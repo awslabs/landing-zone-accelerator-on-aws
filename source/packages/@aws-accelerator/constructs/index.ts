@@ -13,11 +13,13 @@
 
 export * from './lib/aws-accelerator/get-accelerator-metadata';
 export * from './lib/aws-budgets/budget-definition';
+export * from './lib/aws-cloudformation/get-resource-type';
 export * from './lib/aws-cloudwatch-logs/cloudwatch-destination';
 export * from './lib/aws-cloudwatch-logs/cloudwatch-log-group';
 export * from './lib/aws-cloudwatch-logs/cloudwatch-logs-subscription-filter';
 export * from './lib/aws-configservice/config-tags';
 export * from './lib/aws-configservice/config-aggregation';
+export * from './lib/aws-configservice/config-recorder';
 export * from './lib/aws-controltower/create-accounts';
 export * from './lib/aws-cur/report-definition';
 export * from './lib/aws-detective/detective-graph-config';

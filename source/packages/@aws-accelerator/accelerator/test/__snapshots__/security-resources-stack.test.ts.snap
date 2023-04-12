@@ -2760,16 +2760,18 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "UpdateReplacePolicy": "Retain",
     },
     "ConfigDeliveryChannel": {
+      "DeletionPolicy": "Retain",
       "Properties": {
         "ConfigSnapshotDeliveryProperties": {
           "DeliveryFrequency": "One_Hour",
         },
         "S3BucketName": "aws-accelerator-central-logs-333333333333-us-west-2",
-        "S3KeyPrefix": "config",
       },
       "Type": "AWS::Config::DeliveryChannel",
+      "UpdateReplacePolicy": "Retain",
     },
     "ConfigRecorder": {
+      "DeletionPolicy": "Retain",
       "Properties": {
         "RecordingGroup": {
           "AllSupported": true,
@@ -2783,6 +2785,341 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         },
       },
       "Type": "AWS::Config::ConfigurationRecorder",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "ConfigRecorderDeliveryChannelConfigServiceRecorderFunction8ED53EB1": {
+      "DependsOn": [
+        "ConfigRecorderDeliveryChannelConfigServiceRecorderFunctionServiceRoleDefaultPolicyC8094654",
+        "ConfigRecorderDeliveryChannelConfigServiceRecorderFunctionServiceRole64B1443B",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Create/Update Config Recorder",
+        "Handler": "index.handler",
+        "KmsKeyArn": {
+          "Ref": "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "ConfigRecorderDeliveryChannelConfigServiceRecorderFunctionServiceRole64B1443B",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 300,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ConfigRecorderDeliveryChannelConfigServiceRecorderFunctionLogGroup8700D0A9": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "ConfigRecorderDeliveryChannelConfigServiceRecorderFunction8ED53EB1",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ConfigRecorderDeliveryChannelConfigServiceRecorderFunctionServiceRole64B1443B": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Lambda managed policy",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ConfigRecorderDeliveryChannelConfigServiceRecorderFunctionServiceRoleDefaultPolicyC8094654": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Lambda managed policy",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "config:DeleteDeliveryChannel",
+                "config:DescribeConfigurationRecorders",
+                "config:DescribeDeliveryChannelStatus",
+                "config:PutConfigurationRecorder",
+                "config:PutDeliveryChannel",
+                "config:StartConfigurationRecorder",
+                "config:StopConfigurationRecorder",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "configService",
+            },
+            {
+              "Action": [
+                "s3:PutObject*",
+                "s3:GetBucketACL",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::aws-accelerator-central-logs-333333333333-us-west-2",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::aws-accelerator-central-logs-333333333333-us-west-2/*",
+                    ],
+                  ],
+                },
+              ],
+              "Sid": "s3",
+            },
+            {
+              "Action": "iam:PassRole",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "ConfigRecorderRoleC4E33AA3",
+                  "Arn",
+                ],
+              },
+              "Sid": "iam",
+            },
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "ConfigRecorderRoleC4E33AA3",
+                  "Arn",
+                ],
+              },
+              "Sid": "sts",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ConfigRecorderDeliveryChannelConfigServiceRecorderFunctionServiceRoleDefaultPolicyC8094654",
+        "Roles": [
+          {
+            "Ref": "ConfigRecorderDeliveryChannelConfigServiceRecorderFunctionServiceRole64B1443B",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ConfigRecorderDeliveryChannelConfigServiceRecorderProviderframeworkonEvent0F201818": {
+      "DependsOn": [
+        "ConfigRecorderDeliveryChannelConfigServiceRecorderProviderframeworkonEventServiceRoleDefaultPolicy5AFF8283",
+        "ConfigRecorderDeliveryChannelConfigServiceRecorderProviderframeworkonEventServiceRole27ACB169",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-SecurityResourcesStack-111111111111-us-east-1/ConfigRecorderDeliveryChannel/ConfigServiceRecorderProvider)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "ConfigRecorderDeliveryChannelConfigServiceRecorderFunction8ED53EB1",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "ConfigRecorderDeliveryChannelConfigServiceRecorderProviderframeworkonEventServiceRole27ACB169",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ConfigRecorderDeliveryChannelConfigServiceRecorderProviderframeworkonEventServiceRole27ACB169": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Lambda managed policy",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ConfigRecorderDeliveryChannelConfigServiceRecorderProviderframeworkonEventServiceRoleDefaultPolicy5AFF8283": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Lambda managed policy",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "ConfigRecorderDeliveryChannelConfigServiceRecorderFunction8ED53EB1",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "ConfigRecorderDeliveryChannelConfigServiceRecorderFunction8ED53EB1",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ConfigRecorderDeliveryChannelConfigServiceRecorderProviderframeworkonEventServiceRoleDefaultPolicy5AFF8283",
+        "Roles": [
+          {
+            "Ref": "ConfigRecorderDeliveryChannelConfigServiceRecorderProviderframeworkonEventServiceRole27ACB169",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ConfigRecorderDeliveryChannelConfigServiceRecorderResourceFC8ADAD3": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "ConfigRecorderDeliveryChannelConfigServiceRecorderProviderframeworkonEvent0F201818",
+            "Arn",
+          ],
+        },
+        "recorderRoleArn": {
+          "Fn::GetAtt": [
+            "ConfigRecorderRoleC4E33AA3",
+            "Arn",
+          ],
+        },
+        "s3BucketKmsKeyArn": {
+          "Ref": "AcceleratorCentralLogS3KeyLookupC2EF784A",
+        },
+        "s3BucketName": "aws-accelerator-central-logs-333333333333-us-west-2",
+      },
+      "Type": "Custom::ConfigServiceRecorder",
+      "UpdateReplacePolicy": "Delete",
     },
     "ConfigRecorderRoleC4E33AA3": {
       "Metadata": {
@@ -2791,6 +3128,10 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
             {
               "id": "AwsSolutions-IAM4",
               "reason": "ConfigRecorderRole needs managed policy service-role/AWS_ConfigRole to administer config rules",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "ConfigRecorderRole DefaultPolicy is built by cdk.",
             },
           ],
         },
@@ -2831,7 +3172,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM5",
-              "reason": "ConfigRecorderRole DefaultPolicy is built by cdk.",
+              "reason": "Single bucket",
             },
           ],
         },
@@ -2840,9 +3181,27 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         "PolicyDocument": {
           "Statement": [
             {
-              "Action": "s3:PutObject",
+              "Action": [
+                "s3:PutObject*",
+                "s3:GetBucketACL",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                "arn:aws:s3:::aws-accelerator-central-logs-333333333333-us-west-2",
+                "arn:aws:s3:::aws-accelerator-central-logs-333333333333-us-west-2/*",
+              ],
+              "Sid": "s3",
+            },
+            {
+              "Action": "iam:PassRole",
+              "Condition": {
+                "StringEquals": {
+                  "iam:PassedToService": "config.amazonaws.com",
+                },
+              },
               "Effect": "Allow",
               "Resource": "*",
+              "Sid": "iam",
             },
           ],
           "Version": "2012-10-17",
@@ -6390,16 +6749,18 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
       "Type": "AWS::Logs::MetricFilter",
     },
     "ConfigDeliveryChannel": {
+      "DeletionPolicy": "Retain",
       "Properties": {
         "ConfigSnapshotDeliveryProperties": {
           "DeliveryFrequency": "One_Hour",
         },
         "S3BucketName": "aws-accelerator-central-logs-333333333333-us-west-2",
-        "S3KeyPrefix": "config",
       },
       "Type": "AWS::Config::DeliveryChannel",
+      "UpdateReplacePolicy": "Retain",
     },
     "ConfigRecorder": {
+      "DeletionPolicy": "Retain",
       "Properties": {
         "RecordingGroup": {
           "AllSupported": true,
@@ -6413,6 +6774,341 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
         },
       },
       "Type": "AWS::Config::ConfigurationRecorder",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "ConfigRecorderDeliveryChannelConfigServiceRecorderFunction8ED53EB1": {
+      "DependsOn": [
+        "ConfigRecorderDeliveryChannelConfigServiceRecorderFunctionServiceRoleDefaultPolicyC8094654",
+        "ConfigRecorderDeliveryChannelConfigServiceRecorderFunctionServiceRole64B1443B",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Create/Update Config Recorder",
+        "Handler": "index.handler",
+        "KmsKeyArn": {
+          "Ref": "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "ConfigRecorderDeliveryChannelConfigServiceRecorderFunctionServiceRole64B1443B",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 300,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ConfigRecorderDeliveryChannelConfigServiceRecorderFunctionLogGroup8700D0A9": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "ConfigRecorderDeliveryChannelConfigServiceRecorderFunction8ED53EB1",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ConfigRecorderDeliveryChannelConfigServiceRecorderFunctionServiceRole64B1443B": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Lambda managed policy",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ConfigRecorderDeliveryChannelConfigServiceRecorderFunctionServiceRoleDefaultPolicyC8094654": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Lambda managed policy",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "config:DeleteDeliveryChannel",
+                "config:DescribeConfigurationRecorders",
+                "config:DescribeDeliveryChannelStatus",
+                "config:PutConfigurationRecorder",
+                "config:PutDeliveryChannel",
+                "config:StartConfigurationRecorder",
+                "config:StopConfigurationRecorder",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "configService",
+            },
+            {
+              "Action": [
+                "s3:PutObject*",
+                "s3:GetBucketACL",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::aws-accelerator-central-logs-333333333333-us-west-2",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::aws-accelerator-central-logs-333333333333-us-west-2/*",
+                    ],
+                  ],
+                },
+              ],
+              "Sid": "s3",
+            },
+            {
+              "Action": "iam:PassRole",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "ConfigRecorderRoleC4E33AA3",
+                  "Arn",
+                ],
+              },
+              "Sid": "iam",
+            },
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "ConfigRecorderRoleC4E33AA3",
+                  "Arn",
+                ],
+              },
+              "Sid": "sts",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ConfigRecorderDeliveryChannelConfigServiceRecorderFunctionServiceRoleDefaultPolicyC8094654",
+        "Roles": [
+          {
+            "Ref": "ConfigRecorderDeliveryChannelConfigServiceRecorderFunctionServiceRole64B1443B",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ConfigRecorderDeliveryChannelConfigServiceRecorderProviderframeworkonEvent0F201818": {
+      "DependsOn": [
+        "ConfigRecorderDeliveryChannelConfigServiceRecorderProviderframeworkonEventServiceRoleDefaultPolicy5AFF8283",
+        "ConfigRecorderDeliveryChannelConfigServiceRecorderProviderframeworkonEventServiceRole27ACB169",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-SecurityResourcesStack-111111111111-us-east-1/ConfigRecorderDeliveryChannel/ConfigServiceRecorderProvider)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "ConfigRecorderDeliveryChannelConfigServiceRecorderFunction8ED53EB1",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "ConfigRecorderDeliveryChannelConfigServiceRecorderProviderframeworkonEventServiceRole27ACB169",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ConfigRecorderDeliveryChannelConfigServiceRecorderProviderframeworkonEventServiceRole27ACB169": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Lambda managed policy",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ConfigRecorderDeliveryChannelConfigServiceRecorderProviderframeworkonEventServiceRoleDefaultPolicy5AFF8283": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Lambda managed policy",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "ConfigRecorderDeliveryChannelConfigServiceRecorderFunction8ED53EB1",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "ConfigRecorderDeliveryChannelConfigServiceRecorderFunction8ED53EB1",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ConfigRecorderDeliveryChannelConfigServiceRecorderProviderframeworkonEventServiceRoleDefaultPolicy5AFF8283",
+        "Roles": [
+          {
+            "Ref": "ConfigRecorderDeliveryChannelConfigServiceRecorderProviderframeworkonEventServiceRole27ACB169",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ConfigRecorderDeliveryChannelConfigServiceRecorderResourceFC8ADAD3": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "ConfigRecorderDeliveryChannelConfigServiceRecorderProviderframeworkonEvent0F201818",
+            "Arn",
+          ],
+        },
+        "recorderRoleArn": {
+          "Fn::GetAtt": [
+            "ConfigRecorderRoleC4E33AA3",
+            "Arn",
+          ],
+        },
+        "s3BucketKmsKeyArn": {
+          "Ref": "AcceleratorCentralLogS3KeyLookupC2EF784A",
+        },
+        "s3BucketName": "aws-accelerator-central-logs-333333333333-us-west-2",
+      },
+      "Type": "Custom::ConfigServiceRecorder",
+      "UpdateReplacePolicy": "Delete",
     },
     "ConfigRecorderRoleC4E33AA3": {
       "Metadata": {
@@ -6421,6 +7117,10 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
             {
               "id": "AwsSolutions-IAM4",
               "reason": "ConfigRecorderRole needs managed policy service-role/AWS_ConfigRole to administer config rules",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "ConfigRecorderRole DefaultPolicy is built by cdk.",
             },
           ],
         },
@@ -6461,7 +7161,7 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM5",
-              "reason": "ConfigRecorderRole DefaultPolicy is built by cdk.",
+              "reason": "Single bucket",
             },
           ],
         },
@@ -6470,9 +7170,27 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
         "PolicyDocument": {
           "Statement": [
             {
-              "Action": "s3:PutObject",
+              "Action": [
+                "s3:PutObject*",
+                "s3:GetBucketACL",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                "arn:aws:s3:::aws-accelerator-central-logs-333333333333-us-west-2",
+                "arn:aws:s3:::aws-accelerator-central-logs-333333333333-us-west-2/*",
+              ],
+              "Sid": "s3",
+            },
+            {
+              "Action": "iam:PassRole",
+              "Condition": {
+                "StringEquals": {
+                  "iam:PassedToService": "config.amazonaws.com",
+                },
+              },
               "Effect": "Allow",
               "Resource": "*",
+              "Sid": "iam",
             },
           ],
           "Version": "2012-10-17",
