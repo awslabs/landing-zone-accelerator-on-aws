@@ -64,11 +64,6 @@ export class ConfigRepository extends Construct {
       managementAccountAccessRole = 'OrganizationAccountAccessRole';
     }
 
-    let enableOrganizations = true;
-    if (props.enableSingleAccountMode) {
-      enableOrganizations = false;
-    }
-
     fs.writeFileSync(
       path.join(tempDirPath, AccountsConfig.FILENAME),
       yaml.dump(
@@ -93,20 +88,24 @@ export class ConfigRepository extends Construct {
     );
     fs.writeFileSync(path.join(tempDirPath, IamConfig.FILENAME), yaml.dump(new IamConfig()), 'utf8');
     fs.writeFileSync(path.join(tempDirPath, NetworkConfig.FILENAME), yaml.dump(new NetworkConfig()), 'utf8');
-    fs.writeFileSync(
-      path.join(tempDirPath, OrganizationConfig.FILENAME),
-      yaml.dump(
-        new OrganizationConfig({
-          enable: enableOrganizations,
-          organizationalUnits: [],
-          organizationalUnitIds: [],
-          taggingPolicies: [],
-          backupPolicies: [],
-          serviceControlPolicies: [],
-        }),
-      ),
-      'utf8',
-    );
+    if (props.enableSingleAccountMode) {
+      const orgConfig = new OrganizationConfig({
+        enable: false,
+        organizationalUnits: [],
+        organizationalUnitIds: [],
+        serviceControlPolicies: [],
+        taggingPolicies: [],
+        backupPolicies: [],
+      });
+      fs.writeFileSync(path.join(tempDirPath, OrganizationConfig.FILENAME), yaml.dump(orgConfig), 'utf8');
+    } else {
+      fs.writeFileSync(
+        path.join(tempDirPath, OrganizationConfig.FILENAME),
+        yaml.dump(new OrganizationConfig()),
+        'utf8',
+      );
+    }
+
     fs.writeFileSync(path.join(tempDirPath, SecurityConfig.FILENAME), yaml.dump(new SecurityConfig()), 'utf8');
 
     const configurationDefaultsAssets = new s3_assets.Asset(this, 'ConfigurationDefaultsAssets', {
