@@ -222,6 +222,7 @@ export class AcceleratorTool {
       actions: [
         { order: 2, name: 'Logging', stackPrefix: '-LoggingStack' },
         { order: 1, name: 'Key', stackPrefix: '-KeyStack' },
+        { order: 1, name: 'Key', stackPrefix: '-DependenciesStack' },
       ],
     },
     {
