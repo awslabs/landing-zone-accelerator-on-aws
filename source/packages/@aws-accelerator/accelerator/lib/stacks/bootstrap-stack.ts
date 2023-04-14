@@ -16,6 +16,7 @@ import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { BootstrapVersion } from '../accelerator';
+import { BucketAccessControl } from 'aws-cdk-lib/aws-s3';
 
 export class BootstrapStack extends AcceleratorStack {
   readonly qualifier: string;
@@ -506,6 +507,7 @@ export class BootstrapStack extends AcceleratorStack {
     ];
 
     const assetBucket = new cdk.aws_s3.Bucket(this, 'StagingBucket', {
+      accessControl: BucketAccessControl.PRIVATE,
       blockPublicAccess: cdk.aws_s3.BlockPublicAccess.BLOCK_ALL,
       bucketName: this.assetBucketName,
       encryption: cdk.aws_s3.BucketEncryption.KMS,
