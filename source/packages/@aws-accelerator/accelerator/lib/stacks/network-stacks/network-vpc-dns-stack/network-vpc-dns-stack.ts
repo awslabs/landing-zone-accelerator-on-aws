@@ -35,42 +35,37 @@ export class NetworkVpcDnsStack extends NetworkStack {
     //
     // Store VPC IDs, interface endpoint DNS, and Route 53 resolver endpoints
     //
-    const vpcMap = this.setVpcMap(this.vpcResources);
-    const [endpointMap, zoneMap] = this.setInterfaceEndpointDnsMap(this.vpcResources);
-    const resolverMap = this.setResolverEndpointMap(this.vpcResources);
+    const vpcMap = this.setVpcMap(this.vpcsInScope);
+    const [endpointMap, zoneMap] = this.setInterfaceEndpointDnsMap(this.vpcsInScope);
+    const resolverMap = this.setResolverEndpointMap(this.vpcsInScope);
 
     //
     // Create private hosted zones
     //
 
-    for (const vpcItem of this.vpcResources) {
-      // Get account IDs
-      const vpcAccountIds = this.getVpcAccountIds(vpcItem);
+    for (const vpcItem of this.vpcsInScope) {
+      const vpcId = vpcMap.get(vpcItem.name);
 
-      if (this.isTargetStack(vpcAccountIds, [vpcItem.region])) {
-        const vpcId = vpcMap.get(vpcItem.name);
+      if (!vpcId) {
+        this.logger.error(`Unable to locate VPC ${vpcItem.name}`);
+        throw new Error(`Configuration validation failed at runtime.`);
+      }
+      // Create private hosted zones
+      if (vpcItem.interfaceEndpoints?.central) {
+        this.createHostedZones(vpcItem, vpcId, endpointMap, zoneMap);
+      }
 
-        if (!vpcId) {
-          this.logger.error(`Unable to locate VPC ${vpcItem.name}`);
-          throw new Error(`Configuration validation failed at runtime.`);
-        }
-        // Create private hosted zones
-        if (vpcItem.interfaceEndpoints?.central) {
-          this.createHostedZones(vpcItem, vpcId, endpointMap, zoneMap);
-        }
+      //
+      // Create resolver rules
+      //
 
-        //
-        // Create resolver rules
-        //
+      // FORWARD rules
+      if (props.networkConfig.centralNetworkServices?.route53Resolver?.endpoints) {
+        const endpoints = props.networkConfig.centralNetworkServices?.route53Resolver?.endpoints;
 
-        // FORWARD rules
-        if (props.networkConfig.centralNetworkServices?.route53Resolver?.endpoints) {
-          const endpoints = props.networkConfig.centralNetworkServices?.route53Resolver?.endpoints;
-
-          for (const endpointItem of endpoints) {
-            if (endpointItem.vpc === vpcItem.name && endpointItem.type === 'OUTBOUND') {
-              this.createForwardRules(vpcItem, endpointItem, resolverMap);
-            }
+        for (const endpointItem of endpoints) {
+          if (endpointItem.vpc === vpcItem.name && endpointItem.type === 'OUTBOUND') {
+            this.createForwardRules(vpcItem, endpointItem, resolverMap);
           }
         }
       }

@@ -74,6 +74,7 @@ import { SsmResourceType } from '@aws-accelerator/utils';
 import path from 'path';
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import { NetworkStack } from '../network-stack';
+import { SharedResources } from './shared-resources';
 
 interface Peering {
   name: string;
@@ -136,7 +137,7 @@ export class NetworkAssociationsStack extends NetworkStack {
       //
       // Build route table map
       //
-      this.routeTableMap = this.setRouteTableMap(this.vpcResources);
+      this.routeTableMap = this.setRouteTableMap(this.vpcsInScope);
       // Get cross-account prefix list IDs as needed
       const crossAcctRouteTables = this.setCrossAcctRouteTables();
       crossAcctRouteTables.forEach((value, key) => this.routeTableMap.set(key, value));
@@ -203,6 +204,12 @@ export class NetworkAssociationsStack extends NetworkStack {
       // Apply tags to shared VPC/subnet resources
       //
       this.shareSubnetTags();
+
+      //
+      // Create resources for RAM shared subnets
+      //
+      const sharedVpcMap = this.setVpcMap(this.sharedVpcs);
+      new SharedResources(this, sharedVpcMap, this.prefixListMap, props);
 
       //
       // Create SSM parameters
@@ -2303,7 +2310,7 @@ export class NetworkAssociationsStack extends NetworkStack {
         owningAccountId: accountId,
         ssmSubnetIdPath: this.getSsmPath(SsmResourceType.SUBNET, [target.vpc, target.subnet]),
         region: target.region ?? cdk.Stack.of(this).region,
-        roleName: `${this.props.prefixes.accelerator}-GetIpamCidrRole-${cdk.Stack.of(this).region}`,
+        roleName: this.acceleratorResourceNames.roles.ipamSubnetLookup,
         kmsKey: this.cloudwatchKey,
         logRetentionInDays: this.logRetention,
       },

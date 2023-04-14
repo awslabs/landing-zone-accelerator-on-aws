@@ -411,6 +411,7 @@ prefixLists:
   - name: accelerator-prefix-list
     accounts:
       - Network
+      - SharedServices
     regions:
       - *HOME_REGION
     addressFamily: 'IPv4'
@@ -456,17 +457,87 @@ vpcs:
         ipamAllocation:
           ipamPoolName: home-region-pool
           netmaskLength: 28
+        shareTargets:
+          organizationalUnits:
+            - Infrastructure
       - name: SharedServices-B
         availabilityZone: b
         routeTable: SharedServices-B-Rt
         ipamAllocation:
           ipamPoolName: home-region-pool
           netmaskLength: 28
+        shareTargets:
+          organizationalUnits:
+            - Infrastructure
     gatewayEndpoints:
       defaultPolicy: Default
       endpoints:
         - service: s3
         - service: dynamodb
+    securityGroups:
+      - name: 'Management'
+        description: 'Management Security Group'
+        inboundRules:
+          - description: 'Management RDP Traffic Inbound'
+            types:
+              - RDP
+            sources:
+              - '10.0.0.0/8'
+              - '100.96.252.0/23'
+              - '100.96.250.0/23'
+              - account: SharedServices
+                vpc: SharedServices-Ipam-East
+                subnets:
+                  - SharedServices-A
+                  - SharedServices-B
+              - securityGroups:
+                  - Management
+              - prefixLists:
+                  - accelerator-prefix-list
+          - description: 'Management SSH Traffic Inbound'
+            types: []
+            tcpPorts:
+              - 22
+            udpPorts:
+              - 22
+            sources:
+              - 10.0.0.0/8
+              - 100.96.252.0/23
+              - 100.96.250.0/23
+              - account: SharedServices
+                vpc: SharedServices-Ipam-East
+                subnets:
+                  - SharedServices-A
+                  - SharedServices-B
+              - securityGroups:
+                  - Management
+              - prefixLists:
+                  - accelerator-prefix-list
+        outboundRules:
+          - description: 'All Outbound'
+            types:
+              - ALL
+            sources:
+              - 10.0.0.0/8
+              - 100.96.252.0/23
+              - 100.96.250.0/23
+              - account: SharedServices
+                vpc: SharedServices-Ipam-East
+                subnets:
+                  - SharedServices-A
+                  - SharedServices-B
+              - securityGroups:
+                  - Management
+              - prefixLists:
+                  - accelerator-prefix-list
+          - description: 'All Outbound'
+            types: []
+            tcpPorts:
+              - 22
+            udpPorts:
+              - 22
+            sources:
+              - 10.0.0.0/8
 
   - name: SharedServices-Ipam-West
     account: SharedServices

@@ -17,6 +17,7 @@ import {
   RouteTableEntryConfig,
   SecurityGroupConfig,
   SecurityGroupRuleConfig,
+  SubnetConfig,
   TransitGatewayAttachmentConfig,
   TransitGatewayConfig,
   VpcConfig,
@@ -1736,6 +1737,9 @@ export class VpcValidator {
     helpers: NetworkValidatorFunctions,
     errors: string[],
   ) {
+    // Get accounts for RAM shared subnets
+    const sharedAccounts = vpcItem.subnets ? this.getSharedSubnetAccounts(vpcItem.subnets, helpers) : [];
+
     vpcItem.securityGroups?.forEach(group => {
       group.inboundRules.forEach(inbound => {
         // Validate inbound rules
@@ -1748,7 +1752,8 @@ export class VpcValidator {
                   `[VPC ${vpcItem.name} security group ${group.name}]: inboundRule source prefix list "${listName}" does not exist`,
                 );
               } else {
-                const vpcAccountNames = helpers.getVpcAccountNames(vpcItem);
+                // Prefix lists must be deployed to all deployment target accounts, including subnet shares
+                const vpcAccountNames = [...new Set([...helpers.getVpcAccountNames(vpcItem), ...sharedAccounts])];
                 if (helpers.hasTargetMismatch(vpcAccountNames, prefixList.accounts)) {
                   errors.push(
                     `[VPC ${vpcItem.name} security group ${group.name}]: inboundRule source prefix list "${listName}" is not deployed to one or more VPC deployment target accounts`,
@@ -1770,7 +1775,8 @@ export class VpcValidator {
                   `[VPC ${vpcItem.name} security group ${group.name}]: outboundRule source prefix list "${listName}" does not exist`,
                 );
               } else {
-                const vpcAccountNames = helpers.getVpcAccountNames(vpcItem);
+                // Prefix lists must be deployed to all deployment target accounts, including subnet shares
+                const vpcAccountNames = [...new Set([...helpers.getVpcAccountNames(vpcItem), ...sharedAccounts])];
                 if (helpers.hasTargetMismatch(vpcAccountNames, prefixList.accounts)) {
                   errors.push(
                     `[VPC ${vpcItem.name} security group ${group.name}]: outboundRule source prefix list "${listName}" is not deployed to one or more VPC deployment target accounts`,
@@ -1782,6 +1788,22 @@ export class VpcValidator {
         });
       });
     });
+  }
+
+  /**
+   * Retrieve shared account names for a subnet's share targets
+   * @param subnetConfig
+   * @param helpers
+   * @returns
+   */
+  private getSharedSubnetAccounts(subnetConfig: SubnetConfig[], helpers: NetworkValidatorFunctions): string[] {
+    const sharedAccounts: string[] = [];
+
+    for (const subnet of subnetConfig) {
+      const subnetSharedAccounts = subnet.shareTargets ? helpers.getAccountNamesFromTarget(subnet.shareTargets) : [];
+      sharedAccounts.push(...subnetSharedAccounts);
+    }
+    return [...new Set(sharedAccounts)];
   }
 
   /**
