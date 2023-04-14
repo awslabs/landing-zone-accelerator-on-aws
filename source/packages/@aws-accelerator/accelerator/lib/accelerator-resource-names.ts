@@ -18,6 +18,7 @@ export interface AcceleratorResourceNamesProps {
 interface RoleNames {
   crossAccountCmkArnSsmParameterAccess: string;
   ipamSsmParameterAccess: string;
+  ipamSubnetLookup: string;
   crossAccountCentralLogBucketCmkArnSsmParameterAccess: string;
   crossAccountSecretsCmkParameterAccess: string;
   moveAccountConfig: string;
@@ -82,6 +83,7 @@ export class AcceleratorResourceNames {
   public roles: RoleNames = {
     crossAccountCmkArnSsmParameterAccess: 'PLACE_HOLDER',
     ipamSsmParameterAccess: 'PLACE_HOLDER',
+    ipamSubnetLookup: 'PLACE_HOLDER',
     crossAccountCentralLogBucketCmkArnSsmParameterAccess: 'PLACE_HOLDER',
     crossAccountSecretsCmkParameterAccess: 'PLACE_HOLDER',
     moveAccountConfig: 'PLACE_HOLDER',
@@ -149,6 +151,7 @@ export class AcceleratorResourceNames {
     this.roles.crossAccountCentralLogBucketCmkArnSsmParameterAccess =
       props.prefixes.accelerator + '-CentralBucket-KeyArnParam-Role';
     this.roles.ipamSsmParameterAccess = props.prefixes.accelerator + '-Ipam-GetSsmParamRole';
+    this.roles.ipamSubnetLookup = props.prefixes.accelerator + '-GetIpamCidrRole';
     this.roles.crossAccountCmkArnSsmParameterAccess = props.prefixes.accelerator + '-CrossAccount-SsmParameter-Role';
 
     this.roles.crossAccountSecretsCmkParameterAccess = props.prefixes.accelerator + '-CrossAccount-SecretsKms-Role';

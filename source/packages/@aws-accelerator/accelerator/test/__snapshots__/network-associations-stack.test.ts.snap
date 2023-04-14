@@ -183,6 +183,10 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Default": "/accelerator/network/vpc/Network-Secondary/routeTable/Network-Secondary-B-Rt/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworkvpcSharedServicesIpamEastidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/SharedServices-Ipam-East/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
   },
   "Resources": {
     "AcceleratorVpnNetworkMainCoreAssociationEF397C51": {
@@ -1970,7 +1974,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
               {
                 "Ref": "AWS::Partition",
               },
-              ":iam::444444444444:role/AWSAccelerator-GetIpamCidrRole-us-east-1",
+              ":iam::444444444444:role/AWSAccelerator-GetIpamCidrRole",
             ],
           ],
         },
@@ -2001,7 +2005,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
               {
                 "Ref": "AWS::Partition",
               },
-              ":iam::444444444444:role/AWSAccelerator-GetIpamCidrRole-us-east-1",
+              ":iam::444444444444:role/AWSAccelerator-GetIpamCidrRole",
             ],
           ],
         },
@@ -2032,7 +2036,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
               {
                 "Ref": "AWS::Partition",
               },
-              ":iam::444444444444:role/AWSAccelerator-GetIpamCidrRole-us-east-1",
+              ":iam::444444444444:role/AWSAccelerator-GetIpamCidrRole",
             ],
           ],
         },
@@ -2063,7 +2067,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
               {
                 "Ref": "AWS::Partition",
               },
-              ":iam::444444444444:role/AWSAccelerator-GetIpamCidrRole-us-east-1",
+              ":iam::444444444444:role/AWSAccelerator-GetIpamCidrRole",
             ],
           ],
         },
@@ -2160,6 +2164,212 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "RuleNumber": 106,
       },
       "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "SharedServicesIpamEastSharedServicesAIpamSubnetLookupD77A2C65": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomGetIpamSubnetCidrCustomResourceProviderLogGroup655A9FB7",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomGetIpamSubnetCidrCustomResourceProviderHandler8C11DBB5",
+            "Arn",
+          ],
+        },
+        "region": "us-east-1",
+        "roleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::444444444444:role/AWSAccelerator-GetIpamCidrRole",
+            ],
+          ],
+        },
+        "ssmSubnetIdPath": "/accelerator/network/vpc/SharedServices-Ipam-East/subnet/SharedServices-A/id",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::GetIpamSubnetCidr",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SharedServicesIpamEastSharedServicesBIpamSubnetLookupD01BB3A4": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomGetIpamSubnetCidrCustomResourceProviderLogGroup655A9FB7",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomGetIpamSubnetCidrCustomResourceProviderHandler8C11DBB5",
+            "Arn",
+          ],
+        },
+        "region": "us-east-1",
+        "roleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::444444444444:role/AWSAccelerator-GetIpamCidrRole",
+            ],
+          ],
+        },
+        "ssmSubnetIdPath": "/accelerator/network/vpc/SharedServices-Ipam-East/subnet/SharedServices-B/id",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::GetIpamSubnetCidr",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SharedServicesIpamEastVpcManagementSg0BB92636": {
+      "Properties": {
+        "GroupDescription": "Management Security Group",
+        "GroupName": "Management",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "10.0.0.0/8",
+            "Description": "All Outbound",
+            "IpProtocol": "-1",
+          },
+          {
+            "CidrIp": "100.96.252.0/23",
+            "Description": "All Outbound",
+            "IpProtocol": "-1",
+          },
+          {
+            "CidrIp": "100.96.250.0/23",
+            "Description": "All Outbound",
+            "IpProtocol": "-1",
+          },
+          {
+            "CidrIp": {
+              "Fn::GetAtt": [
+                "SharedServicesIpamEastSharedServicesAIpamSubnetLookupD77A2C65",
+                "ipv4CidrBlock",
+              ],
+            },
+            "Description": "All Outbound",
+            "IpProtocol": "-1",
+          },
+          {
+            "CidrIp": {
+              "Fn::GetAtt": [
+                "SharedServicesIpamEastSharedServicesBIpamSubnetLookupD01BB3A4",
+                "ipv4CidrBlock",
+              ],
+            },
+            "Description": "All Outbound",
+            "IpProtocol": "-1",
+          },
+          {
+            "Description": "All Outbound",
+            "DestinationPrefixListId": {
+              "Ref": "SsmParameterValueacceleratornetworkprefixListacceleratorprefixlistidC96584B6F00A464EAD1953AFF4B05118Parameter",
+            },
+            "IpProtocol": "-1",
+          },
+        ],
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": "10.0.0.0/8",
+            "Description": "Management RDP Traffic Inbound",
+            "FromPort": 3389,
+            "IpProtocol": "tcp",
+            "ToPort": 3389,
+          },
+          {
+            "CidrIp": "100.96.252.0/23",
+            "Description": "Management RDP Traffic Inbound",
+            "FromPort": 3389,
+            "IpProtocol": "tcp",
+            "ToPort": 3389,
+          },
+          {
+            "CidrIp": "100.96.250.0/23",
+            "Description": "Management RDP Traffic Inbound",
+            "FromPort": 3389,
+            "IpProtocol": "tcp",
+            "ToPort": 3389,
+          },
+          {
+            "CidrIp": {
+              "Fn::GetAtt": [
+                "SharedServicesIpamEastSharedServicesAIpamSubnetLookupD77A2C65",
+                "ipv4CidrBlock",
+              ],
+            },
+            "Description": "Management RDP Traffic Inbound",
+            "FromPort": 3389,
+            "IpProtocol": "tcp",
+            "ToPort": 3389,
+          },
+          {
+            "CidrIp": {
+              "Fn::GetAtt": [
+                "SharedServicesIpamEastSharedServicesBIpamSubnetLookupD01BB3A4",
+                "ipv4CidrBlock",
+              ],
+            },
+            "Description": "Management RDP Traffic Inbound",
+            "FromPort": 3389,
+            "IpProtocol": "tcp",
+            "ToPort": 3389,
+          },
+          {
+            "Description": "Management RDP Traffic Inbound",
+            "FromPort": 3389,
+            "IpProtocol": "tcp",
+            "SourcePrefixListId": {
+              "Ref": "SsmParameterValueacceleratornetworkprefixListacceleratorprefixlistidC96584B6F00A464EAD1953AFF4B05118Parameter",
+            },
+            "ToPort": 3389,
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Management",
+          },
+        ],
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcSharedServicesIpamEastidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "SharedServicesIpamEastVpcManagementSgManagementEgress00A8CF1412": {
+      "Properties": {
+        "Description": "All Outbound",
+        "DestinationSecurityGroupId": {
+          "Ref": "SharedServicesIpamEastVpcManagementSg0BB92636",
+        },
+        "GroupId": {
+          "Ref": "SharedServicesIpamEastVpcManagementSg0BB92636",
+        },
+        "IpProtocol": "-1",
+      },
+      "Type": "AWS::EC2::SecurityGroupEgress",
+    },
+    "SharedServicesIpamEastVpcManagementSgManagementIngress008146AA79": {
+      "Properties": {
+        "Description": "Management RDP Traffic Inbound",
+        "FromPort": 3389,
+        "GroupId": {
+          "Ref": "SharedServicesIpamEastVpcManagementSg0BB92636",
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Ref": "SharedServicesIpamEastVpcManagementSg0BB92636",
+        },
+        "ToPort": 3389,
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
     },
     "SharedServicesMainNetworkMainCorePropagationB8A9444B": {
       "Properties": {
@@ -2366,6 +2576,16 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Type": "String",
         "Value": {
           "Ref": "NetworkEndpointsToInspectionVpcPeeringE81AF602",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamSharedServicesIpamEastManagementSecurityGroup1A10564E": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/SharedServices-Ipam-East/securityGroup/Management/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "SharedServicesIpamEastVpcManagementSg0BB92636",
         },
       },
       "Type": "AWS::SSM::Parameter",

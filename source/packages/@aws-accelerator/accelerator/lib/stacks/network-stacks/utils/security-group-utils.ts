@@ -23,6 +23,7 @@ import {
   nonEmptyString,
 } from '@aws-accelerator/config';
 import {
+  IIpamSubnet,
   PrefixList,
   SecurityGroup,
   SecurityGroupEgressRuleProps,
@@ -31,7 +32,7 @@ import {
 } from '@aws-accelerator/constructs';
 import { createLogger } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
-import { getPrefixList, getSecurityGroup, getSubnet } from './getter-utils';
+import { getPrefixList, getSecurityGroup, getSubnet, getSubnetConfig, getVpcConfig } from './getter-utils';
 
 /**
  * Security group rule properties
@@ -68,6 +69,75 @@ const TCP_PROTOCOLS_PORT: { [key: string]: number } = {
 const logger = createLogger(['security-group-utils']);
 
 /**
+ * Function to set IPAM subnets for a given array of VPC resources
+ * @param vpcResources
+ * @param subnetMap
+ */
+export function setIpamSubnetSourceArray(
+  allVpcResources: (VpcConfig | VpcTemplatesConfig)[],
+  vpcResources: (VpcConfig | VpcTemplatesConfig)[],
+): string[] {
+  const ipamSubnets: string[] = [];
+
+  for (const vpcItem of vpcResources) {
+    for (const sgItem of vpcItem.securityGroups ?? []) {
+      ipamSubnets.push(...setSgItemIpamSubnets(allVpcResources, sgItem));
+    }
+  }
+  return [...new Set(ipamSubnets)];
+}
+
+/**
+ * Sets an array of IPAM subnets for a single security group config item
+ * @param allVpcResources
+ * @param sgItem
+ * @returns
+ */
+function setSgItemIpamSubnets(
+  allVpcResources: (VpcConfig | VpcTemplatesConfig)[],
+  sgItem: SecurityGroupConfig,
+): string[] {
+  const ipamSubnets: string[] = [];
+
+  for (const ruleItem of [...sgItem.inboundRules, ...sgItem.outboundRules]) {
+    for (const source of ruleItem.sources) {
+      if (NetworkConfigTypes.subnetSourceConfig.is(source)) {
+        ipamSubnets.push(...parseSubnetConfigs(allVpcResources, source.vpc, source.account, source.subnets));
+      }
+    }
+  }
+  return ipamSubnets;
+}
+
+/**
+ * Parse individual subnet configurations to determine if they are IPAM subnets
+ * @param allVpcResources
+ * @param vpcName
+ * @param accountName
+ * @param subnets
+ * @returns
+ */
+function parseSubnetConfigs(
+  allVpcResources: (VpcConfig | VpcTemplatesConfig)[],
+  vpcName: string,
+  accountName: string,
+  subnets: string[],
+): string[] {
+  const ipamSubnets: string[] = [];
+
+  for (const subnet of subnets) {
+    const vpcConfig = getVpcConfig(allVpcResources, vpcName);
+    const subnetConfig = getSubnetConfig(vpcConfig, subnet);
+    const key = `${vpcConfig.name}_${accountName}_${subnetConfig.name}`;
+
+    if (subnetConfig.ipamAllocation && !ipamSubnets.includes(key)) {
+      ipamSubnets.push(key);
+    }
+  }
+  return ipamSubnets;
+}
+
+/**
  * Process and set security group ingress rules
  * @param vpcResources
  * @param securityGroupItem
@@ -78,8 +148,8 @@ const logger = createLogger(['security-group-utils']);
 export function processSecurityGroupIngressRules(
   vpcResources: (VpcConfig | VpcTemplatesConfig)[],
   securityGroupItem: SecurityGroupConfig,
-  subnetMap: Map<string, Subnet>,
-  prefixListMap: Map<string, PrefixList>,
+  subnetMap: Map<string, Subnet> | Map<string, IIpamSubnet>,
+  prefixListMap: Map<string, PrefixList> | Map<string, string>,
 ) {
   const processedIngressRules: SecurityGroupIngressRuleProps[] = [];
 
@@ -149,8 +219,8 @@ export function containsAllIngressRule(ingressRules: SecurityGroupIngressRulePro
 export function processSecurityGroupEgressRules(
   vpcResources: (VpcConfig | VpcTemplatesConfig)[],
   securityGroupItem: SecurityGroupConfig,
-  subnetMap: Map<string, Subnet>,
-  prefixListMap: Map<string, PrefixList>,
+  subnetMap: Map<string, Subnet> | Map<string, IIpamSubnet>,
+  prefixListMap: Map<string, PrefixList> | Map<string, string>,
 ) {
   const processedEgressRules: SecurityGroupEgressRuleProps[] = [];
 
@@ -220,8 +290,8 @@ export function processSecurityGroupSgIngressSources(
   vpcResources: (VpcConfig | VpcTemplatesConfig)[],
   vpcItem: VpcConfig | VpcTemplatesConfig,
   securityGroupItem: SecurityGroupConfig,
-  subnetMap: Map<string, Subnet>,
-  prefixListMap: Map<string, PrefixList>,
+  subnetMap: Map<string, Subnet> | Map<string, IIpamSubnet>,
+  prefixListMap: Map<string, PrefixList> | Map<string, string>,
   securityGroupMap: Map<string, SecurityGroup>,
 ): { logicalId: string; rule: SecurityGroupRuleProps }[] {
   const securityGroupSources: { logicalId: string; rule: SecurityGroupRuleProps }[] = [];
@@ -278,8 +348,8 @@ export function processSecurityGroupSgEgressSources(
   vpcResources: (VpcConfig | VpcTemplatesConfig)[],
   vpcItem: VpcConfig | VpcTemplatesConfig,
   securityGroupItem: SecurityGroupConfig,
-  subnetMap: Map<string, Subnet>,
-  prefixListMap: Map<string, PrefixList>,
+  subnetMap: Map<string, Subnet> | Map<string, IIpamSubnet>,
+  prefixListMap: Map<string, PrefixList> | Map<string, string>,
   securityGroupMap: Map<string, SecurityGroup>,
 ): { logicalId: string; rule: SecurityGroupRuleProps }[] {
   const securityGroupSources: { logicalId: string; rule: SecurityGroupRuleProps }[] = [];
@@ -338,8 +408,8 @@ function setSecurityGroupSgEgressSources(
 function processSecurityGroupRules(
   vpcResources: (VpcConfig | VpcTemplatesConfig)[],
   item: SecurityGroupRuleConfig,
-  subnetMap: Map<string, Subnet>,
-  prefixListMap: Map<string, PrefixList>,
+  subnetMap: Map<string, Subnet> | Map<string, IIpamSubnet>,
+  prefixListMap: Map<string, PrefixList> | Map<string, string>,
   securityGroupMap?: Map<string, SecurityGroup>,
   vpcName?: string,
 ): SecurityGroupRuleProps[] {
@@ -369,8 +439,8 @@ function processSecurityGroupRules(
 function processTcpSources(
   vpcResources: (VpcConfig | VpcTemplatesConfig)[],
   securityGroupRuleItem: SecurityGroupRuleConfig,
-  subnetMap: Map<string, Subnet>,
-  prefixListMap: Map<string, PrefixList>,
+  subnetMap: Map<string, Subnet> | Map<string, IIpamSubnet>,
+  prefixListMap: Map<string, PrefixList> | Map<string, string>,
   securityGroupMap?: Map<string, SecurityGroup>,
   vpcName?: string,
 ): SecurityGroupRuleProps[] {
@@ -411,8 +481,8 @@ function processTcpSources(
 function processUdpSources(
   vpcResources: (VpcConfig | VpcTemplatesConfig)[],
   securityGroupRuleItem: SecurityGroupRuleConfig,
-  subnetMap: Map<string, Subnet>,
-  prefixListMap: Map<string, PrefixList>,
+  subnetMap: Map<string, Subnet> | Map<string, IIpamSubnet>,
+  prefixListMap: Map<string, PrefixList> | Map<string, string>,
   securityGroupMap?: Map<string, SecurityGroup>,
   vpcName?: string,
 ): SecurityGroupRuleProps[] {
@@ -453,8 +523,8 @@ function processUdpSources(
 function processTypeSources(
   vpcResources: (VpcConfig | VpcTemplatesConfig)[],
   securityGroupRuleItem: SecurityGroupRuleConfig,
-  subnetMap: Map<string, Subnet>,
-  prefixListMap: Map<string, PrefixList>,
+  subnetMap: Map<string, Subnet> | Map<string, IIpamSubnet>,
+  prefixListMap: Map<string, PrefixList> | Map<string, string>,
   securityGroupMap?: Map<string, SecurityGroup>,
   vpcName?: string,
 ): SecurityGroupRuleProps[] {
@@ -529,8 +599,8 @@ function processTypeSources(
 function processSecurityGroupRuleSources(
   vpcResources: (VpcConfig | VpcTemplatesConfig)[],
   sources: string[] | SecurityGroupSourceConfig[] | PrefixListSourceConfig[] | SubnetSourceConfig[],
-  subnetMap: Map<string, Subnet>,
-  prefixListMap: Map<string, PrefixList>,
+  subnetMap: Map<string, Subnet> | Map<string, IIpamSubnet>,
+  prefixListMap: Map<string, PrefixList> | Map<string, string>,
   props: {
     ipProtocol: string;
     fromPort?: number;
@@ -608,7 +678,7 @@ function processIpSource(
  */
 function processSubnetSource(
   vpcResources: (VpcConfig | VpcTemplatesConfig)[],
-  subnetMap: Map<string, Subnet>,
+  subnetMap: Map<string, Subnet> | Map<string, IIpamSubnet>,
   source: SubnetSourceConfig,
   props: { ipProtocol: string; fromPort?: number; toPort?: number; description?: string },
 ): SecurityGroupRuleProps[] {
@@ -616,22 +686,14 @@ function processSubnetSource(
   logger.info(`Evaluate Subnet Source account:${source.account} vpc:${source.vpc} subnets:[${source.subnets}]`);
 
   // Locate the VPC
-  const vpcItem = vpcResources.find(item => item.name === source.vpc);
-  if (!vpcItem) {
-    logger.error(`Specified VPC ${source.vpc} not defined`);
-    throw new Error(`Configuration validation failed at runtime.`);
-  }
+  const vpcItem = getVpcConfig(vpcResources, source.vpc);
 
   for (const subnet of source.subnets) {
     // Locate the Subnet
-    const subnetConfigItem = vpcItem.subnets?.find(item => item.name === subnet);
-    if (!subnetConfigItem) {
-      logger.error(`Specified subnet ${subnet} not defined`);
-      throw new Error(`Configuration validation failed at runtime.`);
-    }
+    const subnetConfigItem = getSubnetConfig(vpcItem, subnet);
 
     if (subnetConfigItem.ipamAllocation) {
-      const subnetItem = getSubnet(subnetMap, vpcItem.name, subnetConfigItem.name) as Subnet;
+      const subnetItem = getSubnet(subnetMap, vpcItem.name, subnetConfigItem.name);
       subnetRules.push({
         cidrIp: subnetItem.ipv4CidrBlock,
         ...props,
@@ -654,7 +716,7 @@ function processSubnetSource(
  * @returns
  */
 function processPrefixListSource(
-  prefixListMap: Map<string, PrefixList>,
+  prefixListMap: Map<string, PrefixList> | Map<string, string>,
   source: PrefixListSourceConfig,
   props: { ipProtocol: string; fromPort?: number; toPort?: number; description?: string },
 ): SecurityGroupRuleProps[] {

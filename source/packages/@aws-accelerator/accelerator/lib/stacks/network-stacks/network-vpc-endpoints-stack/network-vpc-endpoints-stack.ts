@@ -48,9 +48,9 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
     //
     // Store VPC, subnet, and route table IDs
     //
-    const vpcMap = this.setVpcMap(this.vpcResources);
-    const subnetMap = this.setSubnetMap(this.vpcResources);
-    const routeTableMap = this.setRouteTableMap(this.vpcResources);
+    const vpcMap = this.setVpcMap(this.vpcsInScope);
+    const subnetMap = this.setSubnetMap(this.vpcsInScope);
+    const routeTableMap = this.setRouteTableMap(this.vpcsInScope);
     //
     // Set Network Firewall policy map
     //
@@ -66,56 +66,49 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
         props.centralizedLoggingRegion
       }`,
     );
-    for (const vpcItem of this.vpcResources) {
-      // Get account IDs
-      const vpcAccountIds = this.getVpcAccountIds(vpcItem);
+    for (const vpcItem of this.vpcsInScope) {
+      const vpcId = vpcMap.get(vpcItem.name);
+      if (!vpcId) {
+        this.logger.error(`Unable to locate VPC ${vpcItem.name}`);
+        throw new Error(`Configuration validation failed at runtime.`);
+      }
+      //
+      // Create VPC endpoints
+      //
+      if (vpcItem.gatewayEndpoints) {
+        this.createGatewayEndpoints(vpcItem, vpcId, routeTableMap);
+      }
 
-      if (this.isTargetStack(vpcAccountIds, [vpcItem.region])) {
-        const vpcId = vpcMap.get(vpcItem.name);
-        if (!vpcId) {
-          this.logger.error(`Unable to locate VPC ${vpcItem.name}`);
-          throw new Error(`Configuration validation failed at runtime.`);
-        }
-        //
-        // Create VPC endpoints
-        //
-        if (vpcItem.gatewayEndpoints) {
-          this.createGatewayEndpoints(vpcItem, vpcId, routeTableMap);
-        }
+      if (vpcItem.interfaceEndpoints) {
+        this.createInterfaceEndpoints(vpcItem, vpcId, subnetMap);
+      }
 
-        if (vpcItem.interfaceEndpoints) {
-          this.createInterfaceEndpoints(vpcItem, vpcId, subnetMap);
-        }
+      //
+      // Create Network Firewalls
+      //
+      if (props.networkConfig.centralNetworkServices?.networkFirewall?.firewalls) {
+        const firewalls = props.networkConfig.centralNetworkServices.networkFirewall.firewalls;
 
-        //
-        // Create Network Firewalls
-        //
-        if (props.networkConfig.centralNetworkServices?.networkFirewall?.firewalls) {
-          const firewalls = props.networkConfig.centralNetworkServices.networkFirewall.firewalls;
+        for (const firewallItem of firewalls) {
+          if (firewallItem.vpc === vpcItem.name) {
+            const firewallSubnets: string[] = [];
 
-          for (const firewallItem of firewalls) {
-            if (firewallItem.vpc === vpcItem.name) {
-              const firewallSubnets: string[] = [];
-
-              // Check if VPC has matching subnets
-              for (const subnetItem of firewallItem.subnets) {
-                const subnetKey = `${firewallItem.vpc}_${subnetItem}`;
-                const subnetId = subnetMap.get(subnetKey);
-                if (subnetId) {
-                  firewallSubnets.push(subnetId);
-                } else {
-                  this.logger.error(
-                    `Create Network Firewall: subnet ${subnetItem} not found in VPC ${firewallItem.vpc}`,
-                  );
-                  throw new Error(`Configuration validation failed at runtime.`);
-                }
+            // Check if VPC has matching subnets
+            for (const subnetItem of firewallItem.subnets) {
+              const subnetKey = `${firewallItem.vpc}_${subnetItem}`;
+              const subnetId = subnetMap.get(subnetKey);
+              if (subnetId) {
+                firewallSubnets.push(subnetId);
+              } else {
+                this.logger.error(`Create Network Firewall: subnet ${subnetItem} not found in VPC ${firewallItem.vpc}`);
+                throw new Error(`Configuration validation failed at runtime.`);
               }
+            }
 
-              // Create firewall
-              if (firewallSubnets.length > 0) {
-                const nfw = this.createNetworkFirewall(firewallItem, vpcId, firewallSubnets, firewallLogBucket);
-                firewallMap.set(firewallItem.name, nfw);
-              }
+            // Create firewall
+            if (firewallSubnets.length > 0) {
+              const nfw = this.createNetworkFirewall(firewallItem, vpcId, firewallSubnets, firewallLogBucket);
+              firewallMap.set(firewallItem.name, nfw);
             }
           }
         }

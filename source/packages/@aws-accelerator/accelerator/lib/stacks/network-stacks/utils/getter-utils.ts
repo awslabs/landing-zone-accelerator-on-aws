@@ -11,7 +11,8 @@
  *  and limitations under the License.
  */
 
-import { PrefixList, RouteTable, Subnet, SecurityGroup, Vpc } from '@aws-accelerator/constructs';
+import { SubnetConfig, VpcConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
+import { PrefixList, RouteTable, Subnet, SecurityGroup, Vpc, IIpamSubnet } from '@aws-accelerator/constructs';
 import { createLogger } from '@aws-accelerator/utils';
 
 const logger = createLogger(['getter-utils']);
@@ -90,11 +91,12 @@ export function getSecurityGroup(
  * @returns
  */
 export function getSubnet(
-  subnetMap: Map<string, Subnet> | Map<string, string>,
+  subnetMap: Map<string, Subnet> | Map<string, IIpamSubnet>,
   vpcName: string,
   subnetName: string,
-): Subnet | string {
-  const key = `${vpcName}_${subnetName}`;
+  accountName?: string,
+): Subnet | IIpamSubnet {
+  const key = accountName ? `${vpcName}_${accountName}_${subnetName}` : `${vpcName}_${subnetName}`;
   const subnet = subnetMap.get(key);
 
   if (!subnet) {
@@ -137,4 +139,37 @@ export function getVpc(vpcMap: Map<string, Vpc> | Map<string, string>, vpcName: 
   }
 
   return vpc;
+}
+
+/**
+ * Returns a VPC configuration object from a given list of configurations if it exists
+ * @param vpcResources
+ * @param vpcName
+ * @returns
+ */
+export function getVpcConfig(
+  vpcResources: (VpcConfig | VpcTemplatesConfig)[],
+  vpcName: string,
+): VpcConfig | VpcTemplatesConfig {
+  const vpcConfig = vpcResources.find(vpc => vpc.name === vpcName);
+  if (!vpcConfig) {
+    logger.error(`VPC configuration for VPC ${vpcName} not found`);
+    throw new Error(`Configuration validation failed at runtime.`);
+  }
+  return vpcConfig;
+}
+
+/**
+ * Returns a subnet configuration object from a given list of configurations if it exists
+ * @param vpcItem
+ * @param subnetName
+ * @returns
+ */
+export function getSubnetConfig(vpcItem: VpcConfig | VpcTemplatesConfig, subnetName: string): SubnetConfig {
+  const subnetConfig = vpcItem.subnets?.find(subnet => subnet.name === subnetName);
+  if (!subnetConfig) {
+    logger.error(`Subnet configuration for VPC ${vpcItem.name} subnet ${subnetName} not found`);
+    throw new Error(`Configuration validation failed at runtime.`);
+  }
+  return subnetConfig;
 }
