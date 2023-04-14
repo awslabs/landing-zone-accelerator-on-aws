@@ -771,59 +771,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "Custom::DeleteDefaultSecurityGroupRules",
       "UpdateReplacePolicy": "Delete",
     },
-    "Get555555555555IpamCidrRoleA17CA412": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM5",
-              "reason": "Allow read role to get CIDRs from dynamic IPAM resources.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Condition": {
-                "StringEquals": {
-                  "aws:PrincipalOrgID": {
-                    "Ref": "Organization29A5FC3F",
-                  },
-                },
-              },
-              "Effect": "Allow",
-              "Principal": {
-                "AWS": "*",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "Policies": [
-          {
-            "PolicyDocument": {
-              "Statement": [
-                {
-                  "Action": [
-                    "ec2:DescribeSubnets",
-                    "ssm:GetParameter",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": "*",
-                },
-              ],
-              "Version": "2012-10-17",
-            },
-            "PolicyName": "default",
-          },
-        ],
-        "RoleName": "AWSAccelerator-GetIpamCidrRole-us-east-1",
-      },
-      "Type": "AWS::IAM::Role",
-    },
     "GetAcceleratorGwlbSsmParamRole6013B2CA": {
       "Metadata": {
         "cdk_nag": {
@@ -894,6 +841,59 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
           },
         ],
         "RoleName": "AWSAccelerator-GetAcceleratorGwlbSsmParamRole-us-east-1",
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "GetIpamCidrRole2DCCA945": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allow read role to get CIDRs from dynamic IPAM resources.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalOrgID": {
+                    "Ref": "Organization29A5FC3F",
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ec2:DescribeSubnets",
+                    "ssm:GetParameter",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "default",
+          },
+        ],
+        "RoleName": "AWSAccelerator-GetIpamCidrRole",
       },
       "Type": "AWS::IAM::Role",
     },

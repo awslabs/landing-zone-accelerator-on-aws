@@ -54,11 +54,11 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
     super(scope, id, props);
 
     // Set initial private properties
-    this.vpcMap = this.setVpcMap(this.vpcResources);
-    this.subnetMap = this.setSubnetMap(this.vpcResources);
-    this.routeTableMap = this.setRouteTableMap(this.vpcResources);
-    this.securityGroupMap = this.setSecurityGroupMap(this.vpcResources);
-    this.gwlbMap = this.setInitialMaps(this.vpcResources);
+    this.vpcMap = this.setVpcMap(this.vpcsInScope);
+    this.subnetMap = this.setSubnetMap(this.vpcsInScope);
+    this.routeTableMap = this.setRouteTableMap(this.vpcsInScope);
+    this.securityGroupMap = this.setSecurityGroupMap(this.vpcsInScope);
+    this.gwlbMap = this.setInitialMaps(this.vpcsInScope);
 
     //
     // Create firewall instances and target groups
@@ -86,14 +86,9 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
     const gwlbMap = new Map<string, string>();
 
     for (const vpcItem of vpcResources) {
-      // Get account IDs
-      const vpcAccountIds = this.getVpcAccountIds(vpcItem);
-
-      if (this.isTargetStack(vpcAccountIds, [vpcItem.region])) {
-        // Retrieve Gateway Load balancers
-        const gwlbItemMap = this.setGwlbMap(vpcItem);
-        gwlbItemMap.forEach((value, key) => gwlbMap.set(key, value));
-      }
+      // Retrieve Gateway Load balancers
+      const gwlbItemMap = this.setGwlbMap(vpcItem);
+      gwlbItemMap.forEach((value, key) => gwlbMap.set(key, value));
     }
     return gwlbMap;
   }

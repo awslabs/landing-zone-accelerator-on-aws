@@ -19,6 +19,7 @@ import {
   NfwFirewallPolicyConfig,
   NfwRuleGroupConfig,
   ResolverRuleConfig,
+  SecurityGroupConfig,
   SubnetConfig,
   TransitGatewayAttachmentConfig,
   TransitGatewayConfig,
@@ -26,17 +27,33 @@ import {
   VpcTemplatesConfig,
 } from '@aws-accelerator/config';
 import {
+  IIpamSubnet,
   IResourceShareItem,
+  PrefixList,
   ResourceShare,
   ResourceShareItem,
   ResourceShareOwner,
+  SecurityGroup,
+  SecurityGroupEgressRuleProps,
+  SecurityGroupIngressRuleProps,
   SsmParameterLookup,
+  Subnet,
+  Vpc,
 } from '@aws-accelerator/constructs';
 import { SsmResourceType } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
+import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { pascalCase } from 'pascal-case';
 import { AcceleratorStack, AcceleratorStackProps } from '../accelerator-stack';
+import { getSecurityGroup, getVpc } from './utils/getter-utils';
+import {
+  containsAllIngressRule,
+  processSecurityGroupEgressRules,
+  processSecurityGroupIngressRules,
+  processSecurityGroupSgEgressSources,
+  processSecurityGroupSgIngressSources,
+} from './utils/security-group-utils';
 
 /**
  * Resource share type for RAM resource shares
@@ -127,11 +144,12 @@ export abstract class NetworkStack extends AcceleratorStack {
     for (const vpcItem of vpcResources) {
       const accountIds: string[] = [];
       const sharedSubnets = vpcItem.subnets ? vpcItem.subnets.filter(subnet => subnet.shareTargets) : [];
+      const vpcAccountIds = this.getVpcAccountIds(vpcItem);
 
       for (const subnetItem of sharedSubnets) {
         const subnetAccountIds = this.getAccountIdsFromShareTarget(subnetItem.shareTargets!);
         subnetAccountIds.forEach(accountId => {
-          if (!accountIds.includes(accountId)) {
+          if (!accountIds.includes(accountId) && !vpcAccountIds.includes(accountId)) {
             accountIds.push(accountId);
           }
         });
@@ -214,15 +232,11 @@ export abstract class NetworkStack extends AcceleratorStack {
     const vpcMap = new Map<string, string>();
 
     for (const vpcItem of vpcResources) {
-      const vpcAccountIds = this.getVpcAccountIds(vpcItem);
-
-      if (this.isTargetStack(vpcAccountIds, [vpcItem.region])) {
-        const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-          this,
-          this.getSsmPath(SsmResourceType.VPC, [vpcItem.name]),
-        );
-        vpcMap.set(vpcItem.name, vpcId);
-      }
+      const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        this.getSsmPath(SsmResourceType.VPC, [vpcItem.name]),
+      );
+      vpcMap.set(vpcItem.name, vpcId);
     }
     return vpcMap;
   }
@@ -236,16 +250,12 @@ export abstract class NetworkStack extends AcceleratorStack {
     const subnetMap = new Map<string, string>();
 
     for (const vpcItem of vpcResources) {
-      const vpcAccountIds = this.getVpcAccountIds(vpcItem);
-
-      if (this.isTargetStack(vpcAccountIds, [vpcItem.region])) {
-        for (const subnetItem of vpcItem.subnets ?? []) {
-          const subnetId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-            this,
-            this.getSsmPath(SsmResourceType.SUBNET, [vpcItem.name, subnetItem.name]),
-          );
-          subnetMap.set(`${vpcItem.name}_${subnetItem.name}`, subnetId);
-        }
+      for (const subnetItem of vpcItem.subnets ?? []) {
+        const subnetId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+          this,
+          this.getSsmPath(SsmResourceType.SUBNET, [vpcItem.name, subnetItem.name]),
+        );
+        subnetMap.set(`${vpcItem.name}_${subnetItem.name}`, subnetId);
       }
     }
     return subnetMap;
@@ -260,16 +270,12 @@ export abstract class NetworkStack extends AcceleratorStack {
     const routeTableMap = new Map<string, string>();
 
     for (const vpcItem of vpcResources) {
-      const vpcAccountIds = this.getVpcAccountIds(vpcItem);
-
-      if (this.isTargetStack(vpcAccountIds, [vpcItem.region])) {
-        for (const routeTableItem of vpcItem.routeTables ?? []) {
-          const routeTableId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-            this,
-            this.getSsmPath(SsmResourceType.ROUTE_TABLE, [vpcItem.name, routeTableItem.name]),
-          );
-          routeTableMap.set(`${vpcItem.name}_${routeTableItem.name}`, routeTableId);
-        }
+      for (const routeTableItem of vpcItem.routeTables ?? []) {
+        const routeTableId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+          this,
+          this.getSsmPath(SsmResourceType.ROUTE_TABLE, [vpcItem.name, routeTableItem.name]),
+        );
+        routeTableMap.set(`${vpcItem.name}_${routeTableItem.name}`, routeTableId);
       }
     }
     return routeTableMap;
@@ -284,16 +290,12 @@ export abstract class NetworkStack extends AcceleratorStack {
     const securityGroupMap = new Map<string, string>();
 
     for (const vpcItem of vpcResources) {
-      const vpcAccountIds = this.getVpcAccountIds(vpcItem);
-
-      if (this.isTargetStack(vpcAccountIds, [vpcItem.region])) {
-        for (const securityGroupItem of vpcItem.securityGroups ?? []) {
-          const securityGroupId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-            this,
-            this.getSsmPath(SsmResourceType.SECURITY_GROUP, [vpcItem.name, securityGroupItem.name]),
-          );
-          securityGroupMap.set(`${vpcItem.name}_${securityGroupItem.name}`, securityGroupId);
-        }
+      for (const securityGroupItem of vpcItem.securityGroups ?? []) {
+        const securityGroupId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+          this,
+          this.getSsmPath(SsmResourceType.SECURITY_GROUP, [vpcItem.name, securityGroupItem.name]),
+        );
+        securityGroupMap.set(`${vpcItem.name}_${securityGroupItem.name}`, securityGroupId);
       }
     }
     return securityGroupMap;
@@ -357,9 +359,7 @@ export abstract class NetworkStack extends AcceleratorStack {
     const zoneMap = new Map<string, string>();
 
     for (const vpcItem of vpcResources) {
-      const vpcAccountIds = this.getVpcAccountIds(vpcItem);
-
-      if (this.isTargetStack(vpcAccountIds, [vpcItem.region]) && vpcItem.interfaceEndpoints?.central) {
+      if (vpcItem.interfaceEndpoints?.central) {
         // Set interface endpoint DNS names
         for (const endpointItem of vpcItem.interfaceEndpoints?.endpoints ?? []) {
           const endpointDns = cdk.aws_ssm.StringParameter.valueForStringParameter(
@@ -386,12 +386,7 @@ export abstract class NetworkStack extends AcceleratorStack {
     const endpointMap = new Map<string, string>();
 
     for (const vpcItem of vpcResources) {
-      const vpcAccountIds = this.getVpcAccountIds(vpcItem);
-
-      if (
-        this.isTargetStack(vpcAccountIds, [vpcItem.region]) &&
-        this.props.networkConfig.centralNetworkServices?.route53Resolver?.endpoints
-      ) {
+      if (this.props.networkConfig.centralNetworkServices?.route53Resolver?.endpoints) {
         const endpoints = this.props.networkConfig.centralNetworkServices?.route53Resolver?.endpoints;
 
         for (const endpointItem of endpoints) {
@@ -647,5 +642,158 @@ export abstract class NetworkStack extends AcceleratorStack {
       }).value;
     }
     return poolId;
+  }
+
+  /**
+   * Create security group resources
+   * @param vpcResources
+   * @param vpcMap
+   * @param subnetMap
+   * @param prefixListMap
+   * @returns
+   */
+  public createSecurityGroups(
+    vpcResources: (VpcConfig | VpcTemplatesConfig)[],
+    vpcMap: Map<string, Vpc> | Map<string, string>,
+    subnetMap: Map<string, Subnet> | Map<string, IIpamSubnet>,
+    prefixListMap: Map<string, PrefixList> | Map<string, string>,
+  ): Map<string, SecurityGroup> {
+    const securityGroupMap = new Map<string, SecurityGroup>();
+
+    for (const vpcItem of vpcResources) {
+      for (const securityGroupItem of vpcItem.securityGroups ?? []) {
+        this.logger.info(`Processing rules for ${securityGroupItem.name} in VPC ${vpcItem.name}`);
+
+        // Process configured rules
+        const processedIngressRules = processSecurityGroupIngressRules(
+          this.vpcResources,
+          securityGroupItem,
+          subnetMap,
+          prefixListMap,
+        );
+        const allIngressRule = containsAllIngressRule(processedIngressRules);
+        const processedEgressRules = processSecurityGroupEgressRules(
+          this.vpcResources,
+          securityGroupItem,
+          subnetMap,
+          prefixListMap,
+        );
+
+        // Get VPC
+        const vpc = getVpc(vpcMap, vpcItem.name);
+
+        // Create security group
+        const securityGroup = this.createSecurityGroupItem(
+          vpcItem,
+          vpc,
+          securityGroupItem,
+          processedIngressRules,
+          processedEgressRules,
+          allIngressRule,
+        );
+        securityGroupMap.set(`${vpcItem.name}_${securityGroupItem.name}`, securityGroup);
+      }
+      // Create security group rules that reference other security groups
+      this.createSecurityGroupSgSources(vpcItem, subnetMap, prefixListMap, securityGroupMap);
+    }
+    return securityGroupMap;
+  }
+
+  /**
+   * Create security group rules that reference other security groups
+   * @param vpcItem
+   * @param subnetMap
+   * @param prefixListMap
+   * @param securityGroupMap
+   */
+  private createSecurityGroupSgSources(
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    subnetMap: Map<string, Subnet> | Map<string, IIpamSubnet>,
+    prefixListMap: Map<string, PrefixList> | Map<string, string>,
+    securityGroupMap: Map<string, SecurityGroup>,
+  ) {
+    for (const securityGroupItem of vpcItem.securityGroups ?? []) {
+      const securityGroup = getSecurityGroup(securityGroupMap, vpcItem.name, securityGroupItem.name) as SecurityGroup;
+      const ingressRules = processSecurityGroupSgIngressSources(
+        this.vpcResources,
+        vpcItem,
+        securityGroupItem,
+        subnetMap,
+        prefixListMap,
+        securityGroupMap,
+      );
+      const egressRules = processSecurityGroupSgEgressSources(
+        this.vpcResources,
+        vpcItem,
+        securityGroupItem,
+        subnetMap,
+        prefixListMap,
+        securityGroupMap,
+      );
+
+      // Create ingress rules
+      ingressRules.forEach(ingressRule => {
+        securityGroup.addIngressRule(ingressRule.logicalId, {
+          sourceSecurityGroup: ingressRule.rule.targetSecurityGroup,
+          ...ingressRule.rule,
+        });
+      });
+
+      // Create egress rules
+      egressRules.forEach(egressRule => {
+        securityGroup.addEgressRule(egressRule.logicalId, {
+          destinationSecurityGroup: egressRule.rule.targetSecurityGroup,
+          ...egressRule.rule,
+        });
+      });
+    }
+  }
+
+  /**
+   * Create a security group item
+   * @param vpcItem
+   * @param vpc
+   * @param securityGroupItem
+   * @param processedIngressRules
+   * @param processedEgressRules
+   * @param allIngressRule
+   * @returns
+   */
+  private createSecurityGroupItem(
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    vpc: Vpc | string,
+    securityGroupItem: SecurityGroupConfig,
+    processedIngressRules: SecurityGroupIngressRuleProps[],
+    processedEgressRules: SecurityGroupEgressRuleProps[],
+    allIngressRule: boolean,
+  ): SecurityGroup {
+    this.logger.info(`Adding Security Group ${securityGroupItem.name} in VPC ${vpcItem.name}`);
+    const securityGroup = new SecurityGroup(
+      this,
+      pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${securityGroupItem.name}Sg`),
+      {
+        securityGroupName: securityGroupItem.name,
+        securityGroupEgress: processedEgressRules,
+        securityGroupIngress: processedIngressRules,
+        description: securityGroupItem.description,
+        vpc: typeof vpc === 'object' ? vpc : undefined,
+        vpcId: typeof vpc === 'string' ? vpc : undefined,
+        tags: securityGroupItem.tags,
+      },
+    );
+
+    this.addSsmParameter({
+      logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(securityGroupItem.name)}SecurityGroup`),
+      parameterName: this.getSsmPath(SsmResourceType.SECURITY_GROUP, [vpcItem.name, securityGroupItem.name]),
+      stringValue: securityGroup.securityGroupId,
+    });
+
+    // AwsSolutions-EC23: The Security Group allows for 0.0.0.0/0 or ::/0 inbound access.
+    if (allIngressRule) {
+      NagSuppressions.addResourceSuppressions(securityGroup, [
+        { id: 'AwsSolutions-EC23', reason: 'User defined an all ingress rule in configuration.' },
+      ]);
+    }
+    return securityGroup;
   }
 }
