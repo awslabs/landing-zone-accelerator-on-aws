@@ -828,6 +828,7 @@ exports[`BootstrapStack Construct(BootstrapStack):  Snapshot Test 1`] = `
         },
       },
       "Properties": {
+        "AccessControl": "Private",
         "BucketEncryption": {
           "ServerSideEncryptionConfiguration": [
             {
