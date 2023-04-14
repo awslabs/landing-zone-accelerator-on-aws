@@ -1849,7 +1849,7 @@ export class AwsConfigRuleSet implements t.TypeOf<typeof SecurityConfigTypes.aws
  * @example
  * ```
  * awsConfig:
- *   enableConfigurationRecorder: true
+ *   enableConfigurationRecorder: false
  *   ** enableDeliveryChannel DEPRECATED
  *   enableDeliveryChannel: true
  *   overrideExisting: false
@@ -1875,7 +1875,7 @@ export class AwsConfig implements t.TypeOf<typeof SecurityConfigTypes.awsConfig>
    *
    * ConfigurationRecorder resource describes the AWS resource types for which AWS Config records configuration changes. The configuration recorder stores the configurations of the supported resources in your account as configuration items.
    */
-  readonly enableConfigurationRecorder = true;
+  readonly enableConfigurationRecorder = false;
   /**
    * Indicates whether delivery channel enabled.
    *
