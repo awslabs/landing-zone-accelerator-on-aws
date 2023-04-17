@@ -24,6 +24,7 @@ new PolicyAttachment(stack, 'PolicyAttachment', {
   policyId: 'policyId',
   targetId: 'targetId',
   type: PolicyType.SERVICE_CONTROL_POLICY,
+  strategy: 'deny-list',
   configPolicyNames: ['AcceleratorGuardrails1', 'AcceleratorGuardrails2'],
   acceleratorPrefix: 'AWSAccelerator',
   kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),

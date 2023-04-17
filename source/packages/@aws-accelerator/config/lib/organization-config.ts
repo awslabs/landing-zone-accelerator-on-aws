@@ -47,6 +47,7 @@ export abstract class OrganizationConfigTypes {
     description: t.nonEmptyString,
     policy: t.nonEmptyString,
     type: t.enums('Type', ['awsManaged', 'customerManaged'], 'Value should be a Service Control Policy Type'),
+    strategy: t.optional(t.enums('Type', ['deny-list', 'allow-list'], 'Defines SCP strategy. Default: deny-list')),
     deploymentTargets: t.deploymentTargets,
   });
 
@@ -210,6 +211,11 @@ export abstract class ServiceControlPolicyConfig
    * Service control policy deployment targets
    */
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
+  /**
+   * Service control policy strategy.
+   * https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps_strategies.html
+   */
+  readonly strategy: string = 'deny-list';
 }
 
 /**
@@ -367,6 +373,7 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
    *       groups or log streams.
    *     policy: service-control-policies/deny-delete-vpc-flow-logs.json
    *     type: customerManaged
+   *     strategy: deny-list # defines SCP strategy - deny-list or allow-list. See https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps_strategies.html
    *     deploymentTargets:
    *       organizationalUnits:
    *         - Security

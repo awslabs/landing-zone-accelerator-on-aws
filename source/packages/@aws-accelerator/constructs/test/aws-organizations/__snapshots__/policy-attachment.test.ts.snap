@@ -150,6 +150,7 @@ exports[`PolicyAttachment Construct(PolicyAttachment):  Snapshot Test 1`] = `
         },
         "policyId": "policyId",
         "policyTagKey": "AWSAcceleratorManaged",
+        "strategy": "deny-list",
         "targetId": "targetId",
         "type": "SERVICE_CONTROL_POLICY",
         "uuid": "REPLACED-UUID",

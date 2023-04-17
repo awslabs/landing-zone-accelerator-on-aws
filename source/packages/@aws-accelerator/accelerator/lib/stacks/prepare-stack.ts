@@ -702,6 +702,7 @@ export class PrepareStack extends AcceleratorStack {
     const serviceControlPolicies: {
       name: string;
       targetType: scpTargetType;
+      strategy: string;
       targets: { name: string; id: string }[];
     }[] = [];
     for (const scpItem of this.props.organizationConfig.serviceControlPolicies) {
@@ -712,9 +713,11 @@ export class PrepareStack extends AcceleratorStack {
         );
 
         if (targets.length > 0) {
+          const strategy: string = scpItem.strategy ? scpItem.strategy : 'deny-list';
           serviceControlPolicies.push({
             name: scpItem.name,
             targetType: 'ou',
+            strategy,
             targets,
           });
         }
@@ -732,9 +735,11 @@ export class PrepareStack extends AcceleratorStack {
         });
 
         if (targets.length > 0) {
+          const strategy: string = scpItem.strategy ? scpItem.strategy : 'deny-list';
           serviceControlPolicies.push({
             name: scpItem.name,
             targetType: 'account',
+            strategy,
             targets,
           });
         }
