@@ -71,6 +71,33 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::IAM::ServiceLinkedRole",
     },
+    "AllowList6FC5040C": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomOrganizationsCreatePolicyCustomResourceProviderLogGroup019B74A9",
+        "enablePolicyTypeScpB4BC96BE",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomOrganizationsCreatePolicyCustomResourceProviderHandler7A188619",
+            "Arn",
+          ],
+        },
+        "bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+        "description": "This SCP uses "allow-list" strategy.
+",
+        "key": "REPLACED-JSON-PATH.json",
+        "name": "AllowList",
+        "partition": "aws",
+        "policyTagKey": "AWSAcceleratorManaged",
+        "strategy": "allow-list",
+        "type": "SERVICE_CONTROL_POLICY",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::CreatePolicy",
+      "UpdateReplacePolicy": "Delete",
+    },
     "AttachAcceleratorGuardrails1Infrastructure84C16E51": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
@@ -125,6 +152,37 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
         },
         "policyTagKey": "AWSAcceleratorManaged",
         "targetId": "444444444444",
+        "type": "SERVICE_CONTROL_POLICY",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::AttachPolicy",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AttachAllowListSecureWorkloadsA2619BAE": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "AllowList6FC5040C",
+        "CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomOrganizationsAttachPolicyCustomResourceProviderHandlerB3233202",
+            "Arn",
+          ],
+        },
+        "configPolicyNames": [
+          "AllowList",
+        ],
+        "partition": {
+          "Ref": "AWS::Partition",
+        },
+        "policyId": {
+          "Ref": "AllowList6FC5040C",
+        },
+        "policyTagKey": "AWSAcceleratorManaged",
+        "strategy": "allow-list",
+        "targetId": "ou-asdf-33333333",
         "type": "SERVICE_CONTROL_POLICY",
         "uuid": "REPLACED-UUID",
       },

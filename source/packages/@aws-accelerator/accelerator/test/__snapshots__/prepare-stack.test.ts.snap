@@ -3987,7 +3987,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         },
         "logArchiveAccountEmail": "logarchive-account@example.com",
         "managementAccountEmail": "management-account@example.com",
-        "organizationsConfigS3Key": "e2d344b253b923d66432493f819482f9d76b616377cb89294e5a1370ff29f41b.yaml",
+        "organizationsConfigS3Key": "f041192e85508146304663e03a7290e74c9b765850b286388201977a065879de.yaml",
         "partition": "aws",
         "stackName": "AWSAccelerator-PrepareStack-111111111111-us-east-1",
         "uuid": "REPLACED-UUID",
@@ -4322,6 +4322,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "serviceControlPolicies": [
           {
             "name": "AcceleratorGuardrails1",
+            "strategy": "deny-list",
             "targetType": "ou",
             "targets": [
               {
@@ -4332,11 +4333,23 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
           },
           {
             "name": "AcceleratorGuardrails2",
+            "strategy": "deny-list",
             "targetType": "account",
             "targets": [
               {
                 "id": "444444444444",
                 "name": "SharedServices",
+              },
+            ],
+          },
+          {
+            "name": "AllowList",
+            "strategy": "allow-list",
+            "targetType": "ou",
+            "targets": [
+              {
+                "id": "ou-asdf-33333333",
+                "name": "SecureWorkloads",
               },
             ],
           },
