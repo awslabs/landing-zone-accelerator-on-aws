@@ -191,7 +191,6 @@ export abstract class Accelerator {
       });
       assumeRolePlugin.init(PluginHost.instance);
     }
-    let credentialExpiration = new Date(+new Date() + 60000 * 30);
 
     //
     // When an account and region is specified, execute as single stack
@@ -294,15 +293,6 @@ export abstract class Accelerator {
         await Promise.all(promises);
         promises = [];
       }
-      assumeRolePlugin = await this.initializeAssumeRolePlugin({
-        region: props.region ?? globalRegion,
-        assumeRoleName: globalConfig.managementAccountAccessRole,
-        partition: props.partition,
-        caBundlePath: props.caBundlePath,
-        credentials: managementAccountCredentials,
-      });
-      assumeRolePlugin.init(PluginHost.instance);
-      credentialExpiration = new Date(+new Date() + 60000 * 30);
 
       for (const region of globalConfig.enabledRegions) {
         for (const account of accountsConfig.getAccounts(props.enableSingleAccountMode)) {
@@ -338,17 +328,6 @@ export abstract class Accelerator {
             }
           }
 
-          if (new Date() > credentialExpiration) {
-            assumeRolePlugin = await this.initializeAssumeRolePlugin({
-              region: props.region ?? globalRegion,
-              assumeRoleName: globalConfig.managementAccountAccessRole,
-              partition: props.partition,
-              caBundlePath: props.caBundlePath,
-              credentials: managementAccountCredentials,
-            });
-            assumeRolePlugin.init(PluginHost.instance);
-            credentialExpiration = new Date(+new Date() + 60000 * 30);
-          }
           if (promises.length >= 100) {
             await Promise.all(promises);
             promises = [];
@@ -548,17 +527,6 @@ export abstract class Accelerator {
           if (promises.length >= maxStacks) {
             await Promise.all(promises);
             promises = [];
-            if (new Date() > credentialExpiration) {
-              assumeRolePlugin = await this.initializeAssumeRolePlugin({
-                region: props.region ?? globalRegion,
-                assumeRoleName: globalConfig.managementAccountAccessRole,
-                partition: props.partition,
-                caBundlePath: props.caBundlePath,
-                credentials: managementAccountCredentials,
-              });
-              assumeRolePlugin.init(PluginHost.instance);
-              credentialExpiration = new Date(+new Date() + 60000 * 30);
-            }
           }
         }
       }
@@ -597,18 +565,6 @@ export abstract class Accelerator {
         await Promise.all(promises);
       }
 
-      if (new Date() > credentialExpiration) {
-        assumeRolePlugin = await this.initializeAssumeRolePlugin({
-          region: props.region ?? globalRegion,
-          assumeRoleName: globalConfig.managementAccountAccessRole,
-          partition: props.partition,
-          caBundlePath: props.caBundlePath,
-          credentials: managementAccountCredentials,
-        });
-        assumeRolePlugin.init(PluginHost.instance);
-        credentialExpiration = new Date(+new Date() + 60000 * 30);
-      }
-
       for (const region of globalConfig.enabledRegions) {
         for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
           const accountId = accountsConfig.getAccountId(account.name);
@@ -636,17 +592,6 @@ export abstract class Accelerator {
             if (promises.length >= maxStacks) {
               await Promise.all(promises);
               promises = [];
-              if (new Date() > credentialExpiration) {
-                assumeRolePlugin = await this.initializeAssumeRolePlugin({
-                  region: props.region ?? globalRegion,
-                  assumeRoleName: globalConfig.managementAccountAccessRole,
-                  partition: props.partition,
-                  caBundlePath: props.caBundlePath,
-                  credentials: managementAccountCredentials,
-                });
-                assumeRolePlugin.init(PluginHost.instance);
-                credentialExpiration = new Date(+new Date() + 60000 * 30);
-              }
             }
           }
         }
