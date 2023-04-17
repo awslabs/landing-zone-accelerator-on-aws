@@ -86,6 +86,7 @@ export class PipelineStack extends cdk.Stack {
     const toolkitRole = new cdk.aws_iam.Role(this, 'AdminCdkToolkitRole', {
       assumedBy: new cdk.aws_iam.ServicePrincipal('codebuild.amazonaws.com'),
       managedPolicies: [cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess')],
+      maxSessionDuration: cdk.Duration.hours(4),
     });
 
     new pipeline.AcceleratorPipeline(this, 'Pipeline', {
