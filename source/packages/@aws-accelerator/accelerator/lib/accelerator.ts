@@ -25,6 +25,7 @@ import {
   GetParameterCommandInput,
   GetParameterCommandOutput,
 } from '@aws-sdk/client-ssm';
+import { S3Client, HeadBucketCommand } from '@aws-sdk/client-s3';
 
 import { AccountsConfig, GlobalConfig } from '@aws-accelerator/config';
 import { createLogger, throttlingBackOff } from '@aws-accelerator/utils';
@@ -312,6 +313,7 @@ export abstract class Accelerator {
               region,
               props.partition,
               globalConfig.managementAccountAccessRole,
+              globalConfig?.centralizeCdkBuckets?.enable || globalConfig?.cdkOptions?.centralizeBuckets,
             );
             if (needsBootstrapping) {
               await delay(500);
@@ -733,7 +735,75 @@ async function bootstrapRequired(
   region: string,
   partition: string,
   managementAccountAccessRole: string,
+  centralizedBuckets: boolean,
 ): Promise<boolean> {
+  const crossAccountCredentials = await getCrossAccountCredentials(
+    accountId,
+    region,
+    partition,
+    managementAccountAccessRole,
+  );
+
+  if (!centralizedBuckets) {
+    logger.info(`Checking if workload account CDK asset bucket exists in account ${accountId}`);
+    const s3Client = await getCrossAccountS3Client(region, crossAccountCredentials);
+    const assetBucketExists = await doesCdkAssetBucketExist(s3Client, accountId, region);
+    if (!assetBucketExists) {
+      return true;
+    }
+  }
+
+  const bootstrapVersionName = ' /cdk-bootstrap/accel/version';
+  const ssmClient = await getCrossAccountSsmClient(region, crossAccountCredentials);
+  const bootstrapVersionValue = getSsmParameterValue(bootstrapVersionName, ssmClient);
+  if (bootstrapVersionValue && Number(bootstrapVersionValue) >= BootstrapVersion) {
+    logger.info(`Skipping bootstrap for account-region: ${accountId}-${region}`);
+    return false;
+  }
+
+  return true;
+}
+
+async function doesCdkAssetBucketExist(s3Client: S3Client, accountId: string, region: string) {
+  const commandInput = {
+    Bucket: `cdk-accel-assets-${accountId}-${region}`,
+  };
+  try {
+    await throttlingBackOff(() => s3Client.send(new HeadBucketCommand(commandInput)));
+    return true;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (e: any) {
+    logger.info(`CDK Asset Bucket not found for account ${accountId}, attempting to re-bootstrap`);
+    return false;
+  }
+}
+
+async function getSsmParameterValue(parameterName: string, ssmClient: SSMClient) {
+  const parameterInput: GetParameterCommandInput = {
+    Name: parameterName,
+  };
+  let parameterOutput: GetParameterCommandOutput | undefined = undefined;
+
+  try {
+    parameterOutput = await throttlingBackOff(() => ssmClient.send(new GetParameterCommand(parameterInput)));
+    return parameterOutput.Parameter?.Value ?? '';
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (e: any) {
+    if (e.name === 'ParameterNotFound') {
+      logger.info(`Value not found for SSM Parameter: ${parameterName}`);
+      return '';
+    }
+    logger.error(JSON.stringify(e));
+    throw new Error(e.message);
+  }
+}
+
+async function getCrossAccountCredentials(
+  accountId: string,
+  region: string,
+  partition: string,
+  managementAccountAccessRole: string,
+) {
   const stsClient = new STSClient({ region: region });
   const stsParams: AssumeRoleCommandInput = {
     RoleArn: `arn:${partition}:iam::${accountId}:role/${managementAccountAccessRole}`,
@@ -743,15 +813,22 @@ async function bootstrapRequired(
   let assumeRoleCredential: AssumeRoleCommandOutput | undefined = undefined;
   try {
     assumeRoleCredential = await throttlingBackOff(() => stsClient.send(new AssumeRoleCommand(stsParams)));
+    if (assumeRoleCredential) {
+      return assumeRoleCredential;
+    } else {
+      throw new Error(
+        `Error assuming role ${managementAccountAccessRole} in account ${accountId} for bootstrap checks`,
+      );
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     logger.error(JSON.stringify(e));
     throw new Error(e.message);
   }
-  const ssmParams: GetParameterCommandInput = {
-    Name: ' /cdk-bootstrap/accel/version',
-  };
-  const ssmClient = new SSMClient({
+}
+
+async function getCrossAccountSsmClient(region: string, assumeRoleCredential: AssumeRoleCommandOutput) {
+  return new SSMClient({
     credentials: {
       accessKeyId: assumeRoleCredential.Credentials!.AccessKeyId!,
       secretAccessKey: assumeRoleCredential.Credentials!.SecretAccessKey!,
@@ -759,22 +836,15 @@ async function bootstrapRequired(
     },
     region: region,
   });
+}
 
-  let parameter: GetParameterCommandOutput | undefined = undefined;
-  try {
-    parameter = await throttlingBackOff(() => ssmClient.send(new GetParameterCommand(ssmParams)));
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (e: any) {
-    if (e.name === 'ParameterNotFound') {
-      return true;
-    }
-    logger.error(JSON.stringify(e));
-    throw new Error(e.message);
-  }
-  if (parameter.Parameter && Number(parameter.Parameter.Value) >= BootstrapVersion) {
-    logger.info(`Skipping bootstrap for account-region: ${accountId}-${region}`);
-    return false;
-  }
-
-  return true;
+async function getCrossAccountS3Client(region: string, assumeRoleCredential: AssumeRoleCommandOutput) {
+  return new S3Client({
+    credentials: {
+      accessKeyId: assumeRoleCredential.Credentials!.AccessKeyId!,
+      secretAccessKey: assumeRoleCredential.Credentials!.SecretAccessKey!,
+      sessionToken: assumeRoleCredential.Credentials?.SessionToken,
+    },
+    region: region,
+  });
 }

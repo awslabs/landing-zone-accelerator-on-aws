@@ -39,7 +39,6 @@ error.log
 #
 
 # ELB Root Account References https://docs.aws.amazon.com/elasticloadbalancing/latest/application/enable-access-logging.html#attach-bucket-policy
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:47
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:48
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:49
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:50
@@ -65,11 +64,12 @@ source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:69
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:70
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:71
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:72
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:73
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:671
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:672
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:673
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:696
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:697
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:698
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:699
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:731
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:732
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:733
@@ -81,8 +81,10 @@ source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:681
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:682
 
 # Accelerator specific assume role declaration
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:741
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:742
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:833
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:834
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:844
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:845
 
 # Accelerator specific assume role declaration
 source/packages/@aws-accelerator/constructs/lib/aws-directory-service/share-directory/index.ts:143
