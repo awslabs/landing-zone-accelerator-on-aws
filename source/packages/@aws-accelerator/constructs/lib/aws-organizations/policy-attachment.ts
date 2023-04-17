@@ -25,6 +25,7 @@ export interface PolicyAttachmentProps {
   readonly policyId: string;
   readonly targetId?: string;
   readonly type: PolicyType;
+  readonly strategy?: string;
   readonly configPolicyNames: string[];
   readonly acceleratorPrefix: string;
   /**
@@ -45,6 +46,7 @@ export class PolicyAttachment extends Construct {
   public readonly policyId: string;
   public readonly targetId: string | undefined;
   public readonly type: PolicyType;
+  public readonly strategy?: string;
 
   constructor(scope: Construct, id: string, props: PolicyAttachmentProps) {
     super(scope, id);
@@ -52,6 +54,7 @@ export class PolicyAttachment extends Construct {
     this.policyId = props.policyId;
     this.targetId = props.targetId;
     this.type = props.type;
+    this.strategy = props.strategy;
 
     //
     // Function definition for the custom resource
@@ -87,6 +90,7 @@ export class PolicyAttachment extends Construct {
         policyId: props.policyId,
         targetId: props.targetId,
         type: props.type,
+        strategy: props.strategy,
         configPolicyNames: props.configPolicyNames,
         policyTagKey: `${props.acceleratorPrefix}Managed`,
       },

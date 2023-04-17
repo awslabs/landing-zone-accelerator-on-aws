@@ -27,6 +27,7 @@ new Policy(stack, 'Policy', {
   partition: 'aws',
   description: 'Testing Policy construct',
   type: PolicyType.SERVICE_CONTROL_POLICY,
+  strategy: 'deny-list',
   acceleratorPrefix: 'AWSAccelerator',
   tags: [
     { Key: 'name', Value: 'TestPolicy' },

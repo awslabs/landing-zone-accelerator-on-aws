@@ -175,6 +175,7 @@ exports[`Policy Construct(Policy):  Snapshot Test 1`] = `
         "name": "TestPolicy",
         "partition": "aws",
         "policyTagKey": "AWSAcceleratorManaged",
+        "strategy": "deny-list",
         "tags": [
           {
             "Key": "name",

@@ -31,6 +31,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const policyId: string = event.ResourceProperties['policyId'];
   const targetId: string = event.ResourceProperties['targetId'] ?? undefined;
   const type: string = event.ResourceProperties['type'];
+  const strategy: string = event.ResourceProperties['strategy'];
   const partition: string = event.ResourceProperties['partition'];
   const configPolicyNames: string[] = event.ResourceProperties['configPolicyNames'];
   const policyTagKey: string = event.ResourceProperties['policyTagKey'];
@@ -58,6 +59,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       //
       // Check if already exists, update and return the ID
       //
+      let policyAttached = false;
+      let fullAwsAccessPolicyAttached = false;
       do {
         const page: AWS.Organizations.ListPoliciesForTargetResponse = await getListPoliciesForTarget(
           organizationsClient,
@@ -68,10 +71,12 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         for (const policy of page.Policies ?? []) {
           if (policy.Id === policyId) {
             console.log('Policy already attached');
-            return {
-              PhysicalResourceId: `${policyId}_${targetId}`,
-              Status: 'SUCCESS',
-            };
+            policyAttached = true;
+            continue;
+          }
+          if (policy.Id === 'p-FullAWSAccess') {
+            console.log('FullAWSAccess policy attached');
+            fullAwsAccessPolicyAttached = true;
           }
         }
         nextToken = page.NextToken;
@@ -80,9 +85,27 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       //
       // Create if not found
       //
-      await throttlingBackOff(() =>
-        organizationsClient.attachPolicy({ PolicyId: policyId, TargetId: targetId }).promise(),
-      );
+      if (!policyAttached) {
+        await throttlingBackOff(() =>
+          organizationsClient.attachPolicy({ PolicyId: policyId, TargetId: targetId }).promise(),
+        );
+      }
+
+      // if SCP strategy is allow-list, then FullAWSAccess policy should be detached
+      if (strategy === 'allow-list' && fullAwsAccessPolicyAttached) {
+        console.log('detaching FullAWSAccess policy because the strategy is allow-list');
+        await throttlingBackOff(() =>
+          organizationsClient.detachPolicy({ PolicyId: 'p-FullAWSAccess', TargetId: targetId }).promise(),
+        );
+      }
+
+      // if SCP strategy is changed from allow-list to deny list, then FullAWSAccess policy should be attached
+      if (strategy === 'deny-list' && !fullAwsAccessPolicyAttached) {
+        console.log('attaching FullAWSAccess policy because the strategy is deny-list');
+        await throttlingBackOff(() =>
+          organizationsClient.detachPolicy({ PolicyId: 'p-FullAWSAccess', TargetId: targetId }).promise(),
+        );
+      }
 
       return {
         PhysicalResourceId: `${policyId}_${targetId}`,
