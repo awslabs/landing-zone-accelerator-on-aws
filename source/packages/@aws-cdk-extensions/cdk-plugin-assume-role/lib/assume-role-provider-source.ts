@@ -32,6 +32,7 @@ export interface AssumeRoleProviderSourceProps {
 export class AssumeRoleProviderSource implements CredentialProviderSource {
   readonly name = this.props.name;
   private readonly cache: { [accountId: string]: AWS.Credentials } = {};
+  private readonly cacheExpiration: { [accountId: string]: Date } = {};
 
   constructor(private readonly props: AssumeRoleProviderSourceProps) {}
 
@@ -44,7 +45,7 @@ export class AssumeRoleProviderSource implements CredentialProviderSource {
   }
 
   async getProvider(accountId: string): Promise<AWS.Credentials> {
-    if (this.cache[accountId]) {
+    if (this.cache[accountId] && new Date() < this.cacheExpiration[accountId]) {
       return this.cache[accountId];
     }
 
@@ -65,6 +66,7 @@ export class AssumeRoleProviderSource implements CredentialProviderSource {
       secretAccessKey: credentials.SecretAccessKey,
       sessionToken: credentials.SessionToken,
     });
+    this.cacheExpiration[accountId] = new Date(+new Date() + 60000 * 30);
     return this.cache[accountId];
   }
 
