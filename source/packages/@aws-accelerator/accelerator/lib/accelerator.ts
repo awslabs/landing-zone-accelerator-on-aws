@@ -700,7 +700,7 @@ async function bootstrapRequired(
 
   const bootstrapVersionName = ' /cdk-bootstrap/accel/version';
   const ssmClient = await getCrossAccountSsmClient(region, crossAccountCredentials);
-  const bootstrapVersionValue = getSsmParameterValue(bootstrapVersionName, ssmClient);
+  const bootstrapVersionValue = await getSsmParameterValue(bootstrapVersionName, ssmClient);
   if (bootstrapVersionValue && Number(bootstrapVersionValue) >= BootstrapVersion) {
     logger.info(`Skipping bootstrap for account-region: ${accountId}-${region}`);
     return false;
