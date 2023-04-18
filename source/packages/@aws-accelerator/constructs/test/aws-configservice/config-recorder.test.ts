@@ -31,6 +31,7 @@ new ConfigServiceRecorder(stack, 'TestConfigServiceRecorder', {
   cloudwatchKmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
   lambdaKmsKey: new cdk.aws_kms.Key(stack, 'LambdaKey', {}),
   partition: 'aws',
+  acceleratorPrefix: 'AWSAccelerator',
 });
 
 /**
