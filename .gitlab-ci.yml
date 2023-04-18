@@ -93,7 +93,7 @@ sonar-test:
     SCANNER_VERSION: 4.7.0.2747
     SCANNER_ZIP_FILE: sonar-scanner-cli-${SCANNER_VERSION}-linux.zip
     SECRET_ID: sonarqube-token
-    SONAR_HOST_URL: https://sonarqube.nightswatch.dashboard.solutionsbuilder.aws.dev
+    SONAR_HOST_URL: https://sonarqube.tools.solutions.aws.dev
     SONAR_STATUS_URL: ${SONAR_HOST_URL}/api/qualitygates/project_status?projectKey=${SONAR_PRJ_KEY}
     SONAR_PRJ_KEY: com.amazon.aws:landing-zone-accelerator-on-aws
     SONAR_PRJ_SETTINGS: /tmp/customized-sonar-project.properties
