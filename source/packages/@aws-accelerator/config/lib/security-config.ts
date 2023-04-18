@@ -1889,6 +1889,13 @@ export class AwsConfig implements t.TypeOf<typeof SecurityConfigTypes.awsConfig>
    * existing config recorder, even if config recording is turned off
    * The Landing Zone Accelerator will override the settings in all configured
    * accounts and regions
+   * ** Do not enable this setting if you have deployed LZA
+   * ** successfully with enableConfigurationRecorder set to true
+   * ** and overrideExisting either unset or set to false
+   * ** Doing so will cause a resource conflict
+   * When the overrideExisting property is enabled
+   * ensure that any scp's are not blocking the passRole
+   * iam permission for the iam role name {acceleratorPrefix}Config
    */
   readonly overrideExisting: boolean | undefined;
   /**

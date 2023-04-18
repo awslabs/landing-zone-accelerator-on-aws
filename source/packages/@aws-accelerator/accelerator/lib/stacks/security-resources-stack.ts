@@ -516,18 +516,6 @@ export class SecurityResourcesStack extends AcceleratorStack {
         }),
       );
 
-      configRecorderRole.addToPolicy(
-        new cdk.aws_iam.PolicyStatement({
-          sid: 'iam',
-          effect: cdk.aws_iam.Effect.ALLOW,
-          actions: ['iam:PassRole'],
-          resources: ['*'],
-          conditions: {
-            StringEquals: { 'iam:PassedToService': 'config.amazonaws.com' },
-          },
-        }),
-      );
-
       // AwsSolutions-IAM5
       NagSuppressions.addResourceSuppressionsByPath(
         this,
@@ -554,34 +542,32 @@ export class SecurityResourcesStack extends AcceleratorStack {
             includeGlobalResourceTypes: true,
           },
         });
-        // add removal policy in order to remove resource in future release
-        this.configRecorder.applyRemovalPolicy(cdk.RemovalPolicy.RETAIN);
 
-        const deliveryChannel = new cdk.aws_config.CfnDeliveryChannel(this, 'ConfigDeliveryChannel', {
+        this.deliveryChannel = new cdk.aws_config.CfnDeliveryChannel(this, 'ConfigDeliveryChannel', {
           s3BucketName: `${this.acceleratorResourceNames.bucketPrefixes.centralLogs}-${this.logArchiveAccountId}-${this.props.centralizedLoggingRegion}`,
           configSnapshotDeliveryProperties: {
             deliveryFrequency: 'One_Hour',
           },
         });
-        // add removal policy in order to remove resource in future release
-        deliveryChannel.applyRemovalPolicy(cdk.RemovalPolicy.RETAIN);
       }
 
-      const configServiceUpdater = new ConfigServiceRecorder(this, 'ConfigRecorderDeliveryChannel', {
-        s3BucketName: `${this.acceleratorResourceNames.bucketPrefixes.centralLogs}-${this.logArchiveAccountId}-${this.props.centralizedLoggingRegion}`,
-        s3BucketKmsKey: this.centralLogS3Key,
-        logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-        configRecorderRoleArn: configRecorderRole.roleArn,
-        cloudwatchKmsKey: this.cloudwatchKey,
-        lambdaKmsKey: this.lambdaKey,
-        partition: this.partition,
-      });
+      if (this.props.securityConfig.awsConfig.overrideExisting) {
+        const configServiceUpdater = new ConfigServiceRecorder(this, 'ConfigRecorderDeliveryChannel', {
+          s3BucketName: `${this.acceleratorResourceNames.bucketPrefixes.centralLogs}-${this.logArchiveAccountId}-${this.props.centralizedLoggingRegion}`,
+          s3BucketKmsKey: this.centralLogS3Key,
+          logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+          configRecorderRoleArn: configRecorderRole.roleArn,
+          cloudwatchKmsKey: this.cloudwatchKey,
+          lambdaKmsKey: this.lambdaKey,
+          partition: this.partition,
+          acceleratorPrefix: this.props.prefixes.accelerator,
+        });
 
-      if (this.configRecorder && this.deliveryChannel) {
-        configServiceUpdater.node.addDependency(this.configRecorder);
-        configServiceUpdater.node.addDependency(this.deliveryChannel);
+        if (this.configRecorder && this.deliveryChannel) {
+          configServiceUpdater.node.addDependency(this.configRecorder);
+          configServiceUpdater.node.addDependency(this.deliveryChannel);
+        }
       }
-
       // AwsSolutions-IAM4
       NagSuppressions.addResourceSuppressionsByPath(
         this,

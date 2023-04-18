@@ -44,6 +44,10 @@ export interface ConfigServiceRecorderProps {
    * Partition
    */
   readonly partition: string;
+  /**
+   * Accelerator prefix
+   */
+  readonly acceleratorPrefix: string;
 }
 
 /**
@@ -57,44 +61,51 @@ export class ConfigServiceRecorder extends Construct {
 
     const CONFIGSERVICE_RECORDER = 'Custom::ConfigServiceRecorder';
 
-    const configServicePolicy = new cdk.aws_iam.PolicyStatement({
-      sid: 'configService',
-      effect: cdk.aws_iam.Effect.ALLOW,
-      actions: [
-        'config:DeleteDeliveryChannel',
-        'config:DescribeConfigurationRecorders',
-        'config:DescribeDeliveryChannelStatus',
-        'config:PutConfigurationRecorder',
-        'config:PutDeliveryChannel',
-        'config:StartConfigurationRecorder',
-        'config:StopConfigurationRecorder',
+    const configRecorderFunctionPolicies = new cdk.aws_iam.PolicyDocument({
+      statements: [
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'configService',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: [
+            'config:DeleteDeliveryChannel',
+            'config:DescribeConfigurationRecorders',
+            'config:DescribeDeliveryChannelStatus',
+            'config:PutConfigurationRecorder',
+            'config:PutDeliveryChannel',
+            'config:StartConfigurationRecorder',
+            'config:StopConfigurationRecorder',
+          ],
+          resources: ['*'],
+        }),
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'iam',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['iam:PassRole'],
+          resources: [props.configRecorderRoleArn],
+        }),
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'sts',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['sts:AssumeRole'],
+          resources: [props.configRecorderRoleArn],
+        }),
+        new cdk.aws_iam.PolicyStatement({
+          sid: 's3',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['s3:PutObject*', 's3:GetBucketACL'],
+          resources: [
+            `arn:${props.partition}:s3:::${props.s3BucketName}`,
+            `arn:${props.partition}:s3:::${props.s3BucketName}/*`,
+          ],
+        }),
       ],
-      resources: ['*'],
     });
 
-    const passRolePolicy = new cdk.aws_iam.PolicyStatement({
-      sid: 'iam',
-      effect: cdk.aws_iam.Effect.ALLOW,
-      actions: ['iam:PassRole'],
-      resources: [props.configRecorderRoleArn],
-    });
-
-    const assumeRolePolicy = new cdk.aws_iam.PolicyStatement({
-      sid: 'sts',
-      effect: cdk.aws_iam.Effect.ALLOW,
-      actions: ['sts:AssumeRole'],
-      resources: [props.configRecorderRoleArn],
-    });
-
-    //needed in order to configure s3 delivery channel
-    const s3Policy = new cdk.aws_iam.PolicyStatement({
-      sid: 's3',
-      effect: cdk.aws_iam.Effect.ALLOW,
-      actions: ['s3:PutObject*', 's3:GetBucketACL'],
-      resources: [
-        `arn:${props.partition}:s3:::${props.s3BucketName}`,
-        `arn:${props.partition}:s3:::${props.s3BucketName}/*`,
-      ],
+    const lambdaRole = new cdk.aws_iam.Role(this, 'ConfigServiceRecorderFunctionRole', {
+      roleName: `${props.acceleratorPrefix}-Config`,
+      assumedBy: new cdk.aws_iam.ServicePrincipal('lambda.amazonaws.com'),
+      managedPolicies: [cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole')],
+      inlinePolicies: { configRecorder: configRecorderFunctionPolicies },
     });
 
     const lambdaFunction = new cdk.aws_lambda.Function(this, 'ConfigServiceRecorderFunction', {
@@ -104,7 +115,7 @@ export class ConfigServiceRecorder extends Construct {
       timeout: cdk.Duration.minutes(5),
       description: 'Create/Update Config Recorder',
       environmentEncryption: props.lambdaKmsKey,
-      initialPolicy: [configServicePolicy, s3Policy, passRolePolicy, assumeRolePolicy],
+      role: lambdaRole,
     });
 
     new cdk.aws_logs.LogGroup(this, `${lambdaFunction.node.id}LogGroup`, {
