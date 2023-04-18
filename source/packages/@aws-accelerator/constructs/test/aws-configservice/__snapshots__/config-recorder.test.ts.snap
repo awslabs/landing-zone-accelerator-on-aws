@@ -98,8 +98,7 @@ exports[`ConfigServiceRecorder Construct(ConfigServiceDeliveryChannel):  Snapsho
     },
     "TestConfigServiceRecorderConfigServiceRecorderFunction78E08DB1": {
       "DependsOn": [
-        "TestConfigServiceRecorderConfigServiceRecorderFunctionServiceRoleDefaultPolicy25772EAF",
-        "TestConfigServiceRecorderConfigServiceRecorderFunctionServiceRole5E42F9A8",
+        "TestConfigServiceRecorderConfigServiceRecorderFunctionRoleAEDBB1F8",
       ],
       "Properties": {
         "Code": {
@@ -116,7 +115,7 @@ exports[`ConfigServiceRecorder Construct(ConfigServiceDeliveryChannel):  Snapsho
         },
         "Role": {
           "Fn::GetAtt": [
-            "TestConfigServiceRecorderConfigServiceRecorderFunctionServiceRole5E42F9A8",
+            "TestConfigServiceRecorderConfigServiceRecorderFunctionRoleAEDBB1F8",
             "Arn",
           ],
         },
@@ -150,7 +149,7 @@ exports[`ConfigServiceRecorder Construct(ConfigServiceDeliveryChannel):  Snapsho
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "TestConfigServiceRecorderConfigServiceRecorderFunctionServiceRole5E42F9A8": {
+    "TestConfigServiceRecorderConfigServiceRecorderFunctionRoleAEDBB1F8": {
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -178,62 +177,57 @@ exports[`ConfigServiceRecorder Construct(ConfigServiceDeliveryChannel):  Snapsho
             ],
           },
         ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "TestConfigServiceRecorderConfigServiceRecorderFunctionServiceRoleDefaultPolicy25772EAF": {
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": [
-                "config:DeleteDeliveryChannel",
-                "config:DescribeConfigurationRecorders",
-                "config:DescribeDeliveryChannelStatus",
-                "config:PutConfigurationRecorder",
-                "config:PutDeliveryChannel",
-                "config:StartConfigurationRecorder",
-                "config:StopConfigurationRecorder",
-              ],
-              "Effect": "Allow",
-              "Resource": "*",
-              "Sid": "configService",
-            },
-            {
-              "Action": [
-                "s3:PutObject*",
-                "s3:GetBucketACL",
-              ],
-              "Effect": "Allow",
-              "Resource": [
-                "arn:aws:s3:::accelerator-central-logs",
-                "arn:aws:s3:::accelerator-central-logs/*",
-              ],
-              "Sid": "s3",
-            },
-            {
-              "Action": "iam:PassRole",
-              "Effect": "Allow",
-              "Resource": "arn:aws:iam::123456789012:role/TestRole",
-              "Sid": "iam",
-            },
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Resource": "arn:aws:iam::123456789012:role/TestRole",
-              "Sid": "sts",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "TestConfigServiceRecorderConfigServiceRecorderFunctionServiceRoleDefaultPolicy25772EAF",
-        "Roles": [
+        "Policies": [
           {
-            "Ref": "TestConfigServiceRecorderConfigServiceRecorderFunctionServiceRole5E42F9A8",
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "config:DeleteDeliveryChannel",
+                    "config:DescribeConfigurationRecorders",
+                    "config:DescribeDeliveryChannelStatus",
+                    "config:PutConfigurationRecorder",
+                    "config:PutDeliveryChannel",
+                    "config:StartConfigurationRecorder",
+                    "config:StopConfigurationRecorder",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "configService",
+                },
+                {
+                  "Action": "iam:PassRole",
+                  "Effect": "Allow",
+                  "Resource": "arn:aws:iam::123456789012:role/TestRole",
+                  "Sid": "iam",
+                },
+                {
+                  "Action": "sts:AssumeRole",
+                  "Effect": "Allow",
+                  "Resource": "arn:aws:iam::123456789012:role/TestRole",
+                  "Sid": "sts",
+                },
+                {
+                  "Action": [
+                    "s3:PutObject*",
+                    "s3:GetBucketACL",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    "arn:aws:s3:::accelerator-central-logs",
+                    "arn:aws:s3:::accelerator-central-logs/*",
+                  ],
+                  "Sid": "s3",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "configRecorder",
           },
         ],
+        "RoleName": "AWSAccelerator-Config",
       },
-      "Type": "AWS::IAM::Policy",
+      "Type": "AWS::IAM::Role",
     },
     "TestConfigServiceRecorderConfigServiceRecorderProviderframeworkonEventDE69D09A": {
       "DependsOn": [
