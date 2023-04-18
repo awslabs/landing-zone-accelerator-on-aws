@@ -164,6 +164,21 @@ export class ActiveDirectoryConfiguration extends Construct {
       }),
     );
 
+    // enforce using Instance Metadata Service Version 2 (IMDSv2)
+    // https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-service.html
+    const launchTemplate = new cdk.aws_ec2.CfnLaunchTemplate(
+      this,
+      pascalCase(`${props.managedActiveDirectoryName}LaunchTemplate`),
+      {
+        launchTemplateData: {
+          metadataOptions: {
+            httpTokens: 'httpTokens',
+            httpEndpoint: 'enabled',
+          },
+        },
+      },
+    );
+
     const instance = new cdk.aws_ec2.CfnInstance(this, pascalCase(`${props.managedActiveDirectoryName}Instance`), {
       instanceType: props.instanceType,
       iamInstanceProfile: role.roleName,
@@ -183,6 +198,10 @@ export class ActiveDirectoryConfiguration extends Construct {
       ],
       tags: [{ key: 'Name', value: pascalCase(`${props.managedActiveDirectoryName}-ConfiguringInstance`) }],
       disableApiTermination: props.enableTerminationProtection,
+      launchTemplate: {
+        version: launchTemplate.attrLatestVersionNumber,
+        launchTemplateName: launchTemplate.launchTemplateName,
+      },
     });
 
     instance.node.addDependency(keyPair);
