@@ -189,7 +189,7 @@
       "Condition": {
         "ArnNotLike": {
           "aws:PrincipalArn": [
-            "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+            "arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
           ]
         }
       }
@@ -202,7 +202,7 @@
       "Condition": {
         "StringNotEquals": {
           "aws:RequestedRegion": [
-            "ca-central-1",
+            "${HOME_REGION}",
             "us-east-1"
           ]
         },
@@ -270,11 +270,11 @@
       "Resource": "*",
       "Condition": {
         "StringNotEquals": {
-          "aws:RequestedRegion": "ca-central-1"
+          "aws:RequestedRegion": "${HOME_REGION}"
         },
         "ArnNotLike": {
           "aws:PrincipalARN": [
-            "arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
+            "arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}","arn:${PARTITION}:iam::*:role/AWSA*"
           ]
         }
       }

@@ -248,7 +248,7 @@
       "Condition": {
         "StringNotEquals": {
           "aws:RequestedRegion": [
-              "ca-central-1",
+              "${HOME_REGION}",
               "us-east-1",
               "us-east-2",
               "us-west-1",

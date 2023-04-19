@@ -1,3 +1,4 @@
+homeRegion: &HOME_REGION ca-central-1
 policySets:
   - deploymentTargets:
       organizationalUnits:
@@ -96,7 +97,7 @@ managedActiveDirectories:
   - name: AWSAcceleratorManagedActiveDirectory
     type: AWS Managed Microsoft AD
     account: Operations
-    region: ca-central-1
+    region: *HOME_REGION
     dnsName: example.local
     netBiosDomainName: example
     description: This directory is a) shared to most accounts in the organization to provide centralized Windows and Linux authentication for cloud workloads, b) used as an identity source for AWS SSO, c) used to inter-connect with on-premises directory services, and d) provides a single identities source for instance and AWS console access.
@@ -109,7 +110,7 @@ managedActiveDirectories:
     resolverRuleName: AWSAccelerator-Endpoint-mad-example-local
     secretConfig:
       account: Operations
-      region: ca-central-1
+      region: *HOME_REGION
       adminSecretName: my-admin-001
     sharedOrganizationalUnits:
         organizationalUnits:

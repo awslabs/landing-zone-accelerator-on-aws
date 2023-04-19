@@ -68,8 +68,8 @@ centralNetworkServices:
         regions:
           - *HOME_REGION
         firewallPolicy:
-          statelessDefaultActions: ["aws:forward_to_sfe"]
-          statelessFragmentDefaultActions: ["aws:forward_to_sfe"]
+          statelessDefaultActions: ['aws:forward_to_sfe']
+          statelessFragmentDefaultActions: ['aws:forward_to_sfe']
           statefulRuleGroups:
             - name: AWSAccelerator-rule-group
             - name: AWSAccelerator-domain-list-group
@@ -96,7 +96,7 @@ centralNetworkServices:
                   sourcePort: ANY
                 ruleOptions:
                   - keyword: sid
-                    settings: ["100"]
+                    settings: ['100']
               - action: DROP
                 header:
                   destination: 10.4.0.0/16
@@ -107,7 +107,7 @@ centralNetworkServices:
                   sourcePort: ANY
                 ruleOptions:
                   - keyword: sid
-                    settings: ["200"]
+                    settings: ['200']
       - name: AWSAccelerator-domain-list-group
         regions:
           - *HOME_REGION
@@ -118,8 +118,8 @@ centralNetworkServices:
             rulesSourceList:
               generatedRulesType: DENYLIST
               # Add/Modify the domain list per business needs.
-              targets: [".google.com"]
-              targetTypes: ["TLS_SNI", "HTTP_HOST"]
+              targets: ['.google.com']
+              targetTypes: ['TLS_SNI', 'HTTP_HOST']
           ruleVariables:
             ipSets:
               name: HOME_NET
@@ -131,8 +131,8 @@ centralNetworkServices:
             portSets:
               name: HOME_NET
               definition:
-                - "80"
-                - "443"
+                - '80'
+                - '443'
   route53Resolver:
     endpoints:
       - name: EndpointOutbound
@@ -1220,7 +1220,6 @@ vpcTemplates:
     ipamAllocations:
       - ipamPoolName: home-region-sandbox-pool
         netmaskLength: 20
-    defaultSecurityGroupRulesDeletion: true
     internetGateway: true
     enableDnsHostnames: true
     enableDnsSupport: true
