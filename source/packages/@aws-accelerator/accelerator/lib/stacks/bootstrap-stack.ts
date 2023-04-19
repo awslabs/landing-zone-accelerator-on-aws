@@ -15,7 +15,6 @@ import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
-import { BucketAccessControl } from 'aws-cdk-lib/aws-s3';
 
 export class BootstrapStack extends AcceleratorStack {
   readonly qualifier: string;
@@ -38,7 +37,7 @@ export class BootstrapStack extends AcceleratorStack {
     }
 
     // Create Cfn Parameters
-    // These parameters are required to exist due to how cdk creates a change set when bootstrapping
+    // These parameters are required to exist due to how cdk creates a change set during bootstrapping
     new cdk.CfnParameter(this, 'CloudFormationExecutionPolicies');
     new cdk.CfnParameter(this, 'ContainerAssetsRepositoryName', { default: '' });
     new cdk.CfnParameter(this, 'FileAssetsBucketKmsKeyId', { default: '' });
@@ -444,7 +443,7 @@ export class BootstrapStack extends AcceleratorStack {
     partition: string;
   }) {
     const assetBucket = new cdk.aws_s3.Bucket(this, 'StagingBucket', {
-      accessControl: BucketAccessControl.PRIVATE,
+      accessControl: cdk.aws_s3.BucketAccessControl.PRIVATE,
       blockPublicAccess: cdk.aws_s3.BlockPublicAccess.BLOCK_ALL,
       bucketName: this.assetBucketName,
       encryption: cdk.aws_s3.BucketEncryption.KMS,
