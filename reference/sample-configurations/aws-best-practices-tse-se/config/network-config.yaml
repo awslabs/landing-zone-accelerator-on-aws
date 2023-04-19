@@ -426,7 +426,7 @@ vpcs:
         routeTable: Perimeter-Nat-B
         ipv4CidrBlock: 10.7.7.192/28
     natGateways:
-      - name:  Nat-Perimeter-A
+      - name: Nat-Perimeter-A
         subnet: PerimeterNat-A
       - name: Nat-Perimeter-B
         subnet: PerimeterNat-B
@@ -1287,7 +1287,7 @@ vpcTemplates:
           ipamPoolName: home-region-sandbox-pool
           netmaskLength: 28
     natGateways:
-      - name:  Nat-Network-Sandbox-A
+      - name: Nat-Network-Sandbox-A
         subnet: Network-SandboxNat-A
       - name: Nat-Network-Sandbox-B
         subnet: Network-SandboxNat-B

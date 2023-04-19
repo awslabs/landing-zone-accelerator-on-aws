@@ -122,9 +122,9 @@
       "Action": [
         "ssm:DeleteParam*",
         "ssm:PutParameter",
-        "ssm:DeleteDocument",
-        "ssm:UpdateDocument",
-        "ssm:CreateDocument",
+        "ssm:DeleteDoc*",
+        "ssm:UpdateDoc*",
+        "ssm:CreateDoc*",
         "ssm:DeleteResourceDataSync"
       ],
       "Resource": [
@@ -144,13 +144,7 @@
       "Effect": "Deny",
       "Action": [
         "ec2:DeleteFlowLogs",
-        "logs:DeleteResourcePolicy",
-        "logs:DeleteMetricFilter",
-        "logs:DeleteSubscriptionFilter",
-        "logs:DeleteLogGroup",
-        "logs:DeleteRetentionPolicy",
-        "logs:DeleteLogDelivery",
-        "logs:DeleteDestination",
+        "logs:Delete*",
         "logs:PutRetentionPolicy",
         "logs:PutSubscriptionFilter",
         "logs:DeleteLogStream"
@@ -158,7 +152,7 @@
       "Resource": "*",
       "Condition": {
         "ArnNotLike": {
-          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/AWSA*"]
+          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/AWSA*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"]
         }
       }
     },

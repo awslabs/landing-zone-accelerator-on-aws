@@ -16,12 +16,11 @@
         "iam:ListMFADevices",
         "iam:CreateVirtualMFADevice",
         "iam:EnableMFADevice",
-        "iam:ResyncMFADevice",
-        "iam:DeactivateMFADevice"
+        "iam:ResyncMFADevice"
       ],
-      "Resource": "arn:aws:iam::*:user/${aws:username}",
+      "Resource": "*",
       "Condition": {
-        "Bool": {
+        "BoolIfExists": {
           "aws:MultiFactorAuthPresent": "false"
         }
       }

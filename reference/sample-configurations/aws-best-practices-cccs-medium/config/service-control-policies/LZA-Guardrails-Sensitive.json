@@ -126,7 +126,91 @@
       "Resource": "*",
       "Condition": {
         "ArnNotLike": {
-          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"]
+          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/AWSA*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"]
+        }
+      }
+    },
+    {
+      "Sid": "NET2",
+      "Effect": "Deny",
+      "Action": [
+        "ec2:AcceptVpc*",
+        "ec2:AcceptTransitGateway*",
+        "ec2:AssociateClientVpn*",
+        "ec2:AuthorizeClientVpn*",
+        "ec2:AttachEgressOnlyInternetGateway",
+        "ec2:AttachInternetGateway",
+        "ec2:AttachVpnGateway",
+        "ec2:CreateCarrierGateway",
+        "ec2:CreateClientVpn*",
+        "ec2:CreateCustomerGateway",
+        "ec2:CreateEgressOnlyInternetGateway",
+        "ec2:CreateInternetGateway",
+        "ec2:CreateNatGateway",
+        "ec2:CreateTransitGateway*",
+        "ec2:CreateVpc",
+        "ec2:CreateVpcEndpoint",
+        "ec2:CreateVpcPeeringConnection",
+        "ec2:CreateVpn*",
+        "ec2:DeleteClientVpn*",
+        "ec2:DeleteNetworkAcl*",
+        "ec2:AllocateAddress",
+        "ec2:AssociateAddress",
+        "ec2:ModifyClientVpn*",
+        "ec2:ModifyImageAttribute",
+        "ec2:ModifySnapshotAttribute",
+        "ec2:ModifyVpn*",
+        "ec2:RevokeClientVpn*",
+        "rds:ModifyDBSnapshotAttribute",
+        "rds:ModifyDBClusterSnapshotAttribute",
+        "elasticmapreduce:PutBlockPublic*",
+        "globalaccelerator:Create*",
+        "globalaccelerator:Update*",
+        "kms:ScheduleKeyDeletion",
+        "kms:Delete*",
+        "iam:CreateGroup",
+        "iam:CreateUser",
+        "iam:CreateAccessKey",
+        "iam:DeleteUser",
+        "iam:UpdateUser",
+        "iam:DeleteGroup",
+        "iam:UpdateGroup",
+        "iam:DeleteRolePermissionsBoundary",
+        "iam:AddUserToGroup",
+        "iam:TagUser",
+        "networkmanager:Create*",
+        "networkmanager:Update*",
+        "networkmanager:Associate*",
+        "networkmanager:Disassociate*",
+        "networkmanager:Register*",
+        "networkmanager:Deregister*"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalArn": [
+            "arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "GBL2",
+      "Effect": "Deny",
+      "Action": ["acm:*", "kms:*", "sns:Publish"],
+      "Resource": "*",
+      "Condition": {
+        "StringNotEquals": {
+          "aws:RequestedRegion": [
+            "${HOME_REGION}",
+            "us-east-1"
+          ]
+        },
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:${PARTITION}:iam::*:role/cdk-accel-*",
+            "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
+          ]
         }
       }
     },
@@ -135,6 +219,7 @@
       "Effect": "Deny",
       "NotAction": [
         "a4b:*",
+        "acm:*",
         "access-analyzer:*",
         "aws-marketplace-management:*",
         "aws-marketplace:*",
@@ -153,6 +238,7 @@
         "globalaccelerator:*",
         "health:*",
         "iam:*",
+        "kms:*",
         "networkmanager:*",
         "organizations:*",
         "pricing:*",
@@ -177,24 +263,18 @@
         "s3:DescribeMultiR*",
         "s3:GetMultiR*",
         "s3:ListMultiR*",
-        "s3:PutMultiR*"
+        "s3:PutMultiR*",
+        "sns:Publish",
+        "tag:GetResources"
       ],
       "Resource": "*",
       "Condition": {
         "StringNotEquals": {
-          "aws:RequestedRegion": [
-            "ca-central-1",
-            "us-east-1",
-            "us-east-2",
-            "us-west-1",
-            "us-west-2"
-          ]
+          "aws:RequestedRegion": "${HOME_REGION}"
         },
         "ArnNotLike": {
           "aws:PrincipalARN": [
-            "arn:${PARTITION}:iam::*:role/cdk-accel-*",
-            "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
-            "arn:${PARTITION}:iam::*:role/AWSServiceRoleFor*"
+            "arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}","arn:${PARTITION}:iam::*:role/AWSA*"
           ]
         }
       }
