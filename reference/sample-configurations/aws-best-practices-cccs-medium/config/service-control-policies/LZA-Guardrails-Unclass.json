@@ -126,7 +126,7 @@
       "Resource": "*",
       "Condition": {
         "ArnNotLike": {
-          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/AWSA*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"]
+          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"]
         }
       }
     },
@@ -189,27 +189,8 @@
       "Condition": {
         "ArnNotLike": {
           "aws:PrincipalArn": [
-            "arn:${PARTITION}:iam::*:role/cdk-accel-*"
-          ]
-        }
-      }
-    },
-    {
-      "Sid": "GBL2",
-      "Effect": "Deny",
-      "Action": ["acm:*", "kms:*", "sns:Publish"],
-      "Resource": "*",
-      "Condition": {
-        "StringNotEquals": {
-          "aws:RequestedRegion": [
-            "ca-central-1",
-            "us-east-1"
-          ]
-        },
-        "ArnNotLike": {
-          "aws:PrincipalARN": [
             "arn:${PARTITION}:iam::*:role/cdk-accel-*",
-            "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
+            "arn:${PARTITION}:iam::*:role/AWSAOps-*"
           ]
         }
       }
@@ -219,7 +200,6 @@
       "Effect": "Deny",
       "NotAction": [
         "a4b:*",
-        "acm:*",
         "access-analyzer:*",
         "aws-marketplace-management:*",
         "aws-marketplace:*",
@@ -238,7 +218,6 @@
         "globalaccelerator:*",
         "health:*",
         "iam:*",
-        "kms:*",
         "networkmanager:*",
         "organizations:*",
         "pricing:*",
@@ -263,18 +242,24 @@
         "s3:DescribeMultiR*",
         "s3:GetMultiR*",
         "s3:ListMultiR*",
-        "s3:PutMultiR*",
-        "sns:Publish",
-        "tag:GetResources"
+        "s3:PutMultiR*"
       ],
       "Resource": "*",
       "Condition": {
         "StringNotEquals": {
-          "aws:RequestedRegion": "ca-central-1"
+          "aws:RequestedRegion": [
+              "${HOME_REGION}",
+              "us-east-1",
+              "us-east-2",
+              "us-west-1",
+              "us-west-2"
+          ]
         },
         "ArnNotLike": {
           "aws:PrincipalARN": [
-            "arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
+            "arn:${PARTITION}:iam::*:role/cdk-accel-*",
+            "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:${PARTITION}:iam::*:role/AWSServiceRoleFor*"
           ]
         }
       }

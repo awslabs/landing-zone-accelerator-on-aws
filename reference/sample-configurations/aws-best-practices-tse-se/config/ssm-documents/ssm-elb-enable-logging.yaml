@@ -41,4 +41,4 @@ mainSteps:
         - Key: access_logs.s3.bucket
           Value: '{{ LogDestination }}'
         - Key: access_logs.s3.prefix
-          Value: 'elb/elb-{{ getLoadBalancer.Name }}/{{ getAccount.Id }}'
+          Value: '{{ getAccount.Id }}/elb-{{ getLoadBalancer.Name }}'

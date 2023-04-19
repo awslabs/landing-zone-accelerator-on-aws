@@ -78,10 +78,13 @@
         "kms:PutKeyPolicy",
         "kms:ScheduleKeyDeletion"
       ],
-      "Resource": "arn:${PARTITION}:kms:::alias/accelerator*",
+      "Resource": "*",
       "Condition": {
         "ArnNotLike": {
           "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/AWSA*"]
+        },
+        "ForAnyValue:StringLike": {
+          "kms:ResourceAliases": "alias/accelerator*"
         }
       }
     },
@@ -164,8 +167,8 @@
         "access-analyzer:DeleteAnalyzer",
         "account:EnableRegion",
         "account:DisableRegion",
-        "iam:DeleteAccountPasswordPolicy",
-        "iam:UpdateAccountPasswordPolicy",
+        "iam:DeleteAccountPass*",
+        "iam:UpdateAccountPass*",
         "ec2:CreateDefaultVpc",
         "ec2:DisableEbsEncryptionByDefault",
         "s3:PutAccountPublicAccessBlock",
