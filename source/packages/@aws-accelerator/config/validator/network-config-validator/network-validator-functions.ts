@@ -119,13 +119,13 @@ export class NetworkValidatorFunctions {
   }
 
   /**
-   * Given two arrays of account names, returns true if arr1 has items not in arr2
+   * Given two arrays of account names, returns items in arr1 not included in arr2
    * @param arr1
    * @param arr2
    * @returns
    */
-  public hasTargetMismatch(arr1: string[], arr2: string[]): boolean {
-    return arr1.some(item => !arr2.includes(item));
+  public compareTargetAccounts(arr1: string[], arr2: string[]): string[] {
+    return arr1.filter(item => !arr2.includes(item));
   }
 
   /**

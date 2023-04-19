@@ -662,14 +662,15 @@ export class VpcValidator {
     if (vpcItem.dhcpOptions) {
       const optSet = values.dhcpOptions?.find(item => item.name === vpcItem.dhcpOptions);
       const vpcAccountNames = helpers.getVpcAccountNames(vpcItem);
+      const targetComparison = optSet ? helpers.compareTargetAccounts(vpcAccountNames, optSet.accounts) : [];
 
       if (!optSet) {
         errors.push(`[VPC ${vpcItem.name}]: DHCP options set ${vpcItem.dhcpOptions} does not exist`);
       }
       // Validate DHCP options set exists in the same account and region
-      if (optSet && helpers.hasTargetMismatch(vpcAccountNames, optSet.accounts)) {
+      if (optSet && targetComparison.length > 0) {
         errors.push(
-          `[VPC ${vpcItem.name}]: DHCP options set "${vpcItem.dhcpOptions}" is not deployed to one or more VPC deployment target accounts`,
+          `[VPC ${vpcItem.name}]: DHCP options set "${vpcItem.dhcpOptions}" is not deployed to one or more VPC deployment target accounts. Missing accounts: ${targetComparison}`,
         );
       }
       if (optSet && !optSet.regions.includes(vpcItem.region)) {
@@ -723,9 +724,10 @@ export class VpcValidator {
       } else {
         // Validate accounts and regions
         const groupAccountNames = helpers.getDelegatedAdminShareTargets(group.shareTargets);
-        if (helpers.hasTargetMismatch(vpcAccountNames, groupAccountNames)) {
+        const targetComparison = helpers.compareTargetAccounts(vpcAccountNames, groupAccountNames);
+        if (targetComparison.length > 0) {
           errors.push(
-            `[VPC ${vpcItem.name}]: DNS firewall rule group "${name}" is not shared to one or more VPC deployment target accounts`,
+            `[VPC ${vpcItem.name}]: DNS firewall rule group "${name}" is not shared to one or more VPC deployment target accounts. Missing accounts: ${targetComparison}`,
           );
         }
         if (!group.regions.includes(vpcItem.region)) {
@@ -1244,9 +1246,10 @@ export class VpcValidator {
         // Validate query log share targets
         const vpcAccountNames = helpers.getVpcAccountNames(vpcItem);
         const queryLogAccountNames = helpers.getDelegatedAdminShareTargets(queryLogs.shareTargets);
-        if (helpers.hasTargetMismatch(vpcAccountNames, queryLogAccountNames)) {
+        const targetComparison = helpers.compareTargetAccounts(vpcAccountNames, queryLogAccountNames);
+        if (targetComparison.length > 0) {
           errors.push(
-            `[VPC ${vpcItem.name}]: DNS query logging configuration "${name}" is not shared to one or more VPC deployment target accounts`,
+            `[VPC ${vpcItem.name}]: DNS query logging configuration "${name}" is not shared to one or more VPC deployment target accounts. Missing accounts: ${targetComparison}`,
           );
         }
       }
@@ -1285,10 +1288,11 @@ export class VpcValidator {
         const resolverEndpoint = values.centralNetworkServices?.route53Resolver?.endpoints?.find(endpointItem =>
           endpointItem.rules?.find(ruleItem => rule.name === ruleItem.name),
         );
+        const targetComparison = helpers.compareTargetAccounts(vpcAccountNames, ruleAccountNames);
 
-        if (helpers.hasTargetMismatch(vpcAccountNames, ruleAccountNames)) {
+        if (targetComparison.length > 0) {
           errors.push(
-            `[VPC ${vpcItem.name}]: Resolver rule "${name}" is not shared to one or more VPC deployment target accounts`,
+            `[VPC ${vpcItem.name}]: Resolver rule "${name}" is not shared to one or more VPC deployment target accounts. Missing accounts: ${targetComparison}`,
           );
         }
         // Validate target region
@@ -1754,9 +1758,10 @@ export class VpcValidator {
               } else {
                 // Prefix lists must be deployed to all deployment target accounts, including subnet shares
                 const vpcAccountNames = [...new Set([...helpers.getVpcAccountNames(vpcItem), ...sharedAccounts])];
-                if (helpers.hasTargetMismatch(vpcAccountNames, prefixList.accounts)) {
+                const targetComparison = helpers.compareTargetAccounts(vpcAccountNames, prefixList.accounts);
+                if (targetComparison.length > 0) {
                   errors.push(
-                    `[VPC ${vpcItem.name} security group ${group.name}]: inboundRule source prefix list "${listName}" is not deployed to one or more VPC deployment target accounts`,
+                    `[VPC ${vpcItem.name} security group ${group.name}]: inboundRule source prefix list "${listName}" is not deployed to one or more VPC deployment target or subnet share target accounts. Missing accounts: ${targetComparison}`,
                   );
                 }
               }
@@ -1777,9 +1782,10 @@ export class VpcValidator {
               } else {
                 // Prefix lists must be deployed to all deployment target accounts, including subnet shares
                 const vpcAccountNames = [...new Set([...helpers.getVpcAccountNames(vpcItem), ...sharedAccounts])];
-                if (helpers.hasTargetMismatch(vpcAccountNames, prefixList.accounts)) {
+                const targetComparison = helpers.compareTargetAccounts(vpcAccountNames, prefixList.accounts);
+                if (targetComparison.length > 0) {
                   errors.push(
-                    `[VPC ${vpcItem.name} security group ${group.name}]: outboundRule source prefix list "${listName}" is not deployed to one or more VPC deployment target accounts`,
+                    `[VPC ${vpcItem.name} security group ${group.name}]: outboundRule source prefix list "${listName}" is not deployed to one or more VPC deployment target or subnet share target accounts. Missing accounts: ${targetComparison}`,
                   );
                 }
               }

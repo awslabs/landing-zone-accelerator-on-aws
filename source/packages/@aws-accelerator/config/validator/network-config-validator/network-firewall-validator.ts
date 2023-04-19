@@ -1404,10 +1404,11 @@ export class NetworkFirewallValidator {
       const vpc = helpers.getVpc(firewall.vpc)!;
       const vpcAccountNames = helpers.getVpcAccountNames(vpc);
       const policyAccountNames = helpers.getDelegatedAdminShareTargets(firewallPolicy.shareTargets);
+      const targetComparison = helpers.compareTargetAccounts(vpcAccountNames, policyAccountNames);
 
-      if (helpers.hasTargetMismatch(vpcAccountNames, policyAccountNames)) {
+      if (targetComparison.length > 0) {
         errors.push(
-          `[Network Firewall firewall ${firewall.name}]: firewall policy "${firewall.firewallPolicy}" is not shared with one or more target OU(s)/account(s) for VPC "${vpc.name}"`,
+          `[Network Firewall firewall ${firewall.name}]: firewall policy "${firewall.firewallPolicy}" is not shared with one or more target OU(s)/account(s) for VPC "${vpc.name}." Missing accounts: ${targetComparison}`,
         );
       }
       // Validate regions match
