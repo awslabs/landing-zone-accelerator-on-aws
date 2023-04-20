@@ -83,7 +83,7 @@ export class AccountsConfigValidator {
       ? process.env['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE'] === 'true'
       : true;
     if (singleAccountDeployment) {
-      console.log('Duplicate emails allowed', singleAccountDeployment);
+      return;
     } else if (new Set(emails).size !== emails.length) {
       errors.push(`Duplicate emails defined [${emails}].`);
     }
