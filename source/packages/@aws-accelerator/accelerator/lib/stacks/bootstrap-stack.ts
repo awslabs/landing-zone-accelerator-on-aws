@@ -445,11 +445,9 @@ export class BootstrapStack extends AcceleratorStack {
     const assetBucket = new cdk.aws_s3.Bucket(this, 'StagingBucket', {
       accessControl: cdk.aws_s3.BucketAccessControl.PRIVATE,
       blockPublicAccess: cdk.aws_s3.BlockPublicAccess.BLOCK_ALL,
-      bucketName: this.assetBucketName,
       encryption: cdk.aws_s3.BucketEncryption.KMS,
       encryptionKey: props.kmsKey,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
-      blockPublicAccess: cdk.aws_s3.BlockPublicAccess.BLOCK_ALL,
       bucketName: props.bucketName,
       versioned: true,
       objectOwnership: cdk.aws_s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,
