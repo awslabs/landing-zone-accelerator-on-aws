@@ -220,6 +220,7 @@ export abstract class Accelerator {
         centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
         cdkOptions: globalConfig?.cdkOptions,
         enableSingleAccountMode: props.enableSingleAccountMode,
+        stackPrefix,
       });
     }
 
@@ -240,6 +241,7 @@ export abstract class Accelerator {
         centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
         cdkOptions: globalConfig?.cdkOptions,
         enableSingleAccountMode: props.enableSingleAccountMode,
+        stackPrefix,
       });
     }
 
@@ -288,6 +290,7 @@ export abstract class Accelerator {
             centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
             cdkOptions: globalConfig?.cdkOptions,
             enableSingleAccountMode: props.enableSingleAccountMode,
+            stackPrefix,
           }),
         );
         await Promise.all(promises);
@@ -323,6 +326,7 @@ export abstract class Accelerator {
                   centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
                   cdkOptions: globalConfig?.cdkOptions,
                   enableSingleAccountMode: props.enableSingleAccountMode,
+                  stackPrefix,
                 }),
               );
             }
@@ -360,6 +364,7 @@ export abstract class Accelerator {
         centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
         cdkOptions: globalConfig?.cdkOptions,
         enableSingleAccountMode: props.enableSingleAccountMode,
+        stackPrefix,
       });
     }
 
@@ -380,6 +385,7 @@ export abstract class Accelerator {
         centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
         cdkOptions: globalConfig?.cdkOptions,
         enableSingleAccountMode: props.enableSingleAccountMode,
+        stackPrefix,
       });
     }
 
@@ -397,6 +403,7 @@ export abstract class Accelerator {
         centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
         cdkOptions: globalConfig?.cdkOptions,
         enableSingleAccountMode: props.enableSingleAccountMode,
+        stackPrefix,
       });
     }
 
@@ -419,6 +426,7 @@ export abstract class Accelerator {
             centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
             cdkOptions: globalConfig?.cdkOptions,
             enableSingleAccountMode: props.enableSingleAccountMode,
+            stackPrefix,
           }),
         );
         if (promises.length >= maxStacks) {
@@ -447,6 +455,7 @@ export abstract class Accelerator {
             centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
             cdkOptions: globalConfig?.cdkOptions,
             enableSingleAccountMode: props.enableSingleAccountMode,
+            stackPrefix,
           }),
         );
         if (promises.length >= maxStacks) {
@@ -480,6 +489,7 @@ export abstract class Accelerator {
         centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
         cdkOptions: globalConfig?.cdkOptions,
         enableSingleAccountMode: props.enableSingleAccountMode,
+        stackPrefix,
       });
       // execute in all other regions for Logging account, except home region
       for (const region of globalConfig.enabledRegions) {
@@ -497,6 +507,7 @@ export abstract class Accelerator {
             centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
             cdkOptions: globalConfig?.cdkOptions,
             enableSingleAccountMode: props.enableSingleAccountMode,
+            stackPrefix,
           });
         }
       }
@@ -520,6 +531,7 @@ export abstract class Accelerator {
                 centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
                 cdkOptions: globalConfig?.cdkOptions,
                 enableSingleAccountMode: props.enableSingleAccountMode,
+                stackPrefix,
               }),
             );
           }
@@ -560,6 +572,7 @@ export abstract class Accelerator {
             centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
             cdkOptions: globalConfig?.cdkOptions,
             enableSingleAccountMode: props.enableSingleAccountMode,
+            stackPrefix,
           }),
         );
         await Promise.all(promises);
@@ -587,6 +600,7 @@ export abstract class Accelerator {
                 centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
                 cdkOptions: globalConfig?.cdkOptions,
                 enableSingleAccountMode: props.enableSingleAccountMode,
+                stackPrefix,
               }),
             );
             if (promises.length >= maxStacks) {
