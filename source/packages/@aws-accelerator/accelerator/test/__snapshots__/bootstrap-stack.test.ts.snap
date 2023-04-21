@@ -811,11 +811,33 @@ exports[`BootstrapStack Construct(BootstrapStack):  Snapshot Test 1`] = `
                   "|",
                   {
                     "Fn::Sub": [
-                      "arn:aws:kms:*:\${JoinedAccounts}:*",
+                      {
+                        "Fn::Join": [
+                          "",
+                          [
+                            "arn:",
+                            {
+                              "Ref": "AWS::Partition",
+                            },
+                            ":kms:*:\${JoinedAccounts}:*",
+                          ],
+                        ],
+                      },
                       {
                         "JoinedAccounts": {
                           "Fn::Join": [
-                            ":*|arn:aws:kms:*:",
+                            {
+                              "Fn::Join": [
+                                "",
+                                [
+                                  ":*|arn:",
+                                  {
+                                    "Ref": "AWS::Partition",
+                                  },
+                                  ":kms:*:",
+                                ],
+                              ],
+                            },
                             {
                               "Ref": "TrustedAccounts",
                             },

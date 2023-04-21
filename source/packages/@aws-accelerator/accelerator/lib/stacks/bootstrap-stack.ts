@@ -201,8 +201,8 @@ export class BootstrapStack extends AcceleratorStack {
               actions: ['kms:Decrypt', 'kms:DescribeKey', 'kms:Encrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*'],
               resources: cdk.Fn.split(
                 '|',
-                cdk.Fn.sub('arn:aws:kms:*:${JoinedAccounts}:*', {
-                  JoinedAccounts: cdk.Fn.join(':*|arn:aws:kms:*:', trustedAccounts),
+                cdk.Fn.sub(`arn:${this.partition}:kms:*:` + '${JoinedAccounts}:*', {
+                  JoinedAccounts: cdk.Fn.join(`:*|arn:${this.partition}:kms:*:`, trustedAccounts),
                 }),
               ),
               conditions: {
@@ -394,7 +394,7 @@ export class BootstrapStack extends AcceleratorStack {
     cfnFilePublishingRole.overrideLogicalId('FilePublishingRole');
     cfnFilePublishingRoleDefaultPolicy.overrideLogicalId('FilePublishingRoleDefaultPolicy');
 
-    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
+    // AwsSolutions-IAM5: Reason the IAM entity contains wildcard permissions
     NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/FilePublishingRoleDefaultPolicy/Resource`, [
       {
         id: 'AwsSolutions-IAM5',
