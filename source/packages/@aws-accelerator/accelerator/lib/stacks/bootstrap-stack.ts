@@ -201,8 +201,8 @@ export class BootstrapStack extends AcceleratorStack {
               actions: ['kms:Decrypt', 'kms:DescribeKey', 'kms:Encrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*'],
               resources: cdk.Fn.split(
                 '|',
-                cdk.Fn.sub(`arn:${this.partition}:kms:*:` + '${JoinedAccounts}:*', {
-                  JoinedAccounts: cdk.Fn.join(`:*|arn:${this.partition}:kms:*:`, trustedAccounts),
+                cdk.Fn.sub('arn:${AWS::Partition}:kms:*:${JoinedAccounts}:*', {
+                  JoinedAccounts: cdk.Fn.join(':*|arn:${AWS::Partition}:kms:*:', trustedAccounts),
                 }),
               ),
               conditions: {
