@@ -172,7 +172,7 @@ export class ActiveDirectoryConfiguration extends Construct {
       {
         launchTemplateData: {
           metadataOptions: {
-            httpTokens: 'httpTokens',
+            httpTokens: 'required',
             httpEndpoint: 'enabled',
           },
         },

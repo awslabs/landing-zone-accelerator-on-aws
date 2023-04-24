@@ -686,7 +686,7 @@ catch {
         "LaunchTemplateData": {
           "MetadataOptions": {
             "HttpEndpoint": "enabled",
-            "HttpTokens": "httpTokens",
+            "HttpTokens": "required",
           },
         },
       },
