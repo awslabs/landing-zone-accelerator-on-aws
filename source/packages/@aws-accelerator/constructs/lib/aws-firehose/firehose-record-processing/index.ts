@@ -26,10 +26,6 @@ AWS.config.logger = console;
  */
 
 export async function handler(event: AWSLambda.FirehoseTransformationEvent) {
-  // Retrieve operating region that stack is ran
-  console.log(event);
-  // console.log(`Processing firehose records...`);
-
   const firehoseRecordsOutput: AWSLambda.FirehoseTransformationResult = { records: [] };
 
   // Parse records
@@ -58,8 +54,6 @@ async function processFirehoseInputRecord(firehoseRecord: AWSLambda.FirehoseTran
 
   // only process payload that has logGroup prefix
   if ('logGroup' in jsonParsedPayload) {
-    console.log(`Record LogGroup: ${jsonParsedPayload.logGroup}`);
-
     // check for dynamic partition
     const serviceName = await checkDynamicPartition(jsonParsedPayload);
 
@@ -84,7 +78,6 @@ async function processFirehoseInputRecord(firehoseRecord: AWSLambda.FirehoseTran
     firehoseReturnResult.metadata = {
       partitionKeys,
     };
-    console.log(partitionKeys);
     return firehoseReturnResult;
   } else {
     // if there is no logGroup in payload do not process and forward to firehose
