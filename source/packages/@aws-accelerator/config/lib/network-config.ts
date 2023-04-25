@@ -1098,7 +1098,7 @@ export class TransitGatewayRouteEntryConfig
    */
   readonly destinationPrefixList: string | undefined = undefined;
   /**
-   * Enable to create a blackhole for the destination CIDR.
+   * (OPTIONAL) Enable to create a blackhole for the destination CIDR.
    * Leave undefined if specifying a VPC destination.
    */
   readonly blackhole: boolean | undefined = undefined;
@@ -1136,7 +1136,7 @@ export class TransitGatewayRouteTableConfig
    */
   readonly name: string = '';
   /**
-   * An array of tag objects for the Transit Gateway. route table.
+   * (OPTIONAL) An array of tag objects for the Transit Gateway route table.
    */
   readonly tags: t.Tag[] | undefined = undefined;
   /**
@@ -1183,7 +1183,7 @@ export class TransitGatewayPeeringRequesterConfig
    */
   readonly routeTableAssociations: string = '';
   /**
-   * An array of tag objects for the Transit Gateway Peering.
+   * (OPTIONAL) An array of tag objects for the Transit Gateway Peering.
    */
   readonly tags: t.Tag[] | undefined = undefined;
 }
@@ -1223,14 +1223,15 @@ export class TransitGatewayPeeringAccepterConfig
    */
   readonly routeTableAssociations: string = '';
   /**
-   * Peering request auto accept flag.
-   * When this flag is on, peering request will be accepted by LZA
+   * (OPTIONAL) Peering request auto accept flag.
+   * Note: When this flag is set to `true`, the peering request will be automatically
+   * accepted by the accelerator.
    */
   readonly autoAccept: boolean | undefined = undefined;
   /**
-   * Peering request apply tags flag.
-   * When this flag is on, requester attachment tags will be applied to peer or accepter attachment also.
-   * In peer or accepter attachment existing tags can't be changed, only given tags will be added or modified.
+   * (OPTIONAL) Peering request apply tags flag.
+   * Note: When this flag is set to `true`, the requester attachment tags are replicated
+   * to the accepter attachment.
    */
   readonly applyTags: boolean | undefined = undefined;
 }
@@ -1326,7 +1327,7 @@ export class TransitGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.
    */
   readonly region: t.Region = 'us-east-1';
   /**
-   * Resource Access Manager (RAM) share targets.
+   * (OPTIONAL) Resource Access Manager (RAM) share targets.
    *
    * @remarks
    * Targets can be account names and/or organizational units.
@@ -1387,7 +1388,7 @@ export class TransitGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.
    */
   readonly routeTables: TransitGatewayRouteTableConfig[] = [];
   /**
-   * An array of tag objects for the Transit Gateway.
+   * (OPTIONAL) An array of tag objects for the Transit Gateway.
    */
   readonly tags: t.Tag[] | undefined = undefined;
 }
@@ -1432,7 +1433,7 @@ export class DxVirtualInterfaceConfig implements t.TypeOf<typeof NetworkConfigTy
    * This ASN must be unique from the Amazon side ASN.
    * The ASN for the Amazon side is determined by the DX Gateway it is created on.
    *
-   * The valid values are 1 to 2147483647
+   * Note: The valid values are 1 to 2147483647
    */
   readonly customerAsn: number = 64512;
   /**
@@ -1653,11 +1654,11 @@ export class IpamScopeConfig implements t.TypeOf<typeof NetworkConfigTypes.ipamS
    */
   readonly name: string = '';
   /**
-   * An optional description for the IPAM scope.
+   * (OPTIONAL) Description for the IPAM scope.
    */
   readonly description: string | undefined = undefined;
   /**
-   * An array of tag objects for the IPAM scope.
+   * (OPTIONAL) An array of tag objects for the IPAM scope.
    */
   readonly tags: t.Tag[] | undefined = undefined;
 }
@@ -1829,7 +1830,7 @@ export class IpamConfig implements t.TypeOf<typeof NetworkConfigTypes.ipamConfig
    */
   readonly pools: IpamPoolConfig[] | undefined = undefined;
   /**
-   * An array of tag objects for the IPAM.
+   * (OPTIONAL) An array of tag objects for the IPAM.
    */
   readonly tags: t.Tag[] | undefined = undefined;
 }
@@ -1910,7 +1911,7 @@ export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes
    *
    * `destination` MUST be specified for route entry type `networkFirewall` or `gatewayLoadBalancerEndpoint`.
    *
-   * Leave undefined for route entry type `gatewayEndpoint`.
+   * Note: Leave undefined for route entry type `gatewayEndpoint`.
    */
   readonly destination: string | undefined = undefined;
   /**
@@ -1922,7 +1923,7 @@ export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes
    *
    * Cannot be specified for route entry type `networkFirewall` or `gatewayLoadBalancerEndpoint`. Use `destination` instead.
    *
-   * Leave undefined for route entry type `gatewayEndpoint`.
+   * Note: Leave undefined for route entry type `gatewayEndpoint`.
    */
   readonly destinationPrefixList: string | undefined = undefined;
   /**
@@ -1937,7 +1938,7 @@ export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes
    * @remarks
    * Use `s3` or `dynamodb` as the string when specifying a route entry type of `gatewayEndpoint`.
    *
-   * Leave undefined for route entry type `internetGateway` or `virtualPrivateGateway`.
+   * Note: Leave undefined for route entry type `internetGateway` or `virtualPrivateGateway`.
    */
   readonly target: string | undefined = undefined;
   /**
@@ -1946,7 +1947,7 @@ export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes
    * @remarks
    * Include only the letter of the AZ name (i.e. 'a' for 'us-east-1a').
    *
-   * Leave undefined for targets of route entry types other than `networkFirewall`.
+   * Note: Leave undefined for targets of route entry types other than `networkFirewall`.
    */
   readonly targetAvailabilityZone: string | undefined = undefined;
 }
@@ -1980,7 +1981,7 @@ export class RouteTableConfig implements t.TypeOf<typeof NetworkConfigTypes.rout
    * Designate a gateway to associate this route table with.
    *
    * @remarks
-   * Only define this property when creating a gateway route table. Leave undefined for subnet route tables.
+   * Note: Only define this property when creating a gateway route table. Leave undefined for subnet route tables.
    */
   readonly gatewayAssociation: t.TypeOf<typeof NetworkConfigTypes.gatewayRouteTableTypeEnum> | undefined = undefined;
   /**
@@ -1990,7 +1991,7 @@ export class RouteTableConfig implements t.TypeOf<typeof NetworkConfigTypes.rout
    */
   readonly routes: RouteTableEntryConfig[] | undefined = undefined;
   /**
-   * An array of tag objects for the VPC route table.
+   * (OPTIONAL) An array of tag objects for the VPC route table.
    */
   readonly tags: t.Tag[] | undefined = undefined;
 }
@@ -2024,6 +2025,11 @@ export class RouteTableConfig implements t.TypeOf<typeof NetworkConfigTypes.rout
 export class SubnetConfig implements t.TypeOf<typeof NetworkConfigTypes.subnetConfig> {
   /**
    * A friendly name for the VPC subnet.
+   *
+   * @remarks
+   *
+   * CAUTION: changing this property after initial deployment will cause a Subnet recreation.
+   * Please be aware that any downstream dependencies may cause this property update to fail.
    */
   readonly name: string = '';
   /**
@@ -2031,7 +2037,10 @@ export class SubnetConfig implements t.TypeOf<typeof NetworkConfigTypes.subnetCo
    *
    * @remarks
    * Include only the letter of the AZ name (i.e. 'a' for 'us-east-1a').
-   * Not needed if providing an outpost, otherwise required
+   * Note: Not needed if providing an outpost, otherwise required.
+   *
+   * CAUTION: changing this property after initial deployment will cause a Subnet recreation.
+   * Please be aware that any downstream dependencies may cause this property update to fail.
    */
   readonly availabilityZone: string | undefined = undefined;
   /**
@@ -2056,7 +2065,7 @@ export class SubnetConfig implements t.TypeOf<typeof NetworkConfigTypes.subnetCo
    */
   readonly ipv4CidrBlock: string | undefined = undefined;
   /**
-   * Configure automatic mapping of public IPs.
+   * (OPTIONAL) Configure automatic mapping of public IPs.
    *
    * @remarks
    * Enables you to configure the auto-assign IP settings to automatically request a public
@@ -2064,7 +2073,7 @@ export class SubnetConfig implements t.TypeOf<typeof NetworkConfigTypes.subnetCo
    */
   readonly mapPublicIpOnLaunch: boolean | undefined = undefined;
   /**
-   * Resource Access Manager (RAM) share targets.
+   * (OPTIONAL) Resource Access Manager (RAM) share targets.
    *
    * @remarks
    * Targets can be account names and/or organizational units.
@@ -2123,7 +2132,14 @@ export class NatGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.natG
   readonly subnet: string = '';
 
   /**
-   * The allocation ID of the Elastic IP address that's associated with the NAT gateway.
+   * (OPTIONAL) The allocation ID of the Elastic IP address that's associated with the NAT gateway.
+   *
+   * @remarks
+   * To retrieve the `allocationId` of your Elastic IP address, perform the following:
+   * 1. Open the Amazon VPC console at https://console.aws.amazon.com/vpc/.
+   * 2. In the navigation pane, choose Elastic IPs.
+   * 3. Select the Elastic IP address and reference the value in the `Allocation ID` column. The format
+   * should be `eipalloc-abc123xyz`.
    */
   readonly allocationId: string | undefined = undefined;
 
@@ -2183,7 +2199,7 @@ export class TransitGatewayAttachmentOptionsConfig
   implements t.TypeOf<typeof NetworkConfigTypes.transitGatewayAttachmentOptionsConfig>
 {
   /**
-   * Enable to configure appliance mode for the attachment. This option is disabled by default.
+   * (OPTIONAL) Enable to configure appliance mode for the attachment. This option is disabled by default.
    *
    * @remarks
    * Appliance mode ensures only a single network interface is chosen for the entirety of a traffic flow,
@@ -2191,11 +2207,11 @@ export class TransitGatewayAttachmentOptionsConfig
    */
   readonly applianceModeSupport: t.EnableDisable | undefined = undefined;
   /**
-   * Enable to configure DNS support for the attachment. This option is enabled by default.
+   * (OPTIONAL) Enable to configure DNS support for the attachment. This option is enabled by default.
    */
   readonly dnsSupport: t.EnableDisable | undefined = undefined;
   /**
-   * Enable to configure IPv6 support for the attachment. This option is disabled by default.
+   * (OPTIONAL) Enable to configure IPv6 support for the attachment. This option is disabled by default.
    */
   readonly ipv6Support: t.EnableDisable | undefined = undefined;
 }
@@ -2330,13 +2346,13 @@ export class TransitGatewayAttachmentConfig
    */
   readonly routeTablePropagations: string[] | undefined = undefined;
   /**
-   * A Transit Gateway attachment options configuration.
+   * (OPTIONAL) A Transit Gateway attachment options configuration.
    *
    * @see {@link TransitGatewayAttachmentOptionsConfig}
    */
   readonly options: TransitGatewayAttachmentOptionsConfig | undefined = undefined;
   /**
-   * An array of tag objects for the Transit Gateway attachment.
+   * (OPTIONAL) An array of tag objects for the Transit Gateway attachment.
    */
   readonly tags: t.Tag[] | undefined = undefined;
 }
@@ -3020,26 +3036,29 @@ export class EndpointPolicyConfig implements t.TypeOf<typeof NetworkConfigTypes.
  * - tunnelInsideCidr: 169.254.200.0/30
  *   preSharedKey: Key1-AbcXyz
  * - tunnelInsideCidr: 169.254.200.100/30
+ *   preSharedKey: Key1-AbcXyz
  * ```
  */
 export class VpnTunnelOptionsSpecificationsConfig
   implements t.TypeOf<typeof NetworkConfigTypes.vpnTunnelOptionsSpecificationsConfig>
 {
   /**
-   * The Secrets Manager name that stores the pre-shared key (PSK), that exists in the same account
-   * and region that the VPN Connection will be created in.
+   * (OPTIONAL): The Secrets Manager name that stores the pre-shared key (PSK), that exists in the
+   * same account and region that the VPN Connection will be created in.
    * @remarks
    * Include the random hash that prepends the Secrets Manager name.
+   *
+   * NOTE: The `preSharedKey` (PSK) parameter is optional. If a PSK is not provided, Amazon will generate a
+   * PSK for you.
    */
   readonly preSharedKey: string | undefined = undefined;
 
   /**
-   * The range of inside IP addresses for the tunnel. Any specified CIDR blocks must be unique across
+   * (OPTIONAL): The range of inside IP addresses for the tunnel. Any specified CIDR blocks must be unique across
    * all VPN connections that use the same virtual private gateway.
    * @remarks
-   * The following CIDR blocks are reserved
-   * and cannot be used: - 169.254.0.0/30 - 169.254.1.0/30 - 169.254.2.0/30 - 169.254.3.0/30 - 169.254.4.0/30
-   * - 169.254.5.0/30 - 169.254.169.252/30
+   * The following CIDR blocks are reserved and cannot be used: - 169.254.0.0/30 - 169.254.1.0/30 -
+   * 169.254.2.0/30 - 169.254.3.0/30 - 169.254.4.0/30 - 169.254.5.0/30 - 169.254.169.252/30
    */
   readonly tunnelInsideCidr: string | undefined = undefined;
 }
@@ -3050,6 +3069,7 @@ export class VpnTunnelOptionsSpecificationsConfig
  * Used to define the VPN Connection and its termination point.
  *
  * @example
+ * VPN termination at a Transit Gateway:
  * ```
  * - name: accelerator-vpn
  *   transitGateway: Network-Main
@@ -3062,6 +3082,17 @@ export class VpnTunnelOptionsSpecificationsConfig
  *     - tunnelInsideCidr: 169.254.200.0/30
  *       preSharedKey: Key1-AbcXyz
  *     - tunnelInsideCidr: 169.254.200.100/30
+ * ```
+ * VPN termination at a VPC:
+ * ```
+ * - name: accelerator-vpn
+ *   vpc: Inspection-Vpc
+ *   staticRoutesOnly: false
+ *   tunnelSpecifications:
+ *     - tunnelInsideCidr: 169.254.200.0/30
+ *       preSharedKey: Key1-AbcXyz
+ *     - tunnelInsideCidr: 169.254.200.100/30
+ *       preSharedKey: Key1-AbcXyz
  * ```
  */
 export class VpnConnectionConfig implements t.TypeOf<typeof NetworkConfigTypes.vpnConnectionConfig> {
@@ -3114,18 +3145,18 @@ export class VpnConnectionConfig implements t.TypeOf<typeof NetworkConfigTypes.v
 
   /**
    * @remarks
-   * If creating a VPN connection for a device that doesn't support Border Gateway Protocol (BGP)
+   * (OPTIONAL) If creating a VPN connection for a device that doesn't support Border Gateway Protocol (BGP)
    * declare true as a value, otherwise, use false.
    */
   readonly staticRoutesOnly: boolean | undefined = undefined;
 
   /**
-   * An array of tags for the VPN Connection.
+   * (OPTIONAL)An array of tags for the VPN Connection.
    */
   readonly tags: t.Tag[] | undefined = undefined;
 
   /**
-   * Define the optional VPN Tunnel configuration
+   * (OPTIONAL) Define the optional VPN Tunnel configuration
    * @see {@link VpnTunnelOptionsSpecificationsConfig}
    */
   readonly tunnelSpecifications: VpnTunnelOptionsSpecificationsConfig[] | undefined = undefined;
@@ -3170,7 +3201,8 @@ export class CustomerGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes
   readonly name: string = '';
 
   /**
-   * The logical name of the account to deploy the VPC to
+   * The logical name of the account to deploy the Customer Gateway to. This value should match the name of the account recorded
+   * in the accounts-config.yaml file.
    */
   readonly account: string = '';
 
@@ -3313,13 +3345,22 @@ export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> 
   readonly cidrs: string[] | undefined = undefined;
 
   /**
-   * Determine if the all traffic ingress and egress rules are deleted
+   * (OPTIONAL) Determine if the all traffic ingress and egress rules are deleted
    * in the default security group of a VPC.
+   *
+   * @remarks
+   *
+   * If the `defaultSecurityGroupRulesDeletion` parameter is set to `true`, the solution
+   * will proceed in removing the default ingress and egress All Traffic (0.0.0.0/0) for that
+   * respective VPC's default security group.
+   *
+   * @see {@link https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/default-custom-security-groups.html#default-security-group}
+   *
    */
   readonly defaultSecurityGroupRulesDeletion: boolean | undefined = false;
 
   /**
-   * The friendly name of a DHCP options set.
+   * (OPTIONAL) The friendly name of a DHCP options set.
    */
   readonly dhcpOptions: string | undefined = undefined;
 
@@ -3350,14 +3391,14 @@ export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> 
   readonly instanceTenancy: t.TypeOf<typeof NetworkConfigTypes.instanceTenancyTypeEnum> | undefined = 'default';
 
   /**
-   * An optional array of IPAM allocation configurations.
+   * (OPTIONAL) An array of IPAM allocation configurations.
    *
    * @see {@link IpamAllocationConfig}
    */
   readonly ipamAllocations: IpamAllocationConfig[] | undefined = undefined;
 
   /**
-   * An optional list of DNS query log configuration names.
+   * (OPTIONAL) A list of DNS query log configuration names.
    */
   readonly queryLogs: string[] | undefined = undefined;
 
@@ -3524,25 +3565,33 @@ export class VpcTemplatesConfig implements t.TypeOf<typeof NetworkConfigTypes.vp
   readonly cidrs: string[] | undefined = undefined;
 
   /**
-   * An array of IPAM allocation configurations.
+   * (OPTIONAL) An array of IPAM allocation configurations.
    *
    * @see {@link IpamAllocationConfig}
    */
   readonly ipamAllocations: IpamAllocationConfig[] | undefined = undefined;
 
   /**
-   * Determine if the all traffic ingress and egress rules are deleted
+   * (OPTIONAL) Determine if the all traffic ingress and egress rules are deleted
    * in the default security group of a VPC.
+   *
+   * @remarks
+   *
+   * If the `defaultSecurityGroupRulesDeletion` parameter is set to `true`, the solution
+   * will proceed in removing the default ingress and egress All Traffic (0.0.0.0/0) for that
+   * respective VPC's default security group.
+   *
+   * @see {@link https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/default-custom-security-groups.html#default-security-group}
    */
   readonly defaultSecurityGroupRulesDeletion: boolean | undefined = false;
 
   /**
-   * The friendly name of a DHCP options set.
+   * (OPTIONAL) The friendly name of a DHCP options set.
    */
   readonly dhcpOptions: string | undefined = undefined;
 
   /**
-   * An array of DNS firewall VPC association configurations.
+   * (OPTIONAL) An array of DNS firewall VPC association configurations.
    *
    * @see {@link NetworkConfigTypes.vpcDnsFirewallAssociationConfig}
    */
@@ -3568,7 +3617,7 @@ export class VpcTemplatesConfig implements t.TypeOf<typeof NetworkConfigTypes.vp
   readonly instanceTenancy: t.TypeOf<typeof NetworkConfigTypes.instanceTenancyTypeEnum> | undefined = 'default';
 
   /**
-   * An optional list of DNS query log configuration names.
+   * (OPTIONAL) A list of DNS query log configuration names.
    */
   readonly queryLogs: string[] | undefined = undefined;
 
