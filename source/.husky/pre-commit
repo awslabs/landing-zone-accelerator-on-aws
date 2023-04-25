@@ -5,8 +5,8 @@ set -e
 
 . "$(dirname "$0")/_/husky.sh"
 
-## pre-commit viper scan
-wget -v 'https://s3.amazonaws.com/viperlight-scanner/latest/viperlight.zip' 
+# pre-commit viper scan
+wget -v 'https://s3.amazonaws.com/viperlight-scanner/latest/viperlight.zip'
 unzip -qo viperlight.zip -d ../viperlight
 rm -r ./viperlight.zip
 ../viperlight/bin/viperlight scan
