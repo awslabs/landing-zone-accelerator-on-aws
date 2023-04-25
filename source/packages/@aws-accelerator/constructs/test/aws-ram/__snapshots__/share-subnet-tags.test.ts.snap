@@ -129,11 +129,7 @@ exports[`ShareSubnetTags Construct(ShareSubnetTest):  Snapshot Test 1`] = `
                           {
                             "Ref": "AWS::Region",
                           },
-                          ":",
-                          {
-                            "Ref": "AWS::AccountId",
-                          },
-                          ":subnet/*",
+                          ":*:subnet/*",
                         ],
                       ],
                     },
@@ -149,43 +145,7 @@ exports[`ShareSubnetTags Construct(ShareSubnetTest):  Snapshot Test 1`] = `
                           {
                             "Ref": "AWS::Region",
                           },
-                          ":",
-                          {
-                            "Ref": "AWS::AccountId",
-                          },
-                          ":vpc/*",
-                        ],
-                      ],
-                    },
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":ec2:",
-                          {
-                            "Ref": "AWS::Region",
-                          },
-                          ":9999999999:subnet/*",
-                        ],
-                      ],
-                    },
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":ec2:",
-                          {
-                            "Ref": "AWS::Region",
-                          },
-                          ":9999999999:vpc/*",
+                          ":*:vpc/*",
                         ],
                       ],
                     },

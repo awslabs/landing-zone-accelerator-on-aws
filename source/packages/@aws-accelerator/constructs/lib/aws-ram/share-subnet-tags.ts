@@ -65,10 +65,8 @@ export class ShareSubnetTags extends Construct {
           Effect: 'Allow',
           Action: ['ec2:DeleteTags', 'ec2:CreateTags'],
           Resource: [
-            `arn:${cdk.Aws.PARTITION}:ec2:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:subnet/*`,
-            `arn:${cdk.Aws.PARTITION}:ec2:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:vpc/*`,
-            `arn:${cdk.Aws.PARTITION}:ec2:${cdk.Aws.REGION}:${props.owningAccountId}:subnet/*`,
-            `arn:${cdk.Aws.PARTITION}:ec2:${cdk.Aws.REGION}:${props.owningAccountId}:vpc/*`,
+            `arn:${cdk.Aws.PARTITION}:ec2:${cdk.Aws.REGION}:*:subnet/*`,
+            `arn:${cdk.Aws.PARTITION}:ec2:${cdk.Aws.REGION}:*:vpc/*`,
           ],
         },
         {
