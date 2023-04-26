@@ -194,9 +194,9 @@ export class CentralLogsBucket extends Construct {
 
         this.bucket.getS3Bucket().addToResourcePolicy(
           new cdk.aws_iam.PolicyStatement({
-            sid: 'Allow Organization principals to get encryption context',
+            sid: 'Allow Organization principals to get encryption context and acl',
             effect: cdk.aws_iam.Effect.ALLOW,
-            actions: ['s3:GetEncryptionConfiguration'],
+            actions: ['s3:GetEncryptionConfiguration', 's3:GetBucketAcl'],
             principals: [new cdk.aws_iam.AnyPrincipal()],
             resources: [`${this.bucket.getS3Bucket().bucketArn}`],
             conditions: {
