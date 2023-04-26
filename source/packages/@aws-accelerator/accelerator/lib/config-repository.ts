@@ -91,7 +91,16 @@ export class ConfigRepository extends Construct {
     if (props.enableSingleAccountMode) {
       const orgConfig = new OrganizationConfig({
         enable: false,
-        organizationalUnits: [],
+        organizationalUnits: [
+          {
+            name: 'Security',
+            ignore: undefined,
+          },
+          {
+            name: 'LogArchive',
+            ignore: undefined,
+          },
+        ],
         organizationalUnitIds: [],
         serviceControlPolicies: [],
         taggingPolicies: [],
