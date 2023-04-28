@@ -8,13 +8,10 @@ before_script:
   - apt-get install -y jq
 
 stages:
-  - workshop
-  - build
-  - test
-  - metadata
+  - build-test
 
 accelerator-workshop-session:
-  stage: workshop
+  stage: build-test
   script:
     - "export NODE_OPTIONS=--max_old_space_size=16384"
     - "cd source"
@@ -35,7 +32,7 @@ accelerator-workshop-session:
       - lza-on-aws-workshop.zip
       - AWSAccelerator-InstallerStack-Workshop.template.json
 accelerator-build:
-  stage: build
+  stage: build-test
   tags:
     - arch:amd64
     - size:xlarge
@@ -56,7 +53,7 @@ accelerator-build:
     paths:
       - AWSAccelerator-InstallerStack.template.json
 accelerator-test:
-  stage: test
+  stage: build-test
   tags:
     - arch:amd64
     - size:xlarge
@@ -82,7 +79,7 @@ accelerator-test:
         - source/test-reports/*.xml
     expire_in: 1 day
 sonar-test:
-  stage: test
+  stage: build-test
   tags:
     - arch:amd64
     - size:xlarge
@@ -146,7 +143,7 @@ sonar-test:
   rules:
     - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 pages:
-  stage: metadata
+  stage: build-test
   tags:
     - arch:amd64
     - size:xlarge
