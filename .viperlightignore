@@ -157,7 +157,7 @@ source/packages/@aws-accelerator/constructs/lib/aws-cloudwatch-logs/create-log-g
 source/packages/@aws-accelerator/constructs/lib/aws-cloudwatch-logs/create-log-groups/index.ts:179
 
 # Internal Test file and Account. Not to be published.
-.gitlab-ci.yml:90
+.gitlab-ci.yml:87
 
 # Internal AWS Workshop and Jam Session zip file. Not to be published.
 lza-on-aws-workshop.zip
