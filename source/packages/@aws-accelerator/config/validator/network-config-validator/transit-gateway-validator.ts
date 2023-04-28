@@ -233,7 +233,7 @@ export class TransitGatewayValidator {
         if (allValid) {
           // Validate CIDR route destinations
           this.validateTgwRouteCidrDestinations(tgw, routeTable, helpers, errors);
-          // Validate prefix list route detinations
+          // Validate prefix list route destinations
           this.validateTgwRoutePrefixListDestinations(values, tgw, routeTable, helpers, errors);
           // Validate static route entries
           this.validateTgwStaticRouteEntries(values, tgw, routeTable, helpers, errors);
@@ -357,7 +357,7 @@ export class TransitGatewayValidator {
     cidrs.forEach(cidr => {
       if (!helpers.isValidIpv4Cidr(cidr)) {
         errors.push(
-          `[Transit gateway ${tgw.name} route table ${routeTable.name}]: destintion CIDR "${cidr}" is invalid. Value must be a valid IPv4 CIDR range`,
+          `[Transit gateway ${tgw.name} route table ${routeTable.name}]: destination CIDR "${cidr}" is invalid. Value must be a valid IPv4 CIDR range`,
         );
       }
     });
@@ -401,12 +401,24 @@ export class TransitGatewayValidator {
           `[Transit gateway ${tgw.name} route table ${routeTable.name}]: prefix list "${listName}" not found`,
         );
       }
-      if (prefixList && !prefixList.accounts.includes(tgw.account)) {
+      const accounts = [];
+      const regions = [];
+      if (prefixList?.accounts) {
+        accounts.push(...prefixList.accounts);
+      }
+      if (prefixList?.regions) {
+        accounts.push(prefixList.regions);
+      }
+      if (prefixList?.deploymentTargets) {
+        accounts.push(...helpers.getAccountNamesFromTarget(prefixList.deploymentTargets));
+        regions.push(...helpers.getRegionsFromDeploymentTarget(prefixList.deploymentTargets));
+      }
+      if (!accounts.includes(tgw.account)) {
         errors.push(
           `[Transit gateway ${tgw.name} route table ${routeTable.name}]: prefix list "${listName}" is not deployed to the same account as the TGW`,
         );
       }
-      if (prefixList && !prefixList.regions.includes(tgw.region)) {
+      if (!regions.includes(tgw.region)) {
         errors.push(
           `[Transit gateway ${tgw.name} route table ${routeTable.name}]: prefix list "${listName}" is not deployed to the same region as the TGW`,
         );

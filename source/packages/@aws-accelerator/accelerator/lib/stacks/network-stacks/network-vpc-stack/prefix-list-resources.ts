@@ -35,17 +35,9 @@ export class PrefixListResources {
    */
   private createPrefixLists(props: AcceleratorStackProps): Map<string, PrefixList> {
     const prefixListMap = new Map<string, PrefixList>();
-
     for (const prefixListItem of props.networkConfig.prefixLists ?? []) {
-      // Check if the set belongs in this account/region
-      const accountIds = prefixListItem.accounts.map(item => {
-        return props.accountsConfig.getAccountId(item);
-      });
-      const regions = prefixListItem.regions.map(item => {
-        return item.toString();
-      });
-
-      if (this.stack.isTargetStack(accountIds, regions)) {
+      const prefixListTargets = this.stack.getPrefixListTargets(prefixListItem);
+      if (this.stack.isTargetStack(prefixListTargets.accountIds, prefixListTargets.regions)) {
         this.stack.addLogs(LogLevel.INFO, `Adding Prefix List ${prefixListItem.name}`);
 
         const prefixList = new PrefixList(this.stack, pascalCase(`${prefixListItem.name}PrefixList`), {

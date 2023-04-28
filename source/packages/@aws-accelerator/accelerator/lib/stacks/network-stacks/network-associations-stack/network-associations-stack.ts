@@ -640,15 +640,9 @@ export class NetworkAssociationsStack extends NetworkStack {
   private setPrefixListMap(props: AcceleratorStackProps): Map<string, string> {
     const prefixListMap = new Map<string, string>();
     for (const prefixListItem of props.networkConfig.prefixLists ?? []) {
-      // Check if the set belongs in this account/region
-      const accountIds = prefixListItem.accounts.map(item => {
-        return this.props.accountsConfig.getAccountId(item);
-      });
-      const regions = prefixListItem.regions.map(item => {
-        return item.toString();
-      });
+      const prefixListTargets = this.getPrefixListTargets(prefixListItem);
 
-      if (this.isTargetStack(accountIds, regions)) {
+      if (this.isTargetStack(prefixListTargets.accountIds, prefixListTargets.regions)) {
         const prefixListId = cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,
           this.getSsmPath(SsmResourceType.PREFIX_LIST, [prefixListItem.name]),

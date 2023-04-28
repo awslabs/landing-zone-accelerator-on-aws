@@ -277,8 +277,9 @@ export class NetworkConfigTypes {
 
   static readonly prefixListConfig = t.interface({
     name: t.nonEmptyString,
-    accounts: t.array(t.nonEmptyString),
-    regions: t.array(t.region),
+    accounts: t.optional(t.array(t.nonEmptyString)),
+    regions: t.optional(t.array(t.region)),
+    deploymentTargets: t.optional(t.deploymentTargets),
     addressFamily: this.ipAddressFamilyEnum,
     maxEntries: t.number,
     entries: t.array(t.nonEmptyString),
@@ -2575,13 +2576,22 @@ export class PrefixListConfig implements t.TypeOf<typeof NetworkConfigTypes.pref
   /**
    * An array of friendly names for the accounts the prefix list is deployed.
    */
-  readonly accounts: string[] = [''];
+  readonly accounts: string[] | undefined = undefined;
   /**
    * An array of region names for the prefix list to be deployed.
    *
    * @see {@link t.Region}
    */
-  readonly regions: t.Region[] = ['us-east-1'];
+  readonly regions: t.Region[] | undefined = undefined;
+  /**
+   * Prefix List deployment targets.
+   *
+   * @remarks
+   * Targets can be account names and/or organizational units.
+   *
+   * @see {@link t.ShareTargets}
+   */
+  readonly deploymentTargets: t.DeploymentTargets | undefined = undefined;
   /**
    * The IP address family of the prefix list.
    */

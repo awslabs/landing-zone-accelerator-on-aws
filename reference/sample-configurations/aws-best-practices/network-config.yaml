@@ -317,10 +317,9 @@ transitGateways:
 #####################################
 # prefixLists:
 #   - name: accelerator-prefix-list
-#     accounts:
-#       - Network
-#     regions:
-#       - *HOME_REGION
+#     deploymentTargets:
+#       accounts:
+#         - Network
 #     addressFamily: 'IPv4'
 #     maxEntries: 1
 #     entries:

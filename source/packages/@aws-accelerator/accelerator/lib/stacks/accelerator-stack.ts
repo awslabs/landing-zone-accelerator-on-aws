@@ -31,6 +31,7 @@ import {
   NetworkConfig,
   NetworkConfigTypes,
   OrganizationConfig,
+  Region,
   SecurityConfig,
   ShareTargets,
   VpcConfig,
@@ -280,6 +281,17 @@ export abstract class AcceleratorStack extends cdk.Stack {
     }
 
     return accountIds;
+  }
+
+  public getRegionsFromDeploymentTarget(deploymentTargets: DeploymentTargets): Region[] {
+    const regions: Region[] = [];
+    const enabledRegions = this.props.globalConfig.enabledRegions;
+    regions.push(
+      ...enabledRegions.filter(region => {
+        return !deploymentTargets?.excludedRegions?.includes(region);
+      }),
+    );
+    return regions;
   }
 
   public getVpcAccountIds(vpcItem: VpcConfig | VpcTemplatesConfig): string[] {

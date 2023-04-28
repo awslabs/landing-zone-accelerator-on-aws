@@ -18,6 +18,7 @@ import {
   NetworkAclSubnetSelection,
   NfwFirewallPolicyConfig,
   NfwRuleGroupConfig,
+  PrefixListConfig,
   ResolverRuleConfig,
   SecurityGroupConfig,
   SubnetConfig,
@@ -161,7 +162,6 @@ export abstract class NetworkStack extends AcceleratorStack {
     }
     return sharedVpcs;
   }
-
   /**
    * Get VPCs in current scope of the stack context
    * @param vpcResources
@@ -202,6 +202,47 @@ export abstract class NetworkStack extends AcceleratorStack {
     });
   }
 
+  /**
+   * Public Get account and region deployment targets for prefix lists
+   * @param prefixListItem
+   */
+  public getPrefixListTargets(prefixListItem: PrefixListConfig): { accountIds: string[]; regions: string[] } {
+    // Check if the set belongs in this account/region
+    if (prefixListItem.accounts && prefixListItem.deploymentTargets) {
+      this.logger.error(
+        `prefix list ${prefixListItem.name} has both accounts and deploymentTargets defined. Please use deploymentTargets only.`,
+      );
+      throw new Error(`Configuration validation failed at runtime.`);
+    }
+
+    const accountIds = [];
+    const regions = [];
+    if (prefixListItem.accounts && prefixListItem.regions) {
+      // Check if the set belongs in this account/region
+      accountIds.push(
+        ...prefixListItem.accounts.map(item => {
+          return this.props.accountsConfig.getAccountId(item);
+        }),
+      );
+      regions.push(
+        ...prefixListItem.regions.map(item => {
+          return item.toString();
+        }),
+      );
+    }
+    if (prefixListItem.deploymentTargets) {
+      accountIds.push(...this.getAccountIdsFromDeploymentTarget(prefixListItem.deploymentTargets));
+      regions.push(...this.getRegionsFromDeploymentTarget(prefixListItem.deploymentTargets));
+    }
+    if (accountIds.length === 0) {
+      throw new Error(`No account targets specified for prefix list ${prefixListItem.name}`);
+    }
+    if (regions.length === 0) {
+      throw new Error(`No region targets specified for prefix list ${prefixListItem.name}`);
+    }
+
+    return { accountIds, regions };
+  }
   /**
    * Public accessor method to add logs to logger
    * @param logLevel

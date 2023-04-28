@@ -1755,10 +1755,19 @@ export class VpcValidator {
                 errors.push(
                   `[VPC ${vpcItem.name} security group ${group.name}]: inboundRule source prefix list "${listName}" does not exist`,
                 );
-              } else {
+                return;
+              }
+              if (prefixList.accounts || prefixList.deploymentTargets) {
                 // Prefix lists must be deployed to all deployment target accounts, including subnet shares
+                const accounts = [];
+                if (prefixList.accounts && prefixList.accounts.length > 0) {
+                  accounts.push(...prefixList.accounts);
+                }
+                if (prefixList.deploymentTargets) {
+                  accounts.push(...helpers.getAccountNamesFromTarget(prefixList.deploymentTargets));
+                }
                 const vpcAccountNames = [...new Set([...helpers.getVpcAccountNames(vpcItem), ...sharedAccounts])];
-                const targetComparison = helpers.compareTargetAccounts(vpcAccountNames, prefixList.accounts);
+                const targetComparison = helpers.compareTargetAccounts(vpcAccountNames, accounts);
                 if (targetComparison.length > 0) {
                   errors.push(
                     `[VPC ${vpcItem.name} security group ${group.name}]: inboundRule source prefix list "${listName}" is not deployed to one or more VPC deployment target or subnet share target accounts. Missing accounts: ${targetComparison}`,
@@ -1779,10 +1788,21 @@ export class VpcValidator {
                 errors.push(
                   `[VPC ${vpcItem.name} security group ${group.name}]: outboundRule source prefix list "${listName}" does not exist`,
                 );
-              } else {
+                return;
+              }
+
+              if (prefixList.accounts || prefixList.deploymentTargets) {
                 // Prefix lists must be deployed to all deployment target accounts, including subnet shares
+                const accounts = [];
+                if (prefixList.accounts && prefixList.accounts.length > 0) {
+                  accounts.push(...prefixList.accounts);
+                }
+
+                if (prefixList.deploymentTargets) {
+                  accounts.push(...helpers.getAccountNamesFromTarget(prefixList.deploymentTargets));
+                }
                 const vpcAccountNames = [...new Set([...helpers.getVpcAccountNames(vpcItem), ...sharedAccounts])];
-                const targetComparison = helpers.compareTargetAccounts(vpcAccountNames, prefixList.accounts);
+                const targetComparison = helpers.compareTargetAccounts(vpcAccountNames, accounts);
                 if (targetComparison.length > 0) {
                   errors.push(
                     `[VPC ${vpcItem.name} security group ${group.name}]: outboundRule source prefix list "${listName}" is not deployed to one or more VPC deployment target or subnet share target accounts. Missing accounts: ${targetComparison}`,
