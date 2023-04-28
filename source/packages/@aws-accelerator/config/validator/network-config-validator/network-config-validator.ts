@@ -66,7 +66,13 @@ export class NetworkConfigValidator {
 
     //
     // Instantiate helper method class
-    const helpers = new NetworkValidatorFunctions(values, ouIdNames, accounts, snsTopicNames);
+    const helpers = new NetworkValidatorFunctions(
+      values,
+      ouIdNames,
+      accounts,
+      snsTopicNames,
+      globalConfig.enabledRegions,
+    );
 
     //
     // Start Validation
@@ -116,10 +122,10 @@ export class NetworkConfigValidator {
    */
   private getSnsTopicNames(globalConfig: GlobalConfig, securityConfig: SecurityConfig): string[] {
     const snsTopicNames: string[] = [];
-    const securtiySnsSubscriptions =
+    const securitySnsSubscriptions =
       securityConfig.centralSecurityServices.snsSubscriptions?.map(snsSubscription => snsSubscription.level) ?? [];
     const globalSnsSubscriptions = globalConfig.snsTopics?.topics.map(topic => topic.name) ?? [];
-    snsTopicNames.push(...securtiySnsSubscriptions);
+    snsTopicNames.push(...securitySnsSubscriptions);
     snsTopicNames.push(...globalSnsSubscriptions);
 
     return snsTopicNames;

@@ -57,13 +57,31 @@ export class PrefixListValidator {
    */
   private validatePrefixListAccountNames(values: NetworkConfig, helpers: NetworkValidatorFunctions, errors: string[]) {
     values.prefixLists?.forEach(list => {
-      list.accounts.forEach(account => {
+      if (list.accounts && list.deploymentTargets) {
+        errors.push(`Cannot define both accounts and deploymentTargets for prefixList ${list.name}`);
+        return;
+      }
+      const deploymentTargetAccounts = [];
+      if (list.accounts) {
+        deploymentTargetAccounts.push(...list.accounts);
+      }
+      if (list.deploymentTargets?.accounts) {
+        deploymentTargetAccounts.push(...list.deploymentTargets.accounts);
+      }
+      deploymentTargetAccounts.forEach(account => {
         if (!helpers.accountExists(account)) {
           errors.push(
             `Target account ${account} for prefix list ${list.name} does not exist in accounts-config.yaml file`,
           );
         }
       });
+      if (list.deploymentTargets?.organizationalUnits) {
+        list.deploymentTargets.organizationalUnits.forEach(ou => {
+          if (!helpers.ouExists(ou)) {
+            errors.push(`Target OU ${ou} for prefix list ${list.name} does not exist in accounts-config.yaml file`);
+          }
+        });
+      }
     });
   }
 
