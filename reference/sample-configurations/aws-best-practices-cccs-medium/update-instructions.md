@@ -27,7 +27,9 @@ Changes to this configuration are released at the same time than LZA releases an
 ### v1.3.0
 The first version of this reference configuration was released with LZA version 1.3.0.
 
-### v1.3.3
+### v1.4.0
 This version introduces support for Control Tower in the configuration. **IMPORTANT**: Control Tower can only be enabled in the initial installation and not through an update.
 
 This version includes updates to some SCP statements, make sure to compare the changes and apply them to your configuration
+
+Security groups defined in shared VPCs are now replicated to accounts where the subnets are shared. If you reference a prefix list from a security group, you need to update the deployment targets of the prefix list to deploy the prefix list in all shared accounts. (network-config.yaml)

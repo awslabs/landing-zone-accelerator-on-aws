@@ -176,10 +176,13 @@ centralNetworkServices:
             - Infrastructure
 prefixLists:
   - name: onpremises-prefix-list
-    accounts:
-      - Network
-    regions:
-      - *HOME_REGION
+    deploymentTargets:
+      organizationalUnits: 
+        - Central
+        - Dev
+        - Test
+        - Prod
+        - Infrastructure
     addressFamily: "IPv4"
     maxEntries: 1
     entries:

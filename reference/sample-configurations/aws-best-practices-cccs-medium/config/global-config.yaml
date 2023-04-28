@@ -20,8 +20,9 @@ enabledRegions:
 managementAccountAccessRole: OrganizationAccountAccessRole # UPDATE: If using Control Tower, set to AWSControlTowerExecution
 cloudwatchLogRetentionInDays: 731
 terminationProtection: true
-centralizeCdkBuckets:
-  enable: true
+cdkOptions:
+  centralizeBuckets: true
+  useManagementAccessRole: false
 snsTopics:
   deploymentTargets:
     organizationalUnits:

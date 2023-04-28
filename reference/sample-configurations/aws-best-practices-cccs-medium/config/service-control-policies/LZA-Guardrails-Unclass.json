@@ -9,13 +9,9 @@
         "aws-marketplace:AssociateProductsWithPrivate*",
         "aws-marketplace:DescribePrivate*",
         "aws-marketplace:DisassociateProducts*",
-        "aws-marketplace:ListPrivate*",
-        "aws-marketplace:StartPrivate*",
-        "aws-marketplace:StopPrivate*",
-        "aws-marketplace:UpdatePrivate*"
+        "aws-marketplace:ListPrivate*"
       ],
-      "Resource": "*",
-      "Condition": {}
+      "Resource": "*"
     },
     {
       "Sid": "ROOT",
@@ -118,7 +114,6 @@
         "ram:CreateResourceShare",
         "ram:EnableSharingWithAwsOrg*",
         "lightsail:*",
-        "sumerian:*",
         "gamelift:*",
         "appflow:*",
         "iq:*"
@@ -138,7 +133,6 @@
         "ec2:AcceptTransitGateway*",
         "ec2:AssociateClientVpn*",
         "ec2:AuthorizeClientVpn*",
-        "ec2:AttachEgressOnlyInternetGateway",
         "ec2:AttachInternetGateway",
         "ec2:AttachVpnGateway",
         "ec2:CreateCarrierGateway",
