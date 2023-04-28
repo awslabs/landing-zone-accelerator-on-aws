@@ -80,6 +80,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
                 Name: `/accelerator/acm/${name}/arn`,
                 Value: certificateArn.CertificateArn!,
                 Type: 'String',
+                Overwrite: true,
               })
               .promise(),
           );
@@ -97,6 +98,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
                 Name: `/accelerator/acm/${name}/arn`,
                 Value: certificateArn.CertificateArn!,
                 Type: 'String',
+                Overwrite: true,
               })
               .promise(),
           );
