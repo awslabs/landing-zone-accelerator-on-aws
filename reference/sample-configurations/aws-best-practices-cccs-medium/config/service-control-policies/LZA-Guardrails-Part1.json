@@ -128,7 +128,7 @@
         "ssm:DeleteResourceDataSync"
       ],
       "Resource": [
-        "arn:${PARTITION}:ssm:*:*:parameter/AWSA*",
+        "arn:${PARTITION}:ssm:*:*:parameter/accelerator/*",
         "arn:${PARTITION}:ssm:*:*:document/AWSA*",
         "arn:${PARTITION}:ssm:*:*:document/SSM-SessionManagerRunShell",
         "arn:${PARTITION}:ssm:*:*:resource-data-sync/AWSA*"
@@ -146,8 +146,7 @@
         "ec2:DeleteFlowLogs",
         "logs:Delete*",
         "logs:PutRetentionPolicy",
-        "logs:PutSubscriptionFilter",
-        "logs:DeleteLogStream"
+        "logs:PutSubscriptionFilter"
       ],
       "Resource": "*",
       "Condition": {
