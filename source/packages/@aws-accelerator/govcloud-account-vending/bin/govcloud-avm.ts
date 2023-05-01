@@ -18,15 +18,8 @@ import { version } from '../../../../package.json';
 import * as cdk from 'aws-cdk-lib';
 import { GovCloudAccountVendingStack } from '../lib/govcloud-avm-stack';
 
-//
-// Verify ENV vars are set
-if (!process.env['ACCELERATOR_PREFIX']) {
-  throw new Error(
-    'Attempting to deploy GovCloudAccountVendingStack and environment variable ACCELERATOR_PREFIX is not set',
-  );
-}
-
-const acceleratorPrefix = process.env['ACCELERATOR_PREFIX'];
+// Set accelerator prefix environment variable
+const acceleratorPrefix = process.env['ACCELERATOR_PREFIX'] ?? 'AWSAccelerator';
 
 const app = new cdk.App();
 new GovCloudAccountVendingStack(app, `${acceleratorPrefix}-GovCloudAccountVending`, {
