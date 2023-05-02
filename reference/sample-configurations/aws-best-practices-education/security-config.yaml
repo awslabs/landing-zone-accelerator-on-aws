@@ -428,14 +428,13 @@ awsConfig:
         - name: accelerator-wafv2-logging-enabled
           identifier: WAFV2_LOGGING_ENABLED   
 
-    # Optional Config rules to check for resources protected by backups.
+    # Enabled AWS Config rules to check for resources protected by backups. 
+    # Supports ACSC ISM and Essentials 8 Workload Compliance
+
     - deploymentTargets:
-        organizationalUnits: []
+        organizationalUnits: 
+          - Root
       rules:
-        - name: accelerator-aurora-resources-protected-by-backup-plan
-          complianceResourceTypes:
-            - AWS::RDS::DBCluster
-          identifier: AURORA_RESOURCES_PROTECTED_BY_BACKUP_PLAN
         - name: accelerator-backup-plan-min-frequency-and-min-retention-check
           complianceResourceTypes:
             - AWS::Backup::BackupPlan
@@ -444,6 +443,10 @@ awsConfig:
           complianceResourceTypes:
             - AWS::Backup::RecoveryPoint
           identifier: BACKUP_RECOVERY_POINT_ENCRYPTED
+        - name: accelerator-backup-recovery-point-minimum-retention-check
+          complianceResourceTypes:
+          - AWS::Backup::RecoveryPoint
+          identifier: BACKUP_RECOVERY_POINT_MINIMUM_RETENTION_CHECK
         - name: accelerator-backup-recovery-point-manual-deletion-disabled
           complianceResourceTypes:
             - AWS::Backup::BackupVault
@@ -454,34 +457,171 @@ awsConfig:
           identifier: EC2_RESOURCES_PROTECTED_BY_BACKUP_PLAN
         - name: accelerator-rds-in-backup-plan
           identifier: RDS_IN_BACKUP_PLAN
+        - name: accelerator-aurora-resources-protected-by-backup-plan
+          complianceResourceTypes:
+            - AWS::RDS::DBCluster
+          identifier: AURORA_RESOURCES_PROTECTED_BY_BACKUP_PLAN
+        - name: accelerator-rds-resources-protected-by-backup-plan
+          complianceResourceTypes:
+            - AWS::RDS::DBInstance
+          identifier: RDS_RESOURCES_PROTECTED_BY_BACKUP_PLAN
+        - name: accelerator-dynamodb-resources-protected-by-backup-plan
+          complianceResourceTypes:
+            - AWS::DynamoDB::Table
+          identifier: DYNAMODB_RESOURCES_PROTECTED_BY_BACKUP_PLAN
+        - name: accelerator
+          complianceResourceTypes:
+            - AWS::EFS::FileSystem
+          identifier: EFS_RESOURCES_PROTECTED_BY_BACKUP_PLAN
+        - name: accelerator-fsx-resources-protected-by-backup-plan
+          complianceResourceTypes:
+            - AWS::FSx::FileSystem
+          identifier: FSX_RESOURCES_PROTECTED_BY_BACKUP_PLAN          
     
-    # Addtional rules for Education
+    # Addtional Rules for Education Customers
     - deploymentTargets:
         organizationalUnits:
           - Root
       rules:
-        - name: accelerator-sqs-queue-public-policy
+        - name: accelerator-restricted-common-ports
+          complianceResourceTypes:
+            - AWS::EC2::SecurityGroup
+          identifier: RESTRICTED_INCOMING_TRAFFIC
+        - name: accelerator-ssm-unencrypted-parameter
           type: Custom
-          description: Custom rule for checking SQS queue policy for external access
+          description: Custom rule for detecting unencrypted SSM parameters
           inputParameters:
-          # Optional - ignore queues that start with specific string
-          # QueueNameStartsWith: "accelerator"
           customRule:
             lambda:
-              sourceFilePath: custom-config-rules/sqs-queue-public-policy.zip
-              handler: lambda_handler
-              runtime: python3.7
-              timeout: 900
-              rolePolicyFile: custom-config-rules/sqs-queue-public-policy-role.json
+              sourceFilePath: custom-config-rules/ssm-unencrypted-parameter.zip
+              handler: lambda_function.lambda_handler
+              runtime: python3.8
+              rolePolicyFile: custom-config-rules/ssm-unencrypted-parameter-policy-role.json
             periodic: true
-            maximumExecutionFrequency: Three_Hours
+            maximumExecutionFrequency: Six_Hours
             configurationChanges: false
             triggeringResources:
               lookupType: ResourceTypes
               lookupKey: ResourceTypes
               lookupValue:
-                - AWS::SQS::Queue
-
+                - AWS::SSM::Parameter
+        - name: accelerator-rds-mysql-mariadb-unencrypted-transport
+          type: Custom
+          description: Custom rule for detecting unencrypted transport for RDS's MySQL & MariaDB engines
+          inputParameters:
+          customRule:
+            lambda:
+              sourceFilePath: custom-config-rules/rds-mysql-mariadb-unencrypted-transport.zip
+              handler: lambda_function.lambda_handler
+              runtime: python3.8
+              rolePolicyFile: custom-config-rules/rds-mysql-mariadb-unencrypted-transport-role.json
+            periodic: true
+            maximumExecutionFrequency: Six_Hours
+            configurationChanges: false
+            triggeringResources:
+              lookupType: ResourceTypes
+              lookupKey: ResourceTypes
+              lookupValue:
+                - AWS::RDS::DBInstance
+        - name: accelerator-rds-mssql-postgres-unencrypted-transport
+          type: Custom
+          description: Custom rule for detecting unencrypted transport for RDS Microsoft SQL/PostgreSQL
+          inputParameters:
+          customRule:
+            lambda:
+              sourceFilePath: custom-config-rules/rds-mssql-postgres-unencrypted-transport.zip
+              handler: lambda_function.lambda_handler
+              runtime: python3.8
+              rolePolicyFile: custom-config-rules/rds-mssql-postgres-unencrypted-transport-role.json
+            periodic: true
+            maximumExecutionFrequency: Six_Hours
+            configurationChanges: false
+            triggeringResources:
+              lookupType: ResourceTypes
+              lookupKey: ResourceTypes
+              lookupValue:
+                - AWS::RDS::DBInstance
+        - name: accelerator-rds-oracle-unencrypted-transport
+          type: Custom
+          description: Custom rule for detecting unencrypted transport for RDS Orcale
+          inputParameters:
+          customRule:
+            lambda:
+              sourceFilePath: custom-config-rules/rds-oracle-unencrypted-transport.zip
+              handler: lambda_function.lambda_handler
+              runtime: python3.8
+              rolePolicyFile: custom-config-rules/rds-oracle-unencrypted-transport-role.json
+            periodic: true
+            maximumExecutionFrequency: Six_Hours
+            configurationChanges: false
+            triggeringResources:
+              lookupType: ResourceTypes
+              lookupKey: ResourceTypes
+              lookupValue:
+                - AWS::RDS::DBInstance
+        - name: accelerator-workdocs-user-domain-detector
+          type: Custom
+          description: Custom rule for detecting Workdocs users not using defined domain
+          inputParameters:
+            # set the allowed domain for users 
+            WorkDocsDomain: "example.edu"
+          customRule:
+            lambda:
+              sourceFilePath: custom-config-rules/workdocs-user-domain-detector.zip
+              handler: lambda_function.lambda_handler
+              runtime: python3.8
+              rolePolicyFile: custom-config-rules/workdocs-user-domain-detector-role.json
+            periodic: true
+            maximumExecutionFrequency: Six_Hours
+            configurationChanges: false
+            triggeringResources:
+              lookupType: ResourceTypes
+              lookupKey: ResourceTypes
+              lookupValue:
+                - AWS::WorkDocs::User
+        - name: accelerator-cognito-password-complexity
+          type: Custom
+          description: Custom rule for validating Cognito password policy meets define parameters.
+          inputParameters:
+            # Adjust below parameters to preferred password policy requirements.
+            MinimumLength: "10"
+            RequireUppercase: "True"
+            RequireLowercase: "True"
+            RequireNumbers: "True"
+            RequireSymbols: "True"
+            TemporaryPasswordValidityDays: "15"
+          customRule:
+            lambda:
+              sourceFilePath: custom-config-rules/cognito-password-complexity.zip
+              handler: lambda_function.lambda_handler
+              runtime: python3.8
+              rolePolicyFile: custom-config-rules/cognito-password-complexity-role.json
+            periodic: true
+            maximumExecutionFrequency: Six_Hours
+            configurationChanges: false
+            triggeringResources:
+              lookupType: ResourceTypes
+              lookupKey: ResourceTypes
+              lookupValue:
+                  - AWS::Cognito::UserPool
+        - name: accelerator-emr-cluster-unencrypted-transport
+          type: Custom
+          description: Custom rule for detection of EMR clusters with security configuration not enforcing in-transit encryption.
+          inputParameters:
+          customRule:
+            lambda:
+              sourceFilePath: custom-config-rules/emr-cluster-unencrypted-transport.zip
+              handler: lambda_function.lambda_handler
+              runtime: python3.8
+              rolePolicyFile: custom-config-rules/emr-cluster-unencrypted-transport-role.json
+            periodic: True
+            maximumExecutionFrequency: Six_Hours
+            configurationChanges: False
+            triggeringResources:
+              lookupType: ResourceTypes
+              lookupKey: ResourceTypes
+              lookupValue:
+                  - AWS::EMR::Cluster
 cloudWatch:
   metricSets:
     - regions:
