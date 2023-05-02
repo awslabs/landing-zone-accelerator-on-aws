@@ -28,7 +28,7 @@ Step 4. Update the configuration files and release a change.
 
 * Using the IDE of your choice.  Update the `homeRegion` variable at the top of each config to match the region you deployed the solution to.
 * Update the configuration files to match the desired state of your environment. Look for the `UPDATE` comments for areas requiring updates, such as e-mail addresses in your `accounts-config.yaml`
-* Review the contents in the `Security Controls` section below to understand if any changes need to be made to meet organizational requirements.
+* Review the contents in the `Security Controls` section below to understand included controls specific to Education customers, and if any changes need to be made to meet organizational requirements.
 * Commit and push all your change to the `aws-accelerator-config` AWS CodeCommit repository.
 * Release a change manually to the AWSAccelerator-Pipeline pipeline.
 
@@ -36,7 +36,7 @@ Step 4. Update the configuration files and release a change.
 
 The education industry is highly regulated. The LZA for Education provides additional guardrails to help mitigate against the threats faced by education customers. The LZA for Education is not meant to be feature complete for fully compliant, but rather is intended to help accelerate cloud migrations and cloud refactoring efforts by organizations serving the education industry. While much effort has been made to reduce the effort required to manually build a production-ready infrastructure, you will still need to tailor it to your unique business needs.
 
-This solution includes controls from frameworks in various geographies, including `NIST 800-53`, `ITAR`, `NIST 800-171`, and `CMMC`. If you are deploying the Landing Zone Accelerator on AWS for Education solution, please consult with your AWS team to understand controls to meet your requirements.
+This solution includes controls from frameworks in various geographies, including `NIST 800-53`, `NIST 800-171`, `ITAR`, `ACSC Essential 8`, `ACSC ISM`, and `CMMC`. If you are deploying the Landing Zone Accelerator on AWS for Education solution, please consult with your AWS team to understand controls to meet your requirements.
 
 >**Note**: Some compliance requirements may need to be met using AWS GovCloud Regions, such as ITAR.
 
@@ -80,11 +80,11 @@ Please additionally review the `network-config.yaml`. It contains several commen
 ## Security Controls
 Security controls are set in place as protection against human error and safe guards from inadvertent actions within the AWS environment. These controls take the form of AWS Config rules and Service Control Policies (SCPs). The file `organization-config.yaml` provides detailed information surrounding the declaration of SCPs, Tagging Policies, and Backup Policies. SCPs can be as general or as specific as needed. Each SCP workload is able to be customized to meet organization requirements. Below are sample policies provided for a few specific use cases:
 
-* **Service Control Policies**: Service control policies have been provided in `service-control-policies/guardrails-1.json` and `service-control-policies/guardrails-2.json`, that prevent changes to and deletion of policies which control IAM policy creation, Lambda permissions, mapping, CloudWatch Logs retention policy and KMS key disassociation to name a few. These services and their correct configuration are vital for OUs such as that of the Department Information System, where user access and IAM policies have strict requirements. LZA for Education also includes two additional SCP, `service-control-policies/education-scp.json` and `service-control-policies/education-scp-2.json` that accounts for additional controls relevant to many Education customers. `service-control-policies/education-scp-2.json` is disabled by default. Details on the additional controls can be viewed in [Appendix A](#appendix-a-education-personalized-controls).
+* **Service Control Policies**: Service control policies have been provided in `service-control-policies/guardrails-1.json` and `service-control-policies/guardrails-2.json`, that prevent changes to and deletion of policies which control IAM policy creation, Lambda permissions, mapping, CloudWatch Logs retention policy and KMS key disassociation to name a few. These services and their correct configuration are vital for OUs such as that of the Department Information System, where user access and IAM policies have strict requirements. LZA for Education also includes two additional SCP, `service-control-policies/education-scp.json` and `service-control-policies/education-scp-2.json` that accounts for additional guardrails relevant to many Education customers. `service-control-policies/education-scp-2.json` is disabled by default. Details on these controls can be viewed in [Appendix A](#appendix-a-education-personalized-controls).
 * **Tagging Policies**: A sample tagging policy has been provided in `tagging-policies/org-tag-policy.json` showing how you can further extend these policies to define `Environment Type` for `Prod`, `QA`, `Dev` workloads, and `Data Classification` to track sensitive and non-sensitive workloads, as well as how to enforce them to specific AWS services. The sample policy can be edited to reflect your organizations departments and their unique needs, such that resources provisioned by the LZA are automatically tagged in accordance with your business requirements.
 * **Backup Policies**: A sample backup policy has been provided in `backup-policies/org-backup-plan.json` as an example for how backups can be scheduled along with lifecycle and retention management settings. This policy can directly enable OUs, such as those responsible for Student Financial Aid and that of the Bursar, to specify data retention policies and the frequency of backups, in order to comply with **Federal Student Aid (FSA)** third party auditing requirements, for example.
 
-The `security-config.yaml` file can be used to configure AWS services such as AWS Config, AWS Security Hub, and to enable storage encryption. Additional alarms and metrics have been provided to inform you of actions within your AWS Cloud environment. For a list of all of the services and settings that can be configured, see the [LZA on AWS Implementation Guide](#references) in the references section below.  This file also contains the AWS Config rules that make up the list of detective guardrails used
+The `security-config.yaml` file can be used to configure AWS services such as AWS Config, AWS Security Hub, and to enable storage encryption. Additional alarms and metrics have been provided to inform you of actions within your AWS Cloud environment. For a list of all of the services and settings that can be configured, see the [references](#references) section below. For a list of included controls for Education customers, review [Appendix A](#appendix-a-education-personalized-controls).  
 
 The `global-config.yaml` file contains settings that enable regions, centralized logging using AWS CloudTrail and Amazon CloudWatch Logs and the retention period for those logs to help you meet your monitoring needs.
  
@@ -112,28 +112,60 @@ This is a baseline for Education Landing Zone Accelerate consisting of best prac
 ## Appendix A: Education Personalized Controls
 
 * #### This table provides a list of additional security controls included in LZA for Education, in addition to Best-Practices. Controls can be removed, if not pertinent to your use-case.
+> **_Note_:** Additional security controls are in development. Please open a [GitHub feature request or bug report ](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/new/choose) to request a new control or report issues.
 
 | Control Description | Control Service | Service Detail | Reference File |
 | --------------------|--------------|----------------|----------------------|
-| Detect SQS Queue with Public Access  | AWS Config Custom Rule | accelerator-sqs-queue-public-policy | security-config.yaml |
 | Block ElastiCache Unencrypted At-Rest | AWS Organizations SCP | ElastiCacheRedisEncryptionAtRest | service-control-policies/education-scp.json |
 | Block ElastiCache Unencrypted In-Transit | AWS Organizations SCP | ElastiCacheRedisEncryptionInTransit | service-control-policies/education-scp.json |
 | ElastiCache Redis command AUTH required | AWS Organizations SCP | ElasticacheRedisAUTHEnabled | service-control-policies/education-scp.json |
 | Deny ElastiCache Memcached (No At-Rest Encryption) | AWS Organizations SCP | MemcachedBlockNoAtRestEncryption | service-control-policies/education-scp.json |
 | Regionally Block Bucket Creation (Disabled by Default) | AWS Organizations SCP | BlockS3BucketRegions | service-control-policies/education-scp-2.json |
 | Block RDS SQL Express Edition (No At-Rest Encryption) |  AWS Organizations SCP | BlockRDSMsSQLExpressNoEncryption | service-control-policies/education-scp.json |  
+| Detect SSM Parameters Not Encrypted | AWS Config Custom Rule | accelerator-ssm-unencrypted-parameter | security-config.yaml |
+| Detect RDS MySQL/MariaDB Instances Not Enforcing In-transit Encryption | AWS Config Custom Rule | accelerator-rds-mysql-mariadb-unencrypted-transport | security-config.yaml |
+| Detect RDS MSSQL/PostgreSQL Instances Not Enforcing In-transit Encryption | AWS Config Custom Rule | accelerator-rds-mssql-postgres-unencrypted-transport | security-config.yaml |
+| Detect RDS Oracle Instances Not Enforcing In-transit Encryption | AWS Config Custom Rule | accelerator-rds-oracle-unencrypted-transport | security-config.yaml |
+| Detect WorkDocs User Domains Not Allowed | AWS Config Custom Rule | accelerator-workdocs-user-domain-detector | security-config.yaml |
+| Detect Cognito User Pools With Weak Password Policy | AWS Config Custom Rule | accelerator-cognito-password-complexity | security-config.yaml |
+| Detect EMR Clusters Not Enforcing In-transit Encryption | AWS Config Custom Rule | accelerator-emr-cluster-unencrypted-transport | security-config.yaml |
+| Detect Security Groups Not Restricting Ingress Traffic | AWS Config Managed Rule | accelerator-restricted-common-ports | security-config.yaml |
+| Detect AWS Backup Plan Not Meeting Required Frequency and Retention | AWS Config Managed Rule | accelerator-backup-plan-min-frequency-and-min-retention-check | security-config.yaml |
+| Detect AWS Backup Recovery Point Not Encrypted | AWS Config Managed Rule | accelerator-backup-recovery-point-encrypted | security-config.yaml |
+| Detect AWS Backup Recovery Point Retention Less Than Required | AWS Config Managed Rule | accelerator-backup-recovery-point-minimum-retention-check | security-config.yaml |
+| Detect AWS Backup Vault Allowing Manual Recovery Point Deletion | AWS Config Managed Rule | accelerator-backup-recovery-point-manual-deletion-disabled | security-config.yaml |
+| Detects Running EC2 Instances Not Protected by AWS Backup Plan | AWS Config Managed Rule | accelerator-ec2-resources-protected-by-backup-plan | security-config.yaml |
+| Detects RDS Aurora DB Cluster Not Protected by AWS Backup Plan | AWS Config Managed Rule | accelerator-aurora-resources-protected-by-backup-plan | security-config.yaml |
+| Detects RDS DB Instances Not Protected by AWS Backup Plan | AWS Config Managed Rule | accelerator-rds-resources-protected-by-backup-plan | security-config.yaml |
+| Detects Amazon DynamoDB Tables Not Protected by AWS Backup Plan | AWS Config Managed Rule | accelerator-dynamodb-resources-protected-by-backup-plan | security-config.yaml |
+| Detects Amazon EFS File Systems Not Protected by AWS Backup Plan | AWS Config Managed Rule | accelerator-efs-resources-protected-by-backup-plan | security-config.yaml |
+| Detects Amazon FSx File Systems Not Protected by AWS Backup Plan | AWS Config Managed Rule | accelerator-fsx-resources-protected-by-backup-plan | security-config.yaml |
 
 * #### This table details the intent of the above additional controls with references.
 
 | Control | Reference | Intent |
 |-------------|--------|-----------|
-| accelerator-sqs-queue-public-policy | [Amazon SQS security best practices](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-security-best-practices.html#ensure-queues-not-publicly-accessible) | Ensure least privilege external access to your Amazon SQS queue. |
 | ElastiCacheEncryptionAtRest | [At-Rest Encryption in ElastiCache](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/at-rest-encryption.html) | Ensure increased data security protection by encrypting on-disk data.|
 | ElastiCacheEncryptionInTransit | [ElastiCache in-transit Encrpytion](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/in-transit-encryption.html) | Ensure increased data security protection by encrypting data in-transit.|
 | ElasticacheRedisAUTHEnabled | [Redis AUTH command](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/auth.html) | Redis authentication tokens enable Redis to require password before allowing command execution, thereby improving data security. |
 | MemcachedBlockNoAtRestEncryption | [At-Rest Encryption in ElastiCache](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/at-rest-encryption.html) | Elasticache Memcached does not support encryption at-rest. |
 | BlockS3BucketRegions | [AWS Data Residency](https://d1.awsstatic.com/whitepapers/compliance/Data_Residency_Whitepaper.pdf) | Help meet data residency requirements by blocking s3 buckets in specific regions. |
 | BlockRDSMsSQLExpressNoEncryption | [Availability of Amazon RDS Encryption](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.Encryption.html#Overview.Encryption.Availability) | Amazon RDS encryption is currently available for all database engines and storage types, except for SQL Server Express Edition. |
-
-
-> **_Note_:** Additional security controls are in development. Please open an issue to request a control be added.
+| accelerator-ssm-unencrypted-parameter | [What is a Parameter?](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html#what-is-a-parameter) | Don't store sensitive data in a String or StringList parameter. |
+| accelerator-rds-mysql-mariadb-unencrypted-transport | [Require SSL/TLS for RDS MySQL/MariaDB Connections](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/mysql-ssl-connections.html#mysql-ssl-connections.require-ssl) | Secure database network connections between client and server. |
+| accelerator-rds-mssql-postgres-unencrypted-transport | [SSL With MS SQL](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/SQLServer.Concepts.General.SSL.Using.html) | Secure database network connections between client and server. |
+| accelerator-rds-oracle-unencrypted-transport | [RDS Oracle Encryption Options](https://aws.amazon.com/blogs/apn/oracle-database-encryption-options-on-amazon-rds/) | Secure database network connections between client and server. |
+| accelerator-workdocs-user-domain-detector | [Manage WorkDocs Sites](https://docs.aws.amazon.com/workdocs/latest/adminguide/manage-sites.html#invitation-settings) | Monitor user invites outside allowed domain. |
+| accelerator-cognito-password-complexity | [Adding User Pool Password Requirements](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-policies.html) | Enforce strong passwords for your app users. |
+| accelerator-emr-cluster-unencrypted-transport | [EMR Encryption Options](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-data-encryption-options.html) | Utilize in-transit encryption with EMR. |
+| accelerator-restricted-common-ports | [Control Traffic to Resources](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html) | Use least-permissive security groups to control traffic to resources. |
+| accelerator-backup-plan-min-frequency-and-min-retention-check | [Managing Backups Using Backup Plans](https://docs.aws.amazon.com/aws-backup/latest/devguide/about-backup-plans.html) | Ensure AWS Backup Plans meet organizational requirements. |
+| accelerator-backup-recovery-point-encrypted | [Working with Backups](https://docs.aws.amazon.com/aws-backup/latest/devguide/recovery-points.html) | Ensure AWS Backup recovery points meet encryption requirements. |
+| accelerator-backup-recovery-point-minimum-retention-check | [Minimum Retention for Recovery Point](https://docs.aws.amazon.com/aws-backup/latest/devguide/controls-and-remediation.html#backup-recovery-point-minimum-retention) | Ensure AWS Backup recovery points meet retention requirements. |
+| accelerator-backup-recovery-point-manual-deletion-disabled | [Vaults Prevent Manual Deletion](https://docs.aws.amazon.com/aws-backup/latest/devguide/controls-and-remediation.html#backup-prevent-recovery-point-manual-deletion) | Ensure AWS Backup Vaults prevent manual deletion of backups. |
+| accelerator-ec2-resources-protected-by-backup-plan | [EC2 Backup Plan](https://docs.aws.amazon.com/config/latest/developerguide/ec2-resources-protected-by-backup-plan.html) | Ensure running EC2 resources are backed up and meet requirements. |
+| accelerator-aurora-resources-protected-by-backup-plan | [Using AWS Backup with RDS Aurora](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Managing.Backups.html) | Ensure RDS Aurora resources have backups that meet requirements. |
+| accelerator-rds-resources-protected-by-backup-plan | [Using AWS Backup with RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_WorkingWithAutomatedBackups.html#AutomatedBackups.AWSBackup) | Ensure RDS resources have backups that meet requirements. |
+| accelerator-dynamodb-resources-protected-by-backup-plan | [Using AWS Backup with DynamoDB](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/backuprestore_HowItWorksAWS.html) | Ensure DynamoDB Tables have backups that meet requirements. |
+| accelerator-efs-resources-protected-by-backup-plan | [Using AWS Backup with EFS](https://docs.aws.amazon.com/efs/latest/ug/awsbackup.html) | Ensure EFS File Systems have backups that meet requirements. |
+| accelerator-fsx-resources-protected-by-backup-plan | [Using AWS Backup with FSx](https://docs.aws.amazon.com/fsx/latest/WindowsGuide/using-backups.html) | Ensure FSx File Systems have backups that meet requirements. |

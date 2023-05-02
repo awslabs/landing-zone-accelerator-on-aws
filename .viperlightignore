@@ -32,7 +32,14 @@ error.log
 .*/attach-ec2-instance-profile.zip
 .*/ec2-instance-profile-permissions.zip
 .*/targetDocumentLambda.zip
-.*/custom-config-rules/sqs-queue-public-policy.zip
+.*/custom-config-rules/cognito-password-complexity.zip
+.*/custom-config-rules/emr-cluster-unencrypted-transport.zip
+.*/custom-config-rules/iam-required-policy.zip
+.*/custom-config-rules/rds-mssql-postgres-unencrypted-transport.zip
+.*/custom-config-rules/rds-mysql-mariadb-unencrypted-transport.zip
+.*/custom-config-rules/ssm-unencrypted-parameter.zip
+.*/custom-config-rules/workdocs-user-domain-detector.zip
+.*/custom-config-rules/rds-oracle-unencrypted-transport.zip
 
 #
 # Line level file ignores (keep in alphabetical order)
