@@ -1022,6 +1022,338 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::ServiceLinkedRole",
     },
+    "ConfigBucketCmkC7CFE158": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "EnableKeyRotation": true,
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::333333333333:root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "ConfigBucketConfigBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRole9722BD80": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "s3.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Path": "/service-role/",
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ConfigBucketConfigBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRoleDefaultPolicyE9501E79": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetObjectLegalHold",
+                "s3:GetObjectRetention",
+                "s3:GetObjectVersion",
+                "s3:GetObjectVersionAcl",
+                "s3:GetObjectVersionForReplication",
+                "s3:GetObjectVersionTagging",
+                "s3:GetReplicationConfiguration",
+                "s3:ListBucket",
+                "s3:ReplicateDelete",
+                "s3:ReplicateObject",
+                "s3:ReplicateTags",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "ConfigBucketE7CC15D9",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "ConfigBucketE7CC15D9",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "s3:GetBucketVersioning",
+                "s3:GetObjectVersionTagging",
+                "s3:ObjectOwnerOverrideToBucketOwner",
+                "s3:PutBucketVersioning",
+                "s3:ReplicateDelete",
+                "s3:ReplicateObject",
+                "s3:ReplicateTags",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":s3:::aws-accelerator-central-logs-333333333333-us-west-2/*",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": "kms:Decrypt",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "ConfigBucketCmkC7CFE158",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": "kms:Encrypt",
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "AcceleratorCentralLogBucketKeyLookup26F8C418",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ConfigBucketConfigBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRoleDefaultPolicyE9501E79",
+        "Roles": [
+          {
+            "Ref": "ConfigBucketConfigBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRole9722BD80",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ConfigBucketConfigBucketReplicationB49EB5CE": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomS3PutBucketReplicationCustomResourceProviderLogGroup6A67905E",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomS3PutBucketReplicationCustomResourceProviderHandler1D75398C",
+            "Arn",
+          ],
+        },
+        "destinationAccountId": "333333333333",
+        "destinationBucketArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":s3:::aws-accelerator-central-logs-333333333333-us-west-2",
+            ],
+          ],
+        },
+        "destinationBucketKeyArn": {
+          "Ref": "AcceleratorCentralLogBucketKeyLookup26F8C418",
+        },
+        "prefix": "",
+        "replicationRoleArn": {
+          "Fn::GetAtt": [
+            "ConfigBucketConfigBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRole9722BD80",
+            "Arn",
+          ],
+        },
+        "sourceBucketName": {
+          "Ref": "ConfigBucketE7CC15D9",
+        },
+      },
+      "Type": "Custom::S3PutBucketReplication",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ConfigBucketE7CC15D9": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "KMSMasterKeyID": {
+                  "Fn::GetAtt": [
+                    "ConfigBucketCmkC7CFE158",
+                    "Arn",
+                  ],
+                },
+                "SSEAlgorithm": "aws:kms",
+              },
+            },
+          ],
+        },
+        "BucketName": "aws-accelerator-aws-config-333333333333-us-east-1",
+        "LoggingConfiguration": {
+          "DestinationBucketName": {
+            "Ref": "AccessLogsBucketFA218D2A",
+          },
+          "LogFilePrefix": "aws-accelerator-aws-config-333333333333-us-east-1/",
+        },
+        "OwnershipControls": {
+          "Rules": [
+            {
+              "ObjectOwnership": "BucketOwnerPreferred",
+            },
+          ],
+        },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true,
+        },
+        "VersioningConfiguration": {
+          "Status": "Enabled",
+        },
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "ConfigBucketPolicy97E52C2B": {
+      "Properties": {
+        "Bucket": {
+          "Ref": "ConfigBucketE7CC15D9",
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:*",
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "ConfigBucketE7CC15D9",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "ConfigBucketE7CC15D9",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+              "Sid": "deny-insecure-connections",
+            },
+            {
+              "Action": "s3:PutObject",
+              "Condition": {
+                "StringEquals": {
+                  "s3:x-amz-acl": "bucket-owner-full-control",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "config.amazonaws.com",
+              },
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "ConfigBucketE7CC15D9",
+                        "Arn",
+                      ],
+                    },
+                    "/*",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "s3:GetBucketAcl",
+                "s3:ListBucket",
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "config.amazonaws.com",
+              },
+              "Resource": {
+                "Fn::GetAtt": [
+                  "ConfigBucketE7CC15D9",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::S3::BucketPolicy",
+    },
     "CrossAccountCentralSnsTopicKMSArnSsmParamAccessRoleFA0EB249": {
       "Metadata": {
         "cdk_nag": {

@@ -82,6 +82,11 @@ export abstract class GlobalConfigTypes {
     kmsResourcePolicyAttachments: t.optional(t.array(t.resourcePolicyStatement)),
   });
 
+  static readonly configBucketConfig = t.interface({
+    lifecycleRules: t.array(t.lifecycleRuleConfig),
+    s3ResourcePolicyAttachments: t.optional(t.array(t.resourcePolicyStatement)),
+  });
+
   static readonly elbLogBucketConfig = t.interface({
     lifecycleRules: t.array(t.lifecycleRuleConfig),
     s3ResourcePolicyAttachments: t.optional(t.array(t.resourcePolicyStatement)),
@@ -603,6 +608,40 @@ export class CentralLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes
 }
 
 /**
+ * *{@link GlobalConfig} / {@link LoggingConfig} / {@link ConfigBucketConfig}*
+ *
+ * Accelerator global S3 config logging configuration
+ *
+ * @example
+ * ```
+ * configBucket:
+ *   lifecycleRules:
+ *     - enabled: true
+ *       id: ConfigLifecycle
+ *       abortIncompleteMultipartUpload: 14
+ *       expiration: 3563
+ *       expiredObjectDeleteMarker: true
+ *       noncurrentVersionExpiration: 3653
+ *       noncurrentVersionTransitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       transitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *   s3ResourcePolicyAttachments:
+ *     - policy: s3-policies/policy1.json
+ * ```
+ */
+export class ConfigBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.configBucketConfig> {
+  /**
+   * Declaration of (S3 Bucket) Lifecycle rules.
+   * Configure additional resource policy attachments
+   */
+  readonly lifecycleRules: t.LifeCycleRule[] = [];
+  readonly s3ResourcePolicyAttachments: t.ResourcePolicyStatement[] | undefined = undefined;
+}
+
+/**
  * *{@link GlobalConfig} / {@link LoggingConfig} / {@link ElbLogBucketConfig}*
  *
  * Accelerator global S3 elb logging configuration
@@ -783,6 +822,10 @@ export class LoggingConfig implements t.TypeOf<typeof GlobalConfigTypes.loggingC
    * Declaration of a (S3 Bucket) Lifecycle rule configuration.
    */
   readonly centralLogBucket: CentralLogBucketConfig | undefined = undefined;
+  /**
+   * Declaration of a (S3 Bucket) Lifecycle rule configuration.
+   */
+  readonly configBucket: ConfigBucketConfig | undefined = undefined;
   /**
    * Declaration of a (S3 Bucket) Lifecycle rule configuration.
    */

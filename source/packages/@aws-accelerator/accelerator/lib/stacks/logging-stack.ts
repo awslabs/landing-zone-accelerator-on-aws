@@ -254,6 +254,64 @@ export class LoggingStack extends AcceleratorStack {
     // Create VPC Flow logs destination bucket
     this.createVpcFlowLogsBucket(s3Key, serverAccessLogsBucket, replicationProps);
 
+    if (
+      cdk.Stack.of(this).account === this.props.accountsConfig.getLogArchiveAccountId() &&
+      this.props.securityConfig.awsConfig.useSeparateBucket
+    ) {
+      const configBucket = new Bucket(this, 'ConfigBucket', {
+        encryptionType: BucketEncryptionType.SSE_KMS,
+        s3BucketName: `${this.acceleratorResourceNames.bucketPrefixes.awsConfig}-${cdk.Stack.of(this).account}-${
+          cdk.Stack.of(this).region
+        }`,
+        kmsKey: this.centralLogsBucket?.getS3Bucket().getKey(),
+        serverAccessLogsBucket: serverAccessLogsBucket.getS3Bucket(),
+        replicationProps,
+        s3LifeCycleRules: this.getS3LifeCycleRules(this.props.globalConfig.logging.configBucket?.lifecycleRules),
+      });
+
+      // To make sure central log bucket created before elb access log bucket, this is required when logging stack executes in home region
+      if (this.centralLogsBucket) {
+        configBucket.node.addDependency(this.centralLogsBucket);
+      }
+
+      // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `/${this.stackName}/ConfigBucket/ConfigBucketReplication/` +
+          pascalCase(this.centralLogsBucketName) +
+          '-ReplicationRole/DefaultPolicy/Resource',
+        [
+          {
+            id: 'AwsSolutions-IAM5',
+            reason: 'Allows only specific policy.',
+          },
+        ],
+      );
+
+      configBucket.getS3Bucket().addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          principals: [new cdk.aws_iam.ServicePrincipal('config.amazonaws.com')],
+          actions: ['s3:PutObject'],
+          resources: [configBucket.getS3Bucket().arnForObjects('*')],
+          conditions: {
+            StringEquals: {
+              's3:x-amz-acl': 'bucket-owner-full-control',
+            },
+          },
+        }),
+      );
+
+      configBucket.getS3Bucket().addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          principals: [new cdk.aws_iam.ServicePrincipal('config.amazonaws.com')],
+          actions: ['s3:GetBucketAcl', 's3:ListBucket'],
+          resources: [configBucket.getS3Bucket().bucketArn],
+        }),
+      );
+
+      this.configBucketAddResourcePolicies(configBucket.getS3Bucket());
+    }
+
     /**
      * Create S3 Bucket for ELB Access Logs, this is created in log archive account
      * For ELB to write access logs bucket is needed to have SSE-S3 server-side encryption
@@ -1768,6 +1826,24 @@ export class LoggingStack extends AcceleratorStack {
       NagSuppressions.addResourceSuppressions(fmsRole, [
         { id: 'AwsSolutions-IAM5', reason: 'Allow cross-account resources to encrypt KMS under this path.' },
       ]);
+    }
+  }
+
+  private configBucketAddResourcePolicies(configBucket: cdk.aws_s3.IBucket) {
+    this.logger.info('Adding AWS Config bucket resource policies to S3');
+    for (const attachment of this.props.globalConfig.logging.configBucket?.s3ResourcePolicyAttachments ?? []) {
+      const policyDocument = JSON.parse(
+        this.generatePolicyReplacements(path.join(this.props.configDirPath, attachment.policy), false),
+      );
+      // Create a statements list using the PolicyStatement factory
+      const statements: cdk.aws_iam.PolicyStatement[] = [];
+      for (const statement of policyDocument.Statement) {
+        statements.push(cdk.aws_iam.PolicyStatement.fromJson(statement));
+      }
+
+      for (const statement of statements) {
+        configBucket.addToResourcePolicy(statement);
+      }
     }
   }
 

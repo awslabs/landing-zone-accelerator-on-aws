@@ -73,6 +73,7 @@ interface BucketPrefixes {
   elbLogs: string;
   costUsage: string;
   s3AccessLogs: string;
+  awsConfig: string;
   auditManager: string;
   vpcFlowLogs: string;
   metadata: string;
@@ -137,6 +138,7 @@ export class AcceleratorResourceNames {
     elbLogs: 'PLACE_HOLDER',
     costUsage: 'PLACE_HOLDER',
     s3AccessLogs: 'PLACE_HOLDER',
+    awsConfig: 'PLACE_HOLDER',
     auditManager: 'PLACE_HOLDER',
     vpcFlowLogs: 'PLACE_HOLDER',
     metadata: 'PLACE_HOLDER',
@@ -256,6 +258,7 @@ export class AcceleratorResourceNames {
     this.bucketPrefixes.elbLogs = props.prefixes.bucketName + '-elb-access-logs';
     this.bucketPrefixes.costUsage = props.prefixes.bucketName + '-cur';
     this.bucketPrefixes.s3AccessLogs = props.prefixes.bucketName + '-s3-access-logs';
+    this.bucketPrefixes.awsConfig = props.prefixes.bucketName + '-aws-config';
     this.bucketPrefixes.auditManager = props.prefixes.bucketName + '-auditmgr';
     this.bucketPrefixes.vpcFlowLogs = props.prefixes.bucketName + '-vpc';
     this.bucketPrefixes.metadata = props.prefixes.bucketName + '-metadata';

@@ -2764,7 +2764,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         "ConfigSnapshotDeliveryProperties": {
           "DeliveryFrequency": "One_Hour",
         },
-        "S3BucketName": "aws-accelerator-central-logs-333333333333-us-west-2",
+        "S3BucketName": "aws-accelerator-aws-config-333333333333-us-west-2",
       },
       "Type": "AWS::Config::DeliveryChannel",
     },

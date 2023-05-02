@@ -476,6 +476,7 @@ export class SecurityConfigTypes {
     enableDeliveryChannel: t.optional(t.boolean),
     overrideExisting: t.optional(t.boolean),
     aggregation: t.optional(this.awsConfigAggregation),
+    useSeparateBucket: t.optional(t.boolean),
     ruleSets: t.array(this.awsConfigRuleSet),
   });
 
@@ -1896,6 +1897,7 @@ export class AwsConfigRuleSet implements t.TypeOf<typeof SecurityConfigTypes.aws
  *   ** enableDeliveryChannel DEPRECATED
  *   enableDeliveryChannel: true
  *   overrideExisting: false
+ *   useSeparateBucket: false
  *   aggregation:
  *     enable: true
  *     delegatedAdminAccount: LogArchive
@@ -1941,6 +1943,12 @@ export class AwsConfig implements t.TypeOf<typeof SecurityConfigTypes.awsConfig>
    * iam permission for the iam role name {acceleratorPrefix}Config
    */
   readonly overrideExisting: boolean | undefined;
+  /**
+   * Indicates whether to create a separate bucket to point delivery channel at.
+   *
+   * AWS Config delivery channel will point to this bucket and have its contents then replicated to the central logs bucket. This enables the option to enable Object Lock on the central logs bucket and still receiving data from the delivery channel.
+   */
+  readonly useSeparateBucket = false;
   /**
    * Config Recorder Aggregation configuration
    */

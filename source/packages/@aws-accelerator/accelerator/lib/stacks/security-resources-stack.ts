@@ -544,7 +544,11 @@ export class SecurityResourcesStack extends AcceleratorStack {
         });
 
         this.deliveryChannel = new cdk.aws_config.CfnDeliveryChannel(this, 'ConfigDeliveryChannel', {
-          s3BucketName: `${this.acceleratorResourceNames.bucketPrefixes.centralLogs}-${this.logArchiveAccountId}-${this.props.centralizedLoggingRegion}`,
+          s3BucketName: `${
+            this.props.securityConfig.awsConfig.useSeparateBucket
+              ? this.acceleratorResourceNames.bucketPrefixes.awsConfig
+              : this.acceleratorResourceNames.bucketPrefixes.centralLogs
+          }-${this.logArchiveAccountId}-${this.props.centralizedLoggingRegion}`,
           configSnapshotDeliveryProperties: {
             deliveryFrequency: 'One_Hour',
           },
@@ -553,7 +557,11 @@ export class SecurityResourcesStack extends AcceleratorStack {
 
       if (this.props.securityConfig.awsConfig.overrideExisting) {
         const configServiceUpdater = new ConfigServiceRecorder(this, 'ConfigRecorderDeliveryChannel', {
-          s3BucketName: `${this.acceleratorResourceNames.bucketPrefixes.centralLogs}-${this.logArchiveAccountId}-${this.props.centralizedLoggingRegion}`,
+          s3BucketName: `${
+            this.props.securityConfig.awsConfig.useSeparateBucket
+              ? this.acceleratorResourceNames.bucketPrefixes.awsConfig
+              : this.acceleratorResourceNames.bucketPrefixes.centralLogs
+          }-${this.logArchiveAccountId}-${this.props.centralizedLoggingRegion}`,
           s3BucketKmsKey: this.centralLogS3Key,
           logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
           configRecorderRoleArn: configRecorderRole.roleArn,
