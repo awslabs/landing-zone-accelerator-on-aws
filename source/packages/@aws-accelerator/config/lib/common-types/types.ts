@@ -259,10 +259,55 @@ export const deploymentTargets = t.interface({
   excludedRegions: optional(t.array(nonEmptyString)),
   excludedAccounts: optional(t.array(nonEmptyString)),
 });
+
+/**
+ * Deployment targets configuration.
+ * Deployment targets is an accelerator-specific
+ * configuration object that can be used for
+ * resources provisioned by the accelerator.
+ * Deployment targets allow you to specify
+ * multiple accounts and/or organizational units (OUs)
+ * as targets for resource deployment.
+ *
+ * The following example would deploy a resource
+ * to all accounts in the organization except the
+ * Management account:
+ * @example
+ * ```
+ * deploymentTargets:
+ *   organizationalUnits:
+ *     - Root
+ *   excludedAccounts:
+ *     - Management
+ * ```
+ */
 export class DeploymentTargets implements t.TypeOf<typeof deploymentTargets> {
+  /**
+   * Use this property to define one or more organizational units (OUs)
+   * as a deployment target. Resources are provisioned in each account
+   * contained within the OU.
+   *
+   * @remarks
+   * Any nested OUs that you would like to deploy resources to must be explicitly
+   * defined in this property. Deployment targets will not automatically deploy to
+   * nested OUs.
+   */
   readonly organizationalUnits: string[] = [];
+  /**
+   * Use this property to define one or more accounts as a deployment target.
+   */
   readonly accounts: string[] = [];
+  /**
+   * Use this property to explicitly define one or more regions to exclude from deployment.
+   *
+   * @remarks
+   * By default, all regions defined in the `enabledRegions` property of {@link GlobalConfig} are
+   * included in `deploymentTargets`.
+   */
   readonly excludedRegions: Region[] = [];
+  /**
+   * Use this property to explicitly define one or more accounts to exclude from deployment.
+   */
   readonly excludedAccounts: string[] = [];
 }
 
@@ -316,8 +361,41 @@ export const shareTargets = t.interface({
   organizationalUnits: optional(t.array(nonEmptyString)),
   accounts: optional(t.array(nonEmptyString)),
 });
+
+/**
+ * {@link https://docs.aws.amazon.com/ram/latest/userguide/what-is.html | Resource Access Manager (RAM)} share targets configuration.
+ * Share targets is an accelerator-specific
+ * configuration object that can be used for
+ * resources provisioned by the accelerator.
+ * Share targets allow you to specify
+ * multiple accounts and/or organizational units (OUs)
+ * as targets for RAM shares. RAM allows you to securely share
+ * resources between accounts and OUs within your organization.
+ *
+ * The following example would share a resource
+ * to all accounts in the organization:
+ * @example
+ * ```
+ * shareTargets:
+ *   organizationalUnits:
+ *     - Root
+ * ```
+ */
 export class ShareTargets implements t.TypeOf<typeof shareTargets> {
+  /**
+   * Use this property to define one or more organizational units (OUs)
+   * as a share target. Resources can be consumed each account
+   * contained within the OU.
+   *
+   * @remarks
+   * Any nested OUs that you would like to share resources to must be explicitly
+   * defined in this property. Share targets will not automatically share to
+   * nested OUs.
+   */
   readonly organizationalUnits: string[] = [];
+  /**
+   * Use this property to define one or more accounts as a share target.
+   */
   readonly accounts: string[] = [];
 }
 
@@ -442,8 +520,11 @@ class VpcFlowLogsDestinationConfig implements t.TypeOf<typeof vpcFlowLogsDestina
 }
 
 /**
- * VPC flow logs configuration.
- * Used to customize VPC flow log output.
+ * {@link https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs.html | Virtual Private Cloud (VPC) flow logs} configuration.
+ * Use this configuration to customize VPC flow log output.
+ * VPC Flow Logs is a feature that enables you to capture information
+ * about the IP traffic going to and from network interfaces in your VPC.
+ * Flow log data can be published to the following locations: Amazon CloudWatch Logs, Amazon S3.
  *
  * @example
  * ```
