@@ -407,7 +407,7 @@ export class TransitGatewayValidator {
         accounts.push(...prefixList.accounts);
       }
       if (prefixList?.regions) {
-        accounts.push(prefixList.regions);
+        regions.push(prefixList.regions);
       }
       if (prefixList?.deploymentTargets) {
         accounts.push(...helpers.getAccountNamesFromTarget(prefixList.deploymentTargets));
