@@ -149,3 +149,7 @@ source/packages/@aws-accelerator/constructs/lib/aws-cloudwatch-logs/create-log-g
 source/packages/@aws-accelerator/constructs/lib/aws-cloudwatch-logs/create-log-groups/index.ts:170
 source/packages/@aws-accelerator/constructs/lib/aws-cloudwatch-logs/create-log-groups/index.ts:176
 source/packages/@aws-accelerator/constructs/lib/aws-cloudwatch-logs/create-log-groups/index.ts:179
+
+# empty file to simulate certs
+source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/certificates/certA/privKey.key
+source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/certificates/certA/cert.crt

@@ -1551,14 +1551,15 @@ vpcFlowLogs:
     - traffic-path
 
 certificates:
-  - name: cert1
+  - name: certA
     type: import
-    privKey: cert1/privKey.key
-    cert: cert1/cert.crt
+    privKey: certificates/certA/privKey.key
+    cert: certificates/certA/cert.crt
     deploymentTargets:
       accounts:
-        - Management
-        - Audit
+        - SharedServices
+      excludeRegions:
+        - us-west-2
   - name: cert2
     type: request
     validation: DNS
