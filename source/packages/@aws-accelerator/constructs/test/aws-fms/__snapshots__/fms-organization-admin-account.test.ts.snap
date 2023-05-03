@@ -102,10 +102,25 @@ exports[`FMSOrganizationAdminAccount Construct(FMSOrganizationAdminAccount):  Sn
                 "organizations:ListParents",
                 "organizations:ListRoots",
                 "organizations:RegisterDelegatedAdministrator",
-                "sts:AssumeRole",
               ],
               "Effect": "Allow",
               "Resource": "*",
+            },
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":iam::111111111111:role/testRole",
+                  ],
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",

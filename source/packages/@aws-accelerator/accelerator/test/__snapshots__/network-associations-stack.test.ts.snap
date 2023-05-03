@@ -2727,7 +2727,18 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
             {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Resource": "*",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":iam::*:role/AWSAccelerator-GetNLBIPAddressLookup",
+                  ],
+                ],
+              },
               "Sid": "StsAssumeRole",
             },
           ],

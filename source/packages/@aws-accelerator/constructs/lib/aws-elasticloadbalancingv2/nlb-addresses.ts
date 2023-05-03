@@ -70,7 +70,7 @@ export class NLBAddresses extends cdk.Resource implements INLBAddresses {
         sid: 'StsAssumeRole',
         effect: cdk.aws_iam.Effect.ALLOW,
         actions: ['sts:AssumeRole'],
-        resources: ['*'],
+        resources: [`arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.assumeRoleName}`],
       }),
     );
 

@@ -130,7 +130,18 @@ exports[`ConfigServiceTags Construct(NLBAddresses):  Snapshot Test 1`] = `
             {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Resource": "*",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":iam::*:role/test123",
+                  ],
+                ],
+              },
               "Sid": "StsAssumeRole",
             },
           ],
