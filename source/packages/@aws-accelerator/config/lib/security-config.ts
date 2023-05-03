@@ -785,7 +785,7 @@ export class GuardDutyEksProtectionConfig implements t.TypeOf<typeof SecurityCon
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link GuardDutyConfig} / {@link GuardDutyExportFindingsConfig}*
  *
  * {@link https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_exportfindings.html} | AWS GuardDuty Export Findings configuration.
- * Use this configuration to export Amazon GuardDuty findings to Amazon CloudWatch Evetns, and, optionally, to an Amazon S3 bucket.
+ * Use this configuration to export Amazon GuardDuty findings to Amazon CloudWatch Events, and, optionally, to an Amazon S3 bucket.
  *
  * @example
  * ```
@@ -903,7 +903,7 @@ export class AuditManagerDefaultReportsDestinationConfig
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link AuditManagerConfig}*
  *
  * {@link https://docs.aws.amazon.com/audit-manager/latest/userguide/what-is.html } | AWS Audit Manager configuration
- * Use this configuration to enable AWS Audity Manager for an AWS Organization.
+ * Use this configuration to enable AWS Audit Manager for an AWS Organization.
  *
  * @example
  * ```
@@ -2197,9 +2197,41 @@ export class AlarmSetConfig implements t.TypeOf<typeof SecurityConfigTypes.alarm
   readonly alarms: AlarmConfig[] = [];
 }
 
+/**
+ * *{@link SecurityConfig} / {@link CloudWatchConfig} / {@link LogGroupsConfig} / {@link EncryptionConfig}*
+ *
+ * {@link https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/encrypt-log-data-kms.html | CloudWatch log group encryption} configuration.
+ * Use this configuration to enable encryption for a log group.
+ *
+ * @example
+ * Key name reference example:
+ * ```
+ * kmsKeyName: key1
+ * ```
+ * Solution-managed KMS key example:
+ * ```
+ * useLzaManagedKey: true
+ * ```
+ * Existing KMS key reference:
+ * ```
+ * kmsKeyArn: arn:aws:kms:us-east-1:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab
+ * ```
+ *
+ */
 export class EncryptionConfig implements t.TypeOf<typeof SecurityConfigTypes.encryptionConfig> {
   /**
-   * (OPTIONAL) Kms Key Name reference that is created by Landing Zone Accelerator.
+   * (OPTIONAL) Use this property to reference a
+   * KMS Key Name that is created by Landing Zone Accelerator.
+   *
+   * @remarks
+   * CAUTION: When importing an existing AWS CloudWatch Logs Group that has encryption enabled. If specifying the
+   * encryption configuration with any KMS parameter under the encryption configuration, Landing Zone Accelerator
+   * on AWS will associate a new key with the log group. It is recommend to verify if any processes or applications are using the previous key,
+   * and has access to the new key before updating.
+   *
+   * This is the logical `name` property of the key as defined in security-config.yaml.
+   *
+   * @see {@link KeyConfig}
    */
   readonly kmsKeyName: string | undefined = undefined;
 
@@ -2208,6 +2240,11 @@ export class EncryptionConfig implements t.TypeOf<typeof SecurityConfigTypes.enc
    * KMS Key that is not managed by Landing Zone Accelerator.
    *
    * @remarks
+   * CAUTION: When importing an existing AWS CloudWatch Logs Group that has encryption enabled. If specifying the
+   * encryption configuration with any KMS parameter under the encryption configuration, Landing Zone Accelerator
+   * on AWS will associate a new key with the log group. It is recommend to verify if any processes or applications are using the previous key,
+   * and has access to the new key before updating.
+   *
    * Note: If using the `kmsKeyArn` parameter to encrypt your AWS CloudWatch Logs Groups. It's important that the logs
    * service is provided the necessary cryptographic API calls to the CMK. For more information on how to manage the
    * CMK for logs service access, please review the documentation.
@@ -2218,14 +2255,69 @@ export class EncryptionConfig implements t.TypeOf<typeof SecurityConfigTypes.enc
   readonly kmsKeyArn: string | undefined = undefined;
 
   /**
-   * (OPTIONAL) Provide a boolean value if the AWS CloudWatch Logs
+   * (OPTIONAL) Set this property to `true` if you would like to use the
+   * default CloudWatch Logs KMS CMK that is deployed by Landing Zone Accelerator.
+   *
+   * @remarks
+   * CAUTION: When importing an existing AWS CloudWatch Logs Group that has encryption enabled. If specifying the
+   * encryption configuration with any KMS parameter under the encryption configuration, Landing Zone Accelerator
+   * on AWS will associate a new key with the log group. It is recommend to verify if any processes or applications are using the previous key,
+   * and has access to the new key before updating.
+   *
+   * This key is deployed to all accounts managed by the solution by default.
+   *
    */
   readonly useLzaManagedKey: boolean | undefined = undefined;
 }
 
+/**
+ * *{@link SecurityConfig} / {@link CloudWatchConfig} / {@link LogGroupsConfig}*
+ *
+ * {@link https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CloudWatchLogsConcepts.html | CloudWatch log group} configuration.
+ * Use this configuration to deploy CloudWatch log groups to your environment.
+ * You can also import existing log groups into your accelerator configuration.
+ * Log groups define groups of log streams that share the same retention, monitoring, and access control settings.
+ *
+ * @example
+ * CloudWatch Log Group that is using a CMK that is being managed by Landing Zone Accelerator on AWS.
+ * ```
+ * - logGroupName: Log1
+ *   logRetentionInDays: 365
+ *   terminationProtected: true
+ *   encryption:
+ *     kmsKeyName: key1
+ *   deploymentTargets:
+ *     accounts:
+ *       - Production
+ * ```
+ * CloudWatch Log Group that uses the Landing Zone Accelerator on AWS CMK for CloudWatch Logs Groups.
+ * ```
+ * - logGroupName: Log1
+ *   logRetentionInDays: 365
+ *   terminationProtected: true
+ *   encryption:
+ *     useLzaManagedKey: true
+ *   deploymentTargets:
+ *     organizationalUnits:
+ *       - Infrastructure
+ * ```
+ * CloudWatch Log Group that uses an existing KMS Key that's not managed by Landing Zone Accelerator on AWS.
+ * ```
+ * - logGroupName: Log1
+ *   logRetentionInDays: 365
+ *   terminationProtected: true
+ *   encryption:
+ *     kmsKeyArn: arn:aws:kms:us-east-1:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab
+ *   deploymentTargets:
+ *     accounts:
+ *       - Production
+ * ```
+ */
 export class LogGroupsConfig implements t.TypeOf<typeof SecurityConfigTypes.logGroupsConfig> {
   /**
    * Deployment targets for CloudWatch Logs
+   *
+   * @see {@link DeploymentTargets}
    */
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
 
@@ -2242,48 +2334,11 @@ export class LogGroupsConfig implements t.TypeOf<typeof SecurityConfigTypes.logG
    */
   readonly encryption: EncryptionConfig | undefined = undefined;
   /**
-   * List of AWS CloudWatch Log Groups examples
-   * @example
-   * CloudWatch Log Group that is using a CMK that is being managed by Landing Zone Accelerator on AWS.
-   * ```
-   * cloudWatch:
-   *   logGroups:
-   *     - logGroupName: Log1
-   *       logRetentionInDays: 365
-   *       terminationProtected: true
-   *       encryption:
-   *         kmsKeyName: key1
-   *       deploymentTarget:
-   *         account: Production
-   * ```
-   * CloudWatch Log Group that uses the Landing Zone Accelerator on AWS CMK for CloudWatch Logs Groups.
-   * ```
-   * cloudWatch:
-   *   logGroups:
-   *     - logGroupName: Log1
-   *       logRetentionInDays: 365
-   *       terminationProtected: true
-   *       encryption:
-   *         useLzaManagedKey: true
-   *       deploymentTarget:
-   *         organization: Infrastructure
-   * ```
-   * CloudWatch Log Group that uses an existing KMS Key that's not managed by Landing Zone Accelerator on AWS.
-   * ```
-   * cloudWatch:
-   *   logGroups:
-   *     - logGroupName: Log1
-   *       logRetentionInDays: 365
-   *       terminationProtected: true
-   *       encryption:
-   *         kmsKeyArn: arn:aws:kms:us-east-1:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab
-   *       deploymentTarget:
-   *         account: Production
-   * ```
-   */
-
-  /**
-   * Name of the CloudWatch Logs
+   * Name of the CloudWatch log group
+   *
+   * @remarks
+   * If importing an existing log group, this must be the name of the
+   * group as it exists in your account.
    */
   readonly logGroupName: string = '';
 
@@ -2297,7 +2352,8 @@ export class LogGroupsConfig implements t.TypeOf<typeof SecurityConfigTypes.logG
   readonly logRetentionInDays = 3653;
 
   /**
-   * (OPTIONAL) Determine if the AWS CloudWatch Log Group is retained if deleted from the Landing Zone Accelerator security configuration file.
+   * (OPTIONAL) Set this property to `false` if you would like the log group
+   * to be deleted if it is removed from the solution configuration file.
    *
    * @default true
    */
@@ -2349,12 +2405,14 @@ export class LogGroupsConfig implements t.TypeOf<typeof SecurityConfigTypes.logG
  *       terminationProtected: true
  *       encryption:
  *          kmsKeyName: key1
- *       deploymentTarget:
- *         account: Production
+ *       deploymentTargets:
+ *         accounts:
+ *           - Production
  *     - name: Log2
  *       terminationProtected: false
- *       deploymentTarget:
- *         organization: Infrastructure
+ *       deploymentTargets:
+ *         organizationalUnits:
+ *           - Infrastructure
  * ```
  */
 export class CloudWatchConfig implements t.TypeOf<typeof SecurityConfigTypes.cloudWatchConfig> {
