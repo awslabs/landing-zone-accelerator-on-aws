@@ -16,6 +16,7 @@ import { Construct } from 'constructs';
 import * as path from 'path';
 import { GovCloudAccountVendingProductStack } from './govcloud-avm-product-stack';
 import * as fs from 'fs';
+import { version } from '../../../../package.json';
 
 export interface GovCloudAccountVendingStackProps extends cdk.StackProps {
   readonly acceleratorPrefix: string;
@@ -59,6 +60,7 @@ export class GovCloudAccountVendingStack extends cdk.Stack {
           cloudFormationTemplate: cdk.aws_servicecatalog.CloudFormationTemplate.fromProductStack(
             new GovCloudAccountVendingProductStack(this, 'GovCloudAccountVendingProductStack', {
               acceleratorPrefix: props.acceleratorPrefix,
+              description: `(SO0199-govcloudavmproduct) Landing Zone Accelerator on AWS. Version ${version}.`,
             }),
           ),
           productVersionName: 'v1.0.0',
