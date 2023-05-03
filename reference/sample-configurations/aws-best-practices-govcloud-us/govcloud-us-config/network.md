@@ -188,8 +188,8 @@ Landing Zone Accelerator on AWS GovCloud(US) - Network configuration
         <td> SharedServices-External-Access-Private-A </td>
         <td> 10.1.16.96/27 </td>
         <td> SharedServices-External-Access-Private-Rt-A </td>
-        <td rowspan="3"> 10.1.16.0/24 </td>
-        <td rowspan="3"> local </td>
+        <td rowspan="3"> 10.0.0.0/8<br />0.0.0.0/0<br />10.1.16.0/24 </td>
+        <td rowspan="3"> tgw-id<br />igw-id<br />local </td>
     </tr> 
     <tr>
         <td> SharedServices-External-Access-Private-B </td>
