@@ -91,6 +91,8 @@ export class LoggingStack extends AcceleratorStack {
     } else {
       this.cloudwatchKey = this.createCloudWatchKey();
     }
+    // Create Notification Role for FMS Notifications if enabled
+    this.createFMSNotificationRole();
 
     // create kms key for Lambda environment encryption
     // the Lambda environment encryption key for the management account
@@ -1466,10 +1468,6 @@ export class LoggingStack extends AcceleratorStack {
       );
     }
     topic.addSubscription(new cdk.aws_sns_subscriptions.LambdaSubscription(this.snsForwarderFunction!));
-    if (cdk.Stack.of(this).region === this.props.globalConfig.homeRegion) {
-      // Create Notification Role for FMS Notifications if enabled
-      this.createFMSNotificationRole();
-    }
   }
 
   private createCentralSnsKey() {
@@ -1726,41 +1724,51 @@ export class LoggingStack extends AcceleratorStack {
     const fmsConfiguration = this.props.networkConfig.firewallManagerService;
 
     // Exit if Notification channels don't exist.
-    if (!fmsConfiguration?.notificationChannels || fmsConfiguration.notificationChannels.length === 0) {
+    if (
+      !fmsConfiguration?.notificationChannels ||
+      fmsConfiguration.notificationChannels.length === 0 ||
+      !this.props.networkConfig.firewallManagerService?.delegatedAdminAccount
+    ) {
       return;
     }
-    const roleName = `${this.props.prefixes.accelerator}-FMS-Notifications`;
-    const auditAccountId = this.props.accountsConfig.getAuditAccountId();
+    if (
+      cdk.Stack.of(this).region === this.props.globalConfig.homeRegion &&
+      cdk.Stack.of(this).account ===
+        this.props.accountsConfig.getAccountId(this.props.networkConfig.firewallManagerService?.delegatedAdminAccount)
+    ) {
+      const roleName = `${this.props.prefixes.accelerator}-FMS-Notifications`;
+      const auditAccountId = this.props.accountsConfig.getAuditAccountId();
 
-    //Create Role for SNS Topic access from security config and global config
-    this.logger.info('Creating FMS Notification Channel Role AWSAccelerator - FMS');
-    const fmsRole = new cdk.aws_iam.Role(this, `aws-accelerator-fms`, {
-      roleName,
-      assumedBy: new cdk.aws_iam.ServicePrincipal('fms.amazonaws.com'),
-      inlinePolicies: {
-        default: new cdk.aws_iam.PolicyDocument({
-          statements: [
-            new cdk.aws_iam.PolicyStatement({
-              effect: cdk.aws_iam.Effect.ALLOW,
-              actions: ['sns:Publish'],
-              resources: ['*'],
-            }),
-            new cdk.aws_iam.PolicyStatement({
-              effect: cdk.aws_iam.Effect.ALLOW,
-              actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
-              resources: [
-                `arn:${cdk.Stack.of(this).partition}:kms:*:${auditAccountId}:key/*`,
-                `arn:${cdk.Stack.of(this).partition}:kms:*:${cdk.Stack.of(this).account}:key/*`,
-              ],
-            }),
-          ],
-        }),
-      },
-    });
+      //Create Role for SNS Topic access from security config and global config
+      this.logger.info('Creating FMS Notification Channel Role AWSAccelerator - FMS');
+      const fmsRole = new cdk.aws_iam.Role(this, `aws-accelerator-fms`, {
+        roleName,
+        assumedBy: new cdk.aws_iam.ServicePrincipal('fms.amazonaws.com'),
+        inlinePolicies: {
+          default: new cdk.aws_iam.PolicyDocument({
+            statements: [
+              new cdk.aws_iam.PolicyStatement({
+                effect: cdk.aws_iam.Effect.ALLOW,
+                actions: ['sns:Publish'],
+                resources: ['*'],
+              }),
+              new cdk.aws_iam.PolicyStatement({
+                effect: cdk.aws_iam.Effect.ALLOW,
+                actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
+                resources: [
+                  `arn:${cdk.Stack.of(this).partition}:kms:*:${auditAccountId}:key/*`,
+                  `arn:${cdk.Stack.of(this).partition}:kms:*:${cdk.Stack.of(this).account}:key/*`,
+                ],
+              }),
+            ],
+          }),
+        },
+      });
 
-    NagSuppressions.addResourceSuppressions(fmsRole, [
-      { id: 'AwsSolutions-IAM5', reason: 'Allow cross-account resources to encrypt KMS under this path.' },
-    ]);
+      NagSuppressions.addResourceSuppressions(fmsRole, [
+        { id: 'AwsSolutions-IAM5', reason: 'Allow cross-account resources to encrypt KMS under this path.' },
+      ]);
+    }
   }
 
   private elbLogBucketAddResourcePolicies(elbLogBucket: cdk.aws_s3.IBucket) {
