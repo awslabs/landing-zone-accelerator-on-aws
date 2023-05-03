@@ -104,6 +104,10 @@ export interface AcceleratorPipelineProps {
      */
     readonly databaseName: string;
   };
+  /**
+   * Boolean for single account mode (i.e. AWS Jam or Workshop)
+   */
+  readonly enableSingleAccountMode: boolean;
 }
 
 /**
@@ -162,6 +166,16 @@ export class AcceleratorPipeline extends Construct {
       };
     }
 
+    let enableSingleAccountModeEnvVariables: { [p: string]: codebuild.BuildEnvironmentVariable } | undefined;
+    if (props.enableSingleAccountMode) {
+      enableSingleAccountModeEnvVariables = {
+        ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE: {
+          type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+          value: true,
+        },
+      };
+    }
+
     // Get installer key
     this.installerKey = cdk.aws_kms.Key.fromKeyArn(
       this,
@@ -200,6 +214,7 @@ export class AcceleratorPipeline extends Construct {
         logArchiveAccountEmail: this.props.logArchiveAccountEmail,
         auditAccountEmail: this.props.auditAccountEmail,
         controlTowerEnabled: this.props.controlTowerEnabled,
+        enableSingleAccountMode: this.props.enableSingleAccountMode,
       }).getRepository();
 
       const cfnRepository = configRepository.node.defaultChild as codecommit.CfnRepository;
@@ -309,6 +324,7 @@ export class AcceleratorPipeline extends Construct {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: '--max_old_space_size=8192',
           },
+          ...enableSingleAccountModeEnvVariables,
         },
       },
       cache: codebuild.Cache.local(codebuild.LocalCacheMode.SOURCE),
@@ -416,6 +432,7 @@ export class AcceleratorPipeline extends Construct {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: props.prefixes.databaseName,
           },
+          ...enableSingleAccountModeEnvVariables,
           ...pipelineAccountEnvVariables,
         },
       },
@@ -638,6 +655,10 @@ export class AcceleratorPipeline extends Construct {
    * Enable pipeline notification for commercial partition and supported regions
    */
   private enablePipelineNotification() {
+    if (this.props.enableSingleAccountMode) {
+      return;
+    }
+
     // List of regions with AWS CodeStar being supported. For details, see documentation:
     // https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/
     const awsCodeStarSupportedRegions = [

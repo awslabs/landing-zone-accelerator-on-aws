@@ -66,6 +66,7 @@ export interface PipelineStackProps extends cdk.StackProps {
     readonly trailLogName: string;
     readonly databaseName: string;
   };
+  readonly enableSingleAccountMode: boolean;
 }
 
 export class PipelineStack extends cdk.Stack {

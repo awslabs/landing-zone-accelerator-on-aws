@@ -445,6 +445,7 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
   public async loadOrganizationalUnitIds(partition: string): Promise<void> {
     if (!this.enable) {
       // do nothing
+      return;
     } else {
       this.organizationalUnitIds = [];
     }
@@ -546,6 +547,9 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
   }
 
   public isIgnored(name: string): boolean {
+    if (!this.enable) {
+      return false;
+    }
     const ou = this.organizationalUnits?.find(item => item.name === name);
     if (ou?.ignore) {
       return true;

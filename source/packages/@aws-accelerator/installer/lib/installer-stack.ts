@@ -43,6 +43,10 @@ export interface InstallerStackProps extends cdk.StackProps {
    * Management Cross account role name
    */
   readonly managementCrossAccountRoleName?: string;
+  /**
+   * Single account deployment enable flag
+   */
+  readonly enableSingleAccountMode: boolean;
 }
 
 export class InstallerStack extends cdk.Stack {
@@ -255,7 +259,7 @@ export class InstallerStack extends cdk.Stack {
     };
 
     let targetAcceleratorParameterLabels: { [p: string]: { default: string } } = {};
-    let targetAcceleratorEnvVariables: { [p: string]: cdk.aws_codebuild.BuildEnvironmentVariable } | undefined;
+    let targetAcceleratorEnvVariables: { [p: string]: cdk.aws_codebuild.BuildEnvironmentVariable } = {};
 
     if (props.useExternalPipelineAccount) {
       this.acceleratorQualifier = new cdk.CfnParameter(this, 'AcceleratorQualifier', {
@@ -373,6 +377,13 @@ export class InstallerStack extends cdk.Stack {
       acceleratorPrincipalArn = `arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:role/${
         this.acceleratorQualifier!.valueAsString
       }-*`;
+    }
+
+    if (props.enableSingleAccountMode) {
+      targetAcceleratorEnvVariables['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE'] = {
+        type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+        value: true,
+      };
     }
 
     let targetAcceleratorTestEnvVariables: { [p: string]: cdk.aws_codebuild.BuildEnvironmentVariable } | undefined;

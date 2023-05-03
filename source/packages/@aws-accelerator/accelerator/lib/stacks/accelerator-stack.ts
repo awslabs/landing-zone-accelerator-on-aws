@@ -100,6 +100,7 @@ export interface AcceleratorStackProps extends cdk.StackProps {
      */
     readonly databaseName: string;
   };
+  readonly enableSingleAccountMode: boolean;
 }
 
 process.on('uncaughtException', err => {

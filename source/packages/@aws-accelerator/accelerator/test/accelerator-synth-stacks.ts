@@ -118,6 +118,7 @@ export class AcceleratorSynthStacks {
         trailLogName: 'aws-accelerator',
         databaseName: 'aws-accelerator',
       },
+      enableSingleAccountMode: false,
     };
 
     this.homeRegion = this.props.globalConfig.homeRegion;
