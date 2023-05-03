@@ -41,7 +41,7 @@ export class SolutionHelper extends Construct {
     });
 
     const helperFunction = new lambda.Function(this, 'SolutionHelper', {
-      runtime: lambda.Runtime.NODEJS_14_X,
+      runtime: lambda.Runtime.NODEJS_16_X,
       handler: 'index.handler',
       description:
         'This function generates UUID for each deployment and sends anonymous data to the AWS Solutions team',

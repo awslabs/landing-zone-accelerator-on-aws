@@ -90,7 +90,7 @@ export class CreateCertificate extends Construct {
     // Function definition for the custom resource
     //
     const providerLambda = new cdk.aws_lambda.Function(this, 'Function', {
-      runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'create-certificates/dist')),
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(15),

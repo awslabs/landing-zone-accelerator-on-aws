@@ -22,7 +22,7 @@ exports[`ResolverFirewallDomainList Construct(ResolverFirewallDomainList):  Snap
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",

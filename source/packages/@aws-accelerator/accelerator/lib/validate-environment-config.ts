@@ -61,7 +61,7 @@ export class ValidateEnvironmentConfig extends Construct {
     //
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, VALIDATE_ENVIRONMENT_RESOURCE_TYPE, {
       codeDirectory: path.join(__dirname, 'lambdas/validate-environment/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
       timeout: cdk.Duration.minutes(10),
       policyStatements: [
         {

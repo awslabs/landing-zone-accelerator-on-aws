@@ -48,7 +48,7 @@ export class ConfigServiceTags extends Construct {
     //
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, CONFIGSERVICE_TAGS, {
       codeDirectory: path.join(__dirname, 'update-tags/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
       policyStatements: [
         {
           Effect: 'Allow',

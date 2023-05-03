@@ -27,7 +27,7 @@ export class Organization extends Construct {
 
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::OrganizationsDescribeOrganization', {
       codeDirectory: path.join(__dirname, 'describe-organization/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
       policyStatements: [
         {
           Effect: 'Allow',

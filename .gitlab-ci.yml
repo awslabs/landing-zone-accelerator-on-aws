@@ -1,4 +1,4 @@
-image: public.ecr.aws/bitnami/node:14
+image: public.ecr.aws/bitnami/node:16
 
 before_script:
   - rm -rf /var/lib/apt/lists/*

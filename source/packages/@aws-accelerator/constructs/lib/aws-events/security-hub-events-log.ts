@@ -57,7 +57,7 @@ export class SecurityHubEventsLog extends Construct {
     });
 
     const securityHubEventsFunction = new cdk.aws_lambda.Function(this, 'SecurityHubEventsFunction', {
-      runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'security-hub-event-log/dist')),
       handler: 'index.handler',
       memorySize: 256,

@@ -104,7 +104,7 @@ export class IpamSubnet extends cdk.Resource implements IIpamSubnet {
 
         const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, GET_IPAM_SUBNET_CIDR, {
           codeDirectory: path.join(__dirname, 'get-ipam-subnet-cidr/dist'),
-          runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+          runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
           policyStatements: [
             {
               Effect: 'Allow',
@@ -170,7 +170,7 @@ export class IpamSubnet extends cdk.Resource implements IIpamSubnet {
 
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, IPAM_SUBNET, {
       codeDirectory: path.join(__dirname, 'ipam-subnet/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
       policyStatements: [
         {
           Effect: 'Allow',

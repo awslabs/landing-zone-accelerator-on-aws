@@ -54,7 +54,7 @@ export class IdentityCenterGetPermissionRoleArnProvider extends Construct {
     const functionId = `${id}ProviderLambda`;
     const providerLambda = new cdk.aws_lambda.Function(this, functionId, {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'get-permission-set-role-arn/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
       timeout: cdk.Duration.seconds(60),
       initialPolicy: [
         new cdk.aws_iam.PolicyStatement({

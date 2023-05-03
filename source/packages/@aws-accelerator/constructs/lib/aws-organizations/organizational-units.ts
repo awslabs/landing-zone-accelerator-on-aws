@@ -49,7 +49,7 @@ export class OrganizationalUnits extends Construct {
       'Custom::OrganizationsCreateOrganizationalUnits',
       {
         codeDirectory: path.join(__dirname, 'create-organizational-units/dist'),
-        runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+        runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
         policyStatements: [
           {
             Sid: 'organizations',

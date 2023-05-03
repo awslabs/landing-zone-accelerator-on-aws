@@ -60,7 +60,7 @@ export class NLBAddresses extends cdk.Resource implements INLBAddresses {
 
     const providerLambda = new cdk.aws_lambda.Function(this, functionId, {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'nlb-ip-lookup/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
       timeout: cdk.Duration.seconds(15),
       handler: 'index.handler',
     });

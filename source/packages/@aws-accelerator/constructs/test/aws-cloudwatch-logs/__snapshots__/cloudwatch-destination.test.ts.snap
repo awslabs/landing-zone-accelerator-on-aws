@@ -196,9 +196,6 @@ exports[`CloudWatchDestination Construct(CloudWatchDestination):  Snapshot Test 
             },
           ],
         },
-        "StreamModeDetails": {
-          "StreamMode": "PROVISIONED",
-        },
       },
       "Type": "AWS::Kinesis::Stream",
     },
@@ -401,9 +398,6 @@ exports[`CloudWatchDestination Construct(CloudWatchDestination):  Snapshot Test 
               "KeyId": "alias/aws/kinesis",
             },
           ],
-        },
-        "StreamModeDetails": {
-          "StreamMode": "PROVISIONED",
         },
       },
       "Type": "AWS::Kinesis::Stream",

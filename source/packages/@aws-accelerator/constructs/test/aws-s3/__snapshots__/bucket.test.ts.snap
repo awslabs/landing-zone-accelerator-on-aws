@@ -2548,7 +2548,7 @@ exports[`Bucket Construct(Bucket):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -2630,6 +2630,13 @@ exports[`Bucket Construct(Bucket):  Snapshot Test 1`] = `
       "DeletionPolicy": "Retain",
       "Properties": {
         "AccessControl": "LogDeliveryWrite",
+        "OwnershipControls": {
+          "Rules": [
+            {
+              "ObjectOwnership": "ObjectWriter",
+            },
+          ],
+        },
       },
       "Type": "AWS::S3::Bucket",
       "UpdateReplacePolicy": "Retain",

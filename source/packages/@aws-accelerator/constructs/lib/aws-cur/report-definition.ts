@@ -165,7 +165,7 @@ export class ReportDefinition extends cdk.Resource implements IReportDefinition 
       // Use custom resource
       const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::CrossRegionReportDefinition', {
         codeDirectory: path.join(__dirname, 'cross-region-report-definition/dist'),
-        runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+        runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
         policyStatements: [
           {
             Effect: 'Allow',

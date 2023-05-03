@@ -42,7 +42,7 @@ exports[`ConfigServiceTags Construct(NLBAddresses):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 15,
       },
       "Type": "AWS::Lambda::Function",

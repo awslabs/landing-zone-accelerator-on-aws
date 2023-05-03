@@ -45,7 +45,7 @@ export class EnableAwsServiceAccess extends Construct {
       'Custom::OrganizationsEnableAwsServiceAccess',
       {
         codeDirectory: path.join(__dirname, 'enable-aws-service-access/dist'),
-        runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+        runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
         policyStatements: [
           {
             Effect: 'Allow',
