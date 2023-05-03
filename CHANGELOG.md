@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.4.0] - 2023-05-03
 
-## Added
+### Added
 
 - feat(config): Utilize existing AWS Config Service Delivery Channel
 - feat(installer): Support custom prefix for LZA resources
@@ -21,10 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(aws-best-practices-education): Added additional security-config controls
 - feat(aws-best-practices-tse-se): Added AWS Control Tower installation instructions
 
-## Changed
+### Changed
 
 - chore(app): Update AWS CDK version to 2.70.0
-- chore(docs):  adding optional flags and replacement warnings to SecurityConfig and NetworkConfig
+- chore(docs): adding optional flags and replacement warnings to SecurityConfig and NetworkConfig
 - chore(network): network stack refactor to assist in development efforts
 - enhancement(cdk): Configure CDK to use managementAccountAccessRole for all actions
 - enhancement(logging): Reduce logging in firehose processor to optimize cost
@@ -34,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - enhancement(aws-best-practices-cccs-medium): updated configuration to utilize accelerator prefix feature
 - enhancement(aws-best-practices-tse-se): updated install instructions for GitHub personal access token
 
-## Fixed
+### Fixed
 
 - fix(accounts): methods used to retrieve Account IDs for Root OU targets return ignored accounts
 - fix(bootstrap): Forced bootstrap update for non-centralized CDK buckets
