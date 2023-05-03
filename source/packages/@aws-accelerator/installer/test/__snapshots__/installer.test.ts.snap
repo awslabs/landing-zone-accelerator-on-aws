@@ -1947,6 +1947,22 @@ phases:
             },
           ],
         },
+        "cfn_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "W58",
+              "reason": "CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole",
+            },
+            {
+              "id": "W89",
+              "reason": "This function supports infrastructure deployment and is not deployed inside a VPC.",
+            },
+            {
+              "id": "W92",
+              "reason": "This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.",
+            },
+          ],
+        },
       },
       "Properties": {
         "Code": {
@@ -3209,6 +3225,22 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             {
               "id": "AwsSolutions-IAM4",
               "reason": "Needed to write to CWL group",
+            },
+          ],
+        },
+        "cfn_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "W58",
+              "reason": "CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole",
+            },
+            {
+              "id": "W89",
+              "reason": "This function supports infrastructure deployment and is not deployed inside a VPC.",
+            },
+            {
+              "id": "W92",
+              "reason": "This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.",
             },
           ],
         },
@@ -5232,6 +5264,22 @@ phases:
             },
           ],
         },
+        "cfn_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "W58",
+              "reason": "CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole",
+            },
+            {
+              "id": "W89",
+              "reason": "This function supports infrastructure deployment and is not deployed inside a VPC.",
+            },
+            {
+              "id": "W92",
+              "reason": "This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.",
+            },
+          ],
+        },
       },
       "Properties": {
         "Code": {
@@ -6494,6 +6542,22 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             {
               "id": "AwsSolutions-IAM4",
               "reason": "Needed to write to CWL group",
+            },
+          ],
+        },
+        "cfn_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "W58",
+              "reason": "CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole",
+            },
+            {
+              "id": "W89",
+              "reason": "This function supports infrastructure deployment and is not deployed inside a VPC.",
+            },
+            {
+              "id": "W92",
+              "reason": "This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.",
             },
           ],
         },
@@ -8562,6 +8626,22 @@ phases:
             },
           ],
         },
+        "cfn_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "W58",
+              "reason": "CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole",
+            },
+            {
+              "id": "W89",
+              "reason": "This function supports infrastructure deployment and is not deployed inside a VPC.",
+            },
+            {
+              "id": "W92",
+              "reason": "This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.",
+            },
+          ],
+        },
       },
       "Properties": {
         "Code": {
@@ -9802,6 +9882,22 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             {
               "id": "AwsSolutions-IAM4",
               "reason": "Needed to write to CWL group",
+            },
+          ],
+        },
+        "cfn_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "W58",
+              "reason": "CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole",
+            },
+            {
+              "id": "W89",
+              "reason": "This function supports infrastructure deployment and is not deployed inside a VPC.",
+            },
+            {
+              "id": "W92",
+              "reason": "This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.",
             },
           ],
         },
@@ -11860,6 +11956,22 @@ phases:
             },
           ],
         },
+        "cfn_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "W58",
+              "reason": "CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole",
+            },
+            {
+              "id": "W89",
+              "reason": "This function supports infrastructure deployment and is not deployed inside a VPC.",
+            },
+            {
+              "id": "W92",
+              "reason": "This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.",
+            },
+          ],
+        },
       },
       "Properties": {
         "Code": {
@@ -13100,6 +13212,22 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             {
               "id": "AwsSolutions-IAM4",
               "reason": "Needed to write to CWL group",
+            },
+          ],
+        },
+        "cfn_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "W58",
+              "reason": "CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole",
+            },
+            {
+              "id": "W89",
+              "reason": "This function supports infrastructure deployment and is not deployed inside a VPC.",
+            },
+            {
+              "id": "W92",
+              "reason": "This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.",
             },
           ],
         },
@@ -15163,6 +15291,22 @@ phases:
             },
           ],
         },
+        "cfn_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "W58",
+              "reason": "CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole",
+            },
+            {
+              "id": "W89",
+              "reason": "This function supports infrastructure deployment and is not deployed inside a VPC.",
+            },
+            {
+              "id": "W92",
+              "reason": "This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.",
+            },
+          ],
+        },
       },
       "Properties": {
         "Code": {
@@ -16403,6 +16547,22 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             {
               "id": "AwsSolutions-IAM4",
               "reason": "Needed to write to CWL group",
+            },
+          ],
+        },
+        "cfn_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "W58",
+              "reason": "CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole",
+            },
+            {
+              "id": "W89",
+              "reason": "This function supports infrastructure deployment and is not deployed inside a VPC.",
+            },
+            {
+              "id": "W92",
+              "reason": "This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.",
             },
           ],
         },
