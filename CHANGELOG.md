@@ -18,8 +18,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(security-config) Add ability to define CloudWatch Log Groups
 - feat(security hub): allow definition of deploymentTargets for Security Hub standards
 - feat(validation): verify no ignored OU accounts are included in accounts-config file
-- feat(aws-best-practices-education): Added additional security-config controls
-- feat(aws-best-practices-tse-se): Added AWS Control Tower installation instructions
 
 ### Changed
 
@@ -30,9 +28,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - enhancement(logging): Reduce logging in firehose processor to optimize cost
 - enhancement(networking): replicate Security Groups to Accounts with RAM shared subnets
 - enhancement(network): make vpcFlowLogs property optional
-- enhancement(aws-best-practices): Replace hard-coded management role in guardrail SCPs with a variable
-- enhancement(aws-best-practices-cccs-medium): updated configuration to utilize accelerator prefix feature
-- enhancement(aws-best-practices-tse-se): updated install instructions for GitHub personal access token
 
 ### Fixed
 
@@ -48,6 +43,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(pipeline): Credential timeout for long running stages
 - fix(sso): permission sets and assignments created outside of LZA cause pipeline failure
 - chore(application-stack): refactor application stack to reduce complexity
+
+### Configuration Changes
+
+- feat(aws-best-practices-education): Added additional security-config controls
+- feat(aws-best-practices-tse-se): Added AWS Control Tower installation instructions
+- enhancement(aws-best-practices): Replace hard-coded management role in guardrail SCPs with a variable
+- enhancement(aws-best-practices-cccs-medium): updated configuration to utilize accelerator prefix feature
+- enhancement(aws-best-practices-tse-se): updated install instructions for GitHub personal access token
 
 ## [1.3.2] - 2023-03-02
 
