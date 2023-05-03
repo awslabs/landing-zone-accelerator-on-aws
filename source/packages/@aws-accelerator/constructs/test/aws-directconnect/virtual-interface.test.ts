@@ -36,6 +36,7 @@ new VirtualInterface(stack, 'TestVif', {
   directConnectGatewayId: 'test-dxgw-id',
   kmsKey: key,
   logRetentionInDays: 3653,
+  acceleratorPrefix: 'AWSAccelerator',
 });
 
 // Test virtual interface allocation
@@ -49,6 +50,7 @@ new VirtualInterface(stack, 'TestVifAllocation', {
   vlan: 300,
   kmsKey: key,
   logRetentionInDays: 3653,
+  acceleratorPrefix: 'AWSAccelerator',
 });
 
 /**

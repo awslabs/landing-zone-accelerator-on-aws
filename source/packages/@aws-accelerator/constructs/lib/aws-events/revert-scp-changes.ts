@@ -63,7 +63,11 @@ export interface RevertScpChangesProps {
    */
   readonly logRetentionInDays: number;
   /**
-   * SNS Topic Name to publish notifiactions to
+   * Accelerator SNS topic name Prefix
+   */
+  readonly acceleratorTopicNamePrefix: string;
+  /**
+   * SNS Topic Name to publish notifications to
    */
   readonly snsTopicName: string | undefined;
   /**
@@ -107,9 +111,9 @@ export class RevertScpChanges extends Construct {
     const revertScpChangesPolicyList = [kmsEncryptMessage, orgPolicyUpdate];
 
     if (props.snsTopicName) {
-      snsTopicArn = `arn:${cdk.Stack.of(this).partition}:sns:${props.homeRegion}:${
-        cdk.Stack.of(this).account
-      }:aws-accelerator-${props.snsTopicName}`;
+      snsTopicArn = `arn:${cdk.Stack.of(this).partition}:sns:${props.homeRegion}:${cdk.Stack.of(this).account}:${
+        props.acceleratorTopicNamePrefix
+      }-${props.snsTopicName}`;
       revertScpChangesPolicyList.push(
         new cdk.aws_iam.PolicyStatement({
           sid: 'snsPublishMessage',

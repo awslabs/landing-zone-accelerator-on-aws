@@ -67,9 +67,13 @@ export interface CreateCertificateProps {
    */
   homeRegion: string;
   /**
-   * Management Account Id where the asset bucket is located
+   * Asset Lambda function role name
    */
-  managementAccountId: string;
+  assetFunctionRoleName: string;
+  /**
+   * Asset S3 bucket name
+   */
+  assetBucketName: string;
 }
 
 /**
@@ -91,7 +95,7 @@ export class CreateCertificate extends Construct {
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(15),
       description: 'Create ACM certificates handler',
-      role: cdk.aws_iam.Role.fromRoleName(this, 'AssetsFunctionRole', 'AWSAccelerator-AssetsAccessRole'),
+      role: cdk.aws_iam.Role.fromRoleName(this, 'AssetsFunctionRole', props.assetFunctionRoleName),
     });
 
     // Custom resource lambda log group
@@ -119,7 +123,7 @@ export class CreateCertificate extends Construct {
         domain: props.domain ?? undefined,
         san: props.san?.join(',') ?? undefined,
         homeRegion: props.homeRegion,
-        managementAccountId: props.managementAccountId,
+        assetBucketName: props.assetBucketName,
       },
     });
 

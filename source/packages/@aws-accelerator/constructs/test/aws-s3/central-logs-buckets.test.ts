@@ -33,6 +33,9 @@ new CentralLogsBucket(stack, 'CentralLogsBucket', {
   kmsDescription: 'AWS Accelerator Central Logs Bucket CMK',
   principalOrgIdCondition: { 'aws:PrincipalOrgID': organizationId },
   orgPrincipals: new cdk.aws_iam.OrganizationPrincipal(organizationId),
+  acceleratorPrefix: 'AWSAccelerator',
+  crossAccountAccessRoleName: 'AWSAccelerator-CentralBucket-KeyArnParam-Role',
+  cmkArnSsmParameterName: '/accelerator/logging/central-bucket/kms/arn',
 });
 
 /**

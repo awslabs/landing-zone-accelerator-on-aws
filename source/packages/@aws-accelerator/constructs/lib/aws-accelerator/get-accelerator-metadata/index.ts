@@ -32,17 +32,16 @@ export async function handler(_event: AWSLambda.CloudFormationCustomResourceEven
 > {
   const globalRegion = process.env['GLOBAL_REGION'];
   const solutionId = process.env['SOLUTION_ID'];
+  const acceleratorPrefix = process.env['ACCELERATOR_PREFIX']!;
   const crossAccountRole = process.env['CROSS_ACCOUNT_ROLE']!;
   const logAccountId = process.env['LOG_ACCOUNT_ID']!;
-  const partition = process.env['PARTITION'] || 'aws';
-  const repositoryName = process.env['CONFIG_REPOSITORY_NAME'] || 'aws-accelerator-config';
-  const ssmAcceleratorVersionPath =
-    process.env['ACCELERATOR_VERSION_SSM_PATH'] || '/accelerator/AWSAccelerator-InstallerStack/version';
+  const partition = process.env['PARTITION']!;
+  const repositoryName = process.env['CONFIG_REPOSITORY_NAME']!;
+  const ssmAcceleratorVersionPath = process.env['ACCELERATOR_VERSION_SSM_PATH']!;
   const organizationId = process.env['ORGANIZATION_ID']!;
   const centralLoggingBucket = process.env['CENTRAL_LOG_BUCKET']!;
   const elbLogBucket = process.env['ELB_LOGGING_BUCKET']!;
   const metadataBucket = process.env['METADATA_BUCKET']!;
-  const acceleratorPrefix = process.env['ACCELERATOR_PREFIX'] || 'AWSAccelerator';
   const pipelineName = `${acceleratorPrefix}-Pipeline`;
   const codeCommitClient = new AWS.CodeCommit({ customUserAgent: solutionId });
   const s3Client = new AWS.S3({ customUserAgent: solutionId });
@@ -447,7 +446,7 @@ async function assumeRole(
 ): Promise<AWS.Credentials> {
   const roleArn = `arn:${partition}:iam::${accountId}:role/${assumeRoleName}`;
   const assumeRole = await throttlingBackOff(() =>
-    stsClient.assumeRole({ RoleArn: roleArn, RoleSessionName: `AWSAccelerator` }).promise(),
+    stsClient.assumeRole({ RoleArn: roleArn, RoleSessionName: 'MetadataAssumeRoleSession' }).promise(),
   );
   return new AWS.Credentials({
     accessKeyId: assumeRole.Credentials!.AccessKeyId,

@@ -1094,6 +1094,31 @@ exports[`TesterPipelineStack Construct(TesterPipelineStack):  Snapshot Test 1`] 
               "Type": "PLAINTEXT",
               "Value": "main",
             },
+            {
+              "Name": "ACCELERATOR_PREFIX",
+              "Type": "PLAINTEXT",
+              "Value": "AWSAccelerator",
+            },
+            {
+              "Name": "ACCELERATOR_REPO_NAME_PREFIX",
+              "Type": "PLAINTEXT",
+              "Value": "aws-accelerator",
+            },
+            {
+              "Name": "ACCELERATOR_BUCKET_NAME_PREFIX",
+              "Type": "PLAINTEXT",
+              "Value": "aws-accelerator",
+            },
+            {
+              "Name": "ACCELERATOR_KMS_ALIAS_PREFIX",
+              "Type": "PLAINTEXT",
+              "Value": "alias/accelerator",
+            },
+            {
+              "Name": "ACCELERATOR_SSM_PARAM_NAME_PREFIX",
+              "Type": "PLAINTEXT",
+              "Value": "/accelerator",
+            },
           ],
           "Image": "aws/codebuild/standard:6.0",
           "ImagePullCredentialsType": "CODEBUILD",
@@ -1125,7 +1150,7 @@ phases:
       - yarn build
       - cd packages/@aws-accelerator/tester
       - env
-      - if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then yarn run cdk deploy --require-approval never --context account=",
+      - if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then yarn run cdk deploy --require-approval never --context acceleratorPrefix=AWSAccelerator --context account=",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -1133,7 +1158,7 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                " --context management-cross-account-role-name=AWSControlTowerExecution --context qualifier=aws-accelerator --context config-dir=$CODEBUILD_SRC_DIR_Config --context management-account-id=undefined --context management-account-role-name=AcceleratorAccountAccessRole; else yarn run cdk deploy --require-approval never --context account=",
+                " --context management-cross-account-role-name=AWSControlTowerExecution --context qualifier=aws-accelerator --context config-dir=$CODEBUILD_SRC_DIR_Config --context management-account-id=undefined --context management-account-role-name=AcceleratorAccountAccessRole; else yarn run cdk deploy --require-approval never --context acceleratorPrefix=AWSAccelerator --context account=",
                 {
                   "Ref": "AWS::AccountId",
                 },

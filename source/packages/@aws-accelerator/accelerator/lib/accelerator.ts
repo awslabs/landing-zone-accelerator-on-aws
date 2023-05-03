@@ -78,31 +78,33 @@ export const OptInRegions = [
   'me-south-1',
 ];
 
+const stackPrefix = process.env['ACCELERATOR_PREFIX']!;
+
 /**
  * constant maintaining cloudformation stack names
  */
 export const AcceleratorStackNames: Record<string, string> = {
-  [AcceleratorStage.PREPARE]: 'AWSAccelerator-PrepareStack',
-  [AcceleratorStage.PIPELINE]: 'AWSAccelerator-PipelineStack',
-  [AcceleratorStage.TESTER_PIPELINE]: 'AWSAccelerator-TesterPipelineStack',
-  [AcceleratorStage.ORGANIZATIONS]: 'AWSAccelerator-OrganizationsStack',
-  [AcceleratorStage.KEY]: 'AWSAccelerator-KeyStack',
-  [AcceleratorStage.LOGGING]: 'AWSAccelerator-LoggingStack',
-  [AcceleratorStage.BOOTSTRAP]: 'AWSAccelerator-BootstrapStack',
-  [AcceleratorStage.ACCOUNTS]: 'AWSAccelerator-AccountsStack',
-  [AcceleratorStage.DEPENDENCIES]: 'AWSAccelerator-DependenciesStack',
-  [AcceleratorStage.SECURITY]: 'AWSAccelerator-SecurityStack',
-  [AcceleratorStage.SECURITY_RESOURCES]: 'AWSAccelerator-SecurityResourcesStack',
-  [AcceleratorStage.OPERATIONS]: 'AWSAccelerator-OperationsStack',
-  [AcceleratorStage.NETWORK_PREP]: 'AWSAccelerator-NetworkPrepStack',
-  [AcceleratorStage.NETWORK_VPC]: 'AWSAccelerator-NetworkVpcStack',
-  [AcceleratorStage.NETWORK_VPC_ENDPOINTS]: 'AWSAccelerator-NetworkVpcEndpointsStack',
-  [AcceleratorStage.NETWORK_VPC_DNS]: 'AWSAccelerator-NetworkVpcDnsStack',
-  [AcceleratorStage.NETWORK_ASSOCIATIONS]: 'AWSAccelerator-NetworkAssociationsStack',
-  [AcceleratorStage.NETWORK_ASSOCIATIONS_GWLB]: 'AWSAccelerator-NetworkAssociationsGwlbStack',
-  [AcceleratorStage.FINALIZE]: 'AWSAccelerator-FinalizeStack',
-  [AcceleratorStage.SECURITY_AUDIT]: 'AWSAccelerator-SecurityAuditStack',
-  [AcceleratorStage.CUSTOMIZATIONS]: 'AWSAccelerator-CustomizationsStack',
+  [AcceleratorStage.PREPARE]: `${stackPrefix}-PrepareStack`,
+  [AcceleratorStage.PIPELINE]: `${stackPrefix}-PipelineStack`,
+  [AcceleratorStage.TESTER_PIPELINE]: `${stackPrefix}-TesterPipelineStack`,
+  [AcceleratorStage.ORGANIZATIONS]: `${stackPrefix}-OrganizationsStack`,
+  [AcceleratorStage.KEY]: `${stackPrefix}-KeyStack`,
+  [AcceleratorStage.LOGGING]: `${stackPrefix}-LoggingStack`,
+  [AcceleratorStage.BOOTSTRAP]: `${stackPrefix}-BootstrapStack`,
+  [AcceleratorStage.ACCOUNTS]: `${stackPrefix}-AccountsStack`,
+  [AcceleratorStage.DEPENDENCIES]: `${stackPrefix}-DependenciesStack`,
+  [AcceleratorStage.SECURITY]: `${stackPrefix}-SecurityStack`,
+  [AcceleratorStage.SECURITY_RESOURCES]: `${stackPrefix}-SecurityResourcesStack`,
+  [AcceleratorStage.OPERATIONS]: `${stackPrefix}-OperationsStack`,
+  [AcceleratorStage.NETWORK_PREP]: `${stackPrefix}-NetworkPrepStack`,
+  [AcceleratorStage.NETWORK_VPC]: `${stackPrefix}-NetworkVpcStack`,
+  [AcceleratorStage.NETWORK_VPC_ENDPOINTS]: `${stackPrefix}-NetworkVpcEndpointsStack`,
+  [AcceleratorStage.NETWORK_VPC_DNS]: `${stackPrefix}-NetworkVpcDnsStack`,
+  [AcceleratorStage.NETWORK_ASSOCIATIONS]: `${stackPrefix}-NetworkAssociationsStack`,
+  [AcceleratorStage.NETWORK_ASSOCIATIONS_GWLB]: `${stackPrefix}-NetworkAssociationsGwlbStack`,
+  [AcceleratorStage.FINALIZE]: `${stackPrefix}-FinalizeStack`,
+  [AcceleratorStage.SECURITY_AUDIT]: `${stackPrefix}-SecurityAuditStack`,
+  [AcceleratorStage.CUSTOMIZATIONS]: `${stackPrefix}-CustomizationsStack`,
 };
 
 /**

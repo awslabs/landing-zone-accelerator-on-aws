@@ -33,6 +33,7 @@ new SsmSessionManagerSettings(stack, 'SsmSessionManagerSettings', {
   constructLoggingKmsKey: new cdk.aws_kms.Key(stack, 'Key', {}),
   logRetentionInDays: 3653,
   region: 'us-east-1',
+  acceleratorPrefix: 'AWSAccelerator',
 });
 
 /**

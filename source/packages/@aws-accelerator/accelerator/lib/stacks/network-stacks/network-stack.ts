@@ -90,7 +90,7 @@ export abstract class NetworkStack extends AcceleratorStack {
       'AcceleratorGetCloudWatchKey',
       cdk.aws_ssm.StringParameter.valueForStringParameter(
         this,
-        AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
+        this.acceleratorResourceNames.parameters.cloudWatchLogCmkArn,
       ),
     ) as cdk.aws_kms.Key;
   }
@@ -586,15 +586,19 @@ export abstract class NetworkStack extends AcceleratorStack {
         name: this.getSsmPath(SsmResourceType.IPAM_POOL, [poolName]),
         accountId: delegatedAdminAccountId,
         parameterRegion: ipamPoolRegion,
-        roleName: `AWSAccelerator-GetAcceleratorIpamSsmParamRole-${cdk.Stack.of(this).region}`,
+        roleName: `${this.acceleratorResourceNames.roles.crossAccountIpamPoolAccessRolePrefix}-${
+          cdk.Stack.of(this).region
+        }`,
         kmsKey: this.cloudwatchKey,
         logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays ?? 365,
+        acceleratorPrefix: this.props.prefixes.accelerator,
       }).value;
     } else {
       poolId = new SsmParameterLookup(this, pascalCase(`SsmParamLookup${poolName}`), {
         name: this.getSsmPath(SsmResourceType.IPAM_POOL, [poolName]),
         accountId: delegatedAdminAccountId,
         parameterRegion: ipamPoolRegion,
+        acceleratorPrefix: this.props.prefixes.accelerator,
       }).value;
     }
     return poolId;

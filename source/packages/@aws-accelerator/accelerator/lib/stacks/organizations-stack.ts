@@ -23,7 +23,6 @@ import {
   Bucket,
   BucketEncryptionType,
   BucketReplicationProps,
-  CentralLogsBucket,
   DetectiveOrganizationAdminAccount,
   EnableAwsServiceAccess,
   EnablePolicyType,
@@ -78,22 +77,23 @@ export class OrganizationsStack extends AcceleratorStack {
       'AcceleratorGetCloudWatchKey',
       cdk.aws_ssm.StringParameter.valueForStringParameter(
         this,
-        AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
+        this.acceleratorResourceNames.parameters.cloudWatchLogCmkArn,
       ),
     ) as cdk.aws_kms.Key;
 
     this.centralLogsBucketKey = new KeyLookup(this, 'CentralLogsBucketKey', {
       accountId: this.stackProperties.accountsConfig.getLogArchiveAccountId(),
       keyRegion: props.centralizedLoggingRegion,
-      roleName: CentralLogsBucket.CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME,
-      keyArnParameterName: CentralLogsBucket.KEY_ARN_PARAMETER_NAME,
+      roleName: this.acceleratorResourceNames.roles.crossAccountCentralLogBucketCmkArnSsmParameterAccess,
+      keyArnParameterName: this.acceleratorResourceNames.parameters.centralLogBucketCmkArn,
       logRetentionInDays: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
+      acceleratorPrefix: this.props.prefixes.accelerator,
     }).getKey();
 
     this.bucketReplicationProps = {
       destination: {
         bucketName: `${
-          AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
+          this.acceleratorResourceNames.bucketPrefixes.centralLogs
         }-${this.stackProperties.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`,
         accountId: this.stackProperties.accountsConfig.getLogArchiveAccountId(),
         keyArn: this.centralLogsBucketKey.keyArn,
@@ -231,10 +231,10 @@ export class OrganizationsStack extends AcceleratorStack {
 
       const reportBucket = new Bucket(this, 'ReportBucket', {
         encryptionType: BucketEncryptionType.SSE_S3, // CUR does not support KMS CMK
-        s3BucketName: `${AcceleratorStack.ACCELERATOR_COST_USAGE_REPORT_BUCKET_PREFIX}-${cdk.Stack.of(this).account}-${
+        s3BucketName: `${this.acceleratorResourceNames.bucketPrefixes.costUsage}-${cdk.Stack.of(this).account}-${
           cdk.Stack.of(this).region
         }`,
-        serverAccessLogsBucketName: `${AcceleratorStack.ACCELERATOR_S3_ACCESS_LOGS_BUCKET_NAME_PREFIX}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
+        serverAccessLogsBucketName: `${this.acceleratorResourceNames.bucketPrefixes.s3AccessLogs}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
         s3LifeCycleRules: this.getS3LifeCycleRules(
           this.stackProperties.globalConfig.reports.costAndUsageReport.lifecycleRules,
         ),
@@ -247,7 +247,7 @@ export class OrganizationsStack extends AcceleratorStack {
         `/${this.stackName}/ReportBucket/ReportBucketReplication/` +
           pascalCase(
             `${
-              AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
+              this.acceleratorResourceNames.bucketPrefixes.centralLogs
             }-${this.stackProperties.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`,
           ) +
           '-ReplicationRole/DefaultPolicy/Resource',
@@ -667,8 +667,8 @@ export class OrganizationsStack extends AcceleratorStack {
 
     const cloudTrailCloudWatchCmk = new cdk.aws_kms.Key(this, 'CloudTrailCloudWatchCmk', {
       enableKeyRotation: true,
-      description: 'CloudTrail Log Group CMK',
-      alias: 'accelerator/organizations-cloudtrail/log-group/',
+      description: this.acceleratorResourceNames.customerManagedKeys.orgTrailLog.description,
+      alias: this.acceleratorResourceNames.customerManagedKeys.orgTrailLog.alias,
     });
     cloudTrailCloudWatchCmk.addToResourcePolicy(
       new cdk.aws_iam.PolicyStatement({
@@ -699,7 +699,7 @@ export class OrganizationsStack extends AcceleratorStack {
     const cloudTrailCloudWatchCmkLogGroup = new cdk.aws_logs.LogGroup(this, 'CloudTrailCloudWatchLogGroup', {
       retention: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
       encryptionKey: cloudTrailCloudWatchCmk,
-      logGroupName: 'aws-accelerator-cloudtrail-logs',
+      logGroupName: `${this.props.prefixes.trailLogName}-cloudtrail-logs`,
     });
 
     let managementEventType = cdk.aws_cloudtrail.ReadWriteType.ALL;
@@ -713,7 +713,7 @@ export class OrganizationsStack extends AcceleratorStack {
         this,
         'CentralLogsBucket',
         `${
-          AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
+          this.acceleratorResourceNames.bucketPrefixes.centralLogs
         }-${this.stackProperties.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`,
       ),
       s3KeyPrefix: 'cloudtrail-organization',
@@ -733,7 +733,7 @@ export class OrganizationsStack extends AcceleratorStack {
       managementEvents: managementEventType,
       sendToCloudWatchLogs:
         this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.sendToCloudWatchLogs ?? true,
-      trailName: 'AWSAccelerator-Organizations-CloudTrail',
+      trailName: `${this.props.prefixes.accelerator}-Organizations-CloudTrail`,
     });
 
     if (this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.s3DataEvents ?? true) {

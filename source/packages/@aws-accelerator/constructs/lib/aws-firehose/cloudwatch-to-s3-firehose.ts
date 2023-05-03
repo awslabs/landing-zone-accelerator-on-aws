@@ -67,6 +67,18 @@ export interface CloudWatchToS3FirehoseProps {
    * Config directory path
    */
   configDir: string;
+  /**
+   * Firehose prefix processing lambda function name
+   */
+  readonly prefixProcessingFunctionName: string;
+  /**
+   * Glue database name, where table will be created store AWS Accelerator CloudWatch logs
+   */
+  readonly glueDatabaseName: string;
+  /**
+   * Glue table name to store AWS Accelerator CloudWatch logs
+   */
+  readonly transformationTableName: string;
 }
 /**
  * Class to configure CloudWatch replication on logs receiving account
@@ -95,6 +107,7 @@ export class CloudWatchToS3Firehose extends Construct {
     const glueDatabase = new cdk.aws_glue.CfnDatabase(this, 'FirehoseCloudWatchDb', {
       catalogId: cdk.Stack.of(this).account,
       databaseInput: {
+        name: props.glueDatabaseName,
         description: 'Glue database to store AWS Accelerator CloudWatch logs',
       },
     });
@@ -104,7 +117,7 @@ export class CloudWatchToS3Firehose extends Construct {
       databaseName: glueDatabase.ref,
       tableInput: {
         description: 'Glue table to store AWS Accelerator CloudWatch logs',
-        name: 'aws-accelerator-firehose-transformation-table',
+        name: props.transformationTableName,
         tableType: 'EXTERNAL_TABLE',
         storageDescriptor: {
           // Ref: https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/ValidateLogEventFlow.html
@@ -153,7 +166,7 @@ export class CloudWatchToS3Firehose extends Construct {
 
     const firehosePrefixProcessingLambda = new cdk.aws_lambda.Function(this, 'FirehosePrefixProcessingLambda', {
       runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
-      functionName: 'AWSAccelerator-FirehoseRecordsProcessor',
+      functionName: props.prefixProcessingFunctionName,
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'firehose-record-processing/dist')),
       handler: 'index.handler',
       memorySize: 2048,

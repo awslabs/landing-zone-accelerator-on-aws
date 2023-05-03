@@ -53,6 +53,7 @@ export interface CustomStackProps extends cdk.StackProps {
   readonly templateFile: string;
   readonly terminationProtection: boolean;
   readonly parameters?: CfnParameter[];
+  readonly ssmParamNamePrefix: string;
 }
 export class CustomStack extends cdk.Stack {
   protected props: CustomStackProps;
@@ -68,12 +69,12 @@ export class CustomStack extends cdk.Stack {
     });
 
     new cdk.aws_ssm.StringParameter(this, 'SsmParamStackId', {
-      parameterName: `/accelerator/${cdk.Stack.of(this).stackName}/stack-id`,
+      parameterName: `${props.ssmParamNamePrefix}/${cdk.Stack.of(this).stackName}/stack-id`,
       stringValue: cdk.Stack.of(this).stackId,
     });
 
     new cdk.aws_ssm.StringParameter(this, 'SsmParamAcceleratorVersion', {
-      parameterName: `/accelerator/${cdk.Stack.of(this).stackName}/version`,
+      parameterName: `${props.ssmParamNamePrefix}/${cdk.Stack.of(this).stackName}/version`,
       stringValue: version,
     });
   }

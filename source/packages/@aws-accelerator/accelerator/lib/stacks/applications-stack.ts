@@ -207,7 +207,7 @@ export class ApplicationsStack extends AcceleratorStack {
   private createApplicationConfigResources(props: ApplicationStackProps, appConfigItem: AppConfigItem) {
     const allVpcItems = [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? [];
     const accessLogsBucket = `${
-      AcceleratorStack.ACCELERATOR_ELB_LOGS_BUCKET_PREFIX
+      this.acceleratorResourceNames.bucketPrefixes.elbLogs
     }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`;
 
     for (const vpcItem of allVpcItems) {

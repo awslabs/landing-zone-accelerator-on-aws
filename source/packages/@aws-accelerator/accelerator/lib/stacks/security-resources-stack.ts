@@ -22,7 +22,6 @@ import { Tag as ConfigRuleTag } from '@aws-sdk/client-config-service';
 import { AwsConfigRuleSet, ConfigRule, Tag } from '@aws-accelerator/config';
 
 import {
-  CentralLogsBucket,
   ConfigServiceTags,
   KeyLookup,
   Organization,
@@ -88,9 +87,10 @@ export class SecurityResourcesStack extends AcceleratorStack {
     this.centralLogS3Key = new KeyLookup(this, 'AcceleratorCentralLogS3Key', {
       accountId: this.props.accountsConfig.getLogArchiveAccountId(),
       keyRegion: this.props.centralizedLoggingRegion,
-      roleName: CentralLogsBucket.CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME,
-      keyArnParameterName: CentralLogsBucket.KEY_ARN_PARAMETER_NAME,
+      roleName: this.acceleratorResourceNames.roles.crossAccountCentralLogBucketCmkArnSsmParameterAccess,
+      keyArnParameterName: this.acceleratorResourceNames.parameters.centralLogBucketCmkArn,
       logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+      acceleratorPrefix: this.props.prefixes.accelerator,
     }).getKey();
 
     this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
@@ -98,17 +98,14 @@ export class SecurityResourcesStack extends AcceleratorStack {
       'AcceleratorGetCloudWatchKey',
       cdk.aws_ssm.StringParameter.valueForStringParameter(
         this,
-        AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
+        this.acceleratorResourceNames.parameters.cloudWatchLogCmkArn,
       ),
     );
 
     this.lambdaKey = cdk.aws_kms.Key.fromKeyArn(
       this,
       'AcceleratorGetLambdaKey',
-      cdk.aws_ssm.StringParameter.valueForStringParameter(
-        this,
-        AcceleratorStack.ACCELERATOR_LAMBDA_KEY_ARN_PARAMETER_NAME,
-      ),
+      cdk.aws_ssm.StringParameter.valueForStringParameter(this, this.acceleratorResourceNames.parameters.lambdaCmkArn),
     );
 
     // if sns topics defined and this is the log archive account or
@@ -123,7 +120,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
         'AcceleratorGetSnsKey',
         cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,
-          AcceleratorStack.ACCELERATOR_SNS_TOPIC_KEY_ARN_PARAMETER_NAME,
+          this.acceleratorResourceNames.parameters.snsTopicCmkArn,
         ),
       );
     }
@@ -227,7 +224,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
       const madAccountId = this.props.accountsConfig.getAccountId(managedActiveDirectory.account);
       const madRegion = managedActiveDirectory.region;
 
-      const secretName = `/accelerator/ad-user/${
+      const secretName = `${this.props.prefixes.secretName}/ad-user/${
         managedActiveDirectory.name
       }/${this.props.iamConfig.getManageActiveDirectoryAdminSecretName(managedActiveDirectory.name)}`;
       const madAdminSecretAccountId = this.props.accountsConfig.getAccountId(
@@ -243,7 +240,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
           pascalCase(`${managedActiveDirectory.name}AdminSecretKeyLookup`),
           cdk.aws_ssm.StringParameter.valueForStringParameter(
             this,
-            AcceleratorStack.ACCELERATOR_SECRET_MANAGER_KEY_ARN_PARAMETER_NAME,
+            this.acceleratorResourceNames.parameters.secretsManagerCmkArn,
           ),
         );
         const adminSecret = new cdk.aws_secretsmanager.Secret(
@@ -273,7 +270,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
         );
 
         new cdk.aws_ssm.StringParameter(this, pascalCase(`${managedActiveDirectory.name}AdminSecretArnParameter`), {
-          parameterName: `/accelerator/secrets-manager/${managedActiveDirectory.name}/admin-secret/secret-arn`,
+          parameterName: `${this.props.prefixes.ssmParamName}/secrets-manager/${managedActiveDirectory.name}/admin-secret/secret-arn`,
           stringValue: adminSecret.secretArn,
         });
 
@@ -320,7 +317,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
                 passwordLength: 16,
                 requireEachIncludedType: true,
               },
-              secretName: `/accelerator/ad-user/${managedActiveDirectory.name}/${adUser.name}`,
+              secretName: `${this.props.prefixes.secretName}/ad-user/${managedActiveDirectory.name}/${adUser.name}`,
               encryptionKey: key,
               removalPolicy: cdk.RemovalPolicy.RETAIN,
             });
@@ -341,9 +338,9 @@ export class SecurityResourcesStack extends AcceleratorStack {
               this,
               pascalCase(`${managedActiveDirectory.name}${pascalCase(adUser.name)}SecretArnParameter`),
               {
-                parameterName: `/accelerator/secrets-manager/${managedActiveDirectory.name}/${pascalCase(
-                  adUser.name,
-                )}-secret/secret-arn`,
+                parameterName: `${this.props.prefixes.ssmParamName}/secrets-manager/${
+                  managedActiveDirectory.name
+                }/${pascalCase(adUser.name)}-secret/secret-arn`,
                 stringValue: adminSecret.secretArn,
               },
             );
@@ -402,7 +399,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
                   service: 'sns',
                   region: cdk.Stack.of(this).region,
                   account: cdk.Stack.of(this).account,
-                  resource: `aws-accelerator-${alarmItem.snsTopicName}`,
+                  resource: `${this.props.prefixes.snsTopicName}-${alarmItem.snsTopicName}`,
                   arnFormat: cdk.ArnFormat.NO_RESOURCE_NAME,
                 }),
               ),
@@ -418,7 +415,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
                   service: 'sns',
                   region: cdk.Stack.of(this).region,
                   account: this.props.accountsConfig.getAuditAccountId(),
-                  resource: `aws-accelerator-${alarmItem.snsAlertLevel}Notifications`,
+                  resource: `${this.props.prefixes.snsTopicName}-${alarmItem.snsAlertLevel}Notifications`,
                   arnFormat: cdk.ArnFormat.NO_RESOURCE_NAME,
                 }),
               ),
@@ -496,7 +493,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
 
       if (this.props.securityConfig.awsConfig.enableDeliveryChannel) {
         new config.CfnDeliveryChannel(this, 'ConfigDeliveryChannel', {
-          s3BucketName: `${AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX}-${this.logArchiveAccountId}-${this.props.centralizedLoggingRegion}`,
+          s3BucketName: `${this.acceleratorResourceNames.bucketPrefixes.centralLogs}-${this.logArchiveAccountId}-${this.props.centralizedLoggingRegion}`,
           configSnapshotDeliveryProperties: {
             deliveryFrequency: 'One_Hour',
           },
@@ -1007,10 +1004,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
         return cdk.aws_kms.Key.fromKeyArn(
           this,
           pascalCase(ruleName) + '-AcceleratorGetS3Key',
-          cdk.aws_ssm.StringParameter.valueForStringParameter(
-            this,
-            AcceleratorStack.ACCELERATOR_S3_KEY_ARN_PARAMETER_NAME,
-          ),
+          cdk.aws_ssm.StringParameter.valueForStringParameter(this, this.acceleratorResourceNames.parameters.s3CmkArn),
         ).keyArn;
       } else {
         // When specific Key ID is given
@@ -1027,7 +1021,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
     if (lookupType === ACCEL_LOOKUP_TYPE.Bucket && replacementArray.length === 2) {
       if (replacementArray[1].toLowerCase() === 'elbLogs'.toLowerCase()) {
         return `${
-          AcceleratorStack.ACCELERATOR_ELB_LOGS_BUCKET_PREFIX
+          this.acceleratorResourceNames.bucketPrefixes.elbLogs
         }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`;
       } else {
         return cdk.aws_s3.Bucket.fromBucketName(
@@ -1123,7 +1117,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
       // Set up Session Manager Logging
       new SsmSessionManagerSettings(this, 'SsmSessionManagerSettings', {
         s3BucketName: `${
-          AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
+          this.acceleratorResourceNames.bucketPrefixes.centralLogs
         }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`,
         s3KeyPrefix: `session/${cdk.Aws.ACCOUNT_ID}/${cdk.Stack.of(this).region}`,
         s3BucketKeyArn: this.centralLogS3Key.keyArn,
@@ -1136,6 +1130,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
         constructLoggingKmsKey: this.cloudwatchKey,
         logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
         region: cdk.Stack.of(this).region,
+        acceleratorPrefix: this.props.prefixes.accelerator,
       });
 
       // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
@@ -1169,9 +1164,12 @@ export class SecurityResourcesStack extends AcceleratorStack {
   private securityHubEventForwardToLogs() {
     if (this.props.securityConfig.centralSecurityServices.securityHub.enable) {
       new SecurityHubEventsLog(this, 'SecurityHubEventsLog', {
+        acceleratorPrefix: this.props.prefixes.accelerator,
         snsTopicArn: `arn:${cdk.Stack.of(this).partition}:sns:${cdk.Stack.of(this).region}:${
           cdk.Stack.of(this).account
-        }:aws-accelerator-${this.props.securityConfig.centralSecurityServices.securityHub.snsTopicName}`,
+        }:${this.props.prefixes.snsTopicName}-${
+          this.props.securityConfig.centralSecurityServices.securityHub.snsTopicName
+        }`,
         snsKmsKey: this.snsKey,
         notificationLevel: this.props.securityConfig.centralSecurityServices.securityHub.notificationLevel,
         lambdaKey: this.lambdaKey,
@@ -1193,7 +1191,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
         [
           {
             id: 'AwsSolutions-IAM5',
-            reason: 'Allows only access to /AWSAccelerator-SecurityHub log group.',
+            reason: `Allows only access to /${this.props.prefixes.accelerator}-SecurityHub log group.`,
           },
         ],
       );
@@ -1204,7 +1202,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
         [
           {
             id: 'AwsSolutions-IAM5',
-            reason: 'Allows only access to /AWSAccelerator-SecurityHub log group.',
+            reason: `Allows only access to /${this.props.prefixes.accelerator}-SecurityHub log group.`,
           },
         ],
       );
@@ -1225,11 +1223,11 @@ export class SecurityResourcesStack extends AcceleratorStack {
         continue;
       }
 
-      const trailName = `AWSAccelerator-CloudTrail-${accountTrail.name}`;
+      const trailName = `${this.props.prefixes.accelerator}-CloudTrail-${accountTrail.name}`;
 
       let accountTrailCloudWatchLogGroup: cdk.aws_logs.LogGroup | undefined = undefined;
       if (accountTrail.settings.sendToCloudWatchLogs) {
-        const logGroupName = `aws-accelerator-cloudtrail-${accountTrail.name}`;
+        const logGroupName = `${this.props.prefixes.trailLogName}-cloudtrail-${accountTrail.name}`;
         accountTrailCloudWatchLogGroup = new cdk.aws_logs.LogGroup(this, `CloudTrailLogGroup-${accountTrail.name}`, {
           retention: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
           encryptionKey: this.cloudwatchKey,
@@ -1247,7 +1245,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
         bucket: cdk.aws_s3.Bucket.fromBucketName(
           this,
           'CloudTrailLogBucket',
-          `${AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX}-${this.logArchiveAccountId}-${this.props.centralizedLoggingRegion}`,
+          `${this.acceleratorResourceNames.bucketPrefixes.centralLogs}-${this.logArchiveAccountId}-${this.props.centralizedLoggingRegion}`,
         ),
         s3KeyPrefix: `cloudtrail-${accountTrail.name}`,
         cloudWatchLogGroup: accountTrailCloudWatchLogGroup,

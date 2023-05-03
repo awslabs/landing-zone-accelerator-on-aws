@@ -56,7 +56,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 
       const replicationRules: AWS.S3.ReplicationRules = [
         {
-          ID: `aws-accelerator-${sourceBucketName}-replication-rule`,
+          ID: `${sourceBucketName}-replication-rule`,
           Status: 'Enabled',
           Prefix: prefix,
           SourceSelectionCriteria: {

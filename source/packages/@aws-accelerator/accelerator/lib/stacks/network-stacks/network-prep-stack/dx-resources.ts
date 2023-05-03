@@ -132,6 +132,7 @@ export class DxResources {
           jumboFrames: vifItem.jumboFrames,
           ownerAccount: vifOwnerAccountId,
           tags: vifItem.tags,
+          acceleratorPrefix: props.prefixes.accelerator,
         };
       }
 
@@ -167,6 +168,7 @@ export class DxResources {
           enableSiteLink: vifItem.enableSiteLink,
           jumboFrames: vifItem.jumboFrames,
           tags: vifItem.tags,
+          acceleratorPrefix: props.prefixes.accelerator,
         };
       }
 
@@ -241,7 +243,7 @@ export class DxResources {
         }
         // Create role
         if (accountIds.length > 0) {
-          const role = this.createDxGatewaySsmRole(dxgwItem, accountIds);
+          const role = this.createDxGatewaySsmRole(props, dxgwItem, accountIds);
           ssmRoleMap.set(`${dxgwItem.name}`, role);
         }
       }
@@ -251,10 +253,15 @@ export class DxResources {
 
   /**
    * Create a cross-account role to access SSM parameters
+   * @param props
    * @param dxgwItem
    * @param accountIds
    */
-  private createDxGatewaySsmRole(dxgwItem: DxGatewayConfig, accountIds: string[]): cdk.aws_iam.Role {
+  private createDxGatewaySsmRole(
+    props: AcceleratorStackProps,
+    dxgwItem: DxGatewayConfig,
+    accountIds: string[],
+  ): cdk.aws_iam.Role {
     this.stack.addLogs(LogLevel.INFO, `Direct Connect Gateway: Create IAM cross-account access role`);
 
     const principals: cdk.aws_iam.PrincipalBase[] = [];
@@ -262,7 +269,9 @@ export class DxResources {
       principals.push(new cdk.aws_iam.AccountPrincipal(accountId));
     });
     const role = new cdk.aws_iam.Role(this.stack, `Get${pascalCase(dxgwItem.name)}SsmParamRole`, {
-      roleName: `AWSAccelerator-Get${pascalCase(dxgwItem.name)}SsmParamRole-${cdk.Stack.of(this.stack).region}`,
+      roleName: `${props.prefixes.accelerator}-Get${pascalCase(dxgwItem.name)}SsmParamRole-${
+        cdk.Stack.of(this.stack).region
+      }`,
       assumedBy: new cdk.aws_iam.CompositePrincipal(...principals),
       inlinePolicies: {
         default: new cdk.aws_iam.PolicyDocument({
@@ -271,7 +280,7 @@ export class DxResources {
               effect: cdk.aws_iam.Effect.ALLOW,
               actions: ['ssm:GetParameter'],
               resources: [
-                `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter/accelerator/network/directConnectGateways/${dxgwItem.name}/*`,
+                `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter${props.prefixes.ssmParamName}/network/directConnectGateways/${dxgwItem.name}/*`,
               ],
             }),
           ],

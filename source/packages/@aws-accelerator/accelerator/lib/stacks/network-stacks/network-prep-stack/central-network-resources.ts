@@ -36,6 +36,7 @@ export class CentralNetworkResources {
       delegatedAdminAccountId,
       centralConfig,
       props.globalConfig.homeRegion,
+      props.prefixes.ssmParamName,
       orgId,
     );
     // Create Route 53 resolver resources

@@ -45,6 +45,23 @@ export interface PipelineStackProps extends cdk.StackProps {
    * User defined pre-existing config repository branch name
    */
   readonly configRepositoryBranchName: string;
+  /**
+   * Accelerator resource name prefixes
+   */
+  readonly prefixes: {
+    /**
+     * Accelerator prefix - used for resource name prefix for resources which do not have explicit prefix
+     */
+    readonly accelerator: string;
+    readonly repoName: string;
+    readonly bucketName: string;
+    readonly ssmParamName: string;
+    readonly kmsAlias: string;
+    readonly snsTopicName: string;
+    readonly secretName: string;
+    readonly trailLogName: string;
+    readonly databaseName: string;
+  };
 }
 
 export class PipelineStack extends cdk.Stack {
@@ -52,12 +69,12 @@ export class PipelineStack extends cdk.Stack {
     super(scope, id, props);
 
     new cdk.aws_ssm.StringParameter(this, 'SsmParamStackId', {
-      parameterName: `/accelerator/${cdk.Stack.of(this).stackName}/stack-id`,
+      parameterName: `${props.prefixes.ssmParamName}/${cdk.Stack.of(this).stackName}/stack-id`,
       stringValue: cdk.Stack.of(this).stackId,
     });
 
     new cdk.aws_ssm.StringParameter(this, 'SsmParamAcceleratorVersion', {
-      parameterName: `/accelerator/${cdk.Stack.of(this).stackName}/version`,
+      parameterName: `${props.prefixes.ssmParamName}/${cdk.Stack.of(this).stackName}/version`,
       stringValue: version,
     });
 

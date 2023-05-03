@@ -25,6 +25,7 @@ new KeyLookup(stack, 'KeyLookup', {
   roleName: 'KeyLookupRoleName',
   keyArnParameterName: 'KeyArnParameterName',
   logRetentionInDays: 3653,
+  acceleratorPrefix: 'AWSAccelerator',
 }).getKey();
 
 /**

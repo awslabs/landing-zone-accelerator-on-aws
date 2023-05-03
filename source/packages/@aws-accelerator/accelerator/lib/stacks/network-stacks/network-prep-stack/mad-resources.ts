@@ -13,12 +13,13 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
-import { AcceleratorStack, AcceleratorStackProps } from '../../accelerator-stack';
+import { AcceleratorStackProps } from '../../accelerator-stack';
 import { NetworkPrepStack } from './network-prep-stack';
 
 export class MadResources {
-  private stack: NetworkPrepStack;
   public readonly role?: cdk.aws_iam.Role;
+
+  private stack: NetworkPrepStack;
 
   constructor(networkPrepStack: NetworkPrepStack, props: AcceleratorStackProps) {
     this.stack = networkPrepStack;
@@ -47,11 +48,11 @@ export class MadResources {
       // Create role in shared account home region only
       if (this.stack.isTargetStack(sharedAccountIds, [props.globalConfig.homeRegion])) {
         const role = new cdk.aws_iam.Role(this.stack, 'MadShareAcceptRole', {
-          roleName: AcceleratorStack.ACCELERATOR_MAD_SHARE_ACCEPT_ROLE_NAME,
+          roleName: this.stack.acceleratorResourceNames.roles.madShareAccept,
           assumedBy: new cdk.aws_iam.PrincipalWithConditions(new cdk.aws_iam.AccountPrincipal(madAccountId), {
             ArnLike: {
               'aws:PrincipalARN': [
-                `arn:${cdk.Stack.of(this.stack).partition}:iam::${madAccountId}:role/AWSAccelerator-*`,
+                `arn:${cdk.Stack.of(this.stack).partition}:iam::${madAccountId}:role/${props.prefixes.accelerator}-*`,
               ],
             },
           }),

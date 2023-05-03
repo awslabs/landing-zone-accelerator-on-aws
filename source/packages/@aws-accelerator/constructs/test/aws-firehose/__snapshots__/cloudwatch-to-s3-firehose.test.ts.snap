@@ -32,6 +32,7 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
         },
         "DatabaseInput": {
           "Description": "Glue database to store AWS Accelerator CloudWatch logs",
+          "Name": "AWSAccelerator-Database",
         },
       },
       "Type": "AWS::Glue::Database",
@@ -547,6 +548,7 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
         },
         "DatabaseInput": {
           "Description": "Glue database to store AWS Accelerator CloudWatch logs",
+          "Name": "AWSAccelerator-Database",
         },
       },
       "Type": "AWS::Glue::Database",
@@ -1342,6 +1344,7 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
         },
         "DatabaseInput": {
           "Description": "Glue database to store AWS Accelerator CloudWatch logs",
+          "Name": "AWSAccelerator-Database",
         },
       },
       "Type": "AWS::Glue::Database",
@@ -1857,6 +1860,7 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
         },
         "DatabaseInput": {
           "Description": "Glue database to store AWS Accelerator CloudWatch logs",
+          "Name": "AWSAccelerator-Database",
         },
       },
       "Type": "AWS::Glue::Database",

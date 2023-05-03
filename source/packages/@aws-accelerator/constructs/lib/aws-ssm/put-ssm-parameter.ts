@@ -53,6 +53,10 @@ export interface SsmParameterProps {
     value: string;
   };
   readonly invokingAccountID: string;
+  /**
+   * Accelerator Prefix
+   */
+  readonly acceleratorPrefix: string;
 }
 
 /**
@@ -86,7 +90,7 @@ export class PutSsmParameter extends Construct {
       Sid: 'StsAssumeRoleActions',
       Effect: 'Allow',
       Action: ['sts:AssumeRole'],
-      Resource: [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator*`],
+      Resource: [`arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.acceleratorPrefix}*`],
     });
 
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {

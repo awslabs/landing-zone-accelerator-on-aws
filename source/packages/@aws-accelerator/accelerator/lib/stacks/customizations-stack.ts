@@ -57,7 +57,7 @@ export class CustomizationsStack extends AcceleratorStack {
       'AcceleratorGetCloudWatchKey',
       cdk.aws_ssm.StringParameter.valueForStringParameter(
         this,
-        AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
+        this.acceleratorResourceNames.parameters.cloudWatchLogCmkArn,
       ),
     ) as cdk.aws_kms.Key;
 
@@ -103,27 +103,31 @@ export class CustomizationsStack extends AcceleratorStack {
           return { parameterKey: parameter.name, parameterValue: parameter.value };
         });
 
-        new cdk.aws_cloudformation.CfnStackSet(this, pascalCase(`AWSAccelerator-Custom-${stackSet.name}`), {
-          permissionModel: 'SELF_MANAGED',
-          stackSetName: stackSet.name,
-          capabilities: stackSet.capabilities,
-          description: stackSet.description,
-          operationPreferences: {
-            failureTolerancePercentage: 25,
-            maxConcurrentPercentage: 35,
-            regionConcurrencyType: 'PARALLEL',
-          },
-          stackInstancesGroup: [
-            {
-              deploymentTargets: {
-                accounts: deploymentTargetAccounts,
-              },
-              regions: stackSet.regions,
+        new cdk.aws_cloudformation.CfnStackSet(
+          this,
+          pascalCase(`${this.props.prefixes.accelerator}-Custom-${stackSet.name}`),
+          {
+            permissionModel: 'SELF_MANAGED',
+            stackSetName: stackSet.name,
+            capabilities: stackSet.capabilities,
+            description: stackSet.description,
+            operationPreferences: {
+              failureTolerancePercentage: 25,
+              maxConcurrentPercentage: 35,
+              regionConcurrencyType: 'PARALLEL',
             },
-          ],
-          templateUrl: templateUrl,
-          parameters,
-        });
+            stackInstancesGroup: [
+              {
+                deploymentTargets: {
+                  accounts: deploymentTargetAccounts,
+                },
+                regions: stackSet.regions,
+              },
+            ],
+            templateUrl: templateUrl,
+            parameters,
+          },
+        );
       }
     }
   }
@@ -181,7 +185,7 @@ export class CustomizationsStack extends AcceleratorStack {
 
     this.ssmParameters.push({
       logicalId: pascalCase(`SsmParam${portfolioItem.name}PortfolioId`),
-      parameterName: `/accelerator/servicecatalog/portfolios/${portfolioItem.name}/id`,
+      parameterName: `${this.props.prefixes.ssmParamName}/servicecatalog/portfolios/${portfolioItem.name}/id`,
       stringValue: portfolio.portfolioId,
     });
     return portfolio;
@@ -407,7 +411,7 @@ export class CustomizationsStack extends AcceleratorStack {
     this.logger.info(`Propagating portfolio associations for portfolio ${portfolioItem.name}`);
     const propagateAssociations = new PropagatePortfolioAssociations(this, `${portfolioItem.name}-Propagation`, {
       shareAccountIds: this.getAccountIdsFromShareTarget(portfolioItem.shareTargets),
-      crossAccountRole: AcceleratorStack.ACCELERATOR_SERVICE_CATALOG_PROPAGATION_ROLE_NAME,
+      crossAccountRole: this.acceleratorResourceNames.roles.crossAccountServiceCatalogPropagation,
       portfolioId: portfolio.portfolioId,
       portfolioDefinition: portfolioItem,
       kmsKey: this.cloudwatchKey,

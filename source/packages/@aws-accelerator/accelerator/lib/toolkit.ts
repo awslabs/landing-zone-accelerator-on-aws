@@ -38,6 +38,8 @@ process.on('unhandledRejection', err => {
   throw new Error('Runtime Error');
 });
 
+const stackPrefix = process.env['ACCELERATOR_PREFIX']!;
+
 /**
  *
  */
@@ -158,7 +160,7 @@ export class AcceleratorToolkit {
       },
     });
 
-    const toolkitStackName: string = ToolkitInfo.determineName('AWSAccelerator-CDKToolkit');
+    const toolkitStackName: string = ToolkitInfo.determineName(`${stackPrefix}-CDKToolkit`);
 
     const cli = new CdkToolkit({
       cloudExecutable,
@@ -274,7 +276,7 @@ export class AcceleratorToolkit {
                   organizationConfig,
                 )
               ) {
-                const applicationStackName = `AWSAccelerator-App-${
+                const applicationStackName = `${stackPrefix}-App-${
                   application.name
                 }-${options.accountId!}-${options.region!}`;
                 stackName.push(applicationStackName);

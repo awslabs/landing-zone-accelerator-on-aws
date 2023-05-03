@@ -43,6 +43,17 @@ const stack = new PipelineStack(app, 'PipelineStack', {
   },
   configRepositoryName: 'aws-accelerator-config',
   configRepositoryBranchName: 'main',
+  prefixes: {
+    accelerator: 'AWSAccelerator',
+    kmsAlias: 'alias/accelerator',
+    bucketName: 'aws-accelerator',
+    ssmParamName: '/accelerator',
+    snsTopicName: 'accelerator',
+    repoName: 'aws-accelerator',
+    secretName: '/accelerator',
+    trailLogName: 'aws-accelerator',
+    databaseName: 'aws-accelerator',
+  },
 });
 
 describe('PipelineStack', () => {

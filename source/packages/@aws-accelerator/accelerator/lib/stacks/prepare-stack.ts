@@ -46,13 +46,13 @@ export class PrepareStack extends AcceleratorStack {
       this.logger.info(`homeRegion: ${props.globalConfig.homeRegion}`);
       this.ssmParameters.push({
         logicalId: 'Parameter',
-        parameterName: `/accelerator/prepare-stack/validate`,
+        parameterName: `${props.prefixes.ssmParamName}/prepare-stack/validate`,
         stringValue: 'value',
       });
 
       const key = new cdk.aws_kms.Key(this, 'ManagementKey', {
-        alias: AcceleratorStack.ACCELERATOR_MANAGEMENT_KEY_ALIAS,
-        description: AcceleratorStack.ACCELERATOR_MANAGEMENT_KEY_DESCRIPTION,
+        alias: this.acceleratorResourceNames.customerManagedKeys.managementKey.alias,
+        description: this.acceleratorResourceNames.customerManagedKeys.managementKey.description,
         enableKeyRotation: true,
         removalPolicy: cdk.RemovalPolicy.RETAIN,
       });
@@ -67,7 +67,9 @@ export class PrepareStack extends AcceleratorStack {
           conditions: {
             ArnLike: {
               'aws:PrincipalARN': [
-                `arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:role/AWSAccelerator-*`,
+                `arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:role/${
+                  props.prefixes.accelerator
+                }-*`,
               ],
             },
           },
@@ -105,14 +107,14 @@ export class PrepareStack extends AcceleratorStack {
 
       this.ssmParameters.push({
         logicalId: 'AcceleratorManagementKmsArnParameter',
-        parameterName: '/accelerator/management/kms/key-arn',
+        parameterName: `${props.prefixes.ssmParamName}/management/kms/key-arn`,
         stringValue: key.keyArn,
       });
 
       this.logger.info(`CloudWatch Encryption Key`);
       cloudwatchKey = new cdk.aws_kms.Key(this, 'AcceleratorManagementCloudWatchKey', {
-        alias: AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ALIAS,
-        description: AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_DESCRIPTION,
+        alias: this.acceleratorResourceNames.customerManagedKeys.cloudWatchLog.alias,
+        description: this.acceleratorResourceNames.customerManagedKeys.cloudWatchLog.description,
         enableKeyRotation: true,
         removalPolicy: cdk.RemovalPolicy.RETAIN,
       });
@@ -138,21 +140,21 @@ export class PrepareStack extends AcceleratorStack {
 
       this.ssmParameters.push({
         logicalId: 'AcceleratorCloudWatchKmsArnParameter',
-        parameterName: AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
+        parameterName: this.acceleratorResourceNames.parameters.cloudWatchLogCmkArn,
         stringValue: cloudwatchKey.keyArn,
       });
 
       this.logger.info(`Lambda Encryption Key`);
       const lambdaKey = new cdk.aws_kms.Key(this, 'AcceleratorManagementLambdaKey', {
-        alias: AcceleratorStack.ACCELERATOR_LAMBDA_KEY_ALIAS,
-        description: AcceleratorStack.ACCELERATOR_LAMBDA_KEY_DESCRIPTION,
+        alias: this.acceleratorResourceNames.customerManagedKeys.lambda.alias,
+        description: this.acceleratorResourceNames.customerManagedKeys.lambda.description,
         enableKeyRotation: true,
         removalPolicy: cdk.RemovalPolicy.RETAIN,
       });
 
       this.ssmParameters.push({
         logicalId: 'AcceleratorLambdaKmsArnParameter',
-        parameterName: AcceleratorStack.ACCELERATOR_LAMBDA_KEY_ARN_PARAMETER_NAME,
+        parameterName: this.acceleratorResourceNames.parameters.lambdaCmkArn,
         stringValue: lambdaKey.keyArn,
       });
 
@@ -166,7 +168,7 @@ export class PrepareStack extends AcceleratorStack {
       });
 
       const driftDetectedParameter = new cdk.aws_ssm.StringParameter(this, 'AcceleratorControlTowerDriftParameter', {
-        parameterName: '/accelerator/controltower/driftDetected',
+        parameterName: this.acceleratorResourceNames.parameters.controlTowerDriftDetection,
         stringValue: 'false',
         allowedPattern: '^(true|false)$',
       });
@@ -175,7 +177,7 @@ export class PrepareStack extends AcceleratorStack {
         this,
         'AcceleratorControlTowerDriftMessageParameter',
         {
-          parameterName: '/accelerator/controltower/lastDriftMessage',
+          parameterName: this.acceleratorResourceNames.parameters.controlTowerLastDriftMessage,
           stringValue: 'none',
         },
       );
@@ -206,17 +208,17 @@ export class PrepareStack extends AcceleratorStack {
         ]);
 
         new cdk.aws_ssm.StringParameter(this, 'ConfigTableArnParameter', {
-          parameterName: `/accelerator/prepare-stack/configTable/arn`,
+          parameterName: this.acceleratorResourceNames.parameters.configTableArn,
           stringValue: configTable.tableArn,
         });
 
         new cdk.aws_ssm.StringParameter(this, 'ConfigTableNameParameter', {
-          parameterName: `/accelerator/prepare-stack/configTable/name`,
+          parameterName: this.acceleratorResourceNames.parameters.configTableName,
           stringValue: configTable.tableName,
         });
 
         new cdk.aws_iam.Role(this, 'AcceleratorMoveAccountRole', {
-          roleName: AcceleratorStack.ACCELERATOR_ACCOUNT_CONFIG_TABLE_PARAMETER_ACCESS_ROLE_NAME,
+          roleName: this.acceleratorResourceNames.roles.moveAccountConfig,
           assumedBy: new cdk.aws_iam.AccountPrincipal(cdk.Stack.of(this).account),
           inlinePolicies: {
             default: new cdk.aws_iam.PolicyDocument({
@@ -225,7 +227,7 @@ export class PrepareStack extends AcceleratorStack {
                   effect: cdk.aws_iam.Effect.ALLOW,
                   actions: ['ssm:GetParameters', 'ssm:GetParameter'],
                   resources: [
-                    `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter/accelerator/prepare-stack/configTable/*`,
+                    `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter${props.prefixes.ssmParamName}/prepare-stack/configTable/*`,
                   ],
                 }),
               ],
@@ -242,10 +244,9 @@ export class PrepareStack extends AcceleratorStack {
         ]);
 
         this.logger.info(`Load Config Table`);
-        const configRepoName = props.qualifier ? `${props.qualifier}-config` : 'aws-accelerator-config';
         const loadAcceleratorConfigTable = new LoadAcceleratorConfigTable(this, 'LoadAcceleratorConfigTable', {
           acceleratorConfigTable: configTable,
-          configRepositoryName: configRepoName,
+          configRepositoryName: props.configRepositoryName,
           managementAccountEmail: props.accountsConfig.getManagementAccount().email,
           auditAccountEmail: props.accountsConfig.getAuditAccount().email,
           logArchiveAccountEmail: props.accountsConfig.getLogArchiveAccount().email,
@@ -388,7 +389,7 @@ export class PrepareStack extends AcceleratorStack {
           this.logger.info(`Table Parameter`);
           this.ssmParameters.push({
             logicalId: 'NewCTAccountsTableNameParameter',
-            parameterName: `/accelerator/prepare-stack/NewCTAccountsTableName`,
+            parameterName: `${props.prefixes.ssmParamName}/prepare-stack/NewCTAccountsTableName`,
             stringValue: newCTAccountsTable.tableName,
           });
 
@@ -404,14 +405,14 @@ export class PrepareStack extends AcceleratorStack {
 
             this.ssmParameters.push({
               logicalId: 'GovCloudAccountMappingTableNameParameter',
-              parameterName: `/accelerator/prepare-stack/govCloudAccountMappingTableName`,
+              parameterName: `${props.prefixes.ssmParamName}/prepare-stack/govCloudAccountMappingTableName`,
               stringValue: govCloudAccountMappingTable.tableName,
             });
           }
 
           this.ssmParameters.push({
             logicalId: 'NewOrgAccountsTableNameParameter',
-            parameterName: `/accelerator/prepare-stack/NewOrgAccountsTableName`,
+            parameterName: `${props.prefixes.ssmParamName}/prepare-stack/NewOrgAccountsTableName`,
             stringValue: newOrgAccountsTable.tableName,
           });
 
@@ -615,7 +616,8 @@ export class PrepareStack extends AcceleratorStack {
             );
 
             const controlTowerNotificationTopic = new cdk.aws_sns.Topic(this, 'ControlTowerNotification', {
-              topicName: 'AWSAccelerator-ControlTowerNotification',
+              //Check this if it causes any issue changing topic name
+              topicName: `${props.prefixes.accelerator}-ControlTowerNotification`,
               displayName: 'ForwardedControlTowerNotifications',
               masterKey: key,
             });
