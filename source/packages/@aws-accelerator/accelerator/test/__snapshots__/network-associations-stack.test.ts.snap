@@ -2454,7 +2454,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-555555555555-us-east-1/version",
         "Type": "String",
-        "Value": "1.3.2",
+        "Value": "1.4.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
