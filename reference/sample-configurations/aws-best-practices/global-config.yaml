@@ -64,20 +64,38 @@ logging:
     lifecycleRules:
       - enabled: true
         abortIncompleteMultipartUpload: 7
-        expiration: 730
-        noncurrentVersionExpiration: 730
+        expiration: 1000
+        noncurrentVersionExpiration: 1000
+        transitions:
+          - storageClass: GLACIER_IR
+            transitionAfter: 365
+        noncurrentVersionTransitions:
+          - storageClass: GLACIER_IR
+            transitionAfter: 365
   centralLogBucket:
     lifecycleRules:
       - enabled: true
         abortIncompleteMultipartUpload: 7
-        expiration: 730
-        noncurrentVersionExpiration: 730
+        expiration: 1000
+        noncurrentVersionExpiration: 1000
+        transitions:
+          - storageClass: GLACIER_IR
+            transitionAfter: 365
+        noncurrentVersionTransitions:
+          - storageClass: GLACIER_IR
+            transitionAfter: 365
   elbLogBucket:
     lifecycleRules:
       - enabled: true
         abortIncompleteMultipartUpload: 7
-        expiration: 730
-        noncurrentVersionExpiration: 730
+        expiration: 1000
+        noncurrentVersionExpiration: 1000
+        transitions:
+          - storageClass: GLACIER_IR
+            transitionAfter: 365
+        noncurrentVersionTransitions:
+          - storageClass: GLACIER_IR
+            transitionAfter: 365
 reports:
   costAndUsageReport:
     compression: Parquet
