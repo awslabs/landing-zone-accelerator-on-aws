@@ -77,7 +77,7 @@ export class ActiveDirectoryLogSubscription extends Construct {
 
     const providerLambda = new cdk.aws_lambda.Function(this, 'ManageActiveDirectoryLogSubscriptionFunction', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'create-log-subscription/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
       handler: 'index.handler',
       timeout: cdk.Duration.seconds(30),
       description: 'Manage active directory log subscription handler',

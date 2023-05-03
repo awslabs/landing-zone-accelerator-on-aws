@@ -137,7 +137,7 @@ awsConfig:
             lambda:
               sourceFilePath: custom-config-rules/attach-ec2-instance-profile.zip
               handler: index.handler
-              runtime: nodejs14.x
+              runtime: nodejs16.x
               rolePolicyFile: custom-config-rules/attach-ec2-instance-profile-detection-role.json
             periodic: true
             maximumExecutionFrequency: Six_Hours
@@ -171,7 +171,7 @@ awsConfig:
             lambda:
               sourceFilePath: custom-config-rules/ec2-instance-profile-permissions.zip
               handler: index.handler
-              runtime: nodejs14.x
+              runtime: nodejs16.x
               rolePolicyFile: custom-config-rules/ec2-instance-profile-permissions-detection-role.json
             periodic: true
             maximumExecutionFrequency: Six_Hours
@@ -372,7 +372,7 @@ awsConfig:
             lambda:
               sourceFilePath: custom-config-rules/attach-ec2-instance-profile.zip
               handler: index.handler
-              runtime: nodejs14.x
+              runtime: nodejs16.x
               rolePolicyFile: custom-config-rules/attach-ec2-instance-profile-detection-role.json
             periodic: true
             maximumExecutionFrequency: Six_Hours
@@ -406,7 +406,7 @@ awsConfig:
             lambda:
               sourceFilePath: custom-config-rules/ec2-instance-profile-permissions.zip
               handler: index.handler
-              runtime: nodejs14.x
+              runtime: nodejs16.x
               rolePolicyFile: custom-config-rules/ec2-instance-profile-permissions-detection-role.json
             periodic: true
             maximumExecutionFrequency: Six_Hours
@@ -607,7 +607,7 @@ awsConfig:
             lambda:
               sourceFilePath: custom-config-rules/attach-ec2-instance-profile.zip
               handler: index.handler
-              runtime: nodejs14.x
+              runtime: nodejs16.x
               rolePolicyFile: custom-config-rules/attach-ec2-instance-profile-detection-role.json
             periodic: true
             maximumExecutionFrequency: Six_Hours
@@ -641,7 +641,7 @@ awsConfig:
             lambda:
               sourceFilePath: custom-config-rules/ec2-instance-profile-permissions.zip
               handler: index.handler
-              runtime: nodejs14.x
+              runtime: nodejs16.x
               rolePolicyFile: custom-config-rules/ec2-instance-profile-permissions-detection-role.json
             periodic: true
             maximumExecutionFrequency: Six_Hours
@@ -842,7 +842,7 @@ awsConfig:
             lambda:
               sourceFilePath: custom-config-rules/attach-ec2-instance-profile.zip
               handler: index.handler
-              runtime: nodejs14.x
+              runtime: nodejs16.x
               rolePolicyFile: custom-config-rules/attach-ec2-instance-profile-detection-role.json
             periodic: true
             maximumExecutionFrequency: Six_Hours
@@ -876,7 +876,7 @@ awsConfig:
             lambda:
               sourceFilePath: custom-config-rules/ec2-instance-profile-permissions.zip
               handler: index.handler
-              runtime: nodejs14.x
+              runtime: nodejs16.x
               rolePolicyFile: custom-config-rules/ec2-instance-profile-permissions-detection-role.json
             periodic: true
             maximumExecutionFrequency: Six_Hours
@@ -1077,7 +1077,7 @@ awsConfig:
             lambda:
               sourceFilePath: custom-config-rules/attach-ec2-instance-profile.zip
               handler: index.handler
-              runtime: nodejs14.x
+              runtime: nodejs16.x
               rolePolicyFile: custom-config-rules/attach-ec2-instance-profile-detection-role.json
             periodic: true
             maximumExecutionFrequency: Six_Hours
@@ -1111,7 +1111,7 @@ awsConfig:
             lambda:
               sourceFilePath: custom-config-rules/ec2-instance-profile-permissions.zip
               handler: index.handler
-              runtime: nodejs14.x
+              runtime: nodejs16.x
               rolePolicyFile: custom-config-rules/ec2-instance-profile-permissions-detection-role.json
             periodic: true
             maximumExecutionFrequency: Six_Hours
@@ -1312,7 +1312,7 @@ awsConfig:
             lambda:
               sourceFilePath: custom-config-rules/attach-ec2-instance-profile.zip
               handler: index.handler
-              runtime: nodejs14.x
+              runtime: nodejs16.x
               rolePolicyFile: custom-config-rules/attach-ec2-instance-profile-detection-role.json
             periodic: true
             maximumExecutionFrequency: Six_Hours
@@ -1346,7 +1346,7 @@ awsConfig:
             lambda:
               sourceFilePath: custom-config-rules/ec2-instance-profile-permissions.zip
               handler: index.handler
-              runtime: nodejs14.x
+              runtime: nodejs16.x
               rolePolicyFile: custom-config-rules/ec2-instance-profile-permissions-detection-role.json
             periodic: true
             maximumExecutionFrequency: Six_Hours
@@ -1547,7 +1547,7 @@ awsConfig:
             lambda:
               sourceFilePath: custom-config-rules/attach-ec2-instance-profile.zip
               handler: index.handler
-              runtime: nodejs14.x
+              runtime: nodejs16.x
               rolePolicyFile: custom-config-rules/attach-ec2-instance-profile-detection-role.json
             periodic: true
             maximumExecutionFrequency: Six_Hours
@@ -1581,7 +1581,7 @@ awsConfig:
             lambda:
               sourceFilePath: custom-config-rules/ec2-instance-profile-permissions.zip
               handler: index.handler
-              runtime: nodejs14.x
+              runtime: nodejs16.x
               rolePolicyFile: custom-config-rules/ec2-instance-profile-permissions-detection-role.json
             periodic: true
             maximumExecutionFrequency: Six_Hours
@@ -1782,7 +1782,7 @@ awsConfig:
             lambda:
               sourceFilePath: custom-config-rules/attach-ec2-instance-profile.zip
               handler: index.handler
-              runtime: nodejs14.x
+              runtime: nodejs16.x
               rolePolicyFile: custom-config-rules/attach-ec2-instance-profile-detection-role.json
             periodic: true
             maximumExecutionFrequency: Six_Hours
@@ -1816,7 +1816,7 @@ awsConfig:
             lambda:
               sourceFilePath: custom-config-rules/ec2-instance-profile-permissions.zip
               handler: index.handler
-              runtime: nodejs14.x
+              runtime: nodejs16.x
               rolePolicyFile: custom-config-rules/ec2-instance-profile-permissions-detection-role.json
             periodic: true
             maximumExecutionFrequency: Six_Hours

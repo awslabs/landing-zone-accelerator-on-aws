@@ -134,7 +134,7 @@ export class WarmAccount extends Construct {
 
     this.onEvent = new cdk.aws_lambda.Function(this, 'WarmAccountFunction', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'account-warming/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(5),
       description: 'Account warming onEvent handler',
@@ -160,7 +160,7 @@ export class WarmAccount extends Construct {
 
     this.isComplete = new cdk.aws_lambda.Function(this, 'WarmAccountStatusFunction', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'account-warming-status/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(5),
       description: 'Account warming isComplete handler',

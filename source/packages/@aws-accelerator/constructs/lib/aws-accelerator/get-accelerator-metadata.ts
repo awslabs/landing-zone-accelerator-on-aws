@@ -166,7 +166,7 @@ export class AcceleratorMetadata extends Construct {
       functionName,
       role,
       code,
-      runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
       timeout: cdk.Duration.minutes(10),
       handler: 'index.handler',
       environment: {

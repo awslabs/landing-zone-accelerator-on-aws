@@ -48,7 +48,7 @@ export class MacieMembers extends Construct {
 
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, MACIE_RESOURCE_TYPE, {
       codeDirectory: path.join(__dirname, 'create-member/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
       policyStatements: [
         {
           Sid: 'MacieCreateMemberTaskOrganizationAction',

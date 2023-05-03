@@ -43,7 +43,7 @@ vpcPeer.addPeeringRoute(
 const crLambda = new cdk.aws_lambda.Function(stack, 'test', {
   code: new cdk.aws_lambda.InlineCode('foo'),
   handler: 'handler',
-  runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
+  runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
 });
 const crProvider = new cdk.custom_resources.Provider(stack, 'myProvider', { onEventHandler: crLambda });
 

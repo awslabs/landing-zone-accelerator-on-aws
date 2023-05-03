@@ -59,7 +59,7 @@ export class ShareSubnetTags extends Construct {
     //
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, SHARE_SUBNET_TAGS_TYPE, {
       codeDirectory: path.join(__dirname, 'share-subnet-tags/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
       policyStatements: [
         {
           Effect: 'Allow',

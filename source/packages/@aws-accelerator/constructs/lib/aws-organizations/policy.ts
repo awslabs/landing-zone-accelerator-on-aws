@@ -117,7 +117,7 @@ export class Policy extends Construct {
     //
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::OrganizationsCreatePolicy', {
       codeDirectory: path.join(__dirname, 'create-policy/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
       description: 'Organizations create policy',
       policyStatements: [
         {
