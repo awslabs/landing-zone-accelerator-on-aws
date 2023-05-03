@@ -311,16 +311,24 @@ export class InstallerStack extends cdk.Stack {
 
     // Validate Installer Parameters
 
-    new Validate(this, 'ValidateInstaller', {
+    const validatorFunction = new Validate(this, 'ValidateInstaller', {
       useExistingConfigRepo: this.useExistingConfigRepo.valueAsString,
       existingConfigRepositoryName: this.existingConfigRepositoryName.valueAsString,
       existingConfigRepositoryBranchName: this.existingConfigRepositoryBranchName.valueAsString,
     });
+    // cfn-nag suppression
+    const validatorFunctionResource = validatorFunction.node.findChild('ValidationFunction').node
+      .defaultChild as cdk.CfnResource;
+    this.addLambdaNagMetadata(validatorFunctionResource);
 
     const resourceNamePrefixes = new ResourceNamePrefixes(this, 'ResourceNamePrefixes', {
       acceleratorPrefix: this.acceleratorPrefix.valueAsString,
       acceleratorQualifier: this.acceleratorQualifier?.valueAsString,
     });
+    // cfn-nag suppression
+    const resourceNameFunctionResource = resourceNamePrefixes.node.findChild('ResourceNamePrefixesFunction').node
+      .defaultChild as cdk.CfnResource;
+    this.addLambdaNagMetadata(resourceNameFunctionResource);
 
     const oneWordPrefix = resourceNamePrefixes.oneWordPrefix.endsWith('-')
       ? resourceNamePrefixes.oneWordPrefix.slice(0, -1)
@@ -997,26 +1005,8 @@ export class InstallerStack extends cdk.Stack {
     };
     cfnLambdaFunctionPolicy.cfnOptions.condition = useGitHubCondition;
 
-    const cfnLambdaFunction = updatePipelineGithubTokenFunction.node.defaultChild as cdk.aws_lambda.CfnFunction;
-    cfnLambdaFunction.cfnOptions.metadata = {
-      cfn_nag: {
-        rules_to_suppress: [
-          {
-            id: 'W58',
-            reason: 'CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole',
-          },
-          {
-            id: 'W89',
-            reason: 'This function supports infrastructure deployment and is not deployed inside a VPC.',
-          },
-          {
-            id: 'W92',
-            reason:
-              'This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.',
-          },
-        ],
-      },
-    };
+    const cfnLambdaFunction = updatePipelineGithubTokenFunction.node.defaultChild as cdk.CfnResource;
+    this.addLambdaNagMetadata(cfnLambdaFunction);
 
     cfnLambdaFunction.cfnOptions.condition = useGitHubCondition;
 
@@ -1062,5 +1052,28 @@ export class InstallerStack extends cdk.Stack {
         },
       ]);
     }
+  }
+
+  /**
+   * Adds required metadata to Lambda functions for AWS Solutions security scans
+   * @param resource
+   */
+  private addLambdaNagMetadata(resource: cdk.CfnResource): void {
+    resource.addMetadata('cfn_nag', {
+      rules_to_suppress: [
+        {
+          id: 'W58',
+          reason: `CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole`,
+        },
+        {
+          id: 'W89',
+          reason: `This function supports infrastructure deployment and is not deployed inside a VPC.`,
+        },
+        {
+          id: 'W92',
+          reason: `This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.`,
+        },
+      ],
+    });
   }
 }
