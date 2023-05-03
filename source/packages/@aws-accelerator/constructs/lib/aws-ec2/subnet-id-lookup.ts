@@ -52,7 +52,7 @@ export class SubnetIdLookup extends Construct {
 
     const providerLambda = new cdk.aws_lambda.Function(this, 'SubnetIdLookupFunction', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'get-subnet-id/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(15),
       description: 'Lookup subnet id from account',

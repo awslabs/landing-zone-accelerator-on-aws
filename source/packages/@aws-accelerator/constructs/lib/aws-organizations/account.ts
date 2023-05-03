@@ -46,7 +46,7 @@ export class Account extends cdk.Resource {
 
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, ENROLL_ACCOUNT_TYPE, {
       codeDirectory: path.join(__dirname, 'invite-account-to-organization/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
       policyStatements: [
         {
           Effect: 'Allow',

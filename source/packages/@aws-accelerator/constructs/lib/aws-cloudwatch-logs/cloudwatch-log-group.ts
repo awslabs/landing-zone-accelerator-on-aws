@@ -97,7 +97,7 @@ export class CloudWatchLogGroups extends cdk.Resource {
       pascalCase(`${props.logGroupName}-${CLOUD_WATCH_LOG_GROUPS}`),
       {
         codeDirectory: path.join(__dirname, 'create-log-groups/dist'),
-        runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+        runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
         policyStatements: [
           {
             Effect: 'Allow',

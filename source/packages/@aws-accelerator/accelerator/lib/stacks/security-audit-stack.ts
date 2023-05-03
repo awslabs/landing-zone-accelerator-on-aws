@@ -539,7 +539,7 @@ export class SecurityAuditStack extends AcceleratorStack {
           code: cdk.aws_lambda.Code.fromAsset(
             path.join(__dirname, '../lambdas/control-tower-notifications-forwarder/dist'),
           ),
-          runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
+          runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
           handler: 'index.handler',
           description: 'Lambda function to forward ControlTower notifications to management account',
           timeout: cdk.Duration.minutes(2),

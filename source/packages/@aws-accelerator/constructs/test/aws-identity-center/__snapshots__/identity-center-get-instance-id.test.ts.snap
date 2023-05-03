@@ -22,7 +22,7 @@ exports[`IdentityCenterGetInstanceId Construct(IdentityCenterGetInstanceId):  Sn
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 160,
       },
       "Type": "AWS::Lambda::Function",

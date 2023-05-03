@@ -29,7 +29,7 @@ export class Validate extends Construct {
     super(scope, id);
 
     const lambdaFunction = new cdk.aws_lambda.Function(this, 'ValidationFunction', {
-      runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
       handler: 'index.handler',
       description: 'This function validates installer parameters',
       code: cdk.aws_lambda.Code.fromInline(`

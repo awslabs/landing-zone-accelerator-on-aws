@@ -49,7 +49,7 @@ export class IpamOrganizationAdminAccount extends cdk.Resource implements IEnabl
 
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, ENABLE_IPAM_ADMIN, {
       codeDirectory: path.join(__dirname, 'enable-ipam-organization-admin/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
       policyStatements: [
         {
           Effect: 'Allow',

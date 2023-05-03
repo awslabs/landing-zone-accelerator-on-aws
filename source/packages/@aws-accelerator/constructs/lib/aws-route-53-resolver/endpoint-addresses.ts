@@ -45,7 +45,7 @@ export class EndpointAddresses extends cdk.Resource implements IEndpointAddresse
 
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::ResolverEndpointAddresses', {
       codeDirectory: path.join(__dirname, 'get-endpoint-addresses/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
       policyStatements: [
         {
           Effect: 'Allow',

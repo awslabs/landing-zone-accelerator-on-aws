@@ -48,7 +48,7 @@ export class VpcIdLookup extends Construct {
 
     const providerLambda = new cdk.aws_lambda.Function(this, 'VpcIdLookupFunction', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'get-vpc-id/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(15),
       description: 'Lookup vpc id from account',
