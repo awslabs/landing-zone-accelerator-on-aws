@@ -5,6 +5,53 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2023-05-03
+
+### Added
+
+- feat(config): Utilize existing AWS Config Service Delivery Channel
+- feat(installer): Support custom prefix for LZA resources
+- feat(logging) Add S3 prefix to Config Recorder delivery channel
+- feat(networking): Added deploymentTargets property for prefix lists
+- feat(networking): add ability to reference same-account IPAM subnets in Security Groups and NACLs
+- feat(scp): Implement SCP allow-list strategy
+- feat(security-config) Add ability to define CloudWatch Log Groups
+- feat(security hub): allow definition of deploymentTargets for Security Hub standards
+- feat(validation): verify no ignored OU accounts are included in accounts-config file
+
+### Changed
+
+- chore(app): Update AWS CDK version to 2.70.0
+- chore(docs): adding optional flags and replacement warnings to SecurityConfig and NetworkConfig
+- chore(network): network stack refactor to assist in development efforts
+- enhancement(cdk): Configure CDK to use managementAccountAccessRole for all actions
+- enhancement(logging): Reduce logging in firehose processor to optimize cost
+- enhancement(networking): replicate Security Groups to Accounts with RAM shared subnets
+- enhancement(network): make vpcFlowLogs property optional
+
+### Fixed
+
+- fix(accounts): methods used to retrieve Account IDs for Root OU targets return ignored accounts
+- fix(bootstrap): Forced bootstrap update for non-centralized CDK buckets
+- fix(budgets): unable to deploy AWS Budgets in Regions without vpc endpoint
+- fix(ebs): EBS encryption policy references Account instead of Region
+- fix(logging): remove nested looping for additional statements
+- fix(networking): fix IPAM SSM lookup role name mismatch
+- fix(networking): VPC-level ALBs and NLBs may reference incorrect logging bucket region
+- fix(networking): replicating shared VPC/subnet tags to consumer account fails if sharing subnets from multiple owner accounts
+- fix(networking): default VPCs are not deleted if the excludedAccounts property is not included
+- fix(pipeline): Credential timeout for long running stages
+- fix(sso): permission sets and assignments created outside of LZA cause pipeline failure
+- chore(application-stack): refactor application stack to reduce complexity
+
+### Configuration Changes
+
+- feat(aws-best-practices-education): Added additional security-config controls
+- feat(aws-best-practices-tse-se): Added AWS Control Tower installation instructions
+- enhancement(aws-best-practices): Replace hard-coded management role in guardrail SCPs with a variable
+- enhancement(aws-best-practices-cccs-medium): updated configuration to utilize accelerator prefix feature
+- enhancement(aws-best-practices-tse-se): updated install instructions for GitHub personal access token
+
 ## [1.3.2] - 2023-03-02
 
 ### Changed
