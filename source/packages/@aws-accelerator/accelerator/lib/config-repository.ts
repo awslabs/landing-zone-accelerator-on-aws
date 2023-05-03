@@ -23,14 +23,11 @@ import {
 import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
 import * as cdk from 'aws-cdk-lib';
 import * as s3_assets from 'aws-cdk-lib/aws-s3-assets';
-// import AWS from 'aws-sdk';
 import { Construct } from 'constructs';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as os from 'os';
 import * as path from 'path';
-
-// import { GetCallerIdentityCommand, STSClient } from '@aws-sdk/client-sts';
 
 export interface ConfigRepositoryProps {
   readonly repositoryName: string;

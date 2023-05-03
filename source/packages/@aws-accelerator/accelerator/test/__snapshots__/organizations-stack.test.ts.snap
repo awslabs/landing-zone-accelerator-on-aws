@@ -1980,10 +1980,25 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
                 "organizations:ListParents",
                 "organizations:ListRoots",
                 "organizations:RegisterDelegatedAdministrator",
-                "sts:AssumeRole",
               ],
               "Effect": "Allow",
               "Resource": "*",
+            },
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":iam::222222222222:role/AWSControlTowerExecution",
+                  ],
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
@@ -7507,10 +7522,25 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
                 "organizations:ListParents",
                 "organizations:ListRoots",
                 "organizations:RegisterDelegatedAdministrator",
-                "sts:AssumeRole",
               ],
               "Effect": "Allow",
               "Resource": "*",
+            },
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":iam::222222222222:role/AWSControlTowerExecution",
+                  ],
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",

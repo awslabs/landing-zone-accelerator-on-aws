@@ -333,7 +333,7 @@ export class ApplicationsStack extends AcceleratorStack {
     // if no target group is provided return undefined
     if (listeners && targetGroups) {
       for (const listener of listeners) {
-        const targetGroupValues = targetGroups! ?? [];
+        const targetGroupValues = targetGroups ?? [];
 
         const filteredTargetGroup = targetGroupValues.find(element => {
           return element.name === listener.targetGroup;
@@ -485,7 +485,7 @@ export class ApplicationsStack extends AcceleratorStack {
 
     NagSuppressions.addResourceSuppressionsByPath(
       this,
-      `${this.stackName}/AutoScalingGroup${pascalCase(appName)}${pascalCase(autoscaling!.name)}/Resource`,
+      `${this.stackName}/AutoScalingGroup${pascalCase(appName)}${pascalCase(autoscaling.name)}/Resource`,
       [
         {
           id: 'AwsSolutions-AS3',

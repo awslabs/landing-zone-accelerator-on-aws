@@ -135,7 +135,18 @@ exports[`ActiveDirectoryResolverRule Construct(ActiveDirectoryResolverRule):  Sn
             {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Resource": "*",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":iam::*:role/AWSAccelerator-MAD-example-com-rule",
+                  ],
+                ],
+              },
               "Sid": "StsAssumeRole",
             },
           ],

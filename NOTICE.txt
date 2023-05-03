@@ -46,6 +46,9 @@ This software includes third party software subject to the following copyrights:
 @aws-sdk/smithy-client - Apache-2.0
 @aws-sdk/types - Apache-2.0
 @aws-sdk/util-retry - Apache-2.0
+@babel/core - MIT
+@babel/preset-env - MIT
+@babel/preset-typescript - MIT
 @types/aws-lambda - MIT
 @types/fs-extra - MIT
 @types/jest - MIT
@@ -61,6 +64,7 @@ aws-cdk - Apache-2.0
 aws-cdk-lib - Apache-2.0
 aws-lambda - MIT
 aws-sdk - Apache-2.0
+aws-sdk-client-mock - MIT
 cdk-assets - Apache-2.0
 cdk-nag - Apache-2.0
 change-case - MIT

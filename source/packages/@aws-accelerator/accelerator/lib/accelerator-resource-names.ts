@@ -55,7 +55,6 @@ interface CmkDetails {
   centralLogsBucket: { alias: string; description: string };
   metadataBucket: { alias: string; description: string };
   ebsDefault: { alias: string; description: string };
-  // secretManager: { alias: string; description: string };
   s3: { alias: string; description: string };
   cloudWatchLog: { alias: string; description: string };
   cloudWatchLogReplication: { alias: string; description: string };
@@ -120,7 +119,6 @@ export class AcceleratorResourceNames {
     centralLogsBucket: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
     metadataBucket: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
     ebsDefault: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
-    // secretManager: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
     s3: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
     cloudWatchLog: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
     cloudWatchLogReplication: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
@@ -206,10 +204,6 @@ export class AcceleratorResourceNames {
       alias: props.prefixes.kmsAlias + '/ebs/default-encryption/key',
       description: 'AWS Accelerator default EBS Volume Encryption key',
     };
-    // this.customerManagedKeys.secretManager = {
-    //   alias: props.prefixes.kmsAlias + '/kms/secret-manager/key',
-    //   description: 'AWS Accelerator Secret manager Kms Key',
-    // };
     this.customerManagedKeys.s3 = {
       alias: props.prefixes.kmsAlias + '/kms/s3/key',
       description: 'AWS Accelerator S3 Kms Key',
