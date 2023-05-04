@@ -86,7 +86,7 @@ export const OptInRegions = [
   'me-south-1',
 ];
 
-export const BootstrapVersion = 16;
+export const BootstrapVersion = 17;
 
 const stackPrefix = process.env['ACCELERATOR_PREFIX'] ?? 'AWSAccelerator';
 

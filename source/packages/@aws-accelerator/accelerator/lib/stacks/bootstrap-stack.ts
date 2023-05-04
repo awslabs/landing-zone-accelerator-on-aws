@@ -78,7 +78,7 @@ export class BootstrapStack extends AcceleratorStack {
 
     // Outputs
     new cdk.CfnOutput(this, 'BootstrapVersionOutput', {
-      value: '16',
+      value: BootstrapVersion.toString(),
       description: 'The version of the bootstrap resources that are currently mastered in this stack',
     });
 
