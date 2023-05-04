@@ -33,3 +33,5 @@ This version introduces support for Control Tower in the configuration. **IMPORT
 This version includes updates to some SCP statements, make sure to compare the changes and apply them to your configuration
 
 Security groups defined in shared VPCs are now replicated to accounts where the subnets are shared. If you reference a prefix list from a security group, you need to update the deployment targets of the prefix list to deploy the prefix list in all shared accounts. (network-config.yaml)
+
+Lambda runtimes for AWS Config rules were updated to NodeJs16. (security-config.yaml)
