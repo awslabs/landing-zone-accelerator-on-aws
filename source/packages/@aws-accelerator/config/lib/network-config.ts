@@ -1514,11 +1514,13 @@ export class TransitGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.
  * @example
  * ```
  * - name: Accelerator-VIF
+ *   region: us-east-1
  *   connectionId: dxcon-example
  *   customerAsn: 64512
  *   interfaceName: Accelerator-VIF
  *   ownerAccount: Network
  *   type: transit
+ *   vlan: 100
  * ```
  */
 export class DxVirtualInterfaceConfig implements t.TypeOf<typeof NetworkConfigTypes.dxVirtualInterfaceConfig> {
