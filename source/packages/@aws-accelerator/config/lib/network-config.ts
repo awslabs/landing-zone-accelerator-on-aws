@@ -600,6 +600,7 @@ export class NetworkConfigTypes {
   ]);
 
   static readonly dnsFirewallManagedDomainListEnum = t.enums('DnsFirewallManagedDomainLists', [
+    'AWSManagedDomainsAggregateThreatList',
     'AWSManagedDomainsBotnetCommandandControl',
     'AWSManagedDomainsMalwareDomainList',
   ]);
@@ -4919,15 +4920,27 @@ export class DnsQueryLogsConfig implements t.TypeOf<typeof NetworkConfigTypes.dn
  * Use this configuration to define individual rules for your DNS firewall.
  * This allows you to define the DNS firewall behavior for your VPCs.
  *
+ *
+ * @example
  * The following example creates a rule that blocks requests from a custom list of domains.
  * The custom domain list path must exist in your accelerator configuration repository.
- * @example
  * ```
  * - name: accelerator-dns-rule
  *   action: BLOCK
  *   priority: 100
  *   blockResponse: NXDOMAIN
  *   customDomainList: path/to/domains.txt
+ * ```
+ *
+ * The following example creates a rule referencing an AWS-managed domain list.
+ * The managed domain list must be available in the region you are deploying
+ * the rule to.
+ * ```
+ * - name: accelerator-dns-rule
+ *   action: BLOCK
+ *   priority: 200
+ *   blockResponse: NODATA
+ *   managedDomainList: AWSManagedDomainsAggregateThreatList
  * ```
  */
 export class DnsFirewallRulesConfig implements t.TypeOf<typeof NetworkConfigTypes.dnsFirewallRulesConfig> {
@@ -4981,11 +4994,19 @@ export class DnsFirewallRulesConfig implements t.TypeOf<typeof NetworkConfigType
    * @remarks
    * The file must exist in your accelerator configuration repository.
    * The file must contain domain names separated by newlines.
+   *
+   * Include only one of `customDomainList` or `managedDomainList` for each rule definition.
    */
   readonly customDomainList: string | undefined = undefined;
   /**
    * Configure a rule that uses an AWS-managed domain list.
-   * AWS-managed domain lists are defined here: {@link https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resolver-dns-firewall-managed-domain-lists.html}
+   * AWS-managed domain lists are defined here: {@link https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resolver-dns-firewall-managed-domain-lists.html}.
+   *
+   * @remarks
+   * Before using a managed domain list, please ensure that it is available in the region you are deploying it to.
+   * Regional availability of managed domain lists is included in the link above.
+   *
+   * Include only one of `customDomainList` or `managedDomainList` for each rule definition.
    *
    * @see {@link NetworkConfigTypes.dnsFirewallManagedDomainListEnum}
    */
