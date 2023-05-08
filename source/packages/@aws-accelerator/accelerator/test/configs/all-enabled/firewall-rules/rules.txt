@@ -12,5 +12,5 @@
 pass ip 10.1.0.0/16 any -> 10.0.0.0/16 any (sid:100;)
 drop ip any any <> any any (sid:101;)
 alert tcp any any -> 1.1.1.1/32 80 (sid:102;msg:"example message";)
-drop tls $HOME_NET any -> $EXTERNAL_NET any (tls.sni; content:"example.com"; startswith; nocase; endswith; msg:"matching TLS denylisted FQDNs"; priority:1; flow:to_server, established; sid:103; rev:1;)
-drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; startswith; endswith; msg:"matching HTTP denylisted FQDNs"; priority:1; flow:to_server, established; sid:104; rev:1;)
+drop tls $HOME_NET any -> $EXTERNAL_NET any (tls.sni; content:"example.com"; startswith; nocase; endswith; msg:"matching TLS denylisted FQDNs"; flow:to_server, established; sid:103; rev:1;)
+drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; startswith; endswith; msg:"matching HTTP denylisted FQDNs"; flow:to_server, established; sid:104; rev:1;)

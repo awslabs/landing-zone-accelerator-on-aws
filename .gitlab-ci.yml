@@ -71,7 +71,8 @@ accelerator-test:
     - "yarn lerna link"
     - "yarn build"
     - "export ACCELERATOR_PREFIX=AWSAccelerator"
-    - "yarn test"
+    - "yarn validate-config packages/@aws-accelerator/accelerator/test/configs/all-enabled/" # Validate all enabled config files
+    - "yarn test"    
   artifacts:
     when: always
     reports:

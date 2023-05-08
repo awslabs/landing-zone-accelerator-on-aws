@@ -2284,10 +2284,140 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       },
       "Type": "AWS::Config::ConfigRule",
     },
+    "AppTest2CustomCreateLogGroupCustomResourceProviderHandler03798759": {
+      "DependsOn": [
+        "AppTest2CustomCreateLogGroupCustomResourceProviderRole24FD6060",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "AppTest2CustomCreateLogGroupCustomResourceProviderRole24FD6060",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "AppTest2CustomCreateLogGroupCustomResourceProviderLogGroup7FB49646": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "AppTest2CustomCreateLogGroupCustomResourceProviderHandler03798759",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AppTest2CustomCreateLogGroupCustomResourceProviderRole24FD6060": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "logs:CreateLogGroup",
+                    "logs:DeleteLogGroup",
+                    "logs:PutRetentionPolicy",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":logs:us-east-1:111111111111:log-group:/App/Test2:*",
+                      ],
+                    ],
+                  },
+                },
+                {
+                  "Action": [
+                    "kms:DescribeKey",
+                    "kms:ListKeys",
+                    "logs:AssociateKmsKey",
+                    "logs:DescribeLogGroups",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AppTest2LogGroupCloudWatchLogsResource910CB0B1": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "AppTest2CustomCreateLogGroupCustomResourceProviderLogGroup7FB49646",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "AppTest2CustomCreateLogGroupCustomResourceProviderHandler03798759",
+            "Arn",
+          ],
+        },
+        "keyArn": "arn:aws:kms:us-east-1:111111111111:key/121ac3b6-8d53-4d8a-a05c-1234567789",
+        "logGroupName": "/App/Test2",
+        "region": "us-east-1",
+        "retention": 180,
+        "terminationProtected": false,
+      },
+      "Type": "Custom::CreateLogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
     "AwsConfigChangesMetricFilter019CEB27": {
+      "DependsOn": [
+        "CloudTrailLogGroupAWSAcceleratorAccountCloudTrail9F5C56EA",
+      ],
       "Properties": {
         "FilterPattern": "{($.eventSource=config.amazonaws.com) && (($.eventName=StopConfigurationRecorder) || ($.eventName=DeleteDeliveryChannel) || ($.eventName=PutDeliveryChannel) || ($.eventName=PutConfigurationRecorder))}",
-        "LogGroupName": "aws-controltower/CloudTrailLogs",
+        "LogGroupName": "aws-accelerator-cloudtrail-AWSAccelerator-Account-CloudTrail",
         "MetricTransformations": [
           {
             "MetricName": "AWSConfigChanges",
@@ -2734,9 +2864,12 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Type": "AWS::CloudWatch::Alarm",
     },
     "CloudTrailChangesMetricFilter25ABB504": {
+      "DependsOn": [
+        "CloudTrailLogGroupAWSAcceleratorAccountCloudTrail9F5C56EA",
+      ],
       "Properties": {
         "FilterPattern": "{($.eventName=CreateTrail) || ($.eventName=UpdateTrail) || ($.eventName=DeleteTrail) || ($.eventName=StartLogging) || ($.eventName=StopLogging)}",
-        "LogGroupName": "aws-controltower/CloudTrailLogs",
+        "LogGroupName": "aws-accelerator-cloudtrail-AWSAccelerator-Account-CloudTrail",
         "MetricTransformations": [
           {
             "MetricName": "CloudTrailChanges",
@@ -2867,9 +3000,12 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Type": "AWS::IAM::Policy",
     },
     "ConsoleAuthenticationFailureMetricFilter0F833CC2": {
+      "DependsOn": [
+        "CloudTrailLogGroupAWSAcceleratorAccountCloudTrail9F5C56EA",
+      ],
       "Properties": {
         "FilterPattern": "{($.eventName=ConsoleLogin) && ($.errorMessage="Failed authentication")}",
-        "LogGroupName": "aws-controltower/CloudTrailLogs",
+        "LogGroupName": "aws-accelerator-cloudtrail-AWSAccelerator-Account-CloudTrail",
         "MetricTransformations": [
           {
             "MetricName": "ConsoleAuthenticationFailure",
@@ -2881,9 +3017,12 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Type": "AWS::Logs::MetricFilter",
     },
     "ConsoleSigninWithoutMfaMetricFilter85B015F7": {
+      "DependsOn": [
+        "CloudTrailLogGroupAWSAcceleratorAccountCloudTrail9F5C56EA",
+      ],
       "Properties": {
         "FilterPattern": "{($.eventName = "ConsoleLogin") && ($.additionalEventData.MFAUsed != "Yes") && ($.userIdentity.type = "IAMUser") && ($.responseElements.ConsoleLogin = "Success")}",
-        "LogGroupName": "aws-controltower/CloudTrailLogs",
+        "LogGroupName": "aws-accelerator-cloudtrail-AWSAccelerator-Account-CloudTrail",
         "MetricTransformations": [
           {
             "MetricName": "ConsoleSigninWithoutMFA",
@@ -3231,97 +3370,16 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Type": "AWS::IAM::Role",
     },
     "DisableOrDeleteCmkMetricFilter4217496A": {
+      "DependsOn": [
+        "CloudTrailLogGroupAWSAcceleratorAccountCloudTrail9F5C56EA",
+      ],
       "Properties": {
         "FilterPattern": "{($.eventSource=kms.amazonaws.com) && (($.eventName=DisableKey) || ($.eventName=ScheduleKeyDeletion))}",
-        "LogGroupName": "aws-controltower/CloudTrailLogs",
+        "LogGroupName": "aws-accelerator-cloudtrail-AWSAccelerator-Account-CloudTrail",
         "MetricTransformations": [
           {
             "MetricName": "DisableOrDeleteCMK",
             "MetricNamespace": "LogMetrics",
-            "MetricValue": "1",
-          },
-        ],
-      },
-      "Type": "AWS::Logs::MetricFilter",
-    },
-    "GenericMetricFilterGreaterThanThresholdF3747C30": {
-      "Properties": {
-        "FilterPattern": "{$.eventType !="AwsServiceEvent"}",
-        "LogGroupName": "/generic/log/group",
-        "MetricTransformations": [
-          {
-            "MetricName": "GenericMetricForTestingGreaterThanThreshold",
-            "MetricNamespace": "LzaMetrics",
-            "MetricValue": "1",
-          },
-        ],
-      },
-      "Type": "AWS::Logs::MetricFilter",
-    },
-    "GenericMetricFilterGreaterThanUpperThreshold6D5F12B4": {
-      "Properties": {
-        "FilterPattern": "{$.eventType !="AwsServiceEvent"}",
-        "LogGroupName": "/generic/log/group",
-        "MetricTransformations": [
-          {
-            "MetricName": "GenericMetricForTestingGreaterThanUpperThreshold",
-            "MetricNamespace": "LzaMetrics",
-            "MetricValue": "1",
-          },
-        ],
-      },
-      "Type": "AWS::Logs::MetricFilter",
-    },
-    "GenericMetricFilterLessThanLowerOrGreaterThanUpperThreshold959D3A93": {
-      "Properties": {
-        "FilterPattern": "{$.eventType !="AwsServiceEvent"}",
-        "LogGroupName": "/generic/log/group",
-        "MetricTransformations": [
-          {
-            "MetricName": "GenericMetricForTestingLessThanLowerOrGreaterThanUpperThreshold",
-            "MetricNamespace": "LzaMetrics",
-            "MetricValue": "1",
-          },
-        ],
-      },
-      "Type": "AWS::Logs::MetricFilter",
-    },
-    "GenericMetricFilterLessThanLowerThreshold9B1BB0AF": {
-      "Properties": {
-        "FilterPattern": "{$.eventType !="AwsServiceEvent"}",
-        "LogGroupName": "/generic/log/group",
-        "MetricTransformations": [
-          {
-            "MetricName": "GenericMetricForTestingLessThanLowerThreshold",
-            "MetricNamespace": "LzaMetrics",
-            "MetricValue": "1",
-          },
-        ],
-      },
-      "Type": "AWS::Logs::MetricFilter",
-    },
-    "GenericMetricFilterLessThanOrEqualToThreshold9E926CBD": {
-      "Properties": {
-        "FilterPattern": "{$.eventType !="AwsServiceEvent"}",
-        "LogGroupName": "/generic/log/group",
-        "MetricTransformations": [
-          {
-            "MetricName": "GenericMetricForTestingLessThanOrEqualToThreshold",
-            "MetricNamespace": "LzaMetrics",
-            "MetricValue": "1",
-          },
-        ],
-      },
-      "Type": "AWS::Logs::MetricFilter",
-    },
-    "GenericMetricFilterLessThanThreshold8E8F66A6": {
-      "Properties": {
-        "FilterPattern": "{$.eventType !="AwsServiceEvent"}",
-        "LogGroupName": "/generic/log/group",
-        "MetricTransformations": [
-          {
-            "MetricName": "GenericMetricForTestingLessThanThreshold",
-            "MetricNamespace": "LzaMetrics",
             "MetricValue": "1",
           },
         ],
@@ -3354,93 +3412,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         "Statistic": "Sum",
         "Threshold": 1,
         "TreatMissingData": "ignore",
-      },
-      "Type": "AWS::CloudWatch::Alarm",
-    },
-    "GenericMetricGreaterThanUpperThreshold72E3337B": {
-      "Properties": {
-        "AlarmActions": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                ":sns:us-east-1:111111111111:aws-accelerator-Security",
-              ],
-            ],
-          },
-        ],
-        "AlarmDescription": "Alarm to test GenericMetric GreaterThanUpperThreshold",
-        "AlarmName": "GenericMetricGreaterThanUpperThreshold",
-        "ComparisonOperator": "GreaterThanUpperThreshold",
-        "EvaluationPeriods": 1,
-        "MetricName": "GenericMetricForTestingGreaterThanUpperThreshold",
-        "Namespace": "LzaMetrics",
-        "Period": 300,
-        "Statistic": "Sum",
-        "Threshold": 1,
-        "TreatMissingData": "notBreaching",
-      },
-      "Type": "AWS::CloudWatch::Alarm",
-    },
-    "GenericMetricLessThanLowerOrGreaterThanUpperThresholdAB2E321F": {
-      "Properties": {
-        "AlarmActions": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                ":sns:us-east-1:111111111111:aws-accelerator-Security",
-              ],
-            ],
-          },
-        ],
-        "AlarmDescription": "Alarm to test GenericMetric LessThanLowerOrGreaterThanUpperThreshold",
-        "AlarmName": "GenericMetricLessThanLowerOrGreaterThanUpperThreshold",
-        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
-        "EvaluationPeriods": 1,
-        "MetricName": "GenericMetricForTestingLessThanLowerOrGreaterThanUpperThreshold",
-        "Namespace": "LzaMetrics",
-        "Period": 300,
-        "Statistic": "Sum",
-        "Threshold": 1,
-        "TreatMissingData": "notBreaching",
-      },
-      "Type": "AWS::CloudWatch::Alarm",
-    },
-    "GenericMetricLessThanLowerThresholdC7D23608": {
-      "Properties": {
-        "AlarmActions": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                ":sns:us-east-1:111111111111:aws-accelerator-Security",
-              ],
-            ],
-          },
-        ],
-        "AlarmDescription": "Alarm to test GenericMetric LessThanLowerThreshold",
-        "AlarmName": "GenericMetricLessThanLowerThreshold",
-        "ComparisonOperator": "LessThanLowerThreshold",
-        "EvaluationPeriods": 1,
-        "MetricName": "GenericMetricForTestingLessThanLowerThreshold",
-        "Namespace": "LzaMetrics",
-        "Period": 300,
-        "Statistic": "Sum",
-        "Threshold": 1,
-        "TreatMissingData": "notBreaching",
       },
       "Type": "AWS::CloudWatch::Alarm",
     },
@@ -3503,9 +3474,12 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Type": "AWS::CloudWatch::Alarm",
     },
     "IamPolicyChangesMetricFilter29A943B3": {
+      "DependsOn": [
+        "CloudTrailLogGroupAWSAcceleratorAccountCloudTrail9F5C56EA",
+      ],
       "Properties": {
         "FilterPattern": "{($.eventName=DeleteGroupPolicy) || ($.eventName=DeleteRolePolicy) || ($.eventName=DeleteUserPolicy) || ($.eventName=PutGroupPolicy) || ($.eventName=PutRolePolicy) || ($.eventName=PutUserPolicy) || ($.eventName=CreatePolicy) || ($.eventName=DeletePolicy) || ($.eventName=CreatePolicyVersion) || ($.eventName=DeletePolicyVersion) || ($.eventName=AttachRolePolicy) || ($.eventName=DetachRolePolicy) || ($.eventName=AttachUserPolicy) || ($.eventName=DetachUserPolicy) || ($.eventName=AttachGroupPolicy) || ($.eventName=DetachGroupPolicy)}",
-        "LogGroupName": "aws-controltower/CloudTrailLogs",
+        "LogGroupName": "aws-accelerator-cloudtrail-AWSAccelerator-Account-CloudTrail",
         "MetricTransformations": [
           {
             "MetricName": "IAMPolicyChanges",
@@ -3517,9 +3491,12 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Type": "AWS::Logs::MetricFilter",
     },
     "MetricFilter1B93B6E5": {
+      "DependsOn": [
+        "CloudTrailLogGroupAWSAcceleratorAccountCloudTrail9F5C56EA",
+      ],
       "Properties": {
         "FilterPattern": "{$.userIdentity.type="Root" && $.userIdentity.invokedBy NOT EXISTS && $.eventType !="AwsServiceEvent"}",
-        "LogGroupName": "aws-controltower/CloudTrailLogs",
+        "LogGroupName": "aws-accelerator-cloudtrail-AWSAccelerator-Account-CloudTrail",
         "MetricTransformations": [
           {
             "MetricName": "RootAccountUsage",
@@ -3531,9 +3508,12 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Type": "AWS::Logs::MetricFilter",
     },
     "NetworkAclChangesMetricFilter87734AD0": {
+      "DependsOn": [
+        "CloudTrailLogGroupAWSAcceleratorAccountCloudTrail9F5C56EA",
+      ],
       "Properties": {
         "FilterPattern": "{($.eventName=CreateNetworkAcl) || ($.eventName=CreateNetworkAclEntry) || ($.eventName=DeleteNetworkAcl) || ($.eventName=DeleteNetworkAclEntry) || ($.eventName=ReplaceNetworkAclEntry) || ($.eventName=ReplaceNetworkAclAssociation)}",
-        "LogGroupName": "aws-controltower/CloudTrailLogs",
+        "LogGroupName": "aws-accelerator-cloudtrail-AWSAccelerator-Account-CloudTrail",
         "MetricTransformations": [
           {
             "MetricName": "NetworkACLChanges",
@@ -3545,9 +3525,12 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Type": "AWS::Logs::MetricFilter",
     },
     "NetworkGatewayChangesMetricFilterB8EAA32B": {
+      "DependsOn": [
+        "CloudTrailLogGroupAWSAcceleratorAccountCloudTrail9F5C56EA",
+      ],
       "Properties": {
         "FilterPattern": "{($.eventName=CreateCustomerGateway) || ($.eventName=DeleteCustomerGateway) || ($.eventName=AttachInternetGateway) || ($.eventName=CreateInternetGateway) || ($.eventName=DeleteInternetGateway) || ($.eventName=DetachInternetGateway)}",
-        "LogGroupName": "aws-controltower/CloudTrailLogs",
+        "LogGroupName": "aws-accelerator-cloudtrail-AWSAccelerator-Account-CloudTrail",
         "MetricTransformations": [
           {
             "MetricName": "NetworkGatewayChanges",
@@ -3575,9 +3558,12 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "UpdateReplacePolicy": "Delete",
     },
     "RootAccountMetricFilter2CA28475": {
+      "DependsOn": [
+        "CloudTrailLogGroupAWSAcceleratorAccountCloudTrail9F5C56EA",
+      ],
       "Properties": {
         "FilterPattern": "{$.userIdentity.type="Root" && $.userIdentity.invokedBy NOT EXISTS && $.eventType !="AwsServiceEvent"}",
-        "LogGroupName": "aws-controltower/CloudTrailLogs",
+        "LogGroupName": "aws-accelerator-cloudtrail-AWSAccelerator-Account-CloudTrail",
         "MetricTransformations": [
           {
             "MetricName": "RootAccount",
@@ -3589,9 +3575,12 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Type": "AWS::Logs::MetricFilter",
     },
     "RouteTableChangesMetricFilter5DC8694A": {
+      "DependsOn": [
+        "CloudTrailLogGroupAWSAcceleratorAccountCloudTrail9F5C56EA",
+      ],
       "Properties": {
         "FilterPattern": "{($.eventName=CreateRoute) || ($.eventName=CreateRouteTable) || ($.eventName=ReplaceRoute) || ($.eventName=ReplaceRouteTableAssociation) || ($.eventName=DeleteRouteTable) || ($.eventName=DeleteRoute) || ($.eventName=DisassociateRouteTable)}",
-        "LogGroupName": "aws-controltower/CloudTrailLogs",
+        "LogGroupName": "aws-accelerator-cloudtrail-AWSAccelerator-Account-CloudTrail",
         "MetricTransformations": [
           {
             "MetricName": "RouteTableChanges",
@@ -3603,9 +3592,12 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Type": "AWS::Logs::MetricFilter",
     },
     "S3BucketPolicyChangesMetricFilter2247C8C8": {
+      "DependsOn": [
+        "CloudTrailLogGroupAWSAcceleratorAccountCloudTrail9F5C56EA",
+      ],
       "Properties": {
         "FilterPattern": "{($.eventSource=s3.amazonaws.com) && (($.eventName=PutBucketAcl) || ($.eventName=PutBucketPolicy) || ($.eventName=PutBucketCors) || ($.eventName=PutBucketLifecycle) || ($.eventName=PutBucketReplication) || ($.eventName=DeleteBucketPolicy) || ($.eventName=DeleteBucketCors) || ($.eventName=DeleteBucketLifecycle) || ($.eventName=DeleteBucketReplication))}",
-        "LogGroupName": "aws-controltower/CloudTrailLogs",
+        "LogGroupName": "aws-accelerator-cloudtrail-AWSAccelerator-Account-CloudTrail",
         "MetricTransformations": [
           {
             "MetricName": "S3BucketPolicyChanges",
@@ -3617,9 +3609,12 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Type": "AWS::Logs::MetricFilter",
     },
     "SecurityGroupChangesMetricFilterE0B65A44": {
+      "DependsOn": [
+        "CloudTrailLogGroupAWSAcceleratorAccountCloudTrail9F5C56EA",
+      ],
       "Properties": {
         "FilterPattern": "{($.eventName=AuthorizeSecurityGroupIngress) || ($.eventName=AuthorizeSecurityGroupEgress) || ($.eventName=RevokeSecurityGroupIngress) || ($.eventName=RevokeSecurityGroupEgress) || ($.eventName=CreateSecurityGroup) || ($.eventName=DeleteSecurityGroup)}",
-        "LogGroupName": "aws-controltower/CloudTrailLogs",
+        "LogGroupName": "aws-accelerator-cloudtrail-AWSAccelerator-Account-CloudTrail",
         "MetricTransformations": [
           {
             "MetricName": "SecurityGroupChanges",
@@ -4144,9 +4139,12 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Type": "AWS::IAM::ManagedPolicy",
     },
     "UnauthorizedApiCallsMetricFilter95DF459D": {
+      "DependsOn": [
+        "CloudTrailLogGroupAWSAcceleratorAccountCloudTrail9F5C56EA",
+      ],
       "Properties": {
         "FilterPattern": "{($.errorCode="*UnauthorizedOperation") || ($.errorCode="AccessDenied*")}",
-        "LogGroupName": "aws-controltower/CloudTrailLogs",
+        "LogGroupName": "aws-accelerator-cloudtrail-AWSAccelerator-Account-CloudTrail",
         "MetricTransformations": [
           {
             "MetricName": "UnauthorizedAPICalls",
@@ -4158,9 +4156,12 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Type": "AWS::Logs::MetricFilter",
     },
     "VpcChangesMetricFilter309EC3DF": {
+      "DependsOn": [
+        "CloudTrailLogGroupAWSAcceleratorAccountCloudTrail9F5C56EA",
+      ],
       "Properties": {
         "FilterPattern": "{($.eventName=CreateVpc) || ($.eventName=DeleteVpc) || ($.eventName=ModifyVpcAttribute) || ($.eventName=AcceptVpcPeeringConnection) || ($.eventName=CreateVpcPeeringConnection) || ($.eventName=DeleteVpcPeeringConnection) || ($.eventName=RejectVpcPeeringConnection) || ($.eventName=AttachClassicLinkVpc) || ($.eventName=DetachClassicLinkVpc) || ($.eventName=DisableVpcClassicLink) || ($.eventName=EnableVpcClassicLink)}",
-        "LogGroupName": "aws-controltower/CloudTrailLogs",
+        "LogGroupName": "aws-accelerator-cloudtrail-AWSAccelerator-Account-CloudTrail",
         "MetricTransformations": [
           {
             "MetricName": "VPCChanges",

@@ -42,20 +42,6 @@ exports[`NetworkPrepStack Construct(NetworkPrepStack):  Snapshot Test 1`] = `
           },
           {
             "Action": "BLOCK",
-            "BlockOverrideDnsType": "CNAME",
-            "BlockOverrideDomain": "amazon.com",
-            "BlockOverrideTtl": 3600,
-            "BlockResponse": "OVERRIDE",
-            "FirewallDomainListId": {
-              "Fn::GetAtt": [
-                "DomainList1DomainListBF84D823",
-                "Id",
-              ],
-            },
-            "Priority": 200,
-          },
-          {
-            "Action": "BLOCK",
             "BlockResponse": "NODATA",
             "FirewallDomainListId": {
               "Ref": "AwsManagedDomainsBotnetCommandandControlDomainList1AA90CC1",
@@ -370,8 +356,8 @@ exports[`NetworkPrepStack Construct(NetworkPrepStack):  Snapshot Test 1`] = `
             "RulesString": "pass ip 10.1.0.0/16 any -> 10.0.0.0/16 any (sid:100;)
 drop ip any any <> any any (sid:101;)
 alert tcp any any -> 1.1.1.1/32 80 (sid:102;msg:"example message";)
-drop tls $HOME_NET any -> $EXTERNAL_NET any (tls.sni; content:"example.com"; startswith; nocase; endswith; msg:"matching TLS denylisted FQDNs"; priority:1; flow:to_server, established; sid:103; rev:1;)
-drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; startswith; endswith; msg:"matching HTTP denylisted FQDNs"; priority:1; flow:to_server, established; sid:104; rev:1;)",
+drop tls $HOME_NET any -> $EXTERNAL_NET any (tls.sni; content:"example.com"; startswith; nocase; endswith; msg:"matching TLS denylisted FQDNs"; flow:to_server, established; sid:103; rev:1;)
+drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; startswith; endswith; msg:"matching HTTP denylisted FQDNs"; flow:to_server, established; sid:104; rev:1;)",
           },
           "StatefulRuleOptions": {
             "RuleOrder": "STRICT_ORDER",
@@ -414,8 +400,8 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
             "RulesString": "pass ip 10.1.0.0/16 any -> 10.0.0.0/16 any (sid:100;)
 drop ip any any <> any any (sid:101;)
 alert tcp any any -> 1.1.1.1/32 80 (sid:102;msg:"example message";)
-drop tls $HOME_NET any -> $EXTERNAL_NET any (tls.sni; content:"example.com"; startswith; nocase; endswith; msg:"matching TLS denylisted FQDNs"; priority:1; flow:to_server, established; sid:103; rev:1;)
-drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; startswith; endswith; msg:"matching HTTP denylisted FQDNs"; priority:1; flow:to_server, established; sid:104; rev:1;)",
+drop tls $HOME_NET any -> $EXTERNAL_NET any (tls.sni; content:"example.com"; startswith; nocase; endswith; msg:"matching TLS denylisted FQDNs"; flow:to_server, established; sid:103; rev:1;)
+drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; startswith; endswith; msg:"matching HTTP denylisted FQDNs"; flow:to_server, established; sid:104; rev:1;)",
           },
         },
         "RuleGroupName": "accelerator-suricata-rule-group",
@@ -580,123 +566,6 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
                   "Effect": "Allow",
                   "Resource": "*",
                   "Sid": "DirectConnectGatewayCRUD",
-                },
-              ],
-              "Version": "2012-10-17",
-            },
-            "PolicyName": "Inline",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "CustomDirectConnectVirtualInterfaceCustomResourceProviderHandler147DBFD9": {
-      "DependsOn": [
-        "CustomDirectConnectVirtualInterfaceCustomResourceProviderRoleD8C9D582",
-      ],
-      "Properties": {
-        "Code": {
-          "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
-          "S3Key": "REPLACED-GENERATED-NAME.zip",
-        },
-        "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
-        "Role": {
-          "Fn::GetAtt": [
-            "CustomDirectConnectVirtualInterfaceCustomResourceProviderRoleD8C9D582",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs16.x",
-        "Timeout": 900,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "CustomDirectConnectVirtualInterfaceCustomResourceProviderLogGroup51E4607A": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "LogGroupName": {
-          "Fn::Join": [
-            "",
-            [
-              "/aws/lambda/",
-              {
-                "Ref": "CustomDirectConnectVirtualInterfaceCustomResourceProviderHandler147DBFD9",
-              },
-            ],
-          ],
-        },
-        "RetentionInDays": 3653,
-      },
-      "Type": "AWS::Logs::LogGroup",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "CustomDirectConnectVirtualInterfaceCustomResourceProviderRoleD8C9D582": {
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-          },
-        ],
-        "Policies": [
-          {
-            "PolicyDocument": {
-              "Statement": [
-                {
-                  "Action": [
-                    "directconnect:CreatePrivateVirtualInterface",
-                    "directconnect:CreateTransitVirtualInterface",
-                    "directconnect:DeleteVirtualInterface",
-                    "directconnect:DescribeVirtualInterfaces",
-                    "directconnect:TagResource",
-                    "directconnect:UntagResource",
-                    "directconnect:UpdateVirtualInterfaceAttributes",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": "*",
-                  "Sid": "DxVirtualInterfaceCRUD",
-                },
-                {
-                  "Action": [
-                    "lambda:InvokeFunction",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": {
-                    "Fn::Join": [
-                      "",
-                      [
-                        "arn:",
-                        {
-                          "Ref": "AWS::Partition",
-                        },
-                        ":lambda:",
-                        {
-                          "Ref": "AWS::Region",
-                        },
-                        ":",
-                        {
-                          "Ref": "AWS::AccountId",
-                        },
-                        ":function:AWSAccelerator-NetworkPre-CustomDirectConnect*",
-                      ],
-                    ],
-                  },
-                  "Sid": "InvokeSelf",
                 },
               ],
               "Version": "2012-10-17",
@@ -977,6 +846,23 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       },
       "Type": "AWS::IAM::Role",
     },
+    "HomeRegionPoolIpamPoolShareResourceShare6A09CD50": {
+      "Properties": {
+        "Name": "home-region-pool_IpamPoolShare",
+        "Principals": [
+          "arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-22222222",
+        ],
+        "ResourceArns": [
+          {
+            "Fn::GetAtt": [
+              "HomeRegionPoolPool16097CF6",
+              "Arn",
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::RAM::ResourceShare",
+    },
     "HomeRegionPoolPool16097CF6": {
       "Properties": {
         "AddressFamily": "ipv4",
@@ -991,6 +877,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
         "ProvisionedCidrs": [
           {
             "Cidr": "10.0.0.0/16",
+          },
+          {
+            "Cidr": "10.2.0.0/16",
           },
         ],
         "SourceIpamPoolId": {
@@ -1043,6 +932,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
           {
             "Cidr": "10.0.0.0/24",
           },
+          {
+            "Cidr": "10.2.0.0/24",
+          },
         ],
         "SourceIpamPoolId": {
           "Ref": "HomeRegionPoolPool16097CF6",
@@ -1083,7 +975,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
                           {
                             "Ref": "AWS::Partition",
                           },
-                          ":iam::333333333333:role/AWSAccelerator-*",
+                          ":iam::444444444444:role/AWSAccelerator-*",
                         ],
                       ],
                     },
@@ -1100,7 +992,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
                       {
                         "Ref": "AWS::Partition",
                       },
-                      ":iam::333333333333:root",
+                      ":iam::444444444444:root",
                     ],
                   ],
                 },
@@ -1127,34 +1019,6 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
         "RoleName": "AWSAccelerator-MadAccept-Role",
       },
       "Type": "AWS::IAM::Role",
-    },
-    "NetworkDxgwAccelratorVifVirtualInterface0F06099A": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomDirectConnectVirtualInterfaceCustomResourceProviderLogGroup51E4607A",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomDirectConnectVirtualInterfaceCustomResourceProviderHandler147DBFD9",
-            "Arn",
-          ],
-        },
-        "addressFamily": "ipv4",
-        "connectionId": "dxcon-test1234",
-        "customerAsn": 65002,
-        "directConnectGatewayId": {
-          "Ref": "NetworkDxgwDxGatewayB600DBBE",
-        },
-        "enableSiteLink": true,
-        "interfaceName": "Accelrator-VIF",
-        "jumboFrames": true,
-        "region": "us-east-1",
-        "type": "transit",
-        "vlan": 575,
-      },
-      "Type": "Custom::DirectConnectVirtualInterface",
-      "UpdateReplacePolicy": "Delete",
     },
     "NetworkDxgwDxGatewayB600DBBE": {
       "DeletionPolicy": "Delete",
@@ -1432,19 +1296,6 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SsmParamNetworkDxgwAccelratorVifVirtualInterface811176E7": {
-      "DependsOn": [
-        "SsmParamNetworkMain2NetworkMain2StandaloneTransitGatewayRouteTableIdF641FDF1",
-      ],
-      "Properties": {
-        "Name": "/accelerator/network/directConnectGateways/Network-DXGW/virtualInterfaces/Accelrator-VIF/id",
-        "Type": "String",
-        "Value": {
-          "Ref": "NetworkDxgwAccelratorVifVirtualInterface0F06099A",
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
     "SsmParamNetworkDxgwDirectConnectGatewayC782B366": {
       "DependsOn": [
         "SsmParamNetworkMain2NetworkMain2StandaloneTransitGatewayRouteTableIdF641FDF1",
@@ -1581,6 +1432,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamacceleratorBlockGroupRuleGroupEA562A3B": {
+      "DependsOn": [
+        "SsmParambasePoolPoolId86A35FFC",
+      ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/firewall/ruleGroups/accelerator-block-group/id",
         "Type": "String",
@@ -1604,6 +1458,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamacceleratorIpamIpamId271C0A36": {
+      "DependsOn": [
+        "SsmParamNetworkMain2NetworkMain2StandaloneTransitGatewayRouteTableIdF641FDF1",
+      ],
       "Properties": {
         "Name": "/accelerator/network/ipam/accelerator-ipam/id",
         "Type": "String",
@@ -1615,7 +1472,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamacceleratorPolicyNetworkFirewallPolicy68E9C1A5": {
       "DependsOn": [
-        "SsmParamacceleratorRuleGroupNetworkFirewallRuleGroup28931513",
+        "SsmParamdomainListGroupNetworkFirewallRuleGroupC2BC037A",
       ],
       "Properties": {
         "Name": "/accelerator/network/networkFirewall/policies/accelerator-policy/arn",
@@ -1628,7 +1485,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamacceleratorQueryLogsCwlQueryLogConfig0E6CC558": {
       "DependsOn": [
-        "SsmParamacceleratorBlockGroupRuleGroupEA562A3B",
+        "SsmParamacceleratorQueryLogsS3QueryLogConfig0B1FF32F",
       ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/queryLogConfigs/accelerator-query-logs-cwl/id",
@@ -1643,9 +1500,6 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamacceleratorQueryLogsS3QueryLogConfig0B1FF32F": {
-      "DependsOn": [
-        "SsmParamacceleratorBlockGroupRuleGroupEA562A3B",
-      ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/queryLogConfigs/accelerator-query-logs-s3/id",
         "Type": "String",
@@ -1659,6 +1513,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamacceleratorRuleGroupNetworkFirewallRuleGroup28931513": {
+      "DependsOn": [
+        "SsmParamacceleratorQueryLogsS3QueryLogConfig0B1FF32F",
+      ],
       "Properties": {
         "Name": "/accelerator/network/networkFirewall/ruleGroups/accelerator-rule-group/arn",
         "Type": "String",
@@ -1670,7 +1527,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamacceleratorStrictPolicyNetworkFirewallPolicy2C70E8B6": {
       "DependsOn": [
-        "SsmParamacceleratorRuleGroupNetworkFirewallRuleGroup28931513",
+        "SsmParamdomainListGroupNetworkFirewallRuleGroupC2BC037A",
       ],
       "Properties": {
         "Name": "/accelerator/network/networkFirewall/policies/accelerator-strict-policy/arn",
@@ -1683,7 +1540,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamacceleratorStrictRuleGroupNetworkFirewallRuleGroup315F5768": {
       "DependsOn": [
-        "SsmParamacceleratorBlockGroupRuleGroupEA562A3B",
+        "SsmParamacceleratorQueryLogsS3QueryLogConfig0B1FF32F",
       ],
       "Properties": {
         "Name": "/accelerator/network/networkFirewall/ruleGroups/accelerator-strict-rule-group/arn",
@@ -1696,7 +1553,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamacceleratorSuricataRuleGroupNetworkFirewallRuleGroup5707985D": {
       "DependsOn": [
-        "SsmParamacceleratorBlockGroupRuleGroupEA562A3B",
+        "SsmParamacceleratorQueryLogsS3QueryLogConfig0B1FF32F",
       ],
       "Properties": {
         "Name": "/accelerator/network/networkFirewall/ruleGroups/accelerator-suricata-rule-group/arn",
@@ -1721,9 +1578,6 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParambasePoolPoolId86A35FFC": {
-      "DependsOn": [
-        "SsmParamacceleratorIpamIpamId271C0A36",
-      ],
       "Properties": {
         "Name": "/accelerator/network/ipam/pools/base-pool/id",
         "Type": "String",
@@ -1734,9 +1588,6 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamdomainListGroupNetworkFirewallRuleGroupC2BC037A": {
-      "DependsOn": [
-        "SsmParamacceleratorRuleGroupNetworkFirewallRuleGroup28931513",
-      ],
       "Properties": {
         "Name": "/accelerator/network/networkFirewall/ruleGroups/domain-list-group/arn",
         "Type": "String",
@@ -1748,7 +1599,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamhomeRegionPoolPoolId475D7271": {
       "DependsOn": [
-        "SsmParamacceleratorIpamIpamId271C0A36",
+        "SsmParambasePoolPoolId86A35FFC",
       ],
       "Properties": {
         "Name": "/accelerator/network/ipam/pools/home-region-pool/id",
@@ -1761,7 +1612,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamhomeRegionProdPoolPoolId5672D6D3": {
       "DependsOn": [
-        "SsmParamacceleratorIpamIpamId271C0A36",
+        "SsmParambasePoolPoolId86A35FFC",
       ],
       "Properties": {
         "Name": "/accelerator/network/ipam/pools/home-region-prod-pool/id",
@@ -1774,7 +1625,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamwestRegionPoolPoolId673ACD76": {
       "DependsOn": [
-        "SsmParamacceleratorIpamIpamId271C0A36",
+        "SsmParambasePoolPoolId86A35FFC",
       ],
       "Properties": {
         "Name": "/accelerator/network/ipam/pools/west-region-pool/id",
@@ -1872,6 +1723,23 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
         "RoleName": "AWSAccelerator-TgwPeering-Role",
       },
       "Type": "AWS::IAM::Role",
+    },
+    "WestRegionPoolIpamPoolShareResourceShareCD06FDCF": {
+      "Properties": {
+        "Name": "west-region-pool_IpamPoolShare",
+        "Principals": [
+          "arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-22222222",
+        ],
+        "ResourceArns": [
+          {
+            "Fn::GetAtt": [
+              "WestRegionPoolPoolB2DED4AA",
+              "Arn",
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::RAM::ResourceShare",
     },
     "WestRegionPoolPoolB2DED4AA": {
       "Properties": {
