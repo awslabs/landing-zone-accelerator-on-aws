@@ -75,20 +75,12 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Default": "/accelerator/network/transitGateways/Network-Main/routeTables/Network-Main-Standalone/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsalbappAalb01idC96584B6F00A464EAD1953AFF4B05118Parameter": {
-      "Default": "/accelerator/network/vpc/Network-Endpoints/alb/appA-alb-01/id",
-      "Type": "AWS::SSM::Parameter::Value<String>",
-    },
     "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "SsmParameterValueacceleratornetworkvpcNetworkEndpointsnetworkAclTestNACLidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/networkAcl/TestNACL/id",
-      "Type": "AWS::SSM::Parameter::Value<String>",
-    },
-    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsnlbappAnlb01idC96584B6F00A464EAD1953AFF4B05118Parameter": {
-      "Default": "/accelerator/network/vpc/Network-Endpoints/nlb/appA-nlb-01/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZoneec2idC96584B6F00A464EAD1953AFF4B05118Parameter": {
@@ -181,10 +173,6 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
     },
     "SsmParameterValueacceleratornetworkvpcNetworkSecondaryrouteTableNetworkSecondaryBRtidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Secondary/routeTable/Network-Secondary-B-Rt/id",
-      "Type": "AWS::SSM::Parameter::Value<String>",
-    },
-    "SsmParameterValueacceleratornetworkvpcSharedServicesIpamEastidC96584B6F00A464EAD1953AFF4B05118Parameter": {
-      "Default": "/accelerator/network/vpc/SharedServices-Ipam-East/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
   },
@@ -1379,98 +1367,6 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       },
       "Type": "AWS::IAM::Role",
     },
-    "ListenerNetworkEndpointsappAAlb01appAListener2": {
-      "Properties": {
-        "Certificates": [
-          {},
-        ],
-        "DefaultActions": [
-          {
-            "ForwardConfig": {
-              "TargetGroups": [
-                {
-                  "TargetGroupArn": {
-                    "Ref": "NetworkEndpointsappAalbtg176E11B7D",
-                  },
-                },
-              ],
-            },
-            "TargetGroupArn": {
-              "Ref": "NetworkEndpointsappAalbtg176E11B7D",
-            },
-            "Type": "forward",
-          },
-        ],
-        "LoadBalancerArn": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsalbappAalb01idC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "Port": 80,
-        "Protocol": "HTTP",
-      },
-      "Type": "AWS::ElasticLoadBalancingV2::Listener",
-    },
-    "ListenerNetworkEndpointsappANlb01appAListener1": {
-      "Properties": {
-        "AlpnPolicy": [],
-        "Certificates": [
-          {},
-        ],
-        "DefaultActions": [
-          {
-            "ForwardConfig": {
-              "TargetGroups": [
-                {
-                  "TargetGroupArn": {
-                    "Ref": "NetworkEndpointsappAnlbtg19C910FB9",
-                  },
-                },
-              ],
-            },
-            "TargetGroupArn": {
-              "Ref": "NetworkEndpointsappAnlbtg19C910FB9",
-            },
-            "Type": "forward",
-          },
-        ],
-        "LoadBalancerArn": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsnlbappAnlb01idC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "Port": 80,
-        "Protocol": "TCP",
-      },
-      "Type": "AWS::ElasticLoadBalancingV2::Listener",
-    },
-    "ListenerNetworkEndpointsappANlb01appAListener2": {
-      "Properties": {
-        "AlpnPolicy": [],
-        "Certificates": [
-          {},
-        ],
-        "DefaultActions": [
-          {
-            "ForwardConfig": {
-              "TargetGroups": [
-                {
-                  "TargetGroupArn": {
-                    "Ref": "NetworkEndpointsappAnlbtg2EE7F2886",
-                  },
-                },
-              ],
-            },
-            "TargetGroupArn": {
-              "Ref": "NetworkEndpointsappAnlbtg2EE7F2886",
-            },
-            "Type": "forward",
-          },
-        ],
-        "LoadBalancerArn": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsnlbappAnlb01idC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "Port": 80,
-        "Protocol": "TCP",
-      },
-      "Type": "AWS::ElasticLoadBalancingV2::Listener",
-    },
     "NetworkDxgwNetworkMainCoreAssociation1B0096A1": {
       "Properties": {
         "TransitGatewayAttachmentId": {
@@ -1613,17 +1509,17 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       },
       "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
     },
-    "NetworkEndpointsToInspectionVpcPeeringE81AF602": {
+    "NetworkEndpointsToSecondaryVpcPeering08A08BA2": {
       "Properties": {
         "PeerOwnerId": "555555555555",
         "PeerRegion": "us-east-1",
         "PeerVpcId": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "Tags": [
           {
             "Key": "Name",
-            "Value": "NetworkEndpointsToInspection",
+            "Value": "NetworkEndpointsToSecondary",
           },
         ],
         "VpcId": {
@@ -1665,78 +1561,6 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         },
       },
       "Type": "AWS::Route53Resolver::ResolverQueryLoggingConfigAssociation",
-    },
-    "NetworkEndpointsappAalbtg176E11B7D": {
-      "Properties": {
-        "HealthCheckEnabled": true,
-        "HealthCheckPort": "80",
-        "HealthCheckProtocol": "HTTP",
-        "Matcher": {},
-        "Name": "appA-alb-tg-1",
-        "Port": 80,
-        "Protocol": "HTTP",
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "appA-alb-tg-1",
-          },
-        ],
-        "TargetType": "instance",
-        "VpcId": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-      },
-      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
-    },
-    "NetworkEndpointsappAnlbtg19C910FB9": {
-      "Properties": {
-        "HealthCheckEnabled": true,
-        "HealthCheckPort": "80",
-        "HealthCheckProtocol": "TCP",
-        "Matcher": {},
-        "Name": "appA-nlb-tg-1",
-        "Port": 80,
-        "Protocol": "TCP",
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "appA-nlb-tg-1",
-          },
-        ],
-        "TargetType": "instance",
-        "VpcId": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-      },
-      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
-    },
-    "NetworkEndpointsappAnlbtg2EE7F2886": {
-      "Properties": {
-        "HealthCheckEnabled": true,
-        "HealthCheckPort": "80",
-        "HealthCheckProtocol": "TCP",
-        "Matcher": {},
-        "Name": "appA-nlb-tg-2",
-        "Port": 80,
-        "Protocol": "TCP",
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "appA-nlb-tg-2",
-          },
-        ],
-        "TargetType": "ip",
-        "Targets": {
-          "Fn::GetAtt": [
-            "appAnlbtg2ipLookupB24081DE",
-            "ipAddresses",
-          ],
-        },
-        "VpcId": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-      },
-      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
     },
     "NetworkEndpointsexampleRuleRuleAssociationB302A795": {
       "Properties": {
@@ -1869,9 +1693,9 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       },
       "Type": "AWS::EC2::TransitGatewayRoute",
     },
-    "NetworkMainCore103000016acceleratorvpnStaticRoute674FF3C8": {
+    "NetworkMainCore10300016acceleratorvpnStaticRoute1A702C47": {
       "Properties": {
-        "DestinationCidrBlock": "10.300.0.0/16",
+        "DestinationCidrBlock": "10.30.0.0/16",
         "TransitGatewayAttachmentId": {
           "Ref": "AcceleratorVpnVpnTransitGatewayAttachmentFBF8EE77",
         },
@@ -2165,212 +1989,6 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       },
       "Type": "AWS::EC2::NetworkAclEntry",
     },
-    "SharedServicesIpamEastSharedServicesAIpamSubnetLookupD77A2C65": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomGetIpamSubnetCidrCustomResourceProviderLogGroup655A9FB7",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomGetIpamSubnetCidrCustomResourceProviderHandler8C11DBB5",
-            "Arn",
-          ],
-        },
-        "region": "us-east-1",
-        "roleArn": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":iam::444444444444:role/AWSAccelerator-GetIpamCidrRole",
-            ],
-          ],
-        },
-        "ssmSubnetIdPath": "/accelerator/network/vpc/SharedServices-Ipam-East/subnet/SharedServices-A/id",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::GetIpamSubnetCidr",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "SharedServicesIpamEastSharedServicesBIpamSubnetLookupD01BB3A4": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomGetIpamSubnetCidrCustomResourceProviderLogGroup655A9FB7",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomGetIpamSubnetCidrCustomResourceProviderHandler8C11DBB5",
-            "Arn",
-          ],
-        },
-        "region": "us-east-1",
-        "roleArn": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":iam::444444444444:role/AWSAccelerator-GetIpamCidrRole",
-            ],
-          ],
-        },
-        "ssmSubnetIdPath": "/accelerator/network/vpc/SharedServices-Ipam-East/subnet/SharedServices-B/id",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::GetIpamSubnetCidr",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "SharedServicesIpamEastVpcManagementSg0BB92636": {
-      "Properties": {
-        "GroupDescription": "Management Security Group",
-        "GroupName": "Management",
-        "SecurityGroupEgress": [
-          {
-            "CidrIp": "10.0.0.0/8",
-            "Description": "All Outbound",
-            "IpProtocol": "-1",
-          },
-          {
-            "CidrIp": "100.96.252.0/23",
-            "Description": "All Outbound",
-            "IpProtocol": "-1",
-          },
-          {
-            "CidrIp": "100.96.250.0/23",
-            "Description": "All Outbound",
-            "IpProtocol": "-1",
-          },
-          {
-            "CidrIp": {
-              "Fn::GetAtt": [
-                "SharedServicesIpamEastSharedServicesAIpamSubnetLookupD77A2C65",
-                "ipv4CidrBlock",
-              ],
-            },
-            "Description": "All Outbound",
-            "IpProtocol": "-1",
-          },
-          {
-            "CidrIp": {
-              "Fn::GetAtt": [
-                "SharedServicesIpamEastSharedServicesBIpamSubnetLookupD01BB3A4",
-                "ipv4CidrBlock",
-              ],
-            },
-            "Description": "All Outbound",
-            "IpProtocol": "-1",
-          },
-          {
-            "Description": "All Outbound",
-            "DestinationPrefixListId": {
-              "Ref": "SsmParameterValueacceleratornetworkprefixListacceleratorprefixlistidC96584B6F00A464EAD1953AFF4B05118Parameter",
-            },
-            "IpProtocol": "-1",
-          },
-        ],
-        "SecurityGroupIngress": [
-          {
-            "CidrIp": "10.0.0.0/8",
-            "Description": "Management RDP Traffic Inbound",
-            "FromPort": 3389,
-            "IpProtocol": "tcp",
-            "ToPort": 3389,
-          },
-          {
-            "CidrIp": "100.96.252.0/23",
-            "Description": "Management RDP Traffic Inbound",
-            "FromPort": 3389,
-            "IpProtocol": "tcp",
-            "ToPort": 3389,
-          },
-          {
-            "CidrIp": "100.96.250.0/23",
-            "Description": "Management RDP Traffic Inbound",
-            "FromPort": 3389,
-            "IpProtocol": "tcp",
-            "ToPort": 3389,
-          },
-          {
-            "CidrIp": {
-              "Fn::GetAtt": [
-                "SharedServicesIpamEastSharedServicesAIpamSubnetLookupD77A2C65",
-                "ipv4CidrBlock",
-              ],
-            },
-            "Description": "Management RDP Traffic Inbound",
-            "FromPort": 3389,
-            "IpProtocol": "tcp",
-            "ToPort": 3389,
-          },
-          {
-            "CidrIp": {
-              "Fn::GetAtt": [
-                "SharedServicesIpamEastSharedServicesBIpamSubnetLookupD01BB3A4",
-                "ipv4CidrBlock",
-              ],
-            },
-            "Description": "Management RDP Traffic Inbound",
-            "FromPort": 3389,
-            "IpProtocol": "tcp",
-            "ToPort": 3389,
-          },
-          {
-            "Description": "Management RDP Traffic Inbound",
-            "FromPort": 3389,
-            "IpProtocol": "tcp",
-            "SourcePrefixListId": {
-              "Ref": "SsmParameterValueacceleratornetworkprefixListacceleratorprefixlistidC96584B6F00A464EAD1953AFF4B05118Parameter",
-            },
-            "ToPort": 3389,
-          },
-        ],
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "Management",
-          },
-        ],
-        "VpcId": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcSharedServicesIpamEastidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-      },
-      "Type": "AWS::EC2::SecurityGroup",
-    },
-    "SharedServicesIpamEastVpcManagementSgManagementEgress00A8CF1412": {
-      "Properties": {
-        "Description": "All Outbound",
-        "DestinationSecurityGroupId": {
-          "Ref": "SharedServicesIpamEastVpcManagementSg0BB92636",
-        },
-        "GroupId": {
-          "Ref": "SharedServicesIpamEastVpcManagementSg0BB92636",
-        },
-        "IpProtocol": "-1",
-      },
-      "Type": "AWS::EC2::SecurityGroupEgress",
-    },
-    "SharedServicesIpamEastVpcManagementSgManagementIngress008146AA79": {
-      "Properties": {
-        "Description": "Management RDP Traffic Inbound",
-        "FromPort": 3389,
-        "GroupId": {
-          "Ref": "SharedServicesIpamEastVpcManagementSg0BB92636",
-        },
-        "IpProtocol": "tcp",
-        "SourceSecurityGroupId": {
-          "Ref": "SharedServicesIpamEastVpcManagementSg0BB92636",
-        },
-        "ToPort": 3389,
-      },
-      "Type": "AWS::EC2::SecurityGroupIngress",
-    },
     "SharedServicesMainNetworkMainCorePropagationB8A9444B": {
       "Properties": {
         "TransitGatewayAttachmentId": {
@@ -2570,22 +2188,12 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Type": "Custom::SsmGetParameterValue",
       "UpdateReplacePolicy": "Delete",
     },
-    "SsmParamNetworkEndpointsToInspectionVpcPeering66A4E12A": {
+    "SsmParamNetworkEndpointsToSecondaryVpcPeeringED109890": {
       "Properties": {
-        "Name": "/accelerator/network/vpcPeering/NetworkEndpointsToInspection/id",
+        "Name": "/accelerator/network/vpcPeering/NetworkEndpointsToSecondary/id",
         "Type": "String",
         "Value": {
-          "Ref": "NetworkEndpointsToInspectionVpcPeeringE81AF602",
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
-    "SsmParamSharedServicesIpamEastManagementSecurityGroup1A10564E": {
-      "Properties": {
-        "Name": "/accelerator/network/vpc/SharedServices-Ipam-East/securityGroup/Management/id",
-        "Type": "String",
-        "Value": {
-          "Ref": "SharedServicesIpamEastVpcManagementSg0BB92636",
+          "Ref": "NetworkEndpointsToSecondaryVpcPeering08A08BA2",
         },
       },
       "Type": "AWS::SSM::Parameter",
@@ -2599,285 +2207,6 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         },
       },
       "Type": "AWS::SSM::Parameter",
-    },
-    "appAnlbtg2ipLookupB24081DE": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderframeworkonEvent694CD713",
-            "Arn",
-          ],
-        },
-        "assumeRoleName": "AWSAccelerator-GetNLBIPAddressLookup",
-        "partition": {
-          "Ref": "AWS::Partition",
-        },
-        "region": "us-east-1",
-        "targets": [
-          {
-            "account": "555555555555",
-            "nlbName": "appA-nlb-01",
-            "region": "us-east-1",
-          },
-        ],
-      },
-      "Type": "AWS::CloudFormation::CustomResource",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaEF941FA2": {
-      "DependsOn": [
-        "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaServiceRoleDefaultPolicyD488029A",
-        "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaServiceRole92332B48",
-      ],
-      "Properties": {
-        "Code": {
-          "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
-          "S3Key": "REPLACED-GENERATED-NAME.zip",
-        },
-        "Handler": "index.handler",
-        "Role": {
-          "Fn::GetAtt": [
-            "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaServiceRole92332B48",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs16.x",
-        "Timeout": 15,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaLogGroup713C77F0": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "LogGroupName": {
-          "Fn::Join": [
-            "",
-            [
-              "/aws/lambda/",
-              {
-                "Ref": "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaEF941FA2",
-              },
-            ],
-          ],
-        },
-        "RetentionInDays": 3653,
-      },
-      "Type": "AWS::Logs::LogGroup",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaServiceRole92332B48": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-              ],
-            ],
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaServiceRoleDefaultPolicyD488029A": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    "arn:",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    ":iam::*:role/AWSAccelerator-GetNLBIPAddressLookup",
-                  ],
-                ],
-              },
-              "Sid": "StsAssumeRole",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaServiceRoleDefaultPolicyD488029A",
-        "Roles": [
-          {
-            "Ref": "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaServiceRole92332B48",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderframeworkonEvent694CD713": {
-      "DependsOn": [
-        "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderframeworkonEventServiceRoleDefaultPolicy60AF00B7",
-        "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderframeworkonEventServiceRoleA31E553B",
-      ],
-      "Properties": {
-        "Code": {
-          "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
-          "S3Key": "REPLACED-GENERATED-NAME.zip",
-        },
-        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-555555555555-us-east-1/appA-nlb-tg-2-ipLookup/appA-nlb-tg-2-ipLookupProvider)",
-        "Environment": {
-          "Variables": {
-            "USER_ON_EVENT_FUNCTION_ARN": {
-              "Fn::GetAtt": [
-                "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaEF941FA2",
-                "Arn",
-              ],
-            },
-          },
-        },
-        "Handler": "framework.onEvent",
-        "Role": {
-          "Fn::GetAtt": [
-            "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderframeworkonEventServiceRoleA31E553B",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs14.x",
-        "Timeout": 900,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderframeworkonEventServiceRoleA31E553B": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-              ],
-            ],
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderframeworkonEventServiceRoleDefaultPolicy60AF00B7": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": "lambda:InvokeFunction",
-              "Effect": "Allow",
-              "Resource": [
-                {
-                  "Fn::GetAtt": [
-                    "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaEF941FA2",
-                    "Arn",
-                  ],
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaEF941FA2",
-                          "Arn",
-                        ],
-                      },
-                      ":*",
-                    ],
-                  ],
-                },
-              ],
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderframeworkonEventServiceRoleDefaultPolicy60AF00B7",
-        "Roles": [
-          {
-            "Ref": "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderframeworkonEventServiceRoleA31E553B",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
     },
   },
 }

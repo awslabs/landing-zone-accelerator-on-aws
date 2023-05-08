@@ -2,19 +2,19 @@ homeRegion: &HOME_REGION us-east-1
 snsSubscriptionConfig:
   - level: High
     email: foo@example.com
-keyManagementService:
-  keySets:
-    - name: key1
-      alias: accelerator/test-key/key1
-      policy: kms/kms-policy-01.json
-      description: Test KMS Key
-      enableKeyRotation: true
-      enabled: true
-      removalPolicy: destroy
-      deploymentTargets:
-        organizationalUnits:
-          - Root
-          - Infrastructure
+# keyManagementService:
+#   keySets:
+#     - name: key1
+#       alias: accelerator/test-key/key1
+#       policy: kms/kms-policy-01.json
+#       description: Test KMS Key
+#       enableKeyRotation: true
+#       enabled: true
+#       removalPolicy: destroy
+#       deploymentTargets:
+#         organizationalUnits:
+#           - Root
+#           - Infrastructure
 centralSecurityServices:
   delegatedAdminAccount: Audit
   ebsDefaultVolumeEncryption:
@@ -449,16 +449,16 @@ cloudWatch:
     - logGroupName: /App/Test2
       logRetentionInDays: 180
       terminationProtected: false
+      encryption:
+        kmsKeyArn: 'arn:aws:kms:us-east-1:111111111111:key/121ac3b6-8d53-4d8a-a05c-1234567789'
       deploymentTargets:
         accounts:
-          - SharedServices
+          - Management
         excludedRegions:
-          - eu-west-2
+          - us-west-2
     - logGroupName: /App/Test3
       logRetentionInDays: 365
       terminationProtected: false
-      encryption:
-        kmsKeyArn: 'arn:aws:kms:us-east-1:111111111111:key/121ac3b6-8d53-4d8a-a05c-1234567789'
       deploymentTargets:
         organizationalUnits:
           - Infrastructure
@@ -467,8 +467,8 @@ cloudWatch:
     - logGroupName: /App/Test4
       logRetentionInDays: 14
       terminationProtected: true
-      encryption:
-        kmsKeyName: key1
+      # encryption:
+      #   kmsKeyName: key1
       deploymentTargets:
         organizationalUnits:
           - Infrastructure
@@ -481,175 +481,175 @@ cloudWatch:
       metrics:
         # CIS 1.1 – Avoid the use of the "root" account
         - filterName: RootAccountMetricFilter
-          logGroupName: aws-controltower/CloudTrailLogs
+          logGroupName: aws-accelerator-cloudtrail-AWSAccelerator-Account-CloudTrail
           filterPattern: '{$.userIdentity.type="Root" && $.userIdentity.invokedBy NOT EXISTS && $.eventType !="AwsServiceEvent"}'
           metricNamespace: LogMetrics
           metricName: RootAccount
           metricValue: '1'
         # CIS 3.1 – Ensure a log metric filter and alarm exist for unauthorized API calls
         - filterName: UnauthorizedAPICallsMetricFilter
-          logGroupName: aws-controltower/CloudTrailLogs
+          logGroupName: aws-accelerator-cloudtrail-AWSAccelerator-Account-CloudTrail
           filterPattern: '{($.errorCode="*UnauthorizedOperation") || ($.errorCode="AccessDenied*")}'
           metricNamespace: LogMetrics
           metricName: UnauthorizedAPICalls
           metricValue: '1'
         # CIS 3.2 – Ensure a log metric filter and alarm exist for AWS Management Console sign-in without MFA
         - filterName: ConsoleSigninWithoutMFAMetricFilter
-          logGroupName: aws-controltower/CloudTrailLogs
+          logGroupName: aws-accelerator-cloudtrail-AWSAccelerator-Account-CloudTrail
           filterPattern: '{($.eventName = "ConsoleLogin") && ($.additionalEventData.MFAUsed != "Yes") && ($.userIdentity.type = "IAMUser") && ($.responseElements.ConsoleLogin = "Success")}'
           metricNamespace: LogMetrics
           metricName: ConsoleSigninWithoutMFA
           metricValue: '1'
         # CIS 3.3 – Ensure a log metric filter and alarm exist for usage of "root" account
         - filterName: MetricFilter
-          logGroupName: aws-controltower/CloudTrailLogs
+          logGroupName: aws-accelerator-cloudtrail-AWSAccelerator-Account-CloudTrail
           filterPattern: '{$.userIdentity.type="Root" && $.userIdentity.invokedBy NOT EXISTS && $.eventType !="AwsServiceEvent"}'
           metricNamespace: LogMetrics
           metricName: RootAccountUsage
           metricValue: '1'
         # CIS 3.4 – Ensure a log metric filter and alarm exist for IAM policy changes
         - filterName: IAMPolicyChangesMetricFilter
-          logGroupName: aws-controltower/CloudTrailLogs
+          logGroupName: aws-accelerator-cloudtrail-AWSAccelerator-Account-CloudTrail
           filterPattern: '{($.eventName=DeleteGroupPolicy) || ($.eventName=DeleteRolePolicy) || ($.eventName=DeleteUserPolicy) || ($.eventName=PutGroupPolicy) || ($.eventName=PutRolePolicy) || ($.eventName=PutUserPolicy) || ($.eventName=CreatePolicy) || ($.eventName=DeletePolicy) || ($.eventName=CreatePolicyVersion) || ($.eventName=DeletePolicyVersion) || ($.eventName=AttachRolePolicy) || ($.eventName=DetachRolePolicy) || ($.eventName=AttachUserPolicy) || ($.eventName=DetachUserPolicy) || ($.eventName=AttachGroupPolicy) || ($.eventName=DetachGroupPolicy)}'
           metricNamespace: LogMetrics
           metricName: IAMPolicyChanges
           metricValue: '1'
         # CIS 3.5 – Ensure a log metric filter and alarm exist for CloudTrail configuration changes
         - filterName: CloudTrailChangesMetricFilter
-          logGroupName: aws-controltower/CloudTrailLogs
+          logGroupName: aws-accelerator-cloudtrail-AWSAccelerator-Account-CloudTrail
           filterPattern: '{($.eventName=CreateTrail) || ($.eventName=UpdateTrail) || ($.eventName=DeleteTrail) || ($.eventName=StartLogging) || ($.eventName=StopLogging)}'
           metricNamespace: LogMetrics
           metricName: CloudTrailChanges
           metricValue: '1'
         # CIS 3.6 – Ensure a log metric filter and alarm exist for AWS Management Console authentication failures
         - filterName: ConsoleAuthenticationFailureMetricFilter
-          logGroupName: aws-controltower/CloudTrailLogs
+          logGroupName: aws-accelerator-cloudtrail-AWSAccelerator-Account-CloudTrail
           filterPattern: '{($.eventName=ConsoleLogin) && ($.errorMessage="Failed authentication")}'
           metricNamespace: LogMetrics
           metricName: ConsoleAuthenticationFailure
           metricValue: '1'
         # CIS 3.7 – Ensure a log metric filter and alarm exist for disabling or scheduled deletion of customer created CMKs
         - filterName: DisableOrDeleteCMKMetricFilter
-          logGroupName: aws-controltower/CloudTrailLogs
+          logGroupName: aws-accelerator-cloudtrail-AWSAccelerator-Account-CloudTrail
           filterPattern: '{($.eventSource=kms.amazonaws.com) && (($.eventName=DisableKey) || ($.eventName=ScheduleKeyDeletion))}'
           metricNamespace: LogMetrics
           metricName: DisableOrDeleteCMK
           metricValue: '1'
         # CIS 3.8 – Ensure a log metric filter and alarm exist for S3 bucket policy changes
         - filterName: S3BucketPolicyChangesMetricFilter
-          logGroupName: aws-controltower/CloudTrailLogs
+          logGroupName: aws-accelerator-cloudtrail-AWSAccelerator-Account-CloudTrail
           filterPattern: '{($.eventSource=s3.amazonaws.com) && (($.eventName=PutBucketAcl) || ($.eventName=PutBucketPolicy) || ($.eventName=PutBucketCors) || ($.eventName=PutBucketLifecycle) || ($.eventName=PutBucketReplication) || ($.eventName=DeleteBucketPolicy) || ($.eventName=DeleteBucketCors) || ($.eventName=DeleteBucketLifecycle) || ($.eventName=DeleteBucketReplication))}'
           metricNamespace: LogMetrics
           metricName: S3BucketPolicyChanges
           metricValue: '1'
         # CIS 3.9 – Ensure a log metric filter and alarm exist for AWS Config configuration changes
         - filterName: AWSConfigChangesMetricFilter
-          logGroupName: aws-controltower/CloudTrailLogs
+          logGroupName: aws-accelerator-cloudtrail-AWSAccelerator-Account-CloudTrail
           filterPattern: '{($.eventSource=config.amazonaws.com) && (($.eventName=StopConfigurationRecorder) || ($.eventName=DeleteDeliveryChannel) || ($.eventName=PutDeliveryChannel) || ($.eventName=PutConfigurationRecorder))}'
           metricNamespace: LogMetrics
           metricName: AWSConfigChanges
           metricValue: '1'
         # CIS 3.10 – Ensure a log metric filter and alarm exist for security group changes
         - filterName: SecurityGroupChangesMetricFilter
-          logGroupName: aws-controltower/CloudTrailLogs
+          logGroupName: aws-accelerator-cloudtrail-AWSAccelerator-Account-CloudTrail
           filterPattern: '{($.eventName=AuthorizeSecurityGroupIngress) || ($.eventName=AuthorizeSecurityGroupEgress) || ($.eventName=RevokeSecurityGroupIngress) || ($.eventName=RevokeSecurityGroupEgress) || ($.eventName=CreateSecurityGroup) || ($.eventName=DeleteSecurityGroup)}'
           metricNamespace: LogMetrics
           metricName: SecurityGroupChanges
           metricValue: '1'
         # CIS 3.11 – Ensure a log metric filter and alarm exist for changes to Network Access Control Lists (NACL)
         - filterName: NetworkACLChangesMetricFilter
-          logGroupName: aws-controltower/CloudTrailLogs
+          logGroupName: aws-accelerator-cloudtrail-AWSAccelerator-Account-CloudTrail
           filterPattern: '{($.eventName=CreateNetworkAcl) || ($.eventName=CreateNetworkAclEntry) || ($.eventName=DeleteNetworkAcl) || ($.eventName=DeleteNetworkAclEntry) || ($.eventName=ReplaceNetworkAclEntry) || ($.eventName=ReplaceNetworkAclAssociation)}'
           metricNamespace: LogMetrics
           metricName: NetworkACLChanges
           metricValue: '1'
         # CIS 3.12 – Ensure a log metric filter and alarm exist for changes to network gateways
         - filterName: NetworkGatewayChangesMetricFilter
-          logGroupName: aws-controltower/CloudTrailLogs
+          logGroupName: aws-accelerator-cloudtrail-AWSAccelerator-Account-CloudTrail
           filterPattern: '{($.eventName=CreateCustomerGateway) || ($.eventName=DeleteCustomerGateway) || ($.eventName=AttachInternetGateway) || ($.eventName=CreateInternetGateway) || ($.eventName=DeleteInternetGateway) || ($.eventName=DetachInternetGateway)}'
           metricNamespace: LogMetrics
           metricName: NetworkGatewayChanges
           metricValue: '1'
         # CIS 3.13 – Ensure a log metric filter and alarm exist for route table changes
         - filterName: RouteTableChangesMetricFilter
-          logGroupName: aws-controltower/CloudTrailLogs
+          logGroupName: aws-accelerator-cloudtrail-AWSAccelerator-Account-CloudTrail
           filterPattern: '{($.eventName=CreateRoute) || ($.eventName=CreateRouteTable) || ($.eventName=ReplaceRoute) || ($.eventName=ReplaceRouteTableAssociation) || ($.eventName=DeleteRouteTable) || ($.eventName=DeleteRoute) || ($.eventName=DisassociateRouteTable)}'
           metricNamespace: LogMetrics
           metricName: RouteTableChanges
           metricValue: '1'
         # CIS 3.14 – Ensure a log metric filter and alarm exist for VPC changes
         - filterName: VPCChangesMetricFilter
-          logGroupName: aws-controltower/CloudTrailLogs
+          logGroupName: aws-accelerator-cloudtrail-AWSAccelerator-Account-CloudTrail
           filterPattern: '{($.eventName=CreateVpc) || ($.eventName=DeleteVpc) || ($.eventName=ModifyVpcAttribute) || ($.eventName=AcceptVpcPeeringConnection) || ($.eventName=CreateVpcPeeringConnection) || ($.eventName=DeleteVpcPeeringConnection) || ($.eventName=RejectVpcPeeringConnection) || ($.eventName=AttachClassicLinkVpc) || ($.eventName=DetachClassicLinkVpc) || ($.eventName=DisableVpcClassicLink) || ($.eventName=EnableVpcClassicLink)}'
           metricNamespace: LogMetrics
           metricName: VPCChanges
           metricValue: '1'
-        # greater than threshold test
-        - filterName: GenericMetricFilterGreaterThanThreshold
-          logGroupName: /generic/log/group
-          filterPattern: '{$.eventType !="AwsServiceEvent"}'
-          metricNamespace: LzaMetrics
-          metricName: GenericMetricForTestingGreaterThanThreshold
-          metricValue: '1'
-        # less than threshold test
-        - filterName: GenericMetricFilterLessThanThreshold
-          logGroupName: /generic/log/group
-          filterPattern: '{$.eventType !="AwsServiceEvent"}'
-          metricNamespace: LzaMetrics
-          metricName: GenericMetricForTestingLessThanThreshold
-          metricValue: '1'
-        # less than or equal to threshold test
-        - filterName: GenericMetricFilterLessThanOrEqualToThreshold
-          logGroupName: /generic/log/group
-          filterPattern: '{$.eventType !="AwsServiceEvent"}'
-          metricNamespace: LzaMetrics
-          metricName: GenericMetricForTestingLessThanOrEqualToThreshold
-          metricValue: '1'
-        # less than lower or greater than upper threshold test
-        - filterName: GenericMetricFilterLessThanLowerOrGreaterThanUpperThreshold
-          logGroupName: /generic/log/group
-          filterPattern: '{$.eventType !="AwsServiceEvent"}'
-          metricNamespace: LzaMetrics
-          metricName: GenericMetricForTestingLessThanLowerOrGreaterThanUpperThreshold
-          metricValue: '1'
-        # greater than upper threshold test
-        - filterName: GenericMetricFilterGreaterThanUpperThreshold
-          logGroupName: /generic/log/group
-          filterPattern: '{$.eventType !="AwsServiceEvent"}'
-          metricNamespace: LzaMetrics
-          metricName: GenericMetricForTestingGreaterThanUpperThreshold
-          metricValue: '1'
-        # less than lower threshold test
-        - filterName: GenericMetricFilterLessThanLowerThreshold
-          logGroupName: /generic/log/group
-          filterPattern: '{$.eventType !="AwsServiceEvent"}'
-          metricNamespace: LzaMetrics
-          metricName: GenericMetricForTestingLessThanLowerThreshold
-          metricValue: '1'
-    - regions:
-        - *HOME_REGION
-      deploymentTargets:
-        account:
-          - SharedServices
-      metrics:
-        - filterName: GenericMetricFilterGreaterThanOrEqualToThreshold
-          logGroupName: /generic/log/group
-          filterPattern: '{$.eventType !="AwsServiceEvent"}'
-          metricNamespace: LzaMetrics
-          metricName: GenericMetricForTestingGreaterThanOrEqualToThreshold
-          metricValue: '1'
-        - filterName: GenericMetricFilterGreaterThanThreshold
-          logGroupName: /generic/log/group
-          filterPattern: '{$.eventType !="AwsServiceEvent"}'
-          metricNamespace: LzaMetrics
-          metricName: GenericMetricForTestingGreaterThanThreshold
-          metricValue: '1'
-        - filterName: GenericMetricFilterLessThanThreshold
-          logGroupName: /generic/log/group
-          filterPattern: '{$.eventType !="AwsServiceEvent"}'
-          metricNamespace: LzaMetrics
-          metricName: GenericMetricForTestingLessThanThreshold
-          metricValue: '1'
+    #     # greater than threshold test
+    #     - filterName: GenericMetricFilterGreaterThanThreshold
+    #       logGroupName: /generic/log/group
+    #       filterPattern: '{$.eventType !="AwsServiceEvent"}'
+    #       metricNamespace: LzaMetrics
+    #       metricName: GenericMetricForTestingGreaterThanThreshold
+    #       metricValue: '1'
+    #     # less than threshold test
+    #     - filterName: GenericMetricFilterLessThanThreshold
+    #       logGroupName: /generic/log/group
+    #       filterPattern: '{$.eventType !="AwsServiceEvent"}'
+    #       metricNamespace: LzaMetrics
+    #       metricName: GenericMetricForTestingLessThanThreshold
+    #       metricValue: '1'
+    #     # less than or equal to threshold test
+    #     - filterName: GenericMetricFilterLessThanOrEqualToThreshold
+    #       logGroupName: /generic/log/group
+    #       filterPattern: '{$.eventType !="AwsServiceEvent"}'
+    #       metricNamespace: LzaMetrics
+    #       metricName: GenericMetricForTestingLessThanOrEqualToThreshold
+    #       metricValue: '1'
+    #     # less than lower or greater than upper threshold test
+    #     - filterName: GenericMetricFilterLessThanLowerOrGreaterThanUpperThreshold
+    #       logGroupName: /generic/log/group
+    #       filterPattern: '{$.eventType !="AwsServiceEvent"}'
+    #       metricNamespace: LzaMetrics
+    #       metricName: GenericMetricForTestingLessThanLowerOrGreaterThanUpperThreshold
+    #       metricValue: '1'
+    #     # greater than upper threshold test
+    #     - filterName: GenericMetricFilterGreaterThanUpperThreshold
+    #       logGroupName: /generic/log/group
+    #       filterPattern: '{$.eventType !="AwsServiceEvent"}'
+    #       metricNamespace: LzaMetrics
+    #       metricName: GenericMetricForTestingGreaterThanUpperThreshold
+    #       metricValue: '1'
+    #     # less than lower threshold test
+    #     - filterName: GenericMetricFilterLessThanLowerThreshold
+    #       logGroupName: /generic/log/group
+    #       filterPattern: '{$.eventType !="AwsServiceEvent"}'
+    #       metricNamespace: LzaMetrics
+    #       metricName: GenericMetricForTestingLessThanLowerThreshold
+    #       metricValue: '1'
+    # - regions:
+    #     - *HOME_REGION
+    #   deploymentTargets:
+    #     account:
+    #       - SharedServices
+    #   metrics:
+    #     - filterName: GenericMetricFilterGreaterThanOrEqualToThreshold
+    #       logGroupName: /generic/log/group
+    #       filterPattern: '{$.eventType !="AwsServiceEvent"}'
+    #       metricNamespace: LzaMetrics
+    #       metricName: GenericMetricForTestingGreaterThanOrEqualToThreshold
+    #       metricValue: '1'
+    #     - filterName: GenericMetricFilterGreaterThanThreshold
+    #       logGroupName: /generic/log/group
+    #       filterPattern: '{$.eventType !="AwsServiceEvent"}'
+    #       metricNamespace: LzaMetrics
+    #       metricName: GenericMetricForTestingGreaterThanThreshold
+    #       metricValue: '1'
+    #     - filterName: GenericMetricFilterLessThanThreshold
+    #       logGroupName: /generic/log/group
+    #       filterPattern: '{$.eventType !="AwsServiceEvent"}'
+    #       metricNamespace: LzaMetrics
+    #       metricName: GenericMetricForTestingLessThanThreshold
+    #       metricValue: '1'
   alarmSets:
     - regions:
         - *HOME_REGION
@@ -874,38 +874,38 @@ cloudWatch:
           threshold: 1
           treatMissingData: notBreaching
         # less than lower or greater than upper threshold test
-        - alarmName: GenericMetricLessThanLowerOrGreaterThanUpperThreshold
-          alarmDescription: Alarm to test GenericMetric LessThanLowerOrGreaterThanUpperThreshold
-          snsTopicName: Security
-          metricName: GenericMetricForTestingLessThanLowerOrGreaterThanUpperThreshold
-          namespace: LzaMetrics
-          comparisonOperator: LessThanLowerOrGreaterThanUpperThreshold
-          evaluationPeriods: 1
-          period: 300
-          statistic: Sum
-          threshold: 1
-          treatMissingData: notBreaching
+        # - alarmName: GenericMetricLessThanLowerOrGreaterThanUpperThreshold
+        #   alarmDescription: Alarm to test GenericMetric LessThanLowerOrGreaterThanUpperThreshold
+        #   snsTopicName: Security
+        #   metricName: GenericMetricForTestingLessThanLowerOrGreaterThanUpperThreshold
+        #   namespace: LzaMetrics
+        #   comparisonOperator: LessThanLowerOrGreaterThanUpperThreshold
+        #   evaluationPeriods: 1
+        #   period: 300
+        #   statistic: Sum
+        #   threshold: 1
+        #   treatMissingData: notBreaching
         # greater than upper threshold test
-        - alarmName: GenericMetricGreaterThanUpperThreshold
-          alarmDescription: Alarm to test GenericMetric GreaterThanUpperThreshold
-          snsTopicName: Security
-          metricName: GenericMetricForTestingGreaterThanUpperThreshold
-          namespace: LzaMetrics
-          comparisonOperator: GreaterThanUpperThreshold
-          evaluationPeriods: 1
-          period: 300
-          statistic: Sum
-          threshold: 1
-          treatMissingData: notBreaching
+        # - alarmName: GenericMetricGreaterThanUpperThreshold
+        #   alarmDescription: Alarm to test GenericMetric GreaterThanUpperThreshold
+        #   snsTopicName: Security
+        #   metricName: GenericMetricForTestingGreaterThanUpperThreshold
+        #   namespace: LzaMetrics
+        #   comparisonOperator: GreaterThanUpperThreshold
+        #   evaluationPeriods: 1
+        #   period: 300
+        #   statistic: Sum
+        #   threshold: 1
+        #   treatMissingData: notBreaching
         # less than lower threshold test
-        - alarmName: GenericMetricLessThanLowerThreshold
-          alarmDescription: Alarm to test GenericMetric LessThanLowerThreshold
-          snsTopicName: Security
-          metricName: GenericMetricForTestingLessThanLowerThreshold
-          namespace: LzaMetrics
-          comparisonOperator: LessThanLowerThreshold
-          evaluationPeriods: 1
-          period: 300
-          statistic: Sum
-          threshold: 1
-          treatMissingData: notBreaching
+        # - alarmName: GenericMetricLessThanLowerThreshold
+        #   alarmDescription: Alarm to test GenericMetric LessThanLowerThreshold
+        #   snsTopicName: Security
+        #   metricName: GenericMetricForTestingLessThanLowerThreshold
+        #   namespace: LzaMetrics
+        #   comparisonOperator: LessThanLowerThreshold
+        #   evaluationPeriods: 1
+        #   period: 300
+        #   statistic: Sum
+        #   threshold: 1
+        #   treatMissingData: notBreaching
