@@ -1435,7 +1435,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
     },
     "SsmParamNetworkEndpointss3DnsA83EEA61": {
       "DependsOn": [
-        "SsmParamNetworkEndpointskmsDns52AB3E63",
+        "SsmParamNetworkEndpointskmsPhz4C558915",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/s3/dns",
@@ -1465,6 +1465,9 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointss3PhzE2EECCBF": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointskmsPhz4C558915",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/s3/hostedZoneId",
         "Type": "String",
@@ -1618,7 +1621,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
     },
     "SsmParamNetworkInspectionAcceleratorFirewallFirewallArn40D3C53C": {
       "DependsOn": [
-        "SsmParamNetworkEndpointss3PhzE2EECCBF",
+        "SsmParamacceleratorInboundResolverEndpoint80E88844",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/networkFirewall/accelerator-firewall/arn",
@@ -1650,9 +1653,6 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamacceleratorInboundResolverEndpoint80E88844": {
-      "DependsOn": [
-        "SsmParamNetworkEndpointss3PhzE2EECCBF",
-      ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/endpoints/accelerator-inbound/id",
         "Type": "String",
@@ -1667,7 +1667,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
     },
     "SsmParamacceleratorOutboundResolverEndpoint9F3A81CE": {
       "DependsOn": [
-        "SsmParamNetworkEndpointss3PhzE2EECCBF",
+        "SsmParamacceleratorInboundResolverEndpoint80E88844",
       ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/endpoints/accelerator-outbound/id",
