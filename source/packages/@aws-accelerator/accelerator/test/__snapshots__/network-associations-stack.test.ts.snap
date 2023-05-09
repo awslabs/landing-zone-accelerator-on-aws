@@ -99,6 +99,10 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Default": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/logs/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZones3idC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/s3/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonessmidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/ssm/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -257,6 +261,9 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           },
           {
             "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonelogsidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+          {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZones3idC96584B6F00A464EAD1953AFF4B05118Parameter",
           },
         ],
         "partition": {
