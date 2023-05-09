@@ -39,8 +39,6 @@ process.on('unhandledRejection', err => {
   throw new Error('Runtime Error');
 });
 
-const stackPrefix = process.env['ACCELERATOR_PREFIX']!;
-
 /**
  *
  */
@@ -95,6 +93,7 @@ export class AcceleratorToolkit {
     centralizeCdkBootstrap?: boolean;
     cdkOptions?: cdkOptionsConfig;
     enableSingleAccountMode: boolean;
+    stackPrefix: string;
   }): Promise<void> {
     if (options.accountId || options.region) {
       if (options.stage) {
@@ -166,7 +165,7 @@ export class AcceleratorToolkit {
       },
     });
 
-    const toolkitStackName: string = ToolkitInfo.determineName(`${stackPrefix}-CDKToolkit`);
+    const toolkitStackName: string = ToolkitInfo.determineName(`${options.stackPrefix}-CDKToolkit`);
 
     const cli = new CdkToolkit({
       cloudExecutable,
@@ -293,7 +292,7 @@ export class AcceleratorToolkit {
                   organizationConfig,
                 )
               ) {
-                const applicationStackName = `${stackPrefix}-App-${
+                const applicationStackName = `${options.stackPrefix}-App-${
                   application.name
                 }-${options.accountId!}-${options.region!}`;
                 stackName.push(applicationStackName);
