@@ -444,7 +444,7 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
           },
           "BufferingHints": {
             "IntervalInSeconds": 60,
-            "SizeInMBs": 128,
+            "SizeInMBs": 64,
           },
           "CompressionFormat": "UNCOMPRESSED",
           "DataFormatConversionConfiguration": {
@@ -510,6 +510,14 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
                   {
                     "ParameterName": "NumberOfRetries",
                     "ParameterValue": "3",
+                  },
+                  {
+                    "ParameterName": "BufferSizeInMBs",
+                    "ParameterValue": "0.2",
+                  },
+                  {
+                    "ParameterName": "BufferIntervalInSeconds",
+                    "ParameterValue": "60",
                   },
                 ],
                 "Type": "Lambda",
@@ -951,7 +959,7 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
           },
           "BufferingHints": {
             "IntervalInSeconds": 60,
-            "SizeInMBs": 128,
+            "SizeInMBs": 64,
           },
           "CompressionFormat": "UNCOMPRESSED",
           "DataFormatConversionConfiguration": {
@@ -1017,6 +1025,14 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
                   {
                     "ParameterName": "NumberOfRetries",
                     "ParameterValue": "3",
+                  },
+                  {
+                    "ParameterName": "BufferSizeInMBs",
+                    "ParameterValue": "0.2",
+                  },
+                  {
+                    "ParameterName": "BufferIntervalInSeconds",
+                    "ParameterValue": "60",
                   },
                 ],
                 "Type": "Lambda",
@@ -1754,7 +1770,7 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
           },
           "BufferingHints": {
             "IntervalInSeconds": 60,
-            "SizeInMBs": 128,
+            "SizeInMBs": 64,
           },
           "CompressionFormat": "UNCOMPRESSED",
           "DataFormatConversionConfiguration": {
@@ -1820,6 +1836,14 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
                   {
                     "ParameterName": "NumberOfRetries",
                     "ParameterValue": "3",
+                  },
+                  {
+                    "ParameterName": "BufferSizeInMBs",
+                    "ParameterValue": "0.2",
+                  },
+                  {
+                    "ParameterName": "BufferIntervalInSeconds",
+                    "ParameterValue": "60",
                   },
                 ],
                 "Type": "Lambda",
@@ -2261,7 +2285,7 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
           },
           "BufferingHints": {
             "IntervalInSeconds": 60,
-            "SizeInMBs": 128,
+            "SizeInMBs": 64,
           },
           "CompressionFormat": "UNCOMPRESSED",
           "DataFormatConversionConfiguration": {
@@ -2327,6 +2351,14 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
                   {
                     "ParameterName": "NumberOfRetries",
                     "ParameterValue": "3",
+                  },
+                  {
+                    "ParameterName": "BufferSizeInMBs",
+                    "ParameterValue": "0.2",
+                  },
+                  {
+                    "ParameterName": "BufferIntervalInSeconds",
+                    "ParameterValue": "60",
                   },
                 ],
                 "Type": "Lambda",
