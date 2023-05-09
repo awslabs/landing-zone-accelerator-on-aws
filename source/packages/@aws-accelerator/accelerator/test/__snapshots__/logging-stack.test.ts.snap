@@ -2412,7 +2412,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           },
           "BufferingHints": {
             "IntervalInSeconds": 60,
-            "SizeInMBs": 128,
+            "SizeInMBs": 64,
           },
           "CompressionFormat": "UNCOMPRESSED",
           "DataFormatConversionConfiguration": {
@@ -2475,6 +2475,14 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
                   {
                     "ParameterName": "NumberOfRetries",
                     "ParameterValue": "3",
+                  },
+                  {
+                    "ParameterName": "BufferSizeInMBs",
+                    "ParameterValue": "0.2",
+                  },
+                  {
+                    "ParameterName": "BufferIntervalInSeconds",
+                    "ParameterValue": "60",
                   },
                 ],
                 "Type": "Lambda",
@@ -5567,7 +5575,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
           },
           "BufferingHints": {
             "IntervalInSeconds": 60,
-            "SizeInMBs": 128,
+            "SizeInMBs": 64,
           },
           "CompressionFormat": "UNCOMPRESSED",
           "DataFormatConversionConfiguration": {
@@ -5630,6 +5638,14 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
                   {
                     "ParameterName": "NumberOfRetries",
                     "ParameterValue": "3",
+                  },
+                  {
+                    "ParameterName": "BufferSizeInMBs",
+                    "ParameterValue": "0.2",
+                  },
+                  {
+                    "ParameterName": "BufferIntervalInSeconds",
+                    "ParameterValue": "60",
                   },
                 ],
                 "Type": "Lambda",
