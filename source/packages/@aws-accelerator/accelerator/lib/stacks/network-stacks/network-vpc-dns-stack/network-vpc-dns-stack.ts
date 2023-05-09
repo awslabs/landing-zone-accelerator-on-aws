@@ -17,6 +17,7 @@ import { Construct } from 'constructs';
 import { NagSuppressions } from 'cdk-nag';
 
 import {
+  InterfaceEndpointServiceConfig,
   Region,
   ResolverEndpointConfig,
   ResolverRuleConfig,
@@ -123,30 +124,64 @@ export class NetworkVpcDnsStack extends NetworkStack {
         stringValue: hostedZone.hostedZoneId,
       });
 
-      // Create the record set
-      let recordSetName = hostedZoneName;
-      const wildcardServices = ['ecr.dkr', 's3'];
-      if (wildcardServices.includes(endpointItem.service)) {
-        recordSetName = `*.${hostedZoneName}`;
-      }
+      // Create record sets
+      this.createRecordSets(vpcItem, endpointItem, endpointMap, zoneMap, hostedZoneName, hostedZone);
+    }
+  }
 
-      // Check mapping for DNS name
-      const endpointKey = `${vpcItem.name}_${endpointItem.service}`;
-      const dnsName = endpointMap.get(endpointKey);
-      const zoneId = zoneMap.get(endpointKey);
-      if (!dnsName) {
-        this.logger.error(`Unable to locate DNS name for VPC:${vpcItem.name} endpoint:${endpointItem.service}`);
-        throw new Error(`Configuration validation failed at runtime.`);
-      }
-      if (!zoneId) {
-        this.logger.error(`Unable to locate hosted zone ID for VPC:${vpcItem.name} endpoint:${endpointItem.service}`);
-        throw new Error(`Configuration validation failed at runtime.`);
-      }
+  /**
+   * Create record sets for centralized interface endpoints
+   * @param vpcItem
+   * @param endpointItem
+   * @param endpointMap
+   * @param zoneMap
+   * @param hostedZoneName
+   * @param hostedZone
+   */
+  private createRecordSets(
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    endpointItem: InterfaceEndpointServiceConfig,
+    endpointMap: Map<string, string>,
+    zoneMap: Map<string, string>,
+    hostedZoneName: string,
+    hostedZone: HostedZone,
+  ) {
+    // Create the record set
+    let recordSetName = hostedZoneName;
+    const wildcardServices = ['ecr.dkr', 's3'];
+    if (wildcardServices.includes(endpointItem.service)) {
+      recordSetName = `*.${hostedZoneName}`;
+    }
 
-      this.logger.info(`Creating alias record for VPC:${vpcItem.name} endpoint:${endpointItem.service}`);
-      new RecordSet(this, `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem.service)}EpRecordSet`, {
+    // Check mapping for DNS name
+    const endpointKey = `${vpcItem.name}_${endpointItem.service}`;
+    const dnsName = endpointMap.get(endpointKey);
+    const zoneId = zoneMap.get(endpointKey);
+    if (!dnsName) {
+      this.logger.error(`Unable to locate DNS name for VPC:${vpcItem.name} endpoint:${endpointItem.service}`);
+      throw new Error(`Configuration validation failed at runtime.`);
+    }
+    if (!zoneId) {
+      this.logger.error(`Unable to locate hosted zone ID for VPC:${vpcItem.name} endpoint:${endpointItem.service}`);
+      throw new Error(`Configuration validation failed at runtime.`);
+    }
+
+    // Create alias record for hosted zone
+    this.logger.info(`Creating alias record for VPC:${vpcItem.name} endpoint:${endpointItem.service}`);
+    new RecordSet(this, `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem.service)}EpRecordSet`, {
+      type: 'A',
+      name: recordSetName,
+      hostedZone: hostedZone,
+      dnsName: dnsName,
+      hostedZoneId: zoneId,
+    });
+
+    // Create additional record for S3 endpoints
+    if (endpointItem.service === 's3') {
+      this.logger.info(`Creating additional record for VPC:${vpcItem.name} endpoint:${endpointItem.service}`);
+      new RecordSet(this, `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem.service)}EpRecordSetNonWildcard`, {
         type: 'A',
-        name: recordSetName,
+        name: hostedZoneName,
         hostedZone: hostedZone,
         dnsName: dnsName,
         hostedZoneId: zoneId,
