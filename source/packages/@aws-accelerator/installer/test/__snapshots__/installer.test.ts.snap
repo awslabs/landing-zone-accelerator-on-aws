@@ -193,10 +193,12 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
       "Type": "String",
     },
     "ExistingConfigRepositoryBranchName": {
+      "Default": "",
       "Description": "Specify the branch name of existing CodeCommit repository to pull the accelerator configuration from.",
       "Type": "String",
     },
     "ExistingConfigRepositoryName": {
+      "Default": "",
       "Description": "The name of an existing CodeCommit repository hosting the accelerator configuration.",
       "Type": "String",
     },
@@ -3257,9 +3259,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           const existingConfigRepositoryBranchName=event.ResourceProperties.existingConfigRepositoryBranchName;
 
           if (useExistingConfigRepo === 'Yes') {
-            console.log('Here - 1');
-            if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName ===''){
-                console.log('Here - 2');
+            if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName === ''){
                 await response.send(event, context, response.FAILED, {'FailureReason': 'UseExistingConfigRepo parameter set to Yes, but ExistingConfigRepositoryName or ExistingConfigRepositoryBranchName parameter value missing!!!'}, event.PhysicalResourceId);
                 return;
             }
@@ -3520,10 +3520,12 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
       "Type": "String",
     },
     "ExistingConfigRepositoryBranchName": {
+      "Default": "",
       "Description": "Specify the branch name of existing CodeCommit repository to pull the accelerator configuration from.",
       "Type": "String",
     },
     "ExistingConfigRepositoryName": {
+      "Default": "",
       "Description": "The name of an existing CodeCommit repository hosting the accelerator configuration.",
       "Type": "String",
     },
@@ -6574,9 +6576,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           const existingConfigRepositoryBranchName=event.ResourceProperties.existingConfigRepositoryBranchName;
 
           if (useExistingConfigRepo === 'Yes') {
-            console.log('Here - 1');
-            if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName ===''){
-                console.log('Here - 2');
+            if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName === ''){
                 await response.send(event, context, response.FAILED, {'FailureReason': 'UseExistingConfigRepo parameter set to Yes, but ExistingConfigRepositoryName or ExistingConfigRepositoryBranchName parameter value missing!!!'}, event.PhysicalResourceId);
                 return;
             }
@@ -6861,10 +6861,12 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
       "Type": "String",
     },
     "ExistingConfigRepositoryBranchName": {
+      "Default": "",
       "Description": "Specify the branch name of existing CodeCommit repository to pull the accelerator configuration from.",
       "Type": "String",
     },
     "ExistingConfigRepositoryName": {
+      "Default": "",
       "Description": "The name of an existing CodeCommit repository hosting the accelerator configuration.",
       "Type": "String",
     },
@@ -9914,9 +9916,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           const existingConfigRepositoryBranchName=event.ResourceProperties.existingConfigRepositoryBranchName;
 
           if (useExistingConfigRepo === 'Yes') {
-            console.log('Here - 1');
-            if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName ===''){
-                console.log('Here - 2');
+            if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName === ''){
                 await response.send(event, context, response.FAILED, {'FailureReason': 'UseExistingConfigRepo parameter set to Yes, but ExistingConfigRepositoryName or ExistingConfigRepositoryBranchName parameter value missing!!!'}, event.PhysicalResourceId);
                 return;
             }
@@ -10201,10 +10201,12 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
       "Type": "String",
     },
     "ExistingConfigRepositoryBranchName": {
+      "Default": "",
       "Description": "Specify the branch name of existing CodeCommit repository to pull the accelerator configuration from.",
       "Type": "String",
     },
     "ExistingConfigRepositoryName": {
+      "Default": "",
       "Description": "The name of an existing CodeCommit repository hosting the accelerator configuration.",
       "Type": "String",
     },
@@ -13244,9 +13246,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           const existingConfigRepositoryBranchName=event.ResourceProperties.existingConfigRepositoryBranchName;
 
           if (useExistingConfigRepo === 'Yes') {
-            console.log('Here - 1');
-            if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName ===''){
-                console.log('Here - 2');
+            if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName === ''){
                 await response.send(event, context, response.FAILED, {'FailureReason': 'UseExistingConfigRepo parameter set to Yes, but ExistingConfigRepositoryName or ExistingConfigRepositoryBranchName parameter value missing!!!'}, event.PhysicalResourceId);
                 return;
             }
@@ -13531,10 +13531,12 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
       "Type": "String",
     },
     "ExistingConfigRepositoryBranchName": {
+      "Default": "",
       "Description": "Specify the branch name of existing CodeCommit repository to pull the accelerator configuration from.",
       "Type": "String",
     },
     "ExistingConfigRepositoryName": {
+      "Default": "",
       "Description": "The name of an existing CodeCommit repository hosting the accelerator configuration.",
       "Type": "String",
     },
@@ -16579,9 +16581,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           const existingConfigRepositoryBranchName=event.ResourceProperties.existingConfigRepositoryBranchName;
 
           if (useExistingConfigRepo === 'Yes') {
-            console.log('Here - 1');
-            if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName ===''){
-                console.log('Here - 2');
+            if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName === ''){
                 await response.send(event, context, response.FAILED, {'FailureReason': 'UseExistingConfigRepo parameter set to Yes, but ExistingConfigRepositoryName or ExistingConfigRepositoryBranchName parameter value missing!!!'}, event.PhysicalResourceId);
                 return;
             }
