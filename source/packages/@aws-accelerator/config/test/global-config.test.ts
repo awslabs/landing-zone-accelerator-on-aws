@@ -43,7 +43,7 @@ describe('GlobalConfig', () => {
 
     it('loads from string', () => {
       const buffer = fs.readFileSync(
-        path.join('../accelerator/test/configs/all-enabled', GlobalConfig.FILENAME),
+        path.join('../accelerator/test/configs/snapshot-only', GlobalConfig.FILENAME),
         'utf8',
       );
       const globalConfigFromString = GlobalConfig.loadFromString(buffer);

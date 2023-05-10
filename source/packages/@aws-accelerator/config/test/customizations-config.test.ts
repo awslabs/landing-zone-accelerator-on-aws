@@ -39,7 +39,7 @@ import * as path from 'path';
 describe('CustomizationsConfig', () => {
   describe('Test config', () => {
     const customizationsConfigFromFile = CustomizationsConfig.load(
-      path.resolve('../accelerator/test/configs/all-enabled'),
+      path.resolve('../accelerator/test/configs/snapshot-only'),
     );
     const customizationsConfig = new CustomizationsConfig();
 

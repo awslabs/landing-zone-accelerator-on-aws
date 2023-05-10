@@ -21,12 +21,7 @@ const testNamePrefix = 'Construct(NetworkVpcDnsStack): ';
 /**
  * NetworkVpcEndpointsStack
  */
-const acceleratorTestStacks = new AcceleratorSynthStacks(
-  AcceleratorStage.NETWORK_VPC_DNS,
-  'all-enabled',
-  'aws',
-  'us-east-1',
-);
+const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.NETWORK_VPC_DNS, 'aws', 'us-east-1');
 const stack = acceleratorTestStacks.stacks.get(`Network-us-east-1`)!;
 
 describe('NetworkVpcDnsStack', () => {

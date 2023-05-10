@@ -208,7 +208,7 @@ describe('accounts-config', () => {
     });
 
     it('load config successfully', () => {
-      const loadedConfig = AccountsConfig.load(path.resolve('../accelerator/test/configs/all-enabled'));
+      const loadedConfig = AccountsConfig.load(path.resolve('../accelerator/test/configs/snapshot-only'));
       expect(loadedConfig && typeof loadedConfig === 'object').toBe(true);
     });
   });

@@ -87,7 +87,7 @@ describe('IamConfig', () => {
   });
 
   it('loads from string', () => {
-    const buffer = fs.readFileSync(path.join('../accelerator/test/configs/all-enabled', IamConfig.FILENAME), 'utf8');
+    const buffer = fs.readFileSync(path.join('../accelerator/test/configs/snapshot-only', IamConfig.FILENAME), 'utf8');
     const iamConfigFromString = IamConfig.loadFromString(buffer);
     if (!iamConfigFromString) {
       throw new Error('iamConfigFromString is not defined');

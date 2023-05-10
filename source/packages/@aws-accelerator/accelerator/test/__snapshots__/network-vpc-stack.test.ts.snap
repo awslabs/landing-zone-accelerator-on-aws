@@ -838,6 +838,60 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Role",
     },
+    "GetNLBIPAddressLookupCB983550": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific role arns.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::555555555555:root",
+                    ],
+                  ],
+                },
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": "ec2:DescribeNetworkInterfaces",
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "default",
+          },
+        ],
+        "RoleName": "AWSAccelerator-GetNLBIPAddressLookup",
+      },
+      "Type": "AWS::IAM::Role",
+    },
     "NetworkEndpoints2VpcTransitGatewayAttachment9892C5DB": {
       "Properties": {
         "Options": {
@@ -3940,6 +3994,134 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "Type": "String",
         "Value": {
           "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "appAalb01NetworkEndpointsD769A400": {
+      "DependsOn": [
+        "NetworkEndpointsVpcManagementSgManagementEgress00D58058BF",
+        "NetworkEndpointsVpcManagementSgManagementIngress008FD972B5",
+        "NetworkEndpointsVpcManagementSgManagementIngress105119E927",
+        "NetworkEndpointsVpcManagementSgManagementIngress1135D6C2DD",
+        "NetworkEndpointsVpcManagementSg2B8F9418",
+        "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
+        "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnetRouteTableAssociation4D925D52",
+        "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5",
+        "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnetRouteTableAssociation958ED1AB",
+      ],
+      "Properties": {
+        "LoadBalancerAttributes": [
+          {
+            "Key": "access_logs.s3.enabled",
+            "Value": "true",
+          },
+          {
+            "Key": "access_logs.s3.bucket",
+            "Value": "aws-accelerator-elb-access-logs-333333333333-us-east-1",
+          },
+          {
+            "Key": "access_logs.s3.prefix",
+            "Value": "555555555555/us-east-1/appA-alb-01",
+          },
+        ],
+        "Name": "appA-alb-01",
+        "Scheme": "internet-facing",
+        "SecurityGroups": [
+          {
+            "Ref": "NetworkEndpointsVpcManagementSg2B8F9418",
+          },
+        ],
+        "Subnets": [
+          {
+            "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
+          },
+          {
+            "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5",
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "appA-alb-01",
+          },
+        ],
+        "Type": "application",
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+    },
+    "appAalb01NetworkEndpointsssmF399A7CC": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointsTestNaclNaclED9584AC",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Endpoints/alb/appA-alb-01/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "appAalb01NetworkEndpointsD769A400",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "appAnlb01NetworkEndpoints0281B174": {
+      "DependsOn": [
+        "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
+        "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnetRouteTableAssociation4D925D52",
+        "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5",
+        "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnetRouteTableAssociation958ED1AB",
+      ],
+      "Properties": {
+        "LoadBalancerAttributes": [
+          {
+            "Key": "deletion_protection.enabled",
+            "Value": "false",
+          },
+          {
+            "Key": "load_balancing.cross_zone.enabled",
+            "Value": "true",
+          },
+          {
+            "Key": "access_logs.s3.enabled",
+            "Value": "true",
+          },
+          {
+            "Key": "access_logs.s3.bucket",
+            "Value": "aws-accelerator-elb-access-logs-333333333333-us-east-1",
+          },
+          {
+            "Key": "access_logs.s3.prefix",
+            "Value": "555555555555/us-east-1/appA-nlb-01",
+          },
+        ],
+        "Name": "appA-nlb-01",
+        "Scheme": "internet-facing",
+        "Subnets": [
+          {
+            "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
+          },
+          {
+            "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5",
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "appA-nlb-01",
+          },
+        ],
+        "Type": "network",
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+    },
+    "appAnlb01NetworkEndpointsssm0DA0AE1E": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointsTestNaclNaclED9584AC",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Endpoints/nlb/appA-nlb-01/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "appAnlb01NetworkEndpoints0281B174",
         },
       },
       "Type": "AWS::SSM::Parameter",

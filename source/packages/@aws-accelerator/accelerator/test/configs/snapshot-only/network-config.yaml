@@ -127,31 +127,6 @@ transitGatewayPeering:
       routeTableAssociations: Network-Main-Shared
       autoAccept: true
       applyTags: true
-  - name: Network-Main-2-And-SharedServices-Main-Peering
-    autoAccept: false
-    requester:
-      transitGatewayName: SharedServices-Main
-      account: SharedServices
-      region: *HOME_REGION
-      routeTableAssociations: SharedServices-Main-Shared
-      tags:
-        - key: Name
-          value: Network-Main-2-And-SharedServices-Main-Peering
-        - key: CostCenter
-          value: TSD-LZA
-        - key: Company
-          value: AWS
-        - key: Organization
-          value: WWPS
-        - key: Team
-          value: Development
-    accepter:
-      transitGatewayName: Network-Main-2
-      account: Network
-      region: *HOME_REGION
-      routeTableAssociations: Network-Main-2-Core
-      autoAccept: true
-      applyTags: true
 
 dhcpOptions:
   - name: accelerator-dhcp-opts
@@ -244,17 +219,6 @@ centralNetworkServices:
           - Network-Inspection-A
           - Network-Inspection-B
         vpc: Network-Inspection
-        loggingConfiguration:
-          - destination: s3
-            type: ALERT
-          - destination: cloud-watch-logs
-            type: FLOW
-      - name: az-id-firewall
-        firewallPolicy: accelerator-policy
-        subnets:
-          - Network-Secondary-C
-          - Network-Secondary-D
-        vpc: Network-Secondary
         loggingConfiguration:
           - destination: s3
             type: ALERT
@@ -596,20 +560,6 @@ vpcs:
         routes: []
       - name: Network-Secondary-B-Rt
         routes: []
-      - name: Network-Secondary-C-Rt
-        routes:
-          - name: NfwRoute
-            destination: 0.0.0.0/0
-            type: networkFirewall
-            target: az-id-firewall
-            targetAvailabilityZone: 1
-      - name: Network-Secondary-D-Rt
-        routes:
-          - name: NfwRoute
-            destination: 0.0.0.0/0
-            type: networkFirewall
-            target: az-id-firewall
-            targetAvailabilityZone: 2
     subnets:
       - name: Network-Secondary-A
         availabilityZone: a
@@ -623,25 +573,11 @@ vpcs:
         ipamAllocation:
           ipamPoolName: home-region-prod-pool
           netmaskLength: 28
-      - name: Network-Secondary-C
-        availabilityZone: 1
-        routeTable: Network-Secondary-C-Rt
-        ipamAllocation:
-          ipamPoolName: home-region-prod-pool
-          netmaskLength: 28
-      - name: Network-Secondary-D
-        availabilityZone: 2
-        routeTable: Network-Secondary-D-Rt
-        ipamAllocation:
-          ipamPoolName: home-region-prod-pool
-          netmaskLength: 28
     networkAcls:
       - name: TestNacl
         subnetAssociations:
           - Network-Secondary-A
           - Network-Secondary-B
-          - Network-Secondary-C
-          - Network-Secondary-D
         outboundRules:
           - rule: 101
             action: allow
@@ -1134,25 +1070,6 @@ vpcs:
               protocol: HTTP
               targetGroup: appA-alb-tg-1
               type: forward
-        - name: appA-alb-test-01
-          scheme: internal
-          subnets:
-            - SharedServices-App-A
-            - SharedServices-App-B
-          securityGroups:
-            - InternalHTTP-SG
-          listeners:
-            - name: appA-listener-3
-              port: 443
-              protocol: HTTPS
-              targetGroup: deployed-tg-2
-              order: 3
-              type: forward
-              certificate: cert1
-              sslPolicy: ELBSecurityPolicy-2016-08
-          shareTargets:
-            organizationalUnits:
-              - Security
       networkLoadBalancers:
         - name: appA-nlb-01
           scheme: internet-facing
@@ -1192,13 +1109,6 @@ vpcs:
           enabled: true
           port: 80
           protocol: HTTP
-      - name: deployed-tg-2
-        port: 443
-        protocol: HTTPS
-        type: instance
-        shareTargets:
-          organizationalUnits:
-            - Security
       - name: appA-nlb-tg-2
         port: 80
         protocol: TCP
@@ -1284,25 +1194,7 @@ vpcs:
             target: Endpoint-B
       - name: Network-Inspection-Gateway
         gatewayAssociation: internetGateway
-        routes:
-          - name: NfwRouteDynamic-A
-            destination: Network-Inspection-A
-            type: networkFirewall
-            target: accelerator-firewall
-            targetAvailabilityZone: a
-          - name: GwlbRouteDynamic-A
-            destination: Network-InspectionTgwAttach-A
-            type: gatewayLoadBalancerEndpoint
-            target: Endpoint-A
-          - name: NfwRouteDynamic-B
-            destination: Network-Inspection-B
-            type: networkFirewall
-            target: accelerator-firewall
-            targetAvailabilityZone: b
-          - name: GwlbRouteDynamic-B
-            destination: Network-InspectionTgwAttach-B
-            type: gatewayLoadBalancerEndpoint
-            target: Endpoint-B
+        routes: []
     subnets:
       - name: Network-Inspection-A
         availabilityZone: a
@@ -1622,17 +1514,7 @@ certificates:
       accounts:
         - Management
         - Audit
-      organizationalUnits:
-        - Security
   - name: cert2
-    type: import
-    privKey: cert1/privKey.key
-    cert: cert1/cert.crt
-    deploymentTargets:
-      accounts:
-        - Management
-        - Audit
-  - name: cert3
     type: request
     validation: DNS
     domain: example.com
@@ -1641,11 +1523,7 @@ certificates:
       - www.example.net
       - e.co
     deploymentTargets:
-      organizationalUnits:
-        - Security
-
+      OU:
+        - Infrastructure
 firewallManager:
   delegatedAdminAccount: Audit
-  notificationChannels:
-    - snsTopic: Security
-      region: us-east-1

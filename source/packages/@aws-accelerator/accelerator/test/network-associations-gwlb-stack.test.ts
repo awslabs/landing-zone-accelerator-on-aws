@@ -21,7 +21,6 @@ const testNamePrefix = 'Construct(NetworkAssociationsGwlbStack): ';
 
 const acceleratorTestStacks = new AcceleratorSynthStacks(
   AcceleratorStage.NETWORK_ASSOCIATIONS_GWLB,
-  'all-enabled',
   'aws',
   'us-east-1',
 );

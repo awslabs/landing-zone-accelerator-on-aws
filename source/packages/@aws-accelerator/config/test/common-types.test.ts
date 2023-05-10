@@ -22,7 +22,7 @@ describe('parse method', () => {
   describe('parse a valid config', () => {
     it('should return an object', () => {
       const buffer = fs.readFileSync(
-        path.resolve('../accelerator/test/configs/all-enabled/organization-config.yaml'),
+        path.resolve('../accelerator/test/configs/snapshot-only/organization-config.yaml'),
         'utf8',
       );
       const r = parse(OrganizationConfigTypes.organizationConfig, yaml.load(buffer));

@@ -17,7 +17,7 @@ import { SecurityConfig } from '../lib/security-config';
 
 describe('SecurityConfig', () => {
   describe('Test config', () => {
-    const securityConfigFromFile = SecurityConfig.load(path.resolve('../accelerator/test/configs/all-enabled'));
+    const securityConfigFromFile = SecurityConfig.load(path.resolve('../accelerator/test/configs/snapshot-only'));
     // const securityConfig = new SecurityConfig();
 
     it('has loaded successfully', () => {
