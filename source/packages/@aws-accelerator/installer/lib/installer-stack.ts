@@ -146,6 +146,7 @@ export class InstallerStack extends cdk.Stack {
   private readonly existingConfigRepositoryName = new cdk.CfnParameter(this, 'ExistingConfigRepositoryName', {
     type: 'String',
     description: 'The name of an existing CodeCommit repository hosting the accelerator configuration.',
+    default: '',
   });
 
   /**
@@ -159,6 +160,7 @@ export class InstallerStack extends cdk.Stack {
       type: 'String',
       description:
         'Specify the branch name of existing CodeCommit repository to pull the accelerator configuration from.',
+      default: '',
     },
   );
 
