@@ -212,9 +212,9 @@ export class CentralLogsBucket extends Construct {
     // Grant organization principals to use the bucket
     this.bucket.getS3Bucket().addToResourcePolicy(
       new cdk.aws_iam.PolicyStatement({
-        sid: 'Allow Organization principals to use of the bucket',
+        sid: 'Allow Organization principals to use the bucket',
         effect: cdk.aws_iam.Effect.ALLOW,
-        actions: ['s3:GetBucketLocation', 's3:PutObject', 's3:GetObject', 's3:ListBucket'],
+        actions: ['s3:GetBucketLocation', 's3:GetBucketAcl', 's3:PutObject', 's3:GetObject', 's3:ListBucket'],
         principals: [new cdk.aws_iam.AnyPrincipal()],
         resources: [this.bucket.getS3Bucket().bucketArn, `${this.bucket.getS3Bucket().bucketArn}/*`],
         conditions: {
