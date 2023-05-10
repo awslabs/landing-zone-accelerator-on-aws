@@ -605,6 +605,7 @@ exports[`CentralLogsBucket Construct(CentralLogsBucket):  Snapshot Test 1`] = `
             {
               "Action": [
                 "s3:GetBucketLocation",
+                "s3:GetBucketAcl",
                 "s3:PutObject",
                 "s3:GetObject",
                 "s3:ListBucket",
@@ -640,7 +641,7 @@ exports[`CentralLogsBucket Construct(CentralLogsBucket):  Snapshot Test 1`] = `
                   ],
                 },
               ],
-              "Sid": "Allow Organization principals to use of the bucket",
+              "Sid": "Allow Organization principals to use the bucket",
             },
             {
               "Action": [

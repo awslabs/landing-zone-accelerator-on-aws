@@ -2977,15 +2977,23 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
           "Statement": [
             {
               "Action": [
-                "s3:PutObject*",
-                "s3:GetBucketACL",
+                "s3:PutObject",
+                "s3:PutObjectAcl",
               ],
+              "Condition": {
+                "StringLike": {
+                  "s3:x-amz-acl": "bucket-owner-full-control",
+                },
+              },
               "Effect": "Allow",
-              "Resource": [
-                "arn:aws:s3:::aws-accelerator-central-logs-333333333333-us-west-2",
-                "arn:aws:s3:::aws-accelerator-central-logs-333333333333-us-west-2/*",
-              ],
-              "Sid": "s3",
+              "Resource": "arn:aws:s3:::aws-accelerator-central-logs-333333333333-us-west-2/*",
+              "Sid": "S3WriteAccess",
+            },
+            {
+              "Action": "s3:GetBucketAcl",
+              "Effect": "Allow",
+              "Resource": "arn:aws:s3:::aws-accelerator-central-logs-333333333333-us-west-2",
+              "Sid": "S3GetAclAccess",
             },
           ],
           "Version": "2012-10-17",
@@ -6485,15 +6493,23 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
           "Statement": [
             {
               "Action": [
-                "s3:PutObject*",
-                "s3:GetBucketACL",
+                "s3:PutObject",
+                "s3:PutObjectAcl",
               ],
+              "Condition": {
+                "StringLike": {
+                  "s3:x-amz-acl": "bucket-owner-full-control",
+                },
+              },
               "Effect": "Allow",
-              "Resource": [
-                "arn:aws:s3:::aws-accelerator-central-logs-333333333333-us-west-2",
-                "arn:aws:s3:::aws-accelerator-central-logs-333333333333-us-west-2/*",
-              ],
-              "Sid": "s3",
+              "Resource": "arn:aws:s3:::aws-accelerator-central-logs-333333333333-us-west-2/*",
+              "Sid": "S3WriteAccess",
+            },
+            {
+              "Action": "s3:GetBucketAcl",
+              "Effect": "Allow",
+              "Resource": "arn:aws:s3:::aws-accelerator-central-logs-333333333333-us-west-2",
+              "Sid": "S3GetAclAccess",
             },
           ],
           "Version": "2012-10-17",
