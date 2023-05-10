@@ -18,12 +18,7 @@ import { snapShotTest } from './snapshot-test';
 
 const testNamePrefix = 'Construct(SecurityAuditStack): ';
 
-const acceleratorTestStacks = new AcceleratorSynthStacks(
-  AcceleratorStage.SECURITY_AUDIT,
-  'all-enabled',
-  'aws',
-  'us-east-1',
-);
+const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.SECURITY_AUDIT, 'aws', 'us-east-1');
 const stack = acceleratorTestStacks.stacks.get(`Audit-us-east-1`)!;
 
 describe('SecurityAuditStack', () => {
@@ -32,9 +27,9 @@ describe('SecurityAuditStack', () => {
 
 const delegatedAdminTestStacks = new AcceleratorSynthStacks(
   AcceleratorStage.SECURITY_AUDIT,
-  'all-enabled-delegated-admin',
   'aws',
   'us-east-1',
+  'all-enabled-delegated-admin',
 );
 const delegatedAdminStack = delegatedAdminTestStacks.stacks.get(`Audit-us-east-1`)!;
 

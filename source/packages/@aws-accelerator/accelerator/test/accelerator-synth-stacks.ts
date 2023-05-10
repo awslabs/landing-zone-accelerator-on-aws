@@ -68,8 +68,8 @@ export class AcceleratorSynthStacks {
   private readonly globalRegion: string;
 
   public readonly stacks = new Map<string, AcceleratorStack | CustomStack | Stack>();
-  constructor(stageName: string, configFolderName: string, partition: string, globalRegion: string) {
-    this.configFolderName = configFolderName;
+  constructor(stageName: string, partition: string, globalRegion: string, configFolderName?: string) {
+    this.configFolderName = configFolderName ?? 'snapshot-only';
     this.partition = partition;
     this.stageName = stageName;
     this.globalRegion = globalRegion;

@@ -22,12 +22,7 @@ const testNamePrefix = 'Construct(OrganizationsStack): ';
 /**
  * OrganizationsStack
  */
-const acceleratorTestStacks = new AcceleratorSynthStacks(
-  AcceleratorStage.ORGANIZATIONS,
-  'all-enabled',
-  'aws',
-  'us-east-1',
-);
+const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.ORGANIZATIONS, 'aws', 'us-east-1');
 const stack = acceleratorTestStacks.stacks.get(`Management-us-east-1`)!;
 
 describe('OrganizationsStack', () => {
@@ -36,9 +31,9 @@ describe('OrganizationsStack', () => {
 
 const multiOuTestStacks = new AcceleratorSynthStacks(
   AcceleratorStage.ORGANIZATIONS,
-  'all-enabled-ou-targets',
   'aws',
   'us-east-1',
+  'all-enabled-ou-targets',
 );
 const multiOuStack = multiOuTestStacks.stacks.get(`Management-us-east-1`)!;
 
@@ -48,9 +43,9 @@ describe('MultiOuOrganizationsStack', () => {
 
 const delegatedAdminTestStacks = new AcceleratorSynthStacks(
   AcceleratorStage.ORGANIZATIONS,
-  'all-enabled-delegated-admin',
   'aws',
   'us-east-1',
+  'all-enabled-delegated-admin',
 );
 const delegatedAdminStack = delegatedAdminTestStacks.stacks.get(`Management-us-east-1`)!;
 

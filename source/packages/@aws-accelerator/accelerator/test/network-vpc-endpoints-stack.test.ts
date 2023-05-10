@@ -21,12 +21,7 @@ const testNamePrefix = 'Construct(NetworkVpcEndpointsStack): ';
 /**
  * NetworkVpcEndpointsStack
  */
-const acceleratorTestStacks = new AcceleratorSynthStacks(
-  AcceleratorStage.NETWORK_VPC_ENDPOINTS,
-  'all-enabled',
-  'aws',
-  'us-east-1',
-);
+const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.NETWORK_VPC_ENDPOINTS, 'aws', 'us-east-1');
 const stack = acceleratorTestStacks.stacks.get(`Network-us-east-1`)!;
 
 /**

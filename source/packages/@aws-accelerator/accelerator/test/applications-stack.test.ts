@@ -18,12 +18,7 @@ import { snapShotTest } from './snapshot-test';
 
 const testNamePrefix = 'Construct(ApplicationsStack): ';
 
-const acceleratorTestStacks = new AcceleratorSynthStacks(
-  AcceleratorStage.CUSTOMIZATIONS,
-  'all-enabled',
-  'aws',
-  'us-east-1',
-);
+const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.CUSTOMIZATIONS, 'aws', 'us-east-1');
 const stack = acceleratorTestStacks.stacks.get(`SharedServices-us-east-1`)!;
 
 describe('ApplicationsStack', () => {

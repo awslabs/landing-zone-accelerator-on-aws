@@ -71,7 +71,7 @@ describe('NetworkConfig', () => {
 
     it('loads from string', () => {
       const buffer = fs.readFileSync(
-        path.join('../accelerator/test/configs/all-enabled', NetworkConfig.FILENAME),
+        path.join('../accelerator/test/configs/snapshot-only', NetworkConfig.FILENAME),
         'utf8',
       );
       const networkConfigFromString = NetworkConfig.loadFromString(buffer);

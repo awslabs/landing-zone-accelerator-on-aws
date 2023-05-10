@@ -3394,6 +3394,90 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       },
       "Type": "AWS::Logs::MetricFilter",
     },
+    "GenericMetricFilterGreaterThanThresholdF3747C30": {
+      "Properties": {
+        "FilterPattern": "{$.eventType !="AwsServiceEvent"}",
+        "LogGroupName": "/generic/log/group",
+        "MetricTransformations": [
+          {
+            "MetricName": "GenericMetricForTestingGreaterThanThreshold",
+            "MetricNamespace": "LzaMetrics",
+            "MetricValue": "1",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::MetricFilter",
+    },
+    "GenericMetricFilterGreaterThanUpperThreshold6D5F12B4": {
+      "Properties": {
+        "FilterPattern": "{$.eventType !="AwsServiceEvent"}",
+        "LogGroupName": "/generic/log/group",
+        "MetricTransformations": [
+          {
+            "MetricName": "GenericMetricForTestingGreaterThanUpperThreshold",
+            "MetricNamespace": "LzaMetrics",
+            "MetricValue": "1",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::MetricFilter",
+    },
+    "GenericMetricFilterLessThanLowerOrGreaterThanUpperThreshold959D3A93": {
+      "Properties": {
+        "FilterPattern": "{$.eventType !="AwsServiceEvent"}",
+        "LogGroupName": "/generic/log/group",
+        "MetricTransformations": [
+          {
+            "MetricName": "GenericMetricForTestingLessThanLowerOrGreaterThanUpperThreshold",
+            "MetricNamespace": "LzaMetrics",
+            "MetricValue": "1",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::MetricFilter",
+    },
+    "GenericMetricFilterLessThanLowerThreshold9B1BB0AF": {
+      "Properties": {
+        "FilterPattern": "{$.eventType !="AwsServiceEvent"}",
+        "LogGroupName": "/generic/log/group",
+        "MetricTransformations": [
+          {
+            "MetricName": "GenericMetricForTestingLessThanLowerThreshold",
+            "MetricNamespace": "LzaMetrics",
+            "MetricValue": "1",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::MetricFilter",
+    },
+    "GenericMetricFilterLessThanOrEqualToThreshold9E926CBD": {
+      "Properties": {
+        "FilterPattern": "{$.eventType !="AwsServiceEvent"}",
+        "LogGroupName": "/generic/log/group",
+        "MetricTransformations": [
+          {
+            "MetricName": "GenericMetricForTestingLessThanOrEqualToThreshold",
+            "MetricNamespace": "LzaMetrics",
+            "MetricValue": "1",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::MetricFilter",
+    },
+    "GenericMetricFilterLessThanThreshold8E8F66A6": {
+      "Properties": {
+        "FilterPattern": "{$.eventType !="AwsServiceEvent"}",
+        "LogGroupName": "/generic/log/group",
+        "MetricTransformations": [
+          {
+            "MetricName": "GenericMetricForTestingLessThanThreshold",
+            "MetricNamespace": "LzaMetrics",
+            "MetricValue": "1",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::MetricFilter",
+    },
     "GenericMetricGreaterThanThresholdDCFEEABB": {
       "Properties": {
         "AlarmActions": [
@@ -3420,6 +3504,93 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         "Statistic": "Sum",
         "Threshold": 1,
         "TreatMissingData": "ignore",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "GenericMetricGreaterThanUpperThreshold72E3337B": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":sns:us-east-1:111111111111:aws-accelerator-Security",
+              ],
+            ],
+          },
+        ],
+        "AlarmDescription": "Alarm to test GenericMetric GreaterThanUpperThreshold",
+        "AlarmName": "GenericMetricGreaterThanUpperThreshold",
+        "ComparisonOperator": "GreaterThanUpperThreshold",
+        "EvaluationPeriods": 1,
+        "MetricName": "GenericMetricForTestingGreaterThanUpperThreshold",
+        "Namespace": "LzaMetrics",
+        "Period": 300,
+        "Statistic": "Sum",
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "GenericMetricLessThanLowerOrGreaterThanUpperThresholdAB2E321F": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":sns:us-east-1:111111111111:aws-accelerator-Security",
+              ],
+            ],
+          },
+        ],
+        "AlarmDescription": "Alarm to test GenericMetric LessThanLowerOrGreaterThanUpperThreshold",
+        "AlarmName": "GenericMetricLessThanLowerOrGreaterThanUpperThreshold",
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "EvaluationPeriods": 1,
+        "MetricName": "GenericMetricForTestingLessThanLowerOrGreaterThanUpperThreshold",
+        "Namespace": "LzaMetrics",
+        "Period": 300,
+        "Statistic": "Sum",
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "GenericMetricLessThanLowerThresholdC7D23608": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":sns:us-east-1:111111111111:aws-accelerator-Security",
+              ],
+            ],
+          },
+        ],
+        "AlarmDescription": "Alarm to test GenericMetric LessThanLowerThreshold",
+        "AlarmName": "GenericMetricLessThanLowerThreshold",
+        "ComparisonOperator": "LessThanLowerThreshold",
+        "EvaluationPeriods": 1,
+        "MetricName": "GenericMetricForTestingLessThanLowerThreshold",
+        "Namespace": "LzaMetrics",
+        "Period": 300,
+        "Statistic": "Sum",
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
       },
       "Type": "AWS::CloudWatch::Alarm",
     },
