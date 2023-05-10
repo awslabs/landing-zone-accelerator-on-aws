@@ -507,11 +507,24 @@ export class SecurityResourcesStack extends AcceleratorStack {
        */
       configRecorderRole.addToPrincipalPolicy(
         new cdk.aws_iam.PolicyStatement({
-          sid: 's3',
-          actions: ['s3:PutObject*', 's3:GetBucketACL'],
+          sid: 'S3WriteAccess',
+          actions: ['s3:PutObject', 's3:PutObjectAcl'],
+          resources: [
+            `arn:${this.props.partition}:s3:::${this.acceleratorResourceNames.bucketPrefixes.centralLogs}-${this.logArchiveAccountId}-${this.props.centralizedLoggingRegion}/*`,
+          ],
+          conditions: {
+            StringLike: {
+              's3:x-amz-acl': 'bucket-owner-full-control',
+            },
+          },
+        }),
+      );
+      configRecorderRole.addToPrincipalPolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'S3GetAclAccess',
+          actions: ['s3:GetBucketAcl'],
           resources: [
             `arn:${this.props.partition}:s3:::${this.acceleratorResourceNames.bucketPrefixes.centralLogs}-${this.logArchiveAccountId}-${this.props.centralizedLoggingRegion}`,
-            `arn:${this.props.partition}:s3:::${this.acceleratorResourceNames.bucketPrefixes.centralLogs}-${this.logArchiveAccountId}-${this.props.centralizedLoggingRegion}/*`,
           ],
         }),
       );
