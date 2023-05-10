@@ -1,0 +1,40 @@
+mandatoryAccounts:
+  - name: Management
+    description: The management (primary) account. Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
+    email: all-enabled-management-account@example.com
+    organizationalUnit: Root
+  - name: LogArchive
+    description: The log archive account. Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
+    email: all-enabled-logarchive-account@example.com
+    organizationalUnit: Security
+  - name: Audit
+    description: The security audit account (also referred to as the audit account). Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
+    email: all-enabled-audit-account@example.com
+    organizationalUnit: Security
+workloadAccounts:
+  - name: SharedServices
+    description: The SharedServices account
+    email: all-enabled-shared-services@example.com
+    organizationalUnit: Infrastructure
+  - name: Network
+    description: The Network account
+    email: all-enabled-network@example.com
+    organizationalUnit: Infrastructure
+  - name: GovCloudWorkloadAccount01
+    description: Sample govCloud workload account
+    email: all-enabled-govcloud-workload-account01@example.com
+    organizationalUnit: GovCloud
+    enableGovCloud: true
+accountIds:
+  - email: all-enabled-management-account@example.com
+    accountId: '111111111111'
+  - email: all-enabled-audit-account@example.com
+    accountId: '222222222222'
+  - email: all-enabled-logarchive-account@example.com
+    accountId: '333333333333'
+  - email: all-enabled-shared-services@example.com
+    accountId: '444444444444'
+  - email: all-enabled-network@example.com
+    accountId: '555555555555'
+  - email: all-enabled-govcloud-workload-account01@example.com
+    accountId: '666666666666'

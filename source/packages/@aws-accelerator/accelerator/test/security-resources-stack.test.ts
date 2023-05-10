@@ -21,12 +21,7 @@ const testNamePrefix = 'Construct(SecurityResourcesStack): ';
 /**
  * SecurityResourcesStack
  */
-const acceleratorTestStacks = new AcceleratorSynthStacks(
-  AcceleratorStage.SECURITY_RESOURCES,
-  'all-enabled',
-  'aws',
-  'us-east-1',
-);
+const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.SECURITY_RESOURCES, 'aws', 'us-east-1');
 const stack = acceleratorTestStacks.stacks.get(`Management-us-east-1`)!;
 
 describe('SecurityResourcesStack', () => {
@@ -35,9 +30,9 @@ describe('SecurityResourcesStack', () => {
 
 const delegatedAdminTestStacks = new AcceleratorSynthStacks(
   AcceleratorStage.SECURITY_RESOURCES,
-  'all-enabled-delegated-admin',
   'aws',
   'us-east-1',
+  'all-enabled-delegated-admin',
 );
 const delegatedAdminStack = delegatedAdminTestStacks.stacks.get(`Management-us-east-1`)!;
 
