@@ -1,4 +1,6 @@
-<!-- Provide a general summary of your changes in the Title above -->
+Development standards and best practices can be found in [DEVELOPING.md](https://github.com/awslabs/landing-zone-accelerator-on-aws/blob/main/DEVELOPING.md)
+
+Please complete all fields to ensure your submission is properly reviewed and prioritized.
 
 ## Description
 <!-- Describe how customers will benefit from this feature. -->
