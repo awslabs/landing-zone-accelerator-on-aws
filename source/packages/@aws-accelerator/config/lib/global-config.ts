@@ -220,6 +220,7 @@ export abstract class GlobalConfigTypes {
     backup: t.optional(GlobalConfigTypes.backupConfig),
     snsTopics: t.optional(GlobalConfigTypes.snsConfig),
     ssmInventory: t.optional(GlobalConfigTypes.ssmInventoryConfig),
+    tags: t.optional(t.array(t.tag)),
     limits: t.optional(t.array(this.serviceQuotaLimitsConfig)),
     acceleratorMetadata: t.optional(GlobalConfigTypes.acceleratorMetadataConfig),
   });
@@ -1494,6 +1495,23 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    *
    */
   readonly ssmInventory: SsmInventoryConfig | undefined = undefined;
+
+  /**
+   * Custom Tags for all Accelerator created resources that can be tagged.
+   *
+   * Custom Tags for all resources created by LZA that can be tagged.
+   * @example
+   * ```
+   * tags:
+   *   - key: Environment
+   *     value: Dev
+   *   - key: ResourceOwner
+   *     value: AcmeApp
+   *   - key: CostCenter
+   *     value: 123
+   * ```
+   **/
+  readonly tags: t.Tag[] = [];
 
   /**
    * Accelerator Metadata Configuration

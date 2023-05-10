@@ -148,7 +148,12 @@ export class AwsSolutionAspect implements cdk.IAspect {
 // 1. Some resources do not support tag updates
 // 2. Using Aspects for stacks that use the fs.writeFileSync() operation
 // causes the application to quit during stack synthesis
-function addAcceleratorTags(node: IConstruct, partition: string, acceleratorPrefix: string): void {
+function addAcceleratorTags(
+  node: IConstruct,
+  partition: string,
+  globalConfig: GlobalConfig,
+  acceleratorPrefix: string,
+): void {
   // Resource types that do not support tag updates
   const excludeResourceTypes = [
     'AWS::EC2::TransitGatewayRouteTable',
@@ -164,6 +169,12 @@ function addAcceleratorTags(node: IConstruct, partition: string, acceleratorPref
       }
       new cdk.Tag('Accel-P', acceleratorPrefix).visit(resource);
       new cdk.Tag('Accelerator', acceleratorPrefix).visit(resource);
+
+      if (globalConfig?.tags) {
+        globalConfig.tags.forEach(t => {
+          new cdk.Tag(t.key, t.value).visit(resource);
+        });
+      }
     }
   }
 }
@@ -484,7 +495,7 @@ async function main() {
           ...props,
         },
       );
-      addAcceleratorTags(prepareStack, partition, acceleratorPrefix);
+      addAcceleratorTags(prepareStack, partition, globalConfig, acceleratorPrefix);
       cdk.Aspects.of(prepareStack).add(new AwsSolutionsChecks());
     }
 
@@ -512,7 +523,7 @@ async function main() {
           ...props,
         },
       );
-      addAcceleratorTags(finalizeStack, partition, acceleratorPrefix);
+      addAcceleratorTags(finalizeStack, partition, globalConfig, acceleratorPrefix);
       cdk.Aspects.of(finalizeStack).add(new AwsSolutionsChecks());
     }
 
@@ -540,7 +551,7 @@ async function main() {
           ...props,
         },
       );
-      addAcceleratorTags(accountsStack, partition, acceleratorPrefix);
+      addAcceleratorTags(accountsStack, partition, globalConfig, acceleratorPrefix);
       cdk.Aspects.of(accountsStack).add(new AwsSolutionsChecks());
     }
 
@@ -569,7 +580,7 @@ async function main() {
             ...props,
           },
         );
-        addAcceleratorTags(organizationStack, partition, acceleratorPrefix);
+        addAcceleratorTags(organizationStack, partition, globalConfig, acceleratorPrefix);
         cdk.Aspects.of(organizationStack).add(new AwsSolutionsChecks());
       }
     }
@@ -603,7 +614,7 @@ async function main() {
             ...props,
           },
         );
-        addAcceleratorTags(auditStack, partition, acceleratorPrefix);
+        addAcceleratorTags(auditStack, partition, globalConfig, acceleratorPrefix);
         cdk.Aspects.of(auditStack).add(new AwsSolutionsChecks());
       }
     }
@@ -642,7 +653,7 @@ async function main() {
               ...props,
             },
           );
-          addAcceleratorTags(keyStack, partition, acceleratorPrefix);
+          addAcceleratorTags(keyStack, partition, globalConfig, acceleratorPrefix);
           cdk.Aspects.of(keyStack).add(new AwsSolutionsChecks());
 
           const dependencyStack = new DependenciesStack(
@@ -656,7 +667,7 @@ async function main() {
               ...props,
             },
           );
-          addAcceleratorTags(dependencyStack, partition, acceleratorPrefix);
+          addAcceleratorTags(dependencyStack, partition, globalConfig, acceleratorPrefix);
           cdk.Aspects.of(dependencyStack).add(new AwsSolutionsChecks());
         }
 
@@ -681,7 +692,7 @@ async function main() {
               ...props,
             },
           );
-          addAcceleratorTags(bootstrapStack, partition, acceleratorPrefix);
+          addAcceleratorTags(bootstrapStack, partition, globalConfig, acceleratorPrefix);
           cdk.Aspects.of(bootstrapStack).add(new AwsSolutionsChecks());
         }
 
@@ -706,7 +717,7 @@ async function main() {
               ...props,
             },
           );
-          addAcceleratorTags(loggingStack, partition, acceleratorPrefix);
+          addAcceleratorTags(loggingStack, partition, globalConfig, acceleratorPrefix);
           cdk.Aspects.of(loggingStack).add(new AwsSolutionsChecks());
         }
 
@@ -731,7 +742,7 @@ async function main() {
               ...props,
             },
           );
-          addAcceleratorTags(securityStack, partition, acceleratorPrefix);
+          addAcceleratorTags(securityStack, partition, globalConfig, acceleratorPrefix);
           cdk.Aspects.of(securityStack).add(new AwsSolutionsChecks());
         }
 
@@ -757,7 +768,7 @@ async function main() {
               accountWarming: accountItem.warm ?? false,
             },
           );
-          addAcceleratorTags(operationsStack, partition, acceleratorPrefix);
+          addAcceleratorTags(operationsStack, partition, globalConfig, acceleratorPrefix);
           cdk.Aspects.of(operationsStack).add(new AwsSolutionsChecks());
         }
 
@@ -782,7 +793,7 @@ async function main() {
               ...props,
             },
           );
-          addAcceleratorTags(networkPrepStack, partition, acceleratorPrefix);
+          addAcceleratorTags(networkPrepStack, partition, globalConfig, acceleratorPrefix);
           cdk.Aspects.of(networkPrepStack).add(new AwsSolutionsChecks());
         }
 
@@ -807,7 +818,7 @@ async function main() {
               ...props,
             },
           );
-          addAcceleratorTags(securityResourcesStack, partition, acceleratorPrefix);
+          addAcceleratorTags(securityResourcesStack, partition, globalConfig, acceleratorPrefix);
           cdk.Aspects.of(securityResourcesStack).add(new AwsSolutionsChecks());
         }
 
@@ -919,7 +930,7 @@ async function main() {
               ...props,
             },
           );
-          addAcceleratorTags(vpcStack, partition, acceleratorPrefix);
+          addAcceleratorTags(vpcStack, partition, globalConfig, acceleratorPrefix);
           cdk.Aspects.of(vpcStack).add(new AwsSolutionsChecks());
 
           const endpointsStack = new NetworkVpcEndpointsStack(
@@ -933,7 +944,7 @@ async function main() {
               ...props,
             },
           );
-          addAcceleratorTags(endpointsStack, partition, acceleratorPrefix);
+          addAcceleratorTags(endpointsStack, partition, globalConfig, acceleratorPrefix);
           endpointsStack.addDependency(vpcStack);
           cdk.Aspects.of(endpointsStack).add(new AwsSolutionsChecks());
 
@@ -948,7 +959,7 @@ async function main() {
               ...props,
             },
           );
-          addAcceleratorTags(dnsStack, partition, acceleratorPrefix);
+          addAcceleratorTags(dnsStack, partition, globalConfig, acceleratorPrefix);
           dnsStack.addDependency(endpointsStack);
           cdk.Aspects.of(dnsStack).add(new AwsSolutionsChecks());
         }
@@ -974,7 +985,7 @@ async function main() {
               ...props,
             },
           );
-          addAcceleratorTags(networkAssociationsStack, partition, acceleratorPrefix);
+          addAcceleratorTags(networkAssociationsStack, partition, globalConfig, acceleratorPrefix);
           cdk.Aspects.of(networkAssociationsStack).add(new AwsSolutionsChecks());
 
           const networkGwlbStack = new NetworkAssociationsGwlbStack(
@@ -988,7 +999,7 @@ async function main() {
               ...props,
             },
           );
-          addAcceleratorTags(networkGwlbStack, partition, acceleratorPrefix);
+          addAcceleratorTags(networkGwlbStack, partition, globalConfig, acceleratorPrefix);
           cdk.Aspects.of(networkGwlbStack).add(new AwsSolutionsChecks());
         }
       }
