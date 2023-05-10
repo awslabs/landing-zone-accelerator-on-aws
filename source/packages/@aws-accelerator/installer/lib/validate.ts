@@ -42,9 +42,7 @@ export class Validate extends Construct {
           const existingConfigRepositoryBranchName=event.ResourceProperties.existingConfigRepositoryBranchName;
 
           if (useExistingConfigRepo === 'Yes') {
-            console.log('Here - 1');
-            if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName ===''){
-                console.log('Here - 2');
+            if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName === ''){
                 await response.send(event, context, response.FAILED, {'FailureReason': 'UseExistingConfigRepo parameter set to Yes, but ExistingConfigRepositoryName or ExistingConfigRepositoryBranchName parameter value missing!!!'}, event.PhysicalResourceId);
                 return;
             }
