@@ -21,6 +21,7 @@ import { IamConfig, IamConfigTypes } from '../lib/iam-config';
 import { NetworkConfig } from '../lib/network-config';
 import { OrganizationConfig } from '../lib/organization-config';
 import { SecurityConfig } from '../lib/security-config';
+import { hasDuplicates } from './utils/common-validator-functions';
 
 type VpcSubnetListsType = {
   vpcName: string;
@@ -70,9 +71,13 @@ export class IamConfigValidator {
     // Start Validation
 
     //
-    // Validate policy file existence
+    // Validate IAM policies
     //
-    this.validatePolicyFileExists(configDir, values, errors);
+    this.validatePolicies(configDir, values, errors);
+    //
+    // Validate IAM roles
+    //
+    this.validateRoles(values, errors);
 
     // Validate target OU names
     this.validateDeploymentTargetOUs(values, ouIdNames, errors);
@@ -152,6 +157,23 @@ export class IamConfigValidator {
   }
 
   /**
+   * Validate IAM policies
+   * @param configDir
+   * @param values
+   * @param errors
+   */
+  private validatePolicies(configDir: string, values: IamConfig, errors: string[]) {
+    //
+    // Validate policy file existence
+    //
+    this.validatePolicyFileExists(configDir, values, errors);
+    //
+    // Validate policy names
+    //
+    this.validatePolicyNames(values, errors);
+  }
+
+  /**
    * Validate policy file existence
    * @param configDir
    * @param values
@@ -177,6 +199,58 @@ export class IamConfigValidator {
   }
 
   /**
+   * Checks policy names for duplicate values
+   * @param values
+   * @param errors
+   */
+  private validatePolicyNames(values: IamConfig, errors: string[]) {
+    const policyNames: string[] = [];
+
+    values.policySets?.forEach(policySet => {
+      policySet.policies?.forEach(policy => {
+        policyNames.push(policy.name);
+      });
+    });
+
+    // Check names for duplicates
+    if (hasDuplicates(policyNames)) {
+      errors.push(`Duplicate policy names defined. Policy names must be unique. Policy names defined: ${policyNames}`);
+    }
+  }
+
+  /**
+   * Validate IAM roles
+   * @param values
+   * @param errors
+   */
+  private validateRoles(values: IamConfig, errors: string[]) {
+    //
+    // Validate role names
+    //
+    this.validateRoleNames(values, errors);
+  }
+
+  /**
+   * Checks role names for duplicate values
+   * @param values
+   * @param errors
+   */
+  private validateRoleNames(values: IamConfig, errors: string[]) {
+    const roleNames: string[] = [];
+
+    values.roleSets?.forEach(roleSet => {
+      roleSet.roles?.forEach(role => {
+        roleNames.push(role.name);
+      });
+    });
+
+    // Check names for duplicates
+    if (hasDuplicates(roleNames)) {
+      errors.push(`Duplicate role names defined. Role names must be unique. Role names defined: ${roleNames}`);
+    }
+  }
+
+  /**
    * Function to validate PermissionSet and Assignment names are unique
    * @param values
    */
@@ -188,11 +262,11 @@ export class IamConfigValidator {
     const assignmentNames = [...(identityCenter?.identityCenterAssignments ?? [])].map(item => item.name);
     const permissionSetNames = [...(identityCenter?.identityCenterPermissionSets ?? [])].map(item => item.name);
 
-    if (new Set(assignmentNames).size !== assignmentNames.length) {
+    if (hasDuplicates(assignmentNames)) {
       errors.push(`Duplicate Identity Center Assignment names defined [${assignmentNames}].`);
     }
 
-    if (new Set(permissionSetNames).size !== permissionSetNames.length) {
+    if (hasDuplicates(permissionSetNames)) {
       errors.push(`Duplicate Identity Center Permission Set names defined [${permissionSetNames}].`);
     }
   }
