@@ -154,43 +154,43 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
             }
           }
         }
+      }
 
-        //
-        // Create Route 53 Resolver Endpoints
-        //
-        if (props.networkConfig.centralNetworkServices?.route53Resolver?.endpoints) {
-          const delegatedAdminAccountId = this.props.accountsConfig.getAccountId(
-            props.networkConfig.centralNetworkServices.delegatedAdminAccount,
-          );
-          const endpoints = props.networkConfig.centralNetworkServices?.route53Resolver?.endpoints;
+      //
+      // Create Route 53 Resolver Endpoints
+      //
+      if (props.networkConfig.centralNetworkServices?.route53Resolver?.endpoints) {
+        const delegatedAdminAccountId = this.props.accountsConfig.getAccountId(
+          props.networkConfig.centralNetworkServices.delegatedAdminAccount,
+        );
+        const endpoints = props.networkConfig.centralNetworkServices?.route53Resolver?.endpoints;
 
-          // Check if the VPC has matching subnets
-          for (const endpointItem of endpoints) {
-            if (vpcItem.name === endpointItem.vpc) {
-              const endpointSubnets: string[] = [];
+        // Check if the VPC has matching subnets
+        for (const endpointItem of endpoints) {
+          if (vpcItem.name === endpointItem.vpc) {
+            const endpointSubnets: string[] = [];
 
-              // Check if this is the delegated admin account
-              if (cdk.Stack.of(this).account !== delegatedAdminAccountId) {
-                this.logger.error(
-                  'VPC for Route 53 Resolver endpoints must be located in the delegated network administrator account',
-                );
+            // Check if this is the delegated admin account
+            if (cdk.Stack.of(this).account !== delegatedAdminAccountId) {
+              this.logger.error(
+                'VPC for Route 53 Resolver endpoints must be located in the delegated network administrator account',
+              );
+              throw new Error(`Configuration validation failed at runtime.`);
+            }
+
+            for (const subnetItem of endpointItem.subnets) {
+              const subnetKey = `${vpcItem.name}_${subnetItem}`;
+              const subnetId = subnetMap.get(subnetKey);
+              if (subnetId) {
+                endpointSubnets.push(subnetId);
+              } else {
+                this.logger.error(`Create Route 53 Resolver endpoint: subnet not found in VPC ${vpcItem.name}`);
                 throw new Error(`Configuration validation failed at runtime.`);
               }
-
-              for (const subnetItem of endpointItem.subnets) {
-                const subnetKey = `${vpcItem.name}_${subnetItem}`;
-                const subnetId = subnetMap.get(subnetKey);
-                if (subnetId) {
-                  endpointSubnets.push(subnetId);
-                } else {
-                  this.logger.error(`Create Route 53 Resolver endpoint: subnet not found in VPC ${vpcItem.name}`);
-                  throw new Error(`Configuration validation failed at runtime.`);
-                }
-              }
-              // Create endpoint
-              if (endpointSubnets.length > 0) {
-                this.createResolverEndpoint(endpointItem, vpcId, endpointSubnets);
-              }
+            }
+            // Create endpoint
+            if (endpointSubnets.length > 0) {
+              this.createResolverEndpoint(endpointItem, vpcId, endpointSubnets);
             }
           }
         }
