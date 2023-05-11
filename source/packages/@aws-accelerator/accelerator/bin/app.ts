@@ -134,6 +134,19 @@ export class CnOverrides implements cdk.IAspect {
   }
 }
 
+export class LambdaDefaultMemoryAspect implements cdk.IAspect {
+  visit(node: IConstruct): void {
+    if (node instanceof cdk.CfnResource) {
+      if (node.cfnResourceType === 'AWS::Lambda::Function') {
+        const memorySize = (node as cdk.aws_lambda.CfnFunction).memorySize;
+        if (!memorySize || memorySize < 256) {
+          node.addPropertyOverride('MemorySize', 256);
+        }
+      }
+    }
+  }
+}
+
 export class AwsSolutionAspect implements cdk.IAspect {
   visit(node: IConstruct): void {
     if (node instanceof cdk.CfnResource) {
@@ -238,6 +251,7 @@ async function main() {
   }
 
   cdk.Aspects.of(app).add(new AwsSolutionAspect());
+  cdk.Aspects.of(app).add(new LambdaDefaultMemoryAspect());
 
   const includeStage = (props: { stage: string; account: string; region: string }): boolean => {
     if (stage === undefined) {
