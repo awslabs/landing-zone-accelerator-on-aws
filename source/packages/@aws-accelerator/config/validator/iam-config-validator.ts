@@ -26,7 +26,7 @@ import { hasDuplicates } from './utils/common-validator-functions';
 type VpcSubnetListsType = {
   vpcName: string;
   subnetName: string;
-  subnetAz: string;
+  subnetAz: string | number;
 };
 
 /**
@@ -721,7 +721,7 @@ class ManagedActiveDirectoryValidator {
    */
   private validateMadVpcSettings(
     values: t.TypeOf<typeof IamConfigTypes.iamConfig>,
-    vpcSubnetLists: { vpcName: string; subnetName: string; subnetAz: string }[],
+    vpcSubnetLists: { vpcName: string; subnetName: string; subnetAz: string | number }[],
     errors: string[],
   ) {
     for (const managedActiveDirectory of values.managedActiveDirectories ?? []) {
@@ -734,7 +734,7 @@ class ManagedActiveDirectoryValidator {
         const madSubnets: {
           vpcName: string;
           subnetName: string;
-          subnetAz: string;
+          subnetAz: string | number;
         }[] = [];
 
         if (managedActiveDirectory.vpcSettings.subnets.length < 2) {
@@ -759,7 +759,7 @@ class ManagedActiveDirectoryValidator {
           }
 
           // now check subnets are of different availability zones
-          const madSubnetAzs: string[] = [];
+          const madSubnetAzs: (string | number)[] = [];
           for (const madSubnetName of madSubnets) {
             madSubnetAzs.push(madSubnetName.subnetAz);
           }
