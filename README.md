@@ -82,14 +82,13 @@ The latest version of our configuration reference is hosted here: https://awslab
 Direct links to specific service configuration references are included in the following sections.
 
 **Documentation for previous minor releases:**
+* *v1.3.0* - https://awslabs.github.io/landing-zone-accelerator-on-aws/v1.3.0
+* *v1.2.0* - https://awslabs.github.io/landing-zone-accelerator-on-aws/v1.2.0
+* *v1.1.0* - https://awslabs.github.io/landing-zone-accelerator-on-aws/v1.1.0
+* *v1.0.0* - https://awslabs.github.io/landing-zone-accelerator-on-aws/v1.0.0
 
-- _v1.3.0_ - https://awslabs.github.io/landing-zone-accelerator-on-aws/v1.3.0
-- _v1.2.0_ - https://awslabs.github.io/landing-zone-accelerator-on-aws/v1.2.0
-- _v1.1.0_ - https://awslabs.github.io/landing-zone-accelerator-on-aws/v1.1.0
-- _v1.0.0_ - https://awslabs.github.io/landing-zone-accelerator-on-aws/v1.0.0
-
-> NOTE: You can navigate to patch release versions of the solution's configuration reference by modifying the version number of
-> the URL. For example, to navigate to v1.3.2 documentation, you can use
+> NOTE: You can navigate to patch release versions of the solution's configuration reference by modifying the version number of 
+> the URL. For example, to navigate to v1.3.2 documentation, you can use 
 > https://awslabs.github.io/landing-zone-accelerator-on-aws/v1.3.2.
 
 ### Account Configuration
@@ -116,7 +115,7 @@ Used to manage all of the global properties that can be inherited across the AWS
 | Amazon S3                           | Lifecycle Rules                       | [GlobalConfig](https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.GlobalConfig.html) / [LoggingConfig](https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.LoggingConfig.html) | [AccessLogBucketConfig](https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.AccessLogBucketConfig.html) / [CentralLogBucketConfig](https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.CentralLogBucketConfig.html) | Define global lifecycle rules for S3 access log buckets and the central log bucket deployed by the accelerator.                                                                                                                                                   |
 | AWS Systems Manager Session Manager | Session Manager logging configuration | [GlobalConfig](https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.GlobalConfig.html) / [LoggingConfig](https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.LoggingConfig.html) | [SessionManagerConfig](https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.SessionManagerConfig.html)                                                                                                                                                     | Define global logging configuration settings for Session Manager.                                                                                                                                                                                                 |
 | AWS SNS Topics                      | SNS Topics Configuration              | [GlobalConfig](https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.GlobalConfig.html)                                                                                                                                 | [SnsTopicConfig](https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.SnsTopicConfig.html)                                                                                                                                                                 | Define SNS topics for notifications.                                                                                                                                                                                                                              |
-| AWS Tags                      | Tags Configuration              | [GlobalConfig](https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.GlobalConfig.html)                                                                                                                                 |                                                                                                                                                                  | Define tags to apply to LZA created resources.                                                                                                                                                                                                                              |
+| AWS Tags                            | Tags Configuration                    | [GlobalConfig](https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.GlobalConfig.html)                                                                                                                                 |                                                                                                                                                                                                                                                                                                 | Define tags to apply to LZA created resources.                                                                                                                                                                                                                    |
 
 ### Identity and Access Management (IAM) Configuration
 
