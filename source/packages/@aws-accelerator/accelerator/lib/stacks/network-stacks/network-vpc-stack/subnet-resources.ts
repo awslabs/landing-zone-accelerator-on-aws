@@ -17,7 +17,7 @@ import { SsmResourceType } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'pascal-case';
 import { LogLevel } from '../network-stack';
-import { getRouteTable, getSubnet, getVpc } from '../utils/getter-utils';
+import { getRouteTable, getSubnet, getVpc, getAvailabilityZoneMap } from '../utils/getter-utils';
 import { NetworkVpcStack } from './network-vpc-stack';
 
 export class SubnetResources {
@@ -133,9 +133,11 @@ export class SubnetResources {
    */
   private setAvailabilityZone(subnetItem: SubnetConfig, outpost?: OutpostsConfig) {
     let availabilityZone: string | undefined = undefined;
-
-    if (subnetItem.availabilityZone) {
+    const availabilityZoneId = getAvailabilityZoneMap(cdk.Stack.of(this.stack).region);
+    if (typeof subnetItem.availabilityZone === 'string') {
       availabilityZone = `${cdk.Stack.of(this.stack).region}${subnetItem.availabilityZone}`;
+    } else if (typeof subnetItem.availabilityZone === 'number') {
+      availabilityZone = availabilityZoneId?.concat(subnetItem.availabilityZone.toString());
     } else if (outpost?.availabilityZone) {
       availabilityZone = outpost.availabilityZone;
     }
@@ -170,9 +172,18 @@ export class SubnetResources {
     outpost?: OutpostsConfig,
   ): Subnet {
     this.stack.addLogs(LogLevel.INFO, `Adding subnet ${subnetItem.name} to VPC ${vpcItem.name}`);
+    let isAvailabilityZoneId: boolean;
+    let availabilityZoneId: string | undefined;
+    if (availabilityZone.includes(cdk.Stack.of(this.stack).region)) {
+      isAvailabilityZoneId = false;
+    } else {
+      isAvailabilityZoneId = true;
+      availabilityZoneId = availabilityZone;
+    }
     const subnet = new Subnet(this.stack, pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${subnetItem.name}Subnet`), {
       name: subnetItem.name,
-      availabilityZone,
+      availabilityZone: isAvailabilityZoneId === false ? availabilityZone : undefined,
+      availabilityZoneId: isAvailabilityZoneId === true ? availabilityZoneId : undefined,
       basePool,
       ipamAllocation: subnetItem.ipamAllocation,
       ipv4CidrBlock: subnetItem.ipv4CidrBlock,

@@ -49,12 +49,20 @@ export interface ISubnet extends cdk.IResource {
    *
    * @attribute
    */
-  readonly availabilityZone: string;
+  readonly availabilityZone?: string;
+
+  /**
+   * The Physical Availability Zone ID the subnet is located in
+   *
+   * @attribute
+   */
+  readonly availabilityZoneId?: string;
 }
 
 export interface SubnetProps {
   readonly name: string;
-  readonly availabilityZone: string;
+  readonly availabilityZone?: string;
+  readonly availabilityZoneId?: string;
   readonly mapPublicIpOnLaunch?: boolean;
   readonly routeTable: IRouteTable;
   readonly vpc: IVpc;
@@ -65,12 +73,12 @@ export interface SubnetProps {
   readonly logRetentionInDays?: number;
   readonly tags?: cdk.CfnTag[];
   readonly outpost?: OutpostsConfig;
-  // readonly nacl: INacl;
 }
 
 export class Subnet extends cdk.Resource implements ISubnet {
   public readonly subnetName: string;
-  public readonly availabilityZone: string;
+  public readonly availabilityZone?: string;
+  public readonly availabilityZoneId?: string;
   public readonly ipv4CidrBlock: string;
   public readonly mapPublicIpOnLaunch?: boolean;
   public readonly routeTable: IRouteTable;
@@ -83,9 +91,11 @@ export class Subnet extends cdk.Resource implements ISubnet {
 
     this.subnetName = props.name;
     this.availabilityZone = props.availabilityZone;
+    this.availabilityZoneId = props.availabilityZoneId;
     this.mapPublicIpOnLaunch = props.mapPublicIpOnLaunch;
     this.routeTable = props.routeTable;
     this.outpostArn = props.outpost?.arn;
+
     // Determine if IPAM subnet or native
     let resource: cdk.aws_ec2.CfnSubnet | IpamSubnet;
 
@@ -96,6 +106,7 @@ export class Subnet extends cdk.Resource implements ISubnet {
         vpcId: props.vpc.vpcId,
         cidrBlock: props.ipv4CidrBlock,
         availabilityZone: props.availabilityZone,
+        availabilityZoneId: props.availabilityZoneId,
         mapPublicIpOnLaunch: props.mapPublicIpOnLaunch,
         tags: props.tags,
         outpostArn: props.outpost?.arn,
@@ -134,6 +145,7 @@ export class Subnet extends cdk.Resource implements ISubnet {
       resource = new IpamSubnet(this, 'Resource', {
         name: props.name,
         availabilityZone: props.availabilityZone,
+        availabilityZoneId: props.availabilityZoneId,
         basePool: props.basePool,
         ipamAllocation: props.ipamAllocation,
         vpcId: props.vpc.vpcId,

@@ -838,7 +838,7 @@ export class VpcValidator {
     }
 
     // Validate subnets
-    const azs: string[] = [];
+    const azs: (string | number)[] = [];
     vpcItem.interfaceEndpoints?.subnets.forEach(subnetName => {
       const subnet = helpers.getSubnet(vpcItem, subnetName);
       if (!subnet) {
@@ -1961,6 +1961,8 @@ export class VpcValidator {
     this.validateSubnetCidrs(vpcItem, helpers, errors);
     // Validate subnet route table
     this.validateSubnetRouteTables(vpcItem, errors);
+    // Validate subnet availability zones
+    this.validateSubnetAvailabilityZones(vpcItem, helpers, errors);
   }
 
   /**
@@ -2047,6 +2049,7 @@ export class VpcValidator {
   /**
    * Validate subnet route table associations
    * @param vpcItem
+   * @param helpers
    * @param errors
    */
   private validateSubnetRouteTables(vpcItem: VpcConfig | VpcTemplatesConfig, errors: string[]) {
@@ -2058,6 +2061,35 @@ export class VpcValidator {
         errors.push(
           `[VPC ${vpcItem.name} subnet ${subnet.name}]: route table "${subnet.routeTable}" does not exist in the VPC`,
         );
+      }
+    });
+  }
+
+  /**
+   * Validate subnet availability zones
+   * @param vpcItem
+   * @param helps
+   * @param errors
+   */
+  private validateSubnetAvailabilityZones(
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+  ) {
+    vpcItem.subnets?.forEach(subnet => {
+      if (typeof subnet.availabilityZone === 'string') {
+        if (!helpers.matchesRegex(subnet.availabilityZone, '^[a-z]{1}$')) {
+          errors.push(
+            `[VPC ${vpcItem.name} subnet ${subnet.name}]: Uses an incorrect value for ${subnet.availabilityZone} as the availabilityZone. Please use a single lowercase letter.`,
+          );
+        }
+      }
+      if (typeof subnet.availabilityZone === 'number') {
+        if (!helpers.matchesRegex(subnet.availabilityZone.toString(), '^[0-9]{1}$')) {
+          errors.push(
+            `[VPC ${vpcItem.name} subnet ${subnet.name}]: Uses an incorrect value for ${subnet.availabilityZone} as the availabilityZone. Please use a single number.`,
+          );
+        }
       }
     });
   }
@@ -2201,7 +2233,7 @@ export class VpcValidator {
     helpers: NetworkValidatorFunctions,
     errors: string[],
   ) {
-    const subnetAzs: string[] = [];
+    const subnetAzs: (string | number)[] = [];
     const subnetNames: string[] = [];
 
     attach.subnets.forEach(subnetName => {

@@ -43,7 +43,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   }
 
   // Set properties
-  const az: string = event.ResourceProperties['availabilityZone'];
+  const az: string | undefined = event.ResourceProperties['availabilityZone'];
+  const azId: string | undefined = event.ResourceProperties['availabilityZoneId'];
   const basePool: string[] = event.ResourceProperties['basePool'];
   const ipamAllocation: IpamAllocation = event.ResourceProperties['ipamAllocation'];
   let mapPublicIpOnLaunch: boolean | undefined = event.ResourceProperties['mapPublicIpOnLaunch'] ?? false;
@@ -84,6 +85,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
           .createSubnet({
             TagSpecifications: [{ ResourceType: 'subnet', Tags: tags }],
             AvailabilityZone: az,
+            AvailabilityZoneId: azId,
             CidrBlock: subnetCidr,
             VpcId: vpc.vpcId,
             OutpostArn: outpostArn,

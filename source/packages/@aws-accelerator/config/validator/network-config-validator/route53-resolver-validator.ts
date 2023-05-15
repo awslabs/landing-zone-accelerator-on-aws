@@ -551,7 +551,7 @@ export class Route53ResolverValidator {
 
     // Validate there are no duplicate subnets or AZs
     const subnetNames: string[] = [];
-    const subnetAzs: string[] = [];
+    const subnetAzs: (string | number)[] = [];
     subnets.forEach(subnetItem => {
       subnetNames.push(subnetItem.name);
       subnetAzs.push(subnetItem.availabilityZone ? subnetItem.availabilityZone : '');

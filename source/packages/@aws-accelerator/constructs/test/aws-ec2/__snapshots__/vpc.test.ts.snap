@@ -3,6 +3,96 @@
 exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
 {
   "Resources": {
+    "CustomDeleteDefaultSecurityGroupRulesCustomResourceProviderHandler0579558F": {
+      "DependsOn": [
+        "CustomDeleteDefaultSecurityGroupRulesCustomResourceProviderRole7BAE247B",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomDeleteDefaultSecurityGroupRulesCustomResourceProviderRole7BAE247B",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomDeleteDefaultSecurityGroupRulesCustomResourceProviderLogGroup36ABE46B": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "testKmsTestDeleteDefaultSgRules7B9FDE55",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomDeleteDefaultSecurityGroupRulesCustomResourceProviderHandler0579558F",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 7,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomDeleteDefaultSecurityGroupRulesCustomResourceProviderRole7BAE247B": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ec2:DescribeSecurityGroups",
+                    "ec2:RevokeSecurityGroupIngress",
+                    "ec2:RevokeSecurityGroupEgress",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
     "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A": {
       "DependsOn": [
         "CustomIpamSubnetCustomResourceProviderRoleA2FF4E6D",
@@ -167,6 +257,24 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
         ],
       },
       "Type": "AWS::IAM::Role",
+    },
+    "TestDeleteDefaultSgRules8A6777C7": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomDeleteDefaultSecurityGroupRulesCustomResourceProviderLogGroup36ABE46B",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomDeleteDefaultSecurityGroupRulesCustomResourceProviderHandler0579558F",
+            "Arn",
+          ],
+        },
+        "uuid": "REPLACED-UUID",
+        "vpcId": "someVpcId",
+      },
+      "Type": "Custom::DeleteDefaultSecurityGroupRules",
+      "UpdateReplacePolicy": "Delete",
     },
     "TestVpcCloudWatchFlowLogD5309822": {
       "Properties": {
@@ -472,7 +580,112 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
       },
       "Type": "AWS::EC2::Subnet",
     },
+    "testKms1A8429BFF": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "testKms25B759B9A": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
     "testKms8D3EA89B": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "testKmsTestDeleteDefaultSgRules7B9FDE55": {
       "DeletionPolicy": "Retain",
       "Properties": {
         "KeyPolicy": {
@@ -530,7 +743,7 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
-        "availabilityZone": "a",
+        "availabilityZone": "b",
         "basePool": [
           "myBasePool",
         ],
@@ -547,6 +760,46 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
       "Type": "Custom::IpamSubnet",
       "UpdateReplacePolicy": "Delete",
     },
+    "testSubnetIpamPhysicalAz1F5518C4E": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
+            "Arn",
+          ],
+        },
+        "availabilityZoneId": "1",
+        "basePool": [
+          "myBasePool",
+        ],
+        "ipamAllocation": {
+          "ipamPoolName": "test",
+          "netmaskLength": 24,
+        },
+        "name": "testSubnetPhysicalAz1",
+        "tags": [],
+        "vpcId": {
+          "Ref": "TestVpcE77CE678",
+        },
+      },
+      "Type": "Custom::IpamSubnet",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "testSubnetIpamPhysicalAz1RouteTableAssociationFEC58856": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "testrtEA36A15F",
+        },
+        "SubnetId": {
+          "Ref": "testSubnetIpamPhysicalAz1F5518C4E",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
     "testSubnetIpamRouteTableAssociation3C411F29": {
       "Properties": {
         "RouteTableId": {
@@ -554,6 +807,46 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
         },
         "SubnetId": {
           "Ref": "testSubnetIpamB3252329",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "testSubnetPhysicalAz2E088113B": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
+            "Arn",
+          ],
+        },
+        "availabilityZoneId": "2",
+        "basePool": [
+          "myBasePool",
+        ],
+        "ipamAllocation": {
+          "ipamPoolName": "test",
+          "netmaskLength": 24,
+        },
+        "name": "testSubnetPhysicalAz2",
+        "tags": [],
+        "vpcId": {
+          "Ref": "TestVpcE77CE678",
+        },
+      },
+      "Type": "Custom::IpamSubnet",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "testSubnetPhysicalAz2RouteTableAssociation3FE5D9C7": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "testrtEA36A15F",
+        },
+        "SubnetId": {
+          "Ref": "testSubnetPhysicalAz2E088113B",
         },
       },
       "Type": "AWS::EC2::SubnetRouteTableAssociation",

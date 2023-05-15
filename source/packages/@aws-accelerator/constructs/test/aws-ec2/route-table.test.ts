@@ -45,6 +45,7 @@ const subnet = new Subnet(stack, 'test-subnet', {
   routeTable: rt,
   vpc,
   availabilityZone: 'a',
+  availabilityZoneId: undefined,
   ipv4CidrBlock: '10.0.2.0/24',
 });
 

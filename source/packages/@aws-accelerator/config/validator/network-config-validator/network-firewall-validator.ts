@@ -1334,7 +1334,7 @@ export class NetworkFirewallValidator {
       });
 
       // Validate there are no duplicate subnet AZs/names
-      const azs: string[] = [];
+      const azs: (string | number)[] = [];
       const subnetNames: string[] = [];
       subnets.forEach(item => {
         azs.push(item.availabilityZone ? item.availabilityZone : '');

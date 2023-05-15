@@ -230,7 +230,7 @@ export class NetworkConfigTypes {
 
   static readonly subnetConfig = t.interface({
     name: t.nonEmptyString,
-    availabilityZone: t.optional(t.nonEmptyString),
+    availabilityZone: t.optional(t.union([t.nonEmptyString, t.number])),
     routeTable: t.nonEmptyString,
     ipv4CidrBlock: t.optional(t.nonEmptyString),
     mapPublicIpOnLaunch: t.optional(t.boolean),
@@ -2224,6 +2224,14 @@ export class RouteTableConfig implements t.TypeOf<typeof NetworkConfigTypes.rout
  *   ipv4CidrBlock: 10.0.0.0/26
  *   tags: []
  * ```
+ * Using the Physical ID for an Availibility Zone
+ * ```
+ * - name: accelerator-cidr-subnet-a
+ *   availabilityZone: 1
+ *   routeTable: accelerator-cidr-subnet-a
+ *   ipv4CidrBlock: 10.0.0.0/26
+ *   tags: []
+ * ```
  * IPAM allocation:
  * ```
  * - name: accelerator-ipam-subnet-a
@@ -2251,10 +2259,12 @@ export class SubnetConfig implements t.TypeOf<typeof NetworkConfigTypes.subnetCo
    * **CAUTION**: changing this property after initial deployment will cause a subnet recreation.
    * Please be aware that any downstream dependencies may cause this property update to fail.
    *
-   * Include only the letter of the AZ name (i.e. 'a' for 'us-east-1a').
-   * Note: Not needed if providing an outpost, otherwise required.
+   * Include only the letter of the AZ name (i.e. 'a' for 'us-east-1a') to have the subnet created in a specific AZ. Use an integer
+   * (i.e. 1) for a physical mapping ID to an AZ. Please reference the documentation {@link https://docs.aws.amazon.com/ram/latest/userguide/working-with-az-ids.html }
+   * for more information.
    */
-  readonly availabilityZone: string | undefined = undefined;
+  readonly availabilityZone: string | number | undefined = undefined;
+
   /**
    * The friendly name of the route table to associate with the subnet.
    */

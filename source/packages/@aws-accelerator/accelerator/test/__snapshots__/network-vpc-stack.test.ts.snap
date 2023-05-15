@@ -2989,7 +2989,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
-        "availabilityZone": "us-east-1a",
+        "availabilityZoneId": "use1-az1",
         "basePool": [
           "10.0.0.0/24",
           "10.2.0.0/24",
@@ -3050,7 +3050,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
-        "availabilityZone": "us-east-1b",
+        "availabilityZoneId": "use1-az2",
         "basePool": [
           "10.0.0.0/24",
           "10.2.0.0/24",
@@ -4052,7 +4052,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "appAalb01NetworkEndpointsssmF399A7CC": {
       "DependsOn": [
-        "SsmParamNetworkEndpointsTestNaclNaclED9584AC",
+        "SsmParamAcceleratorGwlbGwlbServiceIdF93A23BF",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/alb/appA-alb-01/id",
@@ -4115,7 +4115,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "appAnlb01NetworkEndpointsssm0DA0AE1E": {
       "DependsOn": [
-        "SsmParamNetworkEndpointsTestNaclNaclED9584AC",
+        "SsmParamAcceleratorGwlbGwlbServiceIdF93A23BF",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/nlb/appA-nlb-01/id",
