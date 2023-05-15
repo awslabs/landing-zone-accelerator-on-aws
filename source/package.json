@@ -44,6 +44,7 @@
     "test": "lerna run test --stream",
     "test:clean": "rm -f ./test-reports/*.xml",
     "docs": "yarn run typedoc --entryPointStrategy packages './packages/@aws-accelerator/*' './packages/@aws-cdk-extensions/*' --name 'Landing Zone Accelerator on AWS' --includeVersion --disableSources --logLevel Verbose",
+    "generate-all-docs": "../deployment/build-docs.sh",
     "viper-scan": "cd .. && aws s3 cp s3://viperlight-scanner/latest/viperlight.zip . && unzip -qo viperlight.zip -d ../viperlight && rm -r ./viperlight.zip && ../viperlight/bin/viperlight scan",
     "prepare": "cd ../ && husky install source/.husky",
     "postinstall": "cd ../ && husky install source/.husky && cd source",

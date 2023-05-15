@@ -88,6 +88,7 @@ Several helper scripts are built into the project that support performing common
  - `yarn cleanup` - removes compiled TypeScript code, Node modules, and other build artifacts from the local repo
  - `yarn cleanup:tsc` - removes only compiled TypeScript code
  - `yarn docs` - generate TypeDocs
+ - `yarn generate-all-docs` - generate TypeDocs for all versions of the solution (only available in **./source** directory)
  - `yarn install` - install package dependencies
  - `yarn lint` - run ESLint
  - `yarn prettier` - run Prettier
