@@ -2748,7 +2748,35 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           },
           "CompressionFormat": "UNCOMPRESSED",
           "DataFormatConversionConfiguration": {
-            "Enabled": false,
+            "Enabled": true,
+            "InputFormatConfiguration": {
+              "Deserializer": {
+                "OpenXJsonSerDe": {
+                  "CaseInsensitive": true,
+                },
+              },
+            },
+            "OutputFormatConfiguration": {
+              "Serializer": {
+                "ParquetSerDe": {
+                  "Compression": "UNCOMPRESSED",
+                },
+              },
+            },
+            "SchemaConfiguration": {
+              "DatabaseName": {
+                "Ref": "FirehoseToS3SetupFirehoseCloudWatchDb3683542E",
+              },
+              "RoleARN": {
+                "Fn::GetAtt": [
+                  "FirehoseToS3SetupFirehoseS3ServiceRole1E95E56A",
+                  "Arn",
+                ],
+              },
+              "TableName": {
+                "Ref": "FirehoseToS3SetupFirehoseCloudWatchTable07CBDE10",
+              },
+            },
           },
           "DynamicPartitioningConfiguration": {
             "Enabled": true,
@@ -6193,7 +6221,35 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
           },
           "CompressionFormat": "UNCOMPRESSED",
           "DataFormatConversionConfiguration": {
-            "Enabled": false,
+            "Enabled": true,
+            "InputFormatConfiguration": {
+              "Deserializer": {
+                "OpenXJsonSerDe": {
+                  "CaseInsensitive": true,
+                },
+              },
+            },
+            "OutputFormatConfiguration": {
+              "Serializer": {
+                "ParquetSerDe": {
+                  "Compression": "UNCOMPRESSED",
+                },
+              },
+            },
+            "SchemaConfiguration": {
+              "DatabaseName": {
+                "Ref": "FirehoseToS3SetupFirehoseCloudWatchDb3683542E",
+              },
+              "RoleARN": {
+                "Fn::GetAtt": [
+                  "FirehoseToS3SetupFirehoseS3ServiceRole1E95E56A",
+                  "Arn",
+                ],
+              },
+              "TableName": {
+                "Ref": "FirehoseToS3SetupFirehoseCloudWatchTable07CBDE10",
+              },
+            },
           },
           "DynamicPartitioningConfiguration": {
             "Enabled": true,

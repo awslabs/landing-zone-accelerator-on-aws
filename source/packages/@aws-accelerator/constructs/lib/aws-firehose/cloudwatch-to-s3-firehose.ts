@@ -256,6 +256,28 @@ export class CloudWatchToS3Firehose extends Construct {
             },
           ],
         },
+        dataFormatConversionConfiguration: {
+          enabled: true,
+          inputFormatConfiguration: {
+            deserializer: {
+              openXJsonSerDe: {
+                caseInsensitive: true,
+              },
+            },
+          },
+          outputFormatConfiguration: {
+            serializer: {
+              parquetSerDe: {
+                compression: 'UNCOMPRESSED',
+              },
+            },
+          },
+          schemaConfiguration: {
+            databaseName: glueDatabase.ref,
+            roleArn: firehoseServiceRole.roleArn,
+            tableName: glueTable.ref,
+          },
+        },
       },
     });
 
