@@ -1497,9 +1497,8 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
   readonly ssmInventory: SsmInventoryConfig | undefined = undefined;
 
   /**
-   * Custom Tags for all Accelerator created resources that can be tagged.
+   * Custom Tags for all resources created by Landing Zone Accelerator that can be tagged.
    *
-   * Custom Tags for all resources created by LZA that can be tagged.
    * @example
    * ```
    * tags:
