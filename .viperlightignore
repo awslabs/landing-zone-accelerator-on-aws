@@ -172,3 +172,7 @@ lza-on-aws-workshop.zip
 # empty file to simulate certs
 source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/certificates/certA/privKey.key
 source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/certificates/certA/cert.crt
+
+# ignore false positives
+[node-yarnoutdated]
+node=18.14.0
