@@ -175,4 +175,7 @@ source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/certificat
 
 # ignore false positives
 [node-yarnoutdated]
-node=18.14.0
+@types/node=18.14.0
+typescript=4.9.5
+proxy-agent=5.0.0
+jsii=1.75.0
