@@ -339,7 +339,7 @@ export class CloudWatchToS3Firehose extends Construct {
           outputFormatConfiguration: {
             serializer: {
               parquetSerDe: {
-                compression: 'SNAPPY',
+                compression: 'UNCOMPRESSED',
               },
             },
           },
