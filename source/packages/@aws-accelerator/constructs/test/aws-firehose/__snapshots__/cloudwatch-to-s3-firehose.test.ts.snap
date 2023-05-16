@@ -459,7 +459,7 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
             "OutputFormatConfiguration": {
               "Serializer": {
                 "ParquetSerDe": {
-                  "Compression": "SNAPPY",
+                  "Compression": "UNCOMPRESSED",
                 },
               },
             },
@@ -974,7 +974,7 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
             "OutputFormatConfiguration": {
               "Serializer": {
                 "ParquetSerDe": {
-                  "Compression": "SNAPPY",
+                  "Compression": "UNCOMPRESSED",
                 },
               },
             },
@@ -1785,7 +1785,7 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
             "OutputFormatConfiguration": {
               "Serializer": {
                 "ParquetSerDe": {
-                  "Compression": "SNAPPY",
+                  "Compression": "UNCOMPRESSED",
                 },
               },
             },
@@ -2300,7 +2300,7 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
             "OutputFormatConfiguration": {
               "Serializer": {
                 "ParquetSerDe": {
-                  "Compression": "SNAPPY",
+                  "Compression": "UNCOMPRESSED",
                 },
               },
             },

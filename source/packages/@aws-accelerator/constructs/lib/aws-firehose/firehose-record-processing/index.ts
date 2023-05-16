@@ -184,6 +184,12 @@ async function getTransformedData(jsonParsedPayload: singleRowItem) {
     };
     jsonFormattedPayload.push(JSON.stringify(singleRow));
   }
-  const encodePayload = Buffer.from(jsonFormattedPayload.join('\n')).toString('base64');
+
+  const addNewLineToBuffer = Buffer.from(jsonFormattedPayload.join('\n'));
+
+  // gzip compress the buffer with level 6 compression
+  // https://docs.aws.amazon.com/firehose/latest/dev/writing-with-cloudwatch-logs.html
+  const zippedPayload = zlib.gzipSync(addNewLineToBuffer, { level: 6 });
+  const encodePayload = zippedPayload.toString('base64');
   return encodePayload;
 }
