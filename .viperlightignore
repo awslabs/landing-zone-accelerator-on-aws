@@ -179,3 +179,6 @@ source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/certificat
 typescript=4.9.5
 proxy-agent=5.0.0
 jsii=1.75.0
+typescript=4.5.2
+jest-junit=15.0.0
+eslint-plugin-node=15.6.1
