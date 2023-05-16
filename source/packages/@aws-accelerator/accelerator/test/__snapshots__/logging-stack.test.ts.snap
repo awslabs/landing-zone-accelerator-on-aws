@@ -2427,7 +2427,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
             "OutputFormatConfiguration": {
               "Serializer": {
                 "ParquetSerDe": {
-                  "Compression": "SNAPPY",
+                  "Compression": "UNCOMPRESSED",
                 },
               },
             },
@@ -5590,7 +5590,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
             "OutputFormatConfiguration": {
               "Serializer": {
                 "ParquetSerDe": {
-                  "Compression": "SNAPPY",
+                  "Compression": "UNCOMPRESSED",
                 },
               },
             },
