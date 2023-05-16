@@ -12,14 +12,15 @@
     "fs-extra": "11.1.0",
     "jest": "29.4.3",
     "jsii": "1.75.0",
-    "jsii-pacmak": "1.75.0"
+    "jsii-pacmak": "1.75.0",
+    "minimatch": "9.0.0"
   },
   "devDependencies": {
     "@types/jest": "29.4.0",
     "@types/node": "18.14.0",
     "@typescript-eslint/eslint-plugin": "5.53.0",
     "@typescript-eslint/parser": "5.53.0",
-    "aws-cdk-lib": "2.77.0",
+    "aws-cdk-lib": "2.79.1",
     "constructs": "10.0.12",
     "esbuild": "0.17.10",
     "eslint": "8.34.0",
