@@ -65,7 +65,11 @@ logging:
           - us-east-1
         logGroupNames:
           - test/*
-
+tags:
+  - key: Environment
+    value: Dev
+  - key: ResourceOwner
+    value: AcmeApp
 limits:
   - serviceCode: lambda
     quotaCode: L-B99A9384
