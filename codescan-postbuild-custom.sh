@@ -6,7 +6,7 @@
 . ./codescan-funcs.sh
 
 echo ================================================================
-echo ======     Viperlight Script `basename $0`
+echo ======     Viperlight Script `codescan-postbuild-custom.sh`
 echo ================================================================
 source_dir='./source'
 solution_dir=`pwd`
