@@ -15,6 +15,7 @@ phases:
   build:
     commands:
       - echo "Starting build `date` in `pwd`"
+      - NODE_OPTIONS="--max-old-space-size=8192"
       - cd ../deployment
       - chmod +x ./build-s3-dist.sh && ./build-s3-dist.sh $DIST_OUTPUT_BUCKET $SOLUTION_NAME $VERSION
       - echo "Build completed `date`"
