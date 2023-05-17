@@ -35,9 +35,11 @@ artifacts:
     - source/**/*
     - .gitignore
     - sonar-project.properties
+    - README.md
     - LICENSE.txt
     - NOTICE.txt
     - buildspec.yml
     - CHANGELOG.md
     - .cfnnag_*
     - .viperlightignore
+    - codescan-postbuild-custom.sh
