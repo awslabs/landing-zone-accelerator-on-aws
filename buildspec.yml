@@ -1,7 +1,4 @@
 version: 0.2
-env:
-  variables:
-    NODE_OPTIONS: "--max_old_space_size=8192"
 phases:
   install:
     runtime-versions:
@@ -11,6 +8,7 @@ phases:
   pre_build:
     commands:
       - echo "Installing dependencies and executing unit tests - `pwd`"
+      - export NODE_OPTIONS="--max-old-space-size=8192"
       - chmod +x ./run-all-tests.sh && ./run-all-tests.sh
       - echo "Installing dependencies and executing unit tests completed `date`"
   build:
