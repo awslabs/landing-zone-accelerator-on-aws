@@ -11,18 +11,19 @@
  *  and limitations under the License.
  */
 
-import { RouteTableConfig, VpcConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
+import { RouteTableConfig, RouteTableEntryConfig, VpcConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
 import {
   NatGateway,
   PrefixList,
   PrefixListRoute,
   RouteTable,
+  Subnet,
   TransitGatewayAttachment,
 } from '@aws-accelerator/constructs';
 import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'pascal-case';
 import { LogLevel } from '../network-stack';
-import { getPrefixList, getRouteTable, getTransitGatewayId } from '../utils/getter-utils';
+import { getPrefixList, getRouteTable, getSubnet, getTransitGatewayId } from '../utils/getter-utils';
 import { NetworkVpcStack } from './network-vpc-stack';
 
 export class RouteEntryResources {
@@ -34,6 +35,7 @@ export class RouteEntryResources {
     routeTableMap: Map<string, RouteTable>,
     transitGatewayIds: Map<string, string>,
     tgwAttachmentMap: Map<string, TransitGatewayAttachment>,
+    subnetMap: Map<string, Subnet>,
     natGatewayMap: Map<string, NatGateway>,
     prefixListMap: Map<string, PrefixList>,
   ) {
@@ -45,6 +47,7 @@ export class RouteEntryResources {
       routeTableMap,
       transitGatewayIds,
       tgwAttachmentMap,
+      subnetMap,
       natGatewayMap,
       prefixListMap,
     );
@@ -56,6 +59,7 @@ export class RouteEntryResources {
    * @param routeTableMap
    * @param transitGatewayIds
    * @param tgwAttachmentMap
+   * @param subnetMap
    * @param natGatewayMap
    * @param prefixListMap
    * @returns
@@ -65,6 +69,7 @@ export class RouteEntryResources {
     routeTableMap: Map<string, RouteTable>,
     transitGatewayIds: Map<string, string>,
     tgwAttachmentMap: Map<string, TransitGatewayAttachment>,
+    subnetMap: Map<string, Subnet>,
     natGatewayMap: Map<string, NatGateway>,
     prefixListMap: Map<string, PrefixList>,
   ): Map<string, cdk.aws_ec2.CfnRoute | PrefixListRoute> {
@@ -79,6 +84,7 @@ export class RouteEntryResources {
           routeTable,
           transitGatewayIds,
           tgwAttachmentMap,
+          subnetMap,
           natGatewayMap,
           prefixListMap,
         );
@@ -95,6 +101,7 @@ export class RouteEntryResources {
    * @param routeTable
    * @param transitGatewayIds
    * @param tgwAttachmentMap
+   * @param subnetMap
    * @param natGatewayMap
    * @param prefixListMap
    * @returns
@@ -105,6 +112,7 @@ export class RouteEntryResources {
     routeTable: RouteTable,
     transitGatewayIds: Map<string, string>,
     tgwAttachmentMap: Map<string, TransitGatewayAttachment>,
+    subnetMap: Map<string, Subnet>,
     natGatewayMap: Map<string, NatGateway>,
     prefixListMap: Map<string, PrefixList>,
   ): Map<string, cdk.aws_ec2.CfnRoute | PrefixListRoute> {
@@ -119,15 +127,13 @@ export class RouteEntryResources {
 
       // Check if using a prefix list or CIDR as the destination
       if (routeTableEntryItem.type && entryTypes.includes(routeTableEntryItem.type)) {
-        let destination: string | undefined = undefined;
-        let destinationPrefixListId: string | undefined = undefined;
-        if (routeTableEntryItem.destinationPrefixList) {
-          // Get PL ID from map
-          const prefixList = getPrefixList(prefixListMap, routeTableEntryItem.destinationPrefixList) as PrefixList;
-          destinationPrefixListId = prefixList.prefixListId;
-        } else {
-          destination = routeTableEntryItem.destination;
-        }
+        // Set destination type
+        const [destination, destinationPrefixListId] = this.setRouteEntryDestination(
+          routeTableEntryItem,
+          prefixListMap,
+          subnetMap,
+          vpcItem.name,
+        );
 
         // Route: Transit Gateway
         if (routeTableEntryItem.type === 'transitGateway') {
@@ -200,5 +206,34 @@ export class RouteEntryResources {
       }
     }
     return routeTableItemEntryMap;
+  }
+
+  /**
+   * Determine whether to set prefix list, CIDR, or subnet reference for route destination
+   * @param routeTableEntryItem
+   * @param prefixListMap
+   * @param subnetMap
+   * @param vpcName
+   * @returns
+   */
+  private setRouteEntryDestination(
+    routeTableEntryItem: RouteTableEntryConfig,
+    prefixListMap: Map<string, PrefixList>,
+    subnetMap: Map<string, Subnet>,
+    vpcName: string,
+  ): [string | undefined, string | undefined] {
+    let destination: string | undefined = undefined;
+    let destinationPrefixListId: string | undefined = undefined;
+    if (routeTableEntryItem.destinationPrefixList) {
+      // Get PL ID from map
+      const prefixList = getPrefixList(prefixListMap, routeTableEntryItem.destinationPrefixList) as PrefixList;
+      destinationPrefixListId = prefixList.prefixListId;
+    } else {
+      const subnetKey = `${vpcName}_${routeTableEntryItem.destination}`;
+      destination = subnetMap.get(subnetKey)
+        ? getSubnet(subnetMap, vpcName, routeTableEntryItem.destination!).ipv4CidrBlock
+        : routeTableEntryItem.destination;
+    }
+    return [destination, destinationPrefixListId];
   }
 }

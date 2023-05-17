@@ -2046,7 +2046,6 @@ export class IpamConfig implements t.TypeOf<typeof NetworkConfigTypes.ipamConfig
  *   target: Network-Main
  * ```
  *
- * @example
  * NAT Gateway
  * ```
  * - name: NatRoute
@@ -2055,7 +2054,6 @@ export class IpamConfig implements t.TypeOf<typeof NetworkConfigTypes.ipamConfig
  *   target: Nat-A
  * ```
  *
- * @example
  * Internet Gateway
  * ```
  * - name: IgwRoute
@@ -2063,7 +2061,6 @@ export class IpamConfig implements t.TypeOf<typeof NetworkConfigTypes.ipamConfig
  *   type: internetGateway
  * ```
  *
- * @example
  * VPC Peering
  * ```
  * - name: PeerRoute
@@ -2072,8 +2069,7 @@ export class IpamConfig implements t.TypeOf<typeof NetworkConfigTypes.ipamConfig
  *   target: Peering
  * ```
  *
- * @example
- * Network Firewall
+ * Network Firewall with CIDR destination:
  * ```
  * - name: NfwRoute
  *   destination: 0.0.0.0/0
@@ -2082,11 +2078,27 @@ export class IpamConfig implements t.TypeOf<typeof NetworkConfigTypes.ipamConfig
  *   targetAvailabilityZone: a
  * ```
  *
- * @example
- * Gateway Load Balancer Endpoint
+ * Network Firewall with subnet destination:
+ * ```
+ * - name: NfwRoute
+ *   destination: subnet-a
+ *   type: networkFirewall
+ *   target: accelerator-firewall
+ *   targetAvailabilityZone: a
+ * ```
+ *
+ * Gateway Load Balancer Endpoint with CIDR destination:
  * ```
  * - name: GwlbRoute
  *   destination: 0.0.0.0/0
+ *   type: gatewayLoadBalancerEndpoint
+ *   target: Endpoint-A
+ * ```
+ *
+ * Gateway Load Balancer Endpoint with subnet destination:
+ * ```
+ * - name: GwlbRoute
+ *   destination: subnet-a
  *   type: gatewayLoadBalancerEndpoint
  *   target: Endpoint-A
  * ```
@@ -2102,10 +2114,13 @@ export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes
    */
   readonly name: string = '';
   /**
-   * (OPTIONAL) The destination CIDR block for the route table entry.
+   * (OPTIONAL) The destination CIDR block or dynamic subnet reference for the route table entry.
    *
    * @remarks
-   * Use CIDR notation, i.e. 10.0.0.0/16
+   * You can either use CIDR notation (i.e. 10.0.0.0/16) or target a subnet by referencing its logical `name` property.
+   * If referencing a subnet name, the subnet MUST be defined in the same VPC. This feature is intended for ingress routing scenarios
+   * where a gateway route table must target a Gateway Load Balancer or Network Firewall endpoint in a dynamic IPAM-created subnet.
+   * @see {@link SubnetConfig} and {@link RouteTableConfig}.
    *
    * Either `destination` or `destinationPrefixList` must be specified for the following route entry types:
    * `transitGateway`, `natGateway`, `internetGateway`, `networkInterface`, `vpcPeering`, `virtualPrivateGateway`.

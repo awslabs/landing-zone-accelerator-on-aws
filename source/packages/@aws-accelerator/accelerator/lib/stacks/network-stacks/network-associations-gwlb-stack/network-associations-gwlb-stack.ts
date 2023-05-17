@@ -41,12 +41,14 @@ import { SsmResourceType } from '@aws-accelerator/utils';
 
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import { NetworkStack } from '../network-stack';
+import { setIpamSubnetRouteTableEntryArray } from '../utils/setter-utils';
 
 export class NetworkAssociationsGwlbStack extends NetworkStack {
   private gwlbMap: Map<string, string>;
   private routeTableMap: Map<string, string>;
   private securityGroupMap: Map<string, string>;
   private subnetMap: Map<string, string>;
+  private ipamSubnetArray: string[];
   private targetGroupMap: Map<string, TargetGroup>;
   private vpcMap: Map<string, string>;
 
@@ -56,6 +58,7 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
     // Set initial private properties
     this.vpcMap = this.setVpcMap(this.vpcsInScope);
     this.subnetMap = this.setSubnetMap(this.vpcsInScope);
+    this.ipamSubnetArray = setIpamSubnetRouteTableEntryArray(this.vpcsInScope);
     this.routeTableMap = this.setRouteTableMap(this.vpcsInScope);
     this.securityGroupMap = this.setSecurityGroupMap(this.vpcsInScope);
     this.gwlbMap = this.setInitialMaps(this.vpcsInScope);
@@ -703,6 +706,7 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
       // Get endpoint and route table items
       const gwlbEndpoint = gwlbEndpointMap.get(routeTableEntryItem.target!);
       const routeTableId = this.routeTableMap.get(`${vpcName}_${routeTableName}`);
+      const destination = this.setRouteEntryDestination(routeTableEntryItem, this.ipamSubnetArray, vpcName);
 
       // Check if route table exists im map
       if (!routeTableId) {
@@ -716,7 +720,7 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
       }
       // Add route
       this.logger.info(`Adding Gateway Load Balancer endpoint Route Table Entry ${routeTableEntryItem.name}`);
-      gwlbEndpoint.createEndpointRoute(endpointRouteId, routeTableEntryItem.destination!, routeTableId);
+      gwlbEndpoint.createEndpointRoute(endpointRouteId, destination, routeTableId);
     }
   }
 }
