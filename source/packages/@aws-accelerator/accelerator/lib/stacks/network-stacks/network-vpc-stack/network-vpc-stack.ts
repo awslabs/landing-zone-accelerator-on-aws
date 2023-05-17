@@ -90,6 +90,7 @@ export class NetworkVpcStack extends NetworkStack {
       routeTableResources.routeTableMap,
       transitGatewayIds,
       tgwResources.tgwAttachmentMap,
+      subnetResources.subnetMap,
       natGatewayResources.natGatewayMap,
       plResources.prefixListMap,
     );

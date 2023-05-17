@@ -20,6 +20,7 @@ import {
   NfwRuleGroupConfig,
   PrefixListConfig,
   ResolverRuleConfig,
+  RouteTableEntryConfig,
   SecurityGroupConfig,
   SubnetConfig,
   TransitGatewayAttachmentConfig,
@@ -30,6 +31,7 @@ import {
 import {
   IIpamSubnet,
   IResourceShareItem,
+  IpamSubnet,
   PrefixList,
   ResourceShare,
   ResourceShareItem,
@@ -836,5 +838,42 @@ export abstract class NetworkStack extends AcceleratorStack {
       ]);
     }
     return securityGroup;
+  }
+
+  /**
+   * Lookup same account+region IPAM subnet
+   * @param vpcName
+   * @param subnetName
+   */
+  public lookupLocalIpamSubnet(vpcName: string, subnetName: string): IIpamSubnet {
+    this.logger.info(`Retrieve IPAM Subnet CIDR for vpc:[${vpcName}] subnet:[${subnetName}]`);
+
+    return IpamSubnet.fromLookup(this, pascalCase(`${vpcName}${subnetName}IpamSubnetLookup`), {
+      owningAccountId: cdk.Stack.of(this).account,
+      ssmSubnetIdPath: this.getSsmPath(SsmResourceType.SUBNET, [vpcName, subnetName]),
+      region: cdk.Stack.of(this).region,
+      roleName: this.acceleratorResourceNames.roles.ipamSubnetLookup,
+      kmsKey: this.cloudwatchKey,
+      logRetentionInDays: this.logRetention,
+    });
+  }
+
+  /**
+   * Set route table destination based on CIDR or subnet reference
+   * @param routeTableEntryItem
+   * @param subnetMap
+   * @param vpcName
+   * @returns
+   */
+  public setRouteEntryDestination(
+    routeTableEntryItem: RouteTableEntryConfig,
+    ipamSubnetArray: string[],
+    vpcName: string,
+  ): string {
+    const subnetKey = `${vpcName}_${routeTableEntryItem.destination!}`;
+
+    return ipamSubnetArray.includes(subnetKey)
+      ? this.lookupLocalIpamSubnet(vpcName, routeTableEntryItem.destination!).ipv4CidrBlock
+      : routeTableEntryItem.destination!;
   }
 }

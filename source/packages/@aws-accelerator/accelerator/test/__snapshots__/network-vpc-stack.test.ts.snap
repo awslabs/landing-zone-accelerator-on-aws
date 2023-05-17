@@ -2453,6 +2453,21 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::EC2::Route",
     },
+    "NetworkInspectionVpcNetworkInspectionARouteTableNetworkInspectionVpcNetworkInspectionARouteTableTgwRouteDynamicCFCCBC50": {
+      "DependsOn": [
+        "NetworkInspectionVpcTransitGatewayAttachment2E4BA675",
+      ],
+      "Properties": {
+        "DestinationCidrBlock": "10.2.0.0/24",
+        "RouteTableId": {
+          "Ref": "NetworkInspectionVpcNetworkInspectionARouteTableED0E5084",
+        },
+        "TransitGatewayId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
     "NetworkInspectionVpcNetworkInspectionASubnet01E2BD4D": {
       "DependsOn": [
         "NetworkInspectionVpcVpcCidrBlock343B2A17",
@@ -2506,6 +2521,21 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       ],
       "Properties": {
         "DestinationCidrBlock": "0.0.0.0/0",
+        "RouteTableId": {
+          "Ref": "NetworkInspectionVpcNetworkInspectionBRouteTable1410DC9F",
+        },
+        "TransitGatewayId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "NetworkInspectionVpcNetworkInspectionBRouteTableNetworkInspectionVpcNetworkInspectionBRouteTableTgwRouteDynamic64A0B0C7": {
+      "DependsOn": [
+        "NetworkInspectionVpcTransitGatewayAttachment2E4BA675",
+      ],
+      "Properties": {
+        "DestinationCidrBlock": "10.2.1.0/24",
         "RouteTableId": {
           "Ref": "NetworkInspectionVpcNetworkInspectionBRouteTable1410DC9F",
         },
