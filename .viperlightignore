@@ -163,22 +163,6 @@ source/packages/@aws-accelerator/constructs/lib/aws-cloudwatch-logs/create-log-g
 source/packages/@aws-accelerator/constructs/lib/aws-cloudwatch-logs/create-log-groups/index.ts:176
 source/packages/@aws-accelerator/constructs/lib/aws-cloudwatch-logs/create-log-groups/index.ts:179
 
-# Internal Test file and Account. Not to be published.
-.gitlab-ci.yml:87
-
-# Internal AWS Workshop and Jam Session zip file. Not to be published.
-lza-on-aws-workshop.zip
-
 # empty file to simulate certs
 source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/certificates/certA/privKey.key
 source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/certificates/certA/cert.crt
-
-# ignore false positives
-[node-yarnoutdated]
-@types/node=18.14.0
-typescript=4.9.5
-proxy-agent=5.0.0
-jsii=1.75.0
-typescript=4.5.2
-jest-junit=15.0.0
-eslint-plugin-node=15.6.1

@@ -84,7 +84,6 @@ sonar-test:
     - arch:amd64
     - size:xlarge
   variables:
-    AWS_CREDS_TARGET_ROLE: arn:aws:iam::964740179205:role/GitlabRunnersSonarqubeSecretRole
     AWS_DEFAULT_REGION: us-east-1
     SCANNER_BINARY: /tmp/sonar-scanner-${SCANNER_VERSION}-linux/bin/sonar-scanner
     SCANNER_VERSION: 4.7.0.2747
