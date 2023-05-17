@@ -560,6 +560,10 @@ vpcs:
         routes: []
       - name: Network-Secondary-B-Rt
         routes: []
+      - name: Network-Secondary-C-Rt
+        routes: []
+      - name: Network-Secondary-D-Rt
+        routes: []
     subnets:
       - name: Network-Secondary-A
         availabilityZone: a
@@ -573,11 +577,25 @@ vpcs:
         ipamAllocation:
           ipamPoolName: home-region-prod-pool
           netmaskLength: 28
+      - name: Network-Secondary-C
+        availabilityZone: 1
+        routeTable: Network-Secondary-C-Rt
+        ipamAllocation:
+          ipamPoolName: home-region-prod-pool
+          netmaskLength: 28
+      - name: Network-Secondary-D
+        availabilityZone: 2
+        routeTable: Network-Secondary-D-Rt
+        ipamAllocation:
+          ipamPoolName: home-region-prod-pool
+          netmaskLength: 28
     networkAcls:
       - name: TestNacl
         subnetAssociations:
           - Network-Secondary-A
           - Network-Secondary-B
+          - Network-Secondary-C
+          - Network-Secondary-D
         outboundRules:
           - rule: 101
             action: allow

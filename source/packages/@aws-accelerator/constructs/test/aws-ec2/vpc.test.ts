@@ -12,7 +12,14 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { Vpc, Subnet, NatGateway, SecurityGroup, NetworkAcl } from '../../lib/aws-ec2/vpc';
+import {
+  Vpc,
+  Subnet,
+  NatGateway,
+  SecurityGroup,
+  NetworkAcl,
+  DeleteDefaultSecurityGroupRules,
+} from '../../lib/aws-ec2/vpc';
 import { RouteTable } from '../../lib/aws-ec2/route-table';
 import { snapShotTest } from '../snapshot-test';
 import { OutpostsConfig } from '@aws-accelerator/config';
@@ -55,10 +62,12 @@ const subnet1 = new Subnet(stack, 'test', {
   routeTable: rt,
   outpost: outpostConfig,
   ipv4CidrBlock: '10.0.1.0/24',
+  availabilityZoneId: undefined,
 });
 
 new Subnet(stack, 'testSubnetIpam', {
-  availabilityZone: 'a',
+  availabilityZone: 'b',
+  availabilityZoneId: undefined,
   vpc,
   name: 'testSubnet',
   routeTable: rt,
@@ -69,6 +78,36 @@ new Subnet(stack, 'testSubnetIpam', {
   basePool: ['myBasePool'],
   logRetentionInDays: 10,
   kmsKey: new cdk.aws_kms.Key(stack, 'testKms'),
+});
+
+new Subnet(stack, 'testSubnetIpamPhysicalAz1', {
+  availabilityZone: undefined,
+  availabilityZoneId: '1',
+  vpc,
+  name: 'testSubnetPhysicalAz1',
+  routeTable: rt,
+  ipamAllocation: {
+    ipamPoolName: 'test',
+    netmaskLength: 24,
+  },
+  basePool: ['myBasePool'],
+  logRetentionInDays: 10,
+  kmsKey: new cdk.aws_kms.Key(stack, 'testKms1'),
+});
+
+new Subnet(stack, 'testSubnetPhysicalAz2', {
+  availabilityZone: undefined,
+  availabilityZoneId: '2',
+  vpc,
+  name: 'testSubnetPhysicalAz2',
+  routeTable: rt,
+  ipamAllocation: {
+    ipamPoolName: 'test',
+    netmaskLength: 24,
+  },
+  basePool: ['myBasePool'],
+  logRetentionInDays: 10,
+  kmsKey: new cdk.aws_kms.Key(stack, 'testKms2'),
 });
 
 new NatGateway(stack, 'natGw', { name: 'ngw', subnet: subnet1, tags: [{ key: 'test', value: 'test2' }] });
@@ -111,6 +150,13 @@ nacl.addEntry('naclEntry', {
 });
 
 nacl.associateSubnet('naclSubnetAssociation', { subnet: subnet1 });
+
+new DeleteDefaultSecurityGroupRules(stack, 'TestDeleteDefaultSgRules', {
+  vpcId: 'someVpcId', //intentionally did not use regex of VPC to prevent scan
+  kmsKey: new cdk.aws_kms.Key(stack, 'testKmsTestDeleteDefaultSgRules'),
+  logRetentionInDays: 7,
+});
+
 /**
  * Vpc construct test
  */

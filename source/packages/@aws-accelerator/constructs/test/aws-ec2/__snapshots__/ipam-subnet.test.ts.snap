@@ -168,6 +168,41 @@ exports[`IpamSubnet Construct(IpamSubnet):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Role",
     },
+    "Key2071601C6": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
     "Key961B73FD": {
       "DeletionPolicy": "Retain",
       "Properties": {
@@ -224,6 +259,38 @@ exports[`IpamSubnet Construct(IpamSubnet):  Snapshot Test 1`] = `
           "netmaskLength": 24,
         },
         "name": "Test",
+        "tags": [
+          {
+            "Key": "key",
+            "Value": "value",
+          },
+        ],
+        "vpcId": "vpc-test",
+      },
+      "Type": "Custom::IpamSubnet",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TestIpamSubnet22B82F212": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
+            "Arn",
+          ],
+        },
+        "availabilityZoneId": "use1-az2",
+        "basePool": [
+          "10.0.0.0/8",
+        ],
+        "ipamAllocation": {
+          "ipamPoolName": "test-pool",
+          "netmaskLength": 24,
+        },
+        "name": "Test2",
         "tags": [
           {
             "Key": "key",

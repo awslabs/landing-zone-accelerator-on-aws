@@ -146,7 +146,7 @@ export class NetworkValidatorFunctions {
    * @param arr
    * @returns
    */
-  public hasDuplicates(arr: string[]): boolean {
+  public hasDuplicates(arr: (string | number)[]): boolean {
     return new Set(arr).size !== arr.length;
   }
 
