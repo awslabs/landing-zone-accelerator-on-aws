@@ -39,6 +39,7 @@ import { SsmResourceType } from '@aws-accelerator/utils';
 
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import { NetworkStack } from '../network-stack';
+import { setIpamSubnetRouteTableEntryArray } from '../utils/setter-utils';
 
 export class NetworkVpcEndpointsStack extends NetworkStack {
   private nfwPolicyMap: Map<string, string>;
@@ -50,6 +51,7 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
     //
     const vpcMap = this.setVpcMap(this.vpcsInScope);
     const subnetMap = this.setSubnetMap(this.vpcsInScope);
+    const ipamSubnetArray = setIpamSubnetRouteTableEntryArray(this.vpcsInScope);
     const routeTableMap = this.setRouteTableMap(this.vpcsInScope);
     //
     // Set Network Firewall policy map
@@ -126,6 +128,7 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
 
             if (routeTableEntryItem.type && routeTableEntryItem.type === 'networkFirewall') {
               const routeTableId = routeTableMap.get(`${vpcItem.name}_${routeTableItem.name}`);
+              const destination = this.setRouteEntryDestination(routeTableEntryItem, ipamSubnetArray, vpcItem.name);
 
               // Check if route table exists im map
               if (!routeTableId) {
@@ -145,7 +148,7 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
               this.logger.info(`Adding Network Firewall Route Table Entry ${routeTableEntryItem.name}`);
               firewall.addNetworkFirewallRoute(
                 endpointRouteId,
-                routeTableEntryItem.destination!,
+                destination,
                 endpointAz,
                 this.cloudwatchKey,
                 this.logRetention,

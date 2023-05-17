@@ -1184,6 +1184,10 @@ vpcs:
             destination: 0.0.0.0/0
             type: transitGateway
             target: Network-Main
+          - name: TgwRouteDynamic
+            destination: Network-Inspection-A
+            type: transitGateway
+            target: Network-Main
           - name: S3Gateway
             type: gatewayEndpoint
             target: s3
@@ -1194,6 +1198,10 @@ vpcs:
         routes:
           - name: TgwRoute
             destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+          - name: TgwRouteDynamic
+            destination: Network-Inspection-B
             type: transitGateway
             target: Network-Main
           - name: S3Gateway
@@ -1213,6 +1221,15 @@ vpcs:
             destination: 10.0.0.0/8
             type: gatewayLoadBalancerEndpoint
             target: Endpoint-A
+          - name: NfwRouteDynamic
+            destination: Network-Inspection-A
+            type: networkFirewall
+            target: accelerator-firewall
+            targetAvailabilityZone: a
+          - name: GwlbRouteDynamic
+            destination: Network-InspectionTgwAttach-A
+            type: gatewayLoadBalancerEndpoint
+            target: Endpoint-A
       - name: Network-Inspection-Tgw-B
         routes:
           - name: NfwRoute
@@ -1224,6 +1241,15 @@ vpcs:
             destination: 10.0.0.0/8
             type: gatewayLoadBalancerEndpoint
             target: Endpoint-B
+          - name: NfwRouteDynamic
+            destination: Network-Inspection-B
+            type: networkFirewall
+            target: accelerator-firewall
+            targetAvailabilityZone: a
+          - name: GwlbRouteDynamic
+            destination: Network-InspectionTgwAttach-B
+            type: gatewayLoadBalancerEndpoint
+            target: Endpoint-A
       - name: Network-Inspection-Gateway
         gatewayAssociation: internetGateway
         routes:

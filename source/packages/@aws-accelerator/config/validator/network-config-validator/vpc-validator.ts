@@ -210,7 +210,7 @@ export class VpcValidator {
     // Validate route tables names
     this.validateRouteTableNames(vpcItem, helpers, errors);
     // Validate route entries
-    this.validateRouteTableEntries(values, vpcItem, errors);
+    this.validateRouteTableEntries(values, vpcItem, helpers, errors);
   }
 
   /**
@@ -259,36 +259,64 @@ export class VpcValidator {
   private validateRouteEntryDestination(
     routeTableEntryItem: RouteTableEntryConfig,
     routeTableName: string,
-    vpcName: string,
+    vpcItem: VpcConfig | VpcTemplatesConfig,
     values: NetworkConfig,
+    helpers: NetworkValidatorFunctions,
     errors: string[],
   ) {
     if (routeTableEntryItem.destinationPrefixList) {
       // Check if a CIDR destination is also defined
       if (routeTableEntryItem.destination) {
         errors.push(
-          `[Route table ${routeTableName} for VPC ${vpcName}]: route entry ${routeTableEntryItem.name} using destination and destinationPrefixList. Please choose only one destination type`,
+          `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} using destination and destinationPrefixList. Please choose only one destination type`,
         );
       }
 
       // Throw error if network firewall or GWLB are the target
       if (['networkFirewall', 'gatewayLoadBalancerEndpoint'].includes(routeTableEntryItem.type!)) {
         errors.push(
-          `[Route table ${routeTableName} for VPC ${vpcName}]: route entry ${routeTableEntryItem.name} with type ${routeTableEntryItem.type} does not support destinationPrefixList`,
+          `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} with type ${routeTableEntryItem.type} does not support destinationPrefixList`,
         );
       }
 
       // Throw error if prefix list doesn't exist
       if (!values.prefixLists?.find(item => item.name === routeTableEntryItem.destinationPrefixList)) {
         errors.push(
-          `[Route table ${routeTableName} for VPC ${vpcName}]: route entry ${routeTableEntryItem.name} destinationPrefixList ${routeTableEntryItem.destinationPrefixList} does not exist`,
+          `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} destinationPrefixList ${routeTableEntryItem.destinationPrefixList} does not exist`,
         );
       }
     } else {
-      if (!routeTableEntryItem.destination) {
-        errors.push(
-          `[Route table ${routeTableName} for VPC ${vpcName}]: route entry ${routeTableEntryItem.name} does not have a destination defined`,
-        );
+      // Validate the destination CIDR or subnet
+      this.validateRouteEntryDestinationCidr(routeTableEntryItem, routeTableName, vpcItem, helpers, errors);
+    }
+  }
+
+  /**
+   * Validate route entry destination CIDR or subnet reference is valid
+   * @param routeTableEntryItem
+   * @param routeTableName
+   * @param vpcItem
+   * @param helpers
+   * @param errors
+   */
+  private validateRouteEntryDestinationCidr(
+    routeTableEntryItem: RouteTableEntryConfig,
+    routeTableName: string,
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+  ) {
+    if (!routeTableEntryItem.destination) {
+      errors.push(
+        `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} does not have a destination defined`,
+      );
+    } else {
+      if (!helpers.isValidIpv4Cidr(routeTableEntryItem.destination)) {
+        if (!helpers.getSubnet(vpcItem, routeTableEntryItem.destination)) {
+          errors.push(
+            `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} destination "${routeTableEntryItem.destination}" is not a valid CIDR or subnet name`,
+          );
+        }
       }
     }
   }
@@ -419,12 +447,17 @@ export class VpcValidator {
    * @param vpcItem
    * @param errors
    */
-  private validateRouteTableEntries(values: NetworkConfig, vpcItem: VpcConfig | VpcTemplatesConfig, errors: string[]) {
+  private validateRouteTableEntries(
+    values: NetworkConfig,
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+  ) {
     vpcItem.routeTables?.forEach(routeTableItem => {
       routeTableItem.routes?.forEach(entry => {
         // Validate destination exists
         if (entry.type && entry.type !== 'gatewayEndpoint') {
-          this.validateRouteEntryDestination(entry, routeTableItem.name, vpcItem.name, values, errors);
+          this.validateRouteEntryDestination(entry, routeTableItem.name, vpcItem, values, helpers, errors);
         }
 
         // Validate IGW route

@@ -39,6 +39,7 @@
     "hash-sum": "2.0.0",
     "io-ts": "2.2.20",
     "io-ts-types": "0.5.19",
+    "ip-num": "1.5.0",
     "js-yaml": "4.1.0",
     "monocle-ts": "2.3.13",
     "newtype-ts": "0.3.5",
