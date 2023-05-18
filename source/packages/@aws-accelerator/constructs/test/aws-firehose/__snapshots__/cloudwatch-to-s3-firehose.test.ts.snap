@@ -25,73 +25,6 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
     },
   },
   "Resources": {
-    "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchDbCAE69522": {
-      "Properties": {
-        "CatalogId": {
-          "Ref": "AWS::AccountId",
-        },
-        "DatabaseInput": {
-          "Description": "Glue database to store AWS Accelerator CloudWatch logs",
-          "Name": "AWSAccelerator-Database",
-        },
-      },
-      "Type": "AWS::Glue::Database",
-    },
-    "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchTable1D7675CB": {
-      "Properties": {
-        "CatalogId": {
-          "Ref": "AWS::AccountId",
-        },
-        "DatabaseName": {
-          "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchDbCAE69522",
-        },
-        "TableInput": {
-          "Description": "Glue table to store AWS Accelerator CloudWatch logs",
-          "Name": "aws-accelerator-firehose-transformation-table",
-          "StorageDescriptor": {
-            "Columns": [
-              {
-                "Comment": "Data messages use the "DATA_MESSAGE" type. Sometimes CloudWatch Logs may emit Kinesis records with a "CONTROL_MESSAGE" type, mainly for checking if the destination is reachable.",
-                "Name": "messagetype",
-                "Type": "string",
-              },
-              {
-                "Comment": "The AWS Account ID of the originating log data",
-                "Name": "owner",
-                "Type": "string",
-              },
-              {
-                "Comment": "The log group name of the originating log data.",
-                "Name": "loggroup",
-                "Type": "string",
-              },
-              {
-                "Comment": "The list of comma delimited subscription filter names that matched with the originating log data.",
-                "Name": "subscriptionfilters",
-                "Type": "string",
-              },
-              {
-                "Comment": "The ID property is a unique identifier for every log event.",
-                "Name": "logeventsid",
-                "Type": "string",
-              },
-              {
-                "Comment": "Timestamp of the log event",
-                "Name": "logeventstimestamp",
-                "Type": "timestamp",
-              },
-              {
-                "Comment": "Actual message of the log event which is in json string",
-                "Name": "logeventsmessage",
-                "Type": "string",
-              },
-            ],
-          },
-          "TableType": "EXTERNAL_TABLE",
-        },
-      },
-      "Type": "AWS::Glue::Table",
-    },
     "CloudWatchToS3FirehoseBucketNameFirehoseKinesisStreamServiceRole9577C2D5": {
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -191,6 +124,16 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
       "Type": "AWS::Lambda::Function",
     },
     "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambdaServiceRoleFA79B6BB": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Managed policy for Lambda basic execution attached.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -221,7 +164,17 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
       },
       "Type": "AWS::IAM::Role",
     },
-    "CloudWatchToS3FirehoseBucketNameFirehoseS3ServiceRole1B034103": {
+    "CloudWatchToS3FirehoseBucketNameFirehoseServiceRole9EBB7E56": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Bucket permissions are wildcards to abort downloads and clean up objects. KMS permissions are wildcards to re-encrypt entities.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -338,86 +291,6 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
                     },
                   ],
                 },
-                {
-                  "Action": [
-                    "glue:GetTable",
-                    "glue:GetTableVersion",
-                    "glue:GetTableVersions",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": [
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":glue:",
-                          {
-                            "Ref": "AWS::Region",
-                          },
-                          ":",
-                          {
-                            "Ref": "AWS::AccountId",
-                          },
-                          ":catalog",
-                        ],
-                      ],
-                    },
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":glue:",
-                          {
-                            "Ref": "AWS::Region",
-                          },
-                          ":",
-                          {
-                            "Ref": "AWS::AccountId",
-                          },
-                          ":database/",
-                          {
-                            "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchDbCAE69522",
-                          },
-                        ],
-                      ],
-                    },
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":glue:",
-                          {
-                            "Ref": "AWS::Region",
-                          },
-                          ":",
-                          {
-                            "Ref": "AWS::AccountId",
-                          },
-                          ":table/",
-                          {
-                            "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchDbCAE69522",
-                          },
-                          "/",
-                          {
-                            "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchTable1D7675CB",
-                          },
-                        ],
-                      ],
-                    },
-                  ],
-                },
               ],
               "Version": "2012-10-17",
             },
@@ -427,7 +300,17 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
       },
       "Type": "AWS::IAM::Role",
     },
-    "CloudWatchToS3FirehoseBucketNameKinesisFirehoseStreamDynamicPartitioningCD958E16": {
+    "CloudWatchToS3FirehoseBucketNameFirehoseStream3C376F34": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-KDF1",
+              "reason": "Customer managed key is used to encrypt firehose delivery stream.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "DeliveryStreamType": "KinesisStreamAsSource",
         "ExtendedS3DestinationConfiguration": {
@@ -449,35 +332,7 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
           },
           "CompressionFormat": "UNCOMPRESSED",
           "DataFormatConversionConfiguration": {
-            "Enabled": true,
-            "InputFormatConfiguration": {
-              "Deserializer": {
-                "OpenXJsonSerDe": {
-                  "CaseInsensitive": true,
-                },
-              },
-            },
-            "OutputFormatConfiguration": {
-              "Serializer": {
-                "ParquetSerDe": {
-                  "Compression": "UNCOMPRESSED",
-                },
-              },
-            },
-            "SchemaConfiguration": {
-              "DatabaseName": {
-                "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchDbCAE69522",
-              },
-              "RoleARN": {
-                "Fn::GetAtt": [
-                  "CloudWatchToS3FirehoseBucketNameFirehoseS3ServiceRole1B034103",
-                  "Arn",
-                ],
-              },
-              "TableName": {
-                "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchTable1D7675CB",
-              },
-            },
+            "Enabled": false,
           },
           "DynamicPartitioningConfiguration": {
             "Enabled": true,
@@ -527,7 +382,7 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
           },
           "RoleARN": {
             "Fn::GetAtt": [
-              "CloudWatchToS3FirehoseBucketNameFirehoseS3ServiceRole1B034103",
+              "CloudWatchToS3FirehoseBucketNameFirehoseServiceRole9EBB7E56",
               "Arn",
             ],
           },
@@ -548,73 +403,6 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
         },
       },
       "Type": "AWS::KinesisFirehose::DeliveryStream",
-    },
-    "CloudWatchToS3FirehoseFirehoseCloudWatchDb1916F9D9": {
-      "Properties": {
-        "CatalogId": {
-          "Ref": "AWS::AccountId",
-        },
-        "DatabaseInput": {
-          "Description": "Glue database to store AWS Accelerator CloudWatch logs",
-          "Name": "AWSAccelerator-Database",
-        },
-      },
-      "Type": "AWS::Glue::Database",
-    },
-    "CloudWatchToS3FirehoseFirehoseCloudWatchTableB4DADD48": {
-      "Properties": {
-        "CatalogId": {
-          "Ref": "AWS::AccountId",
-        },
-        "DatabaseName": {
-          "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchDb1916F9D9",
-        },
-        "TableInput": {
-          "Description": "Glue table to store AWS Accelerator CloudWatch logs",
-          "Name": "aws-accelerator-firehose-transformation-table",
-          "StorageDescriptor": {
-            "Columns": [
-              {
-                "Comment": "Data messages use the "DATA_MESSAGE" type. Sometimes CloudWatch Logs may emit Kinesis records with a "CONTROL_MESSAGE" type, mainly for checking if the destination is reachable.",
-                "Name": "messagetype",
-                "Type": "string",
-              },
-              {
-                "Comment": "The AWS Account ID of the originating log data",
-                "Name": "owner",
-                "Type": "string",
-              },
-              {
-                "Comment": "The log group name of the originating log data.",
-                "Name": "loggroup",
-                "Type": "string",
-              },
-              {
-                "Comment": "The list of comma delimited subscription filter names that matched with the originating log data.",
-                "Name": "subscriptionfilters",
-                "Type": "string",
-              },
-              {
-                "Comment": "The ID property is a unique identifier for every log event.",
-                "Name": "logeventsid",
-                "Type": "string",
-              },
-              {
-                "Comment": "Timestamp of the log event",
-                "Name": "logeventstimestamp",
-                "Type": "timestamp",
-              },
-              {
-                "Comment": "Actual message of the log event which is in json string",
-                "Name": "logeventsmessage",
-                "Type": "string",
-              },
-            ],
-          },
-          "TableType": "EXTERNAL_TABLE",
-        },
-      },
-      "Type": "AWS::Glue::Table",
     },
     "CloudWatchToS3FirehoseFirehoseKinesisStreamServiceRole80E25BD8": {
       "Properties": {
@@ -715,6 +503,16 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
       "Type": "AWS::Lambda::Function",
     },
     "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaServiceRole405E5167": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Managed policy for Lambda basic execution attached.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -745,7 +543,17 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
       },
       "Type": "AWS::IAM::Role",
     },
-    "CloudWatchToS3FirehoseFirehoseS3ServiceRole8EEB3338": {
+    "CloudWatchToS3FirehoseFirehoseServiceRole4A1CF56B": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Bucket permissions are wildcards to abort downloads and clean up objects. KMS permissions are wildcards to re-encrypt entities.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -860,86 +668,6 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
                     },
                   ],
                 },
-                {
-                  "Action": [
-                    "glue:GetTable",
-                    "glue:GetTableVersion",
-                    "glue:GetTableVersions",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": [
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":glue:",
-                          {
-                            "Ref": "AWS::Region",
-                          },
-                          ":",
-                          {
-                            "Ref": "AWS::AccountId",
-                          },
-                          ":catalog",
-                        ],
-                      ],
-                    },
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":glue:",
-                          {
-                            "Ref": "AWS::Region",
-                          },
-                          ":",
-                          {
-                            "Ref": "AWS::AccountId",
-                          },
-                          ":database/",
-                          {
-                            "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchDb1916F9D9",
-                          },
-                        ],
-                      ],
-                    },
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":glue:",
-                          {
-                            "Ref": "AWS::Region",
-                          },
-                          ":",
-                          {
-                            "Ref": "AWS::AccountId",
-                          },
-                          ":table/",
-                          {
-                            "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchDb1916F9D9",
-                          },
-                          "/",
-                          {
-                            "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchTableB4DADD48",
-                          },
-                        ],
-                      ],
-                    },
-                  ],
-                },
               ],
               "Version": "2012-10-17",
             },
@@ -949,7 +677,17 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
       },
       "Type": "AWS::IAM::Role",
     },
-    "CloudWatchToS3FirehoseKinesisFirehoseStreamDynamicPartitioning03389B0D": {
+    "CloudWatchToS3FirehoseFirehoseStream0CBF097E": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-KDF1",
+              "reason": "Customer managed key is used to encrypt firehose delivery stream.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "DeliveryStreamType": "KinesisStreamAsSource",
         "ExtendedS3DestinationConfiguration": {
@@ -965,35 +703,7 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
           },
           "CompressionFormat": "UNCOMPRESSED",
           "DataFormatConversionConfiguration": {
-            "Enabled": true,
-            "InputFormatConfiguration": {
-              "Deserializer": {
-                "OpenXJsonSerDe": {
-                  "CaseInsensitive": true,
-                },
-              },
-            },
-            "OutputFormatConfiguration": {
-              "Serializer": {
-                "ParquetSerDe": {
-                  "Compression": "UNCOMPRESSED",
-                },
-              },
-            },
-            "SchemaConfiguration": {
-              "DatabaseName": {
-                "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchDb1916F9D9",
-              },
-              "RoleARN": {
-                "Fn::GetAtt": [
-                  "CloudWatchToS3FirehoseFirehoseS3ServiceRole8EEB3338",
-                  "Arn",
-                ],
-              },
-              "TableName": {
-                "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchTableB4DADD48",
-              },
-            },
+            "Enabled": false,
           },
           "DynamicPartitioningConfiguration": {
             "Enabled": true,
@@ -1043,7 +753,7 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
           },
           "RoleARN": {
             "Fn::GetAtt": [
-              "CloudWatchToS3FirehoseFirehoseS3ServiceRole8EEB3338",
+              "CloudWatchToS3FirehoseFirehoseServiceRole4A1CF56B",
               "Arn",
             ],
           },
@@ -1347,73 +1057,6 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
     },
   },
   "Resources": {
-    "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchDbCAE69522": {
-      "Properties": {
-        "CatalogId": {
-          "Ref": "AWS::AccountId",
-        },
-        "DatabaseInput": {
-          "Description": "Glue database to store AWS Accelerator CloudWatch logs",
-          "Name": "AWSAccelerator-Database",
-        },
-      },
-      "Type": "AWS::Glue::Database",
-    },
-    "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchTable1D7675CB": {
-      "Properties": {
-        "CatalogId": {
-          "Ref": "AWS::AccountId",
-        },
-        "DatabaseName": {
-          "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchDbCAE69522",
-        },
-        "TableInput": {
-          "Description": "Glue table to store AWS Accelerator CloudWatch logs",
-          "Name": "aws-accelerator-firehose-transformation-table",
-          "StorageDescriptor": {
-            "Columns": [
-              {
-                "Comment": "Data messages use the "DATA_MESSAGE" type. Sometimes CloudWatch Logs may emit Kinesis records with a "CONTROL_MESSAGE" type, mainly for checking if the destination is reachable.",
-                "Name": "messagetype",
-                "Type": "string",
-              },
-              {
-                "Comment": "The AWS Account ID of the originating log data",
-                "Name": "owner",
-                "Type": "string",
-              },
-              {
-                "Comment": "The log group name of the originating log data.",
-                "Name": "loggroup",
-                "Type": "string",
-              },
-              {
-                "Comment": "The list of comma delimited subscription filter names that matched with the originating log data.",
-                "Name": "subscriptionfilters",
-                "Type": "string",
-              },
-              {
-                "Comment": "The ID property is a unique identifier for every log event.",
-                "Name": "logeventsid",
-                "Type": "string",
-              },
-              {
-                "Comment": "Timestamp of the log event",
-                "Name": "logeventstimestamp",
-                "Type": "timestamp",
-              },
-              {
-                "Comment": "Actual message of the log event which is in json string",
-                "Name": "logeventsmessage",
-                "Type": "string",
-              },
-            ],
-          },
-          "TableType": "EXTERNAL_TABLE",
-        },
-      },
-      "Type": "AWS::Glue::Table",
-    },
     "CloudWatchToS3FirehoseBucketNameFirehoseKinesisStreamServiceRole9577C2D5": {
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -1513,6 +1156,16 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
       "Type": "AWS::Lambda::Function",
     },
     "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambdaServiceRoleFA79B6BB": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Managed policy for Lambda basic execution attached.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -1543,7 +1196,17 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
       },
       "Type": "AWS::IAM::Role",
     },
-    "CloudWatchToS3FirehoseBucketNameFirehoseS3ServiceRole1B034103": {
+    "CloudWatchToS3FirehoseBucketNameFirehoseServiceRole9EBB7E56": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Bucket permissions are wildcards to abort downloads and clean up objects. KMS permissions are wildcards to re-encrypt entities.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -1660,86 +1323,6 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
                     },
                   ],
                 },
-                {
-                  "Action": [
-                    "glue:GetTable",
-                    "glue:GetTableVersion",
-                    "glue:GetTableVersions",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": [
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":glue:",
-                          {
-                            "Ref": "AWS::Region",
-                          },
-                          ":",
-                          {
-                            "Ref": "AWS::AccountId",
-                          },
-                          ":catalog",
-                        ],
-                      ],
-                    },
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":glue:",
-                          {
-                            "Ref": "AWS::Region",
-                          },
-                          ":",
-                          {
-                            "Ref": "AWS::AccountId",
-                          },
-                          ":database/",
-                          {
-                            "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchDbCAE69522",
-                          },
-                        ],
-                      ],
-                    },
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":glue:",
-                          {
-                            "Ref": "AWS::Region",
-                          },
-                          ":",
-                          {
-                            "Ref": "AWS::AccountId",
-                          },
-                          ":table/",
-                          {
-                            "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchDbCAE69522",
-                          },
-                          "/",
-                          {
-                            "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchTable1D7675CB",
-                          },
-                        ],
-                      ],
-                    },
-                  ],
-                },
               ],
               "Version": "2012-10-17",
             },
@@ -1749,7 +1332,17 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
       },
       "Type": "AWS::IAM::Role",
     },
-    "CloudWatchToS3FirehoseBucketNameKinesisFirehoseStreamDynamicPartitioningCD958E16": {
+    "CloudWatchToS3FirehoseBucketNameFirehoseStream3C376F34": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-KDF1",
+              "reason": "Customer managed key is used to encrypt firehose delivery stream.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "DeliveryStreamType": "KinesisStreamAsSource",
         "ExtendedS3DestinationConfiguration": {
@@ -1771,35 +1364,7 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
           },
           "CompressionFormat": "UNCOMPRESSED",
           "DataFormatConversionConfiguration": {
-            "Enabled": true,
-            "InputFormatConfiguration": {
-              "Deserializer": {
-                "OpenXJsonSerDe": {
-                  "CaseInsensitive": true,
-                },
-              },
-            },
-            "OutputFormatConfiguration": {
-              "Serializer": {
-                "ParquetSerDe": {
-                  "Compression": "UNCOMPRESSED",
-                },
-              },
-            },
-            "SchemaConfiguration": {
-              "DatabaseName": {
-                "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchDbCAE69522",
-              },
-              "RoleARN": {
-                "Fn::GetAtt": [
-                  "CloudWatchToS3FirehoseBucketNameFirehoseS3ServiceRole1B034103",
-                  "Arn",
-                ],
-              },
-              "TableName": {
-                "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchTable1D7675CB",
-              },
-            },
+            "Enabled": false,
           },
           "DynamicPartitioningConfiguration": {
             "Enabled": true,
@@ -1849,7 +1414,7 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
           },
           "RoleARN": {
             "Fn::GetAtt": [
-              "CloudWatchToS3FirehoseBucketNameFirehoseS3ServiceRole1B034103",
+              "CloudWatchToS3FirehoseBucketNameFirehoseServiceRole9EBB7E56",
               "Arn",
             ],
           },
@@ -1870,73 +1435,6 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
         },
       },
       "Type": "AWS::KinesisFirehose::DeliveryStream",
-    },
-    "CloudWatchToS3FirehoseFirehoseCloudWatchDb1916F9D9": {
-      "Properties": {
-        "CatalogId": {
-          "Ref": "AWS::AccountId",
-        },
-        "DatabaseInput": {
-          "Description": "Glue database to store AWS Accelerator CloudWatch logs",
-          "Name": "AWSAccelerator-Database",
-        },
-      },
-      "Type": "AWS::Glue::Database",
-    },
-    "CloudWatchToS3FirehoseFirehoseCloudWatchTableB4DADD48": {
-      "Properties": {
-        "CatalogId": {
-          "Ref": "AWS::AccountId",
-        },
-        "DatabaseName": {
-          "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchDb1916F9D9",
-        },
-        "TableInput": {
-          "Description": "Glue table to store AWS Accelerator CloudWatch logs",
-          "Name": "aws-accelerator-firehose-transformation-table",
-          "StorageDescriptor": {
-            "Columns": [
-              {
-                "Comment": "Data messages use the "DATA_MESSAGE" type. Sometimes CloudWatch Logs may emit Kinesis records with a "CONTROL_MESSAGE" type, mainly for checking if the destination is reachable.",
-                "Name": "messagetype",
-                "Type": "string",
-              },
-              {
-                "Comment": "The AWS Account ID of the originating log data",
-                "Name": "owner",
-                "Type": "string",
-              },
-              {
-                "Comment": "The log group name of the originating log data.",
-                "Name": "loggroup",
-                "Type": "string",
-              },
-              {
-                "Comment": "The list of comma delimited subscription filter names that matched with the originating log data.",
-                "Name": "subscriptionfilters",
-                "Type": "string",
-              },
-              {
-                "Comment": "The ID property is a unique identifier for every log event.",
-                "Name": "logeventsid",
-                "Type": "string",
-              },
-              {
-                "Comment": "Timestamp of the log event",
-                "Name": "logeventstimestamp",
-                "Type": "timestamp",
-              },
-              {
-                "Comment": "Actual message of the log event which is in json string",
-                "Name": "logeventsmessage",
-                "Type": "string",
-              },
-            ],
-          },
-          "TableType": "EXTERNAL_TABLE",
-        },
-      },
-      "Type": "AWS::Glue::Table",
     },
     "CloudWatchToS3FirehoseFirehoseKinesisStreamServiceRole80E25BD8": {
       "Properties": {
@@ -2037,6 +1535,16 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
       "Type": "AWS::Lambda::Function",
     },
     "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaServiceRole405E5167": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Managed policy for Lambda basic execution attached.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -2067,7 +1575,17 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
       },
       "Type": "AWS::IAM::Role",
     },
-    "CloudWatchToS3FirehoseFirehoseS3ServiceRole8EEB3338": {
+    "CloudWatchToS3FirehoseFirehoseServiceRole4A1CF56B": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Bucket permissions are wildcards to abort downloads and clean up objects. KMS permissions are wildcards to re-encrypt entities.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -2182,86 +1700,6 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
                     },
                   ],
                 },
-                {
-                  "Action": [
-                    "glue:GetTable",
-                    "glue:GetTableVersion",
-                    "glue:GetTableVersions",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": [
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":glue:",
-                          {
-                            "Ref": "AWS::Region",
-                          },
-                          ":",
-                          {
-                            "Ref": "AWS::AccountId",
-                          },
-                          ":catalog",
-                        ],
-                      ],
-                    },
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":glue:",
-                          {
-                            "Ref": "AWS::Region",
-                          },
-                          ":",
-                          {
-                            "Ref": "AWS::AccountId",
-                          },
-                          ":database/",
-                          {
-                            "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchDb1916F9D9",
-                          },
-                        ],
-                      ],
-                    },
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":glue:",
-                          {
-                            "Ref": "AWS::Region",
-                          },
-                          ":",
-                          {
-                            "Ref": "AWS::AccountId",
-                          },
-                          ":table/",
-                          {
-                            "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchDb1916F9D9",
-                          },
-                          "/",
-                          {
-                            "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchTableB4DADD48",
-                          },
-                        ],
-                      ],
-                    },
-                  ],
-                },
               ],
               "Version": "2012-10-17",
             },
@@ -2271,7 +1709,17 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
       },
       "Type": "AWS::IAM::Role",
     },
-    "CloudWatchToS3FirehoseKinesisFirehoseStreamDynamicPartitioning03389B0D": {
+    "CloudWatchToS3FirehoseFirehoseStream0CBF097E": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-KDF1",
+              "reason": "Customer managed key is used to encrypt firehose delivery stream.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "DeliveryStreamType": "KinesisStreamAsSource",
         "ExtendedS3DestinationConfiguration": {
@@ -2287,35 +1735,7 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
           },
           "CompressionFormat": "UNCOMPRESSED",
           "DataFormatConversionConfiguration": {
-            "Enabled": true,
-            "InputFormatConfiguration": {
-              "Deserializer": {
-                "OpenXJsonSerDe": {
-                  "CaseInsensitive": true,
-                },
-              },
-            },
-            "OutputFormatConfiguration": {
-              "Serializer": {
-                "ParquetSerDe": {
-                  "Compression": "UNCOMPRESSED",
-                },
-              },
-            },
-            "SchemaConfiguration": {
-              "DatabaseName": {
-                "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchDb1916F9D9",
-              },
-              "RoleARN": {
-                "Fn::GetAtt": [
-                  "CloudWatchToS3FirehoseFirehoseS3ServiceRole8EEB3338",
-                  "Arn",
-                ],
-              },
-              "TableName": {
-                "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchTableB4DADD48",
-              },
-            },
+            "Enabled": false,
           },
           "DynamicPartitioningConfiguration": {
             "Enabled": true,
@@ -2365,7 +1785,7 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
           },
           "RoleARN": {
             "Fn::GetAtt": [
-              "CloudWatchToS3FirehoseFirehoseS3ServiceRole8EEB3338",
+              "CloudWatchToS3FirehoseFirehoseServiceRole4A1CF56B",
               "Arn",
             ],
           },
