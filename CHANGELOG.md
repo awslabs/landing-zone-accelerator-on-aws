@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(config recorder): AWS Config recorder failure when enabled in new installation
 - fix(installer): set default value for existing config repository parameters
 - fix(networking): non-wildcard record missing in hosted zone for centralized S3 interface endpoints
+- fix(bootstrap): update CDK version to 2.79.1
 
 ## [1.4.0] - 2023-05-03
 
