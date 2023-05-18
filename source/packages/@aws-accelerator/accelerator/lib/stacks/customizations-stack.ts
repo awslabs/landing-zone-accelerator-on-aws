@@ -16,7 +16,12 @@ import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import * as path from 'path';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
-import { PortfolioAssociationConfig, PortfolioConfig, ProductConfig } from '@aws-accelerator/config';
+import {
+  PortfolioAssociationConfig,
+  PortfolioConfig,
+  ProductConfig,
+  ProductConstraintConfig,
+} from '@aws-accelerator/config';
 import {
   IdentityCenterGetPermissionRoleArn,
   IdentityCenterGetPermissionRoleArnProvider,
@@ -83,7 +88,7 @@ export class CustomizationsStack extends AcceleratorStack {
     this.logger.info(`[customizations-stack] Deploying CloudFormation StackSets`);
     if (
       this.account === this.stackSetAdministratorAccount &&
-      this.props.globalConfig.homeRegion == cdk.Stack.of(this).region &&
+      this.props.globalConfig.homeRegion === cdk.Stack.of(this).region &&
       this.props.customizationsConfig?.customizations?.cloudFormationStackSets
     ) {
       const customStackSetList = this.props.customizationsConfig.customizations.cloudFormationStackSets;
@@ -264,6 +269,157 @@ export class CustomizationsStack extends AcceleratorStack {
 
       //Associate Portfolio with the Product.
       portfolio.addProduct(product);
+
+      //Add Constraints to Product.
+
+      if (productItem.constraints) {
+        this.createProductConstraints(portfolio, product, portfolioItem, productItem);
+      }
+    }
+  }
+
+  /**
+   * Create Service Catalog Product Constraints
+   * @param portfolio
+   * @param product
+   * @param portfolioItem
+   * @param productItem
+   */
+  private createProductConstraints(
+    portfolio: cdk.aws_servicecatalog.Portfolio,
+    product: cdk.aws_servicecatalog.CloudFormationProduct,
+    portfolioItem: PortfolioConfig,
+    productItem: ProductConfig,
+  ) {
+    const constraints: ProductConstraintConfig = productItem.constraints!;
+
+    if (constraints.launch) {
+      this.getProductLaunchConstraint(portfolio, product, portfolioItem.name, productItem.name, constraints.launch);
+    }
+
+    if (constraints.tagUpdate !== undefined) {
+      this.getProductTagUpdateConstraint(portfolio, product, constraints.tagUpdate);
+    }
+
+    if (constraints.notifications) {
+      this.getProductNotificationConstraint(
+        portfolio,
+        product,
+        portfolioItem.name,
+        productItem.name,
+        constraints.notifications,
+      );
+    }
+  }
+
+  /**
+   * Create Product Notification Service Catalog constraint
+   * @param portfolio
+   * @param product
+   * @param portfolioName
+   * @param productName
+   * @param notifications
+   */
+  private getProductNotificationConstraint(
+    portfolio: cdk.aws_servicecatalog.Portfolio,
+    product: cdk.aws_servicecatalog.CloudFormationProduct,
+    portfolioName: string,
+    productName: string,
+    notifications: string[],
+  ) {
+    const account = cdk.Stack.of(this).account;
+    const partition = cdk.Stack.of(this).partition;
+    const topicArns = [];
+
+    for (const topic of notifications) {
+      const topicArn = `arn:${partition}:sns:${this.region}:${account}:${topic}`;
+
+      topicArns.push(topicArn);
+    }
+
+    this.logger.info(`Adding topics ${topicArns}`);
+
+    new cdk.aws_servicecatalog.CfnLaunchNotificationConstraint(
+      this,
+      `${portfolioName}${productName}NotificationConstraint`,
+      {
+        notificationArns: topicArns,
+        portfolioId: portfolio.portfolioId,
+        productId: product.productId,
+        description: `Notify topics for ${productName}`,
+      },
+    );
+  }
+
+  /**
+   * Create Service Catalog Product TagUpdate Constraint
+   *    tagUpdate can be either true or false to disable.
+   * @param portfolio
+   * @param product
+   * @param tagUpdate
+   *
+   */
+  private getProductTagUpdateConstraint(
+    portfolio: cdk.aws_servicecatalog.Portfolio,
+    product: cdk.aws_servicecatalog.CloudFormationProduct,
+    tagUpdate: boolean,
+  ) {
+    this.logger.info(`Creating TagUpdate constraint with allow: ${tagUpdate} on product ${product.productId}`);
+
+    portfolio.constrainTagUpdates(product, {
+      allow: tagUpdate,
+    });
+  }
+
+  /**
+   * Create Service Catalog Product Launch Constraint
+   *
+   * Note: if you use a 'Role' type this may affect shared portfolios and prevent them from
+   * working as expected as the role will not exist in shared account.
+   *
+   * @param portfolio
+   * @param product
+   * @param portfolioName
+   * @param productName
+   * @param launchConstraint
+   */
+  private getProductLaunchConstraint(
+    portfolio: cdk.aws_servicecatalog.Portfolio,
+    product: cdk.aws_servicecatalog.CloudFormationProduct,
+    portfolioName: string,
+    productName: string,
+    launchConstraint: { type: 'Role' | 'LocalRole'; role: string },
+  ) {
+    const account = cdk.Stack.of(this).account;
+    const partition = cdk.Stack.of(this).partition;
+
+    this.logger.info(`Creating launch constraint on product ${product.productId}`);
+
+    if (launchConstraint.type === 'Role') {
+      //specific role only
+
+      const launchRoleArn = `arn:${partition}:iam::${account}:role/${launchConstraint.role}`;
+      new cdk.aws_servicecatalog.CfnLaunchRoleConstraint(
+        this,
+        pascalCase(`${portfolioName}Portfolio${productName}ProductLaunchConstraint`),
+        {
+          portfolioId: portfolio.portfolioId,
+          productId: product.productId,
+          roleArn: launchRoleArn,
+        },
+      );
+    }
+
+    if (launchConstraint.type === 'LocalRole') {
+      new cdk.aws_servicecatalog.CfnLaunchRoleConstraint(
+        this,
+        pascalCase(`${portfolioName}Portfolio${productName}ProductLaunchConstraint`),
+        {
+          portfolioId: portfolio.portfolioId,
+          productId: product.productId,
+          localRoleName: launchConstraint.role,
+        },
+      );
     }
   }
 

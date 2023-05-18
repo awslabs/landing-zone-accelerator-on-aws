@@ -482,6 +482,32 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] 
       },
       "Type": "AWS::ServiceCatalog::PortfolioPrincipalAssociation",
     },
+    "MyPortfolioMyProductNotificationConstraint": {
+      "Properties": {
+        "Description": "Notify topics for My-Product",
+        "NotificationArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":sns:us-east-1:111111111111:AWSAccelerator-ControlTowerNotification",
+              ],
+            ],
+          },
+        ],
+        "PortfolioId": {
+          "Ref": "MyPortfolioPortfolio94625F45",
+        },
+        "ProductId": {
+          "Ref": "MyPortfolioPortfolioMyProductProduct084EC200",
+        },
+      },
+      "Type": "AWS::ServiceCatalog::LaunchNotificationConstraint",
+    },
     "MyPortfolioPortfolio94625F45": {
       "Properties": {
         "DisplayName": "My-Portfolio",
@@ -513,6 +539,18 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] 
       },
       "Type": "AWS::ServiceCatalog::CloudFormationProduct",
     },
+    "MyPortfolioPortfolioMyProductProductLaunchConstraint": {
+      "Properties": {
+        "LocalRoleName": "testRole",
+        "PortfolioId": {
+          "Ref": "MyPortfolioPortfolio94625F45",
+        },
+        "ProductId": {
+          "Ref": "MyPortfolioPortfolioMyProductProduct084EC200",
+        },
+      },
+      "Type": "AWS::ServiceCatalog::LaunchRoleConstraint",
+    },
     "MyPortfolioPortfolioPortfolioProductAssociation72040103f9e35F6E6349": {
       "Properties": {
         "PortfolioId": {
@@ -524,12 +562,28 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] 
       },
       "Type": "AWS::ServiceCatalog::PortfolioProductAssociation",
     },
+    "MyPortfolioPortfolioResourceUpdateConstraint72040103f9e34CF340D2": {
+      "DependsOn": [
+        "MyPortfolioPortfolioPortfolioProductAssociation72040103f9e35F6E6349",
+      ],
+      "Properties": {
+        "PortfolioId": {
+          "Ref": "MyPortfolioPortfolio94625F45",
+        },
+        "ProductId": {
+          "Ref": "MyPortfolioPortfolioMyProductProduct084EC200",
+        },
+        "TagUpdateOnProvisionedProduct": "NOT_ALLOWED",
+      },
+      "Type": "AWS::ServiceCatalog::ResourceUpdateConstraint",
+    },
     "MyPortfolioPropagationPropagateAssociationsDC7707C1": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
         "CustomPropagatePortfolioAssociationsCustomResourceProviderLogGroup44DE568D",
         "MyPortfolioPortfolioPortfolioProductAssociation72040103f9e35F6E6349",
         "MyPortfolioPortfolio94625F45",
+        "MyPortfolioPortfolioResourceUpdateConstraint72040103f9e34CF340D2",
       ],
       "Properties": {
         "ServiceToken": {
@@ -542,7 +596,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] 
         "partition": {
           "Ref": "AWS::Partition",
         },
-        "portfolioDefinition": "{"name":"My-Portfolio","provider":"LZA","account":"Management","regions":["us-east-1","us-west-2"],"shareTargets":{"organizationalUnits":["Security"]},"shareTagOptions":true,"portfolioAssociations":[{"type":"Group","name":"Administrators","propagateAssociation":true},{"type":"Role","name":"EC2-Default-SSM-AD-Role"},{"type":"User","name":"breakGlassUser01"}],"products":[{"name":"My-Product","description":"Sample product by lZA.","owner":"LZA","distributor":"LZA","versions":[{"name":"v1","description":"product version is v1","template":"cloudformation-templates/custom-s3-bucket.yaml","deprecated":false}],"support":{"description":"Please include account ID and provisioned product ID.","email":"support@example.com","url":"https://support.amazon.com"}}]}",
+        "portfolioDefinition": "{"name":"My-Portfolio","provider":"LZA","account":"Management","regions":["us-east-1","us-west-2"],"shareTargets":{"organizationalUnits":["Security"]},"shareTagOptions":true,"portfolioAssociations":[{"type":"Group","name":"Administrators","propagateAssociation":true},{"type":"Role","name":"EC2-Default-SSM-AD-Role"},{"type":"User","name":"breakGlassUser01"}],"products":[{"name":"My-Product","description":"Sample product by lZA.","owner":"LZA","distributor":"LZA","versions":[{"name":"v1","description":"product version is v1","template":"cloudformation-templates/custom-s3-bucket.yaml","deprecated":false}],"constraints":{"launch":{"type":"LocalRole","role":"testRole"},"tagUpdate":false,"notifications":["AWSAccelerator-ControlTowerNotification"]},"support":{"description":"Please include account ID and provisioned product ID.","email":"support@example.com","url":"https://support.amazon.com"}}]}",
         "portfolioId": {
           "Ref": "MyPortfolioPortfolio94625F45",
         },
@@ -558,6 +612,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] 
         "CustomSharePortfolioWithOrgCustomResourceProviderLogGroup3D78DA1D",
         "MyPortfolioPortfolioPortfolioProductAssociation72040103f9e35F6E6349",
         "MyPortfolioPortfolio94625F45",
+        "MyPortfolioPortfolioResourceUpdateConstraint72040103f9e34CF340D2",
       ],
       "Properties": {
         "ServiceToken": {

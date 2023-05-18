@@ -397,6 +397,28 @@ export class CustomizationsConfigTypes {
   });
 
   /**
+   * Service Catalog Launch Constraint type
+   */
+  static readonly productLaunchConstraintType = t.enums('ProductLaunchConstraintType', ['Role', 'LocalRole']);
+
+  /**
+   * Service Catalog Launch Constraint configuration
+   */
+  static readonly productLaunchConstraintConfig = t.interface({
+    type: this.productLaunchConstraintType,
+    role: t.nonEmptyString,
+  });
+
+  /**
+   * Notification Constraint, Topics - Max of 5 topics can be provided.
+   */
+  static readonly productConstraintConfig = t.interface({
+    launch: t.optional(this.productLaunchConstraintConfig),
+    tagUpdate: t.optional(t.boolean),
+    notifications: t.optional(t.array(t.nonEmptyString)),
+  });
+
+  /**
    * Service Catalog Products configuration
    */
   static readonly productConfig = t.interface({
@@ -407,6 +429,7 @@ export class CustomizationsConfigTypes {
     distributor: t.optional(t.nonEmptyString),
     support: t.optional(this.productSupportConfig),
     tagOptions: t.optional(t.array(this.tagOptionsConfig)),
+    constraints: t.optional(this.productConstraintConfig),
   });
 
   /**
@@ -2288,6 +2311,69 @@ export class TagOptionsConfig implements t.TypeOf<typeof CustomizationsConfigTyp
 }
 
 /**
+ * *{@link CustomizationsConfig} / {@link CustomizationConfig} / {@link PortfolioConfig} | {@link ProductConfig} / {@link ProductConstraintConfig} / {@link ProductLaunchConstraintConfig}*
+ *
+ * Service Catalog Product Constraint configuration. For more information see https://docs.aws.amazon.com/servicecatalog/latest/adminguide/constraints.html
+ *
+ * @example
+ * ```
+ * constraints:
+ *   launch:
+ *    type: localRole | Role
+ *    role: string
+ *   tagUpdate: true | false
+ *   notifications:
+ *     - topicName
+ * ```
+ */
+export class ProductLaunchConstraintConfig
+  implements t.TypeOf<typeof CustomizationsConfigTypes.productLaunchConstraintConfig>
+{
+  /**
+   * The type of launch constraint, either Role or LocalRole. For more information, see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-servicecatalog-launchroleconstraint.html
+   */
+  readonly type: t.TypeOf<typeof CustomizationsConfigTypes.productLaunchConstraintType> = 'Role';
+  /**
+   * The name of the IAM Role.
+   */
+  readonly role: string = '';
+}
+
+/**
+ * *{@link CustomizationsConfig} / {@link CustomizationConfig} / {@link PortfolioConfig} | {@link ProductConfig} / {@link ProductConstraintConfig}*
+ *
+ * Service Catalog Product Constraint configuration. For more information see https://docs.aws.amazon.com/servicecatalog/latest/adminguide/constraints.html
+ *
+ * @example
+ * ```
+ * constraints:
+ *   launch:
+ *    type: localRole | Role
+ *    role: string
+ *   tagUpdate: true | false
+ *   notifications:
+ *     - topicName
+ * ```
+ */
+export class ProductConstraintConfig implements t.TypeOf<typeof CustomizationsConfigTypes.productConstraintConfig> {
+  /**
+   * Launch constraint role name and type, supports LocalRole or Role.
+   */
+  launch: ProductLaunchConstraintConfig | undefined;
+  /**
+   * Determines if Service Catalog Tag Update constraint is enabled
+   */
+  tagUpdate: boolean | undefined;
+  /**
+   * A list of SNS topic names to stream product notifications to
+   *
+   * @remarks
+   * The SNS Topic must exist in the same account and region. SNS Topic names are not validated, please ensure the SNS Topic exists in the account.
+   */
+  notifications: string[] | undefined;
+}
+
+/**
  * *{@link CustomizationsConfig} / {@link CustomizationConfig} / {@link PortfolioConfig} / {@link ProductConfig}*
  *
  * Service Catalog Products configuration
@@ -2301,6 +2387,13 @@ export class TagOptionsConfig implements t.TypeOf<typeof CustomizationsConfigTyp
  *     - name: v1
  *       description: Product version 1
  *       template: path/to/template.json
+ *   constraints:
+ *     launch:
+ *       type: localRole | Role
+ *       role: string
+ *     tagUpdate: true | false
+ *     notifications:
+ *       - topicName
  * ```
  */
 export class ProductConfig implements t.TypeOf<typeof CustomizationsConfigTypes.productConfig> {
@@ -2332,6 +2425,10 @@ export class ProductConfig implements t.TypeOf<typeof CustomizationsConfigTypes.
    * Product TagOptions configuration
    */
   readonly tagOptions: TagOptionsConfig[] | undefined = undefined;
+  /**
+   * Product Constraint configuration
+   */
+  readonly constraints: ProductConstraintConfig | undefined = undefined;
 }
 
 /**
@@ -2357,6 +2454,13 @@ export class ProductConfig implements t.TypeOf<typeof CustomizationsConfigTypes.
  *     - name: Product01
  *       description: Example product
  *       owner: Product-Owner
+ *       constraints:
+ *         launch:
+ *          type: localRole | Role
+ *          role: roleName
+ *         tagUpdate: true | false
+ *         notifications:
+ *           - topicName
  *       versions:
  *         - name: v1
  *           description: Product version 1
