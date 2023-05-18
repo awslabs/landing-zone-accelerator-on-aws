@@ -5,16 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.4.1] - 2023-05-15
+## [1.4.1] - 2023-05-18
 
 ### Fixed
 
-- fix(route53): route53 resolver configuration should be independent of network firewall configuration
-- fix(guardduty): Increased memory size of GuardDuty Custom Resource
+- fix(route53): route53 resolver configuration depends on Network Firewall configuration
 - fix(config recorder): AWS Config recorder failure when enabled in new installation
 - fix(installer): set default value for existing config repository parameters
 - fix(networking): non-wildcard record missing in hosted zone for centralized S3 interface endpoints
-- fix(bootstrap): update CDK version to 2.79.1
+- chore(bootstrap): update CDK version to 2.79.1
+- chore(lambda): Increased memory size of custom resources
 
 ## [1.4.0] - 2023-05-03
 
