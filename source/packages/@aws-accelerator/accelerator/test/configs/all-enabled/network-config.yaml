@@ -1184,10 +1184,6 @@ vpcs:
             destination: 0.0.0.0/0
             type: transitGateway
             target: Network-Main
-          - name: TgwRouteDynamic
-            destination: Network-Inspection-A
-            type: transitGateway
-            target: Network-Main
           - name: S3Gateway
             type: gatewayEndpoint
             target: s3
@@ -1198,10 +1194,6 @@ vpcs:
         routes:
           - name: TgwRoute
             destination: 0.0.0.0/0
-            type: transitGateway
-            target: Network-Main
-          - name: TgwRouteDynamic
-            destination: Network-Inspection-B
             type: transitGateway
             target: Network-Main
           - name: S3Gateway
@@ -1221,15 +1213,6 @@ vpcs:
             destination: 10.0.0.0/8
             type: gatewayLoadBalancerEndpoint
             target: Endpoint-A
-          - name: NfwRouteDynamic
-            destination: Network-Inspection-A
-            type: networkFirewall
-            target: accelerator-firewall
-            targetAvailabilityZone: a
-          - name: GwlbRouteDynamic
-            destination: Network-InspectionTgwAttach-A
-            type: gatewayLoadBalancerEndpoint
-            target: Endpoint-A
       - name: Network-Inspection-Tgw-B
         routes:
           - name: NfwRoute
@@ -1241,34 +1224,25 @@ vpcs:
             destination: 10.0.0.0/8
             type: gatewayLoadBalancerEndpoint
             target: Endpoint-B
-          - name: NfwRouteDynamic
-            destination: Network-Inspection-B
-            type: networkFirewall
-            target: accelerator-firewall
-            targetAvailabilityZone: a
-          - name: GwlbRouteDynamic
-            destination: Network-InspectionTgwAttach-B
-            type: gatewayLoadBalancerEndpoint
-            target: Endpoint-A
       - name: Network-Inspection-Gateway
         gatewayAssociation: internetGateway
         routes:
           - name: NfwRouteDynamic-A
-            destination: 10.2.0.0/24
+            destination: Network-Inspection-A
             type: networkFirewall
             target: accelerator-firewall
             targetAvailabilityZone: a
           - name: GwlbRouteDynamic-A
-            destination: 10.2.1.0/24
+            destination: Network-InspectionTgwAttach-A
             type: gatewayLoadBalancerEndpoint
             target: Endpoint-A
           - name: NfwRouteDynamic-B
-            destination: 10.2.3.208/28
+            destination: Network-Inspection-B
             type: networkFirewall
             target: accelerator-firewall
             targetAvailabilityZone: b
           - name: GwlbRouteDynamic-B
-            destination: 10.2.3.224/28
+            destination: Network-InspectionTgwAttach-B
             type: gatewayLoadBalancerEndpoint
             target: Endpoint-B
     subnets:

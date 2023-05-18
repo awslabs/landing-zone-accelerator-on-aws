@@ -345,7 +345,12 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
     },
     "NetworkInspectionVpcEndpointAGwlbEpNetworkInspectionVpcNetworkInspectionGatewayRouteTableGwlbRouteDynamicA422EA421": {
       "Properties": {
-        "DestinationCidrBlock": "10.2.1.0/24",
+        "DestinationCidrBlock": {
+          "Fn::GetAtt": [
+            "NetworkInspectionNetworkInspectionTgwAttachAIpamSubnetLookup0C1296D2",
+            "ipv4CidrBlock",
+          ],
+        },
         "RouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionGatewayidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
@@ -360,40 +365,6 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
         "DestinationCidrBlock": "10.0.0.0/8",
         "RouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionTgwAidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "VpcEndpointId": {
-          "Ref": "NetworkInspectionVpcEndpointAGwlbEpB5238F8C",
-        },
-      },
-      "Type": "AWS::EC2::Route",
-    },
-    "NetworkInspectionVpcEndpointAGwlbEpNetworkInspectionVpcNetworkInspectionTgwARouteTableGwlbRouteDynamic30ECCD93": {
-      "Properties": {
-        "DestinationCidrBlock": {
-          "Fn::GetAtt": [
-            "NetworkInspectionNetworkInspectionTgwAttachAIpamSubnetLookup0C1296D2",
-            "ipv4CidrBlock",
-          ],
-        },
-        "RouteTableId": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionTgwAidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "VpcEndpointId": {
-          "Ref": "NetworkInspectionVpcEndpointAGwlbEpB5238F8C",
-        },
-      },
-      "Type": "AWS::EC2::Route",
-    },
-    "NetworkInspectionVpcEndpointAGwlbEpNetworkInspectionVpcNetworkInspectionTgwBRouteTableGwlbRouteDynamic643F3842": {
-      "Properties": {
-        "DestinationCidrBlock": {
-          "Fn::GetAtt": [
-            "NetworkInspectionNetworkInspectionTgwAttachBIpamSubnetLookup4FB5ACC0",
-            "ipv4CidrBlock",
-          ],
-        },
-        "RouteTableId": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionTgwBidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "VpcEndpointId": {
           "Ref": "NetworkInspectionVpcEndpointAGwlbEpB5238F8C",
@@ -428,7 +399,12 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
     },
     "NetworkInspectionVpcEndpointBGwlbEpNetworkInspectionVpcNetworkInspectionGatewayRouteTableGwlbRouteDynamicB140E00A1": {
       "Properties": {
-        "DestinationCidrBlock": "10.2.3.224/28",
+        "DestinationCidrBlock": {
+          "Fn::GetAtt": [
+            "NetworkInspectionNetworkInspectionTgwAttachBIpamSubnetLookup4FB5ACC0",
+            "ipv4CidrBlock",
+          ],
+        },
         "RouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionGatewayidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },

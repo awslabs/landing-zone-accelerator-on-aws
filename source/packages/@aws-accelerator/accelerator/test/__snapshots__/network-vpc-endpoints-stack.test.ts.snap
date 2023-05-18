@@ -1015,7 +1015,12 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
     },
     "NetworkInspectionacceleratorFirewallNetworkFirewallNetworkInspectionVpcNetworkInspectionGatewayRouteTableNfwRouteDynamicA7F44B00F": {
       "Properties": {
-        "DestinationCidrBlock": "10.2.0.0/24",
+        "DestinationCidrBlock": {
+          "Fn::GetAtt": [
+            "NetworkInspectionNetworkInspectionAIpamSubnetLookupAB49CB8A",
+            "ipv4CidrBlock",
+          ],
+        },
         "RouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionGatewayidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
@@ -1048,7 +1053,12 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
     },
     "NetworkInspectionacceleratorFirewallNetworkFirewallNetworkInspectionVpcNetworkInspectionGatewayRouteTableNfwRouteDynamicBA3840700": {
       "Properties": {
-        "DestinationCidrBlock": "10.2.3.208/28",
+        "DestinationCidrBlock": {
+          "Fn::GetAtt": [
+            "NetworkInspectionNetworkInspectionBIpamSubnetLookup8E0B0779",
+            "ipv4CidrBlock",
+          ],
+        },
         "RouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionGatewayidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
@@ -1091,83 +1101,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
       },
       "Type": "AWS::EC2::Route",
     },
-    "NetworkInspectionacceleratorFirewallNetworkFirewallNetworkInspectionVpcNetworkInspectionTgwARouteTableNfwRouteDynamic7ADCAB2C": {
-      "Properties": {
-        "DestinationCidrBlock": {
-          "Fn::GetAtt": [
-            "NetworkInspectionNetworkInspectionAIpamSubnetLookupAB49CB8A",
-            "ipv4CidrBlock",
-          ],
-        },
-        "RouteTableId": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionTgwAidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "VpcEndpointId": {
-          "Ref": "NetworkInspectionacceleratorFirewallNetworkFirewallNetworkInspectionVpcNetworkInspectionTgwARouteTableNfwRouteDynamicEndpoint9624ADC0",
-        },
-      },
-      "Type": "AWS::EC2::Route",
-    },
-    "NetworkInspectionacceleratorFirewallNetworkFirewallNetworkInspectionVpcNetworkInspectionTgwARouteTableNfwRouteDynamicEndpoint9624ADC0": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomGetNetworkFirewallEndpointCustomResourceProviderLogGroup98AC3B14",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomGetNetworkFirewallEndpointCustomResourceProviderHandler2EF030A1",
-            "Arn",
-          ],
-        },
-        "endpointAz": "us-east-1a",
-        "firewallArn": {
-          "Ref": "NetworkInspectionacceleratorFirewallNetworkFirewallF1BD6427",
-        },
-        "region": "us-east-1",
-      },
-      "Type": "Custom::GetNetworkFirewallEndpoint",
-      "UpdateReplacePolicy": "Delete",
-    },
     "NetworkInspectionacceleratorFirewallNetworkFirewallNetworkInspectionVpcNetworkInspectionTgwARouteTableNfwRouteEndpointEAD15969": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomGetNetworkFirewallEndpointCustomResourceProviderLogGroup98AC3B14",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomGetNetworkFirewallEndpointCustomResourceProviderHandler2EF030A1",
-            "Arn",
-          ],
-        },
-        "endpointAz": "us-east-1a",
-        "firewallArn": {
-          "Ref": "NetworkInspectionacceleratorFirewallNetworkFirewallF1BD6427",
-        },
-        "region": "us-east-1",
-      },
-      "Type": "Custom::GetNetworkFirewallEndpoint",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "NetworkInspectionacceleratorFirewallNetworkFirewallNetworkInspectionVpcNetworkInspectionTgwBRouteTableNfwRouteDynamic0C924A8A": {
-      "Properties": {
-        "DestinationCidrBlock": {
-          "Fn::GetAtt": [
-            "NetworkInspectionNetworkInspectionBIpamSubnetLookup8E0B0779",
-            "ipv4CidrBlock",
-          ],
-        },
-        "RouteTableId": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionTgwBidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "VpcEndpointId": {
-          "Ref": "NetworkInspectionacceleratorFirewallNetworkFirewallNetworkInspectionVpcNetworkInspectionTgwBRouteTableNfwRouteDynamicEndpoint7109C10F",
-        },
-      },
-      "Type": "AWS::EC2::Route",
-    },
-    "NetworkInspectionacceleratorFirewallNetworkFirewallNetworkInspectionVpcNetworkInspectionTgwBRouteTableNfwRouteDynamicEndpoint7109C10F": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
         "CustomGetNetworkFirewallEndpointCustomResourceProviderLogGroup98AC3B14",
