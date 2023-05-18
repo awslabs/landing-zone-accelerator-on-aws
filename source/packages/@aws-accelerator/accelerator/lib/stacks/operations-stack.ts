@@ -26,7 +26,6 @@ import {
   Organization,
   WarmAccount,
 } from '@aws-accelerator/constructs';
-
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 export interface OperationsStackProps extends AcceleratorStackProps {

@@ -66,8 +66,6 @@ customizations:
           name: EC2-Default-SSM-AD-Role
         - type: User
           name: breakGlassUser01
-        # - type: PermissionSet
-        #   name: PermissionSet1
       products:
         - name: My-Product
           description: Sample product by lZA.
@@ -78,6 +76,13 @@ customizations:
               description: product version is v1
               template: cloudformation-templates/custom-s3-bucket.yaml
               deprecated: false
+          constraints:
+            launch:
+              type: LocalRole
+              role: testRole
+            tagUpdate: false
+            notifications:
+              - AWSAccelerator-ControlTowerNotification
           support:
             description: Please include account ID and provisioned product ID.
             email: support@example.com
@@ -382,7 +387,7 @@ applications:
         port: 80
         protocol: TCP
         type: instance
-        attributes: 
+        attributes:
           connectionTermination: true
           preserveClientIp: true
           proxyProtocolV2: true
@@ -443,7 +448,7 @@ applications:
         port: 80
         protocol: TCP
         type: instance
-        attributes: 
+        attributes:
           connectionTermination: true
           preserveClientIp: true
           proxyProtocolV2: true
@@ -545,7 +550,7 @@ applications:
       name: appG-nlb-01
       scheme: internal
       deletionProtection: false
-      subnets: 
+      subnets:
         - SharedServices-App-A
         - SharedServices-App-B
       listeners:
@@ -563,7 +568,7 @@ applications:
     applicationLoadBalancer:
       name: appG-alb-01
       scheme: internet-facing
-      subnets: 
+      subnets:
         - SharedServices-App-A
         - SharedServices-App-B
       securityGroups:
