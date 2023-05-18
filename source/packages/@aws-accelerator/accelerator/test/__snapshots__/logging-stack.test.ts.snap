@@ -1995,69 +1995,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::S3::BucketPolicy",
     },
-    "FirehoseToS3SetupFirehoseCloudWatchDb3683542E": {
-      "Properties": {
-        "CatalogId": "333333333333",
-        "DatabaseInput": {
-          "Description": "Glue database to store AWS Accelerator CloudWatch logs",
-          "Name": "aws-accelerator-subscription-database",
-        },
-      },
-      "Type": "AWS::Glue::Database",
-    },
-    "FirehoseToS3SetupFirehoseCloudWatchTable07CBDE10": {
-      "Properties": {
-        "CatalogId": "333333333333",
-        "DatabaseName": {
-          "Ref": "FirehoseToS3SetupFirehoseCloudWatchDb3683542E",
-        },
-        "TableInput": {
-          "Description": "Glue table to store AWS Accelerator CloudWatch logs",
-          "Name": "aws-accelerator-firehose-transformation-table",
-          "StorageDescriptor": {
-            "Columns": [
-              {
-                "Comment": "Data messages use the "DATA_MESSAGE" type. Sometimes CloudWatch Logs may emit Kinesis records with a "CONTROL_MESSAGE" type, mainly for checking if the destination is reachable.",
-                "Name": "messagetype",
-                "Type": "string",
-              },
-              {
-                "Comment": "The AWS Account ID of the originating log data",
-                "Name": "owner",
-                "Type": "string",
-              },
-              {
-                "Comment": "The log group name of the originating log data.",
-                "Name": "loggroup",
-                "Type": "string",
-              },
-              {
-                "Comment": "The list of comma delimited subscription filter names that matched with the originating log data.",
-                "Name": "subscriptionfilters",
-                "Type": "string",
-              },
-              {
-                "Comment": "The ID property is a unique identifier for every log event.",
-                "Name": "logeventsid",
-                "Type": "string",
-              },
-              {
-                "Comment": "Timestamp of the log event",
-                "Name": "logeventstimestamp",
-                "Type": "timestamp",
-              },
-              {
-                "Comment": "REPLACED-JSON-PATH.json",
-                "Name": "logeventsmessage",
-                "Type": "string",
-              },
-            ],
-          },
-          "TableType": "EXTERNAL_TABLE",
-        },
-      },
-      "Type": "AWS::Glue::Table",
-    },
     "FirehoseToS3SetupFirehoseKinesisStreamServiceRoleDCF2BF9E": {
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -2195,7 +2132,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Role",
     },
-    "FirehoseToS3SetupFirehoseS3ServiceRole1E95E56A": {
+    "FirehoseToS3SetupFirehoseServiceRole23B67E37": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -2319,62 +2256,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
                     },
                   ],
                 },
-                {
-                  "Action": [
-                    "glue:GetTable",
-                    "glue:GetTableVersion",
-                    "glue:GetTableVersions",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": [
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":glue:us-east-1:333333333333:catalog",
-                        ],
-                      ],
-                    },
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":glue:us-east-1:333333333333:database/",
-                          {
-                            "Ref": "FirehoseToS3SetupFirehoseCloudWatchDb3683542E",
-                          },
-                        ],
-                      ],
-                    },
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":glue:us-east-1:333333333333:table/",
-                          {
-                            "Ref": "FirehoseToS3SetupFirehoseCloudWatchDb3683542E",
-                          },
-                          "/",
-                          {
-                            "Ref": "FirehoseToS3SetupFirehoseCloudWatchTable07CBDE10",
-                          },
-                        ],
-                      ],
-                    },
-                  ],
-                },
               ],
               "Version": "2012-10-17",
             },
@@ -2384,7 +2265,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Role",
     },
-    "FirehoseToS3SetupKinesisFirehoseStreamDynamicPartitioning65876320": {
+    "FirehoseToS3SetupFirehoseStream649EE2A0": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -2416,35 +2297,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           },
           "CompressionFormat": "UNCOMPRESSED",
           "DataFormatConversionConfiguration": {
-            "Enabled": true,
-            "InputFormatConfiguration": {
-              "Deserializer": {
-                "OpenXJsonSerDe": {
-                  "CaseInsensitive": true,
-                },
-              },
-            },
-            "OutputFormatConfiguration": {
-              "Serializer": {
-                "ParquetSerDe": {
-                  "Compression": "UNCOMPRESSED",
-                },
-              },
-            },
-            "SchemaConfiguration": {
-              "DatabaseName": {
-                "Ref": "FirehoseToS3SetupFirehoseCloudWatchDb3683542E",
-              },
-              "RoleARN": {
-                "Fn::GetAtt": [
-                  "FirehoseToS3SetupFirehoseS3ServiceRole1E95E56A",
-                  "Arn",
-                ],
-              },
-              "TableName": {
-                "Ref": "FirehoseToS3SetupFirehoseCloudWatchTable07CBDE10",
-              },
-            },
+            "Enabled": false,
           },
           "DynamicPartitioningConfiguration": {
             "Enabled": true,
@@ -2491,7 +2344,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           },
           "RoleARN": {
             "Fn::GetAtt": [
-              "FirehoseToS3SetupFirehoseS3ServiceRole1E95E56A",
+              "FirehoseToS3SetupFirehoseServiceRole23B67E37",
               "Arn",
             ],
           },
@@ -5158,69 +5011,6 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
       },
       "Type": "AWS::S3::BucketPolicy",
     },
-    "FirehoseToS3SetupFirehoseCloudWatchDb3683542E": {
-      "Properties": {
-        "CatalogId": "333333333333",
-        "DatabaseInput": {
-          "Description": "Glue database to store AWS Accelerator CloudWatch logs",
-          "Name": "aws-accelerator-subscription-database",
-        },
-      },
-      "Type": "AWS::Glue::Database",
-    },
-    "FirehoseToS3SetupFirehoseCloudWatchTable07CBDE10": {
-      "Properties": {
-        "CatalogId": "333333333333",
-        "DatabaseName": {
-          "Ref": "FirehoseToS3SetupFirehoseCloudWatchDb3683542E",
-        },
-        "TableInput": {
-          "Description": "Glue table to store AWS Accelerator CloudWatch logs",
-          "Name": "aws-accelerator-firehose-transformation-table",
-          "StorageDescriptor": {
-            "Columns": [
-              {
-                "Comment": "Data messages use the "DATA_MESSAGE" type. Sometimes CloudWatch Logs may emit Kinesis records with a "CONTROL_MESSAGE" type, mainly for checking if the destination is reachable.",
-                "Name": "messagetype",
-                "Type": "string",
-              },
-              {
-                "Comment": "The AWS Account ID of the originating log data",
-                "Name": "owner",
-                "Type": "string",
-              },
-              {
-                "Comment": "The log group name of the originating log data.",
-                "Name": "loggroup",
-                "Type": "string",
-              },
-              {
-                "Comment": "The list of comma delimited subscription filter names that matched with the originating log data.",
-                "Name": "subscriptionfilters",
-                "Type": "string",
-              },
-              {
-                "Comment": "The ID property is a unique identifier for every log event.",
-                "Name": "logeventsid",
-                "Type": "string",
-              },
-              {
-                "Comment": "Timestamp of the log event",
-                "Name": "logeventstimestamp",
-                "Type": "timestamp",
-              },
-              {
-                "Comment": "REPLACED-JSON-PATH.json",
-                "Name": "logeventsmessage",
-                "Type": "string",
-              },
-            ],
-          },
-          "TableType": "EXTERNAL_TABLE",
-        },
-      },
-      "Type": "AWS::Glue::Table",
-    },
     "FirehoseToS3SetupFirehoseKinesisStreamServiceRoleDCF2BF9E": {
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -5358,7 +5148,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
       },
       "Type": "AWS::IAM::Role",
     },
-    "FirehoseToS3SetupFirehoseS3ServiceRole1E95E56A": {
+    "FirehoseToS3SetupFirehoseServiceRole23B67E37": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -5482,62 +5272,6 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
                     },
                   ],
                 },
-                {
-                  "Action": [
-                    "glue:GetTable",
-                    "glue:GetTableVersion",
-                    "glue:GetTableVersions",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": [
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":glue:us-east-1:333333333333:catalog",
-                        ],
-                      ],
-                    },
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":glue:us-east-1:333333333333:database/",
-                          {
-                            "Ref": "FirehoseToS3SetupFirehoseCloudWatchDb3683542E",
-                          },
-                        ],
-                      ],
-                    },
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":glue:us-east-1:333333333333:table/",
-                          {
-                            "Ref": "FirehoseToS3SetupFirehoseCloudWatchDb3683542E",
-                          },
-                          "/",
-                          {
-                            "Ref": "FirehoseToS3SetupFirehoseCloudWatchTable07CBDE10",
-                          },
-                        ],
-                      ],
-                    },
-                  ],
-                },
               ],
               "Version": "2012-10-17",
             },
@@ -5547,7 +5281,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
       },
       "Type": "AWS::IAM::Role",
     },
-    "FirehoseToS3SetupKinesisFirehoseStreamDynamicPartitioning65876320": {
+    "FirehoseToS3SetupFirehoseStream649EE2A0": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -5579,35 +5313,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
           },
           "CompressionFormat": "UNCOMPRESSED",
           "DataFormatConversionConfiguration": {
-            "Enabled": true,
-            "InputFormatConfiguration": {
-              "Deserializer": {
-                "OpenXJsonSerDe": {
-                  "CaseInsensitive": true,
-                },
-              },
-            },
-            "OutputFormatConfiguration": {
-              "Serializer": {
-                "ParquetSerDe": {
-                  "Compression": "UNCOMPRESSED",
-                },
-              },
-            },
-            "SchemaConfiguration": {
-              "DatabaseName": {
-                "Ref": "FirehoseToS3SetupFirehoseCloudWatchDb3683542E",
-              },
-              "RoleARN": {
-                "Fn::GetAtt": [
-                  "FirehoseToS3SetupFirehoseS3ServiceRole1E95E56A",
-                  "Arn",
-                ],
-              },
-              "TableName": {
-                "Ref": "FirehoseToS3SetupFirehoseCloudWatchTable07CBDE10",
-              },
-            },
+            "Enabled": false,
           },
           "DynamicPartitioningConfiguration": {
             "Enabled": true,
@@ -5654,7 +5360,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
           },
           "RoleARN": {
             "Fn::GetAtt": [
-              "FirehoseToS3SetupFirehoseS3ServiceRole1E95E56A",
+              "FirehoseToS3SetupFirehoseServiceRole23B67E37",
               "Arn",
             ],
           },
