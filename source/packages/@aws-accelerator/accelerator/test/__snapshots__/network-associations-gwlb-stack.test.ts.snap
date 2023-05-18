@@ -339,19 +339,7 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
       },
       "Type": "AWS::EC2::VPCEndpoint",
     },
-    "NetworkInspectionVpcEndpointAGwlbEpNetworkInspectionVpcNetworkInspectionTgwARouteTableGwlbRoute2D6CF39B": {
-      "Properties": {
-        "DestinationCidrBlock": "10.0.0.0/8",
-        "RouteTableId": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionTgwAidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "VpcEndpointId": {
-          "Ref": "NetworkInspectionVpcEndpointAGwlbEpB5238F8C",
-        },
-      },
-      "Type": "AWS::EC2::Route",
-    },
-    "NetworkInspectionVpcEndpointAGwlbEpNetworkInspectionVpcNetworkInspectionTgwARouteTableGwlbRouteDynamic30ECCD93": {
+    "NetworkInspectionVpcEndpointAGwlbEpNetworkInspectionVpcNetworkInspectionGatewayRouteTableGwlbRouteDynamicA422EA421": {
       "Properties": {
         "DestinationCidrBlock": {
           "Fn::GetAtt": [
@@ -360,7 +348,7 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
           ],
         },
         "RouteTableId": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionTgwAidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionGatewayidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "VpcEndpointId": {
           "Ref": "NetworkInspectionVpcEndpointAGwlbEpB5238F8C",
@@ -368,16 +356,11 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
       },
       "Type": "AWS::EC2::Route",
     },
-    "NetworkInspectionVpcEndpointAGwlbEpNetworkInspectionVpcNetworkInspectionTgwBRouteTableGwlbRouteDynamic643F3842": {
+    "NetworkInspectionVpcEndpointAGwlbEpNetworkInspectionVpcNetworkInspectionTgwARouteTableGwlbRoute2D6CF39B": {
       "Properties": {
-        "DestinationCidrBlock": {
-          "Fn::GetAtt": [
-            "NetworkInspectionNetworkInspectionTgwAttachBIpamSubnetLookup4FB5ACC0",
-            "ipv4CidrBlock",
-          ],
-        },
+        "DestinationCidrBlock": "10.0.0.0/8",
         "RouteTableId": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionTgwBidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionTgwAidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "VpcEndpointId": {
           "Ref": "NetworkInspectionVpcEndpointAGwlbEpB5238F8C",
@@ -409,6 +392,23 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
         },
       },
       "Type": "AWS::EC2::VPCEndpoint",
+    },
+    "NetworkInspectionVpcEndpointBGwlbEpNetworkInspectionVpcNetworkInspectionGatewayRouteTableGwlbRouteDynamicB140E00A1": {
+      "Properties": {
+        "DestinationCidrBlock": {
+          "Fn::GetAtt": [
+            "NetworkInspectionNetworkInspectionTgwAttachBIpamSubnetLookup4FB5ACC0",
+            "ipv4CidrBlock",
+          ],
+        },
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionGatewayidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "VpcEndpointId": {
+          "Ref": "NetworkInspectionVpcEndpointBGwlbEpEF9CAE4C",
+        },
+      },
+      "Type": "AWS::EC2::Route",
     },
     "NetworkInspectionVpcEndpointBGwlbEpNetworkInspectionVpcNetworkInspectionTgwBRouteTableGwlbRoute2B7C4C2E": {
       "Properties": {
