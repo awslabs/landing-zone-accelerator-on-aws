@@ -717,7 +717,6 @@ export class LoggingStack extends AcceleratorStack {
       glueDatabaseName: `${this.props.prefixes.databaseName}-subscription-database`,
       transformationTableName: `${this.props.prefixes.databaseName}-firehose-transformation-table`,
     });
-
     return cloudwatchCfnDestination;
   }
   private cloudwatchLogCreatingAccount() {

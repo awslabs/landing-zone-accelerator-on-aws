@@ -332,35 +332,7 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
           },
           "CompressionFormat": "UNCOMPRESSED",
           "DataFormatConversionConfiguration": {
-            "Enabled": true,
-            "InputFormatConfiguration": {
-              "Deserializer": {
-                "OpenXJsonSerDe": {
-                  "CaseInsensitive": true,
-                },
-              },
-            },
-            "OutputFormatConfiguration": {
-              "Serializer": {
-                "ParquetSerDe": {
-                  "Compression": "UNCOMPRESSED",
-                },
-              },
-            },
-            "SchemaConfiguration": {
-              "DatabaseName": {
-                "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchDbCAE69522",
-              },
-              "RoleARN": {
-                "Fn::GetAtt": [
-                  "CloudWatchToS3FirehoseBucketNameFirehoseS3ServiceRole1B034103",
-                  "Arn",
-                ],
-              },
-              "TableName": {
-                "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchTable1D7675CB",
-              },
-            },
+            "Enabled": false,
           },
           "DynamicPartitioningConfiguration": {
             "Enabled": true,
@@ -731,35 +703,7 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
           },
           "CompressionFormat": "UNCOMPRESSED",
           "DataFormatConversionConfiguration": {
-            "Enabled": true,
-            "InputFormatConfiguration": {
-              "Deserializer": {
-                "OpenXJsonSerDe": {
-                  "CaseInsensitive": true,
-                },
-              },
-            },
-            "OutputFormatConfiguration": {
-              "Serializer": {
-                "ParquetSerDe": {
-                  "Compression": "UNCOMPRESSED",
-                },
-              },
-            },
-            "SchemaConfiguration": {
-              "DatabaseName": {
-                "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchDb1916F9D9",
-              },
-              "RoleARN": {
-                "Fn::GetAtt": [
-                  "CloudWatchToS3FirehoseFirehoseS3ServiceRole8EEB3338",
-                  "Arn",
-                ],
-              },
-              "TableName": {
-                "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchTableB4DADD48",
-              },
-            },
+            "Enabled": false,
           },
           "DynamicPartitioningConfiguration": {
             "Enabled": true,
@@ -1420,35 +1364,7 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
           },
           "CompressionFormat": "UNCOMPRESSED",
           "DataFormatConversionConfiguration": {
-            "Enabled": true,
-            "InputFormatConfiguration": {
-              "Deserializer": {
-                "OpenXJsonSerDe": {
-                  "CaseInsensitive": true,
-                },
-              },
-            },
-            "OutputFormatConfiguration": {
-              "Serializer": {
-                "ParquetSerDe": {
-                  "Compression": "UNCOMPRESSED",
-                },
-              },
-            },
-            "SchemaConfiguration": {
-              "DatabaseName": {
-                "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchDbCAE69522",
-              },
-              "RoleARN": {
-                "Fn::GetAtt": [
-                  "CloudWatchToS3FirehoseBucketNameFirehoseS3ServiceRole1B034103",
-                  "Arn",
-                ],
-              },
-              "TableName": {
-                "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchTable1D7675CB",
-              },
-            },
+            "Enabled": false,
           },
           "DynamicPartitioningConfiguration": {
             "Enabled": true,
@@ -1819,35 +1735,7 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
           },
           "CompressionFormat": "UNCOMPRESSED",
           "DataFormatConversionConfiguration": {
-            "Enabled": true,
-            "InputFormatConfiguration": {
-              "Deserializer": {
-                "OpenXJsonSerDe": {
-                  "CaseInsensitive": true,
-                },
-              },
-            },
-            "OutputFormatConfiguration": {
-              "Serializer": {
-                "ParquetSerDe": {
-                  "Compression": "UNCOMPRESSED",
-                },
-              },
-            },
-            "SchemaConfiguration": {
-              "DatabaseName": {
-                "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchDb1916F9D9",
-              },
-              "RoleARN": {
-                "Fn::GetAtt": [
-                  "CloudWatchToS3FirehoseFirehoseS3ServiceRole8EEB3338",
-                  "Arn",
-                ],
-              },
-              "TableName": {
-                "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchTableB4DADD48",
-              },
-            },
+            "Enabled": false,
           },
           "DynamicPartitioningConfiguration": {
             "Enabled": true,
