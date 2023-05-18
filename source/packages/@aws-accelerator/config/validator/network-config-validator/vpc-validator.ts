@@ -312,9 +312,16 @@ export class VpcValidator {
       );
     } else {
       if (!helpers.isValidIpv4Cidr(routeTableEntryItem.destination)) {
+        // Check if subnet exists in the VPC
         if (!helpers.getSubnet(vpcItem, routeTableEntryItem.destination)) {
           errors.push(
             `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} destination "${routeTableEntryItem.destination}" is not a valid CIDR or subnet name`,
+          );
+        }
+        // Validate target type
+        if (!['natGateway', 'networkFirewall', 'gatewayLoadBalancerEndpoint'].includes(routeTableEntryItem.type!)) {
+          errors.push(
+            `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} destination "${routeTableEntryItem.destination}" is not valid. Route entry type ${routeTableEntryItem.type} does not support dynamic subnet destinations`,
           );
         }
       }
