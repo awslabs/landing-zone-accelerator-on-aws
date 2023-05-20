@@ -167,7 +167,7 @@ export class SecurityStack extends AcceleratorStack {
         cdk.Stack.of(this).region as Region,
       ) === -1
     ) {
-      if (this.props.accountsConfig.containsAccount(this.auditAccountName)) {
+      if (this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.enable) {
         if (this.props.accountsConfig.containsAccount(this.auditAccountName)) {
           new GuardDutyPublishingDestination(this, 'GuardDutyPublishingDestination', {
             exportDestinationType:
