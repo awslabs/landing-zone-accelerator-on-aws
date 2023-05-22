@@ -2,12 +2,6 @@
 
 exports[`TransitGatewayPeering Construct(TransitGatewayPrefixListReference):  Snapshot Test 1`] = `
 {
-  "Parameters": {
-    "SsmParameterValueacceleratornetworktransitGatewaysSharedServicesTGWidC96584B6F00A464EAD1953AFF4B05118Parameter": {
-      "Default": "/accelerator/network/transitGateways/SharedServices-TGW/id",
-      "Type": "AWS::SSM::Parameter::Value<String>",
-    },
-  },
   "Resources": {
     "CustomTransitGatewayAcceptPeeringCustomResourceProviderHandler692671C6": {
       "DependsOn": [
@@ -231,9 +225,7 @@ exports[`TransitGatewayPeering Construct(TransitGatewayPrefixListReference):  Sn
             "Value": "SharedServices-And-Network-Main-Peering",
           },
         ],
-        "TransitGatewayId": {
-          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysSharedServicesTGWidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
+        "TransitGatewayId": "tgw-0002",
       },
       "Type": "AWS::EC2::TransitGatewayPeeringAttachment",
     },

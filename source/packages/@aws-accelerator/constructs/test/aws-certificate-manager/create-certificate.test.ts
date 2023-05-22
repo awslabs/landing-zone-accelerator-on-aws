@@ -26,6 +26,7 @@ const stack = new cdk.Stack();
 describe('RequestCertificate', () => {
   new CreateCertificate(stack, 'RequestCertificate', {
     name: 'requestCert',
+    parameterName: '/accelerator/acm/requestCert/arn',
     type: 'request',
     validation: 'DNS',
     domain: '*.example.com',
@@ -42,6 +43,7 @@ describe('RequestCertificate', () => {
 describe('ImportCertificate', () => {
   new CreateCertificate(stack, 'ImportCertificate', {
     name: 'importCert',
+    parameterName: '/accelerator/acm/importCert/arn',
     type: 'import',
     privKey: 'cert/privKey.pem',
     cert: 'cert/cert.crt',

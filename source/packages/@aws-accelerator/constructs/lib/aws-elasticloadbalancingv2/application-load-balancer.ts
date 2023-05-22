@@ -78,6 +78,10 @@ export interface ApplicationLoadBalancerProps {
    */
   readonly name: string;
   /**
+   * SSM parameter prefix
+   */
+  readonly ssmPrefix: string;
+  /**
    * Application Load Balancer Subnets (required).
    */
   readonly subnets: string[];
@@ -131,20 +135,20 @@ export class ApplicationLoadBalancer extends cdk.Resource implements IApplicatio
       new cdk.aws_elasticloadbalancingv2.CfnListener(this, pascalCase(`Listener${listener.name}`), {
         defaultActions: [listenerAction],
         loadBalancerArn: resource.ref,
-        certificates: [{ certificateArn: this.getCertificate(listener.certificate) }],
+        certificates: [{ certificateArn: this.getCertificate(props.ssmPrefix, listener.certificate) }],
         port: listener.port,
         protocol: listener.protocol,
         sslPolicy: listener.sslPolicy!,
       });
     }
   }
-  private getCertificate(certificate: string | undefined) {
+  private getCertificate(ssmPrefix: string, certificate: string | undefined) {
     if (certificate) {
       //check if user provided arn. If so do nothing, if not get it from ssm
       if (certificate.match('\\arn:*')) {
         return certificate;
       } else {
-        return cdk.aws_ssm.StringParameter.valueForStringParameter(this, `/accelerator/acm/${certificate}/arn`);
+        return cdk.aws_ssm.StringParameter.valueForStringParameter(this, `${ssmPrefix}/acm/${certificate}/arn`);
       }
     }
     return undefined;

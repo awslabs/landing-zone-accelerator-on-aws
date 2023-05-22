@@ -2856,6 +2856,7 @@ export class NetworkAssociationsStack extends NetworkStack {
           adPerAccountGroups: adInstanceConfig.adPerAccountGroups,
           adConnectorGroup: adInstanceConfig.adConnectorGroup,
           adUsers: adInstanceConfig.adUsers,
+          secretPrefix: this.props.prefixes.secretName,
           adPasswordPolicy: adInstanceConfig.adPasswordPolicy,
           accountNames: props.sharedAccountNames,
         },

@@ -291,6 +291,10 @@ export class TgwResources {
           {
             requester: {
               accountName: transitGatewayPeeringItem.requester.account,
+              transitGatewayId: cdk.aws_ssm.StringParameter.valueForStringParameter(
+                this.stack,
+                this.stack.getSsmPath(SsmResourceType.TGW, [transitGatewayPeeringItem.requester.transitGatewayName]),
+              ),
               transitGatewayName: transitGatewayPeeringItem.requester.transitGatewayName,
               transitGatewayRouteTableId: requesterTransitGatewayRouteTableId,
               tags: requesterTags,

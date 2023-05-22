@@ -48,6 +48,7 @@ export async function handler(event: any): Promise<
   | undefined
 > {
   console.log(event);
+  const ssmPrefix: string = event.ResourceProperties['ssmPrefix'];
   const instanceDetails = await getInstanceDetails();
 
   // if no instance was found, it has been deleted return
@@ -59,7 +60,7 @@ export async function handler(event: any): Promise<
     console.log('Account warming time reached');
     await terminateInstance(instanceDetails.instanceId);
     await deleteVpc();
-    await setSSMParameter('true');
+    await setSSMParameter(ssmPrefix, 'true');
     return {
       IsComplete: true,
     };
@@ -120,12 +121,12 @@ async function getVpcId(): Promise<string | undefined> {
   return undefined;
 }
 
-async function setSSMParameter(parameterValue: string) {
+async function setSSMParameter(ssmPrefix: string, parameterValue: string) {
   console.log('Updating SSM Parameter');
   try {
     await ssmClient.send(
       new PutParameterCommand({
-        Name: '/accelerator/account/pre-warmed',
+        Name: `${ssmPrefix}/account/pre-warmed`,
         Value: parameterValue,
         Overwrite: true,
       }),

@@ -266,6 +266,7 @@ export class LoadBalancerResources {
         }
         const alb = new ApplicationLoadBalancer(this.stack, `${albItem.name}-${vpcItem.name}`, {
           name: albItem.name,
+          ssmPrefix: props.prefixes.ssmParamName,
           subnets: subnetIds,
           securityGroups: securityGroupIds ?? undefined,
           scheme: albItem.scheme ?? 'internal',
@@ -334,6 +335,7 @@ export class LoadBalancerResources {
         }
         const nlb = new NetworkLoadBalancer(this.stack, `${nlbItem.name}-${vpcItem.name}`, {
           name: nlbItem.name,
+          ssmPrefix: props.prefixes.ssmParamName,
           appName: `${nlbItem.name}-${vpcItem.name}-app`,
           subnets: subnetIds,
           vpcName: vpcItem.name,

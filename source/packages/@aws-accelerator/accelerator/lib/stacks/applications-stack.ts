@@ -34,6 +34,7 @@ import {
   LaunchTemplate,
   AutoscalingGroup,
 } from '@aws-accelerator/constructs';
+import { SsmResourceType } from '@aws-accelerator/utils';
 
 export type PrivateIpAddressConfig = {
   primary: boolean | undefined;
@@ -206,14 +207,14 @@ export class ApplicationsStack extends AcceleratorStack {
       // Set VPC ID
       const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
         this,
-        `/accelerator/network/vpc/${vpcItem.name}/id`,
+        this.getSsmPath(SsmResourceType.VPC, [vpcItem.name]),
       );
       vpcMap.set(vpcItem.name, vpcId);
       // Set subnet IDs
       for (const subnetItem of vpcItem.subnets ?? []) {
         const subnetId = cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,
-          `/accelerator/network/vpc/${vpcItem.name}/subnet/${subnetItem.name}/id`,
+          this.getSsmPath(SsmResourceType.SUBNET, [vpcItem.name, subnetItem.name]),
         );
         subnetMap.set(`${vpcItem.name}_${subnetItem.name}`, subnetId);
       }
@@ -221,7 +222,7 @@ export class ApplicationsStack extends AcceleratorStack {
       for (const securityGroupItem of vpcItem.securityGroups ?? []) {
         const securityGroupId = cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,
-          `/accelerator/network/vpc/${vpcItem.name}/securityGroup/${securityGroupItem.name}/id`,
+          this.getSsmPath(SsmResourceType.SECURITY_GROUP, [vpcItem.name, securityGroupItem.name]),
         );
         securityGroupMap.set(`${vpcItem.name}_${securityGroupItem.name}`, securityGroupId);
       }
@@ -319,6 +320,7 @@ export class ApplicationsStack extends AcceleratorStack {
       }
       return new ApplicationLoadBalancer(this, `ApplicationLoadBalancer_${appName}`, {
         name: applicationLoadBalancer.name,
+        ssmPrefix: this.props.prefixes.ssmParamName,
         subnets,
         securityGroups: getSecurityGroups!,
         scheme: applicationLoadBalancer.scheme! ?? 'internal',
@@ -524,6 +526,7 @@ export class ApplicationsStack extends AcceleratorStack {
       }
       const nlb = new NetworkLoadBalancer(this, pascalCase(`AppNlb${appName}${networkLoadBalancer.name}`), {
         name: networkLoadBalancer.name,
+        ssmPrefix: this.props.prefixes.ssmParamName,
         appName: appName,
         vpcName: vpcName,
         subnets: subnets,
@@ -577,7 +580,10 @@ export class ApplicationsStack extends AcceleratorStack {
       if (certificate.match('\\arn:*')) {
         return certificate;
       } else {
-        return cdk.aws_ssm.StringParameter.valueForStringParameter(this, `/accelerator/acm/${certificate}/arn`);
+        return cdk.aws_ssm.StringParameter.valueForStringParameter(
+          this,
+          this.getSsmPath(SsmResourceType.ACM_CERT, [certificate]),
+        );
       }
     }
     return undefined;
@@ -646,7 +652,7 @@ export class ApplicationsStack extends AcceleratorStack {
 
         this.ssmParameters.push({
           logicalId: pascalCase(`SsmTg${appName}${vpcName}${targetGroup.name}Arn`),
-          parameterName: `/accelerator/application/targetGroup/${appName}/${vpcName}/${targetGroup.name}/arn`,
+          parameterName: this.getSsmPath(SsmResourceType.TARGET_GROUP, [appName, vpcName, targetGroup.name]),
           stringValue: tg.targetGroupArn,
         });
       }

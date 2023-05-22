@@ -18,6 +18,7 @@ import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'pascal-case';
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import { LogLevel, NetworkStack } from '../network-stack';
+import { SsmResourceType } from '@aws-accelerator/utils';
 
 export class AcmResources {
   public readonly certificateMap: Map<string, CreateCertificate>;
@@ -59,6 +60,7 @@ export class AcmResources {
 
     const acmCertificate = new CreateCertificate(this.stack, resourceName, {
       name: certificate.name,
+      parameterName: this.stack.getSsmPath(SsmResourceType.ACM_CERT, [certificate.name]),
       type: certificate.type,
       privKey: certificate.privKey,
       cert: certificate.cert,

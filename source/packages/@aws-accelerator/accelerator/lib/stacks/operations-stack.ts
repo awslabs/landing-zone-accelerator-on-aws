@@ -956,6 +956,7 @@ export class OperationsStack extends AcceleratorStack {
     new WarmAccount(this, 'WarmAccount', {
       cloudwatchKmsKey: this.cloudwatchKey,
       logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+      ssmPrefix: this.props.prefixes.ssmParamName,
     });
   }
 }

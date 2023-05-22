@@ -50,16 +50,18 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     }
   | undefined
 > {
+  const ssmPrefix: string = event.ResourceProperties['ssmPrefix'];
+
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      const isWarm = await checkWarm();
+      const isWarm = await checkWarm(ssmPrefix);
       if (isWarm) {
         return {
           IsComplete: true,
         };
       }
-      await createSsmParameter();
+      await createSsmParameter(ssmPrefix);
       await createVpcAndInstance();
       return {
         IsComplete: false,
@@ -68,20 +70,20 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     case 'Delete':
       await terminateInstances();
       await deleteVpc();
-      await deleteSsmParameter();
+      await deleteSsmParameter(ssmPrefix);
       return {
         IsComplete: true,
       };
   }
 }
 
-async function checkWarm(): Promise<boolean> {
+async function checkWarm(ssmPrefix: string): Promise<boolean> {
   console.log('Checking if account has been pre-warmed');
   let warmed = false;
   try {
     const parameter = ssmClient.send(
       new GetParameterCommand({
-        Name: '/accelerator/account/pre-warmed',
+        Name: `${ssmPrefix}/account/pre-warmed`,
       }),
     );
     warmed = (parameter.Parameter?.Value ?? 'false') === 'true';
@@ -91,12 +93,12 @@ async function checkWarm(): Promise<boolean> {
   return warmed;
 }
 
-async function createSsmParameter() {
+async function createSsmParameter(ssmPrefix: string) {
   console.log('Creating SSM Parameter');
   try {
     ssmClient.send(
       new PutParameterCommand({
-        Name: '/accelerator/account/pre-warmed',
+        Name: `${ssmPrefix}/account/pre-warmed`,
         Value: 'false',
         Description: 'Flag for account pre-warming',
         Type: ParameterType.STRING,
@@ -164,12 +166,12 @@ async function createVpcAndInstance() {
   }
 }
 
-async function deleteSsmParameter() {
+async function deleteSsmParameter(ssmPrefix: string) {
   console.log('Deleting SSM Parameter');
   try {
     ssmClient.send(
       new DeleteParameterCommand({
-        Name: '/accelerator/account/pre-warmed',
+        Name: `${ssmPrefix}/account/pre-warmed`,
       }),
     );
   } catch (e) {
