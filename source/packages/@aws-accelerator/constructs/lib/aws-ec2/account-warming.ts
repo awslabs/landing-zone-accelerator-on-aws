@@ -19,6 +19,7 @@ import path = require('path');
 export interface WarmAccountProps {
   readonly cloudwatchKmsKey: cdk.aws_kms.IKey;
   readonly logRetentionInDays: number;
+  readonly ssmPrefix: string;
 }
 
 export class WarmAccount extends Construct {
@@ -115,9 +116,9 @@ export class WarmAccount extends Construct {
       effect: cdk.aws_iam.Effect.ALLOW,
       actions: ['ssm:GetParameter', 'ssm:PutParameter', 'ssm:DeleteParameter'],
       resources: [
-        `arn:${cdk.Stack.of(this).partition}:ssm:${cdk.Stack.of(this).region}:${
-          cdk.Stack.of(this).account
-        }:parameter/accelerator/account/pre-warmed`,
+        `arn:${cdk.Stack.of(this).partition}:ssm:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:parameter${
+          props.ssmPrefix
+        }/account/pre-warmed`,
       ],
     });
 
@@ -184,6 +185,9 @@ export class WarmAccount extends Construct {
     const resource = new cdk.CustomResource(this, 'WarmAccountResource', {
       resourceType: WARM_ACCOUNT,
       serviceToken: this.provider.serviceToken,
+      properties: {
+        ssmPrefix: props.ssmPrefix,
+      },
     });
 
     NagSuppressions.addResourceSuppressions(

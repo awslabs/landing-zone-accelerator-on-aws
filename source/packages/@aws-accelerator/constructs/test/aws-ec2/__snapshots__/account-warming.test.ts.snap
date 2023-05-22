@@ -1033,6 +1033,7 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
+        "ssmPrefix": "/accelerator",
       },
       "Type": "Custom::WarmAccount",
       "UpdateReplacePolicy": "Delete",

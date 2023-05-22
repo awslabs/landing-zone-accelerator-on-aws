@@ -61,6 +61,10 @@ export interface NetworkLoadBalancerProps {
    */
   readonly name: string;
   /**
+   * SSM prefix
+   */
+  readonly ssmPrefix: string;
+  /**
    * Network Load Balancer Subnets (required).
    */
   readonly subnets: string[];
@@ -136,7 +140,12 @@ export class NetworkLoadBalancer extends cdk.Resource implements INetworkLoadBal
     this.networkLoadBalancerName = resource.attrLoadBalancerName;
 
     for (const listener of props.listeners ?? []) {
-      const targetGroupArn = this.getTargetGroupArn(listener.targetGroup, props.vpcName, props.appName);
+      const targetGroupArn = this.getTargetGroupArn(
+        listener.targetGroup,
+        props.vpcName,
+        props.appName,
+        props.ssmPrefix,
+      );
       new cdk.aws_elasticloadbalancingv2.CfnListener(this, pascalCase(`Listener${listener.name}`), {
         defaultActions: [
           {
@@ -160,12 +169,12 @@ export class NetworkLoadBalancer extends cdk.Resource implements INetworkLoadBal
       });
     }
   }
-  private getTargetGroupArn(targetGroup: string, vpcName: string, appName: string): string {
+  private getTargetGroupArn(targetGroup: string, vpcName: string, appName: string, ssmPrefix: string): string {
     if (targetGroup.match('\\${ACCEL_LOOKUP::TargetGroup:([a-zA-Z0-9-/:]*)}')) {
       const targetGroupMatch = targetGroup.match('\\${ACCEL_LOOKUP::TargetGroup:([a-zA-Z0-9-/:]*)}');
       const targetGroupValue = cdk.aws_ssm.StringParameter.valueForStringParameter(
         this,
-        `/accelerator/application/targetGroup/${appName}/${vpcName}/${targetGroupMatch![1]}/arn`,
+        `${ssmPrefix}/application/targetGroup/${appName}/${vpcName}/${targetGroupMatch![1]}/arn`,
       );
       return targetGroupValue;
     } else if (targetGroup.match('\\arn:*')) {
@@ -173,7 +182,7 @@ export class NetworkLoadBalancer extends cdk.Resource implements INetworkLoadBal
     } else {
       return cdk.aws_ssm.StringParameter.valueForStringParameter(
         this,
-        `/accelerator/application/targetGroup/${appName}/${vpcName}/${targetGroup}/arn`,
+        `${ssmPrefix}/application/targetGroup/${appName}/${vpcName}/${targetGroup}/arn`,
       );
     }
   }

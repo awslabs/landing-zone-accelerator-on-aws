@@ -26,6 +26,7 @@ const stack = new cdk.Stack(app, 'Stack', { env: env });
 new WarmAccount(stack, 'AccountWarming', {
   cloudwatchKmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
   logRetentionInDays: 3653,
+  ssmPrefix: '/accelerator',
 });
 
 /**

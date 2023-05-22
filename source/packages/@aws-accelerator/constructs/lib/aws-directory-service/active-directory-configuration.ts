@@ -111,6 +111,10 @@ export interface ActiveDirectoryConfigurationProps {
    */
   readonly adUsers: { name: string; email: string; groups: string[] }[];
   /**
+   * Accelerator prefix for user secret names
+   */
+  readonly secretPrefix: string;
+  /**
    * Managed active directory user password policy
    */
   readonly adPasswordPolicy: {
@@ -274,7 +278,7 @@ export class ActiveDirectoryConfiguration extends Construct {
     }
 
     // Creating AD Users scripts
-    const adUsersScripts = this.getAdUsersScripts(adUserSetupScriptName);
+    const adUsersScripts = this.getAdUsersScripts(adUserSetupScriptName, props.secretPrefix);
 
     const accountNames = props.accountNames;
 
@@ -411,10 +415,10 @@ export class ActiveDirectoryConfiguration extends Construct {
   /**
    * Function to get Ad user creation scripts
    */
-  private getAdUsersScripts(adUserSetupScriptName: string): string[] {
+  private getAdUsersScripts(adUserSetupScriptName: string, secretPrefix: string): string[] {
     const adUsersCommand: string[] = [];
     for (const adUser of this.activeDirectoryConfigurationProps.adUsers ?? []) {
-      const secretName = `/accelerator/ad-user/${this.activeDirectoryConfigurationProps.managedActiveDirectoryName}/${adUser.name}`;
+      const secretName = `${secretPrefix}/ad-user/${this.activeDirectoryConfigurationProps.managedActiveDirectoryName}/${adUser.name}`;
       const secretArn = `arn:${cdk.Stack.of(this).partition}:secretsmanager:${
         this.activeDirectoryConfigurationProps.managedActiveDirectorySecretRegion
       }:${this.activeDirectoryConfigurationProps.managedActiveDirectorySecretAccountId}:secret:${secretName}`;

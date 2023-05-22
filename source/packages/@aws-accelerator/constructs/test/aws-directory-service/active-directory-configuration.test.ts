@@ -30,6 +30,7 @@ new ActiveDirectoryConfiguration(stack, 'ActiveDirectoryConfiguration', {
   netBiosDomainName: 'example',
   adminPwdSecretArn: 'adminPwdSecretArn',
   secretKeyArn: 'secretKeyArn',
+  secretPrefix: '/accelerator',
   subnetId: 'subnetId',
   securityGroupId: 'securityGroupId',
   instanceRoleName: 'instanceRoleName',
