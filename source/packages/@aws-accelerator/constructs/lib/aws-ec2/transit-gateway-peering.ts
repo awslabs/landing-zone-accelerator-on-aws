@@ -67,7 +67,11 @@ export interface TransitGatewayPeeringProps {
      */
     readonly accountName: string;
     /**
-     * Requester Transit Gateway name.
+     * Requester Transit Gateway ID.
+     */
+    readonly transitGatewayId: string;
+    /**
+     * Requester Transit Gateway Name.
      */
     readonly transitGatewayName: string;
     /**
@@ -104,10 +108,7 @@ export class TransitGatewayPeering extends Construct {
         peerAccountId: props.accepter.accountId,
         peerRegion: props.accepter.region,
         peerTransitGatewayId: props.accepter.transitGatewayId,
-        transitGatewayId: cdk.aws_ssm.StringParameter.valueForStringParameter(
-          this,
-          `/accelerator/network/transitGateways/${props.requester.transitGatewayName}/id`,
-        ),
+        transitGatewayId: props.requester.transitGatewayId,
         tags: props.requester.tags,
       },
     );

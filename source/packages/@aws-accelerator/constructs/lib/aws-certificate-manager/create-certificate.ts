@@ -21,6 +21,10 @@ export interface CreateCertificateProps {
    */
   name: string;
   /**
+   * SSM parameter name for certificate ARN
+   */
+  parameterName: string;
+  /**
    *
    * Certificate type
    */
@@ -115,6 +119,7 @@ export class CreateCertificate extends Construct {
       serviceToken: provider.serviceToken,
       properties: {
         name: props.name,
+        parameterName: props.parameterName,
         type: props.type,
         privKey: props.privKey ?? undefined,
         cert: props.cert ?? undefined,

@@ -1067,7 +1067,7 @@ export class LoggingStack extends AcceleratorStack {
               StringLike: {
                 'kms:EncryptionContext:SecretARN': `arn:${cdk.Stack.of(this).partition}:secretsmanager:${
                   cdk.Stack.of(this).region
-                }:${madAdminSecretAccountId}:secret:/accelerator/ad-user/*`,
+                }:${madAdminSecretAccountId}:secret:${this.props.prefixes.secretName}/ad-user/*`,
               },
             },
           }),
