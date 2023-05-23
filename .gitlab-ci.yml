@@ -21,7 +21,7 @@ accelerator-workshop-session:
     - "yarn build"
     - "export version=$(cat package.json | jq -r '.version')"
     - "cd packages/@aws-accelerator/installer"
-    - "yarn run cdk synth -c enable-single-account-mode=true > $CI_PROJECT_DIR/AWSAccelerator-InstallerStack-Workshop.template.json"
+    - "yarn run cdk synth -c enable-single-account-mode=true --output $CI_PROJECT_DIR"
     - "cd ../../../../deployment"
     - "chmod +x ./build-open-source-dist.sh && ./build-open-source-dist.sh lza-on-aws-workshop"
     - "cp ./open-source/lza-on-aws-workshop.zip $CI_PROJECT_DIR/lza-on-aws-workshop.zip"
