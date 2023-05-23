@@ -195,7 +195,7 @@ export class CustomizationsConfigTypes {
   static readonly launchTemplateConfig = t.interface({
     name: t.nonEmptyString,
     blockDeviceMappings: t.optional(t.array(this.blockDeviceMappingItem)),
-    securityGroups: t.array(t.nonEmptyString),
+    securityGroups: t.optional(t.array(t.nonEmptyString)),
     keyPair: t.optional(t.nonEmptyString),
     iamInstanceProfile: t.optional(t.nonEmptyString),
     imageId: t.nonEmptyString,
@@ -1934,7 +1934,7 @@ export class LaunchTemplateConfig implements t.TypeOf<typeof CustomizationsConfi
   /**
    * One or more security group names. These should be created under the VPC in network-config.yaml
    */
-  readonly securityGroups: string[] = [];
+  readonly securityGroups: string[] | undefined = undefined;
   /**
    * The name of the key pair. LZA does not create keypair. This should exist in the account/region or else deployment will fail.
    */
