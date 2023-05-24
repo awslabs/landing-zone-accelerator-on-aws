@@ -351,7 +351,7 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
       blockDeviceMappings: launchTemplate.blockDeviceMappings
         ? this.processBlockDeviceReplacements(launchTemplate.blockDeviceMappings, firewallName)
         : undefined,
-      securityGroups: this.processSecurityGroups(launchTemplate.securityGroups, vpc),
+      securityGroups: this.processSecurityGroups(launchTemplate.securityGroups ?? [], vpc),
       keyPair: launchTemplate.keyPair,
       iamInstanceProfile: launchTemplate.iamInstanceProfile,
       imageId: this.replaceImageId(launchTemplate.imageId),

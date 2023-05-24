@@ -384,19 +384,20 @@ class CustomizationValidator {
     errors: string[],
   ) {
     if (app.launchTemplate) {
-      if (app.launchTemplate!.securityGroups.length === 0) {
+      const launchTemplateSecurityGroups = app.launchTemplate.securityGroups ?? [];
+      if (launchTemplateSecurityGroups.length === 0) {
         errors.push(
           `Launch Template ${app.launchTemplate!.name} does not have security groups in ${
             app.name
           }. At least one security group is required`,
         );
       }
-      const ltSgCheck = helpers.checkSecurityGroupInConfig(app.launchTemplate!.securityGroups, vpcCheck);
+      const ltSgCheck = helpers.checkSecurityGroupInConfig(launchTemplateSecurityGroups, vpcCheck);
       if (ltSgCheck === false) {
         errors.push(
           `Launch Template ${
             app.launchTemplate!.name
-          } does not have security groups ${app.launchTemplate!.securityGroups.join(',')} in VPC ${app.vpc}.`,
+          } does not have security groups ${launchTemplateSecurityGroups.join(',')} in VPC ${app.vpc}.`,
         );
       }
       if (app.launchTemplate.blockDeviceMappings) {
@@ -1058,7 +1059,8 @@ class FirewallValidator {
     errors: string[],
   ) {
     const interfaces = firewall.launchTemplate.networkInterfaces;
-    if (firewall.launchTemplate.securityGroups.length === 0) {
+    const firewallLaunchTemplateSecurityGroups = firewall.launchTemplate.securityGroups ?? [];
+    if (firewallLaunchTemplateSecurityGroups.length === 0) {
       // Validate network interfaces are configured
       if (!interfaces) {
         errors.push(
@@ -1074,7 +1076,7 @@ class FirewallValidator {
     }
 
     // Validate security groups
-    if (!helpers.checkSecurityGroupInConfig(firewall.launchTemplate.securityGroups, vpc)) {
+    if (!helpers.checkSecurityGroupInConfig(firewallLaunchTemplateSecurityGroups, vpc)) {
       errors.push(
         `[Firewall ${firewall.name}]: launch template references security groups that do not exist in VPC ${vpc.name}`,
       );
