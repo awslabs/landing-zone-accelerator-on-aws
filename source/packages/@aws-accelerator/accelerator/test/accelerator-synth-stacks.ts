@@ -36,7 +36,7 @@ import { ApplicationsStack } from '../lib/stacks/applications-stack';
 import { BootstrapStack } from '../lib/stacks/bootstrap-stack';
 import { CustomStack, generateCustomStackMappings, isIncluded } from '../lib/stacks/custom-stack';
 import { CustomizationsStack } from '../lib/stacks/customizations-stack';
-import { DependenciesStack } from '../lib/stacks/dependencies-stack';
+import { DependenciesStack } from '../lib/stacks/dependencies-stack/dependencies-stack';
 import { FinalizeStack } from '../lib/stacks/finalize-stack';
 import { KeyStack } from '../lib/stacks/key-stack';
 import { LoggingStack } from '../lib/stacks/logging-stack';

@@ -12,7 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { IdentityCenterGetInstanceId } from '../../lib/aws-identity-center/identity-center-get-instance-id';
+import { IdentityCenterInstance } from '../../lib/aws-identity-center/identity-center-instance';
 import { snapShotTest } from '../snapshot-test';
 import { describe } from '@jest/globals';
 const testNamePrefix = 'Construct(IdentityCenterGetInstanceId): ';
@@ -20,11 +20,16 @@ const testNamePrefix = 'Construct(IdentityCenterGetInstanceId): ';
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
 
-new IdentityCenterGetInstanceId(stack, 'IdentityCenterGetInstanceId');
+new IdentityCenterInstance(stack, 'IdentityCenterInstance', {
+  globalRegion: 'us-east-1',
+  customResourceLambdaEnvironmentEncryptionKmsKey: new cdk.aws_kms.Key(stack, 'LambdaKey', {}),
+  customResourceLambdaCloudWatchLogKmsKey: new cdk.aws_kms.Key(stack, 'CloudWatchKey', {}),
+  customResourceLambdaLogRetentionInDays: 365,
+});
 
 /**
- * IdentityCenterGetInstanceId construct test
+ * IdentityCenterInstance construct test
  */
-describe('IdentityCenterGetInstanceId', () => {
+describe('IdentityCenterInstance', () => {
   snapShotTest(testNamePrefix, stack);
 });
