@@ -1,5 +1,7 @@
 version: 0.2
-
+env:
+  variables:
+    NODE_OPTIONS: "--max_old_space_size=8192"
 phases:
   install:
     runtime-versions:
@@ -35,8 +37,11 @@ artifacts:
     - source/**/*
     - .gitignore
     - sonar-project.properties
+    - README.md
     - LICENSE.txt
     - NOTICE.txt
     - buildspec.yml
     - CHANGELOG.md
     - .cfnnag_*
+    - .viperlightignore
+    - codescan-postbuild-custom.sh
