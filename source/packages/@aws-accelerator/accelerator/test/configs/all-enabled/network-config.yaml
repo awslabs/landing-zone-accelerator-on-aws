@@ -735,9 +735,9 @@ vpcs:
       endpoints:
         - service: s3
         - service: dynamodb
-    tags:
-      - key: env
-        value: prod
+      tags:
+        - key: env
+          value: prod
 
   - name: Network-Endpoints
     account: Network

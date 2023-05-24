@@ -64,6 +64,134 @@ exports[`DependenciesStack Construct(DependenciesStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Role",
     },
+    "LzaManagedPolicy01FDAB5303": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Policies definition are derived from accelerator iam-config boundary-policy file",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Description": "",
+        "ManagedPolicyName": "lzaManagedPolicy01",
+        "Path": "/",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:CreateBucket",
+                "s3:PutBucketPolicy",
+              ],
+              "Effect": "Allow",
+              "Resource": "arn:aws:s3:::rcc-bucket-trustedservice-do-not-delete-*",
+            },
+            {
+              "Action": "s3:ListAllMyBuckets",
+              "Effect": "Allow",
+              "Resource": "arn:aws:s3:::*",
+            },
+            {
+              "Action": [
+                "config:DescribeConfigurationRecorders",
+                "config:DescribeConfigurationRecorderStatus",
+                "config:PutConfigurationRecorder",
+                "config:StartConfigurationRecorder",
+                "config:DescribeDeliveryChannels",
+                "config:DescribeDeliveryChannelStatus",
+                "config:PutDeliveryChannel",
+                "config:DescribeAggregationAuthorizations",
+                "config:PutAggregationAuthorization",
+                "config:ListDiscoveredResources",
+                "config:BatchGetResourceConfig",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            {
+              "Action": [
+                "iam:GetRole",
+                "iam:PassRole",
+                "iam:CreateServiceLinkedRole",
+                "iam:DeleteServiceLinkedRole",
+                "iam:GetServiceLinkedRoleDeletionStatus",
+              ],
+              "Effect": "Allow",
+              "Resource": "arn:aws:iam::*:role/aws-service-role/config.amazonaws.com/*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::ManagedPolicy",
+    },
+    "LzaManagedPolicy027214A961": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Policies definition are derived from accelerator iam-config boundary-policy file",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Description": "",
+        "ManagedPolicyName": "lzaManagedPolicy02",
+        "Path": "/",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:CreateBucket",
+                "s3:PutBucketPolicy",
+              ],
+              "Effect": "Allow",
+              "Resource": "arn:aws:s3:::rcc-bucket-trustedservice-do-not-delete-*",
+            },
+            {
+              "Action": "s3:ListAllMyBuckets",
+              "Effect": "Allow",
+              "Resource": "arn:aws:s3:::*",
+            },
+            {
+              "Action": [
+                "config:DescribeConfigurationRecorders",
+                "config:DescribeConfigurationRecorderStatus",
+                "config:PutConfigurationRecorder",
+                "config:StartConfigurationRecorder",
+                "config:DescribeDeliveryChannels",
+                "config:DescribeDeliveryChannelStatus",
+                "config:PutDeliveryChannel",
+                "config:DescribeAggregationAuthorizations",
+                "config:PutAggregationAuthorization",
+                "config:ListDiscoveredResources",
+                "config:BatchGetResourceConfig",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            {
+              "Action": [
+                "iam:GetRole",
+                "iam:PassRole",
+                "iam:CreateServiceLinkedRole",
+                "iam:DeleteServiceLinkedRole",
+                "iam:GetServiceLinkedRoleDeletionStatus",
+              ],
+              "Effect": "Allow",
+              "Resource": "arn:aws:iam::*:role/aws-service-role/config.amazonaws.com/*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::ManagedPolicy",
+    },
     "Organization29A5FC3F": {
       "DeletionPolicy": "Delete",
       "Properties": {

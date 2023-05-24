@@ -49,6 +49,8 @@ interface ParameterNames {
   lambdaCmkArn: string;
   managementCmkArn: string;
   assetsBucketCmkArn: string;
+  identityCenterInstanceArn: string;
+  identityStoreId: string;
 }
 interface CmkDetails {
   orgTrailLog: { alias: string; description: string };
@@ -113,6 +115,8 @@ export class AcceleratorResourceNames {
     lambdaCmkArn: 'PLACE_HOLDER',
     managementCmkArn: 'PLACE_HOLDER',
     assetsBucketCmkArn: 'PLACE_HOLDER',
+    identityCenterInstanceArn: 'PLACE_HOLDER',
+    identityStoreId: 'PLACE_HOLDER',
   };
   public customerManagedKeys: CmkDetails = {
     orgTrailLog: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
@@ -185,6 +189,10 @@ export class AcceleratorResourceNames {
     this.parameters.lambdaCmkArn = props.prefixes.ssmParamName + '/kms/lambda/key-arn';
     this.parameters.managementCmkArn = props.prefixes.ssmParamName + '/management/kms/key-arn';
     this.parameters.assetsBucketCmkArn = props.prefixes.ssmParamName + '/assets/kms/key';
+    this.parameters.identityCenterInstanceArn =
+      props.prefixes.ssmParamName + '/organization/security/identity-center/instance-arn';
+    this.parameters.identityStoreId =
+      props.prefixes.ssmParamName + '/organization/security/identity-center/identity-store-id';
 
     //
     // CMK details initialization
