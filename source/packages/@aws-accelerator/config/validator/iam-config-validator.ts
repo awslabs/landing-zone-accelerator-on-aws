@@ -16,6 +16,7 @@ import * as path from 'path';
 import { createLogger } from '@aws-accelerator/utils';
 
 import { AccountsConfig } from '../lib/accounts-config';
+import { CommonValidatorFunctions } from './common/common-validator-functions';
 import * as t from '../lib/common-types';
 import { IamConfig, IamConfigTypes } from '../lib/iam-config';
 import { NetworkConfig } from '../lib/network-config';
@@ -85,8 +86,8 @@ export class IamConfigValidator {
     // Validate target account names
     this.validateDeploymentTargetAccountNames(values, accountNames, errors);
 
-    // Validate name uniqueness
-    this.validateIdentityCenterResourceNameForUniqueness(values, errors);
+    // Validate Identity Center Object
+    this.validateIdentityCenter(values, accountsConfig, errors);
 
     // Validate Managed active directory
     new ManagedActiveDirectoryValidator(values, vpcSubnetLists, ouIdNames, accountNames, errors);
@@ -251,14 +252,45 @@ export class IamConfigValidator {
   }
 
   /**
+   * Function to validate Identity Center object
+   * @param values
+   * @param errors
+   */
+  private validateIdentityCenter(
+    iamConfig: t.TypeOf<typeof IamConfigTypes.iamConfig>,
+    accountsConfig: AccountsConfig,
+    errors: string[],
+  ) {
+    //
+    //Function to validate PermissionSet and Assignment names are unique
+    //
+    this.validateIdentityCenterPermissionSetNameForUniqueness(iamConfig, errors);
+
+    //
+    // Validate Identity Center PermissionSet policies
+    //
+    this.validateIdentityCenterPermissionSetPolicies(iamConfig, accountsConfig, errors);
+
+    //
+    // Validate Identity Center PermissionSet names
+    //
+    this.validateIdentityCenterPermissionSetInAssignments(iamConfig, errors);
+
+    //
+    // Validate PermissionSet permissions boundary
+    //
+    this.validateIdentityCenterPermissionSetPermissionsBoundary(iamConfig, errors);
+  }
+
+  /**
    * Function to validate PermissionSet and Assignment names are unique
    * @param values
    */
-  private validateIdentityCenterResourceNameForUniqueness(
-    values: t.TypeOf<typeof IamConfigTypes.iamConfig>,
+  private validateIdentityCenterPermissionSetNameForUniqueness(
+    iamConfig: t.TypeOf<typeof IamConfigTypes.iamConfig>,
     errors: string[],
   ) {
-    const identityCenter = values.identityCenter;
+    const identityCenter = iamConfig.identityCenter;
     const assignmentNames = [...(identityCenter?.identityCenterAssignments ?? [])].map(item => item.name);
     const permissionSetNames = [...(identityCenter?.identityCenterPermissionSets ?? [])].map(item => item.name);
 
@@ -269,6 +301,199 @@ export class IamConfigValidator {
     if (hasDuplicates(permissionSetNames)) {
       errors.push(`Duplicate Identity Center Permission Set names defined [${permissionSetNames}].`);
     }
+  }
+
+  /**
+   * Function to validate Identity Center Permission set names in assignment
+   * @param iamConfig
+   * @param errors
+   */
+  private validateIdentityCenterPermissionSetInAssignments(
+    iamConfig: t.TypeOf<typeof IamConfigTypes.iamConfig>,
+    errors: string[],
+  ) {
+    if (iamConfig.identityCenter) {
+      const permissionSetNames = [...(iamConfig.identityCenter?.identityCenterPermissionSets ?? [])].map(
+        item => item.name,
+      );
+
+      const identityCenterAssignments = iamConfig.identityCenter.identityCenterAssignments ?? [];
+
+      for (const identityCenterAssignment of identityCenterAssignments) {
+        if (!permissionSetNames.includes(identityCenterAssignment.permissionSetName)) {
+          errors.push(
+            `Identity center ${iamConfig.identityCenter.name} assignments ${
+              identityCenterAssignment.name
+            } uses permission set ${
+              identityCenterAssignment.permissionSetName
+            }, which is not found in identityCenterPermissionSets, available permission names are [${permissionSetNames.join(
+              ',',
+            )}].`,
+          );
+        }
+
+        const principals = identityCenterAssignment.principals ?? [];
+        const groups: string[] = [];
+        const users: string[] = [];
+        for (const principal of principals) {
+          if (principal.type === 'USER') {
+            users.push(principal.name);
+          }
+          if (principal.type === 'GROUP') {
+            groups.push(principal.name);
+          }
+        }
+
+        // check duplicates for groups in principals
+        if (hasDuplicates(groups)) {
+          errors.push(
+            `Duplicate groups in principals [${groups.join(',')}] defined in IdentityCenter ${
+              iamConfig.identityCenter.name
+            } for assignment ${identityCenterAssignment.name} `,
+          );
+        }
+
+        // check duplicates for users in principals
+        if (hasDuplicates(users)) {
+          errors.push(
+            `Duplicate users in principals [${users.join(',')}] defined in IdentityCenter ${
+              iamConfig.identityCenter.name
+            } for assignment ${identityCenterAssignment.name} `,
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to validate Identity Center Permission set permissionsBoundary
+   * @param iamConfig
+   * @param errors
+   */
+  private validateIdentityCenterPermissionSetPermissionsBoundary(
+    iamConfig: t.TypeOf<typeof IamConfigTypes.iamConfig>,
+    errors: string[],
+  ) {
+    if (iamConfig.identityCenter) {
+      for (const identityCenterPermissionSet of iamConfig.identityCenter.identityCenterPermissionSets ?? []) {
+        if (identityCenterPermissionSet.policies?.permissionsBoundary) {
+          if (
+            identityCenterPermissionSet.policies.permissionsBoundary.customerManagedPolicy &&
+            identityCenterPermissionSet.policies.permissionsBoundary.awsManagedPolicyName
+          ) {
+            errors.push(
+              `Identity center ${iamConfig.identityCenter.name} permission set ${identityCenterPermissionSet.name} permissions boundary can either have customerManagedPolicy or managedPolicy, both the properties can't be defined.`,
+            );
+          }
+        }
+      }
+    }
+  }
+
+  private validateIdentityCenterPermissionSetPolicies(
+    iamConfig: t.TypeOf<typeof IamConfigTypes.iamConfig>,
+    accountsConfig: AccountsConfig,
+    errors: string[],
+  ) {
+    if (iamConfig.identityCenter) {
+      const policies: { name: string; accountNames: string[] }[] = [];
+      for (const policySet of iamConfig.policySets ?? []) {
+        for (const policyItem of policySet.policies) {
+          policies.push({
+            name: policyItem.name,
+            accountNames: CommonValidatorFunctions.getAccountNamesFromTarget(
+              accountsConfig,
+              policySet.deploymentTargets as t.DeploymentTargets,
+            ),
+          });
+        }
+      }
+
+      const identityCenter = iamConfig.identityCenter;
+      for (const identityCenterPermissionSet of identityCenter.identityCenterPermissionSets ?? []) {
+        // check duplicates for awsManaged polices
+        const awsManagedPolicies = identityCenterPermissionSet.policies?.awsManaged ?? [];
+        if (hasDuplicates(awsManagedPolicies)) {
+          errors.push(
+            `Duplicate AWS managed policy names [${awsManagedPolicies.join(',')}] defined in IdentityCenter ${
+              identityCenter.name
+            } for permission set ${identityCenterPermissionSet.name} `,
+          );
+        }
+        // check duplicates for customerManaged polices
+        const customerManagedPolicies = identityCenterPermissionSet.policies?.customerManaged ?? [];
+        if (hasDuplicates(customerManagedPolicies)) {
+          errors.push(
+            `Duplicate customer managed policy names [${customerManagedPolicies.join(',')}] defined in IdentityCenter ${
+              identityCenter.name
+            } for permission set ${identityCenterPermissionSet.name} `,
+          );
+        }
+        // check duplicates for customerManaged polices
+        const acceleratorManagedPolicies = identityCenterPermissionSet.policies?.acceleratorManaged ?? [];
+        if (hasDuplicates(acceleratorManagedPolicies)) {
+          errors.push(
+            `Duplicate lza managed policy names [${acceleratorManagedPolicies.join(',')}] defined in IdentityCenter ${
+              identityCenter.name
+            } for permission set ${identityCenterPermissionSet.name} `,
+          );
+        }
+        for (const lzaManagedPolicy of acceleratorManagedPolicies) {
+          const filteredPolicyItem = policies.find(item => item.name === lzaManagedPolicy);
+          if (!filteredPolicyItem) {
+            errors.push(
+              `Identity Center ${iamConfig.identityCenter.name}, permission set ${identityCenterPermissionSet.name}, lza managed policy  ${lzaManagedPolicy} not found in policySets of iam-config.yaml file !!!`,
+            );
+          } else {
+            // Validate LZA managed policy deploy target match assignment deploy target accounts
+            const assignmentAccountNames = this.getIdentityCenterAssignmentDeployAccountNames(
+              identityCenter,
+              accountsConfig,
+              identityCenterPermissionSet.name,
+            );
+
+            if (!assignmentAccountNames.every(item => filteredPolicyItem.accountNames.includes(item))) {
+              errors.push(
+                `Identity Center ${iamConfig.identityCenter.name}, permission set ${
+                  identityCenterPermissionSet.name
+                } assignments target deploy accounts [${assignmentAccountNames.join(
+                  ',',
+                )}], are not part of lza managed policy  ${lzaManagedPolicy} deploy target accounts [${filteredPolicyItem.accountNames.join(
+                  ',',
+                )}] !!!`,
+              );
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to get Identity Center Assignment deploy target account names
+   * @param identityCenter
+   * @param accountsConfig
+   * @param identityCenterPermissionSetName
+   * @returns
+   */
+  private getIdentityCenterAssignmentDeployAccountNames(
+    identityCenter: t.TypeOf<typeof IamConfigTypes.identityCenterConfig>,
+    accountsConfig: AccountsConfig,
+    identityCenterPermissionSetName: string,
+  ): string[] {
+    const accountNames: string[] = [];
+    for (const identityCenterAssignmentItem of identityCenter.identityCenterAssignments ?? []) {
+      if (identityCenterAssignmentItem.permissionSetName === identityCenterPermissionSetName) {
+        accountNames.push(
+          ...CommonValidatorFunctions.getAccountNamesFromTarget(
+            accountsConfig,
+            identityCenterAssignmentItem.deploymentTargets as t.DeploymentTargets,
+          ),
+        );
+      }
+    }
+
+    return [...new Set(accountNames)];
   }
 
   /**

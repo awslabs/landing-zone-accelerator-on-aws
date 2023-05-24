@@ -14,7 +14,17 @@
 import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
-import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import { AcceleratorStack, AcceleratorStackProps } from '../accelerator-stack';
+import { identityCenter } from './identity-center';
+
+/**
+ * Enum for log level
+ */
+export enum LogLevel {
+  INFO = 'info',
+  WARN = 'warn',
+  ERROR = 'error',
+}
 
 export class DependenciesStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
@@ -24,6 +34,30 @@ export class DependenciesStack extends AcceleratorStack {
     if (cdk.Stack.of(this).region === props.globalConfig.homeRegion) {
       this.logger.info('Creating cross-account/cross-region put SSM parameter role in home region');
       this.createPutSsmParameterRole(props.prefixes.ssmParamName, props.partition, this.organizationId);
+    }
+
+    // Create Identity Center dependent resources
+    new identityCenter(this, props);
+  }
+
+  /**
+   * Public accessor method to add logs to logger
+   * @param logLevel
+   * @param message
+   */
+  public addLogs(logLevel: LogLevel, message: string) {
+    switch (logLevel) {
+      case 'info':
+        this.logger.info(message);
+        break;
+
+      case 'warn':
+        this.logger.warn(message);
+        break;
+
+      case 'error':
+        this.logger.error(message);
+        break;
     }
   }
 

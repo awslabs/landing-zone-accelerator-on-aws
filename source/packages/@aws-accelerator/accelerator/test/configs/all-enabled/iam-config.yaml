@@ -61,22 +61,51 @@ identityCenter:
         awsManaged:
           - arn:aws:iam::aws:policy/AdministratorAccess
           - arn:aws:iam::aws:policy/CloudFrontFullAccess
+          - PowerUserAccess
+          - ReadOnlyAccess
         customerManaged:
           - ResourceConfigurationCollectorPolicy
-      sessionDuration: 100
+        acceleratorManaged:
+          - lzaManagedPolicy01
+          - lzaManagedPolicy02
+        inlinePolicy: iam-policies/sso-permissionSet1-inline-policy.json
+        permissionsBoundary: 
+          # customerManagedPolicy:
+          #   name: lzaManagedPolicy01
+          #   path: /
+          awsManagedPolicyName: PowerUserAccess
+      # sessionDuration: 100
     - name: PermissionSet2
       policies:
         awsManaged:
-          - arn:aws:iam::aws:policy/AdministratorAccess
-          - arn:aws:iam::aws:policy/CloudFrontFullAccess
+          - PowerUserAccess
+          - ReadOnlyAccess
         customerManaged:
           - ResourceConfigurationCollectorPolicy
+        acceleratorManaged:
+          - lzaManagedPolicy01
+          # - lzaManagedPolicy02
+        inlinePolicy: iam-policies/sso-permissionSet1-inline-policy.json
+        permissionsBoundary: 
+          customerManagedPolicy:
+            name: lzaManagedPolicy01
+            path: /
+          # awsManagedPolicyName: PowerUserAccess
       sessionDuration: 60
   identityCenterAssignments:
     - name: Assignment1
       permissionSetName: PermissionSet1
       principalId: 'abcd1234-1001-70f0-9c12-56a6aa967ca4'
       principalType: USER
+      principals:
+        - type: USER
+          name: lza-accelerator-user-01
+        - type: GROUP
+          name: lza-accelerator-group-01
+        - type: USER
+          name: lza-accelerator-user-02
+        - type: GROUP
+          name: lza-accelerator-group-02
       deploymentTargets:
         accounts:
           - LogArchive

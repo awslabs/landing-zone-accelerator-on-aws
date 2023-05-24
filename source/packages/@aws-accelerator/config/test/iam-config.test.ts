@@ -49,7 +49,7 @@ describe('IamConfig', () => {
       expect(groupConfig.name).toEqual('');
 
       const policiesConfig = new PoliciesConfig();
-      expect(policiesConfig.awsManaged).toEqual([]);
+      expect(policiesConfig.awsManaged).toEqual(undefined);
 
       const userSetConfig = new UserSetConfig();
       expect(userSetConfig.users).toEqual([]);

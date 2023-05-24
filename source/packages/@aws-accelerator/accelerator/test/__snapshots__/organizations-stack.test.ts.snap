@@ -2908,6 +2908,10 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
       "Default": "/accelerator/kms/cloudwatch/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/kms/lambda/key-arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
   },
   "Resources": {
     "AcceleratorCentralLogBucketKeyLookup26F8C418": {
@@ -4644,6 +4648,115 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::IAM::Role",
     },
+    "CustomSsmPutParameterValueCustomResourceProviderHandler2A0BDE7F": {
+      "DependsOn": [
+        "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Custom resource provider to put cross-account ssm parameter value",
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomSsmPutParameterValueCustomResourceProviderLogGroupB0109C68": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomSsmPutParameterValueCustomResourceProviderHandler2A0BDE7F",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ssm:DeleteParameter",
+                    "ssm:PutParameter",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    "*",
+                  ],
+                  "Sid": "SsmPutParameterActions",
+                },
+                {
+                  "Action": [
+                    "sts:AssumeRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::*:role/AWSAccelerator*",
+                        ],
+                      ],
+                    },
+                  ],
+                  "Sid": "StsAssumeRoleActions",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
     "DetectiveOrganizationAdminAccountD12FBDDC": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
@@ -4734,6 +4847,50 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
         "region": "us-east-1",
       },
       "Type": "Custom::GuardDutyEnableOrganizationAdminAccount",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "IdentityCenter1InstanceMetadataParametersDA71A26A": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomSsmPutParameterValueCustomResourceProviderLogGroupB0109C68",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomSsmPutParameterValueCustomResourceProviderHandler2A0BDE7F",
+            "Arn",
+          ],
+        },
+        "invokingAccountId": "111111111111",
+        "parameterAccountIds": [
+          "111111111111",
+          "222222222222",
+        ],
+        "parameters": [
+          {
+            "name": "/accelerator/organization/security/identity-center/instance-arn",
+            "value": {
+              "Fn::GetAtt": [
+                "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdResourceE2BD9B5B",
+                "instanceArn",
+              ],
+            },
+          },
+          {
+            "name": "/accelerator/organization/security/identity-center/identity-store-id",
+            "value": {
+              "Fn::GetAtt": [
+                "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdResourceE2BD9B5B",
+                "identityStoreId",
+              ],
+            },
+          },
+        ],
+        "region": "us-east-1",
+        "roleName": "AWSAccelerator-CrossAccountSsmParameterShare",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::SsmPutParameterValue",
       "UpdateReplacePolicy": "Delete",
     },
     "IdentityCenterAdminIdentityCenterAdminProviderLambdaE457A029": {
@@ -4998,26 +5155,45 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
           {
             "name": "PermissionSet1",
             "policies": {
+              "acceleratorManaged": [
+                "lzaManagedPolicy01",
+                "lzaManagedPolicy02",
+              ],
               "awsManaged": [
                 "arn:aws:iam::aws:policy/AdministratorAccess",
                 "arn:aws:iam::aws:policy/CloudFrontFullAccess",
+                "PowerUserAccess",
+                "ReadOnlyAccess",
               ],
               "customerManaged": [
                 "ResourceConfigurationCollectorPolicy",
               ],
+              "inlinePolicy": "REPLACED-JSON-PATH.json",
+              "permissionsBoundary": {
+                "awsManagedPolicyName": "PowerUserAccess",
+              },
             },
-            "sessionDuration": 100,
           },
           {
             "name": "PermissionSet2",
             "policies": {
+              "acceleratorManaged": [
+                "lzaManagedPolicy01",
+              ],
               "awsManaged": [
-                "arn:aws:iam::aws:policy/AdministratorAccess",
-                "arn:aws:iam::aws:policy/CloudFrontFullAccess",
+                "PowerUserAccess",
+                "ReadOnlyAccess",
               ],
               "customerManaged": [
                 "ResourceConfigurationCollectorPolicy",
               ],
+              "inlinePolicy": "REPLACED-JSON-PATH.json",
+              "permissionsBoundary": {
+                "customerManagedPolicy": {
+                  "name": "lzaManagedPolicy01",
+                  "path": "/",
+                },
+              },
             },
             "sessionDuration": 60,
           },
@@ -5028,6 +5204,335 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::CloudFormation::CustomResource",
       "UpdateReplacePolicy": "Delete",
+    },
+    "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunction6D15DC48": {
+      "DependsOn": [
+        "IdentityCenterAdminidentityCenterAdminEB714AB1",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaE457A029",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRoleDefaultPolicyBBBDA17F",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRole6939696D",
+        "IdentityCenterAdminframeworkonEvent80E08E77",
+        "IdentityCenterAdminframeworkonEventServiceRoleDefaultPolicy0A2A63AA",
+        "IdentityCenterAdminframeworkonEventServiceRole2ED5ECC8",
+        "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunctionServiceRoleDefaultPolicyA565A09E",
+        "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunctionServiceRole7F75B101",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Accelerator deployed IdentityCenterGetInstanceId custom resource lambda function.",
+        "Handler": "index.handler",
+        "KmsKeyArn": {
+          "Ref": "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "MemorySize": 256,
+        "Role": {
+          "Fn::GetAtt": [
+            "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunctionServiceRole7F75B101",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 160,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunctionLogGroup6C4870CE": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "IdentityCenterAdminidentityCenterAdminEB714AB1",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaE457A029",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRoleDefaultPolicyBBBDA17F",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRole6939696D",
+        "IdentityCenterAdminframeworkonEvent80E08E77",
+        "IdentityCenterAdminframeworkonEventServiceRoleDefaultPolicy0A2A63AA",
+        "IdentityCenterAdminframeworkonEventServiceRole2ED5ECC8",
+      ],
+      "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunction6D15DC48",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunctionServiceRole7F75B101": {
+      "DependsOn": [
+        "IdentityCenterAdminidentityCenterAdminEB714AB1",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaE457A029",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRoleDefaultPolicyBBBDA17F",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRole6939696D",
+        "IdentityCenterAdminframeworkonEvent80E08E77",
+        "IdentityCenterAdminframeworkonEventServiceRoleDefaultPolicy0A2A63AA",
+        "IdentityCenterAdminframeworkonEventServiceRole2ED5ECC8",
+      ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunctionServiceRoleDefaultPolicyA565A09E": {
+      "DependsOn": [
+        "IdentityCenterAdminidentityCenterAdminEB714AB1",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaE457A029",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRoleDefaultPolicyBBBDA17F",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRole6939696D",
+        "IdentityCenterAdminframeworkonEvent80E08E77",
+        "IdentityCenterAdminframeworkonEventServiceRoleDefaultPolicy0A2A63AA",
+        "IdentityCenterAdminframeworkonEventServiceRole2ED5ECC8",
+      ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sso:ListInstances",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunctionServiceRoleDefaultPolicyA565A09E",
+        "Roles": [
+          {
+            "Ref": "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunctionServiceRole7F75B101",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdResourceE2BD9B5B": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "IdentityCenterAdminidentityCenterAdminEB714AB1",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaE457A029",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRoleDefaultPolicyBBBDA17F",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRole6939696D",
+        "IdentityCenterAdminframeworkonEvent80E08E77",
+        "IdentityCenterAdminframeworkonEventServiceRoleDefaultPolicy0A2A63AA",
+        "IdentityCenterAdminframeworkonEventServiceRole2ED5ECC8",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "IdentityCenterInstanceIdentityCenterGetInstanceIdframeworkonEvent5DB81BA0",
+            "Arn",
+          ],
+        },
+        "globalRegion": "us-east-1",
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "IdentityCenterInstanceIdentityCenterGetInstanceIdframeworkonEvent5DB81BA0": {
+      "DependsOn": [
+        "IdentityCenterAdminidentityCenterAdminEB714AB1",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaE457A029",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRoleDefaultPolicyBBBDA17F",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRole6939696D",
+        "IdentityCenterAdminframeworkonEvent80E08E77",
+        "IdentityCenterAdminframeworkonEventServiceRoleDefaultPolicy0A2A63AA",
+        "IdentityCenterAdminframeworkonEventServiceRole2ED5ECC8",
+        "IdentityCenterInstanceIdentityCenterGetInstanceIdframeworkonEventServiceRoleDefaultPolicyA09146FD",
+        "IdentityCenterInstanceIdentityCenterGetInstanceIdframeworkonEventServiceRole870C36F8",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-OrganizationsStack-111111111111-us-east-1/IdentityCenterInstance/IdentityCenterGetInstanceId/Resource)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunction6D15DC48",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "IdentityCenterInstanceIdentityCenterGetInstanceIdframeworkonEventServiceRole870C36F8",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "IdentityCenterInstanceIdentityCenterGetInstanceIdframeworkonEventServiceRole870C36F8": {
+      "DependsOn": [
+        "IdentityCenterAdminidentityCenterAdminEB714AB1",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaE457A029",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRoleDefaultPolicyBBBDA17F",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRole6939696D",
+        "IdentityCenterAdminframeworkonEvent80E08E77",
+        "IdentityCenterAdminframeworkonEventServiceRoleDefaultPolicy0A2A63AA",
+        "IdentityCenterAdminframeworkonEventServiceRole2ED5ECC8",
+      ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "IdentityCenterInstanceIdentityCenterGetInstanceIdframeworkonEventServiceRoleDefaultPolicyA09146FD": {
+      "DependsOn": [
+        "IdentityCenterAdminidentityCenterAdminEB714AB1",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaE457A029",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRoleDefaultPolicyBBBDA17F",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRole6939696D",
+        "IdentityCenterAdminframeworkonEvent80E08E77",
+        "IdentityCenterAdminframeworkonEventServiceRoleDefaultPolicy0A2A63AA",
+        "IdentityCenterAdminframeworkonEventServiceRole2ED5ECC8",
+      ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunction6D15DC48",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunction6D15DC48",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "IdentityCenterInstanceIdentityCenterGetInstanceIdframeworkonEventServiceRoleDefaultPolicyA09146FD",
+        "Roles": [
+          {
+            "Ref": "IdentityCenterInstanceIdentityCenterGetInstanceIdframeworkonEventServiceRole870C36F8",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "IpamAdminAccountB45C9E06": {
       "DeletionPolicy": "Delete",
@@ -7297,6 +7802,115 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
       },
       "Type": "AWS::IAM::Role",
     },
+    "CustomSsmPutParameterValueCustomResourceProviderHandler2A0BDE7F": {
+      "DependsOn": [
+        "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Custom resource provider to put cross-account ssm parameter value",
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomSsmPutParameterValueCustomResourceProviderLogGroupB0109C68": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomSsmPutParameterValueCustomResourceProviderHandler2A0BDE7F",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ssm:DeleteParameter",
+                    "ssm:PutParameter",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    "*",
+                  ],
+                  "Sid": "SsmPutParameterActions",
+                },
+                {
+                  "Action": [
+                    "sts:AssumeRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::*:role/AWSAccelerator*",
+                        ],
+                      ],
+                    },
+                  ],
+                  "Sid": "StsAssumeRoleActions",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
     "DetectiveOrganizationAdminAccountD12FBDDC": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
@@ -7614,6 +8228,50 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
       "Type": "Custom::GuardDutyEnableOrganizationAdminAccount",
       "UpdateReplacePolicy": "Delete",
     },
+    "IdentityCenter1InstanceMetadataParametersDA71A26A": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomSsmPutParameterValueCustomResourceProviderLogGroupB0109C68",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomSsmPutParameterValueCustomResourceProviderHandler2A0BDE7F",
+            "Arn",
+          ],
+        },
+        "invokingAccountId": "111111111111",
+        "parameterAccountIds": [
+          "111111111111",
+          "666666666666",
+        ],
+        "parameters": [
+          {
+            "name": "/accelerator/organization/security/identity-center/instance-arn",
+            "value": {
+              "Fn::GetAtt": [
+                "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdResourceE2BD9B5B",
+                "instanceArn",
+              ],
+            },
+          },
+          {
+            "name": "/accelerator/organization/security/identity-center/identity-store-id",
+            "value": {
+              "Fn::GetAtt": [
+                "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdResourceE2BD9B5B",
+                "identityStoreId",
+              ],
+            },
+          },
+        ],
+        "region": "us-east-1",
+        "roleName": "AWSAccelerator-CrossAccountSsmParameterShare",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::SsmPutParameterValue",
+      "UpdateReplacePolicy": "Delete",
+    },
     "IdentityCenterAdminIdentityCenterAdminProviderLambdaE457A029": {
       "DependsOn": [
         "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRoleDefaultPolicyBBBDA17F",
@@ -7893,6 +8551,335 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
       },
       "Type": "AWS::CloudFormation::CustomResource",
       "UpdateReplacePolicy": "Delete",
+    },
+    "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunction6D15DC48": {
+      "DependsOn": [
+        "IdentityCenterAdminidentityCenterAdminEB714AB1",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaE457A029",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRoleDefaultPolicyBBBDA17F",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRole6939696D",
+        "IdentityCenterAdminframeworkonEvent80E08E77",
+        "IdentityCenterAdminframeworkonEventServiceRoleDefaultPolicy0A2A63AA",
+        "IdentityCenterAdminframeworkonEventServiceRole2ED5ECC8",
+        "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunctionServiceRoleDefaultPolicyA565A09E",
+        "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunctionServiceRole7F75B101",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Accelerator deployed IdentityCenterGetInstanceId custom resource lambda function.",
+        "Handler": "index.handler",
+        "KmsKeyArn": {
+          "Ref": "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "MemorySize": 256,
+        "Role": {
+          "Fn::GetAtt": [
+            "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunctionServiceRole7F75B101",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 160,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunctionLogGroup6C4870CE": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "IdentityCenterAdminidentityCenterAdminEB714AB1",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaE457A029",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRoleDefaultPolicyBBBDA17F",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRole6939696D",
+        "IdentityCenterAdminframeworkonEvent80E08E77",
+        "IdentityCenterAdminframeworkonEventServiceRoleDefaultPolicy0A2A63AA",
+        "IdentityCenterAdminframeworkonEventServiceRole2ED5ECC8",
+      ],
+      "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunction6D15DC48",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunctionServiceRole7F75B101": {
+      "DependsOn": [
+        "IdentityCenterAdminidentityCenterAdminEB714AB1",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaE457A029",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRoleDefaultPolicyBBBDA17F",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRole6939696D",
+        "IdentityCenterAdminframeworkonEvent80E08E77",
+        "IdentityCenterAdminframeworkonEventServiceRoleDefaultPolicy0A2A63AA",
+        "IdentityCenterAdminframeworkonEventServiceRole2ED5ECC8",
+      ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunctionServiceRoleDefaultPolicyA565A09E": {
+      "DependsOn": [
+        "IdentityCenterAdminidentityCenterAdminEB714AB1",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaE457A029",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRoleDefaultPolicyBBBDA17F",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRole6939696D",
+        "IdentityCenterAdminframeworkonEvent80E08E77",
+        "IdentityCenterAdminframeworkonEventServiceRoleDefaultPolicy0A2A63AA",
+        "IdentityCenterAdminframeworkonEventServiceRole2ED5ECC8",
+      ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sso:ListInstances",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunctionServiceRoleDefaultPolicyA565A09E",
+        "Roles": [
+          {
+            "Ref": "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunctionServiceRole7F75B101",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdResourceE2BD9B5B": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "IdentityCenterAdminidentityCenterAdminEB714AB1",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaE457A029",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRoleDefaultPolicyBBBDA17F",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRole6939696D",
+        "IdentityCenterAdminframeworkonEvent80E08E77",
+        "IdentityCenterAdminframeworkonEventServiceRoleDefaultPolicy0A2A63AA",
+        "IdentityCenterAdminframeworkonEventServiceRole2ED5ECC8",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "IdentityCenterInstanceIdentityCenterGetInstanceIdframeworkonEvent5DB81BA0",
+            "Arn",
+          ],
+        },
+        "globalRegion": "us-east-1",
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "IdentityCenterInstanceIdentityCenterGetInstanceIdframeworkonEvent5DB81BA0": {
+      "DependsOn": [
+        "IdentityCenterAdminidentityCenterAdminEB714AB1",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaE457A029",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRoleDefaultPolicyBBBDA17F",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRole6939696D",
+        "IdentityCenterAdminframeworkonEvent80E08E77",
+        "IdentityCenterAdminframeworkonEventServiceRoleDefaultPolicy0A2A63AA",
+        "IdentityCenterAdminframeworkonEventServiceRole2ED5ECC8",
+        "IdentityCenterInstanceIdentityCenterGetInstanceIdframeworkonEventServiceRoleDefaultPolicyA09146FD",
+        "IdentityCenterInstanceIdentityCenterGetInstanceIdframeworkonEventServiceRole870C36F8",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-OrganizationsStack-111111111111-us-east-1/IdentityCenterInstance/IdentityCenterGetInstanceId/Resource)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunction6D15DC48",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "IdentityCenterInstanceIdentityCenterGetInstanceIdframeworkonEventServiceRole870C36F8",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "IdentityCenterInstanceIdentityCenterGetInstanceIdframeworkonEventServiceRole870C36F8": {
+      "DependsOn": [
+        "IdentityCenterAdminidentityCenterAdminEB714AB1",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaE457A029",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRoleDefaultPolicyBBBDA17F",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRole6939696D",
+        "IdentityCenterAdminframeworkonEvent80E08E77",
+        "IdentityCenterAdminframeworkonEventServiceRoleDefaultPolicy0A2A63AA",
+        "IdentityCenterAdminframeworkonEventServiceRole2ED5ECC8",
+      ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "IdentityCenterInstanceIdentityCenterGetInstanceIdframeworkonEventServiceRoleDefaultPolicyA09146FD": {
+      "DependsOn": [
+        "IdentityCenterAdminidentityCenterAdminEB714AB1",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaE457A029",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRoleDefaultPolicyBBBDA17F",
+        "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRole6939696D",
+        "IdentityCenterAdminframeworkonEvent80E08E77",
+        "IdentityCenterAdminframeworkonEventServiceRoleDefaultPolicy0A2A63AA",
+        "IdentityCenterAdminframeworkonEventServiceRole2ED5ECC8",
+      ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunction6D15DC48",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunction6D15DC48",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "IdentityCenterInstanceIdentityCenterGetInstanceIdframeworkonEventServiceRoleDefaultPolicyA09146FD",
+        "Roles": [
+          {
+            "Ref": "IdentityCenterInstanceIdentityCenterGetInstanceIdframeworkonEventServiceRole870C36F8",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "IpamAdminAccountB45C9E06": {
       "DeletionPolicy": "Delete",

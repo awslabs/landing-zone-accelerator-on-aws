@@ -299,6 +299,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
     // Implicit Deny
     return false;
   }
+
   protected getAccountNamesFromDeploymentTarget(deploymentTargets: DeploymentTargets): string[] {
     const accountNames: string[] = [];
 
@@ -326,7 +327,9 @@ export abstract class AcceleratorStack extends cdk.Stack {
       accountNames.push(account);
     }
 
-    return [...new Set(accountNames)];
+    const filterAccountNames = accountNames.filter(item => !deploymentTargets.excludedAccounts?.includes(item));
+
+    return [...new Set(filterAccountNames)];
   }
 
   // Helper function to add an account id to the list
@@ -628,7 +631,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * @param organizationId
    * @returns
    */
-  protected generatePolicyReplacements(policyPath: string, returnTempPath: boolean, organizationId?: string): string {
+  public generatePolicyReplacements(policyPath: string, returnTempPath: boolean, organizationId?: string): string {
     // Transform policy document
     let policyContent: string = JSON.stringify(require(policyPath));
     const acceleratorPrefix = this.props.prefixes.accelerator;
@@ -699,16 +702,6 @@ export abstract class AcceleratorStack extends cdk.Stack {
     fs.writeFileSync(tempPath, policyContent, 'utf-8');
 
     return tempPath;
-  }
-
-  protected generateManagedPolicyReferences(customerManagedPolicyReferencesList: string[]) {
-    let customerManagedPolicyReferences: cdk.aws_sso.CfnPermissionSet.CustomerManagedPolicyReferenceProperty[] = [];
-    if (customerManagedPolicyReferencesList) {
-      customerManagedPolicyReferences = customerManagedPolicyReferencesList.map(x => ({
-        name: x,
-      }));
-    }
-    return customerManagedPolicyReferences;
   }
 
   protected convertMinutesToIso8601(s: number) {

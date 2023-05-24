@@ -16,13 +16,19 @@ import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import * as path from 'path';
 
-import { IdentityCenterAssignmentConfig, IdentityCenterPermissionSetConfig, RoleConfig } from '@aws-accelerator/config';
+import {
+  IdentityCenterAssignmentConfig,
+  IdentityCenterConfig,
+  IdentityCenterPermissionSetConfig,
+  RoleConfig,
+} from '@aws-accelerator/config';
 import {
   BudgetDefinition,
-  IdentityCenterGetInstanceId,
   Inventory,
   KeyLookup,
   LimitsDefinition,
+  Organization,
+  UsersGroupsMetadata,
   WarmAccount,
 } from '@aws-accelerator/constructs';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
@@ -34,6 +40,7 @@ export interface OperationsStackProps extends AcceleratorStackProps {
 interface PermissionSetMapping {
   name: string;
   arn: string;
+  permissionSet: cdk.aws_sso.CfnPermissionSet;
 }
 
 export class OperationsStack extends AcceleratorStack {
@@ -186,7 +193,7 @@ export class OperationsStack extends AcceleratorStack {
    */
   private addManagedPolicies() {
     for (const policySetItem of this.props.iamConfig.policySets ?? []) {
-      if (!this.isIncluded(policySetItem.deploymentTargets)) {
+      if (!this.isIncluded(policySetItem.deploymentTargets) || policySetItem.identityCenterDependency) {
         this.logger.info(`Item excluded`);
         continue;
       }
@@ -682,124 +689,228 @@ export class OperationsStack extends AcceleratorStack {
   }
 
   /**
-   * Custom resource to check if Identity Center Delegated Administrator
-   * needs to be updated.
+   * Function to create Identity Center Permission Sets
+   * @param identityCenterItem
+   * @param identityCenterInstanceArn
+   * @returns
    */
-  private addIdentityCenterPermissionSets(securityAdminAccountId: string, identityCenterInstanceId: string) {
+  private addIdentityCenterPermissionSets(
+    identityCenterItem: IdentityCenterConfig,
+    identityCenterInstanceArn: string,
+  ): PermissionSetMapping[] {
     const permissionSetMap: PermissionSetMapping[] = [];
-    if (cdk.Stack.of(this).account == securityAdminAccountId) {
-      const identityCenter = this.props.iamConfig.identityCenter;
-      if (identityCenter?.identityCenterPermissionSets) {
-        for (const identityCenterPermissionSet of identityCenter.identityCenterPermissionSets) {
-          const permissionSet = this.createPermissionsSet(identityCenterPermissionSet, identityCenterInstanceId);
-          permissionSetMap.push(permissionSet);
-        }
-      }
+
+    for (const identityCenterPermissionSet of identityCenterItem.identityCenterPermissionSets ?? []) {
+      const permissionSet = this.createPermissionsSet(
+        identityCenterPermissionSet,
+        identityCenterInstanceArn,
+        permissionSetMap,
+      );
+      permissionSetMap.push(permissionSet);
     }
+
     return permissionSetMap;
   }
 
+  /**
+   * Create Identity Center Permission sets
+   * @param identityCenterPermissionSet
+   * @param identityCenterInstanceArn
+   * @returns
+   */
   private createPermissionsSet(
     identityCenterPermissionSet: IdentityCenterPermissionSetConfig,
-    identityCenterInstanceId: string,
+    identityCenterInstanceArn: string,
+    permissionSetMap: PermissionSetMapping[],
   ): PermissionSetMapping {
-    let customerManagedPolicyReferencesList: cdk.aws_sso.CfnPermissionSet.CustomerManagedPolicyReferenceProperty[] = [];
-    const permissionSetPair: PermissionSetMapping = {
-      name: '',
-      arn: '',
+    const customerManagedPolicyReferencesList: cdk.aws_sso.CfnPermissionSet.CustomerManagedPolicyReferenceProperty[] =
+      [];
+
+    if (identityCenterPermissionSet.policies) {
+      this.logger.info(`Adding Identity Center Permission Set ${identityCenterPermissionSet.name}`);
+
+      // Add Customer managed and LZA managed policies
+      for (const policy of [
+        ...(identityCenterPermissionSet.policies.customerManaged ?? []),
+        ...(identityCenterPermissionSet.policies.acceleratorManaged ?? []),
+      ]) {
+        customerManagedPolicyReferencesList.push({ name: policy });
+      }
+    }
+
+    let convertedSessionDuration: string | undefined;
+
+    if (identityCenterPermissionSet.sessionDuration) {
+      convertedSessionDuration = this.convertMinutesToIso8601(identityCenterPermissionSet.sessionDuration);
+    }
+
+    const awsManagedPolicies: string[] = [];
+
+    for (const awsManagedPolicy of identityCenterPermissionSet?.policies?.awsManaged ?? []) {
+      if (awsManagedPolicy.startsWith('arn:')) {
+        awsManagedPolicies.push(awsManagedPolicy);
+      } else {
+        awsManagedPolicies.push(cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName(awsManagedPolicy).managedPolicyArn);
+      }
+    }
+
+    let permissionsBoundary: cdk.aws_sso.CfnPermissionSet.PermissionsBoundaryProperty | undefined;
+
+    if (identityCenterPermissionSet.policies?.permissionsBoundary) {
+      if (identityCenterPermissionSet.policies.permissionsBoundary.customerManagedPolicy) {
+        permissionsBoundary = {
+          customerManagedPolicyReference: {
+            name: identityCenterPermissionSet.policies.permissionsBoundary.customerManagedPolicy.name,
+            path: identityCenterPermissionSet.policies.permissionsBoundary.customerManagedPolicy.path,
+          },
+        };
+      }
+      if (identityCenterPermissionSet.policies.permissionsBoundary.awsManagedPolicyName) {
+        permissionsBoundary = {
+          managedPolicyArn: cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName(
+            identityCenterPermissionSet.policies.permissionsBoundary.awsManagedPolicyName,
+          ).managedPolicyArn,
+        };
+      }
+    }
+
+    let permissionSetProps: cdk.aws_sso.CfnPermissionSetProps = {
+      name: identityCenterPermissionSet.name,
+      instanceArn: identityCenterInstanceArn,
+      managedPolicies: awsManagedPolicies.length > 0 ? awsManagedPolicies : undefined,
+      customerManagedPolicyReferences:
+        customerManagedPolicyReferencesList.length > 0 ? customerManagedPolicyReferencesList : undefined,
+      sessionDuration: convertedSessionDuration,
+      permissionsBoundary: permissionsBoundary,
     };
-    this.logger.info(`Adding Identity Center Permission Set ${identityCenterPermissionSet.name}`);
-    if (identityCenterPermissionSet.policies?.customerManaged) {
-      customerManagedPolicyReferencesList = this.generateManagedPolicyReferences(
-        identityCenterPermissionSet.policies?.customerManaged,
+
+    if (identityCenterPermissionSet.policies?.inlinePolicy) {
+      // Read in the policy document which should be properly formatted json
+      const inlinePolicyDocument = JSON.parse(
+        this.generatePolicyReplacements(
+          path.join(this.props.configDirPath, identityCenterPermissionSet.policies?.inlinePolicy),
+          false,
+        ),
       );
+      permissionSetProps = {
+        name: identityCenterPermissionSet.name,
+        instanceArn: identityCenterInstanceArn,
+        managedPolicies: awsManagedPolicies.length > 0 ? awsManagedPolicies : undefined,
+        customerManagedPolicyReferences:
+          customerManagedPolicyReferencesList.length > 0 ? customerManagedPolicyReferencesList : undefined,
+        sessionDuration: convertedSessionDuration ?? undefined,
+        inlinePolicy: inlinePolicyDocument,
+        permissionsBoundary: permissionsBoundary,
+      };
     }
 
-    const convertedSessionDuration = this.convertMinutesToIso8601(identityCenterPermissionSet.sessionDuration);
+    const permissionSet = new cdk.aws_sso.CfnPermissionSet(
+      this,
+      `${pascalCase(identityCenterPermissionSet.name)}IdentityCenterPermissionSet`,
+      permissionSetProps,
+    );
 
-    try {
-      //if check for managedpolicy or customer managed
-      const permissionSet = new cdk.aws_sso.CfnPermissionSet(
-        this,
-        `${pascalCase(identityCenterPermissionSet.name)}IdentityCenterPermissionSet`,
-        {
-          name: identityCenterPermissionSet.name,
-          instanceArn: identityCenterInstanceId,
-          managedPolicies: identityCenterPermissionSet?.policies?.awsManaged,
-          customerManagedPolicyReferences: customerManagedPolicyReferencesList,
-          sessionDuration: convertedSessionDuration ?? undefined,
-        },
-      );
-
-      permissionSetPair.name = permissionSet.name;
-      permissionSetPair.arn = permissionSet.attrPermissionSetArn;
-    } catch (e) {
-      this.logger.error(e);
-      throw e;
+    // Create dependency for CfnPermissionSet
+    for (const item of permissionSetMap) {
+      permissionSet.node.addDependency(item.permissionSet);
     }
 
-    return permissionSetPair;
+    return { name: permissionSet.name, arn: permissionSet.attrPermissionSetArn, permissionSet: permissionSet };
   }
 
   private addIdentityCenterAssignments(
-    securityAdminAccountId: string,
+    identityCenterItem: IdentityCenterConfig,
+    identityCenterInstanceArn: string,
     permissionSetMap: PermissionSetMapping[],
-    identityCenterInstanceId: string,
   ) {
-    if (cdk.Stack.of(this).account == securityAdminAccountId) {
-      const identityCenter = this.props.iamConfig.identityCenter;
-      if (identityCenter?.identityCenterAssignments) {
-        for (const assignment of identityCenter.identityCenterAssignments) {
-          this.createAssignment(assignment, permissionSetMap, identityCenterInstanceId);
-        }
-      }
+    for (const assignment of identityCenterItem.identityCenterAssignments ?? []) {
+      this.createAssignment(assignment, permissionSetMap, identityCenterInstanceArn);
     }
   }
 
-  /**
-   * Retrieve Identity Center Instance Id
-   */
-  private getIdentityCenterInstanceId(securityAdminAccountId: string) {
-    this.logger.info(`Retrieving Identity Center Instance Id`);
-    let identityCenterInstanceResponse;
-    let identityCenterInstanceId;
-    if (!securityAdminAccountId) {
-      securityAdminAccountId = this.props.accountsConfig.getManagementAccountId();
+  private getAssignmentPrincipals(
+    assignment: IdentityCenterAssignmentConfig,
+    targetAccountId: string,
+  ): { type: string; name: string; id: string }[] {
+    if (!assignment.principals || assignment.principals.length === 0) {
+      return [];
     }
-    if (cdk.Stack.of(this).account == securityAdminAccountId) {
-      try {
-        identityCenterInstanceResponse = new IdentityCenterGetInstanceId(this, `IdentityCenterGetInstanceId`);
-        identityCenterInstanceId = identityCenterInstanceResponse.instanceId;
-      } catch (e) {
-        this.logger.error(e);
-        throw e;
-      }
-    }
-    return identityCenterInstanceId;
+
+    const identityStoreId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+      this,
+      this.acceleratorResourceNames.parameters.identityStoreId,
+    );
+
+    const usersGroupsMetadata = new UsersGroupsMetadata(
+      this,
+      pascalCase(`UsersGroupsMetadata-${assignment.name}-${targetAccountId}`),
+      {
+        globalRegion: this.props.globalRegion,
+        identityStoreId: identityStoreId,
+        principals: assignment.principals,
+        resourceUniqueIdentifier: `${targetAccountId}-${assignment.name}`,
+        customResourceLambdaEnvironmentEncryptionKmsKey: cdk.aws_kms.Key.fromKeyArn(
+          this,
+          'AcceleratorGetLambdaKey',
+          cdk.aws_ssm.StringParameter.valueForStringParameter(
+            this,
+            this.acceleratorResourceNames.parameters.lambdaCmkArn,
+          ),
+        ),
+        customResourceLambdaCloudWatchLogKmsKey: this.cloudwatchKey,
+        customResourceLambdaLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+      },
+    );
+
+    return usersGroupsMetadata.principalsMetadata;
   }
 
   private createAssignment(
     assignment: IdentityCenterAssignmentConfig,
     permissionSetMap: PermissionSetMapping[],
-    identityCenterInstanceId: string,
+    identityCenterInstanceArn: string,
   ) {
-    let listOfTargets = [];
-    listOfTargets = this.getAccountIdsFromDeploymentTarget(assignment.deploymentTargets);
+    const targetAccountIds = this.getAccountIdsFromDeploymentTarget(assignment.deploymentTargets);
     const permissionSetArnValue = this.getPermissionSetArn(permissionSetMap, assignment.permissionSetName);
-    for (const target of listOfTargets) {
-      this.logger.info(`Creating Identity Center Assignment ${assignment.name}-${target}`);
-      try {
-        new cdk.aws_sso.CfnAssignment(this, `${pascalCase(assignment.name)}-${target}`, {
-          instanceArn: identityCenterInstanceId,
+
+    for (const targetAccountId of targetAccountIds) {
+      // backward compatibility for principalId & principalType property
+      if (assignment.principalId && assignment.principalType) {
+        this.logger.info(`Creating Identity Center Assignment ${assignment.name}-${targetAccountId}`);
+        new cdk.aws_sso.CfnAssignment(this, `${pascalCase(assignment.name)}-${targetAccountId}`, {
+          instanceArn: identityCenterInstanceArn,
           permissionSetArn: permissionSetArnValue,
           principalId: assignment.principalId,
           principalType: assignment.principalType,
-          targetId: target,
+          targetId: targetAccountId,
           targetType: 'AWS_ACCOUNT',
         });
-      } catch (e) {
-        this.logger.error(e);
-        throw e;
+      }
+
+      // New feature with list of principals in assignment
+      const cfnAssignments: cdk.aws_sso.CfnAssignment[] = [];
+
+      const assignmentPrincipals = this.getAssignmentPrincipals(assignment, targetAccountId);
+
+      for (const assignmentPrincipal of assignmentPrincipals) {
+        const cfnAssignment = new cdk.aws_sso.CfnAssignment(
+          this,
+          `${pascalCase(assignment.name)}-${targetAccountId}-${assignmentPrincipal.type}-${assignmentPrincipal.name}`,
+          {
+            instanceArn: identityCenterInstanceArn,
+            permissionSetArn: permissionSetArnValue,
+            principalId: assignmentPrincipal.id,
+            principalType: assignmentPrincipal.type,
+            targetId: targetAccountId,
+            targetType: 'AWS_ACCOUNT',
+          },
+        );
+
+        // To create dependency for CfnAssignment object
+        for (const dependency of cfnAssignments) {
+          cfnAssignment.addDependency(dependency);
+        }
+        cfnAssignments.push(cfnAssignment);
       }
     }
   }
@@ -814,28 +925,32 @@ export class OperationsStack extends AcceleratorStack {
     return permissionSetArn;
   }
 
+  /**
+   * Function to add Identity Center Resources
+   * @param securityAdminAccountId
+   */
   private addIdentityCenterResources(securityAdminAccountId: string) {
-    let delegatedAdminAccountId = securityAdminAccountId;
     if (this.props.iamConfig.identityCenter) {
-      const identityCenterDelgatedAdminOverrideId = this.props.iamConfig.identityCenter?.delegatedAdminAccount;
-
-      if (identityCenterDelgatedAdminOverrideId) {
-        delegatedAdminAccountId = this.props.accountsConfig.getAccountId(identityCenterDelgatedAdminOverrideId);
-      }
+      const delegatedAdminAccountId = this.props.iamConfig.identityCenter.delegatedAdminAccount
+        ? this.props.accountsConfig.getAccountId(this.props.iamConfig.identityCenter.delegatedAdminAccount)
+        : securityAdminAccountId;
 
       if (cdk.Stack.of(this).account === delegatedAdminAccountId) {
-        const identityCenterInstanceId = this.getIdentityCenterInstanceId(delegatedAdminAccountId);
-        if (!identityCenterInstanceId) {
-          this.logger.error(
-            `No Identity Center instance found. Please ensure that the Identity Service is enabled, and rerun the Code Pipeline`,
-          );
-          throw new Error(`Configuration validation failed at runtime.`);
-        }
-        const permissionSetList = this.addIdentityCenterPermissionSets(
-          delegatedAdminAccountId,
-          identityCenterInstanceId,
+        const identityCenterInstanceArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
+          this,
+          this.acceleratorResourceNames.parameters.identityCenterInstanceArn,
         );
-        this.addIdentityCenterAssignments(delegatedAdminAccountId, permissionSetList, identityCenterInstanceId);
+
+        const permissionSetList = this.addIdentityCenterPermissionSets(
+          this.props.iamConfig.identityCenter,
+          identityCenterInstanceArn,
+        );
+
+        this.addIdentityCenterAssignments(
+          this.props.iamConfig.identityCenter,
+          identityCenterInstanceArn,
+          permissionSetList,
+        );
       }
     }
   }
