@@ -56,7 +56,7 @@ export class NetworkValidatorFunctions {
   public getRegionsFromDeploymentTarget(targets: t.DeploymentTargets): t.Region[] {
     const enabledRegions: t.Region[] = this.enabledRegions;
 
-    return enabledRegions.filter(region => !targets.excludedRegions.includes(region));
+    return enabledRegions.filter(region => !targets.excludedRegions?.includes(region));
   }
 
   /**
