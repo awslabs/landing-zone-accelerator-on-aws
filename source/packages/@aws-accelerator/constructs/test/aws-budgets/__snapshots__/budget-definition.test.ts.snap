@@ -94,3 +94,177 @@ exports[`BudgetDefinition Construct(BudgetDefinition):  Snapshot Test 1`] = `
   },
 }
 `;
+
+exports[`BudgetDefinitionCrossRegion Construct(BudgetDefinition):  Snapshot Test 1`] = `
+{
+  "Resources": {
+    "CrossRegionManagementKey1B0C6537": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "Description": "Test for the overall lambda",
+        "EnableKeyRotation": true,
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::111111111111:root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CrossRegionManagementKeyAlias8BEA027D": {
+      "Properties": {
+        "AliasName": "alias/AcceleratorStack/ACCELERATOR_MANAGEMENT_KEY_ALIAS",
+        "TargetKeyId": {
+          "Fn::GetAtt": [
+            "CrossRegionManagementKey1B0C6537",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::KMS::Alias",
+    },
+    "CrossRegionTestBudgetDefinitionCrossRegionResource03BC94B7": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomCrossRegionBudgetCustomResourceProviderLogGroupC2E71098",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomCrossRegionBudgetCustomResourceProviderHandler1BDD3BC4",
+            "Arn",
+          ],
+        },
+        "budgetDefinition": {
+          "amount": 2000,
+          "includeCredit": false,
+          "includeDiscount": true,
+          "includeOtherSubscription": true,
+          "includeRecurring": true,
+          "includeRefund": false,
+          "includeSubscription": true,
+          "includeSupport": true,
+          "includeTax": true,
+          "includeUpfront": true,
+          "name": "accel-budget-cross-region",
+          "timeUnit": "MONTHLY",
+          "type": "COST",
+          "unit": "USD",
+          "useAmortized": false,
+          "useBlended": false,
+        },
+      },
+      "Type": "Custom::CrossRegionBudget",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomCrossRegionBudgetCustomResourceProviderHandler1BDD3BC4": {
+      "DependsOn": [
+        "CustomCrossRegionBudgetCustomResourceProviderRole08C8F7BD",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-dummyRegion",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomCrossRegionBudgetCustomResourceProviderRole08C8F7BD",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomCrossRegionBudgetCustomResourceProviderLogGroupC2E71098": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "CrossRegionManagementKey1B0C6537",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomCrossRegionBudgetCustomResourceProviderHandler1BDD3BC4",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 100,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomCrossRegionBudgetCustomResourceProviderRole08C8F7BD": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "budgets:DeleteBudget",
+                    "budgets:ModifyBudget",
+                    "budgets:PutBudget",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+  },
+}
+`;

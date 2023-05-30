@@ -1305,7 +1305,11 @@ export class SecurityResourcesStack extends AcceleratorStack {
   }
 
   private securityHubEventForwardToLogs() {
-    if (this.props.securityConfig.centralSecurityServices.securityHub.enable) {
+    // only forward events if Security Hub is enabled and logging is enabled. If logging is undefined, its assumed to be true.
+    if (
+      this.props.securityConfig.centralSecurityServices.securityHub.enable &&
+      (this.props.securityConfig.centralSecurityServices.securityHub.logging?.cloudWatch?.enable ?? true)
+    ) {
       new SecurityHubEventsLog(this, 'SecurityHubEventsLog', {
         acceleratorPrefix: this.props.prefixes.accelerator,
         snsTopicArn: `arn:${cdk.Stack.of(this).partition}:sns:${cdk.Stack.of(this).region}:${

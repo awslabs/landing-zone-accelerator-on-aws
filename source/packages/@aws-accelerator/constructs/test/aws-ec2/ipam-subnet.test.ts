@@ -51,6 +51,15 @@ new IpamSubnet(stack, 'TestIpamSubnet2', {
   tags: [{ key: 'key', value: 'value' }],
 });
 
+IpamSubnet.fromLookup(stack, 'TestIpamSubnetFromLookup', {
+  owningAccountId: '11111111111',
+  ssmSubnetIdPath: '/path/to/ipam/subnet',
+  roleName: 'testRole',
+  region: 'us-east-1',
+  kmsKey: new cdk.aws_kms.Key(stack, 'KeyForLookup', {}),
+  logRetentionInDays: 3653,
+});
+
 /**
  * IPAM subnet construct test
  */

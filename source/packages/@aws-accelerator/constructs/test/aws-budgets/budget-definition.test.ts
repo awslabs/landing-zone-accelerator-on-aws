@@ -24,7 +24,7 @@ const app = new cdk.App();
 // Create stack for native Cfn construct
 const nativeEnv = { account: '333333333333', region: 'us-east-1' };
 const nativeStack = new cdk.Stack(app, 'NativeStack', { env: nativeEnv });
-const key = new cdk.aws_kms.Key(nativeStack, 'ManagementKey', {
+const nativeKey = new cdk.aws_kms.Key(nativeStack, 'ManagementKey', {
   alias: 'AcceleratorStack/ACCELERATOR_MANAGEMENT_KEY_ALIAS',
   description: 'Test for the overall lambda',
   enableKeyRotation: true,
@@ -58,7 +58,38 @@ new BudgetDefinition(nativeStack, 'TestBudgetDefinition', {
       address: 'myemail+pa-budg@example.com',
     },
   ],
-  kmsKey: key,
+  kmsKey: nativeKey,
+  logRetentionInDays: 100,
+});
+
+// Create stack for cross region Cfn construct
+const crossRegionEnv = { account: '111111111111', region: 'dummyRegion' };
+const crossRegionStack = new cdk.Stack(app, 'CrossRegionStack', { env: crossRegionEnv });
+const crossRegionKey = new cdk.aws_kms.Key(crossRegionStack, 'CrossRegionManagementKey', {
+  alias: 'AcceleratorStack/ACCELERATOR_MANAGEMENT_KEY_ALIAS',
+  description: 'Test for the overall lambda',
+  enableKeyRotation: true,
+  removalPolicy: cdk.RemovalPolicy.RETAIN,
+});
+
+new BudgetDefinition(crossRegionStack, 'CrossRegionTestBudgetDefinition', {
+  name: 'accel-budget-cross-region',
+  timeUnit: 'MONTHLY',
+  type: 'COST',
+  amount: 2000,
+  includeUpfront: true,
+  includeTax: true,
+  includeSupport: true,
+  includeSubscription: true,
+  includeRecurring: true,
+  includeOtherSubscription: true,
+  includeDiscount: true,
+  includeCredit: false,
+  includeRefund: false,
+  useBlended: false,
+  useAmortized: false,
+  unit: 'USD',
+  kmsKey: crossRegionKey,
   logRetentionInDays: 100,
 });
 
@@ -67,4 +98,11 @@ new BudgetDefinition(nativeStack, 'TestBudgetDefinition', {
  */
 describe('BudgetDefinition', () => {
   snapShotTest(testNamePrefix, nativeStack);
+});
+
+/**
+ * BudgetDefinition Cross region construct test
+ */
+describe('BudgetDefinitionCrossRegion', () => {
+  snapShotTest(testNamePrefix, crossRegionStack);
 });
