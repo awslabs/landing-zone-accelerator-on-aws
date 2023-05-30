@@ -57,6 +57,12 @@ export enum SsmResourceType {
    */
   DXVIF = '/network/directConnectGateways/${0}/virtualInterfaces/${1}/id',
   /**
+   * Accelerator SCP ID
+   *
+   * `${0}` is replaced with the scp name
+   */
+  SCP = '/organizations/scp/${0}/id',
+  /**
    * Transit Gateway ID
    *
    * `${0}` is replaced with the transit gateway name

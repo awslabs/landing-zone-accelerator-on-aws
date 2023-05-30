@@ -572,6 +572,22 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::KMS::Alias",
     },
+    "AcceleratorKmsMetadataKey9CF7DF88": {
+      "DependsOn": [
+        "AcceleratorS3MetadataBucket3CD9B291",
+      ],
+      "Properties": {
+        "Name": "/accelerator/kms/metadata/key-arn",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "AcceleratorMetadataBucketCmkC5190F6D",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "AcceleratorLambdaKeyAlias4E15225B": {
       "Properties": {
         "AliasName": "alias/accelerator/kms/lambda/key",
@@ -1032,6 +1048,19 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "Value": {
           "Fn::GetAtt": [
             "Accelerator3KeyBF43FCD9",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "AcceleratorS3MetadataBucket3CD9B291": {
+      "Properties": {
+        "Name": "/accelerator/metadata/bucket/arn",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "AcceleratorMetadataBucket1A53514B",
             "Arn",
           ],
         },
@@ -4017,6 +4046,22 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
       },
       "Type": "AWS::KMS::Alias",
     },
+    "AcceleratorKmsMetadataKey9CF7DF88": {
+      "DependsOn": [
+        "AcceleratorS3MetadataBucket3CD9B291",
+      ],
+      "Properties": {
+        "Name": "/accelerator/kms/metadata/key-arn",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "AcceleratorMetadataBucketCmkC5190F6D",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "AcceleratorLambdaKeyAlias4E15225B": {
       "Properties": {
         "AliasName": "alias/accelerator/kms/lambda/key",
@@ -4477,6 +4522,19 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
         "Value": {
           "Fn::GetAtt": [
             "Accelerator3KeyBF43FCD9",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "AcceleratorS3MetadataBucket3CD9B291": {
+      "Properties": {
+        "Name": "/accelerator/metadata/bucket/arn",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "AcceleratorMetadataBucket1A53514B",
             "Arn",
           ],
         },

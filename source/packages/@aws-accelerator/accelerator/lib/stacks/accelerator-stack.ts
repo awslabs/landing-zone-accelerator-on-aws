@@ -21,12 +21,14 @@ import * as winston from 'winston';
 import { NagSuppressions } from 'cdk-nag';
 
 import {
+  AccountConfig,
   AccountsConfig,
   BlockDeviceMappingItem,
   CustomizationsConfig,
   DeploymentTargets,
   EbsItemConfig,
   GlobalConfig,
+  GovCloudAccountConfig,
   IamConfig,
   LifeCycleRule,
   NetworkConfig,
@@ -38,48 +40,11 @@ import {
   VpcConfig,
   VpcTemplatesConfig,
 } from '@aws-accelerator/config';
-import { KeyLookup, S3LifeCycleRule, ServiceLinkedRole } from '@aws-accelerator/constructs';
+import { KeyLookup, Organization, S3LifeCycleRule } from '@aws-accelerator/constructs';
 import { createLogger, policyReplacements, SsmParameterPath, SsmResourceType } from '@aws-accelerator/utils';
 
 import { version } from '../../../../../package.json';
 import { AcceleratorResourceNames } from '../accelerator-resource-names';
-
-/**
- * Allowed rule id type for NagSuppression
- */
-export enum NagSuppressionRuleIds {
-  DDB3 = 'DDB3',
-  EC28 = 'EC28',
-  EC29 = 'EC29',
-  IAM4 = 'IAM4',
-  IAM5 = 'IAM5',
-  SMG4 = 'SMG4',
-  VPC3 = 'VPC3',
-  AS3 = 'AS3',
-}
-
-/**
- * NagSuppression Detail Type
- */
-export type NagSuppressionDetailType = {
-  /**
-   * Suppressions rule id
-   */
-  id: NagSuppressionRuleIds;
-  /**
-   * Suppressions details
-   */
-  details: {
-    /**
-     * Resource path
-     */
-    path: string;
-    /**
-     * Suppressions reason
-     */
-    reason: string;
-  }[];
-};
 
 /**
  * Accelerator Key type enum
@@ -110,7 +75,7 @@ export enum ServiceLinkedRoleType {
   /**
    * GUARDDUTY SLR
    */
-  GUARDDUTY = 'guardduty',
+  GUARDDUTY = 'gard-duty',
   /**
    * MACIE SLR
    */
@@ -118,7 +83,7 @@ export enum ServiceLinkedRoleType {
   /**
    * SECURITYHUB SLR
    */
-  SECURITY_HUB = 'securityhub',
+  SECURITY_HUB = 'security-hub',
   /**
    * AUTOSCALING SLR
    */
@@ -126,11 +91,7 @@ export enum ServiceLinkedRoleType {
   /**
    * AWSCloud9 SLR
    */
-  AWS_CLOUD9 = 'cloud9',
-  /**
-   * AWS Firewall Manager SLR
-   */
-  FMS = 'fms',
+  AWS_CLOUD9 = 'aws-cloud9',
 }
 
 export interface AcceleratorStackProps extends cdk.StackProps {
@@ -211,17 +172,11 @@ export abstract class AcceleratorStack extends cdk.Stack {
    */
   protected ssmParameters: { logicalId: string; parameterName: string; stringValue: string }[];
 
+  protected centralLogsBucketName: string;
+
   public acceleratorResourceNames: AcceleratorResourceNames;
 
-  /**
-   * List of supported partitions for Service Linked Role creation
-   */
-  protected serviceLinkedRoleSupportedPartitionList: string[] = ['aws', 'aws-cn', 'aws-us-gov'];
-
-  /**
-   * Nag suppression input list
-   */
-  protected nagSuppressionInputs: NagSuppressionDetailType[] = [];
+  public stackParameters: Map<string, cdk.aws_ssm.StringParameter>;
 
   protected constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
@@ -229,21 +184,160 @@ export abstract class AcceleratorStack extends cdk.Stack {
     this.logger = createLogger([cdk.Stack.of(this).stackName]);
     this.props = props;
     this.ssmParameters = [];
-    this.organizationId = props.organizationConfig.getOrganizationId();
-
     //
     // Initialize resource names
     this.acceleratorResourceNames = new AcceleratorResourceNames({ prefixes: props.prefixes });
 
-    new cdk.aws_ssm.StringParameter(this, 'SsmParamStackId', {
-      parameterName: this.getSsmPath(SsmResourceType.STACK_ID, [cdk.Stack.of(this).stackName]),
-      stringValue: cdk.Stack.of(this).stackId,
-    });
+    this.centralLogsBucketName = `${
+      this.acceleratorResourceNames.bucketPrefixes.centralLogs
+    }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`;
 
-    new cdk.aws_ssm.StringParameter(this, 'SsmParamAcceleratorVersion', {
-      parameterName: this.getSsmPath(SsmResourceType.VERSION, [cdk.Stack.of(this).stackName]),
-      stringValue: version,
-    });
+    this.stackParameters = new Map<string, cdk.aws_ssm.StringParameter>();
+    this.stackParameters.set(
+      'StackId',
+      new cdk.aws_ssm.StringParameter(this, 'SsmParamStackId', {
+        parameterName: this.getSsmPath(SsmResourceType.STACK_ID, [cdk.Stack.of(this).stackName]),
+        stringValue: cdk.Stack.of(this).stackId,
+      }),
+    );
+
+    this.stackParameters.set(
+      'StackVersion',
+      new cdk.aws_ssm.StringParameter(this, 'SsmParamAcceleratorVersion', {
+        parameterName: this.getSsmPath(SsmResourceType.VERSION, [cdk.Stack.of(this).stackName]),
+        stringValue: version,
+      }),
+    );
+  }
+
+  /**
+   * Function to create Service Linked Role for given type
+   * @param roleType {@link ServiceLinkedRoleType}
+   * @returns cdk.aws_iam.CfnServiceLinkedRole
+   *
+   * @remarks
+   * Service Linked Role creation is depended on the service configuration.
+   */
+  protected createServiceLinkedRole(roleType: string): cdk.aws_iam.CfnServiceLinkedRole {
+    let serviceLinkedRole: cdk.aws_iam.CfnServiceLinkedRole | undefined;
+
+    switch (roleType) {
+      case ServiceLinkedRoleType.ACCESS_ANALYZER:
+        if (this.props.organizationConfig.enable && this.props.securityConfig.accessAnalyzer.enable) {
+          this.logger.debug('Create AccessAnalyzerServiceLinkedRole');
+          serviceLinkedRole = new cdk.aws_iam.CfnServiceLinkedRole(this, 'AccessAnalyzerServiceLinkedRole', {
+            awsServiceName: 'access-analyzer.amazonaws.com',
+          });
+        }
+        break;
+      case ServiceLinkedRoleType.GUARDDUTY:
+        if (
+          this.props.organizationConfig.enable &&
+          this.props.securityConfig.centralSecurityServices.guardduty.enable
+        ) {
+          this.logger.debug('Create GuardDutyServiceLinkedRole');
+          new cdk.aws_iam.CfnServiceLinkedRole(this, 'GuardDutyServiceLinkedRole', {
+            awsServiceName: 'guardduty.amazonaws.com',
+            description: 'A service-linked role required for Amazon GuardDuty to access your resources. ',
+          });
+        }
+        break;
+      case ServiceLinkedRoleType.SECURITY_HUB:
+        if (
+          this.props.organizationConfig.enable &&
+          this.props.securityConfig.centralSecurityServices.securityHub.enable
+        ) {
+          this.logger.debug('Create SecurityHubServiceLinkedRole');
+          new cdk.aws_iam.CfnServiceLinkedRole(this, 'SecurityHubServiceLinkedRole', {
+            awsServiceName: 'securityhub.amazonaws.com',
+            description: 'A service-linked role required for AWS Security Hub to access your resources.',
+          });
+        }
+        break;
+      case ServiceLinkedRoleType.MACIE:
+        if (this.props.organizationConfig.enable && this.props.securityConfig.centralSecurityServices.macie.enable) {
+          this.logger.debug('Create MacieServiceLinkedRole');
+          new cdk.aws_iam.CfnServiceLinkedRole(this, 'MacieServiceLinkedRole', {
+            awsServiceName: 'macie.amazonaws.com',
+          });
+        }
+        break;
+      case ServiceLinkedRoleType.AUTOSCALING:
+        if (this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable) {
+          this.logger.debug('Create AutoScalingServiceLinkedRole');
+          new cdk.aws_iam.CfnServiceLinkedRole(this, 'AutoScalingServiceLinkedRole', {
+            awsServiceName: 'autoscaling.amazonaws.com',
+            description:
+              'Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling',
+          });
+        }
+        break;
+      case ServiceLinkedRoleType.AWS_CLOUD9:
+        if (
+          this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable &&
+          this.props.partition === 'aws'
+        ) {
+          this.logger.debug('Create AutoScalingServiceLinkedRole');
+          new cdk.aws_iam.CfnServiceLinkedRole(this, 'AWSServiceRoleForAWSCloud9', {
+            awsServiceName: 'cloud9.amazonaws.com',
+            description: 'Service linked role for AWS Cloud9',
+          });
+        }
+        break;
+      default:
+        throw new Error(`Invalid service linked role type ${roleType}`);
+    }
+    return serviceLinkedRole!;
+  }
+
+  /**
+   * Function to get Accelerator key for given key type
+   * @param keyType {@type AcceleratorKeyType}
+   * @param customResourceLambdaCloudWatchLogKmsKey {@link cdk.aws_kms.IKey}
+   * @returns cdk.aws_kms.Key
+   */
+  protected getAcceleratorKey(
+    keyType: AcceleratorKeyType,
+    customResourceLambdaCloudWatchLogKmsKey?: cdk.aws_kms.IKey,
+  ): cdk.aws_kms.Key {
+    let key: cdk.aws_kms.Key | undefined;
+    switch (keyType) {
+      case AcceleratorKeyType.CLOUDWATCH_KEY:
+        key = cdk.aws_kms.Key.fromKeyArn(
+          this,
+          'AcceleratorGetCloudWatchKey',
+          cdk.aws_ssm.StringParameter.valueForStringParameter(
+            this,
+            this.acceleratorResourceNames.parameters.cloudWatchLogCmkArn,
+          ),
+        ) as cdk.aws_kms.Key;
+        break;
+      case AcceleratorKeyType.LAMBDA_KEY:
+        key = cdk.aws_kms.Key.fromKeyArn(
+          this,
+          'AcceleratorGetLambdaKey',
+          cdk.aws_ssm.StringParameter.valueForStringParameter(
+            this,
+            this.acceleratorResourceNames.parameters.lambdaCmkArn,
+          ),
+        ) as cdk.aws_kms.Key;
+        break;
+      case AcceleratorKeyType.CENTRAL_LOG_BUCKET:
+        key = new KeyLookup(this, 'AcceleratorCentralLogBucketKeyLookup', {
+          accountId: this.props.accountsConfig.getLogArchiveAccountId(),
+          keyRegion: this.props.centralizedLoggingRegion,
+          roleName: this.acceleratorResourceNames.roles.crossAccountCentralLogBucketCmkArnSsmParameterAccess,
+          keyArnParameterName: this.acceleratorResourceNames.parameters.centralLogBucketCmkArn,
+          kmsKey: customResourceLambdaCloudWatchLogKmsKey,
+          logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+          acceleratorPrefix: this.props.prefixes.accelerator,
+        }).getKey();
+        break;
+      default:
+        throw new Error(`Invalid key type ${keyType}`);
+    }
+
+    return key!;
   }
 
   /**
@@ -300,36 +394,69 @@ export abstract class AcceleratorStack extends cdk.Stack {
     return false;
   }
 
-  protected getAccountNamesFromDeploymentTarget(deploymentTargets: DeploymentTargets): string[] {
+  /**
+   * Private helper function to get account names from Accounts array of DeploymentTarget
+   * @param accounts
+   * @returns Array of account names
+   *
+   * @remarks Used only in getAccountNamesFromDeploymentTarget function.
+   */
+  private getAccountNamesFromDeploymentTargetAccountNames(accounts: string[]): string[] {
     const accountNames: string[] = [];
+    for (const account of accounts ?? []) {
+      accountNames.push(account);
+    }
+    return accountNames;
+  }
 
-    for (const ou of deploymentTargets.organizationalUnits ?? []) {
-      if (ou === 'Root') {
-        for (const account of [
-          ...this.props.accountsConfig.mandatoryAccounts,
-          ...this.props.accountsConfig.workloadAccounts,
-        ]) {
+  /**
+   * Private helper function to get account names from given list of account configs
+   * @param ouName
+   * @param accountConfigs
+   * @returns Array of account names
+   *
+   * @remarks Used only in getAccountNamesFromDeploymentTarget function.
+   */
+  private getAccountNamesFromAccountConfigs(
+    ouName: string,
+    accountConfigs: (AccountConfig | GovCloudAccountConfig)[],
+  ): string[] {
+    const accountNames: string[] = [];
+    if (ouName === 'Root') {
+      for (const account of accountConfigs) {
+        accountNames.push(account.name);
+      }
+    } else {
+      for (const account of accountConfigs) {
+        if (ouName === account.organizationalUnit) {
           accountNames.push(account.name);
-        }
-      } else {
-        for (const account of [
-          ...this.props.accountsConfig.mandatoryAccounts,
-          ...this.props.accountsConfig.workloadAccounts,
-        ]) {
-          if (ou === account.organizationalUnit) {
-            accountNames.push(account.name);
-          }
         }
       }
     }
 
-    for (const account of deploymentTargets.accounts ?? []) {
-      accountNames.push(account);
+    return accountNames;
+  }
+
+  /**
+   * Function to get list of account names from given DeploymentTargets.
+   * @param deploymentTargets
+   * @returns Array of account names
+   */
+  protected getAccountNamesFromDeploymentTarget(deploymentTargets: DeploymentTargets): string[] {
+    const accountNames: string[] = [];
+
+    for (const ou of deploymentTargets.organizationalUnits ?? []) {
+      accountNames.push(
+        ...this.getAccountNamesFromAccountConfigs(ou, [
+          ...this.props.accountsConfig.mandatoryAccounts,
+          ...this.props.accountsConfig.workloadAccounts,
+        ]),
+      );
     }
 
-    const filterAccountNames = accountNames.filter(item => !deploymentTargets.excludedAccounts?.includes(item));
+    accountNames.push(...this.getAccountNamesFromDeploymentTargetAccountNames(deploymentTargets.accounts));
 
-    return [...new Set(filterAccountNames)];
+    return [...new Set(accountNames)];
   }
 
   // Helper function to add an account id to the list
@@ -339,36 +466,70 @@ export abstract class AcceleratorStack extends cdk.Stack {
     }
   }
 
+  /**
+   * Private helper function to append account ids from Accounts array of DeploymentTarget or ShareTargets
+   * @param accounts
+   * @param accountIds - List where processed account ids from Accounts array of DeploymentTarget or ShareTargets to be appended to.
+   * @returns Array of Account Ids
+   *
+   * @remarks Used only in getAccountIdsFromDeploymentTarget function.
+   */
+  private appendAccountIdsFromDeploymentTargetAccounts(
+    deploymentTargets: DeploymentTargets | ShareTargets,
+    accountIds: string[],
+  ): void {
+    for (const accountName of deploymentTargets.accounts ?? []) {
+      const accountId = this.props.accountsConfig.getAccountId(accountName);
+      this._addAccountId(accountIds, accountId);
+    }
+  }
+
+  /**
+   * Private helper function to append account ids from given list of account configs
+   * @param ouName
+   * @param accountConfigs
+   * @param accountIds - List where processed account ids from accountConfigs to be appended to.
+   * @returns Array of Account Ids
+   *
+   * @remarks Used only in getAccountIdsFromDeploymentTarget function.
+   */
+  private appendAccountIdsFromAccountConfigs(
+    ouName: string,
+    accountConfigs: (AccountConfig | GovCloudAccountConfig)[],
+    accountIds: string[],
+  ): void {
+    if (ouName === 'Root') {
+      for (const accountConfig of accountConfigs) {
+        const accountId = this.props.accountsConfig.getAccountId(accountConfig.name);
+        this._addAccountId(accountIds, accountId);
+      }
+    } else {
+      for (const accountConfig of accountConfigs) {
+        if (ouName === accountConfig.organizationalUnit) {
+          const accountId = this.props.accountsConfig.getAccountId(accountConfig.name);
+          this._addAccountId(accountIds, accountId);
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to get account ids from given DeploymentTarget
+   * @param deploymentTargets
+   * @returns
+   */
   public getAccountIdsFromDeploymentTarget(deploymentTargets: DeploymentTargets): string[] {
     const accountIds: string[] = [];
 
     for (const ou of deploymentTargets.organizationalUnits ?? []) {
-      // debug: processing ou
-      if (ou === 'Root') {
-        for (const account of [
-          ...this.props.accountsConfig.mandatoryAccounts,
-          ...this.props.accountsConfig.workloadAccounts,
-        ]) {
-          const accountId = this.props.accountsConfig.getAccountId(account.name);
-          this._addAccountId(accountIds, accountId);
-        }
-      } else {
-        for (const account of [
-          ...this.props.accountsConfig.mandatoryAccounts,
-          ...this.props.accountsConfig.workloadAccounts,
-        ]) {
-          if (ou === account.organizationalUnit) {
-            const accountId = this.props.accountsConfig.getAccountId(account.name);
-            this._addAccountId(accountIds, accountId);
-          }
-        }
-      }
+      this.appendAccountIdsFromAccountConfigs(
+        ou,
+        [...this.props.accountsConfig.mandatoryAccounts, ...this.props.accountsConfig.workloadAccounts],
+        accountIds,
+      );
     }
 
-    for (const account of deploymentTargets.accounts ?? []) {
-      const accountId = this.props.accountsConfig.getAccountId(account);
-      this._addAccountId(accountIds, accountId);
-    }
+    this.appendAccountIdsFromDeploymentTargetAccounts(deploymentTargets, accountIds);
 
     const excludedAccountIds = this.getExcludedAccountIds(deploymentTargets);
     const filteredAccountIds = accountIds.filter(item => !excludedAccountIds.includes(item));
@@ -414,35 +575,23 @@ export abstract class AcceleratorStack extends cdk.Stack {
     return vpcAccountIds;
   }
 
+  /**
+   * Function to get account ids from ShareTarget
+   * @param shareTargets
+   * @returns
+   */
   public getAccountIdsFromShareTarget(shareTargets: ShareTargets): string[] {
     const accountIds: string[] = [];
 
     for (const ou of shareTargets.organizationalUnits ?? []) {
-      if (ou === 'Root') {
-        for (const account of [
-          ...this.props.accountsConfig.mandatoryAccounts,
-          ...this.props.accountsConfig.workloadAccounts,
-        ]) {
-          const accountId = this.props.accountsConfig.getAccountId(account.name);
-          this._addAccountId(accountIds, accountId);
-        }
-      } else {
-        for (const account of [
-          ...this.props.accountsConfig.mandatoryAccounts,
-          ...this.props.accountsConfig.workloadAccounts,
-        ]) {
-          if (ou === account.organizationalUnit) {
-            const accountId = this.props.accountsConfig.getAccountId(account.name);
-            this._addAccountId(accountIds, accountId);
-          }
-        }
-      }
+      this.appendAccountIdsFromAccountConfigs(
+        ou,
+        [...this.props.accountsConfig.mandatoryAccounts, ...this.props.accountsConfig.workloadAccounts],
+        accountIds,
+      );
     }
 
-    for (const account of shareTargets.accounts ?? []) {
-      const accountId = this.props.accountsConfig.getAccountId(account);
-      this._addAccountId(accountIds, accountId);
-    }
+    this.appendAccountIdsFromDeploymentTargetAccounts(shareTargets, accountIds);
 
     return accountIds;
   }
