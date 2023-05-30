@@ -66,6 +66,9 @@ centralSecurityServices:
     regionAggregation: true
     snsTopicName: Security
     notificationLevel: HIGH
+    logging:
+      cloudWatch:
+        enable: true
     excludeRegions:
       - us-west-2
     standards:

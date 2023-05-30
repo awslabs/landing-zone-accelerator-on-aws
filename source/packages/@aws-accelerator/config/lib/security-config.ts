@@ -294,6 +294,14 @@ export class SecurityConfigTypes {
     controlsToDisable: t.optional(t.array(t.nonEmptyString)),
   });
 
+  static readonly securityHubLoggingCloudwatchConfig = t.interface({
+    enable: t.boolean,
+  });
+
+  static readonly securityHubLoggingConfig = t.interface({
+    cloudWatch: t.optional(this.securityHubLoggingCloudwatchConfig),
+  });
+
   static readonly securityHubConfig = t.interface({
     enable: t.boolean,
     regionAggregation: t.optional(t.boolean),
@@ -301,6 +309,7 @@ export class SecurityConfigTypes {
     notificationLevel: t.optional(t.string),
     excludeRegions: t.optional(t.array(t.region)),
     standards: t.array(this.securityHubStandardConfig),
+    logging: t.optional(this.securityHubLoggingConfig),
   });
 
   static readonly ebsDefaultVolumeEncryptionConfig = t.interface({
@@ -1002,6 +1011,39 @@ export class SecurityHubStandardConfig implements t.TypeOf<typeof SecurityConfig
    */
   readonly controlsToDisable: string[] = [];
 }
+/**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SecurityHubConfig} / {@link SecurityHubLoggingConfig} / {@link SecurityHubLoggingCloudwatchConfig}*
+ *
+ * @example
+ * ```
+ * enable: true
+ * ```
+ */
+export class SecurityHubLoggingCloudwatchConfig
+  implements t.TypeOf<typeof SecurityConfigTypes.securityHubLoggingCloudwatchConfig>
+{
+  /**
+   * Security hub to cloudwatch logging is enabled by default.
+   */
+  readonly enable = true;
+}
+
+/**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SecurityHubConfig} / {@link SecurityHubLoggingConfig}*
+ *
+ * @example
+ * ```
+ * logging:
+ *   cloudWatch:
+ *     enable: true
+ * ```
+ */
+export class SecurityHubLoggingConfig implements t.TypeOf<typeof SecurityConfigTypes.securityHubLoggingConfig> {
+  /**
+   * Data store to ship the Security Hub logs to.
+   */
+  readonly cloudWatch: SecurityHubLoggingCloudwatchConfig | undefined = undefined;
+}
 
 /**
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SecurityHubConfig}*
@@ -1012,18 +1054,21 @@ export class SecurityHubStandardConfig implements t.TypeOf<typeof SecurityConfig
  * @example
  * ```
  * securityHub:
- *     enable: true
- *     regionAggregation: true
- *     excludeRegions: []
- *     standards:
- *       - name: AWS Foundational Security Best Practices v1.0.0
- *         deploymentTargets:
- *          organizationalUnits:
- *            -  Root
- *         enable: true
- *         controlsToDisable:
- *           - IAM.1
- *           - EC2.10
+ *   enable: true
+ *   regionAggregation: true
+ *   excludeRegions: []
+ *   standards:
+ *     - name: AWS Foundational Security Best Practices v1.0.0
+ *       deploymentTargets:
+ *       organizationalUnits:
+ *         -  Root
+ *       enable: true
+ *       controlsToDisable:
+ *         - IAM.1
+ *         - EC2.10
+ *   logging:
+ *     cloudWatch:
+ *       enable: true
  * ```
  */
 export class SecurityHubConfig implements t.TypeOf<typeof SecurityConfigTypes.securityHubConfig> {
@@ -1061,6 +1106,14 @@ export class SecurityHubConfig implements t.TypeOf<typeof SecurityConfigTypes.se
    * Security Hub standards configuration
    */
   readonly standards: SecurityHubStandardConfig[] = [];
+  /**
+   * (OPTIONAL) Security Hub logs are sent to CloudWatch logs by default. This option can enable or disable the logging.
+   *
+   * @remarks
+   * By default, if nothing is given `true` is taken. In order to stop logging, set this parameter to `false`.
+   * Please note, this option can be toggled but log group with `/${acceleratorPrefix}-SecurityHub` will remain in the account for every enabled region and will need to be manually deleted. This is designed to ensure no accidental loss of data occurs.
+   */
+  readonly logging: SecurityHubLoggingConfig | undefined = undefined;
 }
 
 /**
