@@ -47,14 +47,9 @@ export class SecurityAuditStack extends AcceleratorStack {
   private readonly centralLogsBucketKey: cdk.aws_kms.Key;
   private readonly organizationId: string;
   private readonly replicationProps: BucketReplicationProps;
-  private readonly centralLogsBucketName: string;
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
-
-    this.centralLogsBucketName = `${
-      this.acceleratorResourceNames.bucketPrefixes.centralLogs
-    }-${props.accountsConfig.getLogArchiveAccountId()}-${props.centralizedLoggingRegion}`;
 
     this.s3Key = new KeyLookup(this, 'AcceleratorS3Key', {
       accountId: props.accountsConfig.getAuditAccountId(),
