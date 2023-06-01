@@ -27,6 +27,10 @@ import * as path from 'path';
  */
 export interface RevertScpChangesProps {
   /**
+   * Audit account Id
+   */
+  readonly acceleratorPrefix: string;
+  /**
    * Configuration directory path
    */
   readonly configDirPath: string;
@@ -115,6 +119,7 @@ export class RevertScpChanges extends Construct {
       description: 'Lambda function to revert changes made to LZA-controlled service control policies',
       timeout: cdk.Duration.minutes(LAMBDA_TIMEOUT_IN_MINUTES),
       environment: {
+        ACCELERATOR_PREFIX: props.acceleratorPrefix,
         AWS_PARTITION: cdk.Aws.PARTITION,
         HOME_REGION: props.homeRegion,
         SNS_TOPIC_ARN: snsTopicArn ?? '',
