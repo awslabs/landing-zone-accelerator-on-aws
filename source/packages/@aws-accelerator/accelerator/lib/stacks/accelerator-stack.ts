@@ -94,6 +94,29 @@ export enum ServiceLinkedRoleType {
   AWS_CLOUD9 = 'aws-cloud9',
 }
 
+/**
+ * NagSuppression Detail Type
+ */
+export type NagSuppressionDetailType = {
+  /**
+   * Suppressions type
+   */
+  type: 'IAM4' | 'IAM5' | 'VPC3' | 'EC28' | 'EC29' | 'SMG4';
+  /**
+   * Suppressions details
+   */
+  details: {
+    /**
+     * Resource path
+     */
+    path: string;
+    /**
+     * Suppressions reason
+     */
+    reason: string;
+  }[];
+};
+
 export interface AcceleratorStackProps extends cdk.StackProps {
   readonly configDirPath: string;
   readonly accountsConfig: AccountsConfig;
@@ -373,6 +396,20 @@ export abstract class AcceleratorStack extends cdk.Stack {
     }
   }
 
+  /**
+   * Function to create NagSuppressions
+   * @param inputs {@link NagSuppressionDetailType}
+   */
+  protected createNagSuppressions(inputs: NagSuppressionDetailType[]): void {
+    for (const input of inputs) {
+      for (const detail of input.details) {
+        NagSuppressions.addResourceSuppressionsByPath(this, detail.path, [
+          { id: `AwsSolutions-${input.type}`, reason: detail.reason },
+        ]);
+      }
+    }
+  }
+
   public isIncluded(deploymentTargets: DeploymentTargets): boolean {
     // Explicit Denies
     if (
@@ -573,6 +610,33 @@ export abstract class AcceleratorStack extends cdk.Stack {
     }
 
     return vpcAccountIds;
+  }
+
+  /**
+   * Function to get central endpoint vpc
+   * @returns VpcConfig {@link VpcConfig}
+   */
+  protected getCentralEndpointVpc(): VpcConfig {
+    let centralEndpointVpc = undefined;
+    const centralEndpointVpcs = this.props.networkConfig.vpcs.filter(
+      item =>
+        item.interfaceEndpoints?.central &&
+        this.props.accountsConfig.getAccountId(item.account) === cdk.Stack.of(this).account &&
+        item.region === cdk.Stack.of(this).region,
+    );
+
+    if (this.props.partition !== 'aws' && this.props.partition !== 'aws-cn' && centralEndpointVpcs.length > 0) {
+      this.logger.error('Central Endpoint VPC is only possible in commercial regions');
+      throw new Error(`Configuration validation failed at runtime.`);
+    }
+
+    if (centralEndpointVpcs.length > 1) {
+      this.logger.error(`multiple (${centralEndpointVpcs.length}) central endpoint vpcs detected, should only be one`);
+      throw new Error(`Configuration validation failed at runtime.`);
+    }
+    centralEndpointVpc = centralEndpointVpcs[0];
+
+    return centralEndpointVpc;
   }
 
   /**
