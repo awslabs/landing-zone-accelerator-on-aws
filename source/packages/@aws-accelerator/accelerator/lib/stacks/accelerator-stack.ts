@@ -233,6 +233,81 @@ export abstract class AcceleratorStack extends cdk.Stack {
   }
 
   /**
+   * Create Access Analyzer Service Linked role
+   *
+   * @remarks
+   * Access Analyzer Service linked role is created when organization is enabled and accessAnalyzer flag is ON.
+   */
+  protected createAccessAnalyzerServiceLinkedRole() {
+    if (this.props.organizationConfig.enable && this.props.securityConfig.accessAnalyzer.enable) {
+      this.createServiceLinkedRole(ServiceLinkedRoleType.ACCESS_ANALYZER);
+    }
+  }
+
+  /**
+   * Create GuardDuty Service Linked role
+   *
+   * @remarks
+   * GuardDuty Service linked role is created when organization is enabled and guardduty flag is ON.
+   */
+  protected createGuardDutyServiceLinkedRole() {
+    if (this.props.organizationConfig.enable && this.props.securityConfig.centralSecurityServices.guardduty.enable) {
+      this.createServiceLinkedRole(ServiceLinkedRoleType.GUARDDUTY);
+    }
+  }
+
+  /**
+   * Create SecurityHub Service Linked role
+   *
+   * @remarks
+   * SecurityHub Service linked role is created when organization is enabled and securityHub flag is ON.
+   */
+  protected createSecurityHubServiceLinkedRole() {
+    if (this.props.organizationConfig.enable && this.props.securityConfig.centralSecurityServices.securityHub.enable) {
+      this.createServiceLinkedRole(ServiceLinkedRoleType.SECURITY_HUB);
+    }
+  }
+
+  /**
+   * Create Macie Service Linked role
+   *
+   * @remarks
+   * Macie Service linked role is created when organization is enabled and macie flag is ON.
+   */
+  protected createMacieServiceLinkedRole() {
+    if (this.props.organizationConfig.enable && this.props.securityConfig.centralSecurityServices.macie.enable) {
+      this.createServiceLinkedRole(ServiceLinkedRoleType.MACIE);
+    }
+  }
+
+  /**
+   * Create AutoScaling Service Linked role
+   *
+   * @remarks
+   * AutoScaling when ebsDefaultVolumeEncryption flag is ON.
+   */
+  protected createAutoScalingServiceLinkedRole() {
+    if (this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable) {
+      this.createServiceLinkedRole(ServiceLinkedRoleType.AUTOSCALING);
+    }
+  }
+
+  /**
+   * Create AWS CLOUD9 Service Linked role
+   *
+   * @remarks
+   * AWS CLOUD9 when ebsDefaultVolumeEncryption flag is ON and partition is 'aws'
+   */
+  protected createAwsCloud9ServiceLinkedRole() {
+    if (
+      this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable &&
+      this.props.partition === 'aws'
+    ) {
+      this.createServiceLinkedRole(ServiceLinkedRoleType.AWS_CLOUD9);
+    }
+  }
+
+  /**
    * Function to create Service Linked Role for given type
    * @param roleType {@link ServiceLinkedRoleType}
    * @returns cdk.aws_iam.CfnServiceLinkedRole
@@ -240,29 +315,24 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * @remarks
    * Service Linked Role creation is depended on the service configuration.
    */
-  protected createServiceLinkedRole(roleType: string): cdk.aws_iam.CfnServiceLinkedRole {
+  private createServiceLinkedRole(roleType: string): cdk.aws_iam.CfnServiceLinkedRole {
     let serviceLinkedRole: cdk.aws_iam.CfnServiceLinkedRole | undefined;
 
     switch (roleType) {
       case ServiceLinkedRoleType.ACCESS_ANALYZER:
-        if (this.props.organizationConfig.enable && this.props.securityConfig.accessAnalyzer.enable) {
-          this.logger.debug('Create AccessAnalyzerServiceLinkedRole');
-          serviceLinkedRole = new cdk.aws_iam.CfnServiceLinkedRole(this, 'AccessAnalyzerServiceLinkedRole', {
-            awsServiceName: 'access-analyzer.amazonaws.com',
-          });
-        }
+        this.logger.debug('Create AccessAnalyzerServiceLinkedRole');
+        serviceLinkedRole = new cdk.aws_iam.CfnServiceLinkedRole(this, 'AccessAnalyzerServiceLinkedRole', {
+          awsServiceName: 'access-analyzer.amazonaws.com',
+        });
+
         break;
       case ServiceLinkedRoleType.GUARDDUTY:
-        if (
-          this.props.organizationConfig.enable &&
-          this.props.securityConfig.centralSecurityServices.guardduty.enable
-        ) {
-          this.logger.debug('Create GuardDutyServiceLinkedRole');
-          new cdk.aws_iam.CfnServiceLinkedRole(this, 'GuardDutyServiceLinkedRole', {
-            awsServiceName: 'guardduty.amazonaws.com',
-            description: 'A service-linked role required for Amazon GuardDuty to access your resources. ',
-          });
-        }
+        this.logger.debug('Create GuardDutyServiceLinkedRole');
+        new cdk.aws_iam.CfnServiceLinkedRole(this, 'GuardDutyServiceLinkedRole', {
+          awsServiceName: 'guardduty.amazonaws.com',
+          description: 'A service-linked role required for Amazon GuardDuty to access your resources. ',
+        });
+
         break;
       case ServiceLinkedRoleType.SECURITY_HUB:
         if (
@@ -285,14 +355,12 @@ export abstract class AcceleratorStack extends cdk.Stack {
         }
         break;
       case ServiceLinkedRoleType.AUTOSCALING:
-        if (this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable) {
-          this.logger.debug('Create AutoScalingServiceLinkedRole');
-          new cdk.aws_iam.CfnServiceLinkedRole(this, 'AutoScalingServiceLinkedRole', {
-            awsServiceName: 'autoscaling.amazonaws.com',
-            description:
-              'Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling',
-          });
-        }
+        this.logger.debug('Create AutoScalingServiceLinkedRole');
+        new cdk.aws_iam.CfnServiceLinkedRole(this, 'AutoScalingServiceLinkedRole', {
+          awsServiceName: 'autoscaling.amazonaws.com',
+          description:
+            'Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling',
+        });
         break;
       case ServiceLinkedRoleType.AWS_CLOUD9:
         if (

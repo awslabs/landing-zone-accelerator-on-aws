@@ -41,11 +41,61 @@ export class NetworkVpcDnsStack extends NetworkStack {
     const resolverMap = this.setResolverEndpointMap(this.vpcsInScope);
 
     //
-    // Create private hosted zones
+    // Create Private Hosted Zones
     //
+    this.createPrivateHostedZones({ vpc: vpcMap, endpoint: endpointMap, zone: zoneMap, resolver: resolverMap }, props);
 
+    //
+    // configure SYSTEM rules
+    //
+    this.configureSystemRules(props);
+
+    //
+    // Create SSM Parameters
+    //
+    this.createSsmParameters();
+
+    this.logger.info('Completed stack synthesis');
+  }
+
+  /**
+   * Function to configure system rules
+   * @param props
+   */
+  private configureSystemRules(props: AcceleratorStackProps) {
+    if (props.networkConfig.centralNetworkServices?.route53Resolver?.rules) {
+      const delegatedAdminAccountId = this.props.accountsConfig.getAccountId(
+        props.networkConfig.centralNetworkServices.delegatedAdminAccount,
+      );
+
+      // Only deploy in the delegated admin account
+      if (delegatedAdminAccountId === cdk.Stack.of(this).account) {
+        this.createSystemRules(props.networkConfig.centralNetworkServices?.route53Resolver?.rules);
+      }
+    }
+  }
+
+  /**
+   * Function to create private hosted zones
+   * @param maps {
+      vpc: Map<string, string>;
+      endpoint: Map<string, string>;
+      zone: Map<string, string>;
+      resolver: Map<string, string>;
+    }
+   * @param props {@link AcceleratorStackProps}
+   */
+  private createPrivateHostedZones(
+    maps: {
+      vpc: Map<string, string>;
+      endpoint: Map<string, string>;
+      zone: Map<string, string>;
+      resolver: Map<string, string>;
+    },
+    props: AcceleratorStackProps,
+  ) {
     for (const vpcItem of this.vpcsInScope) {
-      const vpcId = vpcMap.get(vpcItem.name);
+      const vpcId = maps.vpc.get(vpcItem.name);
 
       if (!vpcId) {
         this.logger.error(`Unable to locate VPC ${vpcItem.name}`);
@@ -53,7 +103,7 @@ export class NetworkVpcDnsStack extends NetworkStack {
       }
       // Create private hosted zones
       if (vpcItem.interfaceEndpoints?.central) {
-        this.createHostedZones(vpcItem, vpcId, endpointMap, zoneMap);
+        this.createHostedZones(vpcItem, vpcId, maps.endpoint, maps.zone);
       }
 
       //
@@ -66,30 +116,11 @@ export class NetworkVpcDnsStack extends NetworkStack {
 
         for (const endpointItem of endpoints) {
           if (endpointItem.vpc === vpcItem.name && endpointItem.type === 'OUTBOUND') {
-            this.createForwardRules(vpcItem, endpointItem, resolverMap);
+            this.createForwardRules(vpcItem, endpointItem, maps.resolver);
           }
         }
       }
     }
-
-    // SYSTEM rules
-    if (props.networkConfig.centralNetworkServices?.route53Resolver?.rules) {
-      const delegatedAdminAccountId = this.props.accountsConfig.getAccountId(
-        props.networkConfig.centralNetworkServices.delegatedAdminAccount,
-      );
-
-      // Only deploy in the delegated admin account
-      if (delegatedAdminAccountId === cdk.Stack.of(this).account) {
-        this.createSystemRules(props.networkConfig.centralNetworkServices?.route53Resolver?.rules);
-      }
-    }
-
-    //
-    // Create SSM Parameters
-    //
-    this.createSsmParameters();
-
-    this.logger.info('Completed stack synthesis');
   }
 
   /**

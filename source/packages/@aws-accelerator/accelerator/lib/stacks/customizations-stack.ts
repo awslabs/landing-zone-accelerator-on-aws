@@ -199,6 +199,37 @@ export class CustomizationsStack extends AcceleratorStack {
   }
 
   /**
+   * Function to share portfolio with organization
+   * @param portfolio {@link cdk.aws_servicecatalog.Portfolio}
+   * @param portfolioItem {@link PortfolioConfig}
+   *
+   * @remarks
+   * Share portfolio with organizational units via Custom Resource
+   */
+  private sharePortfolioWithOrg(portfolio: cdk.aws_servicecatalog.Portfolio, portfolioItem: PortfolioConfig) {
+    const organizationalUnitIds: string[] = [];
+    let shareToEntireOrg = false;
+    for (const ou of portfolioItem?.shareTargets?.organizationalUnits ?? []) {
+      if (ou === 'Root') {
+        shareToEntireOrg = true;
+      } else {
+        organizationalUnitIds.push(this.props.organizationConfig.getOrganizationalUnitId(ou));
+      }
+    }
+    if (organizationalUnitIds.length > 0 || shareToEntireOrg) {
+      const portfolioOrgShare = new SharePortfolioWithOrg(this, `${portfolioItem.name}-Share`, {
+        portfolioId: portfolio.portfolioId,
+        organizationalUnitIds: organizationalUnitIds,
+        tagShareOptions: portfolioItem.shareTagOptions ?? false,
+        organizationId: shareToEntireOrg ? this.organizationId : '',
+        kmsKey: this.cloudwatchKey,
+        logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+      });
+      portfolioOrgShare.node.addDependency(portfolio);
+    }
+  }
+
+  /**
    * Create account and OU-level Service Catalog portfolio shares
    * @param portfolio
    * @param portfolioItem
@@ -219,26 +250,7 @@ export class CustomizationsStack extends AcceleratorStack {
       // share portfolio with organizational units via Custom Resource
       const managementAccountId = this.props.accountsConfig.getManagementAccountId();
       if (cdk.Stack.of(this).account === managementAccountId) {
-        const organizationalUnitIds: string[] = [];
-        let shareToEntireOrg = false;
-        for (const ou of portfolioItem?.shareTargets?.organizationalUnits ?? []) {
-          if (ou === 'Root') {
-            shareToEntireOrg = true;
-          } else {
-            organizationalUnitIds.push(this.props.organizationConfig.getOrganizationalUnitId(ou));
-          }
-        }
-        if (organizationalUnitIds.length > 0 || shareToEntireOrg) {
-          const portfolioOrgShare = new SharePortfolioWithOrg(this, `${portfolioItem.name}-Share`, {
-            portfolioId: portfolio.portfolioId,
-            organizationalUnitIds: organizationalUnitIds,
-            tagShareOptions: portfolioItem.shareTagOptions ?? false,
-            organizationId: shareToEntireOrg ? this.organizationId : '',
-            kmsKey: this.cloudwatchKey,
-            logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-          });
-          portfolioOrgShare.node.addDependency(portfolio);
-        }
+        this.sharePortfolioWithOrg(portfolio, portfolioItem);
       }
     }
   }

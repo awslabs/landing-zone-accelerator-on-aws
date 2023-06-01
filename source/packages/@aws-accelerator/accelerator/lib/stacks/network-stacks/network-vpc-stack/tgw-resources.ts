@@ -11,7 +11,12 @@
  *  and limitations under the License.
  */
 
-import { TransitGatewayAttachmentConfig, VpcConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
+import {
+  TransitGatewayAttachmentConfig,
+  TransitGatewayPeeringConfig,
+  VpcConfig,
+  VpcTemplatesConfig,
+} from '@aws-accelerator/config';
 import {
   PutSsmParameter,
   SsmParameterLookup,
@@ -221,6 +226,80 @@ export class TgwResources {
   }
 
   /**
+   * Function to get Transit Gateway peering requestor tags
+   * @param transitGatewayPeeringItem {@link TransitGatewayPeeringConfig}
+   * @returns
+   */
+  private getTgwPeeringRequestorTags(transitGatewayPeeringItem: TransitGatewayPeeringConfig): cdk.CfnTag[] | undefined {
+    let requesterTags: cdk.CfnTag[] | undefined;
+
+    if (transitGatewayPeeringItem.requester.tags) {
+      if (transitGatewayPeeringItem.requester.tags.length > 0) {
+        requesterTags = transitGatewayPeeringItem.requester.tags;
+      }
+    }
+
+    return requesterTags;
+  }
+
+  /**
+   * Function to create SSM parameter in accepter environment for Transit Gateway peering attachment id
+   * @param transitGatewayPeeringItem
+   * @param crossAccountCondition
+   * @param peeringAttachmentId
+   * @param props
+   *
+   * @remarks
+   * Create SSM parameter for peering attachment ID in accepter account/region.
+   */
+  private createTgwPeeringSsmParameterInAccepterEnvironment(
+    transitGatewayPeeringItem: TransitGatewayPeeringConfig,
+    crossAccountCondition: boolean,
+    peeringAttachmentId: string,
+    props: AcceleratorStackProps,
+  ) {
+    // Create SSM parameter for peering attachment ID in accepter account/region if different than requester account/region
+    if (crossAccountCondition) {
+      new PutSsmParameter(
+        this.stack,
+        pascalCase(
+          `CrossAcctSsmParam${transitGatewayPeeringItem.accepter.transitGatewayName}${transitGatewayPeeringItem.name}PeeringAttachmentId`,
+        ),
+        {
+          accountIds: [props.accountsConfig.getAccountId(transitGatewayPeeringItem.accepter.account)],
+          region: transitGatewayPeeringItem.accepter.region,
+          roleName: this.stack.acceleratorResourceNames.roles.crossAccountSsmParameterShare,
+          kmsKey: this.stack.cloudwatchKey,
+          logRetentionInDays: this.stack.logRetention,
+          parameters: [
+            {
+              name: this.stack.getSsmPath(SsmResourceType.TGW_PEERING, [
+                transitGatewayPeeringItem.accepter.transitGatewayName,
+                transitGatewayPeeringItem.name,
+              ]),
+              value: peeringAttachmentId,
+            },
+          ],
+          invokingAccountId: cdk.Stack.of(this.stack).account,
+          acceleratorPrefix: props.prefixes.accelerator,
+        },
+      );
+    } else {
+      // Create SSM parameter for peering attachment ID in accepter account/region if same as requester account/region
+      this.stack.addSsmParameter({
+        logicalId: pascalCase(
+          `SsmParam${transitGatewayPeeringItem.accepter.transitGatewayName}${transitGatewayPeeringItem.name}PeeringAttachmentId`,
+        ),
+        parameterName: this.stack.getSsmPath(SsmResourceType.TGW_PEERING, [
+          transitGatewayPeeringItem.accepter.transitGatewayName,
+          transitGatewayPeeringItem.name,
+        ]),
+        stringValue: peeringAttachmentId,
+      });
+    }
+  }
+
+  /**
    * Function to create TGW peering
    */
   private createTransitGatewayPeering(props: AcceleratorStackProps): Map<string, string> {
@@ -275,13 +354,8 @@ export class TgwResources {
           },
         ).value;
 
-        let requesterTags: cdk.CfnTag[] | undefined;
-
-        if (transitGatewayPeeringItem.requester.tags) {
-          if (transitGatewayPeeringItem.requester.tags.length > 0) {
-            requesterTags = transitGatewayPeeringItem.requester.tags;
-          }
-        }
+        // Get peering requestor tags
+        const requesterTags = this.getTgwPeeringRequestorTags(transitGatewayPeeringItem);
 
         const peeringAttachmentId = new TransitGatewayPeering(
           this.stack,
@@ -327,45 +401,13 @@ export class TgwResources {
           stringValue: peeringAttachmentId,
         });
 
-        // Create SSM parameter for peering attachment ID in accepter account/region if different than requester account/region
-        if (crossAccountCondition) {
-          new PutSsmParameter(
-            this.stack,
-            pascalCase(
-              `CrossAcctSsmParam${transitGatewayPeeringItem.accepter.transitGatewayName}${transitGatewayPeeringItem.name}PeeringAttachmentId`,
-            ),
-            {
-              accountIds: [props.accountsConfig.getAccountId(transitGatewayPeeringItem.accepter.account)],
-              region: transitGatewayPeeringItem.accepter.region,
-              roleName: this.stack.acceleratorResourceNames.roles.crossAccountSsmParameterShare,
-              kmsKey: this.stack.cloudwatchKey,
-              logRetentionInDays: this.stack.logRetention,
-              parameters: [
-                {
-                  name: this.stack.getSsmPath(SsmResourceType.TGW_PEERING, [
-                    transitGatewayPeeringItem.accepter.transitGatewayName,
-                    transitGatewayPeeringItem.name,
-                  ]),
-                  value: peeringAttachmentId,
-                },
-              ],
-              invokingAccountId: cdk.Stack.of(this.stack).account,
-              acceleratorPrefix: props.prefixes.accelerator,
-            },
-          );
-        } else {
-          // Create SSM parameter for peering attachment ID in accepter account/region if same as requester account/region
-          this.stack.addSsmParameter({
-            logicalId: pascalCase(
-              `SsmParam${transitGatewayPeeringItem.accepter.transitGatewayName}${transitGatewayPeeringItem.name}PeeringAttachmentId`,
-            ),
-            parameterName: this.stack.getSsmPath(SsmResourceType.TGW_PEERING, [
-              transitGatewayPeeringItem.accepter.transitGatewayName,
-              transitGatewayPeeringItem.name,
-            ]),
-            stringValue: peeringAttachmentId,
-          });
-        }
+        // Create SSM parameter for peering attachment ID in accepter account/region.
+        this.createTgwPeeringSsmParameterInAccepterEnvironment(
+          transitGatewayPeeringItem,
+          crossAccountCondition,
+          peeringAttachmentId,
+          props,
+        );
 
         this.stack.addLogs(
           LogLevel.INFO,

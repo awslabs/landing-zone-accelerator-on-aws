@@ -156,6 +156,44 @@ export class IpamResources {
   }
 
   /**
+   * Function to check whether IPAM source pool exists in given poolItem
+   * @param poolItem {@link IpamPoolConfig}
+   * @param sourcePoolExists {@link IpamPoolConfig}
+   *
+   * @remarks
+   * Check for case where the source pool hasn't been created yet
+   */
+  private checkIpamSourcePoolExists(poolItem: IpamPoolConfig, sourcePoolExists?: IpamPoolConfig): void {
+    if (!sourcePoolExists) {
+      this.stack.addLogs(
+        LogLevel.ERROR,
+        `Unable to locate source IPAM pool ${poolItem.sourceIpamPool} for pool ${poolItem.name}`,
+      );
+      throw new Error(`Configuration validation failed at runtime.`);
+    }
+  }
+
+  /**
+   * Function to check whether IPAM scope exists for given pooleItem
+   * @param poolItem {@link IpamPoolConfig}
+   * @param scopeMap Map<string, string>
+   */
+  private checkIpamScopeExists(poolItem: IpamPoolConfig, scopeMap: Map<string, string>): string | undefined {
+    let poolScope: string | undefined;
+
+    if (poolItem.scope) {
+      poolScope = scopeMap.get(poolItem.scope);
+
+      if (!poolScope) {
+        this.stack.addLogs(LogLevel.ERROR, `Unable to locate IPAM scope ${poolItem.scope} for pool ${poolItem.name}`);
+        throw new Error(`Configuration validation failed at runtime.`);
+      }
+    }
+
+    return poolScope;
+  }
+
+  /**
    * Create IPAM nested pools
    * @param ipam
    * @param ipamItem
@@ -180,13 +218,7 @@ export class IpamResources {
         if (!sourcePool) {
           // Check for case where the source pool hasn't been created yet
           const sourcePoolExists = nestedPools.find(item => item.name === poolItem.sourceIpamPool);
-          if (!sourcePoolExists) {
-            this.stack.addLogs(
-              LogLevel.ERROR,
-              `Unable to locate source IPAM pool ${poolItem.sourceIpamPool} for pool ${poolItem.name}`,
-            );
-            throw new Error(`Configuration validation failed at runtime.`);
-          }
+          this.checkIpamSourcePoolExists(poolItem, sourcePoolExists);
           // Skip iteration if source pool exists but has not yet been created
           continue;
         }
@@ -195,19 +227,7 @@ export class IpamResources {
 
         if (sourcePool && !poolExists) {
           this.stack.addLogs(LogLevel.INFO, `Add IPAM nested pool ${poolItem.name}`);
-          let poolScope: string | undefined;
-
-          if (poolItem.scope) {
-            poolScope = scopeMap.get(poolItem.scope);
-
-            if (!poolScope) {
-              this.stack.addLogs(
-                LogLevel.ERROR,
-                `Unable to locate IPAM scope ${poolItem.scope} for pool ${poolItem.name}`,
-              );
-              throw new Error(`Configuration validation failed at runtime.`);
-            }
-          }
+          const poolScope = this.checkIpamScopeExists(poolItem, scopeMap);
 
           // Create nested pool
           const pool = this.createIpamPool(ipam, poolItem, poolScope, sourcePool);

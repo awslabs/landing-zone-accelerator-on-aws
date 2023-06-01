@@ -15,7 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { AcceleratorStack, AcceleratorStackProps } from '../accelerator-stack';
-import { identityCenter } from './identity-center';
+import { IdentityCenter } from './identity-center';
 
 /**
  * Enum for log level
@@ -37,7 +37,7 @@ export class DependenciesStack extends AcceleratorStack {
     }
 
     // Create Identity Center dependent resources
-    new identityCenter(this, props);
+    new IdentityCenter(this, props);
   }
 
   /**
