@@ -192,7 +192,14 @@ yarn test
 
 #### Accelerator Test Updates
 
-When developing a new feature, please enable or create the new resource by updating the [all-enabled](https://github.com/awslabs/landing-zone-accelerator-on-aws/tree/main/source/packages/%40aws-accelerator/accelerator/test/configs/all-enabled) configuration directory. After updating the configuration, run `yarn test -u` from the `accelerator` directory.
+When developing a new feature, please enable or create the new resource by updating the [all-enabled](https://github.com/awslabs/landing-zone-accelerator-on-aws/tree/main/source/packages/%40aws-accelerator/accelerator/test/configs/all-enabled) and [snapshot-only](https://github.com/awslabs/landing-zone-accelerator-on-aws/tree/main/source/packages/%40aws-accelerator/accelerator/test/configs/snapshot-only)  configuration directory. After updating the configuration, run `yarn test -u` from the `accelerator` directory.
+Currently snapshot-only directory files are used for snapshot testing and all-enabled directory files are used for functional test. Gradually snapshot-only directory configuration files will be migrated to all-enabled directory.
+
+[all-enabled](https://github.com/awslabs/landing-zone-accelerator-on-aws/tree/main/source/packages/%40aws-accelerator/accelerator/test/configs/all-enabled) directory configuration files are validated through pre-commit hook. 
+To manually validate all-enabled directory config files, change directory to `source` and run 
+```
+yarn validate-config packages/@aws-accelerator/accelerator/test/configs/all-enabled/
+```
 
 #### Config Test Updates
 
