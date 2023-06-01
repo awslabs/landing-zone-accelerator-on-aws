@@ -21,6 +21,7 @@ const testNamePrefix = 'Construct(RevertScpChanges): ';
 const stack = new cdk.Stack();
 
 new RevertScpChanges(stack, 'RevertScpChanges', {
+  acceleratorPrefix: 'AWSAccelerator',
   auditAccountId: '111111111111',
   logArchiveAccountId: '222222222222',
   managementAccountId: '333333333333',

@@ -878,6 +878,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
         "Description": "Lambda function to revert changes made to LZA-controlled service control policies",
         "Environment": {
           "Variables": {
+            "ACCELERATOR_PREFIX": "AWSAccelerator",
             "AUDIT_ACCOUNT_ID": "222222222222",
             "AWS_PARTITION": {
               "Ref": "AWS::Partition",

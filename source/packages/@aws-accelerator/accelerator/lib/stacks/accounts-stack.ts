@@ -279,6 +279,7 @@ export class AccountsStack extends AcceleratorStack {
         if (props.securityConfig.centralSecurityServices?.scpRevertChangesConfig?.enable) {
           this.logger.info(`Creating resources to revert modifications to scps`);
           new RevertScpChanges(this, 'RevertScpChanges', {
+            acceleratorPrefix: props.prefixes.accelerator,
             auditAccountId: props.accountsConfig.getAuditAccountId(),
             logArchiveAccountId: props.accountsConfig.getLogArchiveAccountId(),
             managementAccountId: props.accountsConfig.getManagementAccountId(),
