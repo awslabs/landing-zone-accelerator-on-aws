@@ -29,6 +29,10 @@ export interface RevertScpChangesProps {
   /**
    * Audit account Id
    */
+  readonly acceleratorPrefix: string;
+  /**
+   * Audit account Id
+   */
   readonly auditAccountId: string;
   /**
    * Log Archive account Id
@@ -131,6 +135,7 @@ export class RevertScpChanges extends Construct {
       description: 'Lambda function to revert changes made to LZA-controlled service control policies',
       timeout: cdk.Duration.minutes(LAMBDA_TIMEOUT_IN_MINUTES),
       environment: {
+        ACCELERATOR_PREFIX: props.acceleratorPrefix,
         AWS_PARTITION: cdk.Aws.PARTITION,
         HOME_REGION: props.homeRegion,
         SNS_TOPIC_ARN: snsTopicArn ?? '',

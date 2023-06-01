@@ -20,7 +20,7 @@ import { throttlingBackOff, policyReplacements } from '@aws-accelerator/utils';
 
 let organizationsClient: AWS.Organizations;
 
-const acceleratorRolePrefix = 'AWSAccelerator';
+const acceleratorRolePrefix = process.env['ACCELERATOR_PREFIX'] ?? 'AWSAccelerator';
 const snsTopicArn = process.env['SNS_TOPIC_ARN'];
 const partition = process.env['AWS_PARTITION']!;
 const region = process.env['AWS_REGION']!;

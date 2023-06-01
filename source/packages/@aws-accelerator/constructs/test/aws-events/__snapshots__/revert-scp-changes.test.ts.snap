@@ -147,6 +147,7 @@ exports[`RevertScpChanges Construct(RevertScpChanges):  Snapshot Test 1`] = `
         "Description": "Lambda function to revert changes made to LZA-controlled service control policies",
         "Environment": {
           "Variables": {
+            "ACCELERATOR_PREFIX": "AWSAccelerator",
             "AUDIT_ACCOUNT_ID": "111111111111",
             "AWS_PARTITION": {
               "Ref": "AWS::Partition",
