@@ -25,12 +25,7 @@ import {
   MoveAccountRule,
   RevertScpChanges,
 } from '@aws-accelerator/constructs';
-import {
-  AcceleratorKeyType,
-  AcceleratorStack,
-  AcceleratorStackProps,
-  ServiceLinkedRoleType,
-} from './accelerator-stack';
+import { AcceleratorKeyType, AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { ServiceControlPolicyConfig } from '@aws-accelerator/config';
 import { SsmResourceType } from '@aws-accelerator/utils';
 
@@ -86,22 +81,22 @@ export class AccountsStack extends AcceleratorStack {
       //
       // Create Access Analyzer Service Linked Role
       //
-      this.createServiceLinkedRole(ServiceLinkedRoleType.ACCESS_ANALYZER);
+      this.createAccessAnalyzerServiceLinkedRole();
 
       //
       // Create Access GuardDuty Service Linked Role
       //
-      this.createServiceLinkedRole(ServiceLinkedRoleType.GUARDDUTY);
+      this.createGuardDutyServiceLinkedRole();
 
       //
       // Create Access SecurityHub Service Linked Role
       //
-      this.createServiceLinkedRole(ServiceLinkedRoleType.SECURITY_HUB);
+      this.createSecurityHubServiceLinkedRole();
 
       //
       // Create Access Macie Service Linked Role
       //
-      this.createServiceLinkedRole(ServiceLinkedRoleType.MACIE);
+      this.createMacieServiceLinkedRole();
 
       //
       // Configure revert scp changes rule

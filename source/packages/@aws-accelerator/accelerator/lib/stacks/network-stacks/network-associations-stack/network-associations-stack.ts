@@ -294,6 +294,54 @@ export class NetworkAssociationsStack extends NetworkStack {
   }
 
   /**
+   * Function to create Application load balancer
+   * @param vpcName string
+   * @param vpcId string
+   * @param targetGroupItem {@link TargetGroupItemConfig}
+   * @param albNames string[]
+   * @param loadBalancerListenerMap Map<string, {@link cdk.aws_elasticloadbalancingv2.CfnListener}>
+   * @returns TargetGroup {@link TargetGroup}
+   */
+  private createApplicationLoadBalancerTargetGroup(
+    vpcName: string,
+    vpcId: string,
+    targetGroupItem: TargetGroupItemConfig,
+    albNames: string[],
+    loadBalancerListenerMap: Map<string, cdk.aws_elasticloadbalancingv2.CfnListener>,
+  ): TargetGroup {
+    const updatedTargets = targetGroupItem.targets?.map(target => {
+      if (albNames.includes(target as string)) {
+        return cdk.aws_ssm.StringParameter.valueForStringParameter(
+          this,
+          this.getSsmPath(SsmResourceType.ALB, [vpcName, target as string]),
+        );
+      }
+      return target;
+    }) as string[];
+
+    const targetGroup = new TargetGroup(this, pascalCase(`TargetGroup${targetGroupItem.name}`), {
+      name: targetGroupItem.name,
+      port: targetGroupItem.port,
+      protocol: targetGroupItem.protocol,
+      protocolVersion: targetGroupItem.protocolVersion! || undefined,
+      type: targetGroupItem.type,
+      attributes: targetGroupItem.attributes ?? undefined,
+      healthCheck: targetGroupItem.healthCheck ?? undefined,
+      threshold: targetGroupItem.threshold ?? undefined,
+      matcher: targetGroupItem.matcher ?? undefined,
+      targets: updatedTargets,
+      vpc: vpcId,
+    });
+    for (const [key, value] of loadBalancerListenerMap.entries()) {
+      if (key.startsWith(vpcName)) {
+        targetGroup.node.addDependency(value);
+      }
+    }
+
+    return targetGroup;
+  }
+
+  /**
    * Function to create application load balancer target groups
    * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
    * @param loadBalancerListenerMap Map<string, cdk.aws_elasticloadbalancingv2.CfnListener>
@@ -310,35 +358,16 @@ export class NetworkAssociationsStack extends NetworkStack {
     );
     const albTargetGroups = vpcItem.targetGroups?.filter(targetGroup => targetGroup.type === 'alb') ?? [];
     const albNames = vpcItem.loadBalancers?.applicationLoadBalancers?.map(alb => alb.name) ?? [];
-    for (const targetGroupItem of albTargetGroups) {
-      const updatedTargets = targetGroupItem.targets?.map(target => {
-        if (albNames.includes(target as string)) {
-          return cdk.aws_ssm.StringParameter.valueForStringParameter(
-            this,
-            this.getSsmPath(SsmResourceType.ALB, [vpcItem.name, target as string]),
-          );
-        }
-        return target;
-      }) as string[];
 
-      const targetGroup = new TargetGroup(this, pascalCase(`TargetGroup${targetGroupItem.name}`), {
-        name: targetGroupItem.name,
-        port: targetGroupItem.port,
-        protocol: targetGroupItem.protocol,
-        protocolVersion: targetGroupItem.protocolVersion! || undefined,
-        type: targetGroupItem.type,
-        attributes: targetGroupItem.attributes ?? undefined,
-        healthCheck: targetGroupItem.healthCheck ?? undefined,
-        threshold: targetGroupItem.threshold ?? undefined,
-        matcher: targetGroupItem.matcher ?? undefined,
-        targets: updatedTargets,
-        vpc: vpcId,
-      });
-      for (const [key, value] of loadBalancerListenerMap.entries()) {
-        if (key.startsWith(vpcItem.name)) {
-          targetGroup.node.addDependency(value);
-        }
-      }
+    for (const targetGroupItem of albTargetGroups) {
+      const targetGroup = this.createApplicationLoadBalancerTargetGroup(
+        vpcItem.name,
+        vpcId,
+        targetGroupItem,
+        albNames,
+        loadBalancerListenerMap,
+      );
+
       targetGroupMap.set(`${vpcItem.name}-${targetGroupItem.name}`, targetGroup);
     }
   }

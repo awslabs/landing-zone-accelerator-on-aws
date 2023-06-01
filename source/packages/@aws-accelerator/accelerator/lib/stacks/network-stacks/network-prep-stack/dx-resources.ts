@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { DxGatewayConfig } from '@aws-accelerator/config';
+import { DxGatewayConfig, DxTransitGatewayAssociationConfig } from '@aws-accelerator/config';
 import { DirectConnectGateway, VirtualInterface, VirtualInterfaceProps } from '@aws-accelerator/constructs';
 import { SsmResourceType } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
@@ -212,6 +212,39 @@ export class DxResources {
   }
 
   /**
+   * Function to get TGW account ids
+   * @param dxgwItem {@link DxGatewayConfig}
+   * @param associationItem {@link DxTransitGatewayAssociationConfig}
+   * @param props {@link AcceleratorStackProps}
+   * @param accountIds string[]
+   */
+  private getTgwAccountIds(
+    dxgwItem: DxGatewayConfig,
+    associationItem: DxTransitGatewayAssociationConfig,
+    props: AcceleratorStackProps,
+    accountIds: string[],
+  ) {
+    const tgw = props.networkConfig.transitGateways.find(
+      item => item.name === associationItem.name && item.account === associationItem.account,
+    );
+    if (!tgw) {
+      this.stack.addLogs(LogLevel.ERROR, `Unable to locate transit gateway ${associationItem.name}`);
+      throw new Error(`Configuration validation failed at runtime.`);
+    }
+
+    const tgwAccountId = props.accountsConfig.getAccountId(tgw.account);
+
+    // Add to accountIds if accounts do not match
+    if (dxgwItem.account !== tgw.account && !accountIds.includes(tgwAccountId)) {
+      accountIds.push(tgwAccountId);
+    }
+    // Add to accountIds if regions don't match
+    if (tgw.region !== cdk.Stack.of(this.stack).region && !accountIds.includes(tgwAccountId)) {
+      accountIds.push(tgwAccountId);
+    }
+  }
+
+  /**
    * Validate whether a cross-account SSM role should be created in this stack
    * @param props
    * @returns
@@ -223,23 +256,7 @@ export class DxResources {
     if (props.globalConfig.homeRegion === cdk.Stack.of(this.stack).region) {
       for (const dxgwItem of props.networkConfig.directConnectGateways ?? []) {
         for (const associationItem of dxgwItem.transitGatewayAssociations ?? []) {
-          const tgw = props.networkConfig.transitGateways.find(
-            item => item.name === associationItem.name && item.account === associationItem.account,
-          );
-          if (!tgw) {
-            this.stack.addLogs(LogLevel.ERROR, `Unable to locate transit gateway ${associationItem.name}`);
-            throw new Error(`Configuration validation failed at runtime.`);
-          }
-          const tgwAccountId = props.accountsConfig.getAccountId(tgw.account);
-
-          // Add to accountIds if accounts do not match
-          if (dxgwItem.account !== tgw.account && !accountIds.includes(tgwAccountId)) {
-            accountIds.push(tgwAccountId);
-          }
-          // Add to accountIds if regions don't match
-          if (tgw.region !== cdk.Stack.of(this.stack).region && !accountIds.includes(tgwAccountId)) {
-            accountIds.push(tgwAccountId);
-          }
+          this.getTgwAccountIds(dxgwItem, associationItem, props, accountIds);
         }
         // Create role
         if (accountIds.length > 0) {

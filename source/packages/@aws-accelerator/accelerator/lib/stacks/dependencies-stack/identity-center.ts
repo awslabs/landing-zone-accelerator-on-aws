@@ -4,7 +4,7 @@ import { NagSuppressions } from 'cdk-nag';
 import * as cdk from 'aws-cdk-lib';
 import { AcceleratorStackProps } from '../accelerator-stack';
 import { pascalCase } from 'pascal-case';
-export class identityCenter {
+export class IdentityCenter {
   public acceleratorManagedPolicies: Map<string, cdk.aws_iam.ManagedPolicy>[] = [];
   private stack: DependenciesStack;
   constructor(dependenciesStack: DependenciesStack, props: AcceleratorStackProps) {

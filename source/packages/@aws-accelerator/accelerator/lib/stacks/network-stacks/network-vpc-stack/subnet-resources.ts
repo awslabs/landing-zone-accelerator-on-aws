@@ -41,6 +41,64 @@ export class SubnetResources {
   }
 
   /**
+   * Function to create Subnet
+   * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
+   * @param subnetItem {@link SubnetConfig}
+   * @param maps
+   * @param index number
+   * @param ipamConfig {@link IpamConfig} []
+   * @returns
+   */
+  private createSubnet(
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    subnetItem: SubnetConfig,
+    maps: {
+      vpcs: Map<string, Vpc>;
+      routeTables: Map<string, RouteTable>;
+      subnets: Map<string, Subnet>;
+      ipamSubnets: Map<number, Subnet>;
+      outposts: Map<string, OutpostsConfig>;
+    },
+    index: number,
+    ipamConfig?: IpamConfig[],
+  ): number {
+    // Retrieve items required to create subnet
+    const vpc = getVpc(maps.vpcs, vpcItem.name) as Vpc;
+    const routeTable = getRouteTable(maps.routeTables, vpcItem.name, subnetItem.routeTable) as RouteTable;
+    const basePool = subnetItem.ipamAllocation ? this.getBasePool(subnetItem, ipamConfig) : undefined;
+    const outpost = subnetItem.outpost
+      ? this.stack.getOutpost(maps.outposts, vpcItem.name, subnetItem.outpost)
+      : undefined;
+    const availabilityZone = this.setAvailabilityZone(subnetItem);
+
+    // Create subnet
+    const subnet = this.createSubnetItem(vpcItem, subnetItem, availabilityZone, routeTable, vpc, basePool, outpost);
+    maps.subnets.set(`${vpcItem.name}_${subnetItem.name}`, subnet);
+
+    // Need to ensure IPAM subnets are created one at a time to avoid duplicate allocations
+    // Add dependency on previously-created IPAM subnet, if it exists
+    if (subnetItem.ipamAllocation) {
+      maps.ipamSubnets.set(index, subnet);
+
+      if (index > 0) {
+        const lastSubnet = maps.ipamSubnets.get(index - 1);
+
+        if (!lastSubnet) {
+          this.stack.addLogs(
+            LogLevel.ERROR,
+            `Error creating subnet ${subnetItem.name}: previous IPAM subnet undefined`,
+          );
+          throw new Error(`Configuration validation failed at runtime.`);
+        }
+        subnet.node.addDependency(lastSubnet);
+      }
+      index += 1;
+    }
+
+    return index;
+  }
+
+  /**
    * Create subnets for each VPC
    * @param vpcResources
    * @param vpcMap
@@ -64,38 +122,19 @@ export class SubnetResources {
       let index = 0;
 
       for (const subnetItem of vpcItem.subnets ?? []) {
-        // Retrieve items required to create subnet
-        const vpc = getVpc(vpcMap, vpcItem.name) as Vpc;
-        const routeTable = getRouteTable(routeTableMap, vpcItem.name, subnetItem.routeTable) as RouteTable;
-        const basePool = subnetItem.ipamAllocation ? this.getBasePool(subnetItem, ipamConfig) : undefined;
-        const outpost = subnetItem.outpost
-          ? this.stack.getOutpost(outpostMap, vpcItem.name, subnetItem.outpost)
-          : undefined;
-        const availabilityZone = this.setAvailabilityZone(subnetItem);
-
-        // Create subnet
-        const subnet = this.createSubnetItem(vpcItem, subnetItem, availabilityZone, routeTable, vpc, basePool, outpost);
-        subnetMap.set(`${vpcItem.name}_${subnetItem.name}`, subnet);
-
-        // Need to ensure IPAM subnets are created one at a time to avoid duplicate allocations
-        // Add dependency on previously-created IPAM subnet, if it exists
-        if (subnetItem.ipamAllocation) {
-          ipamSubnetMap.set(index, subnet);
-
-          if (index > 0) {
-            const lastSubnet = ipamSubnetMap.get(index - 1);
-
-            if (!lastSubnet) {
-              this.stack.addLogs(
-                LogLevel.ERROR,
-                `Error creating subnet ${subnetItem.name}: previous IPAM subnet undefined`,
-              );
-              throw new Error(`Configuration validation failed at runtime.`);
-            }
-            subnet.node.addDependency(lastSubnet);
-          }
-          index += 1;
-        }
+        index = this.createSubnet(
+          vpcItem,
+          subnetItem,
+          {
+            vpcs: vpcMap,
+            routeTables: routeTableMap,
+            subnets: subnetMap,
+            ipamSubnets: ipamSubnetMap,
+            outposts: outpostMap,
+          },
+          index,
+          ipamConfig,
+        );
       }
     }
     return subnetMap;

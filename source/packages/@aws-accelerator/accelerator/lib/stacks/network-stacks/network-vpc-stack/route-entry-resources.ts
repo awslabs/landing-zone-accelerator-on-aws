@@ -78,16 +78,13 @@ export class RouteEntryResources {
     for (const vpcItem of vpcResources) {
       for (const routeTableItem of vpcItem.routeTables ?? []) {
         const routeTable = getRouteTable(routeTableMap, vpcItem.name, routeTableItem.name) as RouteTable;
-        const routeTableItemEntryMap = this.createRouteTableItemEntries(
-          vpcItem,
-          routeTableItem,
-          routeTable,
-          transitGatewayIds,
-          tgwAttachmentMap,
-          subnetMap,
-          natGatewayMap,
-          prefixListMap,
-        );
+        const routeTableItemEntryMap = this.createRouteTableItemEntries(vpcItem, routeTableItem, routeTable, {
+          transitGatewayIds: transitGatewayIds,
+          tgwAttachments: tgwAttachmentMap,
+          subnets: subnetMap,
+          natGateways: natGatewayMap,
+          prefixLists: prefixListMap,
+        });
         routeTableItemEntryMap.forEach((value, key) => routeTableEntryMap.set(key, value));
       }
     }
@@ -110,11 +107,13 @@ export class RouteEntryResources {
     vpcItem: VpcConfig | VpcTemplatesConfig,
     routeTableItem: RouteTableConfig,
     routeTable: RouteTable,
-    transitGatewayIds: Map<string, string>,
-    tgwAttachmentMap: Map<string, TransitGatewayAttachment>,
-    subnetMap: Map<string, Subnet>,
-    natGatewayMap: Map<string, NatGateway>,
-    prefixListMap: Map<string, PrefixList>,
+    maps: {
+      transitGatewayIds: Map<string, string>;
+      tgwAttachments: Map<string, TransitGatewayAttachment>;
+      subnets: Map<string, Subnet>;
+      natGateways: Map<string, NatGateway>;
+      prefixLists: Map<string, PrefixList>;
+    },
   ): Map<string, cdk.aws_ec2.CfnRoute | PrefixListRoute> {
     const routeTableItemEntryMap = new Map<string, cdk.aws_ec2.CfnRoute | PrefixListRoute>();
 
@@ -130,78 +129,76 @@ export class RouteEntryResources {
         // Set destination type
         const [destination, destinationPrefixListId] = this.setRouteEntryDestination(
           routeTableEntryItem,
-          prefixListMap,
-          subnetMap,
+          maps.prefixLists,
+          maps.subnets,
           vpcItem.name,
         );
 
-        // Route: Transit Gateway
-        if (routeTableEntryItem.type === 'transitGateway') {
-          this.stack.addLogs(LogLevel.INFO, `Adding Transit Gateway Route Table Entry ${routeTableEntryItem.name}`);
+        switch (routeTableEntryItem.type) {
+          // Route: Transit Gateway
+          case 'transitGateway':
+            this.stack.addLogs(LogLevel.INFO, `Adding Transit Gateway Route Table Entry ${routeTableEntryItem.name}`);
 
-          const transitGatewayId = getTransitGatewayId(transitGatewayIds, routeTableEntryItem.target!);
-          const transitGatewayAttachment = this.stack.getTgwAttachment(
-            tgwAttachmentMap,
-            vpcItem.name,
-            routeTableEntryItem.target!,
-          );
+            const transitGatewayId = getTransitGatewayId(maps.transitGatewayIds, routeTableEntryItem.target!);
+            const transitGatewayAttachment = this.stack.getTgwAttachment(
+              maps.tgwAttachments,
+              vpcItem.name,
+              routeTableEntryItem.target!,
+            );
 
-          const tgwRoute = routeTable.addTransitGatewayRoute(
-            routeId,
-            transitGatewayId,
-            transitGatewayAttachment.node.defaultChild as cdk.aws_ec2.CfnTransitGatewayAttachment,
-            destination,
-            destinationPrefixListId,
-            this.stack.cloudwatchKey,
-            this.stack.logRetention,
-          );
-          routeTableItemEntryMap.set(`${vpcItem.name}_${routeTableItem.name}_${routeTableEntryItem.name}`, tgwRoute);
-        }
+            const tgwRoute = routeTable.addTransitGatewayRoute(
+              routeId,
+              transitGatewayId,
+              transitGatewayAttachment.node.defaultChild as cdk.aws_ec2.CfnTransitGatewayAttachment,
+              destination,
+              destinationPrefixListId,
+              this.stack.cloudwatchKey,
+              this.stack.logRetention,
+            );
+            routeTableItemEntryMap.set(`${vpcItem.name}_${routeTableItem.name}_${routeTableEntryItem.name}`, tgwRoute);
+            break;
+          case 'natGateway':
+            // Route: NAT Gateway
+            this.stack.addLogs(LogLevel.INFO, `Adding NAT Gateway Route Table Entry ${routeTableEntryItem.name}`);
 
-        // Route: NAT Gateway
-        if (routeTableEntryItem.type === 'natGateway') {
-          this.stack.addLogs(LogLevel.INFO, `Adding NAT Gateway Route Table Entry ${routeTableEntryItem.name}`);
+            const natGateway = this.stack.getNatGateway(maps.natGateways, vpcItem.name, routeTableEntryItem.target!);
 
-          const natGateway = this.stack.getNatGateway(natGatewayMap, vpcItem.name, routeTableEntryItem.target!);
-
-          const natRoute = routeTable.addNatGatewayRoute(
-            routeId,
-            natGateway.natGatewayId,
-            destination,
-            destinationPrefixListId,
-            this.stack.cloudwatchKey,
-            this.stack.logRetention,
-          );
-          routeTableItemEntryMap.set(`${vpcItem.name}_${routeTableItem.name}_${routeTableEntryItem.name}`, natRoute);
-        }
-
-        // Route: Internet Gateway
-        if (routeTableEntryItem.type === 'internetGateway') {
-          this.stack.addLogs(LogLevel.INFO, `Adding Internet Gateway Route Table Entry ${routeTableEntryItem.name}`);
-          const igwRoute = routeTable.addInternetGatewayRoute(
-            routeId,
-            destination,
-            destinationPrefixListId,
-            this.stack.cloudwatchKey,
-            this.stack.logRetention,
-          );
-          routeTableItemEntryMap.set(`${vpcItem.name}_${routeTableItem.name}_${routeTableEntryItem.name}`, igwRoute);
-        }
-
-        // Route: Virtual Private Gateway
-        if (routeTableEntryItem.type === 'virtualPrivateGateway') {
-          this.stack.addLogs(
-            LogLevel.INFO,
-            `Adding Virtual Private Gateway Route Table Entry ${routeTableEntryItem.name}`,
-          );
-          const vgwRoute = routeTable.addVirtualPrivateGatewayRoute(
-            routeId,
-            destination,
-            destinationPrefixListId,
-            this.stack.cloudwatchKey,
-            this.stack.logRetention,
-          );
-          routeTableItemEntryMap.set(`${vpcItem.name}_${routeTableItem.name}_${routeTableEntryItem.name}`, vgwRoute);
+            const natRoute = routeTable.addNatGatewayRoute(
+              routeId,
+              natGateway.natGatewayId,
+              destination,
+              destinationPrefixListId,
+              this.stack.cloudwatchKey,
+              this.stack.logRetention,
+            );
+            routeTableItemEntryMap.set(`${vpcItem.name}_${routeTableItem.name}_${routeTableEntryItem.name}`, natRoute);
+            break;
+          // Route: Internet Gateway
+          case 'internetGateway':
+            this.stack.addLogs(LogLevel.INFO, `Adding Internet Gateway Route Table Entry ${routeTableEntryItem.name}`);
+            const igwRoute = routeTable.addInternetGatewayRoute(
+              routeId,
+              destination,
+              destinationPrefixListId,
+              this.stack.cloudwatchKey,
+              this.stack.logRetention,
+            );
+            routeTableItemEntryMap.set(`${vpcItem.name}_${routeTableItem.name}_${routeTableEntryItem.name}`, igwRoute);
+            break;
+          case 'virtualPrivateGateway':
+            this.stack.addLogs(
+              LogLevel.INFO,
+              `Adding Virtual Private Gateway Route Table Entry ${routeTableEntryItem.name}`,
+            );
+            const vgwRoute = routeTable.addVirtualPrivateGatewayRoute(
+              routeId,
+              destination,
+              destinationPrefixListId,
+              this.stack.cloudwatchKey,
+              this.stack.logRetention,
+            );
+            routeTableItemEntryMap.set(`${vpcItem.name}_${routeTableItem.name}_${routeTableEntryItem.name}`, vgwRoute);
+            break;
         }
       }
     }

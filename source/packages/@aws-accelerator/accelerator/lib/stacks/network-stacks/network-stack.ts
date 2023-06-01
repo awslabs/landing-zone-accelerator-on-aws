@@ -14,8 +14,10 @@
 import {
   DnsFirewallRuleGroupConfig,
   DnsQueryLogsConfig,
+  IpamAllocationConfig,
   IpamPoolConfig,
   NetworkAclSubnetSelection,
+  NfwFirewallConfig,
   NfwFirewallPolicyConfig,
   NfwRuleGroupConfig,
   PrefixListConfig,
@@ -446,6 +448,45 @@ export abstract class NetworkStack extends AcceleratorStack {
   }
 
   /**
+   * Function to create MAP of FW policy and policy ARN
+   * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
+   * @param firewalls {@link NfwFirewallConfig}[]
+   * @param policyMap Map<string, string>
+   * @param props {@link AcceleratorStackProps}
+   */
+  private createFwPolicyMap(
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    firewalls: NfwFirewallConfig[],
+    policyMap: Map<string, string>,
+    props: AcceleratorStackProps,
+  ) {
+    const delegatedAdminAccountId = this.props.accountsConfig.getAccountId(
+      props.networkConfig.centralNetworkServices!.delegatedAdminAccount,
+    );
+    for (const firewallItem of firewalls) {
+      if (firewallItem.vpc === vpcItem.name && !policyMap.has(firewallItem.firewallPolicy)) {
+        // Get firewall policy ARN
+        let policyArn: string;
+
+        if (delegatedAdminAccountId === cdk.Stack.of(this).account) {
+          policyArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
+            this,
+            this.getSsmPath(SsmResourceType.NFW_POLICY, [firewallItem.firewallPolicy]),
+          );
+        } else {
+          policyArn = this.getResourceShare(
+            `${firewallItem.firewallPolicy}_NetworkFirewallPolicyShare`,
+            'network-firewall:FirewallPolicy',
+            delegatedAdminAccountId,
+            this.cloudwatchKey,
+          ).resourceShareItemArn;
+        }
+        policyMap.set(firewallItem.firewallPolicy, policyArn);
+      }
+    }
+  }
+
+  /**
    * Set Network Firewall policy map
    * @param props
    * @returns
@@ -454,9 +495,6 @@ export abstract class NetworkStack extends AcceleratorStack {
     const policyMap = new Map<string, string>();
 
     if (props.networkConfig.centralNetworkServices?.networkFirewall?.firewalls) {
-      const delegatedAdminAccountId = this.props.accountsConfig.getAccountId(
-        props.networkConfig.centralNetworkServices.delegatedAdminAccount,
-      );
       const firewalls = props.networkConfig.centralNetworkServices?.networkFirewall?.firewalls;
 
       for (const vpcItem of this.vpcResources) {
@@ -464,27 +502,7 @@ export abstract class NetworkStack extends AcceleratorStack {
         const vpcAccountIds = this.getVpcAccountIds(vpcItem);
 
         if (this.isTargetStack(vpcAccountIds, [vpcItem.region])) {
-          for (const firewallItem of firewalls ?? []) {
-            if (firewallItem.vpc === vpcItem.name && !policyMap.has(firewallItem.firewallPolicy)) {
-              // Get firewall policy ARN
-              let policyArn: string;
-
-              if (delegatedAdminAccountId === cdk.Stack.of(this).account) {
-                policyArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
-                  this,
-                  this.getSsmPath(SsmResourceType.NFW_POLICY, [firewallItem.firewallPolicy]),
-                );
-              } else {
-                policyArn = this.getResourceShare(
-                  `${firewallItem.firewallPolicy}_NetworkFirewallPolicyShare`,
-                  'network-firewall:FirewallPolicy',
-                  delegatedAdminAccountId,
-                  this.cloudwatchKey,
-                ).resourceShareItemArn;
-              }
-              policyMap.set(firewallItem.firewallPolicy, policyArn);
-            }
-          }
+          this.createFwPolicyMap(vpcItem, firewalls, policyMap, props);
         }
       }
     }
@@ -607,6 +625,50 @@ export abstract class NetworkStack extends AcceleratorStack {
   }
 
   /**
+   * Function to create IPAM pool map of pool name and pool id
+   * @param ipamAllocations {@link IpamAllocationConfig}[]
+   * @param poolMap Map<string, string>,
+   * @param props {@link AcceleratorStackProps}
+   */
+  private createIpamPoolMap(
+    ipamAllocations: IpamAllocationConfig[],
+    poolMap: Map<string, string>,
+    props: AcceleratorStackProps,
+  ) {
+    const delegatedAdminAccountId = props.accountsConfig.getAccountId(
+      props.networkConfig.centralNetworkServices!.delegatedAdminAccount,
+    );
+    for (const alloc of ipamAllocations) {
+      const ipamPool = props.networkConfig.centralNetworkServices!.ipams?.find(item =>
+        item.pools?.find(item => item.name === alloc.ipamPoolName),
+      );
+      if (ipamPool === undefined) {
+        this.logger.error(`Specified Ipam Pool not defined`);
+        throw new Error(`Configuration validation failed at runtime.`);
+      }
+      if (!poolMap.has(alloc.ipamPoolName)) {
+        let poolId: string;
+        if (delegatedAdminAccountId === cdk.Stack.of(this).account && ipamPool.region === cdk.Stack.of(this).region) {
+          poolId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+            this,
+            this.getSsmPath(SsmResourceType.IPAM_POOL, [alloc.ipamPoolName]),
+          );
+        } else if (ipamPool.region !== cdk.Stack.of(this).region) {
+          poolId = this.getCrossRegionPoolId(delegatedAdminAccountId, alloc.ipamPoolName, ipamPool.region);
+        } else {
+          poolId = this.getResourceShare(
+            `${alloc.ipamPoolName}_IpamPoolShare`,
+            'ec2:IpamPool',
+            delegatedAdminAccountId,
+            this.cloudwatchKey,
+          ).resourceShareItemId;
+        }
+        poolMap.set(alloc.ipamPoolName, poolId);
+      }
+    }
+  }
+
+  /**
    * Set IPAM pool map
    * @param props
    * @returns
@@ -615,42 +677,8 @@ export abstract class NetworkStack extends AcceleratorStack {
     const poolMap = new Map<string, string>();
 
     if (props.networkConfig.centralNetworkServices?.ipams) {
-      const delegatedAdminAccountId = props.accountsConfig.getAccountId(
-        props.networkConfig.centralNetworkServices.delegatedAdminAccount,
-      );
-
       for (const vpcItem of this.vpcsInScope) {
-        for (const alloc of vpcItem.ipamAllocations ?? []) {
-          const ipamPool = props.networkConfig.centralNetworkServices.ipams?.find(item =>
-            item.pools?.find(item => item.name === alloc.ipamPoolName),
-          );
-          if (ipamPool === undefined) {
-            this.logger.error(`Specified Ipam Pool not defined`);
-            throw new Error(`Configuration validation failed at runtime.`);
-          }
-          if (!poolMap.has(alloc.ipamPoolName)) {
-            let poolId: string;
-            if (
-              delegatedAdminAccountId === cdk.Stack.of(this).account &&
-              ipamPool.region === cdk.Stack.of(this).region
-            ) {
-              poolId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-                this,
-                this.getSsmPath(SsmResourceType.IPAM_POOL, [alloc.ipamPoolName]),
-              );
-            } else if (ipamPool.region !== cdk.Stack.of(this).region) {
-              poolId = this.getCrossRegionPoolId(delegatedAdminAccountId, alloc.ipamPoolName, ipamPool.region);
-            } else {
-              poolId = this.getResourceShare(
-                `${alloc.ipamPoolName}_IpamPoolShare`,
-                'ec2:IpamPool',
-                delegatedAdminAccountId,
-                this.cloudwatchKey,
-              ).resourceShareItemId;
-            }
-            poolMap.set(alloc.ipamPoolName, poolId);
-          }
-        }
+        this.createIpamPoolMap(vpcItem.ipamAllocations ?? [], poolMap, props);
       }
     }
     return poolMap;

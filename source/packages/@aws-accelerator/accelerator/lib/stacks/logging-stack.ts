@@ -36,12 +36,7 @@ import {
 } from '@aws-accelerator/constructs';
 
 import { AcceleratorElbRootAccounts, OptInRegions } from '../accelerator';
-import {
-  AcceleratorKeyType,
-  AcceleratorStack,
-  AcceleratorStackProps,
-  ServiceLinkedRoleType,
-} from './accelerator-stack';
+import { AcceleratorKeyType, AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 export type cloudwatchExclusionProcessedItem = {
   account: string;
@@ -141,12 +136,12 @@ export class LoggingStack extends AcceleratorStack {
     //
     // Create Auto scaling service linked role
     //
-    this.createServiceLinkedRole(ServiceLinkedRoleType.AUTOSCALING);
+    this.createAutoScalingServiceLinkedRole();
 
     //
     // Create AWS Cloud9 service linked role
     //
-    this.createServiceLinkedRole(ServiceLinkedRoleType.AWS_CLOUD9);
+    this.createAwsCloud9ServiceLinkedRole();
 
     //
     // Configure CloudWatchLogs to S3 replication
