@@ -2298,6 +2298,8 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         "MaximumExecutionFrequency": "Six_Hours",
         "Scope": {
           "ComplianceResourceTypes": [
+            "AWS::WAF::WebACL",
+            "AWS::WAFRegional::WebACL",
             "AWS::WAFv2::WebACL",
           ],
         },
