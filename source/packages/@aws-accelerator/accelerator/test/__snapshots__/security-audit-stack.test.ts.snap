@@ -2764,6 +2764,68 @@ def script_handler(events, context):
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "WafEnableLoggingB6AE5B82": {
+      "Properties": {
+        "Content": {
+          "assumeRole": "{{ AutomationAssumeRole }}",
+          "description": "Adds logging to non-compliant WebACLs",
+          "mainSteps": [
+            {
+              "action": "aws:executeScript",
+              "inputs": {
+                "Handler": "handler",
+                "InputPayload": {
+                  "WebACLId": "{{ WebACLId }}",
+                },
+                "Runtime": "python3.7",
+                "Script": "REPLACED-JSON-PATH.json",
+              },
+              "name": "performRemediation",
+            },
+          ],
+          "parameters": {
+            "AutomationAssumeRole": {
+              "type": "String",
+            },
+            "WebACLId": {
+              "type": "String",
+            },
+          },
+          "schemaVersion": "0.3",
+        },
+        "DocumentType": "Automation",
+        "Name": "WAF-Enable-Logging",
+        "UpdateMethod": "NewVersion",
+      },
+      "Type": "AWS::SSM::Document",
+    },
+    "WafEnableLoggingShareDocument11FB34C8": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomSSMShareDocumentCustomResourceProviderLogGroup11AEA42B",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomSSMShareDocumentCustomResourceProviderHandler02D98C87",
+            "Arn",
+          ],
+        },
+        "accountIds": [
+          "111111111111",
+          "333333333333",
+          "222222222222",
+          "444444444444",
+          "555555555555",
+          "666666666666",
+        ],
+        "name": {
+          "Ref": "WafEnableLoggingB6AE5B82",
+        },
+      },
+      "Type": "Custom::SSMShareDocument",
+      "UpdateReplacePolicy": "Delete",
+    },
   },
 }
 `;

@@ -40,6 +40,7 @@ error.log
 .*/custom-config-rules/ssm-unencrypted-parameter.zip
 .*/custom-config-rules/workdocs-user-domain-detector.zip
 .*/custom-config-rules/rds-oracle-unencrypted-transport.zip
+.*/custom-config-rules/waf-logging-enabled.zip
 
 #
 # Line level file ignores (keep in alphabetical order)

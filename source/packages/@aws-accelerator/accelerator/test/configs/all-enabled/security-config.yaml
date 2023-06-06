@@ -109,6 +109,9 @@ centralSecurityServices:
           # Attaches Aws IAM Managed Policy to IAM Role
           - name: Attach-IAM-Role-Policy
             template: ssm-documents/attach-iam-role-policy.yaml
+          # Turns on CloudWatch logging for WAF ACLs
+          - name: WAF-Enable-Logging
+            template: ssm-documents/waf-enable-logging.yaml
   snsSubscriptions:
     - level: High
       email: notify-high@example.com
@@ -137,6 +140,36 @@ awsConfig:
         organizationalUnits:
           - Root
       rules:
+        - name: accelerator-waf-logging-enabled
+          type: Custom
+          description: Custom rule for checking WAF logging enabled
+          inputParameters:
+          customRule:
+            lambda:
+              sourceFilePath: custom-config-rules/waf-logging-enabled.zip
+              handler: index.handler
+              runtime: python3.7
+              rolePolicyFile: custom-config-rules/waf-logging-enabled-detection-role.json
+            periodic: true
+            maximumExecutionFrequency: Six_Hours
+            configurationChanges: true
+            triggeringResources:
+              lookupType: ResourceTypes
+              lookupKey: ResourceTypes
+              lookupValue:
+                - AWS::WAF::WebACL
+                - AWS::WAFRegional::WebACL
+                - AWS::WAFv2::WebACL
+          remediation:
+            rolePolicyFile: custom-config-rules/waf-logging-enabled-remediation-role.json
+            automatic: true
+            targetId: WAF-Enable-Logging
+            retryAttemptSeconds: 60
+            maximumAutomaticAttempts: 5
+            parameters:
+              - name: WebACLId
+                value: RESOURCE_ID
+                type: String
         - name: accelerator-target-document-01
           type: Custom
           description: Custom rule for testing target document remediation

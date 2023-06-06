@@ -1,0 +1,22 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "wafconfig",
+      "Effect": "Allow",
+      "Action": [
+        "waf:GetLoggingConfiguration",
+        "waf:GetWebACL",
+        "wafv2:GetLoggingConfiguration",
+        "wafv2:GetWebACL",
+        "waf-regional:GetLoggingConfiguration",
+        "waf-regional:GetWebACL"
+      ],
+      "Resource": [
+        "arn:*:waf::*:*",
+        "arn:*:wafv2:*:*:*/*/*",
+        "arn:*:waf-regional:*:*:*"
+      ]
+    }
+  ]
+}

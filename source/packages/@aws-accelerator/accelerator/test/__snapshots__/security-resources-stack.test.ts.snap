@@ -2284,6 +2284,335 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       },
       "Type": "AWS::Config::ConfigRule",
     },
+    "AcceleratorWafLoggingEnabledC2F2415E": {
+      "DependsOn": [
+        "AcceleratorWafLoggingEnabledFunctionCustomRulePermissionBjrlLxHBU2q1eflzaT436qiq4Iu5pKu7iRO6toNI742BC256",
+        "AcceleratorWafLoggingEnabledFunctionE69C34AD",
+        "AcceleratorWafLoggingEnabledFunctionServiceRole3388E650",
+        "ConfigRecorder",
+      ],
+      "Properties": {
+        "ConfigRuleName": "accelerator-waf-logging-enabled",
+        "Description": "Custom rule for checking WAF logging enabled",
+        "InputParameters": {},
+        "MaximumExecutionFrequency": "Six_Hours",
+        "Scope": {
+          "ComplianceResourceTypes": [
+            "AWS::WAFv2::WebACL",
+          ],
+        },
+        "Source": {
+          "Owner": "CUSTOM_LAMBDA",
+          "SourceDetails": [
+            {
+              "EventSource": "aws.config",
+              "MessageType": "ConfigurationItemChangeNotification",
+            },
+            {
+              "EventSource": "aws.config",
+              "MessageType": "OversizedConfigurationItemChangeNotification",
+            },
+            {
+              "EventSource": "aws.config",
+              "MaximumExecutionFrequency": "Six_Hours",
+              "MessageType": "ScheduledNotification",
+            },
+          ],
+          "SourceIdentifier": {
+            "Fn::GetAtt": [
+              "AcceleratorWafLoggingEnabledFunctionE69C34AD",
+              "Arn",
+            ],
+          },
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorWafLoggingEnabledFunctionCustomRulePermissionBjrlLxHBU2q1eflzaT436qiq4Iu5pKu7iRO6toNI742BC256": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AcceleratorWafLoggingEnabledFunctionE69C34AD",
+            "Arn",
+          ],
+        },
+        "Principal": "config.amazonaws.com",
+        "SourceAccount": "111111111111",
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AcceleratorWafLoggingEnabledFunctionE69C34AD": {
+      "DependsOn": [
+        "AcceleratorWafLoggingEnabledFunctionServiceRole3388E650",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS Config custom rule function used for "accelerator-waf-logging-enabled" rule",
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "AcceleratorWafLoggingEnabledFunctionServiceRole3388E650",
+            "Arn",
+          ],
+        },
+        "Runtime": "python3.7",
+        "Timeout": 3,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "AcceleratorWafLoggingEnabledFunctionServiceRole3388E650": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Config custom rule needs managed readonly access policy",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSConfigRulesExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AcceleratorWafLoggingEnabledLambdaRolePolicy8D9C985E": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "AWS Config rule custom lambda role, created by the permission provided in config repository",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "waf:GetLoggingConfiguration",
+                "waf:GetWebACL",
+                "wafv2:GetLoggingConfiguration",
+                "wafv2:GetWebACL",
+                "waf-regional:GetLoggingConfiguration",
+                "waf-regional:GetWebACL",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                "arn:*:waf::*:*",
+                "arn:*:wafv2:*:*:*/*/*",
+                "arn:*:waf-regional:*:*:*",
+              ],
+              "Sid": "wafconfig",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "AcceleratorWafLoggingEnabledLambdaRolePolicy8D9C985E",
+        "Roles": [
+          {
+            "Ref": "AcceleratorWafLoggingEnabledFunctionServiceRole3388E650",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "AcceleratorWafLoggingEnabledLogGroupBE48D40E": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "AcceleratorWafLoggingEnabledFunctionE69C34AD",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AcceleratorWafLoggingEnabledRemediation": {
+      "DependsOn": [
+        "AcceleratorWafLoggingEnabledC2F2415E",
+      ],
+      "Properties": {
+        "Automatic": true,
+        "ConfigRuleName": "accelerator-waf-logging-enabled",
+        "MaximumAutomaticAttempts": 5,
+        "Parameters": {
+          "AutomationAssumeRole": {
+            "StaticValue": {
+              "Values": [
+                {
+                  "Fn::GetAtt": [
+                    "AcceleratorWafLoggingEnabledRemediationRole4997DFE0",
+                    "Arn",
+                  ],
+                },
+              ],
+            },
+          },
+          "WebACLId": {
+            "ResourceValue": {
+              "Value": "RESOURCE_ID",
+            },
+          },
+        },
+        "RetryAttemptSeconds": 60,
+        "TargetId": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":ssm:us-east-1:222222222222:document/WAF-Enable-Logging",
+            ],
+          ],
+        },
+        "TargetType": "SSM_DOCUMENT",
+      },
+      "Type": "AWS::Config::RemediationConfiguration",
+    },
+    "AcceleratorWafLoggingEnabledRemediationRole4997DFE0": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ssm.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AcceleratorWafLoggingEnabledRemediationRoleDefaultPolicyA51DB6A8": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "AWS Config rule remediation role, created by the permission provided in config repository",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "ssm:GetAutomationExecution",
+                "ssm:StartAutomationExecution",
+                "ssm:GetParameters",
+                "ssm:GetParameter",
+                "ssm:PutParameter",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":ssm:us-east-1:222222222222:document/WAF-Enable-Logging",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "waf:PutLoggingConfiguration",
+                "waf:GetLoggingConfiguration",
+                "waf:GetWebACL",
+                "wafv2:PutLoggingConfiguration",
+                "wafv2:GetLoggingConfiguration",
+                "wafv2:GetWebACL",
+                "waf-regional:PutLoggingConfiguration",
+                "waf-regional:GetLoggingConfiguration",
+                "waf-regional:GetWebACL",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "wafconfig",
+            },
+            {
+              "Action": "logs:*",
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "logs",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "AcceleratorWafLoggingEnabledRemediationRoleDefaultPolicyA51DB6A8",
+        "Roles": [
+          {
+            "Ref": "AcceleratorWafLoggingEnabledRemediationRole4997DFE0",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
     "AppTest2CustomCreateLogGroupCustomResourceProviderHandler03798759": {
       "DependsOn": [
         "AppTest2CustomCreateLogGroupCustomResourceProviderRole24FD6060",

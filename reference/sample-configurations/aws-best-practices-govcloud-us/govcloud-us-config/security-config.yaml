@@ -69,6 +69,9 @@ centralSecurityServices:
           # Attaches Aws IAM Managed Policy to IAM Role
           - name: Attach-IAM-Role-Policy
             template: ssm-documents/attach-iam-role-policy.yaml
+          # Turns on CloudWatch logging for WAF ACLs
+          - name: WAF-Enable-Logging
+            template: ssm-documents/waf-enable-logging.yaml
 accessAnalyzer:
   enable: true
 iamPasswordPolicy:
@@ -93,29 +96,36 @@ awsConfig:
         organizationalUnits:
           - Root
       rules:
-        # The following rules are encouraged, but are not available in Gov-East.
-        # If you are only deploying to Gov-West you can enable these rules.
-
-        # - name: accelerator-sagemaker-endpoint-configuration-kms-key-configured
-        #   identifier: SAGEMAKER_ENDPOINT_CONFIGURATION_KMS_KEY_CONFIGURED
-        # - name: accelerator-sagemaker-notebook-instance-kms-key-configured
-        #   identifier: SAGEMAKER_NOTEBOOK_INSTANCE_KMS_KEY_CONFIGURED
-        # - name: accelerator-eip-attached
-        #   complianceResourceTypes:
-        #     - AWS::EC2::EIP
-        #   identifier: EIP_ATTACHED
-        # - name: accelerator-account-part-of-organizations
-        #   complianceResourceTypes:
-        #     - AWS::EC2::EIP
-        #   identifier: ACCOUNT_PART_OF_ORGANIZATIONS
-        # - name: accelerator-codebuild-project-envvar-awscred-check
-        #   complianceResourceTypes:
-        #     - AWS::CODEBUILD::Project
-        #   identifier: CODEBUILD_PROJECT_ENVVAR_AWSCRED_CHECK
-        # - name: accelerator-codebuild-project-source-repo-url-check
-        #   complianceResourceTypes:
-        #     - AWS::CODEBUILD::Project
-        #   identifier: CODEBUILD_PROJECT_SOURCE_REPO_URL_CHECK
+        - name: accelerator-waf-logging-enabled
+          type: Custom
+          description: Custom rule for checking WAF logging enabled
+          inputParameters:
+          customRule:
+            lambda:
+              sourceFilePath: custom-config-rules/waf-logging-enabled.zip
+              handler: index.handler
+              runtime: python3.7
+              rolePolicyFile: custom-config-rules/waf-logging-enabled-detection-role.json
+            periodic: true
+            maximumExecutionFrequency: Six_Hours
+            configurationChanges: true
+            triggeringResources:
+              lookupType: ResourceTypes
+              lookupKey: ResourceTypes
+              lookupValue:
+                - AWS::WAF::WebACL
+                - AWS::WAFRegional::WebACL
+                - AWS::WAFv2::WebACL
+          remediation:
+            rolePolicyFile: custom-config-rules/waf-logging-enabled-remediation-role.json
+            automatic: true
+            targetId: WAF-Enable-Logging
+            retryAttemptSeconds: 60
+            maximumAutomaticAttempts: 5
+            parameters:
+              - name: WebACLId
+                value: RESOURCE_ID
+                type: String
         - name: accelerator-attach-ec2-instance-profile
           type: Custom
           description: Custom rule for checking EC2 instance IAM profile attachment
@@ -288,10 +298,6 @@ awsConfig:
             - AWS::IAM::Role
             - AWS::IAM::Group
           identifier: IAM_NO_INLINE_POLICY_CHECK
-        - name: accelerator-elb-acm-certificate-required
-          complianceResourceTypes:
-            - AWS::ElasticLoadBalancing::LoadBalancer
-          identifier: ELB_ACM_CERTIFICATE_REQUIRED
         - name: accelerator-alb-http-drop-invalid-header-enabled
           complianceResourceTypes:
             - AWS::ElasticLoadBalancingV2::LoadBalancer
@@ -345,12 +351,6 @@ awsConfig:
           identifier: ELB_CROSS_ZONE_LOAD_BALANCING_ENABLED
         - name: accelerator-iam-user-mfa-enabled
           identifier: IAM_USER_MFA_ENABLED
-        - name: accelerator-guardduty-non-archived-findings
-          inputParameters:
-            daysHighSev: "1"
-            daysLowSev: "30"
-            daysMediumSev: "7"
-          identifier: GUARDDUTY_NON_ARCHIVED_FINDINGS
         - name: accelerator-elasticsearch-node-to-node-encryption-check
           complianceResourceTypes:
             - AWS::Elasticsearch::Domain
@@ -409,6 +409,43 @@ awsConfig:
           identifier: IAM_POLICY_NO_STATEMENTS_WITH_ADMIN_ACCESS
         - name: accelerator-multi-region-cloudtrail-enabled
           identifier: MULTI_REGION_CLOUD_TRAIL_ENABLED
+    - deploymentTargets:
+        organizationalUnits:
+          - Root
+        excludedRegions:
+          - us-gov-east-1
+      rules:
+        # The following rules are encouraged, but are not available in Gov-East.
+        - name: accelerator-sagemaker-endpoint-configuration-kms-key-configured
+          identifier: SAGEMAKER_ENDPOINT_CONFIGURATION_KMS_KEY_CONFIGURED
+        - name: accelerator-sagemaker-notebook-instance-kms-key-configured
+          identifier: SAGEMAKER_NOTEBOOK_INSTANCE_KMS_KEY_CONFIGURED
+        - name: accelerator-eip-attached
+          complianceResourceTypes:
+            - AWS::EC2::EIP
+          identifier: EIP_ATTACHED
+        - name: accelerator-account-part-of-organizations
+          complianceResourceTypes:
+            - AWS::EC2::EIP
+          identifier: ACCOUNT_PART_OF_ORGANIZATIONS
+        - name: accelerator-codebuild-project-envvar-awscred-check
+          complianceResourceTypes:
+            - AWS::CODEBUILD::Project
+          identifier: CODEBUILD_PROJECT_ENVVAR_AWSCRED_CHECK
+        - name: accelerator-codebuild-project-source-repo-url-check
+          complianceResourceTypes:
+            - AWS::CODEBUILD::Project
+          identifier: CODEBUILD_PROJECT_SOURCE_REPO_URL_CHECK
+        - name: accelerator-elb-acm-certificate-required
+          complianceResourceTypes:
+            - AWS::ElasticLoadBalancing::LoadBalancer
+          identifier: ELB_ACM_CERTIFICATE_REQUIRED
+        - name: accelerator-guardduty-non-archived-findings
+          inputParameters:
+            daysHighSev: "1"
+            daysLowSev: "30"
+            daysMediumSev: "7"
+          identifier: GUARDDUTY_NON_ARCHIVED_FINDINGS
 cloudWatch:
   metricSets:
     - regions:
