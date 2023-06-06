@@ -117,8 +117,6 @@ export interface AcceleratorEnvironment {
   enableApprovalStage: boolean;
   /**
    * Whether or not to enable single account mode
-   *
-   * @default false
    */
   enableSingleAccountMode: boolean;
   /**
@@ -153,8 +151,6 @@ export interface AcceleratorEnvironment {
   sourceRepositoryOwner: string;
   /**
    * Use a configuration repository that already exists
-   *
-   * @default false
    */
   useExistingConfigRepo: boolean;
   /**
@@ -248,19 +244,19 @@ export function setResourcePrefixes(prefix: string): AcceleratorResourcePrefixes
  */
 function setConfigRepoName(
   repoNamePrefix: string,
-  useExistingConfigRepo: boolean,
+  useExistingConfigRepo?: string,
   existingRepoName?: string,
   existingBranchName?: string,
   qualifier?: string,
 ): string {
-  if (useExistingConfigRepo && (!existingRepoName || !existingBranchName)) {
+  if (useExistingConfigRepo === 'Yes' && (!existingRepoName || !existingBranchName)) {
     throw new Error(
       'Attempting to deploy pipeline stage(s) and environment variables are not set [EXISTING_CONFIG_REPOSITORY_NAME, EXISTING_CONFIG_REPOSITORY_BRANCH_NAME], when USE_EXISTING_CONFIG_REPO environment is set to Yes',
     );
   }
 
   let configRepositoryName = `${repoNamePrefix}-config`;
-  if (useExistingConfigRepo) {
+  if (useExistingConfigRepo === 'Yes') {
     configRepositoryName = existingRepoName!;
   } else {
     if (qualifier) {
@@ -282,26 +278,12 @@ export function setAcceleratorEnvironment(
   stage?: string,
 ): AcceleratorEnvironment {
   // Check for mandatory environment variables in PIPELINE stage
-  if (stage === AcceleratorStage.PIPELINE) {
-    const mandatoryVariables = [
-      'AUDIT_ACCOUNT_EMAIL',
-      'CONTROL_TOWER_ENABLED',
-      'LOG_ARCHIVE_ACCOUNT_EMAIL',
-      'MANAGEMENT_ACCOUNT_EMAIL',
-      'ACCELERATOR_REPOSITORY_BRANCH_NAME',
-    ];
-    for (const variable of mandatoryVariables) {
-      if (!env[variable]) {
-        throw new Error(`Mandatory environment variable ${variable} is not set`);
-      }
-    }
-  }
+  checkMandatoryEnvVariables(env, stage);
 
   // Set config repo name
-  const useExistingConfigRepo = env['USE_EXISTING_CONFIG_REPO'] ? env['USE_EXISTING_CONFIG_REPO'] === 'Yes' : false;
   const configRepositoryName = setConfigRepoName(
     resourcePrefixes.repoName,
-    useExistingConfigRepo,
+    env['USE_EXISTING_CONFIG_REPO'],
     env['EXISTING_CONFIG_REPOSITORY_NAME'],
     env['EXISTING_CONFIG_REPOSITORY_BRANCH_NAME'],
     env['ACCELERATOR_QUALIFIER'],
@@ -315,16 +297,14 @@ export function setAcceleratorEnvironment(
     enableApprovalStage: env['ACCELERATOR_ENABLE_APPROVAL_STAGE']
       ? env['ACCELERATOR_ENABLE_APPROVAL_STAGE'] === 'Yes'
       : true,
-    enableSingleAccountMode: env['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE']
-      ? env['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE'] === 'true'
-      : false,
+    enableSingleAccountMode: env['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE'] === 'true',
     logArchiveAccountEmail: env['LOG_ARCHIVE_ACCOUNT_EMAIL'] ?? '',
     managementAccountEmail: env['MANAGEMENT_ACCOUNT_EMAIL'] ?? '',
     sourceBranchName: env['ACCELERATOR_REPOSITORY_BRANCH_NAME'] ?? '',
     sourceRepository: env['ACCELERATOR_REPOSITORY_SOURCE'] ?? 'github',
     sourceRepositoryName: env['ACCELERATOR_REPOSITORY_NAME'] ?? 'landing-zone-accelerator-on-aws',
     sourceRepositoryOwner: env['ACCELERATOR_REPOSITORY_OWNER'] ?? 'awslabs',
-    useExistingConfigRepo,
+    useExistingConfigRepo: env['USE_EXISTING_CONFIG_REPO'] === 'Yes',
     approvalStageNotifyEmailList: env['APPROVAL_STAGE_NOTIFY_EMAIL_LIST'],
     configCommitId: env['CONFIG_COMMIT_ID'],
     managementAccountId: env['MANAGEMENT_ACCOUNT_ID'],
@@ -332,6 +312,36 @@ export function setAcceleratorEnvironment(
     managementCrossAccountRoleName: env['MANAGEMENT_CROSS_ACCOUNT_ROLE_NAME'],
     qualifier: env['ACCELERATOR_QUALIFIER'],
   };
+}
+
+/**
+ * Checks for mandatory environment variables based on accelerator stage and throws
+ * an error if any are missing
+ * @param env
+ * @param stage
+ */
+function checkMandatoryEnvVariables(env: NodeJS.ProcessEnv, stage?: string) {
+  const missingVariables: string[] = [];
+
+  if (stage === AcceleratorStage.PIPELINE) {
+    const mandatoryVariables = [
+      'AUDIT_ACCOUNT_EMAIL',
+      'CONTROL_TOWER_ENABLED',
+      'LOG_ARCHIVE_ACCOUNT_EMAIL',
+      'MANAGEMENT_ACCOUNT_EMAIL',
+      'ACCELERATOR_REPOSITORY_BRANCH_NAME',
+    ];
+
+    for (const variable of mandatoryVariables) {
+      if (!env[variable]) {
+        missingVariables.push(variable);
+      }
+    }
+  }
+  // Throw error if any mandatory variables are missing
+  if (missingVariables.length > 0) {
+    throw new Error(`Missing mandatory environment variables: ${missingVariables.join(', ')}`);
+  }
 }
 
 /**
