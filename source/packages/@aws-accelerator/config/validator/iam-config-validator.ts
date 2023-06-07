@@ -401,7 +401,7 @@ export class IamConfigValidator {
         for (const policyItem of policySet.policies) {
           policies.push({
             name: policyItem.name,
-            accountNames: CommonValidatorFunctions.getAccountNamesFromTarget(
+            accountNames: CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
               accountsConfig,
               policySet.deploymentTargets as t.DeploymentTargets,
             ),
@@ -485,7 +485,7 @@ export class IamConfigValidator {
     for (const identityCenterAssignmentItem of identityCenter.identityCenterAssignments ?? []) {
       if (identityCenterAssignmentItem.permissionSetName === identityCenterPermissionSetName) {
         accountNames.push(
-          ...CommonValidatorFunctions.getAccountNamesFromTarget(
+          ...CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
             accountsConfig,
             identityCenterAssignmentItem.deploymentTargets as t.DeploymentTargets,
           ),

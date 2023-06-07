@@ -12,6 +12,7 @@
  */
 import { AccountsConfig } from '../../lib/accounts-config';
 import * as t from '../../lib/common-types';
+import { GlobalConfig } from '../../lib/global-config';
 
 /**
  * Class for common helper functions
@@ -22,7 +23,7 @@ export class CommonValidatorFunctions {
    * @param targets
    * @returns
    */
-  public static getAccountNamesFromTarget(
+  public static getAccountNamesFromDeploymentTargets(
     accountsConfig: AccountsConfig,
     deploymentTargets: t.DeploymentTargets,
   ): string[] {
@@ -49,5 +50,45 @@ export class CommonValidatorFunctions {
     const filterAccountNames = accountNames.filter(item => !deploymentTargets.excludedAccounts?.includes(item));
 
     return [...new Set(filterAccountNames)];
+  }
+
+  /**
+   * Function that will retrieve the regions from the deploymentTargets object that is passed in.
+   * @param target {@link t.DeploymentTargets}
+   * @param globalConfig {@link globalConfig}
+   * @returns
+   */
+  public static getRegionsFromDeploymentTarget(target: t.DeploymentTargets, global: GlobalConfig): t.Region[] {
+    const enabledRegions: t.Region[] = global.enabledRegions;
+    if (target.excludedRegions) {
+      return enabledRegions.filter(region => !target.excludedRegions.includes(region));
+    }
+
+    return enabledRegions;
+  }
+
+  /**
+   * Function receives input of the account and region from the deploymentTargets, and provides a combined list
+   * of environments with the format of account-region (e.g. Dev-us-east-1)
+   * @param accountsConfig {@link AccountsConfig}
+   * @param target {@link t.DeploymentTargets}
+   * @param global
+   * @returns
+   */
+  public static getEnvironmentsFromDeploymentTarget(
+    accountsConfig: AccountsConfig,
+    target: t.DeploymentTargets,
+    globalConfig: GlobalConfig,
+  ): string[] {
+    const environments: string[] = [];
+    const enabledRegions = CommonValidatorFunctions.getRegionsFromDeploymentTarget(target, globalConfig);
+    const accountConfigs = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(accountsConfig, target);
+
+    for (const accountConfig of accountConfigs) {
+      for (const enableRegion of enabledRegions) {
+        environments.push(accountConfig + '-' + enableRegion);
+      }
+    }
+    return environments;
   }
 }

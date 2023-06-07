@@ -18,7 +18,8 @@ import { AccountsConfig } from '../lib/accounts-config';
 import * as t from '../lib/common-types';
 import { GlobalConfig } from '../lib/global-config';
 import { OrganizationConfig } from '../lib/organization-config';
-import { AwsConfigRuleSet, SecurityConfig, SecurityConfigTypes } from '../lib/security-config';
+import { SecurityConfig, SecurityConfigTypes } from '../lib/security-config';
+import { CommonValidatorFunctions } from './common/common-validator-functions';
 
 export class SecurityConfigValidator {
   constructor(
@@ -78,7 +79,7 @@ export class SecurityConfigValidator {
       this.validateConfigRuleRemediationAssumeRoleFile(configDir, ruleSet, errors);
       this.validateConfigRuleRemediationTargetAssets(configDir, ruleSet, ssmDocuments, errors);
     }
-
+    this.validateConfigRuleNames(values.awsConfig, accountsConfig, globalConfig, errors);
     //
     // Validate SNS Topics for CloudWatch Alarms
     const snsTopicNames = this.getSnsTopicNames(globalConfig);
@@ -555,22 +556,45 @@ export class SecurityConfigValidator {
   }
 
   /**
-   * Validate Config rule remediation account name
+   * Function to validate if AWS Config Rule names are unique to the environments they're deployed to respectively.
    * @param ruleSet
-   * @param accountNames
-   * @param errors
+   * @param helpers
    */
-  private validateConfigRuleRemediationAccountNames(
-    ruleSet: AwsConfigRuleSet,
-    accountNames: string[],
+  private validateConfigRuleNames(
+    configItem: t.TypeOf<typeof SecurityConfigTypes.awsConfig>,
+    accountsConfig: AccountsConfig,
+    globalConfig: GlobalConfig,
     errors: string[],
   ) {
-    for (const rule of ruleSet.rules) {
-      if (rule.remediation?.targetAccountName && !accountNames.includes(rule.remediation.targetAccountName)) {
-        errors.push(
-          `Rule: ${rule.name}, remediation target account ${rule.remediation.targetAccountName} does not exist in accounts-config.yaml`,
-        );
+    const configRuleMap: { name: string; environments: string[] }[] = [];
+    const configRuleNames: string[] = [];
+    const duplicateNames: string[] = [];
+
+    for (const ruleSetItem of configItem.ruleSets ?? []) {
+      for (const ruleItem of ruleSetItem.rules ?? []) {
+        configRuleMap.push({
+          name: ruleItem.name,
+          environments: CommonValidatorFunctions.getEnvironmentsFromDeploymentTarget(
+            accountsConfig,
+            ruleSetItem.deploymentTargets as t.DeploymentTargets,
+            globalConfig,
+          ),
+        });
       }
+    }
+
+    configRuleMap.forEach(configRule => configRuleNames.push(configRule.name));
+    for (const ruleName of configRuleNames) {
+      const deploymentTargetRules = configRuleMap.filter(rule => rule.name === ruleName);
+      const resultMap = deploymentTargetRules.map(rule => rule.environments);
+      if (this.hasDuplicates(resultMap.flat())) {
+        duplicateNames.push(ruleName);
+      }
+    }
+    if (duplicateNames.length > 0) {
+      errors.push(
+        `Duplicate AWS Config rules name exist with the same name and must be unique when deployed to the same account and region. Config rules in file: ${configRuleNames}`,
+      );
     }
   }
 
