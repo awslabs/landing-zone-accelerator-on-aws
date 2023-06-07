@@ -14,7 +14,6 @@
 import * as cdk from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
-import { NagSuppressions } from 'cdk-nag';
 
 import { Region } from '@aws-accelerator/config';
 import {
@@ -28,7 +27,7 @@ import {
   ConfigAggregation,
 } from '@aws-accelerator/constructs';
 
-import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import { AcceleratorStack, AcceleratorStackProps, NagSuppressionRuleIds } from './accelerator-stack';
 import { pascalCase } from 'pascal-case';
 
 /**
@@ -129,7 +128,25 @@ export class SecurityStack extends AcceleratorStack {
       this.enableConfigAggregation();
     }
 
+    //
+    // Create NagSuppressions
+    //
+    this.addResourceSuppressionsByPath(this.nagSuppressionInputs);
+
     this.logger.info('Completed stack synthesis');
+  }
+
+  /**
+   * Validate Delegated Admin Account name for the given security service is part of account config
+   * @param securityServiceName string
+   */
+  private validateDelegatedAdminAccountName(securityServiceName: string) {
+    if (!this.props.accountsConfig.containsAccount(this.auditAccountName)) {
+      this.logger.error(
+        `${securityServiceName} audit delegated admin account name "${this.auditAccountName}" not found.`,
+      );
+      throw new Error(`Configuration validation failed at runtime.`);
+    }
   }
 
   /**
@@ -142,18 +159,16 @@ export class SecurityStack extends AcceleratorStack {
         cdk.Stack.of(this).region as Region,
       ) === -1
     ) {
-      if (this.props.accountsConfig.containsAccount(this.auditAccountName)) {
-        new MacieExportConfigClassification(this, 'AwsMacieUpdateExportConfigClassification', {
-          bucketName: this.centralLogsBucketName,
-          bucketKmsKey: this.centralLogsBucketKey,
-          logKmsKey: this.cloudwatchKey,
-          keyPrefix: `macie/${cdk.Stack.of(this).account}/`,
-          logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-        });
-      } else {
-        this.logger.error(`Macie audit delegated admin account name "${this.auditAccountName}" not found.`);
-        throw new Error(`Configuration validation failed at runtime.`);
-      }
+      // Validate Delegated Admin Account name is part of account config
+      this.validateDelegatedAdminAccountName('Macie');
+
+      new MacieExportConfigClassification(this, 'AwsMacieUpdateExportConfigClassification', {
+        bucketName: this.centralLogsBucketName,
+        bucketKmsKey: this.centralLogsBucketKey,
+        logKmsKey: this.cloudwatchKey,
+        keyPrefix: `macie/${cdk.Stack.of(this).account}/`,
+        logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+      });
     }
   }
 
@@ -168,23 +183,45 @@ export class SecurityStack extends AcceleratorStack {
       ) === -1
     ) {
       if (this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.enable) {
-        if (this.props.accountsConfig.containsAccount(this.auditAccountName)) {
-          new GuardDutyPublishingDestination(this, 'GuardDutyPublishingDestination', {
-            exportDestinationType:
-              this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.destinationType,
-            exportDestinationOverride:
-              this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.overrideExisting ?? false,
-            destinationArn: `arn:${cdk.Stack.of(this).partition}:s3:::${this.centralLogsBucketName}/guardduty`,
-            destinationKmsKey: this.centralLogsBucketKey,
-            logKmsKey: this.cloudwatchKey,
-            logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-          });
-        } else {
-          this.logger.error(`Guardduty audit delegated admin account name "${this.auditAccountName}" not found.`);
-          throw new Error(`Configuration validation failed at runtime.`);
-        }
+        // Validate Delegated Admin Account name is part of account config
+        this.validateDelegatedAdminAccountName('Guardduty');
+
+        new GuardDutyPublishingDestination(this, 'GuardDutyPublishingDestination', {
+          exportDestinationType:
+            this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.destinationType,
+          exportDestinationOverride:
+            this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.overrideExisting ?? false,
+          destinationArn: `arn:${cdk.Stack.of(this).partition}:s3:::${this.centralLogsBucketName}/guardduty`,
+          destinationKmsKey: this.centralLogsBucketKey,
+          logKmsKey: this.cloudwatchKey,
+          logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+        });
       }
     }
+  }
+
+  /**
+   * Function to initialize SecurityHub standards
+   * @returns
+   */
+  private initializeSecurityHubStandards(): { name: string; enable: boolean; controlsToDisable: string[] }[] {
+    const standards: { name: string; enable: boolean; controlsToDisable: string[] }[] = [];
+    for (const standard of this.props.securityConfig.centralSecurityServices.securityHub.standards) {
+      if (standard.deploymentTargets) {
+        if (!this.isIncluded(standard.deploymentTargets)) {
+          this.logger.info(`Item excluded`);
+          continue;
+        }
+      }
+      // add to standards list
+      standards.push({
+        name: standard.name,
+        enable: standard.enable,
+        controlsToDisable: standard.controlsToDisable,
+      });
+    }
+
+    return standards;
   }
 
   /**
@@ -197,32 +234,17 @@ export class SecurityStack extends AcceleratorStack {
         cdk.Stack.of(this).region as Region,
       ) === -1
     ) {
-      if (this.props.accountsConfig.containsAccount(this.auditAccountName)) {
-        const standards: { name: string; enable: boolean; controlsToDisable: string[] }[] = [];
-        for (const standard of this.props.securityConfig.centralSecurityServices.securityHub.standards) {
-          if (standard.deploymentTargets) {
-            if (!this.isIncluded(standard.deploymentTargets)) {
-              this.logger.info(`Item excluded`);
-              continue;
-            }
-          }
-          // add to standards list
-          standards.push({
-            name: standard.name,
-            enable: standard.enable,
-            controlsToDisable: standard.controlsToDisable,
-          });
-        }
-        if (standards.length > 0) {
-          new SecurityHubStandards(this, 'SecurityHubStandards', {
-            standards,
-            kmsKey: this.cloudwatchKey,
-            logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-          });
-        }
-      } else {
-        this.logger.error(`SecurityHub audit delegated admin account name "${this.auditAccountName}" not found.`);
-        throw new Error(`Configuration validation failed at runtime.`);
+      // Validate Delegated Admin Account name is part of account config
+      this.validateDelegatedAdminAccountName('SecurityHub');
+
+      const standards = this.initializeSecurityHubStandards();
+
+      if (standards.length > 0) {
+        new SecurityHubStandards(this, 'SecurityHubStandards', {
+          standards,
+          kmsKey: this.cloudwatchKey,
+          logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+        });
       }
     }
   }
@@ -386,16 +408,15 @@ export class SecurityStack extends AcceleratorStack {
     });
 
     // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `${this.stackName}/EnableConfigAggregation/ConfigAggregatorRole/Resource`,
-      [
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM4,
+      details: [
         {
-          id: 'AwsSolutions-IAM4',
+          path: `${this.stackName}/EnableConfigAggregation/ConfigAggregatorRole/Resource`,
           reason: 'AWS Config managed role required.',
         },
       ],
-    );
+    });
   }
 
   private acceleratorMetadataRule(

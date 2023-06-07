@@ -142,94 +142,94 @@ export class TargetGroup extends cdk.Resource implements ITargetGroupResource {
   private buildAttributes(props: TargetGroupProps) {
     // add elements to the array.
     // based on https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-elasticloadbalancingv2-targetgroup-targetgroupattribute.html
-    if (props.attributes) {
-      const targetGroupAttributesProperties = [];
 
-      if (props.attributes.deregistrationDelay) {
-        targetGroupAttributesProperties.push({
-          key: 'deregistration_delay.timeout_seconds',
-          value: props.attributes.deregistrationDelay.toString(),
-        });
-      }
-      if (props.attributes.stickiness) {
-        targetGroupAttributesProperties.push({
-          key: 'stickiness.enabled',
-          value: props.attributes.stickiness.toString(),
-        });
-      }
-      if (props.attributes.stickinessType) {
-        targetGroupAttributesProperties.push({
-          key: 'stickiness.type',
-          value: props.attributes.stickinessType,
-        });
-      }
-      if (props.attributes.algorithm) {
-        targetGroupAttributesProperties.push({
-          key: 'load_balancing.algorithm.type',
-          value: props.attributes.algorithm,
-        });
-      }
-      if (props.attributes.slowStart) {
-        targetGroupAttributesProperties.push({
-          key: 'slow_start.duration_seconds',
-          value: props.attributes.slowStart.toString(),
-        });
-      }
-      if (props.attributes.appCookieName) {
-        targetGroupAttributesProperties.push({
-          key: 'stickiness.app_cookie.cookie_name',
-          value: props.attributes.appCookieName,
-        });
-      }
-      if (props.attributes.appCookieDuration) {
-        targetGroupAttributesProperties.push({
-          key: 'stickiness.app_cookie.duration_seconds',
-          value: props.attributes.appCookieDuration.toString(),
-        });
-      }
-      if (props.attributes.lbCookieDuration) {
-        targetGroupAttributesProperties.push({
-          key: 'stickiness.lb_cookie.duration_seconds',
-          value: props.attributes.lbCookieDuration.toString(),
-        });
-      }
-      if (props.attributes.connectionTermination) {
-        targetGroupAttributesProperties.push({
-          key: 'deregistration_delay.connection_termination.enabled',
-          value: props.attributes.connectionTermination.toString(),
-        });
-      }
-      if (props.attributes.preserveClientIp) {
-        targetGroupAttributesProperties.push({
-          key: 'preserve_client_ip.enabled',
-          value: props.attributes.preserveClientIp.toString(),
-        });
-      }
-      if (props.attributes.proxyProtocolV2) {
-        targetGroupAttributesProperties.push({
-          key: 'proxy_protocol_v2.enabled',
-          value: props.attributes.proxyProtocolV2.toString(),
-        });
-      }
-      if (props.attributes.targetFailover) {
-        targetGroupAttributesProperties.push({
-          key: 'target_failover.on_deregistration',
-          value: props.attributes.targetFailover,
-        });
-        targetGroupAttributesProperties.push({
-          key: 'target_failover.on_unhealthy',
-          value: props.attributes.targetFailover,
-        });
-      }
-
-      if (targetGroupAttributesProperties.length > 0) {
-        return targetGroupAttributesProperties;
-      } else {
-        return undefined;
-      }
-    } else {
+    if (!props.attributes) {
       return undefined;
     }
+
+    const targetGroupAttributesProperties = [];
+
+    if (props.attributes.deregistrationDelay) {
+      targetGroupAttributesProperties.push({
+        key: 'deregistration_delay.timeout_seconds',
+        value: props.attributes.deregistrationDelay.toString(),
+      });
+    }
+    if (props.attributes.stickiness) {
+      targetGroupAttributesProperties.push({
+        key: 'stickiness.enabled',
+        value: props.attributes.stickiness.toString(),
+      });
+    }
+    if (props.attributes.stickinessType) {
+      targetGroupAttributesProperties.push({
+        key: 'stickiness.type',
+        value: props.attributes.stickinessType,
+      });
+    }
+    if (props.attributes.algorithm) {
+      targetGroupAttributesProperties.push({
+        key: 'load_balancing.algorithm.type',
+        value: props.attributes.algorithm,
+      });
+    }
+    if (props.attributes.slowStart) {
+      targetGroupAttributesProperties.push({
+        key: 'slow_start.duration_seconds',
+        value: props.attributes.slowStart.toString(),
+      });
+    }
+    if (props.attributes.appCookieName) {
+      targetGroupAttributesProperties.push({
+        key: 'stickiness.app_cookie.cookie_name',
+        value: props.attributes.appCookieName,
+      });
+    }
+    if (props.attributes.appCookieDuration) {
+      targetGroupAttributesProperties.push({
+        key: 'stickiness.app_cookie.duration_seconds',
+        value: props.attributes.appCookieDuration.toString(),
+      });
+    }
+    if (props.attributes.lbCookieDuration) {
+      targetGroupAttributesProperties.push({
+        key: 'stickiness.lb_cookie.duration_seconds',
+        value: props.attributes.lbCookieDuration.toString(),
+      });
+    }
+    if (props.attributes.connectionTermination) {
+      targetGroupAttributesProperties.push({
+        key: 'deregistration_delay.connection_termination.enabled',
+        value: props.attributes.connectionTermination.toString(),
+      });
+    }
+    if (props.attributes.preserveClientIp) {
+      targetGroupAttributesProperties.push({
+        key: 'preserve_client_ip.enabled',
+        value: props.attributes.preserveClientIp.toString(),
+      });
+    }
+    if (props.attributes.proxyProtocolV2) {
+      targetGroupAttributesProperties.push({
+        key: 'proxy_protocol_v2.enabled',
+        value: props.attributes.proxyProtocolV2.toString(),
+      });
+    }
+    if (props.attributes.targetFailover) {
+      targetGroupAttributesProperties.push({
+        key: 'target_failover.on_deregistration',
+        value: props.attributes.targetFailover,
+      });
+      targetGroupAttributesProperties.push({
+        key: 'target_failover.on_unhealthy',
+        value: props.attributes.targetFailover,
+      });
+    }
+
+    if (targetGroupAttributesProperties.length > 0) {
+      return targetGroupAttributesProperties;
+    }
+    return undefined;
   }
 
   private buildTargets(

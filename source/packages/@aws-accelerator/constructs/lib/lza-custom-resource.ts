@@ -98,10 +98,10 @@ export interface LzaCustomResourceProps {
      */
     readonly handler?: string;
     /**
-     * Determine the removal policy of CloudWatch log group for tje lambda.
+     * Determine the removal policy of CloudWatch log group for the lambda.
     @default RemovalPolicy.Destroy
      */
-    readonly cloudWatchLogRemovalPolicy?: cdk.RemovalPolicy | undefined;
+    readonly cloudWatchLogRemovalPolicy?: cdk.RemovalPolicy;
     /**
      * Debug flag used in custom resource lambda function to output debug logs
     @default false    
@@ -134,23 +134,6 @@ export class LzaCustomResource extends Construct {
 
     const functionName = pascalCase(props.resource.name + 'Function');
 
-    const lambdaEnvironmentList:
-      | {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          [key: string]: any;
-        }[] = props.lambda.environmentVariables ?? [];
-
-    const lambdaEnvironment: {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      [key: string]: any;
-    } = {};
-
-    for (const environmentVariable of lambdaEnvironmentList) {
-      for (const [key, value] of Object.entries(environmentVariable)) {
-        lambdaEnvironment[key] = value;
-      }
-    }
-
     const providerLambdaFunction = new cdk.aws_lambda.Function(this, functionName, {
       description:
         props.lambda.description ?? `Accelerator deployed ${props.resource.name} custom resource lambda function.`,
@@ -162,7 +145,7 @@ export class LzaCustomResource extends Construct {
       initialPolicy: props.lambda.roleInitialPolicy,
       handler: props.lambda.handler ?? 'index.handler',
       environmentEncryption: props.lambda.environmentEncryptionKmsKey,
-      environment: lambdaEnvironmentList.length > 0 ? lambdaEnvironment : undefined,
+      environment: this.prepareLambdaEnvironments(props),
     });
 
     new cdk.aws_logs.LogGroup(this, `${providerLambdaFunction.node.id}LogGroup`, {
@@ -176,30 +159,9 @@ export class LzaCustomResource extends Construct {
       onEventHandler: providerLambdaFunction,
     });
 
-    const resourcePropertyList:
-      | {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          [key: string]: any;
-        }[] = props.resource.properties ?? [{ debug: props.lambda.debug ?? false }];
-
-    if (props.resource.forceUpdate) {
-      resourcePropertyList.push({ uuid: uuidv4() });
-    }
-
-    const resourceProperties: {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      [key: string]: any;
-    } = {};
-
-    for (const resourceProperty of resourcePropertyList) {
-      for (const [key, value] of Object.entries(resourceProperty)) {
-        resourceProperties[key] = value;
-      }
-    }
-
     this.resource = new cdk.CustomResource(this, pascalCase(props.resource.name + 'Resource'), {
       serviceToken: this.provider.serviceToken,
-      properties: resourcePropertyList.length > 0 ? resourceProperties : undefined,
+      properties: this.prepareResourceProperties(props),
     });
 
     const stack = cdk.Stack.of(scope);
@@ -251,5 +213,73 @@ export class LzaCustomResource extends Construct {
         },
       ],
     );
+  }
+
+  /**
+   * Function to prepare Lambda Environment variables
+   * @param props {@link LzaCustomResourceProps}
+   * @returns
+   */
+  private prepareLambdaEnvironments(props: LzaCustomResourceProps):
+    | {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        [key: string]: any;
+      }
+    | undefined {
+    const lambdaEnvironmentList:
+      | {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          [key: string]: any;
+        }[] = props.lambda.environmentVariables ?? [];
+
+    const lambdaEnvironment: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      [key: string]: any;
+    } = {};
+
+    for (const environmentVariable of lambdaEnvironmentList) {
+      for (const [key, value] of Object.entries(environmentVariable)) {
+        lambdaEnvironment[key] = value;
+      }
+    }
+
+    return lambdaEnvironmentList.length > 0 ? lambdaEnvironment : undefined;
+
+    // return lambdaEnvironment;
+  }
+
+  /**
+   * Function to prepare Resource Properties
+   * @param props {@link LzaCustomResourceProps}
+   * @returns
+   */
+  private prepareResourceProperties(props: LzaCustomResourceProps):
+    | {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        [key: string]: any;
+      }
+    | undefined {
+    const resourcePropertyList:
+      | {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          [key: string]: any;
+        }[] = props.resource.properties ?? [{ debug: props.lambda.debug ?? false }];
+
+    if (props.resource.forceUpdate) {
+      resourcePropertyList.push({ uuid: uuidv4() });
+    }
+
+    const resourceProperties: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      [key: string]: any;
+    } = {};
+
+    for (const resourceProperty of resourcePropertyList) {
+      for (const [key, value] of Object.entries(resourceProperty)) {
+        resourceProperties[key] = value;
+      }
+    }
+
+    return resourcePropertyList.length > 0 ? resourceProperties : undefined;
   }
 }

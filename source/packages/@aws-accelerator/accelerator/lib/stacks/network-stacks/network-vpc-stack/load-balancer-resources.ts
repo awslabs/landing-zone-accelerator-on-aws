@@ -245,62 +245,53 @@ export class LoadBalancerResources {
 
   /**
    * Function to create Application Load Balancer
-   * @param vpcName string
-   * @param albItem {@link ApplicationLoadBalancerConfig}
-   * @param accessLogsBucketName string
-   * @param subnetIds string[]
-   * @param securityGroupIds string[]
-   * @param albMap Map<string, {@link ApplicationLoadBalancer}>
-   * @param subnetMap Map<string, {@link Subnet}>
-   * @param subnetLookups ({@link Subnet} | undefined)[]
-   * @param securityGroupLookups ({@link SecurityGroup} | undefined)[]
-   * @param props {@link AcceleratorStackProps}
+   * @param options
    */
-  private createApplicationLoadBalancer(
-    vpcName: string,
-    albItem: ApplicationLoadBalancerConfig,
-    accessLogsBucketName: string,
-    subnetIds: string[],
-    securityGroupIds: string[],
-    albMap: Map<string, ApplicationLoadBalancer>,
-    subnetMap: Map<string, Subnet>,
-    subnetLookups: (Subnet | undefined)[],
-    securityGroupLookups: (SecurityGroup | undefined)[],
-    props: AcceleratorStackProps,
-  ) {
-    const alb = new ApplicationLoadBalancer(this.stack, `${albItem.name}-${vpcName}`, {
-      name: albItem.name,
-      ssmPrefix: props.prefixes.ssmParamName,
-      subnets: subnetIds,
-      securityGroups: securityGroupIds ?? undefined,
-      scheme: albItem.scheme ?? 'internal',
-      accessLogsBucket: accessLogsBucketName,
-      attributes: albItem.attributes ?? undefined,
+  private createApplicationLoadBalancer(options: {
+    vpcName: string;
+    albItem: ApplicationLoadBalancerConfig;
+    accessLogsBucketName: string;
+    subnetIds: string[];
+    securityGroupIds: string[];
+    albMap: Map<string, ApplicationLoadBalancer>;
+    subnetMap: Map<string, Subnet>;
+    subnetLookups: (Subnet | undefined)[];
+    securityGroupLookups: (SecurityGroup | undefined)[];
+    props: AcceleratorStackProps;
+  }) {
+    const alb = new ApplicationLoadBalancer(this.stack, `${options.albItem.name}-${options.vpcName}`, {
+      name: options.albItem.name,
+      ssmPrefix: options.props.prefixes.ssmParamName,
+      subnets: options.subnetIds,
+      securityGroups: options.securityGroupIds ?? undefined,
+      scheme: options.albItem.scheme ?? 'internal',
+      accessLogsBucket: options.accessLogsBucketName,
+      attributes: options.albItem.attributes ?? undefined,
     });
-    albMap.set(`${vpcName}_${albItem.name}`, alb);
+    options.albMap.set(`${options.vpcName}_${options.albItem.name}`, alb);
 
-    for (const subnet of albItem.subnets || []) {
-      const subnetLookup = subnetMap.get(`${vpcName}_${subnet}`);
+    for (const subnet of options.albItem.subnets || []) {
+      const subnetLookup = options.subnetMap.get(`${options.vpcName}_${subnet}`);
       if (subnetLookup) {
         alb.node.addDependency(subnetLookup);
       }
     }
 
-    for (const subnet of subnetLookups || []) {
+    for (const subnet of options.subnetLookups || []) {
       if (subnet) {
         alb.node.addDependency(subnet);
       }
     }
 
-    for (const securityGroup of securityGroupLookups || []) {
+    for (const securityGroup of options.securityGroupLookups || []) {
       if (securityGroup) {
         alb.node.addDependency(securityGroup);
       }
     }
 
     this.stack.addSsmParameter({
-      logicalId: `${albItem.name}-${vpcName}-ssm`,
-      parameterName: this.stack.getSsmPath(SsmResourceType.ALB, [vpcName, albItem.name]),
+      logicalId: `${options.albItem.name}-${options.vpcName}-ssm`,
+      parameterName: this.stack.getSsmPath(SsmResourceType.ALB, [options.vpcName, options.albItem.name]),
       stringValue: alb.applicationLoadBalancerArn,
     });
   }
@@ -338,8 +329,8 @@ export class LoadBalancerResources {
         this.validateAlbSubnetId(subnetIds, albItem.name);
 
         // Create application load balancer
-        this.createApplicationLoadBalancer(
-          vpcItem.name,
+        this.createApplicationLoadBalancer({
+          vpcName: vpcItem.name,
           albItem,
           accessLogsBucketName,
           subnetIds,
@@ -349,7 +340,7 @@ export class LoadBalancerResources {
           subnetLookups,
           securityGroupLookups,
           props,
-        );
+        });
       }
     }
     return albMap;

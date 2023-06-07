@@ -252,28 +252,25 @@ export class ActiveDirectoryConfiguration extends Construct {
         content: fs.readFileSync(userDataScript.path, 'utf8'),
       };
 
-      if (userDataScript.name === 'JoinDomain') {
-        joinDomainScriptName = fileName;
-      }
-
-      if (userDataScript.name === 'ADGroupSetup') {
-        adGroupSetupScriptName = fileName;
-      }
-
-      if (userDataScript.name === 'ADConnectorPermissionsSetup') {
-        adConnectorPermissionSetupScriptName = fileName;
-      }
-
-      if (userDataScript.name === 'ADUserSetup') {
-        adUserSetupScriptName = fileName;
-      }
-
-      if (userDataScript.name === 'ADUserGroupSetup') {
-        adUserGroupSetupScriptName = fileName;
-      }
-
-      if (userDataScript.name === 'ConfigurePasswordPolicy') {
-        configurePasswordPolicyScriptName = fileName;
+      switch (userDataScript.name) {
+        case 'JoinDomain':
+          joinDomainScriptName = fileName;
+          break;
+        case 'ADGroupSetup':
+          adGroupSetupScriptName = fileName;
+          break;
+        case 'ADConnectorPermissionsSetup':
+          adConnectorPermissionSetupScriptName = fileName;
+          break;
+        case 'ADUserSetup':
+          adUserSetupScriptName = fileName;
+          break;
+        case 'ADUserGroupSetup':
+          adUserGroupSetupScriptName = fileName;
+          break;
+        case 'ConfigurePasswordPolicy':
+          configurePasswordPolicyScriptName = fileName;
+          break;
       }
     }
 

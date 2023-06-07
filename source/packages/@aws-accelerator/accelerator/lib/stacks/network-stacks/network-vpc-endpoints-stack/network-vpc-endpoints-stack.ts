@@ -24,6 +24,7 @@ import {
   NfwFirewallConfig,
   ResolverEndpointConfig,
   RouteTableConfig,
+  RouteTableEntryConfig,
   VpcConfig,
   VpcTemplatesConfig,
 } from '@aws-accelerator/config';
@@ -146,6 +147,29 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
   }
 
   /**
+   * Function to get firewall subnet ids
+   * @param firewallItem {@link NfwFirewallConfig}
+   * @returns subnetIds string[]
+   */
+  private getFirewallSubnetIds(firewallItem: NfwFirewallConfig): string[] {
+    const firewallSubnets: string[] = [];
+
+    // Check if VPC has matching subnets
+    for (const subnetItem of firewallItem.subnets) {
+      const subnetKey = `${firewallItem.vpc}_${subnetItem}`;
+      const subnetId = this.subnetMap.get(subnetKey);
+      if (subnetId) {
+        firewallSubnets.push(subnetId);
+      } else {
+        this.logger.error(`Create Network Firewall: subnet ${subnetItem} not found in VPC ${firewallItem.vpc}`);
+        throw new Error(`Configuration validation failed at runtime.`);
+      }
+    }
+
+    return firewallSubnets;
+  }
+
+  /**
    * Function to create Network firewalls
    * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
    * @param vpcId string
@@ -163,27 +187,61 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
 
       for (const firewallItem of firewalls) {
         if (firewallItem.vpc === vpcItem.name) {
-          const firewallSubnets: string[] = [];
-
-          // Check if VPC has matching subnets
-          for (const subnetItem of firewallItem.subnets) {
-            const subnetKey = `${firewallItem.vpc}_${subnetItem}`;
-            const subnetId = this.subnetMap.get(subnetKey);
-            if (subnetId) {
-              firewallSubnets.push(subnetId);
-            } else {
-              this.logger.error(`Create Network Firewall: subnet ${subnetItem} not found in VPC ${firewallItem.vpc}`);
-              throw new Error(`Configuration validation failed at runtime.`);
-            }
-          }
+          //Get firewall subnets
+          const firewallSubnetIds = this.getFirewallSubnetIds(firewallItem);
 
           // Create firewall
-          if (firewallSubnets.length > 0) {
-            const nfw = this.createNetworkFirewall(firewallItem, vpcId, firewallSubnets, firewallLogBucket);
+          if (firewallSubnetIds.length > 0) {
+            const nfw = this.createNetworkFirewall(firewallItem, vpcId, firewallSubnetIds, firewallLogBucket);
             this.firewallMap.set(firewallItem.name, nfw);
           }
         }
       }
+    }
+  }
+
+  private createEndpointRoute(
+    vpcName: string,
+    routeTableItem: RouteTableConfig,
+    routeTableEntryItem: RouteTableEntryConfig,
+  ) {
+    const endpointRouteId =
+      pascalCase(`${vpcName}Vpc`) +
+      pascalCase(`${routeTableItem.name}RouteTable`) +
+      pascalCase(routeTableEntryItem.name);
+
+    if (routeTableEntryItem.type && routeTableEntryItem.type === 'networkFirewall') {
+      const routeTableId = this.routeTableMap.get(`${vpcName}_${routeTableItem.name}`);
+      const destination = this.setRouteEntryDestination(
+        routeTableEntryItem,
+        setIpamSubnetRouteTableEntryArray(this.vpcsInScope),
+        vpcName,
+      );
+
+      // Check if route table exists im map
+      if (!routeTableId) {
+        this.logger.error(`Unable to locate route table ${routeTableItem.name}`);
+        throw new Error(`Configuration validation failed at runtime.`);
+      }
+
+      // Get Network Firewall
+      const firewall = this.firewallMap.get(routeTableEntryItem.target!);
+      const endpointAz = `${cdk.Stack.of(this).region}${routeTableEntryItem.targetAvailabilityZone}`;
+
+      if (!firewall) {
+        this.logger.error(`Unable to locate Network Firewall ${routeTableEntryItem.target}`);
+        throw new Error(`Configuration validation failed at runtime.`);
+      }
+      // Add route
+      this.logger.info(`Adding Network Firewall Route Table Entry ${routeTableEntryItem.name}`);
+      firewall.addNetworkFirewallRoute(
+        endpointRouteId,
+        destination,
+        endpointAz,
+        this.cloudwatchKey,
+        this.logRetention,
+        routeTableId,
+      );
     }
   }
 
@@ -197,44 +255,8 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
       for (const routeTableItem of vpcItem.routeTables ?? []) {
         // Check if endpoint routes exist
         for (const routeTableEntryItem of routeTableItem.routes ?? []) {
-          const endpointRouteId =
-            pascalCase(`${vpcItem.name}Vpc`) +
-            pascalCase(`${routeTableItem.name}RouteTable`) +
-            pascalCase(routeTableEntryItem.name);
-
-          if (routeTableEntryItem.type && routeTableEntryItem.type === 'networkFirewall') {
-            const routeTableId = this.routeTableMap.get(`${vpcItem.name}_${routeTableItem.name}`);
-            const destination = this.setRouteEntryDestination(
-              routeTableEntryItem,
-              setIpamSubnetRouteTableEntryArray(this.vpcsInScope),
-              vpcItem.name,
-            );
-
-            // Check if route table exists im map
-            if (!routeTableId) {
-              this.logger.error(`Unable to locate route table ${routeTableItem.name}`);
-              throw new Error(`Configuration validation failed at runtime.`);
-            }
-
-            // Get Network Firewall
-            const firewall = this.firewallMap.get(routeTableEntryItem.target!);
-            const endpointAz = `${cdk.Stack.of(this).region}${routeTableEntryItem.targetAvailabilityZone}`;
-
-            if (!firewall) {
-              this.logger.error(`Unable to locate Network Firewall ${routeTableEntryItem.target}`);
-              throw new Error(`Configuration validation failed at runtime.`);
-            }
-            // Add route
-            this.logger.info(`Adding Network Firewall Route Table Entry ${routeTableEntryItem.name}`);
-            firewall.addNetworkFirewallRoute(
-              endpointRouteId,
-              destination,
-              endpointAz,
-              this.cloudwatchKey,
-              this.logRetention,
-              routeTableId,
-            );
-          }
+          //Create endpoint route
+          this.createEndpointRoute(vpcItem.name, routeTableItem, routeTableEntryItem);
         }
       }
     }

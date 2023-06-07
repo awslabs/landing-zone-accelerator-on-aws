@@ -162,36 +162,40 @@ export class ApplicationLoadBalancer extends cdk.Resource implements IApplicatio
       order: listener.order,
       targetGroupArn: listenerTargetGroupArn,
     };
-    if (listener.type === 'forward') {
-      actionValues.forwardConfig = {
-        targetGroups: [{ targetGroupArn: listener.targetGroup }],
-        targetGroupStickinessConfig: listener.forwardConfig?.targetGroupStickinessConfig ?? undefined,
-      };
-    } else if (listener.type === 'redirect') {
-      if (listener.redirectConfig) {
-        actionValues.redirectConfig = {
-          host: listener.redirectConfig.host ?? undefined,
-          path: listener.redirectConfig.path ?? undefined,
-          port: listener.redirectConfig.port?.toString() ?? undefined,
-          protocol: listener.redirectConfig.protocol ?? undefined,
-          query: listener.redirectConfig.query ?? undefined,
-          statusCode: listener.redirectConfig.statusCode ?? undefined,
+    switch (listener.type) {
+      case 'forward':
+        actionValues.forwardConfig = {
+          targetGroups: [{ targetGroupArn: listener.targetGroup }],
+          targetGroupStickinessConfig: listener.forwardConfig?.targetGroupStickinessConfig ?? undefined,
         };
-      } else {
-        throw new Error(`Listener ${listener.name} is set to redirect but redirectConfig is not defined`);
-      }
-    } else if (listener.type === 'fixed-response') {
-      if (listener.fixedResponseConfig) {
-        actionValues.fixedResponseConfig = {
-          contentType: listener.fixedResponseConfig.contentType ?? undefined,
-          messageBody: listener.fixedResponseConfig.messageBody ?? undefined,
-          statusCode: listener.fixedResponseConfig.statusCode ?? undefined,
-        };
-      } else {
-        throw new Error(`Listener ${listener.name} is set to fixed-response but fixedResponseConfig is not defined`);
-      }
-    } else {
-      throw new Error(`Listener ${listener.name} is not set to forward, fixed-response or redirect`);
+        break;
+      case 'redirect':
+        if (listener.redirectConfig) {
+          actionValues.redirectConfig = {
+            host: listener.redirectConfig.host ?? undefined,
+            path: listener.redirectConfig.path ?? undefined,
+            port: listener.redirectConfig.port?.toString() ?? undefined,
+            protocol: listener.redirectConfig.protocol ?? undefined,
+            query: listener.redirectConfig.query ?? undefined,
+            statusCode: listener.redirectConfig.statusCode ?? undefined,
+          };
+        } else {
+          throw new Error(`Listener ${listener.name} is set to redirect but redirectConfig is not defined`);
+        }
+        break;
+      case 'fixed-response':
+        if (listener.fixedResponseConfig) {
+          actionValues.fixedResponseConfig = {
+            contentType: listener.fixedResponseConfig.contentType ?? undefined,
+            messageBody: listener.fixedResponseConfig.messageBody ?? undefined,
+            statusCode: listener.fixedResponseConfig.statusCode ?? undefined,
+          };
+        } else {
+          throw new Error(`Listener ${listener.name} is set to fixed-response but fixedResponseConfig is not defined`);
+        }
+        break;
+      default:
+        throw new Error(`Listener ${listener.name} is not set to forward, fixed-response or redirect`);
     }
 
     return actionValues as cdk.aws_elasticloadbalancingv2.CfnListener.ActionProperty;
@@ -214,62 +218,65 @@ export class ApplicationLoadBalancer extends cdk.Resource implements IApplicatio
         value: `${cdk.Stack.of(this).account}/${cdk.Stack.of(this).region}/${props.name}`,
       },
     ];
-    if (props.attributes) {
-      if (props.attributes.deletionProtection) {
-        albAttributesProperties.push({
-          key: 'deletion_protection.enabled',
-          value: props.attributes.deletionProtection.toString(),
-        });
-      }
-      if (props.attributes.idleTimeout) {
-        albAttributesProperties.push({
-          key: 'idle_timeout.timeout_seconds',
-          value: props.attributes.idleTimeout.toString(),
-        });
-      }
-      if (props.attributes.routingHttpDesyncMitigationMode) {
-        albAttributesProperties.push({
-          key: 'routing.http.desync_mitigation_mode',
-          value: props.attributes.routingHttpDesyncMitigationMode,
-        });
-      }
-      if (props.attributes.routingHttpDropInvalidHeader) {
-        albAttributesProperties.push({
-          key: 'routing.http.drop_invalid_header_fields.enabled',
-          value: props.attributes.routingHttpDropInvalidHeader.toString(),
-        });
-      }
-      if (props.attributes.routingHttpXAmznTlsCipherEnable) {
-        albAttributesProperties.push({
-          key: 'routing.http.x_amzn_tls_version_and_cipher_suite.enabled',
-          value: props.attributes.routingHttpXAmznTlsCipherEnable.toString(),
-        });
-      }
-      if (props.attributes.routingHttpXffClientPort) {
-        albAttributesProperties.push({
-          key: 'routing.http.xff_client_port.enabled',
-          value: props.attributes.routingHttpXffClientPort.toString(),
-        });
-      }
-      if (props.attributes.routingHttpXffHeaderProcessingMode) {
-        albAttributesProperties.push({
-          key: 'routing.http.xff_header_processing.mode',
-          value: props.attributes.routingHttpXffHeaderProcessingMode,
-        });
-      }
-      if (props.attributes.http2Enabled) {
-        albAttributesProperties.push({
-          key: 'routing.http2.enabled',
-          value: props.attributes.http2Enabled.toString(),
-        });
-      }
-      if (props.attributes.wafFailOpen) {
-        albAttributesProperties.push({
-          key: 'waf.fail_open.enabled',
-          value: props.attributes.wafFailOpen.toString(),
-        });
-      }
+    if (!props.attributes) {
+      return albAttributesProperties;
     }
+
+    if (props.attributes.deletionProtection) {
+      albAttributesProperties.push({
+        key: 'deletion_protection.enabled',
+        value: props.attributes.deletionProtection.toString(),
+      });
+    }
+    if (props.attributes.idleTimeout) {
+      albAttributesProperties.push({
+        key: 'idle_timeout.timeout_seconds',
+        value: props.attributes.idleTimeout.toString(),
+      });
+    }
+    if (props.attributes.routingHttpDesyncMitigationMode) {
+      albAttributesProperties.push({
+        key: 'routing.http.desync_mitigation_mode',
+        value: props.attributes.routingHttpDesyncMitigationMode,
+      });
+    }
+    if (props.attributes.routingHttpDropInvalidHeader) {
+      albAttributesProperties.push({
+        key: 'routing.http.drop_invalid_header_fields.enabled',
+        value: props.attributes.routingHttpDropInvalidHeader.toString(),
+      });
+    }
+    if (props.attributes.routingHttpXAmznTlsCipherEnable) {
+      albAttributesProperties.push({
+        key: 'routing.http.x_amzn_tls_version_and_cipher_suite.enabled',
+        value: props.attributes.routingHttpXAmznTlsCipherEnable.toString(),
+      });
+    }
+    if (props.attributes.routingHttpXffClientPort) {
+      albAttributesProperties.push({
+        key: 'routing.http.xff_client_port.enabled',
+        value: props.attributes.routingHttpXffClientPort.toString(),
+      });
+    }
+    if (props.attributes.routingHttpXffHeaderProcessingMode) {
+      albAttributesProperties.push({
+        key: 'routing.http.xff_header_processing.mode',
+        value: props.attributes.routingHttpXffHeaderProcessingMode,
+      });
+    }
+    if (props.attributes.http2Enabled) {
+      albAttributesProperties.push({
+        key: 'routing.http2.enabled',
+        value: props.attributes.http2Enabled.toString(),
+      });
+    }
+    if (props.attributes.wafFailOpen) {
+      albAttributesProperties.push({
+        key: 'waf.fail_open.enabled',
+        value: props.attributes.wafFailOpen.toString(),
+      });
+    }
+
     return albAttributesProperties;
   }
 }

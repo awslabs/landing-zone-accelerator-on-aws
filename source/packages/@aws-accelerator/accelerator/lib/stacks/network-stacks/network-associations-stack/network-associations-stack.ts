@@ -77,7 +77,7 @@ import {
 import { SsmResourceType } from '@aws-accelerator/utils';
 
 import path from 'path';
-import { AcceleratorStackProps, NagSuppressionDetailType } from '../../accelerator-stack';
+import { AcceleratorStackProps, NagSuppressionDetailType, NagSuppressionRuleIds } from '../../accelerator-stack';
 import { NetworkStack } from '../network-stack';
 import { SharedResources } from './shared-resources';
 
@@ -101,7 +101,7 @@ export class NetworkAssociationsStack extends NetworkStack {
   private transitGatewayRouteTables: Map<string, string>;
   private transitGatewayAttachments: Map<string, string>;
   private crossAcctRouteProvider?: cdk.custom_resources.Provider;
-  private nagSuppressionDetails: NagSuppressionDetailType[];
+  private nagSuppressionDetails: NagSuppressionDetailType[] = [];
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
@@ -115,7 +115,6 @@ export class NetworkAssociationsStack extends NetworkStack {
       this.transitGateways = new Map<string, string>();
       this.transitGatewayAttachments = new Map<string, string>();
       this.transitGatewayRouteTables = new Map<string, string>();
-      this.nagSuppressionDetails = [];
 
       this.lambdaKey = cdk.aws_kms.Key.fromKeyArn(
         this,
@@ -229,7 +228,7 @@ export class NetworkAssociationsStack extends NetworkStack {
       //
       // Create Nag Suppressions
       //
-      this.createNagSuppressions(this.nagSuppressionDetails);
+      this.addResourceSuppressionsByPath(this.nagSuppressionDetails);
 
       this.logger.info('Completed stack synthesis');
     } catch (err) {
@@ -719,7 +718,7 @@ export class NetworkAssociationsStack extends NetworkStack {
       }).provider;
 
       this.nagSuppressionDetails.push({
-        type: 'IAM4',
+        id: NagSuppressionRuleIds.IAM4,
         details: [
           {
             path: `${this.stackName}/CrossAccountRouteFramework/CrossAccountRouteFunction/ServiceRole/Resource`,
@@ -733,7 +732,7 @@ export class NetworkAssociationsStack extends NetworkStack {
       });
 
       this.nagSuppressionDetails.push({
-        type: 'IAM5',
+        id: NagSuppressionRuleIds.IAM5,
         details: [
           {
             path: `${this.stackName}/CrossAccountRouteFramework/CrossAccountRouteFunction/ServiceRole/DefaultPolicy/Resource`,
@@ -1081,6 +1080,32 @@ export class NetworkAssociationsStack extends NetworkStack {
   }
 
   /**
+   * Function to process Transit Gateway attachment account list and create Transit Gateway Route Table Associations
+   * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
+   * @param tgwAttachmentItem {@link TransitGatewayAttachmentConfig}
+   * @param accountNames string[]
+   * @param excludedAccountIds string[]
+   */
+  private processTransitGatewayAttachmentAccountsToCreateTgwRtAssociations(
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    tgwAttachmentItem: TransitGatewayAttachmentConfig,
+    accountNames: string[],
+    excludedAccountIds: string[],
+  ) {
+    // Get the Transit Gateway Attachment ID
+    for (const owningAccount of accountNames) {
+      const owningAccountId = this.props.accountsConfig.getAccountId(owningAccount);
+      const attachmentKey = `${tgwAttachmentItem.transitGateway.name}_${owningAccount}_${vpcItem.name}`;
+      // Skip iteration if account is excluded
+      if (excludedAccountIds.includes(owningAccountId)) {
+        continue;
+      }
+      // Create TGW route table association
+      this.createTransitGatewayRouteTableAssociation(vpcItem, tgwAttachmentItem, owningAccount, attachmentKey);
+    }
+  }
+
+  /**
    * Create transit gateway route table associations for VPC attachments
    * @param vpcItem
    */
@@ -1093,16 +1118,12 @@ export class NetworkAssociationsStack extends NetworkStack {
         const accountId = this.props.accountsConfig.getAccountId(tgwAttachmentItem.transitGateway.account);
         if (accountId === cdk.Stack.of(this).account) {
           // Get the Transit Gateway Attachment ID
-          for (const owningAccount of accountNames) {
-            const owningAccountId = this.props.accountsConfig.getAccountId(owningAccount);
-            const attachmentKey = `${tgwAttachmentItem.transitGateway.name}_${owningAccount}_${vpcItem.name}`;
-            // Skip iteration if account is excluded
-            if (excludedAccountIds.includes(owningAccountId)) {
-              continue;
-            }
-            // Create TGW route table association
-            this.createTransitGatewayRouteTableAssociation(vpcItem, tgwAttachmentItem, owningAccount, attachmentKey);
-          }
+          this.processTransitGatewayAttachmentAccountsToCreateTgwRtAssociations(
+            vpcItem,
+            tgwAttachmentItem,
+            accountNames,
+            excludedAccountIds,
+          );
         }
       }
     }
@@ -1152,6 +1173,32 @@ export class NetworkAssociationsStack extends NetworkStack {
   }
 
   /**
+   * Function to process Transit Gateway attachment account list and create Transit Gateway Route Table Propagations
+   * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
+   * @param tgwAttachmentItem {@link TransitGatewayAttachmentConfig}
+   * @param accountNames string[]
+   * @param excludedAccountIds string[]
+   */
+  private processTransitGatewayAttachmentAccountsToCreateTgwRtPropagations(
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    tgwAttachmentItem: TransitGatewayAttachmentConfig,
+    accountNames: string[],
+    excludedAccountIds: string[],
+  ) {
+    // Loop through attachment owner accounts
+    for (const owningAccount of accountNames) {
+      const owningAccountId = this.props.accountsConfig.getAccountId(owningAccount);
+      const attachmentKey = `${tgwAttachmentItem.transitGateway.name}_${owningAccount}_${vpcItem.name}`;
+      // Skip iteration if account is excluded
+      if (excludedAccountIds.includes(owningAccountId)) {
+        continue;
+      }
+
+      // Create TGW route table propagation
+      this.createTransitGatewayRouteTablePropagation(vpcItem, tgwAttachmentItem, owningAccount, attachmentKey);
+    }
+  }
+  /**
    * Create transit gateway route table propagations for VPC attachments
    * @param vpcItem
    */
@@ -1163,18 +1210,12 @@ export class NetworkAssociationsStack extends NetworkStack {
       for (const tgwAttachmentItem of vpcItem.transitGatewayAttachments ?? []) {
         const accountId = this.props.accountsConfig.getAccountId(tgwAttachmentItem.transitGateway.account);
         if (accountId === cdk.Stack.of(this).account) {
-          // Loop through attachment owner accounts
-          for (const owningAccount of accountNames) {
-            const owningAccountId = this.props.accountsConfig.getAccountId(owningAccount);
-            const attachmentKey = `${tgwAttachmentItem.transitGateway.name}_${owningAccount}_${vpcItem.name}`;
-            // Skip iteration if account is excluded
-            if (excludedAccountIds.includes(owningAccountId)) {
-              continue;
-            }
-
-            // Create TGW route table propagation
-            this.createTransitGatewayRouteTablePropagation(vpcItem, tgwAttachmentItem, owningAccount, attachmentKey);
-          }
+          this.processTransitGatewayAttachmentAccountsToCreateTgwRtPropagations(
+            vpcItem,
+            tgwAttachmentItem,
+            accountNames,
+            excludedAccountIds,
+          );
         }
       }
     }
@@ -2597,7 +2638,7 @@ export class NetworkAssociationsStack extends NetworkStack {
           },
         );
         this.nagSuppressionDetails.push({
-          type: 'VPC3',
+          id: NagSuppressionRuleIds.VPC3,
           details: [
             {
               path: `${this.stackName}/${pascalCase(vpcItem.name)}Vpc${pascalCase(naclItem.name)}Nacl/${pascalCase(
@@ -2651,7 +2692,7 @@ export class NetworkAssociationsStack extends NetworkStack {
         );
 
         this.nagSuppressionDetails.push({
-          type: 'VPC3',
+          id: NagSuppressionRuleIds.VPC3,
           details: [
             {
               path: `${this.stackName}/${pascalCase(vpcItem.name)}Vpc${pascalCase(naclItem.name)}Nacl/${pascalCase(
@@ -2813,7 +2854,7 @@ export class NetworkAssociationsStack extends NetworkStack {
 
       // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
       this.nagSuppressionDetails.push({
-        type: 'IAM5',
+        id: NagSuppressionRuleIds.IAM5,
         details: [
           {
             path: `${this.stackName}/${pascalCase(
@@ -2826,7 +2867,7 @@ export class NetworkAssociationsStack extends NetworkStack {
 
       // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
       this.nagSuppressionDetails.push({
-        type: 'IAM4',
+        id: NagSuppressionRuleIds.IAM4,
         details: [
           {
             path: `${this.stackName}/${pascalCase(
@@ -2839,7 +2880,7 @@ export class NetworkAssociationsStack extends NetworkStack {
 
       // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
       this.nagSuppressionDetails.push({
-        type: 'IAM4',
+        id: NagSuppressionRuleIds.IAM4,
         details: [
           {
             path: `${this.stackName}/${pascalCase(
@@ -2852,7 +2893,7 @@ export class NetworkAssociationsStack extends NetworkStack {
 
       // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
       this.nagSuppressionDetails.push({
-        type: 'IAM5',
+        id: NagSuppressionRuleIds.IAM5,
         details: [
           {
             path: `${this.stackName}/${pascalCase(
@@ -2888,7 +2929,7 @@ export class NetworkAssociationsStack extends NetworkStack {
 
       // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
       this.nagSuppressionDetails.push({
-        type: 'IAM4',
+        id: NagSuppressionRuleIds.IAM4,
         details: [
           {
             path: `${this.stackName}/${pascalCase(managedActiveDirectory.name)}${pascalCase(
@@ -2901,7 +2942,7 @@ export class NetworkAssociationsStack extends NetworkStack {
 
       // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
       this.nagSuppressionDetails.push({
-        type: 'IAM4',
+        id: NagSuppressionRuleIds.IAM4,
         details: [
           {
             path: `${this.stackName}/${pascalCase(managedActiveDirectory.name)}${pascalCase(
@@ -2914,7 +2955,7 @@ export class NetworkAssociationsStack extends NetworkStack {
 
       // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
       this.nagSuppressionDetails.push({
-        type: 'IAM5',
+        id: NagSuppressionRuleIds.IAM5,
         details: [
           {
             path: `${this.stackName}/${pascalCase(managedActiveDirectory.name)}${pascalCase(
@@ -2927,7 +2968,7 @@ export class NetworkAssociationsStack extends NetworkStack {
 
       // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
       this.nagSuppressionDetails.push({
-        type: 'IAM5',
+        id: NagSuppressionRuleIds.IAM5,
         details: [
           {
             path: `${this.stackName}/${pascalCase(managedActiveDirectory.name)}${pascalCase(
@@ -2970,7 +3011,7 @@ export class NetworkAssociationsStack extends NetworkStack {
 
         // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
         this.nagSuppressionDetails.push({
-          type: 'IAM4',
+          id: NagSuppressionRuleIds.IAM4,
           details: [
             {
               path: `${this.stackName}/${pascalCase(
@@ -2983,7 +3024,7 @@ export class NetworkAssociationsStack extends NetworkStack {
 
         // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
         this.nagSuppressionDetails.push({
-          type: 'IAM4',
+          id: NagSuppressionRuleIds.IAM4,
           details: [
             {
               path: `${this.stackName}/${pascalCase(
@@ -2996,7 +3037,7 @@ export class NetworkAssociationsStack extends NetworkStack {
 
         // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
         this.nagSuppressionDetails.push({
-          type: 'IAM5',
+          id: NagSuppressionRuleIds.IAM5,
           details: [
             {
               path: `${this.stackName}/${pascalCase(
@@ -3009,7 +3050,7 @@ export class NetworkAssociationsStack extends NetworkStack {
 
         // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
         this.nagSuppressionDetails.push({
-          type: 'IAM5',
+          id: NagSuppressionRuleIds.IAM5,
           details: [
             {
               path: `${this.stackName}/${pascalCase(
@@ -3064,7 +3105,7 @@ export class NetworkAssociationsStack extends NetworkStack {
 
         // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
         this.nagSuppressionDetails.push({
-          type: 'IAM4',
+          id: NagSuppressionRuleIds.IAM4,
           details: [
             {
               path: `${this.stackName}/${pascalCase(managedActiveDirectory.name)}ActiveDirectory/${pascalCase(
@@ -3077,7 +3118,7 @@ export class NetworkAssociationsStack extends NetworkStack {
 
         // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
         this.nagSuppressionDetails.push({
-          type: 'IAM4',
+          id: NagSuppressionRuleIds.IAM4,
           details: [
             {
               path: `${this.stackName}/${pascalCase(managedActiveDirectory.name)}ActiveDirectory/${pascalCase(
@@ -3090,7 +3131,7 @@ export class NetworkAssociationsStack extends NetworkStack {
 
         // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
         this.nagSuppressionDetails.push({
-          type: 'IAM5',
+          id: NagSuppressionRuleIds.IAM5,
           details: [
             {
               path: `${this.stackName}/${pascalCase(managedActiveDirectory.name)}ActiveDirectory/${pascalCase(
@@ -3103,7 +3144,7 @@ export class NetworkAssociationsStack extends NetworkStack {
 
         // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
         this.nagSuppressionDetails.push({
-          type: 'IAM5',
+          id: NagSuppressionRuleIds.IAM5,
           details: [
             {
               path: `${this.stackName}/${pascalCase(managedActiveDirectory.name)}ActiveDirectory/${pascalCase(
@@ -3162,7 +3203,7 @@ export class NetworkAssociationsStack extends NetworkStack {
 
     // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
     this.nagSuppressionDetails.push({
-      type: 'IAM4',
+      id: NagSuppressionRuleIds.IAM4,
       details: [
         {
           path: `${this.stackName}/${pascalCase(
@@ -3175,7 +3216,7 @@ export class NetworkAssociationsStack extends NetworkStack {
 
     // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
     this.nagSuppressionDetails.push({
-      type: 'IAM4',
+      id: NagSuppressionRuleIds.IAM4,
       details: [
         {
           path: `${this.stackName}/${pascalCase(
@@ -3188,7 +3229,7 @@ export class NetworkAssociationsStack extends NetworkStack {
 
     // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
     this.nagSuppressionDetails.push({
-      type: 'IAM5',
+      id: NagSuppressionRuleIds.IAM5,
       details: [
         {
           path: `${this.stackName}/${pascalCase(
@@ -3201,7 +3242,7 @@ export class NetworkAssociationsStack extends NetworkStack {
 
     // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
     this.nagSuppressionDetails.push({
-      type: 'IAM5',
+      id: NagSuppressionRuleIds.IAM5,
       details: [
         {
           path: `${this.stackName}/${pascalCase(
@@ -3308,7 +3349,7 @@ export class NetworkAssociationsStack extends NetworkStack {
 
       // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
       this.nagSuppressionDetails.push({
-        type: 'IAM4',
+        id: NagSuppressionRuleIds.IAM4,
         details: [
           {
             path:
@@ -3324,7 +3365,7 @@ export class NetworkAssociationsStack extends NetworkStack {
 
       // AwsSolutions-EC28: The EC2 instance/AutoScaling launch configuration does not have detailed monitoring enabled
       this.nagSuppressionDetails.push({
-        type: 'EC28',
+        id: NagSuppressionRuleIds.EC28,
         details: [
           {
             path:
@@ -3340,7 +3381,7 @@ export class NetworkAssociationsStack extends NetworkStack {
 
       // AwsSolutions-EC29: The EC2 instance is not part of an ASG and has Termination Protection disabled
       this.nagSuppressionDetails.push({
-        type: 'EC29',
+        id: NagSuppressionRuleIds.EC29,
         details: [
           {
             path:
@@ -3356,7 +3397,7 @@ export class NetworkAssociationsStack extends NetworkStack {
 
       // AwsSolutions-EC28: The EC2 instance/AutoScaling launch configuration does not have detailed monitoring enabled
       this.nagSuppressionDetails.push({
-        type: 'EC28',
+        id: NagSuppressionRuleIds.EC28,
         details: [
           {
             path:
@@ -3372,7 +3413,7 @@ export class NetworkAssociationsStack extends NetworkStack {
 
       // AwsSolutions-EC29: The EC2 instance is not part of an ASG and has Termination Protection disabled.
       this.nagSuppressionDetails.push({
-        type: 'EC29',
+        id: NagSuppressionRuleIds.EC29,
         details: [
           {
             path:
@@ -3389,7 +3430,7 @@ export class NetworkAssociationsStack extends NetworkStack {
       for (const adUser of adInstanceConfig.adUsers ?? []) {
         // AwsSolutions-SMG4: The secret does not have automatic rotation scheduled
         this.nagSuppressionDetails.push({
-          type: 'SMG4',
+          id: NagSuppressionRuleIds.SMG4,
           details: [
             {
               path:

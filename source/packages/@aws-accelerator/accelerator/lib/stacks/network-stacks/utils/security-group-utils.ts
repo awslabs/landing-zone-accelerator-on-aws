@@ -607,13 +607,16 @@ function prepareSecurityGroupRuleProps(
     toPort?: number;
     description?: string;
   },
-  prefixListMap: Map<string, PrefixList> | Map<string, string>,
-  subnetMap: Map<string, Subnet> | Map<string, IIpamSubnet>,
-  securityGroupMap?: Map<string, SecurityGroup>,
+  maps: {
+    prefixLists: Map<string, PrefixList> | Map<string, string>;
+    subnets: Map<string, Subnet> | Map<string, IIpamSubnet>;
+    securityGroups?: Map<string, SecurityGroup>;
+  },
+
   vpcName?: string,
 ) {
   // Conditional to only process non-security group sources
-  if (!securityGroupMap) {
+  if (!maps.securityGroups) {
     //
     // IP source
     //
@@ -624,20 +627,20 @@ function prepareSecurityGroupRuleProps(
     // Subnet source
     //
     if (NetworkConfigTypes.subnetSourceConfig.is(source)) {
-      rules.push(...processSubnetSource(vpcResources, subnetMap, source, props));
+      rules.push(...processSubnetSource(vpcResources, maps.subnets, source, props));
     }
     //
     // Prefix List Source
     //
     if (NetworkConfigTypes.prefixListSourceConfig.is(source)) {
-      rules.push(...processPrefixListSource(prefixListMap, source, props));
+      rules.push(...processPrefixListSource(maps.prefixLists, source, props));
     }
   } else {
     //
     // Security Group Source
     //
     if (NetworkConfigTypes.securityGroupSourceConfig.is(source) && vpcName) {
-      rules.push(...processSecurityGroupSource(securityGroupMap, vpcName, source, props));
+      rules.push(...processSecurityGroupSource(maps.securityGroups, vpcName, source, props));
     }
   }
 }
@@ -674,9 +677,7 @@ function processSecurityGroupRuleSources(
       source,
       rules,
       props,
-      prefixListMap,
-      subnetMap,
-      securityGroupMap,
+      { prefixLists: prefixListMap, subnets: subnetMap, securityGroups: securityGroupMap },
       vpcName,
     );
   }
