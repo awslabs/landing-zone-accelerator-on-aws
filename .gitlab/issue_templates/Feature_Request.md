@@ -1,8 +1,10 @@
-Before creating an issue, please read through existing issues to ensure you are not creating a duplicate:
+<!-- 
+    Before creating an issue, please read through existing issues to ensure you are not creating a duplicate:
 
-* https://gitlab.aws.dev/landing-zone-accelerator/landing-zone-accelerator-on-aws/-/issues
+    * https://gitlab.aws.dev/landing-zone-accelerator/landing-zone-accelerator-on-aws/-/issues
 
-Please complete all fields to ensure your submission is properly reviewed and prioritized.
+    Please complete all fields to ensure your submission is properly reviewed and prioritized.
+!-->
 
 ## Problem Statement
 <!-- What is the issue being faced and needs addressing? !-->
@@ -32,4 +34,4 @@ Please complete all fields to ensure your submission is properly reviewed and pr
 ## Examples
 <!-- Are there any examples of this which exist in other solutions? !-->
 
-/label ~"feature request" ~"New"
+/label ~"Feature Request" ~New 

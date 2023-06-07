@@ -1,8 +1,10 @@
-Before creating an issue, please read through existing issues to ensure you are not creating a duplicate:
+<!-- 
+    Before creating an issue, please read through existing issues to ensure you are not creating a duplicate:
 
-* https://gitlab.aws.dev/landing-zone-accelerator/landing-zone-accelerator-on-aws/-/issues
+    * https://gitlab.aws.dev/landing-zone-accelerator/landing-zone-accelerator-on-aws/-/issues
 
-Please complete all fields to ensure your submission is properly reviewed and prioritized.
+    Please complete all fields to ensure your submission is properly reviewed and prioritized.
+!-->
 
 ## Summary
 <!-- A brief description of what happened when you tried to perform an action !-->
@@ -22,4 +24,4 @@ Please complete all fields to ensure your submission is properly reviewed and pr
 ## Possible fixes
 <!-- If you can, link to the line of code that might be responsible for the problem !-->
 
-/label ~bug ~"New"
+/label ~Bug ~New

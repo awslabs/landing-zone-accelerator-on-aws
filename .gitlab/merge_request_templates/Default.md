@@ -1,6 +1,8 @@
-Development standards and best practices can be found in [DEVELOPING.md](https://github.com/awslabs/landing-zone-accelerator-on-aws/blob/main/DEVELOPING.md)
+<!-- 
+   Development standards and best practices can be found in [DEVELOPING.md](https://github.com/awslabs/landing-zone-accelerator-on-aws/blob/main/DEVELOPING.md)
 
-Please complete all fields to ensure your submission is properly reviewed and prioritized.
+   Please complete all fields to ensure your submission is properly reviewed and prioritized.
+!-->
 
 ## Description
 <!-- Describe how customers will benefit from this feature. -->
@@ -11,11 +13,11 @@ Please complete all fields to ensure your submission is properly reviewed and pr
 <!-- Please link to the issue(s) here: -->
 
 ## What is the [security risk](https://panost.pages.aws.dev/proserve-security-guidance/terms/#risk) introduced by this change?
-<!-- If you believe that an adversary will not be interested in attempting to exploit the new functionality, then post your reasons under the first question and skip the other two. If you are not sure how to respond to any of these questions, please reach out to Panos Thomas (https://phonetool.amazon.com/users/panost). -->
+<!-- If you believe that an adversary will not be interested in attempting to exploit the new functionality, then post your reasons under the first question and skip the other two. -->
 1. What value might the new functionality have for an adversary?
    <!-- This question is about the "why" of an attack, not about whether it succeeds or not. Your response should therefore not take into account the security controls that are in place to prevent attacks. -->
 2. If your life depended on it, how would you attempt to exploit it?
-3. What [security controls](https://panost.pages.aws.dev/proserve-security-guidance/controls) are in place to defend against such attempts?
+3. What [security controls](https://panost.pages.aws.dev/proserve-security-guidance/controls/) are in place to defend against such attempts?
 
 ## How has this been tested?
 <!-- Please describe in detail how you tested your changes. -->
