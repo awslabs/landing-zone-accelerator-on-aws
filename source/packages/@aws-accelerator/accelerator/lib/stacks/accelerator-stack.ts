@@ -95,13 +95,28 @@ export enum ServiceLinkedRoleType {
 }
 
 /**
+ * Allowed rule id type for NagSuppression
+ */
+export enum NagSuppressionRuleIds {
+  DDB3 = 'DDB3',
+  EC28 = 'EC28',
+  EC29 = 'EC29',
+  IAM4 = 'IAM4',
+  IAM5 = 'IAM5',
+  SMG4 = 'SMG4',
+  VPC3 = 'VPC3',
+}
+
+// = 'IAM4' | 'IAM5' | 'VPC3' | 'EC28' | 'EC29' | 'SMG4' | 'DDB3';
+
+/**
  * NagSuppression Detail Type
  */
 export type NagSuppressionDetailType = {
   /**
-   * Suppressions type
+   * Suppressions rule id
    */
-  type: 'IAM4' | 'IAM5' | 'VPC3' | 'EC28' | 'EC29' | 'SMG4';
+  id: NagSuppressionRuleIds;
   /**
    * Suppressions details
    */
@@ -188,6 +203,11 @@ export abstract class AcceleratorStack extends cdk.Stack {
   protected logger: winston.Logger;
   protected props: AcceleratorStackProps;
   protected organizationId: string | undefined;
+
+  /**
+   * Nag suppression input list
+   */
+  protected nagSuppressionInputs: NagSuppressionDetailType[] = [];
 
   /**
    * Accelerator SSM parameters
@@ -465,14 +485,14 @@ export abstract class AcceleratorStack extends cdk.Stack {
   }
 
   /**
-   * Function to create NagSuppressions
+   * Function to add resource suppressions by path
    * @param inputs {@link NagSuppressionDetailType}
    */
-  protected createNagSuppressions(inputs: NagSuppressionDetailType[]): void {
+  protected addResourceSuppressionsByPath(inputs: NagSuppressionDetailType[]): void {
     for (const input of inputs) {
       for (const detail of input.details) {
         NagSuppressions.addResourceSuppressionsByPath(this, detail.path, [
-          { id: `AwsSolutions-${input.type}`, reason: detail.reason },
+          { id: `AwsSolutions-${input.id}`, reason: detail.reason },
         ]);
       }
     }

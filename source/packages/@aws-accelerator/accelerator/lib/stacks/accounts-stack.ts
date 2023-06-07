@@ -12,7 +12,6 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import * as path from 'path';
@@ -25,7 +24,12 @@ import {
   MoveAccountRule,
   RevertScpChanges,
 } from '@aws-accelerator/constructs';
-import { AcceleratorKeyType, AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import {
+  AcceleratorKeyType,
+  AcceleratorStack,
+  AcceleratorStackProps,
+  NagSuppressionRuleIds,
+} from './accelerator-stack';
 import { ServiceControlPolicyConfig } from '@aws-accelerator/config';
 import { SsmResourceType } from '@aws-accelerator/utils';
 
@@ -118,6 +122,11 @@ export class AccountsStack extends AcceleratorStack {
     // Create SSM parameters
     //
     this.createSsmParameters();
+
+    //
+    // Create NagSuppressions
+    //
+    this.addResourceSuppressionsByPath(this.nagSuppressionInputs);
 
     this.logger.info('Completed stack synthesis');
   }
@@ -227,40 +236,37 @@ export class AccountsStack extends AcceleratorStack {
         });
 
         // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
-        NagSuppressions.addResourceSuppressionsByPath(
-          this,
-          `${this.stackName}/MoveAccountRule/MoveAccountRole/Policy/Resource`,
-          [
+        this.nagSuppressionInputs.push({
+          id: NagSuppressionRuleIds.IAM5,
+          details: [
             {
-              id: 'AwsSolutions-IAM5',
+              path: `${this.stackName}/MoveAccountRule/MoveAccountRole/Policy/Resource`,
               reason: 'AWS Custom resource provider role created by cdk.',
             },
           ],
-        );
+        });
 
         // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-        NagSuppressions.addResourceSuppressionsByPath(
-          this,
-          `${this.stackName}/MoveAccountRule/MoveAccountTargetFunction/ServiceRole/Resource`,
-          [
+        this.nagSuppressionInputs.push({
+          id: NagSuppressionRuleIds.IAM4,
+          details: [
             {
-              id: 'AwsSolutions-IAM4',
+              path: `${this.stackName}/MoveAccountRule/MoveAccountTargetFunction/ServiceRole/Resource`,
               reason: 'AWS Custom resource provider role created by cdk.',
             },
           ],
-        );
+        });
 
         // AwsSolutions-IAM5: The IAM entity contains wildcard permissions.
-        NagSuppressions.addResourceSuppressionsByPath(
-          this,
-          `${this.stackName}/MoveAccountRule/MoveAccountTargetFunction/ServiceRole/DefaultPolicy/Resource`,
-          [
+        this.nagSuppressionInputs.push({
+          id: NagSuppressionRuleIds.IAM5,
+          details: [
             {
-              id: 'AwsSolutions-IAM5',
+              path: `${this.stackName}/MoveAccountRule/MoveAccountTargetFunction/ServiceRole/DefaultPolicy/Resource`,
               reason: 'AWS Custom resource provider role created by cdk.',
             },
           ],
-        );
+        });
       }
     }
     return moveAccountRule;
@@ -481,28 +487,26 @@ export class AccountsStack extends AcceleratorStack {
       });
 
       // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-      NagSuppressions.addResourceSuppressionsByPath(
-        this,
-        `${this.stackName}/AttachQuarantineScpFunction/ServiceRole/Resource`,
-        [
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
           {
-            id: 'AwsSolutions-IAM4',
+            path: `${this.stackName}/AttachQuarantineScpFunction/ServiceRole/Resource`,
             reason: 'AWS Custom resource provider framework-role created by cdk.',
           },
         ],
-      );
+      });
 
       // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
-      NagSuppressions.addResourceSuppressionsByPath(
-        this,
-        `${this.stackName}/AttachQuarantineScpFunction/ServiceRole/DefaultPolicy/Resource`,
-        [
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
           {
-            id: 'AwsSolutions-IAM5',
+            path: `${this.stackName}/AttachQuarantineScpFunction/ServiceRole/DefaultPolicy/Resource`,
             reason: 'Allows only specific policy.',
           },
         ],
-      );
+      });
 
       const createAccountEventRule = new cdk.aws_events.Rule(this, 'CreateAccountRule', {
         eventPattern: {

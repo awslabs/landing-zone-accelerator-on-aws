@@ -55,6 +55,8 @@ export class IdentityCenter {
           }),
         );
 
+        policies.push(policy);
+
         // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
         // rule suppression with evidence for this permission.
         NagSuppressions.addResourceSuppressionsByPath(

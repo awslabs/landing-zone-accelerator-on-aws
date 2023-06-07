@@ -853,7 +853,5 @@ export class OrganizationsStack extends AcceleratorStack {
         acceleratorPrefix: this.props.prefixes.accelerator,
       });
     }
-
-    return;
   }
 }
