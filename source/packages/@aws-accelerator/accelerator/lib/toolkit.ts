@@ -376,10 +376,7 @@ export class AcceleratorToolkit {
     options: AcceleratorToolkitProps,
   ): Promise<string[]> {
     const configDirPath = AcceleratorToolkit.validateAndGetConfigDirectory(options.configDirPath);
-    // if (options.configDirPath === undefined) {
-    //   logger.error('Customizations stage requires an argument for configuration directory path');
-    //   throw new Error('Customizations stage requires an argument for configuration directory path');
-    // }
+
     if (fs.existsSync(path.join(configDirPath, 'customizations-config.yaml'))) {
       const customizationsConfig = CustomizationsConfig.load(configDirPath);
       const accountsConfig = AccountsConfig.load(configDirPath);
