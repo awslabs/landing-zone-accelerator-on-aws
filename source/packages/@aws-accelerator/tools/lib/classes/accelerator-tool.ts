@@ -41,7 +41,7 @@ import {
   DetachRolePolicyCommand,
   IAMClient,
   ListAttachedRolePoliciesCommand,
-  ListEntitiesForPolicyCommand
+  ListEntitiesForPolicyCommand,
 } from '@aws-sdk/client-iam';
 import {
   DescribeKeyCommand,
@@ -66,7 +66,7 @@ import {
   GetCallerIdentityCommand,
   STSClient,
 } from '@aws-sdk/client-sts';
-import { ConfigServiceClient, DescribeConfigRulesCommand } from "@aws-sdk/client-config-service";
+import { ConfigServiceClient, DescribeConfigRulesCommand } from '@aws-sdk/client-config-service';
 
 /**
  * Type for pipeline stage action information with order and action name
@@ -101,10 +101,10 @@ type deleteStacksType = {
  */
 type ManagementAccountType =
   | {
-    accountId: string;
-    assumeRoleName: string | undefined;
-    credentials: Credentials | undefined;
-  }
+      accountId: string;
+      assumeRoleName: string | undefined;
+      credentials: Credentials | undefined;
+    }
   | undefined;
 
 /**
@@ -189,58 +189,58 @@ export class AcceleratorTool {
     order: number;
     actions: stageActionType[];
   }[] = [
-      {
-        stage: 'Deploy',
-        order: 7,
-        actions: [
-          { order: 7, name: 'Finalize', stackPrefix: '-FinalizeStack' },
-          { order: 6, name: 'Customizations', stackPrefix: '-CustomizationsStack' },
-          { order: 5, name: 'Network_Associations', stackPrefix: '-NetworkAssociationsStack' },
-          { order: 5, name: 'Network_Associations', stackPrefix: '-NetworkAssociationsGwlbStack' },
-          { order: 2, name: 'Security_Resources', stackPrefix: '-SecurityResourcesStack' },
-          { order: 4, name: 'Network_VPCs', stackPrefix: '-NetworkVpcDnsStack' },
-          { order: 3, name: 'Network_VPCs', stackPrefix: '-NetworkVpcEndpointsStack' },
-          { order: 2, name: 'Network_VPCs', stackPrefix: '-NetworkVpcStack' },
-          { order: 1, name: 'Operations', stackPrefix: '-OperationsStack' },
-          { order: 1, name: 'Security', stackPrefix: '-SecurityStack' },
-          { order: 1, name: 'Network_Prepare', stackPrefix: '-NetworkPrepStack' },
-        ],
-      },
-      {
-        stage: 'SecurityAudit',
-        order: 6,
-        actions: [{ order: 1, name: 'SecurityAudit', stackPrefix: '-SecurityAuditStack' }],
-      },
-      {
-        stage: 'Organization',
-        order: 5,
-        actions: [{ order: 1, name: 'Organizations', stackPrefix: '-OrganizationsStack' }],
-      },
-      {
-        stage: 'Logging',
-        order: 4,
-        actions: [
-          { order: 2, name: 'Logging', stackPrefix: '-LoggingStack' },
-          { order: 1, name: 'Key', stackPrefix: '-KeyStack' },
-          { order: 1, name: 'Key', stackPrefix: '-DependenciesStack' },
-        ],
-      },
-      {
-        stage: 'Accounts',
-        order: 3,
-        actions: [{ order: 1, name: 'Accounts', stackPrefix: '-AccountsStack' }],
-      },
-      {
-        stage: 'Prepare',
-        order: 2,
-        actions: [{ order: 1, name: 'Prepare', stackPrefix: '-PrepareStack' }],
-      },
-      {
-        stage: 'Bootstrap',
-        order: 1,
-        actions: [{ order: 1, name: 'Bootstrap', stackPrefix: '-CDKToolkit' }],
-      },
-    ];
+    {
+      stage: 'Deploy',
+      order: 7,
+      actions: [
+        { order: 7, name: 'Finalize', stackPrefix: '-FinalizeStack' },
+        { order: 6, name: 'Customizations', stackPrefix: '-CustomizationsStack' },
+        { order: 5, name: 'Network_Associations', stackPrefix: '-NetworkAssociationsStack' },
+        { order: 5, name: 'Network_Associations', stackPrefix: '-NetworkAssociationsGwlbStack' },
+        { order: 2, name: 'Security_Resources', stackPrefix: '-SecurityResourcesStack' },
+        { order: 4, name: 'Network_VPCs', stackPrefix: '-NetworkVpcDnsStack' },
+        { order: 3, name: 'Network_VPCs', stackPrefix: '-NetworkVpcEndpointsStack' },
+        { order: 2, name: 'Network_VPCs', stackPrefix: '-NetworkVpcStack' },
+        { order: 1, name: 'Operations', stackPrefix: '-OperationsStack' },
+        { order: 1, name: 'Security', stackPrefix: '-SecurityStack' },
+        { order: 1, name: 'Network_Prepare', stackPrefix: '-NetworkPrepStack' },
+      ],
+    },
+    {
+      stage: 'SecurityAudit',
+      order: 6,
+      actions: [{ order: 1, name: 'SecurityAudit', stackPrefix: '-SecurityAuditStack' }],
+    },
+    {
+      stage: 'Organization',
+      order: 5,
+      actions: [{ order: 1, name: 'Organizations', stackPrefix: '-OrganizationsStack' }],
+    },
+    {
+      stage: 'Logging',
+      order: 4,
+      actions: [
+        { order: 2, name: 'Logging', stackPrefix: '-LoggingStack' },
+        { order: 1, name: 'Key', stackPrefix: '-KeyStack' },
+        { order: 1, name: 'Key', stackPrefix: '-DependenciesStack' },
+      ],
+    },
+    {
+      stage: 'Accounts',
+      order: 3,
+      actions: [{ order: 1, name: 'Accounts', stackPrefix: '-AccountsStack' }],
+    },
+    {
+      stage: 'Prepare',
+      order: 2,
+      actions: [{ order: 1, name: 'Prepare', stackPrefix: '-PrepareStack' }],
+    },
+    {
+      stage: 'Bootstrap',
+      order: 1,
+      actions: [{ order: 1, name: 'Bootstrap', stackPrefix: '-CDKToolkit' }],
+    },
+  ];
 
   /**
    * List of pipeline stage names
@@ -528,8 +528,8 @@ export class AcceleratorTool {
       try {
         this.filterPipelineStages();
       } catch (
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      e: any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        e: any
       ) {
         throw new Error(e);
       }
@@ -546,8 +546,8 @@ export class AcceleratorTool {
       // Order the stacks in delete order
       this.acceleratorCloudFormationStacks = this.getPipelineCloudFormationStacks(acceleratorPrefix);
     } catch (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    e: any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      e: any
     ) {
       if (e.name === 'PipelineNotFoundException') {
         throw new Error(`Pipeline ${pipelineName} not found!!!`);
@@ -567,7 +567,7 @@ export class AcceleratorTool {
       this.externalPipelineAccount.isUsed
         ? this.externalPipelineAccount.accountId!
         : this.pipelineManagementAccount!.accountId
-      }-${this.globalConfig?.homeRegion}`;
+    }-${this.globalConfig?.homeRegion}`;
 
     const acceleratorPipeline = await AcceleratorTool.getPipelineNameFromCloudFormationStack(
       acceleratorPipelineStackName,
@@ -780,18 +780,17 @@ export class AcceleratorTool {
    * @returns
    */
   private async getSsmManagedPolicies(): Promise<string[]> {
-
     //Get the actual values from the Config rule (not the securityConfig) to make sure we are getting the resolved ${ACCEL_LOOKUP} values.
-    let policies: string[] = [];
+    const policies: string[] = [];
     const configClient = new ConfigServiceClient({});
 
     try {
       const response = await throttlingBackOff(() =>
         configClient.send(
           new DescribeConfigRulesCommand({
-            ConfigRuleNames: ['accelerator-ec2-instance-profile-permission']
-          })
-        )
+            ConfigRuleNames: ['accelerator-ec2-instance-profile-permission'],
+          }),
+        ),
       );
 
       //If rule not implemented, return empty array.
@@ -808,13 +807,12 @@ export class AcceleratorTool {
 
       for (const [key, value] of Object.entries(JSON.parse(inputParameters))) {
         if (key === 'AWSManagedPolicies' || key === 'CustomerManagedPolicies') {
-          policies.push(...((value as string).split(',')));
+          policies.push(...(value as string).split(','));
         }
       }
-    }
-    catch (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    e: any
+    } catch (
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      e: any
     ) {
       this.debugLog(e, 'error');
     }
@@ -877,8 +875,8 @@ export class AcceleratorTool {
         ),
       );
     } catch (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    e: any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      e: any
     ) {
       if (e.name === 'NoSuchBucket') {
         return true;
@@ -915,12 +913,11 @@ export class AcceleratorTool {
 
   private async removeSsmManagedPolicies(): Promise<void> {
     // get SsmManagedPolicies onces
-    const ssmManagedPolicies = await this.getSsmManagedPolicies()
+    const ssmManagedPolicies = await this.getSsmManagedPolicies();
 
     for (const item of this.iamRoles) {
       this.debugLog(`Deleting IAM Role ${item.roleName} from ${item.stackName} stack`, 'info');
       try {
-
         // Get managed policies
         const listAttachedRolePoliciesResponse = await throttlingBackOff(() =>
           item.client.send(new ListAttachedRolePoliciesCommand({ RoleName: item.roleName })),
@@ -939,8 +936,8 @@ export class AcceleratorTool {
           }
         }
       } catch (
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      e: any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        e: any
       ) {
         if (e.name === 'NoSuchEntity') {
           this.debugLog(`IAM Role ${item.roleName} from ${item.stackName} stack not found !!`, 'info');
@@ -970,8 +967,8 @@ export class AcceleratorTool {
           );
         }
       } catch (
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      e: any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        e: any
       ) {
         if (e.name === 'NoSuchEntity') {
           this.debugLog(`IAM Policy ${item.policyName} from ${item.stackName} stack not found !!`, 'info');
@@ -1028,8 +1025,8 @@ export class AcceleratorTool {
           ),
         );
       } catch (
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      e: any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        e: any
       ) {
         if (e.name === 'KMSInvalidStateException') {
           // This is needed because session manager key is deleted with stack
@@ -1444,7 +1441,7 @@ export class AcceleratorTool {
       this.externalPipelineAccount.isUsed
         ? this.externalPipelineAccount.accountId!
         : this.pipelineManagementAccount!.accountId
-      }-${this.globalConfig?.homeRegion}`;
+    }-${this.globalConfig?.homeRegion}`;
 
     await this.deleteStack(cloudFormationClient, testerStackName);
   }
@@ -1469,7 +1466,7 @@ export class AcceleratorTool {
       this.externalPipelineAccount.isUsed
         ? this.externalPipelineAccount.accountId!
         : this.pipelineManagementAccount!.accountId
-      }-${this.globalConfig?.homeRegion}`;
+    }-${this.globalConfig?.homeRegion}`;
 
     if (!this.acceleratorToolProps.keepPipelineAndConfig) {
       await this.deleteCodecommitRepository(new CodeCommitClient({}), testerPipelineConfigRepositoryName);

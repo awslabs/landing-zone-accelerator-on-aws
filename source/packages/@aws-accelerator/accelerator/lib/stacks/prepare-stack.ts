@@ -362,8 +362,6 @@ export class PrepareStack extends AcceleratorStack {
         stringValue: newCTAccountsTable.tableName,
       });
 
-      // this.createGovCloudAccountsMappingTable(props, key);
-
       if (options.props.accountsConfig.anyGovCloudAccounts()) {
         this.logger.info(`Create GovCloudAccountsMappingTable`);
         govCloudAccountMappingTable = new cdk.aws_dynamodb.Table(this, 'govCloudAccountMapping', {

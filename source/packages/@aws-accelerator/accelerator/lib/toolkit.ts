@@ -40,7 +40,7 @@ process.on('unhandledRejection', err => {
 });
 
 /**
- *
+ * CDK toolkit commands
  */
 export enum AcceleratorToolkitCommand {
   BOOTSTRAP = Command.BOOTSTRAP,
@@ -51,12 +51,81 @@ export enum AcceleratorToolkitCommand {
 }
 
 /**
+ * Accelerator extended CDK toolkit properties
+ */
+export interface AcceleratorToolkitProps {
+  /**
+   * CDK toolkit command
+   */
+  command: string;
+  /**
+   * Enable single account deployment
+   */
+  enableSingleAccountMode: boolean;
+  /**
+   * The AWS partition
+   */
+  partition: string;
+  /**
+   * The accelerator stack prefix value
+   */
+  stackPrefix: string;
+  /**
+   * The AWS account ID
+   */
+  accountId?: string;
+  /**
+   * The AWS region
+   */
+  region?: string;
+  /**
+   * The accelerator stage
+   */
+  stage?: string;
+  /**
+   * The accelerator configuration directory path
+   */
+  configDirPath?: string;
+  /**
+   * Require approval flag
+   */
+  requireApproval?: RequireApproval;
+  /**
+   * Trusted account ID
+   */
+  trustedAccountId?: string;
+  /**
+   * App output file location
+   */
+  app?: string;
+  /**
+   * CA bundle path
+   */
+  caBundlePath?: string;
+  /**
+   * EC2 credentials flag
+   */
+  ec2Creds?: boolean;
+  /**
+   * Proxy address
+   */
+  proxyAddress?: string;
+  /**
+   * Centralize CDK bootstrapping
+   */
+  centralizeCdkBootstrap?: boolean;
+  /**
+   * Custom CDK options for the accelerator
+   */
+  cdkOptions?: cdkOptionsConfig;
+}
+
+/**
  * Wrapper around the CdkToolkit. The Accelerator defines this wrapper to add
  * the following functionality:
  *
- * - x
- * - y
- * - z
+ * - Add custom app context and configuration options
+ * - Enable custom stage-based implementation
  */
 export class AcceleratorToolkit {
   /**
@@ -75,57 +144,16 @@ export class AcceleratorToolkit {
    * aws-cdk/packages/aws-cdk/bin/cdk.ts
    *
    *
-   * @param options
+   * @param options {@link AcceleratorToolkitProps}
    */
-  static async execute(options: {
-    command: string;
-    accountId?: string;
-    region?: string;
-    partition: string;
-    stage?: string;
-    configDirPath?: string;
-    requireApproval?: RequireApproval;
-    trustedAccountId?: string;
-    app?: string;
-    caBundlePath?: string;
-    ec2Creds?: boolean;
-    proxyAddress?: string;
-    centralizeCdkBootstrap?: boolean;
-    cdkOptions?: cdkOptionsConfig;
-    enableSingleAccountMode: boolean;
-    stackPrefix: string;
-  }): Promise<void> {
-    if (options.accountId || options.region) {
-      if (options.stage) {
-        logger.info(
-          `Executing cdk ${options.command} ${options.stage} for aws://${options.accountId}/${options.region}`,
-        );
-      } else {
-        logger.info(`Executing cdk ${options.command} for aws://${options.accountId}/${options.region}`);
-      }
-    } else if (options.stage) {
-      logger.info(`Executing cdk ${options.command} ${options.stage}`);
-    } else {
-      logger.info(`Executing cdk ${options.command}`);
-    }
+  static async execute(options: AcceleratorToolkitProps): Promise<void> {
+    //
+    // Validate options
+    AcceleratorToolkit.validateOptions(options);
 
+    //
     // build the context
-    const context: string[] = [];
-    if (options.configDirPath) {
-      context.push(`config-dir=${options.configDirPath}`);
-    }
-    if (options.stage) {
-      context.push(`stage=${options.stage}`);
-    }
-    if (options.accountId) {
-      context.push(`account=${options.accountId}`);
-    }
-    if (options.region) {
-      context.push(`region=${options.region}`);
-    }
-    if (options.partition) {
-      context.push(`partition=${options.partition}`);
-    }
+    const context = AcceleratorToolkit.buildExecutionContext(options);
 
     const configuration = new Configuration({
       commandLineArguments: {
@@ -176,150 +204,14 @@ export class AcceleratorToolkit {
 
     switch (options.command) {
       case Command.BOOTSTRAP:
-        let source: BootstrapSource;
-
-        const environments = [`aws://${options.accountId}/${options.region}`];
-        const trustedAccounts: string[] = [];
-        if (options.trustedAccountId && options.trustedAccountId != options.accountId) {
-          trustedAccounts.push(options.trustedAccountId);
-        }
-
-        const bootstrapEnvOptions: BootstrapEnvironmentOptions = {
-          toolkitStackName: toolkitStackName,
-          parameters: {
-            bucketName: configuration.settings.get(['toolkitBucket', 'bucketName']),
-            kmsKeyId: configuration.settings.get(['toolkitBucket', 'kmsKeyId']),
-            qualifier: 'accel',
-            trustedAccounts,
-            cloudFormationExecutionPolicies: [`arn:${options.partition}:iam::aws:policy/AdministratorAccess`],
-          },
-        };
-
-        // Use custom bootstrapping template if cdk options are set
-        if (
-          options.centralizeCdkBootstrap ||
-          options.cdkOptions?.centralizeBuckets ||
-          options.cdkOptions?.useManagementAccessRole
-        ) {
-          process.env['CDK_NEW_BOOTSTRAP'] = '1';
-          const templatePath = `./cdk.out/${AcceleratorStackNames[AcceleratorStage.BOOTSTRAP]}-${options.accountId}-${
-            options.region
-          }.template.json`;
-          source = { source: 'custom', templateFile: templatePath };
-        } else {
-          source = { source: 'default' };
-        }
-
-        const bootstrapper = new Bootstrapper(source);
-
-        await cli.bootstrap(environments, bootstrapper, bootstrapEnvOptions);
+        await AcceleratorToolkit.bootstrapToolKitStacks(cli, configuration, toolkitStackName, options);
         break;
       case Command.DIFF:
         await cli.diff({ stackNames: [] });
         break;
 
       case Command.DEPLOY:
-        if (options.stage === undefined) {
-          logger.error('trying to deploy with an undefined stage');
-          throw new Error('trying to deploy with an undefined stage');
-        }
-        let stackName = [`${AcceleratorStackNames[options.stage]}-${options.accountId}-${options.region}`];
-
-        if (options.stage === AcceleratorStage.PIPELINE) {
-          stackName = process.env['ACCELERATOR_QUALIFIER']
-            ? [
-                `${process.env['ACCELERATOR_QUALIFIER']}-${AcceleratorStage.PIPELINE}-stack-${options.accountId}-${options.region}`,
-              ]
-            : [`${AcceleratorStackNames[options.stage]}-${options.accountId}-${options.region}`];
-        }
-
-        if (options.stage === AcceleratorStage.TESTER_PIPELINE) {
-          stackName = process.env['ACCELERATOR_QUALIFIER']
-            ? [
-                `${process.env['ACCELERATOR_QUALIFIER']}-${AcceleratorStage.TESTER_PIPELINE}-stack-${options.accountId}-${options.region}`,
-              ]
-            : [`${AcceleratorStackNames[options.stage]}-${options.accountId}-${options.region}`];
-        }
-
-        if (options.stage === AcceleratorStage.KEY) {
-          stackName = [
-            `${AcceleratorStackNames[AcceleratorStage.KEY]}-${options.accountId}-${options.region}`,
-            `${AcceleratorStackNames[AcceleratorStage.DEPENDENCIES]}-${options.accountId}-${options.region}`,
-          ];
-        }
-
-        if (options.stage === AcceleratorStage.NETWORK_VPC) {
-          stackName = [
-            `${AcceleratorStackNames[AcceleratorStage.NETWORK_VPC_DNS]}-${options.accountId}-${options.region}`,
-          ];
-        }
-
-        if (options.stage === AcceleratorStage.NETWORK_ASSOCIATIONS) {
-          stackName = [
-            `${AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS]}-${options.accountId}-${options.region}`,
-            `${AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS_GWLB]}-${options.accountId}-${
-              options.region
-            }`,
-          ];
-        }
-
-        if (options.stage === AcceleratorStage.CUSTOMIZATIONS) {
-          if (options.configDirPath === undefined) {
-            logger.error('Customizations stage requires an argument for configuration directory path');
-            throw new Error('Customizations stage requires an argument for configuration directory path');
-          }
-          if (fs.existsSync(path.join(options.configDirPath, 'customizations-config.yaml'))) {
-            const customizationsConfig = CustomizationsConfig.load(options.configDirPath);
-            const accountsConfig = AccountsConfig.load(options.configDirPath);
-            await accountsConfig.loadAccountIds(options.partition, options.enableSingleAccountMode);
-            const customStacks = customizationsConfig.getCustomStacks();
-            for (const stack of customStacks) {
-              const deploymentAccts = accountsConfig.getAccountIdsFromDeploymentTarget(stack.deploymentTargets);
-              const deploymentRegions = stack.regions.map(a => a.toString());
-              if (deploymentRegions.includes(options.region!) && deploymentAccts.includes(options.accountId!)) {
-                stackName.push(`${stack.name}-${options.accountId}-${options.region}`);
-              }
-            }
-            const appStacks = customizationsConfig.getAppStacks();
-            const organizationConfig = OrganizationConfig.load(options.configDirPath);
-            for (const application of appStacks) {
-              if (
-                isIncluded(
-                  application.deploymentTargets,
-                  options.region!,
-                  options.accountId!,
-                  accountsConfig,
-                  organizationConfig,
-                )
-              ) {
-                const applicationStackName = `${options.stackPrefix}-App-${
-                  application.name
-                }-${options.accountId!}-${options.region!}`;
-                stackName.push(applicationStackName);
-              }
-            }
-          }
-        }
-
-        const selector: StackSelector = {
-          // patterns: [`${AcceleratorStackNames[options.stage]}-${options.accountId}-${options.region}`],
-          patterns: stackName,
-        };
-
-        const changeSetName = `${stackName[0]}-change-set`;
-
-        await cli
-          .deploy({
-            selector,
-            toolkitStackName,
-            requireApproval: options.requireApproval,
-            changeSetName: changeSetName,
-            hotswap: HotswapMode.FULL_DEPLOYMENT,
-          })
-          .catch(err => {
-            logger.error(err);
-            throw new Error('Deployment failed');
-          });
+        await AcceleratorToolkit.deployStacks(cli, toolkitStackName, options);
         break;
       case Command.SYNTHESIZE:
       case Command.SYNTH:
@@ -330,5 +222,266 @@ export class AcceleratorToolkit {
         logger.error(`Unsupported command: ${options.command}`);
         throw new Error(`Unsupported command: ${options.command}`);
     }
+  }
+
+  /**
+   * Function to validate toolkit execution options
+   * @param options {@link AcceleratorToolkitProps}
+   *
+   */
+  private static validateOptions(options: AcceleratorToolkitProps) {
+    if (options.accountId || options.region) {
+      if (options.stage) {
+        logger.info(
+          `Executing cdk ${options.command} ${options.stage} for aws://${options.accountId}/${options.region}`,
+        );
+      } else {
+        logger.info(`Executing cdk ${options.command} for aws://${options.accountId}/${options.region}`);
+      }
+    } else if (options.stage) {
+      logger.info(`Executing cdk ${options.command} ${options.stage}`);
+    } else {
+      logger.info(`Executing cdk ${options.command}`);
+    }
+  }
+
+  /**
+   * Function to build toolkit execution context
+   * @param options {@link AcceleratorToolkitProps}
+   * @returns context string[]
+   */
+  private static buildExecutionContext(options: AcceleratorToolkitProps): string[] {
+    // build the context
+    const context: string[] = [];
+    if (options.configDirPath) {
+      context.push(`config-dir=${options.configDirPath}`);
+    }
+    if (options.stage) {
+      context.push(`stage=${options.stage}`);
+    }
+    if (options.accountId) {
+      context.push(`account=${options.accountId}`);
+    }
+    if (options.region) {
+      context.push(`region=${options.region}`);
+    }
+    if (options.partition) {
+      context.push(`partition=${options.partition}`);
+    }
+
+    return context;
+  }
+
+  /**
+   * Function to Bootstrap the CDK Toolkit stack in the accounts used by the specified stack(s).
+   * @param cli {@link CdkToolkit}
+   * @param configuration {@link Configuration}
+   * @param toolkitStackName string
+   * @param options {@link AcceleratorToolkitProps}
+   */
+  private static async bootstrapToolKitStacks(
+    cli: CdkToolkit,
+    configuration: Configuration,
+    toolkitStackName: string,
+    options: AcceleratorToolkitProps,
+  ) {
+    let source: BootstrapSource;
+
+    const environments = [`aws://${options.accountId}/${options.region}`];
+    const trustedAccounts: string[] = [];
+    if (options.trustedAccountId && options.trustedAccountId != options.accountId) {
+      trustedAccounts.push(options.trustedAccountId);
+    }
+
+    const bootstrapEnvOptions: BootstrapEnvironmentOptions = {
+      toolkitStackName: toolkitStackName,
+      parameters: {
+        bucketName: configuration.settings.get(['toolkitBucket', 'bucketName']),
+        kmsKeyId: configuration.settings.get(['toolkitBucket', 'kmsKeyId']),
+        qualifier: 'accel',
+        trustedAccounts,
+        cloudFormationExecutionPolicies: [`arn:${options.partition}:iam::aws:policy/AdministratorAccess`],
+      },
+    };
+
+    // Use custom bootstrapping template if cdk options are set
+    if (
+      options.centralizeCdkBootstrap ||
+      options.cdkOptions?.centralizeBuckets ||
+      options.cdkOptions?.useManagementAccessRole
+    ) {
+      process.env['CDK_NEW_BOOTSTRAP'] = '1';
+      const templatePath = `./cdk.out/${AcceleratorStackNames[AcceleratorStage.BOOTSTRAP]}-${options.accountId}-${
+        options.region
+      }.template.json`;
+      source = { source: 'custom', templateFile: templatePath };
+    } else {
+      source = { source: 'default' };
+    }
+
+    const bootstrapper = new Bootstrapper(source);
+
+    await cli.bootstrap(environments, bootstrapper, bootstrapEnvOptions);
+  }
+
+  /**
+   * Function to validate and get stage name for deploy
+   * @param options {@link AcceleratorToolkitProps}
+   */
+  private static validateAndGetDeployStage(options: AcceleratorToolkitProps): string {
+    if (options.stage === undefined) {
+      logger.error('trying to deploy with an undefined stage');
+      throw new Error('trying to deploy with an undefined stage');
+    }
+
+    return options.stage;
+  }
+
+  /**
+   * Function to initialize PIPELINE and TESTER PIPELINE stack name
+   * @param props
+   * @returns
+   */
+  private static getPipelineAndTesterPipelineStackName(
+    stageName: AcceleratorStage,
+    props: { stage: string; accountId?: string; region?: string },
+  ) {
+    return process.env['ACCELERATOR_QUALIFIER']
+      ? `${process.env['ACCELERATOR_QUALIFIER']}-${stageName}-stack-${props.accountId}-${props.region}`
+      : `${AcceleratorStackNames[props.stage]}-${props.accountId}-${props.region}`;
+  }
+
+  /**
+   * Function to validate and get config directory path
+   * @param configDirPath
+   * @returns
+   */
+  private static validateAndGetConfigDirectory(configDirPath?: string): string {
+    if (configDirPath === undefined) {
+      logger.error('Customizations stage requires an argument for configuration directory path');
+      throw new Error('Customizations stage requires an argument for configuration directory path');
+    }
+
+    return configDirPath;
+  }
+
+  /**
+   * Function to get customizations stack names
+   * @param stackNames string[]
+   * @param options {@link AcceleratorToolkitProps}
+   * @returns
+   */
+  private static async getCustomizationsStackNames(
+    stackNames: string[],
+    options: AcceleratorToolkitProps,
+  ): Promise<string[]> {
+    const configDirPath = AcceleratorToolkit.validateAndGetConfigDirectory(options.configDirPath);
+    // if (options.configDirPath === undefined) {
+    //   logger.error('Customizations stage requires an argument for configuration directory path');
+    //   throw new Error('Customizations stage requires an argument for configuration directory path');
+    // }
+    if (fs.existsSync(path.join(configDirPath, 'customizations-config.yaml'))) {
+      const customizationsConfig = CustomizationsConfig.load(configDirPath);
+      const accountsConfig = AccountsConfig.load(configDirPath);
+      await accountsConfig.loadAccountIds(options.partition, options.enableSingleAccountMode);
+      const customStacks = customizationsConfig.getCustomStacks();
+      for (const stack of customStacks) {
+        const deploymentAccts = accountsConfig.getAccountIdsFromDeploymentTarget(stack.deploymentTargets);
+        const deploymentRegions = stack.regions.map(a => a.toString());
+        if (deploymentRegions.includes(options.region!) && deploymentAccts.includes(options.accountId!)) {
+          stackNames.push(`${stack.name}-${options.accountId}-${options.region}`);
+        }
+      }
+      const appStacks = customizationsConfig.getAppStacks();
+      const organizationConfig = OrganizationConfig.load(configDirPath);
+      for (const application of appStacks) {
+        if (
+          isIncluded(
+            application.deploymentTargets,
+            options.region!,
+            options.accountId!,
+            accountsConfig,
+            organizationConfig,
+          )
+        ) {
+          const applicationStackName = `${options.stackPrefix}-App-${
+            application.name
+          }-${options.accountId!}-${options.region!}`;
+          stackNames.push(applicationStackName);
+        }
+      }
+    }
+    return stackNames;
+  }
+
+  /**
+   * Function to deploy stacks
+   * @param cli {@link CdkToolkit}
+   * @param toolkitStackName string
+   * @param options {@link AcceleratorToolkitProps}
+   */
+  private static async deployStacks(cli: CdkToolkit, toolkitStackName: string, options: AcceleratorToolkitProps) {
+    const stageName = AcceleratorToolkit.validateAndGetDeployStage(options);
+    let stackName = [`${AcceleratorStackNames[stageName]}-${options.accountId}-${options.region}`];
+
+    switch (options.stage) {
+      case AcceleratorStage.PIPELINE:
+        stackName = [
+          AcceleratorToolkit.getPipelineAndTesterPipelineStackName(AcceleratorStage.PIPELINE, {
+            stage: options.stage,
+            accountId: options.accountId,
+            region: options.region,
+          }),
+        ];
+        break;
+      case AcceleratorStage.TESTER_PIPELINE:
+        stackName = [
+          AcceleratorToolkit.getPipelineAndTesterPipelineStackName(AcceleratorStage.TESTER_PIPELINE, {
+            stage: options.stage,
+            accountId: options.accountId,
+            region: options.region,
+          }),
+        ];
+        break;
+      case AcceleratorStage.KEY:
+        stackName = [
+          `${AcceleratorStackNames[AcceleratorStage.KEY]}-${options.accountId}-${options.region}`,
+          `${AcceleratorStackNames[AcceleratorStage.DEPENDENCIES]}-${options.accountId}-${options.region}`,
+        ];
+        break;
+      case AcceleratorStage.NETWORK_VPC:
+        stackName = [
+          `${AcceleratorStackNames[AcceleratorStage.NETWORK_VPC_DNS]}-${options.accountId}-${options.region}`,
+        ];
+        break;
+      case AcceleratorStage.NETWORK_ASSOCIATIONS:
+        stackName = [
+          `${AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS]}-${options.accountId}-${options.region}`,
+          `${AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS_GWLB]}-${options.accountId}-${options.region}`,
+        ];
+        break;
+      case AcceleratorStage.CUSTOMIZATIONS:
+        stackName = await AcceleratorToolkit.getCustomizationsStackNames(stackName, options);
+        break;
+    }
+
+    const selector: StackSelector = {
+      patterns: stackName,
+    };
+
+    const changeSetName = `${stackName[0]}-change-set`;
+
+    await cli
+      .deploy({
+        selector,
+        toolkitStackName,
+        requireApproval: options.requireApproval,
+        changeSetName: changeSetName,
+        hotswap: HotswapMode.FULL_DEPLOYMENT,
+      })
+      .catch(err => {
+        logger.error(err);
+        throw new Error('Deployment failed');
+      });
   }
 }
