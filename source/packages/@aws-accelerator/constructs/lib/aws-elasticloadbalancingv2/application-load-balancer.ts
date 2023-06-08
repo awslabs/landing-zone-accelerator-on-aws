@@ -172,12 +172,12 @@ export class ApplicationLoadBalancer extends cdk.Resource implements IApplicatio
       case 'redirect':
         if (listener.redirectConfig) {
           actionValues.redirectConfig = {
-            host: listener.redirectConfig.host ?? undefined,
-            path: listener.redirectConfig.path ?? undefined,
+            host: listener.redirectConfig.host,
+            path: listener.redirectConfig.path,
             port: listener.redirectConfig.port?.toString() ?? undefined,
-            protocol: listener.redirectConfig.protocol ?? undefined,
-            query: listener.redirectConfig.query ?? undefined,
-            statusCode: listener.redirectConfig.statusCode ?? undefined,
+            protocol: listener.redirectConfig.protocol,
+            query: listener.redirectConfig.query,
+            statusCode: listener.redirectConfig.statusCode,
           };
         } else {
           throw new Error(`Listener ${listener.name} is set to redirect but redirectConfig is not defined`);
@@ -186,9 +186,9 @@ export class ApplicationLoadBalancer extends cdk.Resource implements IApplicatio
       case 'fixed-response':
         if (listener.fixedResponseConfig) {
           actionValues.fixedResponseConfig = {
-            contentType: listener.fixedResponseConfig.contentType ?? undefined,
-            messageBody: listener.fixedResponseConfig.messageBody ?? undefined,
-            statusCode: listener.fixedResponseConfig.statusCode ?? undefined,
+            contentType: listener.fixedResponseConfig.contentType,
+            messageBody: listener.fixedResponseConfig.messageBody,
+            statusCode: listener.fixedResponseConfig.statusCode,
           };
         } else {
           throw new Error(`Listener ${listener.name} is set to fixed-response but fixedResponseConfig is not defined`);
