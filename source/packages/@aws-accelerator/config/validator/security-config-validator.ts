@@ -18,7 +18,7 @@ import { AccountsConfig } from '../lib/accounts-config';
 import * as t from '../lib/common-types';
 import { GlobalConfig } from '../lib/global-config';
 import { OrganizationConfig } from '../lib/organization-config';
-import { SecurityConfig, SecurityConfigTypes } from '../lib/security-config';
+import { AwsConfigRuleSet, SecurityConfig, SecurityConfigTypes } from '../lib/security-config';
 import { CommonValidatorFunctions } from './common/common-validator-functions';
 
 export class SecurityConfigValidator {
@@ -60,8 +60,10 @@ export class SecurityConfigValidator {
     this.validateCustomKeyName(values, keyNames, errors);
 
     //
+    // Validate delegated admin account
     // Validate deployment targets against organization config file
     // validate deployment target OUs for security services
+    this.validateDelegatedAdminAccount(values, accountNames, errors);
     this.validateDeploymentTargetOUs(values, ouIdNames, errors);
     this.validateDeploymentTargetAccountNames(values, accountNames, errors);
 
@@ -73,6 +75,7 @@ export class SecurityConfigValidator {
     // Validate Config rule assets
     for (const ruleSet of values.awsConfig.ruleSets ?? []) {
       this.validateConfigRuleAssets(configDir, ruleSet, errors);
+      this.validateConfigRuleRemediationAccountNames(ruleSet, accountNames, errors);
       this.validateConfigRuleRemediationAssumeRoleFile(configDir, ruleSet, errors);
       this.validateConfigRuleRemediationTargetAssets(configDir, ruleSet, ssmDocuments, errors);
     }
@@ -138,6 +141,21 @@ export class SecurityConfigValidator {
    */
   private getSnsTopicNames(globalConfig: GlobalConfig): string[] {
     return globalConfig.getSnsTopicNames();
+  }
+
+  /**
+   * Validate delegated admin account name
+   *
+   * @param values
+   * @param accountNames
+   * @param errors
+   */
+  private validateDelegatedAdminAccount(values: SecurityConfig, accountNames: string[], errors: string[]) {
+    if (!accountNames.includes(values.centralSecurityServices.delegatedAdminAccount)) {
+      errors.push(
+        `Delegated admin account ${values.centralSecurityServices.delegatedAdminAccount} does not exist in accounts-config.yaml`,
+      );
+    }
   }
 
   /**
@@ -577,6 +595,26 @@ export class SecurityConfigValidator {
       errors.push(
         `Duplicate AWS Config rules name exist with the same name and must be unique when deployed to the same account and region. Config rules in file: ${configRuleNames}`,
       );
+    }
+  }
+
+  /**
+   * Validate Config rule remediation account name
+   * @param ruleSet
+   * @param accountNames
+   * @param errors
+   */
+  private validateConfigRuleRemediationAccountNames(
+    ruleSet: AwsConfigRuleSet,
+    accountNames: string[],
+    errors: string[],
+  ) {
+    for (const rule of ruleSet.rules) {
+      if (rule.remediation && !accountNames.includes(rule.remediation.targetAccountName)) {
+        errors.push(
+          `Rule: ${rule.name}, remediation target account ${rule.remediation.targetAccountName} does not exist in accounts-config.yaml`,
+        );
+      }
     }
   }
 
