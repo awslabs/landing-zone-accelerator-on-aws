@@ -18,7 +18,7 @@ import { AccountsConfig } from '../lib/accounts-config';
 import * as t from '../lib/common-types';
 import { GlobalConfig } from '../lib/global-config';
 import { OrganizationConfig } from '../lib/organization-config';
-import { SecurityConfig, SecurityConfigTypes } from '../lib/security-config';
+import { AwsConfigRuleSet, SecurityConfig, SecurityConfigTypes } from '../lib/security-config';
 import { CommonValidatorFunctions } from './common/common-validator-functions';
 
 export class SecurityConfigValidator {
@@ -595,6 +595,26 @@ export class SecurityConfigValidator {
       errors.push(
         `Duplicate AWS Config rules name exist with the same name and must be unique when deployed to the same account and region. Config rules in file: ${configRuleNames}`,
       );
+    }
+  }
+
+  /**
+   * Validate Config rule remediation account name
+   * @param ruleSet
+   * @param accountNames
+   * @param errors
+   */
+  private validateConfigRuleRemediationAccountNames(
+    ruleSet: AwsConfigRuleSet,
+    accountNames: string[],
+    errors: string[],
+  ) {
+    for (const rule of ruleSet.rules) {
+      if (rule.remediation && !accountNames.includes(rule.remediation.targetAccountName)) {
+        errors.push(
+          `Rule: ${rule.name}, remediation target account ${rule.remediation.targetAccountName} does not exist in accounts-config.yaml`,
+        );
+      }
     }
   }
 
