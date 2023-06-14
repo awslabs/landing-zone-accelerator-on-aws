@@ -16,19 +16,14 @@ AWS.config.logger = console;
 import * as path from 'path';
 
 import { AccountsConfig, OrganizationConfig } from '@aws-accelerator/config';
-import { throttlingBackOff, policyReplacements } from '@aws-accelerator/utils';
+import { throttlingBackOff } from '@aws-accelerator/utils';
 
 let organizationsClient: AWS.Organizations;
 
 const acceleratorRolePrefix = 'AWSAccelerator';
 const snsTopicArn = process.env['SNS_TOPIC_ARN'];
 const partition = process.env['AWS_PARTITION']!;
-const region = process.env['AWS_REGION']!;
 const homeRegion = process.env['HOME_REGION']!;
-const managementAccountId = process.env['MANAGEMENT_ACCOUNT_ID']!;
-const logArchiveAccountId = process.env['LOG_ARCHIVE_ACCOUNT_ID']!;
-const auditAccountId = process.env['AUDIT_ACCOUNT_ID']!;
-const managementAccountAccessRole = process.env['MANAGEMENT_ACCOUNT_ACCESS_ROLE']!;
 
 const snsClient = new AWS.SNS({ region: homeRegion });
 
@@ -182,33 +177,7 @@ async function isControlTowerPolicy(policyDetail: AWS.Organizations.Policy): Pro
 
 async function getOriginalPolicyDocument(policyName: string, orgConfig: OrganizationConfig): Promise<string> {
   const policyPath = await getOriginalPolicyDocumentPath(policyName, orgConfig);
-  console.log(`Generating replacement for file: ${path.join(__dirname, 'policies', policyPath)}`);
-  return await generatePolicyReplacements(path.join(__dirname, 'policies', policyPath));
-}
-
-/**
- * Generate policy replacements
- * @param policyPath
- * @returns
- */
-function generatePolicyReplacements(policyPath: string): string {
-  // Transform policy document
-  let policyContent: string = JSON.stringify(require(policyPath));
-  policyContent = policyReplacements({
-    content: policyContent,
-    acceleratorPrefix: 'AWSAccelerator',
-    managementAccountAccessRole: managementAccountAccessRole,
-    partition: partition,
-    additionalReplacements: {
-      '\\${ACCOUNT_ID}': managementAccountId,
-      '\\${AUDIT_ACCOUNT_ID}': auditAccountId,
-      '\\${LOGARCHIVE_ACCOUNT_ID}': logArchiveAccountId,
-      '\\${MANAGEMENT_ACCOUNT_ID}': managementAccountId,
-      '\\${REGION}': region,
-    },
-  });
-
-  return policyContent;
+  return JSON.stringify(require(path.join(__dirname, 'policies', policyPath)));
 }
 
 async function getOrganizationConfig(): Promise<OrganizationConfig> {

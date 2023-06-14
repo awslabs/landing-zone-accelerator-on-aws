@@ -1681,7 +1681,11 @@ export class LoggingStack extends AcceleratorStack {
     const centralLogsBucketKey = centralLogsBucket.getS3Bucket().getKey();
     for (const attachment of this.props.globalConfig.logging.centralLogBucket?.kmsResourcePolicyAttachments ?? []) {
       const policyDocument = JSON.parse(
-        this.generatePolicyReplacements(path.join(this.props.configDirPath, attachment.policy), false),
+        this.generatePolicyReplacements(
+          path.join(this.props.configDirPath, attachment.policy),
+          false,
+          this.organizationId,
+        ),
       );
 
       // Create a statements list using the PolicyStatement factory
@@ -1697,7 +1701,11 @@ export class LoggingStack extends AcceleratorStack {
     const realCentralLogBucket = centralLogsBucket?.getS3Bucket().getS3Bucket();
     for (const attachment of this.props.globalConfig.logging.centralLogBucket?.s3ResourcePolicyAttachments ?? []) {
       const policyDocument = JSON.parse(
-        this.generatePolicyReplacements(path.join(this.props.configDirPath, attachment.policy), false),
+        this.generatePolicyReplacements(
+          path.join(this.props.configDirPath, attachment.policy),
+          false,
+          this.organizationId,
+        ),
       );
       // Create a statements list using the PolicyStatement factory
       const statements: cdk.aws_iam.PolicyStatement[] = [];
@@ -1765,7 +1773,11 @@ export class LoggingStack extends AcceleratorStack {
     this.logger.info(`Adding elb log bucket resource policies to S3`);
     for (const attachment of this.props.globalConfig.logging.elbLogBucket?.s3ResourcePolicyAttachments ?? []) {
       const policyDocument = JSON.parse(
-        this.generatePolicyReplacements(path.join(this.props.configDirPath, attachment.policy), false),
+        this.generatePolicyReplacements(
+          path.join(this.props.configDirPath, attachment.policy),
+          false,
+          this.organizationId,
+        ),
       );
       // Create a statements list using the PolicyStatement factory
       const statements: cdk.aws_iam.PolicyStatement[] = [];

@@ -197,7 +197,11 @@ export class OperationsStack extends AcceleratorStack {
 
         // Read in the policy document which should be properly formatted json
         const policyDocument = JSON.parse(
-          this.generatePolicyReplacements(path.join(this.props.configDirPath, policyItem.policy), false),
+          this.generatePolicyReplacements(
+            path.join(this.props.configDirPath, policyItem.policy),
+            false,
+            this.organizationId,
+          ),
         );
 
         // Create a statements list using the PolicyStatement factory

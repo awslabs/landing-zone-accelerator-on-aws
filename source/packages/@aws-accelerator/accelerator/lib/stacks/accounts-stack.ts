@@ -167,6 +167,8 @@ export class AccountsStack extends AcceleratorStack {
 
       if (props.organizationConfig.enable) {
         let quarantineScpId = '';
+        const generatedScpFilePaths = [];
+
         // SCP is not supported in China Region.
         if (props.partition !== 'aws-cn') {
           const enablePolicyTypeScp = new EnablePolicyType(this, 'enablePolicyTypeScp', {
@@ -179,11 +181,22 @@ export class AccountsStack extends AcceleratorStack {
           for (const serviceControlPolicy of props.organizationConfig.serviceControlPolicies) {
             this.logger.info(`Adding service control policy (${serviceControlPolicy.name})`);
 
+            const scpPath = this.generatePolicyReplacements(
+              path.join(props.configDirPath, serviceControlPolicy.policy),
+              true,
+              this.organizationId,
+            );
+            generatedScpFilePaths.push({
+              name: serviceControlPolicy.name,
+              path: serviceControlPolicy.policy,
+              tempPath: scpPath,
+            });
+
             const scp = new Policy(this, serviceControlPolicy.name, {
               description: serviceControlPolicy.description,
               name: serviceControlPolicy.name,
               partition: props.partition,
-              path: this.generatePolicyReplacements(path.join(props.configDirPath, serviceControlPolicy.policy), true),
+              path: scpPath,
               type: PolicyType.SERVICE_CONTROL_POLICY,
               strategy: serviceControlPolicy.strategy,
               acceleratorPrefix: props.prefixes.accelerator,
@@ -279,18 +292,14 @@ export class AccountsStack extends AcceleratorStack {
         if (props.securityConfig.centralSecurityServices?.scpRevertChangesConfig?.enable) {
           this.logger.info(`Creating resources to revert modifications to scps`);
           new RevertScpChanges(this, 'RevertScpChanges', {
-            auditAccountId: props.accountsConfig.getAuditAccountId(),
-            logArchiveAccountId: props.accountsConfig.getLogArchiveAccountId(),
-            managementAccountId: props.accountsConfig.getManagementAccountId(),
             configDirPath: props.configDirPath,
             homeRegion: props.globalConfig.homeRegion,
             kmsKeyCloudWatch: this.cloudwatchKey,
             kmsKeyLambda: this.lambdaKey,
             logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-            managementAccountAccessRole: props.globalConfig.managementAccountAccessRole,
             acceleratorTopicNamePrefix: props.prefixes.snsTopicName,
             snsTopicName: props.securityConfig.centralSecurityServices.scpRevertChangesConfig?.snsTopicName,
-            scpFilePaths: props.organizationConfig.serviceControlPolicies?.map(a => a.policy) ?? [],
+            scpFilePaths: generatedScpFilePaths,
           });
         }
 
