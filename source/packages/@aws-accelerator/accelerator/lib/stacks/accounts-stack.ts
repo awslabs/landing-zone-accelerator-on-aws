@@ -12,7 +12,6 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import * as iam from 'aws-cdk-lib/aws-iam';
 import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
@@ -26,7 +25,7 @@ import {
   MoveAccountRule,
   RevertScpChanges,
 } from '@aws-accelerator/constructs';
-import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import { AcceleratorKeyType, AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 export interface AccountsStackProps extends AcceleratorStackProps {
   readonly configDirPath: string;
@@ -87,14 +86,7 @@ export class AccountsStack extends AcceleratorStack {
     // Exactly like CloudWatch key, reference a new key if in home
     // otherwise create new kms key
     if (props.globalConfig.homeRegion == cdk.Stack.of(this).region) {
-      this.lambdaKey = cdk.aws_kms.Key.fromKeyArn(
-        this,
-        'AcceleratorGetLambdaKey',
-        cdk.aws_ssm.StringParameter.valueForStringParameter(
-          this,
-          this.acceleratorResourceNames.parameters.lambdaCmkArn,
-        ),
-      ) as cdk.aws_kms.Key;
+      this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
     } else {
       // Create KMS Key for Lambda environment variable encryption
       this.lambdaKey = new cdk.aws_kms.Key(this, 'AcceleratorLambdaKey', {
@@ -259,35 +251,17 @@ export class AccountsStack extends AcceleratorStack {
           }
         }
 
-        if (props.securityConfig.accessAnalyzer.enable) {
-          this.logger.debug('Enable Service Access for access-analyzer.amazonaws.com');
-          new iam.CfnServiceLinkedRole(this, 'AccessAnalyzerServiceLinkedRole', {
-            awsServiceName: 'access-analyzer.amazonaws.com',
-          });
-        }
+        this.logger.debug('Enable Service Access for access-analyzer.amazonaws.com');
+        this.createAccessAnalyzerServiceLinkedRole(this.cloudwatchKey, this.lambdaKey);
 
-        if (props.securityConfig.centralSecurityServices.guardduty.enable) {
-          this.logger.debug('Enable Service Access for guardduty.amazonaws.com');
-          new iam.CfnServiceLinkedRole(this, 'GuardDutyServiceLinkedRole', {
-            awsServiceName: 'guardduty.amazonaws.com',
-            description: 'A service-linked role required for Amazon GuardDuty to access your resources. ',
-          });
-        }
+        this.logger.debug('Enable Service Access for guardduty.amazonaws.com');
+        this.createGuardDutyServiceLinkedRole(this.cloudwatchKey, this.lambdaKey);
 
-        if (props.securityConfig.centralSecurityServices.securityHub.enable) {
-          this.logger.debug('Enable Service Access for securityhub.amazonaws.com');
-          new iam.CfnServiceLinkedRole(this, 'SecurityHubServiceLinkedRole', {
-            awsServiceName: 'securityhub.amazonaws.com',
-            description: 'A service-linked role required for AWS Security Hub to access your resources.',
-          });
-        }
+        this.logger.debug('Enable Service Access for securityhub.amazonaws.com');
+        this.createSecurityHubServiceLinkedRole(this.cloudwatchKey, this.lambdaKey);
 
-        if (props.securityConfig.centralSecurityServices.macie.enable) {
-          this.logger.debug('Enable Service Access for macie.amazonaws.com');
-          new iam.CfnServiceLinkedRole(this, 'MacieServiceLinkedRole', {
-            awsServiceName: 'macie.amazonaws.com',
-          });
-        }
+        this.logger.debug('Enable Service Access for macie.amazonaws.com');
+        this.createMacieServiceLinkedRole(this.cloudwatchKey, this.lambdaKey);
 
         if (props.securityConfig.centralSecurityServices?.scpRevertChangesConfig?.enable) {
           this.logger.info(`Creating resources to revert modifications to scps`);
@@ -421,6 +395,11 @@ export class AccountsStack extends AcceleratorStack {
     // Create SSM parameters
     //
     this.createSsmParameters();
+
+    //
+    // Add nag suppressions by path
+    //
+    this.addResourceSuppressionsByPath(this.nagSuppressionInputs);
 
     this.logger.info('Completed stack synthesis');
   }

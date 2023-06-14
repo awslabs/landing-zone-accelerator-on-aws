@@ -15,7 +15,7 @@ import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import * as path from 'path';
 import { NagSuppressions } from 'cdk-nag';
-import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import { AcceleratorKeyType, AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import {
   AppConfigItem,
   VpcConfig,
@@ -113,9 +113,15 @@ export class ApplicationsStack extends AcceleratorStack {
   private securityGroupMap: Map<string, string>;
   private subnetMap: Map<string, string>;
   private vpcMap: Map<string, string>;
+  private cloudwatchKey: cdk.aws_kms.IKey;
+  private lambdaKey: cdk.aws_kms.IKey;
   constructor(scope: Construct, id: string, props: ApplicationStackProps) {
     super(scope, id, props);
     this.props = props;
+
+    this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
+
+    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
 
     const allVpcItems = [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? [];
     const allAppConfigs: AppConfigItem[] = props.customizationsConfig.applications ?? [];
@@ -481,6 +487,9 @@ export class ApplicationsStack extends AcceleratorStack {
       healthCheckType: autoscaling.healthCheckType ?? undefined,
       targetGroups: finalTargetGroups,
       subnets,
+      lambdaKey: this.lambdaKey,
+      cloudWatchLogKmsKey: this.cloudwatchKey,
+      cloudWatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
     });
 
     NagSuppressions.addResourceSuppressionsByPath(

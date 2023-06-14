@@ -70,6 +70,9 @@ new FirewallAutoScalingGroup(stack, 'TestFirewall', {
   configDir: './',
   launchTemplate,
   vpc: 'TestVpc',
+  lambdaKey: new cdk.aws_kms.Key(stack, 'LambdaKey', {}),
+  cloudWatchLogKmsKey: new cdk.aws_kms.Key(stack, 'CloudWatchKey', {}),
+  cloudWatchLogRetentionInDays: 3653,
 });
 
 /**

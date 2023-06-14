@@ -324,11 +324,38 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
       launchTemplate,
       vpc: group.vpc,
       tags: group.tags,
+      lambdaKey: this.lambdaKey,
+      cloudWatchLogKmsKey: this.cloudwatchKey,
+      cloudWatchLogRetentionInDays: this.logRetention,
     });
 
     NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/${resourceName}/Resource/Resource`, [
       { id: 'AwsSolutions-AS3', reason: 'Scaling policies are not offered as a part of this solution.' },
     ]);
+
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/${resourceName}/Resource/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/Resource`,
+      [{ id: 'AwsSolutions-IAM4', reason: 'Custom resource Lambda role policy.' }],
+    );
+
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/${resourceName}/Resource/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/DefaultPolicy/Resource`,
+      [{ id: 'AwsSolutions-IAM5', reason: 'Custom resource Lambda role policy.' }],
+    );
+
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/${resourceName}/Resource/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/Resource`,
+      [{ id: 'AwsSolutions-IAM4', reason: 'Custom resource Lambda role policy.' }],
+    );
+
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/${resourceName}/Resource/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
+      [{ id: 'AwsSolutions-IAM5', reason: 'Custom resource Lambda role policy.' }],
+    );
   }
 
   /**

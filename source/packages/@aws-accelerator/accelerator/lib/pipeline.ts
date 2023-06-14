@@ -19,7 +19,7 @@ import * as codepipeline_actions from 'aws-cdk-lib/aws-codepipeline-actions';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 
-import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
+import { Bucket, BucketEncryptionType, ServiceLinkedRole } from '@aws-accelerator/constructs';
 
 import { AcceleratorStage } from './accelerator-stage';
 import * as config_repository from './config-repository';
@@ -679,14 +679,16 @@ export class AcceleratorPipeline extends Construct {
 
     // We can Enable pipeline notification only for regions with AWS CodeStar being available
     if (awsCodeStarSupportedRegions.includes(cdk.Stack.of(this).region)) {
-      const codeStarNotificationsRole = new cdk.aws_iam.CfnServiceLinkedRole(
-        this,
-        'AWSServiceRoleForCodeStarNotifications',
-        {
-          awsServiceName: 'codestar-notifications.amazonaws.com',
-          description: 'Allows AWS CodeStar Notifications to access Amazon CloudWatch Events on your behalf',
-        },
-      );
+      const codeStarNotificationsRole = new ServiceLinkedRole(this, 'AWSServiceRoleForCodeStarNotifications', {
+        environmentEncryptionKmsKey: this.installerKey,
+        cloudWatchLogKmsKey: this.installerKey,
+        // specifying this as it will be overwritten with global retention in logging stack
+        cloudWatchLogRetentionInDays: 7,
+        awsServiceName: 'codestar-notifications.amazonaws.com',
+        description: 'Allows AWS CodeStar Notifications to access Amazon CloudWatch Events on your behalf',
+        roleName: 'AWSServiceRoleForCodeStarNotifications',
+      });
+
       this.pipeline.node.addDependency(codeStarNotificationsRole);
 
       const acceleratorStatusTopic = new cdk.aws_sns.Topic(this, 'AcceleratorStatusTopic', {

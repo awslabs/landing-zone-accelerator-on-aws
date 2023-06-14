@@ -46,7 +46,7 @@ import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { pascalCase } from 'pascal-case';
-import { AcceleratorStack, AcceleratorStackProps } from '../accelerator-stack';
+import { AcceleratorKeyType, AcceleratorStack, AcceleratorStackProps } from '../accelerator-stack';
 import { getSecurityGroup, getVpc } from './utils/getter-utils';
 import {
   containsAllIngressRule,
@@ -91,6 +91,10 @@ export abstract class NetworkStack extends AcceleratorStack {
    */
   public readonly cloudwatchKey: cdk.aws_kms.Key;
   /**
+   * Lambda environment encryption KMS key
+   */
+  public readonly lambdaKey: cdk.aws_kms.Key;
+  /**
    * Global CloudWatch logs retention setting
    */
   public readonly logRetention: number;
@@ -117,14 +121,8 @@ export abstract class NetworkStack extends AcceleratorStack {
     this.sharedVpcs = this.getSharedVpcs(this.vpcResources);
     this.vpcsInScope = this.getVpcsInScope(this.vpcResources);
 
-    this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
-      this,
-      'AcceleratorGetCloudWatchKey',
-      cdk.aws_ssm.StringParameter.valueForStringParameter(
-        this,
-        this.acceleratorResourceNames.parameters.cloudWatchLogCmkArn,
-      ),
-    ) as cdk.aws_kms.Key;
+    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
+    this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
   }
 
   /**
