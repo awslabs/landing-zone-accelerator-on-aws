@@ -38,8 +38,8 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-sdk/client-ec2": "3.272.0",
-    "@aws-sdk/client-ssm": "3.272.0",
-    "@aws-sdk/util-retry": "3.272.0"
+    "@aws-sdk/client-ec2": "3.347.1",
+    "@aws-sdk/client-ssm": "3.347.1",
+    "@aws-sdk/util-retry": "3.347.0"
   }
 }
