@@ -49,6 +49,6 @@
     "@aws-accelerator/utils": "^0.0.0",
     "aws-cdk-lib": "2.79.1",
     "@types/uuid": "9.0.0",
-    "@aws-sdk/client-config-service": "3.272.0"
+    "@aws-sdk/client-config-service": "3.347.1"
   }
 }
