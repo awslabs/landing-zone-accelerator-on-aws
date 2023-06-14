@@ -43,7 +43,7 @@ exports[`SecurityStack Construct(SecurityStack):  Snapshot Test 1`] = `
             "GLOBAL_REGION": "us-east-1",
             "LOG_ACCOUNT_ID": "333333333333",
             "METADATA_BUCKET": "aws-accelerator-metadata-333333333333-us-east-1",
-            "ORGANIZATION_ID": "r-asdf",
+            "ORGANIZATION_ID": "o-asdf123456",
             "PARTITION": {
               "Ref": "AWS::Partition",
             },
@@ -1277,7 +1277,7 @@ exports[`delegatedAdminStack Construct(SecurityStack):  Snapshot Test 1`] = `
             "GLOBAL_REGION": "us-east-1",
             "LOG_ACCOUNT_ID": "333333333333",
             "METADATA_BUCKET": "aws-accelerator-metadata-333333333333-us-east-1",
-            "ORGANIZATION_ID": "r-asdf",
+            "ORGANIZATION_ID": "o-asdf123456",
             "PARTITION": {
               "Ref": "AWS::Partition",
             },

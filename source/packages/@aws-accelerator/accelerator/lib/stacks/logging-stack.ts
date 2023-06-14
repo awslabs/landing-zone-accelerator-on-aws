@@ -32,7 +32,6 @@ import {
   CloudWatchToS3Firehose,
   KeyLookup,
   NewCloudWatchLogEvent,
-  Organization,
   S3PublicAccessBlock,
   SsmParameterLookup,
 } from '@aws-accelerator/constructs';
@@ -49,7 +48,6 @@ export type cloudwatchExclusionProcessedItem = {
 
 export class LoggingStack extends AcceleratorStack {
   private cloudwatchKey: cdk.aws_kms.IKey;
-  private organizationId: string | undefined;
   private lambdaKey: cdk.aws_kms.IKey;
   private centralLogsBucketName: string;
   private centralLogsBucket: CentralLogsBucket | undefined;
@@ -63,9 +61,6 @@ export class LoggingStack extends AcceleratorStack {
     this.centralLogsBucketName = `${
       this.acceleratorResourceNames.bucketPrefixes.centralLogs
     }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`;
-
-    // Set Organization ID
-    this.setOrganizationId();
 
     // Create S3 Key in all account
     const s3Key = this.createS3Key();
@@ -437,11 +432,6 @@ export class LoggingStack extends AcceleratorStack {
     this.logger.debug(`Stack synthesis complete`);
   }
 
-  private setOrganizationId() {
-    if (this.props.organizationConfig.enable) {
-      this.organizationId = new Organization(this, 'Organization').id;
-    }
-  }
   /**
    * Function to create S3 Key
    */

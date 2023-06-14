@@ -20,17 +20,12 @@ import { BootstrapVersion } from '../accelerator';
 export class BootstrapStack extends AcceleratorStack {
   readonly qualifier: string;
   readonly managementAccount: string;
-  readonly organizationId: string;
   readonly s3KmsKeyOutputValue: string;
   readonly assetBucketName: string;
   constructor(scope: Construct, id: string, props: AcceleratorStackProps, bootstrapQualifier?: string) {
     super(scope, id, props);
     this.qualifier = bootstrapQualifier ?? 'accel';
     this.managementAccount = props.accountsConfig.getManagementAccountId();
-    // Workaround to get organization Id without using Organization construct, which requires custom resource.
-    this.organizationId = props.organizationConfig.enable
-      ? props.organizationConfig.organizationalUnitIds![0].arn.split('/')[1]
-      : '';
     this.assetBucketName = this.getAssetBucketName();
 
     if (!this.account || !this.region) {

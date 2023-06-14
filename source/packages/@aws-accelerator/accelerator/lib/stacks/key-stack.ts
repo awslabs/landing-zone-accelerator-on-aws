@@ -15,16 +15,12 @@ import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
-import { Organization } from '@aws-accelerator/constructs';
 
 export class KeyStack extends AcceleratorStack {
-  private readonly organizationId?: string;
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
     if (cdk.Stack.of(this).account === props.accountsConfig.getAuditAccountId()) {
-      this.organizationId = props.organizationConfig.enable ? new Organization(this, 'Organization').id : '';
-
       const accountIds = props.accountsConfig.getAccountIds();
 
       const key = new cdk.aws_kms.Key(this, 'AcceleratorKey', {

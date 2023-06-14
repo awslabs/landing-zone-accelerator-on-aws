@@ -23,7 +23,7 @@ export class DependenciesStack extends AcceleratorStack {
     // Create put SSM parameter role
     if (cdk.Stack.of(this).region === props.globalConfig.homeRegion) {
       this.logger.info('Creating cross-account/cross-region put SSM parameter role in home region');
-      this.createPutSsmParameterRole(props.prefixes.ssmParamName, props.partition, this.getOrganizationId());
+      this.createPutSsmParameterRole(props.prefixes.ssmParamName, props.partition, this.organizationId);
     }
   }
 
