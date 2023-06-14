@@ -84,7 +84,6 @@ interface Peering {
 }
 
 export class NetworkAssociationsStack extends NetworkStack {
-  private lambdaKey: cdk.aws_kms.IKey;
   private dnsFirewallMap: Map<string, string>;
   private dxGatewayMap: Map<string, string>;
   private peeringList: Peering[];
@@ -109,15 +108,6 @@ export class NetworkAssociationsStack extends NetworkStack {
       this.transitGateways = new Map<string, string>();
       this.transitGatewayAttachments = new Map<string, string>();
       this.transitGatewayRouteTables = new Map<string, string>();
-
-      this.lambdaKey = cdk.aws_kms.Key.fromKeyArn(
-        this,
-        'AcceleratorGetLambdaKey',
-        cdk.aws_ssm.StringParameter.valueForStringParameter(
-          this,
-          this.acceleratorResourceNames.parameters.lambdaCmkArn,
-        ),
-      );
 
       //
       // Build VPC peering list

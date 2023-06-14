@@ -75,6 +75,7 @@ export * from './lib/aws-detective/detective-members';
 export * from './lib/aws-detective/detective-organization-admin-account';
 export * from './lib/aws-detective/detective-graph-config';
 export * from './lib/aws-iam/password-policy';
+export * from './lib/aws-iam/service-linked-role';
 export * from './lib/aws-firehose/cloudwatch-to-s3-firehose';
 export * from './lib/aws-fms/fms-notification-channel';
 export * from './lib/aws-fms/fms-organization-admin-account';

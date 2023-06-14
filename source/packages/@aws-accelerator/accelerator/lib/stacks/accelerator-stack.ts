@@ -18,6 +18,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import * as winston from 'winston';
+import { NagSuppressions } from 'cdk-nag';
 
 import {
   AccountsConfig,
@@ -37,11 +38,100 @@ import {
   VpcConfig,
   VpcTemplatesConfig,
 } from '@aws-accelerator/config';
-import { S3LifeCycleRule } from '@aws-accelerator/constructs';
+import { KeyLookup, S3LifeCycleRule, ServiceLinkedRole } from '@aws-accelerator/constructs';
 import { createLogger, policyReplacements, SsmParameterPath, SsmResourceType } from '@aws-accelerator/utils';
 
 import { version } from '../../../../../package.json';
 import { AcceleratorResourceNames } from '../accelerator-resource-names';
+
+/**
+ * Allowed rule id type for NagSuppression
+ */
+export enum NagSuppressionRuleIds {
+  DDB3 = 'DDB3',
+  EC28 = 'EC28',
+  EC29 = 'EC29',
+  IAM4 = 'IAM4',
+  IAM5 = 'IAM5',
+  SMG4 = 'SMG4',
+  VPC3 = 'VPC3',
+  AS3 = 'AS3',
+}
+
+/**
+ * NagSuppression Detail Type
+ */
+export type NagSuppressionDetailType = {
+  /**
+   * Suppressions rule id
+   */
+  id: NagSuppressionRuleIds;
+  /**
+   * Suppressions details
+   */
+  details: {
+    /**
+     * Resource path
+     */
+    path: string;
+    /**
+     * Suppressions reason
+     */
+    reason: string;
+  }[];
+};
+
+/**
+ * Accelerator Key type enum
+ */
+export enum AcceleratorKeyType {
+  /**
+   * Cloudwatch key
+   */
+  CLOUDWATCH_KEY = 'cloudwatch-key',
+  /**
+   * Lambda key
+   */
+  LAMBDA_KEY = 'lambda-key',
+  /**
+   * Central Log Bucket key
+   */
+  CENTRAL_LOG_BUCKET = 'central-log-bucket',
+}
+
+/**
+ * Service Linked Role type enum
+ */
+export enum ServiceLinkedRoleType {
+  /**
+   * Access Analyzer SLR
+   */
+  ACCESS_ANALYZER = 'access-analyzer',
+  /**
+   * GUARDDUTY SLR
+   */
+  GUARDDUTY = 'guardduty',
+  /**
+   * MACIE SLR
+   */
+  MACIE = 'macie',
+  /**
+   * SECURITYHUB SLR
+   */
+  SECURITY_HUB = 'securityhub',
+  /**
+   * AUTOSCALING SLR
+   */
+  AUTOSCALING = 'autoscaling',
+  /**
+   * AWSCloud9 SLR
+   */
+  AWS_CLOUD9 = 'cloud9',
+  /**
+   * AWS Firewall Manager SLR
+   */
+  FMS = 'fms',
+}
 
 export interface AcceleratorStackProps extends cdk.StackProps {
   readonly configDirPath: string;
@@ -122,6 +212,16 @@ export abstract class AcceleratorStack extends cdk.Stack {
   protected ssmParameters: { logicalId: string; parameterName: string; stringValue: string }[];
 
   public acceleratorResourceNames: AcceleratorResourceNames;
+
+  /**
+   * List of supported partitions for Service Linked Role creation
+   */
+  protected serviceLinkedRoleSupportedPartitionList: string[] = ['aws', 'aws-cn', 'aws-us-gov'];
+
+  /**
+   * Nag suppression input list
+   */
+  protected nagSuppressionInputs: NagSuppressionDetailType[] = [];
 
   protected constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
@@ -727,6 +827,529 @@ export abstract class AcceleratorStack extends cdk.Stack {
       return cdk.aws_ssm.StringParameter.valueForStringParameter(this, imageIdMatch![1]);
     } else {
       return imageId;
+    }
+  }
+
+  /**
+   * Create Access Analyzer Service Linked role
+   *
+   * @remarks
+   * Access Analyzer Service linked role is created when organization is enabled and accessAnalyzer flag is ON.
+   */
+  protected createAccessAnalyzerServiceLinkedRole(cloudwatchKey: cdk.aws_kms.Key, lambdaKey: cdk.aws_kms.Key) {
+    if (
+      this.props.organizationConfig.enable &&
+      this.props.securityConfig.accessAnalyzer.enable &&
+      this.serviceLinkedRoleSupportedPartitionList.includes(this.props.partition)
+    ) {
+      this.createServiceLinkedRole(ServiceLinkedRoleType.ACCESS_ANALYZER, cloudwatchKey, lambdaKey);
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/AccessAnalyzerServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
+          {
+            path: `${this.stackName}/AccessAnalyzerServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/DefaultPolicy/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/AccessAnalyzerServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
+          {
+            path: `${this.stackName}/AccessAnalyzerServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+    }
+  }
+
+  /**
+   * Create GuardDuty Service Linked role
+   *
+   * @remarks
+   * GuardDuty Service linked role is created when organization is enabled and guardduty flag is ON.
+   */
+  protected createGuardDutyServiceLinkedRole(cloudwatchKey: cdk.aws_kms.Key, lambdaKey: cdk.aws_kms.Key) {
+    if (
+      this.props.organizationConfig.enable &&
+      this.props.securityConfig.centralSecurityServices.guardduty.enable &&
+      this.serviceLinkedRoleSupportedPartitionList.includes(this.props.partition)
+    ) {
+      this.createServiceLinkedRole(ServiceLinkedRoleType.GUARDDUTY, cloudwatchKey, lambdaKey);
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/GuardDutyServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
+          {
+            path: `${this.stackName}/GuardDutyServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/DefaultPolicy/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/GuardDutyServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
+          {
+            path: `${this.stackName}/GuardDutyServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+    }
+  }
+
+  /**
+   * Create SecurityHub Service Linked role
+   *
+   * @remarks
+   * SecurityHub Service linked role is created when organization is enabled and securityHub flag is ON.
+   */
+  protected createSecurityHubServiceLinkedRole(cloudwatchKey: cdk.aws_kms.Key, lambdaKey: cdk.aws_kms.Key) {
+    if (
+      this.props.organizationConfig.enable &&
+      this.props.securityConfig.centralSecurityServices.securityHub.enable &&
+      this.serviceLinkedRoleSupportedPartitionList.includes(this.props.partition)
+    ) {
+      this.createServiceLinkedRole(ServiceLinkedRoleType.SECURITY_HUB, cloudwatchKey, lambdaKey);
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/SecurityHubServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
+          {
+            path: `${this.stackName}/SecurityHubServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/DefaultPolicy/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/SecurityHubServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
+          {
+            path: `${this.stackName}/SecurityHubServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+    }
+  }
+
+  /**
+   * Create Macie Service Linked role
+   *
+   * @remarks
+   * Macie Service linked role is created when organization is enabled and macie flag is ON.
+   */
+  protected createMacieServiceLinkedRole(cloudwatchKey: cdk.aws_kms.Key, lambdaKey: cdk.aws_kms.Key) {
+    if (
+      this.props.organizationConfig.enable &&
+      this.props.securityConfig.centralSecurityServices.macie.enable &&
+      this.serviceLinkedRoleSupportedPartitionList.includes(this.props.partition)
+    ) {
+      this.createServiceLinkedRole(ServiceLinkedRoleType.MACIE, cloudwatchKey, lambdaKey);
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/MacieServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
+          {
+            path: `${this.stackName}/MacieServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/DefaultPolicy/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/MacieServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
+          {
+            path: `${this.stackName}/MacieServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+    }
+  }
+
+  /**
+   * Create AutoScaling Service Linked role
+   *
+   * @remarks
+   * AutoScaling when ebsDefaultVolumeEncryption flag is ON. Or when firewall is used.
+   */
+  protected createAutoScalingServiceLinkedRole(cloudwatchKey: cdk.aws_kms.Key, lambdaKey: cdk.aws_kms.Key) {
+    if (
+      this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable &&
+      this.serviceLinkedRoleSupportedPartitionList.includes(this.props.partition)
+    ) {
+      this.createServiceLinkedRole(ServiceLinkedRoleType.AUTOSCALING, cloudwatchKey, lambdaKey);
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
+          {
+            path: `${this.stackName}/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/DefaultPolicy/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
+          {
+            path: `${this.stackName}/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+    }
+  }
+
+  /**
+   * Create AWS CLOUD9 Service Linked role
+   *
+   * @remarks
+   * AWS CLOUD9 when ebsDefaultVolumeEncryption flag is ON and partition is 'aws'
+   */
+  protected createAwsCloud9ServiceLinkedRole(cloudwatchKey: cdk.aws_kms.Key, lambdaKey: cdk.aws_kms.Key) {
+    if (
+      this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable &&
+      this.props.partition === 'aws'
+    ) {
+      this.createServiceLinkedRole(ServiceLinkedRoleType.AWS_CLOUD9, cloudwatchKey, lambdaKey);
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/AWSServiceRoleForAWSCloud9/CreateServiceLinkedRoleFunction/ServiceRole/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
+          {
+            path: `${this.stackName}/AWSServiceRoleForAWSCloud9/CreateServiceLinkedRoleFunction/ServiceRole/DefaultPolicy/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/AWSServiceRoleForAWSCloud9/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
+          {
+            path: `${this.stackName}/AWSServiceRoleForAWSCloud9/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+    }
+  }
+
+  /**
+   * Create AWS Firewall Manager Service Linked role
+   *
+   * @remarks
+   * Service linked role is created in the partitions that allow it.
+   * Since it is used for delegated admin organizations need to be enabled
+   */
+  protected createAwsFirewallManagerServiceLinkedRole(
+    cloudwatchKey: cdk.aws_kms.Key,
+    lambdaKey: cdk.aws_kms.Key,
+  ): ServiceLinkedRole {
+    // create service linked roles only in the partitions that allow it
+    return this.createServiceLinkedRole(ServiceLinkedRoleType.FMS, cloudwatchKey, lambdaKey);
+  }
+  /**
+   * Function to create Service Linked Role for given type
+   * @param roleType {@link ServiceLinkedRoleType}
+   * @returns CreateServiceLinkedRole
+   *
+   * @remarks
+   * Service Linked Role creation is depended on the service configuration.
+   */
+  private createServiceLinkedRole(
+    roleType: string,
+    cloudwatchKey: cdk.aws_kms.Key,
+    lambdaKey: cdk.aws_kms.Key,
+  ): ServiceLinkedRole {
+    let serviceLinkedRole: ServiceLinkedRole | undefined;
+
+    switch (roleType) {
+      case ServiceLinkedRoleType.ACCESS_ANALYZER:
+        this.logger.debug('Create AccessAnalyzerServiceLinkedRole');
+        serviceLinkedRole = new ServiceLinkedRole(this, 'AccessAnalyzerServiceLinkedRole', {
+          awsServiceName: 'access-analyzer.amazonaws.com',
+          environmentEncryptionKmsKey: lambdaKey,
+          cloudWatchLogKmsKey: cloudwatchKey,
+          cloudWatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+          roleName: 'AWSServiceRoleForAccessAnalyzer',
+        });
+
+        break;
+      case ServiceLinkedRoleType.GUARDDUTY:
+        this.logger.debug('Create GuardDutyServiceLinkedRole');
+        new ServiceLinkedRole(this, 'GuardDutyServiceLinkedRole', {
+          awsServiceName: 'guardduty.amazonaws.com',
+          description: 'A service-linked role required for Amazon GuardDuty to access your resources. ',
+          environmentEncryptionKmsKey: lambdaKey,
+          cloudWatchLogKmsKey: cloudwatchKey,
+          cloudWatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+          roleName: 'AWSServiceRoleForAmazonGuardDuty',
+        });
+
+        break;
+      case ServiceLinkedRoleType.SECURITY_HUB:
+        if (
+          this.props.organizationConfig.enable &&
+          this.props.securityConfig.centralSecurityServices.securityHub.enable
+        ) {
+          this.logger.debug('Create SecurityHubServiceLinkedRole');
+          new ServiceLinkedRole(this, 'SecurityHubServiceLinkedRole', {
+            awsServiceName: 'securityhub.amazonaws.com',
+            description: 'A service-linked role required for AWS Security Hub to access your resources.',
+            environmentEncryptionKmsKey: lambdaKey,
+            cloudWatchLogKmsKey: cloudwatchKey,
+            cloudWatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+            roleName: 'AWSServiceRoleForSecurityHub',
+          });
+        }
+        break;
+      case ServiceLinkedRoleType.MACIE:
+        if (this.props.organizationConfig.enable && this.props.securityConfig.centralSecurityServices.macie.enable) {
+          this.logger.debug('Create MacieServiceLinkedRole');
+          new ServiceLinkedRole(this, 'MacieServiceLinkedRole', {
+            awsServiceName: 'macie.amazonaws.com',
+            environmentEncryptionKmsKey: lambdaKey,
+            cloudWatchLogKmsKey: cloudwatchKey,
+            cloudWatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+            roleName: 'AWSServiceRoleForAmazonMacie',
+          });
+        }
+        break;
+      case ServiceLinkedRoleType.AUTOSCALING:
+        this.logger.debug('Create AutoScalingServiceLinkedRole');
+        new ServiceLinkedRole(this, 'AutoScalingServiceLinkedRole', {
+          awsServiceName: 'autoscaling.amazonaws.com',
+          description:
+            'Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling',
+          environmentEncryptionKmsKey: lambdaKey,
+          cloudWatchLogKmsKey: cloudwatchKey,
+          cloudWatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+          roleName: 'AWSServiceRoleForAutoScaling',
+        });
+        break;
+      case ServiceLinkedRoleType.AWS_CLOUD9:
+        if (
+          this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable &&
+          this.props.partition === 'aws'
+        ) {
+          this.logger.debug('Create AutoScalingServiceLinkedRole');
+          new ServiceLinkedRole(this, 'AWSServiceRoleForAWSCloud9', {
+            awsServiceName: 'cloud9.amazonaws.com',
+            description: 'Service linked role for AWS Cloud9',
+            environmentEncryptionKmsKey: lambdaKey,
+            cloudWatchLogKmsKey: cloudwatchKey,
+            cloudWatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+            roleName: 'AWSServiceRoleForAWSCloud9',
+          });
+        }
+        break;
+      case ServiceLinkedRoleType.FMS:
+        this.logger.debug('Create FirewallManagerServiceLinkedRole');
+        new ServiceLinkedRole(this, 'FirewallManagerServiceLinkedRole', {
+          awsServiceName: 'fms.amazonaws.com',
+          environmentEncryptionKmsKey: lambdaKey,
+          cloudWatchLogKmsKey: cloudwatchKey,
+          cloudWatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+          roleName: 'AWSServiceRoleForFMS',
+        });
+        break;
+      default:
+        throw new Error(`Invalid service linked role type ${roleType}`);
+    }
+    return serviceLinkedRole!;
+  }
+
+  /**
+   * Function to get Accelerator key for given key type
+   * @param keyType {@type AcceleratorKeyType}
+   * @param customResourceLambdaCloudWatchLogKmsKey {@link cdk.aws_kms.IKey}
+   * @returns cdk.aws_kms.Key
+   */
+  protected getAcceleratorKey(
+    keyType: AcceleratorKeyType,
+    customResourceLambdaCloudWatchLogKmsKey?: cdk.aws_kms.IKey,
+  ): cdk.aws_kms.Key {
+    let key: cdk.aws_kms.Key | undefined;
+    switch (keyType) {
+      case AcceleratorKeyType.CLOUDWATCH_KEY:
+        key = cdk.aws_kms.Key.fromKeyArn(
+          this,
+          'AcceleratorGetCloudWatchKey',
+          cdk.aws_ssm.StringParameter.valueForStringParameter(
+            this,
+            this.acceleratorResourceNames.parameters.cloudWatchLogCmkArn,
+          ),
+        ) as cdk.aws_kms.Key;
+        break;
+      case AcceleratorKeyType.LAMBDA_KEY:
+        key = cdk.aws_kms.Key.fromKeyArn(
+          this,
+          'AcceleratorGetLambdaKey',
+          cdk.aws_ssm.StringParameter.valueForStringParameter(
+            this,
+            this.acceleratorResourceNames.parameters.lambdaCmkArn,
+          ),
+        ) as cdk.aws_kms.Key;
+        break;
+      case AcceleratorKeyType.CENTRAL_LOG_BUCKET:
+        key = new KeyLookup(this, 'AcceleratorCentralLogBucketKeyLookup', {
+          accountId: this.props.accountsConfig.getLogArchiveAccountId(),
+          keyRegion: this.props.centralizedLoggingRegion,
+          roleName: this.acceleratorResourceNames.roles.crossAccountCentralLogBucketCmkArnSsmParameterAccess,
+          keyArnParameterName: this.acceleratorResourceNames.parameters.centralLogBucketCmkArn,
+          kmsKey: customResourceLambdaCloudWatchLogKmsKey,
+          logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+          acceleratorPrefix: this.props.prefixes.accelerator,
+        }).getKey();
+        break;
+      default:
+        throw new Error(`Invalid key type ${keyType}`);
+    }
+
+    return key!;
+  }
+
+  /**
+   * Function to add resource suppressions by path
+   * @param inputs {@link NagSuppressionDetailType}
+   */
+  protected addResourceSuppressionsByPath(inputs: NagSuppressionDetailType[]): void {
+    for (const input of inputs) {
+      for (const detail of input.details) {
+        NagSuppressions.addResourceSuppressionsByPath(this, detail.path, [
+          { id: `AwsSolutions-${input.id}`, reason: detail.reason },
+        ]);
+      }
     }
   }
 }

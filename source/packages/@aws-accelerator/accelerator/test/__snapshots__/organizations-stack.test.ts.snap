@@ -7,8 +7,46 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
       "Default": "/accelerator/kms/cloudwatch/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/kms/lambda/key-arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
   },
   "Resources": {
+    "AcceleratorCentralLogBucketKeyLookup26F8C418": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
+            "Arn",
+          ],
+        },
+        "assumeRoleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::333333333333:role/AWSAccelerator-CentralBucket-KeyArnParam-Role",
+            ],
+          ],
+        },
+        "invokingAccountID": "111111111111",
+        "invokingRegion": "us-east-1",
+        "parameterAccountID": "333333333333",
+        "parameterName": "/accelerator/logging/central-bucket/kms/arn",
+        "parameterRegion": "us-west-2",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::SsmGetParameterValue",
+      "UpdateReplacePolicy": "Delete",
+    },
     "AttachBackupPolicyInfrastructure61051A6A": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
@@ -171,40 +209,6 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
         "uuid": "REPLACED-UUID",
       },
       "Type": "Custom::CreatePolicy",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "CentralLogsBucketKeyLookup52CD8A37": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
-            "Arn",
-          ],
-        },
-        "assumeRoleArn": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":iam::333333333333:role/AWSAccelerator-CentralBucket-KeyArnParam-Role",
-            ],
-          ],
-        },
-        "invokingAccountID": "111111111111",
-        "invokingRegion": "us-east-1",
-        "parameterAccountID": "333333333333",
-        "parameterName": "/accelerator/logging/central-bucket/kms/arn",
-        "parameterRegion": "us-west-2",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::SsmGetParameterValue",
       "UpdateReplacePolicy": "Delete",
     },
     "CustomAuditManagerEnableOrganizationAdminAccountCustomResourceProviderHandlerCA9379D9": {
@@ -1721,6 +1725,9 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
     "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D": {
       "DeletionPolicy": "Delete",
       "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -1876,43 +1883,55 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
       "Type": "Custom::EnableSharingWithAwsOrganization",
       "UpdateReplacePolicy": "Delete",
     },
-    "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambda2D69B84E": {
+    "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionA541DABF": {
       "DependsOn": [
-        "FirewallManagerServiceLinkedRole",
-        "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRoleDefaultPolicy83E36C98",
-        "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRole28F3C566",
+        "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicyBF2D7C58",
+        "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRole4B6F4F45",
       ],
       "Properties": {
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Description": "Custom resource provider to create service linked role",
         "Handler": "index.handler",
+        "KmsKeyArn": {
+          "Ref": "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
         "Role": {
           "Fn::GetAtt": [
-            "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRole28F3C566",
+            "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRole4B6F4F45",
             "Arn",
           ],
         },
         "Runtime": "nodejs16.x",
-        "Timeout": 180,
+        "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRole28F3C566": {
-      "DependsOn": [
-        "FirewallManagerServiceLinkedRole",
-      ],
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
-            },
+    "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionLogGroup162E628B": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionA541DABF",
+              },
+            ],
           ],
         },
+        "RetentionInDays": 3653,
       },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRole4B6F4F45": {
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -1943,114 +1962,46 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
       },
       "Type": "AWS::IAM::Role",
     },
-    "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRoleDefaultPolicy83E36C98": {
-      "DependsOn": [
-        "FirewallManagerServiceLinkedRole",
-      ],
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
-            },
-          ],
-        },
-      },
+    "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicyBF2D7C58": {
       "Properties": {
         "PolicyDocument": {
           "Statement": [
             {
               "Action": [
-                "fms:AssociateAdminAccount",
-                "fms:DisassociateAdminAccount",
-                "fms:GetAdminAccount",
-                "organizations:DescribeAccount",
-                "organizations:DescribeOrganization",
-                "organizations:DescribeOrganizationalUnit",
-                "organizations:DeregisterDelegatedAdministrator",
-                "organizations:DisableAWSServiceAccess",
-                "organizations:EnableAwsServiceAccess",
-                "organizations:ListAccounts",
-                "organizations:ListAWSServiceAccessForOrganization",
-                "organizations:ListChildren",
-                "organizations:ListDelegatedAdministrators",
-                "organizations:ListDelegatedServicesForAccount",
-                "organizations:ListOrganizationalUnitsForParent",
-                "organizations:ListParents",
-                "organizations:ListRoots",
-                "organizations:RegisterDelegatedAdministrator",
+                "iam:CreateServiceLinkedRole",
+                "iam:GetRole",
               ],
               "Effect": "Allow",
               "Resource": "*",
             },
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    "arn:",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    ":iam::222222222222:role/AWSControlTowerExecution",
-                  ],
-                ],
-              },
-            },
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRoleDefaultPolicy83E36C98",
+        "PolicyName": "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicyBF2D7C58",
         "Roles": [
           {
-            "Ref": "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRole28F3C566",
+            "Ref": "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRole4B6F4F45",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "FMSOrganizationAdminAccountfmsAdmin222222222222B4E8A399": {
-      "DeletionPolicy": "Delete",
+    "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventEE1DB34B": {
       "DependsOn": [
-        "FirewallManagerServiceLinkedRole",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "FMSOrganizationAdminAccountframeworkonEvent17783F2B",
-            "Arn",
-          ],
-        },
-        "adminAccountId": "222222222222",
-        "assumeRoleName": "AWSControlTowerExecution",
-        "partition": {
-          "Ref": "AWS::Partition",
-        },
-        "region": "us-east-1",
-      },
-      "Type": "AWS::CloudFormation::CustomResource",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "FMSOrganizationAdminAccountframeworkonEvent17783F2B": {
-      "DependsOn": [
-        "FirewallManagerServiceLinkedRole",
-        "FMSOrganizationAdminAccountframeworkonEventServiceRoleDefaultPolicyD56A7BD5",
-        "FMSOrganizationAdminAccountframeworkonEventServiceRole6775A101",
+        "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy65EE4B90",
+        "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole41A12BB9",
       ],
       "Properties": {
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-OrganizationsStack-111111111111-us-east-1/FMSOrganizationAdminAccount/Resource)",
+        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-OrganizationsStack-111111111111-us-east-1/FirewallManagerServiceLinkedRole/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
-                "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambda2D69B84E",
+                "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionA541DABF",
                 "Arn",
               ],
             },
@@ -2059,7 +2010,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
         "Handler": "framework.onEvent",
         "Role": {
           "Fn::GetAtt": [
-            "FMSOrganizationAdminAccountframeworkonEventServiceRole6775A101",
+            "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole41A12BB9",
             "Arn",
           ],
         },
@@ -2068,20 +2019,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
       },
       "Type": "AWS::Lambda::Function",
     },
-    "FMSOrganizationAdminAccountframeworkonEventServiceRole6775A101": {
-      "DependsOn": [
-        "FirewallManagerServiceLinkedRole",
-      ],
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
-            },
-          ],
-        },
-      },
+    "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole41A12BB9": {
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -2112,20 +2050,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
       },
       "Type": "AWS::IAM::Role",
     },
-    "FMSOrganizationAdminAccountframeworkonEventServiceRoleDefaultPolicyD56A7BD5": {
-      "DependsOn": [
-        "FirewallManagerServiceLinkedRole",
-      ],
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
-            },
-          ],
-        },
-      },
+    "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy65EE4B90": {
       "Properties": {
         "PolicyDocument": {
           "Statement": [
@@ -2135,7 +2060,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
               "Resource": [
                 {
                   "Fn::GetAtt": [
-                    "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambda2D69B84E",
+                    "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionA541DABF",
                     "Arn",
                   ],
                 },
@@ -2145,7 +2070,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
                     [
                       {
                         "Fn::GetAtt": [
-                          "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambda2D69B84E",
+                          "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionA541DABF",
                           "Arn",
                         ],
                       },
@@ -2158,20 +2083,29 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "FMSOrganizationAdminAccountframeworkonEventServiceRoleDefaultPolicyD56A7BD5",
+        "PolicyName": "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy65EE4B90",
         "Roles": [
           {
-            "Ref": "FMSOrganizationAdminAccountframeworkonEventServiceRole6775A101",
+            "Ref": "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole41A12BB9",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "FirewallManagerServiceLinkedRole": {
+    "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleResourceE252DEA3": {
+      "DeletionPolicy": "Delete",
       "Properties": {
-        "AWSServiceName": "fms.amazonaws.com",
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventEE1DB34B",
+            "Arn",
+          ],
+        },
+        "roleName": "AWSServiceRoleForFMS",
+        "serviceName": "fms.amazonaws.com",
       },
-      "Type": "AWS::IAM::ServiceLinkedRole",
+      "Type": "Custom::CreateServiceLinkedRole",
+      "UpdateReplacePolicy": "Delete",
     },
     "GuardDutyEnableOrganizationAdminAccount90D7393E": {
       "DeletionPolicy": "Delete",
@@ -2710,7 +2644,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
           ],
         },
         "destinationBucketKeyArn": {
-          "Ref": "CentralLogsBucketKeyLookup52CD8A37",
+          "Ref": "AcceleratorCentralLogBucketKeyLookup26F8C418",
         },
         "prefix": "",
         "replicationRoleArn": {
@@ -2824,7 +2758,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
               "Action": "kms:Encrypt",
               "Effect": "Allow",
               "Resource": {
-                "Ref": "CentralLogsBucketKeyLookup52CD8A37",
+                "Ref": "AcceleratorCentralLogBucketKeyLookup26F8C418",
               },
             },
           ],
@@ -2975,6 +2909,40 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
     },
   },
   "Resources": {
+    "AcceleratorCentralLogBucketKeyLookup26F8C418": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
+            "Arn",
+          ],
+        },
+        "assumeRoleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::333333333333:role/AWSAccelerator-CentralBucket-KeyArnParam-Role",
+            ],
+          ],
+        },
+        "invokingAccountID": "111111111111",
+        "invokingRegion": "us-east-1",
+        "parameterAccountID": "333333333333",
+        "parameterName": "/accelerator/logging/central-bucket/kms/arn",
+        "parameterRegion": "us-west-2",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::SsmGetParameterValue",
+      "UpdateReplacePolicy": "Delete",
+    },
     "AttachBackupPolicyRootB4A999CE": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
@@ -3075,40 +3043,6 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
         "uuid": "REPLACED-UUID",
       },
       "Type": "Custom::CreatePolicy",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "CentralLogsBucketKeyLookup52CD8A37": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
-            "Arn",
-          ],
-        },
-        "assumeRoleArn": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":iam::333333333333:role/AWSAccelerator-CentralBucket-KeyArnParam-Role",
-            ],
-          ],
-        },
-        "invokingAccountID": "111111111111",
-        "invokingRegion": "us-east-1",
-        "parameterAccountID": "333333333333",
-        "parameterName": "/accelerator/logging/central-bucket/kms/arn",
-        "parameterRegion": "us-west-2",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::SsmGetParameterValue",
       "UpdateReplacePolicy": "Delete",
     },
     "CustomAuditManagerEnableOrganizationAdminAccountCustomResourceProviderHandlerCA9379D9": {
@@ -4625,6 +4559,9 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
     "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D": {
       "DeletionPolicy": "Delete",
       "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -4779,12 +4716,6 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
       },
       "Type": "Custom::EnableSharingWithAwsOrganization",
       "UpdateReplacePolicy": "Delete",
-    },
-    "FirewallManagerServiceLinkedRole": {
-      "Properties": {
-        "AWSServiceName": "fms.amazonaws.com",
-      },
-      "Type": "AWS::IAM::ServiceLinkedRole",
     },
     "GuardDutyEnableOrganizationAdminAccount90D7393E": {
       "DeletionPolicy": "Delete",
@@ -5348,7 +5279,7 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
           ],
         },
         "destinationBucketKeyArn": {
-          "Ref": "CentralLogsBucketKeyLookup52CD8A37",
+          "Ref": "AcceleratorCentralLogBucketKeyLookup26F8C418",
         },
         "prefix": "",
         "replicationRoleArn": {
@@ -5462,7 +5393,7 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
               "Action": "kms:Encrypt",
               "Effect": "Allow",
               "Resource": {
-                "Ref": "CentralLogsBucketKeyLookup52CD8A37",
+                "Ref": "AcceleratorCentralLogBucketKeyLookup26F8C418",
               },
             },
           ],
@@ -5611,8 +5542,46 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
       "Default": "/accelerator/kms/cloudwatch/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/kms/lambda/key-arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
   },
   "Resources": {
+    "AcceleratorCentralLogBucketKeyLookup26F8C418": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
+            "Arn",
+          ],
+        },
+        "assumeRoleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::333333333333:role/AWSAccelerator-CentralBucket-KeyArnParam-Role",
+            ],
+          ],
+        },
+        "invokingAccountID": "111111111111",
+        "invokingRegion": "us-east-1",
+        "parameterAccountID": "333333333333",
+        "parameterName": "/accelerator/logging/central-bucket/kms/arn",
+        "parameterRegion": "us-west-2",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::SsmGetParameterValue",
+      "UpdateReplacePolicy": "Delete",
+    },
     "AttachBackupPolicyRootB4A999CE": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
@@ -5713,40 +5682,6 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
         "uuid": "REPLACED-UUID",
       },
       "Type": "Custom::CreatePolicy",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "CentralLogsBucketKeyLookup52CD8A37": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
-            "Arn",
-          ],
-        },
-        "assumeRoleArn": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":iam::333333333333:role/AWSAccelerator-CentralBucket-KeyArnParam-Role",
-            ],
-          ],
-        },
-        "invokingAccountID": "111111111111",
-        "invokingRegion": "us-east-1",
-        "parameterAccountID": "333333333333",
-        "parameterName": "/accelerator/logging/central-bucket/kms/arn",
-        "parameterRegion": "us-west-2",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::SsmGetParameterValue",
       "UpdateReplacePolicy": "Delete",
     },
     "CustomAuditManagerEnableOrganizationAdminAccountCustomResourceProviderHandlerCA9379D9": {
@@ -7263,6 +7198,9 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
     "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D": {
       "DeletionPolicy": "Delete",
       "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -7418,43 +7356,55 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
       "Type": "Custom::EnableSharingWithAwsOrganization",
       "UpdateReplacePolicy": "Delete",
     },
-    "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambda2D69B84E": {
+    "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionA541DABF": {
       "DependsOn": [
-        "FirewallManagerServiceLinkedRole",
-        "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRoleDefaultPolicy83E36C98",
-        "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRole28F3C566",
+        "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicyBF2D7C58",
+        "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRole4B6F4F45",
       ],
       "Properties": {
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Description": "Custom resource provider to create service linked role",
         "Handler": "index.handler",
+        "KmsKeyArn": {
+          "Ref": "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
         "Role": {
           "Fn::GetAtt": [
-            "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRole28F3C566",
+            "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRole4B6F4F45",
             "Arn",
           ],
         },
         "Runtime": "nodejs16.x",
-        "Timeout": 180,
+        "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRole28F3C566": {
-      "DependsOn": [
-        "FirewallManagerServiceLinkedRole",
-      ],
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
-            },
+    "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionLogGroup162E628B": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionA541DABF",
+              },
+            ],
           ],
         },
+        "RetentionInDays": 3653,
       },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRole4B6F4F45": {
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -7485,114 +7435,46 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
       },
       "Type": "AWS::IAM::Role",
     },
-    "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRoleDefaultPolicy83E36C98": {
-      "DependsOn": [
-        "FirewallManagerServiceLinkedRole",
-      ],
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
-            },
-          ],
-        },
-      },
+    "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicyBF2D7C58": {
       "Properties": {
         "PolicyDocument": {
           "Statement": [
             {
               "Action": [
-                "fms:AssociateAdminAccount",
-                "fms:DisassociateAdminAccount",
-                "fms:GetAdminAccount",
-                "organizations:DescribeAccount",
-                "organizations:DescribeOrganization",
-                "organizations:DescribeOrganizationalUnit",
-                "organizations:DeregisterDelegatedAdministrator",
-                "organizations:DisableAWSServiceAccess",
-                "organizations:EnableAwsServiceAccess",
-                "organizations:ListAccounts",
-                "organizations:ListAWSServiceAccessForOrganization",
-                "organizations:ListChildren",
-                "organizations:ListDelegatedAdministrators",
-                "organizations:ListDelegatedServicesForAccount",
-                "organizations:ListOrganizationalUnitsForParent",
-                "organizations:ListParents",
-                "organizations:ListRoots",
-                "organizations:RegisterDelegatedAdministrator",
+                "iam:CreateServiceLinkedRole",
+                "iam:GetRole",
               ],
               "Effect": "Allow",
               "Resource": "*",
             },
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    "arn:",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    ":iam::222222222222:role/AWSControlTowerExecution",
-                  ],
-                ],
-              },
-            },
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRoleDefaultPolicy83E36C98",
+        "PolicyName": "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicyBF2D7C58",
         "Roles": [
           {
-            "Ref": "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRole28F3C566",
+            "Ref": "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRole4B6F4F45",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "FMSOrganizationAdminAccountfmsAdmin222222222222B4E8A399": {
-      "DeletionPolicy": "Delete",
+    "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventEE1DB34B": {
       "DependsOn": [
-        "FirewallManagerServiceLinkedRole",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "FMSOrganizationAdminAccountframeworkonEvent17783F2B",
-            "Arn",
-          ],
-        },
-        "adminAccountId": "222222222222",
-        "assumeRoleName": "AWSControlTowerExecution",
-        "partition": {
-          "Ref": "AWS::Partition",
-        },
-        "region": "us-east-1",
-      },
-      "Type": "AWS::CloudFormation::CustomResource",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "FMSOrganizationAdminAccountframeworkonEvent17783F2B": {
-      "DependsOn": [
-        "FirewallManagerServiceLinkedRole",
-        "FMSOrganizationAdminAccountframeworkonEventServiceRoleDefaultPolicyD56A7BD5",
-        "FMSOrganizationAdminAccountframeworkonEventServiceRole6775A101",
+        "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy65EE4B90",
+        "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole41A12BB9",
       ],
       "Properties": {
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-OrganizationsStack-111111111111-us-east-1/FMSOrganizationAdminAccount/Resource)",
+        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-OrganizationsStack-111111111111-us-east-1/FirewallManagerServiceLinkedRole/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
-                "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambda2D69B84E",
+                "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionA541DABF",
                 "Arn",
               ],
             },
@@ -7601,7 +7483,7 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
         "Handler": "framework.onEvent",
         "Role": {
           "Fn::GetAtt": [
-            "FMSOrganizationAdminAccountframeworkonEventServiceRole6775A101",
+            "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole41A12BB9",
             "Arn",
           ],
         },
@@ -7610,20 +7492,7 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
       },
       "Type": "AWS::Lambda::Function",
     },
-    "FMSOrganizationAdminAccountframeworkonEventServiceRole6775A101": {
-      "DependsOn": [
-        "FirewallManagerServiceLinkedRole",
-      ],
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
-            },
-          ],
-        },
-      },
+    "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole41A12BB9": {
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -7654,20 +7523,7 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
       },
       "Type": "AWS::IAM::Role",
     },
-    "FMSOrganizationAdminAccountframeworkonEventServiceRoleDefaultPolicyD56A7BD5": {
-      "DependsOn": [
-        "FirewallManagerServiceLinkedRole",
-      ],
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
-            },
-          ],
-        },
-      },
+    "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy65EE4B90": {
       "Properties": {
         "PolicyDocument": {
           "Statement": [
@@ -7677,7 +7533,7 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
               "Resource": [
                 {
                   "Fn::GetAtt": [
-                    "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambda2D69B84E",
+                    "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionA541DABF",
                     "Arn",
                   ],
                 },
@@ -7687,7 +7543,7 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
                     [
                       {
                         "Fn::GetAtt": [
-                          "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambda2D69B84E",
+                          "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionA541DABF",
                           "Arn",
                         ],
                       },
@@ -7700,20 +7556,29 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "FMSOrganizationAdminAccountframeworkonEventServiceRoleDefaultPolicyD56A7BD5",
+        "PolicyName": "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy65EE4B90",
         "Roles": [
           {
-            "Ref": "FMSOrganizationAdminAccountframeworkonEventServiceRole6775A101",
+            "Ref": "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole41A12BB9",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "FirewallManagerServiceLinkedRole": {
+    "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleResourceE252DEA3": {
+      "DeletionPolicy": "Delete",
       "Properties": {
-        "AWSServiceName": "fms.amazonaws.com",
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventEE1DB34B",
+            "Arn",
+          ],
+        },
+        "roleName": "AWSServiceRoleForFMS",
+        "serviceName": "fms.amazonaws.com",
       },
-      "Type": "AWS::IAM::ServiceLinkedRole",
+      "Type": "Custom::CreateServiceLinkedRole",
+      "UpdateReplacePolicy": "Delete",
     },
     "GuardDutyEnableOrganizationAdminAccount90D7393E": {
       "DeletionPolicy": "Delete",
@@ -8278,7 +8143,7 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
           ],
         },
         "destinationBucketKeyArn": {
-          "Ref": "CentralLogsBucketKeyLookup52CD8A37",
+          "Ref": "AcceleratorCentralLogBucketKeyLookup26F8C418",
         },
         "prefix": "",
         "replicationRoleArn": {
@@ -8392,7 +8257,7 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
               "Action": "kms:Encrypt",
               "Effect": "Allow",
               "Resource": {
-                "Ref": "CentralLogsBucketKeyLookup52CD8A37",
+                "Ref": "AcceleratorCentralLogBucketKeyLookup26F8C418",
               },
             },
           ],

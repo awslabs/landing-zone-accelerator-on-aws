@@ -30,7 +30,6 @@ import {
   FMSOrganizationAdminAccount,
   GuardDutyOrganizationAdminAccount,
   IpamOrganizationAdminAccount,
-  KeyLookup,
   MacieOrganizationAdminAccount,
   Policy,
   PolicyAttachment,
@@ -43,7 +42,7 @@ import {
 } from '@aws-accelerator/constructs';
 import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
 
-import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import { AcceleratorKeyType, AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 export interface OrganizationsStackProps extends AcceleratorStackProps {
   configDirPath: string;
 }
@@ -77,23 +76,9 @@ export class OrganizationsStack extends AcceleratorStack {
     this.stackProperties = props;
     this.logRetention = this.stackProperties.globalConfig.cloudwatchLogRetentionInDays;
 
-    this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
-      this,
-      'AcceleratorGetCloudWatchKey',
-      cdk.aws_ssm.StringParameter.valueForStringParameter(
-        this,
-        this.acceleratorResourceNames.parameters.cloudWatchLogCmkArn,
-      ),
-    ) as cdk.aws_kms.Key;
+    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
 
-    this.centralLogsBucketKey = new KeyLookup(this, 'CentralLogsBucketKey', {
-      accountId: this.stackProperties.accountsConfig.getLogArchiveAccountId(),
-      keyRegion: props.centralizedLoggingRegion,
-      roleName: this.acceleratorResourceNames.roles.crossAccountCentralLogBucketCmkArnSsmParameterAccess,
-      keyArnParameterName: this.acceleratorResourceNames.parameters.centralLogBucketCmkArn,
-      logRetentionInDays: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
-      acceleratorPrefix: this.props.prefixes.accelerator,
-    }).getKey();
+    this.centralLogsBucketKey = this.getAcceleratorKey(AcceleratorKeyType.CENTRAL_LOG_BUCKET, this.cloudwatchKey);
 
     this.bucketReplicationProps = {
       destination: {
@@ -179,9 +164,10 @@ export class OrganizationsStack extends AcceleratorStack {
     this.addTaggingPolicies();
 
     //
-    // Configure Trusted Services and Delegated Management Accounts
+    // Add nag suppressions by path
     //
-    //
+    this.addResourceSuppressionsByPath(this.nagSuppressionInputs);
+
     this.logger.info('Completed stack synthesis');
   }
 
@@ -373,21 +359,37 @@ export class OrganizationsStack extends AcceleratorStack {
    * Function to enable FMS delegated admin account
    */
   private enableFMSDelegatedAdminAccount() {
-    const fmsServiceLinkedRole = new cdk.aws_iam.CfnServiceLinkedRole(this, 'FirewallManagerServiceLinkedRole', {
-      awsServiceName: 'fms.amazonaws.com',
-    });
     const fmsConfig = this.stackProperties.networkConfig.firewallManagerService;
-    if (fmsConfig && cdk.Stack.of(this).region === this.stackProperties.globalConfig.homeRegion) {
-      const adminAccountName = fmsConfig.delegatedAdminAccount;
-      const adminAccountId = this.stackProperties.accountsConfig.getAccountId(adminAccountName);
-      const createFmsDelegatedAdmin = new FMSOrganizationAdminAccount(this, 'FMSOrganizationAdminAccount', {
-        adminAccountId,
-        kmsKey: this.cloudwatchKey,
-        logRetentionInDays: this.logRetention,
-        assumeRole: this.stackProperties.globalConfig.managementAccountAccessRole,
-      });
-      // Add dependency to prevent race condition between delegated admin and service linked role
-      createFmsDelegatedAdmin.node.addDependency(fmsServiceLinkedRole);
+    if (
+      fmsConfig &&
+      cdk.Stack.of(this).region === this.stackProperties.globalConfig.homeRegion &&
+      this.props.organizationConfig.enable &&
+      this.serviceLinkedRoleSupportedPartitionList.includes(this.props.partition)
+    ) {
+      const fmsServiceLinkedRole = this.createAwsFirewallManagerServiceLinkedRole(
+        this.cloudwatchKey,
+        cdk.aws_kms.Key.fromKeyArn(
+          this,
+          'AcceleratorGetLambdaKey',
+          cdk.aws_ssm.StringParameter.valueForStringParameter(
+            this,
+            this.acceleratorResourceNames.parameters.lambdaCmkArn,
+          ),
+        ) as cdk.aws_kms.Key,
+      );
+
+      if (fmsServiceLinkedRole) {
+        const adminAccountName = fmsConfig.delegatedAdminAccount;
+        const adminAccountId = this.stackProperties.accountsConfig.getAccountId(adminAccountName);
+        const createFmsDelegatedAdmin = new FMSOrganizationAdminAccount(this, 'FMSOrganizationAdminAccount', {
+          adminAccountId,
+          kmsKey: this.cloudwatchKey,
+          logRetentionInDays: this.logRetention,
+          assumeRole: this.stackProperties.globalConfig.managementAccountAccessRole,
+        });
+        // Add dependency to prevent race condition between delegated admin and service linked role
+        createFmsDelegatedAdmin.node.addDependency(fmsServiceLinkedRole);
+      }
     }
   }
 

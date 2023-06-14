@@ -12,35 +12,27 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { AutoscalingGroup } from '../../lib/aws-autoscaling/create-autoscaling-group';
+import { ServiceLinkedRole } from '@aws-accelerator/constructs';
 import { snapShotTest } from '../snapshot-test';
 import { describe } from '@jest/globals';
 
-const testNamePrefix = 'Construct(AutoscalingGroup): ';
+const testNamePrefix = 'Construct(CreateServiceLinkedRole): ';
 
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
 
-new AutoscalingGroup(stack, 'Test', {
-  name: 'string',
-  minSize: 1,
-  maxSize: 4,
-  desiredSize: 2,
-  launchTemplateId: 'string',
-  launchTemplateVersion: 'string',
-  healthCheckGracePeriod: 300,
-  healthCheckType: 'ELB',
-  targetGroups: ['string'],
-  subnets: ['string'],
-  lambdaKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
+new ServiceLinkedRole(stack, 'ServiceLinkedRole', {
+  environmentEncryptionKmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
   cloudWatchLogKmsKey: new cdk.aws_kms.Key(stack, 'CustomKeyCloudWatch', {}),
   cloudWatchLogRetentionInDays: 3653,
-  tags: [{ key: 'key', value: 'value' }],
+  awsServiceName: 'awesomeService.amazonaws.com',
+  description: 'some description',
+  roleName: 'AWSServiceRoleForAwesomeService',
 });
 
 /**
- * GWLB construct test
+ * ServiceLinkedRole construct test
  */
-describe('AutoscalingGroup', () => {
+describe('ServiceLinkedRole', () => {
   snapShotTest(testNamePrefix, stack);
 });

@@ -37,7 +37,7 @@ import {
 } from '@aws-accelerator/constructs';
 
 import { AcceleratorElbRootAccounts, OptInRegions } from '../accelerator';
-import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import { AcceleratorKeyType, AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 export type cloudwatchExclusionProcessedItem = {
   account: string;
@@ -97,14 +97,7 @@ export class LoggingStack extends AcceleratorStack {
       (cdk.Stack.of(this).region === this.props.globalConfig.homeRegion ||
         cdk.Stack.of(this).region === this.props.globalRegion)
     ) {
-      this.lambdaKey = cdk.aws_kms.Key.fromKeyArn(
-        this,
-        'AcceleratorGetLambdaKey',
-        cdk.aws_ssm.StringParameter.valueForStringParameter(
-          this,
-          this.acceleratorResourceNames.parameters.lambdaCmkArn,
-        ),
-      );
+      this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
     } else {
       this.lambdaKey = new cdk.aws_kms.Key(this, 'AcceleratorLambdaKey', {
         alias: this.acceleratorResourceNames.customerManagedKeys.lambda.alias,
@@ -364,24 +357,12 @@ export class LoggingStack extends AcceleratorStack {
       this.elbLogBucketAddResourcePolicies(elbAccessLogsBucket.getS3Bucket());
     }
 
-    if (this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable) {
-      // create service linked role for autoscaling
-      // if ebs default encryption enabled and using a customer master key
-      new iam.CfnServiceLinkedRole(this, 'AutoScalingServiceLinkedRole', {
-        awsServiceName: 'autoscaling.amazonaws.com',
-        description:
-          'Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling',
-      });
-    }
-    if (
-      this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable &&
-      props.partition === 'aws'
-    ) {
-      new iam.CfnServiceLinkedRole(this, 'AWSServiceRoleForAWSCloud9', {
-        awsServiceName: 'cloud9.amazonaws.com',
-        description: 'Service linked role for AWS Cloud9',
-      });
-    }
+    this.logger.debug('Create AutoScaling service linked role');
+    this.createAutoScalingServiceLinkedRole(this.cloudwatchKey as cdk.aws_kms.Key, this.lambdaKey as cdk.aws_kms.Key);
+
+    this.logger.debug('Create AWS Cloud9 service linked role');
+    this.createAwsCloud9ServiceLinkedRole(this.cloudwatchKey as cdk.aws_kms.Key, this.lambdaKey as cdk.aws_kms.Key);
+
     // CloudWatchLogs to S3 replication
 
     // First, logs receiving account will setup Kinesis DataStream and Firehose
@@ -428,6 +409,11 @@ export class LoggingStack extends AcceleratorStack {
     // Create Metadata Bucket
     //
     this.createMetadataBucket(serverAccessLogsBucket);
+
+    //
+    // Add nag suppressions by path
+    //
+    this.addResourceSuppressionsByPath(this.nagSuppressionInputs);
 
     this.logger.debug(`Stack synthesis complete`);
   }
