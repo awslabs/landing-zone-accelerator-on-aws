@@ -132,6 +132,7 @@ exports[`SsmParameter Construct(SsmParameter):  Snapshot Test 1`] = `
         "invokingAccountId": "333333333333",
         "parameterAccountIds": [
           "111111111111",
+          "222222222222",
         ],
         "parameters": [
           {
