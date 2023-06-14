@@ -206,6 +206,7 @@ export class OrganizationsStack extends AcceleratorStack {
           path: this.generatePolicyReplacements(
             path.join(this.stackProperties.configDirPath, backupPolicies.policy),
             true,
+            this.organizationId,
           ),
           type: PolicyType.BACKUP_POLICY,
           acceleratorPrefix: this.props.prefixes.accelerator,
@@ -606,6 +607,7 @@ export class OrganizationsStack extends AcceleratorStack {
           path: this.generatePolicyReplacements(
             path.join(this.stackProperties.configDirPath, taggingPolicy.policy),
             true,
+            this.organizationId,
           ),
           type: PolicyType.TAG_POLICY,
           acceleratorPrefix: this.props.prefixes.accelerator,
