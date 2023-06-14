@@ -51,7 +51,7 @@ export class NetworkPrepStack extends NetworkStack {
     //
     if (props.networkConfig.centralNetworkServices) {
       // Retrieve org ID
-      const organizationId = this.getOrganizationId();
+      const organizationId = this.organizationId;
       new CentralNetworkResources(this, props, organizationId);
     }
     //

@@ -24,7 +24,6 @@ import {
   CloudWatchLogGroups,
   ConfigServiceTags,
   KeyLookup,
-  Organization,
   SsmSessionManagerSettings,
   SecurityHubEventsLog,
 } from '@aws-accelerator/constructs';
@@ -67,7 +66,6 @@ export class SecurityResourcesStack extends AcceleratorStack {
   readonly logArchiveAccountId: string;
   readonly stackProperties: AcceleratorStackProps;
 
-  organizationId: string | undefined;
   configRecorder: cdk.aws_config.CfnConfigurationRecorder | undefined;
   deliveryChannel: cdk.aws_config.CfnDeliveryChannel | undefined;
   accountTrailCloudWatchLogGroups: Map<string, cdk.aws_logs.LogGroup>;
@@ -80,10 +78,6 @@ export class SecurityResourcesStack extends AcceleratorStack {
     this.stackProperties = props;
     this.auditAccountId = props.accountsConfig.getAuditAccountId();
     this.logArchiveAccountId = props.accountsConfig.getLogArchiveAccountId();
-
-    //
-    // Set Organization Id
-    this.setOrganizationId();
 
     this.centralLogS3Key = new KeyLookup(this, 'AcceleratorCentralLogS3Key', {
       accountId: this.props.accountsConfig.getLogArchiveAccountId(),
@@ -458,12 +452,6 @@ export class SecurityResourcesStack extends AcceleratorStack {
           customLambdaLogRetention: this.props.globalConfig.cloudwatchLogRetentionInDays,
         });
       }
-    }
-  }
-
-  private setOrganizationId() {
-    if (this.props.organizationConfig.enable) {
-      this.organizationId = new Organization(this, 'Organization').id;
     }
   }
 

@@ -20,7 +20,6 @@ import { PortfolioAssociationConfig, PortfolioConfig, ProductConfig } from '@aws
 import {
   IdentityCenterGetPermissionRoleArn,
   IdentityCenterGetPermissionRoleArnProvider,
-  Organization,
   SharePortfolioWithOrg,
   PropagatePortfolioAssociations,
 } from '@aws-accelerator/constructs';
@@ -30,11 +29,6 @@ export class CustomizationsStack extends AcceleratorStack {
    * StackSet Administrator Account Id
    */
   private stackSetAdministratorAccount: string;
-
-  /**
-   * AWS Organization Id
-   */
-  private organizationId: string;
 
   /**
    * KMS Key used to encrypt CloudWatch logs
@@ -52,7 +46,6 @@ export class CustomizationsStack extends AcceleratorStack {
     super(scope, id, props);
     this.props = props;
     this.stackSetAdministratorAccount = props.accountsConfig.getManagementAccountId();
-    this.organizationId = props.organizationConfig.enable ? new Organization(this, 'Organization').id : '';
     this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
       this,
       'AcceleratorGetCloudWatchKey',
@@ -228,7 +221,7 @@ export class CustomizationsStack extends AcceleratorStack {
             portfolioId: portfolio.portfolioId,
             organizationalUnitIds: organizationalUnitIds,
             tagShareOptions: portfolioItem.shareTagOptions ?? false,
-            organizationId: shareToEntireOrg ? this.organizationId : '',
+            organizationId: shareToEntireOrg && this.organizationId ? this.organizationId : '',
             kmsKey: this.cloudwatchKey,
             logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
           });

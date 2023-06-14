@@ -113,7 +113,7 @@ export class NetworkVpcStack extends NetworkStack {
     //
     // Create Get IPAM Cidr Role
     //
-    new IpamResources(this, props.globalConfig.homeRegion, this.getOrganizationId());
+    new IpamResources(this, props.globalConfig.homeRegion, this.organizationId);
     //
     // Create SSM Parameters
     //

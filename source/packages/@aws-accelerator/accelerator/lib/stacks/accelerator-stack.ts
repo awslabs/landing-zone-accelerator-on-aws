@@ -37,7 +37,7 @@ import {
   VpcConfig,
   VpcTemplatesConfig,
 } from '@aws-accelerator/config';
-import { Organization, S3LifeCycleRule } from '@aws-accelerator/constructs';
+import { S3LifeCycleRule } from '@aws-accelerator/constructs';
 import { createLogger, policyReplacements, SsmParameterPath, SsmResourceType } from '@aws-accelerator/utils';
 
 import { version } from '../../../../../package.json';
@@ -113,6 +113,7 @@ process.on('uncaughtException', err => {
 export abstract class AcceleratorStack extends cdk.Stack {
   protected logger: winston.Logger;
   protected props: AcceleratorStackProps;
+  protected organizationId: string | undefined;
 
   /**
    * Accelerator SSM parameters
@@ -128,6 +129,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
     this.logger = createLogger([cdk.Stack.of(this).stackName]);
     this.props = props;
     this.ssmParameters = [];
+    this.organizationId = props.organizationConfig.getOrganizationId();
 
     //
     // Initialize resource names
@@ -435,17 +437,6 @@ export abstract class AcceleratorStack extends cdk.Stack {
       rules.push(rule);
     }
     return rules;
-  }
-
-  /**
-   * Returns the ID of the AWS Organization, if enabled
-   * @returns
-   */
-  protected getOrganizationId(): string | undefined {
-    if (this.props.organizationConfig.enable) {
-      return new Organization(this, 'Organization').id;
-    }
-    return undefined;
   }
 
   /**
