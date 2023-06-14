@@ -455,7 +455,7 @@ export class SecurityStack extends AcceleratorStack {
       ),
       logRetentionInDays: acceleratorProps.globalConfig.cloudwatchLogRetentionInDays,
       metadataLogBucketName: metadataLogBucketName,
-      organizationId: acceleratorProps.organizationConfig.getOrganizationalUnitId('Root'),
+      organizationId: this.organizationId ?? '',
       globalRegion: acceleratorProps.globalRegion,
     });
   }

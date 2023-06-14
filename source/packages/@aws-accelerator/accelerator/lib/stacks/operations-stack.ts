@@ -27,7 +27,6 @@ import {
   Inventory,
   KeyLookup,
   LimitsDefinition,
-  Organization,
   UsersGroupsMetadata,
   WarmAccount,
 } from '@aws-accelerator/constructs';
@@ -75,11 +74,6 @@ export class OperationsStack extends AcceleratorStack {
   private cloudwatchKey: cdk.aws_kms.Key;
 
   /**
-   * AWS Organizations Id
-   */
-  private organizationId: string | undefined;
-
-  /**
    * Constructor for OperationsStack
    *
    * @param scope
@@ -99,9 +93,6 @@ export class OperationsStack extends AcceleratorStack {
         this.acceleratorResourceNames.parameters.cloudWatchLogCmkArn,
       ),
     ) as cdk.aws_kms.Key;
-
-    // Set Organization ID
-    this.setOrganizationId();
 
     // Security Services delegated admin account configuration
     // Global decoration for security services
@@ -1146,11 +1137,5 @@ export class OperationsStack extends AcceleratorStack {
       logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
       ssmPrefix: this.props.prefixes.ssmParamName,
     });
-  }
-
-  private setOrganizationId() {
-    if (this.props.organizationConfig.enable) {
-      this.organizationId = new Organization(this, 'Organization').id;
-    }
   }
 }

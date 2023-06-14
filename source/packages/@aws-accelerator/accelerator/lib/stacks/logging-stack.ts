@@ -49,7 +49,6 @@ type excludeUniqueItemType = { account: string; region: string };
 
 export class LoggingStack extends AcceleratorStack {
   private cloudwatchKey: cdk.aws_kms.IKey;
-  private organizationId: string | undefined;
   private lambdaKey: cdk.aws_kms.IKey;
   private centralLogsBucket: CentralLogsBucket | undefined;
   private centralLogBucketKey: cdk.aws_kms.IKey | undefined;
@@ -58,9 +57,6 @@ export class LoggingStack extends AcceleratorStack {
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
-
-    // Set Organization ID
-    this.organizationId = this.getOrganizationId();
 
     // Create S3 Key in all account
     const s3Key = this.createS3Key();

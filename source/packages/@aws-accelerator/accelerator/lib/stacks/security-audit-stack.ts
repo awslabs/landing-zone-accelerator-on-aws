@@ -33,7 +33,6 @@ import {
   DetectiveMembers,
   KeyLookup,
   MacieMembers,
-  Organization,
   SecurityHubMembers,
   SecurityHubRegionAggregation,
 } from '@aws-accelerator/constructs';
@@ -45,7 +44,6 @@ export class SecurityAuditStack extends AcceleratorStack {
   private readonly s3Key: cdk.aws_kms.Key;
   private readonly cloudwatchKey: cdk.aws_kms.IKey;
   private readonly centralLogsBucketKey: cdk.aws_kms.Key;
-  private readonly organizationId: string;
   private readonly replicationProps: BucketReplicationProps;
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
@@ -86,8 +84,6 @@ export class SecurityAuditStack extends AcceleratorStack {
       kmsKey: this.cloudwatchKey,
       logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
     };
-
-    this.organizationId = props.organizationConfig.enable ? new Organization(this, 'Organization').id : '';
 
     //
     // Macie configuration

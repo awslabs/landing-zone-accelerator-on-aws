@@ -44,67 +44,6 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] 
       },
       "Type": "AWS::CloudFormation::StackSet",
     },
-    "CustomOrganizationsDescribeOrganizationCustomResourceProviderHandler4C6F49D1": {
-      "DependsOn": [
-        "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5",
-      ],
-      "Properties": {
-        "Code": {
-          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
-          "S3Key": "REPLACED-GENERATED-NAME.zip",
-        },
-        "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
-        "Role": {
-          "Fn::GetAtt": [
-            "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs16.x",
-        "Timeout": 900,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5": {
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-          },
-        ],
-        "Policies": [
-          {
-            "PolicyDocument": {
-              "Statement": [
-                {
-                  "Action": [
-                    "organizations:DescribeOrganization",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": "*",
-                },
-              ],
-              "Version": "2012-10-17",
-            },
-            "PolicyName": "Inline",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
     "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambda303083B3": {
       "DependsOn": [
         "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambdaServiceRoleDefaultPolicy5A2D45EB",
@@ -713,22 +652,6 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] 
       },
       "Type": "AWS::ServiceCatalog::PortfolioPrincipalAssociation",
     },
-    "Organization29A5FC3F": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomOrganizationsDescribeOrganizationCustomResourceProviderHandler4C6F49D1",
-            "Arn",
-          ],
-        },
-        "partition": {
-          "Ref": "AWS::Partition",
-        },
-      },
-      "Type": "Custom::DescribeOrganization",
-      "UpdateReplacePolicy": "Delete",
-    },
     "SsmParamAcceleratorVersionFF83282D": {
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-CustomizationsStack-111111111111-us-east-1/version",
@@ -760,67 +683,6 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 2`] 
     },
   },
   "Resources": {
-    "CustomOrganizationsDescribeOrganizationCustomResourceProviderHandler4C6F49D1": {
-      "DependsOn": [
-        "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5",
-      ],
-      "Properties": {
-        "Code": {
-          "S3Bucket": "cdk-hnb659fds-assets-444444444444-us-east-1",
-          "S3Key": "REPLACED-GENERATED-NAME.zip",
-        },
-        "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
-        "Role": {
-          "Fn::GetAtt": [
-            "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs16.x",
-        "Timeout": 900,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5": {
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-          },
-        ],
-        "Policies": [
-          {
-            "PolicyDocument": {
-              "Statement": [
-                {
-                  "Action": [
-                    "organizations:DescribeOrganization",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": "*",
-                },
-              ],
-              "Version": "2012-10-17",
-            },
-            "PolicyName": "Inline",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
     "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambda303083B3": {
       "DependsOn": [
         "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambdaServiceRoleDefaultPolicy5A2D45EB",
@@ -1124,22 +986,6 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 2`] 
         ],
       },
       "Type": "AWS::IAM::Role",
-    },
-    "Organization29A5FC3F": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomOrganizationsDescribeOrganizationCustomResourceProviderHandler4C6F49D1",
-            "Arn",
-          ],
-        },
-        "partition": {
-          "Ref": "AWS::Partition",
-        },
-      },
-      "Type": "Custom::DescribeOrganization",
-      "UpdateReplacePolicy": "Delete",
     },
     "Portfolio2EC2DefaultSSMADRoleRole": {
       "Properties": {

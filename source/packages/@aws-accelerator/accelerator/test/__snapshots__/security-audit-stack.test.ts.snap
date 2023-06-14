@@ -77,9 +77,7 @@ exports[`SecurityAuditStack Construct(SecurityAuditStack):  Snapshot Test 1`] = 
                   ],
                 },
                 "StringEquals": {
-                  "aws:PrincipalOrgID": {
-                    "Ref": "Organization29A5FC3F",
-                  },
+                  "aws:PrincipalOrgID": "o-asdf123456",
                 },
               },
               "Effect": "Allow",
@@ -644,9 +642,7 @@ def script_handler(events, context):
               ],
               "Condition": {
                 "StringEquals": {
-                  "aws:PrincipalOrgID": {
-                    "Ref": "Organization29A5FC3F",
-                  },
+                  "aws:PrincipalOrgID": "o-asdf123456",
                 },
               },
               "Effect": "Allow",
@@ -1546,67 +1542,6 @@ def script_handler(events, context):
       },
       "Type": "AWS::IAM::Role",
     },
-    "CustomOrganizationsDescribeOrganizationCustomResourceProviderHandler4C6F49D1": {
-      "DependsOn": [
-        "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5",
-      ],
-      "Properties": {
-        "Code": {
-          "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
-          "S3Key": "REPLACED-GENERATED-NAME.zip",
-        },
-        "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
-        "Role": {
-          "Fn::GetAtt": [
-            "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs16.x",
-        "Timeout": 900,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5": {
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-          },
-        ],
-        "Policies": [
-          {
-            "PolicyDocument": {
-              "Statement": [
-                {
-                  "Action": [
-                    "organizations:DescribeOrganization",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": "*",
-                },
-              ],
-              "Version": "2012-10-17",
-            },
-            "PolicyName": "Inline",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
     "CustomS3PutBucketReplicationCustomResourceProviderHandler1D75398C": {
       "DependsOn": [
         "CustomS3PutBucketReplicationCustomResourceProviderRole1C378488",
@@ -2213,9 +2148,7 @@ def script_handler(events, context):
               "Action": "sns:Publish",
               "Condition": {
                 "StringEquals": {
-                  "aws:PrincipalOrgID": {
-                    "Ref": "Organization29A5FC3F",
-                  },
+                  "aws:PrincipalOrgID": "o-asdf123456",
                 },
               },
               "Effect": "Allow",
@@ -2235,9 +2168,7 @@ def script_handler(events, context):
               ],
               "Condition": {
                 "StringEquals": {
-                  "aws:PrincipalOrgID": {
-                    "Ref": "Organization29A5FC3F",
-                  },
+                  "aws:PrincipalOrgID": "o-asdf123456",
                 },
               },
               "Effect": "Allow",
@@ -2313,9 +2244,7 @@ def script_handler(events, context):
               "Action": "sns:Publish",
               "Condition": {
                 "StringEquals": {
-                  "aws:PrincipalOrgID": {
-                    "Ref": "Organization29A5FC3F",
-                  },
+                  "aws:PrincipalOrgID": "o-asdf123456",
                 },
               },
               "Effect": "Allow",
@@ -2335,9 +2264,7 @@ def script_handler(events, context):
               ],
               "Condition": {
                 "StringEquals": {
-                  "aws:PrincipalOrgID": {
-                    "Ref": "Organization29A5FC3F",
-                  },
+                  "aws:PrincipalOrgID": "o-asdf123456",
                 },
               },
               "Effect": "Allow",
@@ -2434,9 +2361,7 @@ def script_handler(events, context):
               "Action": "sns:Publish",
               "Condition": {
                 "StringEquals": {
-                  "aws:PrincipalOrgID": {
-                    "Ref": "Organization29A5FC3F",
-                  },
+                  "aws:PrincipalOrgID": "o-asdf123456",
                 },
               },
               "Effect": "Allow",
@@ -2456,9 +2381,7 @@ def script_handler(events, context):
               ],
               "Condition": {
                 "StringEquals": {
-                  "aws:PrincipalOrgID": {
-                    "Ref": "Organization29A5FC3F",
-                  },
+                  "aws:PrincipalOrgID": "o-asdf123456",
                 },
               },
               "Effect": "Allow",
@@ -2490,22 +2413,6 @@ def script_handler(events, context):
         },
       },
       "Type": "AWS::SNS::Subscription",
-    },
-    "Organization29A5FC3F": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomOrganizationsDescribeOrganizationCustomResourceProviderHandler4C6F49D1",
-            "Arn",
-          ],
-        },
-        "partition": {
-          "Ref": "AWS::Partition",
-        },
-      },
-      "Type": "Custom::DescribeOrganization",
-      "UpdateReplacePolicy": "Delete",
     },
     "PutS3Encryption383DF0CE": {
       "Properties": {
@@ -3391,9 +3298,7 @@ def script_handler(events, context):
               ],
               "Condition": {
                 "StringEquals": {
-                  "aws:PrincipalOrgID": {
-                    "Ref": "Organization29A5FC3F",
-                  },
+                  "aws:PrincipalOrgID": "o-asdf123456",
                 },
               },
               "Effect": "Allow",
@@ -4293,67 +4198,6 @@ def script_handler(events, context):
       },
       "Type": "AWS::IAM::Role",
     },
-    "CustomOrganizationsDescribeOrganizationCustomResourceProviderHandler4C6F49D1": {
-      "DependsOn": [
-        "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5",
-      ],
-      "Properties": {
-        "Code": {
-          "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
-          "S3Key": "REPLACED-GENERATED-NAME.zip",
-        },
-        "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
-        "Role": {
-          "Fn::GetAtt": [
-            "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs16.x",
-        "Timeout": 900,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5": {
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-          },
-        ],
-        "Policies": [
-          {
-            "PolicyDocument": {
-              "Statement": [
-                {
-                  "Action": [
-                    "organizations:DescribeOrganization",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": "*",
-                },
-              ],
-              "Version": "2012-10-17",
-            },
-            "PolicyName": "Inline",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
     "CustomS3PutBucketReplicationCustomResourceProviderHandler1D75398C": {
       "DependsOn": [
         "CustomS3PutBucketReplicationCustomResourceProviderRole1C378488",
@@ -4936,22 +4780,6 @@ def script_handler(events, context):
         "region": "us-east-1",
       },
       "Type": "Custom::MacieCreateMember",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "Organization29A5FC3F": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomOrganizationsDescribeOrganizationCustomResourceProviderHandler4C6F49D1",
-            "Arn",
-          ],
-        },
-        "partition": {
-          "Ref": "AWS::Partition",
-        },
-      },
-      "Type": "Custom::DescribeOrganization",
       "UpdateReplacePolicy": "Delete",
     },
     "PutS3Encryption383DF0CE": {
