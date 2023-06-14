@@ -22,7 +22,7 @@ const testNamePrefix = 'Construct(SsmParameter): ';
 const stack = new cdk.Stack();
 
 new PutSsmParameter(stack, 'SsmParameter', {
-  accountIds: ['111111111111'],
+  accountIds: ['111111111111', '222222222222'],
   region: 'us-east-1',
   roleName: `AWSAccelerator-VpcPeeringRole-222222222222`,
   parameters: [

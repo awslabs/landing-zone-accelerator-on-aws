@@ -42,45 +42,52 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const roleName: string = event.ResourceProperties['roleName'];
   const parameters: SsmParameterProps[] = event.ResourceProperties['parameters'];
   const solutionId = process.env['SOLUTION_ID'];
+  const partition = event.ServiceToken.split(':')[1];
 
-  for (const parameterAccountId of parameterAccountIds) {
-    // Get SSM client for the parameter account
-    const partition = event.ServiceToken.split(':')[1];
-    const assumeRoleArn = setRoleArn(partition, parameterAccountId, roleName);
-    const ssmClient = await getSsmClient(invokingAccountId, parameterAccountId, region, assumeRoleArn, solutionId);
+  switch (event.RequestType) {
+    case 'Create':
+      // Put parameters
+      await processParameterCreate(
+        { invokingAccountId, roleName, region, partition, solutionId },
+        parameterAccountIds,
+        parameters,
+      );
+      break;
 
-    switch (event.RequestType) {
-      case 'Create':
-        // Put parameters
-        for (const parameter of parameters) {
-          console.log(`Put SSM parameter ${parameter.name} to account ${parameterAccountId}`);
-          await throttlingBackOff(() =>
-            ssmClient
-              .putParameter({ Name: parameter.name, Value: parameter.value, Type: 'String', Overwrite: true })
-              .promise(),
-          );
-        }
-        break;
+    case 'Update':
+      const oldParameters: SsmParameterProps[] = event.OldResourceProperties['parameters'];
+      const oldAccountIds: string[] = event.OldResourceProperties['parameterAccountIds'];
+      const removedAccountIds = oldAccountIds.filter(id => !parameterAccountIds.includes(id));
+      const addedAccountIds = parameterAccountIds.filter(id => !oldAccountIds.includes(id));
 
-      case 'Update':
-        // Process creation, updates, and deletes
-        await processParameterUpdates(
-          parameters,
-          ssmClient,
-          parameterAccountId,
-          event.OldResourceProperties['parameters'],
+      if (removedAccountIds.length > 0) {
+        console.log(`Accounts ${removedAccountIds.join(',')} removed, deleting all old parameters for these accounts.`);
+        await deleteParametersFromRemovedAccounts(
+          { invokingAccountId, partition, region, roleName, solutionId },
+          removedAccountIds,
+          oldParameters,
         );
-        break;
+      }
 
-      case 'Delete':
-        // Delete all parameters
-        for (const parameter of parameters) {
-          console.log(`Delete SSM parameter ${parameter.name} from account ${parameterAccountId}`);
-          await throttlingBackOff(() => ssmClient.deleteParameter({ Name: parameter.name }).promise());
-        }
-        break;
-    }
+      await processParameterUpdates(
+        { invokingAccountId, roleName, region, partition, solutionId },
+        parameterAccountIds,
+        addedAccountIds,
+        parameters,
+        oldParameters,
+      );
+      break;
+
+    case 'Delete':
+      // Delete all parameters
+      await processParameterDelete(
+        { invokingAccountId, roleName, region, partition, solutionId },
+        parameterAccountIds,
+        parameters,
+      );
+      break;
   }
+
   return {
     PhysicalResourceId: parameters[0].name, // required for backwards compatibility
     Status: 'SUCCESS',
@@ -140,42 +147,161 @@ async function getSsmClient(
 }
 
 /**
- * Process parameter updates
- * @param oldParameters
- * @param newParameters
- * @param ssmClient
- * @param parameterAccountId
+ * Function to delete ssm parameters from removed accounts
+ * @param stsConfig
+ * @param removedAccountIds string[]
+ * @param oldParameters {@link SsmParameterProps}[]
  */
-async function processParameterUpdates(
-  newParameters: SsmParameterProps[],
-  ssmClient: AWS.SSM,
-  parameterAccountId: string,
-  oldParameters?: SsmParameterProps[],
+async function deleteParametersFromRemovedAccounts(
+  stsConfig: {
+    invokingAccountId: string;
+    partition: string;
+    region: string;
+    roleName: string;
+    solutionId?: string;
+  },
+  removedAccountIds: string[],
+  oldParameters: SsmParameterProps[],
 ): Promise<void> {
   const oldParameterNames = oldParameters ? oldParameters.map(oldParam => oldParam.name) : [];
-  const oldParameterValues = oldParameters ? oldParameters.map(oldParam => oldParam.value) : [];
-  const newParameterNames = newParameters.map(newParam => newParam.name);
 
-  const removedParameters = oldParameterNames.filter(name => !newParameterNames.includes(name));
-  const addedParameters = newParameters.filter(param => !oldParameterNames.includes(param.name));
-  const modifiedParameters = newParameters.filter(
-    param => oldParameterNames.includes(param.name) && !oldParameterValues.includes(param.value),
-  );
-
-  // Remove parameters
-  for (const parameter of removedParameters) {
-    console.log(`Delete SSM parameter ${parameter} from account ${parameterAccountId}`);
-    await throttlingBackOff(() => ssmClient.deleteParameter({ Name: parameter }).promise());
+  // Remove old parameters from removed accounts
+  for (const removedAccountId of removedAccountIds) {
+    const assumeRoleArn = setRoleArn(stsConfig.partition, removedAccountId, stsConfig.roleName);
+    const ssmClient = await getSsmClient(
+      stsConfig.invokingAccountId,
+      removedAccountId,
+      stsConfig.region,
+      assumeRoleArn,
+      stsConfig.solutionId,
+    );
+    // Remove parameters
+    await deleteParameters(ssmClient, removedAccountId, oldParameterNames);
   }
+}
 
-  // Create new parameters
-  for (const parameter of addedParameters) {
-    console.log(`Put SSM parameter ${parameter} to account ${parameterAccountId}`);
+/**
+ * Process parameter delete
+ * @param stsClient
+ * @param parameterAccountIds string[]
+ * @param parameterProps {@link SsmParameterProps}[]
+ */
+async function processParameterDelete(
+  stsClient: { invokingAccountId: string; roleName: string; region: string; partition: string; solutionId?: string },
+  parameterAccountIds: string[],
+  parameterProps: SsmParameterProps[],
+): Promise<void> {
+  for (const parameterAccountId of parameterAccountIds) {
+    // Get SSM client for the parameter account
+    const assumeRoleArn = setRoleArn(stsClient.partition, parameterAccountId, stsClient.roleName);
+    const ssmClient = await getSsmClient(
+      stsClient.invokingAccountId,
+      parameterAccountId,
+      stsClient.region,
+      assumeRoleArn,
+      stsClient.solutionId,
+    );
+
+    // Delete all parameters
+    await deleteParameters(ssmClient, parameterAccountId, undefined, parameterProps);
+  }
+}
+
+/**
+ * Process parameter create
+ * @param stsClient
+ * @param parameterAccountIds string[]
+ * @param parameters {@link SsmParameterProps}[]
+ */
+async function processParameterCreate(
+  stsClient: { invokingAccountId: string; roleName: string; region: string; partition: string; solutionId?: string },
+  parameterAccountIds: string[],
+  parameters: SsmParameterProps[],
+): Promise<void> {
+  for (const parameterAccountId of parameterAccountIds) {
+    // Get SSM client for the parameter account
+    const assumeRoleArn = setRoleArn(stsClient.partition, parameterAccountId, stsClient.roleName);
+    const ssmClient = await getSsmClient(
+      stsClient.invokingAccountId,
+      parameterAccountId,
+      stsClient.region,
+      assumeRoleArn,
+      stsClient.solutionId,
+    );
+
+    // Put parameters
+    await createParameters(ssmClient, parameterAccountId, parameters);
+  }
+}
+
+/**
+ * Create SSM parameters
+ * @param ssmClient {@link AWS.SSM}
+ * @param parameterAccountId string
+ * @param parameters {@link SsmParameterProps}[]
+ */
+async function createParameters(ssmClient: AWS.SSM, parameterAccountId: string, parameters: SsmParameterProps[]) {
+  // Put parameters
+  for (const parameter of parameters) {
+    console.log(`Put SSM parameter ${parameter.name} to account ${parameterAccountId}`);
     await throttlingBackOff(() =>
       ssmClient
         .putParameter({ Name: parameter.name, Value: parameter.value, Type: 'String', Overwrite: true })
         .promise(),
     );
+  }
+}
+
+/**
+ * Delete SSM parameters
+ * @param ssmClient {@link AWS.SSM}
+ * @param parameterAccountId string
+ * @param parameterNames string[]
+ * @param parameterProps SsmParameterProps[]
+ */
+async function deleteParameters(
+  ssmClient: AWS.SSM,
+  parameterAccountId: string,
+  parameterNames?: string[],
+  parameterProps?: SsmParameterProps[],
+) {
+  const deleteParameterNames: string[] = [];
+
+  for (const parameterProp of parameterProps ?? []) {
+    deleteParameterNames.push(parameterProp.name);
+  }
+
+  deleteParameterNames.push(...(parameterNames ?? []));
+
+  // Remove parameters
+  for (const deleteParameterName of deleteParameterNames) {
+    console.log(`Delete SSM parameter ${deleteParameterName} from account ${parameterAccountId}`);
+    await throttlingBackOff(() => ssmClient.deleteParameter({ Name: deleteParameterName }).promise());
+  }
+}
+
+/**
+ * Function to get Modified parameters
+ * @param ssmClient
+ * @param parameterAccountId string
+ * @param newParameters {@link SsmParameterProps}[]
+ * @param oldParameters {@link SsmParameterProps}[]
+ */
+async function modifyParameters(
+  ssmClient: AWS.SSM,
+  parameterAccountId: string,
+  newParameters: SsmParameterProps[],
+  oldParameters: SsmParameterProps[],
+): Promise<void> {
+  const modifiedParameters: SsmParameterProps[] = [];
+
+  for (const newParameter of newParameters) {
+    const filterParameters = oldParameters.filter(item => item.name === newParameter.name);
+    for (const filterParameter of filterParameters) {
+      if (filterParameter.value !== newParameter.value) {
+        modifiedParameters.push(newParameter);
+      }
+    }
   }
 
   // Modify existing parameters if their values have changed
@@ -186,5 +312,56 @@ async function processParameterUpdates(
         .putParameter({ Name: parameter.name, Value: parameter.value, Type: 'String', Overwrite: true })
         .promise(),
     );
+  }
+}
+
+/**
+ * Process parameter updates
+ * @param stsClient
+ * @param parameterAccountIds string[]
+ * @param addedAccountIds string[]
+ * @param newParameters {@link SsmParameterProps}[]
+ * @param oldParameters {@link SsmParameterProps}[]
+ */
+async function processParameterUpdates(
+  stsClient: { invokingAccountId: string; roleName: string; region: string; partition: string; solutionId?: string },
+  parameterAccountIds: string[],
+  addedAccountIds: string[],
+  newParameters: SsmParameterProps[],
+  oldParameters: SsmParameterProps[],
+): Promise<void> {
+  const existingAccountIds = parameterAccountIds.filter(item => !addedAccountIds.includes(item));
+
+  if (addedAccountIds.length > 0) {
+    await processParameterCreate(stsClient, addedAccountIds, newParameters);
+  }
+
+  for (const parameterAccountId of existingAccountIds) {
+    // Get SSM client for the parameter account
+
+    const assumeRoleArn = setRoleArn(stsClient.partition, parameterAccountId, stsClient.roleName);
+    const ssmClient = await getSsmClient(
+      stsClient.invokingAccountId,
+      parameterAccountId,
+      stsClient.region,
+      assumeRoleArn,
+      stsClient.solutionId,
+    );
+
+    const oldParameterNames = oldParameters ? oldParameters.map(oldParam => oldParam.name) : [];
+    const newParameterNames = newParameters.map(newParam => newParam.name);
+
+    const removedParameterNames = oldParameterNames.filter(name => !newParameterNames.includes(name));
+    const addedParameters = newParameters.filter(param => !oldParameterNames.includes(param.name));
+
+    // Remove parameters
+    await deleteParameters(ssmClient, parameterAccountId, removedParameterNames);
+
+    // Create new parameters
+    // Put parameters
+    await createParameters(ssmClient, parameterAccountId, addedParameters);
+
+    // Modify existing parameters if their values have changed
+    await modifyParameters(ssmClient, parameterAccountId, newParameters, oldParameters);
   }
 }
