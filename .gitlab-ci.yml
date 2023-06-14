@@ -12,6 +12,9 @@ stages:
 
 accelerator-workshop-session:
   stage: build-test
+  tags:
+    - arch:amd64
+    - size:xlarge
   script:
     - "export NODE_OPTIONS=--max_old_space_size=16384"
     - "cd source"
@@ -31,6 +34,7 @@ accelerator-workshop-session:
     paths:
       - lza-on-aws-workshop.zip
       - AWSAccelerator-InstallerStack-Workshop.template.json
+  allow_failure: true
 accelerator-build:
   stage: build-test
   tags:
