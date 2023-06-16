@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [1.4.2] - 2023-06-16
+
+### Fixed
+
+- fix(ssm): PutSsmParameters custom resource ignores new accounts
+- chore(organizations): moved getOrganizationId to organizations-config
+- fix(iam): service linked roles fail to create in multi-region deployment
+- fix(validation): TGW route validation fails when prefixList deployment targets do not have excluded regions
+- fix(validation): incorrectly configured security delegated admin account isn’t caught by validation
+- fix(docs): README indicates S3 server access logs are replicated to central logs bucket
+
 ## [1.4.1] - 2023-05-18
 
 ### Fixed

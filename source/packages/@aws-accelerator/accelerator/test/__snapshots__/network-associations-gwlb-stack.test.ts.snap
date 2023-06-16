@@ -981,7 +981,7 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsGwlbStack-555555555555-us-east-1/version",
         "Type": "String",
-        "Value": "1.4.1",
+        "Value": "1.4.2",
       },
       "Type": "AWS::SSM::Parameter",
     },
