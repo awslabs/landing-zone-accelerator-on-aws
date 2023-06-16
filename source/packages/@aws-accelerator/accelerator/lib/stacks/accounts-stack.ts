@@ -47,6 +47,24 @@ type scpItem = {
   id: string;
 };
 
+/**
+ * Scp generated file path type
+ */
+type scpGeneratedFilePath = {
+  /**
+   * Name of the scp
+   */
+  name: string;
+  /**
+   * The relative path to the file containing the policy document in the config repo
+   */
+  path: string;
+  /**
+   * The path to the temp file returned by generatePolicyReplacements()
+   */
+  tempPath: string;
+};
+
 export interface AccountsStackProps extends AcceleratorStackProps {
   readonly configDirPath: string;
 }
@@ -54,9 +72,15 @@ export interface AccountsStackProps extends AcceleratorStackProps {
 export class AccountsStack extends AcceleratorStack {
   readonly cloudwatchKey: cdk.aws_kms.Key;
   readonly lambdaKey: cdk.aws_kms.Key;
+  readonly scpGeneratedFilePathList: scpGeneratedFilePath[] = [];
 
   constructor(scope: Construct, id: string, props: AccountsStackProps) {
     super(scope, id, props);
+
+    //
+    // Generate replacements for policy files
+    //
+    this.loadPolicyReplacements(props);
 
     //
     // Get or create cloudwatch key
@@ -212,6 +236,27 @@ export class AccountsStack extends AcceleratorStack {
   }
 
   /**
+   * Function to load replacements within the provided SCP policy documents
+   * @param props {@link AccountsStackProps}
+   * @returns
+   */
+  private loadPolicyReplacements(props: AccountsStackProps): void {
+    for (const serviceControlPolicy of props.organizationConfig.serviceControlPolicies) {
+      this.logger.info(`Adding service control policy (${serviceControlPolicy.name})`);
+
+      this.scpGeneratedFilePathList.push({
+        name: serviceControlPolicy.name,
+        path: serviceControlPolicy.policy,
+        tempPath: this.generatePolicyReplacements(
+          path.join(props.configDirPath, serviceControlPolicy.policy),
+          true,
+          this.organizationId,
+        ),
+      });
+    }
+  }
+
+  /**
    * Function to create MoveAccountRule
    * @param props {@link AccountsStackProps}
    * @returns MoveAccountRule | undefined
@@ -332,7 +377,7 @@ export class AccountsStack extends AcceleratorStack {
       description: serviceControlPolicy.description,
       name: serviceControlPolicy.name,
       partition: props.partition,
-      path: this.generatePolicyReplacements(path.join(props.configDirPath, serviceControlPolicy.policy), true),
+      path: this.scpGeneratedFilePathList.find(policy => policy.name === serviceControlPolicy.name)!.tempPath,
       type: PolicyType.SERVICE_CONTROL_POLICY,
       strategy: serviceControlPolicy.strategy,
       acceleratorPrefix: props.prefixes.accelerator,
@@ -419,18 +464,14 @@ export class AccountsStack extends AcceleratorStack {
     if (props.securityConfig.centralSecurityServices?.scpRevertChangesConfig?.enable) {
       this.logger.info(`Creating resources to revert modifications to scps`);
       new RevertScpChanges(this, 'RevertScpChanges', {
-        auditAccountId: props.accountsConfig.getAuditAccountId(),
-        logArchiveAccountId: props.accountsConfig.getLogArchiveAccountId(),
-        managementAccountId: props.accountsConfig.getManagementAccountId(),
         configDirPath: props.configDirPath,
         homeRegion: props.globalConfig.homeRegion,
         kmsKeyCloudWatch: this.cloudwatchKey,
         kmsKeyLambda: this.lambdaKey,
         logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-        managementAccountAccessRole: props.globalConfig.managementAccountAccessRole,
         acceleratorTopicNamePrefix: props.prefixes.snsTopicName,
         snsTopicName: props.securityConfig.centralSecurityServices.scpRevertChangesConfig?.snsTopicName,
-        scpFilePaths: props.organizationConfig.serviceControlPolicies?.map(a => a.policy) ?? [],
+        scpFilePaths: this.scpGeneratedFilePathList,
       });
     }
   }

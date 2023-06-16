@@ -850,6 +850,7 @@ export class OperationsStack extends AcceleratorStack {
         this.generatePolicyReplacements(
           path.join(this.props.configDirPath, identityCenterPermissionSet.policies?.inlinePolicy),
           false,
+          this.organizationId,
         ),
       );
       permissionSetProps = {
