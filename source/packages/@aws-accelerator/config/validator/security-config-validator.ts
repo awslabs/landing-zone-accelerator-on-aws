@@ -610,7 +610,7 @@ export class SecurityConfigValidator {
     errors: string[],
   ) {
     for (const rule of ruleSet.rules) {
-      if (rule.remediation && !accountNames.includes(rule.remediation.targetAccountName)) {
+      if (rule.remediation?.targetAccountName && !accountNames.includes(rule.remediation.targetAccountName)) {
         errors.push(
           `Rule: ${rule.name}, remediation target account ${rule.remediation.targetAccountName} does not exist in accounts-config.yaml`,
         );
