@@ -99,7 +99,7 @@ export class SecurityConfigValidator {
     this.validateAwsCloudWatchLogGroupsRetention(values, errors);
 
     if (errors.length) {
-      logger.error(`${SecurityConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
+      throw new Error(`${SecurityConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
     }
   }
 
