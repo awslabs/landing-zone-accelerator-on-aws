@@ -808,7 +808,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
     },
     "RevertScpChangesModifyScpRule4ECCD6B5": {
       "Properties": {
-        "Description": "Rule to notify when an LZA-managed SCP is modified or detatched.",
+        "Description": "Rule to notify when an LZA-managed SCP is modified or detached.",
         "EventPattern": {
           "detail": {
             "eventName": [
@@ -878,14 +878,10 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
         "Description": "Lambda function to revert changes made to LZA-controlled service control policies",
         "Environment": {
           "Variables": {
-            "AUDIT_ACCOUNT_ID": "222222222222",
             "AWS_PARTITION": {
               "Ref": "AWS::Partition",
             },
             "HOME_REGION": "us-east-1",
-            "LOG_ARCHIVE_ACCOUNT_ID": "333333333333",
-            "MANAGEMENT_ACCOUNT_ACCESS_ROLE": "AWSControlTowerExecution",
-            "MANAGEMENT_ACCOUNT_ID": "111111111111",
             "SNS_TOPIC_ARN": {
               "Fn::Join": [
                 "",
