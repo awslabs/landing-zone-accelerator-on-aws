@@ -48,6 +48,20 @@ export {
   UnknownType,
 } from 'io-ts';
 
+export type Json = boolean | number | string | null | JsonArray | JsonRecord;
+
+export interface JsonRecord {
+  readonly [key: string]: Json;
+}
+
+export type JsonArray = ReadonlyArray<Json>;
+
+export const JsonArray: t.Type<JsonArray> = t.recursion('JsonArray', () => t.readonlyArray(Json));
+
+export const JsonRecord: t.Type<JsonRecord> = t.recursion('JsonRecord', () => t.record(t.string, Json));
+
+export const Json: t.Type<Json> = t.union([t.boolean, t.number, t.string, t.null, JsonArray, JsonRecord], 'Json');
+
 export class CidrType extends t.Type<IPv4CidrRange, string, unknown> {
   constructor(name?: string) {
     super(
@@ -625,3 +639,35 @@ export class VpcFlowLogsConfig implements t.TypeOf<typeof vpcFlowLogsConfig> {
     'traffic-path',
   ];
 }
+
+export type CfnResourceType = {
+  /**
+   * LogicalId of a resource in Amazon CloudFormation Stack
+   * Unique within the template
+   */
+  logicalResourceId: string;
+  /**
+   * PhysicalId of a resource in Amazon CloudFormation Stack
+   * Use the physical IDs to identify resources outside of AWS CloudFormation templates
+   */
+  physicalResourceId: string;
+  /**
+   * The resource type identifies the type of resource that you are declaring
+   */
+  resourceType: string;
+  /**
+   * The resourceMetadata holds all resources and properties
+   */
+  resourceMetadata: { [key: string]: any };
+};
+
+export type AseaStackInfo = {
+  accountId: string;
+  accountKey: string;
+  region: string;
+  phase: number;
+  stackName: string;
+  templatePath: string;
+  resources: CfnResourceType[];
+  nestedStack?: boolean;
+};

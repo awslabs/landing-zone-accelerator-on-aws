@@ -50,6 +50,11 @@ export enum AcceleratorToolkitCommand {
   SYNTHESIZE = Command.SYNTHESIZE,
 }
 
+interface Tag {
+  readonly Key: string;
+  readonly Value: string;
+}
+
 /**
  * Accelerator extended CDK toolkit properties
  */
@@ -118,6 +123,16 @@ export interface AcceleratorToolkitProps {
    * Custom CDK options for the accelerator
    */
   cdkOptions?: cdkOptionsConfig;
+  /**
+   * Stack to be deployed. This stack is added to stackName list
+   * For IMPORT_ASEA_RESOURCES should be ASEA stack name
+   */
+  stack?: string;
+
+  /**
+   * Tags to be applied for CloudFormation stack
+   */
+  tags?: Tag[];
 }
 
 /**
@@ -136,7 +151,7 @@ export class AcceleratorToolkit {
     if (command === undefined) {
       return false;
     }
-    return Object.values(AcceleratorToolkitCommand).includes(command);
+    return Object.values(AcceleratorToolkitCommand).includes(command as unknown as AcceleratorToolkitCommand);
   }
 
   /**
@@ -460,6 +475,9 @@ export class AcceleratorToolkit {
       case AcceleratorStage.CUSTOMIZATIONS:
         stackName = await AcceleratorToolkit.getCustomizationsStackNames(stackName, options);
         break;
+      case AcceleratorStage.IMPORT_ASEA_RESOURCES:
+        stackName = [options.stack!];
+        break;
     }
 
     const selector: StackSelector = {
@@ -475,6 +493,7 @@ export class AcceleratorToolkit {
         requireApproval: options.requireApproval,
         changeSetName: changeSetName,
         hotswap: HotswapMode.FULL_DEPLOYMENT,
+        tags: options.tags,
       })
       .catch(err => {
         logger.error(err);

@@ -48,6 +48,7 @@ import {
   createSecurityResourcesStack,
   createSecurityStack,
   createTesterStack,
+  importAseaResourceStacks,
 } from '../utils/stack-utils';
 
 const logger = createLogger(['app']);
@@ -148,6 +149,9 @@ function createMultiAccountMultiRegionStacks(app: cdk.App, context: AcceleratorC
         region: enabledRegion,
       };
       //
+      // Import ASEA resources using CfnInclude
+      importAseaResourceStacks(app, context, props, accountId, enabledRegion);
+      //
       // KEY and DEPENDENCIES Stacks
       createKeyDependencyStacks(app, context, props, env, accountId, enabledRegion);
       //
@@ -202,7 +206,7 @@ async function main() {
   createPipelineStacks(app, context, acceleratorEnv, resourcePrefixes);
   //
   // Set accelerator stack props
-  const props = setAcceleratorStackProps(context, acceleratorEnv, resourcePrefixes, globalRegion);
+  const props = await setAcceleratorStackProps(context, acceleratorEnv, resourcePrefixes, globalRegion);
 
   if (props) {
     //

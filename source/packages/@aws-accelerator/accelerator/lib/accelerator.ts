@@ -175,6 +175,11 @@ export abstract class Accelerator {
       ? await this.getManagementAccountCredentials(props.partition)
       : undefined;
     const globalConfig = !this.isPipelineStage(props.stage) ? GlobalConfig.load(props.configDirPath) : undefined;
+    if (globalConfig?.externalLandingZoneResources?.importExternalLandingZoneResources) {
+      logger.info('Loading ASEA mapping');
+      await globalConfig.loadExternalMapping(true);
+      logger.info('Loaded ASEA mapping');
+    }
 
     if (!this.isPipelineStage(props.stage)) {
       await this.initializeAssumeRolePlugin({
@@ -244,6 +249,11 @@ export abstract class Accelerator {
         id: accountsConfig.getAuditAccountId(),
         name: accountsConfig.getAuditAccount().name,
       };
+
+      //
+      // Execute IMPORT_ASEA_RESOURCES Stage
+      //
+      await this.executeImportAseaResources(toolkitProps, promises, globalConfig, accountsConfig);
       //
       // Execute Bootstrap stacks for all identified accounts
       //
@@ -855,6 +865,64 @@ export abstract class Accelerator {
           await Promise.all(promises);
           promises.length = 0;
         }
+      }
+    }
+  }
+
+  private static async executeImportAseaResources(
+    toolkitProps: AcceleratorToolkitProps,
+    promises: Promise<void>[],
+    globalConfig: GlobalConfig,
+    accountsConfig: AccountsConfig,
+  ) {
+    if (toolkitProps.stage !== AcceleratorStage.IMPORT_ASEA_RESOURCES) {
+      return;
+    }
+    if (!globalConfig.externalLandingZoneResources) {
+      logger.error(
+        `Stage is ${AcceleratorStage.IMPORT_ASEA_RESOURCES} but externalLandingZoneResources is not defined in global config.`,
+      );
+      throw new Error(`Configuration validation failed at runtime.`);
+    }
+    const aseaPrefix = globalConfig.externalLandingZoneResources.acceleratorPrefix;
+    let previousPhase = -1;
+    for (const phase of [-1, 0, 1, 2, 3, 4, 5]) {
+      logger.info(`Deploying Stacks in Phase ${phase}`);
+      if (previousPhase !== phase) {
+        await Promise.all(promises);
+        previousPhase = phase;
+      }
+      for (const region of globalConfig.enabledRegions) {
+        for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
+          const accountId = accountsConfig.getAccountId(account.name);
+          const stacks = globalConfig.externalLandingZoneResources.templateMap.filter(
+            s => s.accountId === accountId && s.region === region && s.phase === phase,
+          );
+          stacks
+            .filter(s => !s.nestedStack)
+            .forEach(stack =>
+              promises.push(
+                AcceleratorToolkit.execute({
+                  ...toolkitProps,
+                  app: `cdk.out/phase-${accountId}-${region}`,
+                  stackPrefix: aseaPrefix,
+                  stack: stack.stackName,
+                  // ASEA Adds "AcceleratorName" tag to all stacks
+                  // Adding it to avoid updating all stacks
+                  tags: [
+                    {
+                      Key: 'AcceleratorName',
+                      Value: aseaPrefix,
+                    },
+                  ],
+                }),
+              ),
+            );
+        }
+      }
+      if (promises.length >= maxStacks) {
+        await Promise.all(promises);
+        promises = [];
       }
     }
   }
