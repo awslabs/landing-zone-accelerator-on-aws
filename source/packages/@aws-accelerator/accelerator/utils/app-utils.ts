@@ -352,12 +352,12 @@ function checkMandatoryEnvVariables(env: NodeJS.ProcessEnv, stage?: string) {
  * @param globalRegion
  * @returns
  */
-export function setAcceleratorStackProps(
+export async function setAcceleratorStackProps(
   context: AcceleratorContext,
   acceleratorEnv: AcceleratorEnvironment,
   prefixes: AcceleratorResourcePrefixes,
   globalRegion: string,
-): AcceleratorStackProps | undefined {
+): Promise<AcceleratorStackProps | undefined> {
   if (!context.configDirPath) {
     return;
   }
@@ -370,6 +370,10 @@ export function setAcceleratorStackProps(
     customizationsConfig = CustomizationsConfig.load(context.configDirPath);
   } else {
     customizationsConfig = new CustomizationsConfig();
+  }
+
+  if (globalConfig.externalLandingZoneResources?.importExternalLandingZoneResources) {
+    await globalConfig.loadExternalMapping(true);
   }
 
   return {

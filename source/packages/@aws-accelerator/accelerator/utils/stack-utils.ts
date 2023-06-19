@@ -44,6 +44,7 @@ import { SecurityResourcesStack } from '../lib/stacks/security-resources-stack';
 import { SecurityStack } from '../lib/stacks/security-stack';
 import { TesterPipelineStack } from '../lib/stacks/tester-pipeline-stack';
 import { AcceleratorContext, AcceleratorEnvironment, AcceleratorResourcePrefixes } from './app-utils';
+import { ImportAseaResourcesStack } from '../lib/stacks/import-asea-resources-stack';
 
 const logger = createLogger(['stack-utils']);
 
@@ -73,6 +74,53 @@ function getStackSynthesizer(props: AcceleratorStackProps, accountId: string, re
       generateBootstrapVersionRule: false,
       bucketPrefix: bucketPrefix,
       fileAssetsBucketName: fileAssetBucketName,
+    });
+  }
+}
+
+/**
+ * This function returns a CDK stack synthesizer based on configuration options
+ * @param props
+ * @param accountId
+ * @param region
+ * @param bootstrapAccountId
+ * @param qualifier
+ * @param roleName
+ * @returns
+ */
+function getAseaStackSynthesizer(props: {
+  accelProps: AcceleratorStackProps;
+  accountId: string;
+  region: string;
+  qualifier?: string;
+  roleName?: string;
+}) {
+  const { accountId, region, qualifier, roleName, accelProps } = props;
+  const managementAccountId = accelProps.accountsConfig.getManagementAccountId();
+  const centralizeBuckets =
+    accelProps.globalConfig.centralizeCdkBuckets?.enable || accelProps.globalConfig.cdkOptions?.centralizeBuckets;
+  const fileAssetsBucketName = centralizeBuckets ? `cdk-accel-assets-${managementAccountId}-${region}` : undefined;
+  const bucketPrefix = `${accountId}/`;
+
+  if (accelProps.globalConfig.cdkOptions?.useManagementAccessRole) {
+    logger.info(`Stack in account ${accountId} and region ${region} using CliCredentialSynthesizer`);
+    return new cdk.CliCredentialsStackSynthesizer({
+      bucketPrefix,
+      fileAssetsBucketName,
+      qualifier,
+    });
+  } else {
+    logger.info(`Stack in account ${accountId} and region ${region} using DefaultSynthesizer`, roleName);
+    const executionRoleArn = `arn:aws:iam::${accountId}:role/${roleName!}`;
+    return new cdk.DefaultStackSynthesizer({
+      generateBootstrapVersionRule: false,
+      bucketPrefix,
+      fileAssetsBucketName,
+      qualifier,
+      cloudFormationExecutionRole: executionRoleArn,
+      deployRoleArn: executionRoleArn,
+      fileAssetPublishingRoleArn: executionRoleArn,
+      imageAssetPublishingRoleArn: executionRoleArn,
     });
   }
 }
@@ -884,6 +932,106 @@ export function createCustomizationsStacks(
     createCustomStacks(app, props, env, accountId, enabledRegion);
 
     createApplicationsStacks(app, props, env, accountId, enabledRegion);
+  }
+}
+
+/**
+ * Import ASEA CloudFormation stacks manage resources using LZA CDK App
+ * @param app
+ * @param context
+ * @param props
+ * @param accountId
+ * @param enabledRegion
+ * @returns
+ */
+export function importAseaResourceStacks(
+  rootApp: cdk.App,
+  rootContext: AcceleratorContext,
+  props: AcceleratorStackProps,
+  accountId: string,
+  enabledRegion: string,
+) {
+  if (
+    !includeStage(rootContext, {
+      stage: AcceleratorStage.IMPORT_ASEA_RESOURCES,
+      account: accountId,
+      region: enabledRegion,
+    }) ||
+    !props.globalConfig.externalLandingZoneResources?.importExternalLandingZoneResources
+  ) {
+    return;
+  }
+  // Since we use different apps and stacks are not part of rootApp, adding empty stack
+  // to app to avoid command failure for no stacks in app
+  if (!rootApp.node.tryFindChild(`placeHolder`)) {
+    new cdk.Stack(rootApp, `placeHolder`, {});
+  }
+  const aseaStackMap = props.globalConfig.externalLandingZoneResources?.templateMap;
+  const acceleratorPrefix = props.globalConfig.externalLandingZoneResources?.acceleratorPrefix;
+
+  if (!aseaStackMap) {
+    logger.error(`Could not load asea mapping file from externalLandingZoneResources in global config`);
+    throw new Error(`Configuration validation failed at runtime.`);
+  }
+
+  if (!acceleratorPrefix) {
+    logger.error(`Could not load accelerator prefix from externalLandingZoneResources in global config`);
+    throw new Error(`Configuration validation failed at runtime.`);
+  }
+  /**
+   * Create one cdk.App for each account and region to avoid name conflicts
+   * Couldn't use cdk.Stage because of NestedStack naming
+   * CfnInclude.loadNestedStack prefixes stage name to existing stack name.
+   */
+  const app = new cdk.App({
+    outdir: `cdk.out/phase-${accountId}-${enabledRegion}`,
+  });
+
+  for (const phase of [-1, 0, 1, 2, 3, 4, 5]) {
+    const aseaStacks = aseaStackMap.filter(
+      s => s.accountId === accountId && s.region === enabledRegion && s.phase === phase,
+    );
+    if (aseaStacks.length === 0) {
+      logger.warn(`No ASEA stack found for account ${accountId} in region ${enabledRegion} for ${phase.toString()}`);
+      continue;
+    }
+    let synthesizer: cdk.CliCredentialsStackSynthesizer | cdk.DefaultStackSynthesizer;
+    if (
+      accountId === props.accountsConfig.getManagementAccountId() &&
+      enabledRegion === props.globalConfig.homeRegion
+    ) {
+      synthesizer = getAseaStackSynthesizer({
+        accelProps: props,
+        accountId,
+        region: enabledRegion,
+        roleName: `${acceleratorPrefix}-PipelineRole`,
+      });
+    } else {
+      synthesizer = getAseaStackSynthesizer({
+        accelProps: props,
+        accountId,
+        region: enabledRegion,
+        qualifier: acceleratorPrefix.endsWith('-')
+          ? acceleratorPrefix.slice(0, -1).toLowerCase()
+          : acceleratorPrefix.toLowerCase(),
+        roleName: `${acceleratorPrefix}-PipelineRole`,
+      });
+    }
+
+    for (const aseaStack of aseaStacks.filter(s => !s.nestedStack)) {
+      new ImportAseaResourcesStack(app, aseaStack.stackName, {
+        ...props,
+        stackName: aseaStack.stackName,
+        synthesizer,
+        terminationProtection: props.globalConfig.terminationProtection ?? true,
+        stackInfo: aseaStack,
+        nestedStacks: aseaStacks.filter(s => s.nestedStack),
+        env: {
+          account: accountId,
+          region: enabledRegion,
+        },
+      });
+    }
   }
 }
 

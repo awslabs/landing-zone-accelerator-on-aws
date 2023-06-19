@@ -28,6 +28,9 @@ source/test-reports
 combined.log
 error.log
 
+### Ignore Development which is for debugging
+development
+
 # Ignore reference custom rules lambda zip files
 .*/attach-ec2-instance-profile.zip
 .*/ec2-instance-profile-permissions.zip
@@ -75,12 +78,12 @@ source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:72
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:73
 
 # Accelerator specific assume role declaration
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:334
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:335
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:987
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:988
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:998
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:999
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:344
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:345
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1055
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1056
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1066
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1067
 
 
 # Accelerator specific assume role declaration
