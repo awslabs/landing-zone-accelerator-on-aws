@@ -23,7 +23,7 @@
     "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}'"
   },
   "dependencies": {
-    "aws-cdk-lib": "2.79.1",
+    "aws-cdk-lib": "2.80.0",
     "aws-cdk": "2.79.1",
     "@aws-sdk/client-config-service": "3.100.0",
     "@types/aws-lambda": "8.10.86",
@@ -44,7 +44,7 @@
     "winston": "3.8.2"
   },
   "devDependencies": {
-    "aws-cdk-lib": "2.79.1",
+    "aws-cdk-lib": "2.80.0",
     "aws-cdk": "2.79.1",
     "@aws-cdk/cx-api": "2.79.1",
     "@aws-cdk/region-info": "2.79.1",

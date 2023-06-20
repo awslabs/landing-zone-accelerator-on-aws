@@ -23,7 +23,7 @@
     "@aws-accelerator/config": "^0.0.0",
     "@aws-accelerator/constructs": "^0.0.0",
     "@aws-cdk-extensions/cdk-plugin-assume-role": "^0.0.0",
-    "aws-cdk-lib": "2.79.1",
+    "aws-cdk-lib": "2.80.0",
     "aws-cdk": "2.79.1",
     "@aws-cdk/cloud-assembly-schema": "2.79.1",
     "@aws-sdk/client-config-service": "3.347.1",
@@ -48,7 +48,7 @@
     "winston": "3.8.2"
   },
   "devDependencies": {
-    "aws-cdk-lib": "2.79.1",
+    "aws-cdk-lib": "2.80.0",
     "aws-cdk": "2.79.1",
     "@aws-cdk/cx-api": "2.79.1",
     "@aws-cdk/region-info": "2.79.1",
