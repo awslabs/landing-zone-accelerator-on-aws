@@ -140,6 +140,7 @@ export interface AcceleratorProps {
   readonly ec2Creds?: boolean;
   readonly proxyAddress?: string;
   readonly enableSingleAccountMode: boolean;
+  readonly useExistingRoles: boolean;
 }
 
 /**
@@ -214,6 +215,7 @@ export abstract class Accelerator {
       proxyAddress: props.proxyAddress,
       centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
       cdkOptions: globalConfig?.cdkOptions,
+      useExistingRoles: props.useExistingRoles,
     };
     //
     // When an account and region is specified, execute as single stack.

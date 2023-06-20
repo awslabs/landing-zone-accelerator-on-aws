@@ -70,11 +70,12 @@ export class BootstrapStack extends AcceleratorStack {
     const cfnCdkBootstrapVersionParam = cdkBootstrapVersionParam.node.defaultChild as cdk.aws_ssm.CfnParameter;
     cfnCdkBootstrapVersionParam.overrideLogicalId('CdkBootstrapVersion');
 
-    // Create CDK roles for default CDK stack synthesis
-    this.createCdkRoles(cdkBootstrapVersionParam.parameterName, trustedAccountsParam.valueAsList);
+    if (!props.useExistingRoles) {
+      // Create CDK roles for default CDK stack synthesis
+      this.createCdkRoles(cdkBootstrapVersionParam.parameterName, trustedAccountsParam.valueAsList);
 
-    this.createCustomDeploymentRole(customDeploymentRole, this.props.globalConfig.homeRegion);
-
+      this.createCustomDeploymentRole(customDeploymentRole, this.props.globalConfig.homeRegion);
+    }
     // Create ECR repository
     this.createEcrRepository();
 

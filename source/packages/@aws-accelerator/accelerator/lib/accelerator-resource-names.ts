@@ -41,6 +41,7 @@ interface ParameterNames {
   assetsBucketCmkArn: string;
   identityCenterInstanceArn: string;
   identityStoreId: string;
+  firehoseRecordsProcessorFunctionName: string;
 }
 interface CmkDetails {
   orgTrailLog: { alias: string; description: string };
@@ -110,6 +111,7 @@ export class AcceleratorResourceNames {
     assetsBucketCmkArn: 'PLACE_HOLDER',
     identityCenterInstanceArn: 'PLACE_HOLDER',
     identityStoreId: 'PLACE_HOLDER',
+    firehoseRecordsProcessorFunctionName: 'PLACE_HOLDER',
   };
   public customerManagedKeys: CmkDetails = {
     orgTrailLog: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
@@ -266,5 +268,9 @@ export class AcceleratorResourceNames {
     this.bucketPrefixes.vpcFlowLogs = props.prefixes.bucketName + '-vpc';
     this.bucketPrefixes.metadata = props.prefixes.bucketName + '-metadata';
     this.bucketPrefixes.centralLogs = props.prefixes.bucketName + '-central-logs';
+
+    //
+    // Lambda function name initialization
+    this.parameters.firehoseRecordsProcessorFunctionName = props.prefixes.accelerator + '-FirehoseRecordsProcessor';
   }
 }

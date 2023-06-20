@@ -134,6 +134,11 @@ export interface AcceleratorToolkitProps {
    * Tags to be applied for CloudFormation stack
    */
   tags?: Tag[];
+
+  /**
+   * Use existing roles for deployment
+   */
+  useExistingRoles: boolean;
 }
 
 /**
@@ -283,6 +288,9 @@ export class AcceleratorToolkit {
     }
     if (options.partition) {
       context.push(`partition=${options.partition}`);
+    }
+    if (options.useExistingRoles) {
+      context.push(`useExistingRoles=true`);
     }
 
     return context;

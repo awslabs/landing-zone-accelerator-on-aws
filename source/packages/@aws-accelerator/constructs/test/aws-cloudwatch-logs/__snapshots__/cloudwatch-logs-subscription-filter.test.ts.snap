@@ -70,7 +70,85 @@ exports[`CloudWatchLogsSubscriptionFilter Construct(CloudWatchLogsSubscriptionFi
       "Type": "Custom::UpdateSubscriptionFilter",
       "UpdateReplacePolicy": "Delete",
     },
+    "CloudWatchLogsSubscriptionFilterExistingIam9E6C2804": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomUpdateSubscriptionFilterCustomResourceProviderLogGroup0738E05B",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomUpdateSubscriptionFilterCustomResourceProviderHandler1BAA7608",
+            "Arn",
+          ],
+        },
+        "acceleratorCreatedLogDestinationArn": "LogRetentionArn",
+        "acceleratorLogKmsKeyArn": {
+          "Fn::GetAtt": [
+            "CustomKeyExistingIam1584FEB7",
+            "Arn",
+          ],
+        },
+        "acceleratorLogRetentionInDays": "731",
+        "acceleratorLogSubscriptionRoleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":role/AWSAcceleratorLogReplicationRole-",
+              {
+                "Ref": "AWS::Region",
+              },
+            ],
+          ],
+        },
+      },
+      "Type": "Custom::UpdateSubscriptionFilter",
+      "UpdateReplacePolicy": "Delete",
+    },
     "CustomKey1E6D0D07": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomKeyExistingIam1584FEB7": {
       "DeletionPolicy": "Retain",
       "Properties": {
         "KeyPolicy": {

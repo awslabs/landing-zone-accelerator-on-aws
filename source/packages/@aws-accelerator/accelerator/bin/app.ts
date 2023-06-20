@@ -202,7 +202,7 @@ async function main() {
   const context = getContext(app);
   //
   // Set aspects and global region
-  const aspects = new AcceleratorAspects(app, context.partition);
+  const aspects = new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   const globalRegion = aspects.globalRegion;
   //
   // Set various resource name prefixes used in code base

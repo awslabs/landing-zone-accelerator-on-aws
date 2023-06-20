@@ -43,6 +43,8 @@ vpc.addFlowLogs({
   bucketArn: 'arn:aws:s3:::aws-accelerator-test-111111111111-us-east-1',
   encryptionKey: new cdk.aws_kms.Key(stack, 'test-key2'),
   logRetentionInDays: 10,
+  useExistingRoles: false,
+  acceleratorPrefix: 'AWSAccelerator',
 });
 
 vpc.addCidr({ cidrBlock: '10.2.0.0/16' });

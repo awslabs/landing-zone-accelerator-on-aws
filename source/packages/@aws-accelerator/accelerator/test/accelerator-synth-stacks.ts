@@ -120,6 +120,7 @@ export class AcceleratorSynthStacks {
         databaseName: 'aws-accelerator',
       },
       enableSingleAccountMode: false,
+      useExistingRoles: false,
     };
 
     this.homeRegion = this.props.globalConfig.homeRegion;

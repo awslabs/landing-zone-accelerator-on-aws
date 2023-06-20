@@ -60,6 +60,14 @@ export interface CloudWatchLogsCreateProps {
    *
    */
   readonly replaceLogDestinationArn?: string;
+  /**
+   * Accelerator Prefix defaults to 'AWSAccelerator'.
+   */
+  readonly acceleratorPrefix: string;
+  /**
+   * Use existing IAM roles for deployment.
+   */
+  readonly useExistingRoles: boolean;
 }
 
 /**
@@ -69,6 +77,14 @@ export class CloudWatchLogsSubscriptionFilter extends Construct {
   readonly id: string;
   constructor(scope: Construct, id: string, props: CloudWatchLogsCreateProps) {
     super(scope, id);
+    let acceleratorLogSubscriptionRoleArn: string;
+    if (props.useExistingRoles) {
+      acceleratorLogSubscriptionRoleArn = `arn:${cdk.Stack.of(this).partition}:iam::${
+        cdk.Stack.of(this).account
+      }:role/${props.acceleratorPrefix}LogReplicationRole-${cdk.Stack.of(this).region}`;
+    } else {
+      acceleratorLogSubscriptionRoleArn = props.subscriptionFilterRoleArn;
+    }
 
     const UPDATE_SUBSCRIPTION_FILTER = 'Custom::UpdateSubscriptionFilter';
 
@@ -115,7 +131,7 @@ export class CloudWatchLogsSubscriptionFilter extends Construct {
       properties: {
         acceleratorLogRetentionInDays: props.logsRetentionInDays,
         acceleratorCreatedLogDestinationArn: props.logDestinationArn,
-        acceleratorLogSubscriptionRoleArn: props.subscriptionFilterRoleArn,
+        acceleratorLogSubscriptionRoleArn,
         acceleratorLogKmsKeyArn: props.logsKmsKey.keyArn,
         logExclusionOption: props.logExclusionOption
           ? JSON.stringify(props.logExclusionOption)

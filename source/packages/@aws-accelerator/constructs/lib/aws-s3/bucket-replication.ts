@@ -60,6 +60,14 @@ export interface BucketReplicationProps {
    * Custom resource lambda log retention in days
    */
   readonly logRetentionInDays: number;
+  /**
+   * Use existing IAM resources
+   */
+  readonly useExistingRoles: boolean;
+  /**
+   * Accelerator prefix, defaults to 'AWSAccelerator'
+   */
+  readonly acceleratorPrefix: string;
 }
 
 /**
@@ -99,9 +107,73 @@ export class BucketReplication extends Construct {
       throw new Error('Destination bucket key arn property require when source bucket have server side encryption.');
     }
 
+    const RESOURCE_TYPE = 'Custom::S3PutBucketReplication';
+
+    const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
+      codeDirectory: path.join(__dirname, 'put-bucket-replication/dist'),
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
+      policyStatements: [
+        {
+          Sid: 'S3PutReplicationConfigurationTaskActions',
+          Effect: 'Allow',
+          Action: [
+            'iam:PassRole',
+            's3:PutLifecycleConfiguration',
+            's3:PutReplicationConfiguration',
+            's3:PutBucketVersioning',
+          ],
+          Resource: '*',
+        },
+      ],
+    });
+
+    const resource = new cdk.CustomResource(this, 'Resource', {
+      resourceType: RESOURCE_TYPE,
+      serviceToken: provider.serviceToken,
+      properties: {
+        replicationRoleArn: this.createReplicationRole(
+          props.destination.bucketName,
+          props.destination.keyArn,
+          props.useExistingRoles,
+          props.acceleratorPrefix,
+        ),
+        sourceBucketName: this.sourceBucket.bucketName,
+        prefix: props.source!.prefix ?? '',
+        destinationBucketArn: this.destinationBucket.bucketArn,
+        destinationBucketKeyArn: props.destination.keyArn ?? '',
+        destinationAccountId: props.destination.accountId,
+      },
+    });
+
+    /**
+     * Singleton pattern to define the log group for the singleton function
+     * in the stack
+     */
+    const stack = cdk.Stack.of(scope);
+    const logGroup =
+      (stack.node.tryFindChild(`${provider.node.id}LogGroup`) as cdk.aws_logs.LogGroup) ??
+      new cdk.aws_logs.LogGroup(stack, `${provider.node.id}LogGroup`, {
+        logGroupName: `/aws/lambda/${(provider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref}`,
+        retention: props.logRetentionInDays,
+        encryptionKey: props.kmsKey,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
+    resource.node.addDependency(logGroup);
+  }
+  private createReplicationRole(
+    destinationBucketName: string,
+    destinationKeyArn: string | undefined,
+    useExistingRoles: boolean,
+    acceleratorPrefix: string,
+  ) {
+    if (useExistingRoles) {
+      return `arn:${cdk.Stack.of(this).partition}:iam::${
+        cdk.Stack.of(this).account
+      }:role/${acceleratorPrefix}S3ReplicationRole`;
+    }
     //
     // Create role for replication
-    const replicationRole = new cdk.aws_iam.Role(this, `${pascalCase(props.destination.bucketName)}-ReplicationRole`, {
+    const replicationRole = new cdk.aws_iam.Role(this, `${pascalCase(destinationBucketName)}-ReplicationRole`, {
       assumedBy: new cdk.aws_iam.ServicePrincipal('s3.amazonaws.com'),
       path: '/service-role/',
     });
@@ -146,10 +218,10 @@ export class BucketReplication extends Construct {
       );
     }
 
-    if (props.destination.keyArn) {
+    if (destinationKeyArn) {
       replicationRolePolicies.push(
         new cdk.aws_iam.PolicyStatement({
-          resources: [props.destination.keyArn],
+          resources: [destinationKeyArn],
           actions: ['kms:Encrypt'],
         }),
       );
@@ -159,52 +231,6 @@ export class BucketReplication extends Construct {
       replicationRole.addToPolicy(item);
     });
 
-    const RESOURCE_TYPE = 'Custom::S3PutBucketReplication';
-
-    const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
-      codeDirectory: path.join(__dirname, 'put-bucket-replication/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
-      policyStatements: [
-        {
-          Sid: 'S3PutReplicationConfigurationTaskActions',
-          Effect: 'Allow',
-          Action: [
-            'iam:PassRole',
-            's3:PutLifecycleConfiguration',
-            's3:PutReplicationConfiguration',
-            's3:PutBucketVersioning',
-          ],
-          Resource: '*',
-        },
-      ],
-    });
-
-    const resource = new cdk.CustomResource(this, 'Resource', {
-      resourceType: RESOURCE_TYPE,
-      serviceToken: provider.serviceToken,
-      properties: {
-        replicationRoleArn: replicationRole.roleArn,
-        sourceBucketName: this.sourceBucket.bucketName,
-        prefix: props.source!.prefix ?? '',
-        destinationBucketArn: this.destinationBucket.bucketArn,
-        destinationBucketKeyArn: props.destination.keyArn ?? '',
-        destinationAccountId: props.destination.accountId,
-      },
-    });
-
-    /**
-     * Singleton pattern to define the log group for the singleton function
-     * in the stack
-     */
-    const stack = cdk.Stack.of(scope);
-    const logGroup =
-      (stack.node.tryFindChild(`${provider.node.id}LogGroup`) as cdk.aws_logs.LogGroup) ??
-      new cdk.aws_logs.LogGroup(stack, `${provider.node.id}LogGroup`, {
-        logGroupName: `/aws/lambda/${(provider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref}`,
-        retention: props.logRetentionInDays,
-        encryptionKey: props.kmsKey,
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-      });
-    resource.node.addDependency(logGroup);
+    return replicationRole.roleArn;
   }
 }

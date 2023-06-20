@@ -32,6 +32,10 @@ export interface AcceleratorContext {
    */
   partition: string;
   /**
+   * Use existing roles
+   */
+  useExistingRoles: boolean;
+  /**
    * The directory containing the accelerator configuration files
    */
   configDirPath?: string;
@@ -190,6 +194,7 @@ export interface AcceleratorEnvironment {
  */
 export function getContext(app: cdk.App): AcceleratorContext {
   const partition = app.node.tryGetContext('partition');
+  const useExistingRoles = app.node.tryGetContext('useExistingRoles') === 'true';
 
   if (!partition) {
     throw new Error('Partition value must be specified in app context');
@@ -201,6 +206,7 @@ export function getContext(app: cdk.App): AcceleratorContext {
     stage: app.node.tryGetContext('stage'),
     account: app.node.tryGetContext('account'),
     region: app.node.tryGetContext('region'),
+    useExistingRoles,
   };
 }
 
@@ -396,6 +402,7 @@ export async function setAcceleratorStackProps(
     globalRegion,
     centralizedLoggingRegion: globalConfig.logging.centralizedLoggingRegion ?? globalConfig.homeRegion,
     prefixes,
+    useExistingRoles: context.useExistingRoles,
     ...acceleratorEnv,
   };
 }

@@ -55,7 +55,7 @@ import { AcceleratorToolkit } from './lib/toolkit';
   const caBundlePath = args['ca-bundle-path'];
   const ec2Creds = args['ec2Creds'];
   const proxyAddress = args['proxy'];
-
+  const useExistingRoles = args['use-existing-roles'] ?? false;
   //
   // Validate args: must specify a command
   //
@@ -110,6 +110,7 @@ import { AcceleratorToolkit } from './lib/toolkit';
     ec2Creds,
     proxyAddress,
     enableSingleAccountMode: enableSingleAccountMode,
+    useExistingRoles,
   }).catch(function (err) {
     console.log(err.message);
     process.exit(1);

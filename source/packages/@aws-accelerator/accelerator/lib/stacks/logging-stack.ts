@@ -129,6 +129,8 @@ export class LoggingStack extends AcceleratorStack {
       },
       kmsKey: this.cloudwatchKey,
       logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+      useExistingRoles: this.props.useExistingRoles ?? false,
+      acceleratorPrefix: this.props.prefixes.accelerator,
     };
 
     //
@@ -865,7 +867,8 @@ export class LoggingStack extends AcceleratorStack {
         this.props.partition === 'aws-cn' || !this.organizationId
           ? this.props.accountsConfig.getAccountIds()
           : undefined,
-      destinationName: `${this.props.prefixes.accelerator}CloudWatchToS3`,
+      acceleratorPrefix: this.props.prefixes.accelerator,
+      useExistingRoles: this.props.useExistingRoles ?? false,
     });
 
     // Setup Firehose to take records from Kinesis and place in S3
@@ -880,9 +883,10 @@ export class LoggingStack extends AcceleratorStack {
       homeRegion: this.props.globalConfig.homeRegion,
       lambdaKey: lambdaKey, // to encrypt lambda environment
       configDir: this.props.configDirPath,
-      prefixProcessingFunctionName: `${this.props.prefixes.accelerator}-FirehoseRecordsProcessor`,
-      glueDatabaseName: `${this.props.prefixes.databaseName}-subscription-database`,
-      transformationTableName: `${this.props.prefixes.databaseName}-firehose-transformation-table`,
+      acceleratorPrefix: this.props.prefixes.accelerator,
+      useExistingRoles: this.props.useExistingRoles ?? false,
+      firehoseRecordsProcessorFunctionName:
+        this.acceleratorResourceNames.parameters.firehoseRecordsProcessorFunctionName,
     });
     return cloudwatchCfnDestination;
   }
@@ -943,6 +947,8 @@ export class LoggingStack extends AcceleratorStack {
       subscriptionFilterRoleArn: subscriptionFilterRole.roleArn,
       logExclusionOption: accountRegionExclusion,
       replaceLogDestinationArn: this.props.globalConfig.logging.cloudwatchLogs?.replaceLogDestinationArn,
+      acceleratorPrefix: this.props.prefixes.accelerator,
+      useExistingRoles: this.props.useExistingRoles ?? false,
     });
 
     //For every new log group that is created, set up subscription, KMS and retention
@@ -954,6 +960,8 @@ export class LoggingStack extends AcceleratorStack {
       logsRetentionInDaysValue: this.props.globalConfig.cloudwatchLogRetentionInDays.toString(),
       subscriptionFilterRoleArn: subscriptionFilterRole.roleArn,
       exclusionSetting: accountRegionExclusion!,
+      acceleratorPrefix: this.props.prefixes.accelerator,
+      useExistingRoles: this.props.useExistingRoles ?? false,
     });
 
     // create custom resource before the new log group logic is created.

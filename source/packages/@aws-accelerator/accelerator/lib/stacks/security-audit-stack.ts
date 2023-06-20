@@ -64,6 +64,8 @@ export class SecurityAuditStack extends AcceleratorStack {
       },
       kmsKey: this.cloudwatchKey,
       logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+      acceleratorPrefix: this.props.prefixes.accelerator,
+      useExistingRoles: this.props.useExistingRoles ?? false,
     };
 
     //

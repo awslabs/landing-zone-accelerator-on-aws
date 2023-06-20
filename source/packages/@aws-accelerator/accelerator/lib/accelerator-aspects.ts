@@ -169,6 +169,57 @@ class AwsSolutionAspect implements cdk.IAspect {
 }
 
 /**
+ * Existing Role Overrides
+ */
+class ExistingRoleOverrides implements cdk.IAspect {
+  public visit(construct: IConstruct): void {
+    const acceleratorPrefix = process.env['ACCELERATOR_PREFIX'] ?? 'AWSAccelerator';
+
+    if (construct instanceof cdk.CfnResource && construct.cfnResourceType === 'AWS::CloudTrail::Trail') {
+      this.replaceCloudTrailCloudWatchLogsRole(construct, acceleratorPrefix);
+    } else if (construct instanceof cdk.CfnResource && construct.cfnResourceType === 'AWS::Lambda::Function') {
+      this.replaceLambdaFunctionRole(construct, acceleratorPrefix);
+    } else if (
+      construct instanceof cdk.CfnResource &&
+      (construct.cfnResourceType === 'AWS::IAM::Role' ||
+        construct.cfnResourceType === 'AWS::IAM::Policy' ||
+        construct.cfnResourceType === 'AWS::IAM::InstanceProfile' ||
+        construct.cfnResourceType === 'AWS::IAM::ManagedPolicy')
+    ) {
+      for (const x of construct.obtainResourceDependencies()) {
+        construct.removeDependency(x);
+      }
+      construct.node.scope?.node.tryRemoveChild(construct.node.id);
+    }
+  }
+  private replaceCloudTrailCloudWatchLogsRole(construct: cdk.CfnResource, acceleratorPrefix: string) {
+    for (const eachDependency of construct.node.dependencies) {
+      // in cloudtrail look for logsRole
+      // this is only created when sendToCloudWatchLogs is set to true
+      // replace this with pre-existing role
+      if (eachDependency.node.path.includes('LogsRole')) {
+        construct.addPropertyDeletionOverride('CloudWatchLogsRoleArn');
+        construct.addPropertyOverride(
+          'CloudWatchLogsRoleArn.Fn::Sub',
+          'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/' + acceleratorPrefix + 'CloudTrailCloudWatchRole',
+        );
+      }
+    }
+  }
+  private replaceLambdaFunctionRole(construct: cdk.CfnResource, acceleratorPrefix: string) {
+    for (const x of construct.obtainResourceDependencies()) {
+      construct.removeDependency(x);
+      const parentConstruct = construct.node.scope;
+      parentConstruct?.node.tryRemoveChild(x.node.id);
+    }
+    construct.addPropertyDeletionOverride('Role');
+    construct.addPropertyOverride(
+      'Role.Fn::Sub',
+      'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/' + acceleratorPrefix + 'LambdaRole',
+    );
+  }
+}
+/**
  * Add accelerator specific aspects to the application based on partition
  */
 export class AcceleratorAspects {
@@ -178,7 +229,7 @@ export class AcceleratorAspects {
    */
   public readonly globalRegion: string;
 
-  constructor(app: cdk.App, partition: string) {
+  constructor(app: cdk.App, partition: string, useExistingRoles: boolean) {
     let globalRegion = 'us-east-1';
     // Add partition specific overrides
     switch (partition) {
@@ -201,8 +252,18 @@ export class AcceleratorAspects {
     }
     // Add default aspects
     cdk.Aspects.of(app).add(new LambdaDefaultMemoryAspect());
-    cdk.Aspects.of(app).add(new AwsSolutionAspect());
     cdk.Aspects.of(app).add(new IamServiceLinkedRoleAspect());
+    if (useExistingRoles) {
+      cdk.Aspects.of(app).add(new ExistingRoleOverrides());
+    } else {
+      /**
+       * when existing roles are recreated the Lambda, invoke fails on custom resource as environment variable is encrypted and it cannot access it with the error below
+       * @example
+       * Calling the invoke API action failed with this message: Lambda was unable to decrypt the environment variables because KMS access was denied. Please check the function's KMS key settings. KMS Exception: AccessDeniedExceptionKMS Message: The ciphertext refers to a customer master key that does not exist, does not exist in this region, or you are not allowed to access
+       */
+      // removing solutions aspect to prevent this error
+      cdk.Aspects.of(app).add(new AwsSolutionAspect());
+    }
 
     // Set global region
     this.globalRegion = globalRegion;
