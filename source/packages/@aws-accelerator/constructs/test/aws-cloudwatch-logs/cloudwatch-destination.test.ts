@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { CloudWatchDestination } from '../../lib/aws-cloudwatch-logs/cloudwatch-destination';
 import { snapShotTest } from '../snapshot-test';
+import { describe } from '@jest/globals';
 
 const testNamePrefix = 'Construct(CloudWatchDestination): ';
 
@@ -26,7 +27,8 @@ new CloudWatchDestination(stack, 'CloudWatchDestination', {
   kinesisStream: new cdk.aws_kinesis.Stream(stack, 'CustomStream', {}),
   organizationId: 'o-some-org-id',
   partition: 'aws',
-  destinationName: 'AWSAcceleratorCloudWatchToS3',
+  useExistingRoles: false,
+  acceleratorPrefix: 'AWSAccelerator',
 });
 
 new CloudWatchDestination(cnStack, 'CloudWatchDestination', {
@@ -35,7 +37,17 @@ new CloudWatchDestination(cnStack, 'CloudWatchDestination', {
   organizationId: 'o-some-org-id',
   accountIds: ['111111111111', '222222222222'],
   partition: 'aws-cn',
-  destinationName: 'AWSAcceleratorCloudWatchToS3',
+  useExistingRoles: false,
+  acceleratorPrefix: 'AWSAccelerator',
+});
+
+new CloudWatchDestination(stack, 'CloudWatchDestinationExistingIam', {
+  kinesisKmsKey: new cdk.aws_kms.Key(stack, 'CustomKeyExistingIam', {}),
+  kinesisStream: new cdk.aws_kinesis.Stream(stack, 'CustomStreamExistingIam', {}),
+  organizationId: 'o-some-org-id',
+  partition: 'aws',
+  useExistingRoles: true,
+  acceleratorPrefix: 'AWSAccelerator',
 });
 
 /**

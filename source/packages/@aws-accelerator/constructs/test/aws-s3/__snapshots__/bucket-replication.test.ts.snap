@@ -199,7 +199,105 @@ exports[`BucketReplication Construct(BucketReplication):  Snapshot Test 1`] = `
       "Type": "Custom::S3PutBucketReplication",
       "UpdateReplacePolicy": "Delete",
     },
+    "BucketReplicationExistingIamA4FEEDD2": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomS3PutBucketReplicationCustomResourceProviderLogGroup6A67905E",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomS3PutBucketReplicationCustomResourceProviderHandler1D75398C",
+            "Arn",
+          ],
+        },
+        "destinationAccountId": {
+          "Ref": "AWS::AccountId",
+        },
+        "destinationBucketArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":s3:::aws-accelerator-central-logs-bucket-existing-iam",
+            ],
+          ],
+        },
+        "destinationBucketKeyArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:kms:us-east-1:",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":key/ksm-key-arn",
+            ],
+          ],
+        },
+        "prefix": "",
+        "replicationRoleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":role/AWSAcceleratorS3ReplicationRole",
+            ],
+          ],
+        },
+        "sourceBucketName": {
+          "Ref": "SourceBucketDDD2130A",
+        },
+      },
+      "Type": "Custom::S3PutBucketReplication",
+      "UpdateReplacePolicy": "Delete",
+    },
     "CWLKeyB9201973": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CWLKeyExistingIamDCB4F720": {
       "DeletionPolicy": "Retain",
       "Properties": {
         "KeyPolicy": {
@@ -325,6 +423,63 @@ exports[`BucketReplication Construct(BucketReplication):  Snapshot Test 1`] = `
         ],
       },
       "Type": "AWS::IAM::Role",
+    },
+    "SourceBucketDDD2130A": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "KMSMasterKeyID": {
+                  "Fn::GetAtt": [
+                    "SourceBucketExistingIam4DBB8957",
+                    "Arn",
+                  ],
+                },
+                "SSEAlgorithm": "aws:kms",
+              },
+            },
+          ],
+        },
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "SourceBucketExistingIam4DBB8957": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
     },
   },
 }

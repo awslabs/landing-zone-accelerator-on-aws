@@ -40,9 +40,13 @@ export interface CloudWatchDestinationProps {
    */
   accountIds?: string[];
   /**
-   * Cloudwatch destination name.
+   * Accelerator Prefix defaults to 'AWSAccelerator'.
    */
-  destinationName: string;
+  acceleratorPrefix: string;
+  /**
+   * Use existing IAM roles for deployment.
+   */
+  useExistingRoles: boolean;
 }
 /**
  * Class to configure CloudWatch Destination on logs receiving account
@@ -50,44 +54,6 @@ export interface CloudWatchDestinationProps {
 export class CloudWatchDestination extends Construct {
   constructor(scope: Construct, id: string, props: CloudWatchDestinationProps) {
     super(scope, id);
-
-    //Create policy for access to Kinesis stream
-    const kinesisStreamAccess = new cdk.aws_iam.PolicyDocument({
-      statements: [
-        new cdk.aws_iam.PolicyStatement({
-          actions: ['kinesis:ListShards', 'kinesis:PutRecord', 'kinesis:PutRecords'],
-          resources: [props.kinesisStream.streamArn],
-        }),
-      ],
-    });
-    const kmsKeyAccess = new cdk.aws_iam.PolicyDocument({
-      statements: [
-        new cdk.aws_iam.PolicyStatement({
-          actions: [
-            'kms:Decrypt',
-            'kms:Encrypt',
-            'kms:GenerateDataKey',
-            'kms:ReEncryptTo',
-            'kms:GenerateDataKeyWithoutPlaintext',
-            'kms:GenerateDataKeyPairWithoutPlaintext',
-            'kms:GenerateDataKeyPair',
-            'kms:ReEncryptFrom',
-          ],
-          resources: [props.kinesisKmsKey.keyArn],
-        }),
-      ],
-    });
-
-    // Create a role for CloudWatch Logs destination
-    const logsKinesisRole = new cdk.aws_iam.Role(this, 'LogsKinesisRole', {
-      assumedBy: new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.${cdk.Stack.of(this).urlSuffix}`),
-      // this needs to be inline to ensure role is created with proper access
-      // if not, CloudWatch destination creation fails with no permission to access Kinesis or KMS (generateDataKey access error)
-      inlinePolicies: {
-        KinesisAccess: kinesisStreamAccess,
-        KmsAccess: kmsKeyAccess,
-      },
-    });
 
     let principalOrgIdCondition: object | undefined = undefined;
     let accountPrincipals: object | cdk.aws_iam.IPrincipal;
@@ -115,17 +81,72 @@ export class CloudWatchDestination extends Construct {
           Action: 'logs:PutSubscriptionFilter',
           Resource: `arn:${cdk.Stack.of(this).partition}:logs:${cdk.Stack.of(this).region}:${
             cdk.Stack.of(this).account
-          }:destination:${props.destinationName}`,
+          }:destination:${props.acceleratorPrefix}CloudWatchToS3`,
           Condition: principalOrgIdCondition,
         },
       ],
     });
 
     new cdk.aws_logs.CfnDestination(this, 'Resource', {
-      roleArn: logsKinesisRole.roleArn,
+      roleArn: this.createKinesisRole(
+        props.kinesisStream.streamArn,
+        props.kinesisKmsKey.keyArn,
+        props.useExistingRoles,
+        props.acceleratorPrefix,
+      ),
       targetArn: props.kinesisStream.streamArn,
-      destinationName: props.destinationName,
+      destinationName: `${props.acceleratorPrefix}CloudWatchToS3`,
       destinationPolicy: logDestinationPolicy,
     });
+  }
+
+  private createKinesisRole(
+    kinesisStreamArn: string,
+    kinesisKeyArn: string,
+    useExistingRoles: boolean,
+    acceleratorPrefix: string,
+  ) {
+    if (useExistingRoles === true) {
+      return `arn:${cdk.Stack.of(this).partition}:iam::${
+        cdk.Stack.of(this).account
+      }:role/${acceleratorPrefix}LogReplicationRole-${cdk.Stack.of(this).region}`;
+    }
+    //Create policy for access to Kinesis stream
+    const kinesisStreamAccess = new cdk.aws_iam.PolicyDocument({
+      statements: [
+        new cdk.aws_iam.PolicyStatement({
+          actions: ['kinesis:ListShards', 'kinesis:PutRecord', 'kinesis:PutRecords'],
+          resources: [kinesisStreamArn],
+        }),
+      ],
+    });
+    const kmsKeyAccess = new cdk.aws_iam.PolicyDocument({
+      statements: [
+        new cdk.aws_iam.PolicyStatement({
+          actions: [
+            'kms:Decrypt',
+            'kms:Encrypt',
+            'kms:GenerateDataKey',
+            'kms:ReEncryptTo',
+            'kms:GenerateDataKeyWithoutPlaintext',
+            'kms:GenerateDataKeyPairWithoutPlaintext',
+            'kms:GenerateDataKeyPair',
+            'kms:ReEncryptFrom',
+          ],
+          resources: [kinesisKeyArn],
+        }),
+      ],
+    });
+    // Create a role for CloudWatch Logs destination
+    const logsKinesisRole = new cdk.aws_iam.Role(this, 'LogsKinesisRole', {
+      assumedBy: new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.${cdk.Stack.of(this).urlSuffix}`),
+      // this needs to be inline to ensure role is created with proper access
+      // if not, CloudWatch destination creation fails with no permission to access Kinesis or KMS (generateDataKey access error)
+      inlinePolicies: {
+        KinesisAccess: kinesisStreamAccess,
+        KmsAccess: kmsKeyAccess,
+      },
+    });
+    return logsKinesisRole.roleArn;
   }
 }

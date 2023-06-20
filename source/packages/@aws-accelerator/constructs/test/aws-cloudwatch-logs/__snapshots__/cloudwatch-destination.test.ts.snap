@@ -63,6 +63,57 @@ exports[`CloudWatchDestination Construct(CloudWatchDestination):  Snapshot Test 
       },
       "Type": "AWS::Logs::Destination",
     },
+    "CloudWatchDestinationExistingIamE1F9FD4A": {
+      "Properties": {
+        "DestinationName": "AWSAcceleratorCloudWatchToS3",
+        "DestinationPolicy": {
+          "Fn::Join": [
+            "",
+            [
+              "{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":"logs:PutSubscriptionFilter","Resource":"arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":logs:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":destination:AWSAcceleratorCloudWatchToS3","Condition":{"StringEquals":{"aws:PrincipalOrgID":"o-some-org-id"}}}]}",
+            ],
+          ],
+        },
+        "RoleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":role/AWSAcceleratorLogReplicationRole-",
+              {
+                "Ref": "AWS::Region",
+              },
+            ],
+          ],
+        },
+        "TargetArn": {
+          "Fn::GetAtt": [
+            "CustomStreamExistingIamFE5F8092",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::Logs::Destination",
+    },
     "CloudWatchDestinationLogsKinesisRole54686795": {
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -180,7 +231,61 @@ exports[`CloudWatchDestination Construct(CloudWatchDestination):  Snapshot Test 
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
+    "CustomKeyExistingIam1584FEB7": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
     "CustomStreamE8E9158E": {
+      "Properties": {
+        "RetentionPeriodHours": 24,
+        "ShardCount": 1,
+        "StreamEncryption": {
+          "Fn::If": [
+            "AwsCdkKinesisEncryptedStreamsUnsupportedRegions",
+            {
+              "Ref": "AWS::NoValue",
+            },
+            {
+              "EncryptionType": "KMS",
+              "KeyId": "alias/aws/kinesis",
+            },
+          ],
+        },
+      },
+      "Type": "AWS::Kinesis::Stream",
+    },
+    "CustomStreamExistingIamFE5F8092": {
       "Properties": {
         "RetentionPeriodHours": 24,
         "ShardCount": 1,

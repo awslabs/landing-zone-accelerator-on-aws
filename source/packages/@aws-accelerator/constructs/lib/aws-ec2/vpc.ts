@@ -635,6 +635,8 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
     logRetentionInDays?: number;
     encryptionKey?: cdk.aws_kms.IKey;
     bucketArn?: string;
+    useExistingRoles: boolean;
+    acceleratorPrefix: string;
   }) {
     // Validate maxAggregationInterval
     const maxAggregationInterval = options.maxAggregationInterval;
@@ -657,27 +659,12 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
         retention: options.logRetentionInDays,
       });
 
-      const role = new cdk.aws_iam.Role(this, 'FlowLogsRole', {
-        assumedBy: new cdk.aws_iam.ServicePrincipal('vpc-flow-logs.amazonaws.com'),
-      });
-
-      role.addToPrincipalPolicy(
-        new cdk.aws_iam.PolicyStatement({
-          actions: [
-            'logs:CreateLogDelivery',
-            'logs:CreateLogGroup',
-            'logs:CreateLogStream',
-            'logs:DeleteLogDelivery',
-            'logs:DescribeLogGroups',
-            'logs:DescribeLogStreams',
-            'logs:PutLogEvents',
-          ],
-          resources: [logGroup.logGroupArn],
-        }),
-      );
-
       new cdk.aws_ec2.CfnFlowLog(this, 'CloudWatchFlowLog', {
-        deliverLogsPermissionArn: role.roleArn,
+        deliverLogsPermissionArn: this.createVpcFlowLogsRoleCloudWatchLogs(
+          logGroup.logGroupArn,
+          options.useExistingRoles,
+          options.acceleratorPrefix,
+        ),
         logDestinationType: 'cloud-watch-logs',
         logDestination: logGroup.logGroupArn,
         resourceId: this.vpcId,
@@ -700,6 +687,36 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
         logFormat: options.logFormat,
       });
     }
+  }
+  private createVpcFlowLogsRoleCloudWatchLogs(
+    logGroupArn: string,
+    useExistingRoles: boolean,
+    acceleratorPrefix: string,
+  ) {
+    if (useExistingRoles) {
+      return `arn:${cdk.Stack.of(this).partition}:iam::${
+        cdk.Stack.of(this).account
+      }:role/${acceleratorPrefix}VpcFlowLogsRole`;
+    }
+    const role = new cdk.aws_iam.Role(this, 'FlowLogsRole', {
+      assumedBy: new cdk.aws_iam.ServicePrincipal('vpc-flow-logs.amazonaws.com'),
+    });
+
+    role.addToPrincipalPolicy(
+      new cdk.aws_iam.PolicyStatement({
+        actions: [
+          'logs:CreateLogDelivery',
+          'logs:CreateLogGroup',
+          'logs:CreateLogStream',
+          'logs:DeleteLogDelivery',
+          'logs:DescribeLogGroups',
+          'logs:DescribeLogStreams',
+          'logs:PutLogEvents',
+        ],
+        resources: [logGroupArn],
+      }),
+    );
+    return role.roleArn;
   }
 
   public addCidr(options: {

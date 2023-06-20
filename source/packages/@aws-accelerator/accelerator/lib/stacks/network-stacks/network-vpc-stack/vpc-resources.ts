@@ -475,7 +475,7 @@ export class VpcResources {
     }
 
     if (vpcFlowLogs) {
-      this.createVpcFlowLogs(vpc, vpcFlowLogs);
+      this.createVpcFlowLogs(vpc, vpcFlowLogs, props.useExistingRoles, props.prefixes.accelerator);
     } else {
       NagSuppressions.addResourceSuppressions(vpc, [
         { id: 'AwsSolutions-VPC7', reason: 'VPC does not have flow logs configured' },
@@ -490,7 +490,12 @@ export class VpcResources {
    * @param props
    *
    */
-  private createVpcFlowLogs(vpc: Vpc, vpcFlowLogs: VpcFlowLogsConfig) {
+  private createVpcFlowLogs(
+    vpc: Vpc,
+    vpcFlowLogs: VpcFlowLogsConfig,
+    useExistingRoles: boolean,
+    acceleratorPrefix: string,
+  ) {
     let logFormat: string | undefined = undefined;
     let destinationBucketArn: string | undefined;
 
@@ -513,6 +518,8 @@ export class VpcResources {
       logRetentionInDays: vpcFlowLogs.destinationsConfig?.cloudWatchLogs?.retentionInDays ?? this.stack.logRetention,
       encryptionKey: this.stack.cloudwatchKey,
       bucketArn: destinationBucketArn,
+      useExistingRoles,
+      acceleratorPrefix,
     });
   }
 

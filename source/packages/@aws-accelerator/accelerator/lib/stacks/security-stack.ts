@@ -366,7 +366,7 @@ export class SecurityStack extends AcceleratorStack {
    * Function to update IAM password policy
    */
   private updateIamPasswordPolicy() {
-    if (this.props.enableSingleAccountMode) {
+    if (this.props.enableSingleAccountMode || this.props.useExistingRoles) {
       return;
     } else {
       if (this.props.globalConfig.homeRegion === cdk.Stack.of(this).region) {

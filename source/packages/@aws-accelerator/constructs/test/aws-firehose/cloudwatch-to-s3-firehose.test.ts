@@ -34,9 +34,9 @@ describe('CloudWatchToS3Firehose', () => {
     dynamicPartitioningValue: 'dynamic-partitioning/log-filters.json',
     homeRegion: 'someregion',
     configDir: `${__dirname}/../../../accelerator/test/configs/snapshot-only`,
-    prefixProcessingFunctionName: 'AWSAccelerator-FirehoseRecordsProcessor',
-    glueDatabaseName: 'AWSAccelerator-Database',
-    transformationTableName: 'aws-accelerator-firehose-transformation-table',
+    acceleratorPrefix: 'AWSAccelerator',
+    useExistingRoles: false,
+    firehoseRecordsProcessorFunctionName: 'test',
   });
   snapShotTest(testNamePrefix, stack);
 });
@@ -51,9 +51,9 @@ describe('CloudWatchToS3FirehoseBucketName', () => {
     dynamicPartitioningValue: 'dynamic-partitioning/log-filters.json',
     homeRegion: 'someregion',
     configDir: `${__dirname}/../../../accelerator/test/configs/snapshot-only`,
-    prefixProcessingFunctionName: 'AWSAccelerator-FirehoseRecordsProcessor',
-    glueDatabaseName: 'AWSAccelerator-Database',
-    transformationTableName: 'aws-accelerator-firehose-transformation-table',
+    acceleratorPrefix: 'AWSAccelerator',
+    useExistingRoles: false,
+    firehoseRecordsProcessorFunctionName: 'test',
   });
   snapShotTest(testNamePrefix, stack);
 });
@@ -70,13 +70,30 @@ test('should throw an exception for bucket name and bucket are present', () => {
       dynamicPartitioningValue: 'dynamic-partitioning/log-filters.json',
       homeRegion: 'someregion',
       configDir: `${__dirname}/../../../accelerator/test/configs/snapshot-only`,
-      prefixProcessingFunctionName: 'AWSAccelerator-FirehoseRecordsProcessor',
-      glueDatabaseName: 'AWSAccelerator-Database',
-      transformationTableName: 'aws-accelerator-firehose-transformation-table',
+      acceleratorPrefix: 'AWSAccelerator',
+      useExistingRoles: false,
+      firehoseRecordsProcessorFunctionName: 'test',
     });
   }
 
   const errMsg =
     'Either source bucket or source bucketName property must be defined. Only one property must be defined.';
   expect(s3BucketError).toThrow(new Error(errMsg));
+});
+
+describe('CloudWatchToS3FirehoseExistingIam', () => {
+  new CloudWatchToS3Firehose(stack, 'CloudWatchToS3FirehoseExistingIam', {
+    firehoseKmsKey: new cdk.aws_kms.Key(stack, 'CustomKeyExistingIam', {}),
+    lambdaKey: new cdk.aws_kms.Key(stack, 'CustomLambdaKeyExistingIam', {}),
+    kinesisStream: new cdk.aws_kinesis.Stream(stack, 'CustomStreamExistingIam', {}),
+    kinesisKmsKey: new cdk.aws_kms.Key(stack, 'CustomKinesisKeyExistingIam', {}),
+    bucketName: 'somebucket',
+    dynamicPartitioningValue: 'dynamic-partitioning/log-filters.json',
+    homeRegion: 'someregion',
+    configDir: `${__dirname}/../../../accelerator/test/configs/snapshot-only`,
+    acceleratorPrefix: 'AWSAccelerator',
+    useExistingRoles: true,
+    firehoseRecordsProcessorFunctionName: 'test',
+  });
+  snapShotTest(testNamePrefix, stack);
 });

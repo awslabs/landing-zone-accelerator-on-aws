@@ -86,6 +86,8 @@ export class OrganizationsStack extends AcceleratorStack {
       },
       kmsKey: this.cloudwatchKey,
       logRetentionInDays: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
+      useExistingRoles: this.props.useExistingRoles ?? false,
+      acceleratorPrefix: this.props.prefixes.accelerator,
     };
 
     // Only deploy resources in this stack if organizations is enabled

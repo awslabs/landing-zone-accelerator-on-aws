@@ -250,6 +250,8 @@ export class Bucket extends Construct {
         },
         kmsKey: props.replicationProps.kmsKey,
         logRetentionInDays: props.replicationProps.logRetentionInDays,
+        useExistingRoles: props.replicationProps.useExistingRoles,
+        acceleratorPrefix: props.replicationProps.acceleratorPrefix,
       });
     }
 

@@ -335,6 +335,159 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
       },
       "Type": "AWS::EC2::VPC",
     },
+    "TestVpcExistingIamB9508C93": {
+      "Properties": {
+        "CidrBlock": "10.0.0.0/16",
+        "EnableDnsHostnames": false,
+        "EnableDnsSupport": true,
+        "InstanceTenancy": "default",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Main",
+          },
+          {
+            "Key": "Test-Key",
+            "Value": "Test-Value",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::VPC",
+    },
+    "TestVpcExistingIamCloudWatchFlowLog976A715F": {
+      "Properties": {
+        "DeliverLogsPermissionArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":role/AWSAcceleratorVpcFlowLogsRole",
+            ],
+          ],
+        },
+        "LogDestination": {
+          "Fn::GetAtt": [
+            "TestVpcExistingIamFlowLogsGroupD35F5586",
+            "Arn",
+          ],
+        },
+        "LogDestinationType": "cloud-watch-logs",
+        "MaxAggregationInterval": 60,
+        "ResourceId": {
+          "Ref": "TestVpcExistingIamB9508C93",
+        },
+        "ResourceType": "VPC",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Main",
+          },
+        ],
+        "TrafficType": "ALL",
+      },
+      "Type": "AWS::EC2::FlowLog",
+    },
+    "TestVpcExistingIamDhcpOptionsAssociation92EB66FD": {
+      "Properties": {
+        "DhcpOptionsId": "Test-Options",
+        "VpcId": {
+          "Ref": "TestVpcExistingIamB9508C93",
+        },
+      },
+      "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
+    },
+    "TestVpcExistingIamFlowLogsGroupD35F5586": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "testKey2ExistingIam0E728F30",
+            "Arn",
+          ],
+        },
+        "RetentionInDays": 10,
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Main",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "TestVpcExistingIamInternetGateway812AACEB": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Main",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::InternetGateway",
+    },
+    "TestVpcExistingIamInternetGatewayAttachment2ABE52DD": {
+      "Properties": {
+        "InternetGatewayId": {
+          "Ref": "TestVpcExistingIamInternetGateway812AACEB",
+        },
+        "VpcId": {
+          "Ref": "TestVpcExistingIamB9508C93",
+        },
+      },
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+    },
+    "TestVpcExistingIamS3FlowLog15E7512D": {
+      "Properties": {
+        "LogDestination": "arn:aws:s3:::aws-accelerator-test-111111111111-us-east-1/vpc-flow-logs/",
+        "LogDestinationType": "s3",
+        "MaxAggregationInterval": 60,
+        "ResourceId": {
+          "Ref": "TestVpcExistingIamB9508C93",
+        },
+        "ResourceType": "VPC",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Main",
+          },
+        ],
+        "TrafficType": "ALL",
+      },
+      "Type": "AWS::EC2::FlowLog",
+    },
+    "TestVpcExistingIamVirtualPrivateGateway4A00A9BC": {
+      "Properties": {
+        "AmazonSideAsn": 65000,
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Main",
+          },
+        ],
+        "Type": "ipsec.1",
+      },
+      "Type": "AWS::EC2::VPNGateway",
+    },
+    "TestVpcExistingIamVirtualPrivateGatewayAttachmentE053A5C5": {
+      "Properties": {
+        "VpcId": {
+          "Ref": "TestVpcExistingIamB9508C93",
+        },
+        "VpnGatewayId": {
+          "Ref": "TestVpcExistingIamVirtualPrivateGateway4A00A9BC",
+        },
+      },
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+    },
     "TestVpcFlowLogsGroup63B469E8": {
       "DeletionPolicy": "Retain",
       "Properties": {
@@ -580,6 +733,41 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
         },
       },
       "Type": "AWS::EC2::Subnet",
+    },
+    "testKey2ExistingIam0E728F30": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
     },
     "testKms1A8429BFF": {
       "DeletionPolicy": "Retain",

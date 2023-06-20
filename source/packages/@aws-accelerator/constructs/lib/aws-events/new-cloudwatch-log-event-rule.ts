@@ -57,6 +57,14 @@ export interface NewCloudWatchLogsEventProps {
    */
   logArchiveAccountId: string;
   /**
+   * Accelerator Prefix defaults to 'AWSAccelerator'.
+   */
+  acceleratorPrefix: string;
+  /**
+   * Use existing IAM roles for deployment.
+   */
+  useExistingRoles: boolean;
+  /**
    * CloudWatch Logs exclusion setting
    */
   exclusionSetting?: cloudwatchExclusionProcessedItem;
@@ -68,6 +76,14 @@ export interface NewCloudWatchLogsEventProps {
 export class NewCloudWatchLogEvent extends Construct {
   constructor(scope: Construct, id: string, props: NewCloudWatchLogsEventProps) {
     super(scope, id);
+    let LogSubscriptionRole: string;
+    if (props.useExistingRoles) {
+      LogSubscriptionRole = `arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:role/${
+        props.acceleratorPrefix
+      }LogReplicationRole-${cdk.Stack.of(this).region}`;
+    } else {
+      LogSubscriptionRole = props.subscriptionFilterRoleArn;
+    }
 
     const newLogGroupRule = new cdk.aws_events.Rule(this, 'NewLogGroupCreatedRule', {
       eventPattern: {
@@ -93,7 +109,7 @@ export class NewCloudWatchLogEvent extends Construct {
         environment: {
           LogRetention: props.logsRetentionInDaysValue,
           LogDestination: props.logDestinationArn,
-          LogSubscriptionRole: props.subscriptionFilterRoleArn,
+          LogSubscriptionRole,
           LogKmsKeyArn: props.logsKmsKey.keyArn,
           LogExclusion: JSON.stringify(props.exclusionSetting!),
         },

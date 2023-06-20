@@ -166,6 +166,10 @@ export interface AcceleratorStackProps extends cdk.StackProps {
    */
   readonly prefixes: AcceleratorResourcePrefixes;
   readonly enableSingleAccountMode: boolean;
+  /**
+   * Use existing roles for deployment
+   */
+  readonly useExistingRoles: boolean;
 }
 
 process.on('uncaughtException', err => {

@@ -69,17 +69,17 @@ export interface CloudWatchToS3FirehoseProps {
    */
   configDir: string;
   /**
-   * Firehose prefix processing lambda function name
+   * Accelerator Prefix defaults to 'AWSAccelerator'.
    */
-  readonly prefixProcessingFunctionName: string;
+  acceleratorPrefix: string;
   /**
-   * Glue database name, where table will be created store AWS Accelerator CloudWatch logs
+   * Use existing IAM roles for deployment.
    */
-  readonly glueDatabaseName: string;
+  useExistingRoles: boolean;
   /**
-   * Glue table name to store AWS Accelerator CloudWatch logs
+   * Firehose preprocessor function name
    */
-  readonly transformationTableName: string;
+  firehoseRecordsProcessorFunctionName: string;
 }
 /**
  * Class to configure CloudWatch replication on logs receiving account
@@ -108,7 +108,7 @@ export class CloudWatchToS3Firehose extends Construct {
 
     const firehosePrefixProcessingLambda = new cdk.aws_lambda.Function(this, 'FirehosePrefixProcessingLambda', {
       runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
-      functionName: props.prefixProcessingFunctionName,
+      functionName: props.firehoseRecordsProcessorFunctionName,
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'firehose-record-processing/dist')),
       handler: 'index.handler',
       memorySize: 2048,
@@ -143,89 +143,16 @@ export class CloudWatchToS3Firehose extends Construct {
       }),
     );
 
-    // Access is based on least privileged apis
-    // Ref: https://docs.aws.amazon.com/firehose/latest/dev/controlling-access.html#using-iam-s3
-    const firehoseAccessS3KmsLambda = new cdk.aws_iam.PolicyDocument({
-      statements: [
-        new cdk.aws_iam.PolicyStatement({
-          actions: ['kms:Decrypt', 'kms:GenerateDataKey'],
-          resources: [props.firehoseKmsKey.keyArn],
-          conditions: {
-            StringEquals: {
-              'kms:ViaService': `s3.${props.homeRegion}.amazonaws.com`,
-            },
-            StringLike: {
-              'kms:EncryptionContext:aws:s3:arn': `${logsStorageBucket.bucketArn}/*`,
-            },
-          },
-        }),
-        new cdk.aws_iam.PolicyStatement({
-          actions: [
-            's3:AbortMultipartUpload',
-            's3:GetBucketLocation',
-            's3:GetObject',
-            's3:ListBucket',
-            's3:ListBucketMultipartUploads',
-            's3:PutObject',
-          ],
-          resources: [logsStorageBucket.bucketArn, `${logsStorageBucket.bucketArn}/*`],
-        }),
-        new cdk.aws_iam.PolicyStatement({
-          actions: ['lambda:InvokeFunction', 'lambda:GetFunctionConfiguration'],
-          resources: [
-            `${firehosePrefixProcessingLambda.functionArn}:*`,
-            `${firehosePrefixProcessingLambda.functionArn}`,
-          ],
-        }),
-      ],
-    });
-
-    const firehoseServiceRole = new cdk.aws_iam.Role(this, 'FirehoseServiceRole', {
-      assumedBy: new cdk.aws_iam.ServicePrincipal('firehose.amazonaws.com'),
-      description: 'Role used by Kinesis Firehose to place Kinesis records in the central bucket.',
-      // placing inline policy as firehose needs this from get-go or there might be a few initial failures
-      inlinePolicies: {
-        AccessS3KmsLambda: firehoseAccessS3KmsLambda,
-      },
-    });
-
-    const firehoseAccessKinesis = new cdk.aws_iam.PolicyDocument({
-      statements: [
-        new cdk.aws_iam.PolicyStatement({
-          actions: ['kinesis:DescribeStream', 'kinesis:GetShardIterator', 'kinesis:GetRecords', 'kinesis:ListShards'],
-          resources: [props.kinesisStream.streamArn],
-        }),
-
-        new cdk.aws_iam.PolicyStatement({
-          actions: [
-            'kms:Decrypt',
-            'kms:Encrypt',
-            'kms:GenerateDataKey',
-            'kms:ReEncryptTo',
-            'kms:GenerateDataKeyWithoutPlaintext',
-            'kms:GenerateDataKeyPairWithoutPlaintext',
-            'kms:GenerateDataKeyPair',
-            'kms:ReEncryptFrom',
-          ],
-          resources: [props.kinesisKmsKey.keyArn],
-        }),
-      ],
-    });
-
-    const kinesisStreamRole = new cdk.aws_iam.Role(this, 'FirehoseKinesisStreamServiceRole', {
-      assumedBy: new cdk.aws_iam.ServicePrincipal('firehose.amazonaws.com'),
-      description: 'Role used by Kinesis Firehose to get records from Kinesis.',
-      // placing inline policy as firehose needs this from get-go or there might be a few initial failures
-      inlinePolicies: {
-        AccessKinesis: firehoseAccessKinesis,
-      },
-    });
-
     const firehose = new cdk.aws_kinesisfirehose.CfnDeliveryStream(this, 'FirehoseStream', {
       deliveryStreamType: 'KinesisStreamAsSource',
       kinesisStreamSourceConfiguration: {
         kinesisStreamArn: props.kinesisStream.streamArn,
-        roleArn: kinesisStreamRole.roleArn,
+        roleArn: this.createKinesisStreamRole(
+          props.kinesisStream.streamArn,
+          props.kinesisKmsKey.keyArn,
+          props.acceleratorPrefix,
+          props.useExistingRoles,
+        ),
       },
       extendedS3DestinationConfiguration: {
         bucketArn: logsStorageBucket.bucketArn,
@@ -237,7 +164,14 @@ export class CloudWatchToS3Firehose extends Construct {
         dataFormatConversionConfiguration: {
           enabled: false,
         },
-        roleArn: firehoseServiceRole.roleArn,
+        roleArn: this.createFirehoseServiceRole(
+          props.firehoseKmsKey.keyArn,
+          props.homeRegion,
+          logsStorageBucket.bucketArn,
+          firehosePrefixProcessingLambda.functionArn,
+          props.acceleratorPrefix,
+          props.useExistingRoles,
+        ),
         dynamicPartitioningConfiguration: {
           enabled: true,
         },
@@ -297,14 +231,6 @@ export class CloudWatchToS3Firehose extends Construct {
       ],
     );
 
-    NagSuppressions.addResourceSuppressionsByPath(stack, `${firehoseServiceRole.node.path}/Resource`, [
-      {
-        id: 'AwsSolutions-IAM5',
-        reason:
-          'Bucket permissions are wildcards to abort downloads and clean up objects. KMS permissions are wildcards to re-encrypt entities.',
-      },
-    ]);
-
     // Kinesis-Firehose-Stream-Dynamic-Partitioning AwsSolutions-KDF1: The Kinesis Data Firehose delivery stream does have server-side encryption enabled.
     NagSuppressions.addResourceSuppressionsByPath(stack, `${firehose.node.path}`, [
       {
@@ -312,6 +238,19 @@ export class CloudWatchToS3Firehose extends Construct {
         reason: 'Customer managed key is used to encrypt firehose delivery stream.',
       },
     ]);
+
+    // FirehoseToS3Setup/FirehoseServiceRole/Resource AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+    NagSuppressions.addResourceSuppressionsByPath(
+      stack,
+      `${stack.stackName}/FirehoseToS3Setup/FirehoseServiceRole/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'Bucket permissions are wildcards to abort downloads and clean up objects. KMS permissions are wildcards to re-encrypt entities.',
+        },
+      ],
+    );
   }
   private packageDynamicPartitionInDeployment(configDirPath: string, dynamicPartitionPath: string) {
     const deploymentPackagePath = path.join(__dirname, 'firehose-record-processing/dist');
@@ -325,5 +264,107 @@ export class CloudWatchToS3Firehose extends Construct {
       path.join(configDirPath, dynamicPartitionPath),
       path.join(deploymentPackagePath, dynamicPartitionPath),
     );
+  }
+  private createFirehoseServiceRole(
+    firehoseKmsKeyArn: string,
+    homeRegion: string,
+    logsStorageBucketArn: string,
+    processingLambdaArn: string,
+    acceleratorPrefix: string,
+    useExistingRoles: boolean,
+  ) {
+    if (useExistingRoles) {
+      return `arn:${cdk.Stack.of(this).partition}:iam::${
+        cdk.Stack.of(this).account
+      }:role/${acceleratorPrefix}FirehoseRole`;
+    }
+    // Access is based on least privileged apis
+    // Ref: https://docs.aws.amazon.com/firehose/latest/dev/controlling-access.html#using-iam-s3
+    const firehoseAccessS3KmsLambda = new cdk.aws_iam.PolicyDocument({
+      statements: [
+        new cdk.aws_iam.PolicyStatement({
+          actions: ['kms:Decrypt', 'kms:GenerateDataKey'],
+          resources: [firehoseKmsKeyArn],
+          conditions: {
+            StringEquals: {
+              'kms:ViaService': `s3.${homeRegion}.amazonaws.com`,
+            },
+            StringLike: {
+              'kms:EncryptionContext:aws:s3:arn': `${logsStorageBucketArn}/*`,
+            },
+          },
+        }),
+        new cdk.aws_iam.PolicyStatement({
+          actions: [
+            's3:AbortMultipartUpload',
+            's3:GetBucketLocation',
+            's3:GetObject',
+            's3:ListBucket',
+            's3:ListBucketMultipartUploads',
+            's3:PutObject',
+          ],
+          resources: [logsStorageBucketArn, `${logsStorageBucketArn}/*`],
+        }),
+        new cdk.aws_iam.PolicyStatement({
+          actions: ['lambda:InvokeFunction', 'lambda:GetFunctionConfiguration'],
+          resources: [`${processingLambdaArn}:*`, `${processingLambdaArn}`],
+        }),
+      ],
+    });
+
+    const firehoseServiceRole = new cdk.aws_iam.Role(this, 'FirehoseServiceRole', {
+      assumedBy: new cdk.aws_iam.ServicePrincipal('firehose.amazonaws.com'),
+      description: 'Role used by Kinesis Firehose to place Kinesis records in the central bucket.',
+      // placing inline policy as firehose needs this from get-go or there might be a few initial failures
+      inlinePolicies: {
+        AccessS3KmsLambda: firehoseAccessS3KmsLambda,
+      },
+    });
+    return firehoseServiceRole.roleArn;
+  }
+  private createKinesisStreamRole(
+    kinesisStreamArn: string,
+    kinesisStreamKmsArn: string,
+    acceleratorPrefix: string,
+    useExistingRoles: boolean,
+  ) {
+    if (useExistingRoles) {
+      return `arn:${cdk.Stack.of(this).partition}:iam::${
+        cdk.Stack.of(this).account
+      }:role/${acceleratorPrefix}FirehoseRole`;
+    }
+    const firehoseAccessKinesis = new cdk.aws_iam.PolicyDocument({
+      statements: [
+        new cdk.aws_iam.PolicyStatement({
+          actions: ['kinesis:DescribeStream', 'kinesis:GetShardIterator', 'kinesis:GetRecords', 'kinesis:ListShards'],
+          resources: [kinesisStreamArn],
+        }),
+
+        new cdk.aws_iam.PolicyStatement({
+          actions: [
+            'kms:Decrypt',
+            'kms:Encrypt',
+            'kms:GenerateDataKey',
+            'kms:ReEncryptTo',
+            'kms:GenerateDataKeyWithoutPlaintext',
+            'kms:GenerateDataKeyPairWithoutPlaintext',
+            'kms:GenerateDataKeyPair',
+            'kms:ReEncryptFrom',
+          ],
+          resources: [kinesisStreamKmsArn],
+        }),
+      ],
+    });
+
+    const kinesisStreamRole = new cdk.aws_iam.Role(this, 'FirehoseKinesisStreamServiceRole', {
+      assumedBy: new cdk.aws_iam.ServicePrincipal('firehose.amazonaws.com'),
+      description: 'Role used by Kinesis Firehose to get records from Kinesis.',
+      // placing inline policy as firehose needs this from get-go or there might be a few initial failures
+      inlinePolicies: {
+        AccessKinesis: firehoseAccessKinesis,
+      },
+    });
+
+    return kinesisStreamRole.roleArn;
   }
 }

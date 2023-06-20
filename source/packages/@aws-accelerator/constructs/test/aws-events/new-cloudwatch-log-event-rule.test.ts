@@ -28,6 +28,19 @@ new NewCloudWatchLogEvent(stack, 'NewCloudWatchLogEvent', {
   logsRetentionInDaysValue: '731',
   subscriptionFilterRoleArn: 'testString',
   logArchiveAccountId: 'some-account-id',
+  acceleratorPrefix: 'AWSAccelerator',
+  useExistingRoles: false,
+});
+
+new NewCloudWatchLogEvent(stack, 'NewCloudWatchLogEventExistingIam', {
+  logsKmsKey: new cdk.aws_kms.Key(stack, 'CustomKeyExistingIam', {}),
+  lambdaEnvKey: new cdk.aws_kms.Key(stack, 'CustomLambdaKeyExistingIam', {}),
+  logDestinationArn: 'LogRetentionArn',
+  logsRetentionInDaysValue: '731',
+  subscriptionFilterRoleArn: 'testString',
+  logArchiveAccountId: 'some-account-id',
+  acceleratorPrefix: 'AWSAccelerator',
+  useExistingRoles: true,
 });
 
 /**

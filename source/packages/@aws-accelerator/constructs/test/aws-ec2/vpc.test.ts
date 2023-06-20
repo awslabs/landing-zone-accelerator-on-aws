@@ -23,6 +23,7 @@ import {
 import { RouteTable } from '../../lib/aws-ec2/route-table';
 import { snapShotTest } from '../snapshot-test';
 import { OutpostsConfig } from '@aws-accelerator/config';
+import { describe } from '@jest/globals';
 
 const testNamePrefix = 'Construct(Vpc): ';
 
@@ -50,6 +51,33 @@ vpc.addFlowLogs({
   bucketArn: 'arn:aws:s3:::aws-accelerator-test-111111111111-us-east-1',
   encryptionKey: new cdk.aws_kms.Key(stack, 'test-key2'),
   logRetentionInDays: 10,
+  useExistingRoles: false,
+  acceleratorPrefix: 'AWSAccelerator',
+});
+
+const vpcExistingIam = new Vpc(stack, 'TestVpcExistingIam', {
+  name: 'Main',
+  ipv4CidrBlock: '10.0.0.0/16',
+  dhcpOptions: 'Test-Options',
+  internetGateway: true,
+  enableDnsHostnames: false,
+  enableDnsSupport: true,
+  instanceTenancy: 'default',
+  tags: [{ key: 'Test-Key', value: 'Test-Value' }],
+  virtualPrivateGateway: {
+    asn: 65000,
+  },
+});
+
+vpcExistingIam.addFlowLogs({
+  destinations: ['s3', 'cloud-watch-logs'],
+  maxAggregationInterval: 60,
+  trafficType: 'ALL',
+  bucketArn: 'arn:aws:s3:::aws-accelerator-test-111111111111-us-east-1',
+  encryptionKey: new cdk.aws_kms.Key(stack, 'testKey2ExistingIam'),
+  logRetentionInDays: 10,
+  useExistingRoles: true,
+  acceleratorPrefix: 'AWSAccelerator',
 });
 
 vpc.addCidr({ cidrBlock: '10.2.0.0/16' });
