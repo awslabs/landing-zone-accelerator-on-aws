@@ -925,7 +925,7 @@ export class CostAndUsageReportConfig implements t.TypeOf<typeof GlobalConfigTyp
  *       useBlended: false
  *       useAmortized: false
  *       unit: USD
- *       notification:
+ *       notifications:
  *       - type: ACTUAL
  *         thresholdType: PERCENTAGE
  *         threshold: 90
@@ -1110,7 +1110,7 @@ export class ReportConfig implements t.TypeOf<typeof GlobalConfigTypes.reportCon
    *       useBlended: false
    *       useAmortized: false
    *       unit: USD
-   *       notification:
+   *       notifications:
    *       - type: ACTUAL
    *         thresholdType: PERCENTAGE
    *         threshold: 90
@@ -1462,7 +1462,7 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    *       useBlended: false
    *       useAmortized: false
    *       unit: USD
-   *       notification:
+   *       notifications:
    *       - type: ACTUAL
    *         thresholdType: PERCENTAGE
    *         threshold: 90
