@@ -39,7 +39,7 @@
     "io-ts-types": "0.5.19",
     "js-yaml": "4.1.0",
     "pascal-case": "3.1.2",
-    "semver": "7.3.8",
+    "semver": "7.5.2",
     "tempy": "3.0.0",
     "winston": "3.8.2"
   },
