@@ -11,12 +11,11 @@
  *  and limitations under the License.
  */
 
-import * as AWS from 'aws-sdk';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
 
-import { createLogger, throttlingBackOff } from '@aws-accelerator/utils';
+import { createLogger, loadOrganizationalUnits } from '@aws-accelerator/utils';
 
 import * as t from './common-types';
 
@@ -457,73 +456,7 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
       this.organizationalUnitIds = [];
     }
     if (this.organizationalUnitIds?.length == 0) {
-      let organizationsClient: AWS.Organizations;
-      if (partition === 'aws-us-gov') {
-        organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1' });
-      } else if (partition === 'aws-cn') {
-        organizationsClient = new AWS.Organizations({ region: 'cn-northwest-1' });
-      } else {
-        organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
-      }
-
-      let rootId = '';
-
-      let listRootsNextToken: string | undefined = undefined;
-      do {
-        const page = await throttlingBackOff(() =>
-          organizationsClient.listRoots({ NextToken: listRootsNextToken }).promise(),
-        );
-        for (const root of page.Roots ?? []) {
-          if (root.Name === 'Root' && root.Id && root.Arn) {
-            this.organizationalUnitIds?.push({ name: root.Name, id: root.Id, arn: root.Arn });
-            rootId = root.Id;
-          }
-        }
-        listRootsNextToken = page.NextToken;
-      } while (listRootsNextToken);
-
-      for (const item of this.organizationalUnits) {
-        let parentId = rootId;
-        let parentName = '';
-
-        const parentPath = this.getPath(item.name);
-        for (const parent of parentPath.split('/')) {
-          if (parent) {
-            let ouForParentNextToken: string | undefined = undefined;
-            do {
-              const page = await throttlingBackOff(() =>
-                organizationsClient
-                  .listOrganizationalUnitsForParent({ ParentId: parentId, NextToken: ouForParentNextToken })
-                  .promise(),
-              );
-              for (const ou of page.OrganizationalUnits ?? []) {
-                if (ou.Name === parent && ou.Id) {
-                  parentId = ou.Id;
-                  parentName = ou.Name;
-                }
-              }
-              ouForParentNextToken = page.NextToken;
-            } while (ouForParentNextToken);
-          }
-        }
-
-        let nextToken: string | undefined = undefined;
-        do {
-          const page = await throttlingBackOff(() =>
-            organizationsClient
-              .listOrganizationalUnitsForParent({ ParentId: parentId, NextToken: nextToken })
-              .promise(),
-          );
-          for (const ou of page.OrganizationalUnits ?? []) {
-            const ouName = this.getOuName(item.name);
-            const ouParent = this.getParentOuName(item.name);
-            if (ou.Name === ouName && ouParent === parentName && ou.Id && ou.Arn) {
-              this.organizationalUnitIds?.push({ name: item.name, id: ou.Id, arn: ou.Arn });
-            }
-          }
-          nextToken = page.NextToken;
-        } while (nextToken);
-      }
+      this.organizationalUnitIds = await loadOrganizationalUnits(partition, this.organizationalUnits);
     }
   }
 

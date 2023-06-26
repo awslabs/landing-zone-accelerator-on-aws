@@ -15,3 +15,4 @@ export * from './lib/logger';
 export * from './lib/policy-replacements';
 export * from './lib/ssm-parameter-path';
 export * from './lib/throttle';
+export * from './lib/load-organization-config';
