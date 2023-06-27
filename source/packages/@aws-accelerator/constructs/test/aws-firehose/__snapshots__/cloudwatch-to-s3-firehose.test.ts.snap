@@ -89,6 +89,7 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
     },
     "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambda2F1022EF": {
       "DependsOn": [
+        "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambdaServiceRoleDefaultPolicyA2E491F3",
         "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambdaServiceRoleFA79B6BB",
       ],
       "Properties": {
@@ -101,6 +102,12 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
         "Environment": {
           "Variables": {
             "DynamicS3LogPartitioningMapping": "dynamic-partitioning/log-filters.json",
+            "KinesisStreamArn": {
+              "Fn::GetAtt": [
+                "CustomStreamBucketName9F2BF3F7",
+                "Arn",
+              ],
+            },
           },
         },
         "FunctionName": "AWSAccelerator-FirehoseRecordsProcessor",
@@ -122,6 +129,55 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
         "Timeout": 300,
       },
       "Type": "AWS::Lambda::Function",
+    },
+    "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambdaServiceRoleDefaultPolicyA2E491F3": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "kinesis:PutRecords",
+                "kinesis:PutRecord",
+                "kinesis:ListShards",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "CustomStreamBucketName9F2BF3F7",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "kms:Decrypt",
+                "kms:Encrypt",
+                "kms:GenerateDataKey",
+                "kms:ReEncryptTo",
+                "kms:GenerateDataKeyWithoutPlaintext",
+                "kms:GenerateDataKeyPairWithoutPlaintext",
+                "kms:GenerateDataKeyPair",
+                "kms:ReEncryptFrom",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "CustomKinesisKeyBucketNameFF6F8D94",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambdaServiceRoleDefaultPolicyA2E491F3",
+        "Roles": [
+          {
+            "Ref": "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambdaServiceRoleFA79B6BB",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambdaServiceRoleFA79B6BB": {
       "Metadata": {
@@ -468,6 +524,7 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
     },
     "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaE5E42603": {
       "DependsOn": [
+        "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaServiceRoleDefaultPolicy65018579",
         "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaServiceRole405E5167",
       ],
       "Properties": {
@@ -480,6 +537,12 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
         "Environment": {
           "Variables": {
             "DynamicS3LogPartitioningMapping": "dynamic-partitioning/log-filters.json",
+            "KinesisStreamArn": {
+              "Fn::GetAtt": [
+                "CustomStreamE8E9158E",
+                "Arn",
+              ],
+            },
           },
         },
         "FunctionName": "AWSAccelerator-FirehoseRecordsProcessor",
@@ -542,6 +605,55 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
         ],
       },
       "Type": "AWS::IAM::Role",
+    },
+    "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaServiceRoleDefaultPolicy65018579": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "kinesis:PutRecords",
+                "kinesis:PutRecord",
+                "kinesis:ListShards",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "CustomStreamE8E9158E",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "kms:Decrypt",
+                "kms:Encrypt",
+                "kms:GenerateDataKey",
+                "kms:ReEncryptTo",
+                "kms:GenerateDataKeyWithoutPlaintext",
+                "kms:GenerateDataKeyPairWithoutPlaintext",
+                "kms:GenerateDataKeyPair",
+                "kms:ReEncryptFrom",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "CustomKinesisKey1382C574",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaServiceRoleDefaultPolicy65018579",
+        "Roles": [
+          {
+            "Ref": "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaServiceRole405E5167",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "CloudWatchToS3FirehoseFirehoseServiceRole4A1CF56B": {
       "Metadata": {
@@ -1121,6 +1233,7 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
     },
     "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambda2F1022EF": {
       "DependsOn": [
+        "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambdaServiceRoleDefaultPolicyA2E491F3",
         "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambdaServiceRoleFA79B6BB",
       ],
       "Properties": {
@@ -1133,6 +1246,12 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
         "Environment": {
           "Variables": {
             "DynamicS3LogPartitioningMapping": "dynamic-partitioning/log-filters.json",
+            "KinesisStreamArn": {
+              "Fn::GetAtt": [
+                "CustomStreamBucketName9F2BF3F7",
+                "Arn",
+              ],
+            },
           },
         },
         "FunctionName": "AWSAccelerator-FirehoseRecordsProcessor",
@@ -1154,6 +1273,55 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
         "Timeout": 300,
       },
       "Type": "AWS::Lambda::Function",
+    },
+    "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambdaServiceRoleDefaultPolicyA2E491F3": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "kinesis:PutRecords",
+                "kinesis:PutRecord",
+                "kinesis:ListShards",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "CustomStreamBucketName9F2BF3F7",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "kms:Decrypt",
+                "kms:Encrypt",
+                "kms:GenerateDataKey",
+                "kms:ReEncryptTo",
+                "kms:GenerateDataKeyWithoutPlaintext",
+                "kms:GenerateDataKeyPairWithoutPlaintext",
+                "kms:GenerateDataKeyPair",
+                "kms:ReEncryptFrom",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "CustomKinesisKeyBucketNameFF6F8D94",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambdaServiceRoleDefaultPolicyA2E491F3",
+        "Roles": [
+          {
+            "Ref": "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambdaServiceRoleFA79B6BB",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambdaServiceRoleFA79B6BB": {
       "Metadata": {
@@ -1500,6 +1668,7 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
     },
     "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaE5E42603": {
       "DependsOn": [
+        "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaServiceRoleDefaultPolicy65018579",
         "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaServiceRole405E5167",
       ],
       "Properties": {
@@ -1512,6 +1681,12 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
         "Environment": {
           "Variables": {
             "DynamicS3LogPartitioningMapping": "dynamic-partitioning/log-filters.json",
+            "KinesisStreamArn": {
+              "Fn::GetAtt": [
+                "CustomStreamE8E9158E",
+                "Arn",
+              ],
+            },
           },
         },
         "FunctionName": "AWSAccelerator-FirehoseRecordsProcessor",
@@ -1574,6 +1749,55 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
         ],
       },
       "Type": "AWS::IAM::Role",
+    },
+    "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaServiceRoleDefaultPolicy65018579": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "kinesis:PutRecords",
+                "kinesis:PutRecord",
+                "kinesis:ListShards",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "CustomStreamE8E9158E",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "kms:Decrypt",
+                "kms:Encrypt",
+                "kms:GenerateDataKey",
+                "kms:ReEncryptTo",
+                "kms:GenerateDataKeyWithoutPlaintext",
+                "kms:GenerateDataKeyPairWithoutPlaintext",
+                "kms:GenerateDataKeyPair",
+                "kms:ReEncryptFrom",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "CustomKinesisKey1382C574",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaServiceRoleDefaultPolicy65018579",
+        "Roles": [
+          {
+            "Ref": "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaServiceRole405E5167",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "CloudWatchToS3FirehoseFirehoseServiceRole4A1CF56B": {
       "Metadata": {

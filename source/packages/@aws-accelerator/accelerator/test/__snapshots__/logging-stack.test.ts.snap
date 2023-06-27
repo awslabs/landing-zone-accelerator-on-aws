@@ -2009,6 +2009,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
     },
     "FirehoseToS3SetupFirehosePrefixProcessingLambdaCFF0C71A": {
       "DependsOn": [
+        "FirehoseToS3SetupFirehosePrefixProcessingLambdaServiceRoleDefaultPolicy56739193",
         "FirehoseToS3SetupFirehosePrefixProcessingLambdaServiceRole55C795C1",
       ],
       "Properties": {
@@ -2019,6 +2020,12 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "Environment": {
           "Variables": {
             "DynamicS3LogPartitioningMapping": "REPLACED-JSON-PATH.json",
+            "KinesisStreamArn": {
+              "Fn::GetAtt": [
+                "LogsKinesisStreamCfn",
+                "Arn",
+              ],
+            },
           },
         },
         "FunctionName": "AWSAccelerator-FirehoseRecordsProcessor",
@@ -2081,6 +2088,55 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         ],
       },
       "Type": "AWS::IAM::Role",
+    },
+    "FirehoseToS3SetupFirehosePrefixProcessingLambdaServiceRoleDefaultPolicy56739193": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "kinesis:PutRecords",
+                "kinesis:PutRecord",
+                "kinesis:ListShards",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "LogsKinesisStreamCfn",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "kms:Decrypt",
+                "kms:Encrypt",
+                "kms:GenerateDataKey",
+                "kms:ReEncryptTo",
+                "kms:GenerateDataKeyWithoutPlaintext",
+                "kms:GenerateDataKeyPairWithoutPlaintext",
+                "kms:GenerateDataKeyPair",
+                "kms:ReEncryptFrom",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "LogsReplicationKeyAE749486",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "FirehoseToS3SetupFirehosePrefixProcessingLambdaServiceRoleDefaultPolicy56739193",
+        "Roles": [
+          {
+            "Ref": "FirehoseToS3SetupFirehosePrefixProcessingLambdaServiceRole55C795C1",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "FirehoseToS3SetupFirehoseServiceRole23B67E37": {
       "Metadata": {
@@ -4953,6 +5009,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
     },
     "FirehoseToS3SetupFirehosePrefixProcessingLambdaCFF0C71A": {
       "DependsOn": [
+        "FirehoseToS3SetupFirehosePrefixProcessingLambdaServiceRoleDefaultPolicy56739193",
         "FirehoseToS3SetupFirehosePrefixProcessingLambdaServiceRole55C795C1",
       ],
       "Properties": {
@@ -4963,6 +5020,12 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
         "Environment": {
           "Variables": {
             "DynamicS3LogPartitioningMapping": "REPLACED-JSON-PATH.json",
+            "KinesisStreamArn": {
+              "Fn::GetAtt": [
+                "LogsKinesisStreamCfn",
+                "Arn",
+              ],
+            },
           },
         },
         "FunctionName": "AWSAccelerator-FirehoseRecordsProcessor",
@@ -5025,6 +5088,55 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
         ],
       },
       "Type": "AWS::IAM::Role",
+    },
+    "FirehoseToS3SetupFirehosePrefixProcessingLambdaServiceRoleDefaultPolicy56739193": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "kinesis:PutRecords",
+                "kinesis:PutRecord",
+                "kinesis:ListShards",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "LogsKinesisStreamCfn",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "kms:Decrypt",
+                "kms:Encrypt",
+                "kms:GenerateDataKey",
+                "kms:ReEncryptTo",
+                "kms:GenerateDataKeyWithoutPlaintext",
+                "kms:GenerateDataKeyPairWithoutPlaintext",
+                "kms:GenerateDataKeyPair",
+                "kms:ReEncryptFrom",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "LogsReplicationKeyAE749486",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "FirehoseToS3SetupFirehosePrefixProcessingLambdaServiceRoleDefaultPolicy56739193",
+        "Roles": [
+          {
+            "Ref": "FirehoseToS3SetupFirehosePrefixProcessingLambdaServiceRole55C795C1",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "FirehoseToS3SetupFirehoseServiceRole23B67E37": {
       "Metadata": {

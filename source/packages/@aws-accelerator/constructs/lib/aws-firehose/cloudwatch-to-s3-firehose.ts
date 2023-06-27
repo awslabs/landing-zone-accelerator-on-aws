@@ -116,8 +116,32 @@ export class CloudWatchToS3Firehose extends Construct {
       environmentEncryption: props.lambdaKey,
       environment: {
         DynamicS3LogPartitioningMapping: props.dynamicPartitioningValue!,
+        KinesisStreamArn: props.kinesisStream.streamArn,
       },
     });
+    // Allow lambda to place records back to kinesis stream if the payload is over 6MB
+    firehosePrefixProcessingLambda.addToRolePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        actions: ['kinesis:PutRecords', 'kinesis:PutRecord', 'kinesis:ListShards'],
+        resources: [props.kinesisStream.streamArn],
+      }),
+    );
+    // Allow lambda use to kinesis stream kms key
+    firehosePrefixProcessingLambda.addToRolePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        actions: [
+          'kms:Decrypt',
+          'kms:Encrypt',
+          'kms:GenerateDataKey',
+          'kms:ReEncryptTo',
+          'kms:GenerateDataKeyWithoutPlaintext',
+          'kms:GenerateDataKeyPairWithoutPlaintext',
+          'kms:GenerateDataKeyPair',
+          'kms:ReEncryptFrom',
+        ],
+        resources: [props.kinesisKmsKey.keyArn],
+      }),
+    );
 
     // Access is based on least privileged apis
     // Ref: https://docs.aws.amazon.com/firehose/latest/dev/controlling-access.html#using-iam-s3
