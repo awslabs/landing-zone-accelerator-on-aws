@@ -52,12 +52,14 @@ export async function loadOrganizationalUnits(
   if (rootResults.Roots) {
     rootId = rootResults.Roots[0].Id!;
   }
-  const topLevel = await getChildrenForParent(rootId!, undefined, client);
-  const level2 = await processLevel(topLevel, client);
+  const level0 = await getChildrenForParent(rootId!, undefined, client);
+  const level1 = await processLevel(level0, client);
+  const level2 = await processLevel(level1, client);
   const level3 = await processLevel(level2, client);
   const level4 = await processLevel(level3, client);
   const acceleratorOrganizationalUnit: AcceleratorOu[] = [
-    ...(await parseArray(topLevel)),
+    ...(await parseArray(level0)),
+    ...(await parseArray(level1)),
     ...(await parseArray(level2)),
     ...(await parseArray(level3)),
     ...(await parseArray(level4)),
