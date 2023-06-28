@@ -22,6 +22,7 @@ const stack = new cdk.Stack();
 const configDirPath = `${__dirname}/../../../accelerator/test/configs/all-enabled`;
 
 new RevertScpChanges(stack, 'RevertScpChanges', {
+  acceleratorPrefix: 'AWSAccelerator',
   configDirPath: `${__dirname}/../../../accelerator/test/configs/snapshot-only`,
   homeRegion: 'us-west-2',
   kmsKeyCloudWatch: new cdk.aws_kms.Key(stack, 'CustomCloudWatchKey', {}),
