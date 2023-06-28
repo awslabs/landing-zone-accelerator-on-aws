@@ -458,21 +458,6 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
     if (this.organizationalUnitIds?.length == 0) {
       this.organizationalUnitIds = await loadOrganizationalUnits(partition, this.organizationalUnits);
     }
-  }
-
-  public getOrganizationId(): string | undefined {
-    if (!this.enable) {
-      return undefined;
-    } else {
-      // We can get the AWS Organization Id without an API call here
-      // because we already retrieved OU ARNs which contain the Organization Id.
-      // We know every organization has at least one OU so we
-      // can get the Organization Id from parsing the first OU ARN.
-      const orgId = this.organizationalUnitIds![0].arn.split('/')[1];
-      if (orgId) {
-        return orgId;
-      }
-    }
     logger.error('Organizations not enabled or error getting Organization Id');
     throw new Error('configuration validation failed.');
   }
