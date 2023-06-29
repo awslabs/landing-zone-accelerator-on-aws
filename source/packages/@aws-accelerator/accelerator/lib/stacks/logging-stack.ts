@@ -1044,6 +1044,14 @@ export class LoggingStack extends AcceleratorStack {
   }
 
   private prepareCloudWatchExclusionList(exclusionList: CloudWatchLogsExclusionConfig[]) {
+    exclusionList.push({
+      accounts: ['LogArchive'],
+      regions: this.props.globalConfig.enabledRegions,
+      logGroupNames: [`/aws/lambda/${this.props.prefixes.accelerator}-FirehoseRecordsProcessor`],
+      organizationalUnits: undefined,
+      excludeAll: undefined,
+    });
+
     // Input will be an array of OUs and account.
     // Decompose input to account Ids with single regions
     const processedItems = this.getCloudWatchExclusionProcessedItems(exclusionList);
@@ -1076,7 +1084,7 @@ export class LoggingStack extends AcceleratorStack {
           account: uniqueElement.account,
           region: uniqueElement.region,
           excludeAll: globalExclude,
-          logGroupNames: allLogGroupNames,
+          logGroupNames: Array.from(new Set(allLogGroupNames)),
         });
       }
     }
