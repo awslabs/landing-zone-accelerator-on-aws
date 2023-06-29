@@ -2528,7 +2528,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
-        "logExclusionOption": "{"account":"333333333333","region":"us-east-1","logGroupNames":["test1/*"]}",
+        "logExclusionOption": "{"account":"333333333333","region":"us-east-1","logGroupNames":["test1/*","/aws/lambda/AWSAccelerator-FirehoseRecordsProcessor"]}",
         "replaceLogDestinationArn": "arn:aws:logs:us-east-1:111111111111:destination/log-destination",
       },
       "Type": "Custom::UpdateSubscriptionFilter",
@@ -2609,7 +2609,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "Environment": {
           "Variables": {
             "LogDestination": "arn:aws:logs:us-east-1:333333333333:destination:AWSAcceleratorCloudWatchToS3",
-            "LogExclusion": "{"account":"333333333333","region":"us-east-1","logGroupNames":["test1/*"]}",
+            "LogExclusion": "{"account":"333333333333","region":"us-east-1","logGroupNames":["test1/*","/aws/lambda/AWSAccelerator-FirehoseRecordsProcessor"]}",
             "LogKmsKeyArn": {
               "Fn::GetAtt": [
                 "AcceleratorCloudWatchKeyF93B6E17",
@@ -6619,6 +6619,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
             "Arn",
           ],
         },
+        "logExclusionOption": "{"account":"333333333333","region":"us-east-1","logGroupNames":["/aws/lambda/AWSAccelerator-FirehoseRecordsProcessor"]}",
       },
       "Type": "Custom::UpdateSubscriptionFilter",
       "UpdateReplacePolicy": "Delete",
@@ -6698,6 +6699,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
         "Environment": {
           "Variables": {
             "LogDestination": "arn:aws:logs:us-east-1:333333333333:destination:AWSAcceleratorCloudWatchToS3",
+            "LogExclusion": "{"account":"333333333333","region":"us-east-1","logGroupNames":["/aws/lambda/AWSAccelerator-FirehoseRecordsProcessor"]}",
             "LogKmsKeyArn": {
               "Fn::GetAtt": [
                 "AcceleratorCloudWatchKeyF93B6E17",
