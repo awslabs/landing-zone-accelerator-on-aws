@@ -16,12 +16,14 @@ import { Construct } from 'constructs';
 import * as path from 'path';
 
 import {
+  AseaResourceType,
   IdentityCenterAssignmentConfig,
   IdentityCenterConfig,
   IdentityCenterPermissionSetConfig,
   RoleConfig,
   RoleSetConfig,
 } from '@aws-accelerator/config';
+import { SsmResourceType } from '@aws-accelerator/utils';
 import {
   BudgetDefinition,
   Inventory,
@@ -56,22 +58,22 @@ export class OperationsStack extends AcceleratorStack {
   /**
    * List of all the defined IAM Policies
    */
-  private policies: { [name: string]: cdk.aws_iam.ManagedPolicy } = {};
+  private policies: { [name: string]: cdk.aws_iam.IManagedPolicy } = {};
 
   /**
    * List of all the defined IAM Roles
    */
-  private roles: { [name: string]: cdk.aws_iam.Role } = {};
+  private roles: { [name: string]: cdk.aws_iam.IRole } = {};
 
   /**
    * List of all the defined IAM Groups
    */
-  private groups: { [name: string]: cdk.aws_iam.Group } = {};
+  private groups: { [name: string]: cdk.aws_iam.IGroup } = {};
 
   /**
    * List of all the defined IAM Users
    */
-  private users: { [name: string]: cdk.aws_iam.User } = {};
+  private users: { [name: string]: cdk.aws_iam.IUser } = {};
 
   /**
    * KMS Key used to encrypt CloudWatch logs
@@ -201,6 +203,15 @@ export class OperationsStack extends AcceleratorStack {
       }
 
       for (const policyItem of policySetItem.policies) {
+        if (this.isManagedByAsea(AseaResourceType.IAM_POLICY, policyItem.name)) {
+          this.logger.info(`Customer managed policy ${policyItem.name} is managed by ASEA`);
+          this.policies[policyItem.name] = cdk.aws_iam.ManagedPolicy.fromManagedPolicyName(
+            this,
+            pascalCase(policyItem.name),
+            policyItem.name,
+          );
+          continue;
+        }
         this.logger.info(`Add customer managed policy ${policyItem.name}`);
 
         // Read in the policy document which should be properly formatted json
@@ -222,6 +233,11 @@ export class OperationsStack extends AcceleratorStack {
         this.policies[policyItem.name] = new cdk.aws_iam.ManagedPolicy(this, pascalCase(policyItem.name), {
           managedPolicyName: policyItem.name,
           statements,
+        });
+        this.addSsmParameter({
+          logicalId: pascalCase(`SsmParam${pascalCase(policyItem.name)}PolicyArn`),
+          parameterName: this.getSsmPath(SsmResourceType.IAM_POLICY, [policyItem.name]),
+          stringValue: this.policies[policyItem.name].managedPolicyArn,
         });
 
         // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
@@ -372,6 +388,11 @@ export class OperationsStack extends AcceleratorStack {
       }
 
       for (const roleItem of roleSetItem.roles) {
+        if (this.isManagedByAsea(AseaResourceType.IAM_ROLE, roleItem.name)) {
+          this.logger.info(`IAM Role ${roleItem.name} is managed by ASEA`);
+          this.roles[roleItem.name] = cdk.aws_iam.Role.fromRoleName(this, pascalCase(roleItem.name), roleItem.name);
+          continue;
+        }
         this.logger.info(`Add role ${roleItem.name}`);
 
         // Create IAM role
@@ -391,6 +412,11 @@ export class OperationsStack extends AcceleratorStack {
 
         // Add to roles list
         this.roles[roleItem.name] = role;
+        this.addSsmParameter({
+          logicalId: pascalCase(`SsmParam${pascalCase(roleItem.name)}RoleArn`),
+          parameterName: this.getSsmPath(SsmResourceType.IAM_ROLE, [roleItem.name]),
+          stringValue: role.roleArn,
+        });
       }
     }
   }
@@ -466,6 +492,15 @@ export class OperationsStack extends AcceleratorStack {
       }
 
       for (const groupItem of groupSetItem.groups) {
+        if (this.isManagedByAsea(AseaResourceType.IAM_GROUP, groupItem.name)) {
+          this.logger.info(`IAM Group ${groupItem.name} is managed by ASEA`);
+          this.groups[groupItem.name] = cdk.aws_iam.Group.fromGroupName(
+            this,
+            pascalCase(groupItem.name),
+            groupItem.name,
+          );
+          continue;
+        }
         this.logger.info(`Add group ${groupItem.name}`);
 
         const managedPolicies: cdk.aws_iam.IManagedPolicy[] = [];
@@ -481,6 +516,12 @@ export class OperationsStack extends AcceleratorStack {
         this.groups[groupItem.name] = new cdk.aws_iam.Group(this, pascalCase(groupItem.name), {
           groupName: groupItem.name,
           managedPolicies,
+        });
+
+        this.addSsmParameter({
+          logicalId: pascalCase(`SsmParam${pascalCase(groupItem.name)}GroupArn`),
+          parameterName: this.getSsmPath(SsmResourceType.IAM_GROUP, [groupItem.name]),
+          stringValue: this.groups[groupItem.name].groupArn,
         });
 
         // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
@@ -509,6 +550,11 @@ export class OperationsStack extends AcceleratorStack {
       }
 
       for (const user of userSet.users ?? []) {
+        if (this.isManagedByAsea(AseaResourceType.IAM_USER, user.username)) {
+          this.logger.info(`IAM User ${user.username} is managed by ASEA`);
+          this.users[user.username] = cdk.aws_iam.User.fromUserName(this, pascalCase(user.username), user.username);
+          continue;
+        }
         this.logger.info(`Add user ${user.username}`);
 
         const secret = new cdk.aws_secretsmanager.Secret(this, pascalCase(`${user.username}Secret`), {
@@ -539,6 +585,12 @@ export class OperationsStack extends AcceleratorStack {
           groups: [this.groups[user.group]],
           permissionsBoundary: this.policies[user.boundaryPolicy],
           passwordResetRequired: true,
+        });
+
+        this.addSsmParameter({
+          logicalId: pascalCase(`SsmParam${pascalCase(user.username)}UserArn`),
+          parameterName: this.getSsmPath(SsmResourceType.IAM_USER, [user.username]),
+          stringValue: this.users[user.username].userArn,
         });
       }
     }

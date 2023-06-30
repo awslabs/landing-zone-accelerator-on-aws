@@ -1220,4 +1220,28 @@ export abstract class AcceleratorStack extends cdk.Stack {
       return imageId;
     }
   }
+
+  /**
+   * Public accessor method to add SSM parameters
+   * @param props
+   */
+  public addSsmParameter(props: { logicalId: string; parameterName: string; stringValue: string }) {
+    this.ssmParameters.push({
+      logicalId: props.logicalId,
+      parameterName: props.parameterName,
+      stringValue: props.stringValue,
+    });
+  }
+
+  public isManagedByAsea(resourceType: string, resourceIdentifier: string): boolean {
+    if (!this.props.globalConfig.externalLandingZoneResources?.importExternalLandingZoneResources) return false;
+    const aseaResourceList = this.props.globalConfig.externalLandingZoneResources.resourceList;
+    return !!aseaResourceList.find(
+      r =>
+        r.accountId === cdk.Stack.of(this).account &&
+        r.region === cdk.Stack.of(this).region &&
+        r.resourceType === resourceType &&
+        r.resourceIdentifier === resourceIdentifier,
+    );
+  }
 }

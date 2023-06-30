@@ -195,18 +195,6 @@ export abstract class NetworkStack extends AcceleratorStack {
   }
 
   /**
-   * Public accessor method to add SSM parameters
-   * @param props
-   */
-  public addSsmParameter(props: { logicalId: string; parameterName: string; stringValue: string }) {
-    this.ssmParameters.push({
-      logicalId: props.logicalId,
-      parameterName: props.parameterName,
-      stringValue: props.stringValue,
-    });
-  }
-
-  /**
    * Public Get account and region deployment targets for prefix lists
    * @param prefixListItem
    */

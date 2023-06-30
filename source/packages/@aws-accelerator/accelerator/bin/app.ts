@@ -49,7 +49,9 @@ import {
   createSecurityStack,
   createTesterStack,
   importAseaResourceStacks,
+  saveAseaResourceMapping,
 } from '../utils/stack-utils';
+import { AseaResourceMapping } from '@aws-accelerator/config';
 
 const logger = createLogger(['app']);
 
@@ -135,6 +137,7 @@ function createSingleAccountMultiRegionStacks(
  * @param props
  */
 function createMultiAccountMultiRegionStacks(app: cdk.App, context: AcceleratorContext, props: AcceleratorStackProps) {
+  const aseaResources: AseaResourceMapping[] = [];
   for (const enabledRegion of props.globalConfig.enabledRegions) {
     let accountId = '';
     for (const accountItem of props.accountsConfig.getAccounts(props.enableSingleAccountMode)) {
@@ -150,7 +153,8 @@ function createMultiAccountMultiRegionStacks(app: cdk.App, context: AcceleratorC
       };
       //
       // Import ASEA resources using CfnInclude
-      importAseaResourceStacks(app, context, props, accountId, enabledRegion);
+      const aseaAccountResources = importAseaResourceStacks(app, context, props, accountId, enabledRegion);
+      if (aseaAccountResources) aseaResources.push(...aseaAccountResources);
       //
       // KEY and DEPENDENCIES Stacks
       createKeyDependencyStacks(app, context, props, env, accountId, enabledRegion);
@@ -183,6 +187,7 @@ function createMultiAccountMultiRegionStacks(app: cdk.App, context: AcceleratorC
       createCustomizationsStacks(app, context, props, env, accountId, enabledRegion);
     }
   }
+  saveAseaResourceMapping(context, props, aseaResources);
 }
 
 async function main() {

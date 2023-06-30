@@ -297,6 +297,33 @@ export enum SsmResourceType {
    * `${2}` is replaced with the target group name
    */
   TARGET_GROUP = '/application/targetGroup/${0}/${1}/${2}/arn',
+  /**
+   * IAM
+   */
+  /**
+   * IAM Role Arn
+   *
+   * `${0}` is  replaced with the IAM Role name
+   */
+  IAM_ROLE = '/iam/role/${0}/arn',
+  /**
+   * IAM Managed Policy Arn
+   *
+   * `${0}` is  replaced with the IAM Managed Policy name
+   */
+  IAM_POLICY = '/iam/policy/${0}/arn',
+  /**
+   * IAM Group Arn
+   *
+   * `${0}` is  replaced with the IAM Group name
+   */
+  IAM_GROUP = '/iam/group/${0}/arn',
+  /**
+   * IAM User Arn
+   *
+   * `${0}` is  replaced with the IAM Username
+   */
+  IAM_USER = '/iam/user/${0}/arn',
 }
 
 export class SsmParameterPath {

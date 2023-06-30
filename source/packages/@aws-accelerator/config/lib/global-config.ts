@@ -16,8 +16,10 @@ import * as os from 'os';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
 import * as AWS from 'aws-sdk';
+import { STSClient, AssumeRoleCommand, AssumeRoleCommandInput, AssumeRoleCommandOutput } from '@aws-sdk/client-sts';
+import { SSMClient, GetParametersByPathCommand } from '@aws-sdk/client-ssm';
 
-import { createLogger } from '@aws-accelerator/utils';
+import { createLogger, throttlingBackOff } from '@aws-accelerator/utils';
 
 import * as t from './common-types';
 
@@ -69,6 +71,7 @@ export abstract class GlobalConfigTypes {
     importExternalLandingZoneResources: t.boolean,
     mappingFileBucket: t.optional(t.string),
     acceleratorPrefix: t.nonEmptyString,
+    acceleratorName: t.nonEmptyString,
   });
 
   static readonly sessionManagerConfig = t.interface({
@@ -286,8 +289,18 @@ export class externalLandingZoneResourcesConfig
   readonly mappingFileBucket = '';
 
   readonly acceleratorPrefix = 'ASEA';
+  readonly acceleratorName = 'ASEA';
 
   templateMap: t.AseaStackInfo[] = [];
+  resourceList: t.AseaResourceMapping[] = [];
+  /**
+   * List of accountIds deployed using external Accelerator
+   */
+  accountsDeployedExternally: string[] = [];
+  /**
+   * SSM Parameter mapping for resource types managed in both accelerators
+   */
+  resourceParameters: { [key: string]: { [key: string]: string } } = {};
 }
 
 /**
@@ -1681,29 +1694,118 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
     }
   }
 
-  public async loadExternalMapping(loadFromCache: boolean) {
+  public async saveAseaResourceMapping(resources: t.AseaResourceMapping[]) {
+    if (
+      !this.externalLandingZoneResources?.importExternalLandingZoneResources ||
+      !this.externalLandingZoneResources.mappingFileBucket
+    ) {
+      throw new Error(
+        `saveAseaResourceMapping can only be called when importExternalLandingZoneResources set as true and mappingFileBucket is provided`,
+      );
+    }
+    const s3Client = new AWS.S3({ region: this.homeRegion });
+    await s3Client
+      .putObject({
+        Bucket: this.externalLandingZoneResources.mappingFileBucket,
+        Key: 'aseaResources.json',
+        Body: JSON.stringify(resources),
+      })
+      .promise();
+  }
+
+  public async loadExternalMapping(loadFromCache: boolean, failOnResourceListNotFound = true) {
+    if (!this.externalLandingZoneResources?.importExternalLandingZoneResources) return;
+    this.externalLandingZoneResources.accountsDeployedExternally = [];
     const tempDirPath = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'asea-assets'));
     const aseaMappingPath = path.join(tempDirPath, 'aseaMapping.json');
+    const aseaResourceListPath = path.join(tempDirPath, 'aseaResources.json');
     if (!this.externalLandingZoneResources) {
       return;
     }
     if (loadFromCache && fs.existsSync(aseaMappingPath)) {
       const mapping = this.readJsonFromDisk(aseaMappingPath);
       this.externalLandingZoneResources.templateMap = await this.setTemplateMap(mapping);
+      this.externalLandingZoneResources.resourceList = this.readJsonFromDisk(aseaResourceListPath);
     } else {
-      const mapping = await this.loadExternalMappingFromS3();
+      const s3Client = new AWS.S3({ region: this.homeRegion });
+      const mapping = await this.loadExternalMappingFromS3(s3Client);
       this.externalLandingZoneResources.templateMap = await this.setTemplateMap(mapping);
+      this.externalLandingZoneResources.resourceList =
+        (await this.readJsonFromExternalS3<t.AseaResourceMapping[]>(
+          'aseaResources.json',
+          s3Client,
+          failOnResourceListNotFound,
+        )) || [];
       fs.writeFileSync(aseaMappingPath, JSON.stringify(mapping, null, 2));
+      fs.writeFileSync(aseaResourceListPath, JSON.stringify(this.externalLandingZoneResources.resourceList, null, 2));
     }
     return;
   }
 
-  private async loadExternalMappingFromS3() {
+  async loadLzaResources(partition: string, prefix: string) {
+    if (!this.externalLandingZoneResources?.importExternalLandingZoneResources) return;
+    for (const region of this.enabledRegions) {
+      await this.loadRegionLzaResources(
+        region,
+        partition,
+        prefix,
+        this.externalLandingZoneResources?.accountsDeployedExternally || [],
+      );
+    }
+  }
+
+  private async loadRegionLzaResources(region: string, partition: string, prefix: string, accounts: string[]) {
+    const getSsmPath = (resourceType: t.AseaResourceTypePaths) => `/${prefix}${resourceType}`;
+    if (!this.externalLandingZoneResources?.importExternalLandingZoneResources) return;
+    this.externalLandingZoneResources.resourceParameters = {};
+    for (const accountId of accounts) {
+      const crossAccountCredentials = await this.getCrossAccountCredentials(
+        accountId,
+        region,
+        partition,
+        this.managementAccountAccessRole,
+      );
+      const ssmClient = await this.getCrossAccountSsmClient(region, crossAccountCredentials);
+      // Get Resources which are there in both external Accelerator and LZA
+      // Can load only resources which are maintained in both
+      // Loading all to avoid reading SSM Params multiple times
+      // Can also use DynamoDB for resource status instead of SSM Parameters,
+      // But with DynamoDB knowing resource creation status in CloudFormation is difficult
+      this.externalLandingZoneResources.resourceParameters[`${accountId}-${region}`] = {
+        ...(await this.getParametersByPath(getSsmPath(t.AseaResourceTypePaths.IAM), ssmClient)),
+        ...(await this.getParametersByPath(getSsmPath(t.AseaResourceTypePaths.VPC), ssmClient)),
+      };
+    }
+  }
+
+  private async getParametersByPath(path: string, ssmClient: SSMClient) {
+    const parameters: { [key: string]: string } = {};
+    let nextToken: string | undefined = undefined;
+    do {
+      const parametersOutput = await throttlingBackOff(() =>
+        ssmClient.send(
+          new GetParametersByPathCommand({
+            Path: path,
+            MaxResults: 10,
+            NextToken: nextToken,
+            Recursive: true,
+          }),
+        ),
+      );
+      nextToken = parametersOutput.NextToken;
+      parametersOutput.Parameters?.forEach(parameter => (parameters[parameter.Name!] = parameter.Value!));
+    } while (nextToken);
+    return parameters;
+  }
+
+  private async loadExternalMappingFromS3(s3Client?: AWS.S3) {
     if (
       this.externalLandingZoneResources?.importExternalLandingZoneResources &&
       this.externalLandingZoneResources.mappingFileBucket
     ) {
-      const s3Client = new AWS.S3({ region: this.homeRegion });
+      if (!s3Client) {
+        s3Client = new AWS.S3({ region: this.homeRegion });
+      }
       const mappingFile = await s3Client
         .getObject({
           Bucket: this.externalLandingZoneResources.mappingFileBucket,
@@ -1720,6 +1822,43 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
       return JSON.parse(mappingFile.Body.toString());
     }
   }
+
+  private async readJsonFromExternalS3<T>(
+    objectKey: string,
+    s3Client?: AWS.S3,
+    failOnNotFound = true,
+  ): Promise<T | undefined> {
+    if (
+      !this.externalLandingZoneResources?.importExternalLandingZoneResources ||
+      !this.externalLandingZoneResources.mappingFileBucket
+    ) {
+      throw new Error(
+        `readJsonFromExternalS3 can only be called when importExternalLandingZoneResources set as true and mappingFileBucket is provided`,
+      );
+    }
+    if (!s3Client) {
+      s3Client = new AWS.S3({ region: this.homeRegion });
+    }
+    try {
+      const response = await s3Client
+        .getObject({
+          Bucket: this.externalLandingZoneResources.mappingFileBucket,
+          Key: objectKey,
+        })
+        .promise();
+      if (!response.Body) {
+        logger.error(
+          `Could not load mapping file from path s3://${this.externalLandingZoneResources.mappingFileBucket}/${objectKey}`,
+        );
+        return;
+      }
+      return JSON.parse(response.Body.toString());
+    } catch (e) {
+      if ((e as AWS.AWSError).code === 'NoSuchKey' && !failOnNotFound) return;
+      throw e;
+    }
+  }
+
   private readJsonFromDisk(mappingFilePath: string) {
     const mappingFile = fs.readFileSync(mappingFilePath).toString();
     return JSON.parse(mappingFile);
@@ -1728,6 +1867,7 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
   private async setTemplateMap(mappingJson: any): Promise<t.AseaStackInfo[]> {
     const aseaStacks: t.AseaStackInfo[] = [];
     for (const account of mappingJson) {
+      this.externalLandingZoneResources?.accountsDeployedExternally.push(account.accountId);
       for (const stack of account.stacksAndResourceMapList) {
         const phaseIdentifierIndex = stack.stackName.indexOf('Phase') + 5;
         let phase = stack.stackName[phaseIdentifierIndex];
@@ -1758,5 +1898,46 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
       }
     }
     return aseaStacks;
+  }
+
+  private async getCrossAccountCredentials(
+    accountId: string,
+    region: string,
+    partition: string,
+    managementAccountAccessRole: string,
+    sessionName = 'acceleratorResourceMapping',
+  ) {
+    const stsClient = new STSClient({ region: region });
+    const stsParams: AssumeRoleCommandInput = {
+      RoleArn: `arn:${partition}:iam::${accountId}:role/${managementAccountAccessRole}`,
+      RoleSessionName: sessionName,
+      DurationSeconds: 900,
+    };
+    let assumeRoleCredential: AssumeRoleCommandOutput | undefined = undefined;
+    try {
+      assumeRoleCredential = await throttlingBackOff(() => stsClient.send(new AssumeRoleCommand(stsParams)));
+      if (assumeRoleCredential) {
+        return assumeRoleCredential;
+      } else {
+        throw new Error(
+          `Error assuming role ${managementAccountAccessRole} in account ${accountId} for bootstrap checks`,
+        );
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      logger.error(JSON.stringify(e));
+      throw new Error(e.message);
+    }
+  }
+
+  private async getCrossAccountSsmClient(region: string, assumeRoleCredential: AssumeRoleCommandOutput) {
+    return new SSMClient({
+      credentials: {
+        accessKeyId: assumeRoleCredential.Credentials!.AccessKeyId!,
+        secretAccessKey: assumeRoleCredential.Credentials!.SecretAccessKey!,
+        sessionToken: assumeRoleCredential.Credentials?.SessionToken,
+      },
+      region: region,
+    });
   }
 }

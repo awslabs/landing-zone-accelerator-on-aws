@@ -690,3 +690,30 @@ export type AseaStackInfo = {
   resources: CfnResourceType[];
   nestedStack?: boolean;
 };
+
+/**
+ * ASEA ResourceTypes used in Resource Mapping
+ */
+export enum AseaResourceType {
+  IAM_POLICY = 'IAM_POLICY',
+  IAM_ROLE = 'IAM_ROLE',
+  IAM_GROUP = 'IAM_GROUP',
+  IAM_USER = 'IAM_USER',
+  EC2_VPC = 'EC2_VPC',
+  EC2_SUBNET = 'EC2_SUBNET',
+}
+
+/**
+ * Consolidated type for ASEA Resource mapping
+ */
+export type AseaResourceMapping = {
+  accountId: string;
+  region: string;
+  resourceType: string;
+  resourceIdentifier: string;
+};
+
+export enum AseaResourceTypePaths {
+  IAM = '/iam/',
+  VPC = '/network/vpc/',
+}

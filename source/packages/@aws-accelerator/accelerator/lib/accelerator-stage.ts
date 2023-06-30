@@ -42,4 +42,5 @@ export enum AcceleratorStage {
   SECURITY_AUDIT = 'security-audit',
   FINALIZE = 'finalize',
   IMPORT_ASEA_RESOURCES = 'import-asea-resources',
+  POST_IMPORT_ASEA_RESOURCES = 'post-import-asea-resources',
 }
