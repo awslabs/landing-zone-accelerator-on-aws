@@ -100,6 +100,10 @@ export abstract class NetworkStack extends AcceleratorStack {
    */
   public readonly cloudwatchKey: cdk.aws_kms.Key;
   /**
+   * KMS Key used to encrypt custom resource lambda environment variables
+   */
+  public readonly lambdaKey: cdk.aws_kms.Key;
+  /**
    * Global CloudWatch logs retention setting
    */
   public readonly logRetention: number;
@@ -129,6 +133,7 @@ export abstract class NetworkStack extends AcceleratorStack {
     this.vpcsInScope = this.getVpcsInScope(this.vpcResources);
 
     this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
+    this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
   }
 
   /**

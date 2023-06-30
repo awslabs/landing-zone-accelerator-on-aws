@@ -66,7 +66,7 @@ exports[`IdentityCenterInstance Construct(IdentityCenterGetInstanceId):  Snapsho
           ],
         },
         "Runtime": "nodejs16.x",
-        "Timeout": 160,
+        "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },

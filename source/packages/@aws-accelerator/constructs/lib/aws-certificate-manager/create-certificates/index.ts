@@ -30,9 +30,6 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     }
   | undefined
 > {
-  //print out the event in case manual intervention is needed
-  console.log(event);
-
   //set variables from event
   const name: string = event.ResourceProperties['name'];
   const parameterName: string = event.ResourceProperties['parameterName'];
@@ -64,6 +61,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
           const chainContents = await getS3FileContents(assetBucket, s3Client, chain);
 
           certificateArn = await createImportCertificate(acmClient, certContent, chainContents, privKeyContent);
+
           await putParameter(ssmClient, parameterName, certificateArn.CertificateArn);
 
           return { Status: 'Success', StatusCode: 200 };

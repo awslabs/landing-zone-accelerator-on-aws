@@ -7,6 +7,10 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
       "Default": "/accelerator/kms/cloudwatch/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/kms/lambda/key-arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratornetworkgwlbAcceleratorGWLBarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/gwlb/Accelerator-GWLB/arn",
       "Type": "AWS::SSM::Parameter::Value<String>",

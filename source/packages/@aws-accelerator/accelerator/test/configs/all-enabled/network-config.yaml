@@ -2,14 +2,7 @@ homeRegion: &HOME_REGION us-east-1
 defaultVpc:
   delete: true
   excludeAccounts: []
-certificates:
-  - name: cert1
-    type: import
-    privKey: cert/example1-cert.key
-    cert: cert/example1-cert.crt
-    deploymentTargets:
-      organizationalUnits:
-        - Security
+
 
 transitGateways:
   - name: Network-Main
@@ -1596,5 +1589,33 @@ vpcFlowLogs:
     - flow-direction
     - traffic-path
 
+certificates:
+  - name: cert1
+    type: import
+    privKey: cert1/privKey.key
+    cert: cert1/cert.crt
+    deploymentTargets:
+      organizationalUnits:
+        - Security
+  - name: cert2
+    type: import
+    privKey: cert1/privKey.key
+    cert: cert1/cert.crt
+    deploymentTargets:
+      accounts:
+        - Management
+        - Audit
+  - name: cert3
+    type: request
+    validation: DNS
+    domain: example.com
+    san:
+      - www.example.com
+      - www.example.net
+      - e.co
+    deploymentTargets:
+      organizationalUnits:
+        - Security
+        
 firewallManager:
   delegatedAdminAccount: Audit

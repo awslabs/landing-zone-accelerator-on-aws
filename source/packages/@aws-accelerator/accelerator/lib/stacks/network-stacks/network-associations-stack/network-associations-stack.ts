@@ -77,7 +77,7 @@ import {
 import { SsmResourceType } from '@aws-accelerator/utils';
 
 import path from 'path';
-import { AcceleratorKeyType, AcceleratorStackProps, NagSuppressionRuleIds } from '../../accelerator-stack';
+import { AcceleratorStackProps, NagSuppressionRuleIds } from '../../accelerator-stack';
 import { NetworkStack } from '../network-stack';
 import { SharedResources } from './shared-resources';
 
@@ -89,7 +89,6 @@ interface Peering {
 }
 
 export class NetworkAssociationsStack extends NetworkStack {
-  private lambdaKey: cdk.aws_kms.IKey;
   private dnsFirewallMap: Map<string, string>;
   private dxGatewayMap: Map<string, string>;
   private peeringList: Peering[];
@@ -114,8 +113,6 @@ export class NetworkAssociationsStack extends NetworkStack {
       this.transitGateways = new Map<string, string>();
       this.transitGatewayAttachments = new Map<string, string>();
       this.transitGatewayRouteTables = new Map<string, string>();
-
-      this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
 
       //
       // Build VPC peering list
