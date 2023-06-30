@@ -46,24 +46,28 @@ export async function loadOrganizationalUnits(
     retryStrategy: new ConfiguredRetryStrategy(10, (attempt: number) => 100 + attempt * 1000),
     region: await getRegion(partition),
   });
+  const acceleratorOrganizationalUnit: AcceleratorOu[] = [];
   const rootResults = await client.send(new ListRootsCommand({}));
 
   let rootId: string;
   if (rootResults.Roots) {
     rootId = rootResults.Roots[0].Id!;
+    acceleratorOrganizationalUnit.push({
+      name: rootResults.Roots[0].Name!,
+      arn: rootResults.Roots[0].Arn!,
+      id: rootId,
+    });
   }
   const level0 = await getChildrenForParent(rootId!, undefined, client);
   const level1 = await processLevel(level0, client);
   const level2 = await processLevel(level1, client);
   const level3 = await processLevel(level2, client);
   const level4 = await processLevel(level3, client);
-  const acceleratorOrganizationalUnit: AcceleratorOu[] = [
-    ...(await parseArray(level0)),
-    ...(await parseArray(level1)),
-    ...(await parseArray(level2)),
-    ...(await parseArray(level3)),
-    ...(await parseArray(level4)),
-  ];
+  acceleratorOrganizationalUnit.push(...(await parseArray(level0)));
+  acceleratorOrganizationalUnit.push(...(await parseArray(level1)));
+  acceleratorOrganizationalUnit.push(...(await parseArray(level2)));
+  acceleratorOrganizationalUnit.push(...(await parseArray(level3)));
+  acceleratorOrganizationalUnit.push(...(await parseArray(level4)));
 
   const filteredArray = acceleratorOrganizationalUnit.filter(obj => {
     return arrayFromConfig.filter(value => {
