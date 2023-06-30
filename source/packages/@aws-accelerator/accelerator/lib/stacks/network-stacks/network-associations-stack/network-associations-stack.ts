@@ -215,7 +215,7 @@ export class NetworkAssociationsStack extends NetworkStack {
       // Create resources for RAM shared subnets
       //
       const sharedVpcMap = this.setVpcMap(this.sharedVpcs);
-      new SharedResources(this, sharedVpcMap, this.prefixListMap, props);
+      new SharedResources(this, sharedVpcMap, this.prefixListMap, targetGroupMap, props);
 
       //
       // Create SSM parameters
@@ -419,6 +419,7 @@ export class NetworkAssociationsStack extends NetworkStack {
         listener,
         targetGroup.targetGroupArn,
       );
+
       const listenerResource = new cdk.aws_elasticloadbalancingv2.CfnListener(
         this,
         pascalCase(`Listener${vpcItem.name}${albItem.name}${listener.name}`),
@@ -438,16 +439,14 @@ export class NetworkAssociationsStack extends NetworkStack {
   private createAlbListeners(targetGroupMap: Map<string, TargetGroup>) {
     try {
       const listenerMap = new Map<string, cdk.aws_elasticloadbalancingv2.CfnListener>();
-      for (const vpcItem of this.vpcResources) {
-        const vpcAccountIds = this.getVpcAccountIds(vpcItem);
-
-        if (this.isTargetStack(vpcAccountIds, [vpcItem.region])) {
-          for (const albItem of vpcItem.loadBalancers?.applicationLoadBalancers ?? []) {
+      for (const vpcItem of this.props.networkConfig.vpcs ?? []) {
+        for (const albItem of vpcItem.loadBalancers?.applicationLoadBalancers ?? []) {
+          // Logic to determine that ALBs that are not shared are only created in the account of the VPC.
+          if (!albItem.shareTargets && vpcItem.account === cdk.Stack.of(this).account) {
             const albArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
               this,
               this.getSsmPath(SsmResourceType.ALB, [vpcItem.name, albItem.name]),
             );
-
             this.createApplicationLoadBalancerListeners(vpcItem, albItem, albArn, targetGroupMap, listenerMap);
           }
         }
@@ -458,7 +457,7 @@ export class NetworkAssociationsStack extends NetworkStack {
       throw err;
     }
   }
-  private getCertificate(certificate: string | undefined) {
+  public getCertificate(certificate: string | undefined) {
     if (certificate) {
       //check if user provided arn. If so do nothing, if not get it from ssm
       if (certificate.match('\\arn:*')) {
@@ -473,7 +472,7 @@ export class NetworkAssociationsStack extends NetworkStack {
     return undefined;
   }
 
-  private getListenerAction(
+  public getListenerAction(
     listener: ApplicationLoadBalancerListenerConfig,
     targetGroupArn: string,
   ): cdk.aws_elasticloadbalancingv2.CfnListener.ActionProperty {
@@ -617,37 +616,46 @@ export class NetworkAssociationsStack extends NetworkStack {
    * Function to create instance or IP target groups
    * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
    * @param vpcId string
+   * @param targetGroupItem {@link TargetGroupItemConfig}
    * @param targetGroupMap Map<string, {@link TargetGroup}>
    */
   private createInstanceOrIpTargetGroups(
     vpcItem: VpcConfig | VpcTemplatesConfig,
     vpcId: string,
+    targetGroupItem: TargetGroupItemConfig,
     targetGroupMap: Map<string, TargetGroup>,
   ): void {
-    for (const targetGroupItem of vpcItem.targetGroups ?? []) {
-      if (targetGroupItem.type === 'ip') {
-        const targetGroup = this.createIpTargetGroup(targetGroupItem, vpcItem, vpcId);
-        targetGroupMap.set(`${vpcItem.name}-${targetGroupItem.name}`, targetGroup);
-      }
-      if (targetGroupItem.type === 'instance') {
-        const targetGroup = this.createInstanceTargetGroups(targetGroupItem, vpcItem, vpcId);
-        targetGroupMap.set(`${vpcItem.name}-${targetGroupItem.name}`, targetGroup);
-      }
+    if (targetGroupItem.type === 'ip') {
+      const targetGroup = this.createIpTargetGroup(targetGroupItem, vpcItem, vpcId);
+      targetGroupMap.set(`${vpcItem.name}-${targetGroupItem.name}`, targetGroup);
+    }
+    if (targetGroupItem.type === 'instance') {
+      const targetGroup = this.createInstanceTargetGroups(targetGroupItem, vpcItem, vpcId);
+      targetGroupMap.set(`${vpcItem.name}-${targetGroupItem.name}`, targetGroup);
     }
   }
 
   private createIpAndInstanceTargetGroups() {
     try {
       const targetGroupMap = new Map<string, TargetGroup>();
-      for (const vpcItem of this.vpcResources) {
-        const vpcAccountIds = this.getVpcAccountIds(vpcItem);
-
-        if (this.isTargetStack(vpcAccountIds, [vpcItem.region])) {
-          const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-            this,
-            this.getSsmPath(SsmResourceType.VPC, [vpcItem.name]),
-          );
-          this.createInstanceOrIpTargetGroups(vpcItem, vpcId, targetGroupMap);
+      for (const vpcItem of this.props.networkConfig.vpcs) {
+        for (const targetGroupItem of vpcItem.targetGroups ?? []) {
+          if (targetGroupItem.shareTargets) {
+            const sharedTargetGroup = this.checkResourceShare(targetGroupItem.shareTargets);
+            if (sharedTargetGroup) {
+              const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+                this,
+                this.getSsmPath(SsmResourceType.VPC, [vpcItem.name]),
+              );
+              this.createInstanceOrIpTargetGroups(vpcItem, vpcId, targetGroupItem, targetGroupMap);
+            }
+          } else {
+            const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+              this,
+              this.getSsmPath(SsmResourceType.VPC, [vpcItem.name]),
+            );
+            this.createInstanceOrIpTargetGroups(vpcItem, vpcId, targetGroupItem, targetGroupMap);
+          }
         }
       }
       return targetGroupMap;
@@ -2586,7 +2594,7 @@ export class NetworkAssociationsStack extends NetworkStack {
    *
    * @param shareTargets
    */
-  private checkResourceShare(shareTargets: ShareTargets): boolean {
+  public checkResourceShare(shareTargets: ShareTargets): boolean {
     let included = false;
     included = this.isOrganizationalUnitIncluded(shareTargets.organizationalUnits);
 

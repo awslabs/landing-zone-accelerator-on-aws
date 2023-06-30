@@ -317,30 +317,33 @@ export class LoadBalancerResources {
 
     for (const vpcItem of vpcResources) {
       for (const albItem of vpcItem.loadBalancers?.applicationLoadBalancers || []) {
-        const subnetLookups = albItem.subnets.map(subnetName => subnetMap.get(`${vpcItem.name}_${subnetName}`));
-        const nonNullsubnets = subnetLookups.filter(subnet => subnet) as Subnet[];
-        const subnetIds = nonNullsubnets.map(subnet => subnet.subnetId);
-        const securityGroupLookups = albItem.securityGroups.map(securityGroupName =>
-          securityGroupMap.get(`${vpcItem.name}_${securityGroupName}`),
-        );
-        const nonNullSecurityGroups = securityGroupLookups.filter(group => group) as SecurityGroup[];
-        const securityGroupIds = nonNullSecurityGroups.map(securityGroup => securityGroup.securityGroupId);
+        // Logic to only create Application Load Balancers that don't include the shareTargets property
+        if (!albItem.shareTargets) {
+          const subnetLookups = albItem.subnets.map(subnetName => subnetMap.get(`${vpcItem.name}_${subnetName}`));
+          const nonNullsubnets = subnetLookups.filter(subnet => subnet) as Subnet[];
+          const subnetIds = nonNullsubnets.map(subnet => subnet.subnetId);
+          const securityGroupLookups = albItem.securityGroups.map(securityGroupName =>
+            securityGroupMap.get(`${vpcItem.name}_${securityGroupName}`),
+          );
+          const nonNullSecurityGroups = securityGroupLookups.filter(group => group) as SecurityGroup[];
+          const securityGroupIds = nonNullSecurityGroups.map(securityGroup => securityGroup.securityGroupId);
 
-        this.validateAlbSubnetId(subnetIds, albItem.name);
+          this.validateAlbSubnetId(subnetIds, albItem.name);
 
-        // Create application load balancer
-        this.createApplicationLoadBalancer({
-          vpcName: vpcItem.name,
-          albItem,
-          accessLogsBucketName,
-          subnetIds,
-          securityGroupIds,
-          albMap,
-          subnetMap,
-          subnetLookups,
-          securityGroupLookups,
-          props,
-        });
+          // Create application load balancer
+          this.createApplicationLoadBalancer({
+            vpcName: vpcItem.name,
+            albItem,
+            accessLogsBucketName,
+            subnetIds,
+            securityGroupIds,
+            albMap,
+            subnetMap,
+            subnetLookups,
+            securityGroupLookups,
+            props,
+          });
+        }
       }
     }
     return albMap;

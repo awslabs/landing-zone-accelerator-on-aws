@@ -2,6 +2,15 @@ homeRegion: &HOME_REGION us-east-1
 defaultVpc:
   delete: true
   excludeAccounts: []
+certificates:
+  - name: cert1
+    type: import
+    privKey: cert/example1-cert.key
+    cert: cert/example1-cert.crt
+    deploymentTargets:
+      organizationalUnits:
+        - Security
+
 transitGateways:
   - name: Network-Main
     account: Network
@@ -1350,6 +1359,9 @@ vpcs:
         availabilityZone: b
         routeTable: SharedServices-App-B
         ipv4CidrBlock: 10.4.1.0/24
+        shareTargets:
+          organizationalUnits:
+            - Security
       - name: SharedServices-MainTgwAttach-A
         availabilityZone: a
         routeTable: SharedServices-Tgw-A
@@ -1358,6 +1370,35 @@ vpcs:
         availabilityZone: b
         routeTable: SharedServices-Tgw-B
         ipv4CidrBlock: 10.4.255.224/28
+    loadBalancers:
+      applicationLoadBalancers:
+        - name: appA-alb-test-01
+          scheme: internal
+          subnets:
+            - SharedServices-App-A
+            - SharedServices-App-B
+          securityGroups:
+            - InternalHTTP-SG
+          listeners:
+            - name: appA-listener-3
+              port: 443
+              protocol: HTTPS
+              targetGroup: deployed-tg-2
+              order: 3
+              type: forward
+              certificate: cert1
+              sslPolicy: ELBSecurityPolicy-2016-08
+          shareTargets:
+            organizationalUnits:
+              - Security
+    targetGroups:
+      - name: deployed-tg-2
+        port: 443
+        protocol: HTTPS
+        type: instance
+        shareTargets:
+          organizationalUnits:
+            - Security
     transitGatewayAttachments:
       - name: SharedServices-Main
         transitGateway:
@@ -1393,6 +1434,20 @@ vpcs:
               - 10.0.0.0/8
         outboundRules:
           - description: All Outbound
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: InternalHTTP-SG
+        description: Accelerator Security Group
+        inboundRules:
+          - description: HTTP access security group rule
+            types:
+              - HTTP
+            sources:
+              - 10.0.0.0/16
+        outboundRules:
+          - description: Allow all outbound
             types:
               - ALL
             sources:
@@ -1541,25 +1596,5 @@ vpcFlowLogs:
     - flow-direction
     - traffic-path
 
-# certificates:
-#   - name: cert1
-#     type: import
-#     privKey: cert1/privKey.key
-#     cert: cert1/cert.crt
-#     deploymentTargets:
-#       accounts:
-#         - Management
-#         - Audit
-#   - name: cert2
-#     type: request
-#     validation: DNS
-#     domain: example.com
-#     san:
-#       - www.example.com
-#       - www.example.net
-#       - e.co
-#     deploymentTargets:
-#       OU:
-#         - Infrastructure
 firewallManager:
   delegatedAdminAccount: Audit
