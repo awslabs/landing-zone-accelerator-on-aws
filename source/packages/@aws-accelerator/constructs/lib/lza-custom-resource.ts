@@ -75,9 +75,10 @@ export interface LzaCustomResourceProps {
     readonly description?: string;
     /**
      * Custom resource lambda execution role. This is the role that will be assumed by the function upon execution.
-     * @default - A unique role will be generated for this lambda function.
+     * @default
+     * A unique role will be generated for this lambda function.
      */
-    readonly role?: cdk.aws_iam.Role;
+    readonly role?: cdk.aws_iam.Role | cdk.aws_iam.IRole;
     /**
      * The amount of memory, in MB, that is allocated to custom resource Lambda function. Lambda uses this value to proportionally allocate the amount of CPU power.
      * @default 256
@@ -87,7 +88,7 @@ export interface LzaCustomResourceProps {
      * Custom resource lambda function execution time (in seconds) after which Lambda terminates the function.
      * @default 3 seconds
      */
-    readonly timeOut?: number;
+    readonly timeOut?: cdk.Duration;
     /**
      * Initial policy statements to add to the created custom resource Lambda Role.
      */
@@ -140,7 +141,7 @@ export class LzaCustomResource extends Construct {
       code: cdk.aws_lambda.Code.fromAsset(props.lambda.assetPath),
       runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
       memorySize: props.lambda.memorySize ?? 256,
-      timeout: props.lambda.timeOut ? cdk.Duration.seconds(props.lambda.timeOut) : cdk.Duration.seconds(160),
+      timeout: props.lambda.timeOut,
       role: props.lambda.role,
       initialPolicy: props.lambda.roleInitialPolicy,
       handler: props.lambda.handler ?? 'index.handler',

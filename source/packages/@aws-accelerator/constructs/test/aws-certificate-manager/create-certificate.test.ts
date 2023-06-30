@@ -31,11 +31,12 @@ describe('RequestCertificate', () => {
     validation: 'DNS',
     domain: '*.example.com',
     san: ['e.co', '*.example.net'],
-    cloudWatchLogsKmsKey: new cdk.aws_kms.Key(stack, 'CustomKeyImportCert', {}),
-    logRetentionInDays: 363,
     homeRegion: 'us-east-1',
     assetBucketName: 'aws-accelerator-assets',
     assetFunctionRoleName: 'AWSAccelerator-AssetsAccessRole',
+    customResourceLambdaCloudWatchLogKmsKey: new cdk.aws_kms.Key(stack, 'RequestCertificateCloudWatchKey', {}),
+    customResourceLambdaEnvironmentEncryptionKmsKey: new cdk.aws_kms.Key(stack, 'RequestCertificateLambdaKey', {}),
+    customResourceLambdaLogRetentionInDays: 365,
   });
   snapShotTest(testNamePrefix, stack);
 });
@@ -48,11 +49,12 @@ describe('ImportCertificate', () => {
     privKey: 'cert/privKey.pem',
     cert: 'cert/cert.crt',
     chain: 'cert/chain.csr',
-    cloudWatchLogsKmsKey: new cdk.aws_kms.Key(stack, 'CustomKeyRequestCert', {}),
-    logRetentionInDays: 363,
     homeRegion: 'us-east-1',
     assetBucketName: 'aws-accelerator-assets',
     assetFunctionRoleName: 'AWSAccelerator-AssetsAccessRole',
+    customResourceLambdaCloudWatchLogKmsKey: new cdk.aws_kms.Key(stack, 'ImportCertificateCloudWatchKey', {}),
+    customResourceLambdaEnvironmentEncryptionKmsKey: new cdk.aws_kms.Key(stack, 'ImportCertificateLambdaKey', {}),
+    customResourceLambdaLogRetentionInDays: 365,
   });
   snapShotTest(testNamePrefix, stack);
 });

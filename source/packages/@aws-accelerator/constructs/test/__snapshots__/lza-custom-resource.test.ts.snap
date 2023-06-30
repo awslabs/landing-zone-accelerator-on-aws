@@ -101,7 +101,7 @@ exports[`LzaCustomResource Construct(IdentityCenterGetInstanceId):  Snapshot Tes
           ],
         },
         "Runtime": "nodejs16.x",
-        "Timeout": 160,
+        "Timeout": 300,
       },
       "Type": "AWS::Lambda::Function",
     },

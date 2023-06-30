@@ -13,6 +13,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as path from 'path';
+import { LzaCustomResource } from '../lza-custom-resource';
 
 export interface CreateCertificateProps {
   /**
@@ -59,14 +60,6 @@ export interface CreateCertificateProps {
    */
   san?: string[];
   /**
-   * Custom resource lambda log group encryption key
-   */
-  cloudWatchLogsKmsKey: cdk.aws_kms.IKey;
-  /**
-   * Custom resource lambda log retention in days
-   */
-  logRetentionInDays: number;
-  /**
    * Home region where the asset bucket lives
    */
   homeRegion: string;
@@ -78,6 +71,18 @@ export interface CreateCertificateProps {
    * Asset S3 bucket name
    */
   assetBucketName: string;
+  /**
+   * Custom resource lambda environment encryption key
+   */
+  readonly customResourceLambdaEnvironmentEncryptionKmsKey: cdk.aws_kms.IKey;
+  /**
+   * Custom resource lambda log group encryption key
+   */
+  readonly customResourceLambdaCloudWatchLogKmsKey: cdk.aws_kms.IKey;
+  /**
+   * Custom resource lambda log retention in days
+   */
+  readonly customResourceLambdaLogRetentionInDays: number;
 }
 
 /**
@@ -88,50 +93,37 @@ export class CreateCertificate extends Construct {
   constructor(scope: Construct, id: string, props: CreateCertificateProps) {
     super(scope, id);
 
-    const RESOURCE_TYPE = 'Custom::CreateAcmCerts';
+    const resourceName = 'CreateAcmCerts';
 
-    //
-    // Function definition for the custom resource
-    //
-    const providerLambda = new cdk.aws_lambda.Function(this, 'Function', {
-      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
-      code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'create-certificates/dist')),
-      handler: 'index.handler',
-      timeout: cdk.Duration.minutes(15),
-      description: 'Create ACM certificates handler',
-      role: cdk.aws_iam.Role.fromRoleName(this, 'AssetsFunctionRole', props.assetFunctionRoleName),
-    });
-
-    // Custom resource lambda log group
-    new cdk.aws_logs.LogGroup(this, `${providerLambda.node.id}LogGroup`, {
-      logGroupName: `/aws/lambda/${providerLambda.functionName}`,
-      retention: props.logRetentionInDays,
-      encryptionKey: props.cloudWatchLogsKmsKey,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-    });
-
-    const provider = new cdk.custom_resources.Provider(this, 'Custom::CreateAcmCerts', {
-      onEventHandler: providerLambda,
-    });
-
-    const resource = new cdk.CustomResource(this, 'Resource', {
-      resourceType: RESOURCE_TYPE,
-      serviceToken: provider.serviceToken,
-      properties: {
-        name: props.name,
-        parameterName: props.parameterName,
-        type: props.type,
-        privKey: props.privKey ?? undefined,
-        cert: props.cert ?? undefined,
-        chain: props.chain ?? undefined,
-        validation: props.validation ?? undefined,
-        domain: props.domain ?? undefined,
-        san: props.san?.join(',') ?? undefined,
-        homeRegion: props.homeRegion,
-        assetBucketName: props.assetBucketName,
+    const lzaCustomResource = new LzaCustomResource(this, resourceName, {
+      resource: {
+        name: resourceName,
+        parentId: id,
+        properties: [
+          { name: props.name },
+          { parameterName: props.parameterName },
+          { type: props.type },
+          { privKey: props.privKey },
+          { cert: props.cert },
+          { chain: props.chain },
+          { validation: props.validation },
+          { domain: props.domain },
+          { san: props.san?.join(',') },
+          { homeRegion: props.homeRegion },
+          { assetBucketName: props.assetBucketName },
+        ],
+      },
+      lambda: {
+        assetPath: path.join(__dirname, 'create-certificates/dist'),
+        environmentEncryptionKmsKey: props.customResourceLambdaEnvironmentEncryptionKmsKey,
+        cloudWatchLogKmsKey: props.customResourceLambdaCloudWatchLogKmsKey,
+        cloudWatchLogRetentionInDays: props.customResourceLambdaLogRetentionInDays,
+        timeOut: cdk.Duration.minutes(15),
+        description: 'Create ACM certificates handler',
+        role: cdk.aws_iam.Role.fromRoleName(this, 'AssetsFunctionRole', props.assetFunctionRoleName),
       },
     });
 
-    this.id = resource.ref;
+    this.id = lzaCustomResource.resource.ref;
   }
 }

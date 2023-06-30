@@ -1579,6 +1579,14 @@ certificates:
       organizationalUnits:
         - Security
   - name: cert2
+    type: import
+    privKey: cert1/privKey.key
+    cert: cert1/cert.crt
+    deploymentTargets:
+      accounts:
+        - Management
+        - Audit
+  - name: cert3
     type: request
     validation: DNS
     domain: example.com
@@ -1587,7 +1595,8 @@ certificates:
       - www.example.net
       - e.co
     deploymentTargets:
-      OU:
-        - Infrastructure
+      organizationalUnits:
+        - Security
+        
 firewallManager:
   delegatedAdminAccount: Audit

@@ -36,7 +36,7 @@ new LzaCustomResource(stack, 'LzaCustomResource', {
     environmentEncryptionKmsKey: new cdk.aws_kms.Key(stack, 'LambdaKey', {}),
     cloudWatchLogKmsKey: new cdk.aws_kms.Key(stack, 'CloudWatchKey', {}),
     cloudWatchLogRetentionInDays: 365,
-    timeOut: 160,
+    timeOut: cdk.Duration.minutes(5),
     roleInitialPolicy: [
       new cdk.aws_iam.PolicyStatement({
         effect: cdk.aws_iam.Effect.ALLOW,

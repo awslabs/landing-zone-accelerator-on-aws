@@ -39,12 +39,17 @@ export class AcmResources {
     this.stack.addLogs(LogLevel.INFO, 'Evaluating AWS Certificate Manager certificates.');
     for (const certificate of props.networkConfig.certificates ?? []) {
       if (!this.stack.isIncluded(certificate.deploymentTargets)) {
-        this.stack.addLogs(LogLevel.INFO, 'Item excluded');
+        this.stack.addLogs(
+          LogLevel.INFO,
+          `Account (${cdk.Stack.of(this.stack).account}) ACM certificate ${certificate.name} excluded.`,
+        );
         continue;
       }
       this.stack.addLogs(
         LogLevel.INFO,
-        `Account (${cdk.Stack.of(this.stack).account}) should be included, deploying ACM certificates.`,
+        `Account (${cdk.Stack.of(this.stack).account}) should be included, deploying ACM certificate ${
+          certificate.name
+        }.`,
       );
       const certificateResource = this.createAcmCertificates(certificate, props);
       certificateMap.set(certificate.name, certificateResource);
@@ -68,13 +73,14 @@ export class AcmResources {
       validation: certificate.validation,
       domain: certificate.domain,
       san: certificate.san,
-      cloudWatchLogsKmsKey: this.stack.cloudwatchKey,
-      logRetentionInDays: this.stack.logRetention,
       homeRegion: props.globalConfig.homeRegion,
       assetFunctionRoleName: this.stack.acceleratorResourceNames.roles.assetFunctionRoleName,
       assetBucketName: `${
         this.stack.acceleratorResourceNames.bucketPrefixes.assets
       }-${props.accountsConfig.getManagementAccountId()}-${props.globalConfig.homeRegion}`,
+      customResourceLambdaEnvironmentEncryptionKmsKey: this.stack.lambdaKey,
+      customResourceLambdaCloudWatchLogKmsKey: this.stack.cloudwatchKey,
+      customResourceLambdaLogRetentionInDays: this.stack.logRetention,
     });
 
     // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission

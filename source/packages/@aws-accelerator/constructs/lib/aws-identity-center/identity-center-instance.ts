@@ -60,7 +60,7 @@ export class IdentityCenterInstance extends Construct {
         environmentEncryptionKmsKey: props.customResourceLambdaEnvironmentEncryptionKmsKey,
         cloudWatchLogKmsKey: props.customResourceLambdaCloudWatchLogKmsKey,
         cloudWatchLogRetentionInDays: props.customResourceLambdaLogRetentionInDays,
-        timeOut: 160,
+        timeOut: cdk.Duration.minutes(15),
         roleInitialPolicy: [
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
