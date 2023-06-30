@@ -39,6 +39,7 @@ export class CustomizationsConfigValidator {
     values: CustomizationsConfig,
     accountsConfig: AccountsConfig,
     globalConfig: GlobalConfig,
+    iamConfig: IamConfig,
     networkConfig: NetworkConfig,
     organizationConfig: OrganizationConfig,
     securityConfig: SecurityConfig,
@@ -60,6 +61,10 @@ export class CustomizationsConfigValidator {
     const accountNames = this.getAccountNames(accountsConfig);
 
     //
+    // Instantiate helper methods
+    const helpers = new CustomizationHelperMethods(accountsConfig, iamConfig);
+
+    //
     // Start Validation
     // Validate customizations
     new CustomizationValidator(
@@ -71,11 +76,12 @@ export class CustomizationsConfigValidator {
       ouIdNames,
       configDir,
       accountNames,
+      helpers,
       errors,
     );
 
     // Validate firewalls
-    new FirewallValidator(values, networkConfig, securityConfig, configDir, errors);
+    new FirewallValidator(values, networkConfig, securityConfig, configDir, helpers, errors);
 
     if (errors.length) {
       throw new Error(`${CustomizationsConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
@@ -121,6 +127,7 @@ class CustomizationValidator {
     ouIdNames: string[],
     configDir: string,
     accountNames: string[],
+    helpers: CustomizationHelperMethods,
     errors: string[],
   ) {
     // Validate deployment target Account Names
@@ -139,7 +146,7 @@ class CustomizationValidator {
     this.validateTemplateFile(configDir, values, errors);
 
     // Validate applications inputs
-    this.validateApplicationsInputs(configDir, values, globalConfig, networkConfig, securityConfig, errors);
+    this.validateApplicationsInputs(configDir, values, globalConfig, networkConfig, securityConfig, helpers, errors);
 
     // Validate Service Catalog portfolio inputs
     this.validateServiceCatalogInputs(values, accountsConfig, errors, accountNames, ouIdNames);
@@ -302,9 +309,9 @@ class CustomizationValidator {
     globalConfig: GlobalConfig,
     networkConfig: NetworkConfig,
     securityConfig: SecurityConfig,
+    helpers: CustomizationHelperMethods,
     errors: string[],
   ) {
-    const helpers = new CustomizationHelperMethods();
     const appNames: string[] = [];
     for (const app of values.applications ?? []) {
       appNames.push(app.name);
@@ -653,6 +660,13 @@ class CustomizationValidator {
 }
 
 class CustomizationHelperMethods {
+  private accountsConfig: AccountsConfig;
+  private iamConfig: IamConfig;
+
+  constructor(accountsConfig: AccountsConfig, iamConfig: IamConfig) {
+    this.accountsConfig = accountsConfig;
+    this.iamConfig = iamConfig;
+  }
   /**
    * Validate if VPC name is in config file
    * @param string
@@ -748,13 +762,10 @@ class CustomizationHelperMethods {
     }
   }
 
-  public getIamUsersDeployedToAccount(iamConfig: IamConfig, accountsConfig: AccountsConfig, accountName: string) {
+  public getIamUsersDeployedToAccount(accountName: string) {
     const usernameList = [];
-    for (const userSetItem of iamConfig.userSets ?? []) {
-      const deploymentAccountNames = this.getAccountNamesFromDeploymentTarget(
-        userSetItem.deploymentTargets,
-        accountsConfig,
-      );
+    for (const userSetItem of this.iamConfig.userSets ?? []) {
+      const deploymentAccountNames = this.getAccountNamesFromDeploymentTarget(userSetItem.deploymentTargets);
       if (deploymentAccountNames.includes(accountName)) {
         usernameList.push(...userSetItem.users.map(a => a.username));
       }
@@ -762,13 +773,10 @@ class CustomizationHelperMethods {
     return usernameList;
   }
 
-  public getIamGroupsDeployedToAccount(iamConfig: IamConfig, accountsConfig: AccountsConfig, accountName: string) {
+  public getIamGroupsDeployedToAccount(accountName: string) {
     const groupList = [];
-    for (const groupSetItem of iamConfig.groupSets ?? []) {
-      const deploymentAccountNames = this.getAccountNamesFromDeploymentTarget(
-        groupSetItem.deploymentTargets,
-        accountsConfig,
-      );
+    for (const groupSetItem of this.iamConfig.groupSets ?? []) {
+      const deploymentAccountNames = this.getAccountNamesFromDeploymentTarget(groupSetItem.deploymentTargets);
       if (deploymentAccountNames.includes(accountName)) {
         groupList.push(...groupSetItem.groups.map(a => a.name));
       }
@@ -776,13 +784,10 @@ class CustomizationHelperMethods {
     return groupList;
   }
 
-  public getIamRolesDeployedToAccount(iamConfig: IamConfig, accountsConfig: AccountsConfig, accountName: string) {
+  public getIamRolesDeployedToAccount(accountName: string) {
     const roleList = [];
-    for (const roleSetItem of iamConfig.roleSets ?? []) {
-      const deploymentAccountNames = this.getAccountNamesFromDeploymentTarget(
-        roleSetItem.deploymentTargets,
-        accountsConfig,
-      );
+    for (const roleSetItem of this.iamConfig.roleSets ?? []) {
+      const deploymentAccountNames = this.getAccountNamesFromDeploymentTarget(roleSetItem.deploymentTargets);
       if (deploymentAccountNames.includes(accountName)) {
         roleList.push(...roleSetItem.roles.map(a => a.name));
       }
@@ -790,10 +795,7 @@ class CustomizationHelperMethods {
     return roleList;
   }
 
-  private getAccountNamesFromDeploymentTarget(
-    deploymentTargets: t.DeploymentTargets,
-    accountsConfig: AccountsConfig,
-  ): string[] {
+  private getAccountNamesFromDeploymentTarget(deploymentTargets: t.DeploymentTargets): string[] {
     const accountNames: string[] = [];
     // Helper function to add an account to the list
     const addAccountName = (accountName: string) => {
@@ -808,11 +810,11 @@ class CustomizationHelperMethods {
 
     for (const ou of deploymentTargets.organizationalUnits ?? []) {
       if (ou === 'Root') {
-        for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
+        for (const account of [...this.accountsConfig.mandatoryAccounts, ...this.accountsConfig.workloadAccounts]) {
           addAccountName(account.name);
         }
       } else {
-        for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
+        for (const account of [...this.accountsConfig.mandatoryAccounts, ...this.accountsConfig.workloadAccounts]) {
           if (ou === account.organizationalUnit) {
             addAccountName(account.name);
           }
@@ -834,10 +836,11 @@ class FirewallValidator {
     networkConfig: NetworkConfig,
     securityConfig: SecurityConfig,
     configDir: string,
+    helpers: CustomizationHelperMethods,
     errors: string[],
   ) {
     // Validate firewall instances
-    this.validateFirewalls(values, networkConfig, securityConfig, configDir, errors);
+    this.validateFirewalls(values, networkConfig, securityConfig, configDir, helpers, errors);
   }
 
   private validateFirewalls(
@@ -845,11 +848,9 @@ class FirewallValidator {
     networkConfig: NetworkConfig,
     securityConfig: SecurityConfig,
     configDir: string,
+    helpers: CustomizationHelperMethods,
     errors: string[],
   ) {
-    // Load helper methods
-    const helpers = new CustomizationHelperMethods();
-
     // Validate firewall instance configs
     this.validateFirewallInstances(values, helpers, configDir, networkConfig, securityConfig, errors);
     // Validate firewall ASG configs
@@ -1025,6 +1026,8 @@ class FirewallValidator {
     this.validateLaunchTemplateSecurityGroups(vpc, firewall, helpers, errors);
     // Validate subnets
     this.validateLaunchTemplateSubnets(vpc, firewall, helpers, errors);
+    // Validate IAM instance profile
+    this.validateIamInstanceProfile(vpc, firewall, helpers, errors);
     // Validate block devices
     if (firewall.launchTemplate.blockDeviceMappings) {
       helpers.checkBlockDeviceMappings(
@@ -1227,6 +1230,40 @@ class FirewallValidator {
       }
     }
     return true;
+  }
+
+  /**
+   * Validate firewall IAM instance profile
+   * @param vpc
+   * @param firewall
+   * @param helpers
+   * @param errors
+   */
+  private validateIamInstanceProfile(
+    vpc: VpcConfig,
+    firewall:
+      | t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallInstanceConfig>
+      | t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallAutoScalingGroupConfig>,
+    helpers: CustomizationHelperMethods,
+    errors: string[],
+  ) {
+    //
+    // Validate IAM instance profile exists if configFile or licenseFile are defined
+    if ((firewall.configFile || firewall.licenseFile) && !firewall.launchTemplate.iamInstanceProfile) {
+      errors.push(
+        `[Firewall ${firewall.name}]: IAM instance profile must be defined in the launch template when either configFile or licenseFile properties are defined`,
+      );
+    }
+    //
+    // Validate IAM instance profile is deployed to the account
+    if (firewall.launchTemplate.iamInstanceProfile) {
+      const accountIamRoles = helpers.getIamRolesDeployedToAccount(vpc.account);
+      if (!accountIamRoles.includes(firewall.launchTemplate.iamInstanceProfile)) {
+        errors.push(
+          `[Firewall ${firewall.name}]: IAM instance profile is not deployed to the firewall VPC target account. Target VPC account: ${vpc.account}`,
+        );
+      }
+    }
   }
 
   private validateAsgTargetGroups(

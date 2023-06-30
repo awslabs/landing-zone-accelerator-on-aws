@@ -11,9 +11,10 @@
  *  and limitations under the License.
  */
 
-import * as cdk from 'aws-cdk-lib';
-import { FirewallInstance } from '../../lib/aws-ec2/firewall-instance';
 import { EbsItemConfig, LaunchTemplateConfig, NetworkInterfaceItemConfig } from '@aws-accelerator/config';
+import * as cdk from 'aws-cdk-lib';
+import path from 'path';
+import { FirewallInstance } from '../../lib/aws-ec2/firewall-instance';
 import { snapShotTest } from '../snapshot-test';
 
 const testNamePrefix = 'Construct(FirewallInstance): ';
@@ -46,12 +47,13 @@ const launchTemplate: LaunchTemplateConfig = {
     } as NetworkInterfaceItemConfig,
   ],
   securityGroups: [],
-  userData: undefined,
+  userData: 'aws-ec2/launchTemplateFiles/firewallUserData.txt',
 };
 
 new FirewallInstance(stack, 'TestFirewall', {
   name: 'Test',
-  configDir: './',
+  configBucketName: 'test-bucket',
+  configDir: path.dirname(__dirname),
   launchTemplate,
   vpc: 'TestVpc',
 });

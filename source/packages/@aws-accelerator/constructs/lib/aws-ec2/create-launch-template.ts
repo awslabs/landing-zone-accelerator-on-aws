@@ -49,7 +49,7 @@ export type BlockDeviceMappingItem = {
 
 export interface LaunchTemplateProps {
   /*
-   * Path to user data.
+   * Either the path to the user data file or a base-64 encoded userdata string
    */
   readonly userData?: string;
   /*
@@ -104,7 +104,7 @@ export class LaunchTemplate extends cdk.Resource implements ILaunchTemplateResou
         keyName: props.keyPair ?? undefined,
         imageId: props.imageId,
         iamInstanceProfile: { name: props.iamInstanceProfile ?? undefined },
-        userData: props.userData ? cdk.Fn.base64(fs.readFileSync(props.userData, 'utf8')) : undefined,
+        userData: this.processUserData(props.userData),
         metadataOptions,
       },
       launchTemplateName: props.name,
@@ -137,5 +137,25 @@ export class LaunchTemplate extends cdk.Resource implements ILaunchTemplateResou
       });
     }
     return networkInterfaceProps;
+  }
+
+  /**
+   * Process user data file or string
+   * @param userDataStr string | undefined
+   * @returns string | undefined
+   */
+  private processUserData(userDataStr?: string): string | undefined {
+    if (!userDataStr) {
+      return;
+    }
+    //
+    // If string is a token, return it. It has already been processed upstream
+    if (cdk.Token.isUnresolved(userDataStr)) {
+      return userDataStr;
+    } else {
+      //
+      // Else, userDataStr is a file path, return it in base-64 encoding.
+      return cdk.Fn.base64(fs.readFileSync(userDataStr, 'utf8'));
+    }
   }
 }

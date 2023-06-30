@@ -463,7 +463,9 @@ export class CustomizationsConfigTypes {
     name: t.nonEmptyString,
     launchTemplate: this.launchTemplateConfig,
     vpc: t.nonEmptyString,
+    configFile: t.optional(t.nonEmptyString),
     detailedMonitoring: t.optional(t.boolean),
+    licenseFile: t.optional(t.nonEmptyString),
     terminationProtection: t.optional(t.boolean),
     tags: t.optional(t.array(t.tag)),
   });
@@ -473,6 +475,8 @@ export class CustomizationsConfigTypes {
     autoscaling: this.autoscalingConfig,
     launchTemplate: this.launchTemplateConfig,
     vpc: t.nonEmptyString,
+    configFile: t.optional(t.nonEmptyString),
+    licenseFile: t.optional(t.nonEmptyString),
     tags: t.optional(t.array(t.tag)),
   });
 
@@ -533,10 +537,18 @@ export class CustomizationsConfigTypes {
 export class Ec2FirewallInstanceConfig implements t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallInstanceConfig> {
   /**
    * The friendly name of the firewall instance
+   *
+   * @remarks
+   * **CAUTION**: Changing values under this property after initial deployment will cause an instance replacement.
+   * Please be aware that any downstream dependencies may cause this property update to fail.
    */
   readonly name: string = '';
   /**
    * The launch template for the firewall instance
+   *
+   * @remarks
+   * **CAUTION**: Changing values under this property after initial deployment will cause an instance replacement.
+   * Please be aware that any downstream dependencies may cause this property update to fail.
    */
   readonly launchTemplate: LaunchTemplateConfig = new LaunchTemplateConfig();
   /**
@@ -547,17 +559,100 @@ export class Ec2FirewallInstanceConfig implements t.TypeOf<typeof Customizations
    */
   readonly vpc: string = '';
   /**
-   * Specify true to enable detailed monitoring. Otherwise, basic monitoring is enabled.
+   * (OPTIONAL) Specify a relative S3 object path to pull a firewall configuration file from.
+   *
+   * For example, if your S3 object path is `s3://path/to/config.txt`, specify `path/to/config.txt` for this property.
+   *
+   * **NOTE:** The custom resource backing this feature does not force update on every core pipeline run. To update the resource,
+   * update the name of the configuration file.
+   *
+   * @remarks
+   * Setting this property allows you to make use of firewall configuration replacements. This allows you to
+   * configure your firewall instance dynamically using values determined at CDK runtime.
+   *
+   * **NOTE**: The configuration file must be uploaded to the accelerator-created assets bucket in the home region of
+   * your Management account. This is the `${AcceleratorPrefix}-assets` bucket, not the `cdk-accel-assets` bucket.
+   *
+   * The transformed configuration file will be uploaded to `${AcceleratorPrefix}-firewall-config` bucket in the account and region your firewall instance
+   * is deployed to. This config file can be consumed by third-party firewall vendors that support pulling a configuration file from S3.
+   *
+   * Supported replacements:
+   * * VPC replacements - look up metadata about the VPC the firewall is deployed to:
+   *   * Format: `${ACCEL_LOOKUP::EC2:VPC:<METADATA_TYPE>_<INDEX>}`, where `<METADATA_TYPE>` is a type listed below,
+   * and `<INDEX>` is the index of the VPC CIDR range.
+   *   * Metadata types:
+   *     * CIDR - the VPC CIDR range in CIDR notation (i.e. 10.0.0.0/16)
+   *     * NETMASK - the network mask of the VPC CIDR (i.e. 255.255.0.0)
+   *     * NETWORKIP - the network address of the VPC CIDR (i.e. 10.0.0.0)
+   *     * ROUTERIP - the VPC router address of the VPC CIDR (i.e. 10.0.0.1)
+   *   * Index numbering is zero-based, so the primary VPC CIDR is index `0`.
+   *   * Example usage: `${ACCEL_LOOKUP::EC2:VPC:CIDR_0}` - translates to the primary CIDR range of the VPC
+   * * Subnet replacements - look up metadata about subnets in the VPC the firewall is deployed to:
+   *   * Format: `${ACCEL_LOOKUP::EC2:SUBNET:<METADATA_TYPE>:<SUBNET_NAME>}`, where `<METADATA_TYPE>` is a type listed
+   * below, and `<SUBNET_NAME>` is the logical name of the subnet as defined in `network-config.yaml`.
+   *   * Metadata types:
+   *     * CIDR - the subnet CIDR range in CIDR notation (i.e. 10.0.0.0/16)
+   *     * NETMASK - the network mask of the subnet (i.e. 255.255.0.0)
+   *     * NETWORKIP - the network address of the subnet (i.e. 10.0.0.0)
+   *     * ROUTERIP - the VPC router address of the subnet (i.e. 10.0.0.1)
+   *   * Example usage: `${ACCEL_LOOKUP::EC2:SUBNET:CIDR:firewall-data-subnet-a}` - translates to the CIDR range of a subnet named `firewall-data-subnet-a`
+   * * Network interface IP replacements - look up public and private IP addresses assigned to firewall network interfaces:
+   *   * Format: `${ACCEL_LOOKUP::EC2:ENI_<ENI_INDEX>:<IP_TYPE>_<IP_INDEX>}`, where `<ENI_INDEX>` is the device index
+   * of the network interface as defined in the firewall launch template, `<IP_TYPE>` is either a public or private IP of the interface,
+   * and `<IP_INDEX>` is the index of the interface IP address.
+   *   * IP types:
+   *     * PRIVATEIP - a private IP associated with the interface
+   *     * PUBLICIP - a public IP associated with the interface
+   *   * Index numbering is zero-based, so the primary interface of the instance is `0` and its primary IP address is also `0`.
+   *   * Example usage: `${ACCEL_LOOKUP::EC2:ENI_0:PRIVATEIP_0}` - translates to the primary private IP address of the primary network interface
+   * * Network interface subnet replacements - look up metadata about the subnet a network interface is deployed to:
+   *   * Format: `${ACCEL_LOOKUP::EC2:ENI_<ENI_INDEX>:SUBNET_<METADATA_TYPE>}`, where `<ENI_INDEX>` is the device index
+   * of the network interface as defined in the firewall launch template and `<METADATA_TYPE>` is a type listed below.
+   *   * Metadata types:
+   *     * CIDR - the subnet CIDR range in CIDR notation (i.e. 10.0.0.0/16)
+   *     * NETMASK - the network mask of the subnet (i.e. 255.255.0.0)
+   *     * NETWORKIP - the network address of the subnet (i.e. 10.0.0.0)
+   *     * ROUTERIP - the VPC router address of the subnet (i.e. 10.0.0.1)
+   *   * Index numbering is zero-based, so the primary interface of the instance is `0`.
+   *   * Example usage: `${ACCEL_LOOKUP::EC2:ENI_0:SUBNET_CIDR}` - translates to the subnet CIDR range of the primary network interface
+   *
+   * * For replacements that are supported in firewall userdata, see {@link LaunchTemplateConfig.userData}.
+   */
+  readonly configFile: string | undefined = undefined;
+  /**
+   * (OPTIONAL) Specify true to enable detailed monitoring. Otherwise, basic monitoring is enabled.
    */
   readonly detailedMonitoring: boolean | undefined = undefined;
   /**
-   * If you set this parameter to true , you can't terminate the instance using the Amazon EC2 console, CLI, or API.
-   * To change this attribute after launch, use ModifyInstanceAttribute . Alternatively, if you set
-   * InstanceInitiatedShutdownBehavior to terminate , you can terminate the instance by running the shutdown command from the instance.
+   * (OPTIONAL) Specify a relative S3 object path to pull a firewall license file from.
+   *
+   * For example, if your S3 object path is `s3://path/to/license.lic`, specify `path/to/license.lic` for this property.
+   *
+   * **NOTE:** The custom resource backing this feature does not force update on every core pipeline run. To update the resource,
+   * update the name of the license file.
+   *
+   * @remarks
+   * The license file must be uploaded to the accelerator-created assets bucket in the home region of
+   * your Management account. This is the `${AcceleratorPrefix}-assets` bucket, not the `cdk-accel-assets` bucket.
+   *
+   * The license file will be uploaded to `${AcceleratorPrefix}-firewall-config` bucket in the account and region your firewall instance
+   * is deployed to. This license file can be consumed by third-party firewall vendors that support pulling a license file from S3.
+   *
+   * * For replacements that are supported in firewall userdata, see {@link LaunchTemplateConfig.userData}.
+   */
+  readonly licenseFile: string | undefined = undefined;
+  /**
+   * (OPTIONAL) If you set this parameter to true , you can't terminate the instance using the Amazon EC2 console, CLI, or API.
+   *
+   * More information: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingDisableAPITermination
+   *
+   * @remarks
+   * When finished configuring your firewall instance, it is highly recommended to enable this property in order to prevent
+   * accidental instance replacement or termination.
    */
   readonly terminationProtection: boolean | undefined = undefined;
   /**
-   * An optional array of tags
+   * (OPTIONAL) An array of tags
    */
   readonly tags: t.Tag[] | undefined = undefined;
 }
@@ -616,6 +711,10 @@ export class Ec2FirewallAutoScalingGroupConfig
 {
   /**
    * The friendly name of the firewall instance
+   *
+   * @remarks
+   * **CAUTION**: Changing values under this property after initial deployment will cause an autoscaling group replacement.
+   * Please be aware that any downstream dependencies may cause this property update to fail.
    */
   readonly name: string = '';
   /**
@@ -624,6 +723,11 @@ export class Ec2FirewallAutoScalingGroupConfig
   readonly autoscaling = new AutoScalingConfig();
   /**
    * The launch template for the firewall instance
+   *
+   * @remarks
+   * **CAUTION**: Changing values under this property after initial deployment will cause instance replacements
+   * in your autoscaling group. This will not impact downstream dependencies, but may impact your network connectivity
+   * and/or throughput.
    */
   readonly launchTemplate = new LaunchTemplateConfig();
   /**
@@ -634,7 +738,68 @@ export class Ec2FirewallAutoScalingGroupConfig
    */
   readonly vpc: string = '';
   /**
-   * An optional array of tags
+   * (OPTIONAL) Specify a relative S3 object path to pull a firewall configuration file from.
+   *
+   * For example, if your S3 object path is `s3://path/to/config.txt`, specify `path/to/config.txt` for this property.
+   *
+   * **NOTE:** The custom resource backing this feature does not force update on every core pipeline run. To update the resource,
+   * update the name of the configuration file.
+   *
+   * @remarks
+   * Setting this property allows you to make use of firewall configuration replacements. This allows you to
+   * configure your firewall instance dynamically using values determined at CDK runtime.
+   *
+   * **NOTE**: The configuration file must be uploaded to the accelerator-created assets bucket in the home region of
+   * your Management account. This is the `${AcceleratorPrefix}-assets` bucket, not the `cdk-accel-assets` bucket.
+   *
+   * The transformed configuration file will be uploaded to `${AcceleratorPrefix}-firewall-config` bucket in the account and region your firewall instance
+   * is deployed to. This config file can be consumed by third-party firewall vendors that support pulling a configuration file from S3.
+   *
+   * Supported replacements:
+   * * VPC replacements - look up metadata about the VPC the firewall is deployed to:
+   *   * Format: `${ACCEL_LOOKUP::EC2:VPC:<METADATA_TYPE>_<INDEX>}`, where `<METADATA_TYPE>` is a type listed below,
+   * and `<INDEX>` is the index of the VPC CIDR range.
+   *   * Metadata types:
+   *     * CIDR - the VPC CIDR range in CIDR notation (i.e. 10.0.0.0/16)
+   *     * NETMASK - the network mask of the VPC CIDR (i.e. 255.255.0.0)
+   *     * NETWORKIP - the network address of the VPC CIDR (i.e. 10.0.0.0)
+   *     * ROUTERIP - the VPC router address of the VPC CIDR (i.e. 10.0.0.1)
+   *   * Index numbering is zero-based, so the primary VPC CIDR is index `0`.
+   *   * Example usage: `${ACCEL_LOOKUP::EC2:VPC:CIDR_0}` - translates to the primary CIDR range of the VPC
+   * * Subnet replacements - look up metadata about subnets in the VPC the firewall is deployed to:
+   *   * Format: `${ACCEL_LOOKUP::EC2:SUBNET:<METADATA_TYPE>:<SUBNET_NAME>}`, where `<METADATA_TYPE>` is a type listed
+   * below, and `<SUBNET_NAME>` is the logical name of the subnet as defined in `network-config.yaml`.
+   *   * Metadata types:
+   *     * CIDR - the subnet CIDR range in CIDR notation (i.e. 10.0.0.0/16)
+   *     * NETMASK - the network mask of the subnet (i.e. 255.255.0.0)
+   *     * NETWORKIP - the network address of the subnet (i.e. 10.0.0.0)
+   *     * ROUTERIP - the VPC router address of the subnet (i.e. 10.0.0.1)
+   *   * Example usage: `${ACCEL_LOOKUP::EC2:SUBNET:CIDR:firewall-data-subnet-a}` - translates to the CIDR range of a subnet named `firewall-data-subnet-a`
+   * * Network interface replacements are NOT supported for firewall AutoScaling groups.
+   *
+   * For replacements that are supported in firewall userdata, see {@link LaunchTemplateConfig.userData}.
+   */
+  readonly configFile: string | undefined = undefined;
+  /**
+   * (OPTIONAL) Specify a relative S3 object path to pull a firewall license file from.
+   *
+   * For example, if your S3 object path is `s3://path/to/license.lic`, specify `path/to/license.lic` for this property.
+   *
+   * **NOTE:** The custom resource backing this feature does not force update on every core pipeline run. To update the resource,
+   * update the name of the license file.
+   *
+   * @remarks
+   * The license file must be uploaded to the accelerator-created assets bucket in the home region of
+   * your Management account. This is the `${AcceleratorPrefix}-assets` bucket, not the `cdk-accel-assets` bucket.
+   *
+   * The license file will be uploaded to `${AcceleratorPrefix}-firewall-config` bucket in the account and region your firewall instance
+   * is deployed to. This license file can be consumed by third-party firewall vendors that support pulling a license file from S3.
+   *
+   * * For replacements that are supported in firewall userdata, see {@link LaunchTemplateConfig.userData}.
+   */
+  readonly licenseFile: string | undefined = undefined;
+  /**
+   * (OPTIONAL) An array of tags
    */
   readonly tags: t.Tag[] | undefined = undefined;
 }
@@ -1980,6 +2145,14 @@ export class LaunchTemplateConfig implements t.TypeOf<typeof CustomizationsConfi
    * Path to user data.
    * The path is relative to the config repository and the content should be in regular text.
    * It is encoded in base64 before passing in to Launch Template
+   *
+   * @remarks
+   * If defining user data for an EC2 firewall instance or AutoScaling group, you may use the variable
+   * `${ACCEL_LOOKUP::S3:BUCKET:firewall-config}` in order to dynamically resolve the name of the S3 bucket
+   * where S3 firewall configurations are stored by the accelerator. This bucket is used when the `configFile` or
+   * `licenseFile` properties are defined for a firewall.
+   *
+   * @see {@link Ec2FirewallAutoScalingGroupConfig} | {@link Ec2FirewallInstanceConfig}
    */
   readonly userData: string | undefined = undefined;
 }

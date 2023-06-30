@@ -11,11 +11,12 @@
  *  and limitations under the License.
  */
 
+import { LaunchTemplateConfig, NetworkInterfaceItemConfig } from '@aws-accelerator/config';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+import fs from 'fs';
+import path from 'path';
 import { LaunchTemplate } from './create-launch-template';
-import { LaunchTemplateConfig, NetworkInterfaceItemConfig } from '@aws-accelerator/config';
-import * as path from 'path';
 
 export interface IFirewall extends cdk.IResource {
   /**
@@ -29,6 +30,10 @@ export interface FirewallProps {
    * The friendly name of the firewall instance
    */
   readonly name: string;
+  /**
+   * The name of the firewall configuration bucket
+   */
+  readonly configBucketName: string;
   /**
    * The configuration directory path
    */
@@ -74,9 +79,7 @@ export class Firewall extends cdk.Resource implements IFirewall {
       name: this.props.launchTemplate.name,
       vpc: this.props.vpc,
       blockDeviceMappings: this.props.launchTemplate.blockDeviceMappings,
-      userData: this.props.launchTemplate.userData
-        ? path.join(this.props.configDir, this.props.launchTemplate.userData)
-        : undefined,
+      userData: this.processUserData(this.props.launchTemplate.userData),
       securityGroups: this.props.launchTemplate.securityGroups,
       networkInterfaces: this.networkInterfaces,
       instanceType: this.props.launchTemplate.instanceType,
@@ -210,5 +213,22 @@ export class Firewall extends cdk.Resource implements IFirewall {
       deviceIndex: deviceIndex,
       networkInterfaceId: routerInterface.ref,
     } as NetworkInterfaceItemConfig;
+  }
+
+  /**
+   * Returns a base-64 encoded userdata string, replacing the
+   * firewall config bucket name, if applicable
+   * @param userdataPath string | undefined
+   * @returns string | undefined
+   */
+  private processUserData(userdataPath?: string): string | undefined {
+    if (!userdataPath) {
+      return;
+    }
+    // Replace config bucket name variable
+    const varRegex = new RegExp('\\$\\{ACCEL_LOOKUP::S3:BUCKET:firewall-config\\}', 'gi');
+    const userdata = fs.readFileSync(path.join(this.props.configDir, userdataPath), 'utf-8');
+
+    return cdk.Fn.base64(userdata.replace(varRegex, this.props.configBucketName));
   }
 }

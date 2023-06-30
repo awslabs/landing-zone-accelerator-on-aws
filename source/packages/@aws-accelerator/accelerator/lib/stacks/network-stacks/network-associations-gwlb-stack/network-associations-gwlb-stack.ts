@@ -31,6 +31,7 @@ import {
 } from '@aws-accelerator/config';
 import {
   FirewallAutoScalingGroup,
+  FirewallConfigReplacements,
   FirewallInstance,
   SsmParameterLookup,
   TargetGroup,
@@ -42,8 +43,25 @@ import { SsmResourceType } from '@aws-accelerator/utils';
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import { NetworkStack } from '../network-stack';
 import { setIpamSubnetRouteTableEntryArray } from '../utils/setter-utils';
+import { getVpc } from '../utils/getter-utils';
+
+interface FirewallConfigDetails {
+  /**
+   * The asset bucket name
+   */
+  assetBucketName: string;
+  /**
+   * The config bucket name
+   */
+  configBucketName: string;
+  /**
+   * The custom resource role
+   */
+  customResourceRole: cdk.aws_iam.IRole;
+}
 
 export class NetworkAssociationsGwlbStack extends NetworkStack {
+  private firewallConfigDetails: FirewallConfigDetails;
   private gwlbMap: Map<string, string>;
   private routeTableMap: Map<string, string>;
   private securityGroupMap: Map<string, string>;
@@ -62,6 +80,21 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
     this.routeTableMap = this.setRouteTableMap(this.vpcsInScope);
     this.securityGroupMap = this.setSecurityGroupMap(this.vpcsInScope);
     this.gwlbMap = this.setInitialMaps(this.vpcsInScope);
+
+    // Set firewall config custom resource details
+    this.firewallConfigDetails = {
+      assetBucketName: `${
+        this.acceleratorResourceNames.bucketPrefixes.assets
+      }-${props.accountsConfig.getManagementAccountId()}-${props.globalConfig.homeRegion}`,
+      configBucketName: `${this.acceleratorResourceNames.bucketPrefixes.firewallConfig}-${cdk.Stack.of(this).account}-${
+        cdk.Stack.of(this).region
+      }`,
+      customResourceRole: cdk.aws_iam.Role.fromRoleName(
+        this,
+        'FirewallConfigRole',
+        this.acceleratorResourceNames.roles.firewallConfigFunctionRoleName,
+      ),
+    };
 
     //
     // Create firewall instances and target groups
@@ -161,6 +194,7 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
     this.logger.info(`Creating standalone firewall instance ${firewallInstance.name} in VPC ${firewallInstance.vpc}`);
     const instance = new FirewallInstance(this, pascalCase(`${firewallInstance.vpc}${firewallInstance.name}Firewall`), {
       name: firewallInstance.name,
+      configBucketName: this.firewallConfigDetails.configBucketName,
       configDir: this.props.configDirPath,
       launchTemplate,
       vpc: firewallInstance.vpc,
@@ -178,6 +212,28 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
       NagSuppressions.addResourceSuppressions(instance, [
         { id: 'AwsSolutions-EC29', reason: 'Termination protection not enabled by configuration.' },
       ]);
+    }
+    //
+    // Generate replacements
+    if (firewallInstance.configFile || firewallInstance.licenseFile) {
+      new FirewallConfigReplacements(
+        this,
+        pascalCase(`${firewallInstance.vpc}${firewallInstance.name}ConfigReplacements`),
+        {
+          cloudWatchLogKey: this.cloudwatchKey,
+          cloudWatchLogRetentionInDays: this.logRetention,
+          environmentEncryptionKey: this.lambdaKey,
+          properties: [
+            { assetBucketName: this.firewallConfigDetails.assetBucketName },
+            { configBucketName: this.firewallConfigDetails.configBucketName },
+            { configFile: firewallInstance.configFile },
+            { instanceId: instance.instanceId },
+            { licenseFile: firewallInstance.licenseFile },
+            { vpcId: getVpc(this.vpcMap, firewallInstance.vpc) as string },
+          ],
+          role: this.firewallConfigDetails.customResourceRole,
+        },
+      );
     }
     return instance;
   }
@@ -318,11 +374,13 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
       group.name,
     );
     const autoscaling: AutoScalingConfig = this.processAutoScalingReplacements(group.autoscaling, group.vpc);
+
     const resourceName = pascalCase(`${group.vpc}${group.name}FirewallAsg`);
     this.logger.info(`Creating firewall autoscaling group ${group.name} in VPC ${group.vpc}`);
     new FirewallAutoScalingGroup(this, resourceName, {
       name: group.name,
       autoscaling,
+      configBucketName: this.firewallConfigDetails.configBucketName,
       configDir: this.props.configDirPath,
       launchTemplate,
       vpc: group.vpc,
@@ -332,6 +390,23 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
     NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/${resourceName}/Resource/Resource`, [
       { id: 'AwsSolutions-AS3', reason: 'Scaling policies are not offered as a part of this solution.' },
     ]);
+    //
+    // Generate replacements
+    if (group.configFile || group.licenseFile) {
+      new FirewallConfigReplacements(this, pascalCase(`${group.vpc}${group.name}ConfigReplacements`), {
+        cloudWatchLogKey: this.cloudwatchKey,
+        cloudWatchLogRetentionInDays: this.logRetention,
+        environmentEncryptionKey: this.lambdaKey,
+        properties: [
+          { assetBucketName: this.firewallConfigDetails.assetBucketName },
+          { configBucketName: this.firewallConfigDetails.configBucketName },
+          { configFile: group.configFile },
+          { licenseFile: group.licenseFile },
+          { vpcId: getVpc(this.vpcMap, group.vpc) as string },
+        ],
+        role: this.firewallConfigDetails.customResourceRole,
+      });
+    }
   }
 
   /**

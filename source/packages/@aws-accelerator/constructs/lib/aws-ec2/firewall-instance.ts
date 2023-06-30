@@ -13,7 +13,7 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { FirewallProps, IFirewall, Firewall } from './firewall';
+import { Firewall, FirewallProps, IFirewall } from './firewall';
 
 export interface IFirewallInstance extends IFirewall {
   /**
