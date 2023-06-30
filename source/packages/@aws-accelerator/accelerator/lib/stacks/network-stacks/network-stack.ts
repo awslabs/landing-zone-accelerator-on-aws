@@ -50,7 +50,12 @@ import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { pascalCase } from 'pascal-case';
-import { AcceleratorKeyType, AcceleratorStack, AcceleratorStackProps } from '../accelerator-stack';
+import {
+  AcceleratorKeyType,
+  AcceleratorStack,
+  AcceleratorStackProps,
+  NagSuppressionDetailType,
+} from '../accelerator-stack';
 import { getSecurityGroup, getVpc } from './utils/getter-utils';
 import {
   containsAllIngressRule,
@@ -115,6 +120,8 @@ export abstract class NetworkStack extends AcceleratorStack {
    */
   public readonly vpcResources: (VpcConfig | VpcTemplatesConfig)[];
 
+  protected nagSuppressionInputs: NagSuppressionDetailType[] = [];
+
   protected constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
@@ -126,7 +133,6 @@ export abstract class NetworkStack extends AcceleratorStack {
     this.vpcsInScope = this.getVpcsInScope(this.vpcResources);
 
     this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
-    this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
   }
 
   /**

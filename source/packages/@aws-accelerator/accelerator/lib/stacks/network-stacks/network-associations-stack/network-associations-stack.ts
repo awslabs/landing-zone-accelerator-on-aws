@@ -77,7 +77,7 @@ import {
 import { SsmResourceType } from '@aws-accelerator/utils';
 
 import path from 'path';
-import { AcceleratorStackProps, NagSuppressionDetailType, NagSuppressionRuleIds } from '../../accelerator-stack';
+import { AcceleratorKeyType, AcceleratorStackProps, NagSuppressionRuleIds } from '../../accelerator-stack';
 import { NetworkStack } from '../network-stack';
 import { SharedResources } from './shared-resources';
 
@@ -100,7 +100,6 @@ export class NetworkAssociationsStack extends NetworkStack {
   private transitGatewayRouteTables: Map<string, string>;
   private transitGatewayAttachments: Map<string, string>;
   private crossAcctRouteProvider?: cdk.custom_resources.Provider;
-  private nagSuppressionDetails: NagSuppressionDetailType[] = [];
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
@@ -114,6 +113,8 @@ export class NetworkAssociationsStack extends NetworkStack {
       this.transitGateways = new Map<string, string>();
       this.transitGatewayAttachments = new Map<string, string>();
       this.transitGatewayRouteTables = new Map<string, string>();
+
+      this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
 
       //
       // Build VPC peering list
@@ -216,9 +217,9 @@ export class NetworkAssociationsStack extends NetworkStack {
       this.createManagedActiveDirectories();
 
       //
-      // Create Nag Suppressions
+      // Create NagSuppressions
       //
-      this.addResourceSuppressionsByPath(this.nagSuppressionDetails);
+      this.addResourceSuppressionsByPath();
 
       this.logger.info('Completed stack synthesis');
     } catch (err) {
@@ -715,7 +716,7 @@ export class NetworkAssociationsStack extends NetworkStack {
         logRetentionInDays: this.logRetention,
       }).provider;
 
-      this.nagSuppressionDetails.push({
+      this.nagSuppressionInputs.push({
         id: NagSuppressionRuleIds.IAM4,
         details: [
           {
@@ -729,7 +730,7 @@ export class NetworkAssociationsStack extends NetworkStack {
         ],
       });
 
-      this.nagSuppressionDetails.push({
+      this.nagSuppressionInputs.push({
         id: NagSuppressionRuleIds.IAM5,
         details: [
           {
@@ -2635,7 +2636,7 @@ export class NetworkAssociationsStack extends NetworkStack {
             },
           },
         );
-        this.nagSuppressionDetails.push({
+        this.nagSuppressionInputs.push({
           id: NagSuppressionRuleIds.VPC3,
           details: [
             {
@@ -2689,7 +2690,7 @@ export class NetworkAssociationsStack extends NetworkStack {
           },
         );
 
-        this.nagSuppressionDetails.push({
+        this.nagSuppressionInputs.push({
           id: NagSuppressionRuleIds.VPC3,
           details: [
             {
@@ -2851,7 +2852,7 @@ export class NetworkAssociationsStack extends NetworkStack {
       shareActiveDirectory.node.addDependency(activeDirectory);
 
       // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
-      this.nagSuppressionDetails.push({
+      this.nagSuppressionInputs.push({
         id: NagSuppressionRuleIds.IAM5,
         details: [
           {
@@ -2864,7 +2865,7 @@ export class NetworkAssociationsStack extends NetworkStack {
       });
 
       // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-      this.nagSuppressionDetails.push({
+      this.nagSuppressionInputs.push({
         id: NagSuppressionRuleIds.IAM4,
         details: [
           {
@@ -2877,7 +2878,7 @@ export class NetworkAssociationsStack extends NetworkStack {
       });
 
       // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-      this.nagSuppressionDetails.push({
+      this.nagSuppressionInputs.push({
         id: NagSuppressionRuleIds.IAM4,
         details: [
           {
@@ -2890,7 +2891,7 @@ export class NetworkAssociationsStack extends NetworkStack {
       });
 
       // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
-      this.nagSuppressionDetails.push({
+      this.nagSuppressionInputs.push({
         id: NagSuppressionRuleIds.IAM5,
         details: [
           {
@@ -2926,7 +2927,7 @@ export class NetworkAssociationsStack extends NetworkStack {
       );
 
       // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-      this.nagSuppressionDetails.push({
+      this.nagSuppressionInputs.push({
         id: NagSuppressionRuleIds.IAM4,
         details: [
           {
@@ -2939,7 +2940,7 @@ export class NetworkAssociationsStack extends NetworkStack {
       });
 
       // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-      this.nagSuppressionDetails.push({
+      this.nagSuppressionInputs.push({
         id: NagSuppressionRuleIds.IAM4,
         details: [
           {
@@ -2952,7 +2953,7 @@ export class NetworkAssociationsStack extends NetworkStack {
       });
 
       // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
-      this.nagSuppressionDetails.push({
+      this.nagSuppressionInputs.push({
         id: NagSuppressionRuleIds.IAM5,
         details: [
           {
@@ -2965,7 +2966,7 @@ export class NetworkAssociationsStack extends NetworkStack {
       });
 
       // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
-      this.nagSuppressionDetails.push({
+      this.nagSuppressionInputs.push({
         id: NagSuppressionRuleIds.IAM5,
         details: [
           {
@@ -3008,7 +3009,7 @@ export class NetworkAssociationsStack extends NetworkStack {
         });
 
         // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-        this.nagSuppressionDetails.push({
+        this.nagSuppressionInputs.push({
           id: NagSuppressionRuleIds.IAM4,
           details: [
             {
@@ -3021,7 +3022,7 @@ export class NetworkAssociationsStack extends NetworkStack {
         });
 
         // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-        this.nagSuppressionDetails.push({
+        this.nagSuppressionInputs.push({
           id: NagSuppressionRuleIds.IAM4,
           details: [
             {
@@ -3034,7 +3035,7 @@ export class NetworkAssociationsStack extends NetworkStack {
         });
 
         // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
-        this.nagSuppressionDetails.push({
+        this.nagSuppressionInputs.push({
           id: NagSuppressionRuleIds.IAM5,
           details: [
             {
@@ -3047,7 +3048,7 @@ export class NetworkAssociationsStack extends NetworkStack {
         });
 
         // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
-        this.nagSuppressionDetails.push({
+        this.nagSuppressionInputs.push({
           id: NagSuppressionRuleIds.IAM5,
           details: [
             {
@@ -3102,7 +3103,7 @@ export class NetworkAssociationsStack extends NetworkStack {
         });
 
         // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-        this.nagSuppressionDetails.push({
+        this.nagSuppressionInputs.push({
           id: NagSuppressionRuleIds.IAM4,
           details: [
             {
@@ -3115,7 +3116,7 @@ export class NetworkAssociationsStack extends NetworkStack {
         });
 
         // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-        this.nagSuppressionDetails.push({
+        this.nagSuppressionInputs.push({
           id: NagSuppressionRuleIds.IAM4,
           details: [
             {
@@ -3128,7 +3129,7 @@ export class NetworkAssociationsStack extends NetworkStack {
         });
 
         // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
-        this.nagSuppressionDetails.push({
+        this.nagSuppressionInputs.push({
           id: NagSuppressionRuleIds.IAM5,
           details: [
             {
@@ -3141,7 +3142,7 @@ export class NetworkAssociationsStack extends NetworkStack {
         });
 
         // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
-        this.nagSuppressionDetails.push({
+        this.nagSuppressionInputs.push({
           id: NagSuppressionRuleIds.IAM5,
           details: [
             {
@@ -3200,7 +3201,7 @@ export class NetworkAssociationsStack extends NetworkStack {
     });
 
     // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-    this.nagSuppressionDetails.push({
+    this.nagSuppressionInputs.push({
       id: NagSuppressionRuleIds.IAM4,
       details: [
         {
@@ -3213,7 +3214,7 @@ export class NetworkAssociationsStack extends NetworkStack {
     });
 
     // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-    this.nagSuppressionDetails.push({
+    this.nagSuppressionInputs.push({
       id: NagSuppressionRuleIds.IAM4,
       details: [
         {
@@ -3226,7 +3227,7 @@ export class NetworkAssociationsStack extends NetworkStack {
     });
 
     // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
-    this.nagSuppressionDetails.push({
+    this.nagSuppressionInputs.push({
       id: NagSuppressionRuleIds.IAM5,
       details: [
         {
@@ -3239,7 +3240,7 @@ export class NetworkAssociationsStack extends NetworkStack {
     });
 
     // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
-    this.nagSuppressionDetails.push({
+    this.nagSuppressionInputs.push({
       id: NagSuppressionRuleIds.IAM5,
       details: [
         {
@@ -3346,7 +3347,7 @@ export class NetworkAssociationsStack extends NetworkStack {
       activeDirectoryConfiguration.node.addDependency(props.activeDirectory);
 
       // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-      this.nagSuppressionDetails.push({
+      this.nagSuppressionInputs.push({
         id: NagSuppressionRuleIds.IAM4,
         details: [
           {
@@ -3362,7 +3363,7 @@ export class NetworkAssociationsStack extends NetworkStack {
       });
 
       // AwsSolutions-EC28: The EC2 instance/AutoScaling launch configuration does not have detailed monitoring enabled
-      this.nagSuppressionDetails.push({
+      this.nagSuppressionInputs.push({
         id: NagSuppressionRuleIds.EC28,
         details: [
           {
@@ -3378,7 +3379,7 @@ export class NetworkAssociationsStack extends NetworkStack {
       });
 
       // AwsSolutions-EC29: The EC2 instance is not part of an ASG and has Termination Protection disabled
-      this.nagSuppressionDetails.push({
+      this.nagSuppressionInputs.push({
         id: NagSuppressionRuleIds.EC29,
         details: [
           {
@@ -3394,7 +3395,7 @@ export class NetworkAssociationsStack extends NetworkStack {
       });
 
       // AwsSolutions-EC28: The EC2 instance/AutoScaling launch configuration does not have detailed monitoring enabled
-      this.nagSuppressionDetails.push({
+      this.nagSuppressionInputs.push({
         id: NagSuppressionRuleIds.EC28,
         details: [
           {
@@ -3410,7 +3411,7 @@ export class NetworkAssociationsStack extends NetworkStack {
       });
 
       // AwsSolutions-EC29: The EC2 instance is not part of an ASG and has Termination Protection disabled.
-      this.nagSuppressionDetails.push({
+      this.nagSuppressionInputs.push({
         id: NagSuppressionRuleIds.EC29,
         details: [
           {
@@ -3427,7 +3428,7 @@ export class NetworkAssociationsStack extends NetworkStack {
 
       for (const adUser of adInstanceConfig.adUsers ?? []) {
         // AwsSolutions-SMG4: The secret does not have automatic rotation scheduled
-        this.nagSuppressionDetails.push({
+        this.nagSuppressionInputs.push({
           id: NagSuppressionRuleIds.SMG4,
           details: [
             {

@@ -13,6 +13,40 @@ exports[`SecurityAuditStack Construct(SecurityAuditStack):  Snapshot Test 1`] = 
     },
   },
   "Resources": {
+    "AcceleratorExistingCentralLogBucketKeyLookup60D9CA07": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
+            "Arn",
+          ],
+        },
+        "assumeRoleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::222222222222:role/AWSAccelerator-CrossAccountSsmParameterShare",
+            ],
+          ],
+        },
+        "invokingAccountID": "222222222222",
+        "invokingRegion": "us-east-1",
+        "parameterAccountID": "222222222222",
+        "parameterName": "/accelerator/imported-resources/logging/central-bucket/kms/arn",
+        "parameterRegion": "us-west-2",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::SsmGetParameterValue",
+      "UpdateReplacePolicy": "Delete",
+    },
     "AcceleratorSnsKeyAlias1909B90C": {
       "Properties": {
         "AliasName": "alias/accelerator/kms/sns/key",
@@ -335,21 +369,7 @@ def script_handler(events, context):
           ],
         },
         "LoggingConfiguration": {
-          "DestinationBucketName": {
-            "Fn::Join": [
-              "",
-              [
-                "aws-accelerator-s3-access-logs-",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "-",
-                {
-                  "Ref": "AWS::Region",
-                },
-              ],
-            ],
-          },
+          "DestinationBucketName": "existing-access-logs-bucket-222222222222-us-east-1",
         },
         "OwnershipControls": {
           "Rules": [
@@ -381,7 +401,77 @@ def script_handler(events, context):
       "Type": "AWS::S3::Bucket",
       "UpdateReplacePolicy": "Retain",
     },
-    "AuditManagerPublishingDestinationBucketAuditManagerPublishingDestinationBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRoleDefaultPolicy6D87750E": {
+    "AuditManagerPublishingDestinationBucketAuditManagerPublishingDestinationBucketReplicationECF1B287": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomS3PutBucketReplicationCustomResourceProviderLogGroup6A67905E",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomS3PutBucketReplicationCustomResourceProviderHandler1D75398C",
+            "Arn",
+          ],
+        },
+        "destinationAccountId": "333333333333",
+        "destinationBucketArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":s3:::existing-central-log-bucket",
+            ],
+          ],
+        },
+        "destinationBucketKeyArn": {
+          "Ref": "AcceleratorExistingCentralLogBucketKeyLookup60D9CA07",
+        },
+        "prefix": "",
+        "replicationRoleArn": {
+          "Fn::GetAtt": [
+            "AuditManagerPublishingDestinationBucketAuditManagerPublishingDestinationBucketReplicationExistingCentralLogBucketReplicationRoleBB4CF589",
+            "Arn",
+          ],
+        },
+        "sourceBucketName": {
+          "Ref": "AuditManagerPublishingDestinationBucket74974FCF",
+        },
+      },
+      "Type": "Custom::S3PutBucketReplication",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AuditManagerPublishingDestinationBucketAuditManagerPublishingDestinationBucketReplicationExistingCentralLogBucketReplicationRoleBB4CF589": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "s3.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Path": "/service-role/",
+        "Tags": [
+          {
+            "Key": "aws-cdk:auto-audit-manager-access-bucket",
+            "Value": "true",
+          },
+          {
+            "Key": "aws-cdk:auto-auditManager-access-bucket",
+            "Value": "true",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AuditManagerPublishingDestinationBucketAuditManagerPublishingDestinationBucketReplicationExistingCentralLogBucketReplicationRoleDefaultPolicy923CA71F": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -452,7 +542,7 @@ def script_handler(events, context):
                     {
                       "Ref": "AWS::Partition",
                     },
-                    ":s3:::aws-accelerator-central-logs-333333333333-us-west-2/*",
+                    ":s3:::existing-central-log-bucket/*",
                   ],
                 ],
               },
@@ -468,90 +558,20 @@ def script_handler(events, context):
               "Action": "kms:Encrypt",
               "Effect": "Allow",
               "Resource": {
-                "Ref": "CentralLogsBucketKeyLookup52CD8A37",
+                "Ref": "AcceleratorExistingCentralLogBucketKeyLookup60D9CA07",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "ditManagerPublishingDestinationBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRoleDefaultPolicy6D87750E",
+        "PolicyName": "gDestinationBucketAuditManagerPublishingDestinationBucketReplicationExistingCentralLogBucketReplicationRoleDefaultPolicy923CA71F",
         "Roles": [
           {
-            "Ref": "AuditManagerPublishingDestinationBucketAuditManagerPublishingDestinationBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRoleE0509DD9",
+            "Ref": "AuditManagerPublishingDestinationBucketAuditManagerPublishingDestinationBucketReplicationExistingCentralLogBucketReplicationRoleBB4CF589",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
-    },
-    "AuditManagerPublishingDestinationBucketAuditManagerPublishingDestinationBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRoleE0509DD9": {
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "s3.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "Path": "/service-role/",
-        "Tags": [
-          {
-            "Key": "aws-cdk:auto-audit-manager-access-bucket",
-            "Value": "true",
-          },
-          {
-            "Key": "aws-cdk:auto-auditManager-access-bucket",
-            "Value": "true",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "AuditManagerPublishingDestinationBucketAuditManagerPublishingDestinationBucketReplicationECF1B287": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomS3PutBucketReplicationCustomResourceProviderLogGroup6A67905E",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomS3PutBucketReplicationCustomResourceProviderHandler1D75398C",
-            "Arn",
-          ],
-        },
-        "destinationAccountId": "333333333333",
-        "destinationBucketArn": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":s3:::aws-accelerator-central-logs-333333333333-us-west-2",
-            ],
-          ],
-        },
-        "destinationBucketKeyArn": {
-          "Ref": "CentralLogsBucketKeyLookup52CD8A37",
-        },
-        "prefix": "",
-        "replicationRoleArn": {
-          "Fn::GetAtt": [
-            "AuditManagerPublishingDestinationBucketAuditManagerPublishingDestinationBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRoleE0509DD9",
-            "Arn",
-          ],
-        },
-        "sourceBucketName": {
-          "Ref": "AuditManagerPublishingDestinationBucket74974FCF",
-        },
-      },
-      "Type": "Custom::S3PutBucketReplication",
-      "UpdateReplacePolicy": "Delete",
     },
     "AuditManagerPublishingDestinationBucketPolicy3992854B": {
       "Properties": {
@@ -678,40 +698,6 @@ def script_handler(events, context):
         },
       },
       "Type": "AWS::S3::BucketPolicy",
-    },
-    "CentralLogsBucketKeyLookup52CD8A37": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
-            "Arn",
-          ],
-        },
-        "assumeRoleArn": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":iam::333333333333:role/AWSAccelerator-CentralBucket-KeyArnParam-Role",
-            ],
-          ],
-        },
-        "invokingAccountID": "222222222222",
-        "invokingRegion": "us-east-1",
-        "parameterAccountID": "333333333333",
-        "parameterName": "/accelerator/logging/central-bucket/kms/arn",
-        "parameterRegion": "us-west-2",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::SsmGetParameterValue",
-      "UpdateReplacePolicy": "Delete",
     },
     "ControlTowerNotificationsForwarderFunctionAllowInvokeAWSAcceleratorSecurityAuditStack222222222222useast1ControlTowerSNSTopic2C923A0CF50B8C0E": {
       "Properties": {
@@ -1943,6 +1929,9 @@ def script_handler(events, context):
     "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D": {
       "DeletionPolicy": "Delete",
       "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -2750,6 +2739,40 @@ exports[`delegatedAdminStack Construct(SecurityAuditStack):  Snapshot Test 1`] =
     },
   },
   "Resources": {
+    "AcceleratorCentralLogBucketKeyLookup26F8C418": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
+            "Arn",
+          ],
+        },
+        "assumeRoleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::333333333333:role/AWSAccelerator-CentralBucket-KeyArnParam-Role",
+            ],
+          ],
+        },
+        "invokingAccountID": "222222222222",
+        "invokingRegion": "us-east-1",
+        "parameterAccountID": "333333333333",
+        "parameterName": "/accelerator/logging/central-bucket/kms/arn",
+        "parameterRegion": "us-west-2",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::SsmGetParameterValue",
+      "UpdateReplacePolicy": "Delete",
+    },
     "AccessAnalyzer": {
       "Properties": {
         "Type": "ORGANIZATION",
@@ -3124,7 +3147,7 @@ def script_handler(events, context):
               "Action": "kms:Encrypt",
               "Effect": "Allow",
               "Resource": {
-                "Ref": "CentralLogsBucketKeyLookup52CD8A37",
+                "Ref": "AcceleratorCentralLogBucketKeyLookup26F8C418",
               },
             },
           ],
@@ -3193,7 +3216,7 @@ def script_handler(events, context):
           ],
         },
         "destinationBucketKeyArn": {
-          "Ref": "CentralLogsBucketKeyLookup52CD8A37",
+          "Ref": "AcceleratorCentralLogBucketKeyLookup26F8C418",
         },
         "prefix": "",
         "replicationRoleArn": {
@@ -3334,40 +3357,6 @@ def script_handler(events, context):
         },
       },
       "Type": "AWS::S3::BucketPolicy",
-    },
-    "CentralLogsBucketKeyLookup52CD8A37": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
-            "Arn",
-          ],
-        },
-        "assumeRoleArn": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":iam::333333333333:role/AWSAccelerator-CentralBucket-KeyArnParam-Role",
-            ],
-          ],
-        },
-        "invokingAccountID": "222222222222",
-        "invokingRegion": "us-east-1",
-        "parameterAccountID": "333333333333",
-        "parameterName": "/accelerator/logging/central-bucket/kms/arn",
-        "parameterRegion": "us-west-2",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::SsmGetParameterValue",
-      "UpdateReplacePolicy": "Delete",
     },
     "ControlTowerNotificationsForwarderFunctionAllowInvokeAWSAcceleratorSecurityAuditStack222222222222useast1ControlTowerSNSTopic2C923A0CF50B8C0E": {
       "Properties": {
@@ -4599,6 +4588,9 @@ def script_handler(events, context):
     "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D": {
       "DeletionPolicy": "Delete",
       "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
         "LogGroupName": {
           "Fn::Join": [
             "",

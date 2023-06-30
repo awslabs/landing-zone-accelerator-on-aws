@@ -20,14 +20,18 @@ import {
   AcceleratorMetadata,
   EbsDefaultEncryption,
   GuardDutyPublishingDestination,
-  KeyLookup,
   MacieExportConfigClassification,
   PasswordPolicy,
   SecurityHubStandards,
   ConfigAggregation,
 } from '@aws-accelerator/constructs';
 
-import { AcceleratorStack, AcceleratorStackProps, NagSuppressionRuleIds } from './accelerator-stack';
+import {
+  AcceleratorKeyType,
+  AcceleratorStack,
+  AcceleratorStackProps,
+  NagSuppressionRuleIds,
+} from './accelerator-stack';
 import { pascalCase } from 'pascal-case';
 
 /**
@@ -38,15 +42,12 @@ export class SecurityStack extends AcceleratorStack {
   readonly auditAccountId: string;
   readonly logArchiveAccountId: string;
   readonly auditAccountName: string;
-  readonly centralLogsBucketName: string;
   readonly centralLogsBucketKey: cdk.aws_kms.Key;
   readonly configAggregationAccountId: string;
   readonly metadataRule: AcceleratorMetadata | undefined;
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
-    const elbLogBucketName = `${
-      this.acceleratorResourceNames.bucketPrefixes.elbLogs
-    }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`;
+    const elbLogBucketName = this.getElbLogsBucketName();
     this.auditAccountName = props.securityConfig.getDelegatedAccountName();
     this.auditAccountId = props.accountsConfig.getAuditAccountId();
     this.logArchiveAccountId = props.accountsConfig.getLogArchiveAccountId();
@@ -59,27 +60,8 @@ export class SecurityStack extends AcceleratorStack {
         props.securityConfig.awsConfig.aggregation.delegatedAdminAccount,
       );
     }
-    this.centralLogsBucketName = `${
-      this.acceleratorResourceNames.bucketPrefixes.centralLogs
-    }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`;
-
-    this.centralLogsBucketKey = new KeyLookup(this, 'CentralLogsBucketKey', {
-      accountId: props.accountsConfig.getLogArchiveAccountId(),
-      keyRegion: props.centralizedLoggingRegion,
-      roleName: this.acceleratorResourceNames.roles.crossAccountCentralLogBucketCmkArnSsmParameterAccess,
-      keyArnParameterName: this.acceleratorResourceNames.parameters.centralLogBucketCmkArn,
-      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-      acceleratorPrefix: props.prefixes.accelerator,
-    }).getKey();
-
-    this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
-      this,
-      'AcceleratorGetCloudWatchKey',
-      cdk.aws_ssm.StringParameter.valueForStringParameter(
-        this,
-        this.acceleratorResourceNames.parameters.cloudWatchLogCmkArn,
-      ),
-    ) as cdk.aws_kms.Key;
+    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
+    this.centralLogsBucketKey = this.getCentralLogsBucketKey(this.cloudwatchKey);
 
     //
     // MacieSession configuration
@@ -131,7 +113,7 @@ export class SecurityStack extends AcceleratorStack {
     //
     // Create NagSuppressions
     //
-    this.addResourceSuppressionsByPath(this.nagSuppressionInputs);
+    this.addResourceSuppressionsByPath();
 
     this.logger.info('Completed stack synthesis');
   }

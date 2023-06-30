@@ -1,0 +1,1447 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ValidateBucketKmsEncryption Construct(ValidateBucketKmsEncryption):  Snapshot Test 1`] = `
+{
+  "Resources": {
+    "BucketKmsEncryption3526A88C": {
+      "DeletionPolicy": "Retain",
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "BucketS3Encryption33776260": {
+      "DeletionPolicy": "Retain",
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CloudWatchKeyKmsEncryptionEFBC1FE2": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CloudWatchKeyS3EncryptionBF53F87D": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "LambdaKeyKmsEncryption8BC9FA8C": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "LambdaKeyS3EncryptionA5A84879": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionF801814C": {
+      "DependsOn": [
+        "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionServiceRoleDefaultPolicy64AEE894",
+        "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionServiceRole49F4CF2C",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Accelerator deployed ValidateBucket custom resource lambda function.",
+        "Handler": "index.handler",
+        "KmsKeyArn": {
+          "Fn::GetAtt": [
+            "LambdaKeyKmsEncryption8BC9FA8C",
+            "Arn",
+          ],
+        },
+        "MemorySize": 256,
+        "Role": {
+          "Fn::GetAtt": [
+            "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionServiceRole49F4CF2C",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 160,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionLogGroup9B26DAD9": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "CloudWatchKeyKmsEncryptionEFBC1FE2",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionF801814C",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 365,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionServiceRole49F4CF2C": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionServiceRoleDefaultPolicy64AEE894": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:GetEncryptionConfiguration",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "BucketKmsEncryption3526A88C",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionServiceRoleDefaultPolicy64AEE894",
+        "Roles": [
+          {
+            "Ref": "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionServiceRole49F4CF2C",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ValidateBucketKmsEncryptionValidateBucketValidateBucketResource2FD53956": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "ValidateBucketKmsEncryptionValidateBucketframeworkonEventB0DCF88B",
+            "Arn",
+          ],
+        },
+        "bucketName": {
+          "Ref": "BucketKmsEncryption3526A88C",
+        },
+        "encryptionType": "kms",
+        "uuid": "REPLACED-UUID",
+        "validationCheckList": [
+          "encryption",
+        ],
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ValidateBucketKmsEncryptionValidateBucketframeworkonEventB0DCF88B": {
+      "DependsOn": [
+        "ValidateBucketKmsEncryptionValidateBucketframeworkonEventServiceRoleDefaultPolicy77EFEE09",
+        "ValidateBucketKmsEncryptionValidateBucketframeworkonEventServiceRoleC40E1A6E",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/ValidateBucketKmsEncryption/ValidateBucket/Resource)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionF801814C",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "ValidateBucketKmsEncryptionValidateBucketframeworkonEventServiceRoleC40E1A6E",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ValidateBucketKmsEncryptionValidateBucketframeworkonEventServiceRoleC40E1A6E": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ValidateBucketKmsEncryptionValidateBucketframeworkonEventServiceRoleDefaultPolicy77EFEE09": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionF801814C",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionF801814C",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ValidateBucketKmsEncryptionValidateBucketframeworkonEventServiceRoleDefaultPolicy77EFEE09",
+        "Roles": [
+          {
+            "Ref": "ValidateBucketKmsEncryptionValidateBucketframeworkonEventServiceRoleC40E1A6E",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ValidateBucketS3EncryptionValidateBucketValidateBucketFunction67F8108B": {
+      "DependsOn": [
+        "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionServiceRoleDefaultPolicy5E08258E",
+        "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionServiceRoleA105B96F",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Accelerator deployed ValidateBucket custom resource lambda function.",
+        "Handler": "index.handler",
+        "KmsKeyArn": {
+          "Fn::GetAtt": [
+            "LambdaKeyS3EncryptionA5A84879",
+            "Arn",
+          ],
+        },
+        "MemorySize": 256,
+        "Role": {
+          "Fn::GetAtt": [
+            "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionServiceRoleA105B96F",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 160,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionLogGroupE5D45616": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "CloudWatchKeyS3EncryptionBF53F87D",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "ValidateBucketS3EncryptionValidateBucketValidateBucketFunction67F8108B",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 365,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionServiceRoleA105B96F": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionServiceRoleDefaultPolicy5E08258E": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:GetEncryptionConfiguration",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "BucketS3Encryption33776260",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionServiceRoleDefaultPolicy5E08258E",
+        "Roles": [
+          {
+            "Ref": "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionServiceRoleA105B96F",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ValidateBucketS3EncryptionValidateBucketValidateBucketResource8AFD01C8": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "ValidateBucketS3EncryptionValidateBucketframeworkonEvent1C646E76",
+            "Arn",
+          ],
+        },
+        "bucketName": {
+          "Ref": "BucketS3Encryption33776260",
+        },
+        "encryptionType": "kms",
+        "uuid": "REPLACED-UUID",
+        "validationCheckList": [
+          "encryption",
+        ],
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ValidateBucketS3EncryptionValidateBucketframeworkonEvent1C646E76": {
+      "DependsOn": [
+        "ValidateBucketS3EncryptionValidateBucketframeworkonEventServiceRoleDefaultPolicy0C181827",
+        "ValidateBucketS3EncryptionValidateBucketframeworkonEventServiceRoleE2623E8E",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/ValidateBucketS3Encryption/ValidateBucket/Resource)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "ValidateBucketS3EncryptionValidateBucketValidateBucketFunction67F8108B",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "ValidateBucketS3EncryptionValidateBucketframeworkonEventServiceRoleE2623E8E",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ValidateBucketS3EncryptionValidateBucketframeworkonEventServiceRoleDefaultPolicy0C181827": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "ValidateBucketS3EncryptionValidateBucketValidateBucketFunction67F8108B",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "ValidateBucketS3EncryptionValidateBucketValidateBucketFunction67F8108B",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ValidateBucketS3EncryptionValidateBucketframeworkonEventServiceRoleDefaultPolicy0C181827",
+        "Roles": [
+          {
+            "Ref": "ValidateBucketS3EncryptionValidateBucketframeworkonEventServiceRoleE2623E8E",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ValidateBucketS3EncryptionValidateBucketframeworkonEventServiceRoleE2623E8E": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+  },
+}
+`;
+
+exports[`ValidateBucketS3Encryption Construct(ValidateBucketS3Encryption):  Snapshot Test 1`] = `
+{
+  "Resources": {
+    "BucketKmsEncryption3526A88C": {
+      "DeletionPolicy": "Retain",
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "BucketS3Encryption33776260": {
+      "DeletionPolicy": "Retain",
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CloudWatchKeyKmsEncryptionEFBC1FE2": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CloudWatchKeyS3EncryptionBF53F87D": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "LambdaKeyKmsEncryption8BC9FA8C": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "LambdaKeyS3EncryptionA5A84879": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionF801814C": {
+      "DependsOn": [
+        "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionServiceRoleDefaultPolicy64AEE894",
+        "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionServiceRole49F4CF2C",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Accelerator deployed ValidateBucket custom resource lambda function.",
+        "Handler": "index.handler",
+        "KmsKeyArn": {
+          "Fn::GetAtt": [
+            "LambdaKeyKmsEncryption8BC9FA8C",
+            "Arn",
+          ],
+        },
+        "MemorySize": 256,
+        "Role": {
+          "Fn::GetAtt": [
+            "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionServiceRole49F4CF2C",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 160,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionLogGroup9B26DAD9": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "CloudWatchKeyKmsEncryptionEFBC1FE2",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionF801814C",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 365,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionServiceRole49F4CF2C": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionServiceRoleDefaultPolicy64AEE894": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:GetEncryptionConfiguration",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "BucketKmsEncryption3526A88C",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionServiceRoleDefaultPolicy64AEE894",
+        "Roles": [
+          {
+            "Ref": "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionServiceRole49F4CF2C",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ValidateBucketKmsEncryptionValidateBucketValidateBucketResource2FD53956": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "ValidateBucketKmsEncryptionValidateBucketframeworkonEventB0DCF88B",
+            "Arn",
+          ],
+        },
+        "bucketName": {
+          "Ref": "BucketKmsEncryption3526A88C",
+        },
+        "encryptionType": "kms",
+        "uuid": "REPLACED-UUID",
+        "validationCheckList": [
+          "encryption",
+        ],
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ValidateBucketKmsEncryptionValidateBucketframeworkonEventB0DCF88B": {
+      "DependsOn": [
+        "ValidateBucketKmsEncryptionValidateBucketframeworkonEventServiceRoleDefaultPolicy77EFEE09",
+        "ValidateBucketKmsEncryptionValidateBucketframeworkonEventServiceRoleC40E1A6E",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/ValidateBucketKmsEncryption/ValidateBucket/Resource)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionF801814C",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "ValidateBucketKmsEncryptionValidateBucketframeworkonEventServiceRoleC40E1A6E",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ValidateBucketKmsEncryptionValidateBucketframeworkonEventServiceRoleC40E1A6E": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ValidateBucketKmsEncryptionValidateBucketframeworkonEventServiceRoleDefaultPolicy77EFEE09": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionF801814C",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionF801814C",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ValidateBucketKmsEncryptionValidateBucketframeworkonEventServiceRoleDefaultPolicy77EFEE09",
+        "Roles": [
+          {
+            "Ref": "ValidateBucketKmsEncryptionValidateBucketframeworkonEventServiceRoleC40E1A6E",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ValidateBucketS3EncryptionValidateBucketValidateBucketFunction67F8108B": {
+      "DependsOn": [
+        "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionServiceRoleDefaultPolicy5E08258E",
+        "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionServiceRoleA105B96F",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Accelerator deployed ValidateBucket custom resource lambda function.",
+        "Handler": "index.handler",
+        "KmsKeyArn": {
+          "Fn::GetAtt": [
+            "LambdaKeyS3EncryptionA5A84879",
+            "Arn",
+          ],
+        },
+        "MemorySize": 256,
+        "Role": {
+          "Fn::GetAtt": [
+            "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionServiceRoleA105B96F",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 160,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionLogGroupE5D45616": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "CloudWatchKeyS3EncryptionBF53F87D",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "ValidateBucketS3EncryptionValidateBucketValidateBucketFunction67F8108B",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 365,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionServiceRoleA105B96F": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionServiceRoleDefaultPolicy5E08258E": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:GetEncryptionConfiguration",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "BucketS3Encryption33776260",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionServiceRoleDefaultPolicy5E08258E",
+        "Roles": [
+          {
+            "Ref": "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionServiceRoleA105B96F",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ValidateBucketS3EncryptionValidateBucketValidateBucketResource8AFD01C8": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "ValidateBucketS3EncryptionValidateBucketframeworkonEvent1C646E76",
+            "Arn",
+          ],
+        },
+        "bucketName": {
+          "Ref": "BucketS3Encryption33776260",
+        },
+        "encryptionType": "kms",
+        "uuid": "REPLACED-UUID",
+        "validationCheckList": [
+          "encryption",
+        ],
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ValidateBucketS3EncryptionValidateBucketframeworkonEvent1C646E76": {
+      "DependsOn": [
+        "ValidateBucketS3EncryptionValidateBucketframeworkonEventServiceRoleDefaultPolicy0C181827",
+        "ValidateBucketS3EncryptionValidateBucketframeworkonEventServiceRoleE2623E8E",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/ValidateBucketS3Encryption/ValidateBucket/Resource)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "ValidateBucketS3EncryptionValidateBucketValidateBucketFunction67F8108B",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "ValidateBucketS3EncryptionValidateBucketframeworkonEventServiceRoleE2623E8E",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ValidateBucketS3EncryptionValidateBucketframeworkonEventServiceRoleDefaultPolicy0C181827": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "ValidateBucketS3EncryptionValidateBucketValidateBucketFunction67F8108B",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "ValidateBucketS3EncryptionValidateBucketValidateBucketFunction67F8108B",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ValidateBucketS3EncryptionValidateBucketframeworkonEventServiceRoleDefaultPolicy0C181827",
+        "Roles": [
+          {
+            "Ref": "ValidateBucketS3EncryptionValidateBucketframeworkonEventServiceRoleE2623E8E",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ValidateBucketS3EncryptionValidateBucketframeworkonEventServiceRoleE2623E8E": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+  },
+}
+`;

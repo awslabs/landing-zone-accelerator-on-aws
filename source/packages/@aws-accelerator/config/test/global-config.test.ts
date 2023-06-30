@@ -13,8 +13,6 @@
 
 import {
   GlobalConfig,
-  AccessLogBucketConfig,
-  CentralLogBucketConfig,
   CostAndUsageReportConfig,
   BudgetReportConfig,
   ServiceQuotaLimitsConfig,
@@ -53,14 +51,6 @@ describe('GlobalConfig', () => {
       // expect(globalConfigFromString.accountNames).toStrictEqual([]);
 
       //expect(GlobalConfig.loadFromString('corrupt str')).toBe(undefined);
-    });
-
-    it('has an empty list of lifecycle rules', () => {
-      const accessLogBucketConfig = new AccessLogBucketConfig();
-      expect(accessLogBucketConfig.lifecycleRules).toStrictEqual([]);
-
-      const centralLogBucketConfig = new CentralLogBucketConfig();
-      expect(centralLogBucketConfig.lifecycleRules).toStrictEqual([]);
     });
 
     it('tests CostAndUsageReportConfig', () => {

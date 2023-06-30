@@ -28,7 +28,7 @@ new CentralLogsBucket(stack, 'CentralLogsBucket', {
     s3BucketName: `aws-accelerator-s3-access-logs-${stack.account}-${stack.region}`,
     kmsAliasName: 'alias/accelerator/s3-access-logs/s3',
     kmsDescription: 'AWS Accelerator S3 Access Logs Bucket CMK',
-  }),
+  }).getS3Bucket(),
   kmsAliasName: 'alias/accelerator/central-logs/s3',
   kmsDescription: 'AWS Accelerator Central Logs Bucket CMK',
   principalOrgIdCondition: { 'aws:PrincipalOrgID': organizationId },

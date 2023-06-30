@@ -35,6 +35,7 @@ import {
 import { createLogger, policyReplacements } from '@aws-accelerator/utils';
 import { AcceleratorResourceNames } from './accelerator-resource-names';
 import { CfnInclude } from 'aws-cdk-lib/cloudformation-include';
+import { AcceleratorResourcePrefixes } from '../utils/app-utils';
 
 export interface AseaResourceHelperProps {
   readonly stackInfo: AseaStackInfo;
@@ -51,46 +52,7 @@ export interface AseaResourceHelperProps {
   /**
    * Accelerator resource name prefixes
    */
-  readonly prefixes: {
-    /**
-     * Use this prefix value to name resources like -
-     AWS IAM Role names, AWS Lambda Function names, AWS Cloudwatch log groups names, AWS CloudFormation stack names, AWS CodePipeline names, AWS CodeBuild project names
-     *
-     */
-    readonly accelerator: string;
-    /**
-     * Use this prefix value to name AWS CodeCommit repository
-     */
-    readonly repoName: string;
-    /**
-     * Use this prefix value to name AWS S3 bucket
-     */
-    readonly bucketName: string;
-    /**
-     * Use this prefix value to name AWS SSM parameter
-     */
-    readonly ssmParamName: string;
-    /**
-     * Use this prefix value to name AWS KMS alias
-     */
-    readonly kmsAlias: string;
-    /**
-     * Use this prefix value to name AWS SNS topic
-     */
-    readonly snsTopicName: string;
-    /**
-     * Use this prefix value to name AWS Secrets
-     */
-    readonly secretName: string;
-    /**
-     * Use this prefix value to name AWS CloudTrail CloudWatch log group
-     */
-    readonly trailLogName: string;
-    /**
-     * Use this prefix value to name AWS Glue database
-     */
-    readonly databaseName: string;
-  };
+  readonly prefixes: AcceleratorResourcePrefixes;
 }
 
 process.on('uncaughtException', err => {

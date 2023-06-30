@@ -275,6 +275,13 @@ export const deploymentTargets = t.interface({
 });
 
 /**
+ * Bucket configuration
+ */
+export const bucketConfig = t.interface({
+  name: nonEmptyString,
+});
+
+/**
  * Deployment targets configuration.
  * Deployment targets is an accelerator-specific
  * configuration object that can be used for
@@ -323,6 +330,18 @@ export class DeploymentTargets implements t.TypeOf<typeof deploymentTargets> {
    * Use this property to explicitly define one or more accounts to exclude from deployment.
    */
   readonly excludedAccounts: string[] = [];
+}
+
+/**
+ * Bucket configuration.
+ *
+ * @remarks Use this configuration when solution using existing bucket. Solution will look for existing bucket in logging account's centralizedLoggingRegion
+ */
+export class BucketConfig implements t.TypeOf<typeof bucketConfig> {
+  /**
+   * Bucket name
+   */
+  readonly name: string = '';
 }
 
 export const storageClass = enums('storageClass', [

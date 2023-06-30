@@ -17,9 +17,10 @@ import fs from 'fs';
 import path from 'path';
 import winston from 'winston';
 import { AccountsConfig } from '../lib/accounts-config';
-import { GlobalConfig } from '../lib/global-config';
+import { AccessLogBucketConfig, CentralLogBucketConfig, ElbLogBucketConfig, GlobalConfig } from '../lib/global-config';
 import { IamConfig } from '../lib/iam-config';
 import { OrganizationConfig } from '../lib/organization-config';
+import { BucketConfig } from '../lib/common-types';
 
 export class GlobalConfigValidator {
   constructor(
@@ -53,6 +54,10 @@ export class GlobalConfigValidator {
     // Validate CentralLogs bucket region name
     //
     this.validateCentralLogsBucketRegionName(values, errors);
+    //
+    // Validate Existing buckets
+    //
+    this.validateExistingBucket(values, logger);
     //
     // Validate budget deployment target OU
     //
@@ -177,6 +182,93 @@ export class GlobalConfigValidator {
         `CentralLogs bucket region name ${
           values.logging.centralizedLoggingRegion
         } not part of pipeline enabled regions [${values.enabledRegions.toString()}].`,
+      );
+    }
+  }
+
+  /**
+   * Function to validate existing central log bucket
+   * @param centralLogBucketConfig {@link CentralLogBucketConfig}
+   * @param existingBucket {@link BucketConfig}
+   * @param logger {@link winston.Logger}
+   */
+  private validateExistingCentralLogBucket(
+    centralLogBucketConfig: CentralLogBucketConfig,
+    existingBucket: BucketConfig,
+    logger: winston.Logger,
+  ) {
+    if (
+      centralLogBucketConfig.lifecycleRules ||
+      centralLogBucketConfig.s3ResourcePolicyAttachments ||
+      centralLogBucketConfig.kmsResourcePolicyAttachments
+    ) {
+      logger.warn(
+        `When using existing CentralLogs bucket ${existingBucket.name}, lifecycleRules, s3ResourcePolicyAttachments, kmsResourcePolicyAttachments properties ignored.`,
+      );
+    }
+  }
+
+  /**
+   * Function to validate existing server access logs bucket
+   * @param accessLogBucketConfig {@link AccessLogBucketConfig}
+   * @param existingBucket {@link BucketConfig}
+   * @param logger {@link winston.Logger}
+   */
+  private validateExistingServerAccessLogsBucket(
+    accessLogBucketConfig: AccessLogBucketConfig,
+    existingBucket: BucketConfig,
+    logger: winston.Logger,
+  ) {
+    if (accessLogBucketConfig.lifecycleRules) {
+      logger.warn(
+        `When using existing server access logs bucket ${existingBucket.name}, lifecycleRules property ignored.`,
+      );
+    }
+  }
+
+  /**
+   * Function to validate existing ELB logs bucket
+   * @param accessLogBucketConfig {@link ElbLogBucketConfig}
+   * @param existingBucket {@link BucketConfig}
+   * @param logger {@link winston.Logger}
+   */
+  private validateExistingElbLogsBucket(
+    elbLogBucketConfig: ElbLogBucketConfig,
+    existingBucket: BucketConfig,
+    logger: winston.Logger,
+  ) {
+    if (elbLogBucketConfig.lifecycleRules || elbLogBucketConfig.s3ResourcePolicyAttachments) {
+      logger.warn(
+        `When using existing elb logs bucket  ${existingBucket.name}, lifecycleRules and s3ResourcePolicyAttachments properties ignored.`,
+      );
+    }
+  }
+
+  private validateExistingBucket(values: GlobalConfig, logger: winston.Logger) {
+    //Validate existing CentralLogs bucket
+    if (values.logging.centralLogBucket?.existingBucket) {
+      this.validateExistingCentralLogBucket(
+        values.logging.centralLogBucket,
+        values.logging.centralLogBucket.existingBucket,
+        logger,
+      );
+    }
+
+    //Validate existing server access logs bucket
+    if (values.logging.accessLogBucket?.existingBucket) {
+      this.validateExistingServerAccessLogsBucket(
+        values.logging.accessLogBucket,
+        values.logging.accessLogBucket.existingBucket,
+        logger,
+      );
+    }
+
+    //Validate existing elb  logs bucket
+    if (values.logging.elbLogBucket?.existingBucket) {
+      this.validateExistingElbLogsBucket(
+        values.logging.elbLogBucket,
+        values.logging.elbLogBucket.existingBucket,
+        logger,
       );
     }
   }

@@ -112,6 +112,7 @@ export class AcceleratorSynthStacks {
         kmsAlias: 'alias/accelerator',
         bucketName: 'aws-accelerator',
         ssmParamName: '/accelerator',
+        importResourcesSsmParamName: '/accelerator/imported-resources',
         snsTopicName: 'aws-accelerator',
         repoName: 'aws-accelerator',
         secretName: '/accelerator',

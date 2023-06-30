@@ -2914,7 +2914,7 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
     },
   },
   "Resources": {
-    "AcceleratorCentralLogBucketKeyLookup26F8C418": {
+    "AcceleratorExistingCentralLogBucketKeyLookup60D9CA07": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
         "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
@@ -2934,14 +2934,14 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
               {
                 "Ref": "AWS::Partition",
               },
-              ":iam::333333333333:role/AWSAccelerator-CentralBucket-KeyArnParam-Role",
+              ":iam::111111111111:role/AWSAccelerator-CrossAccountSsmParameterShare",
             ],
           ],
         },
         "invokingAccountID": "111111111111",
         "invokingRegion": "us-east-1",
-        "parameterAccountID": "333333333333",
-        "parameterName": "/accelerator/logging/central-bucket/kms/arn",
+        "parameterAccountID": "111111111111",
+        "parameterName": "/accelerator/imported-resources/logging/central-bucket/kms/arn",
         "parameterRegion": "us-west-2",
         "uuid": "REPLACED-UUID",
       },
@@ -5606,21 +5606,7 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
         },
         "BucketName": "aws-accelerator-cur-111111111111-us-east-1",
         "LoggingConfiguration": {
-          "DestinationBucketName": {
-            "Fn::Join": [
-              "",
-              [
-                "aws-accelerator-s3-access-logs-",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "-",
-                {
-                  "Ref": "AWS::Region",
-                },
-              ],
-            ],
-          },
+          "DestinationBucketName": "existing-access-logs-bucket-111111111111-us-east-1",
         },
         "OwnershipControls": {
           "Rules": [
@@ -5794,17 +5780,17 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
               {
                 "Ref": "AWS::Partition",
               },
-              ":s3:::aws-accelerator-central-logs-333333333333-us-west-2",
+              ":s3:::existing-central-log-bucket",
             ],
           ],
         },
         "destinationBucketKeyArn": {
-          "Ref": "AcceleratorCentralLogBucketKeyLookup26F8C418",
+          "Ref": "AcceleratorExistingCentralLogBucketKeyLookup60D9CA07",
         },
         "prefix": "",
         "replicationRoleArn": {
           "Fn::GetAtt": [
-            "ReportBucketReportBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRole125103F9",
+            "ReportBucketReportBucketReplicationExistingCentralLogBucketReplicationRole5145BB67",
             "Arn",
           ],
         },
@@ -5815,7 +5801,7 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
       "Type": "Custom::S3PutBucketReplication",
       "UpdateReplacePolicy": "Delete",
     },
-    "ReportBucketReportBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRole125103F9": {
+    "ReportBucketReportBucketReplicationExistingCentralLogBucketReplicationRole5145BB67": {
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -5833,7 +5819,7 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::IAM::Role",
     },
-    "ReportBucketReportBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRoleDefaultPolicy390C828B": {
+    "ReportBucketReportBucketReplicationExistingCentralLogBucketReplicationRoleDefaultPolicy71E2DE5E": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -5904,7 +5890,7 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
                     {
                       "Ref": "AWS::Partition",
                     },
-                    ":s3:::aws-accelerator-central-logs-333333333333-us-west-2/*",
+                    ":s3:::existing-central-log-bucket/*",
                   ],
                 ],
               },
@@ -5913,16 +5899,16 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
               "Action": "kms:Encrypt",
               "Effect": "Allow",
               "Resource": {
-                "Ref": "AcceleratorCentralLogBucketKeyLookup26F8C418",
+                "Ref": "AcceleratorExistingCentralLogBucketKeyLookup60D9CA07",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "ReportBucketReportBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRoleDefaultPolicy390C828B",
+        "PolicyName": "ReportBucketReportBucketReplicationExistingCentralLogBucketReplicationRoleDefaultPolicy71E2DE5E",
         "Roles": [
           {
-            "Ref": "ReportBucketReportBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRole125103F9",
+            "Ref": "ReportBucketReportBucketReplicationExistingCentralLogBucketReplicationRole5145BB67",
           },
         ],
       },

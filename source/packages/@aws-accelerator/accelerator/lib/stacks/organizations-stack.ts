@@ -12,7 +12,6 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { pascalCase } from 'pascal-case';
 import * as path from 'path';
@@ -44,7 +43,12 @@ import {
 } from '@aws-accelerator/constructs';
 import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
 
-import { AcceleratorKeyType, AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import {
+  AcceleratorKeyType,
+  AcceleratorStack,
+  AcceleratorStackProps,
+  NagSuppressionRuleIds,
+} from './accelerator-stack';
 export interface OrganizationsStackProps extends AcceleratorStackProps {
   configDirPath: string;
 }
@@ -54,11 +58,11 @@ export interface OrganizationsStackProps extends AcceleratorStackProps {
  * Organizations Management (Root) account
  */
 export class OrganizationsStack extends AcceleratorStack {
-  private cloudwatchKey!: cdk.aws_kms.Key;
-  private centralLogsBucketKey!: cdk.aws_kms.Key;
-  private bucketReplicationProps!: BucketReplicationProps;
-  private logRetention!: number;
-  private stackProperties!: AcceleratorStackProps;
+  private cloudwatchKey: cdk.aws_kms.Key;
+  private centralLogsBucketKey: cdk.aws_kms.Key;
+  private bucketReplicationProps: BucketReplicationProps;
+  private logRetention: number;
+  private stackProperties: AcceleratorStackProps;
 
   /**
    * KMS Key used to encrypt custom resource lambda environment variables
@@ -68,16 +72,26 @@ export class OrganizationsStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: OrganizationsStackProps) {
     super(scope, id, props);
 
+    // Set private properties
+    this.stackProperties = props;
+    this.logRetention = this.stackProperties.globalConfig.cloudwatchLogRetentionInDays;
+    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
+    this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
+    this.centralLogsBucketKey = this.getCentralLogsBucketKey(this.cloudwatchKey);
+    this.bucketReplicationProps = {
+      destination: {
+        bucketName: this.centralLogsBucketName,
+        accountId: this.stackProperties.accountsConfig.getLogArchiveAccountId(),
+        keyArn: this.centralLogsBucketKey.keyArn,
+      },
+      kmsKey: this.cloudwatchKey,
+      logRetentionInDays: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
+    };
+
     // Only deploy resources in this stack if organizations is enabled
     if (!props.organizationConfig.enable) {
       return;
     }
-
-    this.lambdaKey = cdk.aws_kms.Key.fromKeyArn(
-      this,
-      'AcceleratorGetLambdaKey',
-      cdk.aws_ssm.StringParameter.valueForStringParameter(this, this.acceleratorResourceNames.parameters.lambdaCmkArn),
-    );
 
     // Security Services delegated admin account configuration
     // Global decoration for security services
@@ -85,25 +99,6 @@ export class OrganizationsStack extends AcceleratorStack {
     const securityAdminAccountId = props.accountsConfig.getAccountId(delegatedAdminAccount);
 
     this.logger.debug(`homeRegion: ${props.globalConfig.homeRegion}`);
-    // Set private properties
-    this.stackProperties = props;
-    this.logRetention = this.stackProperties.globalConfig.cloudwatchLogRetentionInDays;
-
-    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
-
-    this.centralLogsBucketKey = this.getAcceleratorKey(AcceleratorKeyType.CENTRAL_LOG_BUCKET, this.cloudwatchKey);
-
-    this.bucketReplicationProps = {
-      destination: {
-        bucketName: `${
-          this.acceleratorResourceNames.bucketPrefixes.centralLogs
-        }-${this.stackProperties.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`,
-        accountId: this.stackProperties.accountsConfig.getLogArchiveAccountId(),
-        keyArn: this.centralLogsBucketKey.keyArn,
-      },
-      kmsKey: this.cloudwatchKey,
-      logRetentionInDays: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
-    };
 
     //
     // Global Organizations actions, only execute in the home region
@@ -177,7 +172,13 @@ export class OrganizationsStack extends AcceleratorStack {
     this.addTaggingPolicies();
 
     //
-    // Add nag suppressions by path
+    // Create NagSuppressions
+    //
+    this.addResourceSuppressionsByPath();
+
+    //
+    // Configure Trusted Services and Delegated Management Accounts
+    //
     //
     this.addResourceSuppressionsByPath(this.nagSuppressionInputs);
 
@@ -248,7 +249,7 @@ export class OrganizationsStack extends AcceleratorStack {
         s3BucketName: `${this.acceleratorResourceNames.bucketPrefixes.costUsage}-${cdk.Stack.of(this).account}-${
           cdk.Stack.of(this).region
         }`,
-        serverAccessLogsBucketName: `${this.acceleratorResourceNames.bucketPrefixes.s3AccessLogs}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
+        serverAccessLogsBucketName: this.getServerAccessLogsBucketName(),
         s3LifeCycleRules: this.getS3LifeCycleRules(
           this.stackProperties.globalConfig.reports.costAndUsageReport.lifecycleRules,
         ),
@@ -256,22 +257,18 @@ export class OrganizationsStack extends AcceleratorStack {
       });
 
       // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
-      NagSuppressions.addResourceSuppressionsByPath(
-        this,
-        `/${this.stackName}/ReportBucket/ReportBucketReplication/` +
-          pascalCase(
-            `${
-              this.acceleratorResourceNames.bucketPrefixes.centralLogs
-            }-${this.stackProperties.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`,
-          ) +
-          '-ReplicationRole/DefaultPolicy/Resource',
-        [
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
           {
-            id: 'AwsSolutions-IAM5',
+            path:
+              `/${this.stackName}/ReportBucket/ReportBucketReplication/` +
+              pascalCase(this.centralLogsBucketName) +
+              '-ReplicationRole/DefaultPolicy/Resource',
             reason: 'Allows only specific policy.',
           },
         ],
-      );
+      });
 
       new ReportDefinition(this, 'ReportDefinition', {
         compression: this.stackProperties.globalConfig.reports.costAndUsageReport.compression,
@@ -757,13 +754,7 @@ export class OrganizationsStack extends AcceleratorStack {
       }
     }
     const organizationsTrail = new cdk_extensions.Trail(this, 'OrganizationsCloudTrail', {
-      bucket: cdk.aws_s3.Bucket.fromBucketName(
-        this,
-        'CentralLogsBucket',
-        `${
-          this.acceleratorResourceNames.bucketPrefixes.centralLogs
-        }-${this.stackProperties.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`,
-      ),
+      bucket: cdk.aws_s3.Bucket.fromBucketName(this, 'CentralLogsBucket', this.centralLogsBucketName),
       s3KeyPrefix: 'cloudtrail-organization',
       cloudWatchLogGroup: cloudTrailCloudWatchCmkLogGroup,
       cloudWatchLogsRetention: cdk.aws_logs.RetentionDays.TEN_YEARS,

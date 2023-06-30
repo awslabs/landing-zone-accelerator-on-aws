@@ -126,9 +126,7 @@ export class ApplicationsStack extends AcceleratorStack {
 
     const allVpcItems = [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? [];
     const allAppConfigs: AppConfigItem[] = props.customizationsConfig.applications ?? [];
-    const accessLogsBucket = `${
-      this.acceleratorResourceNames.bucketPrefixes.elbLogs
-    }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`;
+    const elbLogsBucketName = this.getElbLogsBucketName();
 
     // Set initial private properties
     [this.securityGroupMap, this.subnetMap, this.vpcMap] = this.setInitialMaps(allVpcItems, allAppConfigs);
@@ -141,7 +139,7 @@ export class ApplicationsStack extends AcceleratorStack {
       this.vpcMap,
       props.configDirPath,
       allVpcItems,
-      accessLogsBucket,
+      elbLogsBucketName,
     );
 
     // Create SSM parameters
