@@ -101,6 +101,7 @@ export class CustomizationsConfigTypes {
     targets: t.optional(t.array(t.union([t.nonEmptyString, this.nlbTargetType]))),
     threshold: t.optional(this.targetGroupThresholdType),
     matcher: t.optional(this.targetGroupMatcherType),
+    shareTargets: t.optional(t.shareTargets),
   });
 
   static readonly nlbProtocolEnum = t.enums('NlbProtocolEnum', ['TCP', 'UDP', 'TLS', 'TCP_UDP']);
@@ -311,6 +312,7 @@ export class CustomizationsConfigTypes {
     scheme: t.optional(this.albSchemeEnum),
     attributes: t.optional(this.albAttributesConfig),
     listeners: t.optional(t.array(this.albListenerConfig)),
+    shareTargets: t.optional(t.shareTargets),
   });
 
   static readonly appConfigItem = t.interface({
@@ -1236,6 +1238,13 @@ export class ApplicationLoadBalancerConfig
    * Listeners for Application Load Balancer.
    */
   readonly listeners: ApplicationLoadBalancerListenerConfig[] | undefined = undefined;
+  /**
+   * The location where the Application Load Balancer(s) will be deployed to.
+   * * @remarks
+   * The accounts/OUs provided should contain the subnets specified that are distributed by Resource Access Manager by the `shareTargets` property
+   * for the respective subnets.
+   */
+  readonly shareTargets: t.ShareTargets | undefined = undefined;
 }
 
 /**
@@ -1565,6 +1574,10 @@ export class TargetGroupItemConfig implements t.TypeOf<typeof CustomizationsConf
    * @see {@link CustomizationsConfigTypes.targetGroupMatcherType}
    */
   readonly matcher: TargetGroupMatcherConfig | undefined = undefined;
+  /**
+   * The accounts/OUs location where the Target Group will be deployed to.
+   */
+  readonly shareTargets: t.ShareTargets | undefined = undefined;
 }
 
 /**

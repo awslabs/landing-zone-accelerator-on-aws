@@ -10,6 +10,7 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
+import { ShareTargets } from '../../lib/common-types';
 import {
   NetworkConfig,
   NetworkConfigTypes,
@@ -612,6 +613,10 @@ export class VpcValidator {
         // Validate transit gateway attachments
         //
         this.validateTgwAttachments(values, vpcItem, helpers, errors);
+        //
+        // Validate ACM shared targets
+        //
+        this.validateAcmSharesToAlbShares(values, vpcItem, helpers, errors);
       }
     });
   }
@@ -1984,6 +1989,7 @@ export class VpcValidator {
 
   /**
    * Validate subnets for a given VPC
+   * @param values
    * @param vpcItem
    * @param helpers
    * @param errors
@@ -2003,6 +2009,10 @@ export class VpcValidator {
     this.validateSubnetRouteTables(vpcItem, errors);
     // Validate subnet availability zones
     this.validateSubnetAvailabilityZones(vpcItem, helpers, errors);
+    // Validate subnets exist in VPC that are used with Application Load Balancer
+    this.validateAlbConfigForExistingSubnets(vpcItem, helpers, errors);
+    // Validate that Application Load Balancer that is using shared targets is using subnets that are using shared target.
+    this.validateSharedAlbSubnets(vpcItem, helpers, errors);
   }
 
   /**
@@ -2132,6 +2142,216 @@ export class VpcValidator {
         }
       }
     });
+  }
+
+  /**
+   * Validate that subnet specified in ALB exists
+   * @param vpcItem
+   * @param helpers
+   * @param errors
+   */
+  private validateAlbConfigForExistingSubnets(
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+  ) {
+    for (const albItem of vpcItem.loadBalancers?.applicationLoadBalancers ?? []) {
+      for (const subnetItem of albItem.subnets) {
+        if (!helpers.getSubnet(vpcItem, subnetItem)) {
+          errors.push(
+            `[The Application Load Balancer: ${albItem.name} for VPC ${vpcItem.name} is using subnet ${subnetItem} that doesn't exist`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Validate that ALB that is using sharedTargets has subnets that are also using shared targets method.
+   * @param values
+   * @param errors
+   */
+  private validateSharedAlbSubnets(
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+  ) {
+    let nonSharedSubnets: string[] = [];
+    let invalidAlbs: { name: string; subnets: string[] }[] = [];
+    for (const subnetItem of vpcItem.subnets ?? []) {
+      if (!subnetItem.shareTargets) {
+        nonSharedSubnets.push(subnetItem.name);
+      }
+    }
+    for (const albItem of vpcItem.loadBalancers?.applicationLoadBalancers ?? []) {
+      if (albItem.shareTargets) {
+        if (albItem.subnets.find(item => nonSharedSubnets.find(nonSharedSubnet => item === nonSharedSubnet))) {
+          invalidAlbs.push({ name: albItem.name, subnets: albItem.subnets });
+        }
+      }
+    }
+    this.validateSubnetSharesToAlbShares(vpcItem, helpers, errors);
+    this.validateTargetGroupSharesToAlbShares(vpcItem, helpers, errors);
+    for (const alb of invalidAlbs) {
+      errors.push(
+        `The Application Load Balancer: ${
+          alb.name
+        } is using the sharedTargets method, but at least one of the subnets [${alb.subnets.join(
+          ',',
+        )}] in its configuration is not using the sharedTargets method.`,
+      );
+    }
+  }
+
+  /**
+   * Validate subnet availability to shared Application Load Balancers
+   * @param vpcItem
+   * @param helpers
+   * @param errors
+   */
+  private validateSubnetSharesToAlbShares(
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+  ) {
+    let invalidAlbList: string[] = [];
+    let missingAccountIds: string[] = [];
+    for (const albItem of vpcItem.loadBalancers?.applicationLoadBalancers ?? []) {
+      const albAccounts = helpers.getAccountNamesFromTarget(albItem.shareTargets as ShareTargets);
+      for (const subnetName of albItem.subnets) {
+        const subnetSharedTarget = this.getSubnetSharedTarget(vpcItem, subnetName);
+        if (subnetSharedTarget) {
+          const subnetAccounts = helpers.getAccountNamesFromTarget(subnetSharedTarget);
+          missingAccountIds = albAccounts.filter(item => !subnetAccounts.includes(item));
+          if (missingAccountIds.length > 0) {
+            if (!invalidAlbList.includes(albItem.name)) {
+              invalidAlbList.push(albItem.name);
+            }
+          }
+        }
+      }
+    }
+    for (const alb of invalidAlbList) {
+      errors.push(
+        `The Application Load Balancer ${alb} is deployed to multiple accounts and using subnets that aren't available. Please make sure your sharedTargets configuration for your subnet makes the subnet available for the ALB.`,
+      );
+    }
+  }
+
+  /**
+   * Validate target group availability to shared Application Load Balancers
+   * @param vpcItem
+   * @param helpers
+   * @param errors
+   */
+  private validateTargetGroupSharesToAlbShares(
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+  ) {
+    let invalidAlbList: string[] = [];
+    let missingAccountIds: string[] = [];
+
+    for (const albItem of vpcItem.loadBalancers?.applicationLoadBalancers ?? []) {
+      if (albItem.shareTargets) {
+        const albAccounts = helpers.getAccountNamesFromTarget(albItem.shareTargets as ShareTargets);
+        for (const listenerItem of albItem.listeners ?? []) {
+          for (const targetGroupItem of vpcItem.targetGroups ?? []) {
+            if (targetGroupItem.name === listenerItem.targetGroup) {
+              const targetGroupSharedTarget = this.getTargetGroupSharedTarget(vpcItem, listenerItem.targetGroup);
+              if (targetGroupSharedTarget) {
+                const targetGroupAccounts = helpers.getAccountNamesFromTarget(targetGroupSharedTarget);
+                missingAccountIds = albAccounts.filter(item => !targetGroupAccounts.includes(item));
+                if (missingAccountIds.length > 0) {
+                  if (!invalidAlbList.includes(albItem.name)) {
+                    invalidAlbList.push(albItem.name);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    for (const alb of invalidAlbList) {
+      errors.push(
+        `The Application Load Balancer ${alb} is deployed to multiple accounts and using target group(s) that are not in the same accounts. Please make sure your sharedTargets configuration for your targetGroup makes the Target Group available for the ALB.`,
+      );
+    }
+  }
+
+  /**
+   * Validate ACM availability to shared Application Load Balancers
+   * @param values
+   * @param vpcItem
+   * @param helpers
+   * @param errors
+   */
+  private validateAcmSharesToAlbShares(
+    values: NetworkConfig,
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+  ) {
+    let invalidAlbList: string[] = [];
+    let missingAccountIds: string[] = [];
+
+    for (const acmItem of values.certificates ?? []) {
+      for (const albItem of vpcItem.loadBalancers?.applicationLoadBalancers ?? []) {
+        if (albItem.shareTargets) {
+          const albAccounts = helpers.getAccountNamesFromTarget(albItem.shareTargets as ShareTargets);
+          for (const listenerItem of albItem.listeners ?? []) {
+            if (listenerItem.certificate === acmItem.name) {
+              const acmAccountIds = helpers.getAccountNamesFromTarget(acmItem.deploymentTargets);
+              missingAccountIds = albAccounts.filter(item => !acmAccountIds.includes(item));
+              if (missingAccountIds.length > 0) {
+                if (!invalidAlbList.includes(albItem.name)) {
+                  invalidAlbList.push(albItem.name);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    for (const alb of invalidAlbList) {
+      errors.push(
+        `The Application Load Balancer ${alb} is deployed to multiple accounts and using ACM certificate(s) that are not in the same accounts. Please make sure your sharedTargets configuration for your ACM certificates makes the Target Group available for the ALB.`,
+      );
+    }
+  }
+
+  /**
+   * Returns the shared targets from the input of the subnet name.
+   * @param vpcItem
+   * @param subnetName
+   * @returns
+   */
+  private getSubnetSharedTarget(vpcItem: VpcConfig | VpcTemplatesConfig, subnetName: string): ShareTargets | undefined {
+    for (const subnetItem of vpcItem.subnets ?? []) {
+      if (subnetItem.name === subnetName) {
+        return subnetItem.shareTargets;
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * Returns the shared targets from the input of the target group name.
+   * @param vpcItem
+   * @param subnetName
+   * @returns
+   */
+  private getTargetGroupSharedTarget(
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    targetGroupName: string,
+  ): ShareTargets | undefined {
+    for (const targetGroupItem of vpcItem.targetGroups ?? []) {
+      if (targetGroupItem.name === targetGroupName) {
+        return targetGroupItem.shareTargets;
+      }
+    }
+    return undefined;
   }
 
   /**

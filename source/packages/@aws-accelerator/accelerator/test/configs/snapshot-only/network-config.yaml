@@ -1088,6 +1088,25 @@ vpcs:
               protocol: HTTP
               targetGroup: appA-alb-tg-1
               type: forward
+        - name: appA-alb-test-01
+          scheme: internal
+          subnets:
+            - SharedServices-App-A
+            - SharedServices-App-B
+          securityGroups:
+            - InternalHTTP-SG
+          listeners:
+            - name: appA-listener-3
+              port: 443
+              protocol: HTTPS
+              targetGroup: deployed-tg-2
+              order: 3
+              type: forward
+              certificate: cert1
+              sslPolicy: ELBSecurityPolicy-2016-08
+          shareTargets:
+            organizationalUnits:
+              - Security
       networkLoadBalancers:
         - name: appA-nlb-01
           scheme: internet-facing
@@ -1127,6 +1146,13 @@ vpcs:
           enabled: true
           port: 80
           protocol: HTTP
+      - name: deployed-tg-2
+        port: 443
+        protocol: HTTPS
+        type: instance
+        shareTargets:
+          organizationalUnits:
+            - Security
       - name: appA-nlb-tg-2
         port: 80
         protocol: TCP
@@ -1550,6 +1576,8 @@ certificates:
       accounts:
         - Management
         - Audit
+      organizationalUnits:
+        - Security
   - name: cert2
     type: request
     validation: DNS
