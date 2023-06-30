@@ -143,6 +143,19 @@ class LambdaDefaultMemoryAspect implements cdk.IAspect {
 }
 
 /**
+ * Default deletion override for Service linked role resources
+ */
+class IamServiceLinkedRoleAspect implements cdk.IAspect {
+  visit(node: IConstruct): void {
+    if (node instanceof cdk.CfnResource) {
+      if (node.cfnResourceType === 'AWS::IAM::ServiceLinkedRole') {
+        node.applyRemovalPolicy(cdk.RemovalPolicy.RETAIN);
+      }
+    }
+  }
+}
+
+/**
  * Solution ID override for Lambda resources
  */
 class AwsSolutionAspect implements cdk.IAspect {
@@ -189,6 +202,7 @@ export class AcceleratorAspects {
     // Add default aspects
     cdk.Aspects.of(app).add(new LambdaDefaultMemoryAspect());
     cdk.Aspects.of(app).add(new AwsSolutionAspect());
+    cdk.Aspects.of(app).add(new IamServiceLinkedRoleAspect());
 
     // Set global region
     this.globalRegion = globalRegion;
