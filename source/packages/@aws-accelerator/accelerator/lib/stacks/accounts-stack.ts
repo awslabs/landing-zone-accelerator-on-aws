@@ -150,7 +150,7 @@ export class AccountsStack extends AcceleratorStack {
     //
     // Create NagSuppressions
     //
-    this.addResourceSuppressionsByPath(this.nagSuppressionInputs);
+    this.addResourceSuppressionsByPath();
 
     this.logger.info('Completed stack synthesis');
   }

@@ -15,7 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import * as path from 'path';
-import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import { AcceleratorKeyType, AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import {
   PortfolioAssociationConfig,
   PortfolioConfig,
@@ -51,14 +51,7 @@ export class CustomizationsStack extends AcceleratorStack {
     super(scope, id, props);
     this.props = props;
     this.stackSetAdministratorAccount = props.accountsConfig.getManagementAccountId();
-    this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
-      this,
-      'AcceleratorGetCloudWatchKey',
-      cdk.aws_ssm.StringParameter.valueForStringParameter(
-        this,
-        this.acceleratorResourceNames.parameters.cloudWatchLogCmkArn,
-      ),
-    ) as cdk.aws_kms.Key;
+    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
 
     // Create CloudFormation StackSets
     if (props.customizationsConfig?.customizations?.cloudFormationStackSets) {

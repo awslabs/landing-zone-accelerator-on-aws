@@ -26,6 +26,15 @@ cdkOptions:
 logging:
   account: LogArchive
   centralizedLoggingRegion: us-west-2
+  centralLogBucket:
+    existingBucket: 
+      name: existing-central-log-bucket
+  accessLogBucket:
+    existingBucket: 
+      name: existing-access-logs-bucket-${ACCOUNT_ID}-${REGION}
+  elbLogBucket:
+    existingBucket: 
+      name: existing-elb-logs-bucket-${ACCOUNT_ID}-${REGION}
   cloudtrail:
     enable: true
     organizationTrail: false

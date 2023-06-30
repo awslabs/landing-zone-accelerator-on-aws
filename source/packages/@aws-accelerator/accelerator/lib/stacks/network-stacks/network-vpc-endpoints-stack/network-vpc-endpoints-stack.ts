@@ -67,13 +67,7 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
     //
     this.nfwPolicyMap = this.setNfwPolicyMap(props);
 
-    const firewallLogBucket = cdk.aws_s3.Bucket.fromBucketName(
-      this,
-      'FirewallLogsBucket',
-      `${this.acceleratorResourceNames.bucketPrefixes.centralLogs}-${props.accountsConfig.getLogArchiveAccountId()}-${
-        props.centralizedLoggingRegion
-      }`,
-    );
+    const firewallLogBucket = cdk.aws_s3.Bucket.fromBucketName(this, 'FirewallLogsBucket', this.centralLogsBucketName);
 
     //
     // Iterate through VPCs in this account and region

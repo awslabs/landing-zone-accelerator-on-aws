@@ -989,7 +989,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
           "LogDestinationConfigs": [
             {
               "LogDestination": {
-                "bucketName": "aws-accelerator-central-logs-333333333333-us-west-2",
+                "bucketName": "existing-central-log-bucket",
                 "prefix": "firewall",
               },
               "LogDestinationType": "S3",

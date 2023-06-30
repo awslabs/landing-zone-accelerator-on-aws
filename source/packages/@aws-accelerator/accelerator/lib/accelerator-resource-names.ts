@@ -1,18 +1,6 @@
+import { AcceleratorResourcePrefixes } from '../utils/app-utils';
 export interface AcceleratorResourceNamesProps {
-  readonly prefixes: {
-    /**
-     * Accelerator prefix - used for resource name prefix for resources which do not have explicit prefix
-     */
-    readonly accelerator: string;
-    readonly repoName: string;
-    readonly bucketName: string;
-    readonly ssmParamName: string;
-    readonly kmsAlias: string;
-    readonly snsTopicName: string;
-    readonly secretName: string;
-    readonly trailLogName: string;
-    readonly databaseName: string;
-  };
+  readonly prefixes: AcceleratorResourcePrefixes;
 }
 
 interface RoleNames {
@@ -31,6 +19,7 @@ interface RoleNames {
   assetFunctionRoleName: string;
 }
 interface ParameterNames {
+  existingCentralLogBucketCmkArn: string;
   centralLogBucketCmkArn: string;
   controlTowerDriftDetection: string;
   controlTowerLastDriftMessage: string;
@@ -97,6 +86,7 @@ export class AcceleratorResourceNames {
     assetFunctionRoleName: 'PLACE_HOLDER',
   };
   public parameters: ParameterNames = {
+    existingCentralLogBucketCmkArn: 'PLACE_HOLDER',
     centralLogBucketCmkArn: 'PLACE_HOLDER',
     controlTowerDriftDetection: 'PLACE_HOLDER',
     controlTowerLastDriftMessage: 'PLACE_HOLDER',
@@ -169,6 +159,8 @@ export class AcceleratorResourceNames {
 
     //
     // SSM Parameter initializations
+    this.parameters.existingCentralLogBucketCmkArn =
+      props.prefixes.importResourcesSsmParamName + '/logging/central-bucket/kms/arn';
     this.parameters.centralLogBucketCmkArn = props.prefixes.ssmParamName + '/logging/central-bucket/kms/arn';
     this.parameters.controlTowerDriftDetection = props.prefixes.ssmParamName + '/controltower/driftDetected';
     this.parameters.controlTowerLastDriftMessage = props.prefixes.ssmParamName + '/controltower/lastDriftMessage';

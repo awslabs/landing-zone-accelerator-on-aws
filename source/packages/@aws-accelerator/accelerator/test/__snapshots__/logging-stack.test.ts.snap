@@ -95,40 +95,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "AcceleratorCentralLogBucketKeyLookup26F8C418": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
-            "Arn",
-          ],
-        },
-        "assumeRoleArn": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":iam::333333333333:role/AWSAccelerator-CentralBucket-KeyArnParam-Role",
-            ],
-          ],
-        },
-        "invokingAccountID": "333333333333",
-        "invokingRegion": "us-east-1",
-        "parameterAccountID": "333333333333",
-        "parameterName": "/accelerator/logging/central-bucket/kms/arn",
-        "parameterRegion": "us-west-2",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::SsmGetParameterValue",
-      "UpdateReplacePolicy": "Delete",
-    },
     "AcceleratorCentralSnsKmsArnParameter4E5BD663": {
       "Properties": {
         "Name": "/accelerator/kms/snstopic/key-arn",
@@ -230,6 +196,40 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "AcceleratorExistingCentralLogBucketKeyLookup60D9CA07": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
+            "Arn",
+          ],
+        },
+        "assumeRoleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::333333333333:role/AWSAccelerator-CrossAccountSsmParameterShare",
+            ],
+          ],
+        },
+        "invokingAccountID": "333333333333",
+        "invokingRegion": "us-east-1",
+        "parameterAccountID": "333333333333",
+        "parameterName": "/accelerator/imported-resources/logging/central-bucket/kms/arn",
+        "parameterRegion": "us-west-2",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::SsmGetParameterValue",
+      "UpdateReplacePolicy": "Delete",
+    },
     "AcceleratorKmsArnParameterKey13EEB1676": {
       "Properties": {
         "Name": "/accelerator/kms/key1/key-arn",
@@ -249,7 +249,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "cdk_nag": {
           "rules_to_suppress": [
             {
-              "id": "AwsSolutions-KMS5",
+              "id": "AwsSolutions-S1",
               "reason": "CMK policy defined by customer provided policy definition file.",
             },
           ],
@@ -429,9 +429,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           ],
         },
         "LoggingConfiguration": {
-          "DestinationBucketName": {
-            "Ref": "AccessLogsBucketFA218D2A",
-          },
+          "DestinationBucketName": "existing-access-logs-bucket-333333333333-us-east-1",
           "LogFilePrefix": "aws-accelerator-metadata-333333333333-us-east-1/",
         },
         "OwnershipControls": {
@@ -915,125 +913,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::KMS::Alias",
     },
-    "AccessLogsBucketFA218D2A": {
-      "DeletionPolicy": "Retain",
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-S1",
-              "reason": "AccessLogsBucket has server access logs disabled till the task for access logging completed.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "AccessControl": "LogDeliveryWrite",
-        "BucketEncryption": {
-          "ServerSideEncryptionConfiguration": [
-            {
-              "ServerSideEncryptionByDefault": {
-                "SSEAlgorithm": "AES256",
-              },
-            },
-          ],
-        },
-        "BucketName": "aws-accelerator-s3-access-logs-333333333333-us-east-1",
-        "OwnershipControls": {
-          "Rules": [
-            {
-              "ObjectOwnership": "BucketOwnerPreferred",
-            },
-          ],
-        },
-        "PublicAccessBlockConfiguration": {
-          "BlockPublicAcls": true,
-          "BlockPublicPolicy": true,
-          "IgnorePublicAcls": true,
-          "RestrictPublicBuckets": true,
-        },
-        "VersioningConfiguration": {
-          "Status": "Enabled",
-        },
-      },
-      "Type": "AWS::S3::Bucket",
-      "UpdateReplacePolicy": "Retain",
-    },
-    "AccessLogsBucketPolicy00F12803": {
-      "Properties": {
-        "Bucket": {
-          "Ref": "AccessLogsBucketFA218D2A",
-        },
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": "s3:*",
-              "Condition": {
-                "Bool": {
-                  "aws:SecureTransport": "false",
-                },
-              },
-              "Effect": "Deny",
-              "Principal": {
-                "AWS": "*",
-              },
-              "Resource": [
-                {
-                  "Fn::GetAtt": [
-                    "AccessLogsBucketFA218D2A",
-                    "Arn",
-                  ],
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "AccessLogsBucketFA218D2A",
-                          "Arn",
-                        ],
-                      },
-                      "/*",
-                    ],
-                  ],
-                },
-              ],
-              "Sid": "deny-insecure-connections",
-            },
-            {
-              "Action": "s3:PutObject",
-              "Condition": {
-                "StringEquals": {
-                  "aws:SourceAccount": "333333333333",
-                },
-              },
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "logging.s3.amazonaws.com",
-              },
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    {
-                      "Fn::GetAtt": [
-                        "AccessLogsBucketFA218D2A",
-                        "Arn",
-                      ],
-                    },
-                    "/*",
-                  ],
-                ],
-              },
-              "Sid": "Allow write access for logging service principal",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::S3::BucketPolicy",
-    },
     "AutoScalingServiceLinkedRole": {
       "Properties": {
         "AWSServiceName": "autoscaling.amazonaws.com",
@@ -1147,96 +1026,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           },
         ],
         "RoleName": "AWSAccelerator-SnsTopic-KeyArnParam-Role",
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "CustomS3PutBucketReplicationCustomResourceProviderHandler1D75398C": {
-      "DependsOn": [
-        "CustomS3PutBucketReplicationCustomResourceProviderRole1C378488",
-      ],
-      "Properties": {
-        "Code": {
-          "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
-          "S3Key": "REPLACED-GENERATED-NAME.zip",
-        },
-        "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
-        "Role": {
-          "Fn::GetAtt": [
-            "CustomS3PutBucketReplicationCustomResourceProviderRole1C378488",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs16.x",
-        "Timeout": 900,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "CustomS3PutBucketReplicationCustomResourceProviderLogGroup6A67905E": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "KmsKeyId": {
-          "Fn::GetAtt": [
-            "AcceleratorCloudWatchKeyF93B6E17",
-            "Arn",
-          ],
-        },
-        "LogGroupName": {
-          "Fn::Join": [
-            "",
-            [
-              "/aws/lambda/",
-              {
-                "Ref": "CustomS3PutBucketReplicationCustomResourceProviderHandler1D75398C",
-              },
-            ],
-          ],
-        },
-        "RetentionInDays": 3653,
-      },
-      "Type": "AWS::Logs::LogGroup",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "CustomS3PutBucketReplicationCustomResourceProviderRole1C378488": {
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-          },
-        ],
-        "Policies": [
-          {
-            "PolicyDocument": {
-              "Statement": [
-                {
-                  "Action": [
-                    "iam:PassRole",
-                    "s3:PutLifecycleConfiguration",
-                    "s3:PutReplicationConfiguration",
-                    "s3:PutBucketVersioning",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": "*",
-                  "Sid": "S3PutReplicationConfigurationTaskActions",
-                },
-              ],
-              "Version": "2012-10-17",
-            },
-            "PolicyName": "Inline",
-          },
-        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -1573,378 +1362,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Role",
     },
-    "ElbAccessLogsBucketD6CD6A5D": {
-      "DeletionPolicy": "Retain",
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-S1",
-              "reason": "ElbAccessLogsBucket has server access logs disabled till the task for access logging completed.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "BucketEncryption": {
-          "ServerSideEncryptionConfiguration": [
-            {
-              "ServerSideEncryptionByDefault": {
-                "SSEAlgorithm": "AES256",
-              },
-            },
-          ],
-        },
-        "BucketName": "aws-accelerator-elb-access-logs-333333333333-us-east-1",
-        "OwnershipControls": {
-          "Rules": [
-            {
-              "ObjectOwnership": "BucketOwnerPreferred",
-            },
-          ],
-        },
-        "PublicAccessBlockConfiguration": {
-          "BlockPublicAcls": true,
-          "BlockPublicPolicy": true,
-          "IgnorePublicAcls": true,
-          "RestrictPublicBuckets": true,
-        },
-        "VersioningConfiguration": {
-          "Status": "Enabled",
-        },
-      },
-      "Type": "AWS::S3::Bucket",
-      "UpdateReplacePolicy": "Retain",
-    },
-    "ElbAccessLogsBucketElbAccessLogsBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRole704C2B75": {
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "s3.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "Path": "/service-role/",
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "ElbAccessLogsBucketElbAccessLogsBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRoleDefaultPolicy13236CE3": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": [
-                "s3:GetObjectLegalHold",
-                "s3:GetObjectRetention",
-                "s3:GetObjectVersion",
-                "s3:GetObjectVersionAcl",
-                "s3:GetObjectVersionForReplication",
-                "s3:GetObjectVersionTagging",
-                "s3:GetReplicationConfiguration",
-                "s3:ListBucket",
-                "s3:ReplicateDelete",
-                "s3:ReplicateObject",
-                "s3:ReplicateTags",
-              ],
-              "Effect": "Allow",
-              "Resource": [
-                {
-                  "Fn::GetAtt": [
-                    "ElbAccessLogsBucketD6CD6A5D",
-                    "Arn",
-                  ],
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "ElbAccessLogsBucketD6CD6A5D",
-                          "Arn",
-                        ],
-                      },
-                      "/*",
-                    ],
-                  ],
-                },
-              ],
-            },
-            {
-              "Action": [
-                "s3:GetBucketVersioning",
-                "s3:GetObjectVersionTagging",
-                "s3:ObjectOwnerOverrideToBucketOwner",
-                "s3:PutBucketVersioning",
-                "s3:ReplicateDelete",
-                "s3:ReplicateObject",
-                "s3:ReplicateTags",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    "arn:",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    ":s3:::aws-accelerator-central-logs-333333333333-us-west-2/*",
-                  ],
-                ],
-              },
-            },
-            {
-              "Action": "kms:Encrypt",
-              "Effect": "Allow",
-              "Resource": {
-                "Ref": "AcceleratorCentralLogBucketKeyLookup26F8C418",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "lbAccessLogsBucketElbAccessLogsBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRoleDefaultPolicy13236CE3",
-        "Roles": [
-          {
-            "Ref": "ElbAccessLogsBucketElbAccessLogsBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRole704C2B75",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "ElbAccessLogsBucketElbAccessLogsBucketReplicationC8860256": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomS3PutBucketReplicationCustomResourceProviderLogGroup6A67905E",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomS3PutBucketReplicationCustomResourceProviderHandler1D75398C",
-            "Arn",
-          ],
-        },
-        "destinationAccountId": "333333333333",
-        "destinationBucketArn": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":s3:::aws-accelerator-central-logs-333333333333-us-west-2",
-            ],
-          ],
-        },
-        "destinationBucketKeyArn": {
-          "Ref": "AcceleratorCentralLogBucketKeyLookup26F8C418",
-        },
-        "prefix": "",
-        "replicationRoleArn": {
-          "Fn::GetAtt": [
-            "ElbAccessLogsBucketElbAccessLogsBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRole704C2B75",
-            "Arn",
-          ],
-        },
-        "sourceBucketName": {
-          "Ref": "ElbAccessLogsBucketD6CD6A5D",
-        },
-      },
-      "Type": "Custom::S3PutBucketReplication",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "ElbAccessLogsBucketPolicyC6AEEA2E": {
-      "Properties": {
-        "Bucket": {
-          "Ref": "ElbAccessLogsBucketD6CD6A5D",
-        },
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": "s3:*",
-              "Condition": {
-                "Bool": {
-                  "aws:SecureTransport": "false",
-                },
-              },
-              "Effect": "Deny",
-              "Principal": {
-                "AWS": "*",
-              },
-              "Resource": [
-                {
-                  "Fn::GetAtt": [
-                    "ElbAccessLogsBucketD6CD6A5D",
-                    "Arn",
-                  ],
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "ElbAccessLogsBucketD6CD6A5D",
-                          "Arn",
-                        ],
-                      },
-                      "/*",
-                    ],
-                  ],
-                },
-              ],
-              "Sid": "deny-insecure-connections",
-            },
-            {
-              "Action": "s3:GetBucketAcl",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "ssm.amazonaws.com",
-              },
-              "Resource": {
-                "Fn::GetAtt": [
-                  "ElbAccessLogsBucketD6CD6A5D",
-                  "Arn",
-                ],
-              },
-              "Sid": "Allow get acl access for SSM principal",
-            },
-            {
-              "Action": "s3:PutObject",
-              "Effect": "Allow",
-              "Principal": {
-                "AWS": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:",
-                      {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::127311923021:root",
-                    ],
-                  ],
-                },
-              },
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    {
-                      "Fn::GetAtt": [
-                        "ElbAccessLogsBucketD6CD6A5D",
-                        "Arn",
-                      ],
-                    },
-                    "/*",
-                  ],
-                ],
-              },
-              "Sid": "Allow write access for ELB Account principal",
-            },
-            {
-              "Action": "s3:PutObject",
-              "Condition": {
-                "StringEquals": {
-                  "s3:x-amz-acl": "bucket-owner-full-control",
-                },
-              },
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "delivery.logs.amazonaws.com",
-              },
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    {
-                      "Fn::GetAtt": [
-                        "ElbAccessLogsBucketD6CD6A5D",
-                        "Arn",
-                      ],
-                    },
-                    "/*",
-                  ],
-                ],
-              },
-              "Sid": "Allow write access for delivery logging service principal",
-            },
-            {
-              "Action": "s3:GetBucketAcl",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "delivery.logs.amazonaws.com",
-              },
-              "Resource": {
-                "Fn::GetAtt": [
-                  "ElbAccessLogsBucketD6CD6A5D",
-                  "Arn",
-                ],
-              },
-              "Sid": "Allow read bucket ACL access for delivery logging service principal",
-            },
-            {
-              "Action": [
-                "s3:GetBucketLocation",
-                "s3:PutObject",
-              ],
-              "Condition": {
-                "StringEquals": {
-                  "aws:PrincipalOrgID": "o-asdf123456",
-                },
-              },
-              "Effect": "Allow",
-              "Principal": {
-                "AWS": "*",
-              },
-              "Resource": [
-                {
-                  "Fn::GetAtt": [
-                    "ElbAccessLogsBucketD6CD6A5D",
-                    "Arn",
-                  ],
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "ElbAccessLogsBucketD6CD6A5D",
-                          "Arn",
-                        ],
-                      },
-                      "/*",
-                    ],
-                  ],
-                },
-              ],
-              "Sid": "Allow Organization principals to use of the bucket",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::S3::BucketPolicy",
-    },
     "FirehoseToS3SetupFirehoseKinesisStreamServiceRoleDCF2BF9E": {
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -2185,7 +1602,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
                             {
                               "Ref": "AWS::Partition",
                             },
-                            ":s3:::aws-accelerator-central-logs-333333333333-us-west-2/*",
+                            ":s3:::existing-central-log-bucket/*",
                           ],
                         ],
                       },
@@ -2193,7 +1610,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
                   },
                   "Effect": "Allow",
                   "Resource": {
-                    "Ref": "AcceleratorCentralLogBucketKeyLookup26F8C418",
+                    "Ref": "AcceleratorExistingCentralLogBucketKeyLookup60D9CA07",
                   },
                 },
                 {
@@ -2215,7 +1632,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
                           {
                             "Ref": "AWS::Partition",
                           },
-                          ":s3:::aws-accelerator-central-logs-333333333333-us-west-2",
+                          ":s3:::existing-central-log-bucket",
                         ],
                       ],
                     },
@@ -2227,7 +1644,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
                           {
                             "Ref": "AWS::Partition",
                           },
-                          ":s3:::aws-accelerator-central-logs-333333333333-us-west-2/*",
+                          ":s3:::existing-central-log-bucket/*",
                         ],
                       ],
                     },
@@ -2293,7 +1710,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
                 {
                   "Ref": "AWS::Partition",
                 },
-                ":s3:::aws-accelerator-central-logs-333333333333-us-west-2",
+                ":s3:::existing-central-log-bucket",
               ],
             ],
           },
@@ -2311,7 +1728,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           "EncryptionConfiguration": {
             "KMSEncryptionConfig": {
               "AWSKMSKeyARN": {
-                "Ref": "AcceleratorCentralLogBucketKeyLookup26F8C418",
+                "Ref": "AcceleratorExistingCentralLogBucketKeyLookup60D9CA07",
               },
             },
           },
@@ -2704,10 +2121,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
               "id": "AwsSolutions-IAM5",
               "reason": "This role needs permissions to change retention and subscription filter for any new log group that is created to enable log replication.",
             },
-            {
-              "id": "AwsSolutions-IAM4",
-              "reason": "AWS Managed policy for Lambda basic execution attached.",
-            },
           ],
         },
       },
@@ -2788,12 +2201,8 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "cdk_nag": {
           "rules_to_suppress": [
             {
-              "id": "AwsSolutions-IAM5",
-              "reason": "This role needs permissions to change retention and subscription filter for any new log group that is created to enable log replication.",
-            },
-            {
               "id": "AwsSolutions-IAM4",
-              "reason": "AWS Managed policy for Lambda basic execution attached.",
+              "reason": "This role needs permissions to change retention and subscription filter for any new log group that is created to enable log replication.",
             },
           ],
         },
@@ -2995,6 +2404,572 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         ],
       },
       "Type": "AWS::IAM::Role",
+    },
+    "ValidateExistingaccessLogsBucketValidateBucketValidateBucketFunction5FD05398": {
+      "DependsOn": [
+        "ValidateExistingaccessLogsBucketValidateBucketValidateBucketFunctionServiceRoleDefaultPolicy6B3B703D",
+        "ValidateExistingaccessLogsBucketValidateBucketValidateBucketFunctionServiceRole2BFC0D37",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Accelerator deployed ValidateBucket custom resource lambda function.",
+        "Handler": "index.handler",
+        "KmsKeyArn": {
+          "Fn::GetAtt": [
+            "AcceleratorLambdaKeyD279839E",
+            "Arn",
+          ],
+        },
+        "MemorySize": 256,
+        "Role": {
+          "Fn::GetAtt": [
+            "ValidateExistingaccessLogsBucketValidateBucketValidateBucketFunctionServiceRole2BFC0D37",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 160,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ValidateExistingaccessLogsBucketValidateBucketValidateBucketFunctionLogGroupCACEF4C8": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "AcceleratorCloudWatchKeyF93B6E17",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "ValidateExistingaccessLogsBucketValidateBucketValidateBucketFunction5FD05398",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ValidateExistingaccessLogsBucketValidateBucketValidateBucketFunctionServiceRole2BFC0D37": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ValidateExistingaccessLogsBucketValidateBucketValidateBucketFunctionServiceRoleDefaultPolicy6B3B703D": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:GetEncryptionConfiguration",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":s3:::existing-access-logs-bucket-333333333333-us-east-1",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ValidateExistingaccessLogsBucketValidateBucketValidateBucketFunctionServiceRoleDefaultPolicy6B3B703D",
+        "Roles": [
+          {
+            "Ref": "ValidateExistingaccessLogsBucketValidateBucketValidateBucketFunctionServiceRole2BFC0D37",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ValidateExistingaccessLogsBucketValidateBucketValidateBucketResource0EEF9EA4": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "ValidateExistingaccessLogsBucketValidateBucketframeworkonEvent2B6B9E27",
+            "Arn",
+          ],
+        },
+        "bucketName": "existing-access-logs-bucket-333333333333-us-east-1",
+        "encryptionType": "s3",
+        "uuid": "REPLACED-UUID",
+        "validationCheckList": [
+          "encryption",
+        ],
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ValidateExistingaccessLogsBucketValidateBucketframeworkonEvent2B6B9E27": {
+      "DependsOn": [
+        "ValidateExistingaccessLogsBucketValidateBucketframeworkonEventServiceRoleDefaultPolicy22A5EF89",
+        "ValidateExistingaccessLogsBucketValidateBucketframeworkonEventServiceRoleA43F5BC1",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-east-1/ValidateExistingaccessLogsBucket/ValidateBucket/Resource)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "ValidateExistingaccessLogsBucketValidateBucketValidateBucketFunction5FD05398",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "ValidateExistingaccessLogsBucketValidateBucketframeworkonEventServiceRoleA43F5BC1",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ValidateExistingaccessLogsBucketValidateBucketframeworkonEventServiceRoleA43F5BC1": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ValidateExistingaccessLogsBucketValidateBucketframeworkonEventServiceRoleDefaultPolicy22A5EF89": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "ValidateExistingaccessLogsBucketValidateBucketValidateBucketFunction5FD05398",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "ValidateExistingaccessLogsBucketValidateBucketValidateBucketFunction5FD05398",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ValidateExistingaccessLogsBucketValidateBucketframeworkonEventServiceRoleDefaultPolicy22A5EF89",
+        "Roles": [
+          {
+            "Ref": "ValidateExistingaccessLogsBucketValidateBucketframeworkonEventServiceRoleA43F5BC1",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ValidateExistingelbLogsBucketValidateBucketValidateBucketFunction5B22444D": {
+      "DependsOn": [
+        "ValidateExistingelbLogsBucketValidateBucketValidateBucketFunctionServiceRoleDefaultPolicyE7A6E2D8",
+        "ValidateExistingelbLogsBucketValidateBucketValidateBucketFunctionServiceRole39D2D9BC",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Accelerator deployed ValidateBucket custom resource lambda function.",
+        "Handler": "index.handler",
+        "KmsKeyArn": {
+          "Fn::GetAtt": [
+            "AcceleratorLambdaKeyD279839E",
+            "Arn",
+          ],
+        },
+        "MemorySize": 256,
+        "Role": {
+          "Fn::GetAtt": [
+            "ValidateExistingelbLogsBucketValidateBucketValidateBucketFunctionServiceRole39D2D9BC",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 160,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ValidateExistingelbLogsBucketValidateBucketValidateBucketFunctionLogGroup02AEE16B": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "AcceleratorCloudWatchKeyF93B6E17",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "ValidateExistingelbLogsBucketValidateBucketValidateBucketFunction5B22444D",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ValidateExistingelbLogsBucketValidateBucketValidateBucketFunctionServiceRole39D2D9BC": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ValidateExistingelbLogsBucketValidateBucketValidateBucketFunctionServiceRoleDefaultPolicyE7A6E2D8": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:GetEncryptionConfiguration",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":s3:::existing-elb-logs-bucket-333333333333-us-east-1",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ValidateExistingelbLogsBucketValidateBucketValidateBucketFunctionServiceRoleDefaultPolicyE7A6E2D8",
+        "Roles": [
+          {
+            "Ref": "ValidateExistingelbLogsBucketValidateBucketValidateBucketFunctionServiceRole39D2D9BC",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ValidateExistingelbLogsBucketValidateBucketValidateBucketResource29576852": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "ValidateExistingelbLogsBucketValidateBucketframeworkonEvent7492D78A",
+            "Arn",
+          ],
+        },
+        "bucketName": "existing-elb-logs-bucket-333333333333-us-east-1",
+        "encryptionType": "s3",
+        "uuid": "REPLACED-UUID",
+        "validationCheckList": [
+          "encryption",
+        ],
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ValidateExistingelbLogsBucketValidateBucketframeworkonEvent7492D78A": {
+      "DependsOn": [
+        "ValidateExistingelbLogsBucketValidateBucketframeworkonEventServiceRoleDefaultPolicyD729BD4E",
+        "ValidateExistingelbLogsBucketValidateBucketframeworkonEventServiceRole1D1E18C7",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-east-1/ValidateExistingelbLogsBucket/ValidateBucket/Resource)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "ValidateExistingelbLogsBucketValidateBucketValidateBucketFunction5B22444D",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "ValidateExistingelbLogsBucketValidateBucketframeworkonEventServiceRole1D1E18C7",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ValidateExistingelbLogsBucketValidateBucketframeworkonEventServiceRole1D1E18C7": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ValidateExistingelbLogsBucketValidateBucketframeworkonEventServiceRoleDefaultPolicyD729BD4E": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "ValidateExistingelbLogsBucketValidateBucketValidateBucketFunction5B22444D",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "ValidateExistingelbLogsBucketValidateBucketValidateBucketFunction5B22444D",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ValidateExistingelbLogsBucketValidateBucketframeworkonEventServiceRoleDefaultPolicyD729BD4E",
+        "Roles": [
+          {
+            "Ref": "ValidateExistingelbLogsBucketValidateBucketframeworkonEventServiceRole1D1E18C7",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
   },
 }
@@ -3249,7 +3224,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
         "cdk_nag": {
           "rules_to_suppress": [
             {
-              "id": "AwsSolutions-KMS5",
+              "id": "AwsSolutions-S1",
               "reason": "CMK policy defined by customer provided policy definition file.",
             },
           ],
@@ -5702,10 +5677,6 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
               "id": "AwsSolutions-IAM5",
               "reason": "This role needs permissions to change retention and subscription filter for any new log group that is created to enable log replication.",
             },
-            {
-              "id": "AwsSolutions-IAM4",
-              "reason": "AWS Managed policy for Lambda basic execution attached.",
-            },
           ],
         },
       },
@@ -5786,12 +5757,8 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
         "cdk_nag": {
           "rules_to_suppress": [
             {
-              "id": "AwsSolutions-IAM5",
-              "reason": "This role needs permissions to change retention and subscription filter for any new log group that is created to enable log replication.",
-            },
-            {
               "id": "AwsSolutions-IAM4",
-              "reason": "AWS Managed policy for Lambda basic execution attached.",
+              "reason": "This role needs permissions to change retention and subscription filter for any new log group that is created to enable log replication.",
             },
           ],
         },

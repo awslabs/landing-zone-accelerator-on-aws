@@ -23,7 +23,7 @@ export interface CentralLogsBucketProps {
   kmsDescription: string;
   principalOrgIdCondition: { [key: string]: string | string[] };
   orgPrincipals: cdk.aws_iam.IPrincipal;
-  serverAccessLogsBucket: Bucket;
+  serverAccessLogsBucket: cdk.aws_s3.IBucket;
   s3LifeCycleRules?: S3LifeCycleRule[];
   /**
    * @optional
@@ -66,7 +66,7 @@ export class CentralLogsBucket extends Construct {
       s3BucketName: props.s3BucketName,
       kmsAliasName: props.kmsAliasName,
       kmsDescription: props.kmsDescription,
-      serverAccessLogsBucket: props.serverAccessLogsBucket.getS3Bucket(),
+      serverAccessLogsBucket: props.serverAccessLogsBucket,
       s3LifeCycleRules: props.s3LifeCycleRules,
       awsPrincipalAccesses: awsPrincipalAccesses.filter(item => item.accessType !== BucketAccessType.NO_ACCESS),
       bucketPrefixProps: props.bucketPrefixProps,

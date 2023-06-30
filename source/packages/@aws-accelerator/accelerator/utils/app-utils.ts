@@ -81,9 +81,13 @@ export interface AcceleratorResourcePrefixes {
    */
   snsTopicName: string;
   /**
-   * Accelerator SSM parameter name prefix
+   * Accelerator SSM parameter name prefix for solution defined resources
    */
   ssmParamName: string;
+  /**
+   * Accelerator SSM parameter name prefix for imported resources
+   */
+  importResourcesSsmParamName: string;
   /**
    * Accelerator CloudTrail log name prefix
    */
@@ -217,6 +221,7 @@ export function setResourcePrefixes(prefix: string): AcceleratorResourcePrefixes
         secretName: '/accelerator',
         snsTopicName: 'aws-accelerator',
         ssmParamName: '/accelerator',
+        importResourcesSsmParamName: '/accelerator/imported-resources',
         trailLogName: 'aws-accelerator',
       }
     : {
@@ -228,6 +233,7 @@ export function setResourcePrefixes(prefix: string): AcceleratorResourcePrefixes
         secretName: prefix,
         snsTopicName: prefix,
         ssmParamName: `/${prefix}`,
+        importResourcesSsmParamName: `/${prefix}/imported-resources`,
         trailLogName: prefix,
       };
 }

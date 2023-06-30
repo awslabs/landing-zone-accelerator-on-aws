@@ -81,18 +81,21 @@ export abstract class GlobalConfigTypes {
   });
 
   static readonly accessLogBucketConfig = t.interface({
-    lifecycleRules: t.array(t.lifecycleRuleConfig),
+    lifecycleRules: t.optional(t.array(t.lifecycleRuleConfig)),
+    existingBucket: t.optional(t.bucketConfig),
   });
 
   static readonly centralLogBucketConfig = t.interface({
-    lifecycleRules: t.array(t.lifecycleRuleConfig),
+    lifecycleRules: t.optional(t.array(t.lifecycleRuleConfig)),
     s3ResourcePolicyAttachments: t.optional(t.array(t.resourcePolicyStatement)),
     kmsResourcePolicyAttachments: t.optional(t.array(t.resourcePolicyStatement)),
+    existingBucket: t.optional(t.bucketConfig),
   });
 
   static readonly elbLogBucketConfig = t.interface({
-    lifecycleRules: t.array(t.lifecycleRuleConfig),
+    lifecycleRules: t.optional(t.array(t.lifecycleRuleConfig)),
     s3ResourcePolicyAttachments: t.optional(t.array(t.resourcePolicyStatement)),
+    existingBucket: t.optional(t.bucketConfig),
   });
 
   static readonly cloudWatchLogsExclusionConfig = t.interface({
@@ -506,7 +509,7 @@ export class CloudTrailConfig implements t.TypeOf<typeof GlobalConfigTypes.cloud
 }
 
 /**
- * *{@link GlobalConfig} / {@link LoggingConfig} / {@link SessionManagerConfig}*
+ * *{@link GlobalConfig} / {@link LoggingConfig} / {@link ServiceQuotaLimitsConfig}*
  *
  * AWS Service Quotas configuration
  */
@@ -583,6 +586,8 @@ export class SessionManagerConfig implements t.TypeOf<typeof GlobalConfigTypes.s
  * @example
  * ```
  * accessLogBucket:
+ *   existingBucket:
+ *     name: existing-access-logs-bucket-${ACCOUNT_ID}-${REGION}
  *   lifecycleRules:
  *     - enabled: true
  *       id: AccessLifecycle
@@ -602,7 +607,16 @@ export class AccessLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.
   /**
    * Declaration of (S3 Bucket) Lifecycle rules.
    */
-  readonly lifecycleRules: t.LifeCycleRule[] = [];
+  readonly lifecycleRules: t.LifeCycleRule[] | undefined = undefined;
+  /**
+   * Existing bucket configuration.
+   *
+   * @remarks
+   * Use this configuration when solution will use existing bucket, which were created prior to solution deploy.
+   * When using existing bucket, lifecycleRules property will be ignored,
+   * this property is used for solution deployed bucket only.
+   */
+  readonly existingBucket: t.BucketConfig | undefined = undefined;
 }
 
 /**
@@ -630,6 +644,8 @@ export class AccessLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.
  *     - policy: s3-policies/policy1.json
  *   kmsResourcePolicyAttachments:
  *     - policy: kms-policies/policy1.json
+ *   existingBucket:
+ *     name: central-log-bucket
  * ```
  */
 export class CentralLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.centralLogBucketConfig> {
@@ -637,9 +653,18 @@ export class CentralLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes
    * Declaration of (S3 Bucket) Lifecycle rules.
    * Configure additional resource policy attachments
    */
-  readonly lifecycleRules: t.LifeCycleRule[] = [];
+  readonly lifecycleRules: t.LifeCycleRule[] | undefined = undefined;
   readonly s3ResourcePolicyAttachments: t.ResourcePolicyStatement[] | undefined = undefined;
   readonly kmsResourcePolicyAttachments: t.ResourcePolicyStatement[] | undefined = undefined;
+  /**
+   * Existing bucket configuration.
+   *
+   * @remarks
+   * Use this configuration when solution will use existing bucket, which were created prior to solution deploy.
+   * When using existing bucket, lifecycleRules, s3ResourcePolicyAttachments or kmsResourcePolicyAttachments properties will be ignored,
+   * these properties are used for solution deployed bucket only.
+   */
+  readonly existingBucket: t.BucketConfig | undefined = undefined;
 }
 
 /**
@@ -672,8 +697,17 @@ export class ElbLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.elb
    * Declaration of (S3 Bucket) Lifecycle rules.
    * Configure additional resource policy attachments
    */
-  readonly lifecycleRules: t.LifeCycleRule[] = [];
+  readonly lifecycleRules: t.LifeCycleRule[] | undefined = undefined;
   readonly s3ResourcePolicyAttachments: t.ResourcePolicyStatement[] | undefined = undefined;
+  /**
+   * Existing bucket configuration.
+   *
+   * @remarks
+   * Use this configuration when solution will use existing bucket, which were created prior to solution deploy.
+   * When using existing bucket, lifecycleRules, s3ResourcePolicyAttachments properties will be ignored,
+   * these properties are used for solution deployed bucket only.
+   */
+  readonly existingBucket: t.BucketConfig | undefined = undefined;
 }
 /**
  * *{@link GlobalConfig} / {@link LoggingConfig} / {@link CloudWatchLogsConfig}/ {@link CloudWatchLogsExclusionConfig}*

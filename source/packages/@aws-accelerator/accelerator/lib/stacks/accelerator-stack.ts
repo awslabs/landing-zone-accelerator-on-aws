@@ -45,23 +45,32 @@ import { createLogger, policyReplacements, SsmParameterPath, SsmResourceType } f
 
 import { version } from '../../../../../package.json';
 import { AcceleratorResourceNames } from '../accelerator-resource-names';
+import { AcceleratorResourcePrefixes } from '../../utils/app-utils';
 
 /**
  * Accelerator Key type enum
  */
 export enum AcceleratorKeyType {
   /**
+   * Central Log Bucket key
+   */
+  CENTRAL_LOG_BUCKET = 'central-log-bucket',
+  /**
    * Cloudwatch key
    */
   CLOUDWATCH_KEY = 'cloudwatch-key',
+  /**
+   * Existing Central Log Bucket key
+   */
+  EXISTING_CENTRAL_LOG_BUCKET = 'existing-central-log-bucket',
   /**
    * Lambda key
    */
   LAMBDA_KEY = 'lambda-key',
   /**
-   * Central Log Bucket key
+   * S3 key
    */
-  CENTRAL_LOG_BUCKET = 'central-log-bucket',
+  S3_KEY = 's3-key',
 }
 
 /**
@@ -105,9 +114,9 @@ export enum NagSuppressionRuleIds {
   IAM5 = 'IAM5',
   SMG4 = 'SMG4',
   VPC3 = 'VPC3',
+  S1 = 'S1',
+  KDS3 = 'KDS3',
 }
-
-// = 'IAM4' | 'IAM5' | 'VPC3' | 'EC28' | 'EC29' | 'SMG4' | 'DDB3';
 
 /**
  * NagSuppression Detail Type
@@ -150,46 +159,7 @@ export interface AcceleratorStackProps extends cdk.StackProps {
   /**
    * Accelerator resource name prefixes
    */
-  readonly prefixes: {
-    /**
-     * Use this prefix value to name resources like -
-     AWS IAM Role names, AWS Lambda Function names, AWS Cloudwatch log groups names, AWS CloudFormation stack names, AWS CodePipeline names, AWS CodeBuild project names
-     *
-     */
-    readonly accelerator: string;
-    /**
-     * Use this prefix value to name AWS CodeCommit repository
-     */
-    readonly repoName: string;
-    /**
-     * Use this prefix value to name AWS S3 bucket
-     */
-    readonly bucketName: string;
-    /**
-     * Use this prefix value to name AWS SSM parameter
-     */
-    readonly ssmParamName: string;
-    /**
-     * Use this prefix value to name AWS KMS alias
-     */
-    readonly kmsAlias: string;
-    /**
-     * Use this prefix value to name AWS SNS topic
-     */
-    readonly snsTopicName: string;
-    /**
-     * Use this prefix value to name AWS Secrets
-     */
-    readonly secretName: string;
-    /**
-     * Use this prefix value to name AWS CloudTrail CloudWatch log group
-     */
-    readonly trailLogName: string;
-    /**
-     * Use this prefix value to name AWS Glue database
-     */
-    readonly databaseName: string;
-  };
+  readonly prefixes: AcceleratorResourcePrefixes;
   readonly enableSingleAccountMode: boolean;
 }
 
@@ -233,9 +203,9 @@ export abstract class AcceleratorStack extends cdk.Stack {
     // Initialize resource names
     this.acceleratorResourceNames = new AcceleratorResourceNames({ prefixes: props.prefixes });
 
-    this.centralLogsBucketName = `${
-      this.acceleratorResourceNames.bucketPrefixes.centralLogs
-    }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`;
+    //
+    // Get CentralLogBucket name
+    this.centralLogsBucketName = this.getCentralLogBucketName();
 
     this.stackParameters = new Map<string, cdk.aws_ssm.StringParameter>();
     this.stackParameters.set(
@@ -253,6 +223,71 @@ export abstract class AcceleratorStack extends cdk.Stack {
         stringValue: version,
       }),
     );
+  }
+
+  /**
+   * Function to get server access logs bucket name
+   * @returns
+   *
+   * @remarks
+   * If used returns existing server access logs bucket name else return solution defined bucket name
+   */
+  protected getServerAccessLogsBucketName(): string {
+    if (this.props.globalConfig.logging.accessLogBucket?.existingBucket) {
+      return this.getBucketNameReplacement(this.props.globalConfig.logging.accessLogBucket.existingBucket.name);
+    } else {
+      return `${this.acceleratorResourceNames.bucketPrefixes.s3AccessLogs}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
+    }
+  }
+
+  /**
+   * Function to get ELB logs bucket name
+   * @returns
+   *
+   * @remarks
+   * If used returns existing ELB logs bucket name else solution defined bucket name
+   */
+  protected getElbLogsBucketName(): string {
+    if (this.props.globalConfig.logging.elbLogBucket?.existingBucket) {
+      return this.getBucketNameReplacement(this.props.globalConfig.logging.elbLogBucket.existingBucket.name);
+    } else {
+      return `${
+        this.acceleratorResourceNames.bucketPrefixes.elbLogs
+      }-${this.props.accountsConfig.getLogArchiveAccountId()}-${cdk.Stack.of(this).region}`;
+    }
+  }
+
+  /**
+   * Function to get Central Log bucket name
+   * @returns
+   */
+  private getCentralLogBucketName(): string {
+    if (this.props.globalConfig.logging.centralLogBucket?.existingBucket) {
+      return this.getBucketNameReplacement(this.props.globalConfig.logging.centralLogBucket.existingBucket.name);
+    }
+    return `${
+      this.acceleratorResourceNames.bucketPrefixes.centralLogs
+    }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`;
+  }
+
+  /**
+   * Function to get CentralLogs bucket key
+   * @param customResourceLambdaCloudWatchLogKmsKey {@link cdk.aws_kms.IKey}
+   *
+   * @returns key {@link cdk.aws_kms.IKey}
+   *
+   * @remarks
+   * If used returns existing CentralLogs bucket cmk arn else return solution defined CentralLogs bucket cmk arn
+   */
+  protected getCentralLogsBucketKey(customResourceLambdaCloudWatchLogKmsKey: cdk.aws_kms.IKey): cdk.aws_kms.Key {
+    if (this.props.globalConfig.logging.centralLogBucket?.existingBucket) {
+      return this.getAcceleratorKey(
+        AcceleratorKeyType.EXISTING_CENTRAL_LOG_BUCKET,
+        customResourceLambdaCloudWatchLogKmsKey,
+      );
+    } else {
+      return this.getAcceleratorKey(AcceleratorKeyType.CENTRAL_LOG_BUCKET, customResourceLambdaCloudWatchLogKmsKey);
+    }
   }
 
   /**
@@ -313,6 +348,32 @@ export abstract class AcceleratorStack extends cdk.Stack {
     if (this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable) {
       this.createServiceLinkedRole(ServiceLinkedRoleType.AUTOSCALING);
     }
+  }
+
+  /**
+   * Function to get active account ids
+   * @returns accountIds string
+   *
+   * @remarks
+   * Get only non suspended OUs account ids
+   */
+  protected getActiveAccountIds() {
+    const accountNames: string[] = [];
+    const accountIds: string[] = [];
+    const suspendedOuItems = this.props.organizationConfig.organizationalUnits.filter(item => item.ignore);
+    const suspendedOuNames = suspendedOuItems.flatMap(item => item.name);
+
+    for (const accountItem of [
+      ...this.props.accountsConfig.mandatoryAccounts,
+      ...this.props.accountsConfig.workloadAccounts,
+    ]) {
+      if (!suspendedOuNames.includes(accountItem.organizationalUnit)) {
+        accountNames.push(accountItem.name);
+      }
+    }
+
+    accountNames.forEach(item => accountIds.push(this.props.accountsConfig.getAccountId(item)));
+    return accountIds;
   }
 
   /**
@@ -415,6 +476,13 @@ export abstract class AcceleratorStack extends cdk.Stack {
   ): cdk.aws_kms.Key {
     let key: cdk.aws_kms.Key | undefined;
     switch (keyType) {
+      case AcceleratorKeyType.S3_KEY:
+        key = cdk.aws_kms.Key.fromKeyArn(
+          this,
+          'AcceleratorS3KeyLookup',
+          cdk.aws_ssm.StringParameter.valueForStringParameter(this, this.acceleratorResourceNames.parameters.s3CmkArn),
+        ) as cdk.aws_kms.Key;
+        break;
       case AcceleratorKeyType.CLOUDWATCH_KEY:
         key = cdk.aws_kms.Key.fromKeyArn(
           this,
@@ -445,12 +513,33 @@ export abstract class AcceleratorStack extends cdk.Stack {
           logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
           acceleratorPrefix: this.props.prefixes.accelerator,
         }).getKey();
+
+        break;
+      case AcceleratorKeyType.EXISTING_CENTRAL_LOG_BUCKET:
+        key = new KeyLookup(this, 'AcceleratorExistingCentralLogBucketKeyLookup', {
+          accountId: cdk.Stack.of(this).account,
+          keyRegion: this.props.centralizedLoggingRegion,
+          roleName: this.acceleratorResourceNames.roles.crossAccountSsmParameterShare,
+          keyArnParameterName: this.acceleratorResourceNames.parameters.existingCentralLogBucketCmkArn,
+          kmsKey: customResourceLambdaCloudWatchLogKmsKey,
+          logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+          acceleratorPrefix: this.props.prefixes.accelerator,
+        }).getKey();
         break;
       default:
         throw new Error(`Invalid key type ${keyType}`);
     }
 
     return key!;
+  }
+
+  /**
+   * Function to get replacement bucket name
+   * @param name
+   * @returns
+   */
+  protected getBucketNameReplacement(name: string): string {
+    return name.replace('${REGION}', cdk.Stack.of(this).region).replace('${ACCOUNT_ID}', cdk.Stack.of(this).account);
   }
 
   /**
@@ -488,13 +577,12 @@ export abstract class AcceleratorStack extends cdk.Stack {
 
   /**
    * Function to add resource suppressions by path
-   * @param inputs {@link NagSuppressionDetailType}
    */
-  protected addResourceSuppressionsByPath(inputs: NagSuppressionDetailType[]): void {
-    for (const input of inputs) {
-      for (const detail of input.details) {
+  protected addResourceSuppressionsByPath(): void {
+    for (const nagSuppressionInput of this.nagSuppressionInputs) {
+      for (const detail of nagSuppressionInput.details) {
         NagSuppressions.addResourceSuppressionsByPath(this, detail.path, [
-          { id: `AwsSolutions-${input.id}`, reason: detail.reason },
+          { id: `AwsSolutions-${nagSuppressionInput.id}`, reason: detail.reason },
         ]);
       }
     }
@@ -932,9 +1020,15 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * @param policyPath
    * @param returnTempPath
    * @param organizationId
+   * @param tempFileName
    * @returns
    */
-  public generatePolicyReplacements(policyPath: string, returnTempPath: boolean, organizationId?: string): string {
+  public generatePolicyReplacements(
+    policyPath: string,
+    returnTempPath: boolean,
+    organizationId?: string,
+    tempFileName?: string,
+  ): string {
     // Transform policy document
     let policyContent: string = JSON.stringify(require(policyPath));
     const acceleratorPrefix = this.props.prefixes.accelerator;
@@ -967,7 +1061,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
     });
 
     if (returnTempPath) {
-      return this.createTempFile(policyContent);
+      return this.createTempFile(policyContent, tempFileName);
     } else {
       return policyContent;
     }
@@ -976,9 +1070,10 @@ export abstract class AcceleratorStack extends cdk.Stack {
   /**
    * Create a temp file of a transformed policy document
    * @param policyContent
+   * @param tempFileName
    * @returns
    */
-  private createTempFile(policyContent: string): string {
+  private createTempFile(policyContent: string, tempFileName?: string): string {
     // Generate unique file path in temporary directory
     let tempDir: string;
     if (process.platform === 'win32') {
@@ -996,7 +1091,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
       }
       tempDir = path.join('/tmp', 'temp-accelerator-policies');
     }
-    const tempPath = path.join(tempDir, `${uuidv4()}.json`);
+    const tempPath = path.join(tempDir, tempFileName ?? `${uuidv4()}.json`);
 
     // Write transformed file
     if (!fs.existsSync(tempDir)) {

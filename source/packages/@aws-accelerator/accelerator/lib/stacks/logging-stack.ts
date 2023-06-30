@@ -18,7 +18,12 @@ import { Construct } from 'constructs';
 import { pascalCase } from 'pascal-case';
 import path from 'path';
 
-import { SnsTopicConfig, VpcFlowLogsConfig, CloudWatchLogsExclusionConfig } from '@aws-accelerator/config';
+import {
+  SnsTopicConfig,
+  VpcFlowLogsConfig,
+  CloudWatchLogsExclusionConfig,
+  BucketConfig,
+} from '@aws-accelerator/config';
 import * as t from '@aws-accelerator/config/lib/common-types/types';
 import {
   Bucket,
@@ -33,10 +38,17 @@ import {
   NewCloudWatchLogEvent,
   S3PublicAccessBlock,
   SsmParameterLookup,
+  ValidateBucket,
+  PutSsmParameter,
 } from '@aws-accelerator/constructs';
 
 import { AcceleratorElbRootAccounts, OptInRegions } from '../accelerator';
-import { AcceleratorKeyType, AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import {
+  AcceleratorKeyType,
+  AcceleratorStack,
+  AcceleratorStackProps,
+  NagSuppressionRuleIds,
+} from './accelerator-stack';
 
 export type cloudwatchExclusionProcessedItem = {
   account: string;
@@ -54,6 +66,8 @@ export class LoggingStack extends AcceleratorStack {
   private centralLogBucketKey: cdk.aws_kms.IKey | undefined;
   private centralSnsKey: cdk.aws_kms.IKey | undefined;
   private snsForwarderFunction: cdk.aws_lambda.IFunction | undefined;
+  private existingCentralLogBucket: cdk.aws_s3.IBucket | undefined;
+  private existingCentralLogBucketKey: cdk.aws_kms.IKey | undefined;
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
@@ -96,15 +110,11 @@ export class LoggingStack extends AcceleratorStack {
     //
     // Create S3 Bucket for Access Logs - this is required
     //
-    const serverAccessLogsBucket = this.createServerAccessLogBucket();
+    const serverAccessLogsBucket = this.createOrGetServerAccessLogBucket();
 
     //
-    // Create Central Logs Bucket - This is done only in the home region of the log-archive account.
-    // This is the destination bucket for all logs such as AWS CloudTrail, AWS Config, and VPC Flow
-    // Logs. Addition logs can also be sent to this bucket through AWS CloudWatch Logs, such as
-    // application logs, OS logs, or server logs.
-    //
-    this.createCentralLogsBucket(serverAccessLogsBucket);
+    // Create or get existing central log bucket
+    this.createOrGetCentralLogsBucket(serverAccessLogsBucket);
 
     //
     // Get central log bucket encryption key
@@ -126,9 +136,9 @@ export class LoggingStack extends AcceleratorStack {
     this.createVpcFlowLogsBucket(s3Key, serverAccessLogsBucket, replicationProps);
 
     //
-    // Create ELB access logs bucket
+    // Create or get ELB access logs bucket
     //
-    this.createElbAccessLogsBucket(props, replicationProps);
+    this.createOrGetElbAccessLogsBucket(replicationProps);
 
     //
     // Create Auto scaling service linked role
@@ -161,6 +171,11 @@ export class LoggingStack extends AcceleratorStack {
     this.createSsmParameters();
 
     this.logger.debug(`Stack synthesis complete`);
+
+    //
+    // Create NagSuppressions
+    //
+    this.addResourceSuppressionsByPath();
   }
 
   /**
@@ -196,143 +211,169 @@ export class LoggingStack extends AcceleratorStack {
   }
 
   /**
-   * Function to create ELB access logs bucket
-   * @param props {@link AcceleratorStackProps}
+   * Function to create or get ELB access log bucket
    * @param replicationProps {@link BucketReplicationProps}
-   * @returns Bucket | undefined
+   * @returns
+   */
+  private createOrGetElbAccessLogsBucket(replicationProps?: BucketReplicationProps): cdk.aws_s3.IBucket | undefined {
+    /**
+     * Create S3 Bucket for ELB Access Logs, this is created in log archive account
+     * For ELB to write access logs bucket is needed to have SSE-S3 server-side encryption
+     */
+    if (cdk.Stack.of(this).account === this.props.accountsConfig.getLogArchiveAccountId()) {
+      if (this.props.globalConfig.logging.elbLogBucket?.existingBucket) {
+        return this.getExistingBucket(this.props.globalConfig.logging.elbLogBucket.existingBucket, 'elb-logs', 's3');
+      } else {
+        return this.createElbAccessLogsBucket(replicationProps);
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * Function to create ELB access logs bucket
+   * @param replicationProps {@link BucketReplicationProps}
+   * @returns {@link cdk.aws_s3.IBucket} | undefined
    *
    * @remarks
    * Create S3 Bucket for ELB Access Logs, this is created in log archive account.
    * For ELB to write access logs bucket is needed to have SSE-S3 server-side encryption
    */
-  private createElbAccessLogsBucket(
-    props: AcceleratorStackProps,
-    replicationProps?: BucketReplicationProps,
-  ): Bucket | undefined {
-    /**
-     * Create S3 Bucket for ELB Access Logs, this is created in log archive account
-     * For ELB to write access logs bucket is needed to have SSE-S3 server-side encryption
-     */
-    if (cdk.Stack.of(this).account === props.accountsConfig.getLogArchiveAccountId()) {
-      const elbAccessLogsBucket = new Bucket(this, 'ElbAccessLogsBucket', {
-        encryptionType: BucketEncryptionType.SSE_S3, // Server access logging does not support SSE-KMS
-        s3BucketName: `${this.acceleratorResourceNames.bucketPrefixes.elbLogs}-${cdk.Stack.of(this).account}-${
-          cdk.Stack.of(this).region
-        }`,
-        replicationProps,
-        s3LifeCycleRules: this.getS3LifeCycleRules(props.globalConfig.logging.elbLogBucket?.lifecycleRules),
-      });
-      let elbAccountId = undefined;
-      if (AcceleratorElbRootAccounts[cdk.Stack.of(this).region]) {
-        elbAccountId = AcceleratorElbRootAccounts[cdk.Stack.of(this).region];
-      }
-      if (props.networkConfig.elbAccountIds?.find(item => item.region === cdk.Stack.of(this).region)) {
-        elbAccountId = props.networkConfig.elbAccountIds?.find(
-          item => item.region === cdk.Stack.of(this).region,
-        )!.accountId;
-      }
-      // To make sure central log bucket created before elb access log bucket, this is required when logging stack executes in home region
-      if (this.centralLogsBucket) {
-        elbAccessLogsBucket.node.addDependency(this.centralLogsBucket);
-      }
-
-      // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
-      NagSuppressions.addResourceSuppressionsByPath(
-        this,
-        `/${this.stackName}/ElbAccessLogsBucket/ElbAccessLogsBucketReplication/` +
-          pascalCase(this.centralLogsBucketName) +
-          '-ReplicationRole/DefaultPolicy/Resource',
-        [
-          {
-            id: 'AwsSolutions-IAM5',
-            reason: 'Allows only specific policy.',
-          },
-        ],
-      );
-
-      let elbPrincipal;
-      if (elbAccountId) {
-        elbPrincipal = new iam.AccountPrincipal(`${elbAccountId}`);
-      } else {
-        elbPrincipal = new iam.ServicePrincipal(`logdelivery.elasticloadbalancing.amazonaws.com`);
-      }
-      const policies = [
-        new cdk.aws_iam.PolicyStatement({
-          sid: 'Allow get acl access for SSM principal',
-          effect: iam.Effect.ALLOW,
-          actions: ['s3:GetBucketAcl'],
-          principals: [new iam.ServicePrincipal('ssm.amazonaws.com')],
-          resources: [`${elbAccessLogsBucket.getS3Bucket().bucketArn}`],
-        }),
-        new cdk.aws_iam.PolicyStatement({
-          sid: 'Allow write access for ELB Account principal',
-          effect: iam.Effect.ALLOW,
-          actions: ['s3:PutObject'],
-          principals: [elbPrincipal],
-          resources: [`${elbAccessLogsBucket.getS3Bucket().bucketArn}/*`],
-        }),
-        new cdk.aws_iam.PolicyStatement({
-          sid: 'Allow write access for delivery logging service principal',
-          effect: iam.Effect.ALLOW,
-          actions: ['s3:PutObject'],
-          principals: [new iam.ServicePrincipal('delivery.logs.amazonaws.com')],
-          resources: [`${elbAccessLogsBucket.getS3Bucket().bucketArn}/*`],
-          conditions: {
-            StringEquals: {
-              's3:x-amz-acl': 'bucket-owner-full-control',
-            },
-          },
-        }),
-        new cdk.aws_iam.PolicyStatement({
-          sid: 'Allow read bucket ACL access for delivery logging service principal',
-          effect: iam.Effect.ALLOW,
-          actions: ['s3:GetBucketAcl'],
-          principals: [new iam.ServicePrincipal('delivery.logs.amazonaws.com')],
-          resources: [`${elbAccessLogsBucket.getS3Bucket().bucketArn}`],
-        }),
-      ];
-      policies.forEach(item => {
-        elbAccessLogsBucket.getS3Bucket().addToResourcePolicy(item);
-      });
-
-      elbAccessLogsBucket.getS3Bucket().addToResourcePolicy(
-        new cdk.aws_iam.PolicyStatement({
-          sid: 'Allow Organization principals to use of the bucket',
-          effect: cdk.aws_iam.Effect.ALLOW,
-          actions: ['s3:GetBucketLocation', 's3:PutObject'],
-          principals: [new cdk.aws_iam.AnyPrincipal()],
-          resources: [
-            `${elbAccessLogsBucket.getS3Bucket().bucketArn}`,
-            `${elbAccessLogsBucket.getS3Bucket().bucketArn}/*`,
-          ],
-          conditions: {
-            StringEquals: {
-              ...this.getPrincipalOrgIdCondition(this.organizationId),
-            },
-          },
-        }),
-      );
-
-      // AwsSolutions-S1: The S3 Bucket has server access logs disabled.
-      NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/ElbAccessLogsBucket/Resource/Resource`, [
-        {
-          id: 'AwsSolutions-S1',
-          reason: 'ElbAccessLogsBucket has server access logs disabled till the task for access logging completed.',
-        },
-      ]);
-
-      this.elbLogBucketAddResourcePolicies(elbAccessLogsBucket.getS3Bucket());
-
-      return elbAccessLogsBucket;
+  private createElbAccessLogsBucket(replicationProps?: BucketReplicationProps): cdk.aws_s3.IBucket | undefined {
+    const elbAccessLogsBucket = new Bucket(this, 'ElbAccessLogsBucket', {
+      encryptionType: BucketEncryptionType.SSE_S3, // Server access logging does not support SSE-KMS
+      s3BucketName: this.getElbLogsBucketName(),
+      replicationProps,
+      s3LifeCycleRules: this.getS3LifeCycleRules(this.props.globalConfig.logging.elbLogBucket?.lifecycleRules),
+    });
+    let elbAccountId = undefined;
+    if (AcceleratorElbRootAccounts[cdk.Stack.of(this).region]) {
+      elbAccountId = AcceleratorElbRootAccounts[cdk.Stack.of(this).region];
+    }
+    if (this.props.networkConfig.elbAccountIds?.find(item => item.region === cdk.Stack.of(this).region)) {
+      elbAccountId = this.props.networkConfig.elbAccountIds?.find(
+        item => item.region === cdk.Stack.of(this).region,
+      )!.accountId;
+    }
+    // To make sure central log bucket created before elb access log bucket, this is required when logging stack executes in home region
+    if (this.centralLogsBucket) {
+      elbAccessLogsBucket.node.addDependency(this.centralLogsBucket);
     }
 
-    return undefined;
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM5,
+      details: [
+        {
+          path:
+            `/${this.stackName}/ElbAccessLogsBucket/ElbAccessLogsBucketReplication/` +
+            pascalCase(this.centralLogsBucketName) +
+            '-ReplicationRole/DefaultPolicy/Resource',
+          reason: 'Allows only specific policy.',
+        },
+      ],
+    });
+
+    let elbPrincipal;
+    if (elbAccountId) {
+      elbPrincipal = new iam.AccountPrincipal(`${elbAccountId}`);
+    } else {
+      elbPrincipal = new iam.ServicePrincipal(`logdelivery.elasticloadbalancing.amazonaws.com`);
+    }
+    const policies = [
+      new cdk.aws_iam.PolicyStatement({
+        sid: 'Allow get acl access for SSM principal',
+        effect: iam.Effect.ALLOW,
+        actions: ['s3:GetBucketAcl'],
+        principals: [new iam.ServicePrincipal('ssm.amazonaws.com')],
+        resources: [`${elbAccessLogsBucket.getS3Bucket().bucketArn}`],
+      }),
+      new cdk.aws_iam.PolicyStatement({
+        sid: 'Allow write access for ELB Account principal',
+        effect: iam.Effect.ALLOW,
+        actions: ['s3:PutObject'],
+        principals: [elbPrincipal],
+        resources: [`${elbAccessLogsBucket.getS3Bucket().bucketArn}/*`],
+      }),
+      new cdk.aws_iam.PolicyStatement({
+        sid: 'Allow write access for delivery logging service principal',
+        effect: iam.Effect.ALLOW,
+        actions: ['s3:PutObject'],
+        principals: [new iam.ServicePrincipal('delivery.logs.amazonaws.com')],
+        resources: [`${elbAccessLogsBucket.getS3Bucket().bucketArn}/*`],
+        conditions: {
+          StringEquals: {
+            's3:x-amz-acl': 'bucket-owner-full-control',
+          },
+        },
+      }),
+      new cdk.aws_iam.PolicyStatement({
+        sid: 'Allow read bucket ACL access for delivery logging service principal',
+        effect: iam.Effect.ALLOW,
+        actions: ['s3:GetBucketAcl'],
+        principals: [new iam.ServicePrincipal('delivery.logs.amazonaws.com')],
+        resources: [`${elbAccessLogsBucket.getS3Bucket().bucketArn}`],
+      }),
+    ];
+    policies.forEach(item => {
+      elbAccessLogsBucket.getS3Bucket().addToResourcePolicy(item);
+    });
+
+    elbAccessLogsBucket.getS3Bucket().addToResourcePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        sid: 'Allow Organization principals to use of the bucket',
+        effect: cdk.aws_iam.Effect.ALLOW,
+        actions: ['s3:GetBucketLocation', 's3:PutObject'],
+        principals: [new cdk.aws_iam.AnyPrincipal()],
+        resources: [
+          `${elbAccessLogsBucket.getS3Bucket().bucketArn}`,
+          `${elbAccessLogsBucket.getS3Bucket().bucketArn}/*`,
+        ],
+        conditions: {
+          StringEquals: {
+            ...this.getPrincipalOrgIdCondition(this.organizationId),
+          },
+        },
+      }),
+    );
+
+    // AwsSolutions-S1: The S3 Bucket has server access logs disabled.
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.S1,
+      details: [
+        {
+          path: `${this.stackName}/ElbAccessLogsBucket/Resource/Resource`,
+          reason: 'ElbAccessLogsBucket has server access logs disabled till the task for access logging completed.',
+        },
+      ],
+    });
+
+    this.elbLogBucketAddResourcePolicies(elbAccessLogsBucket.getS3Bucket());
+
+    return elbAccessLogsBucket.getS3Bucket();
   }
+
+  /**
+   * Function to get or create server access log bucket
+   * @returns {@link cdk.aws_s3.IBucket}
+   */
+  private createOrGetServerAccessLogBucket(): cdk.aws_s3.IBucket {
+    if (this.props.globalConfig.logging.accessLogBucket?.existingBucket) {
+      return this.getExistingBucket(
+        this.props.globalConfig.logging.accessLogBucket.existingBucket,
+        'access-logs',
+        's3',
+      );
+    } else {
+      return this.createServerAccessLogBucket();
+    }
+  }
+
   /**
    * Function to create server access log bucket.
-   * @returns Bucket
+   * @returns bucket {@link cdk.aws_s3.IBucket}
    */
-  private createServerAccessLogBucket(): Bucket {
+  private createServerAccessLogBucket(): cdk.aws_s3.IBucket {
     //
     // Create S3 Bucket for Access Logs - this is required
     //
@@ -345,12 +386,15 @@ export class LoggingStack extends AcceleratorStack {
     });
 
     // AwsSolutions-S1: The S3 Bucket has server access logs disabled.
-    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/AccessLogsBucket/Resource/Resource`, [
-      {
-        id: 'AwsSolutions-S1',
-        reason: 'AccessLogsBucket has server access logs disabled till the task for access logging completed.',
-      },
-    ]);
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.S1,
+      details: [
+        {
+          path: `${this.stackName}/AccessLogsBucket/Resource/Resource`,
+          reason: 'AccessLogsBucket has server access logs disabled till the task for access logging completed.',
+        },
+      ],
+    });
 
     serverAccessLogsBucket.getS3Bucket().addToResourcePolicy(
       new iam.PolicyStatement({
@@ -367,24 +411,31 @@ export class LoggingStack extends AcceleratorStack {
       }),
     );
 
-    return serverAccessLogsBucket;
+    return serverAccessLogsBucket.getS3Bucket();
   }
 
   /**
-   * Function to get Central Log Bucket Encryption Key
+   * Function to get existing or solution defined Central Log Bucket Encryption Key
    * @returns cdk.aws_kms.IKey
    *
    * @remarks
-   * For stacks in logging account CentralLogs bucket region, bucket will be present to get key arn.
+   * For stacks in logging account and centralizedLoggingRegion region, bucket will be present to get key arn.
    * All other environment stacks will need custom resource to get key arn from ssm parameter.
    */
   private getCentralLogBucketKey(): cdk.aws_kms.IKey {
-    //
-    //
-    if (this.centralLogsBucket) {
-      return this.centralLogsBucket.getS3Bucket().getKey();
+    //this.acceleratorResourceNames.parameters.existingCentralLogBucketCmkArn
+    if (this.props.globalConfig.logging.centralLogBucket?.existingBucket) {
+      if (this.existingCentralLogBucket) {
+        return this.existingCentralLogBucketKey!;
+      } else {
+        return this.getAcceleratorKey(AcceleratorKeyType.EXISTING_CENTRAL_LOG_BUCKET, this.cloudwatchKey);
+      }
     } else {
-      return this.getAcceleratorKey(AcceleratorKeyType.CENTRAL_LOG_BUCKET, this.cloudwatchKey);
+      if (this.centralLogsBucket) {
+        return this.centralLogsBucket.getS3Bucket().getKey();
+      } else {
+        return this.getAcceleratorKey(AcceleratorKeyType.CENTRAL_LOG_BUCKET, this.cloudwatchKey);
+      }
     }
   }
   /**
@@ -702,13 +753,13 @@ export class LoggingStack extends AcceleratorStack {
    * Function to create VPC FlowLogs bucket.
    * This bucket depends on Central Logs bucket and Server access logs bucket.
    * This bucket also depends on local S3 key.
-   * @param s3Key
-   * @param serverAccessLogsBucket
-   * @param replicationProps
+   * @param s3Key {@link cdk.aws_kms.Key}
+   * @param serverAccessLogsBucket {@link cdk.aws_s3.IBucket}
+   * @param replicationProps {@link BucketReplicationProps}
    */
   private createVpcFlowLogsBucket(
     s3Key: cdk.aws_kms.Key,
-    serverAccessLogsBucket: Bucket,
+    serverAccessLogsBucket: cdk.aws_s3.IBucket,
     replicationProps: BucketReplicationProps,
   ) {
     const vpcFlowLogsConfig = this.getS3FlowLogsDestinationConfig();
@@ -721,7 +772,7 @@ export class LoggingStack extends AcceleratorStack {
           cdk.Stack.of(this).region
         }`,
         kmsKey: s3Key,
-        serverAccessLogsBucket: serverAccessLogsBucket.getS3Bucket(),
+        serverAccessLogsBucket: serverAccessLogsBucket,
         s3LifeCycleRules: this.getS3LifeCycleRules(vpcFlowLogsConfig.destinationsConfig?.s3?.lifecycleRules),
         replicationProps: replicationProps,
       });
@@ -745,18 +796,18 @@ export class LoggingStack extends AcceleratorStack {
       );
 
       // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
-      NagSuppressions.addResourceSuppressionsByPath(
-        this,
-        `/${this.stackName}/AcceleratorVpcFlowLogsBucket/AcceleratorVpcFlowLogsBucketReplication/` +
-          pascalCase(this.centralLogsBucketName) +
-          '-ReplicationRole/DefaultPolicy/Resource',
-        [
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
           {
-            id: 'AwsSolutions-IAM5',
+            path:
+              `${this.stackName}/AcceleratorVpcFlowLogsBucket/AcceleratorVpcFlowLogsBucketReplication/` +
+              pascalCase(this.centralLogsBucketName) +
+              '-ReplicationRole/DefaultPolicy/Resource',
             reason: 'Allows only specific policy.',
           },
         ],
-      );
+      });
 
       this.ssmParameters.push({
         logicalId: 'AcceleratorVpcFlowLogsBucketArnParameter',
@@ -794,12 +845,16 @@ export class LoggingStack extends AcceleratorStack {
     );
 
     // LogsKinesisStream/Resource AwsSolutions-KDS3
-    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/LogsKinesisStreamCfn`, [
-      {
-        id: 'AwsSolutions-KDS3',
-        reason: 'Customer managed key is being used to encrypt Kinesis Data Stream',
-      },
-    ]);
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.KDS3,
+      details: [
+        {
+          path: `${this.stackName}/LogsKinesisStreamCfn`,
+          reason: 'Customer managed key is being used to encrypt Kinesis Data Stream',
+        },
+      ],
+    });
+
     // Cloudwatch logs destination which points to Kinesis Data Stream
     const cloudwatchCfnDestination = new CloudWatchDestination(this, 'LogsDestinationSetup', {
       kinesisKmsKey: logsReplicationKmsKey,
@@ -904,54 +959,50 @@ export class LoggingStack extends AcceleratorStack {
     newLogCreationEvent.node.addDependency(customResourceExistingLogs);
 
     // SubscriptionFilterRole AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
-    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/SubscriptionFilterRole/Resource`, [
-      {
-        id: 'AwsSolutions-IAM5',
-        reason: 'Access is needed to ready all log events across all log groups for replication to S3.',
-      },
-    ]);
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM5,
+      details: [
+        {
+          path: `${this.stackName}/SubscriptionFilterRole/Resource`,
+          reason: 'Access is needed to ready all log events across all log groups for replication to S3.',
+        },
+      ],
+    });
+
     // SetLogRetentionSubscriptionFunction AwsSolutions-IAM4
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `${this.stackName}/SetLogRetentionSubscriptionFunction/ServiceRole/Resource`,
-      [
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM4,
+      details: [
         {
-          id: 'AwsSolutions-IAM4',
+          path: `${this.stackName}/SetLogRetentionSubscriptionFunction/ServiceRole/Resource`,
           reason: 'AWS Managed policy for Lambda basic execution attached.',
         },
       ],
-    );
+    });
+
     // SetLogRetentionSubscriptionFunction AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `${this.stackName}/NewCloudWatchLogsCreateEvent/SetLogRetentionSubscriptionFunction/ServiceRole/DefaultPolicy/Resource`,
-      [
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM5,
+      details: [
         {
-          id: 'AwsSolutions-IAM5',
+          path: `${this.stackName}/NewCloudWatchLogsCreateEvent/SetLogRetentionSubscriptionFunction/ServiceRole/DefaultPolicy/Resource`,
           reason:
             'This role needs permissions to change retention and subscription filter for any new log group that is created to enable log replication.',
         },
-        {
-          id: 'AwsSolutions-IAM4',
-          reason: 'AWS Managed policy for Lambda basic execution attached.',
-        },
       ],
-    );
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `${this.stackName}/NewCloudWatchLogsCreateEvent/SetLogRetentionSubscriptionFunction/ServiceRole/Resource`,
-      [
+    });
+
+    // SetLogRetentionSubscriptionFunction AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies.
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM4,
+      details: [
         {
-          id: 'AwsSolutions-IAM5',
+          path: `${this.stackName}/NewCloudWatchLogsCreateEvent/SetLogRetentionSubscriptionFunction/ServiceRole/Resource`,
           reason:
             'This role needs permissions to change retention and subscription filter for any new log group that is created to enable log replication.',
         },
-        {
-          id: 'AwsSolutions-IAM4',
-          reason: 'AWS Managed policy for Lambda basic execution attached.',
-        },
       ],
-    );
+    });
 
     return customResourceExistingLogs;
   }
@@ -1183,16 +1234,16 @@ export class LoggingStack extends AcceleratorStack {
         });
 
         // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
-        NagSuppressions.addResourceSuppressionsByPath(
-          this,
-          `${this.stackName}/CrossAccountAcceleratorSecretsKmsArnSsmParamAccessRole/Resource`,
-          [
+        this.nagSuppressionInputs.push({
+          id: NagSuppressionRuleIds.IAM5,
+          details: [
             {
-              id: 'AwsSolutions-IAM5',
+              path: `${this.stackName}/CrossAccountAcceleratorSecretsKmsArnSsmParamAccessRole/Resource`,
               reason: 'Cross account role needs access ssm parameters',
             },
           ],
-        );
+        });
+
         return; // Create only one kms key even if there are multiple AD
       }
     }
@@ -1249,16 +1300,15 @@ export class LoggingStack extends AcceleratorStack {
       });
 
       // AwsSolutions-S1: The KMS Symmetric key does not have automatic key rotation enabled.
-      NagSuppressions.addResourceSuppressionsByPath(
-        this,
-        `${this.stackName}` + '/AcceleratorKmsKey-' + pascalCase(keyItem.name) + `/Resource`,
-        [
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.S1,
+        details: [
           {
-            id: 'AwsSolutions-KMS5',
+            path: `${this.stackName}` + '/AcceleratorKmsKey-' + pascalCase(keyItem.name) + `/Resource`,
             reason: 'CMK policy defined by customer provided policy definition file.',
           },
         ],
-      );
+      });
     }
   }
 
@@ -1315,11 +1365,102 @@ export class LoggingStack extends AcceleratorStack {
 
     return { awsPrincipalAccesses: awsPrincipalAccesses, bucketPrefixes: bucketPrefixes };
   }
-  /*
-   * Function to create CentralLogs bucket in LogArchive account home region only
-   * @param serverAccessLogsBucket
+
+  /**
+   * Function to get existing bucket
+   * @param existingBucketConfig {@link BucketConfig}
+   * @param bucketType string
+   * @param encryptionType 'kms' | 's3'
+   * @param bucketKmsArnParameterName string
+   * @returns existingBucket {@link cdk.aws_s3.IBucket}
    */
-  private createCentralLogsBucket(serverAccessLogsBucket: Bucket) {
+  private getExistingBucket(
+    existingBucketConfig: BucketConfig,
+    bucketType: string,
+    encryptionType: 'kms' | 's3',
+    bucketKmsArnParameterName?: string,
+  ): cdk.aws_s3.IBucket {
+    // Get existing bucket
+    const existingBucket = cdk.aws_s3.Bucket.fromBucketName(
+      this,
+      pascalCase(`Existing${bucketType}Bucket`),
+      this.getBucketNameReplacement(existingBucketConfig.name),
+    );
+
+    const validateBucket = new ValidateBucket(this, pascalCase(`ValidateExisting${bucketType}Bucket`), {
+      bucket: existingBucket,
+      validationCheckList: ['encryption'],
+      encryptionType,
+      customResourceLambdaEnvironmentEncryptionKmsKey: this.lambdaKey,
+      customResourceLambdaCloudWatchLogKmsKey: this.cloudwatchKey,
+      customResourceLambdaLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+    });
+
+    if (bucketKmsArnParameterName) {
+      // Store existing central log bucket's encryption key arn for future usage
+      new PutSsmParameter(this, pascalCase(`PutExisting${bucketType}BucketKmsArnParameter`), {
+        accountIds: this.getActiveAccountIds(),
+        region: cdk.Stack.of(this).region,
+        roleName: this.acceleratorResourceNames.roles.crossAccountSsmParameterShare,
+        kmsKey: this.cloudwatchKey,
+        logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+        parameters: [
+          {
+            name: bucketKmsArnParameterName,
+            value: validateBucket.bucketKmsArn,
+          },
+        ],
+        invokingAccountId: cdk.Stack.of(this).account,
+        acceleratorPrefix: this.props.prefixes.accelerator,
+      });
+    }
+
+    if (bucketType === 'central-logs') {
+      this.existingCentralLogBucketKey = cdk.aws_kms.Key.fromKeyArn(
+        this,
+        'ExistingCentralLogsBucketKey',
+        validateBucket.bucketKmsArn,
+      );
+    }
+
+    return existingBucket;
+  }
+
+  /**
+   * Function to create or get existing CentralLogBucket
+   * @param serverAccessLogsBucket {@link Bucket} | {@link cdk.aws_s3.IBucket}
+   *
+   * @remarks
+   * When existing bucket is used solution will lookup the existing bucket else solution will deploy central log bucket.
+   */
+  private createOrGetCentralLogsBucket(serverAccessLogsBucket: cdk.aws_s3.IBucket) {
+    if (
+      cdk.Stack.of(this).region === this.props.centralizedLoggingRegion &&
+      cdk.Stack.of(this).account === this.props.accountsConfig.getLogArchiveAccountId()
+    ) {
+      if (this.props.globalConfig.logging.centralLogBucket?.existingBucket) {
+        this.existingCentralLogBucket = this.getExistingBucket(
+          this.props.globalConfig.logging.centralLogBucket.existingBucket,
+          'central-logs',
+          'kms',
+          this.acceleratorResourceNames.parameters.existingCentralLogBucketCmkArn,
+        );
+      } else {
+        this.createCentralLogsBucket(serverAccessLogsBucket);
+      }
+    }
+  }
+
+  /**
+   * Function to create CentralLogs bucket in LogArchive account home region only.
+   * @param serverAccessLogsBucket {@link Bucket}
+   *
+   * @remarks
+   * If not used existing central log bucket Create then Central Logs Bucket - This is done only in the home region of the log-archive account.
+   * This is the destination bucket for all logs such as AWS CloudTrail, AWS Config, and VPC Flow logs.
+   * Addition logs can also be sent to this bucket through AWS CloudWatch Logs, such as application logs, OS logs, or server logs.
+   */
+  private createCentralLogsBucket(serverAccessLogsBucket: cdk.aws_s3.IBucket) {
     if (
       cdk.Stack.of(this).region === this.props.centralizedLoggingRegion &&
       cdk.Stack.of(this).account === this.props.accountsConfig.getLogArchiveAccountId()
@@ -1353,16 +1494,15 @@ export class LoggingStack extends AcceleratorStack {
 
       // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
       // rule suppression with evidence for this permission.
-      NagSuppressions.addResourceSuppressionsByPath(
-        this,
-        `${this.stackName}/CentralLogsBucket/CrossAccountCentralBucketKMSArnSsmParamAccessRole/Resource`,
-        [
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
           {
-            id: 'AwsSolutions-IAM5',
+            path: `${this.stackName}/CentralLogsBucket/CrossAccountCentralBucketKMSArnSsmParamAccessRole/Resource`,
             reason: 'Central logs bucket arn SSM parameter needs access from other accounts',
           },
         ],
-      );
+      });
 
       this.centralLogBucketAddResourcePolicies(this.centralLogsBucket);
     }
@@ -1439,27 +1579,25 @@ export class LoggingStack extends AcceleratorStack {
       }),
     );
 
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `/${this.stackName}/SnsTopicForwarderFunction/ServiceRole/Resource`,
-      [
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM4,
+      details: [
         {
-          id: 'AwsSolutions-IAM4',
+          path: `/${this.stackName}/SnsTopicForwarderFunction/ServiceRole/Resource`,
           reason: 'Lambda function managed policy',
         },
       ],
-    );
+    });
 
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `/${this.stackName}/SnsTopicForwarderFunction/ServiceRole/DefaultPolicy/Resource`,
-      [
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM5,
+      details: [
         {
-          id: 'AwsSolutions-IAM5',
+          path: `/${this.stackName}/SnsTopicForwarderFunction/ServiceRole/DefaultPolicy/Resource`,
           reason: 'Allows only specific topics.',
         },
       ],
-    );
+    });
 
     this.snsForwarderFunction.addToRolePolicy(
       new cdk.aws_iam.PolicyStatement({
@@ -1628,16 +1766,15 @@ export class LoggingStack extends AcceleratorStack {
       });
     }
 
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `/${this.stackName}/CrossAccountCentralSnsTopicKMSArnSsmParamAccessRole`,
-      [
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM5,
+      details: [
         {
-          id: 'AwsSolutions-IAM5',
+          path: `/${this.stackName}/CrossAccountCentralSnsTopicKMSArnSsmParamAccessRole`,
           reason: 'Allows only specific role arns.',
         },
       ],
-    );
+    });
   }
 
   private createSnsKey() {
@@ -1926,16 +2063,15 @@ export class LoggingStack extends AcceleratorStack {
       });
 
       // AwsSolutions-S1: The S3 Bucket has server access logs disabled.
-      NagSuppressions.addResourceSuppressionsByPath(
-        this,
-        `${this.stackName}/AssetsAccessLogsBucket/Resource/Resource`,
-        [
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.S1,
+        details: [
           {
-            id: 'AwsSolutions-S1',
+            path: `${this.stackName}/AssetsAccessLogsBucket/Resource/Resource`,
             reason: 'AccessLogsBucket has server access logs disabled till the task for access logging completed.',
           },
         ],
-      );
+      });
 
       //create assets bucket
       const assetsBucket = new Bucket(this, 'CertificateAssetBucket', {
@@ -2013,20 +2149,23 @@ export class LoggingStack extends AcceleratorStack {
         },
       });
 
-      NagSuppressions.addResourceSuppressionsByPath(
-        this,
-        `${this.stackName}/CrossAccountAssetsBucketKMSArnSsmParamAccessRole/Resource`,
-        [
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
           {
-            id: 'AwsSolutions-IAM5',
+            path: `${this.stackName}/CrossAccountAssetsBucketKMSArnSsmParamAccessRole/Resource`,
             reason: 'Cross account role allows AWSAccelerator to have read access on SSM',
           },
         ],
-      );
+      });
     }
   }
 
-  private createMetadataBucket(serverAccessLogsBucket: Bucket) {
+  /**
+   * Function to create Server access logs bucket
+   * @param serverAccessLogsBucket {@link cdk.aws_s3.IBucket}
+   */
+  private createMetadataBucket(serverAccessLogsBucket: cdk.aws_s3.IBucket) {
     if (this.props.globalConfig.acceleratorMetadata?.enable) {
       if (
         cdk.Stack.of(this).region === this.props.globalConfig.homeRegion &&
@@ -2040,7 +2179,7 @@ export class LoggingStack extends AcceleratorStack {
           s3BucketName: `${this.acceleratorResourceNames.bucketPrefixes.metadata}-${cdk.Stack.of(this).account}-${
             cdk.Stack.of(this).region
           }`,
-          serverAccessLogsBucket: serverAccessLogsBucket.getS3Bucket(),
+          serverAccessLogsBucket: serverAccessLogsBucket,
         });
 
         const bucket = metadataBucket.getS3Bucket();

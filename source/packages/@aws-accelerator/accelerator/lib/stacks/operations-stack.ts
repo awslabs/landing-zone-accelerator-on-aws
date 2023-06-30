@@ -30,7 +30,12 @@ import {
   UsersGroupsMetadata,
   WarmAccount,
 } from '@aws-accelerator/constructs';
-import { AcceleratorStack, AcceleratorStackProps, NagSuppressionRuleIds } from './accelerator-stack';
+import {
+  AcceleratorKeyType,
+  AcceleratorStack,
+  AcceleratorStackProps,
+  NagSuppressionRuleIds,
+} from './accelerator-stack';
 
 export interface OperationsStackProps extends AcceleratorStackProps {
   readonly accountWarming: boolean;
@@ -83,16 +88,7 @@ export class OperationsStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: OperationsStackProps) {
     super(scope, id, props);
 
-    this.nagSuppressionInputs = [];
-
-    this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
-      this,
-      'AcceleratorGetCloudWatchKey',
-      cdk.aws_ssm.StringParameter.valueForStringParameter(
-        this,
-        this.acceleratorResourceNames.parameters.cloudWatchLogCmkArn,
-      ),
-    ) as cdk.aws_kms.Key;
+    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
 
     // Security Services delegated admin account configuration
     // Global decoration for security services
@@ -152,7 +148,7 @@ export class OperationsStack extends AcceleratorStack {
     //
     // Create NagSuppressions
     //
-    this.addResourceSuppressionsByPath(this.nagSuppressionInputs);
+    this.addResourceSuppressionsByPath();
 
     this.logger.info('Completed stack synthesis');
   }
@@ -552,14 +548,6 @@ export class OperationsStack extends AcceleratorStack {
    * Enables budget reports
    */
   private enableBudgetReports() {
-    this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
-      this,
-      'AcceleratorBudgetGetCloudWatchKey',
-      cdk.aws_ssm.StringParameter.valueForStringParameter(
-        this,
-        this.acceleratorResourceNames.parameters.cloudWatchLogCmkArn,
-      ),
-    ) as cdk.aws_kms.Key;
     if (this.props.globalConfig.reports?.budgets) {
       for (const budget of this.props.globalConfig.reports.budgets ?? []) {
         if (this.isIncluded(budget.deploymentTargets ?? [])) {
@@ -620,9 +608,7 @@ export class OperationsStack extends AcceleratorStack {
     this.logger.info('Enabling SSM Inventory');
 
     new Inventory(this, 'AcceleratorSsmInventory', {
-      bucketName: `${
-        this.acceleratorResourceNames.bucketPrefixes.centralLogs
-      }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`,
+      bucketName: this.centralLogsBucketName,
       bucketRegion: this.props.centralizedLoggingRegion,
       accountId: cdk.Stack.of(this).account,
       prefix: this.props.prefixes.bucketName,
@@ -910,14 +896,7 @@ export class OperationsStack extends AcceleratorStack {
         identityStoreId: identityStoreId,
         principals: assignment.principals,
         resourceUniqueIdentifier: `${targetAccountId}-${assignment.name}`,
-        customResourceLambdaEnvironmentEncryptionKmsKey: cdk.aws_kms.Key.fromKeyArn(
-          this,
-          'AcceleratorGetLambdaKey',
-          cdk.aws_ssm.StringParameter.valueForStringParameter(
-            this,
-            this.acceleratorResourceNames.parameters.lambdaCmkArn,
-          ),
-        ),
+        customResourceLambdaEnvironmentEncryptionKmsKey: this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY),
         customResourceLambdaCloudWatchLogKmsKey: this.cloudwatchKey,
         customResourceLambdaLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
       },

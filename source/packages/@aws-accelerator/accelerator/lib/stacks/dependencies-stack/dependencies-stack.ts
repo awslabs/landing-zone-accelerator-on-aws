@@ -62,7 +62,7 @@ export class DependenciesStack extends AcceleratorStack {
   }
 
   /**
-   * Create a role that can be assumed to put cross-account/cross-region SSM parameters
+   * Create a role that can be assumed to put and read cross-account/cross-region SSM parameters
    * @param ssmPrefix
    * @param partition
    * @param organizationId
@@ -77,7 +77,7 @@ export class DependenciesStack extends AcceleratorStack {
           statements: [
             new cdk.aws_iam.PolicyStatement({
               effect: cdk.aws_iam.Effect.ALLOW,
-              actions: ['ssm:PutParameter', 'ssm:DeleteParameter'],
+              actions: ['ssm:PutParameter', 'ssm:DeleteParameter', 'ssm:GetParameter'],
               resources: [`arn:${partition}:ssm:*:*:parameter${ssmPrefix}*`],
             }),
           ],

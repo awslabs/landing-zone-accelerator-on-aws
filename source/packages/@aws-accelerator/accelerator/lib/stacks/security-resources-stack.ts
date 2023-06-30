@@ -23,13 +23,17 @@ import {
   ConfigServiceRecorder,
   CloudWatchLogGroups,
   ConfigServiceTags,
-  KeyLookup,
   SsmSessionManagerSettings,
   SecurityHubEventsLog,
 } from '@aws-accelerator/constructs';
 import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
 
-import { AcceleratorStack, AcceleratorStackProps, NagSuppressionRuleIds } from './accelerator-stack';
+import {
+  AcceleratorKeyType,
+  AcceleratorStack,
+  AcceleratorStackProps,
+  NagSuppressionRuleIds,
+} from './accelerator-stack';
 
 enum ACCEL_LOOKUP_TYPE {
   KMS = 'KMS',
@@ -58,7 +62,7 @@ type CustomConfigRuleType = cdk.aws_config.ManagedRule | cdk.aws_config.CustomRu
  * Security Stack, configures local account security services
  */
 export class SecurityResourcesStack extends AcceleratorStack {
-  readonly centralLogS3Key: cdk.aws_kms.IKey;
+  readonly centralLogsBucketKey: cdk.aws_kms.Key;
   readonly cloudwatchKey: cdk.aws_kms.IKey;
   readonly lambdaKey: cdk.aws_kms.IKey;
   readonly auditAccountId: string;
@@ -80,29 +84,9 @@ export class SecurityResourcesStack extends AcceleratorStack {
     this.auditAccountId = props.accountsConfig.getAuditAccountId();
     this.logArchiveAccountId = props.accountsConfig.getLogArchiveAccountId();
 
-    this.centralLogS3Key = new KeyLookup(this, 'AcceleratorCentralLogS3Key', {
-      accountId: this.props.accountsConfig.getLogArchiveAccountId(),
-      keyRegion: this.props.centralizedLoggingRegion,
-      roleName: this.acceleratorResourceNames.roles.crossAccountCentralLogBucketCmkArnSsmParameterAccess,
-      keyArnParameterName: this.acceleratorResourceNames.parameters.centralLogBucketCmkArn,
-      logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-      acceleratorPrefix: this.props.prefixes.accelerator,
-    }).getKey();
-
-    this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
-      this,
-      'AcceleratorGetCloudWatchKey',
-      cdk.aws_ssm.StringParameter.valueForStringParameter(
-        this,
-        this.acceleratorResourceNames.parameters.cloudWatchLogCmkArn,
-      ),
-    );
-
-    this.lambdaKey = cdk.aws_kms.Key.fromKeyArn(
-      this,
-      'AcceleratorGetLambdaKey',
-      cdk.aws_ssm.StringParameter.valueForStringParameter(this, this.acceleratorResourceNames.parameters.lambdaCmkArn),
-    );
+    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
+    this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
+    this.centralLogsBucketKey = this.getCentralLogsBucketKey(this.cloudwatchKey);
 
     //
     // Initialize SNS key
@@ -163,7 +147,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
     //
     // Create NagSuppressions
     //
-    this.addResourceSuppressionsByPath(this.nagSuppressionInputs);
+    this.addResourceSuppressionsByPath();
 
     this.logger.info('End stack synthesis');
   }
@@ -503,9 +487,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
         new cdk.aws_iam.PolicyStatement({
           sid: 'S3WriteAccess',
           actions: ['s3:PutObject', 's3:PutObjectAcl'],
-          resources: [
-            `arn:${this.props.partition}:s3:::${this.acceleratorResourceNames.bucketPrefixes.centralLogs}-${this.logArchiveAccountId}-${this.props.centralizedLoggingRegion}/*`,
-          ],
+          resources: [`arn:${this.props.partition}:s3:::${this.centralLogsBucketName}/*`],
           conditions: {
             StringLike: {
               's3:x-amz-acl': 'bucket-owner-full-control',
@@ -517,9 +499,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
         new cdk.aws_iam.PolicyStatement({
           sid: 'S3GetAclAccess',
           actions: ['s3:GetBucketAcl'],
-          resources: [
-            `arn:${this.props.partition}:s3:::${this.acceleratorResourceNames.bucketPrefixes.centralLogs}-${this.logArchiveAccountId}-${this.props.centralizedLoggingRegion}`,
-          ],
+          resources: [`arn:${this.props.partition}:s3:::${this.centralLogsBucketName}`],
         }),
       );
 
@@ -550,7 +530,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
         });
 
         this.deliveryChannel = new cdk.aws_config.CfnDeliveryChannel(this, 'ConfigDeliveryChannel', {
-          s3BucketName: `${this.acceleratorResourceNames.bucketPrefixes.centralLogs}-${this.logArchiveAccountId}-${this.props.centralizedLoggingRegion}`,
+          s3BucketName: `${this.centralLogsBucketName}`,
           configSnapshotDeliveryProperties: {
             deliveryFrequency: 'One_Hour',
           },
@@ -559,8 +539,8 @@ export class SecurityResourcesStack extends AcceleratorStack {
 
       if (this.props.securityConfig.awsConfig.overrideExisting) {
         const configServiceUpdater = new ConfigServiceRecorder(this, 'ConfigRecorderDeliveryChannel', {
-          s3BucketName: `${this.acceleratorResourceNames.bucketPrefixes.centralLogs}-${this.logArchiveAccountId}-${this.props.centralizedLoggingRegion}`,
-          s3BucketKmsKey: this.centralLogS3Key,
+          s3BucketName: `${this.centralLogsBucketName}`,
+          s3BucketKmsKey: this.centralLogsBucketKey,
           logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
           configRecorderRoleArn: configRecorderRole.roleArn,
           cloudwatchKmsKey: this.cloudwatchKey,
@@ -1152,9 +1132,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
    */
   private getBucketNameReplacementValue(ruleName: string, replacementArray: string[], replacementType: string): string {
     if (replacementArray[1].toLowerCase() === 'elbLogs'.toLowerCase()) {
-      return `${
-        this.acceleratorResourceNames.bucketPrefixes.elbLogs
-      }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`;
+      return this.getElbLogsBucketName();
     } else {
       return cdk.aws_s3.Bucket.fromBucketName(
         this,
@@ -1338,11 +1316,9 @@ export class SecurityResourcesStack extends AcceleratorStack {
       ) {
         // Set up Session Manager Logging
         new SsmSessionManagerSettings(this, 'SsmSessionManagerSettings', {
-          s3BucketName: `${
-            this.acceleratorResourceNames.bucketPrefixes.centralLogs
-          }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`,
+          s3BucketName: this.centralLogsBucketName,
           s3KeyPrefix: `session/${cdk.Aws.ACCOUNT_ID}/${cdk.Stack.of(this).region}`,
-          s3BucketKeyArn: this.centralLogS3Key.keyArn,
+          s3BucketKeyArn: this.centralLogsBucketKey.keyArn,
           sendToCloudWatchLogs: this.props.globalConfig.logging.sessionManager.sendToCloudWatchLogs,
           sendToS3: this.props.globalConfig.logging.sessionManager.sendToS3,
           cloudWatchEncryptionEnabled:
@@ -1467,16 +1443,12 @@ export class SecurityResourcesStack extends AcceleratorStack {
     }
 
     const accountCloudTrailLog = new cdk_extensions.Trail(this, `AcceleratorCloudTrail-${accountTrail.name}`, {
-      bucket: cdk.aws_s3.Bucket.fromBucketName(
-        this,
-        'CloudTrailLogBucket',
-        `${this.acceleratorResourceNames.bucketPrefixes.centralLogs}-${this.logArchiveAccountId}-${this.props.centralizedLoggingRegion}`,
-      ),
+      bucket: cdk.aws_s3.Bucket.fromBucketName(this, 'CloudTrailLogBucket', this.centralLogsBucketName),
       s3KeyPrefix: `cloudtrail-${accountTrail.name}`,
       cloudWatchLogGroup: accountTrailCloudWatchLogGroup,
       cloudWatchLogsRetention: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
       enableFileValidation: true,
-      encryptionKey: this.centralLogS3Key,
+      encryptionKey: this.centralLogsBucketKey,
       includeGlobalServiceEvents: accountTrail.settings.globalServiceEvents ?? false,
       isMultiRegionTrail: accountTrail.settings.multiRegionTrail ?? false,
       isOrganizationTrail: false,

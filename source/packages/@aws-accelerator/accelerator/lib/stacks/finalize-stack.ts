@@ -13,7 +13,7 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import { AcceleratorKeyType, AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { DetachQuarantineScp } from '../detach-quarantine-scp';
 
 export class FinalizeStack extends AcceleratorStack {
@@ -22,14 +22,7 @@ export class FinalizeStack extends AcceleratorStack {
 
     if (props.globalRegion === cdk.Stack.of(this).region) {
       this.logger.debug(`Retrieving CloudWatch kms key`);
-      const cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
-        this,
-        'AcceleratorGetCloudWatchKey',
-        cdk.aws_ssm.StringParameter.valueForStringParameter(
-          this,
-          this.acceleratorResourceNames.parameters.cloudWatchLogCmkArn,
-        ),
-      ) as cdk.aws_kms.Key;
+      const cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
 
       if (process.env['CONFIG_COMMIT_ID']) {
         this.logger.debug(`Storing configuration commit id in SSM`);
