@@ -176,8 +176,13 @@ export abstract class Accelerator {
       : undefined;
     const globalConfig = !this.isPipelineStage(props.stage) ? GlobalConfig.load(props.configDirPath) : undefined;
     if (globalConfig?.externalLandingZoneResources?.importExternalLandingZoneResources) {
-      logger.info('Loading ASEA mapping');
-      await globalConfig.loadExternalMapping(true);
+      logger.info('Loading ASEA mapping for stacks list');
+      await globalConfig.loadExternalMapping(
+        true,
+        [AcceleratorStage.IMPORT_ASEA_RESOURCES, AcceleratorStage.POST_IMPORT_ASEA_RESOURCES].includes(
+          props.stage as AcceleratorStage,
+        ),
+      );
       logger.info('Loaded ASEA mapping');
     }
 
@@ -875,16 +880,19 @@ export abstract class Accelerator {
     globalConfig: GlobalConfig,
     accountsConfig: AccountsConfig,
   ) {
-    if (toolkitProps.stage !== AcceleratorStage.IMPORT_ASEA_RESOURCES) {
+    if (
+      ![AcceleratorStage.IMPORT_ASEA_RESOURCES, AcceleratorStage.POST_IMPORT_ASEA_RESOURCES].includes(
+        toolkitProps.stage as AcceleratorStage,
+      )
+    ) {
       return;
     }
     if (!globalConfig.externalLandingZoneResources) {
-      logger.error(
-        `Stage is ${AcceleratorStage.IMPORT_ASEA_RESOURCES} but externalLandingZoneResources is not defined in global config.`,
-      );
+      logger.error(`Stage is ${toolkitProps.stage} but externalLandingZoneResources is not defined in global config.`);
       throw new Error(`Configuration validation failed at runtime.`);
     }
     const aseaPrefix = globalConfig.externalLandingZoneResources.acceleratorPrefix;
+    const aseaName = globalConfig.externalLandingZoneResources.acceleratorName;
     let previousPhase = -1;
     for (const phase of [-1, 0, 1, 2, 3, 4, 5]) {
       logger.info(`Deploying Stacks in Phase ${phase}`);
@@ -896,10 +904,10 @@ export abstract class Accelerator {
         for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
           const accountId = accountsConfig.getAccountId(account.name);
           const stacks = globalConfig.externalLandingZoneResources.templateMap.filter(
-            s => s.accountId === accountId && s.region === region && s.phase === phase,
+            stack => stack.accountId === accountId && stack.region === region && stack.phase === phase,
           );
           stacks
-            .filter(s => !s.nestedStack)
+            .filter(stack => !stack.nestedStack)
             .forEach(stack =>
               promises.push(
                 AcceleratorToolkit.execute({
@@ -912,7 +920,7 @@ export abstract class Accelerator {
                   tags: [
                     {
                       Key: 'AcceleratorName',
-                      Value: aseaPrefix,
+                      Value: aseaName,
                     },
                   ],
                 }),

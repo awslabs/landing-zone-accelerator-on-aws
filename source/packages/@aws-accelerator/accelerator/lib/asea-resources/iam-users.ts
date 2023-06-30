@@ -11,15 +11,17 @@
  *  and limitations under the License.
  */
 
-import * as cdk from 'aws-cdk-lib';
-
-import { AseaResourceHelper, AseaResourceHelperProps } from '../resource-helper';
 import { CfnGroup, CfnManagedPolicy, CfnUser } from 'aws-cdk-lib/aws-iam';
+import { AseaResourceType } from '@aws-accelerator/config';
+import { SsmResourceType } from '@aws-accelerator/utils';
+import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
+import { pascalCase } from 'pascal-case';
+import { AseaResource, AseaResourceProps } from './resource';
 
 const RESOURCE_TYPE = 'AWS::IAM::User';
 const ASEA_PHASE_NUMBER = 1;
 
-export interface UsersProps extends AseaResourceHelperProps {
+export interface UsersProps extends AseaResourceProps {
   /**
    * Group constructs defined in configuration
    */
@@ -34,35 +36,51 @@ export interface UsersProps extends AseaResourceHelperProps {
  * Handles IAM Roles created by ASEA.
  * All IAM Roles driven by ASEA configuration are deployed in Phase-1
  */
-export class Users extends AseaResourceHelper {
-  private readonly groups: { [key: string]: CfnGroup };
-  private readonly policies: { [key: string]: CfnManagedPolicy };
-  constructor(scope: cdk.cloudformation_include.CfnInclude, props: UsersProps) {
+export class Users extends AseaResource {
+  constructor(scope: ImportAseaResourcesStack, props: UsersProps) {
     super(scope, props);
-    this.groups = props.groups;
-    this.policies = props.policies;
     if (props.stackInfo.phase !== ASEA_PHASE_NUMBER) {
-      this.logger.info(`No ${RESOURCE_TYPE}s to handle in stack ${props.stackInfo.stackName}`);
+      this.scope.addLogs(LogLevel.INFO, `No ${RESOURCE_TYPE}s to handle in stack ${props.stackInfo.stackName}`);
       return;
     }
-    const existingResources = this.getResourcesByType(RESOURCE_TYPE);
-    for (const userSetItem of this.props.iamConfig.userSets ?? []) {
-      if (!this.isIncluded(userSetItem.deploymentTargets)) {
-        this.logger.info(`Item excluded`);
+    const existingResources = this.scope.getResourcesByType(RESOURCE_TYPE);
+    for (const userSetItem of props.iamConfig.userSets ?? []) {
+      if (!this.scope.isIncluded(userSetItem.deploymentTargets)) {
+        this.scope.addLogs(LogLevel.INFO, `Item excluded`);
         continue;
       }
 
       for (const userItem of userSetItem.users) {
-        this.logger.info(`Add User ${userItem.username}`);
-        const resource = existingResources.find(r => r.resourceMetadata['Properties'].UserName === userItem.username);
+        this.scope.addLogs(LogLevel.INFO, `Add User ${userItem.username}`);
+        const resource = existingResources.find(
+          cfnResource => cfnResource.resourceMetadata['Properties'].UserName === userItem.username,
+        );
         if (!resource) {
           continue;
         }
-        const user = scope.getResource(resource.logicalResourceId) as CfnUser;
-        user.groups = [this.groups[userItem.group].ref];
-        if (userItem.boundaryPolicy) {
-          user.permissionsBoundary = this.policies[userItem.boundaryPolicy].ref;
+        const user = this.stack.getResource(resource.logicalResourceId) as CfnUser;
+        const group =
+          props.groups[userItem.group]?.ref ??
+          this.resourceSsmParameters[this.scope.getSsmPath(SsmResourceType.IAM_GROUP, [userItem.group])];
+        if (group) {
+          user.groups = [group];
         }
+        if (userItem.boundaryPolicy) {
+          const boundaryPolicy =
+            props.policies[userItem.boundaryPolicy]?.ref ??
+            this.resourceSsmParameters[this.scope.getSsmPath(SsmResourceType.IAM_POLICY, [userItem.boundaryPolicy])];
+          if (boundaryPolicy) {
+            user.permissionsBoundary = boundaryPolicy;
+          }
+        } else if (user.permissionsBoundary) {
+          user.permissionsBoundary = undefined;
+        }
+        this.scope.addSsmParameter({
+          logicalId: pascalCase(`SsmParam${pascalCase(userItem.username)}UserArn`),
+          parameterName: this.scope.getSsmPath(SsmResourceType.IAM_USER, [userItem.username]),
+          stringValue: user.attrArn,
+        });
+        this.scope.addAseaResource(AseaResourceType.IAM_USER, userItem.username);
       }
     }
   }

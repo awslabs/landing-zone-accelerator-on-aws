@@ -37,7 +37,7 @@ async function main() {
   }
 
   if (region === undefined) {
-    console.warn(`[tester-app] Invalid --account ${region}`);
+    console.warn(`[tester-app] Invalid --region ${region}`);
     throw new Error(usage);
   }
 

@@ -13,14 +13,17 @@
 
 import * as cdk from 'aws-cdk-lib';
 
-import { AseaResourceHelper, AseaResourceHelperProps } from '../resource-helper';
 import { CfnGroup, CfnManagedPolicy } from 'aws-cdk-lib/aws-iam';
-import { GroupConfig } from '@aws-accelerator/config';
+import { GroupConfig, AseaResourceType } from '@aws-accelerator/config';
+import { SsmResourceType } from '@aws-accelerator/utils';
+import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
+import { pascalCase } from 'pascal-case';
+import { AseaResource, AseaResourceProps } from './resource';
 
 const RESOURCE_TYPE = 'AWS::IAM::Group';
 const ASEA_PHASE_NUMBER = 1;
 
-export interface GroupsProps extends AseaResourceHelperProps {
+export interface GroupsProps extends AseaResourceProps {
   /**
    * Policy constructs defined in configuration
    */
@@ -31,35 +34,42 @@ export interface GroupsProps extends AseaResourceHelperProps {
  * Handles IAM Groups created by ASEA.
  * All IAM Groups driven by ASEA configuration are deployed in Phase-1
  */
-export class Groups extends AseaResourceHelper {
+export class Groups extends AseaResource {
   private readonly policies: { [key: string]: CfnManagedPolicy };
   readonly groups: { [key: string]: CfnGroup } = {};
-  constructor(scope: cdk.cloudformation_include.CfnInclude, props: GroupsProps) {
+  constructor(scope: ImportAseaResourcesStack, props: GroupsProps) {
     super(scope, props);
     this.policies = props.policies;
     if (props.stackInfo.phase !== ASEA_PHASE_NUMBER) {
-      this.logger.info(`No ${RESOURCE_TYPE}s to handle in stack ${props.stackInfo.stackName}`);
+      this.scope.addLogs(LogLevel.INFO, `No ${RESOURCE_TYPE}s to handle in stack ${props.stackInfo.stackName}`);
       return;
     }
-    const existingResources = this.getResourcesByType(RESOURCE_TYPE);
-    for (const groupSetItem of this.props.iamConfig.groupSets ?? []) {
-      if (!this.isIncluded(groupSetItem.deploymentTargets)) {
-        this.logger.info(`Item excluded`);
+    const existingResources = this.scope.getResourcesByType(RESOURCE_TYPE);
+    for (const groupSetItem of props.iamConfig.groupSets ?? []) {
+      if (!this.scope.isIncluded(groupSetItem.deploymentTargets)) {
+        this.scope.addLogs(LogLevel.INFO, `Item excluded`);
         continue;
       }
 
       for (const groupItem of groupSetItem.groups) {
         const existingResource = existingResources.find(
-          p => p.resourceMetadata['Properties'].GroupName === groupItem.name,
+          (cfnResource: { resourceMetadata: { [x: string]: { GroupName: string } } }) =>
+            cfnResource.resourceMetadata['Properties'].GroupName === groupItem.name,
         );
         if (!existingResource) {
           continue;
         }
-        this.logger.info(`Add customer managed policy ${groupItem.name}`);
-        const resource = scope.getResource(existingResource!.logicalResourceId) as CfnGroup;
+        this.scope.addLogs(LogLevel.INFO, `Add IAM Group ${groupItem.name}`);
+        const resource = this.stack.getResource(existingResource.logicalResourceId) as CfnGroup;
         resource.groupName = groupItem.name;
         resource.managedPolicyArns = this.getManagedPolicies(groupItem);
-        this.groups[resource.groupName] = resource;
+        this.groups[groupItem.name] = resource;
+        this.scope.addSsmParameter({
+          logicalId: pascalCase(`SsmParam${pascalCase(groupItem.name)}GroupArn`),
+          parameterName: this.scope.getSsmPath(SsmResourceType.IAM_GROUP, [groupItem.name]),
+          stringValue: resource.attrArn,
+        });
+        this.scope.addAseaResource(AseaResourceType.IAM_GROUP, groupItem.name);
       }
     }
   }
@@ -67,12 +77,17 @@ export class Groups extends AseaResourceHelper {
   private getManagedPolicies(groupItem: GroupConfig) {
     const managedPolicies: string[] = [];
     for (const policyItem of groupItem.policies?.awsManaged ?? []) {
-      this.logger.info(`Role - aws managed policy ${policyItem}`);
+      this.scope.addLogs(LogLevel.INFO, `Role - aws managed policy ${policyItem}`);
       managedPolicies.push(`arn:${cdk.Aws.PARTITION}:iam::aws:policy/${policyItem}`);
     }
     for (const policyItem of groupItem.policies?.customerManaged ?? []) {
-      this.logger.info(`Role - customer managed policy ${policyItem}`);
-      managedPolicies.push(this.policies[policyItem].ref);
+      this.scope.addLogs(LogLevel.INFO, `Role - customer managed policy ${policyItem}`);
+      const managedPolicy =
+        this.policies[policyItem]?.ref ??
+        this.resourceSsmParameters[this.scope.getSsmPath(SsmResourceType.IAM_POLICY, [policyItem])];
+      if (managedPolicy) {
+        managedPolicies.push(managedPolicy);
+      }
     }
     return managedPolicies;
   }

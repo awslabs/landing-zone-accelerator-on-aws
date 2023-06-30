@@ -797,6 +797,84 @@ exports[`OperationsStack Construct(OperationsStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "SsmParamAdministratorsGroupArn1018D83B": {
+      "Properties": {
+        "Name": "/accelerator/iam/group/Administrators/arn",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "AdministratorsA37EF73A",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamBackupRoleRoleArn575A5734": {
+      "Properties": {
+        "Name": "/accelerator/iam/role/Backup-Role/arn",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "BackupRoleF43CFD90",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamBreakGlassUser01UserArn935D8C01": {
+      "Properties": {
+        "Name": "/accelerator/iam/user/breakGlassUser01/arn",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "BreakGlassUser01AA051328",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamBreakGlassUser02UserArnB4B8C9E3": {
+      "DependsOn": [
+        "SsmParamBreakGlassUser01UserArn935D8C01",
+      ],
+      "Properties": {
+        "Name": "/accelerator/iam/user/breakGlassUser02/arn",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "BreakGlassUser02DFF444C8",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamDefaultBoundaryPolicyPolicyArnD6B0A5E8": {
+      "Properties": {
+        "Name": "/accelerator/iam/policy/Default-Boundary-Policy/arn",
+        "Type": "String",
+        "Value": {
+          "Ref": "DefaultBoundaryPolicy489A8D26",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamEc2DefaultSsmAdRoleRoleArnEA559EEC": {
+      "Properties": {
+        "Name": "/accelerator/iam/role/EC2-Default-SSM-AD-Role/arn",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "Ec2DefaultSsmAdRoleADFFA4C6",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "SsmParamStackId521A78D3": {
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-OperationsStack-111111111111-us-east-1/stack-id",
@@ -1802,6 +1880,84 @@ exports[`delegatedAdminStack Construct(OperationsStack):  Snapshot Test 1`] = `
         "Name": "/accelerator/AWSAccelerator-OperationsStack-111111111111-us-east-1/version",
         "Type": "String",
         "Value": "1.4.1",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamAdministratorsGroupArn1018D83B": {
+      "Properties": {
+        "Name": "/accelerator/iam/group/Administrators/arn",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "AdministratorsA37EF73A",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamBackupRoleRoleArn575A5734": {
+      "Properties": {
+        "Name": "/accelerator/iam/role/Backup-Role/arn",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "BackupRoleF43CFD90",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamBreakGlassUser01UserArn935D8C01": {
+      "Properties": {
+        "Name": "/accelerator/iam/user/breakGlassUser01/arn",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "BreakGlassUser01AA051328",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamBreakGlassUser02UserArnB4B8C9E3": {
+      "DependsOn": [
+        "SsmParamBreakGlassUser01UserArn935D8C01",
+      ],
+      "Properties": {
+        "Name": "/accelerator/iam/user/breakGlassUser02/arn",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "BreakGlassUser02DFF444C8",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamDefaultBoundaryPolicyPolicyArnD6B0A5E8": {
+      "Properties": {
+        "Name": "/accelerator/iam/policy/Default-Boundary-Policy/arn",
+        "Type": "String",
+        "Value": {
+          "Ref": "DefaultBoundaryPolicy489A8D26",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamEc2DefaultSsmAdRoleRoleArnEA559EEC": {
+      "Properties": {
+        "Name": "/accelerator/iam/role/EC2-Default-SSM-AD-Role/arn",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "Ec2DefaultSsmAdRoleADFFA4C6",
+            "Arn",
+          ],
+        },
       },
       "Type": "AWS::SSM::Parameter",
     },

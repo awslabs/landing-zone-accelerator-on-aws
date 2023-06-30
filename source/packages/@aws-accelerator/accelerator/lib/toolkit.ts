@@ -125,7 +125,7 @@ export interface AcceleratorToolkitProps {
   cdkOptions?: cdkOptionsConfig;
   /**
    * Stack to be deployed. This stack is added to stackName list
-   * For IMPORT_ASEA_RESOURCES should be ASEA stack name
+   * For IMPORT_ASEA_RESOURCES/POST_IMPORT_ASEA_RESOURCES should be ASEA stack name
    */
   stack?: string;
 
@@ -476,6 +476,7 @@ export class AcceleratorToolkit {
         stackName = await AcceleratorToolkit.getCustomizationsStackNames(stackName, options);
         break;
       case AcceleratorStage.IMPORT_ASEA_RESOURCES:
+      case AcceleratorStage.POST_IMPORT_ASEA_RESOURCES:
         stackName = [options.stack!];
         break;
     }

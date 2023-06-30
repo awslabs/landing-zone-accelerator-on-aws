@@ -13,7 +13,6 @@
 
 import * as cdk from 'aws-cdk-lib';
 
-import { AseaResourceHelper, AseaResourceHelperProps } from '../resource-helper';
 import {
   AccountPrincipal,
   CfnInstanceProfile,
@@ -23,14 +22,17 @@ import {
   PolicyStatement,
   ServicePrincipal,
 } from 'aws-cdk-lib/aws-iam';
-import { RoleConfig } from '@aws-accelerator/config';
+import { RoleConfig, AseaResourceType } from '@aws-accelerator/config';
+import { SsmResourceType } from '@aws-accelerator/utils';
 import { pascalCase } from 'pascal-case';
+import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
+import { AseaResource, AseaResourceProps } from './resource';
 
 const RESOURCE_TYPE = 'AWS::IAM::Role';
 const ASEA_PHASE_NUMBER = 1;
 const INSTANCE_PROFILE_RESOURCE_TYPE = 'AWS::IAM::InstanceProfile';
 
-export interface RolesProps extends AseaResourceHelperProps {
+export interface RolesProps extends AseaResourceProps {
   /**
    * Policy constructs defined in configuration
    */
@@ -39,40 +41,48 @@ export interface RolesProps extends AseaResourceHelperProps {
 /**
  * Handles IAM Roles created by ASEA.
  * All IAM Roles driven by ASEA configuration are deployed in Phase-1
+ * TODO: Address grantManagedActiveDirectorySecretAccess functionality in operations-stack.createRole()
  */
-export class Roles extends AseaResourceHelper {
-  private readonly policies: { [key: string]: CfnManagedPolicy };
-  private readonly scope: cdk.cloudformation_include.CfnInclude;
-  constructor(scope: cdk.cloudformation_include.CfnInclude, props: RolesProps) {
+export class Roles extends AseaResource {
+  private readonly props: RolesProps;
+  constructor(scope: ImportAseaResourcesStack, props: RolesProps) {
     super(scope, props);
-    this.scope = scope;
-    this.policies = props.policies;
+    this.props = props;
     if (props.stackInfo.phase !== ASEA_PHASE_NUMBER) {
-      this.logger.info(`No ${RESOURCE_TYPE}s to handle in stack ${props.stackInfo.stackName}`);
+      this.scope.addLogs(LogLevel.INFO, `No ${RESOURCE_TYPE}s to handle in stack ${props.stackInfo.stackName}`);
       return;
     }
-    const existingResources = this.getResourcesByType(RESOURCE_TYPE);
-    const existingInstanceProfiles = this.getResourcesByType(INSTANCE_PROFILE_RESOURCE_TYPE);
-    for (const roleSetItem of this.props.iamConfig.roleSets ?? []) {
-      if (!this.isIncluded(roleSetItem.deploymentTargets)) {
-        this.logger.info(`Item excluded`);
+    const existingResources = this.scope.getResourcesByType(RESOURCE_TYPE);
+    const existingInstanceProfiles = this.scope.getResourcesByType(INSTANCE_PROFILE_RESOURCE_TYPE);
+    for (const roleSetItem of props.iamConfig.roleSets ?? []) {
+      if (!this.scope.isIncluded(roleSetItem.deploymentTargets)) {
+        this.scope.addLogs(LogLevel.INFO, `Item excluded`);
         continue;
       }
 
       for (const roleItem of roleSetItem.roles) {
-        this.logger.info(`Add role ${roleItem.name}`);
-        const role = existingResources.find(r => r.resourceMetadata['Properties'].RoleName === roleItem.name);
+        this.scope.addLogs(LogLevel.INFO, `Add role ${roleItem.name}`);
+        const role = existingResources.find(
+          cfnResource => cfnResource.resourceMetadata['Properties'].RoleName === roleItem.name,
+        );
         if (!role) {
           continue;
         }
-        const resource = scope.getResource(role.logicalResourceId) as cdk.aws_iam.CfnRole;
+        const resource = this.stack.getResource(role.logicalResourceId) as cdk.aws_iam.CfnRole;
         resource.managedPolicyArns = this.getManagedPolicies(roleItem);
         resource.assumeRolePolicyDocument = this.getAssumeRolePolicy(roleItem);
         if (roleItem.boundaryPolicy) {
-          resource.permissionsBoundary = this.policies[roleItem.boundaryPolicy].ref;
+          const boundaryPolicy =
+            this.props.policies[roleItem.boundaryPolicy]?.ref ??
+            this.resourceSsmParameters[this.scope.getSsmPath(SsmResourceType.IAM_POLICY, [roleItem.boundaryPolicy])];
+          if (boundaryPolicy) {
+            resource.permissionsBoundary = boundaryPolicy;
+          }
+        } else if (resource.permissionsBoundary) {
+          resource.permissionsBoundary = undefined;
         }
         const existingInstanceProfile = existingInstanceProfiles.find(
-          r => r.resourceMetadata['Properties'].InstanceProfileName === `${roleItem.name}-ip`,
+          cfnResource => cfnResource.resourceMetadata['Properties'].InstanceProfileName === `${roleItem.name}-ip`,
         );
         if (existingInstanceProfile && !roleItem.instanceProfile) {
           this.scope.node.tryRemoveChild(existingInstanceProfile.logicalResourceId);
@@ -89,9 +99,15 @@ export class Roles extends AseaResourceHelper {
             instanceProfileName: `${roleItem.name}-ip`,
           });
         } else {
-          instanceProfile = scope.getResource(existingInstanceProfile.logicalResourceId) as CfnInstanceProfile;
+          instanceProfile = this.stack.getResource(existingInstanceProfile.logicalResourceId) as CfnInstanceProfile;
           instanceProfile.instanceProfileName = `${roleItem.name}-ip`;
         }
+        this.scope.addSsmParameter({
+          logicalId: pascalCase(`SsmParam${pascalCase(roleItem.name)}RoleArn`),
+          parameterName: this.scope.getSsmPath(SsmResourceType.IAM_ROLE, [roleItem.name]),
+          stringValue: resource.attrArn,
+        });
+        this.scope.addAseaResource(AseaResourceType.IAM_ROLE, roleItem.name);
       }
     }
   }
@@ -99,12 +115,17 @@ export class Roles extends AseaResourceHelper {
   private getManagedPolicies(roleItem: RoleConfig) {
     const managedPolicies: string[] = [];
     for (const policyItem of roleItem.policies?.awsManaged ?? []) {
-      this.logger.info(`Role - aws managed policy ${policyItem}`);
+      this.scope.addLogs(LogLevel.INFO, `Role - aws managed policy ${policyItem}`);
       managedPolicies.push(`arn:${cdk.Aws.PARTITION}:iam::aws:policy/${policyItem}`);
     }
     for (const policyItem of roleItem.policies?.customerManaged ?? []) {
-      this.logger.info(`Role - customer managed policy ${policyItem}`);
-      managedPolicies.push(this.policies[policyItem].ref);
+      this.scope.addLogs(LogLevel.INFO, `Role - customer managed policy ${policyItem}`);
+      const managedPolicy =
+        this.props.policies[policyItem]?.ref ??
+        this.resourceSsmParameters[this.scope.getSsmPath(SsmResourceType.IAM_POLICY, [policyItem])];
+      if (managedPolicy) {
+        managedPolicies.push(managedPolicy);
+      }
     }
     return managedPolicies;
   }
@@ -122,7 +143,7 @@ export class Roles extends AseaResourceHelper {
         );
       }
       if (assumedByItem.type === 'account') {
-        const partition = this.scope.stack.partition;
+        const partition = this.props.partition;
         const accountIdRegex = /^\d{12}$/;
         const accountArnRegex = new RegExp('^arn:' + partition + ':iam::(\\d{12}):root$');
         if (accountIdRegex.test(assumedByItem.principal)) {
