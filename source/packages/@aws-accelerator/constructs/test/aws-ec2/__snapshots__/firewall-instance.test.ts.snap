@@ -71,6 +71,9 @@ exports[`LaunchTemplate Construct(FirewallInstance):  Snapshot Test 1`] = `
             },
           ],
           "SecurityGroupIds": [],
+          "UserData": {
+            "Fn::Base64": "S3 bucket name: test-bucket",
+          },
         },
         "LaunchTemplateName": "test-firewall",
       },

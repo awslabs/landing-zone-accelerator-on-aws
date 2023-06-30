@@ -17,6 +17,7 @@ interface RoleNames {
   crossAccountServiceCatalogPropagation: string;
   crossAccountSsmParameterShare: string;
   assetFunctionRoleName: string;
+  firewallConfigFunctionRoleName: string;
 }
 interface ParameterNames {
   existingCentralLogBucketCmkArn: string;
@@ -62,6 +63,7 @@ interface BucketPrefixes {
   assetsAccessLog: string;
   assets: string;
   elbLogs: string;
+  firewallConfig: string;
   costUsage: string;
   s3AccessLogs: string;
   auditManager: string;
@@ -84,6 +86,7 @@ export class AcceleratorResourceNames {
     crossAccountServiceCatalogPropagation: 'PLACE_HOLDER',
     crossAccountSsmParameterShare: 'PLACE_HOLDER',
     assetFunctionRoleName: 'PLACE_HOLDER',
+    firewallConfigFunctionRoleName: 'PLACE_HOLDER',
   };
   public parameters: ParameterNames = {
     existingCentralLogBucketCmkArn: 'PLACE_HOLDER',
@@ -129,6 +132,7 @@ export class AcceleratorResourceNames {
     assetsAccessLog: 'PLACE_HOLDER',
     assets: 'PLACE_HOLDER',
     elbLogs: 'PLACE_HOLDER',
+    firewallConfig: 'PLACE_HOLDER',
     costUsage: 'PLACE_HOLDER',
     s3AccessLogs: 'PLACE_HOLDER',
     auditManager: 'PLACE_HOLDER',
@@ -156,6 +160,7 @@ export class AcceleratorResourceNames {
     this.roles.crossAccountServiceCatalogPropagation = props.prefixes.accelerator + '-CrossAccount-ServiceCatalog-Role';
     this.roles.crossAccountSsmParameterShare = props.prefixes.accelerator + '-CrossAccountSsmParameterShare';
     this.roles.assetFunctionRoleName = props.prefixes.accelerator + '-AssetsAccessRole';
+    this.roles.firewallConfigFunctionRoleName = props.prefixes.accelerator + '-FirewallConfigAccessRole';
 
     //
     // SSM Parameter initializations
@@ -254,6 +259,7 @@ export class AcceleratorResourceNames {
     this.bucketPrefixes.assetsAccessLog = props.prefixes.bucketName + '-assets-logs';
     this.bucketPrefixes.assets = props.prefixes.bucketName + '-assets';
     this.bucketPrefixes.elbLogs = props.prefixes.bucketName + '-elb-access-logs';
+    this.bucketPrefixes.firewallConfig = props.prefixes.bucketName + '-firewall-config';
     this.bucketPrefixes.costUsage = props.prefixes.bucketName + '-cur';
     this.bucketPrefixes.s3AccessLogs = props.prefixes.bucketName + '-s3-access-logs';
     this.bucketPrefixes.auditManager = props.prefixes.bucketName + '-auditmgr';

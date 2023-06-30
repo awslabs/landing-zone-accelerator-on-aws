@@ -2092,9 +2092,12 @@ export class LoggingStack extends AcceleratorStack {
               ...this.getPrincipalOrgIdCondition(this.organizationId),
             },
             StringLike: {
-              'aws:PrincipalARN': `arn:${cdk.Stack.of(this).partition}:iam::*:role/${
-                props.prefixes.accelerator
-              }-AssetsAccessRole`,
+              'aws:PrincipalARN': [
+                `arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.prefixes.accelerator}-AssetsAccessRole`,
+                `arn:${cdk.Stack.of(this).partition}:iam::*:role/${
+                  props.prefixes.accelerator
+                }-FirewallConfigAccessRole`,
+              ],
             },
           },
         }),

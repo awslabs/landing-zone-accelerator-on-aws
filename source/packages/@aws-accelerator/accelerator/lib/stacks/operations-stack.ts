@@ -17,14 +17,21 @@ import * as path from 'path';
 
 import {
   AseaResourceType,
+  Ec2FirewallAutoScalingGroupConfig,
+  Ec2FirewallConfig,
+  Ec2FirewallInstanceConfig,
   IdentityCenterAssignmentConfig,
   IdentityCenterConfig,
   IdentityCenterPermissionSetConfig,
   RoleConfig,
   RoleSetConfig,
+  VpcConfig,
+  VpcTemplatesConfig,
 } from '@aws-accelerator/config';
 import { SsmResourceType } from '@aws-accelerator/utils';
 import {
+  Bucket,
+  BucketEncryptionType,
   BudgetDefinition,
   Inventory,
   KeyLookup,
@@ -38,6 +45,7 @@ import {
   AcceleratorStackProps,
   NagSuppressionRuleIds,
 } from './accelerator-stack';
+import { getVpcConfig } from './network-stacks/utils/getter-utils';
 
 export interface OperationsStackProps extends AcceleratorStackProps {
   readonly accountWarming: boolean;
@@ -98,6 +106,12 @@ export class OperationsStack extends AcceleratorStack {
     const securityAdminAccountId = props.accountsConfig.getAccountId(securityAdminAccount);
 
     //
+    // Look up asset bucket KMS key
+    const vpcResources = [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])];
+    const firewallRoles = this.getFirewallRolesInScope(vpcResources, props.customizationsConfig.firewalls);
+    const assetBucketKmsKey = this.lookupAssetBucketKmsKey(props, firewallRoles);
+
+    //
     // Only deploy IAM and CUR resources into the home region
     //
     if (props.globalConfig.homeRegion === cdk.Stack.of(this).region) {
@@ -121,7 +135,7 @@ export class OperationsStack extends AcceleratorStack {
       this.increaseLimits();
 
       // Create Accelerator Access Role in every region
-      this.createAssetAccessRole();
+      this.createAssetAccessRole(assetBucketKmsKey);
 
       // Create Cross Account Service Catalog Role
       this.createServiceCatalogPropagationRole();
@@ -141,6 +155,11 @@ export class OperationsStack extends AcceleratorStack {
     ) {
       this.enableInventory();
     }
+
+    //
+    // Create firewall configuration S3 bucket
+    //
+    this.createFirewallConfigBucket(props, firewallRoles, assetBucketKmsKey);
 
     //
     // Create SSM parameters
@@ -1081,7 +1100,39 @@ export class OperationsStack extends AcceleratorStack {
     });
   }
 
-  private createAssetAccessRole() {
+  /**
+   * Lookup asset bucket KMS key to use for ACM certificates and
+   * EC2 firewall configurations
+   * @param props {@link AcceleratorStackProps}
+   * @param firewallRoles string[]
+   * @returns cdk.aws_kms.Key | undefined
+   */
+  private lookupAssetBucketKmsKey(props: AcceleratorStackProps, firewallRoles: string[]): cdk.aws_kms.Key | undefined {
+    if (props.globalConfig.homeRegion === cdk.Stack.of(this).region || firewallRoles.length > 0) {
+      return new KeyLookup(this, 'AssetsBucketKms', {
+        accountId: this.props.accountsConfig.getManagementAccountId(),
+        keyRegion: this.props.globalConfig.homeRegion,
+        roleName: this.acceleratorResourceNames.roles.crossAccountAssetsBucketCmkArnSsmParameterAccess,
+        keyArnParameterName: this.acceleratorResourceNames.parameters.assetsBucketCmkArn,
+        kmsKey: this.cloudwatchKey,
+        logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+        acceleratorPrefix: this.props.prefixes.accelerator,
+      }).getKey();
+    }
+    return;
+  }
+
+  /**
+   * Create ACM certificate asset bucket access role
+   * @param assetBucketKmsKey
+   */
+  private createAssetAccessRole(assetBucketKmsKey?: cdk.aws_kms.Key) {
+    if (!assetBucketKmsKey) {
+      throw new Error(
+        `Asset bucket KMS key is undefined. KMS key must be defined so permissions can be added to the custom resource role.`,
+      );
+    }
+
     const accessBucketArn = `arn:${this.props.partition}:s3:::${
       this.acceleratorResourceNames.bucketPrefixes.assets
     }-${this.props.accountsConfig.getManagementAccountId()}-${this.props.globalConfig.homeRegion}`;
@@ -1122,19 +1173,9 @@ export class OperationsStack extends AcceleratorStack {
       }),
     );
 
-    const assetsBucketKmsKey = new KeyLookup(this, 'AssetsBucketKms', {
-      accountId: this.props.accountsConfig.getManagementAccountId(),
-      keyRegion: this.props.globalConfig.homeRegion,
-      roleName: this.acceleratorResourceNames.roles.crossAccountAssetsBucketCmkArnSsmParameterAccess,
-      keyArnParameterName: this.acceleratorResourceNames.parameters.assetsBucketCmkArn,
-      kmsKey: this.cloudwatchKey,
-      logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-      acceleratorPrefix: this.props.prefixes.accelerator,
-    }).getKey();
-
     assetsAccessRole.addToPolicy(
       new cdk.aws_iam.PolicyStatement({
-        resources: [assetsBucketKmsKey.keyArn],
+        resources: [assetBucketKmsKey.keyArn],
         actions: ['kms:Decrypt'],
       }),
     );
@@ -1173,5 +1214,183 @@ export class OperationsStack extends AcceleratorStack {
       logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
       ssmPrefix: this.props.prefixes.ssmParamName,
     });
+  }
+
+  /**
+   * Creates a bucket for storing third-party firewall configuration and license files
+   * @param props {@link AcceleratorStackProps}
+   * @param firewallRoles string[]
+   * @param assetBucketKmsKey cdk.aws_kms.Key | undefined
+   * @returns Bucket | undefined
+   */
+  private createFirewallConfigBucket(
+    props: AcceleratorStackProps,
+    firewallRoles: string[],
+    assetBucketKmsKey?: cdk.aws_kms.Key,
+  ): Bucket | undefined {
+    if (firewallRoles.length > 0) {
+      // Create firewall config bucket
+      const firewallConfigBucket = new Bucket(this, 'FirewallConfigBucket', {
+        s3BucketName: `${this.acceleratorResourceNames.bucketPrefixes.firewallConfig}-${cdk.Stack.of(this).account}-${
+          cdk.Stack.of(this).region
+        }`,
+        encryptionType: BucketEncryptionType.SSE_KMS,
+        kmsKey: this.getAcceleratorKey(AcceleratorKeyType.S3_KEY),
+        serverAccessLogsBucketName: `${this.acceleratorResourceNames.bucketPrefixes.s3AccessLogs}-${
+          cdk.Stack.of(this).account
+        }-${cdk.Stack.of(this).region}`,
+      });
+
+      // Create IAM policy and role for config replacement custom resource
+      this.createFirewallConfigCustomResourceRole(props, firewallConfigBucket, assetBucketKmsKey);
+
+      // Grant read access to all firewall roles in scope
+      for (const role of firewallRoles) {
+        firewallConfigBucket.getS3Bucket().grantRead(this.roles[role]);
+        // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
+        // rule suppression with evidence for this permission.
+        this.nagSuppressionInputs.push({
+          id: NagSuppressionRuleIds.IAM5,
+          details: [
+            {
+              path: `${this.stackName}/${this.roles[role].node.id}/DefaultPolicy/Resource`,
+              reason: 'Access to read from the S3 bucket is required for this IAM instance profile',
+            },
+          ],
+        });
+      }
+      return firewallConfigBucket;
+    }
+    return;
+  }
+
+  /**
+   * Returns an array of IAM instance profile names that are in scope of the stack.
+   * @param vpcResources ({@link VpcConfig} | {@link VpcTemplatesConfig})[]
+   * @param firewallConfig {@link Ec2FirewallConfig}
+   * @returns string[]
+   */
+  private getFirewallRolesInScope(
+    vpcResources: (VpcConfig | VpcTemplatesConfig)[],
+    firewallConfig?: Ec2FirewallConfig,
+  ): string[] {
+    const firewalls = [...(firewallConfig?.autoscalingGroups ?? []), ...(firewallConfig?.instances ?? [])];
+    const firewallRoles: string[] = [];
+
+    for (const firewall of firewalls) {
+      if (
+        this.isFirewallVpcInScope(vpcResources, firewall) &&
+        firewall.launchTemplate.iamInstanceProfile &&
+        (firewall.configFile || firewall.licenseFile)
+      ) {
+        firewallRoles.push(firewall.launchTemplate.iamInstanceProfile);
+      }
+    }
+    return firewallRoles;
+  }
+
+  /**
+   * Returns true if the firewall is in scope of the stack.
+   * @param vpcResources ({@link VpcConfig} | {@link VpcTemplatesConfig})[]
+   * @param firewall {@link Ec2FirewallInstanceConfig} | {@link Ec2FirewallAutoScalingGroupConfig}
+   * @returns boolean
+   */
+  private isFirewallVpcInScope(
+    vpcResources: (VpcConfig | VpcTemplatesConfig)[],
+    firewall: Ec2FirewallInstanceConfig | Ec2FirewallAutoScalingGroupConfig,
+  ): boolean {
+    const vpc = getVpcConfig(vpcResources, firewall.vpc);
+    const vpcAccountIds = this.getVpcAccountIds(vpc);
+    return vpcAccountIds.includes(cdk.Stack.of(this).account) && vpc.region === cdk.Stack.of(this).region;
+  }
+
+  /**
+   * Create Lambda custom resource role for firewall config replacements
+   * @param props {@link AcceleratorStackProps}
+   * @param firewallConfigBucket {@link Bucket}
+   * @param assetBucketKmsKey cdk.aws_kms.Key | undefined
+   * @returns cdk.aws_iam.Role
+   */
+  private createFirewallConfigCustomResourceRole(
+    props: AcceleratorStackProps,
+    firewallConfigBucket: Bucket,
+    assetBucketKmsKey?: cdk.aws_kms.Key,
+  ): cdk.aws_iam.Role {
+    if (!assetBucketKmsKey) {
+      throw new Error(
+        `Asset bucket KMS key is undefined. KMS key must be defined so permissions can be added to the custom resource role.`,
+      );
+    }
+
+    const assetBucketArn = `arn:${props.partition}:s3:::${
+      this.acceleratorResourceNames.bucketPrefixes.assets
+    }-${props.accountsConfig.getManagementAccountId()}-${props.globalConfig.homeRegion}`;
+
+    const lambdaExecutionPolicy = cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName(
+      'service-role/AWSLambdaBasicExecutionRole',
+    );
+
+    const firewallConfigPolicy = new cdk.aws_iam.ManagedPolicy(this, 'FirewallConfigPolicy', {
+      statements: [
+        new cdk.aws_iam.PolicyStatement({
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['ec2:DescribeInstances', 'ec2:DescribeSubnets', 'ec2:DescribeVpcs'],
+          resources: ['*'],
+        }),
+        new cdk.aws_iam.PolicyStatement({
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['s3:GetObject*', 's3:ListBucket'],
+          resources: [assetBucketArn, `${assetBucketArn}/*`],
+        }),
+        new cdk.aws_iam.PolicyStatement({
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['kms:Decrypt'],
+          resources: [assetBucketKmsKey.keyArn],
+        }),
+      ],
+    });
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
+    // rule suppression with evidence for this permission.
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM5,
+      details: [
+        {
+          path: `${this.stackName}/${firewallConfigPolicy.node.id}/Resource`,
+          reason: 'Policy permissions are part of managed role and rest is to get access from s3 bucket',
+        },
+      ],
+    });
+
+    const firewallConfigRole = new cdk.aws_iam.Role(this, 'FirewallConfigRole', {
+      assumedBy: new cdk.aws_iam.ServicePrincipal(`lambda.${this.urlSuffix}`),
+      description: 'Landing Zone Accelerator firewall configuration custom resource access role',
+      managedPolicies: [firewallConfigPolicy, lambdaExecutionPolicy],
+      roleName: this.acceleratorResourceNames.roles.firewallConfigFunctionRoleName,
+    });
+    firewallConfigBucket.getS3Bucket().grantPut(firewallConfigRole);
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
+    // rule suppression with evidence for this permission.
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM5,
+      details: [
+        {
+          path: `${this.stackName}/${firewallConfigRole.node.id}/DefaultPolicy/Resource`,
+          reason: 'Policy permissions are part of managed role and rest is to get access from s3 bucket',
+        },
+      ],
+    });
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+    // rule suppression with evidence for this permission.
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM4,
+      details: [
+        {
+          path: `${this.stackName}/${firewallConfigRole.node.id}/Resource`,
+          reason: 'IAM Role for lambda needs AWS managed policy',
+        },
+      ],
+    });
+
+    return firewallConfigRole;
   }
 }

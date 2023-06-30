@@ -39,6 +39,8 @@ export * from './lib/aws-ec2/customer-gateway';
 export * from './lib/aws-ec2/delete-default-vpc';
 export * from './lib/aws-ec2/dhcp-options';
 export * from './lib/aws-ec2/ebs-encryption';
+export * from './lib/aws-ec2/firewall';
+export * from './lib/aws-ec2/firewall-config-replacements';
 export * from './lib/aws-ec2/firewall-instance';
 export * from './lib/aws-ec2/firewall-asg';
 export * from './lib/aws-ec2/ipam';

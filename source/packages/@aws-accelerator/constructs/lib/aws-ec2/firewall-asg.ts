@@ -11,11 +11,10 @@
  *  and limitations under the License.
  */
 
-import * as cdk from 'aws-cdk-lib';
-import { Construct } from 'constructs';
-import { FirewallProps, IFirewall, Firewall } from './firewall';
 import { AutoScalingConfig } from '@aws-accelerator/config';
+import { Construct } from 'constructs';
 import { AutoscalingGroup } from '../aws-autoscaling/create-autoscaling-group';
+import { Firewall, FirewallProps, IFirewall } from './firewall';
 
 export interface IFirewallAutoScalingGroup extends IFirewall {
   /**

@@ -151,12 +151,21 @@ function runValidators(
   }
 
   // Customizations config validator
-  if (accountsConfig && customizationsConfig && globalConfig && networkConfig && organizationConfig && securityConfig) {
+  if (
+    accountsConfig &&
+    customizationsConfig &&
+    globalConfig &&
+    iamConfig &&
+    networkConfig &&
+    organizationConfig &&
+    securityConfig
+  ) {
     try {
       new CustomizationsConfigValidator(
         customizationsConfig,
         accountsConfig,
         globalConfig,
+        iamConfig,
         networkConfig,
         organizationConfig,
         securityConfig,
