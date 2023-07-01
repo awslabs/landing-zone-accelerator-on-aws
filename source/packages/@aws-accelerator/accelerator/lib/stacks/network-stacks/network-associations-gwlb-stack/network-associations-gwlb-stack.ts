@@ -385,6 +385,9 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
       launchTemplate,
       vpc: group.vpc,
       tags: group.tags,
+      lambdaKey: this.lambdaKey,
+      cloudWatchLogKmsKey: this.cloudwatchKey,
+      cloudWatchLogRetentionInDays: this.logRetention,
     });
 
     NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/${resourceName}/Resource/Resource`, [

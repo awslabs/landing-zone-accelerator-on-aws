@@ -34,6 +34,13 @@ export interface LzaCustomResourceProps {
      */
     readonly parentId: string;
     /**
+     * Prefix for nag suppression
+     *
+     * @@remarks
+     * Use this to specify nag suppression prefix when default nag suppression by this construct is not applicable
+     */
+    readonly nagSuppressionPrefix?: string;
+    /**
      * A name value object list for custom resource properties
      *
      * @example
@@ -167,7 +174,54 @@ export class LzaCustomResource extends Construct {
 
     const stack = cdk.Stack.of(scope);
 
-    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+    if (props.resource.nagSuppressionPrefix) {
+      // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+      NagSuppressions.addResourceSuppressionsByPath(
+        stack,
+        `${stack.stackName}/${props.resource.nagSuppressionPrefix}/${functionName}/ServiceRole/Resource`,
+        [
+          {
+            id: 'AwsSolutions-IAM4',
+            reason: 'AWS Custom resource provider framework-role created by cdk.',
+          },
+        ],
+      );
+      NagSuppressions.addResourceSuppressionsByPath(
+        stack,
+        `${stack.stackName}/${props.resource.nagSuppressionPrefix}/${functionName}/ServiceRole/DefaultPolicy/Resource`,
+        [
+          {
+            id: 'AwsSolutions-IAM5',
+            reason: 'Allows only specific policy.',
+          },
+        ],
+      );
+      // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+      NagSuppressions.addResourceSuppressionsByPath(
+        stack,
+        `${stack.stackName}/${props.resource.nagSuppressionPrefix}/Resource/framework-onEvent/ServiceRole/Resource`,
+        [
+          {
+            id: 'AwsSolutions-IAM4',
+            reason: 'AWS Custom resource provider framework-role created by cdk.',
+          },
+        ],
+      );
+
+      // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
+      NagSuppressions.addResourceSuppressionsByPath(
+        stack,
+        `${stack.stackName}/${props.resource.nagSuppressionPrefix}/Resource/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
+        [
+          {
+            id: 'AwsSolutions-IAM5',
+            reason: 'Allows only specific policy.',
+          },
+        ],
+      );
+    }
+
+    // // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
     NagSuppressions.addResourceSuppressionsByPath(
       stack,
       `${stack.stackName}/${props.resource.parentId}/${id}/${functionName}/ServiceRole/Resource`,

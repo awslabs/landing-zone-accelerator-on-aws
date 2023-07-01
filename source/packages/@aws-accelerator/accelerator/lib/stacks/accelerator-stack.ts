@@ -40,7 +40,7 @@ import {
   VpcConfig,
   VpcTemplatesConfig,
 } from '@aws-accelerator/config';
-import { KeyLookup, S3LifeCycleRule } from '@aws-accelerator/constructs';
+import { KeyLookup, S3LifeCycleRule, ServiceLinkedRole } from '@aws-accelerator/constructs';
 import { createLogger, policyReplacements, SsmParameterPath, SsmResourceType } from '@aws-accelerator/utils';
 
 import { version } from '../../../../../package.json';
@@ -84,7 +84,7 @@ export enum ServiceLinkedRoleType {
   /**
    * GUARDDUTY SLR
    */
-  GUARDDUTY = 'gard-duty',
+  GUARDDUTY = 'guardduty',
   /**
    * MACIE SLR
    */
@@ -92,7 +92,7 @@ export enum ServiceLinkedRoleType {
   /**
    * SECURITYHUB SLR
    */
-  SECURITY_HUB = 'security-hub',
+  SECURITY_HUB = 'securityhub',
   /**
    * AUTOSCALING SLR
    */
@@ -100,7 +100,11 @@ export enum ServiceLinkedRoleType {
   /**
    * AWSCloud9 SLR
    */
-  AWS_CLOUD9 = 'aws-cloud9',
+  AWS_CLOUD9 = 'cloud9',
+  /**
+   * AWS Firewall Manager SLR
+   */
+  FMS = 'fms',
 }
 
 /**
@@ -116,6 +120,7 @@ export enum NagSuppressionRuleIds {
   VPC3 = 'VPC3',
   S1 = 'S1',
   KDS3 = 'KDS3',
+  AS3 = 'AS3',
 }
 
 /**
@@ -291,14 +296,23 @@ export abstract class AcceleratorStack extends cdk.Stack {
   }
 
   /**
+   * List of supported partitions for Service Linked Role creation
+   */
+  protected serviceLinkedRoleSupportedPartitionList: string[] = ['aws', 'aws-cn', 'aws-us-gov'];
+
+  /**
    * Create Access Analyzer Service Linked role
    *
    * @remarks
    * Access Analyzer Service linked role is created when organization is enabled and accessAnalyzer flag is ON.
    */
-  protected createAccessAnalyzerServiceLinkedRole() {
-    if (this.props.organizationConfig.enable && this.props.securityConfig.accessAnalyzer.enable) {
-      this.createServiceLinkedRole(ServiceLinkedRoleType.ACCESS_ANALYZER);
+  protected createAccessAnalyzerServiceLinkedRole(cloudwatchKey: cdk.aws_kms.Key, lambdaKey: cdk.aws_kms.Key) {
+    if (
+      this.props.organizationConfig.enable &&
+      this.props.securityConfig.accessAnalyzer.enable &&
+      this.serviceLinkedRoleSupportedPartitionList.includes(this.props.partition)
+    ) {
+      this.createServiceLinkedRole(ServiceLinkedRoleType.ACCESS_ANALYZER, cloudwatchKey, lambdaKey);
     }
   }
 
@@ -308,9 +322,13 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * @remarks
    * GuardDuty Service linked role is created when organization is enabled and guardduty flag is ON.
    */
-  protected createGuardDutyServiceLinkedRole() {
-    if (this.props.organizationConfig.enable && this.props.securityConfig.centralSecurityServices.guardduty.enable) {
-      this.createServiceLinkedRole(ServiceLinkedRoleType.GUARDDUTY);
+  protected createGuardDutyServiceLinkedRole(cloudwatchKey: cdk.aws_kms.Key, lambdaKey: cdk.aws_kms.Key) {
+    if (
+      this.props.organizationConfig.enable &&
+      this.props.securityConfig.centralSecurityServices.guardduty.enable &&
+      this.serviceLinkedRoleSupportedPartitionList.includes(this.props.partition)
+    ) {
+      this.createServiceLinkedRole(ServiceLinkedRoleType.GUARDDUTY, cloudwatchKey, lambdaKey);
     }
   }
 
@@ -320,9 +338,13 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * @remarks
    * SecurityHub Service linked role is created when organization is enabled and securityHub flag is ON.
    */
-  protected createSecurityHubServiceLinkedRole() {
-    if (this.props.organizationConfig.enable && this.props.securityConfig.centralSecurityServices.securityHub.enable) {
-      this.createServiceLinkedRole(ServiceLinkedRoleType.SECURITY_HUB);
+  protected createSecurityHubServiceLinkedRole(cloudwatchKey: cdk.aws_kms.Key, lambdaKey: cdk.aws_kms.Key) {
+    if (
+      this.props.organizationConfig.enable &&
+      this.props.securityConfig.centralSecurityServices.securityHub.enable &&
+      this.serviceLinkedRoleSupportedPartitionList.includes(this.props.partition)
+    ) {
+      this.createServiceLinkedRole(ServiceLinkedRoleType.SECURITY_HUB, cloudwatchKey, lambdaKey);
     }
   }
 
@@ -332,9 +354,13 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * @remarks
    * Macie Service linked role is created when organization is enabled and macie flag is ON.
    */
-  protected createMacieServiceLinkedRole() {
-    if (this.props.organizationConfig.enable && this.props.securityConfig.centralSecurityServices.macie.enable) {
-      this.createServiceLinkedRole(ServiceLinkedRoleType.MACIE);
+  protected createMacieServiceLinkedRole(cloudwatchKey: cdk.aws_kms.Key, lambdaKey: cdk.aws_kms.Key) {
+    if (
+      this.props.organizationConfig.enable &&
+      this.props.securityConfig.centralSecurityServices.macie.enable &&
+      this.serviceLinkedRoleSupportedPartitionList.includes(this.props.partition)
+    ) {
+      this.createServiceLinkedRole(ServiceLinkedRoleType.MACIE, cloudwatchKey, lambdaKey);
     }
   }
 
@@ -342,11 +368,14 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * Create AutoScaling Service Linked role
    *
    * @remarks
-   * AutoScaling when ebsDefaultVolumeEncryption flag is ON.
+   * AutoScaling when ebsDefaultVolumeEncryption flag is ON. Or when firewall is used.
    */
-  protected createAutoScalingServiceLinkedRole() {
-    if (this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable) {
-      this.createServiceLinkedRole(ServiceLinkedRoleType.AUTOSCALING);
+  protected createAutoScalingServiceLinkedRole(cloudwatchKey: cdk.aws_kms.Key, lambdaKey: cdk.aws_kms.Key) {
+    if (
+      this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable &&
+      this.serviceLinkedRoleSupportedPartitionList.includes(this.props.partition)
+    ) {
+      this.createServiceLinkedRole(ServiceLinkedRoleType.AUTOSCALING, cloudwatchKey, lambdaKey);
     }
   }
 
@@ -382,39 +411,65 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * @remarks
    * AWS CLOUD9 when ebsDefaultVolumeEncryption flag is ON and partition is 'aws'
    */
-  protected createAwsCloud9ServiceLinkedRole() {
+  protected createAwsCloud9ServiceLinkedRole(cloudwatchKey: cdk.aws_kms.Key, lambdaKey: cdk.aws_kms.Key) {
     if (
       this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable &&
       this.props.partition === 'aws'
     ) {
-      this.createServiceLinkedRole(ServiceLinkedRoleType.AWS_CLOUD9);
+      this.createServiceLinkedRole(ServiceLinkedRoleType.AWS_CLOUD9, cloudwatchKey, lambdaKey);
     }
   }
 
   /**
+   * Create AWS Firewall Manager Service Linked role
+   *
+   * @remarks
+   * Service linked role is created in the partitions that allow it.
+   * Since it is used for delegated admin organizations need to be enabled
+   */
+  protected createAwsFirewallManagerServiceLinkedRole(
+    cloudwatchKey: cdk.aws_kms.Key,
+    lambdaKey: cdk.aws_kms.Key,
+  ): ServiceLinkedRole {
+    // create service linked roles only in the partitions that allow it
+    return this.createServiceLinkedRole(ServiceLinkedRoleType.FMS, cloudwatchKey, lambdaKey);
+  }
+  /**
    * Function to create Service Linked Role for given type
    * @param roleType {@link ServiceLinkedRoleType}
-   * @returns cdk.aws_iam.CfnServiceLinkedRole
+   * @returns ServiceLinkedRole
    *
    * @remarks
    * Service Linked Role creation is depended on the service configuration.
    */
-  private createServiceLinkedRole(roleType: string): cdk.aws_iam.CfnServiceLinkedRole {
-    let serviceLinkedRole: cdk.aws_iam.CfnServiceLinkedRole | undefined;
+  private createServiceLinkedRole(
+    roleType: string,
+    cloudwatchKey: cdk.aws_kms.Key,
+    lambdaKey: cdk.aws_kms.Key,
+  ): ServiceLinkedRole {
+    let serviceLinkedRole: ServiceLinkedRole | undefined;
 
     switch (roleType) {
       case ServiceLinkedRoleType.ACCESS_ANALYZER:
         this.logger.debug('Create AccessAnalyzerServiceLinkedRole');
-        serviceLinkedRole = new cdk.aws_iam.CfnServiceLinkedRole(this, 'AccessAnalyzerServiceLinkedRole', {
+        serviceLinkedRole = new ServiceLinkedRole(this, 'AccessAnalyzerServiceLinkedRole', {
           awsServiceName: 'access-analyzer.amazonaws.com',
+          environmentEncryptionKmsKey: lambdaKey,
+          cloudWatchLogKmsKey: cloudwatchKey,
+          cloudWatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+          roleName: 'AWSServiceRoleForAccessAnalyzer',
         });
 
         break;
       case ServiceLinkedRoleType.GUARDDUTY:
         this.logger.debug('Create GuardDutyServiceLinkedRole');
-        new cdk.aws_iam.CfnServiceLinkedRole(this, 'GuardDutyServiceLinkedRole', {
+        new ServiceLinkedRole(this, 'GuardDutyServiceLinkedRole', {
           awsServiceName: 'guardduty.amazonaws.com',
           description: 'A service-linked role required for Amazon GuardDuty to access your resources. ',
+          environmentEncryptionKmsKey: lambdaKey,
+          cloudWatchLogKmsKey: cloudwatchKey,
+          cloudWatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+          roleName: 'AWSServiceRoleForAmazonGuardDuty',
         });
 
         break;
@@ -424,26 +479,38 @@ export abstract class AcceleratorStack extends cdk.Stack {
           this.props.securityConfig.centralSecurityServices.securityHub.enable
         ) {
           this.logger.debug('Create SecurityHubServiceLinkedRole');
-          new cdk.aws_iam.CfnServiceLinkedRole(this, 'SecurityHubServiceLinkedRole', {
+          new ServiceLinkedRole(this, 'SecurityHubServiceLinkedRole', {
             awsServiceName: 'securityhub.amazonaws.com',
             description: 'A service-linked role required for AWS Security Hub to access your resources.',
+            environmentEncryptionKmsKey: lambdaKey,
+            cloudWatchLogKmsKey: cloudwatchKey,
+            cloudWatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+            roleName: 'AWSServiceRoleForSecurityHub',
           });
         }
         break;
       case ServiceLinkedRoleType.MACIE:
         if (this.props.organizationConfig.enable && this.props.securityConfig.centralSecurityServices.macie.enable) {
           this.logger.debug('Create MacieServiceLinkedRole');
-          new cdk.aws_iam.CfnServiceLinkedRole(this, 'MacieServiceLinkedRole', {
+          new ServiceLinkedRole(this, 'MacieServiceLinkedRole', {
             awsServiceName: 'macie.amazonaws.com',
+            environmentEncryptionKmsKey: lambdaKey,
+            cloudWatchLogKmsKey: cloudwatchKey,
+            cloudWatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+            roleName: 'AWSServiceRoleForAmazonMacie',
           });
         }
         break;
       case ServiceLinkedRoleType.AUTOSCALING:
         this.logger.debug('Create AutoScalingServiceLinkedRole');
-        new cdk.aws_iam.CfnServiceLinkedRole(this, 'AutoScalingServiceLinkedRole', {
+        new ServiceLinkedRole(this, 'AutoScalingServiceLinkedRole', {
           awsServiceName: 'autoscaling.amazonaws.com',
           description:
             'Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling',
+          environmentEncryptionKmsKey: lambdaKey,
+          cloudWatchLogKmsKey: cloudwatchKey,
+          cloudWatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+          roleName: 'AWSServiceRoleForAutoScaling',
         });
         break;
       case ServiceLinkedRoleType.AWS_CLOUD9:
@@ -452,11 +519,25 @@ export abstract class AcceleratorStack extends cdk.Stack {
           this.props.partition === 'aws'
         ) {
           this.logger.debug('Create AutoScalingServiceLinkedRole');
-          new cdk.aws_iam.CfnServiceLinkedRole(this, 'AWSServiceRoleForAWSCloud9', {
+          new ServiceLinkedRole(this, 'AWSServiceRoleForAWSCloud9', {
             awsServiceName: 'cloud9.amazonaws.com',
             description: 'Service linked role for AWS Cloud9',
+            environmentEncryptionKmsKey: lambdaKey,
+            cloudWatchLogKmsKey: cloudwatchKey,
+            cloudWatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+            roleName: 'AWSServiceRoleForAWSCloud9',
           });
         }
+        break;
+      case ServiceLinkedRoleType.FMS:
+        this.logger.debug('Create FirewallManagerServiceLinkedRole');
+        new ServiceLinkedRole(this, 'FirewallManagerServiceLinkedRole', {
+          awsServiceName: 'fms.amazonaws.com',
+          environmentEncryptionKmsKey: lambdaKey,
+          cloudWatchLogKmsKey: cloudwatchKey,
+          cloudWatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+          roleName: 'AWSServiceRoleForFMS',
+        });
         break;
       default:
         throw new Error(`Invalid service linked role type ${roleType}`);

@@ -109,22 +109,22 @@ export class AccountsStack extends AcceleratorStack {
       //
       // Create Access Analyzer Service Linked Role
       //
-      this.createAccessAnalyzerServiceLinkedRole();
+      this.createAccessAnalyzerServiceLinkedRole(this.cloudwatchKey, this.lambdaKey);
 
       //
       // Create Access GuardDuty Service Linked Role
       //
-      this.createGuardDutyServiceLinkedRole();
+      this.createGuardDutyServiceLinkedRole(this.cloudwatchKey, this.lambdaKey);
 
       //
       // Create Access SecurityHub Service Linked Role
       //
-      this.createSecurityHubServiceLinkedRole();
+      this.createSecurityHubServiceLinkedRole(this.cloudwatchKey, this.lambdaKey);
 
       //
       // Create Access Macie Service Linked Role
       //
-      this.createMacieServiceLinkedRole();
+      this.createMacieServiceLinkedRole(this.cloudwatchKey, this.lambdaKey);
 
       //
       // Configure revert scp changes rule

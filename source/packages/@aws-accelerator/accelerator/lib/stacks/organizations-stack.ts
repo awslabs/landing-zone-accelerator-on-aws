@@ -142,7 +142,7 @@ export class OrganizationsStack extends AcceleratorStack {
       //
       // Enable FMS Delegated Admin Account
       //
-      this.enableFMSDelegatedAdminAccount();
+      this.enableFMSDelegatedAdminAccount(this.lambdaKey as cdk.aws_kms.Key, this.cloudwatchKey);
 
       //IdentityCenter Config
       this.enableIdentityCenterDelegatedAdminAccount(securityAdminAccountId);
@@ -366,22 +366,28 @@ export class OrganizationsStack extends AcceleratorStack {
   /**
    * Function to enable FMS delegated admin account
    */
-  private enableFMSDelegatedAdminAccount() {
-    const fmsServiceLinkedRole = new cdk.aws_iam.CfnServiceLinkedRole(this, 'FirewallManagerServiceLinkedRole', {
-      awsServiceName: 'fms.amazonaws.com',
-    });
+  private enableFMSDelegatedAdminAccount(lambdaKey: cdk.aws_kms.Key, cloudwatchKey: cdk.aws_kms.Key) {
     const fmsConfig = this.stackProperties.networkConfig.firewallManagerService;
-    if (fmsConfig && cdk.Stack.of(this).region === this.stackProperties.globalConfig.homeRegion) {
-      const adminAccountName = fmsConfig.delegatedAdminAccount;
-      const adminAccountId = this.stackProperties.accountsConfig.getAccountId(adminAccountName);
-      const createFmsDelegatedAdmin = new FMSOrganizationAdminAccount(this, 'FMSOrganizationAdminAccount', {
-        adminAccountId,
-        kmsKey: this.cloudwatchKey,
-        logRetentionInDays: this.logRetention,
-        assumeRole: this.stackProperties.globalConfig.managementAccountAccessRole,
-      });
-      // Add dependency to prevent race condition between delegated admin and service linked role
-      createFmsDelegatedAdmin.node.addDependency(fmsServiceLinkedRole);
+    if (
+      fmsConfig &&
+      cdk.Stack.of(this).region === this.stackProperties.globalConfig.homeRegion &&
+      this.props.organizationConfig.enable &&
+      (this.props.partition === 'aws' || this.props.partition === 'aws-us-gov' || this.props.partition === 'aws-cn')
+    ) {
+      const fmsServiceLinkedRole = this.createAwsFirewallManagerServiceLinkedRole(cloudwatchKey, lambdaKey);
+
+      if (fmsServiceLinkedRole) {
+        const adminAccountName = fmsConfig.delegatedAdminAccount;
+        const adminAccountId = this.stackProperties.accountsConfig.getAccountId(adminAccountName);
+        const createFmsDelegatedAdmin = new FMSOrganizationAdminAccount(this, 'FMSOrganizationAdminAccount', {
+          adminAccountId,
+          kmsKey: this.cloudwatchKey,
+          logRetentionInDays: this.logRetention,
+          assumeRole: this.stackProperties.globalConfig.managementAccountAccessRole,
+        });
+        // Add dependency to prevent race condition between delegated admin and service linked role
+        createFmsDelegatedAdmin.node.addDependency(fmsServiceLinkedRole);
+      }
     }
   }
 

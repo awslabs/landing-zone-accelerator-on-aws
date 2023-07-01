@@ -19,7 +19,7 @@ import * as codepipeline_actions from 'aws-cdk-lib/aws-codepipeline-actions';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 
-import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
+import { Bucket, BucketEncryptionType, ServiceLinkedRole } from '@aws-accelerator/constructs';
 
 import { AcceleratorStage } from './accelerator-stage';
 import * as config_repository from './config-repository';
@@ -466,16 +466,17 @@ export class AcceleratorPipeline extends Construct {
     // Add review stage based on parameter
     this.addReviewStage();
 
-    this.pipeline.addStage({
-      stageName: 'ImportAseaResources',
-      actions: [
-        this.createToolkitStage({
-          actionName: 'Import_Asea_Resources',
-          command: `deploy`,
-          stage: AcceleratorStage.IMPORT_ASEA_RESOURCES,
-        }),
-      ],
-    });
+    // Adds ASEA Import Resources stage
+    // this.pipeline.addStage({
+    //   stageName: 'ImportAseaResources',
+    //   actions: [
+    //     this.createToolkitStage({
+    //       actionName: 'Import_Asea_Resources',
+    //       command: `deploy`,
+    //       stage: AcceleratorStage.IMPORT_ASEA_RESOURCES,
+    //     }),
+    //   ],
+    // });
 
     /**
      * The Logging stack establishes all the logging assets that are needed in
@@ -574,16 +575,17 @@ export class AcceleratorPipeline extends Construct {
       ],
     });
 
-    this.pipeline.addStage({
-      stageName: 'PostImportAseaResources',
-      actions: [
-        this.createToolkitStage({
-          actionName: 'Post_Import_Asea_Resources',
-          command: `deploy`,
-          stage: AcceleratorStage.POST_IMPORT_ASEA_RESOURCES,
-        }),
-      ],
-    });
+    // Add ASEA Import Resources
+    // this.pipeline.addStage({
+    //   stageName: 'PostImportAseaResources',
+    //   actions: [
+    //     this.createToolkitStage({
+    //       actionName: 'Post_Import_Asea_Resources',
+    //       command: `deploy`,
+    //       stage: AcceleratorStage.POST_IMPORT_ASEA_RESOURCES,
+    //     }),
+    //   ],
+    // });
 
     // Enable pipeline notification for commercial partition
     this.enablePipelineNotification();
@@ -701,14 +703,16 @@ export class AcceleratorPipeline extends Construct {
 
     // We can Enable pipeline notification only for regions with AWS CodeStar being available
     if (awsCodeStarSupportedRegions.includes(cdk.Stack.of(this).region)) {
-      const codeStarNotificationsRole = new cdk.aws_iam.CfnServiceLinkedRole(
-        this,
-        'AWSServiceRoleForCodeStarNotifications',
-        {
-          awsServiceName: 'codestar-notifications.amazonaws.com',
-          description: 'Allows AWS CodeStar Notifications to access Amazon CloudWatch Events on your behalf',
-        },
-      );
+      const codeStarNotificationsRole = new ServiceLinkedRole(this, 'AWSServiceRoleForCodeStarNotifications', {
+        environmentEncryptionKmsKey: this.installerKey,
+        cloudWatchLogKmsKey: this.installerKey,
+        // specifying this as it will be overwritten with global retention in logging stack
+        cloudWatchLogRetentionInDays: 7,
+        awsServiceName: 'codestar-notifications.amazonaws.com',
+        description: 'Allows AWS CodeStar Notifications to access Amazon CloudWatch Events on your behalf',
+        roleName: 'AWSServiceRoleForCodeStarNotifications',
+      });
+
       this.pipeline.node.addDependency(codeStarNotificationsRole);
 
       const acceleratorStatusTopic = new cdk.aws_sns.Topic(this, 'AcceleratorStatusTopic', {

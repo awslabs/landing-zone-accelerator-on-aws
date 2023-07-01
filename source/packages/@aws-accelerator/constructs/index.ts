@@ -77,6 +77,7 @@ export * from './lib/aws-detective/detective-members';
 export * from './lib/aws-detective/detective-organization-admin-account';
 export * from './lib/aws-detective/detective-graph-config';
 export * from './lib/aws-iam/password-policy';
+export * from './lib/aws-iam/service-linked-role';
 export * from './lib/aws-identity-center/identity-center-instance';
 export * from './lib/aws-identity-center/identity-center-organization-admin-account';
 export * from './lib/aws-identity-center/identity-center-get-permission-set-role-arn';

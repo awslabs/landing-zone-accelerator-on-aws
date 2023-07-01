@@ -21,6 +21,7 @@ import * as cdk from 'aws-cdk-lib';
 import path from 'path';
 import { FirewallAutoScalingGroup } from '../../lib/aws-ec2/firewall-asg';
 import { snapShotTest } from '../snapshot-test';
+import { describe } from '@jest/globals';
 
 const testNamePrefix = 'Construct(FirewallAutoScalingGroup): ';
 
@@ -72,6 +73,9 @@ new FirewallAutoScalingGroup(stack, 'TestFirewall', {
   configDir: path.dirname(__dirname),
   launchTemplate,
   vpc: 'TestVpc',
+  lambdaKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
+  cloudWatchLogKmsKey: new cdk.aws_kms.Key(stack, 'CustomKeyCloudWatch', {}),
+  cloudWatchLogRetentionInDays: 3653,
 });
 
 /**

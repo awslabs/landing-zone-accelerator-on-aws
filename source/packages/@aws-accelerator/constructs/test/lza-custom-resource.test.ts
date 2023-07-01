@@ -30,6 +30,7 @@ new LzaCustomResource(stack, 'LzaCustomResource', {
       { principalType: 'USER' },
       { principalName: 'lza-accelerator-user' },
     ],
+    nagSuppressionPrefix: 'testPrefix',
   },
   lambda: {
     assetPath: `${__dirname}/../lib/aws-identitystore/get-users-groups-id/dist`,

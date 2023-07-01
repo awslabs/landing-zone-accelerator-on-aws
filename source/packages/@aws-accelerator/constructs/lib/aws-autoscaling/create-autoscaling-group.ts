@@ -13,6 +13,7 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+import { ServiceLinkedRole } from '@aws-accelerator/constructs';
 
 export interface IAutoscalingGroupResource extends cdk.IResource {
   /**
@@ -33,6 +34,13 @@ export interface AutoscalingGroupProps {
   readonly targetGroups?: string[];
   readonly subnets: string[];
   readonly tags?: cdk.CfnTag[];
+  readonly lambdaKey: cdk.aws_kms.IKey;
+  readonly cloudWatchLogKmsKey: cdk.aws_kms.IKey;
+  readonly cloudWatchLogRetentionInDays: number;
+  /**
+   * Prefix for nag suppression
+   */
+  readonly nagSuppressionPrefix?: string;
 }
 
 export class AutoscalingGroup extends cdk.Resource implements IAutoscalingGroupResource {
@@ -41,11 +49,18 @@ export class AutoscalingGroup extends cdk.Resource implements IAutoscalingGroupR
   constructor(scope: Construct, id: string, props: AutoscalingGroupProps) {
     super(scope, id);
 
+    const asgSlrResourceName = 'AutoScalingServiceLinkedRole';
+
     // Ensure there is service linked role for autoscaling
-    new cdk.aws_iam.CfnServiceLinkedRole(this, 'AutoScalingServiceLinkedRole', {
+    new ServiceLinkedRole(this, asgSlrResourceName, {
+      environmentEncryptionKmsKey: props.lambdaKey,
+      cloudWatchLogKmsKey: props.cloudWatchLogKmsKey,
+      cloudWatchLogRetentionInDays: props.cloudWatchLogRetentionInDays,
       awsServiceName: 'autoscaling.amazonaws.com',
       description:
         'Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling',
+      roleName: 'AWSServiceRoleForAutoScaling',
+      nagSuppressionPrefix: `${props.nagSuppressionPrefix}/${asgSlrResourceName}`,
     });
 
     const resource = new cdk.aws_autoscaling.CfnAutoScalingGroup(this, 'Resource', {

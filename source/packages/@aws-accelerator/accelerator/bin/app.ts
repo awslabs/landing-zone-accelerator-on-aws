@@ -187,7 +187,10 @@ function createMultiAccountMultiRegionStacks(app: cdk.App, context: AcceleratorC
       createCustomizationsStacks(app, context, props, env, accountId, enabledRegion);
     }
   }
-  saveAseaResourceMapping(context, props, aseaResources);
+
+  if (props.globalConfig.externalLandingZoneResources?.importExternalLandingZoneResources) {
+    saveAseaResourceMapping(context, props, aseaResources);
+  }
 }
 
 async function main() {

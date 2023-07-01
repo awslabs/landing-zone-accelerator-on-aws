@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
+exports[`ServiceLinkedRole Construct(ServiceLinkedRole):  Snapshot Test 1`] = `
 {
   "Resources": {
     "CustomKey1E6D0D07": {
@@ -73,37 +73,10 @@ exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "Test7BFAF513": {
-      "Properties": {
-        "DesiredCapacity": "2",
-        "HealthCheckGracePeriod": 300,
-        "HealthCheckType": "ELB",
-        "LaunchTemplate": {
-          "LaunchTemplateId": "string",
-          "Version": "string",
-        },
-        "MaxSize": "4",
-        "MinSize": "1",
-        "Tags": [
-          {
-            "Key": "key",
-            "PropagateAtLaunch": true,
-            "Value": "value",
-          },
-        ],
-        "TargetGroupARNs": [
-          "string",
-        ],
-        "VPCZoneIdentifier": [
-          "string",
-        ],
-      },
-      "Type": "AWS::AutoScaling::AutoScalingGroup",
-    },
-    "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunction48E7F3B6": {
+    "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComServiceLinkedRoleAwesomeServiceAmazonawsComFunction32AAECE6": {
       "DependsOn": [
-        "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRoleDefaultPolicyB7FB5D8A",
-        "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRole40EA4F5C",
+        "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComServiceLinkedRoleAwesomeServiceAmazonawsComFunctionServiceRoleDefaultPolicy679D87F0",
+        "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComServiceLinkedRoleAwesomeServiceAmazonawsComFunctionServiceRoleFE1F10E9",
       ],
       "Properties": {
         "Code": {
@@ -112,7 +85,7 @@ exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Description": "Accelerator deployed ServiceLinkedRoleAutoscalingAmazonawsCom custom resource lambda function.",
+        "Description": "Accelerator deployed ServiceLinkedRoleAwesomeServiceAmazonawsCom custom resource lambda function.",
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -123,7 +96,7 @@ exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
         "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
-            "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRole40EA4F5C",
+            "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComServiceLinkedRoleAwesomeServiceAmazonawsComFunctionServiceRoleFE1F10E9",
             "Arn",
           ],
         },
@@ -132,7 +105,7 @@ exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
       },
       "Type": "AWS::Lambda::Function",
     },
-    "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionLogGroupAF16E97B": {
+    "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComServiceLinkedRoleAwesomeServiceAmazonawsComFunctionLogGroupF3A246D6": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "KmsKeyId": {
@@ -147,7 +120,7 @@ exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
             [
               "/aws/lambda/",
               {
-                "Ref": "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunction48E7F3B6",
+                "Ref": "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComServiceLinkedRoleAwesomeServiceAmazonawsComFunction32AAECE6",
               },
             ],
           ],
@@ -157,38 +130,17 @@ exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRole40EA4F5C": {
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
+    "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComServiceLinkedRoleAwesomeServiceAmazonawsComFunctionServiceRoleDefaultPolicy679D87F0": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
             {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
             },
           ],
-          "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-              ],
-            ],
-          },
-        ],
       },
-      "Type": "AWS::IAM::Role",
-    },
-    "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRoleDefaultPolicyB7FB5D8A": {
       "Properties": {
         "PolicyDocument": {
           "Statement": [
@@ -203,67 +155,26 @@ exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "nkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRoleDefaultPolicyB7FB5D8A",
+        "PolicyName": "leServiceLinkedRoleAwesomeServiceAmazonawsComServiceLinkedRoleAwesomeServiceAmazonawsComFunctionServiceRoleDefaultPolicy679D87F0",
         "Roles": [
           {
-            "Ref": "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRole40EA4F5C",
+            "Ref": "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComServiceLinkedRoleAwesomeServiceAmazonawsComFunctionServiceRoleFE1F10E9",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComResourceFA996200": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEvent48B8D4E8",
-            "Arn",
-          ],
-        },
-        "description": "Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling",
-        "roleName": "AWSServiceRoleForAutoScaling",
-        "serviceName": "autoscaling.amazonaws.com",
-      },
-      "Type": "AWS::CloudFormation::CustomResource",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEvent48B8D4E8": {
-      "DependsOn": [
-        "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRoleDefaultPolicy3FDE0AC8",
-        "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRoleA330AA0A",
-      ],
-      "Properties": {
-        "Code": {
-          "S3Bucket": {
-            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
-          },
-          "S3Key": "REPLACED-GENERATED-NAME.zip",
-        },
-        "Description": "AWS CDK resource provider framework - onEvent (Default/Test/AutoScalingServiceLinkedRole/ServiceLinkedRoleAutoscalingAmazonawsCom/Resource)",
-        "Environment": {
-          "Variables": {
-            "USER_ON_EVENT_FUNCTION_ARN": {
-              "Fn::GetAtt": [
-                "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunction48E7F3B6",
-                "Arn",
-              ],
+    "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComServiceLinkedRoleAwesomeServiceAmazonawsComFunctionServiceRoleFE1F10E9": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
             },
-          },
-        },
-        "Handler": "framework.onEvent",
-        "Role": {
-          "Fn::GetAtt": [
-            "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRoleA330AA0A",
-            "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
-        "Timeout": 900,
       },
-      "Type": "AWS::Lambda::Function",
-    },
-    "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRoleA330AA0A": {
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -294,7 +205,109 @@ exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Role",
     },
-    "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRoleDefaultPolicy3FDE0AC8": {
+    "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComServiceLinkedRoleAwesomeServiceAmazonawsComResource29D1FE07": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComframeworkonEvent2D7AB371",
+            "Arn",
+          ],
+        },
+        "description": "some description",
+        "roleName": "AWSServiceRoleForAwesomeService",
+        "serviceName": "awesomeService.amazonaws.com",
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComframeworkonEvent2D7AB371": {
+      "DependsOn": [
+        "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComframeworkonEventServiceRoleDefaultPolicy7C0F0B08",
+        "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComframeworkonEventServiceRole9376F764",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/ServiceLinkedRole/ServiceLinkedRoleAwesomeServiceAmazonawsCom/Resource)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComServiceLinkedRoleAwesomeServiceAmazonawsComFunction32AAECE6",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComframeworkonEventServiceRole9376F764",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComframeworkonEventServiceRole9376F764": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComframeworkonEventServiceRoleDefaultPolicy7C0F0B08": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "PolicyDocument": {
           "Statement": [
@@ -304,7 +317,7 @@ exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
               "Resource": [
                 {
                   "Fn::GetAtt": [
-                    "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunction48E7F3B6",
+                    "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComServiceLinkedRoleAwesomeServiceAmazonawsComFunction32AAECE6",
                     "Arn",
                   ],
                 },
@@ -314,7 +327,7 @@ exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
                     [
                       {
                         "Fn::GetAtt": [
-                          "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunction48E7F3B6",
+                          "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComServiceLinkedRoleAwesomeServiceAmazonawsComFunction32AAECE6",
                           "Arn",
                         ],
                       },
@@ -327,10 +340,10 @@ exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRoleDefaultPolicy3FDE0AC8",
+        "PolicyName": "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComframeworkonEventServiceRoleDefaultPolicy7C0F0B08",
         "Roles": [
           {
-            "Ref": "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRoleA330AA0A",
+            "Ref": "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComframeworkonEventServiceRole9376F764",
           },
         ],
       },
