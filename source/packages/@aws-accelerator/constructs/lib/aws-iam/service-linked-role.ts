@@ -77,6 +77,7 @@ export class ServiceLinkedRole extends Construct {
           },
         ],
         nagSuppressionPrefix: `${props.nagSuppressionPrefix}/${resourceName}`,
+        forceUpdate: true,
       },
       lambda: {
         assetPath: path.join(__dirname, 'create-service-linked-role/dist'),
