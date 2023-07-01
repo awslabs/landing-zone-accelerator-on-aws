@@ -202,14 +202,14 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
     },
     "Pipeline8E4BFAC9": {
       "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEvent4888718C",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEventServiceRoleDefaultPolicy638A3347",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEventServiceRole5535F336",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunction0A1887FF",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionServiceRoleDefaultPolicy7F6A4A5C",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionServiceRole22D3DBB0",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionLogGroupB29A3F55",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComResource2A876872",
         "PipelinePipelineRoleDefaultPolicy7D262A22",
         "PipelinePipelineRole6D983AD5",
       ],
@@ -502,42 +502,6 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
               },
             ],
             "Name": "Review",
-          },
-          {
-            "Actions": [
-              {
-                "ActionTypeId": {
-                  "Category": "Build",
-                  "Owner": "AWS",
-                  "Provider": "CodeBuild",
-                  "Version": "1",
-                },
-                "Configuration": {
-                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage import-asea-resources"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"import-asea-resources"}]",
-                  "PrimarySource": "Build",
-                  "ProjectName": {
-                    "Ref": "PipelineToolkitProjectBCBD6910",
-                  },
-                },
-                "InputArtifacts": [
-                  {
-                    "Name": "Build",
-                  },
-                  {
-                    "Name": "Config",
-                  },
-                ],
-                "Name": "Import_Asea_Resources",
-                "RoleArn": {
-                  "Fn::GetAtt": [
-                    "PipelinePipelineRole6D983AD5",
-                    "Arn",
-                  ],
-                },
-                "RunOrder": 1,
-              },
-            ],
-            "Name": "ImportAseaResources",
           },
           {
             "Actions": [
@@ -931,64 +895,29 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
             ],
             "Name": "Deploy",
           },
-          {
-            "Actions": [
-              {
-                "ActionTypeId": {
-                  "Category": "Build",
-                  "Owner": "AWS",
-                  "Provider": "CodeBuild",
-                  "Version": "1",
-                },
-                "Configuration": {
-                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage post-import-asea-resources"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"post-import-asea-resources"}]",
-                  "PrimarySource": "Build",
-                  "ProjectName": {
-                    "Ref": "PipelineToolkitProjectBCBD6910",
-                  },
-                },
-                "InputArtifacts": [
-                  {
-                    "Name": "Build",
-                  },
-                  {
-                    "Name": "Config",
-                  },
-                ],
-                "Name": "Post_Import_Asea_Resources",
-                "RoleArn": {
-                  "Fn::GetAtt": [
-                    "PipelinePipelineRole6D983AD5",
-                    "Arn",
-                  ],
-                },
-                "RunOrder": 1,
-              },
-            ],
-            "Name": "PostImportAseaResources",
-          },
         ],
       },
       "Type": "AWS::CodePipeline::Pipeline",
     },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974": {
+    "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunction0A1887FF": {
       "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionServiceRoleDefaultPolicy7F6A4A5C",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionServiceRole22D3DBB0",
       ],
       "Properties": {
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-000000000000-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Description": "Custom resource provider to create service linked role",
+        "Description": "Accelerator deployed ServiceLinkedRoleCodestarNotificationsAmazonawsCom custom resource lambda function.",
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
+        "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
-            "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
+            "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionServiceRole22D3DBB0",
             "Arn",
           ],
         },
@@ -997,7 +926,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::Lambda::Function",
     },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852": {
+    "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionLogGroupB29A3F55": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "KmsKeyId": {
@@ -1009,7 +938,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
             [
               "/aws/lambda/",
               {
-                "Ref": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
+                "Ref": "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunction0A1887FF",
               },
             ],
           ],
@@ -1019,13 +948,13 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7": {
+    "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionServiceRole22D3DBB0": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM4",
-              "reason": "CodeStar Notification SLR needs managed policies.",
+              "reason": "Managed policies required for IAM role.",
             },
           ],
         },
@@ -1060,7 +989,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Role",
     },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406": {
+    "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionServiceRoleDefaultPolicy7F6A4A5C": {
       "Properties": {
         "PolicyDocument": {
           "Statement": [
@@ -1075,31 +1004,47 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
+        "PolicyName": "dRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionServiceRoleDefaultPolicy7F6A4A5C",
         "Roles": [
           {
-            "Ref": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
+            "Ref": "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionServiceRole22D3DBB0",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0": {
+    "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComResource2A876872": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEvent4888718C",
+            "Arn",
+          ],
+        },
+        "description": "Allows AWS CodeStar Notifications to access Amazon CloudWatch Events on your behalf",
+        "roleName": "AWSServiceRoleForCodeStarNotifications",
+        "serviceName": "codestar-notifications.amazonaws.com",
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEvent4888718C": {
       "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEventServiceRoleDefaultPolicy638A3347",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEventServiceRole5535F336",
       ],
       "Properties": {
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-000000000000-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Description": "AWS CDK resource provider framework - onEvent (PipelineStack/Pipeline/AWSServiceRoleForCodeStarNotifications/CreateServiceLinkedRoleProvider)",
+        "Description": "AWS CDK resource provider framework - onEvent (PipelineStack/Pipeline/AWSServiceRoleForCodeStarNotifications/ServiceLinkedRoleCodestarNotificationsAmazonawsCom/Resource)",
         "Environment": {
           "Variables": {
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
-                "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
+                "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunction0A1887FF",
                 "Arn",
               ],
             },
@@ -1108,7 +1053,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
         "Handler": "framework.onEvent",
         "Role": {
           "Fn::GetAtt": [
-            "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
+            "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEventServiceRole5535F336",
             "Arn",
           ],
         },
@@ -1117,13 +1062,13 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::Lambda::Function",
     },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB": {
+    "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEventServiceRole5535F336": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM4",
-              "reason": "CodeStar Notification SLR needs managed policies.",
+              "reason": "Managed policies required for IAM role.",
             },
           ],
         },
@@ -1158,7 +1103,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Role",
     },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53": {
+    "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEventServiceRoleDefaultPolicy638A3347": {
       "Properties": {
         "PolicyDocument": {
           "Statement": [
@@ -1168,7 +1113,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
               "Resource": [
                 {
                   "Fn::GetAtt": [
-                    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
+                    "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunction0A1887FF",
                     "Arn",
                   ],
                 },
@@ -1178,7 +1123,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                     [
                       {
                         "Fn::GetAtt": [
-                          "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
+                          "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunction0A1887FF",
                           "Arn",
                         ],
                       },
@@ -1191,31 +1136,14 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
+        "PolicyName": "ceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEventServiceRoleDefaultPolicy638A3347",
         "Roles": [
           {
-            "Ref": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
+            "Ref": "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEventServiceRole5535F336",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-            "Arn",
-          ],
-        },
-        "description": "Allows AWS CodeStar Notifications to access Amazon CloudWatch Events on your behalf",
-        "roleName": "AWSServiceRoleForCodeStarNotifications",
-        "serviceName": "codestar-notifications.amazonaws.com",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::CreateServiceLinkedRole",
-      "UpdateReplacePolicy": "Delete",
     },
     "PipelineAcceleratorFailedStatusTopic614002B3": {
       "Properties": {
@@ -1282,14 +1210,14 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
     },
     "PipelineAcceleratorPipelineFailureNotification5BE0EB21": {
       "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEvent4888718C",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEventServiceRoleDefaultPolicy638A3347",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEventServiceRole5535F336",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunction0A1887FF",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionServiceRoleDefaultPolicy7F6A4A5C",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionServiceRole22D3DBB0",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionLogGroupB29A3F55",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComResource2A876872",
       ],
       "Properties": {
         "DetailType": "FULL",
@@ -1325,14 +1253,14 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
     },
     "PipelineAcceleratorPipelineStatusNotification0FCF4387": {
       "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEvent4888718C",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEventServiceRoleDefaultPolicy638A3347",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEventServiceRole5535F336",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunction0A1887FF",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionServiceRoleDefaultPolicy7F6A4A5C",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionServiceRole22D3DBB0",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionLogGroupB29A3F55",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComResource2A876872",
       ],
       "Properties": {
         "DetailType": "FULL",
@@ -1873,14 +1801,14 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
     },
     "PipelineReviewApproveCodePipelineActionRole3122ED42": {
       "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEvent4888718C",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEventServiceRoleDefaultPolicy638A3347",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEventServiceRole5535F336",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunction0A1887FF",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionServiceRoleDefaultPolicy7F6A4A5C",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionServiceRole22D3DBB0",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionLogGroupB29A3F55",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComResource2A876872",
       ],
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -1911,14 +1839,14 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
     },
     "PipelineReviewApproveCodePipelineActionRoleDefaultPolicyD445B059": {
       "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEvent4888718C",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEventServiceRoleDefaultPolicy638A3347",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEventServiceRole5535F336",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunction0A1887FF",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionServiceRoleDefaultPolicy7F6A4A5C",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionServiceRole22D3DBB0",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionLogGroupB29A3F55",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComResource2A876872",
       ],
       "Properties": {
         "PolicyDocument": {
@@ -2061,14 +1989,14 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
     },
     "PipelineSourceCodePipelineActionRoleBBC58FD5": {
       "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEvent4888718C",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEventServiceRoleDefaultPolicy638A3347",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEventServiceRole5535F336",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunction0A1887FF",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionServiceRoleDefaultPolicy7F6A4A5C",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionServiceRole22D3DBB0",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionLogGroupB29A3F55",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComResource2A876872",
       ],
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -2099,14 +2027,14 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
     },
     "PipelineSourceCodePipelineActionRoleDefaultPolicy5FD830BF": {
       "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEvent4888718C",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEventServiceRoleDefaultPolicy638A3347",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEventServiceRole5535F336",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunction0A1887FF",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionServiceRoleDefaultPolicy7F6A4A5C",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionServiceRole22D3DBB0",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionLogGroupB29A3F55",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComResource2A876872",
       ],
       "Metadata": {
         "cdk_nag": {
@@ -2207,14 +2135,14 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
     },
     "PipelineSourceConfigurationCodePipelineActionRoleA2807B19": {
       "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEvent4888718C",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEventServiceRoleDefaultPolicy638A3347",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEventServiceRole5535F336",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunction0A1887FF",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionServiceRoleDefaultPolicy7F6A4A5C",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionServiceRole22D3DBB0",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionLogGroupB29A3F55",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComResource2A876872",
       ],
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -2245,14 +2173,14 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
     },
     "PipelineSourceConfigurationCodePipelineActionRoleDefaultPolicy5FE1A228": {
       "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEvent4888718C",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEventServiceRoleDefaultPolicy638A3347",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComframeworkonEventServiceRole5535F336",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunction0A1887FF",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionServiceRoleDefaultPolicy7F6A4A5C",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionServiceRole22D3DBB0",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComFunctionLogGroupB29A3F55",
+        "PipelineAWSServiceRoleForCodeStarNotificationsServiceLinkedRoleCodestarNotificationsAmazonawsComServiceLinkedRoleCodestarNotificationsAmazonawsComResource2A876872",
       ],
       "Metadata": {
         "cdk_nag": {

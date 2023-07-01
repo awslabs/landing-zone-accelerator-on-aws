@@ -467,16 +467,17 @@ export class AcceleratorPipeline extends Construct {
     // Add review stage based on parameter
     this.addReviewStage();
 
-    this.pipeline.addStage({
-      stageName: 'ImportAseaResources',
-      actions: [
-        this.createToolkitStage({
-          actionName: 'Import_Asea_Resources',
-          command: `deploy`,
-          stage: AcceleratorStage.IMPORT_ASEA_RESOURCES,
-        }),
-      ],
-    });
+    // Adds ASEA Import Resources stage
+    // this.pipeline.addStage({
+    //   stageName: 'ImportAseaResources',
+    //   actions: [
+    //     this.createToolkitStage({
+    //       actionName: 'Import_Asea_Resources',
+    //       command: `deploy`,
+    //       stage: AcceleratorStage.IMPORT_ASEA_RESOURCES,
+    //     }),
+    //   ],
+    // });
 
     /**
      * The Logging stack establishes all the logging assets that are needed in
@@ -575,16 +576,17 @@ export class AcceleratorPipeline extends Construct {
       ],
     });
 
-    this.pipeline.addStage({
-      stageName: 'PostImportAseaResources',
-      actions: [
-        this.createToolkitStage({
-          actionName: 'Post_Import_Asea_Resources',
-          command: `deploy`,
-          stage: AcceleratorStage.POST_IMPORT_ASEA_RESOURCES,
-        }),
-      ],
-    });
+    // Add ASEA Import Resources
+    // this.pipeline.addStage({
+    //   stageName: 'PostImportAseaResources',
+    //   actions: [
+    //     this.createToolkitStage({
+    //       actionName: 'Post_Import_Asea_Resources',
+    //       command: `deploy`,
+    //       stage: AcceleratorStage.POST_IMPORT_ASEA_RESOURCES,
+    //     }),
+    //   ],
+    // });
 
     // Enable pipeline notification for commercial partition
     this.enablePipelineNotification();
@@ -683,7 +685,7 @@ export class AcceleratorPipeline extends Construct {
     }
 
     // We can Enable pipeline notification only for regions with AWS CodeStar being available
-    if (this.props.awsCodeStarSupportedRegions.includes(cdk.Stack.of(this).region)) {
+    if (awsCodeStarSupportedRegions.includes(cdk.Stack.of(this).region)) {
       const codeStarNotificationsRole = new ServiceLinkedRole(this, 'AWSServiceRoleForCodeStarNotifications', {
         environmentEncryptionKmsKey: this.installerKey,
         cloudWatchLogKmsKey: this.installerKey,

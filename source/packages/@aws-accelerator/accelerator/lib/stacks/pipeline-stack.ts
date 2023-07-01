@@ -114,7 +114,11 @@ export class PipelineStack extends cdk.Stack {
     });
 
     // cdk-nag suppressions
-    const iam4SuppressionPaths = ['AdminCdkToolkitRole/Resource'];
+    const iam4SuppressionPaths = [
+      'AdminCdkToolkitRole/Resource',
+      'Pipeline/AWSServiceRoleForCodeStarNotifications/ServiceLinkedRoleCodestarNotificationsAmazonawsCom/ServiceLinkedRoleCodestarNotificationsAmazonawsComFunction/ServiceRole/Resource',
+      'Pipeline/AWSServiceRoleForCodeStarNotifications/ServiceLinkedRoleCodestarNotificationsAmazonawsCom/Resource/framework-onEvent/ServiceRole/Resource',
+    ];
 
     const iam5SuppressionPaths = [
       'Pipeline/PipelineRole/DefaultPolicy/Resource',

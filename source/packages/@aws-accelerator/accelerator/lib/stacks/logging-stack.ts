@@ -143,12 +143,12 @@ export class LoggingStack extends AcceleratorStack {
     //
     // Create Auto scaling service linked role
     //
-    this.createAutoScalingServiceLinkedRole();
+    this.createAutoScalingServiceLinkedRole(this.cloudwatchKey as cdk.aws_kms.Key, this.lambdaKey as cdk.aws_kms.Key);
 
     //
     // Create AWS Cloud9 service linked role
     //
-    this.createAwsCloud9ServiceLinkedRole();
+    this.createAwsCloud9ServiceLinkedRole(this.cloudwatchKey as cdk.aws_kms.Key, this.lambdaKey as cdk.aws_kms.Key);
 
     //
     // Configure CloudWatchLogs to S3 replication

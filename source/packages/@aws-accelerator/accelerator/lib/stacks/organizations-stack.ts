@@ -142,7 +142,7 @@ export class OrganizationsStack extends AcceleratorStack {
       //
       // Enable FMS Delegated Admin Account
       //
-      this.enableFMSDelegatedAdminAccount();
+      this.enableFMSDelegatedAdminAccount(this.lambdaKey as cdk.aws_kms.Key, this.cloudwatchKey);
 
       //IdentityCenter Config
       this.enableIdentityCenterDelegatedAdminAccount(securityAdminAccountId);
@@ -368,25 +368,15 @@ export class OrganizationsStack extends AcceleratorStack {
   /**
    * Function to enable FMS delegated admin account
    */
-  private enableFMSDelegatedAdminAccount() {
+  private enableFMSDelegatedAdminAccount(lambdaKey: cdk.aws_kms.Key, cloudwatchKey: cdk.aws_kms.Key) {
     const fmsConfig = this.stackProperties.networkConfig.firewallManagerService;
     if (
       fmsConfig &&
       cdk.Stack.of(this).region === this.stackProperties.globalConfig.homeRegion &&
       this.props.organizationConfig.enable &&
-      this.serviceLinkedRoleSupportedPartitionList.includes(this.props.partition)
+      (this.props.partition === 'aws' || this.props.partition === 'aws-us-gov' || this.props.partition === 'aws-cn')
     ) {
-      const fmsServiceLinkedRole = this.createAwsFirewallManagerServiceLinkedRole(
-        this.cloudwatchKey,
-        cdk.aws_kms.Key.fromKeyArn(
-          this,
-          'AcceleratorGetLambdaKey',
-          cdk.aws_ssm.StringParameter.valueForStringParameter(
-            this,
-            this.acceleratorResourceNames.parameters.lambdaCmkArn,
-          ),
-        ) as cdk.aws_kms.Key,
-      );
+      const fmsServiceLinkedRole = this.createAwsFirewallManagerServiceLinkedRole(cloudwatchKey, lambdaKey);
 
       if (fmsServiceLinkedRole) {
         const adminAccountName = fmsConfig.delegatedAdminAccount;

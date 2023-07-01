@@ -13,8 +13,9 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { v4 as uuidv4 } from 'uuid';
 import * as path from 'path';
+import { LzaCustomResource } from '../lza-custom-resource';
+import { pascalCase } from 'change-case';
 /**
  * Initialized ServiceLinkedRoleProps properties
  */
@@ -46,6 +47,10 @@ export interface ServiceLinkedRoleProps {
    * for autoscaling.amazonaws.com roleName would be AWSServiceRoleForAutoScaling
    */
   readonly roleName: string;
+  /**
+   * Prefix for nag suppression
+   */
+  readonly nagSuppressionPrefix?: string;
 }
 
 /**
@@ -57,45 +62,39 @@ export class ServiceLinkedRole extends Construct {
   constructor(scope: Construct, id: string, props: ServiceLinkedRoleProps) {
     super(scope, id);
 
-    const lambdaFunction = new cdk.aws_lambda.Function(this, 'CreateServiceLinkedRoleFunction', {
-      code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'create-service-linked-role/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
-      handler: 'index.handler',
-      timeout: cdk.Duration.minutes(15),
-      description: 'Custom resource provider to create service linked role',
-      initialPolicy: [
-        new cdk.aws_iam.PolicyStatement({
-          effect: cdk.aws_iam.Effect.ALLOW,
-          actions: ['iam:CreateServiceLinkedRole', 'iam:GetRole'],
-          resources: ['*'],
-        }),
-      ],
-      environmentEncryption: props.environmentEncryptionKmsKey,
-    });
+    // make a unique name for each service name
+    const resourceName = `ServiceLinkedRole${pascalCase(props.awsServiceName)}`;
 
-    new cdk.aws_logs.LogGroup(this, `${lambdaFunction.node.id}LogGroup`, {
-      logGroupName: `/aws/lambda/${lambdaFunction.functionName}`,
-      retention: props.cloudWatchLogRetentionInDays,
-      encryptionKey: props.cloudWatchLogKmsKey,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-    });
-
-    const provider = new cdk.custom_resources.Provider(this, 'CreateServiceLinkedRoleProvider', {
-      onEventHandler: lambdaFunction,
-    });
-
-    const resource = new cdk.CustomResource(this, 'CreateServiceLinkedRoleResource', {
-      resourceType: 'Custom::CreateServiceLinkedRole',
-      serviceToken: provider.serviceToken,
-      properties: {
-        serviceName: props.awsServiceName,
-        description: props.description,
-        roleName: props.roleName,
-        uuid: uuidv4(), // Generates a new UUID to force the resource to update
+    const lzaCustomResource = new LzaCustomResource(this, resourceName, {
+      resource: {
+        name: resourceName,
+        parentId: id,
+        properties: [
+          {
+            serviceName: props.awsServiceName,
+            description: props.description,
+            roleName: props.roleName,
+          },
+        ],
+        nagSuppressionPrefix: `${props.nagSuppressionPrefix}/${resourceName}`,
+      },
+      lambda: {
+        assetPath: path.join(__dirname, 'create-service-linked-role/dist'),
+        environmentEncryptionKmsKey: props.environmentEncryptionKmsKey,
+        cloudWatchLogKmsKey: props.cloudWatchLogKmsKey,
+        cloudWatchLogRetentionInDays: props.cloudWatchLogRetentionInDays,
+        timeOut: cdk.Duration.minutes(15),
+        roleInitialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ['iam:CreateServiceLinkedRole', 'iam:GetRole'],
+            resources: ['*'],
+          }),
+        ],
       },
     });
 
-    this.roleArn = resource.getAtt('roleArn').toString();
-    this.roleName = resource.getAtt('roleName').toString();
+    this.roleArn = lzaCustomResource.resource.getAtt('roleArn').toString();
+    this.roleName = lzaCustomResource.resource.getAtt('roleName').toString();
   }
 }

@@ -3,7 +3,7 @@
 exports[`LaunchTemplate Construct(FirewallAutoScalingGroup):  Snapshot Test 1`] = `
 {
   "Resources": {
-    "CloudWatchKey9B181885": {
+    "CustomKey1E6D0D07": {
       "DeletionPolicy": "Retain",
       "Properties": {
         "KeyPolicy": {
@@ -38,7 +38,7 @@ exports[`LaunchTemplate Construct(FirewallAutoScalingGroup):  Snapshot Test 1`] 
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "LambdaKey984A39D9": {
+    "CustomKeyCloudWatchFB91CD4E": {
       "DeletionPolicy": "Retain",
       "Properties": {
         "KeyPolicy": {
@@ -73,10 +73,10 @@ exports[`LaunchTemplate Construct(FirewallAutoScalingGroup):  Snapshot Test 1`] 
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction4263CA84": {
+    "TestFirewallAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionD10AF7C4": {
       "DependsOn": [
-        "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy1510F19B",
-        "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRole82A4BC5E",
+        "TestFirewallAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRoleDefaultPolicy03F7F7FF",
+        "TestFirewallAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRole3B01913F",
       ],
       "Properties": {
         "Code": {
@@ -85,17 +85,18 @@ exports[`LaunchTemplate Construct(FirewallAutoScalingGroup):  Snapshot Test 1`] 
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Description": "Custom resource provider to create service linked role",
+        "Description": "Accelerator deployed ServiceLinkedRoleAutoscalingAmazonawsCom custom resource lambda function.",
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
-            "LambdaKey984A39D9",
+            "CustomKey1E6D0D07",
             "Arn",
           ],
         },
+        "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
-            "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRole82A4BC5E",
+            "TestFirewallAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRole3B01913F",
             "Arn",
           ],
         },
@@ -104,12 +105,12 @@ exports[`LaunchTemplate Construct(FirewallAutoScalingGroup):  Snapshot Test 1`] 
       },
       "Type": "AWS::Lambda::Function",
     },
-    "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionLogGroupB0B4539B": {
+    "TestFirewallAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionLogGroup377375B1": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "KmsKeyId": {
           "Fn::GetAtt": [
-            "CloudWatchKey9B181885",
+            "CustomKeyCloudWatchFB91CD4E",
             "Arn",
           ],
         },
@@ -119,7 +120,7 @@ exports[`LaunchTemplate Construct(FirewallAutoScalingGroup):  Snapshot Test 1`] 
             [
               "/aws/lambda/",
               {
-                "Ref": "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction4263CA84",
+                "Ref": "TestFirewallAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionD10AF7C4",
               },
             ],
           ],
@@ -129,7 +130,17 @@ exports[`LaunchTemplate Construct(FirewallAutoScalingGroup):  Snapshot Test 1`] 
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRole82A4BC5E": {
+    "TestFirewallAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRole3B01913F": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -160,7 +171,17 @@ exports[`LaunchTemplate Construct(FirewallAutoScalingGroup):  Snapshot Test 1`] 
       },
       "Type": "AWS::IAM::Role",
     },
-    "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy1510F19B": {
+    "TestFirewallAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRoleDefaultPolicy03F7F7FF": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "PolicyDocument": {
           "Statement": [
@@ -175,19 +196,35 @@ exports[`LaunchTemplate Construct(FirewallAutoScalingGroup):  Snapshot Test 1`] 
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy1510F19B",
+        "PolicyName": "nkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRoleDefaultPolicy03F7F7FF",
         "Roles": [
           {
-            "Ref": "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRole82A4BC5E",
+            "Ref": "TestFirewallAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRole3B01913F",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEvent7CB941E7": {
+    "TestFirewallAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComResourceF1B1A78C": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "TestFirewallAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEvent1598258C",
+            "Arn",
+          ],
+        },
+        "description": "Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling",
+        "roleName": "AWSServiceRoleForAutoScaling",
+        "serviceName": "autoscaling.amazonaws.com",
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TestFirewallAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEvent1598258C": {
       "DependsOn": [
-        "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy607127A2",
-        "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleADF19690",
+        "TestFirewallAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRoleDefaultPolicyD24B7D12",
+        "TestFirewallAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRole3FC199A5",
       ],
       "Properties": {
         "Code": {
@@ -196,12 +233,12 @@ exports[`LaunchTemplate Construct(FirewallAutoScalingGroup):  Snapshot Test 1`] 
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Description": "AWS CDK resource provider framework - onEvent (Default/TestFirewall/Resource/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleProvider)",
+        "Description": "AWS CDK resource provider framework - onEvent (Default/TestFirewall/Resource/AutoScalingServiceLinkedRole/ServiceLinkedRoleAutoscalingAmazonawsCom/Resource)",
         "Environment": {
           "Variables": {
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
-                "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction4263CA84",
+                "TestFirewallAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionD10AF7C4",
                 "Arn",
               ],
             },
@@ -210,7 +247,7 @@ exports[`LaunchTemplate Construct(FirewallAutoScalingGroup):  Snapshot Test 1`] 
         "Handler": "framework.onEvent",
         "Role": {
           "Fn::GetAtt": [
-            "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleADF19690",
+            "TestFirewallAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRole3FC199A5",
             "Arn",
           ],
         },
@@ -219,7 +256,17 @@ exports[`LaunchTemplate Construct(FirewallAutoScalingGroup):  Snapshot Test 1`] 
       },
       "Type": "AWS::Lambda::Function",
     },
-    "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleADF19690": {
+    "TestFirewallAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRole3FC199A5": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -250,7 +297,17 @@ exports[`LaunchTemplate Construct(FirewallAutoScalingGroup):  Snapshot Test 1`] 
       },
       "Type": "AWS::IAM::Role",
     },
-    "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy607127A2": {
+    "TestFirewallAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRoleDefaultPolicyD24B7D12": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "PolicyDocument": {
           "Statement": [
@@ -260,7 +317,7 @@ exports[`LaunchTemplate Construct(FirewallAutoScalingGroup):  Snapshot Test 1`] 
               "Resource": [
                 {
                   "Fn::GetAtt": [
-                    "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction4263CA84",
+                    "TestFirewallAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionD10AF7C4",
                     "Arn",
                   ],
                 },
@@ -270,7 +327,7 @@ exports[`LaunchTemplate Construct(FirewallAutoScalingGroup):  Snapshot Test 1`] 
                     [
                       {
                         "Fn::GetAtt": [
-                          "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction4263CA84",
+                          "TestFirewallAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionD10AF7C4",
                           "Arn",
                         ],
                       },
@@ -283,31 +340,14 @@ exports[`LaunchTemplate Construct(FirewallAutoScalingGroup):  Snapshot Test 1`] 
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy607127A2",
+        "PolicyName": "TestFirewallAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRoleDefaultPolicyD24B7D12",
         "Roles": [
           {
-            "Ref": "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleADF19690",
+            "Ref": "TestFirewallAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRole3FC199A5",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
-    },
-    "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleResource1EB49BEA": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEvent7CB941E7",
-            "Arn",
-          ],
-        },
-        "description": "Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling",
-        "roleName": "AWSServiceRoleForAutoScaling",
-        "serviceName": "autoscaling.amazonaws.com",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::CreateServiceLinkedRole",
-      "UpdateReplacePolicy": "Delete",
     },
     "TestFirewallF12A004C": {
       "Properties": {

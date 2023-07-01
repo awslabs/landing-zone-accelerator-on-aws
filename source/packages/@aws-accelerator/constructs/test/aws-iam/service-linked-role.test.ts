@@ -16,7 +16,7 @@ import { ServiceLinkedRole } from '@aws-accelerator/constructs';
 import { snapShotTest } from '../snapshot-test';
 import { describe } from '@jest/globals';
 
-const testNamePrefix = 'Construct(CreateServiceLinkedRole): ';
+const testNamePrefix = 'Construct(ServiceLinkedRole): ';
 
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();

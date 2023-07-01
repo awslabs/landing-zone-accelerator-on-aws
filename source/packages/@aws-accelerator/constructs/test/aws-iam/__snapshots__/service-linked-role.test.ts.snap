@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ServiceLinkedRole Construct(CreateServiceLinkedRole):  Snapshot Test 1`] = `
+exports[`ServiceLinkedRole Construct(ServiceLinkedRole):  Snapshot Test 1`] = `
 {
   "Resources": {
     "CustomKey1E6D0D07": {
@@ -73,10 +73,10 @@ exports[`ServiceLinkedRole Construct(CreateServiceLinkedRole):  Snapshot Test 1`
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "ServiceLinkedRoleCreateServiceLinkedRoleFunction76F68A8A": {
+    "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComServiceLinkedRoleAwesomeServiceAmazonawsComFunction32AAECE6": {
       "DependsOn": [
-        "ServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy412C5718",
-        "ServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleFC9D35BB",
+        "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComServiceLinkedRoleAwesomeServiceAmazonawsComFunctionServiceRoleDefaultPolicy679D87F0",
+        "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComServiceLinkedRoleAwesomeServiceAmazonawsComFunctionServiceRoleFE1F10E9",
       ],
       "Properties": {
         "Code": {
@@ -85,7 +85,7 @@ exports[`ServiceLinkedRole Construct(CreateServiceLinkedRole):  Snapshot Test 1`
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Description": "Custom resource provider to create service linked role",
+        "Description": "Accelerator deployed ServiceLinkedRoleAwesomeServiceAmazonawsCom custom resource lambda function.",
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -93,9 +93,10 @@ exports[`ServiceLinkedRole Construct(CreateServiceLinkedRole):  Snapshot Test 1`
             "Arn",
           ],
         },
+        "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
-            "ServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleFC9D35BB",
+            "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComServiceLinkedRoleAwesomeServiceAmazonawsComFunctionServiceRoleFE1F10E9",
             "Arn",
           ],
         },
@@ -104,7 +105,7 @@ exports[`ServiceLinkedRole Construct(CreateServiceLinkedRole):  Snapshot Test 1`
       },
       "Type": "AWS::Lambda::Function",
     },
-    "ServiceLinkedRoleCreateServiceLinkedRoleFunctionLogGroupE011C075": {
+    "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComServiceLinkedRoleAwesomeServiceAmazonawsComFunctionLogGroupF3A246D6": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "KmsKeyId": {
@@ -119,7 +120,7 @@ exports[`ServiceLinkedRole Construct(CreateServiceLinkedRole):  Snapshot Test 1`
             [
               "/aws/lambda/",
               {
-                "Ref": "ServiceLinkedRoleCreateServiceLinkedRoleFunction76F68A8A",
+                "Ref": "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComServiceLinkedRoleAwesomeServiceAmazonawsComFunction32AAECE6",
               },
             ],
           ],
@@ -129,7 +130,17 @@ exports[`ServiceLinkedRole Construct(CreateServiceLinkedRole):  Snapshot Test 1`
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "ServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy412C5718": {
+    "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComServiceLinkedRoleAwesomeServiceAmazonawsComFunctionServiceRoleDefaultPolicy679D87F0": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "PolicyDocument": {
           "Statement": [
@@ -144,16 +155,26 @@ exports[`ServiceLinkedRole Construct(CreateServiceLinkedRole):  Snapshot Test 1`
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "ServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy412C5718",
+        "PolicyName": "leServiceLinkedRoleAwesomeServiceAmazonawsComServiceLinkedRoleAwesomeServiceAmazonawsComFunctionServiceRoleDefaultPolicy679D87F0",
         "Roles": [
           {
-            "Ref": "ServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleFC9D35BB",
+            "Ref": "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComServiceLinkedRoleAwesomeServiceAmazonawsComFunctionServiceRoleFE1F10E9",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "ServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleFC9D35BB": {
+    "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComServiceLinkedRoleAwesomeServiceAmazonawsComFunctionServiceRoleFE1F10E9": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -184,10 +205,26 @@ exports[`ServiceLinkedRole Construct(CreateServiceLinkedRole):  Snapshot Test 1`
       },
       "Type": "AWS::IAM::Role",
     },
-    "ServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEvent034259E5": {
+    "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComServiceLinkedRoleAwesomeServiceAmazonawsComResource29D1FE07": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComframeworkonEvent2D7AB371",
+            "Arn",
+          ],
+        },
+        "description": "some description",
+        "roleName": "AWSServiceRoleForAwesomeService",
+        "serviceName": "awesomeService.amazonaws.com",
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComframeworkonEvent2D7AB371": {
       "DependsOn": [
-        "ServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyAB7B0F16",
-        "ServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole03414527",
+        "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComframeworkonEventServiceRoleDefaultPolicy7C0F0B08",
+        "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComframeworkonEventServiceRole9376F764",
       ],
       "Properties": {
         "Code": {
@@ -196,12 +233,12 @@ exports[`ServiceLinkedRole Construct(CreateServiceLinkedRole):  Snapshot Test 1`
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Description": "AWS CDK resource provider framework - onEvent (Default/ServiceLinkedRole/CreateServiceLinkedRoleProvider)",
+        "Description": "AWS CDK resource provider framework - onEvent (Default/ServiceLinkedRole/ServiceLinkedRoleAwesomeServiceAmazonawsCom/Resource)",
         "Environment": {
           "Variables": {
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
-                "ServiceLinkedRoleCreateServiceLinkedRoleFunction76F68A8A",
+                "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComServiceLinkedRoleAwesomeServiceAmazonawsComFunction32AAECE6",
                 "Arn",
               ],
             },
@@ -210,7 +247,7 @@ exports[`ServiceLinkedRole Construct(CreateServiceLinkedRole):  Snapshot Test 1`
         "Handler": "framework.onEvent",
         "Role": {
           "Fn::GetAtt": [
-            "ServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole03414527",
+            "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComframeworkonEventServiceRole9376F764",
             "Arn",
           ],
         },
@@ -219,7 +256,17 @@ exports[`ServiceLinkedRole Construct(CreateServiceLinkedRole):  Snapshot Test 1`
       },
       "Type": "AWS::Lambda::Function",
     },
-    "ServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole03414527": {
+    "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComframeworkonEventServiceRole9376F764": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -250,7 +297,17 @@ exports[`ServiceLinkedRole Construct(CreateServiceLinkedRole):  Snapshot Test 1`
       },
       "Type": "AWS::IAM::Role",
     },
-    "ServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyAB7B0F16": {
+    "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComframeworkonEventServiceRoleDefaultPolicy7C0F0B08": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "PolicyDocument": {
           "Statement": [
@@ -260,7 +317,7 @@ exports[`ServiceLinkedRole Construct(CreateServiceLinkedRole):  Snapshot Test 1`
               "Resource": [
                 {
                   "Fn::GetAtt": [
-                    "ServiceLinkedRoleCreateServiceLinkedRoleFunction76F68A8A",
+                    "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComServiceLinkedRoleAwesomeServiceAmazonawsComFunction32AAECE6",
                     "Arn",
                   ],
                 },
@@ -270,7 +327,7 @@ exports[`ServiceLinkedRole Construct(CreateServiceLinkedRole):  Snapshot Test 1`
                     [
                       {
                         "Fn::GetAtt": [
-                          "ServiceLinkedRoleCreateServiceLinkedRoleFunction76F68A8A",
+                          "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComServiceLinkedRoleAwesomeServiceAmazonawsComFunction32AAECE6",
                           "Arn",
                         ],
                       },
@@ -283,31 +340,14 @@ exports[`ServiceLinkedRole Construct(CreateServiceLinkedRole):  Snapshot Test 1`
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "ServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyAB7B0F16",
+        "PolicyName": "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComframeworkonEventServiceRoleDefaultPolicy7C0F0B08",
         "Roles": [
           {
-            "Ref": "ServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole03414527",
+            "Ref": "ServiceLinkedRoleServiceLinkedRoleAwesomeServiceAmazonawsComframeworkonEventServiceRole9376F764",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
-    },
-    "ServiceLinkedRoleCreateServiceLinkedRoleResource8BE1DC5C": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "ServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEvent034259E5",
-            "Arn",
-          ],
-        },
-        "description": "some description",
-        "roleName": "AWSServiceRoleForAwesomeService",
-        "serviceName": "awesomeService.amazonaws.com",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::CreateServiceLinkedRole",
-      "UpdateReplacePolicy": "Delete",
     },
   },
 }
