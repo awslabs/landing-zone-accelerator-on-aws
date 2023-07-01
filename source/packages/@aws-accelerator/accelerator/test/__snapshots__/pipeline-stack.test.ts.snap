@@ -1025,6 +1025,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
         "description": "Allows AWS CodeStar Notifications to access Amazon CloudWatch Events on your behalf",
         "roleName": "AWSServiceRoleForCodeStarNotifications",
         "serviceName": "codestar-notifications.amazonaws.com",
+        "uuid": "REPLACED-UUID",
       },
       "Type": "AWS::CloudFormation::CustomResource",
       "UpdateReplacePolicy": "Delete",

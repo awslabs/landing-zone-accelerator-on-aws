@@ -52,9 +52,9 @@ logging:
     existingBucket: 
       name: existing-access-logs-bucket-${ACCOUNT_ID}-${REGION}
 
-  elbLogBucket:
-    existingBucket: 
-      name: existing-elb-logs-bucket-${ACCOUNT_ID}-${REGION}
+  # elbLogBucket:
+  #   existingBucket: 
+  #     name: existing-elb-logs-bucket-${ACCOUNT_ID}-${REGION}
 
   sessionManager:
     sendToCloudWatchLogs: false

@@ -224,6 +224,7 @@ exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
         "description": "Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling",
         "roleName": "AWSServiceRoleForAutoScaling",
         "serviceName": "autoscaling.amazonaws.com",
+        "uuid": "REPLACED-UUID",
       },
       "Type": "AWS::CloudFormation::CustomResource",
       "UpdateReplacePolicy": "Delete",
