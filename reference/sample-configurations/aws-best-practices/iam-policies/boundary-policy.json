@@ -10,7 +10,7 @@
         "Effect": "Deny",
         "NotAction": [
           "iam:ChangePassword",
-          "iam:Getuser",
+          "iam:GetUser",
           "iam:ListMFADevices",
           "iam:CreateVirtualMFADevice",
           "iam:EnableMFADevice",
