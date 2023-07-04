@@ -63,8 +63,20 @@ exports[`AcceleratorMetadata Construct(AcceleratorMetadata):  Snapshot Test 1`] 
     },
     "AcceleratorMetadataAwsAcceleratorMetadataCollectionRule1FFE12D2": {
       "Properties": {
+        "EventPattern": {
+          "detail": {
+            "stack-id": {
+              "Ref": "AWS::StackId",
+            },
+            "status-details": {
+              "status": [
+                "CREATE_COMPLETE",
+                "UPDATE_COMPLETE",
+              ],
+            },
+          },
+        },
         "Name": "AWSAccelerator-metadata-collection-rule",
-        "ScheduleExpression": "rate(1 day)",
         "State": "ENABLED",
         "Targets": [
           {
