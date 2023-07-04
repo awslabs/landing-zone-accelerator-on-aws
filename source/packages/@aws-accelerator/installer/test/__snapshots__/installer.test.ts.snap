@@ -1573,6 +1573,11 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
               "Value": "1",
             },
             {
+              "Name": "ENABLE_ASEA_MIGRATION",
+              "Type": "PLAINTEXT",
+              "Value": "false",
+            },
+            {
               "Name": "ACCELERATOR_REPOSITORY_SOURCE",
               "Type": "PLAINTEXT",
               "Value": {
@@ -4938,6 +4943,11 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
               "Value": "1",
             },
             {
+              "Name": "ENABLE_ASEA_MIGRATION",
+              "Type": "PLAINTEXT",
+              "Value": "false",
+            },
+            {
               "Name": "ACCELERATOR_REPOSITORY_SOURCE",
               "Type": "PLAINTEXT",
               "Value": {
@@ -8299,6 +8309,11 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
               "Name": "CDK_NEW_BOOTSTRAP",
               "Type": "PLAINTEXT",
               "Value": "1",
+            },
+            {
+              "Name": "ENABLE_ASEA_MIGRATION",
+              "Type": "PLAINTEXT",
+              "Value": "false",
             },
             {
               "Name": "ACCELERATOR_REPOSITORY_SOURCE",
@@ -11679,6 +11694,11 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
               "Value": "1",
             },
             {
+              "Name": "ENABLE_ASEA_MIGRATION",
+              "Type": "PLAINTEXT",
+              "Value": "false",
+            },
+            {
               "Name": "ACCELERATOR_REPOSITORY_SOURCE",
               "Type": "PLAINTEXT",
               "Value": {
@@ -15045,6 +15065,11 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
               "Name": "CDK_NEW_BOOTSTRAP",
               "Type": "PLAINTEXT",
               "Value": "1",
+            },
+            {
+              "Name": "ENABLE_ASEA_MIGRATION",
+              "Type": "PLAINTEXT",
+              "Value": "false",
             },
             {
               "Name": "ACCELERATOR_REPOSITORY_SOURCE",

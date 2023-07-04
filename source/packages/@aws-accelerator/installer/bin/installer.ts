@@ -26,6 +26,7 @@ const useExternalPipelineAccount = app.node.tryGetContext('use-external-pipeline
 const enableTester = app.node.tryGetContext('enable-tester') === 'true';
 const managementCrossAccountRoleName = app.node.tryGetContext('management-cross-account-role-name');
 const enableSingleAccountMode = app.node.tryGetContext('enable-single-account-mode') === 'true';
+const enableAseaMigration = app.node.tryGetContext('enable-asea-migration') === 'true';
 
 if (enableTester && managementCrossAccountRoleName === undefined) {
   console.log(`Invalid --management-cross-account-role-name ${managementCrossAccountRoleName}`);
@@ -43,4 +44,5 @@ new installer.InstallerStack(app, 'AWSAccelerator-InstallerStack', {
   enableTester: enableTester,
   managementCrossAccountRoleName: managementCrossAccountRoleName,
   enableSingleAccountMode,
+  enableAseaMigration,
 });

@@ -613,6 +613,28 @@ export class SecurityResourcesStack extends AcceleratorStack {
           },
         ],
       });
+
+      // AwsSolutions-IAM4
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/ConfigRecorderDeliveryChannel/ConfigServiceRecorderFunctionRole/Resource`,
+            reason: 'Lambda managed policy',
+          },
+        ],
+      });
+
+      // AwsSolutions-IAM5
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
+          {
+            path: `${this.stackName}${this.stackName}/ConfigRecorderDeliveryChannel/ConfigServiceRecorderFunctionRole/Resource`,
+            reason: 'Lambda managed policy',
+          },
+        ],
+      });
     }
   }
 

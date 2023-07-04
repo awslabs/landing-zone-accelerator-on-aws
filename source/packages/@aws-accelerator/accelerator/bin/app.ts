@@ -67,10 +67,11 @@ function createPipelineStacks(
   context: AcceleratorContext,
   acceleratorEnv: AcceleratorEnvironment,
   resourcePrefixes: AcceleratorResourcePrefixes,
+  enableAseaMigration: boolean,
 ) {
   //
   // PIPELINE Stack
-  createPipelineStack(app, context, acceleratorEnv, resourcePrefixes);
+  createPipelineStack(app, context, acceleratorEnv, resourcePrefixes, enableAseaMigration);
   //
   // TESTER Stack
   createTesterStack(app, context, acceleratorEnv, resourcePrefixes);
@@ -207,11 +208,14 @@ async function main() {
   // Set various resource name prefixes used in code base
   const resourcePrefixes = setResourcePrefixes(process.env['ACCELERATOR_PREFIX'] ?? 'AWSAccelerator');
   //
+  //
+  const enableAseaMigration = process.env['ENABLE_ASEA_MIGRATION'] === 'true' ? true : false;
+  //
   // Set accelerator environment variables
   const acceleratorEnv = setAcceleratorEnvironment(process.env, resourcePrefixes, context.stage);
   //
   // PIPELINE and TESTER Stacks
-  createPipelineStacks(app, context, acceleratorEnv, resourcePrefixes);
+  createPipelineStacks(app, context, acceleratorEnv, resourcePrefixes, enableAseaMigration);
   //
   // Set accelerator stack props
   const props = await setAcceleratorStackProps(context, acceleratorEnv, resourcePrefixes, globalRegion);

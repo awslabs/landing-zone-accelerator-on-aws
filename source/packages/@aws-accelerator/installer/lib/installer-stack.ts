@@ -47,6 +47,10 @@ export interface InstallerStackProps extends cdk.StackProps {
    * Single account deployment enable flag
    */
   readonly enableSingleAccountMode: boolean;
+  /**
+   * ASEA Migration deployment enable flag
+   */
+  readonly enableAseaMigration: boolean;
 }
 
 export class InstallerStack extends cdk.Stack {
@@ -677,6 +681,11 @@ export class InstallerStack extends cdk.Stack {
           CDK_NEW_BOOTSTRAP: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: '1',
+          },
+
+          ENABLE_ASEA_MIGRATION: {
+            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: props.enableAseaMigration,
           },
           ACCELERATOR_REPOSITORY_SOURCE: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
