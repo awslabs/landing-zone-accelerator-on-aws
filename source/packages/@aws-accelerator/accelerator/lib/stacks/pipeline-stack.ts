@@ -67,6 +67,7 @@ export interface PipelineStackProps extends cdk.StackProps {
     readonly databaseName: string;
   };
   readonly enableSingleAccountMode: boolean;
+  readonly enableAseaMigration: boolean;
 }
 
 export class PipelineStack extends cdk.Stack {

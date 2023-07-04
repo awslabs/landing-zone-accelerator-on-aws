@@ -56,6 +56,7 @@ const stack = new PipelineStack(app, 'PipelineStack', {
     databaseName: 'aws-accelerator',
   },
   enableSingleAccountMode: false,
+  enableAseaMigration: false,
 });
 
 describe('PipelineStack', () => {

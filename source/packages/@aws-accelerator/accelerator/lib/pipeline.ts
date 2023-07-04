@@ -108,6 +108,10 @@ export interface AcceleratorPipelineProps {
    * Boolean for single account mode (i.e. AWS Jam or Workshop)
    */
   readonly enableSingleAccountMode: boolean;
+  /**
+   * Boolean for single account mode (i.e. AWS Jam or Workshop)
+   */
+  readonly enableAseaMigration: boolean;
 }
 
 /**
@@ -467,16 +471,18 @@ export class AcceleratorPipeline extends Construct {
     this.addReviewStage();
 
     // Adds ASEA Import Resources stage
-    // this.pipeline.addStage({
-    //   stageName: 'ImportAseaResources',
-    //   actions: [
-    //     this.createToolkitStage({
-    //       actionName: 'Import_Asea_Resources',
-    //       command: `deploy`,
-    //       stage: AcceleratorStage.IMPORT_ASEA_RESOURCES,
-    //     }),
-    //   ],
-    // });
+    if (props.enableAseaMigration) {
+      this.pipeline.addStage({
+        stageName: 'ImportAseaResources',
+        actions: [
+          this.createToolkitStage({
+            actionName: 'Import_Asea_Resources',
+            command: `deploy`,
+            stage: AcceleratorStage.IMPORT_ASEA_RESOURCES,
+          }),
+        ],
+      });
+    }
 
     /**
      * The Logging stack establishes all the logging assets that are needed in
@@ -576,16 +582,18 @@ export class AcceleratorPipeline extends Construct {
     });
 
     // Add ASEA Import Resources
-    // this.pipeline.addStage({
-    //   stageName: 'PostImportAseaResources',
-    //   actions: [
-    //     this.createToolkitStage({
-    //       actionName: 'Post_Import_Asea_Resources',
-    //       command: `deploy`,
-    //       stage: AcceleratorStage.POST_IMPORT_ASEA_RESOURCES,
-    //     }),
-    //   ],
-    // });
+    if (props.enableAseaMigration) {
+      this.pipeline.addStage({
+        stageName: 'PostImportAseaResources',
+        actions: [
+          this.createToolkitStage({
+            actionName: 'Post_Import_Asea_Resources',
+            command: `deploy`,
+            stage: AcceleratorStage.POST_IMPORT_ASEA_RESOURCES,
+          }),
+        ],
+      });
+    }
 
     // Enable pipeline notification for commercial partition
     this.enablePipelineNotification();
