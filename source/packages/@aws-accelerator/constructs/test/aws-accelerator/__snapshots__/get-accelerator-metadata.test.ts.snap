@@ -64,10 +64,17 @@ exports[`AcceleratorMetadata Construct(AcceleratorMetadata):  Snapshot Test 1`] 
     "AcceleratorMetadataAwsAcceleratorMetadataCollectionRule1FFE12D2": {
       "Properties": {
         "EventPattern": {
-          "detail": {
-            "stack-id": {
-              "Ref": "AWS::StackId",
+          "account": [
+            {
+              "Ref": "AWS::AccountId",
             },
+          ],
+          "detail": {
+            "stack-id": [
+              {
+                "Ref": "AWS::StackId",
+              },
+            ],
             "status-details": {
               "status": [
                 "CREATE_COMPLETE",
@@ -75,8 +82,25 @@ exports[`AcceleratorMetadata Construct(AcceleratorMetadata):  Snapshot Test 1`] 
               ],
             },
           },
+          "detail-type": [
+            "CloudFormation Stack Status Change",
+          ],
+          "region": [
+            {
+              "Ref": "AWS::Region",
+            },
+          ],
+          "resources": [
+            {
+              "Ref": "AWS::StackId",
+            },
+          ],
+          "source": [
+            "aws.cloudformation",
+          ],
         },
         "Name": "AWSAccelerator-metadata-collection-rule",
+        "ScheduleExpression": "rate(1 day)",
         "State": "ENABLED",
         "Targets": [
           {
