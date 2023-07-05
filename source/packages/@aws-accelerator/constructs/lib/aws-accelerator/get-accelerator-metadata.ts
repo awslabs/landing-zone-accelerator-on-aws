@@ -197,10 +197,15 @@ export class AcceleratorMetadata extends Construct {
   ) {
     const rule = new cdk.aws_events.Rule(this, pascalCase(`${acceleratorPrefix}MetadataCollectionRule`), {
       eventPattern: {
+        source: ['aws.cloudformation'],
+        account: [stack.account],
+        region: [stack.region],
+        resources: [stack.stackId],
+        detailType: ['CloudFormation Stack Status Change'],
         detail: {
-          'stack-id': stack.stackId,
+          'stack-id': [stack.stackId],
           'status-details': {
-            status: ['CREATE_COMPLETE', 'UPDATE_COMPLETE'],
+            'status': ['CREATE_COMPLETE', 'UPDATE_COMPLETE'],
           },
         },
       },
