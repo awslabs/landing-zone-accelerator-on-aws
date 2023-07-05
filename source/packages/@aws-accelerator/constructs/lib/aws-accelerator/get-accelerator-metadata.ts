@@ -209,6 +209,7 @@ export class AcceleratorMetadata extends Construct {
           },
         },
       },
+      schedule: cdk.aws_events.Schedule.rate(cdk.Duration.days(1)),
       ruleName: `${acceleratorPrefix}-metadata-collection-rule`,
     });
 

@@ -97,6 +97,7 @@ exports[`SecurityStack Construct(SecurityStack):  Snapshot Test 1`] = `
           ],
         },
         "Name": "AWSAccelerator-metadata-collection-rule",
+        "ScheduleExpression": "rate(1 day)",
         "State": "ENABLED",
         "Targets": [
           {
@@ -1362,6 +1363,7 @@ exports[`delegatedAdminStack Construct(SecurityStack):  Snapshot Test 1`] = `
           ],
         },
         "Name": "AWSAccelerator-metadata-collection-rule",
+        "ScheduleExpression": "rate(1 day)",
         "State": "ENABLED",
         "Targets": [
           {
