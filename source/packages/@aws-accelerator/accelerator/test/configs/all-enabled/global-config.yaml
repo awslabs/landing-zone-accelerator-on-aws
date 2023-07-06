@@ -59,7 +59,10 @@ logging:
     sendToCloudWatchLogs: false
     sendToS3: true
   cloudwatchLogs:
+    enable: true
     dynamicPartitioning: dynamic-partitioning/log-filters.json
+    replaceLogDestinationArn: replaceLogDestinationArn  
+    
     exclusions:
       - organizationalUnits:
           - Infrastructure

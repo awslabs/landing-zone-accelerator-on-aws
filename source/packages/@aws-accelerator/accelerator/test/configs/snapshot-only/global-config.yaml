@@ -26,6 +26,7 @@ cdkOptions:
 logging:
   account: LogArchive
   centralizedLoggingRegion: us-west-2
+
   centralLogBucket:
     existingBucket: 
       name: existing-central-log-bucket
@@ -59,6 +60,8 @@ logging:
     sendToCloudWatchLogs: false
     sendToS3: true
   cloudwatchLogs:
+    enable: true
+    replaceLogDestinationArn: arn:aws:logs:us-east-1:111111111111:destination/log-destination
     dynamicPartitioning: dynamic-partitioning/log-filters.json
     exclusions:
       - organizationalUnits:

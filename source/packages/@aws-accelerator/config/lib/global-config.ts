@@ -113,6 +113,7 @@ export abstract class GlobalConfigTypes {
     dynamicPartitioning: t.optional(t.nonEmptyString),
     enable: t.optional(t.boolean),
     exclusions: t.optional(t.array(GlobalConfigTypes.cloudWatchLogsExclusionConfig)),
+    replaceLogDestinationArn: t.optional(t.nonEmptyString),
   });
 
   static readonly loggingConfig = t.interface({
@@ -757,10 +758,12 @@ export class CloudWatchLogsExclusionConfig implements t.TypeOf<typeof GlobalConf
    */
   readonly accounts: string[] | undefined = undefined;
   /**
-   * Exclude replication on all logs. By default this is set to true.
+   * Exclude replication on all logs. By default this is set to false.
    *
    * @remarks
-   * If undefined, this is set to true. When set to false, it disables replication on entire OU or account for that region. Setting OU as `Root` with no region specified and making this false will fail validation since that usage is redundant. Instead use the {@link CloudWatchLogsConfig | enable} parameter in cloudwatch log config which will disable replication across all accounts in all regions.
+   * If undefined, this is set to false. When set to true, it disables replication on entire OU or account for that region.
+   * Setting OU as `Root` with no region specified and making this true will fail validation since that usage is redundant.
+   * Instead use the {@link CloudWatchLogsConfig | enable} parameter in cloudwatch log config which will disable replication across all accounts in all regions.
    */
   readonly excludeAll: boolean | undefined = undefined;
   /**
@@ -784,6 +787,7 @@ export class CloudWatchLogsExclusionConfig implements t.TypeOf<typeof GlobalConf
  *   # default is true, if undefined this is set to true
  *   # if set to false, no replication is performed which is useful in test or temporary environments
  *   enable: true
+ *   replaceLogDestinationArn: arn:aws:logs:us-east-1:111111111111:destination:ReplaceDestination
  *   exclusions:
  *    # in these OUs do not do log replication
  *    - organizationalUnits:
@@ -821,6 +825,19 @@ export class CloudWatchLogsConfig implements t.TypeOf<typeof GlobalConfigTypes.c
    * Exclude Log Groups during replication
    */
   readonly exclusions: CloudWatchLogsExclusionConfig[] | undefined = undefined;
+  /**
+   * Customer defined log subscription filter destination arn, that is associated with with the existing log group.
+   * Accelerator solution needs to disassociate this destination before configuring solution defined subscription filter destination.
+   *
+   * @default
+   * undefined
+   *
+   * @remarks
+   * When no value provided, accelerator solution will not attempt to remove existing customer defined log subscription filter destination.
+   * When existing log group(s) have two subscription filter destinations defined, and none of that is solution configured subscription filter destination,
+   * then solution will fail to configure log replication for such log groups and as a result pipeline will fail.
+   */
+  readonly replaceLogDestinationArn: string | undefined = undefined;
 }
 
 /**
