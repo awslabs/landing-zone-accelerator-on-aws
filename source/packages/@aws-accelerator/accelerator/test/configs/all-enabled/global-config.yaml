@@ -62,6 +62,7 @@ logging:
   cloudwatchLogs:
     enable: true
     dynamicPartitioning: dynamic-partitioning/log-filters.json
+    replaceLogDestinationArn: replaceLogDestinationArn  
     
     exclusions:
       - organizationalUnits:

@@ -2508,27 +2508,28 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "LogsDestinationSetup408DBC7D",
       ],
       "Properties": {
-        "LogDestination": "arn:aws:logs:us-east-1:333333333333:destination:AWSAcceleratorCloudWatchToS3",
-        "LogExclusion": "{"account":"333333333333","region":"us-east-1","logGroupNames":["test1/*"]}",
-        "LogKmsKeyArn": {
-          "Fn::GetAtt": [
-            "AcceleratorCloudWatchKeyF93B6E17",
-            "Arn",
-          ],
-        },
-        "LogRetention": "3653",
-        "LogSubscriptionRole": {
-          "Fn::GetAtt": [
-            "SubscriptionFilterRoleB0B89330",
-            "Arn",
-          ],
-        },
         "ServiceToken": {
           "Fn::GetAtt": [
             "CustomUpdateSubscriptionFilterCustomResourceProviderHandler1BAA7608",
             "Arn",
           ],
         },
+        "acceleratorCreatedLogDestinationArn": "arn:aws:logs:us-east-1:333333333333:destination:AWSAcceleratorCloudWatchToS3",
+        "acceleratorLogKmsKeyArn": {
+          "Fn::GetAtt": [
+            "AcceleratorCloudWatchKeyF93B6E17",
+            "Arn",
+          ],
+        },
+        "acceleratorLogRetentionInDays": "3653",
+        "acceleratorLogSubscriptionRoleArn": {
+          "Fn::GetAtt": [
+            "SubscriptionFilterRoleB0B89330",
+            "Arn",
+          ],
+        },
+        "logExclusionOption": "{"account":"333333333333","region":"us-east-1","logGroupNames":["test1/*"]}",
+        "replaceLogDestinationArn": "arn:aws:logs:us-east-1:111111111111:destination/log-destination",
       },
       "Type": "Custom::UpdateSubscriptionFilter",
       "UpdateReplacePolicy": "Delete",
@@ -6598,23 +6599,23 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
         "LogsDestinationSetup408DBC7D",
       ],
       "Properties": {
-        "LogDestination": "arn:aws:logs:us-east-1:333333333333:destination:AWSAcceleratorCloudWatchToS3",
-        "LogKmsKeyArn": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomUpdateSubscriptionFilterCustomResourceProviderHandler1BAA7608",
+            "Arn",
+          ],
+        },
+        "acceleratorCreatedLogDestinationArn": "arn:aws:logs:us-east-1:333333333333:destination:AWSAcceleratorCloudWatchToS3",
+        "acceleratorLogKmsKeyArn": {
           "Fn::GetAtt": [
             "AcceleratorCloudWatchKeyF93B6E17",
             "Arn",
           ],
         },
-        "LogRetention": "3653",
-        "LogSubscriptionRole": {
+        "acceleratorLogRetentionInDays": "3653",
+        "acceleratorLogSubscriptionRoleArn": {
           "Fn::GetAtt": [
             "SubscriptionFilterRoleB0B89330",
-            "Arn",
-          ],
-        },
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomUpdateSubscriptionFilterCustomResourceProviderHandler1BAA7608",
             "Arn",
           ],
         },

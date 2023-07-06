@@ -9,19 +9,61 @@ exports[`CloudWatchLogsSubscriptionFilter Construct(CloudWatchLogsSubscriptionFi
         "CustomUpdateSubscriptionFilterCustomResourceProviderLogGroup0738E05B",
       ],
       "Properties": {
-        "LogDestination": "LogRetentionArn",
-        "LogKmsKeyArn": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomUpdateSubscriptionFilterCustomResourceProviderHandler1BAA7608",
+            "Arn",
+          ],
+        },
+        "acceleratorCreatedLogDestinationArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":logs:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":111111111111:destination:AWSAcceleratorCloudWatchToS3",
+            ],
+          ],
+        },
+        "acceleratorLogKmsKeyArn": {
           "Fn::GetAtt": [
             "CustomKey1E6D0D07",
             "Arn",
           ],
         },
-        "LogRetention": "731",
-        "LogSubscriptionRole": "testString",
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomUpdateSubscriptionFilterCustomResourceProviderHandler1BAA7608",
-            "Arn",
+        "acceleratorLogRetentionInDays": "731",
+        "acceleratorLogSubscriptionRoleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::111111111111:role/AWSAccelerator-LoggingSta-SubscriptionFilterRole",
+            ],
+          ],
+        },
+        "replaceLogDestinationArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":logs:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":111111111111:destination:ReplaceDestination",
+            ],
           ],
         },
       },

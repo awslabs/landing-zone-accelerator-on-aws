@@ -917,7 +917,7 @@ export class LoggingStack extends AcceleratorStack {
     const exclusionAccountMap: cloudwatchExclusionProcessedItem[] = this.prepareCloudWatchExclusionList(
       this.props.globalConfig.logging.cloudwatchLogs?.exclusions ?? [],
     );
-    let accountRegionExclusion: cloudwatchExclusionProcessedItem | undefined = undefined;
+    let accountRegionExclusion: cloudwatchExclusionProcessedItem | undefined;
     if (exclusionAccountMap.length > 0) {
       const accountSpecificExclusion = exclusionAccountMap.filter(obj => {
         return obj.account === cdk.Stack.of(this).account && obj.region === cdk.Stack.of(this).region;
@@ -939,9 +939,10 @@ export class LoggingStack extends AcceleratorStack {
       logDestinationArn: logsDestinationArnValue,
       logsKmsKey: this.cloudwatchKey,
       logArchiveAccountId: this.props.accountsConfig.getLogArchiveAccountId(),
-      logsRetentionInDaysValue: this.props.globalConfig.cloudwatchLogRetentionInDays.toString(),
+      logsRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays.toString(),
       subscriptionFilterRoleArn: subscriptionFilterRole.roleArn,
-      exclusionSetting: accountRegionExclusion!,
+      logExclusionOption: accountRegionExclusion,
+      replaceLogDestinationArn: this.props.globalConfig.logging.cloudwatchLogs?.replaceLogDestinationArn,
     });
 
     //For every new log group that is created, set up subscription, KMS and retention

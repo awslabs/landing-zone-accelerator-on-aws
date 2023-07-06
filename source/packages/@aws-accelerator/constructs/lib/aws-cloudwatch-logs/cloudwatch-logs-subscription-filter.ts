@@ -30,31 +30,36 @@ export interface CloudWatchLogsCreateProps {
    *
    * Log Destination Arn to which all the logs will get forwarded to
    */
-  logDestinationArn: string;
+  readonly logDestinationArn: string;
   /**
    *
    * KMS key to encrypt the Lambda environment variables
    */
-  logsKmsKey: cdk.aws_kms.IKey;
+  readonly logsKmsKey: cdk.aws_kms.IKey;
   /**
    *
    * CloudWatch Retention in days from global config
    */
-  logsRetentionInDaysValue: string;
+  readonly logsRetentionInDays: string;
   /**
    *
    * Subscription Filter Arn
    */
-  subscriptionFilterRoleArn: string;
+  readonly subscriptionFilterRoleArn: string;
   /**
    *
-   * AWS Partition where code is being executed
+   * LogArchive account Id
    */
-  logArchiveAccountId: string;
+  readonly logArchiveAccountId: string;
   /**
-   * CloudWatch Logs exclusion setting
+   * CloudWatch Logs exclusion options
    */
-  exclusionSetting?: cloudwatchExclusionItem;
+  readonly logExclusionOption?: cloudwatchExclusionItem;
+  /**
+   * Existing customer defined log subscription destination arn, which accelerator needs to remove before configuring solution defined subscription destination.
+   *
+   */
+  readonly replaceLogDestinationArn?: string;
 }
 
 /**
@@ -108,11 +113,14 @@ export class CloudWatchLogsSubscriptionFilter extends Construct {
       resourceType: UPDATE_SUBSCRIPTION_FILTER,
       serviceToken: provider.serviceToken,
       properties: {
-        LogRetention: props.logsRetentionInDaysValue,
-        LogDestination: props.logDestinationArn,
-        LogSubscriptionRole: props.subscriptionFilterRoleArn,
-        LogKmsKeyArn: props.logsKmsKey.keyArn,
-        LogExclusion: JSON.stringify(props.exclusionSetting!),
+        acceleratorLogRetentionInDays: props.logsRetentionInDays,
+        acceleratorCreatedLogDestinationArn: props.logDestinationArn,
+        acceleratorLogSubscriptionRoleArn: props.subscriptionFilterRoleArn,
+        acceleratorLogKmsKeyArn: props.logsKmsKey.keyArn,
+        logExclusionOption: props.logExclusionOption
+          ? JSON.stringify(props.logExclusionOption)
+          : props.logExclusionOption,
+        replaceLogDestinationArn: props.replaceLogDestinationArn,
       },
     });
 
@@ -125,7 +133,7 @@ export class CloudWatchLogsSubscriptionFilter extends Construct {
       (stack.node.tryFindChild(`${provider.node.id}LogGroup`) as cdk.aws_logs.LogGroup) ??
       new cdk.aws_logs.LogGroup(stack, `${provider.node.id}LogGroup`, {
         logGroupName: `/aws/lambda/${(provider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref}`,
-        retention: parseInt(props.logsRetentionInDaysValue),
+        retention: parseInt(props.logsRetentionInDays),
         encryptionKey: props.logsKmsKey,
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       });
