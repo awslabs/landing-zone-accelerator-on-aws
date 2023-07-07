@@ -577,6 +577,8 @@ export class Ec2FirewallInstanceConfig implements t.TypeOf<typeof Customizations
    * is deployed to. This config file can be consumed by third-party firewall vendors that support pulling a configuration file from S3.
    *
    * Supported replacements:
+   * * Hostname replacement - look up the name of the firewall instance
+   *   * Format: `${ACCEL_LOOKUP::EC2:INSTANCE:HOSTNAME}` -- translates to the logical name of the instance as configured in customizations-config.yaml.
    * * VPC replacements - look up metadata about the VPC the firewall is deployed to:
    *   * Format: `${ACCEL_LOOKUP::EC2:VPC:<METADATA_TYPE>_<INDEX>}`, where `<METADATA_TYPE>` is a type listed below,
    * and `<INDEX>` is the index of the VPC CIDR range.
@@ -775,7 +777,7 @@ export class Ec2FirewallAutoScalingGroupConfig
    *     * NETWORKIP - the network address of the subnet (i.e. 10.0.0.0)
    *     * ROUTERIP - the VPC router address of the subnet (i.e. 10.0.0.1)
    *   * Example usage: `${ACCEL_LOOKUP::EC2:SUBNET:CIDR:firewall-data-subnet-a}` - translates to the CIDR range of a subnet named `firewall-data-subnet-a`
-   * * Network interface replacements are NOT supported for firewall AutoScaling groups.
+   * * Hostname and network interface replacements are NOT supported for firewall AutoScaling groups.
    *
    * For replacements that are supported in firewall userdata, see {@link LaunchTemplateConfig.userData}.
    */

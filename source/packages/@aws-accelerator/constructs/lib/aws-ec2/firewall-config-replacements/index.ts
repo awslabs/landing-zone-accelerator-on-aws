@@ -31,6 +31,7 @@ export async function handler(
   const assetBucketName: string = event.ResourceProperties['assetBucketName'];
   const configBucketName: string = event.ResourceProperties['configBucketName'];
   const configFileKey: string | undefined = event.ResourceProperties['configFile'];
+  const firewallName: string | undefined = event.ResourceProperties['firewallName'];
   const instanceId: string | undefined = event.ResourceProperties['instanceId'];
   const licenseFileKey: string | undefined = event.ResourceProperties['licenseFile'];
   const vpcId: string = event.ResourceProperties['vpcId'];
@@ -48,7 +49,9 @@ export async function handler(
       await copyLicenseFile(s3Client, assetBucketName, configBucketName, licenseFileKey);
       //
       // Process config file replacements
-      const replacements = configFileKey ? await initReplacements(ec2Client, vpcId, instanceId) : undefined;
+      const replacements = configFileKey
+        ? await initReplacements(ec2Client, vpcId, firewallName, instanceId)
+        : undefined;
       await processConfigFileReplacements(s3Client, assetBucketName, configBucketName, configFileKey, replacements);
 
       return {
@@ -174,7 +177,7 @@ function transformConfigFile(replacements: VpcReplacements, configFile?: string)
   }
   //
   // Process config file replacements
-  const variables = [...new Set(configFile.match(/\$\{.+\}/g) ?? [])];
+  const variables = [...new Set(configFile.match(/\$\{ACCEL_LOOKUP.+\}/gi) ?? [])];
   const replacedVariables = replacements.processReplacements(variables);
   //
   // Transform variables to regex
