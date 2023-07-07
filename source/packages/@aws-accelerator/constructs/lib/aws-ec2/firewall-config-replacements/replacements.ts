@@ -125,6 +125,10 @@ interface IVpcReplacements {
    */
   readonly replacementRegex: {
     /**
+     * Hostname replacement regex
+     */
+    hostname: RegExp;
+    /**
      * ENI match regex
      */
     eni: RegExp;
@@ -236,6 +240,10 @@ interface IVpcReplacements {
     vpcRouterIp: RegExp;
   };
   /**
+   * The name of the firewall instance
+   */
+  readonly firewallName?: string;
+  /**
    * The ID of the firewall instance
    */
   readonly instanceId?: string;
@@ -288,6 +296,13 @@ enum FirewallReplacementType {
    * ${ACCEL_LOOKUP::EC2:ENI_0:SUBNET_ROUTERIP}
    */
   ENI_SUBNET_ROUTER_IP = '^\\$\\{ACCEL_LOOKUP::EC2:ENI_\\d:SUBNET_ROUTERIP\\}$',
+  /**
+   * Hostname replacement regex
+   *
+   * @example
+   * ${ACCEL_LOOKUP::EC2:INSTANCE:HOSTNAME}
+   */
+  HOSTNAME = '^\\$\\{ACCEL_LOOKUP::EC2:INSTANCE:HOSTNAME\\}$',
   /**
    * Subnet match regex
    */
@@ -409,6 +424,10 @@ export class VpcReplacements implements IVpcReplacements {
      */
     eniSubnetRouterIp: RegExp;
     /**
+     * Hostname replacement regex
+     */
+    hostname: RegExp;
+    /**
      * Subnet match regex
      */
     subnet: RegExp;
@@ -474,9 +493,10 @@ export class VpcReplacements implements IVpcReplacements {
     vpcRouterIp: RegExp;
   };
   public readonly vpcId: string;
+  public readonly firewallName?: string;
   public readonly instanceId?: string;
 
-  constructor(vpcId: string, instanceId?: string) {
+  constructor(vpcId: string, firewallName?: string, instanceId?: string) {
     this.replacementRegex = {
       eni: new RegExp(FirewallReplacementType.ENI, 'i'),
       eniPrivateIp: new RegExp(FirewallReplacementType.ENI_PRIVATEIP, 'i'),
@@ -485,6 +505,7 @@ export class VpcReplacements implements IVpcReplacements {
       eniSubnetMask: new RegExp(FirewallReplacementType.ENI_SUBNET_MASK, 'i'),
       eniSubnetNetIp: new RegExp(FirewallReplacementType.ENI_SUBNET_NETWORK_IP, 'i'),
       eniSubnetRouterIp: new RegExp(FirewallReplacementType.ENI_SUBNET_ROUTER_IP, 'i'),
+      hostname: new RegExp(FirewallReplacementType.HOSTNAME, 'i'),
       subnet: new RegExp(FirewallReplacementType.SUBNET, 'i'),
       subnetCidr: new RegExp(FirewallReplacementType.SUBNET_CIDR, 'i'),
       subnetMask: new RegExp(FirewallReplacementType.SUBNET_NETMASK, 'i'),
@@ -497,6 +518,7 @@ export class VpcReplacements implements IVpcReplacements {
       vpcRouterIp: new RegExp(FirewallReplacementType.VPC_ROUTERIP, 'i'),
     };
     this.vpcId = vpcId;
+    this.firewallName = firewallName;
     this.instanceId = instanceId;
   }
 
@@ -812,6 +834,8 @@ export class VpcReplacements implements IVpcReplacements {
         replacements.push(this.processSubnetReplacement(variable));
       } else if (this.replacementRegex.eni.test(variable)) {
         replacements.push(this.processNetworkInterfaceReplacement(variable));
+      } else if (this.replacementRegex.hostname.test(variable)) {
+        replacements.push(this.firewallName ?? '');
       } else {
         throw new Error(
           `Unable to parse replacement variable ${variable}. Please verify the variable is using the correct syntax.`,
@@ -1062,9 +1086,10 @@ class NetworkInterface implements INetworkInterface {
 export async function initReplacements(
   ec2Client: EC2Client,
   vpcId: string,
+  firewallName?: string,
   instanceId?: string,
 ): Promise<VpcReplacements> {
-  const replacements = new VpcReplacements(vpcId, instanceId);
+  const replacements = new VpcReplacements(vpcId, firewallName, instanceId);
   await replacements.init(ec2Client);
   return replacements;
 }

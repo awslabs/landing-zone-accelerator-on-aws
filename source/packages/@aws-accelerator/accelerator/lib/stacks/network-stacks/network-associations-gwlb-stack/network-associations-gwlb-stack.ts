@@ -227,6 +227,7 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
             { assetBucketName: this.firewallConfigDetails.assetBucketName },
             { configBucketName: this.firewallConfigDetails.configBucketName },
             { configFile: firewallInstance.configFile },
+            { firewallName: instance.name },
             { instanceId: instance.instanceId },
             { licenseFile: firewallInstance.licenseFile },
             { vpcId: getVpc(this.vpcMap, firewallInstance.vpc) as string },

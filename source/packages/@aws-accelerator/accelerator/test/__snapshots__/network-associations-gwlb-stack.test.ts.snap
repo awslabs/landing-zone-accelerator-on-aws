@@ -489,6 +489,7 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
         "assetBucketName": "aws-accelerator-assets-111111111111-us-east-1",
         "configBucketName": "aws-accelerator-firewall-config-555555555555-us-east-1",
         "configFile": "instance-config.txt",
+        "firewallName": "accelerator-firewall",
         "instanceId": {
           "Ref": "NetworkInspectionacceleratorFirewallFirewall23AAB613",
         },
