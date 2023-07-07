@@ -112,6 +112,7 @@ exports[`Get Network Firewall endpoint Construct(GetNetworkFirewallEndpoint):  S
               "Statement": [
                 {
                   "Action": [
+                    "ec2:DescribeAvailabilityZones",
                     "network-firewall:DescribeFirewall",
                   ],
                   "Effect": "Allow",
