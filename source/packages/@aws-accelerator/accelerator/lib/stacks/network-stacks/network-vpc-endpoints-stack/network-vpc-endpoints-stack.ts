@@ -41,6 +41,7 @@ import { SsmResourceType } from '@aws-accelerator/utils';
 
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import { NetworkStack } from '../network-stack';
+import { getAvailabilityZoneMap } from '../utils/getter-utils';
 import { setIpamSubnetRouteTableEntryArray } from '../utils/setter-utils';
 
 export class NetworkVpcEndpointsStack extends NetworkStack {
@@ -220,7 +221,10 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
 
       // Get Network Firewall
       const firewall = this.firewallMap.get(routeTableEntryItem.target!);
-      const endpointAz = `${cdk.Stack.of(this).region}${routeTableEntryItem.targetAvailabilityZone}`;
+      const endpointAz =
+        typeof routeTableEntryItem.targetAvailabilityZone === 'number'
+          ? `${getAvailabilityZoneMap(cdk.Stack.of(this).region)}${routeTableEntryItem.targetAvailabilityZone}`
+          : `${cdk.Stack.of(this).region}${routeTableEntryItem.targetAvailabilityZone}`;
 
       if (!firewall) {
         this.logger.error(`Unable to locate Network Firewall ${routeTableEntryItem.target}`);

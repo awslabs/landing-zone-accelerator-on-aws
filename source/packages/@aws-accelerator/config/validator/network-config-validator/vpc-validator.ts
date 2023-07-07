@@ -14,6 +14,7 @@ import { ShareTargets } from '../../lib/common-types';
 import {
   NetworkConfig,
   NetworkConfigTypes,
+  NfwFirewallConfig,
   ResolverRuleConfig,
   RouteTableEntryConfig,
   SecurityGroupConfig,
@@ -373,16 +374,19 @@ export class VpcValidator {
    * @param routeTableName
    * @param vpcItem
    * @param values
+   * @param helpers
+   * @param errors
    */
   private validateRouteEntryTarget(
     routeTableEntryItem: RouteTableEntryConfig,
     routeTableName: string,
     vpcItem: VpcConfig | VpcTemplatesConfig,
     values: NetworkConfig,
+    helpers: NetworkValidatorFunctions,
     errors: string[],
   ) {
     const gwlbs = values.centralNetworkServices?.gatewayLoadBalancers;
-    const networkFirewalls = values.centralNetworkServices?.networkFirewall?.firewalls;
+    const networkFirewalls = values.centralNetworkServices?.networkFirewall?.firewalls ?? [];
     const tgws = values.transitGateways;
     const vpcs = [...values.vpcs, ...(values.vpcTemplates ?? [])];
     const vpcPeers = values.vpcPeering;
@@ -404,22 +408,9 @@ export class VpcValidator {
       );
     }
 
-    // Throw error if network firewall endpoint doesn't exist
-    if (
-      routeTableEntryItem.type === 'networkFirewall' &&
-      !networkFirewalls?.find(item => item.name === routeTableEntryItem.target)
-    ) {
-      errors.push(
-        `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} target ${routeTableEntryItem.target} does not exist`,
-      );
-    }
-
-    // Throw error if network firewall target AZ doesn't exist
-    if (routeTableEntryItem.type === 'networkFirewall' && !routeTableEntryItem.targetAvailabilityZone) {
-      errors.push(
-        `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} with type networkFirewall must include targetAvailabilityZone`,
-      );
-    }
+    //
+    // Validate network firewall route entry
+    this.validateNfwRouteEntry(routeTableEntryItem, routeTableName, vpcItem, networkFirewalls, helpers, errors);
 
     // Throw error if NAT gateway doesn't exist
     if (
@@ -453,6 +444,7 @@ export class VpcValidator {
    * Validate route table entries
    * @param values
    * @param vpcItem
+   * @param helpers
    * @param errors
    */
   private validateRouteTableEntries(
@@ -485,10 +477,110 @@ export class VpcValidator {
             entry.type,
           )
         ) {
-          this.validateRouteEntryTarget(entry, routeTableItem.name, vpcItem, values, errors);
+          this.validateRouteEntryTarget(entry, routeTableItem.name, vpcItem, values, helpers, errors);
         }
       });
     });
+  }
+
+  /**
+   * Validate network firewall route entry
+   * @param routeTableEntryItem
+   * @param routeTableName
+   * @param vpcItem
+   * @param networkFirewalls
+   * @param helpers
+   * @param errors
+   */
+  private validateNfwRouteEntry(
+    routeTableEntryItem: RouteTableEntryConfig,
+    routeTableName: string,
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    networkFirewalls: NfwFirewallConfig[],
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+  ) {
+    //
+    // Validate network firewall target exists
+    if (routeTableEntryItem.type === 'networkFirewall') {
+      const nfwTarget = networkFirewalls.find(item => item.name === routeTableEntryItem.target);
+      if (!nfwTarget) {
+        errors.push(
+          `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} target Network Firewall "${routeTableEntryItem.target}" does not exist in network-config.yaml`,
+        );
+      } else {
+        if (nfwTarget.vpc !== vpcItem.name) {
+          errors.push(
+            `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} target Network Firewall "${routeTableEntryItem.target}" must be deployed to the same VPC as the route table. Configured VPC target: ${nfwTarget.vpc}`,
+          );
+        } else {
+          //
+          // Validate target AZ exists
+          this.validateNfwRouteEntryTarget(routeTableEntryItem, routeTableName, vpcItem, nfwTarget, helpers, errors);
+        }
+      }
+    }
+  }
+
+  /**
+   * Validate network firewall route entry AZ target
+   * @param routeTableEntryItem
+   * @param routeTableName
+   * @param vpcItem
+   * @param nfwTarget
+   * @param helpers
+   * @param errors
+   */
+  private validateNfwRouteEntryTarget(
+    routeTableEntryItem: RouteTableEntryConfig,
+    routeTableName: string,
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    nfwTarget: NfwFirewallConfig,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+  ) {
+    const endpointAzs: (string | number)[] = [];
+    //
+    // Get subnet availability zones
+    nfwTarget.subnets.forEach(subnetItem => {
+      const subnet = helpers.getSubnet(vpcItem, subnetItem);
+      if (subnet && subnet.availabilityZone) {
+        endpointAzs.push(subnet.availabilityZone);
+      }
+    });
+    //
+    // Throw error if network firewall target AZ doesn't exist
+    if (!routeTableEntryItem.targetAvailabilityZone) {
+      errors.push(
+        `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} with type networkFirewall must include targetAvailabilityZone`,
+      );
+    } else {
+      //
+      // Validate AZ is correct format
+      if (
+        typeof routeTableEntryItem.targetAvailabilityZone === 'string' &&
+        !helpers.matchesRegex(routeTableEntryItem.targetAvailabilityZone, '^[a-z]{1}$')
+      ) {
+        errors.push(
+          `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} target AZ "${routeTableEntryItem.targetAvailabilityZone}" is not in the correct format. AZ must be a single alphanumeric character.`,
+        );
+      }
+      if (
+        typeof routeTableEntryItem.targetAvailabilityZone === 'number' &&
+        !helpers.matchesRegex(routeTableEntryItem.targetAvailabilityZone.toString(), '^[0-9]{1}$')
+      ) {
+        errors.push(
+          `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} target AZ "${routeTableEntryItem.targetAvailabilityZone}" is not in the correct format. AZ must be a single alphanumeric character.`,
+        );
+      }
+      //
+      // Validate endpoint AZ exists
+      if (!endpointAzs.includes(routeTableEntryItem.targetAvailabilityZone)) {
+        errors.push(
+          `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} target AZ "${routeTableEntryItem.targetAvailabilityZone}" does not exist for Network Firewall "${routeTableEntryItem.target}". Configured AZs: ${endpointAzs}`,
+        );
+      }
+    }
   }
 
   /**

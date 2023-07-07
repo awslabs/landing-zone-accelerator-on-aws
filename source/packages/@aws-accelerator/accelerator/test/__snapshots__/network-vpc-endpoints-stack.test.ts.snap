@@ -277,6 +277,17 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
       },
       "Type": "AWS::Route53Resolver::ResolverEndpoint",
     },
+    "AzIdFirewallFlowLogGroup1F60EDC3": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
     "CustomGetIpamSubnetCidrCustomResourceProviderHandler8C11DBB5": {
       "DependsOn": [
         "CustomGetIpamSubnetCidrCustomResourceProviderRoleADF93CF4",
@@ -437,6 +448,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
               "Statement": [
                 {
                   "Action": [
+                    "ec2:DescribeAvailabilityZones",
                     "network-firewall:DescribeFirewall",
                   ],
                   "Effect": "Allow",
@@ -1258,7 +1270,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
           "LogDestinationConfigs": [
             {
               "LogDestination": {
-                "bucketName": "aws-accelerator-central-logs-333333333333-us-west-2",
+                "bucketName": "existing-central-log-bucket",
                 "prefix": "firewall",
               },
               "LogDestinationType": "S3",
@@ -1302,7 +1314,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
             "Arn",
           ],
         },
-        "endpointAz": "us-east-1a",
+        "endpointAz": "use1-az1",
         "firewallArn": {
           "Ref": "NetworkSecondaryazIdFirewallNetworkFirewall7A5509D1",
         },
@@ -1335,7 +1347,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
             "Arn",
           ],
         },
-        "endpointAz": "us-east-1b",
+        "endpointAz": "use1-az2",
         "firewallArn": {
           "Ref": "NetworkSecondaryazIdFirewallNetworkFirewall7A5509D1",
         },
@@ -1587,7 +1599,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
     },
     "SsmParamNetworkEndpointss3DnsA83EEA61": {
       "DependsOn": [
-        "SsmParamNetworkEndpointskmsPhz4C558915",
+        "SsmParamNetworkEndpointskmsDns52AB3E63",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/s3/dns",
@@ -1617,9 +1629,6 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointss3PhzE2EECCBF": {
-      "DependsOn": [
-        "SsmParamNetworkEndpointskmsPhz4C558915",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/s3/hostedZoneId",
         "Type": "String",
@@ -1773,7 +1782,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
     },
     "SsmParamNetworkInspectionAcceleratorFirewallFirewallArn40D3C53C": {
       "DependsOn": [
-        "SsmParamacceleratorInboundResolverEndpoint80E88844",
+        "SsmParamNetworkEndpointss3PhzE2EECCBF",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/networkFirewall/accelerator-firewall/arn",
@@ -1805,6 +1814,9 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamacceleratorInboundResolverEndpoint80E88844": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointss3PhzE2EECCBF",
+      ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/endpoints/accelerator-inbound/id",
         "Type": "String",
@@ -1819,7 +1831,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
     },
     "SsmParamacceleratorOutboundResolverEndpoint9F3A81CE": {
       "DependsOn": [
-        "SsmParamacceleratorInboundResolverEndpoint80E88844",
+        "SsmParamNetworkEndpointss3PhzE2EECCBF",
       ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/endpoints/accelerator-outbound/id",

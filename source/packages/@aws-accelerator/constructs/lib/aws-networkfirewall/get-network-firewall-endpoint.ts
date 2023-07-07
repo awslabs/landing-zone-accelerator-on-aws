@@ -61,7 +61,7 @@ export class GetNetworkFirewallEndpoint extends cdk.Resource implements IGetNetw
       policyStatements: [
         {
           Effect: 'Allow',
-          Action: ['network-firewall:DescribeFirewall'],
+          Action: ['ec2:DescribeAvailabilityZones', 'network-firewall:DescribeFirewall'],
           Resource: '*',
         },
       ],

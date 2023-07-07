@@ -600,9 +600,19 @@ vpcs:
       - name: Network-Secondary-B-Rt
         routes: []
       - name: Network-Secondary-C-Rt
-        routes: []
+        routes:
+          - name: NfwRoute
+            destination: 0.0.0.0/0
+            type: networkFirewall
+            target: az-id-firewall
+            targetAvailabilityZone: 1
       - name: Network-Secondary-D-Rt
-        routes: []
+        routes:
+          - name: NfwRoute
+            destination: 0.0.0.0/0
+            type: networkFirewall
+            target: az-id-firewall
+            targetAvailabilityZone: 2
     subnets:
       - name: Network-Secondary-A
         availabilityZone: a

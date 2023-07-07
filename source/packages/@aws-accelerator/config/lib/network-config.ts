@@ -213,7 +213,7 @@ export class NetworkConfigTypes {
     destinationPrefixList: t.optional(t.nonEmptyString),
     type: t.optional(this.routeTableEntryTypeEnum),
     target: t.optional(t.nonEmptyString),
-    targetAvailabilityZone: t.optional(t.nonEmptyString),
+    targetAvailabilityZone: t.optional(t.union([t.nonEmptyString, t.number])),
   });
 
   static readonly routeTableConfig = t.interface({
@@ -2167,11 +2167,13 @@ export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes
    * The Availability Zone (AZ) the target resides in.
    *
    * @remarks
-   * Include only the letter of the AZ name (i.e. 'a' for 'us-east-1a').
+   * Include only the letter of the AZ name (i.e. 'a' for 'us-east-1a') to target a subnet created in a specific AZ. Use an integer
+   * (i.e. 1) for subnets using a physical mapping ID to an AZ. Please reference the documentation {@link https://docs.aws.amazon.com/ram/latest/userguide/working-with-az-ids.html | Availability Zone IDs for your AWS resources}
+   *  for more information.
    *
    * Note: Leave undefined for targets of route entry types other than `networkFirewall`.
    */
-  readonly targetAvailabilityZone: string | undefined = undefined;
+  readonly targetAvailabilityZone: string | number | undefined = undefined;
 }
 
 /**
@@ -2275,8 +2277,8 @@ export class SubnetConfig implements t.TypeOf<typeof NetworkConfigTypes.subnetCo
    * Please be aware that any downstream dependencies may cause this property update to fail.
    *
    * Include only the letter of the AZ name (i.e. 'a' for 'us-east-1a') to have the subnet created in a specific AZ. Use an integer
-   * (i.e. 1) for a physical mapping ID to an AZ. Please reference the documentation {@link https://docs.aws.amazon.com/ram/latest/userguide/working-with-az-ids.html }
-   * for more information.
+   * (i.e. 1) for a physical mapping ID to an AZ. Please reference the documentation {@link https://docs.aws.amazon.com/ram/latest/userguide/working-with-az-ids.html | Availability Zone IDs for your AWS resources}
+   *  for more information.
    */
   readonly availabilityZone: string | number | undefined = undefined;
 

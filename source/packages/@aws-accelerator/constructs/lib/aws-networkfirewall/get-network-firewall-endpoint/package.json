@@ -38,6 +38,7 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "aws-sdk": "2.1379.0"
+    "@aws-sdk/client-ec2": "3.347.1",
+    "@aws-sdk/client-network-firewall": "3.347.1"
   }
 }
