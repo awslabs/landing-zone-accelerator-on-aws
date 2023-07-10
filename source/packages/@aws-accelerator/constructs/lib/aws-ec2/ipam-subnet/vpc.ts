@@ -19,15 +19,11 @@ interface IVpc {
   /**
    * The CIDRs of the VPC allocated by IPAM
    */
-  readonly allocatedCidrs: IPv4CidrRange[];
+  readonly allocatedCidrs: IAllocatedCidr[];
   /**
    * The friendly name of the VPC
    */
   readonly name: string;
-  /**
-   * The existing subnets in the VPC
-   */
-  readonly subnets: Subnet[];
   /**
    * The ID of the VPC
    */
@@ -46,9 +42,8 @@ interface VpcProps {
 }
 
 export class Vpc implements IVpc {
-  public allocatedCidrs: IPv4CidrRange[] = [];
+  public allocatedCidrs: AllocatedCidr[] = [];
   public name = '';
-  public subnets: Subnet[] = [];
   public readonly vpcId: string;
   private readonly baseRanges: IPv4CidrRange[];
   private readonly ec2 = new AWS.EC2();
@@ -66,6 +61,9 @@ export class Vpc implements IVpc {
     return this;
   }
 
+  /**
+   * Retrieve VPC details
+   */
   private async vpcDetails(): Promise<void> {
     // Get VPC details
     const vpcDetails = await throttlingBackOff(() => this.ec2.describeVpcs({ VpcIds: [this.vpcId] }).promise());
@@ -75,35 +73,45 @@ export class Vpc implements IVpc {
     }
 
     // Determine CIDRs allocated by IPAM
-    const allocations: IPv4CidrRange[] = [];
     for (const baseRange of this.baseRanges) {
       for (const item of vpcDetails.Vpcs[0].CidrBlockAssociationSet ?? []) {
-        if (!item.CidrBlock) {
-          throw new Error(`Unable to retrieve CIDR block for VPC ${this.vpcId}`);
-        }
-
         // Compare VPC CIDR to base CIDR range
-        const vpcRange = IPv4CidrRange.fromCidr(item.CidrBlock);
-        if (vpcRange.inside(baseRange) || vpcRange.isEquals(baseRange)) {
-          allocations.push(vpcRange);
+        const vpcRange = this.validateVpcCidr(item);
+        if (vpcRange && (vpcRange.inside(baseRange) || vpcRange.isEquals(baseRange))) {
+          this.setAllocatedCidr(vpcRange);
         }
       }
     }
-    if (allocations.length === 0) {
-      throw new Error(`Unable to determine VPC CIDRs allocated by IPAM for VPC ${this.vpcId}`);
-    }
-
+    //
     // Get name tag
     const nameTag = vpcDetails.Vpcs[0].Tags?.filter(item => item.Key === 'Name')[0].Value;
     if (!nameTag) {
       throw new Error(`Unable to retrieve name tag for VPC ${this.vpcId}`);
     }
-
+    //
     // Set property values
-    this.allocatedCidrs = allocations;
     this.name = nameTag;
   }
 
+  /**
+   * Validate CIDR block state and return CIDR range object
+   * @param cidrItem
+   * @returns IPv4CidrRange | undefined
+   */
+  private validateVpcCidr(cidrItem: AWS.EC2.VpcCidrBlockAssociation): IPv4CidrRange | undefined {
+    if (!cidrItem.CidrBlock) {
+      throw new Error(`Unable to retrieve CIDR block for VPC ${this.vpcId}`);
+    }
+    if (cidrItem.CidrBlockState?.State === 'associated') {
+      return IPv4CidrRange.fromCidr(cidrItem.CidrBlock);
+    }
+    return;
+  }
+
+  /**
+   * Validate API response subnet state
+   * @param subnet
+   */
   private validateSubnet(subnet: AWS.EC2.Subnet) {
     if (!subnet.SubnetId) {
       throw new Error(`Unable to retrieve subnet ID`);
@@ -113,21 +121,23 @@ export class Vpc implements IVpc {
     }
   }
 
-  private getSubnets(subnetLists: AWS.EC2.SubnetList | undefined): Subnet[] {
-    const subnets: Subnet[] = [];
-
-    for (const subnet of subnetLists ?? []) {
+  /**
+   * Add subnets to the allocatedCidrs array
+   * @param subnetList
+   */
+  private setSubnets(subnetList: AWS.EC2.SubnetList | undefined): void {
+    for (const subnet of subnetList ?? []) {
       this.validateSubnet(subnet);
 
       // Determine if subnet is in scope of IPAM
       const subnetCidr = IPv4CidrRange.fromCidr(subnet.CidrBlock!);
       for (const vpcRange of this.allocatedCidrs) {
-        if (subnetCidr.inside(vpcRange) || subnetCidr.isEquals(vpcRange)) {
+        if (subnetCidr.inside(vpcRange.cidr) || subnetCidr.isEquals(vpcRange.cidr)) {
           // Get name tag
           const nameTag = subnet.Tags?.filter(item => item.Key === 'Name')[0].Value;
 
           // Push object to array
-          subnets.push(
+          vpcRange.addSubnet(
             new Subnet({
               allocatedCidr: subnetCidr,
               mapPublicIpOnLaunch: subnet.MapPublicIpOnLaunch ?? false,
@@ -139,13 +149,13 @@ export class Vpc implements IVpc {
         }
       }
     }
-
-    return subnets;
   }
 
+  /**
+   * Retrieve subnet details for the VPC
+   */
   private async subnetDetails(): Promise<void> {
     let nextToken: string | undefined = undefined;
-    const subnets: Subnet[] = [];
     do {
       // Get subnet details
       const page = await throttlingBackOff(() =>
@@ -154,14 +164,67 @@ export class Vpc implements IVpc {
           .promise(),
       );
 
-      // Iterate through subnets
-      subnets.push(...this.getSubnets(page.Subnets));
+      this.setSubnets(page.Subnets);
 
       nextToken = page.NextToken;
     } while (nextToken);
+  }
 
-    // Set property value
-    this.subnets = subnets;
+  /**
+   * Mutator method to set an allocated CIDR
+   * @param cidr IPv4CidrRange
+   */
+  private setAllocatedCidr(cidr: IPv4CidrRange) {
+    this.allocatedCidrs.push(new AllocatedCidr(cidr));
+  }
+
+  /**
+   * Accessor method to return a subnet by name
+   * @param name
+   * @returns
+   */
+  public getSubnetByName(name: string): Subnet {
+    let subnet: Subnet | undefined = undefined;
+
+    for (const cidr of this.allocatedCidrs) {
+      subnet = cidr.subnets.find(item => item.name === name);
+      if (subnet) {
+        break;
+      }
+    }
+    if (!subnet) {
+      throw new Error(`Subnet with Name tag "${name}" does not exist in ${this.vpcId}`);
+    }
+    return subnet;
+  }
+}
+
+interface IAllocatedCidr {
+  /**
+   * The CIDR of the allocated CIDR block
+   */
+  readonly cidr: IPv4CidrRange;
+  /**
+   * The subnets associated with the CIDR
+   */
+  readonly subnets: Subnet[];
+}
+
+export class AllocatedCidr implements IAllocatedCidr {
+  public readonly cidr: IPv4CidrRange;
+  public readonly subnets: Subnet[];
+
+  constructor(cidr: IPv4CidrRange) {
+    this.cidr = cidr;
+    this.subnets = [];
+  }
+
+  /**
+   * Mutator method to add a subnet to the allocated CIDR
+   * @param subnet
+   */
+  public addSubnet(subnet: Subnet) {
+    this.subnets.push(subnet);
   }
 }
 
