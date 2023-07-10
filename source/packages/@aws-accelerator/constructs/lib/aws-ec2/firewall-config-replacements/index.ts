@@ -177,7 +177,7 @@ function transformConfigFile(replacements: VpcReplacements, configFile?: string)
   }
   //
   // Process config file replacements
-  const variables = [...new Set(configFile.match(/\$\{ACCEL_LOOKUP.+\}/gi) ?? [])];
+  const variables = [...new Set(configFile.match(/\$\{ACCEL_LOOKUP::EC2(:[a-z0-9_]+){2}(:.[^}]+){0,1}\}/gi) ?? [])];
   const replacedVariables = replacements.processReplacements(variables);
   //
   // Transform variables to regex
