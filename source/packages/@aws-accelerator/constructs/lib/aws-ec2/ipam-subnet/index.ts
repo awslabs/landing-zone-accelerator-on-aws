@@ -15,7 +15,7 @@ import { IPv4CidrRange, IPv4Prefix, Pool } from 'ip-num';
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
 
-import { Vpc, vpcInit } from './vpc';
+import { AllocatedCidr, Vpc, vpcInit } from './vpc';
 
 let ec2: AWS.EC2;
 export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
@@ -72,7 +72,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       // Initialize the VPC
       vpc = await vpcInit({ basePool, vpcId });
       // Get the subnet CIDR
-      const subnetCidr = nextCidr(netmaskLength, vpc);
+      const subnetCidr = getNextCidr(netmaskLength, vpc);
 
       // Set name tag
       tags.push({ Key: 'Name', Value: subnetName });
@@ -114,11 +114,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       // Initialize the VPC
       vpc = await vpcInit({ basePool, vpcId });
       // Get existing subnet from subnet array
-      const subnet = vpc.subnets.find(item => item.name === subnetName);
-
-      if (!subnet) {
-        throw new Error(`Unable to locate existing subnet ${subnetName}`);
-      }
+      const subnet = vpc.getSubnetByName(subnetName);
 
       // Throw error if CIDR prefix value has changed
       if (subnet.allocatedCidr.cidrPrefix.getValue() !== netmaskLength) {
@@ -161,52 +157,126 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   }
 }
 
-function nextCidr(netmaskLength: bigint, vpc: Vpc): string {
-  // Instantiate the pool
-  const subnetPool = Pool.fromCidrRanges(vpc.allocatedCidrs);
-  const subnetPrefix = IPv4Prefix.fromNumber(netmaskLength);
-  let subnetCidrRange: IPv4CidrRange | undefined = subnetPool.getCidrRange(subnetPrefix);
+/**
+ * Returns the next CIDR range available in the VPC
+ * @param netmaskLength bigint
+ * @param vpc Vpc
+ * @returns string
+ */
+function getNextCidr(netmaskLength: bigint, vpc: Vpc): string | undefined {
+  //
+  // Convert netmask to prefix
+  const requestedPrefix = IPv4Prefix.fromNumber(netmaskLength);
 
-  // Get next CIDR from pool
-  let alreadyUsed = false;
-  do {
-    for (const subnet of vpc.subnets) {
-      if (!subnetCidrRange) {
-        throw new Error('Next CIDR is undefined. Cannot allocate a CIDR from the pool.');
+  for (const [index, item] of vpc.allocatedCidrs.entries()) {
+    try {
+      //
+      // Get next subnet CIDR range from the pool.
+      // If it doesn't exist, try the next VPC CIDR range.
+      const nextRange = getNextRangeFromPool(item.cidr, requestedPrefix);
+      if (!nextRange) {
+        continue;
       }
-      if (
-        subnet.allocatedCidr.isEquals(subnetCidrRange) ||
-        subnet.allocatedCidr.contains(subnetCidrRange) ||
-        subnetCidrRange.contains(subnet.allocatedCidr)
-      ) {
-        subnetCidrRange = subnetCidrRange.nextRange();
-        alreadyUsed = true;
-        break;
+      //
+      // Get next available subnet CIDR for the VPC CIDR range
+      const subnetCidr = getNextAvailableCidr(item, nextRange);
+      //
+      // Determine if next CIDR is available.
+      // If it is, break out of the loop.
+      if (subnetCidr) {
+        return subnetCidr;
       } else {
-        alreadyUsed = false;
+        if (index + 1 === vpc.allocatedCidrs.length) {
+          throw new Error(
+            `VPC is exhausted of address space. Cannot allocate a CIDR with /${netmaskLength.toString()} prefix.`,
+          );
+        }
+      }
+    } catch (e) {
+      throw new Error(`Error while calculating next subnet CIDR: ${e}`);
+    }
+  }
+  return;
+}
+
+/**
+ * Creates a pool of CIDR ranges from the given VPC CIDR and returns
+ * the next CIDR range from the pool, if available
+ * @param vpcCidr IPv4CidrRange
+ * @param requestedPrefix IPv4Prefix
+ * @returns IPv4CidrRange | undefined
+ */
+function getNextRangeFromPool(vpcCidr: IPv4CidrRange, requestedPrefix: IPv4Prefix): IPv4CidrRange | undefined {
+  try {
+    const pool = Pool.fromCidrRanges([vpcCidr]);
+    return pool.getCidrRange(requestedPrefix);
+  } catch (e) {
+    // If the above operation fails, it's due to the requested prefix being too large.
+    // Return undefined to indicate that no CIDR range could be found.
+    return;
+  }
+}
+
+/**
+ * Returns the next valid CIDR range from the given VPC CIDR if it exists
+ * @param vpcCidr AllocatedCidr
+ * @param nextRange IPv4CidrRange
+ * @returns string | undefined
+ */
+function getNextAvailableCidr(vpcCidr: AllocatedCidr, nextRange: IPv4CidrRange): string | undefined {
+  // Determine if the next range is overlapping.
+  // If it is, try to find one that doesn't overlap.
+  if (!isOverlapping(vpcCidr, nextRange)) {
+    return nextRange.toCidrString();
+  } else {
+    return tryFindNextCidr(vpcCidr, nextRange);
+  }
+}
+
+/**
+ * Returns true if the next CIDR range is overlapping with subnets associated with the given VPC CIDR
+ * @param vpcCidr AllocatedCidr
+ * @param nextCidr IPv4CidrRange
+ * @returns boolean
+ */
+function isOverlapping(vpcCidr: AllocatedCidr, nextCidr: IPv4CidrRange): boolean {
+  for (const subnet of vpcCidr.subnets) {
+    if (
+      subnet.allocatedCidr.contains(nextCidr) ||
+      subnet.allocatedCidr.isEquals(nextCidr) ||
+      nextCidr.contains(subnet.allocatedCidr)
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Tries to find the next CIDR range that is not overlapping with the given VPC CIDR
+ * @param vpcCidr AllocatedCidr
+ * @param range IPv4CidrRange
+ * @returns string | undefined
+ */
+function tryFindNextCidr(vpcCidr: AllocatedCidr, range: IPv4CidrRange): string | undefined {
+  let nextCidr = range.nextRange();
+  let overlappingCidr = false;
+  if (!nextCidr) {
+    return;
+  }
+
+  do {
+    if (!isOverlapping(vpcCidr, nextCidr) && vpcCidr.cidr.getLast().isGreaterThan(nextCidr.getFirst())) {
+      return nextCidr.toCidrString();
+    } else {
+      overlappingCidr = true;
+      nextCidr = nextCidr.nextRange();
+      if (!nextCidr || vpcCidr.cidr.getLast().isLessThanOrEquals(nextCidr.getFirst())) {
+        return;
       }
     }
-  } while (alreadyUsed);
-
-  // Do error checking against CIDR
-  if (!subnetCidrRange) {
-    throw new Error('Next CIDR is undefined. Cannot allocate a CIDR from the pool.');
-  }
-
-  let isValidCidr = false;
-  for (const vpcCidrRange of vpc.allocatedCidrs) {
-    if (subnetCidrRange.inside(vpcCidrRange) || subnetCidrRange.isEquals(vpcCidrRange)) {
-      isValidCidr = true;
-    }
-  }
-
-  if (!isValidCidr) {
-    throw new Error(
-      `VPC is exhausted of address space. Cannot allocate a CIDR with /${netmaskLength.toString()} prefix.`,
-    );
-  }
-
-  return subnetCidrRange.toCidrString();
+  } while (overlappingCidr);
+  return;
 }
 
 function returnBoolean(input: string): boolean | undefined {
