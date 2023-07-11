@@ -693,7 +693,7 @@ export class AcceleratorPipeline extends Construct {
     }
 
     // We can Enable pipeline notification only for regions with AWS CodeStar being available
-    if (awsCodeStarSupportedRegions.includes(cdk.Stack.of(this).region)) {
+    if (this.props.awsCodeStarSupportedRegions.includes(cdk.Stack.of(this).region)) {
       const codeStarNotificationsRole = new ServiceLinkedRole(this, 'AWSServiceRoleForCodeStarNotifications', {
         environmentEncryptionKmsKey: this.installerKey,
         cloudWatchLogKmsKey: this.installerKey,
