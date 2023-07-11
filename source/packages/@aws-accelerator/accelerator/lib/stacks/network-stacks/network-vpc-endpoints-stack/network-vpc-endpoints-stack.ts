@@ -15,7 +15,6 @@ import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
-import * as fs from 'fs';
 import * as path from 'path';
 
 import {
@@ -947,11 +946,15 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
     }
 
     // Set location and fetch document
-    const location = path.join(this.props.configDirPath, policyItem[0].document);
-    const document = fs.readFileSync(location, 'utf-8');
+    const document = JSON.parse(
+      this.generatePolicyReplacements(
+        path.join(this.props.configDirPath, policyItem[0].document),
+        false,
+        this.organizationId,
+      ),
+    );
 
-    // Set and return policy document
-    policyDocument = cdk.aws_iam.PolicyDocument.fromJson(JSON.parse(document));
+    policyDocument = cdk.aws_iam.PolicyDocument.fromJson(document);
     return policyDocument;
   }
 }

@@ -469,9 +469,31 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
           "Statement": [
             {
               "Action": "*",
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalOrgID": "o-asdf123456",
+                },
+              },
               "Effect": "Allow",
-              "Principal": "*",
+              "Principal": {
+                "AWS": "*",
+              },
               "Resource": "*",
+              "Sid": "AllowRequestsByOrgsIdentities",
+            },
+            {
+              "Action": "*",
+              "Condition": {
+                "Bool": {
+                  "aws:PrincipalIsAWSService": "true",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "AllowRequestsByAWSServicePrincipals",
             },
           ],
           "Version": "2012-10-17",
@@ -508,9 +530,31 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
           "Statement": [
             {
               "Action": "*",
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalOrgID": "o-asdf123456",
+                },
+              },
               "Effect": "Allow",
-              "Principal": "*",
+              "Principal": {
+                "AWS": "*",
+              },
               "Resource": "*",
+              "Sid": "AllowRequestsByOrgsIdentities",
+            },
+            {
+              "Action": "*",
+              "Condition": {
+                "Bool": {
+                  "aws:PrincipalIsAWSService": "true",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "AllowRequestsByAWSServicePrincipals",
             },
           ],
           "Version": "2012-10-17",
@@ -543,9 +587,31 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
           "Statement": [
             {
               "Action": "*",
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalOrgID": "o-asdf123456",
+                },
+              },
               "Effect": "Allow",
-              "Principal": "*",
+              "Principal": {
+                "AWS": "*",
+              },
               "Resource": "*",
+              "Sid": "AllowRequestsByOrgsIdentities",
+            },
+            {
+              "Action": "*",
+              "Condition": {
+                "Bool": {
+                  "aws:PrincipalIsAWSService": "true",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "AllowRequestsByAWSServicePrincipals",
             },
           ],
           "Version": "2012-10-17",
@@ -578,9 +644,31 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
           "Statement": [
             {
               "Action": "*",
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalOrgID": "o-asdf123456",
+                },
+              },
               "Effect": "Allow",
-              "Principal": "*",
+              "Principal": {
+                "AWS": "*",
+              },
               "Resource": "*",
+              "Sid": "AllowRequestsByOrgsIdentities",
+            },
+            {
+              "Action": "*",
+              "Condition": {
+                "Bool": {
+                  "aws:PrincipalIsAWSService": "true",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "AllowRequestsByAWSServicePrincipals",
             },
           ],
           "Version": "2012-10-17",
@@ -613,9 +701,31 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
           "Statement": [
             {
               "Action": "*",
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalOrgID": "o-asdf123456",
+                },
+              },
               "Effect": "Allow",
-              "Principal": "*",
+              "Principal": {
+                "AWS": "*",
+              },
               "Resource": "*",
+              "Sid": "AllowRequestsByOrgsIdentities",
+            },
+            {
+              "Action": "*",
+              "Condition": {
+                "Bool": {
+                  "aws:PrincipalIsAWSService": "true",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "AllowRequestsByAWSServicePrincipals",
             },
           ],
           "Version": "2012-10-17",
@@ -648,9 +758,31 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
           "Statement": [
             {
               "Action": "*",
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalOrgID": "o-asdf123456",
+                },
+              },
               "Effect": "Allow",
-              "Principal": "*",
+              "Principal": {
+                "AWS": "*",
+              },
               "Resource": "*",
+              "Sid": "AllowRequestsByOrgsIdentities",
+            },
+            {
+              "Action": "*",
+              "Condition": {
+                "Bool": {
+                  "aws:PrincipalIsAWSService": "true",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "AllowRequestsByAWSServicePrincipals",
             },
           ],
           "Version": "2012-10-17",
@@ -687,9 +819,31 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
           "Statement": [
             {
               "Action": "*",
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalOrgID": "o-asdf123456",
+                },
+              },
               "Effect": "Allow",
-              "Principal": "*",
+              "Principal": {
+                "AWS": "*",
+              },
               "Resource": "*",
+              "Sid": "AllowRequestsByOrgsIdentities",
+            },
+            {
+              "Action": "*",
+              "Condition": {
+                "Bool": {
+                  "aws:PrincipalIsAWSService": "true",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "AllowRequestsByAWSServicePrincipals",
             },
           ],
           "Version": "2012-10-17",
@@ -722,9 +876,31 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
           "Statement": [
             {
               "Action": "*",
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalOrgID": "o-asdf123456",
+                },
+              },
               "Effect": "Allow",
-              "Principal": "*",
+              "Principal": {
+                "AWS": "*",
+              },
               "Resource": "*",
+              "Sid": "AllowRequestsByOrgsIdentities",
+            },
+            {
+              "Action": "*",
+              "Condition": {
+                "Bool": {
+                  "aws:PrincipalIsAWSService": "true",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "AllowRequestsByAWSServicePrincipals",
             },
           ],
           "Version": "2012-10-17",
@@ -757,9 +933,31 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
           "Statement": [
             {
               "Action": "*",
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalOrgID": "o-asdf123456",
+                },
+              },
               "Effect": "Allow",
-              "Principal": "*",
+              "Principal": {
+                "AWS": "*",
+              },
               "Resource": "*",
+              "Sid": "AllowRequestsByOrgsIdentities",
+            },
+            {
+              "Action": "*",
+              "Condition": {
+                "Bool": {
+                  "aws:PrincipalIsAWSService": "true",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "AllowRequestsByAWSServicePrincipals",
             },
           ],
           "Version": "2012-10-17",
@@ -894,9 +1092,31 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
           "Statement": [
             {
               "Action": "*",
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalOrgID": "o-asdf123456",
+                },
+              },
               "Effect": "Allow",
-              "Principal": "*",
+              "Principal": {
+                "AWS": "*",
+              },
               "Resource": "*",
+              "Sid": "AllowRequestsByOrgsIdentities",
+            },
+            {
+              "Action": "*",
+              "Condition": {
+                "Bool": {
+                  "aws:PrincipalIsAWSService": "true",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "AllowRequestsByAWSServicePrincipals",
             },
           ],
           "Version": "2012-10-17",
@@ -933,9 +1153,31 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
           "Statement": [
             {
               "Action": "*",
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalOrgID": "o-asdf123456",
+                },
+              },
               "Effect": "Allow",
-              "Principal": "*",
+              "Principal": {
+                "AWS": "*",
+              },
               "Resource": "*",
+              "Sid": "AllowRequestsByOrgsIdentities",
+            },
+            {
+              "Action": "*",
+              "Condition": {
+                "Bool": {
+                  "aws:PrincipalIsAWSService": "true",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "AllowRequestsByAWSServicePrincipals",
             },
           ],
           "Version": "2012-10-17",
@@ -1173,9 +1415,31 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
           "Statement": [
             {
               "Action": "*",
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalOrgID": "o-asdf123456",
+                },
+              },
               "Effect": "Allow",
-              "Principal": "*",
+              "Principal": {
+                "AWS": "*",
+              },
               "Resource": "*",
+              "Sid": "AllowRequestsByOrgsIdentities",
+            },
+            {
+              "Action": "*",
+              "Condition": {
+                "Bool": {
+                  "aws:PrincipalIsAWSService": "true",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "AllowRequestsByAWSServicePrincipals",
             },
           ],
           "Version": "2012-10-17",
@@ -1205,9 +1469,31 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
           "Statement": [
             {
               "Action": "*",
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalOrgID": "o-asdf123456",
+                },
+              },
               "Effect": "Allow",
-              "Principal": "*",
+              "Principal": {
+                "AWS": "*",
+              },
               "Resource": "*",
+              "Sid": "AllowRequestsByOrgsIdentities",
+            },
+            {
+              "Action": "*",
+              "Condition": {
+                "Bool": {
+                  "aws:PrincipalIsAWSService": "true",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "AllowRequestsByAWSServicePrincipals",
             },
           ],
           "Version": "2012-10-17",

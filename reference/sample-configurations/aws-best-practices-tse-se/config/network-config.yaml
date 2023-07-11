@@ -192,6 +192,8 @@ endpointPolicies:
     document: vpc-endpoint-policies/default.json
   - name: Ec2
     document: vpc-endpoint-policies/ec2.json
+  - name: S3
+    document: vpc-endpoint-policies/s3.json
 vpcs:
   - name: Endpoint
     tags:
@@ -257,6 +259,7 @@ vpcs:
       defaultPolicy: Default
       endpoints:
         - service: s3
+          policy: S3
         - service: dynamodb
     interfaceEndpoints:
       central: true
@@ -472,6 +475,7 @@ vpcs:
       defaultPolicy: Default
       endpoints:
         - service: s3
+          policy: S3
         - service: dynamodb
     useCentralEndpoints: true
   - name: Dev
@@ -785,6 +789,7 @@ vpcs:
       defaultPolicy: Default
       endpoints:
         - service: s3
+          policy: S3
         - service: dynamodb
     useCentralEndpoints: true
     resolverRules:
@@ -1095,6 +1100,7 @@ vpcs:
       defaultPolicy: Default
       endpoints:
         - service: s3
+          policy: S3
         - service: dynamodb
     useCentralEndpoints: true
     resolverRules:
@@ -1408,6 +1414,7 @@ vpcs:
       defaultPolicy: Default
       endpoints:
         - service: s3
+          policy: S3
         - service: dynamodb
     useCentralEndpoints: true
     resolverRules:
@@ -1721,6 +1728,7 @@ vpcs:
       defaultPolicy: Default
       endpoints:
         - service: s3
+          policy: S3
         - service: dynamodb
     useCentralEndpoints: true
     resolverRules:
@@ -1809,6 +1817,7 @@ vpcTemplates:
       defaultPolicy: Default
       endpoints:
         - service: s3
+          policy: S3
         - service: dynamodb
 vpcFlowLogs:
   trafficType: ALL
