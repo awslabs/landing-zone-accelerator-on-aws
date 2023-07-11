@@ -14,24 +14,10 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as path from 'path';
-import { LzaCustomResource } from '../lza-custom-resource';
-import { pascalCase } from 'change-case';
 /**
  * Initialized ServiceLinkedRoleProps properties
  */
 export interface ServiceLinkedRoleProps {
-  /**
-   * Custom resource lambda environment encryption key
-   */
-  readonly environmentEncryptionKmsKey: cdk.aws_kms.IKey;
-  /**
-   * Custom resource lambda log group encryption key
-   */
-  readonly cloudWatchLogKmsKey: cdk.aws_kms.IKey;
-  /**
-   * Custom resource lambda log retention in days
-   */
-  readonly cloudWatchLogRetentionInDays: number;
   /**
    * Service linked role service name
    */
@@ -48,9 +34,17 @@ export interface ServiceLinkedRoleProps {
    */
   readonly roleName: string;
   /**
-   * Prefix for nag suppression
+   * Custom resource lambda environment encryption key
    */
-  readonly nagSuppressionPrefix?: string;
+  readonly environmentEncryptionKmsKey: cdk.aws_kms.IKey;
+  /**
+   * Custom resource lambda log group encryption key
+   */
+  readonly cloudWatchLogKmsKey: cdk.aws_kms.IKey;
+  /**
+   * Custom resource lambda log retention in days
+   */
+  readonly cloudWatchLogRetentionInDays: number;
 }
 
 /**
@@ -62,40 +56,45 @@ export class ServiceLinkedRole extends Construct {
   constructor(scope: Construct, id: string, props: ServiceLinkedRoleProps) {
     super(scope, id);
 
-    // make a unique name for each service name
-    const resourceName = `ServiceLinkedRole${pascalCase(props.awsServiceName)}`;
+    const lambdaFunction = new cdk.aws_lambda.Function(this, 'CreateServiceLinkedRoleFunction', {
+      code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'create-service-linked-role/dist')),
+      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
+      handler: 'index.handler',
+      timeout: cdk.Duration.minutes(15),
+      memorySize: 256,
+      description: 'Custom resource provider to create service linked role',
+      initialPolicy: [
+        new cdk.aws_iam.PolicyStatement({
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['iam:CreateServiceLinkedRole', 'iam:GetRole'],
+          resources: ['*'],
+        }),
+      ],
+      environmentEncryption: props.environmentEncryptionKmsKey,
+    });
 
-    const lzaCustomResource = new LzaCustomResource(this, resourceName, {
-      resource: {
-        name: resourceName,
-        parentId: id,
-        properties: [
-          {
-            serviceName: props.awsServiceName,
-            description: props.description,
-            roleName: props.roleName,
-          },
-        ],
-        nagSuppressionPrefix: `${props.nagSuppressionPrefix}/${resourceName}`,
-        forceUpdate: true,
-      },
-      lambda: {
-        assetPath: path.join(__dirname, 'create-service-linked-role/dist'),
-        environmentEncryptionKmsKey: props.environmentEncryptionKmsKey,
-        cloudWatchLogKmsKey: props.cloudWatchLogKmsKey,
-        cloudWatchLogRetentionInDays: props.cloudWatchLogRetentionInDays,
-        timeOut: cdk.Duration.minutes(15),
-        roleInitialPolicy: [
-          new cdk.aws_iam.PolicyStatement({
-            effect: cdk.aws_iam.Effect.ALLOW,
-            actions: ['iam:CreateServiceLinkedRole', 'iam:GetRole'],
-            resources: ['*'],
-          }),
-        ],
+    new cdk.aws_logs.LogGroup(this, `${lambdaFunction.node.id}LogGroup`, {
+      logGroupName: `/aws/lambda/${lambdaFunction.functionName}`,
+      retention: props.cloudWatchLogRetentionInDays,
+      encryptionKey: props.cloudWatchLogKmsKey,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    const provider = new cdk.custom_resources.Provider(this, 'CreateServiceLinkedRoleProvider', {
+      onEventHandler: lambdaFunction,
+    });
+
+    const resource = new cdk.CustomResource(this, 'CreateServiceLinkedRoleResource', {
+      resourceType: 'Custom::CreateServiceLinkedRole',
+      serviceToken: provider.serviceToken,
+      properties: {
+        serviceName: props.awsServiceName,
+        description: props.description,
+        roleName: props.roleName,
       },
     });
 
-    this.roleArn = lzaCustomResource.resource.getAtt('roleArn').toString();
-    this.roleName = lzaCustomResource.resource.getAtt('roleName').toString();
+    this.roleArn = resource.getAtt('roleArn').toString();
+    this.roleName = resource.getAtt('roleName').toString();
   }
 }

@@ -13,14 +13,8 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as path from 'path';
-import { LzaCustomResource } from '../lza-custom-resource';
 
-export interface CreateCertificateProps {
-  /**
-   *
-   * Certificate name
-   */
-  name: string;
+export interface CertificateProps {
   /**
    * SSM parameter name for certificate ARN
    */
@@ -72,58 +66,66 @@ export interface CreateCertificateProps {
    */
   assetBucketName: string;
   /**
-   * Custom resource lambda environment encryption key
-   */
-  readonly customResourceLambdaEnvironmentEncryptionKmsKey: cdk.aws_kms.IKey;
-  /**
    * Custom resource lambda log group encryption key
    */
-  readonly customResourceLambdaCloudWatchLogKmsKey: cdk.aws_kms.IKey;
+  cloudWatchLogsKmsKey: cdk.aws_kms.IKey;
   /**
    * Custom resource lambda log retention in days
    */
-  readonly customResourceLambdaLogRetentionInDays: number;
+  logRetentionInDays: number;
 }
 
 /**
- * Class to configure CloudWatch Destination on logs receiving account
+ * Class to create ACM certificates
  */
-export class CreateCertificate extends Construct {
+export class Certificate extends Construct {
   readonly id: string;
-  constructor(scope: Construct, id: string, props: CreateCertificateProps) {
+  constructor(scope: Construct, id: string, props: CertificateProps) {
     super(scope, id);
 
-    const resourceName = 'CreateAcmCerts';
+    const RESOURCE_TYPE = 'Custom::CreateAcmCerts';
 
-    const lzaCustomResource = new LzaCustomResource(this, resourceName, {
-      resource: {
-        name: resourceName,
-        parentId: id,
-        properties: [
-          { name: props.name },
-          { parameterName: props.parameterName },
-          { type: props.type },
-          { privKey: props.privKey },
-          { cert: props.cert },
-          { chain: props.chain },
-          { validation: props.validation },
-          { domain: props.domain },
-          { san: props.san?.join(',') },
-          { homeRegion: props.homeRegion },
-          { assetBucketName: props.assetBucketName },
-        ],
-      },
-      lambda: {
-        assetPath: path.join(__dirname, 'create-certificates/dist'),
-        environmentEncryptionKmsKey: props.customResourceLambdaEnvironmentEncryptionKmsKey,
-        cloudWatchLogKmsKey: props.customResourceLambdaCloudWatchLogKmsKey,
-        cloudWatchLogRetentionInDays: props.customResourceLambdaLogRetentionInDays,
-        timeOut: cdk.Duration.minutes(15),
-        description: 'Create ACM certificates handler',
-        role: cdk.aws_iam.Role.fromRoleName(this, 'AssetsFunctionRole', props.assetFunctionRoleName),
+    //
+    // Function definition for the custom resource
+    //
+    const providerLambda = new cdk.aws_lambda.Function(this, 'Function', {
+      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
+      code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'create-certificates/dist')),
+      handler: 'index.handler',
+      timeout: cdk.Duration.minutes(15),
+      description: 'Create ACM certificates handler',
+      role: cdk.aws_iam.Role.fromRoleName(this, 'AssetsFunctionRole', props.assetFunctionRoleName),
+    });
+
+    // Custom resource lambda log group
+    new cdk.aws_logs.LogGroup(this, `${providerLambda.node.id}LogGroup`, {
+      logGroupName: `/aws/lambda/${providerLambda.functionName}`,
+      retention: props.logRetentionInDays,
+      encryptionKey: props.cloudWatchLogsKmsKey,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    const provider = new cdk.custom_resources.Provider(this, 'Custom::CreateAcmCerts', {
+      onEventHandler: providerLambda,
+    });
+
+    const resource = new cdk.CustomResource(this, 'Resource', {
+      resourceType: RESOURCE_TYPE,
+      serviceToken: provider.serviceToken,
+      properties: {
+        parameterName: props.parameterName,
+        type: props.type,
+        privKey: props.privKey,
+        cert: props.cert,
+        chain: props.chain,
+        validation: props.validation,
+        domain: props.domain,
+        san: props.san?.join(','),
+        homeRegion: props.homeRegion,
+        assetBucketName: props.assetBucketName,
       },
     });
 
-    this.id = lzaCustomResource.resource.ref;
+    this.id = resource.ref;
   }
 }

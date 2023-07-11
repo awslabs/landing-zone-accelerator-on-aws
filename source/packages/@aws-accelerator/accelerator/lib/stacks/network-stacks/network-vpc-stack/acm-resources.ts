@@ -12,7 +12,7 @@
  */
 
 import { CertificateConfig } from '@aws-accelerator/config';
-import { CreateCertificate } from '@aws-accelerator/constructs';
+import { Certificate } from '@aws-accelerator/constructs';
 import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'pascal-case';
@@ -21,7 +21,7 @@ import { LogLevel, NetworkStack } from '../network-stack';
 import { SsmResourceType } from '@aws-accelerator/utils';
 
 export class AcmResources {
-  public readonly certificateMap: Map<string, CreateCertificate>;
+  public readonly certificateMap: Map<string, Certificate>;
   private stack: NetworkStack;
 
   constructor(networkStack: NetworkStack, props: AcceleratorStackProps) {
@@ -34,8 +34,8 @@ export class AcmResources {
   /**
    * Create ACM certificates - check whether ACM should be deployed
    */
-  private createCertificates(props: AcceleratorStackProps): Map<string, CreateCertificate> {
-    const certificateMap = new Map<string, CreateCertificate>();
+  private createCertificates(props: AcceleratorStackProps): Map<string, Certificate> {
+    const certificateMap = new Map<string, Certificate>();
     this.stack.addLogs(LogLevel.INFO, 'Evaluating AWS Certificate Manager certificates.');
     for (const certificate of props.networkConfig.certificates ?? []) {
       if (!this.stack.isIncluded(certificate.deploymentTargets)) {
@@ -60,11 +60,10 @@ export class AcmResources {
   /**
    * Create ACM certificates
    */
-  private createAcmCertificates(certificate: CertificateConfig, props: AcceleratorStackProps): CreateCertificate {
+  private createAcmCertificates(certificate: CertificateConfig, props: AcceleratorStackProps): Certificate {
     const resourceName = pascalCase(`${certificate.name}`);
 
-    const acmCertificate = new CreateCertificate(this.stack, resourceName, {
-      name: certificate.name,
+    const acmCertificate = new Certificate(this.stack, resourceName, {
       parameterName: this.stack.getSsmPath(SsmResourceType.ACM_CERT, [certificate.name]),
       type: certificate.type,
       privKey: certificate.privKey,
@@ -78,9 +77,8 @@ export class AcmResources {
       assetBucketName: `${
         this.stack.acceleratorResourceNames.bucketPrefixes.assets
       }-${props.accountsConfig.getManagementAccountId()}-${props.globalConfig.homeRegion}`,
-      customResourceLambdaEnvironmentEncryptionKmsKey: this.stack.lambdaKey,
-      customResourceLambdaCloudWatchLogKmsKey: this.stack.cloudwatchKey,
-      customResourceLambdaLogRetentionInDays: this.stack.logRetention,
+      cloudWatchLogsKmsKey: this.stack.cloudwatchKey,
+      logRetentionInDays: this.stack.logRetention,
     });
 
     // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission

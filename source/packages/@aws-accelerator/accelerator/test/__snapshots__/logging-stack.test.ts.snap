@@ -3,17 +3,17 @@
 exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
 {
   "Resources": {
-    "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComServiceLinkedRoleCloud9AmazonawsComFunctionA0CAA4C4": {
+    "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunction78452922": {
       "DependsOn": [
-        "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComServiceLinkedRoleCloud9AmazonawsComFunctionServiceRoleDefaultPolicy0E6F7BEB",
-        "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComServiceLinkedRoleCloud9AmazonawsComFunctionServiceRole4E640810",
+        "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunctionServiceRoleDefaultPolicyA960DF70",
+        "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunctionServiceRoleD8D1BF16",
       ],
       "Properties": {
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Description": "Accelerator deployed ServiceLinkedRoleCloud9AmazonawsCom custom resource lambda function.",
+        "Description": "Custom resource provider to create service linked role",
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -24,7 +24,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
-            "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComServiceLinkedRoleCloud9AmazonawsComFunctionServiceRole4E640810",
+            "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunctionServiceRoleD8D1BF16",
             "Arn",
           ],
         },
@@ -33,7 +33,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::Lambda::Function",
     },
-    "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComServiceLinkedRoleCloud9AmazonawsComFunctionLogGroup9928791F": {
+    "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunctionLogGroup3B94FCDE": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "KmsKeyId": {
@@ -48,7 +48,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
             [
               "/aws/lambda/",
               {
-                "Ref": "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComServiceLinkedRoleCloud9AmazonawsComFunctionA0CAA4C4",
+                "Ref": "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunction78452922",
               },
             ],
           ],
@@ -58,13 +58,13 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComServiceLinkedRoleCloud9AmazonawsComFunctionServiceRole4E640810": {
+    "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunctionServiceRoleD8D1BF16": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
+              "reason": "Custom resource Lambda role policy.",
             },
           ],
         },
@@ -99,13 +99,13 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Role",
     },
-    "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComServiceLinkedRoleCloud9AmazonawsComFunctionServiceRoleDefaultPolicy0E6F7BEB": {
+    "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunctionServiceRoleDefaultPolicyA960DF70": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
+              "reason": "Custom resource Lambda role policy.",
             },
           ],
         },
@@ -124,48 +124,31 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "ceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComServiceLinkedRoleCloud9AmazonawsComFunctionServiceRoleDefaultPolicy0E6F7BEB",
+        "PolicyName": "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunctionServiceRoleDefaultPolicyA960DF70",
         "Roles": [
           {
-            "Ref": "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComServiceLinkedRoleCloud9AmazonawsComFunctionServiceRole4E640810",
+            "Ref": "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunctionServiceRoleD8D1BF16",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComServiceLinkedRoleCloud9AmazonawsComResourceC3542FE5": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComframeworkonEvent2AF9BCF2",
-            "Arn",
-          ],
-        },
-        "description": "Service linked role for AWS Cloud9",
-        "roleName": "AWSServiceRoleForAWSCloud9",
-        "serviceName": "cloud9.amazonaws.com",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "AWS::CloudFormation::CustomResource",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComframeworkonEvent2AF9BCF2": {
+    "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleProviderframeworkonEventB3756D27": {
       "DependsOn": [
-        "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComframeworkonEventServiceRoleDefaultPolicy7300A613",
-        "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComframeworkonEventServiceRole54A79A43",
+        "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy3D6F853C",
+        "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleProviderframeworkonEventServiceRole8AB21249",
       ],
       "Properties": {
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-east-1/AWSServiceRoleForAWSCloud9/ServiceLinkedRoleCloud9AmazonawsCom/Resource)",
+        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-east-1/AWSServiceRoleForAWSCloud9/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
-                "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComServiceLinkedRoleCloud9AmazonawsComFunctionA0CAA4C4",
+                "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunction78452922",
                 "Arn",
               ],
             },
@@ -174,7 +157,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "Handler": "framework.onEvent",
         "Role": {
           "Fn::GetAtt": [
-            "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComframeworkonEventServiceRole54A79A43",
+            "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleProviderframeworkonEventServiceRole8AB21249",
             "Arn",
           ],
         },
@@ -183,13 +166,13 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::Lambda::Function",
     },
-    "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComframeworkonEventServiceRole54A79A43": {
+    "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleProviderframeworkonEventServiceRole8AB21249": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
+              "reason": "Custom resource Lambda role policy.",
             },
           ],
         },
@@ -224,13 +207,13 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Role",
     },
-    "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComframeworkonEventServiceRoleDefaultPolicy7300A613": {
+    "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy3D6F853C": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
+              "reason": "Custom resource Lambda role policy.",
             },
           ],
         },
@@ -244,7 +227,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
               "Resource": [
                 {
                   "Fn::GetAtt": [
-                    "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComServiceLinkedRoleCloud9AmazonawsComFunctionA0CAA4C4",
+                    "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunction78452922",
                     "Arn",
                   ],
                 },
@@ -254,7 +237,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
                     [
                       {
                         "Fn::GetAtt": [
-                          "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComServiceLinkedRoleCloud9AmazonawsComFunctionA0CAA4C4",
+                          "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunction78452922",
                           "Arn",
                         ],
                       },
@@ -267,14 +250,30 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComframeworkonEventServiceRoleDefaultPolicy7300A613",
+        "PolicyName": "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy3D6F853C",
         "Roles": [
           {
-            "Ref": "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComframeworkonEventServiceRole54A79A43",
+            "Ref": "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleProviderframeworkonEventServiceRole8AB21249",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
+    },
+    "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleResource5A765F9A": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleProviderframeworkonEventB3756D27",
+            "Arn",
+          ],
+        },
+        "description": "Service linked role for AWS Cloud9",
+        "roleName": "AWSServiceRoleForAWSCloud9",
+        "serviceName": "cloud9.amazonaws.com",
+      },
+      "Type": "Custom::CreateServiceLinkedRole",
+      "UpdateReplacePolicy": "Delete",
     },
     "Accelerator3KeyAliasA5E4BDCB": {
       "Properties": {
@@ -1179,17 +1178,17 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::KMS::Alias",
     },
-    "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionA31E50BF": {
+    "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction56E83FD3": {
       "DependsOn": [
-        "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRoleDefaultPolicy68F6612B",
-        "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRole193CD4A4",
+        "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy4BF99055",
+        "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleF168CC0D",
       ],
       "Properties": {
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Description": "Accelerator deployed ServiceLinkedRoleAutoscalingAmazonawsCom custom resource lambda function.",
+        "Description": "Custom resource provider to create service linked role",
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -1200,7 +1199,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
-            "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRole193CD4A4",
+            "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleF168CC0D",
             "Arn",
           ],
         },
@@ -1209,7 +1208,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::Lambda::Function",
     },
-    "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionLogGroup9E3F3AFA": {
+    "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionLogGroupAF98D208": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "KmsKeyId": {
@@ -1224,7 +1223,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
             [
               "/aws/lambda/",
               {
-                "Ref": "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionA31E50BF",
+                "Ref": "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction56E83FD3",
               },
             ],
           ],
@@ -1234,54 +1233,13 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRole193CD4A4": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-              ],
-            ],
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRoleDefaultPolicy68F6612B": {
+    "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy4BF99055": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
+              "reason": "Custom resource Lambda role policy.",
             },
           ],
         },
@@ -1300,72 +1258,22 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "nkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRoleDefaultPolicy68F6612B",
+        "PolicyName": "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy4BF99055",
         "Roles": [
           {
-            "Ref": "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRole193CD4A4",
+            "Ref": "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleF168CC0D",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComResource416ABF27": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventE5DC4FA1",
-            "Arn",
-          ],
-        },
-        "description": "Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling",
-        "roleName": "AWSServiceRoleForAutoScaling",
-        "serviceName": "autoscaling.amazonaws.com",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "AWS::CloudFormation::CustomResource",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventE5DC4FA1": {
-      "DependsOn": [
-        "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRoleDefaultPolicy27097308",
-        "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRoleCD7551CD",
-      ],
-      "Properties": {
-        "Code": {
-          "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
-          "S3Key": "REPLACED-GENERATED-NAME.zip",
-        },
-        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-east-1/AutoScalingServiceLinkedRole/ServiceLinkedRoleAutoscalingAmazonawsCom/Resource)",
-        "Environment": {
-          "Variables": {
-            "USER_ON_EVENT_FUNCTION_ARN": {
-              "Fn::GetAtt": [
-                "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionA31E50BF",
-                "Arn",
-              ],
-            },
-          },
-        },
-        "Handler": "framework.onEvent",
-        "Role": {
-          "Fn::GetAtt": [
-            "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRoleCD7551CD",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs14.x",
-        "Timeout": 900,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRoleCD7551CD": {
+    "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleF168CC0D": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
+              "reason": "Custom resource Lambda role policy.",
             },
           ],
         },
@@ -1400,13 +1308,46 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Role",
     },
-    "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRoleDefaultPolicy27097308": {
+    "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEvent05930586": {
+      "DependsOn": [
+        "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyC1F62AB2",
+        "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleF8C91A0A",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-east-1/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleProvider)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction56E83FD3",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleF8C91A0A",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyC1F62AB2": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
+              "reason": "Custom resource Lambda role policy.",
             },
           ],
         },
@@ -1420,7 +1361,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
               "Resource": [
                 {
                   "Fn::GetAtt": [
-                    "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionA31E50BF",
+                    "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction56E83FD3",
                     "Arn",
                   ],
                 },
@@ -1430,7 +1371,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
                     [
                       {
                         "Fn::GetAtt": [
-                          "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionA31E50BF",
+                          "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction56E83FD3",
                           "Arn",
                         ],
                       },
@@ -1443,14 +1384,71 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRoleDefaultPolicy27097308",
+        "PolicyName": "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyC1F62AB2",
         "Roles": [
           {
-            "Ref": "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRoleCD7551CD",
+            "Ref": "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleF8C91A0A",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
+    },
+    "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleF8C91A0A": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Custom resource Lambda role policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleResourceE203F878": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEvent05930586",
+            "Arn",
+          ],
+        },
+        "description": "Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling",
+        "roleName": "AWSServiceRoleForAutoScaling",
+        "serviceName": "autoscaling.amazonaws.com",
+      },
+      "Type": "Custom::CreateServiceLinkedRole",
+      "UpdateReplacePolicy": "Delete",
     },
     "CrossAccountCentralSnsTopicKMSArnSsmParamAccessRoleFA0EB249": {
       "Metadata": {
@@ -2938,10 +2936,10 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Role",
     },
-    "ValidateExistingaccessLogsBucketValidateBucketValidateBucketFunction5FD05398": {
+    "ValidateExistingaccessLogsBucketValidateBucketFunction78A7D14A": {
       "DependsOn": [
-        "ValidateExistingaccessLogsBucketValidateBucketValidateBucketFunctionServiceRoleDefaultPolicy6B3B703D",
-        "ValidateExistingaccessLogsBucketValidateBucketValidateBucketFunctionServiceRole2BFC0D37",
+        "ValidateExistingaccessLogsBucketValidateBucketFunctionServiceRoleDefaultPolicy3E8503FC",
+        "ValidateExistingaccessLogsBucketValidateBucketFunctionServiceRole8B552280",
       ],
       "Properties": {
         "Code": {
@@ -2959,7 +2957,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
-            "ValidateExistingaccessLogsBucketValidateBucketValidateBucketFunctionServiceRole2BFC0D37",
+            "ValidateExistingaccessLogsBucketValidateBucketFunctionServiceRole8B552280",
             "Arn",
           ],
         },
@@ -2968,7 +2966,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::Lambda::Function",
     },
-    "ValidateExistingaccessLogsBucketValidateBucketValidateBucketFunctionLogGroupCACEF4C8": {
+    "ValidateExistingaccessLogsBucketValidateBucketFunctionResourceLogGroup8976C71D": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "KmsKeyId": {
@@ -2983,7 +2981,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
             [
               "/aws/lambda/",
               {
-                "Ref": "ValidateExistingaccessLogsBucketValidateBucketValidateBucketFunction5FD05398",
+                "Ref": "ValidateExistingaccessLogsBucketValidateBucketFunction78A7D14A",
               },
             ],
           ],
@@ -2993,13 +2991,13 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "ValidateExistingaccessLogsBucketValidateBucketValidateBucketFunctionServiceRole2BFC0D37": {
+    "ValidateExistingaccessLogsBucketValidateBucketFunctionServiceRole8B552280": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
+              "reason": "AWS Lambda needs Managed policy.",
             },
           ],
         },
@@ -3034,13 +3032,13 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Role",
     },
-    "ValidateExistingaccessLogsBucketValidateBucketValidateBucketFunctionServiceRoleDefaultPolicy6B3B703D": {
+    "ValidateExistingaccessLogsBucketValidateBucketFunctionServiceRoleDefaultPolicy3E8503FC": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
+              "reason": "AWS Lambda needs Managed policy.",
             },
           ],
         },
@@ -3067,10 +3065,10 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "ValidateExistingaccessLogsBucketValidateBucketValidateBucketFunctionServiceRoleDefaultPolicy6B3B703D",
+        "PolicyName": "ValidateExistingaccessLogsBucketValidateBucketFunctionServiceRoleDefaultPolicy3E8503FC",
         "Roles": [
           {
-            "Ref": "ValidateExistingaccessLogsBucketValidateBucketValidateBucketFunctionServiceRole2BFC0D37",
+            "Ref": "ValidateExistingaccessLogsBucketValidateBucketFunctionServiceRole8B552280",
           },
         ],
       },
@@ -3110,7 +3108,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           "Variables": {
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
-                "ValidateExistingaccessLogsBucketValidateBucketValidateBucketFunction5FD05398",
+                "ValidateExistingaccessLogsBucketValidateBucketFunction78A7D14A",
                 "Arn",
               ],
             },
@@ -3189,7 +3187,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
               "Resource": [
                 {
                   "Fn::GetAtt": [
-                    "ValidateExistingaccessLogsBucketValidateBucketValidateBucketFunction5FD05398",
+                    "ValidateExistingaccessLogsBucketValidateBucketFunction78A7D14A",
                     "Arn",
                   ],
                 },
@@ -3199,7 +3197,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
                     [
                       {
                         "Fn::GetAtt": [
-                          "ValidateExistingaccessLogsBucketValidateBucketValidateBucketFunction5FD05398",
+                          "ValidateExistingaccessLogsBucketValidateBucketFunction78A7D14A",
                           "Arn",
                         ],
                       },
@@ -3221,10 +3219,10 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Policy",
     },
-    "ValidateExistingelbLogsBucketValidateBucketValidateBucketFunction5B22444D": {
+    "ValidateExistingelbLogsBucketValidateBucketFunction4D9B1406": {
       "DependsOn": [
-        "ValidateExistingelbLogsBucketValidateBucketValidateBucketFunctionServiceRoleDefaultPolicyE7A6E2D8",
-        "ValidateExistingelbLogsBucketValidateBucketValidateBucketFunctionServiceRole39D2D9BC",
+        "ValidateExistingelbLogsBucketValidateBucketFunctionServiceRoleDefaultPolicy5D917EDA",
+        "ValidateExistingelbLogsBucketValidateBucketFunctionServiceRole5D2B5EB3",
       ],
       "Properties": {
         "Code": {
@@ -3242,7 +3240,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
-            "ValidateExistingelbLogsBucketValidateBucketValidateBucketFunctionServiceRole39D2D9BC",
+            "ValidateExistingelbLogsBucketValidateBucketFunctionServiceRole5D2B5EB3",
             "Arn",
           ],
         },
@@ -3251,7 +3249,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::Lambda::Function",
     },
-    "ValidateExistingelbLogsBucketValidateBucketValidateBucketFunctionLogGroup02AEE16B": {
+    "ValidateExistingelbLogsBucketValidateBucketFunctionResourceLogGroupA4B4CC21": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "KmsKeyId": {
@@ -3266,7 +3264,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
             [
               "/aws/lambda/",
               {
-                "Ref": "ValidateExistingelbLogsBucketValidateBucketValidateBucketFunction5B22444D",
+                "Ref": "ValidateExistingelbLogsBucketValidateBucketFunction4D9B1406",
               },
             ],
           ],
@@ -3276,13 +3274,13 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "ValidateExistingelbLogsBucketValidateBucketValidateBucketFunctionServiceRole39D2D9BC": {
+    "ValidateExistingelbLogsBucketValidateBucketFunctionServiceRole5D2B5EB3": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
+              "reason": "AWS Lambda needs Managed policy.",
             },
           ],
         },
@@ -3317,13 +3315,13 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Role",
     },
-    "ValidateExistingelbLogsBucketValidateBucketValidateBucketFunctionServiceRoleDefaultPolicyE7A6E2D8": {
+    "ValidateExistingelbLogsBucketValidateBucketFunctionServiceRoleDefaultPolicy5D917EDA": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
+              "reason": "AWS Lambda needs Managed policy.",
             },
           ],
         },
@@ -3350,10 +3348,10 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "ValidateExistingelbLogsBucketValidateBucketValidateBucketFunctionServiceRoleDefaultPolicyE7A6E2D8",
+        "PolicyName": "ValidateExistingelbLogsBucketValidateBucketFunctionServiceRoleDefaultPolicy5D917EDA",
         "Roles": [
           {
-            "Ref": "ValidateExistingelbLogsBucketValidateBucketValidateBucketFunctionServiceRole39D2D9BC",
+            "Ref": "ValidateExistingelbLogsBucketValidateBucketFunctionServiceRole5D2B5EB3",
           },
         ],
       },
@@ -3393,7 +3391,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           "Variables": {
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
-                "ValidateExistingelbLogsBucketValidateBucketValidateBucketFunction5B22444D",
+                "ValidateExistingelbLogsBucketValidateBucketFunction4D9B1406",
                 "Arn",
               ],
             },
@@ -3472,7 +3470,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
               "Resource": [
                 {
                   "Fn::GetAtt": [
-                    "ValidateExistingelbLogsBucketValidateBucketValidateBucketFunction5B22444D",
+                    "ValidateExistingelbLogsBucketValidateBucketFunction4D9B1406",
                     "Arn",
                   ],
                 },
@@ -3482,7 +3480,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
                     [
                       {
                         "Fn::GetAtt": [
-                          "ValidateExistingelbLogsBucketValidateBucketValidateBucketFunction5B22444D",
+                          "ValidateExistingelbLogsBucketValidateBucketFunction4D9B1406",
                           "Arn",
                         ],
                       },
@@ -3511,17 +3509,17 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
 exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 1`] = `
 {
   "Resources": {
-    "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComServiceLinkedRoleCloud9AmazonawsComFunctionA0CAA4C4": {
+    "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunction78452922": {
       "DependsOn": [
-        "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComServiceLinkedRoleCloud9AmazonawsComFunctionServiceRoleDefaultPolicy0E6F7BEB",
-        "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComServiceLinkedRoleCloud9AmazonawsComFunctionServiceRole4E640810",
+        "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunctionServiceRoleDefaultPolicyA960DF70",
+        "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunctionServiceRoleD8D1BF16",
       ],
       "Properties": {
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Description": "Accelerator deployed ServiceLinkedRoleCloud9AmazonawsCom custom resource lambda function.",
+        "Description": "Custom resource provider to create service linked role",
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -3532,7 +3530,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
         "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
-            "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComServiceLinkedRoleCloud9AmazonawsComFunctionServiceRole4E640810",
+            "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunctionServiceRoleD8D1BF16",
             "Arn",
           ],
         },
@@ -3541,7 +3539,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
       },
       "Type": "AWS::Lambda::Function",
     },
-    "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComServiceLinkedRoleCloud9AmazonawsComFunctionLogGroup9928791F": {
+    "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunctionLogGroup3B94FCDE": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "KmsKeyId": {
@@ -3556,7 +3554,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
             [
               "/aws/lambda/",
               {
-                "Ref": "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComServiceLinkedRoleCloud9AmazonawsComFunctionA0CAA4C4",
+                "Ref": "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunction78452922",
               },
             ],
           ],
@@ -3566,13 +3564,13 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComServiceLinkedRoleCloud9AmazonawsComFunctionServiceRole4E640810": {
+    "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunctionServiceRoleD8D1BF16": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
+              "reason": "Custom resource Lambda role policy.",
             },
           ],
         },
@@ -3607,13 +3605,13 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
       },
       "Type": "AWS::IAM::Role",
     },
-    "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComServiceLinkedRoleCloud9AmazonawsComFunctionServiceRoleDefaultPolicy0E6F7BEB": {
+    "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunctionServiceRoleDefaultPolicyA960DF70": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
+              "reason": "Custom resource Lambda role policy.",
             },
           ],
         },
@@ -3632,48 +3630,31 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "ceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComServiceLinkedRoleCloud9AmazonawsComFunctionServiceRoleDefaultPolicy0E6F7BEB",
+        "PolicyName": "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunctionServiceRoleDefaultPolicyA960DF70",
         "Roles": [
           {
-            "Ref": "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComServiceLinkedRoleCloud9AmazonawsComFunctionServiceRole4E640810",
+            "Ref": "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunctionServiceRoleD8D1BF16",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComServiceLinkedRoleCloud9AmazonawsComResourceC3542FE5": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComframeworkonEvent2AF9BCF2",
-            "Arn",
-          ],
-        },
-        "description": "Service linked role for AWS Cloud9",
-        "roleName": "AWSServiceRoleForAWSCloud9",
-        "serviceName": "cloud9.amazonaws.com",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "AWS::CloudFormation::CustomResource",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComframeworkonEvent2AF9BCF2": {
+    "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleProviderframeworkonEventB3756D27": {
       "DependsOn": [
-        "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComframeworkonEventServiceRoleDefaultPolicy7300A613",
-        "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComframeworkonEventServiceRole54A79A43",
+        "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy3D6F853C",
+        "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleProviderframeworkonEventServiceRole8AB21249",
       ],
       "Properties": {
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-east-1/AWSServiceRoleForAWSCloud9/ServiceLinkedRoleCloud9AmazonawsCom/Resource)",
+        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-east-1/AWSServiceRoleForAWSCloud9/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
-                "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComServiceLinkedRoleCloud9AmazonawsComFunctionA0CAA4C4",
+                "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunction78452922",
                 "Arn",
               ],
             },
@@ -3682,7 +3663,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
         "Handler": "framework.onEvent",
         "Role": {
           "Fn::GetAtt": [
-            "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComframeworkonEventServiceRole54A79A43",
+            "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleProviderframeworkonEventServiceRole8AB21249",
             "Arn",
           ],
         },
@@ -3691,13 +3672,13 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
       },
       "Type": "AWS::Lambda::Function",
     },
-    "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComframeworkonEventServiceRole54A79A43": {
+    "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleProviderframeworkonEventServiceRole8AB21249": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
+              "reason": "Custom resource Lambda role policy.",
             },
           ],
         },
@@ -3732,13 +3713,13 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
       },
       "Type": "AWS::IAM::Role",
     },
-    "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComframeworkonEventServiceRoleDefaultPolicy7300A613": {
+    "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy3D6F853C": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
+              "reason": "Custom resource Lambda role policy.",
             },
           ],
         },
@@ -3752,7 +3733,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
               "Resource": [
                 {
                   "Fn::GetAtt": [
-                    "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComServiceLinkedRoleCloud9AmazonawsComFunctionA0CAA4C4",
+                    "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunction78452922",
                     "Arn",
                   ],
                 },
@@ -3762,7 +3743,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
                     [
                       {
                         "Fn::GetAtt": [
-                          "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComServiceLinkedRoleCloud9AmazonawsComFunctionA0CAA4C4",
+                          "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunction78452922",
                           "Arn",
                         ],
                       },
@@ -3775,14 +3756,30 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComframeworkonEventServiceRoleDefaultPolicy7300A613",
+        "PolicyName": "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy3D6F853C",
         "Roles": [
           {
-            "Ref": "AWSServiceRoleForAWSCloud9ServiceLinkedRoleCloud9AmazonawsComframeworkonEventServiceRole54A79A43",
+            "Ref": "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleProviderframeworkonEventServiceRole8AB21249",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
+    },
+    "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleResource5A765F9A": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleProviderframeworkonEventB3756D27",
+            "Arn",
+          ],
+        },
+        "description": "Service linked role for AWS Cloud9",
+        "roleName": "AWSServiceRoleForAWSCloud9",
+        "serviceName": "cloud9.amazonaws.com",
+      },
+      "Type": "Custom::CreateServiceLinkedRole",
+      "UpdateReplacePolicy": "Delete",
     },
     "Accelerator3KeyAliasA5E4BDCB": {
       "Properties": {
@@ -4808,17 +4805,17 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
       },
       "Type": "AWS::S3::BucketPolicy",
     },
-    "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionA31E50BF": {
+    "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction56E83FD3": {
       "DependsOn": [
-        "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRoleDefaultPolicy68F6612B",
-        "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRole193CD4A4",
+        "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy4BF99055",
+        "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleF168CC0D",
       ],
       "Properties": {
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Description": "Accelerator deployed ServiceLinkedRoleAutoscalingAmazonawsCom custom resource lambda function.",
+        "Description": "Custom resource provider to create service linked role",
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -4829,7 +4826,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
         "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
-            "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRole193CD4A4",
+            "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleF168CC0D",
             "Arn",
           ],
         },
@@ -4838,7 +4835,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
       },
       "Type": "AWS::Lambda::Function",
     },
-    "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionLogGroup9E3F3AFA": {
+    "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionLogGroupAF98D208": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "KmsKeyId": {
@@ -4853,7 +4850,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
             [
               "/aws/lambda/",
               {
-                "Ref": "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionA31E50BF",
+                "Ref": "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction56E83FD3",
               },
             ],
           ],
@@ -4863,54 +4860,13 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRole193CD4A4": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-              ],
-            ],
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRoleDefaultPolicy68F6612B": {
+    "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy4BF99055": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
+              "reason": "Custom resource Lambda role policy.",
             },
           ],
         },
@@ -4929,72 +4885,22 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "nkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRoleDefaultPolicy68F6612B",
+        "PolicyName": "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy4BF99055",
         "Roles": [
           {
-            "Ref": "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRole193CD4A4",
+            "Ref": "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleF168CC0D",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComResource416ABF27": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventE5DC4FA1",
-            "Arn",
-          ],
-        },
-        "description": "Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling",
-        "roleName": "AWSServiceRoleForAutoScaling",
-        "serviceName": "autoscaling.amazonaws.com",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "AWS::CloudFormation::CustomResource",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventE5DC4FA1": {
-      "DependsOn": [
-        "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRoleDefaultPolicy27097308",
-        "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRoleCD7551CD",
-      ],
-      "Properties": {
-        "Code": {
-          "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
-          "S3Key": "REPLACED-GENERATED-NAME.zip",
-        },
-        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-east-1/AutoScalingServiceLinkedRole/ServiceLinkedRoleAutoscalingAmazonawsCom/Resource)",
-        "Environment": {
-          "Variables": {
-            "USER_ON_EVENT_FUNCTION_ARN": {
-              "Fn::GetAtt": [
-                "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionA31E50BF",
-                "Arn",
-              ],
-            },
-          },
-        },
-        "Handler": "framework.onEvent",
-        "Role": {
-          "Fn::GetAtt": [
-            "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRoleCD7551CD",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs14.x",
-        "Timeout": 900,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRoleCD7551CD": {
+    "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleF168CC0D": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
+              "reason": "Custom resource Lambda role policy.",
             },
           ],
         },
@@ -5029,13 +4935,46 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
       },
       "Type": "AWS::IAM::Role",
     },
-    "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRoleDefaultPolicy27097308": {
+    "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEvent05930586": {
+      "DependsOn": [
+        "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyC1F62AB2",
+        "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleF8C91A0A",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-east-1/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleProvider)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction56E83FD3",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleF8C91A0A",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyC1F62AB2": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
+              "reason": "Custom resource Lambda role policy.",
             },
           ],
         },
@@ -5049,7 +4988,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
               "Resource": [
                 {
                   "Fn::GetAtt": [
-                    "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionA31E50BF",
+                    "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction56E83FD3",
                     "Arn",
                   ],
                 },
@@ -5059,7 +4998,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
                     [
                       {
                         "Fn::GetAtt": [
-                          "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionA31E50BF",
+                          "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction56E83FD3",
                           "Arn",
                         ],
                       },
@@ -5072,14 +5011,71 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRoleDefaultPolicy27097308",
+        "PolicyName": "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyC1F62AB2",
         "Roles": [
           {
-            "Ref": "AutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRoleCD7551CD",
+            "Ref": "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleF8C91A0A",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
+    },
+    "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleF8C91A0A": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Custom resource Lambda role policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleResourceE203F878": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEvent05930586",
+            "Arn",
+          ],
+        },
+        "description": "Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling",
+        "roleName": "AWSServiceRoleForAutoScaling",
+        "serviceName": "autoscaling.amazonaws.com",
+      },
+      "Type": "Custom::CreateServiceLinkedRole",
+      "UpdateReplacePolicy": "Delete",
     },
     "CrossAccountCentralSnsTopicKMSArnSsmParamAccessRoleFA0EB249": {
       "Metadata": {

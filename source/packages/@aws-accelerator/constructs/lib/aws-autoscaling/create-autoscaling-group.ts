@@ -52,10 +52,8 @@ export class AutoscalingGroup extends cdk.Resource implements IAutoscalingGroupR
   constructor(scope: Construct, id: string, props: AutoscalingGroupProps) {
     super(scope, id);
 
-    const asgSlrResourceName = 'AutoScalingServiceLinkedRole';
-
     // Ensure there is service linked role for autoscaling
-    new ServiceLinkedRole(this, asgSlrResourceName, {
+    new ServiceLinkedRole(this, 'AutoScalingServiceLinkedRole', {
       environmentEncryptionKmsKey: props.lambdaKey,
       cloudWatchLogKmsKey: props.cloudWatchLogKmsKey,
       cloudWatchLogRetentionInDays: props.cloudWatchLogRetentionInDays,
@@ -63,7 +61,6 @@ export class AutoscalingGroup extends cdk.Resource implements IAutoscalingGroupR
       description:
         'Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling',
       roleName: 'AWSServiceRoleForAutoScaling',
-      nagSuppressionPrefix: `${props.nagSuppressionPrefix}/${asgSlrResourceName}`,
     });
 
     const resource = new cdk.aws_autoscaling.CfnAutoScalingGroup(this, 'Resource', {

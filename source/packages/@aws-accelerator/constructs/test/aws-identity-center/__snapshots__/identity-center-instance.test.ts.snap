@@ -38,10 +38,10 @@ exports[`IdentityCenterInstance Construct(IdentityCenterGetInstanceId):  Snapsho
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunction6D15DC48": {
+    "IdentityCenterInstanceIdentityCenterGetInstanceIdFunctionE59FDB54": {
       "DependsOn": [
-        "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunctionServiceRoleDefaultPolicyA565A09E",
-        "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunctionServiceRole7F75B101",
+        "IdentityCenterInstanceIdentityCenterGetInstanceIdFunctionServiceRoleDefaultPolicyF2FD593D",
+        "IdentityCenterInstanceIdentityCenterGetInstanceIdFunctionServiceRoleC3631797",
       ],
       "Properties": {
         "Code": {
@@ -61,7 +61,7 @@ exports[`IdentityCenterInstance Construct(IdentityCenterGetInstanceId):  Snapsho
         "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
-            "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunctionServiceRole7F75B101",
+            "IdentityCenterInstanceIdentityCenterGetInstanceIdFunctionServiceRoleC3631797",
             "Arn",
           ],
         },
@@ -70,7 +70,7 @@ exports[`IdentityCenterInstance Construct(IdentityCenterGetInstanceId):  Snapsho
       },
       "Type": "AWS::Lambda::Function",
     },
-    "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunctionLogGroup6C4870CE": {
+    "IdentityCenterInstanceIdentityCenterGetInstanceIdFunctionResourceLogGroup043D5A24": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "KmsKeyId": {
@@ -85,7 +85,7 @@ exports[`IdentityCenterInstance Construct(IdentityCenterGetInstanceId):  Snapsho
             [
               "/aws/lambda/",
               {
-                "Ref": "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunction6D15DC48",
+                "Ref": "IdentityCenterInstanceIdentityCenterGetInstanceIdFunctionE59FDB54",
               },
             ],
           ],
@@ -95,13 +95,13 @@ exports[`IdentityCenterInstance Construct(IdentityCenterGetInstanceId):  Snapsho
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunctionServiceRole7F75B101": {
+    "IdentityCenterInstanceIdentityCenterGetInstanceIdFunctionServiceRoleC3631797": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
+              "reason": "AWS Lambda needs Managed policy.",
             },
           ],
         },
@@ -136,13 +136,13 @@ exports[`IdentityCenterInstance Construct(IdentityCenterGetInstanceId):  Snapsho
       },
       "Type": "AWS::IAM::Role",
     },
-    "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunctionServiceRoleDefaultPolicyA565A09E": {
+    "IdentityCenterInstanceIdentityCenterGetInstanceIdFunctionServiceRoleDefaultPolicyF2FD593D": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
+              "reason": "AWS Lambda needs Managed policy.",
             },
           ],
         },
@@ -158,10 +158,10 @@ exports[`IdentityCenterInstance Construct(IdentityCenterGetInstanceId):  Snapsho
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunctionServiceRoleDefaultPolicyA565A09E",
+        "PolicyName": "IdentityCenterInstanceIdentityCenterGetInstanceIdFunctionServiceRoleDefaultPolicyF2FD593D",
         "Roles": [
           {
-            "Ref": "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunctionServiceRole7F75B101",
+            "Ref": "IdentityCenterInstanceIdentityCenterGetInstanceIdFunctionServiceRoleC3631797",
           },
         ],
       },
@@ -198,7 +198,7 @@ exports[`IdentityCenterInstance Construct(IdentityCenterGetInstanceId):  Snapsho
           "Variables": {
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
-                "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunction6D15DC48",
+                "IdentityCenterInstanceIdentityCenterGetInstanceIdFunctionE59FDB54",
                 "Arn",
               ],
             },
@@ -277,7 +277,7 @@ exports[`IdentityCenterInstance Construct(IdentityCenterGetInstanceId):  Snapsho
               "Resource": [
                 {
                   "Fn::GetAtt": [
-                    "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunction6D15DC48",
+                    "IdentityCenterInstanceIdentityCenterGetInstanceIdFunctionE59FDB54",
                     "Arn",
                   ],
                 },
@@ -287,7 +287,7 @@ exports[`IdentityCenterInstance Construct(IdentityCenterGetInstanceId):  Snapsho
                     [
                       {
                         "Fn::GetAtt": [
-                          "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdFunction6D15DC48",
+                          "IdentityCenterInstanceIdentityCenterGetInstanceIdFunctionE59FDB54",
                           "Arn",
                         ],
                       },

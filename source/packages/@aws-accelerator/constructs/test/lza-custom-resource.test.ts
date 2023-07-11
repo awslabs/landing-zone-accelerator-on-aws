@@ -30,7 +30,8 @@ new LzaCustomResource(stack, 'LzaCustomResource', {
       { principalType: 'USER' },
       { principalName: 'lza-accelerator-user' },
     ],
-    nagSuppressionPrefix: 'testPrefix',
+    forceUpdate: true,
+    debug: true,
   },
   lambda: {
     assetPath: `${__dirname}/../lib/aws-identitystore/get-users-groups-id/dist`,
@@ -47,7 +48,6 @@ new LzaCustomResource(stack, 'LzaCustomResource', {
     ],
     description: 'LZA Snapshot test custom resource',
     cloudWatchLogRemovalPolicy: cdk.RemovalPolicy.RETAIN,
-    debug: true,
   },
 });
 

@@ -314,6 +314,46 @@ export abstract class AcceleratorStack extends cdk.Stack {
       this.serviceLinkedRoleSupportedPartitionList.includes(this.props.partition)
     ) {
       this.createServiceLinkedRole(ServiceLinkedRoleType.ACCESS_ANALYZER, cloudwatchKey, lambdaKey);
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/AccessAnalyzerServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
+          {
+            path: `${this.stackName}/AccessAnalyzerServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/DefaultPolicy/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/AccessAnalyzerServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
+          {
+            path: `${this.stackName}/AccessAnalyzerServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
     }
   }
 
@@ -330,6 +370,46 @@ export abstract class AcceleratorStack extends cdk.Stack {
       this.serviceLinkedRoleSupportedPartitionList.includes(this.props.partition)
     ) {
       this.createServiceLinkedRole(ServiceLinkedRoleType.GUARDDUTY, cloudwatchKey, lambdaKey);
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/GuardDutyServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
+          {
+            path: `${this.stackName}/GuardDutyServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/DefaultPolicy/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/GuardDutyServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
+          {
+            path: `${this.stackName}/GuardDutyServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
     }
   }
 
@@ -346,6 +426,46 @@ export abstract class AcceleratorStack extends cdk.Stack {
       this.serviceLinkedRoleSupportedPartitionList.includes(this.props.partition)
     ) {
       this.createServiceLinkedRole(ServiceLinkedRoleType.SECURITY_HUB, cloudwatchKey, lambdaKey);
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/SecurityHubServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
+          {
+            path: `${this.stackName}/SecurityHubServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/DefaultPolicy/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/SecurityHubServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
+          {
+            path: `${this.stackName}/SecurityHubServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
     }
   }
 
@@ -362,6 +482,46 @@ export abstract class AcceleratorStack extends cdk.Stack {
       this.serviceLinkedRoleSupportedPartitionList.includes(this.props.partition)
     ) {
       this.createServiceLinkedRole(ServiceLinkedRoleType.MACIE, cloudwatchKey, lambdaKey);
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/MacieServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
+          {
+            path: `${this.stackName}/MacieServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/DefaultPolicy/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/MacieServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
+          {
+            path: `${this.stackName}/MacieServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
     }
   }
 
@@ -377,6 +537,46 @@ export abstract class AcceleratorStack extends cdk.Stack {
       this.serviceLinkedRoleSupportedPartitionList.includes(this.props.partition)
     ) {
       this.createServiceLinkedRole(ServiceLinkedRoleType.AUTOSCALING, cloudwatchKey, lambdaKey);
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
+          {
+            path: `${this.stackName}/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/DefaultPolicy/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
+          {
+            path: `${this.stackName}/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
     }
   }
 
@@ -418,6 +618,46 @@ export abstract class AcceleratorStack extends cdk.Stack {
       this.props.partition === 'aws'
     ) {
       this.createServiceLinkedRole(ServiceLinkedRoleType.AWS_CLOUD9, cloudwatchKey, lambdaKey);
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/AWSServiceRoleForAWSCloud9/CreateServiceLinkedRoleFunction/ServiceRole/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
+          {
+            path: `${this.stackName}/AWSServiceRoleForAWSCloud9/CreateServiceLinkedRoleFunction/ServiceRole/DefaultPolicy/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/AWSServiceRoleForAWSCloud9/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
+          {
+            path: `${this.stackName}/AWSServiceRoleForAWSCloud9/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
     }
   }
 
@@ -519,7 +759,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
           this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable &&
           this.props.partition === 'aws'
         ) {
-          this.logger.debug('Create AutoScalingServiceLinkedRole');
+          this.logger.debug('Create Aws Cloud9 Service Linked Role');
           new ServiceLinkedRole(this, 'AWSServiceRoleForAWSCloud9', {
             awsServiceName: 'cloud9.amazonaws.com',
             description: 'Service linked role for AWS Cloud9',

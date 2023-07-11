@@ -73,10 +73,10 @@ exports[`UsersGroupsMetadata Construct(IdentityCenterGetInstanceId):  Snapshot T
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunctionE2E4F0E2": {
+    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunction13963D86": {
       "DependsOn": [
-        "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunctionServiceRoleDefaultPolicyA286B3E8",
-        "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunctionServiceRole9AC5941D",
+        "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunctionServiceRoleDefaultPolicy1288DCD7",
+        "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunctionServiceRole7A2BFF02",
       ],
       "Properties": {
         "Code": {
@@ -96,7 +96,7 @@ exports[`UsersGroupsMetadata Construct(IdentityCenterGetInstanceId):  Snapshot T
         "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
-            "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunctionServiceRole9AC5941D",
+            "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunctionServiceRole7A2BFF02",
             "Arn",
           ],
         },
@@ -105,7 +105,7 @@ exports[`UsersGroupsMetadata Construct(IdentityCenterGetInstanceId):  Snapshot T
       },
       "Type": "AWS::Lambda::Function",
     },
-    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunctionLogGroupFA1672CC": {
+    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunctionResourceLogGroup322901B0": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "KmsKeyId": {
@@ -120,7 +120,7 @@ exports[`UsersGroupsMetadata Construct(IdentityCenterGetInstanceId):  Snapshot T
             [
               "/aws/lambda/",
               {
-                "Ref": "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunctionE2E4F0E2",
+                "Ref": "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunction13963D86",
               },
             ],
           ],
@@ -130,13 +130,13 @@ exports[`UsersGroupsMetadata Construct(IdentityCenterGetInstanceId):  Snapshot T
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunctionServiceRole9AC5941D": {
+    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunctionServiceRole7A2BFF02": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
+              "reason": "AWS Lambda needs Managed policy.",
             },
           ],
         },
@@ -171,13 +171,13 @@ exports[`UsersGroupsMetadata Construct(IdentityCenterGetInstanceId):  Snapshot T
       },
       "Type": "AWS::IAM::Role",
     },
-    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunctionServiceRoleDefaultPolicyA286B3E8": {
+    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunctionServiceRoleDefaultPolicy1288DCD7": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
+              "reason": "AWS Lambda needs Managed policy.",
             },
           ],
         },
@@ -196,10 +196,10 @@ exports[`UsersGroupsMetadata Construct(IdentityCenterGetInstanceId):  Snapshot T
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "oupLzaAcceleratorGroupUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunctionServiceRoleDefaultPolicyA286B3E8",
+        "PolicyName": "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunctionServiceRoleDefaultPolicy1288DCD7",
         "Roles": [
           {
-            "Ref": "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunctionServiceRole9AC5941D",
+            "Ref": "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunctionServiceRole7A2BFF02",
           },
         ],
       },
@@ -239,7 +239,7 @@ exports[`UsersGroupsMetadata Construct(IdentityCenterGetInstanceId):  Snapshot T
           "Variables": {
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
-                "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunctionE2E4F0E2",
+                "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunction13963D86",
                 "Arn",
               ],
             },
@@ -318,7 +318,7 @@ exports[`UsersGroupsMetadata Construct(IdentityCenterGetInstanceId):  Snapshot T
               "Resource": [
                 {
                   "Fn::GetAtt": [
-                    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunctionE2E4F0E2",
+                    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunction13963D86",
                     "Arn",
                   ],
                 },
@@ -328,7 +328,7 @@ exports[`UsersGroupsMetadata Construct(IdentityCenterGetInstanceId):  Snapshot T
                     [
                       {
                         "Fn::GetAtt": [
-                          "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunctionE2E4F0E2",
+                          "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunction13963D86",
                           "Arn",
                         ],
                       },
@@ -350,10 +350,10 @@ exports[`UsersGroupsMetadata Construct(IdentityCenterGetInstanceId):  Snapshot T
       },
       "Type": "AWS::IAM::Policy",
     },
-    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunction405CF77E": {
+    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunction6045F329": {
       "DependsOn": [
-        "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunctionServiceRoleDefaultPolicy2354EA76",
-        "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunctionServiceRole2A6DB54C",
+        "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunctionServiceRoleDefaultPolicyF58E7B84",
+        "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunctionServiceRole7C5198B5",
       ],
       "Properties": {
         "Code": {
@@ -373,7 +373,7 @@ exports[`UsersGroupsMetadata Construct(IdentityCenterGetInstanceId):  Snapshot T
         "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
-            "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunctionServiceRole2A6DB54C",
+            "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunctionServiceRole7C5198B5",
             "Arn",
           ],
         },
@@ -382,7 +382,7 @@ exports[`UsersGroupsMetadata Construct(IdentityCenterGetInstanceId):  Snapshot T
       },
       "Type": "AWS::Lambda::Function",
     },
-    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunctionLogGroup312AED8F": {
+    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunctionResourceLogGroupEE1D2883": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "KmsKeyId": {
@@ -397,7 +397,7 @@ exports[`UsersGroupsMetadata Construct(IdentityCenterGetInstanceId):  Snapshot T
             [
               "/aws/lambda/",
               {
-                "Ref": "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunction405CF77E",
+                "Ref": "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunction6045F329",
               },
             ],
           ],
@@ -407,13 +407,13 @@ exports[`UsersGroupsMetadata Construct(IdentityCenterGetInstanceId):  Snapshot T
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunctionServiceRole2A6DB54C": {
+    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunctionServiceRole7C5198B5": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
+              "reason": "AWS Lambda needs Managed policy.",
             },
           ],
         },
@@ -448,13 +448,13 @@ exports[`UsersGroupsMetadata Construct(IdentityCenterGetInstanceId):  Snapshot T
       },
       "Type": "AWS::IAM::Role",
     },
-    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunctionServiceRoleDefaultPolicy2354EA76": {
+    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunctionServiceRoleDefaultPolicyF58E7B84": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
+              "reason": "AWS Lambda needs Managed policy.",
             },
           ],
         },
@@ -473,10 +473,10 @@ exports[`UsersGroupsMetadata Construct(IdentityCenterGetInstanceId):  Snapshot T
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "t1UserLzaAcceleratorUserUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunctionServiceRoleDefaultPolicy2354EA76",
+        "PolicyName": "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunctionServiceRoleDefaultPolicyF58E7B84",
         "Roles": [
           {
-            "Ref": "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunctionServiceRole2A6DB54C",
+            "Ref": "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunctionServiceRole7C5198B5",
           },
         ],
       },
@@ -516,7 +516,7 @@ exports[`UsersGroupsMetadata Construct(IdentityCenterGetInstanceId):  Snapshot T
           "Variables": {
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
-                "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunction405CF77E",
+                "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunction6045F329",
                 "Arn",
               ],
             },
@@ -595,7 +595,7 @@ exports[`UsersGroupsMetadata Construct(IdentityCenterGetInstanceId):  Snapshot T
               "Resource": [
                 {
                   "Fn::GetAtt": [
-                    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunction405CF77E",
+                    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunction6045F329",
                     "Arn",
                   ],
                 },
@@ -605,7 +605,7 @@ exports[`UsersGroupsMetadata Construct(IdentityCenterGetInstanceId):  Snapshot T
                     [
                       {
                         "Fn::GetAtt": [
-                          "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunction405CF77E",
+                          "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunction6045F329",
                           "Arn",
                         ],
                       },

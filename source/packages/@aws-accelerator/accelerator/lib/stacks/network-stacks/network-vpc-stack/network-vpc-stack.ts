@@ -60,6 +60,7 @@ export class NetworkVpcStack extends NetworkStack {
     // Create subnet resources
     //
     const outpostMap = this.setOutpostsMap(props.networkConfig.vpcs);
+
     const subnetResources = new SubnetResources(
       this,
       vpcResources.vpcMap,

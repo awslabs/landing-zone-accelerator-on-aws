@@ -538,7 +538,6 @@ export abstract class Accelerator {
       }
     }
     await Promise.all(promises);
-    return;
   }
 
   /**

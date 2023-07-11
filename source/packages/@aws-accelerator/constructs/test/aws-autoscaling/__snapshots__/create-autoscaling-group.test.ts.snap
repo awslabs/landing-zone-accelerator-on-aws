@@ -100,10 +100,10 @@ exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
       },
       "Type": "AWS::AutoScaling::AutoScalingGroup",
     },
-    "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunction48E7F3B6": {
+    "TestAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction48483210": {
       "DependsOn": [
-        "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRoleDefaultPolicyB7FB5D8A",
-        "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRole40EA4F5C",
+        "TestAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy5556EF30",
+        "TestAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleD427D69E",
       ],
       "Properties": {
         "Code": {
@@ -112,7 +112,7 @@ exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Description": "Accelerator deployed ServiceLinkedRoleAutoscalingAmazonawsCom custom resource lambda function.",
+        "Description": "Custom resource provider to create service linked role",
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -123,7 +123,7 @@ exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
         "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
-            "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRole40EA4F5C",
+            "TestAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleD427D69E",
             "Arn",
           ],
         },
@@ -132,7 +132,7 @@ exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
       },
       "Type": "AWS::Lambda::Function",
     },
-    "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionLogGroupAF16E97B": {
+    "TestAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionLogGroup4DBD4D73": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "KmsKeyId": {
@@ -147,7 +147,7 @@ exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
             [
               "/aws/lambda/",
               {
-                "Ref": "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunction48E7F3B6",
+                "Ref": "TestAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction48483210",
               },
             ],
           ],
@@ -157,7 +157,7 @@ exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRole40EA4F5C": {
+    "TestAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleD427D69E": {
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -188,7 +188,7 @@ exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Role",
     },
-    "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRoleDefaultPolicyB7FB5D8A": {
+    "TestAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy5556EF30": {
       "Properties": {
         "PolicyDocument": {
           "Statement": [
@@ -203,36 +203,19 @@ exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "nkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRoleDefaultPolicyB7FB5D8A",
+        "PolicyName": "TestAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy5556EF30",
         "Roles": [
           {
-            "Ref": "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunctionServiceRole40EA4F5C",
+            "Ref": "TestAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleD427D69E",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComResourceFA996200": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEvent48B8D4E8",
-            "Arn",
-          ],
-        },
-        "description": "Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling",
-        "roleName": "AWSServiceRoleForAutoScaling",
-        "serviceName": "autoscaling.amazonaws.com",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "AWS::CloudFormation::CustomResource",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEvent48B8D4E8": {
+    "TestAutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEvent25455835": {
       "DependsOn": [
-        "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRoleDefaultPolicy3FDE0AC8",
-        "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRoleA330AA0A",
+        "TestAutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy610C6366",
+        "TestAutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole6926E52E",
       ],
       "Properties": {
         "Code": {
@@ -241,12 +224,12 @@ exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Description": "AWS CDK resource provider framework - onEvent (Default/Test/AutoScalingServiceLinkedRole/ServiceLinkedRoleAutoscalingAmazonawsCom/Resource)",
+        "Description": "AWS CDK resource provider framework - onEvent (Default/Test/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
-                "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunction48E7F3B6",
+                "TestAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction48483210",
                 "Arn",
               ],
             },
@@ -255,7 +238,7 @@ exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
         "Handler": "framework.onEvent",
         "Role": {
           "Fn::GetAtt": [
-            "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRoleA330AA0A",
+            "TestAutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole6926E52E",
             "Arn",
           ],
         },
@@ -264,7 +247,7 @@ exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
       },
       "Type": "AWS::Lambda::Function",
     },
-    "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRoleA330AA0A": {
+    "TestAutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole6926E52E": {
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -295,7 +278,7 @@ exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Role",
     },
-    "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRoleDefaultPolicy3FDE0AC8": {
+    "TestAutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy610C6366": {
       "Properties": {
         "PolicyDocument": {
           "Statement": [
@@ -305,7 +288,7 @@ exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
               "Resource": [
                 {
                   "Fn::GetAtt": [
-                    "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunction48E7F3B6",
+                    "TestAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction48483210",
                     "Arn",
                   ],
                 },
@@ -315,7 +298,7 @@ exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
                     [
                       {
                         "Fn::GetAtt": [
-                          "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComServiceLinkedRoleAutoscalingAmazonawsComFunction48E7F3B6",
+                          "TestAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction48483210",
                           "Arn",
                         ],
                       },
@@ -328,14 +311,30 @@ exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRoleDefaultPolicy3FDE0AC8",
+        "PolicyName": "TestAutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy610C6366",
         "Roles": [
           {
-            "Ref": "TestAutoScalingServiceLinkedRoleServiceLinkedRoleAutoscalingAmazonawsComframeworkonEventServiceRoleA330AA0A",
+            "Ref": "TestAutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole6926E52E",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
+    },
+    "TestAutoScalingServiceLinkedRoleCreateServiceLinkedRoleResourceC5B197D4": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "TestAutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEvent25455835",
+            "Arn",
+          ],
+        },
+        "description": "Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling",
+        "roleName": "AWSServiceRoleForAutoScaling",
+        "serviceName": "autoscaling.amazonaws.com",
+      },
+      "Type": "Custom::CreateServiceLinkedRole",
+      "UpdateReplacePolicy": "Delete",
     },
   },
 }
