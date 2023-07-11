@@ -16,6 +16,7 @@ import { Construct } from 'constructs';
 import { NagSuppressions } from 'cdk-nag';
 import { v4 as uuidv4 } from 'uuid';
 import { pascalCase } from 'change-case';
+import { LzaLambda } from './lza-lambda';
 
 /**
  * Initialized LzaCustomResourceProps properties
@@ -34,13 +35,6 @@ export interface LzaCustomResourceProps {
      */
     readonly parentId: string;
     /**
-     * Prefix for nag suppression
-     *
-     * @@remarks
-     * Use this to specify nag suppression prefix when default nag suppression by this construct is not applicable
-     */
-    readonly nagSuppressionPrefix?: string;
-    /**
      * A name value object list for custom resource properties
      *
      * @example
@@ -54,12 +48,28 @@ export interface LzaCustomResourceProps {
      * Generates a new UUID to force the resource to update
      */
     readonly forceUpdate?: boolean;
+    /**
+     * The AWS Lambda function to invoke for all resource lifecycle operations (CREATE/UPDATE/DELETE).
+     *
+     * @default
+     * undefined.
+     *
+     * @remarks
+     * This function is responsible to begin the requested resource operation (CREATE/UPDATE/DELETE).
+     * When no value provided construct will create lambda function for the custom resource.
+     */
+    readonly onEventHandler?: cdk.aws_lambda.IFunction;
+    /**
+     * Debug flag used in custom resource lambda function to output debug logs
+    @default false    
+     */
+    readonly debug?: boolean;
   };
 
   /**
    * Custom resource lambda properties
    */
-  readonly lambda: {
+  readonly lambda?: {
     /**
      * LZA Custom resource lambda asset folder path including the /dist folder
      */
@@ -111,11 +121,6 @@ export interface LzaCustomResourceProps {
      */
     readonly cloudWatchLogRemovalPolicy?: cdk.RemovalPolicy;
     /**
-     * Debug flag used in custom resource lambda function to output debug logs
-    @default false    
-     */
-    readonly debug?: boolean;
-    /**
      * A name value object list for lambda environment variables
      *
      * @example
@@ -126,6 +131,10 @@ export interface LzaCustomResourceProps {
       [key: string]: any;
     }[];
   };
+  /**
+   * Prefix for nag suppression
+   */
+  readonly nagSuppressionPrefix?: string;
 }
 
 /**
@@ -140,31 +149,46 @@ export class LzaCustomResource extends Construct {
   constructor(scope: Construct, id: string, props: LzaCustomResourceProps) {
     super(scope, id);
 
-    const functionName = pascalCase(props.resource.name + 'Function');
+    if (props.resource.onEventHandler && props.lambda) {
+      throw new Error(
+        `Custom resource onEventHandler lambda function or construct lambda property can be provided, both can't be provided.`,
+      );
+    }
 
-    const providerLambdaFunction = new cdk.aws_lambda.Function(this, functionName, {
-      description:
-        props.lambda.description ?? `Accelerator deployed ${props.resource.name} custom resource lambda function.`,
-      code: cdk.aws_lambda.Code.fromAsset(props.lambda.assetPath),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
-      memorySize: props.lambda.memorySize ?? 256,
-      timeout: props.lambda.timeOut,
-      role: props.lambda.role,
-      initialPolicy: props.lambda.roleInitialPolicy,
-      handler: props.lambda.handler ?? 'index.handler',
-      environmentEncryption: props.lambda.environmentEncryptionKmsKey,
-      environment: this.prepareLambdaEnvironments(props),
-    });
+    if (!props.resource.onEventHandler && !props.lambda) {
+      throw new Error(
+        `Either custom resource onEventHandler lambda function or construct lambda property must be provided, both can't be undefined.`,
+      );
+    }
 
-    new cdk.aws_logs.LogGroup(this, `${providerLambdaFunction.node.id}LogGroup`, {
-      logGroupName: `/aws/lambda/${providerLambdaFunction.functionName}`,
-      retention: props.lambda.cloudWatchLogRetentionInDays,
-      encryptionKey: props.lambda.cloudWatchLogKmsKey,
-      removalPolicy: props.lambda.cloudWatchLogRemovalPolicy ?? cdk.RemovalPolicy.DESTROY,
-    });
+    let providerLambdaFunction = props.resource.onEventHandler;
+    const nagSuppressionPrefix = props.nagSuppressionPrefix
+      ? `${props.nagSuppressionPrefix}/${props.resource.name}`
+      : `${props.resource.parentId}/${props.resource.name}`;
+
+    if (props.lambda) {
+      const lzaLambda = new LzaLambda(this, 'Function', {
+        assetPath: props.lambda.assetPath,
+        environmentEncryptionKmsKey: props.lambda.environmentEncryptionKmsKey,
+        cloudWatchLogKmsKey: props.lambda.cloudWatchLogKmsKey,
+        cloudWatchLogRetentionInDays: props.lambda.cloudWatchLogRetentionInDays,
+        description:
+          props.lambda.description ?? `Accelerator deployed ${props.resource.name} custom resource lambda function.`,
+        role: props.lambda.role,
+        memorySize: props.lambda.memorySize,
+        timeOut: props.lambda.timeOut,
+        roleInitialPolicy: props.lambda.roleInitialPolicy,
+        handler: props.lambda.handler,
+        cloudWatchLogRemovalPolicy: props.lambda.cloudWatchLogRemovalPolicy,
+        environmentVariables: props.lambda.environmentVariables,
+        nagSuppressionPrefix,
+      });
+
+      providerLambdaFunction = lzaLambda.resource;
+    }
 
     this.provider = new cdk.custom_resources.Provider(this, 'Resource', {
-      onEventHandler: providerLambdaFunction,
+      onEventHandler: providerLambdaFunction!,
     });
 
     this.resource = new cdk.CustomResource(this, pascalCase(props.resource.name + 'Resource'), {
@@ -172,135 +196,44 @@ export class LzaCustomResource extends Construct {
       properties: this.prepareResourceProperties(props),
     });
 
-    const stack = cdk.Stack.of(scope);
-
-    if (props.resource.nagSuppressionPrefix) {
-      // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-      NagSuppressions.addResourceSuppressionsByPath(
-        stack,
-        `${stack.stackName}/${props.resource.nagSuppressionPrefix}/${functionName}/ServiceRole/Resource`,
-        [
-          {
-            id: 'AwsSolutions-IAM4',
-            reason: 'AWS Custom resource provider framework-role created by cdk.',
-          },
-        ],
-      );
-      NagSuppressions.addResourceSuppressionsByPath(
-        stack,
-        `${stack.stackName}/${props.resource.nagSuppressionPrefix}/${functionName}/ServiceRole/DefaultPolicy/Resource`,
-        [
-          {
-            id: 'AwsSolutions-IAM5',
-            reason: 'Allows only specific policy.',
-          },
-        ],
-      );
-      // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-      NagSuppressions.addResourceSuppressionsByPath(
-        stack,
-        `${stack.stackName}/${props.resource.nagSuppressionPrefix}/Resource/framework-onEvent/ServiceRole/Resource`,
-        [
-          {
-            id: 'AwsSolutions-IAM4',
-            reason: 'AWS Custom resource provider framework-role created by cdk.',
-          },
-        ],
-      );
-
-      // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
-      NagSuppressions.addResourceSuppressionsByPath(
-        stack,
-        `${stack.stackName}/${props.resource.nagSuppressionPrefix}/Resource/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
-        [
-          {
-            id: 'AwsSolutions-IAM5',
-            reason: 'Allows only specific policy.',
-          },
-        ],
-      );
-    }
-
-    // // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-    NagSuppressions.addResourceSuppressionsByPath(
-      stack,
-      `${stack.stackName}/${props.resource.parentId}/${id}/${functionName}/ServiceRole/Resource`,
-      [
-        {
-          id: 'AwsSolutions-IAM4',
-          reason: 'AWS Custom resource provider framework-role created by cdk.',
-        },
-      ],
-    );
-
-    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
-    NagSuppressions.addResourceSuppressionsByPath(
-      stack,
-      `${stack.stackName}/${props.resource.parentId}/${id}/${functionName}/ServiceRole/DefaultPolicy/Resource`,
-      [
-        {
-          id: 'AwsSolutions-IAM5',
-          reason: 'Allows only specific policy.',
-        },
-      ],
-    );
-
-    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-    NagSuppressions.addResourceSuppressionsByPath(
-      stack,
-      `${stack.stackName}/${props.resource.parentId}/${id}/Resource/framework-onEvent/ServiceRole/Resource`,
-      [
-        {
-          id: 'AwsSolutions-IAM4',
-          reason: 'AWS Custom resource provider framework-role created by cdk.',
-        },
-      ],
-    );
-
-    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
-    NagSuppressions.addResourceSuppressionsByPath(
-      stack,
-      `${stack.stackName}/${props.resource.parentId}/${id}/Resource/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
-      [
-        {
-          id: 'AwsSolutions-IAM5',
-          reason: 'Allows only specific policy.',
-        },
-      ],
-    );
+    this.addSuppression(scope, props);
   }
 
   /**
-   * Function to prepare Lambda Environment variables
-   * @param props {@link LzaCustomResourceProps}
-   * @returns
+   * Function to add NagSuppressions
+   * @param scope {@link Construct}
+   * @param nagSuppressionPrefix {@link LzaCustomResourceProps}
    */
-  private prepareLambdaEnvironments(props: LzaCustomResourceProps):
-    | {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        [key: string]: any;
-      }
-    | undefined {
-    const lambdaEnvironmentList:
-      | {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          [key: string]: any;
-        }[] = props.lambda.environmentVariables ?? [];
+  private addSuppression(scope: Construct, props: LzaCustomResourceProps) {
+    const stack = cdk.Stack.of(scope);
 
-    const lambdaEnvironment: {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      [key: string]: any;
-    } = {};
+    let prefix: string | undefined;
 
-    for (const environmentVariable of lambdaEnvironmentList) {
-      for (const [key, value] of Object.entries(environmentVariable)) {
-        lambdaEnvironment[key] = value;
-      }
+    if (props.nagSuppressionPrefix) {
+      prefix = `${stack.stackName}/${props.nagSuppressionPrefix}/${props.resource.name}/Resource`;
+    } else {
+      prefix = `${stack.stackName}/${props.resource.parentId}/${props.resource.name}/Resource`;
     }
 
-    return lambdaEnvironmentList.length > 0 ? lambdaEnvironment : undefined;
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+    NagSuppressions.addResourceSuppressionsByPath(stack, `${prefix}/framework-onEvent/ServiceRole/Resource`, [
+      {
+        id: 'AwsSolutions-IAM4',
+        reason: 'AWS Custom resource provider framework-role created by cdk.',
+      },
+    ]);
 
-    // return lambdaEnvironment;
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
+    NagSuppressions.addResourceSuppressionsByPath(
+      stack,
+      `${prefix}/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Allows only specific policy.',
+        },
+      ],
+    );
   }
 
   /**
@@ -318,7 +251,7 @@ export class LzaCustomResource extends Construct {
       | {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           [key: string]: any;
-        }[] = props.resource.properties ?? [{ debug: props.lambda.debug ?? false }];
+        }[] = props.resource.properties ?? [{ debug: props.resource.debug ?? false }];
 
     if (props.resource.forceUpdate) {
       resourcePropertyList.push({ uuid: uuidv4() });

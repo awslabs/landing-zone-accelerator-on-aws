@@ -38,7 +38,7 @@ exports[`FirewallConfigReplacements Construct(FirewallConfigReplacements):  Snap
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "ConfigReplacementsResourceFunctionC06187B4": {
+    "ConfigReplacementsFunction3B8BED87": {
       "DependsOn": [
         "Role1ABCC5F0",
       ],
@@ -69,7 +69,7 @@ exports[`FirewallConfigReplacements Construct(FirewallConfigReplacements):  Snap
       },
       "Type": "AWS::Lambda::Function",
     },
-    "ConfigReplacementsResourceFunctionLogGroupEBB280ED": {
+    "ConfigReplacementsFunctionResourceLogGroupA52DC796": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "KmsKeyId": {
@@ -84,7 +84,7 @@ exports[`FirewallConfigReplacements Construct(FirewallConfigReplacements):  Snap
             [
               "/aws/lambda/",
               {
-                "Ref": "ConfigReplacementsResourceFunctionC06187B4",
+                "Ref": "ConfigReplacementsFunction3B8BED87",
               },
             ],
           ],
@@ -125,7 +125,7 @@ exports[`FirewallConfigReplacements Construct(FirewallConfigReplacements):  Snap
           "Variables": {
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
-                "ConfigReplacementsResourceFunctionC06187B4",
+                "ConfigReplacementsFunction3B8BED87",
                 "Arn",
               ],
             },
@@ -204,7 +204,7 @@ exports[`FirewallConfigReplacements Construct(FirewallConfigReplacements):  Snap
               "Resource": [
                 {
                   "Fn::GetAtt": [
-                    "ConfigReplacementsResourceFunctionC06187B4",
+                    "ConfigReplacementsFunction3B8BED87",
                     "Arn",
                   ],
                 },
@@ -214,7 +214,7 @@ exports[`FirewallConfigReplacements Construct(FirewallConfigReplacements):  Snap
                     [
                       {
                         "Fn::GetAtt": [
-                          "ConfigReplacementsResourceFunctionC06187B4",
+                          "ConfigReplacementsFunction3B8BED87",
                           "Arn",
                         ],
                       },

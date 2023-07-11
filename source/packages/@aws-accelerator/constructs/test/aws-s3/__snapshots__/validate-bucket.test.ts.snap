@@ -153,10 +153,10 @@ exports[`ValidateBucketKmsEncryption Construct(ValidateBucketKmsEncryption):  Sn
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionF801814C": {
+    "ValidateBucketKmsEncryptionValidateBucketFunctionD829E216": {
       "DependsOn": [
-        "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionServiceRoleDefaultPolicy64AEE894",
-        "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionServiceRole49F4CF2C",
+        "ValidateBucketKmsEncryptionValidateBucketFunctionServiceRoleDefaultPolicy36876301",
+        "ValidateBucketKmsEncryptionValidateBucketFunctionServiceRole1493FC5C",
       ],
       "Properties": {
         "Code": {
@@ -176,7 +176,7 @@ exports[`ValidateBucketKmsEncryption Construct(ValidateBucketKmsEncryption):  Sn
         "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
-            "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionServiceRole49F4CF2C",
+            "ValidateBucketKmsEncryptionValidateBucketFunctionServiceRole1493FC5C",
             "Arn",
           ],
         },
@@ -185,7 +185,7 @@ exports[`ValidateBucketKmsEncryption Construct(ValidateBucketKmsEncryption):  Sn
       },
       "Type": "AWS::Lambda::Function",
     },
-    "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionLogGroup9B26DAD9": {
+    "ValidateBucketKmsEncryptionValidateBucketFunctionResourceLogGroup0C70290F": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "KmsKeyId": {
@@ -200,7 +200,7 @@ exports[`ValidateBucketKmsEncryption Construct(ValidateBucketKmsEncryption):  Sn
             [
               "/aws/lambda/",
               {
-                "Ref": "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionF801814C",
+                "Ref": "ValidateBucketKmsEncryptionValidateBucketFunctionD829E216",
               },
             ],
           ],
@@ -210,13 +210,13 @@ exports[`ValidateBucketKmsEncryption Construct(ValidateBucketKmsEncryption):  Sn
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionServiceRole49F4CF2C": {
+    "ValidateBucketKmsEncryptionValidateBucketFunctionServiceRole1493FC5C": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
+              "reason": "AWS Lambda needs Managed policy.",
             },
           ],
         },
@@ -251,13 +251,13 @@ exports[`ValidateBucketKmsEncryption Construct(ValidateBucketKmsEncryption):  Sn
       },
       "Type": "AWS::IAM::Role",
     },
-    "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionServiceRoleDefaultPolicy64AEE894": {
+    "ValidateBucketKmsEncryptionValidateBucketFunctionServiceRoleDefaultPolicy36876301": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
+              "reason": "AWS Lambda needs Managed policy.",
             },
           ],
         },
@@ -278,10 +278,10 @@ exports[`ValidateBucketKmsEncryption Construct(ValidateBucketKmsEncryption):  Sn
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionServiceRoleDefaultPolicy64AEE894",
+        "PolicyName": "ValidateBucketKmsEncryptionValidateBucketFunctionServiceRoleDefaultPolicy36876301",
         "Roles": [
           {
-            "Ref": "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionServiceRole49F4CF2C",
+            "Ref": "ValidateBucketKmsEncryptionValidateBucketFunctionServiceRole1493FC5C",
           },
         ],
       },
@@ -325,7 +325,7 @@ exports[`ValidateBucketKmsEncryption Construct(ValidateBucketKmsEncryption):  Sn
           "Variables": {
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
-                "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionF801814C",
+                "ValidateBucketKmsEncryptionValidateBucketFunctionD829E216",
                 "Arn",
               ],
             },
@@ -404,7 +404,7 @@ exports[`ValidateBucketKmsEncryption Construct(ValidateBucketKmsEncryption):  Sn
               "Resource": [
                 {
                   "Fn::GetAtt": [
-                    "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionF801814C",
+                    "ValidateBucketKmsEncryptionValidateBucketFunctionD829E216",
                     "Arn",
                   ],
                 },
@@ -414,7 +414,7 @@ exports[`ValidateBucketKmsEncryption Construct(ValidateBucketKmsEncryption):  Sn
                     [
                       {
                         "Fn::GetAtt": [
-                          "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionF801814C",
+                          "ValidateBucketKmsEncryptionValidateBucketFunctionD829E216",
                           "Arn",
                         ],
                       },
@@ -436,10 +436,10 @@ exports[`ValidateBucketKmsEncryption Construct(ValidateBucketKmsEncryption):  Sn
       },
       "Type": "AWS::IAM::Policy",
     },
-    "ValidateBucketS3EncryptionValidateBucketValidateBucketFunction67F8108B": {
+    "ValidateBucketS3EncryptionValidateBucketFunction1943C2CE": {
       "DependsOn": [
-        "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionServiceRoleDefaultPolicy5E08258E",
-        "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionServiceRoleA105B96F",
+        "ValidateBucketS3EncryptionValidateBucketFunctionServiceRoleDefaultPolicyB6CF9314",
+        "ValidateBucketS3EncryptionValidateBucketFunctionServiceRole1CBF0D3D",
       ],
       "Properties": {
         "Code": {
@@ -459,7 +459,7 @@ exports[`ValidateBucketKmsEncryption Construct(ValidateBucketKmsEncryption):  Sn
         "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
-            "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionServiceRoleA105B96F",
+            "ValidateBucketS3EncryptionValidateBucketFunctionServiceRole1CBF0D3D",
             "Arn",
           ],
         },
@@ -468,7 +468,7 @@ exports[`ValidateBucketKmsEncryption Construct(ValidateBucketKmsEncryption):  Sn
       },
       "Type": "AWS::Lambda::Function",
     },
-    "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionLogGroupE5D45616": {
+    "ValidateBucketS3EncryptionValidateBucketFunctionResourceLogGroup9806F780": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "KmsKeyId": {
@@ -483,7 +483,7 @@ exports[`ValidateBucketKmsEncryption Construct(ValidateBucketKmsEncryption):  Sn
             [
               "/aws/lambda/",
               {
-                "Ref": "ValidateBucketS3EncryptionValidateBucketValidateBucketFunction67F8108B",
+                "Ref": "ValidateBucketS3EncryptionValidateBucketFunction1943C2CE",
               },
             ],
           ],
@@ -493,13 +493,13 @@ exports[`ValidateBucketKmsEncryption Construct(ValidateBucketKmsEncryption):  Sn
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionServiceRoleA105B96F": {
+    "ValidateBucketS3EncryptionValidateBucketFunctionServiceRole1CBF0D3D": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
+              "reason": "AWS Lambda needs Managed policy.",
             },
           ],
         },
@@ -534,13 +534,13 @@ exports[`ValidateBucketKmsEncryption Construct(ValidateBucketKmsEncryption):  Sn
       },
       "Type": "AWS::IAM::Role",
     },
-    "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionServiceRoleDefaultPolicy5E08258E": {
+    "ValidateBucketS3EncryptionValidateBucketFunctionServiceRoleDefaultPolicyB6CF9314": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
+              "reason": "AWS Lambda needs Managed policy.",
             },
           ],
         },
@@ -561,10 +561,10 @@ exports[`ValidateBucketKmsEncryption Construct(ValidateBucketKmsEncryption):  Sn
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionServiceRoleDefaultPolicy5E08258E",
+        "PolicyName": "ValidateBucketS3EncryptionValidateBucketFunctionServiceRoleDefaultPolicyB6CF9314",
         "Roles": [
           {
-            "Ref": "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionServiceRoleA105B96F",
+            "Ref": "ValidateBucketS3EncryptionValidateBucketFunctionServiceRole1CBF0D3D",
           },
         ],
       },
@@ -608,7 +608,7 @@ exports[`ValidateBucketKmsEncryption Construct(ValidateBucketKmsEncryption):  Sn
           "Variables": {
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
-                "ValidateBucketS3EncryptionValidateBucketValidateBucketFunction67F8108B",
+                "ValidateBucketS3EncryptionValidateBucketFunction1943C2CE",
                 "Arn",
               ],
             },
@@ -646,7 +646,7 @@ exports[`ValidateBucketKmsEncryption Construct(ValidateBucketKmsEncryption):  Sn
               "Resource": [
                 {
                   "Fn::GetAtt": [
-                    "ValidateBucketS3EncryptionValidateBucketValidateBucketFunction67F8108B",
+                    "ValidateBucketS3EncryptionValidateBucketFunction1943C2CE",
                     "Arn",
                   ],
                 },
@@ -656,7 +656,7 @@ exports[`ValidateBucketKmsEncryption Construct(ValidateBucketKmsEncryption):  Sn
                     [
                       {
                         "Fn::GetAtt": [
-                          "ValidateBucketS3EncryptionValidateBucketValidateBucketFunction67F8108B",
+                          "ValidateBucketS3EncryptionValidateBucketFunction1943C2CE",
                           "Arn",
                         ],
                       },
@@ -876,10 +876,10 @@ exports[`ValidateBucketS3Encryption Construct(ValidateBucketS3Encryption):  Snap
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionF801814C": {
+    "ValidateBucketKmsEncryptionValidateBucketFunctionD829E216": {
       "DependsOn": [
-        "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionServiceRoleDefaultPolicy64AEE894",
-        "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionServiceRole49F4CF2C",
+        "ValidateBucketKmsEncryptionValidateBucketFunctionServiceRoleDefaultPolicy36876301",
+        "ValidateBucketKmsEncryptionValidateBucketFunctionServiceRole1493FC5C",
       ],
       "Properties": {
         "Code": {
@@ -899,7 +899,7 @@ exports[`ValidateBucketS3Encryption Construct(ValidateBucketS3Encryption):  Snap
         "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
-            "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionServiceRole49F4CF2C",
+            "ValidateBucketKmsEncryptionValidateBucketFunctionServiceRole1493FC5C",
             "Arn",
           ],
         },
@@ -908,7 +908,7 @@ exports[`ValidateBucketS3Encryption Construct(ValidateBucketS3Encryption):  Snap
       },
       "Type": "AWS::Lambda::Function",
     },
-    "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionLogGroup9B26DAD9": {
+    "ValidateBucketKmsEncryptionValidateBucketFunctionResourceLogGroup0C70290F": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "KmsKeyId": {
@@ -923,7 +923,7 @@ exports[`ValidateBucketS3Encryption Construct(ValidateBucketS3Encryption):  Snap
             [
               "/aws/lambda/",
               {
-                "Ref": "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionF801814C",
+                "Ref": "ValidateBucketKmsEncryptionValidateBucketFunctionD829E216",
               },
             ],
           ],
@@ -933,13 +933,13 @@ exports[`ValidateBucketS3Encryption Construct(ValidateBucketS3Encryption):  Snap
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionServiceRole49F4CF2C": {
+    "ValidateBucketKmsEncryptionValidateBucketFunctionServiceRole1493FC5C": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
+              "reason": "AWS Lambda needs Managed policy.",
             },
           ],
         },
@@ -974,13 +974,13 @@ exports[`ValidateBucketS3Encryption Construct(ValidateBucketS3Encryption):  Snap
       },
       "Type": "AWS::IAM::Role",
     },
-    "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionServiceRoleDefaultPolicy64AEE894": {
+    "ValidateBucketKmsEncryptionValidateBucketFunctionServiceRoleDefaultPolicy36876301": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
+              "reason": "AWS Lambda needs Managed policy.",
             },
           ],
         },
@@ -1001,10 +1001,10 @@ exports[`ValidateBucketS3Encryption Construct(ValidateBucketS3Encryption):  Snap
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionServiceRoleDefaultPolicy64AEE894",
+        "PolicyName": "ValidateBucketKmsEncryptionValidateBucketFunctionServiceRoleDefaultPolicy36876301",
         "Roles": [
           {
-            "Ref": "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionServiceRole49F4CF2C",
+            "Ref": "ValidateBucketKmsEncryptionValidateBucketFunctionServiceRole1493FC5C",
           },
         ],
       },
@@ -1048,7 +1048,7 @@ exports[`ValidateBucketS3Encryption Construct(ValidateBucketS3Encryption):  Snap
           "Variables": {
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
-                "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionF801814C",
+                "ValidateBucketKmsEncryptionValidateBucketFunctionD829E216",
                 "Arn",
               ],
             },
@@ -1127,7 +1127,7 @@ exports[`ValidateBucketS3Encryption Construct(ValidateBucketS3Encryption):  Snap
               "Resource": [
                 {
                   "Fn::GetAtt": [
-                    "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionF801814C",
+                    "ValidateBucketKmsEncryptionValidateBucketFunctionD829E216",
                     "Arn",
                   ],
                 },
@@ -1137,7 +1137,7 @@ exports[`ValidateBucketS3Encryption Construct(ValidateBucketS3Encryption):  Snap
                     [
                       {
                         "Fn::GetAtt": [
-                          "ValidateBucketKmsEncryptionValidateBucketValidateBucketFunctionF801814C",
+                          "ValidateBucketKmsEncryptionValidateBucketFunctionD829E216",
                           "Arn",
                         ],
                       },
@@ -1159,10 +1159,10 @@ exports[`ValidateBucketS3Encryption Construct(ValidateBucketS3Encryption):  Snap
       },
       "Type": "AWS::IAM::Policy",
     },
-    "ValidateBucketS3EncryptionValidateBucketValidateBucketFunction67F8108B": {
+    "ValidateBucketS3EncryptionValidateBucketFunction1943C2CE": {
       "DependsOn": [
-        "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionServiceRoleDefaultPolicy5E08258E",
-        "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionServiceRoleA105B96F",
+        "ValidateBucketS3EncryptionValidateBucketFunctionServiceRoleDefaultPolicyB6CF9314",
+        "ValidateBucketS3EncryptionValidateBucketFunctionServiceRole1CBF0D3D",
       ],
       "Properties": {
         "Code": {
@@ -1182,7 +1182,7 @@ exports[`ValidateBucketS3Encryption Construct(ValidateBucketS3Encryption):  Snap
         "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
-            "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionServiceRoleA105B96F",
+            "ValidateBucketS3EncryptionValidateBucketFunctionServiceRole1CBF0D3D",
             "Arn",
           ],
         },
@@ -1191,7 +1191,7 @@ exports[`ValidateBucketS3Encryption Construct(ValidateBucketS3Encryption):  Snap
       },
       "Type": "AWS::Lambda::Function",
     },
-    "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionLogGroupE5D45616": {
+    "ValidateBucketS3EncryptionValidateBucketFunctionResourceLogGroup9806F780": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "KmsKeyId": {
@@ -1206,7 +1206,7 @@ exports[`ValidateBucketS3Encryption Construct(ValidateBucketS3Encryption):  Snap
             [
               "/aws/lambda/",
               {
-                "Ref": "ValidateBucketS3EncryptionValidateBucketValidateBucketFunction67F8108B",
+                "Ref": "ValidateBucketS3EncryptionValidateBucketFunction1943C2CE",
               },
             ],
           ],
@@ -1216,13 +1216,13 @@ exports[`ValidateBucketS3Encryption Construct(ValidateBucketS3Encryption):  Snap
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionServiceRoleA105B96F": {
+    "ValidateBucketS3EncryptionValidateBucketFunctionServiceRole1CBF0D3D": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
+              "reason": "AWS Lambda needs Managed policy.",
             },
           ],
         },
@@ -1257,13 +1257,13 @@ exports[`ValidateBucketS3Encryption Construct(ValidateBucketS3Encryption):  Snap
       },
       "Type": "AWS::IAM::Role",
     },
-    "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionServiceRoleDefaultPolicy5E08258E": {
+    "ValidateBucketS3EncryptionValidateBucketFunctionServiceRoleDefaultPolicyB6CF9314": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
+              "reason": "AWS Lambda needs Managed policy.",
             },
           ],
         },
@@ -1284,10 +1284,10 @@ exports[`ValidateBucketS3Encryption Construct(ValidateBucketS3Encryption):  Snap
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionServiceRoleDefaultPolicy5E08258E",
+        "PolicyName": "ValidateBucketS3EncryptionValidateBucketFunctionServiceRoleDefaultPolicyB6CF9314",
         "Roles": [
           {
-            "Ref": "ValidateBucketS3EncryptionValidateBucketValidateBucketFunctionServiceRoleA105B96F",
+            "Ref": "ValidateBucketS3EncryptionValidateBucketFunctionServiceRole1CBF0D3D",
           },
         ],
       },
@@ -1331,7 +1331,7 @@ exports[`ValidateBucketS3Encryption Construct(ValidateBucketS3Encryption):  Snap
           "Variables": {
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
-                "ValidateBucketS3EncryptionValidateBucketValidateBucketFunction67F8108B",
+                "ValidateBucketS3EncryptionValidateBucketFunction1943C2CE",
                 "Arn",
               ],
             },
@@ -1369,7 +1369,7 @@ exports[`ValidateBucketS3Encryption Construct(ValidateBucketS3Encryption):  Snap
               "Resource": [
                 {
                   "Fn::GetAtt": [
-                    "ValidateBucketS3EncryptionValidateBucketValidateBucketFunction67F8108B",
+                    "ValidateBucketS3EncryptionValidateBucketFunction1943C2CE",
                     "Arn",
                   ],
                 },
@@ -1379,7 +1379,7 @@ exports[`ValidateBucketS3Encryption Construct(ValidateBucketS3Encryption):  Snap
                     [
                       {
                         "Fn::GetAtt": [
-                          "ValidateBucketS3EncryptionValidateBucketValidateBucketFunction67F8108B",
+                          "ValidateBucketS3EncryptionValidateBucketFunction1943C2CE",
                           "Arn",
                         ],
                       },

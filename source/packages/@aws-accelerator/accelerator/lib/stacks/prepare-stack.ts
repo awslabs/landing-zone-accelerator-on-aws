@@ -518,7 +518,9 @@ export class PrepareStack extends AcceleratorStack {
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: ['organizations:DescribeOrganizationalUnit', 'organizations:ListParents'],
             resources: [
-              `arn:aws:organizations::${options.props.accountsConfig.getManagementAccountId()}:account/o-*/*`,
+              `arn:${
+                cdk.Stack.of(this).partition
+              }:organizations::${options.props.accountsConfig.getManagementAccountId()}:account/o-*/*`,
             ],
           }),
         );

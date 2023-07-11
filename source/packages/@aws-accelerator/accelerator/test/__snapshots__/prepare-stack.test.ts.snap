@@ -725,7 +725,18 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
                 "organizations:ListParents",
               ],
               "Effect": "Allow",
-              "Resource": "arn:aws:organizations::111111111111:account/o-*/*",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":organizations::111111111111:account/o-*/*",
+                  ],
+                ],
+              },
               "Sid": "organizations",
             },
           ],

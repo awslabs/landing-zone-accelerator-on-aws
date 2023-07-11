@@ -12,20 +12,19 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { CreateCertificate } from '../../lib/aws-certificate-manager/create-certificate';
+import { Certificate } from '../../lib/aws-certificate-manager/certificate';
 import { snapShotTest } from '../snapshot-test';
 import { describe } from '@jest/globals';
 
-const testNamePrefix = 'Construct(CreateCertificate): ';
+const testNamePrefix = 'Construct(Certificate): ';
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
 
 /**
- * CloudWatchDestination construct test
+ * Certificate construct test
  */
-describe('RequestCertificate', () => {
-  new CreateCertificate(stack, 'RequestCertificate', {
-    name: 'requestCert',
+describe('Certificate', () => {
+  new Certificate(stack, 'RequestCertificate', {
     parameterName: '/accelerator/acm/requestCert/arn',
     type: 'request',
     validation: 'DNS',
@@ -34,16 +33,14 @@ describe('RequestCertificate', () => {
     homeRegion: 'us-east-1',
     assetBucketName: 'aws-accelerator-assets',
     assetFunctionRoleName: 'AWSAccelerator-AssetsAccessRole',
-    customResourceLambdaCloudWatchLogKmsKey: new cdk.aws_kms.Key(stack, 'RequestCertificateCloudWatchKey', {}),
-    customResourceLambdaEnvironmentEncryptionKmsKey: new cdk.aws_kms.Key(stack, 'RequestCertificateLambdaKey', {}),
-    customResourceLambdaLogRetentionInDays: 365,
+    cloudWatchLogsKmsKey: new cdk.aws_kms.Key(stack, 'RequestCertificateCloudWatchKey', {}),
+    logRetentionInDays: 365,
   });
   snapShotTest(testNamePrefix, stack);
 });
 
 describe('ImportCertificate', () => {
-  new CreateCertificate(stack, 'ImportCertificate', {
-    name: 'importCert',
+  new Certificate(stack, 'ImportCertificate', {
     parameterName: '/accelerator/acm/importCert/arn',
     type: 'import',
     privKey: 'cert/privKey.pem',
@@ -52,9 +49,8 @@ describe('ImportCertificate', () => {
     homeRegion: 'us-east-1',
     assetBucketName: 'aws-accelerator-assets',
     assetFunctionRoleName: 'AWSAccelerator-AssetsAccessRole',
-    customResourceLambdaCloudWatchLogKmsKey: new cdk.aws_kms.Key(stack, 'ImportCertificateCloudWatchKey', {}),
-    customResourceLambdaEnvironmentEncryptionKmsKey: new cdk.aws_kms.Key(stack, 'ImportCertificateLambdaKey', {}),
-    customResourceLambdaLogRetentionInDays: 365,
+    cloudWatchLogsKmsKey: new cdk.aws_kms.Key(stack, 'ImportCertificateCloudWatchKey', {}),
+    logRetentionInDays: 365,
   });
   snapShotTest(testNamePrefix, stack);
 });

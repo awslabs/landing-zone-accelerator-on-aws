@@ -65,17 +65,17 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
       "Type": "Custom::CreatePolicy",
       "UpdateReplacePolicy": "Delete",
     },
-    "AccessAnalyzerServiceLinkedRoleServiceLinkedRoleAccessAnalyzerAmazonawsComServiceLinkedRoleAccessAnalyzerAmazonawsComFunction96BD61FA": {
+    "AccessAnalyzerServiceLinkedRoleCreateServiceLinkedRoleFunctionA23D700D": {
       "DependsOn": [
-        "AccessAnalyzerServiceLinkedRoleServiceLinkedRoleAccessAnalyzerAmazonawsComServiceLinkedRoleAccessAnalyzerAmazonawsComFunctionServiceRoleDefaultPolicy6EF2318A",
-        "AccessAnalyzerServiceLinkedRoleServiceLinkedRoleAccessAnalyzerAmazonawsComServiceLinkedRoleAccessAnalyzerAmazonawsComFunctionServiceRole69C879D6",
+        "AccessAnalyzerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicyF69A72FD",
+        "AccessAnalyzerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleC97CFF94",
       ],
       "Properties": {
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Description": "Accelerator deployed ServiceLinkedRoleAccessAnalyzerAmazonawsCom custom resource lambda function.",
+        "Description": "Custom resource provider to create service linked role",
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Ref": "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -83,7 +83,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
         "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
-            "AccessAnalyzerServiceLinkedRoleServiceLinkedRoleAccessAnalyzerAmazonawsComServiceLinkedRoleAccessAnalyzerAmazonawsComFunctionServiceRole69C879D6",
+            "AccessAnalyzerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleC97CFF94",
             "Arn",
           ],
         },
@@ -92,7 +92,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::Lambda::Function",
     },
-    "AccessAnalyzerServiceLinkedRoleServiceLinkedRoleAccessAnalyzerAmazonawsComServiceLinkedRoleAccessAnalyzerAmazonawsComFunctionLogGroup0B8F1D06": {
+    "AccessAnalyzerServiceLinkedRoleCreateServiceLinkedRoleFunctionLogGroup6DA63F2D": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "KmsKeyId": {
@@ -104,7 +104,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
             [
               "/aws/lambda/",
               {
-                "Ref": "AccessAnalyzerServiceLinkedRoleServiceLinkedRoleAccessAnalyzerAmazonawsComServiceLinkedRoleAccessAnalyzerAmazonawsComFunction96BD61FA",
+                "Ref": "AccessAnalyzerServiceLinkedRoleCreateServiceLinkedRoleFunctionA23D700D",
               },
             ],
           ],
@@ -114,13 +114,13 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "AccessAnalyzerServiceLinkedRoleServiceLinkedRoleAccessAnalyzerAmazonawsComServiceLinkedRoleAccessAnalyzerAmazonawsComFunctionServiceRole69C879D6": {
+    "AccessAnalyzerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleC97CFF94": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
+              "reason": "Custom resource Lambda role policy.",
             },
           ],
         },
@@ -155,13 +155,13 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::IAM::Role",
     },
-    "AccessAnalyzerServiceLinkedRoleServiceLinkedRoleAccessAnalyzerAmazonawsComServiceLinkedRoleAccessAnalyzerAmazonawsComFunctionServiceRoleDefaultPolicy6EF2318A": {
+    "AccessAnalyzerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicyF69A72FD": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
+              "reason": "Custom resource Lambda role policy.",
             },
           ],
         },
@@ -180,47 +180,31 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "leServiceLinkedRoleAccessAnalyzerAmazonawsComServiceLinkedRoleAccessAnalyzerAmazonawsComFunctionServiceRoleDefaultPolicy6EF2318A",
+        "PolicyName": "AccessAnalyzerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicyF69A72FD",
         "Roles": [
           {
-            "Ref": "AccessAnalyzerServiceLinkedRoleServiceLinkedRoleAccessAnalyzerAmazonawsComServiceLinkedRoleAccessAnalyzerAmazonawsComFunctionServiceRole69C879D6",
+            "Ref": "AccessAnalyzerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleC97CFF94",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "AccessAnalyzerServiceLinkedRoleServiceLinkedRoleAccessAnalyzerAmazonawsComServiceLinkedRoleAccessAnalyzerAmazonawsComResource6F7BED5B": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "AccessAnalyzerServiceLinkedRoleServiceLinkedRoleAccessAnalyzerAmazonawsComframeworkonEventB39257B4",
-            "Arn",
-          ],
-        },
-        "roleName": "AWSServiceRoleForAccessAnalyzer",
-        "serviceName": "access-analyzer.amazonaws.com",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "AWS::CloudFormation::CustomResource",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "AccessAnalyzerServiceLinkedRoleServiceLinkedRoleAccessAnalyzerAmazonawsComframeworkonEventB39257B4": {
+    "AccessAnalyzerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEvent718EB907": {
       "DependsOn": [
-        "AccessAnalyzerServiceLinkedRoleServiceLinkedRoleAccessAnalyzerAmazonawsComframeworkonEventServiceRoleDefaultPolicyD6139E95",
-        "AccessAnalyzerServiceLinkedRoleServiceLinkedRoleAccessAnalyzerAmazonawsComframeworkonEventServiceRoleD0AA3199",
+        "AccessAnalyzerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy8B7FC4A6",
+        "AccessAnalyzerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole9D827C09",
       ],
       "Properties": {
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-AccountsStack-111111111111-us-east-1/AccessAnalyzerServiceLinkedRole/ServiceLinkedRoleAccessAnalyzerAmazonawsCom/Resource)",
+        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-AccountsStack-111111111111-us-east-1/AccessAnalyzerServiceLinkedRole/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
-                "AccessAnalyzerServiceLinkedRoleServiceLinkedRoleAccessAnalyzerAmazonawsComServiceLinkedRoleAccessAnalyzerAmazonawsComFunction96BD61FA",
+                "AccessAnalyzerServiceLinkedRoleCreateServiceLinkedRoleFunctionA23D700D",
                 "Arn",
               ],
             },
@@ -229,7 +213,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
         "Handler": "framework.onEvent",
         "Role": {
           "Fn::GetAtt": [
-            "AccessAnalyzerServiceLinkedRoleServiceLinkedRoleAccessAnalyzerAmazonawsComframeworkonEventServiceRoleD0AA3199",
+            "AccessAnalyzerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole9D827C09",
             "Arn",
           ],
         },
@@ -238,13 +222,13 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::Lambda::Function",
     },
-    "AccessAnalyzerServiceLinkedRoleServiceLinkedRoleAccessAnalyzerAmazonawsComframeworkonEventServiceRoleD0AA3199": {
+    "AccessAnalyzerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole9D827C09": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
+              "reason": "Custom resource Lambda role policy.",
             },
           ],
         },
@@ -279,13 +263,13 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::IAM::Role",
     },
-    "AccessAnalyzerServiceLinkedRoleServiceLinkedRoleAccessAnalyzerAmazonawsComframeworkonEventServiceRoleDefaultPolicyD6139E95": {
+    "AccessAnalyzerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy8B7FC4A6": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
+              "reason": "Custom resource Lambda role policy.",
             },
           ],
         },
@@ -299,7 +283,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
               "Resource": [
                 {
                   "Fn::GetAtt": [
-                    "AccessAnalyzerServiceLinkedRoleServiceLinkedRoleAccessAnalyzerAmazonawsComServiceLinkedRoleAccessAnalyzerAmazonawsComFunction96BD61FA",
+                    "AccessAnalyzerServiceLinkedRoleCreateServiceLinkedRoleFunctionA23D700D",
                     "Arn",
                   ],
                 },
@@ -309,7 +293,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
                     [
                       {
                         "Fn::GetAtt": [
-                          "AccessAnalyzerServiceLinkedRoleServiceLinkedRoleAccessAnalyzerAmazonawsComServiceLinkedRoleAccessAnalyzerAmazonawsComFunction96BD61FA",
+                          "AccessAnalyzerServiceLinkedRoleCreateServiceLinkedRoleFunctionA23D700D",
                           "Arn",
                         ],
                       },
@@ -322,14 +306,29 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "AccessAnalyzerServiceLinkedRoleServiceLinkedRoleAccessAnalyzerAmazonawsComframeworkonEventServiceRoleDefaultPolicyD6139E95",
+        "PolicyName": "AccessAnalyzerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy8B7FC4A6",
         "Roles": [
           {
-            "Ref": "AccessAnalyzerServiceLinkedRoleServiceLinkedRoleAccessAnalyzerAmazonawsComframeworkonEventServiceRoleD0AA3199",
+            "Ref": "AccessAnalyzerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole9D827C09",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
+    },
+    "AccessAnalyzerServiceLinkedRoleCreateServiceLinkedRoleResource7C0C5637": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "AccessAnalyzerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEvent718EB907",
+            "Arn",
+          ],
+        },
+        "roleName": "AWSServiceRoleForAccessAnalyzer",
+        "serviceName": "access-analyzer.amazonaws.com",
+      },
+      "Type": "Custom::CreateServiceLinkedRole",
+      "UpdateReplacePolicy": "Delete",
     },
     "AllowList6FC5040C": {
       "DeletionPolicy": "Delete",
@@ -1027,17 +1026,17 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::IAM::Role",
     },
-    "GuardDutyServiceLinkedRoleServiceLinkedRoleGuarddutyAmazonawsComServiceLinkedRoleGuarddutyAmazonawsComFunction1185437F": {
+    "GuardDutyServiceLinkedRoleCreateServiceLinkedRoleFunction151BCBCB": {
       "DependsOn": [
-        "GuardDutyServiceLinkedRoleServiceLinkedRoleGuarddutyAmazonawsComServiceLinkedRoleGuarddutyAmazonawsComFunctionServiceRoleDefaultPolicy07504C04",
-        "GuardDutyServiceLinkedRoleServiceLinkedRoleGuarddutyAmazonawsComServiceLinkedRoleGuarddutyAmazonawsComFunctionServiceRole0D18617B",
+        "GuardDutyServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy17F37920",
+        "GuardDutyServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRole2A9ECD02",
       ],
       "Properties": {
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Description": "Accelerator deployed ServiceLinkedRoleGuarddutyAmazonawsCom custom resource lambda function.",
+        "Description": "Custom resource provider to create service linked role",
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Ref": "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -1045,7 +1044,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
         "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
-            "GuardDutyServiceLinkedRoleServiceLinkedRoleGuarddutyAmazonawsComServiceLinkedRoleGuarddutyAmazonawsComFunctionServiceRole0D18617B",
+            "GuardDutyServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRole2A9ECD02",
             "Arn",
           ],
         },
@@ -1054,7 +1053,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::Lambda::Function",
     },
-    "GuardDutyServiceLinkedRoleServiceLinkedRoleGuarddutyAmazonawsComServiceLinkedRoleGuarddutyAmazonawsComFunctionLogGroup0B638C6E": {
+    "GuardDutyServiceLinkedRoleCreateServiceLinkedRoleFunctionLogGroup362E3CCE": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "KmsKeyId": {
@@ -1066,7 +1065,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
             [
               "/aws/lambda/",
               {
-                "Ref": "GuardDutyServiceLinkedRoleServiceLinkedRoleGuarddutyAmazonawsComServiceLinkedRoleGuarddutyAmazonawsComFunction1185437F",
+                "Ref": "GuardDutyServiceLinkedRoleCreateServiceLinkedRoleFunction151BCBCB",
               },
             ],
           ],
@@ -1076,13 +1075,13 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "GuardDutyServiceLinkedRoleServiceLinkedRoleGuarddutyAmazonawsComServiceLinkedRoleGuarddutyAmazonawsComFunctionServiceRole0D18617B": {
+    "GuardDutyServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRole2A9ECD02": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
+              "reason": "Custom resource Lambda role policy.",
             },
           ],
         },
@@ -1117,13 +1116,13 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::IAM::Role",
     },
-    "GuardDutyServiceLinkedRoleServiceLinkedRoleGuarddutyAmazonawsComServiceLinkedRoleGuarddutyAmazonawsComFunctionServiceRoleDefaultPolicy07504C04": {
+    "GuardDutyServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy17F37920": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
+              "reason": "Custom resource Lambda role policy.",
             },
           ],
         },
@@ -1142,169 +1141,168 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "ceLinkedRoleServiceLinkedRoleGuarddutyAmazonawsComServiceLinkedRoleGuarddutyAmazonawsComFunctionServiceRoleDefaultPolicy07504C04",
+        "PolicyName": "GuardDutyServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy17F37920",
         "Roles": [
           {
-            "Ref": "GuardDutyServiceLinkedRoleServiceLinkedRoleGuarddutyAmazonawsComServiceLinkedRoleGuarddutyAmazonawsComFunctionServiceRole0D18617B",
+            "Ref": "GuardDutyServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRole2A9ECD02",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "GuardDutyServiceLinkedRoleServiceLinkedRoleGuarddutyAmazonawsComServiceLinkedRoleGuarddutyAmazonawsComResource536B6357": {
+    "GuardDutyServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventFCA8A49C": {
+      "DependsOn": [
+        "GuardDutyServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyCEB270B2",
+        "GuardDutyServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleF626C82F",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-AccountsStack-111111111111-us-east-1/GuardDutyServiceLinkedRole/CreateServiceLinkedRoleProvider)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "GuardDutyServiceLinkedRoleCreateServiceLinkedRoleFunction151BCBCB",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "GuardDutyServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleF626C82F",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "GuardDutyServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyCEB270B2": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Custom resource Lambda role policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "GuardDutyServiceLinkedRoleCreateServiceLinkedRoleFunction151BCBCB",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "GuardDutyServiceLinkedRoleCreateServiceLinkedRoleFunction151BCBCB",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "GuardDutyServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyCEB270B2",
+        "Roles": [
+          {
+            "Ref": "GuardDutyServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleF626C82F",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "GuardDutyServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleF626C82F": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Custom resource Lambda role policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "GuardDutyServiceLinkedRoleCreateServiceLinkedRoleResourceD5FE1FBD": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
-            "GuardDutyServiceLinkedRoleServiceLinkedRoleGuarddutyAmazonawsComframeworkonEvent13B9A7F5",
+            "GuardDutyServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventFCA8A49C",
             "Arn",
           ],
         },
         "description": "A service-linked role required for Amazon GuardDuty to access your resources. ",
         "roleName": "AWSServiceRoleForAmazonGuardDuty",
         "serviceName": "guardduty.amazonaws.com",
-        "uuid": "REPLACED-UUID",
       },
-      "Type": "AWS::CloudFormation::CustomResource",
+      "Type": "Custom::CreateServiceLinkedRole",
       "UpdateReplacePolicy": "Delete",
     },
-    "GuardDutyServiceLinkedRoleServiceLinkedRoleGuarddutyAmazonawsComframeworkonEvent13B9A7F5": {
+    "MacieServiceLinkedRoleCreateServiceLinkedRoleFunction64213ACA": {
       "DependsOn": [
-        "GuardDutyServiceLinkedRoleServiceLinkedRoleGuarddutyAmazonawsComframeworkonEventServiceRoleDefaultPolicyD0ADF53D",
-        "GuardDutyServiceLinkedRoleServiceLinkedRoleGuarddutyAmazonawsComframeworkonEventServiceRoleC1ABB383",
+        "MacieServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicyB782371E",
+        "MacieServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRole1E0AE3FE",
       ],
       "Properties": {
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-AccountsStack-111111111111-us-east-1/GuardDutyServiceLinkedRole/ServiceLinkedRoleGuarddutyAmazonawsCom/Resource)",
-        "Environment": {
-          "Variables": {
-            "USER_ON_EVENT_FUNCTION_ARN": {
-              "Fn::GetAtt": [
-                "GuardDutyServiceLinkedRoleServiceLinkedRoleGuarddutyAmazonawsComServiceLinkedRoleGuarddutyAmazonawsComFunction1185437F",
-                "Arn",
-              ],
-            },
-          },
-        },
-        "Handler": "framework.onEvent",
-        "Role": {
-          "Fn::GetAtt": [
-            "GuardDutyServiceLinkedRoleServiceLinkedRoleGuarddutyAmazonawsComframeworkonEventServiceRoleC1ABB383",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs14.x",
-        "Timeout": 900,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "GuardDutyServiceLinkedRoleServiceLinkedRoleGuarddutyAmazonawsComframeworkonEventServiceRoleC1ABB383": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-              ],
-            ],
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "GuardDutyServiceLinkedRoleServiceLinkedRoleGuarddutyAmazonawsComframeworkonEventServiceRoleDefaultPolicyD0ADF53D": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": "lambda:InvokeFunction",
-              "Effect": "Allow",
-              "Resource": [
-                {
-                  "Fn::GetAtt": [
-                    "GuardDutyServiceLinkedRoleServiceLinkedRoleGuarddutyAmazonawsComServiceLinkedRoleGuarddutyAmazonawsComFunction1185437F",
-                    "Arn",
-                  ],
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "GuardDutyServiceLinkedRoleServiceLinkedRoleGuarddutyAmazonawsComServiceLinkedRoleGuarddutyAmazonawsComFunction1185437F",
-                          "Arn",
-                        ],
-                      },
-                      ":*",
-                    ],
-                  ],
-                },
-              ],
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "GuardDutyServiceLinkedRoleServiceLinkedRoleGuarddutyAmazonawsComframeworkonEventServiceRoleDefaultPolicyD0ADF53D",
-        "Roles": [
-          {
-            "Ref": "GuardDutyServiceLinkedRoleServiceLinkedRoleGuarddutyAmazonawsComframeworkonEventServiceRoleC1ABB383",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "MacieServiceLinkedRoleServiceLinkedRoleMacieAmazonawsComServiceLinkedRoleMacieAmazonawsComFunction9D4F8C0D": {
-      "DependsOn": [
-        "MacieServiceLinkedRoleServiceLinkedRoleMacieAmazonawsComServiceLinkedRoleMacieAmazonawsComFunctionServiceRoleDefaultPolicy1CC562AF",
-        "MacieServiceLinkedRoleServiceLinkedRoleMacieAmazonawsComServiceLinkedRoleMacieAmazonawsComFunctionServiceRole368BC296",
-      ],
-      "Properties": {
-        "Code": {
-          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
-          "S3Key": "REPLACED-GENERATED-NAME.zip",
-        },
-        "Description": "Accelerator deployed ServiceLinkedRoleMacieAmazonawsCom custom resource lambda function.",
+        "Description": "Custom resource provider to create service linked role",
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Ref": "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -1312,7 +1310,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
         "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
-            "MacieServiceLinkedRoleServiceLinkedRoleMacieAmazonawsComServiceLinkedRoleMacieAmazonawsComFunctionServiceRole368BC296",
+            "MacieServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRole1E0AE3FE",
             "Arn",
           ],
         },
@@ -1321,7 +1319,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::Lambda::Function",
     },
-    "MacieServiceLinkedRoleServiceLinkedRoleMacieAmazonawsComServiceLinkedRoleMacieAmazonawsComFunctionLogGroupB44BD6F8": {
+    "MacieServiceLinkedRoleCreateServiceLinkedRoleFunctionLogGroup7DF41D83": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "KmsKeyId": {
@@ -1333,7 +1331,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
             [
               "/aws/lambda/",
               {
-                "Ref": "MacieServiceLinkedRoleServiceLinkedRoleMacieAmazonawsComServiceLinkedRoleMacieAmazonawsComFunction9D4F8C0D",
+                "Ref": "MacieServiceLinkedRoleCreateServiceLinkedRoleFunction64213ACA",
               },
             ],
           ],
@@ -1343,13 +1341,13 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "MacieServiceLinkedRoleServiceLinkedRoleMacieAmazonawsComServiceLinkedRoleMacieAmazonawsComFunctionServiceRole368BC296": {
+    "MacieServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRole1E0AE3FE": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
+              "reason": "Custom resource Lambda role policy.",
             },
           ],
         },
@@ -1384,13 +1382,13 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::IAM::Role",
     },
-    "MacieServiceLinkedRoleServiceLinkedRoleMacieAmazonawsComServiceLinkedRoleMacieAmazonawsComFunctionServiceRoleDefaultPolicy1CC562AF": {
+    "MacieServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicyB782371E": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
+              "reason": "Custom resource Lambda role policy.",
             },
           ],
         },
@@ -1409,47 +1407,31 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "cieServiceLinkedRoleServiceLinkedRoleMacieAmazonawsComServiceLinkedRoleMacieAmazonawsComFunctionServiceRoleDefaultPolicy1CC562AF",
+        "PolicyName": "MacieServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicyB782371E",
         "Roles": [
           {
-            "Ref": "MacieServiceLinkedRoleServiceLinkedRoleMacieAmazonawsComServiceLinkedRoleMacieAmazonawsComFunctionServiceRole368BC296",
+            "Ref": "MacieServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRole1E0AE3FE",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "MacieServiceLinkedRoleServiceLinkedRoleMacieAmazonawsComServiceLinkedRoleMacieAmazonawsComResourceED9D6D44": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "MacieServiceLinkedRoleServiceLinkedRoleMacieAmazonawsComframeworkonEventF2BBAE62",
-            "Arn",
-          ],
-        },
-        "roleName": "AWSServiceRoleForAmazonMacie",
-        "serviceName": "macie.amazonaws.com",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "AWS::CloudFormation::CustomResource",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "MacieServiceLinkedRoleServiceLinkedRoleMacieAmazonawsComframeworkonEventF2BBAE62": {
+    "MacieServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventA4030044": {
       "DependsOn": [
-        "MacieServiceLinkedRoleServiceLinkedRoleMacieAmazonawsComframeworkonEventServiceRoleDefaultPolicyF14D741A",
-        "MacieServiceLinkedRoleServiceLinkedRoleMacieAmazonawsComframeworkonEventServiceRole3CF33059",
+        "MacieServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy0779FE88",
+        "MacieServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole6ACF14A7",
       ],
       "Properties": {
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-AccountsStack-111111111111-us-east-1/MacieServiceLinkedRole/ServiceLinkedRoleMacieAmazonawsCom/Resource)",
+        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-AccountsStack-111111111111-us-east-1/MacieServiceLinkedRole/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
-                "MacieServiceLinkedRoleServiceLinkedRoleMacieAmazonawsComServiceLinkedRoleMacieAmazonawsComFunction9D4F8C0D",
+                "MacieServiceLinkedRoleCreateServiceLinkedRoleFunction64213ACA",
                 "Arn",
               ],
             },
@@ -1458,7 +1440,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
         "Handler": "framework.onEvent",
         "Role": {
           "Fn::GetAtt": [
-            "MacieServiceLinkedRoleServiceLinkedRoleMacieAmazonawsComframeworkonEventServiceRole3CF33059",
+            "MacieServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole6ACF14A7",
             "Arn",
           ],
         },
@@ -1467,13 +1449,13 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::Lambda::Function",
     },
-    "MacieServiceLinkedRoleServiceLinkedRoleMacieAmazonawsComframeworkonEventServiceRole3CF33059": {
+    "MacieServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole6ACF14A7": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
+              "reason": "Custom resource Lambda role policy.",
             },
           ],
         },
@@ -1508,13 +1490,13 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::IAM::Role",
     },
-    "MacieServiceLinkedRoleServiceLinkedRoleMacieAmazonawsComframeworkonEventServiceRoleDefaultPolicyF14D741A": {
+    "MacieServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy0779FE88": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
+              "reason": "Custom resource Lambda role policy.",
             },
           ],
         },
@@ -1528,7 +1510,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
               "Resource": [
                 {
                   "Fn::GetAtt": [
-                    "MacieServiceLinkedRoleServiceLinkedRoleMacieAmazonawsComServiceLinkedRoleMacieAmazonawsComFunction9D4F8C0D",
+                    "MacieServiceLinkedRoleCreateServiceLinkedRoleFunction64213ACA",
                     "Arn",
                   ],
                 },
@@ -1538,7 +1520,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
                     [
                       {
                         "Fn::GetAtt": [
-                          "MacieServiceLinkedRoleServiceLinkedRoleMacieAmazonawsComServiceLinkedRoleMacieAmazonawsComFunction9D4F8C0D",
+                          "MacieServiceLinkedRoleCreateServiceLinkedRoleFunction64213ACA",
                           "Arn",
                         ],
                       },
@@ -1551,14 +1533,29 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "MacieServiceLinkedRoleServiceLinkedRoleMacieAmazonawsComframeworkonEventServiceRoleDefaultPolicyF14D741A",
+        "PolicyName": "MacieServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy0779FE88",
         "Roles": [
           {
-            "Ref": "MacieServiceLinkedRoleServiceLinkedRoleMacieAmazonawsComframeworkonEventServiceRole3CF33059",
+            "Ref": "MacieServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole6ACF14A7",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
+    },
+    "MacieServiceLinkedRoleCreateServiceLinkedRoleResourceD2E64172": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "MacieServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventA4030044",
+            "Arn",
+          ],
+        },
+        "roleName": "AWSServiceRoleForAmazonMacie",
+        "serviceName": "macie.amazonaws.com",
+      },
+      "Type": "Custom::CreateServiceLinkedRole",
+      "UpdateReplacePolicy": "Delete",
     },
     "Quarantine23FF09FE": {
       "DeletionPolicy": "Delete",
@@ -1825,17 +1822,17 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::IAM::Policy",
     },
-    "SecurityHubServiceLinkedRoleServiceLinkedRoleSecurityhubAmazonawsComServiceLinkedRoleSecurityhubAmazonawsComFunctionF36937A6": {
+    "SecurityHubServiceLinkedRoleCreateServiceLinkedRoleFunction4EC1E85D": {
       "DependsOn": [
-        "SecurityHubServiceLinkedRoleServiceLinkedRoleSecurityhubAmazonawsComServiceLinkedRoleSecurityhubAmazonawsComFunctionServiceRoleDefaultPolicy61E7E359",
-        "SecurityHubServiceLinkedRoleServiceLinkedRoleSecurityhubAmazonawsComServiceLinkedRoleSecurityhubAmazonawsComFunctionServiceRole35215900",
+        "SecurityHubServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy18D14A5E",
+        "SecurityHubServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleA20B559F",
       ],
       "Properties": {
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Description": "Accelerator deployed ServiceLinkedRoleSecurityhubAmazonawsCom custom resource lambda function.",
+        "Description": "Custom resource provider to create service linked role",
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Ref": "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -1843,7 +1840,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
         "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
-            "SecurityHubServiceLinkedRoleServiceLinkedRoleSecurityhubAmazonawsComServiceLinkedRoleSecurityhubAmazonawsComFunctionServiceRole35215900",
+            "SecurityHubServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleA20B559F",
             "Arn",
           ],
         },
@@ -1852,7 +1849,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::Lambda::Function",
     },
-    "SecurityHubServiceLinkedRoleServiceLinkedRoleSecurityhubAmazonawsComServiceLinkedRoleSecurityhubAmazonawsComFunctionLogGroupE1BCB2D4": {
+    "SecurityHubServiceLinkedRoleCreateServiceLinkedRoleFunctionLogGroupD9501DFE": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "KmsKeyId": {
@@ -1864,7 +1861,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
             [
               "/aws/lambda/",
               {
-                "Ref": "SecurityHubServiceLinkedRoleServiceLinkedRoleSecurityhubAmazonawsComServiceLinkedRoleSecurityhubAmazonawsComFunctionF36937A6",
+                "Ref": "SecurityHubServiceLinkedRoleCreateServiceLinkedRoleFunction4EC1E85D",
               },
             ],
           ],
@@ -1874,13 +1871,13 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "SecurityHubServiceLinkedRoleServiceLinkedRoleSecurityhubAmazonawsComServiceLinkedRoleSecurityhubAmazonawsComFunctionServiceRole35215900": {
+    "SecurityHubServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleA20B559F": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
+              "reason": "Custom resource Lambda role policy.",
             },
           ],
         },
@@ -1915,13 +1912,13 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::IAM::Role",
     },
-    "SecurityHubServiceLinkedRoleServiceLinkedRoleSecurityhubAmazonawsComServiceLinkedRoleSecurityhubAmazonawsComFunctionServiceRoleDefaultPolicy61E7E359": {
+    "SecurityHubServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy18D14A5E": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
+              "reason": "Custom resource Lambda role policy.",
             },
           ],
         },
@@ -1940,48 +1937,31 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "nkedRoleServiceLinkedRoleSecurityhubAmazonawsComServiceLinkedRoleSecurityhubAmazonawsComFunctionServiceRoleDefaultPolicy61E7E359",
+        "PolicyName": "SecurityHubServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy18D14A5E",
         "Roles": [
           {
-            "Ref": "SecurityHubServiceLinkedRoleServiceLinkedRoleSecurityhubAmazonawsComServiceLinkedRoleSecurityhubAmazonawsComFunctionServiceRole35215900",
+            "Ref": "SecurityHubServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleA20B559F",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "SecurityHubServiceLinkedRoleServiceLinkedRoleSecurityhubAmazonawsComServiceLinkedRoleSecurityhubAmazonawsComResourceC5B442CF": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "SecurityHubServiceLinkedRoleServiceLinkedRoleSecurityhubAmazonawsComframeworkonEventB6DB38FA",
-            "Arn",
-          ],
-        },
-        "description": "A service-linked role required for AWS Security Hub to access your resources.",
-        "roleName": "AWSServiceRoleForSecurityHub",
-        "serviceName": "securityhub.amazonaws.com",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "AWS::CloudFormation::CustomResource",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "SecurityHubServiceLinkedRoleServiceLinkedRoleSecurityhubAmazonawsComframeworkonEventB6DB38FA": {
+    "SecurityHubServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEvent26F8E1F4": {
       "DependsOn": [
-        "SecurityHubServiceLinkedRoleServiceLinkedRoleSecurityhubAmazonawsComframeworkonEventServiceRoleDefaultPolicyF056CFF5",
-        "SecurityHubServiceLinkedRoleServiceLinkedRoleSecurityhubAmazonawsComframeworkonEventServiceRole01DB2243",
+        "SecurityHubServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy79C6E2DD",
+        "SecurityHubServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole57AAF85D",
       ],
       "Properties": {
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-AccountsStack-111111111111-us-east-1/SecurityHubServiceLinkedRole/ServiceLinkedRoleSecurityhubAmazonawsCom/Resource)",
+        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-AccountsStack-111111111111-us-east-1/SecurityHubServiceLinkedRole/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
-                "SecurityHubServiceLinkedRoleServiceLinkedRoleSecurityhubAmazonawsComServiceLinkedRoleSecurityhubAmazonawsComFunctionF36937A6",
+                "SecurityHubServiceLinkedRoleCreateServiceLinkedRoleFunction4EC1E85D",
                 "Arn",
               ],
             },
@@ -1990,7 +1970,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
         "Handler": "framework.onEvent",
         "Role": {
           "Fn::GetAtt": [
-            "SecurityHubServiceLinkedRoleServiceLinkedRoleSecurityhubAmazonawsComframeworkonEventServiceRole01DB2243",
+            "SecurityHubServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole57AAF85D",
             "Arn",
           ],
         },
@@ -1999,13 +1979,13 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::Lambda::Function",
     },
-    "SecurityHubServiceLinkedRoleServiceLinkedRoleSecurityhubAmazonawsComframeworkonEventServiceRole01DB2243": {
+    "SecurityHubServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole57AAF85D": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
+              "reason": "Custom resource Lambda role policy.",
             },
           ],
         },
@@ -2040,13 +2020,13 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::IAM::Role",
     },
-    "SecurityHubServiceLinkedRoleServiceLinkedRoleSecurityhubAmazonawsComframeworkonEventServiceRoleDefaultPolicyF056CFF5": {
+    "SecurityHubServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy79C6E2DD": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
             {
               "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
+              "reason": "Custom resource Lambda role policy.",
             },
           ],
         },
@@ -2060,7 +2040,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
               "Resource": [
                 {
                   "Fn::GetAtt": [
-                    "SecurityHubServiceLinkedRoleServiceLinkedRoleSecurityhubAmazonawsComServiceLinkedRoleSecurityhubAmazonawsComFunctionF36937A6",
+                    "SecurityHubServiceLinkedRoleCreateServiceLinkedRoleFunction4EC1E85D",
                     "Arn",
                   ],
                 },
@@ -2070,7 +2050,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
                     [
                       {
                         "Fn::GetAtt": [
-                          "SecurityHubServiceLinkedRoleServiceLinkedRoleSecurityhubAmazonawsComServiceLinkedRoleSecurityhubAmazonawsComFunctionF36937A6",
+                          "SecurityHubServiceLinkedRoleCreateServiceLinkedRoleFunction4EC1E85D",
                           "Arn",
                         ],
                       },
@@ -2083,14 +2063,30 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "SecurityHubServiceLinkedRoleServiceLinkedRoleSecurityhubAmazonawsComframeworkonEventServiceRoleDefaultPolicyF056CFF5",
+        "PolicyName": "SecurityHubServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy79C6E2DD",
         "Roles": [
           {
-            "Ref": "SecurityHubServiceLinkedRoleServiceLinkedRoleSecurityhubAmazonawsComframeworkonEventServiceRole01DB2243",
+            "Ref": "SecurityHubServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole57AAF85D",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
+    },
+    "SecurityHubServiceLinkedRoleCreateServiceLinkedRoleResource4CC7EFAA": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "SecurityHubServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEvent26F8E1F4",
+            "Arn",
+          ],
+        },
+        "description": "A service-linked role required for AWS Security Hub to access your resources.",
+        "roleName": "AWSServiceRoleForSecurityHub",
+        "serviceName": "securityhub.amazonaws.com",
+      },
+      "Type": "Custom::CreateServiceLinkedRole",
+      "UpdateReplacePolicy": "Delete",
     },
     "SsmParamAcceleratorVersionFF83282D": {
       "Properties": {
