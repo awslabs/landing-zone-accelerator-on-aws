@@ -949,6 +949,16 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "CodeStar Notification SLR needs managed policies.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -1037,6 +1047,16 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
       "Type": "AWS::Lambda::Function",
     },
     "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "CodeStar Notification SLR needs managed policies.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [

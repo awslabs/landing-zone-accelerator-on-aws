@@ -31,6 +31,7 @@ import { Repository } from '@aws-cdk-extensions/cdk-extensions';
  */
 export interface AcceleratorPipelineProps {
   readonly toolkitRole: cdk.aws_iam.Role;
+  readonly awsCodeStarSupportedRegions: string[];
   readonly sourceRepository: string;
   readonly sourceRepositoryOwner: string;
   readonly sourceRepositoryName: string;
@@ -691,26 +692,8 @@ export class AcceleratorPipeline extends Construct {
       return;
     }
 
-    // List of regions with AWS CodeStar being supported. For details, see documentation:
-    // https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/
-    const awsCodeStarSupportedRegions = [
-      'us-east-1',
-      'us-east-2',
-      'us-west-1',
-      'us-west-2',
-      'ap-northeast-2',
-      'ap-southeast-1',
-      'ap-southeast-2',
-      'ap-northeast-1',
-      'ca-central-1',
-      'eu-central-1',
-      'eu-west-1',
-      'eu-west-2',
-      'eu-north-1',
-    ];
-
     // We can Enable pipeline notification only for regions with AWS CodeStar being available
-    if (awsCodeStarSupportedRegions.includes(cdk.Stack.of(this).region)) {
+    if (this.props.awsCodeStarSupportedRegions.includes(cdk.Stack.of(this).region)) {
       const codeStarNotificationsRole = new ServiceLinkedRole(this, 'AWSServiceRoleForCodeStarNotifications', {
         environmentEncryptionKmsKey: this.installerKey,
         cloudWatchLogKmsKey: this.installerKey,
