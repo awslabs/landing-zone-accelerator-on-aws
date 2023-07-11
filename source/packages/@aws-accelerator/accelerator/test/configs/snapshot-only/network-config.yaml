@@ -1646,3 +1646,6 @@ certificates:
 
 firewallManager:
   delegatedAdminAccount: Audit
+  notificationChannels:
+    - snsTopic: Security
+      region: us-east-1

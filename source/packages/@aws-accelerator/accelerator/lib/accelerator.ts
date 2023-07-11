@@ -26,11 +26,11 @@ import {
   GetParameterCommandOutput,
 } from '@aws-sdk/client-ssm';
 import { S3Client, HeadBucketCommand } from '@aws-sdk/client-s3';
-
+import { IAMClient, GetRoleCommand, GetRoleCommandInput } from '@aws-sdk/client-iam';
 import { AccountsConfig, GlobalConfig } from '@aws-accelerator/config';
 import { createLogger, throttlingBackOff } from '@aws-accelerator/utils';
 import { AssumeProfilePlugin } from '@aws-cdk-extensions/cdk-plugin-assume-role';
-
+import { isBeforeBootstrapStage } from '../utils/app-utils';
 import { AcceleratorStage } from './accelerator-stage';
 import { AcceleratorToolkit, AcceleratorToolkitProps } from './toolkit';
 
@@ -187,9 +187,16 @@ export abstract class Accelerator {
     }
 
     if (!this.isPipelineStage(props.stage)) {
+      const assumeRoleName = setAssumeRoleName({
+        stage: props.stage,
+        customDeploymentRole: globalConfig?.cdkOptions?.customDeploymentRole,
+        command: props.command,
+        managementAccountAccessRole: globalConfig?.managementAccountAccessRole,
+      });
+
       await this.initializeAssumeRolePlugin({
         region: props.region ?? globalRegion,
-        assumeRoleName: globalConfig?.managementAccountAccessRole,
+        assumeRoleName,
         partition: props.partition,
         caBundlePath: props.caBundlePath,
         credentials: managementAccountCredentials,
@@ -483,6 +490,7 @@ export abstract class Accelerator {
           region,
           trustedAccountId: managementAccountId,
           ...toolkitProps,
+          stage: 'bootstrap',
         }),
       );
       await Promise.all(promises);
@@ -550,21 +558,26 @@ export abstract class Accelerator {
     region: string,
     managementAccountId: string,
   ): Promise<void> {
-    const needsBootstrapping = await bootstrapRequired(
+    const needsBootstrapping = await bootstrapRequired({
       accountId,
       region,
-      toolkitProps.partition,
-      globalConfig.managementAccountAccessRole,
-      globalConfig.centralizeCdkBuckets?.enable || globalConfig.cdkOptions?.centralizeBuckets,
-    );
+      partition: toolkitProps.partition,
+      managementAccountAccessRole: globalConfig.managementAccountAccessRole,
+      centralizedBuckets: globalConfig.centralizeCdkBuckets?.enable || globalConfig.cdkOptions?.centralizeBuckets,
+      homeRegion: globalConfig.homeRegion,
+      customDeploymentRoleName: globalConfig.cdkOptions?.customDeploymentRole,
+      force: globalConfig.cdkOptions?.forceBootstrap,
+    });
     if (needsBootstrapping) {
       await delay(500);
+
       promises.push(
         AcceleratorToolkit.execute({
           accountId,
           region,
           trustedAccountId: managementAccountId,
           ...toolkitProps,
+          stage: 'bootstrap',
         }),
       );
     }
@@ -633,7 +646,7 @@ export abstract class Accelerator {
           promises.push(
             AcceleratorToolkit.execute({
               accountId: managementAccountDetails.id,
-              region: region,
+              region,
               ...toolkitProps,
             }),
           );
@@ -960,34 +973,53 @@ function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function bootstrapRequired(
-  accountId: string,
-  region: string,
-  partition: string,
-  managementAccountAccessRole: string,
-  centralizedBuckets: boolean,
-): Promise<boolean> {
+async function bootstrapRequired(props: {
+  accountId: string;
+  region: string;
+  partition: string;
+  managementAccountAccessRole: string;
+  centralizedBuckets: boolean;
+  homeRegion: string;
+  customDeploymentRoleName?: string;
+  force?: boolean;
+}): Promise<boolean> {
   const crossAccountCredentials = await getCrossAccountCredentials(
-    accountId,
-    region,
-    partition,
-    managementAccountAccessRole,
+    props.accountId,
+    props.region,
+    props.partition,
+    props.managementAccountAccessRole,
   );
-
-  if (!centralizedBuckets) {
-    logger.info(`Checking if workload account CDK asset bucket exists in account ${accountId}`);
-    const s3Client = await getCrossAccountS3Client(region, crossAccountCredentials);
-    const assetBucketExists = await doesCdkAssetBucketExist(s3Client, accountId, region);
+  if (props.force) {
+    return true;
+  }
+  if (!props.centralizedBuckets) {
+    logger.info(`Checking if workload account CDK asset bucket exists in account ${props.accountId}`);
+    const s3Client = getCrossAccountClient(props.region, crossAccountCredentials, 'S3') as S3Client;
+    const assetBucketExists = await doesCdkAssetBucketExist(s3Client, props.accountId, props.region);
     if (!assetBucketExists) {
       return true;
     }
   }
 
+  if (props.customDeploymentRoleName && props.region === props.homeRegion) {
+    logger.info(
+      `Checking account ${props.accountId} in home region ${props.homeRegion} to see if custom deployment role ${props.customDeploymentRoleName} exists`,
+    );
+    const iamClient = getCrossAccountClient(props.region, crossAccountCredentials, 'IAM') as IAMClient;
+    const deploymentRoleExists = await customDeploymentRoleExists(
+      iamClient,
+      props.customDeploymentRoleName,
+      props.region,
+    );
+    if (!deploymentRoleExists) {
+      return true;
+    }
+  }
   const bootstrapVersionName = ' /cdk-bootstrap/accel/version';
-  const ssmClient = await getCrossAccountSsmClient(region, crossAccountCredentials);
+  const ssmClient = (await getCrossAccountClient(props.region, crossAccountCredentials, 'SSM')) as SSMClient;
   const bootstrapVersionValue = await getSsmParameterValue(bootstrapVersionName, ssmClient);
   if (bootstrapVersionValue && Number(bootstrapVersionValue) >= BootstrapVersion) {
-    logger.info(`Skipping bootstrap for account-region: ${accountId}-${region}`);
+    logger.info(`Skipping bootstrap for account-region: ${props.accountId}-${props.region}`);
     return false;
   }
 
@@ -1004,6 +1036,20 @@ async function doesCdkAssetBucketExist(s3Client: S3Client, accountId: string, re
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     logger.info(`CDK Asset Bucket not found for account ${accountId}, attempting to re-bootstrap`);
+    return false;
+  }
+}
+
+async function customDeploymentRoleExists(iamClient: IAMClient, roleName: string, region: string) {
+  const commandInput: GetRoleCommandInput = {
+    RoleName: roleName,
+  };
+  try {
+    await throttlingBackOff(() => iamClient.send(new GetRoleCommand(commandInput)));
+    return true;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (e: any) {
+    logger.info(`Custom deployment role does not exist in region ${region}, attempting to re-bootstrap`);
     return false;
   }
 }
@@ -1057,24 +1103,46 @@ async function getCrossAccountCredentials(
   }
 }
 
-async function getCrossAccountSsmClient(region: string, assumeRoleCredential: AssumeRoleCommandOutput) {
-  return new SSMClient({
-    credentials: {
-      accessKeyId: assumeRoleCredential.Credentials!.AccessKeyId!,
-      secretAccessKey: assumeRoleCredential.Credentials!.SecretAccessKey!,
-      sessionToken: assumeRoleCredential.Credentials?.SessionToken,
-    },
-    region: region,
-  });
+function getCrossAccountClient(
+  region: string,
+  assumeRoleCredential: AssumeRoleCommandOutput,
+  clientType: string,
+): IAMClient | S3Client | SSMClient {
+  const credentials = {
+    accessKeyId: assumeRoleCredential.Credentials!.AccessKeyId!,
+    secretAccessKey: assumeRoleCredential.Credentials!.SecretAccessKey!,
+    sessionToken: assumeRoleCredential.Credentials?.SessionToken,
+  };
+  let client = undefined;
+  switch (clientType) {
+    case 'IAM':
+      client = new IAMClient({ credentials, region });
+      break;
+    case 'S3':
+      client = new S3Client({ credentials, region });
+      break;
+    case 'SSM':
+      client = new SSMClient({ credentials, region });
+      break;
+    default:
+      if (!client) {
+        logger.error(`Could not create client for client type ${clientType} in region ${region}`);
+        throw new Error(`Configuration validation failed at runtime.`);
+      }
+  }
+  return client;
 }
 
-async function getCrossAccountS3Client(region: string, assumeRoleCredential: AssumeRoleCommandOutput) {
-  return new S3Client({
-    credentials: {
-      accessKeyId: assumeRoleCredential.Credentials!.AccessKeyId!,
-      secretAccessKey: assumeRoleCredential.Credentials!.SecretAccessKey!,
-      sessionToken: assumeRoleCredential.Credentials?.SessionToken,
-    },
-    region: region,
-  });
+function setAssumeRoleName(props: {
+  managementAccountAccessRole?: string;
+  stage?: string;
+  command: string;
+  customDeploymentRole?: string;
+}) {
+  let assumeRoleName = props.managementAccountAccessRole;
+  if (!isBeforeBootstrapStage(props.command, props.stage) && props.customDeploymentRole) {
+    assumeRoleName = props.customDeploymentRole;
+  }
+
+  return assumeRoleName;
 }

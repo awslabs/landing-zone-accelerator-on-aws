@@ -65,6 +65,8 @@ export abstract class GlobalConfigTypes {
   static readonly cdkOptionsConfig = t.interface({
     centralizeBuckets: t.boolean,
     useManagementAccessRole: t.boolean,
+    customDeploymentRole: t.optional(t.string),
+    forceBootstrap: t.optional(t.boolean),
   });
 
   static readonly externalLandingZoneResourcesConfig = t.interface({
@@ -360,6 +362,15 @@ export class cdkOptionsConfig implements t.TypeOf<typeof GlobalConfigTypes.cdkOp
    * The roles created and leveraged by CDK by default can be found [here](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html#bootstrapping-contract).
    */
   readonly useManagementAccessRole = true;
+  /**
+   * Creates a deployment role in all accounts in the home region with the name specified in the parameter. This role is used by the LZA for all CDK deployment tasks.
+   */
+  readonly customDeploymentRole = undefined;
+
+  /**
+   * Forces the Accelerator to deploy the bootstrapping stack and circumvent the ssm parameter check. This option is needed when adding or removing a custom deployment role
+   */
+  readonly forceBootstrap = undefined;
 }
 /**
  * *{@link GlobalConfig} / {@link LoggingConfig} / {@link CloudTrailConfig} / ({@link AccountCloudTrailConfig}) / {@link CloudTrailSettingsConfig}*

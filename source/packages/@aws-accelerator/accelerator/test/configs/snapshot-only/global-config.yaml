@@ -23,6 +23,8 @@ controlTower:
 cdkOptions:
   centralizeBuckets: true
   useManagementAccessRole: true
+  customDeploymentRole: AWSA-Deployment
+  forceBootstrap: true
 logging:
   account: LogArchive
   centralizedLoggingRegion: us-west-2

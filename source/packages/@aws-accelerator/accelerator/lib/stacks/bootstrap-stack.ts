@@ -16,6 +16,7 @@ import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { BootstrapVersion } from '../accelerator';
+import { IPrincipal } from 'aws-cdk-lib/aws-iam';
 
 export class BootstrapStack extends AcceleratorStack {
   readonly qualifier: string;
@@ -24,6 +25,7 @@ export class BootstrapStack extends AcceleratorStack {
   readonly assetBucketName: string;
   constructor(scope: Construct, id: string, props: AcceleratorStackProps, bootstrapQualifier?: string) {
     super(scope, id, props);
+    const customDeploymentRole = this.props.globalConfig.cdkOptions?.customDeploymentRole;
     this.qualifier = bootstrapQualifier ?? 'accel';
     this.managementAccount = props.accountsConfig.getManagementAccountId();
     this.assetBucketName = this.getAssetBucketName();
@@ -40,17 +42,20 @@ export class BootstrapStack extends AcceleratorStack {
     new cdk.CfnParameter(this, 'FileAssetsBucketName', { default: '' });
     new cdk.CfnParameter(this, 'PublicAccessBlockConfiguration');
     new cdk.CfnParameter(this, 'Qualifier');
-    const trustedAccountsParam = new cdk.CfnParameter(this, 'TrustedAccounts', { type: 'CommaDelimitedList' });
     new cdk.CfnParameter(this, 'TrustedAccountsForLookup');
+    const trustedAccountsParam = new cdk.CfnParameter(this, 'TrustedAccounts', { type: 'CommaDelimitedList' });
 
     if (this.account === this.managementAccount) {
       this.logger.info(`Creating bucket for region ${this.region} in account ${this.account}`);
 
-      const s3KmsKey = this.createBucketCmk({ managementAccountId: this.managementAccount });
+      const s3KmsKey = this.createBucketCmk({
+        managementAccountId: this.managementAccount,
+        customDeploymentRole,
+      });
       this.s3KmsKeyOutputValue = s3KmsKey.keyArn;
       this.createAssetBucket({
         kmsKey: s3KmsKey,
-        accessRoleNames: [this.qualifier, this.props.globalConfig.managementAccountAccessRole],
+        customDeploymentRole,
       });
     } else {
       this.s3KmsKeyOutputValue = '-';
@@ -67,6 +72,8 @@ export class BootstrapStack extends AcceleratorStack {
 
     // Create CDK roles for default CDK stack synthesis
     this.createCdkRoles(cdkBootstrapVersionParam.parameterName, trustedAccountsParam.valueAsList);
+
+    this.createCustomDeploymentRole(customDeploymentRole);
 
     // Create ECR repository
     this.createEcrRepository();
@@ -116,9 +123,35 @@ export class BootstrapStack extends AcceleratorStack {
     this.createDeploymentRole(bootstrapParameterName, cloudFormationExecutionRole.roleArn, trustedAccounts);
   }
 
+  createCustomDeploymentRole(customRoleName: string | undefined) {
+    if (!customRoleName) {
+      return;
+    }
+
+    const customDeploymentRole = new cdk.aws_iam.Role(this, 'CustomDeploymentRole', {
+      assumedBy: this.setCompositePrincipals({
+        managementAccount: this.managementAccount,
+        cfnServicePrincipal: true,
+      }),
+      roleName: customRoleName,
+    });
+    this.setAssumeSelfPermissions(customDeploymentRole);
+    customDeploymentRole.addManagedPolicy(cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess'));
+    // Override logical Id
+    const cfnCustomDeploymentRole = customDeploymentRole.node.defaultChild as cdk.aws_iam.CfnRole;
+    cfnCustomDeploymentRole.overrideLogicalId('CustomDeploymentRole');
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/CustomDeploymentRole/Resource`, [
+      {
+        id: 'AwsSolutions-IAM4',
+        reason: 'AWS Custom resource provider framework-role created by cdk.',
+      },
+    ]);
+  }
+
   createDeploymentRole(bootstrapParameterName: string, cfnExecRoleArn: string, trustedAccounts: string[]) {
     const deploymentActionRole = new cdk.aws_iam.Role(this, 'DeploymentActionRole', {
-      assumedBy: new cdk.aws_iam.AccountPrincipal(this.managementAccount),
+      assumedBy: this.setCompositePrincipals({ managementAccount: this.managementAccount }),
       roleName: `cdk-${this.qualifier}-deploy-role-${this.account}-${this.region}`,
       inlinePolicies: {
         default: new cdk.aws_iam.PolicyDocument({
@@ -256,7 +289,7 @@ export class BootstrapStack extends AcceleratorStack {
 
   createLookupRole() {
     const lookupRole = new cdk.aws_iam.Role(this, 'LookupRole', {
-      assumedBy: new cdk.aws_iam.AccountPrincipal(this.managementAccount),
+      assumedBy: this.setCompositePrincipals({ managementAccount: this.managementAccount }),
       roleName: `cdk-${this.qualifier}-lookup-role-${this.account}-${this.region}`,
       managedPolicies: [cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName('ReadOnlyAccess')],
       inlinePolicies: {
@@ -297,7 +330,7 @@ export class BootstrapStack extends AcceleratorStack {
 
   createImagePublishingRole() {
     const imagePublishingRole = new cdk.aws_iam.Role(this, 'ImagePublishingRole', {
-      assumedBy: new cdk.aws_iam.AccountPrincipal(this.managementAccount),
+      assumedBy: this.setCompositePrincipals({ managementAccount: this.managementAccount }),
       roleName: `cdk-${this.qualifier}-image-publishing-role-${this.account}-${this.region}`,
     });
 
@@ -348,7 +381,7 @@ export class BootstrapStack extends AcceleratorStack {
 
   createFilePublishingRole() {
     const filePublishingRole = new cdk.aws_iam.Role(this, 'FilePublishingRole', {
-      assumedBy: new cdk.aws_iam.AccountPrincipal(this.managementAccount),
+      assumedBy: this.setCompositePrincipals({ managementAccount: this.managementAccount }),
       roleName: `cdk-${this.qualifier}-file-publishing-role-${this.account}-${this.region}`,
     });
 
@@ -423,7 +456,12 @@ export class BootstrapStack extends AcceleratorStack {
     cfnContainerAssetRepo.overrideLogicalId('ContainerAssetsRepository');
   }
 
-  createBucketCmk(props: { managementAccountId: string }) {
+  createBucketCmk(props: { managementAccountId: string; customDeploymentRole?: string }) {
+    const conditions = this.setBootstrapResourceConditions(
+      this.props.organizationConfig.enable,
+      props.customDeploymentRole,
+    );
+    const principals = this.setBootstrapResourcePrincipals(this.props.organizationConfig.enable);
     const s3Key = new cdk.aws_kms.Key(this, 'AssetEncryptionKey', {
       alias: `${this.props.prefixes.kmsAlias}/kms/cdk/key`,
       description: 'Key used to encrypt centralized CDK assets',
@@ -475,23 +513,16 @@ export class BootstrapStack extends AcceleratorStack {
     s3Key.addToResourcePolicy(
       new cdk.aws_iam.PolicyStatement({
         sid: 'Allow org to perform encryption',
-        principals: [new cdk.aws_iam.AnyPrincipal()],
         actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey', 'kms:Describe*'],
         resources: ['*'],
-        conditions: {
-          StringEquals: {
-            ...this.getPrincipalOrgIdCondition(this.organizationId),
-          },
-          ArnLike: {
-            'aws:PrincipalARN': `arn:${this.partition}:iam::*:role/${this.props.prefixes.accelerator}-*`,
-          },
-        },
+        conditions,
+        principals,
       }),
     );
     return s3Key;
   }
 
-  createAssetBucket(props: { kmsKey: cdk.aws_kms.Key; accessRoleNames: string[] }) {
+  createAssetBucket(props: { kmsKey: cdk.aws_kms.Key; customDeploymentRole?: string }) {
     const lifecycleRules: cdk.aws_s3.LifecycleRule[] = [
       {
         id: 'CleanupOldVersions',
@@ -511,10 +542,25 @@ export class BootstrapStack extends AcceleratorStack {
       removalPolicy: cdk.RemovalPolicy.RETAIN,
       versioned: true,
     });
+    const principals = this.setBootstrapResourcePrincipals(this.props.organizationConfig.enable);
+    const conditions = this.setBootstrapResourceConditions(
+      this.props.organizationConfig.enable,
+      props.customDeploymentRole,
+    );
 
-    assetBucket.grantReadWrite(this.getOrgPrincipals(this.organizationId));
     assetBucket.grantReadWrite(new cdk.aws_iam.ServicePrincipal('cloudformation.amazonaws.com'));
     assetBucket.grantReadWrite(new cdk.aws_iam.ServicePrincipal('lambda.amazonaws.com'));
+
+    assetBucket.addToResourcePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        sid: 'cdk-read-write-access',
+        effect: cdk.aws_iam.Effect.ALLOW,
+        resources: [assetBucket.arnForObjects('*'), assetBucket.bucketArn],
+        actions: ['s3:*'],
+        principals,
+        conditions,
+      }),
+    );
 
     assetBucket.addToResourcePolicy(
       new cdk.aws_iam.PolicyStatement({
@@ -565,5 +611,72 @@ export class BootstrapStack extends AcceleratorStack {
   }
   getEcrRepoName() {
     return `cdk-${this.qualifier}-container-assets-${this.account}-${this.region}`;
+  }
+
+  setBootstrapResourceConditions(isOrgsEnabled: boolean, customDeploymentRole?: string) {
+    const roleArns = [
+      `arn:${cdk.Stack.of(this).partition}:iam::*:role/cdk-${this.qualifier}*`,
+      `arn:${cdk.Stack.of(this).partition}:iam::*:role/${this.props.globalConfig.managementAccountAccessRole}`,
+    ];
+    if (customDeploymentRole) {
+      roleArns.push(`arn:${cdk.Stack.of(this).partition}:iam::*:role/${customDeploymentRole}`);
+    }
+    const conditions: { [key: string]: unknown } = {
+      ArnLike: {
+        'aws:PrincipalARN': roleArns,
+      },
+    };
+    if (isOrgsEnabled) {
+      conditions['StringEquals'] = {
+        'aws:PrincipalOrgID': this.organizationId,
+      };
+    }
+    return conditions;
+  }
+  setBootstrapResourcePrincipals(isOrgsEnabled: boolean) {
+    let principals = [new cdk.aws_iam.AnyPrincipal()];
+    if (!isOrgsEnabled) {
+      if (!this.props.accountsConfig.accountIds) {
+        this.logger.error(`Could not load account ids.`);
+        throw new Error(`Configuration validation failed at runtime.`);
+      }
+      principals = this.props.accountsConfig.accountIds?.map(accountId => new cdk.aws_iam.AccountPrincipal(accountId));
+    }
+    return principals;
+  }
+  setCompositePrincipals(props: { managementAccount: string; cfnServicePrincipal?: boolean }) {
+    const principals: IPrincipal[] = [new cdk.aws_iam.AccountPrincipal(props.managementAccount)];
+    if (cdk.Stack.of(this).account !== props.managementAccount) {
+      principals.push(
+        new cdk.aws_iam.ArnPrincipal(
+          `arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:role/${
+            this.props.globalConfig.managementAccountAccessRole
+          }`,
+        ),
+      );
+    }
+
+    if (props.cfnServicePrincipal) {
+      principals.push(new cdk.aws_iam.ServicePrincipal('cloudformation.amazonaws.com'));
+    }
+
+    return new cdk.aws_iam.CompositePrincipal(...principals);
+  }
+
+  setAssumeSelfPermissions(role: cdk.aws_iam.Role) {
+    role.assumeRolePolicy?.addStatements(
+      new cdk.aws_iam.PolicyStatement({
+        effect: cdk.aws_iam.Effect.ALLOW,
+        principals: [new cdk.aws_iam.AccountRootPrincipal()],
+        actions: ['sts:AssumeRole'],
+        conditions: {
+          StringEquals: {
+            'AWS:PrincipalArn': `arn:aws:iam::${cdk.Stack.of(this).account}:role/${
+              this.props.globalConfig.cdkOptions?.customDeploymentRole
+            }`,
+          },
+        },
+      }),
+    );
   }
 }

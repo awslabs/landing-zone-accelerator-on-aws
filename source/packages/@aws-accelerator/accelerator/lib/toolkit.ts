@@ -28,6 +28,7 @@ import * as path from 'path';
 
 import { AccountsConfig, cdkOptionsConfig, CustomizationsConfig, OrganizationConfig } from '@aws-accelerator/config';
 import { createLogger } from '@aws-accelerator/utils';
+import { isBeforeBootstrapStage } from '../utils/app-utils';
 
 import { AcceleratorStackNames } from './accelerator';
 import { AcceleratorStage } from './accelerator-stage';
@@ -308,7 +309,7 @@ export class AcceleratorToolkit {
       trustedAccounts.push(options.trustedAccountId);
     }
 
-    const bootstrapEnvOptions: BootstrapEnvironmentOptions = {
+    let bootstrapEnvOptions: BootstrapEnvironmentOptions = {
       toolkitStackName: toolkitStackName,
       parameters: {
         bucketName: configuration.settings.get(['toolkitBucket', 'bucketName']),
@@ -323,8 +324,15 @@ export class AcceleratorToolkit {
     if (
       options.centralizeCdkBootstrap ||
       options.cdkOptions?.centralizeBuckets ||
-      options.cdkOptions?.useManagementAccessRole
+      options.cdkOptions?.useManagementAccessRole ||
+      options.cdkOptions?.customDeploymentRole
     ) {
+      if (options.cdkOptions?.customDeploymentRole) {
+        bootstrapEnvOptions = {
+          ...bootstrapEnvOptions,
+          force: options.cdkOptions?.forceBootstrap,
+        };
+      }
       process.env['CDK_NEW_BOOTSTRAP'] = '1';
       const templatePath = `./cdk.out/${AcceleratorStackNames[AcceleratorStage.BOOTSTRAP]}-${options.accountId}-${
         options.region
@@ -480,13 +488,18 @@ export class AcceleratorToolkit {
         stackName = [options.stack!];
         break;
     }
-
+    let roleArn;
+    if (!isBeforeBootstrapStage(options.command, options.stage)) {
+      roleArn = getDeploymentRoleArn({
+        account: options.accountId,
+        region: options.region,
+        cdkOptions: options.cdkOptions,
+      });
+    }
     const selector: StackSelector = {
       patterns: stackName,
     };
-
     const changeSetName = `${stackName[0]}-change-set`;
-
     await cli
       .deploy({
         selector,
@@ -495,10 +508,23 @@ export class AcceleratorToolkit {
         changeSetName: changeSetName,
         hotswap: HotswapMode.FULL_DEPLOYMENT,
         tags: options.tags,
+        roleArn: roleArn,
       })
       .catch(err => {
         logger.error(err);
         throw new Error('Deployment failed');
       });
   }
+}
+
+function getDeploymentRoleArn(props: { account?: string; region?: string; cdkOptions?: cdkOptionsConfig }) {
+  if (!props.account || !props.region) {
+    return;
+  }
+  const partition = process.env['PARTITION'] ?? 'aws';
+  let roleArn;
+  if (props.cdkOptions?.customDeploymentRole) {
+    roleArn = `arn:${partition}:iam::${props.account}:role/${props.cdkOptions.customDeploymentRole}`;
+  }
+  return roleArn;
 }
