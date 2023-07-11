@@ -574,5 +574,9 @@ export class GlobalConfigValidator {
     if (!values?.cdkOptions?.centralizeBuckets && values?.cdkOptions?.useManagementAccessRole) {
       errors.push(`cdkOptions.centralizeBuckets must be set to true to enable cdkOptions.useManagementAccessRole`);
     }
+
+    if (!values?.cdkOptions?.centralizeBuckets && values?.cdkOptions?.customDeploymentRole) {
+      errors.push(`cdkOptions.centralizeBuckets must be set to true to enable cdkOptions.customDeploymentRole`);
+    }
   }
 }
