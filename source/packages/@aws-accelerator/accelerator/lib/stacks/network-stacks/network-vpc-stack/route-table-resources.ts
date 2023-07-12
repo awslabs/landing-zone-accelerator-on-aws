@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { NetworkConfigTypes, VpcConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
+import { AseaResourceType, NetworkConfigTypes, VpcConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
 import { RouteTable, Vpc } from '@aws-accelerator/constructs';
 import { SsmResourceType } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
@@ -133,26 +133,41 @@ export class RouteTableResources {
   private createRouteTables(vpc: Vpc, vpcItem: VpcConfig | VpcTemplatesConfig): Map<string, RouteTable> {
     const routeTableMap = new Map<string, RouteTable>();
     for (const routeTableItem of vpcItem.routeTables ?? []) {
-      const routeTable = new RouteTable(
-        this.stack,
-        pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${routeTableItem.name}RouteTable`),
-        {
-          name: routeTableItem.name,
-          vpc,
-          tags: routeTableItem.tags,
-        },
-      );
+      let routeTable;
+      if (this.stack.isManagedByAsea(AseaResourceType.ROUTE_TABLE, `${vpcItem.name}/${routeTableItem.name}`)) {
+        const routeTableId = this.stack.getExternalResourceParameter(
+          this.stack.getSsmPath(SsmResourceType.ROUTE_TABLE, [vpcItem.name, routeTableItem.name]),
+        );
+        routeTable = RouteTable.fromRouteTableAttributes(
+          this.stack,
+          pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${routeTableItem.name}RouteTable`),
+          {
+            routeTableId,
+            vpc,
+          },
+        );
+      } else {
+        routeTable = new RouteTable(
+          this.stack,
+          pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${routeTableItem.name}RouteTable`),
+          {
+            name: routeTableItem.name,
+            vpc,
+            tags: routeTableItem.tags,
+          },
+        );
+        this.stack.addSsmParameter({
+          logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name)}${pascalCase(routeTableItem.name)}RouteTableId`),
+          parameterName: this.stack.getSsmPath(SsmResourceType.ROUTE_TABLE, [vpcItem.name, routeTableItem.name]),
+          stringValue: routeTable.routeTableId,
+        });
+      }
+
       // Add gateway association if configured
       if (routeTableItem.gatewayAssociation) {
         routeTable.addGatewayAssociation(routeTableItem.gatewayAssociation);
       }
       routeTableMap.set(`${vpcItem.name}_${routeTableItem.name}`, routeTable);
-
-      this.stack.addSsmParameter({
-        logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name)}${pascalCase(routeTableItem.name)}RouteTableId`),
-        parameterName: this.stack.getSsmPath(SsmResourceType.ROUTE_TABLE, [vpcItem.name, routeTableItem.name]),
-        stringValue: routeTable.routeTableId,
-      });
     }
     return routeTableMap;
   }

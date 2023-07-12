@@ -2,6 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import {
   AccountsConfig,
   AseaStackInfo,
+  CfnResourceType,
   CustomizationsConfig,
   GlobalConfig,
   IamConfig,
@@ -36,5 +37,27 @@ export class AseaResource {
       props.globalConfig.externalLandingZoneResources?.resourceParameters[
         `${this.scope.account}-${this.scope.region}`
       ] ?? {};
+  }
+
+  findResourceByName(cfnResources: CfnResourceType[], propertyName: string, propertyValue: string) {
+    return cfnResources.find(cfnResource => cfnResource.resourceMetadata['Properties'][propertyName] === propertyValue);
+  }
+
+  filterResourcesByRef(cfnResources: CfnResourceType[], propertyName: string, logicalId: string) {
+    return cfnResources.filter(
+      cfnResource => cfnResource.resourceMetadata['Properties'][propertyName].Ref === logicalId,
+    );
+  }
+
+  filterResourcesByType(cfnResources: CfnResourceType[], resourceType: string) {
+    return cfnResources.filter(cfnResource => cfnResource.resourceType === resourceType);
+  }
+
+  findResourceByTag(cfnResources: CfnResourceType[], value: string, name = 'Name') {
+    return cfnResources.find(cfnResource =>
+      cfnResource.resourceMetadata['Properties'].Tags.find(
+        (tag: { Key: string; Value: string }) => tag.Key === name && tag.Value === value,
+      ),
+    );
   }
 }

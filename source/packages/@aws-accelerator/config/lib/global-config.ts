@@ -1768,6 +1768,9 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
 
   async loadLzaResources(partition: string, prefix: string) {
     if (!this.externalLandingZoneResources?.importExternalLandingZoneResources) return;
+    if (!this.externalLandingZoneResources.resourceParameters) {
+      this.externalLandingZoneResources.resourceParameters = {};
+    }
     for (const region of this.enabledRegions) {
       await this.loadRegionLzaResources(
         region,
@@ -1781,7 +1784,6 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
   private async loadRegionLzaResources(region: string, partition: string, prefix: string, accounts: string[]) {
     const getSsmPath = (resourceType: t.AseaResourceTypePaths) => `/${prefix}${resourceType}`;
     if (!this.externalLandingZoneResources?.importExternalLandingZoneResources) return;
-    this.externalLandingZoneResources.resourceParameters = {};
     for (const accountId of accounts) {
       const crossAccountCredentials = await this.getCrossAccountCredentials(
         accountId,

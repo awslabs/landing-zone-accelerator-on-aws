@@ -1042,9 +1042,6 @@ export function importAseaResourceStacks(
         accelProps: props,
         accountId,
         region: enabledRegion,
-        qualifier: acceleratorPrefix.endsWith('-')
-          ? acceleratorPrefix.slice(0, -1).toLowerCase()
-          : acceleratorPrefix.toLowerCase(),
         roleName: `${acceleratorPrefix}PipelineRole`,
       });
     }

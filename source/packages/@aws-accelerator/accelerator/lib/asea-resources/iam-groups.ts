@@ -44,10 +44,10 @@ export class Groups extends AseaResource {
       this.scope.addLogs(LogLevel.INFO, `No ${RESOURCE_TYPE}s to handle in stack ${props.stackInfo.stackName}`);
       return;
     }
-    const existingResources = this.scope.getResourcesByType(RESOURCE_TYPE);
+    const existingResources = this.filterResourcesByType(props.stackInfo.resources, RESOURCE_TYPE);
     for (const groupSetItem of props.iamConfig.groupSets ?? []) {
       if (!this.scope.isIncluded(groupSetItem.deploymentTargets)) {
-        this.scope.addLogs(LogLevel.INFO, `Item excluded`);
+        this.scope.addLogs(LogLevel.INFO, `Groups excluded`);
         continue;
       }
 

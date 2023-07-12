@@ -11,7 +11,14 @@
  *  and limitations under the License.
  */
 
-import { IpamConfig, OutpostsConfig, SubnetConfig, VpcConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
+import {
+  AseaResourceType,
+  IpamConfig,
+  OutpostsConfig,
+  SubnetConfig,
+  VpcConfig,
+  VpcTemplatesConfig,
+} from '@aws-accelerator/config';
 import { PutSsmParameter, RouteTable, SsmParameterProps, Subnet, Vpc } from '@aws-accelerator/constructs';
 import { SsmResourceType } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
@@ -219,33 +226,48 @@ export class SubnetResources {
       isAvailabilityZoneId = true;
       availabilityZoneId = availabilityZone;
     }
-    const subnet = new Subnet(this.stack, pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${subnetItem.name}Subnet`), {
-      name: subnetItem.name,
-      availabilityZone: isAvailabilityZoneId === false ? availabilityZone : undefined,
-      availabilityZoneId: isAvailabilityZoneId === true ? availabilityZoneId : undefined,
-      basePool,
-      ipamAllocation: subnetItem.ipamAllocation,
-      ipv4CidrBlock: subnetItem.ipv4CidrBlock,
-      kmsKey: this.stack.cloudwatchKey,
-      logRetentionInDays: this.stack.logRetention,
-      mapPublicIpOnLaunch: subnetItem.mapPublicIpOnLaunch,
-      routeTable,
-      vpc,
-      tags: subnetItem.tags,
-      outpost,
-    });
+    let subnet;
+    if (this.stack.isManagedByAsea(AseaResourceType.EC2_SUBNET, `${vpcItem.name}/${subnetItem.name}`)) {
+      const subnetId = this.stack.getExternalResourceParameter(
+        this.stack.getSsmPath(SsmResourceType.SUBNET, [vpcItem.name, subnetItem.name]),
+      );
+      subnet = Subnet.fromSubnetAttributes(
+        this.stack,
+        pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${subnetItem.name}Subnet`),
+        {
+          subnetId,
+          routeTable,
+          name: subnetItem.name,
+          ipv4CidrBlock: subnetItem.ipv4CidrBlock ?? '', // Import Subnet is only supported for static cidr configuration
+        },
+      );
+    } else {
+      subnet = new Subnet(this.stack, pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${subnetItem.name}Subnet`), {
+        name: subnetItem.name,
+        availabilityZone: isAvailabilityZoneId === false ? availabilityZone : undefined,
+        availabilityZoneId: isAvailabilityZoneId === true ? availabilityZoneId : undefined,
+        basePool,
+        ipamAllocation: subnetItem.ipamAllocation,
+        ipv4CidrBlock: subnetItem.ipv4CidrBlock,
+        kmsKey: this.stack.cloudwatchKey,
+        logRetentionInDays: this.stack.logRetention,
+        mapPublicIpOnLaunch: subnetItem.mapPublicIpOnLaunch,
+        routeTable,
+        vpc,
+        tags: subnetItem.tags,
+        outpost,
+      });
 
-    this.stack.addSsmParameter({
-      logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(subnetItem.name)}SubnetId`),
-      parameterName: this.stack.getSsmPath(SsmResourceType.SUBNET, [vpcItem.name, subnetItem.name]),
-      stringValue: subnet.subnetId,
-    });
-
-    // If the VPC has additional CIDR blocks, depend on those CIDRs to be associated
-    for (const cidr of vpc.cidrs ?? []) {
-      subnet.node.addDependency(cidr);
+      this.stack.addSsmParameter({
+        logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(subnetItem.name)}SubnetId`),
+        parameterName: this.stack.getSsmPath(SsmResourceType.SUBNET, [vpcItem.name, subnetItem.name]),
+        stringValue: subnet.subnetId,
+      });
+      // If the VPC has additional CIDR blocks, depend on those CIDRs to be associated
+      for (const cidr of vpc.cidrs ?? []) {
+        subnet.node.addDependency(cidr);
+      }
     }
-
     if (subnetItem.shareTargets) {
       this.stack.addLogs(LogLevel.INFO, `Share subnet ${subnetItem.name}`);
       this.stack.addResourceShare(subnetItem, `${subnetItem.name}_SubnetShare`, [subnet.subnetArn]);

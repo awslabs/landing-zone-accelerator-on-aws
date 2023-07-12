@@ -82,10 +82,6 @@ export class ImportAseaResourcesStack extends AcceleratorStack {
     this.createSsmParameters();
   }
 
-  getResourcesByType(resourceType: string) {
-    return this.stackInfo.resources.filter(resource => resource.resourceType === resourceType);
-  }
-
   /**
    * Public accessor method to add ASEA Resource Mapping
    * @param type
