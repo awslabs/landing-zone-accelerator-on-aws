@@ -486,7 +486,7 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
         return ou.id;
       }
     }
-    logger.error("Organizations not enabled or OU doesn't exist");
+    logger.error(`Could not get Organization ID for name: ${name}. Organizations not enabled or OU doesn't exist`);
     throw new Error('configuration validation failed.');
   }
 
@@ -499,7 +499,7 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
         return ou.arn;
       }
     }
-    logger.error("Organizations not enabled or OU doesn't exist");
+    logger.error(`Could not get Organization Arn for name: ${name}. Organizations not enabled or OU doesn't exist`);
     throw new Error('configuration validation failed.');
   }
 
