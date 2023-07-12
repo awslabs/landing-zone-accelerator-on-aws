@@ -37,12 +37,10 @@ export class ManagedPolicies extends AseaResource {
       this.scope.addLogs(LogLevel.INFO, `No ${RESOURCE_TYPE}s to handle in stack ${props.stackInfo.stackName}`);
       return;
     }
-    const existingPolicyResources = props.stackInfo.resources.filter(
-      cfnResource => cfnResource.resourceType === RESOURCE_TYPE,
-    );
+    const existingPolicyResources = this.filterResourcesByType(props.stackInfo.resources, RESOURCE_TYPE);
     for (const policySetItem of props.iamConfig.policySets ?? []) {
       if (!this.scope.isIncluded(policySetItem.deploymentTargets) || policySetItem.identityCenterDependency) {
-        this.scope.addLogs(LogLevel.INFO, `Item excluded`);
+        this.scope.addLogs(LogLevel.INFO, `Policies excluded`);
         continue;
       }
 

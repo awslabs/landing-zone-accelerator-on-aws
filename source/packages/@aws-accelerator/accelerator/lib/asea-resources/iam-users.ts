@@ -43,10 +43,10 @@ export class Users extends AseaResource {
       this.scope.addLogs(LogLevel.INFO, `No ${RESOURCE_TYPE}s to handle in stack ${props.stackInfo.stackName}`);
       return;
     }
-    const existingResources = this.scope.getResourcesByType(RESOURCE_TYPE);
+    const existingResources = this.filterResourcesByType(props.stackInfo.resources, RESOURCE_TYPE);
     for (const userSetItem of props.iamConfig.userSets ?? []) {
       if (!this.scope.isIncluded(userSetItem.deploymentTargets)) {
-        this.scope.addLogs(LogLevel.INFO, `Item excluded`);
+        this.scope.addLogs(LogLevel.INFO, `Users excluded`);
         continue;
       }
 

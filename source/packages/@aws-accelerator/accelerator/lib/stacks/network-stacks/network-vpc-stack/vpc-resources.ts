@@ -15,7 +15,13 @@ import { DeleteDefaultSecurityGroupRules, DeleteDefaultVpc, Vpc, VpnConnection }
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import { LogLevel, NetworkStack } from '../network-stack';
 import * as cdk from 'aws-cdk-lib';
-import { DefaultVpcsConfig, VpcConfig, VpcFlowLogsConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
+import {
+  AseaResourceType,
+  DefaultVpcsConfig,
+  VpcConfig,
+  VpcFlowLogsConfig,
+  VpcTemplatesConfig,
+} from '@aws-accelerator/config';
 import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'pascal-case';
 import { SsmResourceType } from '@aws-accelerator/utils';
@@ -36,7 +42,6 @@ export class VpcResources {
     props: AcceleratorStackProps,
   ) {
     this.stack = networkStack;
-
     // Delete default VPC
     this.deleteDefaultVpc = this.deleteDefaultVpcMethod(props.networkConfig.defaultVpc);
     // Create central endpoints role
@@ -311,28 +316,57 @@ export class VpcResources {
       poolNetmask = vpcItem.ipamAllocations[0].netmaskLength;
     }
 
-    //
-    // Create VPC
-    //
-    const vpc = new Vpc(this.stack, pascalCase(`${vpcItem.name}Vpc`), {
-      name: vpcItem.name,
-      ipv4CidrBlock: cidr,
-      internetGateway: vpcItem.internetGateway,
-      dhcpOptions: dhcpOptionsIds.get(vpcItem.dhcpOptions ?? ''),
-      enableDnsHostnames: vpcItem.enableDnsHostnames ?? true,
-      enableDnsSupport: vpcItem.enableDnsSupport ?? true,
-      instanceTenancy: vpcItem.instanceTenancy ?? 'default',
-      ipv4IpamPoolId: poolId,
-      ipv4NetmaskLength: poolNetmask,
-      tags: vpcItem.tags,
-      virtualPrivateGateway: vpcItem.virtualPrivateGateway,
-    });
+    let vpc: Vpc;
 
-    this.stack.addSsmParameter({
-      logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name)}VpcId`),
-      parameterName: this.stack.getSsmPath(SsmResourceType.VPC, [vpcItem.name]),
-      stringValue: vpc.vpcId,
-    });
+    if (this.stack.isManagedByAsea(AseaResourceType.EC2_VPC, vpcItem.name)) {
+      //
+      // Import VPC
+      //
+      const vpcId = this.stack.getExternalResourceParameter(this.stack.getSsmPath(SsmResourceType.VPC, [vpcItem.name]));
+      const internetGatewayId = this.stack.getExternalResourceParameter(
+        this.stack.getSsmPath(SsmResourceType.IGW, [vpcItem.name]),
+      );
+      const virtualPrivateGatewayId = this.stack.getExternalResourceParameter(
+        this.stack.getSsmPath(SsmResourceType.VPN_GW, [vpcItem.name]),
+      );
+      vpc = Vpc.fromVpcAttributes(this.stack, pascalCase(`${vpcItem.name}Vpc`), {
+        name: vpcItem.name,
+        vpcId,
+        internetGatewayId,
+        virtualPrivateGatewayId,
+      });
+      if (vpcItem.internetGateway && !internetGatewayId) {
+        vpc.addInternetGateway();
+      }
+      if (vpcItem.virtualPrivateGateway && !virtualPrivateGatewayId) {
+        vpc.addVirtualPrivateGateway(vpcItem.virtualPrivateGateway.asn);
+      }
+      if (vpcItem.dhcpOptions) {
+        vpc.setDhcpOptions(vpcItem.dhcpOptions);
+      }
+    } else {
+      //
+      // Create VPC
+      //
+      vpc = new Vpc(this.stack, pascalCase(`${vpcItem.name}Vpc`), {
+        name: vpcItem.name,
+        ipv4CidrBlock: cidr,
+        internetGateway: vpcItem.internetGateway,
+        dhcpOptions: dhcpOptionsIds.get(vpcItem.dhcpOptions ?? ''),
+        enableDnsHostnames: vpcItem.enableDnsHostnames ?? true,
+        enableDnsSupport: vpcItem.enableDnsSupport ?? true,
+        instanceTenancy: vpcItem.instanceTenancy ?? 'default',
+        ipv4IpamPoolId: poolId,
+        ipv4NetmaskLength: poolNetmask,
+        tags: vpcItem.tags,
+        virtualPrivateGateway: vpcItem.virtualPrivateGateway,
+      });
+      this.stack.addSsmParameter({
+        logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name)}VpcId`),
+        parameterName: this.stack.getSsmPath(SsmResourceType.VPC, [vpcItem.name]),
+        stringValue: vpc.vpcId,
+      });
+    }
     //
     // Create additional CIDRs
     //
@@ -368,6 +402,10 @@ export class VpcResources {
 
     if (vpcItem.cidrs && vpcItem.cidrs.length > 1) {
       for (const vpcCidr of vpcItem.cidrs.slice(1)) {
+        if (this.stack.isManagedByAsea(AseaResourceType.EC2_VPC_CIDR, `${vpcItem.name}-${vpcCidr}`)) {
+          // CIDR is created by external source. Skipping creation
+          continue;
+        }
         this.stack.addLogs(LogLevel.INFO, `Adding secondary CIDR ${vpcCidr} to VPC ${vpcItem.name}`);
         vpc.addCidr({ cidrBlock: vpcCidr });
         additionalCidrs.push({ cidrBlock: vpcCidr });
@@ -512,7 +550,7 @@ export class VpcResources {
             this.stack.getSsmPath(SsmResourceType.CGW, [cgw.name]),
           );
           const vpc = vpcMap.get(vpnConnection.vpc)!;
-          const virtualPrivateGatewayId = vpc.virtualPrivateGateway!.gatewayId;
+          const virtualPrivateGatewayId = vpc.virtualPrivateGatewayId;
           this.stack.addLogs(
             LogLevel.INFO,
             `Creating Vpn Connection with Customer Gateway ${cgw.name} to the VPC ${vpnConnection.vpc}`,

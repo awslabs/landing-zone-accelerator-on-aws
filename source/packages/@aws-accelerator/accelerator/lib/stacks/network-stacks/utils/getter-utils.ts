@@ -12,7 +12,7 @@
  */
 
 import { SubnetConfig, VpcConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
-import { PrefixList, RouteTable, Subnet, SecurityGroup, Vpc, IIpamSubnet } from '@aws-accelerator/constructs';
+import { PrefixList, RouteTable, Subnet, Vpc, IIpamSubnet, SecurityGroup } from '@aws-accelerator/constructs';
 import { createLogger } from '@aws-accelerator/utils';
 
 const logger = createLogger(['getter-utils']);

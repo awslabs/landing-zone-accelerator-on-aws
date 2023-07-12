@@ -52,19 +52,20 @@ export class Roles extends AseaResource {
       this.scope.addLogs(LogLevel.INFO, `No ${RESOURCE_TYPE}s to handle in stack ${props.stackInfo.stackName}`);
       return;
     }
-    const existingResources = this.scope.getResourcesByType(RESOURCE_TYPE);
-    const existingInstanceProfiles = this.scope.getResourcesByType(INSTANCE_PROFILE_RESOURCE_TYPE);
+    const existingResources = this.filterResourcesByType(props.stackInfo.resources, RESOURCE_TYPE);
+    const existingInstanceProfiles = this.filterResourcesByType(
+      props.stackInfo.resources,
+      INSTANCE_PROFILE_RESOURCE_TYPE,
+    );
     for (const roleSetItem of props.iamConfig.roleSets ?? []) {
       if (!this.scope.isIncluded(roleSetItem.deploymentTargets)) {
-        this.scope.addLogs(LogLevel.INFO, `Item excluded`);
+        this.scope.addLogs(LogLevel.INFO, `Roles excluded`);
         continue;
       }
 
       for (const roleItem of roleSetItem.roles) {
         this.scope.addLogs(LogLevel.INFO, `Add role ${roleItem.name}`);
-        const role = existingResources.find(
-          cfnResource => cfnResource.resourceMetadata['Properties'].RoleName === roleItem.name,
-        );
+        const role = this.findResourceByName(existingResources, 'RoleName', roleItem.name);
         if (!role) {
           continue;
         }
@@ -81,8 +82,10 @@ export class Roles extends AseaResource {
         } else if (resource.permissionsBoundary) {
           resource.permissionsBoundary = undefined;
         }
-        const existingInstanceProfile = existingInstanceProfiles.find(
-          cfnResource => cfnResource.resourceMetadata['Properties'].InstanceProfileName === `${roleItem.name}-ip`,
+        const existingInstanceProfile = this.findResourceByName(
+          existingInstanceProfiles,
+          'InstanceProfileName',
+          `${roleItem.name}-ip`,
         );
         if (existingInstanceProfile && !roleItem.instanceProfile) {
           this.scope.node.tryRemoveChild(existingInstanceProfile.logicalResourceId);

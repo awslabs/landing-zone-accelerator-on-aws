@@ -114,6 +114,27 @@ export enum SsmResourceType {
    */
   VPC_PEERING = '/network/vpcPeering/${0}/id',
   /**
+   * Internet gateway ID
+   *
+   * `${0}` is replaced with the VPC name
+   *
+   */
+  IGW = '/network/vpc/${0}/internetGateway/id',
+  /**
+   * Virtual Private gateway ID
+   *
+   * `${0}` is replaced with the VPC name
+   *
+   */
+  VPN_GW = '/network/vpc/${0}/virtualPrivateGateway/id',
+  /**
+   * Subnet ID
+   *
+   * `${0}` is replaced with the VPC name
+   *
+   * `${1} is replaced with the subnet name
+   */
+  /**
    * Subnet ID
    *
    * `${0}` is replaced with the VPC name

@@ -12,6 +12,7 @@
  */
 
 import {
+  AseaResourceType,
   DnsFirewallRuleGroupConfig,
   DnsQueryLogsConfig,
   IpamAllocationConfig,
@@ -777,6 +778,10 @@ export abstract class NetworkStack extends AcceleratorStack {
     securityGroupMap: Map<string, SecurityGroup>,
   ) {
     for (const securityGroupItem of vpcItem.securityGroups ?? []) {
+      const isSecurityGroupExternal = this.isManagedByAsea(
+        AseaResourceType.EC2_SECURITY_GROUP,
+        `${vpcItem.name}/${securityGroupItem.name}`,
+      );
       const securityGroup = getSecurityGroup(securityGroupMap, vpcItem.name, securityGroupItem.name) as SecurityGroup;
       const ingressRules = processSecurityGroupSgIngressSources(
         this.vpcResources,
@@ -797,6 +802,7 @@ export abstract class NetworkStack extends AcceleratorStack {
 
       // Create ingress rules
       ingressRules.forEach(ingressRule => {
+        if (isSecurityGroupExternal) return;
         securityGroup.addIngressRule(ingressRule.logicalId, {
           sourceSecurityGroup: ingressRule.rule.targetSecurityGroup,
           ...ingressRule.rule,
@@ -805,6 +811,7 @@ export abstract class NetworkStack extends AcceleratorStack {
 
       // Create egress rules
       egressRules.forEach(egressRule => {
+        if (isSecurityGroupExternal) return;
         securityGroup.addEgressRule(egressRule.logicalId, {
           destinationSecurityGroup: egressRule.rule.targetSecurityGroup,
           ...egressRule.rule,
@@ -832,25 +839,32 @@ export abstract class NetworkStack extends AcceleratorStack {
     allIngressRule: boolean,
   ): SecurityGroup {
     this.logger.info(`Adding Security Group ${securityGroupItem.name} in VPC ${vpcItem.name}`);
-    const securityGroup = new SecurityGroup(
-      this,
-      pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${securityGroupItem.name}Sg`),
-      {
-        securityGroupName: securityGroupItem.name,
-        securityGroupEgress: processedEgressRules,
-        securityGroupIngress: processedIngressRules,
-        description: securityGroupItem.description,
-        vpc: typeof vpc === 'object' ? vpc : undefined,
-        vpcId: typeof vpc === 'string' ? vpc : undefined,
-        tags: securityGroupItem.tags,
-      },
-    );
-
-    this.addSsmParameter({
-      logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(securityGroupItem.name)}SecurityGroup`),
-      parameterName: this.getSsmPath(SsmResourceType.SECURITY_GROUP, [vpcItem.name, securityGroupItem.name]),
-      stringValue: securityGroup.securityGroupId,
-    });
+    let securityGroup;
+    if (this.isManagedByAsea(AseaResourceType.EC2_SECURITY_GROUP, `${vpcItem.name}/${securityGroupItem.name}`)) {
+      const securityGroupId = this.getExternalResourceParameter(
+        this.getSsmPath(SsmResourceType.SECURITY_GROUP, [vpcItem.name, securityGroupItem.name]),
+      );
+      securityGroup = SecurityGroup.fromSecurityGroupId(this, securityGroupId);
+    } else {
+      securityGroup = new SecurityGroup(
+        this,
+        pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${securityGroupItem.name}Sg`),
+        {
+          securityGroupName: securityGroupItem.name,
+          securityGroupEgress: processedEgressRules,
+          securityGroupIngress: processedIngressRules,
+          description: securityGroupItem.description,
+          vpc: typeof vpc === 'object' ? vpc : undefined,
+          vpcId: typeof vpc === 'string' ? vpc : undefined,
+          tags: securityGroupItem.tags,
+        },
+      );
+      this.addSsmParameter({
+        logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(securityGroupItem.name)}SecurityGroup`),
+        parameterName: this.getSsmPath(SsmResourceType.SECURITY_GROUP, [vpcItem.name, securityGroupItem.name]),
+        stringValue: securityGroup.securityGroupId,
+      });
+    }
 
     // AwsSolutions-EC23: The Security Group allows for 0.0.0.0/0 or ::/0 inbound access.
     if (allIngressRule) {

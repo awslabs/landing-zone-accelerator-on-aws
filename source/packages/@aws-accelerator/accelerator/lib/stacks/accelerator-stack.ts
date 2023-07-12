@@ -198,6 +198,12 @@ export abstract class AcceleratorStack extends cdk.Stack {
 
   public stackParameters: Map<string, cdk.aws_ssm.StringParameter>;
 
+  /**
+   * External resource SSM parameters
+   * These parameters are loaded along with externalResourceMapping from SSM
+   */
+  private externalResourceParameters: { [key: string]: string } | undefined;
+
   protected constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
@@ -212,6 +218,11 @@ export abstract class AcceleratorStack extends cdk.Stack {
     //
     // Get CentralLogBucket name
     this.centralLogsBucketName = this.getCentralLogBucketName();
+
+    //
+    // Get external resource ssm parameters from pre loaded globalConfig
+    this.externalResourceParameters =
+      props.globalConfig.externalLandingZoneResources?.resourceParameters?.[`${this.account}-${this.region}`];
 
     this.stackParameters = new Map<string, cdk.aws_ssm.StringParameter>();
     this.stackParameters.set(
@@ -1555,6 +1566,14 @@ export abstract class AcceleratorStack extends cdk.Stack {
     });
   }
 
+  /**
+   * Helper function to verify if resource managed by ASEA or not by looking in resource mapping
+   * Can be replaced with LZA Configuration check. Not using configuration check to avoid errors/mistakes in configuration by user
+   *
+   * @param resourceType
+   * @param resourceIdentifier
+   * @returns
+   */
   public isManagedByAsea(resourceType: string, resourceIdentifier: string): boolean {
     if (!this.props.globalConfig.externalLandingZoneResources?.importExternalLandingZoneResources) return false;
     const aseaResourceList = this.props.globalConfig.externalLandingZoneResources.resourceList;
@@ -1565,5 +1584,10 @@ export abstract class AcceleratorStack extends cdk.Stack {
         r.resourceType === resourceType &&
         r.resourceIdentifier === resourceIdentifier,
     );
+  }
+
+  public getExternalResourceParameter(name: string) {
+    if (!this.externalResourceParameters) throw new Error(`No ssm parameter "${name}" found in account and region`);
+    return this.externalResourceParameters[name];
   }
 }
