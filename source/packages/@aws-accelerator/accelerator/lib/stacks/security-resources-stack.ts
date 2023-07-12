@@ -630,7 +630,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
         id: NagSuppressionRuleIds.IAM5,
         details: [
           {
-            path: `${this.stackName}${this.stackName}/ConfigRecorderDeliveryChannel/ConfigServiceRecorderFunctionRole/Resource`,
+            path: `${this.stackName}/ConfigRecorderDeliveryChannel/ConfigServiceRecorderFunctionRole/Resource`,
             reason: 'Lambda managed policy',
           },
         ],

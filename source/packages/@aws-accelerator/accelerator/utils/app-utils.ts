@@ -379,12 +379,7 @@ export async function setAcceleratorStackProps(
   }
 
   if (globalConfig.externalLandingZoneResources?.importExternalLandingZoneResources) {
-    await globalConfig.loadExternalMapping(
-      true,
-      ![AcceleratorStage.IMPORT_ASEA_RESOURCES, AcceleratorStage.POST_IMPORT_ASEA_RESOURCES].includes(
-        context.stage as AcceleratorStage,
-      ),
-    );
+    await globalConfig.loadExternalMapping(true);
     await globalConfig.loadLzaResources(context.partition, prefixes.accelerator);
   }
 
