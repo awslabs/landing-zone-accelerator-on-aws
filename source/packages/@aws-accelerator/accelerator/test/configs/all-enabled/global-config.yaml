@@ -61,22 +61,22 @@ logging:
   cloudwatchLogs:
     enable: true
     dynamicPartitioning: dynamic-partitioning/log-filters.json
-    replaceLogDestinationArn: replaceLogDestinationArn  
+    # replaceLogDestinationArn: replaceLogDestinationArn  
     
-    exclusions:
-      - organizationalUnits:
-          - Infrastructure
-        excludeAll: true
-      - organizationalUnits:
-          - Root
-        logGroupNames:
-          - test1/*
-      - accounts:
-          - Management
-        regions:
-          - us-east-1
-        logGroupNames:
-          - test/*
+    # exclusions:
+    #   - organizationalUnits:
+    #       - Infrastructure
+    #     excludeAll: true
+    #   - organizationalUnits:
+    #       - Root
+    #     logGroupNames:
+    #       - test1/*
+    #   - accounts:
+    #       - Management
+    #     regions:
+    #       - us-east-1
+    #     logGroupNames:
+    #       - test/*
 tags:
   - key: Environment
     value: Dev
