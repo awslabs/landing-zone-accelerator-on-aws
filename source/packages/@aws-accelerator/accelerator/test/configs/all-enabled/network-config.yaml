@@ -2,6 +2,7 @@ homeRegion: &HOME_REGION us-east-1
 defaultVpc:
   delete: true
   excludeAccounts: []
+
 transitGateways:
   - name: Network-Main
     account: Network
@@ -125,9 +126,33 @@ transitGatewayPeering:
       account: Network
       region: *HOME_REGION
       routeTableAssociations: Network-Main-Shared
-      # autoAccept: true
-      # applyTags: false
-
+      autoAccept: true
+      applyTags: true
+  - name: Network-Main-2-And-SharedServices-Main-Peering
+    autoAccept: false
+    requester:
+      transitGatewayName: SharedServices-Main
+      account: SharedServices
+      region: *HOME_REGION
+      routeTableAssociations: SharedServices-Main-Shared
+      tags:
+        - key: Name
+          value: Network-Main-2-And-SharedServices-Main-Peering
+        - key: CostCenter
+          value: TSD-LZA
+        - key: Company
+          value: AWS
+        - key: Organization
+          value: WWPS
+        - key: Team
+          value: Development
+    accepter:
+      transitGatewayName: Network-Main-2
+      account: Network
+      region: *HOME_REGION
+      routeTableAssociations: Network-Main-2-Core
+      autoAccept: true
+      applyTags: true
 dhcpOptions:
   - name: accelerator-dhcp-opts
     accounts:
@@ -1646,7 +1671,8 @@ certificates:
       - www.example.net
       - e.co
     deploymentTargets:
-      OU:
-        - Infrastructure
+      organizationalUnits:
+        - Security
+
 firewallManager:
   delegatedAdminAccount: Audit

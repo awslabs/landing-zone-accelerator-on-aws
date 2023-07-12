@@ -248,19 +248,27 @@ export class TgwResources {
           ]),
         );
 
-        const accepterTransitGatewayId = new SsmParameterLookup(this.stack, 'AccepterTransitGatewayIdLookup', {
-          name: this.stack.getSsmPath(SsmResourceType.TGW, [transitGatewayPeeringItem.accepter.transitGatewayName]),
-          accountId: props.accountsConfig.getAccountId(transitGatewayPeeringItem.accepter.account),
-          parameterRegion: transitGatewayPeeringItem.accepter.region,
-          roleName: this.stack.acceleratorResourceNames.roles.tgwPeering,
-          kmsKey: this.stack.cloudwatchKey,
-          logRetentionInDays: this.stack.logRetention ?? 365,
-          acceleratorPrefix: props.prefixes.accelerator,
-        }).value;
+        const accepterTransitGatewayId = new SsmParameterLookup(
+          this.stack,
+          pascalCase(
+            `${transitGatewayPeeringItem.requester.transitGatewayName}-${transitGatewayPeeringItem.accepter.transitGatewayName}-AccepterTransitGatewayIdLookup`,
+          ),
+          {
+            name: this.stack.getSsmPath(SsmResourceType.TGW, [transitGatewayPeeringItem.accepter.transitGatewayName]),
+            accountId: props.accountsConfig.getAccountId(transitGatewayPeeringItem.accepter.account),
+            parameterRegion: transitGatewayPeeringItem.accepter.region,
+            roleName: this.stack.acceleratorResourceNames.roles.tgwPeering,
+            kmsKey: this.stack.cloudwatchKey,
+            logRetentionInDays: this.stack.logRetention ?? 365,
+            acceleratorPrefix: props.prefixes.accelerator,
+          },
+        ).value;
 
         const accepterTransitGatewayRouteTableId = new SsmParameterLookup(
           this.stack,
-          'AccepterTransitGatewayRouteTableIdLookup',
+          pascalCase(
+            `${transitGatewayPeeringItem.requester.transitGatewayName}-${transitGatewayPeeringItem.accepter.transitGatewayName}-AccepterTransitGatewayRouteTableIdLookup`,
+          ),
           {
             name: this.stack.getSsmPath(SsmResourceType.TGW_ROUTE_TABLE, [
               transitGatewayPeeringItem.accepter.transitGatewayName,
