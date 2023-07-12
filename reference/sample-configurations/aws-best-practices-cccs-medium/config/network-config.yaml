@@ -145,7 +145,7 @@ centralNetworkServices:
           - Endpoint-B
         rules:
           - name: AWSAccelerator-Endpoint-mad-example-local
-            domainName: example.local
+            domainName: example.local      # UPDATE
             targetIps:
               - ip: 1.1.1.1
                 # port: '5353' # only include if targeting a non-standard DNS port
@@ -201,6 +201,7 @@ vpcs:
     region: *HOME_REGION
     cidrs:
       - 10.7.0.0/22
+    defaultSecurityGroupRulesDeletion: true
     internetGateway: false
     enableDnsHostnames: true
     enableDnsSupport: true
@@ -270,6 +271,9 @@ vpcs:
         - service: ssmmessages
         - service: kms
         - service: logs
+        - service: cloudformation
+        - service: secretsmanager
+        - service: monitoring
         # - service: access-analyzer
         # - service: acm-pca
         # - service: application-autoscaling
@@ -280,7 +284,6 @@ vpcs:
         # - service: awsconnector
         # - service: cassandra
         # - service: clouddirectory
-        # - service: cloudformation
         # - service: cloudtrail
         # - service: codebuild
         # - service: codecommit
@@ -307,11 +310,9 @@ vpcs:
         # - service: kinesis-streams
         # - service: license-manager
         # - service: macie2
-        # - service: monitoring
         # - service: notebook
         # - service: sagemaker.api
         # - service: sagemaker.runtime
-        # - service: secretsmanager
         # - service: servicecatalog
         # - service: sms
         # - service: sns
@@ -333,6 +334,7 @@ vpcs:
     region: *HOME_REGION
     cidrs:
       - 10.7.4.0/22
+    defaultSecurityGroupRulesDeletion: true
     internetGateway: true
     routeTables:
       - name: Perimeter-Tgw-A
@@ -342,10 +344,30 @@ vpcs:
             type: networkFirewall
             target: AWSAccelerator-firewall
             targetAvailabilityZone: a
+          - name: NfwRouteToNatA
+            destination: 10.7.7.176/28
+            type: networkFirewall
+            target: AWSAccelerator-firewall
+            targetAvailabilityZone: a
+          - name: NfwRouteToNatB
+            destination: 10.7.7.192/28
+            type: networkFirewall
+            target: AWSAccelerator-firewall
+            targetAvailabilityZone: b
       - name: Perimeter-Tgw-B
         routes:
           - name: NfwRoute
             destination: 0.0.0.0/0
+            type: networkFirewall
+            target: AWSAccelerator-firewall
+            targetAvailabilityZone: b
+          - name: NfwRouteToNatA
+            destination: 10.7.7.176/28
+            type: networkFirewall
+            target: AWSAccelerator-firewall
+            targetAvailabilityZone: a
+          - name: NfwRouteToNatB
+            destination: 10.7.7.192/28
             type: networkFirewall
             target: AWSAccelerator-firewall
             targetAvailabilityZone: b
@@ -460,6 +482,7 @@ vpcs:
     region: *HOME_REGION
     cidrs:
       - 10.2.0.0/16
+    defaultSecurityGroupRulesDeletion: true
     routeTables:
       - name: Dev
         routes:
@@ -608,6 +631,137 @@ vpcs:
                   - Management
               - prefixLists:
                   - onpremises-prefix-list
+          - description: "Central VPC Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - account: Network
+                vpc: Central
+                subnets:
+                  - Central-Web-A
+                  - Central-Web-A
+                  - Central-App-A
+                  - Central-App-B
+                  - Central-Mgmt-A
+                  - Central-Mgmt-B
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "Web"
+        description: "Web Security Group for Dev VPC"
+        inboundRules:
+          - description: "World Web Traffic Inbound"
+            types:
+              - HTTPS
+              - HTTP
+            sources:
+              - 0.0.0.0/0
+          - description: "Central VPC Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - account: Network
+                vpc: Central
+                subnets:
+                  - Central-Web-A
+                  - Central-Web-A
+                  - Central-App-A
+                  - Central-App-B
+                  - Central-Mgmt-A
+                  - Central-Mgmt-B
+          - description: "Local Mgmt Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                - Management
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "App"
+        description: "App Security Group for Dev VPC"
+        inboundRules:
+          - description: "Central VPC Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - account: Network
+                vpc: Central
+                subnets:
+                  - Central-Web-A
+                  - Central-Web-A
+                  - Central-App-A
+                  - Central-App-B
+                  - Central-Mgmt-A
+                  - Central-Mgmt-B
+          - description: "Local Mgmt Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                - Management
+          - description: "Local Web Tier Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                - Web
+          - description: "Allow East/West Communication Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                - App
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "Data"
+        description: "Data Security Group for Dev VPC"
+        inboundRules:
+          - description: "Central VPC Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - account: Network
+                vpc: Central
+                subnets:
+                  - Central-Web-A
+                  - Central-Web-A
+                  - Central-App-A
+                  - Central-App-B
+                  - Central-Mgmt-A
+                  - Central-Mgmt-B
+          - description: "Local Mgmt Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                - Management
+          - description: "Local App DB Traffic Inbound"
+            types:
+              - MSSQL
+              - MYSQL/AURORA
+              - REDSHIFT
+              - POSTGRESQL
+              - ORACLE-RDS
+            sources:
+              - securityGroups:
+                - App
+          - description: "Allow East/West Communication Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                - Data
         outboundRules:
           - description: "All Outbound"
             types:
@@ -643,6 +797,7 @@ vpcs:
     region: *HOME_REGION
     cidrs:
       - 10.1.0.0/16
+    defaultSecurityGroupRulesDeletion: true
     routeTables:
       - name: Central
         routes:
@@ -669,6 +824,98 @@ vpcs:
                   - Management
               - prefixLists:
                   - onpremises-prefix-list
+          - description: "Central VPC Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - account: Network
+                vpc: Central
+                subnets:
+                  - Central-Web-A
+                  - Central-Web-A
+                  - Central-App-A
+                  - Central-App-B
+                  - Central-Mgmt-A
+                  - Central-Mgmt-B
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "Web"
+        description: "Web Security Group for Central VPC"
+        inboundRules:
+          - description: "World Web Traffic Inbound"
+            types:
+              - HTTPS
+              - HTTP
+            sources:
+              - 0.0.0.0/0         
+          - description: "Local Mgmt Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                - Management
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "App"
+        description: "App Security Group for Central VPC"
+        inboundRules:         
+          - description: "Local Mgmt Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                - Management
+          - description: "Local Web Tier Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                - Web
+          - description: "Allow East/West Communication Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                - App
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "Data"
+        description: "Data Security Group for Central VPC"
+        inboundRules:          
+          - description: "Local Mgmt Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                - Management
+          - description: "Local App DB Traffic Inbound"
+            types:
+              - MSSQL 
+              - MYSQL/AURORA
+              - REDSHIFT
+              - POSTGRESQL
+              - ORACLE-RDS
+            sources:
+              - securityGroups:
+                - App
+          - description: "Allow East/West Communication Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                - Data
         outboundRules:
           - description: "All Outbound"
             types:
@@ -860,6 +1107,7 @@ vpcs:
     region: *HOME_REGION
     cidrs:
       - 10.3.0.0/16
+    defaultSecurityGroupRulesDeletion: true
     routeTables:
       - name: Test
         routes:
@@ -1006,6 +1254,137 @@ vpcs:
                   - Management
               - prefixLists:
                   - onpremises-prefix-list
+          - description: "Central VPC Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - account: Network
+                vpc: Central
+                subnets:
+                  - Central-Web-A
+                  - Central-Web-A
+                  - Central-App-A
+                  - Central-App-B
+                  - Central-Mgmt-A
+                  - Central-Mgmt-B
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "Web"
+        description: "Web Security Group for Test VPC"
+        inboundRules:
+          - description: "World Web Traffic Inbound"
+            types:
+              - HTTPS
+              - HTTP
+            sources:
+              - 0.0.0.0/0
+          - description: "Central VPC Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - account: Network
+                vpc: Central
+                subnets:
+                  - Central-Web-A
+                  - Central-Web-A
+                  - Central-App-A
+                  - Central-App-B
+                  - Central-Mgmt-A
+                  - Central-Mgmt-B
+          - description: "Local Mgmt Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                - Management
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "App"
+        description: "App Security Group for Test VPC"
+        inboundRules:
+          - description: "Central VPC Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - account: Network
+                vpc: Central
+                subnets:
+                  - Central-Web-A
+                  - Central-Web-A
+                  - Central-App-A
+                  - Central-App-B
+                  - Central-Mgmt-A
+                  - Central-Mgmt-B
+          - description: "Local Mgmt Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                - Management
+          - description: "Local Web Tier Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                - Web
+          - description: "Allow East/West Communication Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                - App
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "Data"
+        description: "Data Security Group for Test VPC"
+        inboundRules:
+          - description: "Central VPC Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - account: Network
+                vpc: Central
+                subnets:
+                  - Central-Web-A
+                  - Central-Web-A
+                  - Central-App-A
+                  - Central-App-B
+                  - Central-Mgmt-A
+                  - Central-Mgmt-B
+          - description: "Local Mgmt Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                - Management
+          - description: "Local App DB Traffic Inbound"
+            types:
+              - MSSQL 
+              - MYSQL/AURORA
+              - REDSHIFT
+              - POSTGRESQL
+              - ORACLE-RDS
+            sources:
+              - securityGroups:
+                - App
+          - description: "Allow East/West Communication Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                - Data
         outboundRules:
           - description: "All Outbound"
             types:
@@ -1041,6 +1420,7 @@ vpcs:
     region: *HOME_REGION
     cidrs:
       - 10.4.0.0/16
+    defaultSecurityGroupRulesDeletion: true
     routeTables:
       - name: Prod
         routes:
@@ -1187,6 +1567,137 @@ vpcs:
                   - Management
               - prefixLists:
                   - onpremises-prefix-list
+          - description: "Central VPC Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - account: Network
+                vpc: Central
+                subnets:
+                  - Central-Web-A
+                  - Central-Web-A
+                  - Central-App-A
+                  - Central-App-B
+                  - Central-Mgmt-A
+                  - Central-Mgmt-B
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "Web"
+        description: "Web Security Group for Prod VPC"
+        inboundRules:
+          - description: "World Web Traffic Inbound"
+            types:
+              - HTTPS
+              - HTTP
+            sources:
+              - 0.0.0.0/0
+          - description: "Central VPC Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - account: Network
+                vpc: Central
+                subnets:
+                  - Central-Web-A
+                  - Central-Web-A
+                  - Central-App-A
+                  - Central-App-B
+                  - Central-Mgmt-A
+                  - Central-Mgmt-B
+          - description: "Local Mgmt Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                - Management
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "App"
+        description: "App Security Group for Prod VPC"
+        inboundRules:
+          - description: "Central VPC Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - account: Network
+                vpc: Central
+                subnets:
+                  - Central-Web-A
+                  - Central-Web-A
+                  - Central-App-A
+                  - Central-App-B
+                  - Central-Mgmt-A
+                  - Central-Mgmt-B
+          - description: "Local Mgmt Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                - Management
+          - description: "Local Web Tier Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                - Web
+          - description: "Allow East/West Communication Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                - App
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "Data"
+        description: "Data Security Group for Prod VPC"
+        inboundRules:
+          - description: "Central VPC Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - account: Network
+                vpc: Central
+                subnets:
+                  - Central-Web-A
+                  - Central-Web-A
+                  - Central-App-A
+                  - Central-App-B
+                  - Central-Mgmt-A
+                  - Central-Mgmt-B
+          - description: "Local Mgmt Traffic Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                - Management
+          - description: "Local App DB Traffic Inbound"
+            types:
+              - MSSQL
+              - MYSQL/AURORA
+              - REDSHIFT
+              - POSTGRESQL
+              - ORACLE-RDS
+            sources:
+              - securityGroups:
+                - App
+          - description: "Allow East/West Communication Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                - Data
         outboundRules:
           - description: "All Outbound"
             types:
@@ -1304,6 +1815,7 @@ vpcFlowLogs:
   maxAggregationInterval: 600
   destinations:
     - cloud-watch-logs
+    - s3
   destinationsConfig:
     cloudWatchLogs:
       retentionInDays: 30
