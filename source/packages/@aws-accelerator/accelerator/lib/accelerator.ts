@@ -177,12 +177,7 @@ export abstract class Accelerator {
     const globalConfig = !this.isPipelineStage(props.stage) ? GlobalConfig.load(props.configDirPath) : undefined;
     if (globalConfig?.externalLandingZoneResources?.importExternalLandingZoneResources) {
       logger.info('Loading ASEA mapping for stacks list');
-      await globalConfig.loadExternalMapping(
-        true,
-        [AcceleratorStage.IMPORT_ASEA_RESOURCES, AcceleratorStage.POST_IMPORT_ASEA_RESOURCES].includes(
-          props.stage as AcceleratorStage,
-        ),
-      );
+      await globalConfig.loadExternalMapping(true);
       logger.info('Loaded ASEA mapping');
     }
 

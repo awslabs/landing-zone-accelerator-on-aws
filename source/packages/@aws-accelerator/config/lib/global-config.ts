@@ -1741,7 +1741,7 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
       .promise();
   }
 
-  public async loadExternalMapping(loadFromCache: boolean, failOnResourceListNotFound = true) {
+  public async loadExternalMapping(loadFromCache: boolean) {
     if (!this.externalLandingZoneResources?.importExternalLandingZoneResources) return;
     this.externalLandingZoneResources.accountsDeployedExternally = [];
     const tempDirPath = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'asea-assets'));
@@ -1759,11 +1759,7 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
       const mapping = await this.loadExternalMappingFromS3(s3Client);
       this.externalLandingZoneResources.templateMap = await this.setTemplateMap(mapping);
       this.externalLandingZoneResources.resourceList =
-        (await this.readJsonFromExternalS3<t.AseaResourceMapping[]>(
-          'aseaResources.json',
-          s3Client,
-          failOnResourceListNotFound,
-        )) || [];
+        (await this.readJsonFromExternalS3<t.AseaResourceMapping[]>('aseaResources.json', s3Client)) || [];
       fs.writeFileSync(aseaMappingPath, JSON.stringify(mapping, null, 2));
       fs.writeFileSync(aseaResourceListPath, JSON.stringify(this.externalLandingZoneResources.resourceList, null, 2));
     }
@@ -1851,11 +1847,7 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
     }
   }
 
-  private async readJsonFromExternalS3<T>(
-    objectKey: string,
-    s3Client?: AWS.S3,
-    failOnNotFound = true,
-  ): Promise<T | undefined> {
+  private async readJsonFromExternalS3<T>(objectKey: string, s3Client?: AWS.S3): Promise<T | undefined> {
     if (
       !this.externalLandingZoneResources?.importExternalLandingZoneResources ||
       !this.externalLandingZoneResources.mappingFileBucket
@@ -1882,7 +1874,7 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
       }
       return JSON.parse(response.Body.toString());
     } catch (e) {
-      if ((e as AWS.AWSError).code === 'NoSuchKey' && !failOnNotFound) return;
+      if ((e as AWS.AWSError).code === 'NoSuchKey') return;
       throw e;
     }
   }
