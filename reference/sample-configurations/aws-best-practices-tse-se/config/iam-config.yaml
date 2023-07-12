@@ -15,12 +15,6 @@ policySets:
         policy: iam-policies/boundary-policy.json
   - deploymentTargets:
       accounts:
-        - Operations
-    policies:
-      - name: AWSAccelerator-RDGW-Custom-Policy
-        policy: iam-policies/rdgw-custom-policy.json
-  - deploymentTargets:
-      accounts:
         - Management
     policies:
       - name: AWSAccelerator-IAM-User-Boundary-Policy
@@ -41,10 +35,6 @@ roleSets:
             - AmazonSSMDirectoryServiceAccess
             - CloudWatchAgentServerPolicy
         boundaryPolicy: AWSAccelerator-Default-Boundary-Policy
-  - deploymentTargets:
-      accounts:
-        - Operations
-    roles:
       - name: AWSAccelerator-RDGW-Role
         instanceProfile: true
         assumedBy:
@@ -55,8 +45,6 @@ roleSets:
             - AmazonSSMManagedInstanceCore
             - AmazonSSMDirectoryServiceAccess
             - CloudWatchAgentServerPolicy
-          customerManaged:
-            - AWSAccelerator-RDGW-Custom-Policy  
         boundaryPolicy: AWSAccelerator-Default-Boundary-Policy
       - name: AWSAccelerator-Rsyslog-Role
         instanceProfile: true
@@ -98,7 +86,7 @@ managedActiveDirectories:
     type: AWS Managed Microsoft AD
     account: Operations
     region: *HOME_REGION
-    dnsName: example.local
+    dnsName: example.local      # UPDATE
     netBiosDomainName: example
     description: This directory is a) shared to most accounts in the organization to provide centralized Windows and Linux authentication for cloud workloads, b) used as an identity source for AWS SSO, c) used to inter-connect with on-premises directory services, and d) provides a single identities source for instance and AWS console access.
     edition: Enterprise
@@ -121,7 +109,7 @@ managedActiveDirectories:
           - Prod
           - UnClass
     logs:
-      groupName: /AWSAccelerator/MAD/example.local
+      groupName: /AWSAccelerator/MAD/example.local      # UPDATE
     activeDirectoryConfigurationInstance:
       instanceType: t3.large
       vpcName: Central
@@ -129,7 +117,7 @@ managedActiveDirectories:
       imagePath: /aws/service/ami-windows-latest/Windows_Server-2016-English-Full-Base
       securityGroupInboundSources:
         - 10.1.0.0/16
-      instanceRole: EC2-Default-SSM-AD-Role
+      instanceRole: AWSAccelerator-RDGW-Role
       userDataScripts:
         - scriptName: JoinDomain
           scriptFilePath: ad-config-scripts/Join-Domain.ps1

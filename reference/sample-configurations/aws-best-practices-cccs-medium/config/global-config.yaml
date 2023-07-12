@@ -82,6 +82,7 @@ logging:
         noncurrentVersionExpiration: 730
     attachPolicyToIamRoles:
       - EC2-Default-SSM-AD-Role
+      - AWSAccelerator-RDGW-Role
   cloudwatchLogs:
     dynamicPartitioning: dynamic-partitioning/log-filters.json
   accessLogBucket:

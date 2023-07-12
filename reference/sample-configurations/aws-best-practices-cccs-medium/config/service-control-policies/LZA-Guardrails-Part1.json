@@ -173,6 +173,7 @@
         "lambda:AddPermission",
         "lambda:CreateEventSourceMapping",
         "lambda:CreateFunction",
+        "lambda:CreateFunctionUrlConfig",
         "lambda:DeleteEventSourceMapping",
         "lambda:DeleteFunction",
         "lambda:DeleteFunctionConcurrency",
@@ -180,7 +181,8 @@
         "lambda:RemovePermission",
         "lambda:UpdateEventSourceMapping",
         "lambda:UpdateFunctionCode",
-        "lambda:UpdateFunctionConfiguration"
+        "lambda:UpdateFunctionConfiguration",
+        "lambda:UpdateFunctionUrlConfig"
       ],
       "Resource": ["arn:${PARTITION}:lambda:*:*:function:AWSA*"],
       "Condition": {
