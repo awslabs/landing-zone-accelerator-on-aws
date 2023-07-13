@@ -602,14 +602,14 @@ vpcs:
             destination: 0.0.0.0/0
             type: networkFirewall
             target: az-id-firewall
-            targetAvailabilityZone: 1
+            targetAvailabilityZone: c
       - name: Network-Secondary-D-Rt
         routes:
           - name: NfwRoute
             destination: 0.0.0.0/0
             type: networkFirewall
             target: az-id-firewall
-            targetAvailabilityZone: 2
+            targetAvailabilityZone: d
     subnets:
       - name: Network-Secondary-A
         availabilityZone: a
@@ -624,13 +624,13 @@ vpcs:
           ipamPoolName: home-region-prod-pool
           netmaskLength: 28
       - name: Network-Secondary-C
-        availabilityZone: 1
+        availabilityZone: c
         routeTable: Network-Secondary-C-Rt
         ipamAllocation:
           ipamPoolName: home-region-prod-pool
           netmaskLength: 28
       - name: Network-Secondary-D
-        availabilityZone: 2
+        availabilityZone: d
         routeTable: Network-Secondary-D-Rt
         ipamAllocation:
           ipamPoolName: home-region-prod-pool
@@ -1530,6 +1530,120 @@ vpcs:
         - flow-direction
         - traffic-path
 
+  # vpc for application workloads
+  - name: SharedServices-appVpc
+    account: SharedServices
+    region: *HOME_REGION
+    cidrs:
+      - 10.1.0.0/16
+    internetGateway: true
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: PrivRtA
+        routes:
+          - name: NatRoute
+            destination: 0.0.0.0/0
+            type: natGateway
+            target: NatGwA
+      - name: PrivRtB
+        routes:
+          - name: NatRoute
+            destination: 0.0.0.0/0
+            type: natGateway
+            target: NatGwB
+      - name: PublicA
+        routes:
+          - name: IgwRoute
+            destination: 0.0.0.0/0
+            type: internetGateway
+            target: IGW
+      - name: PublicB
+        routes:
+          - name: IgwRoute
+            destination: 0.0.0.0/0
+            type: internetGateway
+            target: IGW
+    subnets:
+      - name: PublicA
+        availabilityZone: a
+        routeTable: PublicA
+        ipv4CidrBlock: 10.1.0.0/24
+      - name: PublicB
+        availabilityZone: b
+        routeTable: PublicB
+        ipv4CidrBlock: 10.1.1.0/24
+      - name: PrivateA
+        availabilityZone: a
+        routeTable: PrivRtA
+        ipv4CidrBlock: 10.1.2.0/24
+      - name: PrivateB
+        availabilityZone: b
+        routeTable: PrivRtB
+        ipv4CidrBlock: 10.1.3.0/24
+    natGateways:
+      - name: NatGwA
+        subnet: PublicA
+      - name: NatGwB
+        subnet: PublicB
+    securityGroups:
+      - name: appSecurityGroup
+        description: Accelerator security group
+        inboundRules:
+          - description: Self access security group
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                  - appSecurityGroup
+
+        outboundRules:
+          - description: Allow all outbound
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+    vpcFlowLogs:
+      trafficType: ALL
+      maxAggregationInterval: 60
+      destinations:
+        - cloud-watch-logs
+      destinationsConfig:
+        cloudWatchLogs:
+          retentionInDays: 3653
+      defaultFormat: true
+      customFields:
+        - version
+        - account-id
+        - interface-id
+        - srcaddr
+        - dstaddr
+        - srcport
+        - dstport
+        - protocol
+        - packets
+        - bytes
+        - start
+        - end
+        - action
+        - log-status
+        - vpc-id
+        - subnet-id
+        - instance-id
+        - tcp-flags
+        - type
+        - pkt-srcaddr
+        - pkt-dstaddr
+        - region
+        - az-id
+        - pkt-src-aws-service
+        - pkt-dst-aws-service
+        - flow-direction
+        - traffic-path
+
+
+
 directConnectGateways:
   - name: Network-DXGW
     account: Network
@@ -1641,6 +1755,8 @@ certificates:
     deploymentTargets:
       organizationalUnits:
         - Infrastructure
+      accounts:
+        - SharedServices
   - name: cert2
     type: import
     privKey: cert1/privKey.key

@@ -37,6 +37,7 @@ new LzaLambda(stack, 'LzaLambda', {
   ],
   cloudWatchLogRemovalPolicy: cdk.RemovalPolicy.RETAIN,
   nagSuppressionPrefix: `testPrefix`,
+  environmentVariables: [{ envKey: 'envValue' }],
 });
 
 /**

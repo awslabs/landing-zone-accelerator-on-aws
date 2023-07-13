@@ -346,9 +346,9 @@ class CustomizationValidator {
       }
 
       // Validate file
-      if (app.launchTemplate) {
-        if (!fs.existsSync(path.join(configDir, app.launchTemplate.userData!))) {
-          errors.push(`Launch Template file ${app.launchTemplate.userData!} not found, for ${app.name} !!!`);
+      if (app.launchTemplate?.userData) {
+        if (!fs.existsSync(path.join(configDir, app.launchTemplate.userData))) {
+          errors.push(`Launch Template file ${app.launchTemplate.userData} not found, for ${app.name} !!!`);
         }
       }
     }
@@ -392,13 +392,6 @@ class CustomizationValidator {
   ) {
     if (app.launchTemplate) {
       const launchTemplateSecurityGroups = app.launchTemplate.securityGroups ?? [];
-      if (launchTemplateSecurityGroups.length === 0) {
-        errors.push(
-          `Launch Template ${app.launchTemplate!.name} does not have security groups in ${
-            app.name
-          }. At least one security group is required`,
-        );
-      }
       const ltSgCheck = helpers.checkSecurityGroupInConfig(launchTemplateSecurityGroups, vpcCheck);
       if (ltSgCheck === false) {
         errors.push(

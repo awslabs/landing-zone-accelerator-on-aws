@@ -15,6 +15,21 @@ snsSubscriptionConfig:
 #         organizationalUnits:
 #           - Root
 #           - Infrastructure
+keyManagementService:
+  keySets:
+   - name: appEbsKey
+     alias: accelerator/custom-key/appEbsKey
+     policy: kms/applicationEbs.json
+     description: KMS Key for EBS volume encryption of applications
+     enableKeyRotation: true
+     enabled: true
+     removalPolicy: destroy
+     deploymentTargets:
+       accounts:
+         - SharedServices
+       # only deploy in region where application workloads are present
+       excludedRegions:
+         - us-west-2
 centralSecurityServices:
   delegatedAdminAccount: Audit
   ebsDefaultVolumeEncryption:

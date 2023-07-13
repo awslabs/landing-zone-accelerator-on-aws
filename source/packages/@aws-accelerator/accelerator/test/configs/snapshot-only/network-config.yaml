@@ -1509,6 +1509,114 @@ vpcs:
         - pkt-dst-aws-service
         - flow-direction
         - traffic-path
+  - name: SharedServices-appVpc
+    account: SharedServices
+    region: us-east-1
+    cidrs:
+      - 10.1.0.0/16
+    internetGateway: true
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: SharedServices-appVpc-PrivRtA
+        routes:
+          - name: SharedServices-appVpc-NatRouteA
+            destination: 0.0.0.0/0
+            type: natGateway
+            target: SharedServices-appVpc-NatGwA
+      - name: SharedServices-appVpc-PrivRtB
+        routes:
+          - name: SharedServices-appVpc-NatRouteB
+            destination: 0.0.0.0/0
+            type: natGateway
+            target: SharedServices-appVpc-NatGwB
+      - name: SharedServices-appVpc-PublicRouteA
+        routes:
+          - name: IgwRoute
+            destination: 0.0.0.0/0
+            type: internetGateway
+            target: IGW
+      - name: SharedServices-appVpc-PublicRouteB
+        routes:
+          - name: IgwRoute
+            destination: 0.0.0.0/0
+            type: internetGateway
+            target: IGW
+    subnets:
+      - name: SharedServices-appVpc-PublicSubnetA
+        availabilityZone: a
+        routeTable: SharedServices-appVpc-PublicRouteA
+        ipv4CidrBlock: 10.1.0.0/24
+      - name: SharedServices-appVpc-PublicSubnetB
+        availabilityZone: b
+        routeTable: SharedServices-appVpc-PublicRouteB
+        ipv4CidrBlock: 10.1.1.0/24
+      - name: SharedServices-appVpc-PrivateSubnetA
+        availabilityZone: a
+        routeTable: SharedServices-appVpc-PrivRtA
+        ipv4CidrBlock: 10.1.2.0/24
+      - name: SharedServices-appVpc-PrivateSubnetB
+        availabilityZone: b
+        routeTable: SharedServices-appVpc-PrivRtB
+        ipv4CidrBlock: 10.1.3.0/24
+    natGateways:
+      - name: SharedServices-appVpc-NatGwA
+        subnet: SharedServices-appVpc-PublicSubnetA
+      - name: SharedServices-appVpc-NatGwB
+        subnet: SharedServices-appVpc-PublicSubnetB
+    securityGroups:
+      - name: SharedServices-appVpc-appSecurityGroup
+        description: Accelerator security group
+        inboundRules:
+          - description: Remote access security group
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                - SharedServices-appVpc-appSecurityGroup
+
+        outboundRules:
+          - description: Allow all outbound
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+    vpcFlowLogs:
+      trafficType: ALL
+      maxAggregationInterval: 600
+      destinations:
+    #    - s3
+        - cloud-watch-logs
+      defaultFormat: false
+      customFields:
+        - version
+        - account-id
+        - interface-id
+        - srcaddr
+        - dstaddr
+        - srcport
+        - dstport
+        - protocol
+        - packets
+        - bytes
+        - start
+        - end
+        - action
+        - log-status
+        - vpc-id
+        - subnet-id
+        - instance-id
+        - tcp-flags
+        - type
+        - pkt-srcaddr
+        - pkt-dstaddr
+        - region
+        - az-id
+        - pkt-src-aws-service
+        - pkt-dst-aws-service
+        - flow-direction
+        - traffic-path
 
 directConnectGateways:
   - name: Network-DXGW
@@ -1622,6 +1730,7 @@ certificates:
       accounts:
         - Management
         - Audit
+        - SharedServices
       organizationalUnits:
         - Security
   - name: cert2
