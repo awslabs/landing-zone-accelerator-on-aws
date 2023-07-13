@@ -123,11 +123,6 @@ export class ApplicationsStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: ApplicationStackProps) {
     super(scope, id, props);
     this.props = props;
-
-    this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
-
-    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
-
     const allVpcItems = [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? [];
     const allAppConfigs: AppConfigItem[] = props.customizationsConfig.applications ?? [];
     const elbLogsBucketName = this.getElbLogsBucketName();
@@ -254,7 +249,6 @@ export class ApplicationsStack extends AcceleratorStack {
       if (vpcItem.name === appConfigItem.vpc) {
         // Get account IDs
         const vpcAccountIds = this.getVpcAccountIds(vpcItem);
-
         if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
           // Create target group resource
           const targetGroups = this.createTargetGroup(
@@ -263,6 +257,7 @@ export class ApplicationsStack extends AcceleratorStack {
             appConfigItem.vpc,
             appConfigItem.name,
           )!;
+
           // Create network load balancer resource
           this.createNetworkLoadBalancer(
             appConfigItem.networkLoadBalancer ?? undefined,
@@ -272,6 +267,7 @@ export class ApplicationsStack extends AcceleratorStack {
             maps.subnetMap,
             accessLogsBucket,
           );
+
           // Create application load balancer resource
           this.createApplicationLoadBalancer(
             appConfigItem.applicationLoadBalancer ?? undefined,
@@ -282,6 +278,7 @@ export class ApplicationsStack extends AcceleratorStack {
             maps.subnetMap,
             accessLogsBucket,
           );
+
           // create launch template resource
           const lt = this.createLaunchTemplate(
             appConfigItem.launchTemplate,
@@ -526,6 +523,53 @@ export class ApplicationsStack extends AcceleratorStack {
         },
       ],
     });
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM4,
+      details: [
+        {
+          path: `${this.stackName}/AutoScalingGroup${pascalCase(appConfigItem.name)}${pascalCase(
+            appConfigItem.autoscaling.name,
+          )}/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/Resource`,
+          reason: 'Custom resource Lambda role policy.',
+        },
+      ],
+    });
+
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM5,
+      details: [
+        {
+          path: `${this.stackName}/AutoScalingGroup${pascalCase(appConfigItem.name)}${pascalCase(
+            appConfigItem.autoscaling.name,
+          )}/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/DefaultPolicy/Resource`,
+          reason: 'Custom resource Lambda role policy.',
+        },
+      ],
+    });
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM4,
+      details: [
+        {
+          path: `${this.stackName}/AutoScalingGroup${pascalCase(appConfigItem.name)}${pascalCase(
+            appConfigItem.autoscaling.name,
+          )}/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/Resource`,
+          reason: 'Custom resource Lambda role policy.',
+        },
+      ],
+    });
+
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM5,
+      details: [
+        {
+          path: `${this.stackName}/AutoScalingGroup${pascalCase(appConfigItem.name)}${pascalCase(
+            appConfigItem.autoscaling.name,
+          )}/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
+          reason: 'Custom resource Lambda role policy.',
+        },
+      ],
+    });
+
     return asg;
   }
 

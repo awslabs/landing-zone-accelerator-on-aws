@@ -86,6 +86,11 @@ exports[`LzaLambda Construct(IdentityCenterGetInstanceId):  Snapshot Test 1`] = 
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "LZA Lambda Function for Snapshot test",
+        "Environment": {
+          "Variables": {
+            "envKey": "envValue",
+          },
+        },
         "FunctionName": "LzaLambda",
         "Handler": "index.handler",
         "KmsKeyArn": {
