@@ -240,7 +240,9 @@ export class SharedResources {
       const listenerMap = new Map<string, cdk.aws_elasticloadbalancingv2.CfnListener>();
       for (const vpcItem of this.stack.vpcResources) {
         for (const albItem of vpcItem.loadBalancers?.applicationLoadBalancers ?? []) {
-          this.createSharedApplicationLoadBalancerListeners(vpcItem, albItem, albMap, targetGroupMap, listenerMap);
+          if (this.stack.region === vpcItem.region) {
+            this.createSharedApplicationLoadBalancerListeners(vpcItem, albItem, albMap, targetGroupMap, listenerMap);
+          }
         }
       }
       return listenerMap;

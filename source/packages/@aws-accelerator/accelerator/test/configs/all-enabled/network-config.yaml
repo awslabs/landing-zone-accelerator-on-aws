@@ -1391,7 +1391,7 @@ vpcs:
         ipv4CidrBlock: 10.4.0.0/24
         shareTargets:
           organizationalUnits:
-            - Security
+            - Infrastructure
         tags:
           - key: Name
             value: SharedServices-App-A
@@ -1401,7 +1401,7 @@ vpcs:
         ipv4CidrBlock: 10.4.1.0/24
         shareTargets:
           organizationalUnits:
-            - Security
+            - Infrastructure
       - name: SharedServices-MainTgwAttach-A
         availabilityZone: a
         routeTable: SharedServices-Tgw-A
@@ -1430,7 +1430,7 @@ vpcs:
               sslPolicy: ELBSecurityPolicy-2016-08
           shareTargets:
             organizationalUnits:
-              - Security
+              - Infrastructure
     targetGroups:
       - name: deployed-tg-2
         port: 443
@@ -1438,7 +1438,7 @@ vpcs:
         type: instance
         shareTargets:
           organizationalUnits:
-            - Security
+            - Infrastructure
     transitGatewayAttachments:
       - name: SharedServices-Main
         transitGateway:
@@ -1643,7 +1643,7 @@ certificates:
     cert: cert1/cert.crt
     deploymentTargets:
       organizationalUnits:
-        - Security
+        - Infrastructure
   - name: cert2
     type: import
     privKey: cert1/privKey.key
