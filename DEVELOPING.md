@@ -106,6 +106,12 @@ When developing features for the accelerator, you may encounter situations where
 
 The `DependenciesStack` may be found in `./source/packages/@aws-accelerator/accelerator/stacks/dependencies-stack.ts`.
 
+### Resource availability by region or partition
+
+The LZA is built to manage the deployment of AWS resources across all available partitions and regions. As new services and features are released, there is often a lack of feature parity across these regions or partitions. The LZA team has made the decision not to create guardrails blocking customers from deploying elective resources to regions or partitions where they are unavailable. This practice requires additional research during the initial implementation, as well as follow-up work to remove the guardrail when the feature becomes available.
+
+When designing a feature not available in all regions/partitions, do not create checks or validations to block deployment or throw an error based on the environment. Customers are ultimately responsible for determining the services and features available in the AWS regions and partitions they deploy to. 
+
 ### Adding Validation
 
 The LZA runs a set of validation functions against the provided configuration repository in order to alert customers of syntactical errors. These validations save customers significant time as this can reduce the time for the pipeline to fail in the event of a misconfiguration. This occurs during the `Build` stage of the pipeline, where the CodeBuild project runs the same `config-validator.ts` script referenced in [Configuration Validation](#configuration-validator). This script orchestrates a collection of configuration-file-specific validation classes defined in the `./source/packages/@aws-accelerator/accelerator/config/validator` directory.
