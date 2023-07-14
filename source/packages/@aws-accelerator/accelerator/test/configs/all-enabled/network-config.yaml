@@ -559,6 +559,9 @@ vpcs:
   - name: Network-Secondary
     account: Network
     region: *HOME_REGION
+    tags:
+      - key: env
+        value: prod
     ipamAllocations:
       - ipamPoolName: home-region-prod-pool
         netmaskLength: 25
@@ -1235,21 +1238,21 @@ vpcs:
         gatewayAssociation: internetGateway
         routes:
           - name: NfwRouteDynamic-A
-            destination: Network-Inspection-A
+            destination: 10.2.0.0/24
             type: networkFirewall
             target: accelerator-firewall
             targetAvailabilityZone: a
           - name: GwlbRouteDynamic-A
-            destination: Network-InspectionTgwAttach-A
+            destination: 10.2.1.0/24
             type: gatewayLoadBalancerEndpoint
             target: Endpoint-A
           - name: NfwRouteDynamic-B
-            destination: Network-Inspection-B
+            destination: 10.2.3.208/28
             type: networkFirewall
             target: accelerator-firewall
             targetAvailabilityZone: b
           - name: GwlbRouteDynamic-B
-            destination: Network-InspectionTgwAttach-B
+            destination: 10.2.3.224/28
             type: gatewayLoadBalancerEndpoint
             target: Endpoint-B
     subnets:

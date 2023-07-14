@@ -873,7 +873,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
     },
     "NetworkInspectionacceleratorFirewallNetworkFirewallNetworkInspectionVpcNetworkInspectionGatewayRouteTableNfwRouteDynamicA7F44B00F": {
       "Properties": {
-        "DestinationCidrBlock": "Network-Inspection-A",
+        "DestinationCidrBlock": "10.2.0.0/24",
         "RouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionGatewayidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
@@ -906,7 +906,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
     },
     "NetworkInspectionacceleratorFirewallNetworkFirewallNetworkInspectionVpcNetworkInspectionGatewayRouteTableNfwRouteDynamicBA3840700": {
       "Properties": {
-        "DestinationCidrBlock": "Network-Inspection-B",
+        "DestinationCidrBlock": "10.2.3.208/28",
         "RouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionGatewayidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },

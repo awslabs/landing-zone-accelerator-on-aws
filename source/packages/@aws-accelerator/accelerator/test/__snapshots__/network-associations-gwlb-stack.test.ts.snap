@@ -192,7 +192,7 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
     },
     "NetworkInspectionVpcEndpointAGwlbEpNetworkInspectionVpcNetworkInspectionGatewayRouteTableGwlbRouteDynamicA422EA421": {
       "Properties": {
-        "DestinationCidrBlock": "Network-InspectionTgwAttach-A",
+        "DestinationCidrBlock": "10.2.1.0/24",
         "RouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionGatewayidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
@@ -241,7 +241,7 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
     },
     "NetworkInspectionVpcEndpointBGwlbEpNetworkInspectionVpcNetworkInspectionGatewayRouteTableGwlbRouteDynamicB140E00A1": {
       "Properties": {
-        "DestinationCidrBlock": "Network-InspectionTgwAttach-B",
+        "DestinationCidrBlock": "10.2.3.224/28",
         "RouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionGatewayidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },

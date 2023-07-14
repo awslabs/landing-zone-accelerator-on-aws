@@ -2676,6 +2676,10 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "Ipv4NetmaskLength": 25,
         "Tags": [
           {
+            "Key": "env",
+            "Value": "prod",
+          },
+          {
             "Key": "Name",
             "Value": "Network-Secondary",
           },

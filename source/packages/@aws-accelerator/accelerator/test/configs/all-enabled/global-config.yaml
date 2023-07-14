@@ -22,7 +22,7 @@ controlTower:
   enable: true
 cdkOptions:
   centralizeBuckets: true
-  useManagementAccessRole: true
+  useManagementAccessRole: false
 logging:
   account: LogArchive
   centralizedLoggingRegion: us-west-2
