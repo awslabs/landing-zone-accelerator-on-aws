@@ -34,10 +34,6 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       const partition = event.ResourceProperties['partition'];
       const solutionId = process.env['SOLUTION_ID'];
 
-      if (partition === 'aws-us-gov' && policyType == ('TAG_POLICY' || 'BACKUP_POLICY')) {
-        throw new Error(`Policy Type ${policyType} not supported.`);
-      }
-
       //
       // Obtain an Organizations client
       //
