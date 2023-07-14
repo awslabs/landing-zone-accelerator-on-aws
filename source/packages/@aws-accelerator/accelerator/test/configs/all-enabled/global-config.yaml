@@ -20,6 +20,27 @@ snsTopics:
 terminationProtection: true
 controlTower:
   enable: true
+  controls:
+    - identifier: AWS-GR_RESTRICT_ROOT_USER_ACCESS_KEYS
+      enable: true
+      deploymentTargets:
+        organizationalUnits:
+          - SecureWorkloads
+    - identifier: AWS-GR_EBS_OPTIMIZED_INSTANCE
+      enable: true
+      deploymentTargets:
+        organizationalUnits:
+          - SecureWorkloads
+    - identifier: AWS-GR_RESTRICTED_COMMON_PORTS
+      enable: false
+      deploymentTargets:
+        organizationalUnits:
+          - SecureWorkloads
+    - identifier: AWS-GR_RDS_SNAPSHOTS_PUBLIC_PROHIBITED
+      enable: false
+      deploymentTargets:
+        organizationalUnits:
+          - SecureWorkloads
 cdkOptions:
   centralizeBuckets: true
   useManagementAccessRole: false

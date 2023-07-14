@@ -101,6 +101,10 @@ export class GlobalConfigValidator {
     // cdkOptions validation
     //
     this.validateCdkOptions(values, errors);
+    //
+    // Control Tower control validation
+    //
+    this.validateControlTowerControls(values, errors);
 
     if (errors.length) {
       throw new Error(`${GlobalConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
@@ -577,6 +581,24 @@ export class GlobalConfigValidator {
 
     if (!values?.cdkOptions?.centralizeBuckets && values?.cdkOptions?.customDeploymentRole) {
       errors.push(`cdkOptions.centralizeBuckets must be set to true to enable cdkOptions.customDeploymentRole`);
+    }
+  }
+
+  private validateControlTowerControls(values: GlobalConfig, errors: string[]) {
+    for (const control of values.controlTower.controls ?? []) {
+      // Check control identifier starts with AW-GR
+      if (!control.identifier.startsWith('AWS-GR')) {
+        errors.push(
+          `Invalid Control Tower control ${control.identifier}, only strongly recommended or elective Control Tower controls are supported`,
+        );
+      }
+
+      // Check deploymentTargets does not contain accounts
+      if (control.deploymentTargets?.accounts?.length > 0) {
+        errors.push(
+          `Control Tower controls can only be deployed to Organizational Units. Please remove all account deployment targets from ${control.identifier}`,
+        );
+      }
     }
   }
 }

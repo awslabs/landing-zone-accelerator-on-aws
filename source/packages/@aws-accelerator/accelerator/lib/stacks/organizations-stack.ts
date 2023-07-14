@@ -149,6 +149,9 @@ export class OrganizationsStack extends AcceleratorStack {
 
       //Enable Config Recorder Delegated Admin
       this.enableConfigRecorderDelegatedAdminAccount();
+
+      // Enable Control Tower controls
+      this.enableControlTowerControls();
     }
 
     // Macie Configuration
@@ -183,6 +186,36 @@ export class OrganizationsStack extends AcceleratorStack {
     this.addResourceSuppressionsByPath(this.nagSuppressionInputs);
 
     this.logger.info('Completed stack synthesis');
+  }
+
+  /**
+   * Function to enable Control Tower Controls
+   * Only optional controls are supported (both Strongly Recommended and Elective)
+   * https://docs.aws.amazon.com/controltower/latest/userguide/optional-controls.html
+   */
+  private enableControlTowerControls() {
+    if (
+      this.stackProperties.globalConfig.controlTower.enable &&
+      this.stackProperties.globalConfig.controlTower?.controls?.length > 0
+    ) {
+      this.logger.info(`Enabling Control Tower Controls`);
+
+      for (const control of this.stackProperties.globalConfig.controlTower.controls ?? []) {
+        this.logger.info(`Control ${control.identifier} status: ${control.enable}`);
+
+        if (control.enable) {
+          for (const orgUnit of control.deploymentTargets.organizationalUnits) {
+            const orgUnitArn = this.stackProperties.organizationConfig.getOrganizationalUnitArn(orgUnit);
+            const controlArn = `arn:${this.props.partition}:controltower:${this.region}::control/${control.identifier}`;
+
+            new cdk.aws_controltower.CfnEnabledControl(this, pascalCase(`${control.identifier}-${orgUnit}`), {
+              controlIdentifier: controlArn,
+              targetIdentifier: orgUnitArn,
+            });
+          }
+        }
+      }
+    }
   }
 
   /**
