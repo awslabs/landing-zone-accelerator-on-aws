@@ -73,7 +73,7 @@ export class BootstrapStack extends AcceleratorStack {
     // Create CDK roles for default CDK stack synthesis
     this.createCdkRoles(cdkBootstrapVersionParam.parameterName, trustedAccountsParam.valueAsList);
 
-    this.createCustomDeploymentRole(customDeploymentRole);
+    this.createCustomDeploymentRole(customDeploymentRole, this.props.globalConfig.homeRegion);
 
     // Create ECR repository
     this.createEcrRepository();
@@ -123,11 +123,13 @@ export class BootstrapStack extends AcceleratorStack {
     this.createDeploymentRole(bootstrapParameterName, cloudFormationExecutionRole.roleArn, trustedAccounts);
   }
 
-  createCustomDeploymentRole(customRoleName: string | undefined) {
+  createCustomDeploymentRole(customRoleName: string | undefined, homeRegion: string) {
     if (!customRoleName) {
       return;
     }
-
+    if (cdk.Stack.of(this).region !== homeRegion) {
+      return;
+    }
     const customDeploymentRole = new cdk.aws_iam.Role(this, 'CustomDeploymentRole', {
       assumedBy: this.setCompositePrincipals({
         managementAccount: this.managementAccount,
