@@ -631,14 +631,15 @@ export class NetworkAssociationsStack extends NetworkStack {
         for (const targetGroupItem of vpcItem.targetGroups ?? []) {
           if (targetGroupItem.shareTargets) {
             const sharedTargetGroup = this.checkResourceShare(targetGroupItem.shareTargets);
-            if (sharedTargetGroup) {
+            if (sharedTargetGroup && vpcItem.region === cdk.Stack.of(this).region) {
               const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
                 this,
                 this.getSsmPath(SsmResourceType.VPC, [vpcItem.name]),
               );
               this.createInstanceOrIpTargetGroups(vpcItem, vpcId, targetGroupItem, targetGroupMap);
             }
-          } else {
+          }
+          if (!targetGroupItem.shareTargets && vpcItem.region === cdk.Stack.of(this).region) {
             const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
               this,
               this.getSsmPath(SsmResourceType.VPC, [vpcItem.name]),

@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 import { ShareTargets } from '../../lib/common-types';
+import { ApplicationLoadBalancerConfig } from '../../lib/customizations-config';
 import {
   NetworkConfig,
   NetworkConfigTypes,
@@ -2251,7 +2252,7 @@ export class VpcValidator {
       for (const subnetItem of albItem.subnets) {
         if (!helpers.getSubnet(vpcItem, subnetItem)) {
           errors.push(
-            `[The Application Load Balancer: ${albItem.name} for VPC ${vpcItem.name} is using subnet ${subnetItem} that doesn't exist`,
+            `The Application Load Balancer: ${albItem.name} for VPC ${vpcItem.name} is using subnet ${subnetItem} that doesn't exist`,
           );
         }
       }
@@ -2277,13 +2278,14 @@ export class VpcValidator {
     }
     for (const albItem of vpcItem.loadBalancers?.applicationLoadBalancers ?? []) {
       if (albItem.shareTargets) {
+        this.validateSubnetSharesToAlbShares(albItem, vpcItem, helpers, errors);
+        this.validateTargetGroupSharesToAlbShares(albItem, vpcItem, helpers, errors);
         if (albItem.subnets.find(item => nonSharedSubnets.find(nonSharedSubnet => item === nonSharedSubnet))) {
           invalidAlbs.push({ name: albItem.name, subnets: albItem.subnets });
         }
       }
     }
-    this.validateSubnetSharesToAlbShares(vpcItem, helpers, errors);
-    this.validateTargetGroupSharesToAlbShares(vpcItem, helpers, errors);
+
     for (const alb of invalidAlbs) {
       errors.push(
         `The Application Load Balancer: ${
@@ -2302,31 +2304,24 @@ export class VpcValidator {
    * @param errors
    */
   private validateSubnetSharesToAlbShares(
+    albItem: ApplicationLoadBalancerConfig,
     vpcItem: VpcConfig | VpcTemplatesConfig,
     helpers: NetworkValidatorFunctions,
     errors: string[],
   ) {
-    let invalidAlbList: string[] = [];
     let missingAccountIds: string[] = [];
-    for (const albItem of vpcItem.loadBalancers?.applicationLoadBalancers ?? []) {
-      const albAccounts = helpers.getAccountNamesFromTarget(albItem.shareTargets as ShareTargets);
-      for (const subnetName of albItem.subnets) {
-        const subnetSharedTarget = this.getSubnetSharedTarget(vpcItem, subnetName);
-        if (subnetSharedTarget) {
-          const subnetAccounts = helpers.getAccountNamesFromTarget(subnetSharedTarget);
-          missingAccountIds = albAccounts.filter(item => !subnetAccounts.includes(item));
-          if (missingAccountIds.length > 0) {
-            if (!invalidAlbList.includes(albItem.name)) {
-              invalidAlbList.push(albItem.name);
-            }
-          }
+    const albAccounts = helpers.getAccountNamesFromTarget(albItem.shareTargets as ShareTargets);
+    for (const subnetName of albItem.subnets) {
+      const subnetSharedTarget = this.getSubnetSharedTarget(vpcItem, subnetName);
+      if (subnetSharedTarget) {
+        const subnetAccounts = helpers.getAccountNamesFromTarget(subnetSharedTarget);
+        missingAccountIds = albAccounts.filter(item => !subnetAccounts.includes(item));
+        if (missingAccountIds.length > 0) {
+          errors.push(
+            `The Application Load Balancer ${albItem.name} is deployed to multiple accounts and using subnets that aren't available. Please make sure your sharedTargets configuration for your subnet makes the subnet available for the ALB.`,
+          );
         }
       }
-    }
-    for (const alb of invalidAlbList) {
-      errors.push(
-        `The Application Load Balancer ${alb} is deployed to multiple accounts and using subnets that aren't available. Please make sure your sharedTargets configuration for your subnet makes the subnet available for the ALB.`,
-      );
     }
   }
 
@@ -2337,38 +2332,29 @@ export class VpcValidator {
    * @param errors
    */
   private validateTargetGroupSharesToAlbShares(
+    albItem: ApplicationLoadBalancerConfig,
     vpcItem: VpcConfig | VpcTemplatesConfig,
     helpers: NetworkValidatorFunctions,
     errors: string[],
   ) {
-    let invalidAlbList: string[] = [];
     let missingAccountIds: string[] = [];
 
-    for (const albItem of vpcItem.loadBalancers?.applicationLoadBalancers ?? []) {
-      if (albItem.shareTargets) {
-        const albAccounts = helpers.getAccountNamesFromTarget(albItem.shareTargets as ShareTargets);
-        for (const listenerItem of albItem.listeners ?? []) {
-          for (const targetGroupItem of vpcItem.targetGroups ?? []) {
-            if (targetGroupItem.name === listenerItem.targetGroup) {
-              const targetGroupSharedTarget = this.getTargetGroupSharedTarget(vpcItem, listenerItem.targetGroup);
-              if (targetGroupSharedTarget) {
-                const targetGroupAccounts = helpers.getAccountNamesFromTarget(targetGroupSharedTarget);
-                missingAccountIds = albAccounts.filter(item => !targetGroupAccounts.includes(item));
-                if (missingAccountIds.length > 0) {
-                  if (!invalidAlbList.includes(albItem.name)) {
-                    invalidAlbList.push(albItem.name);
-                  }
-                }
-              }
+    const albAccounts = helpers.getAccountNamesFromTarget(albItem.shareTargets as ShareTargets);
+    for (const listenerItem of albItem.listeners ?? []) {
+      for (const targetGroupItem of vpcItem.targetGroups ?? []) {
+        if (targetGroupItem.name === listenerItem.targetGroup) {
+          const targetGroupSharedTarget = this.getTargetGroupSharedTarget(vpcItem, listenerItem.targetGroup);
+          if (targetGroupSharedTarget) {
+            const targetGroupAccounts = helpers.getAccountNamesFromTarget(targetGroupSharedTarget);
+            missingAccountIds = albAccounts.filter(item => !targetGroupAccounts.includes(item));
+            if (missingAccountIds.length > 0) {
+              errors.push(
+                `The Application Load Balancer ${albItem.name} is deployed to multiple accounts and using target group(s) that are not in the same accounts. Please make sure your sharedTargets configuration for your targetGroup makes the Target Group available for the ALB.`,
+              );
             }
           }
         }
       }
-    }
-    for (const alb of invalidAlbList) {
-      errors.push(
-        `The Application Load Balancer ${alb} is deployed to multiple accounts and using target group(s) that are not in the same accounts. Please make sure your sharedTargets configuration for your targetGroup makes the Target Group available for the ALB.`,
-      );
     }
   }
 
