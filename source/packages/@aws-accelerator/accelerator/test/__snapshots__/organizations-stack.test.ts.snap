@@ -3025,6 +3025,20 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
       "Type": "Custom::AuditManagerEnableOrganizationAdminAccount",
       "UpdateReplacePolicy": "Delete",
     },
+    "AwsGrEbsOptimizedInstanceSecureWorkloads": {
+      "Properties": {
+        "ControlIdentifier": "arn:aws:controltower:us-east-1::control/AWS-GR_EBS_OPTIMIZED_INSTANCE",
+        "TargetIdentifier": "arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-33333333",
+      },
+      "Type": "AWS::ControlTower::EnabledControl",
+    },
+    "AwsGrRestrictRootUserAccessKeysSecureWorkloads": {
+      "Properties": {
+        "ControlIdentifier": "arn:aws:controltower:us-east-1::control/AWS-GR_RESTRICT_ROOT_USER_ACCESS_KEYS",
+        "TargetIdentifier": "arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-33333333",
+      },
+      "Type": "AWS::ControlTower::EnabledControl",
+    },
     "BackupPolicy8656A81D": {
       "DeletionPolicy": "Delete",
       "DependsOn": [

@@ -28,8 +28,15 @@ const logger = createLogger(['global-config']);
  * Global configuration items.
  */
 export abstract class GlobalConfigTypes {
+  static readonly controlTowerControlConfig = t.interface({
+    identifier: t.nonEmptyString,
+    enable: t.boolean,
+    deploymentTargets: t.deploymentTargets,
+  });
+
   static readonly controlTowerConfig = t.interface({
     enable: t.boolean,
+    controls: t.optional(t.array(this.controlTowerControlConfig)),
   });
 
   static readonly cloudTrailSettingsConfig = t.interface({
@@ -264,6 +271,49 @@ export class ControlTowerConfig implements t.TypeOf<typeof GlobalConfigTypes.con
    * the log archive account, and the audit account.
    */
   readonly enable: boolean = true;
+  /**
+   * A list of Control Tower controls to enable.
+   *
+   * Only Strongly recommended and Elective controls are permitted, with the exception of the Region deny guardrail. Please see this page for more information: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-controltower-enabledcontrol.html
+   */
+  readonly controls: ControlTowerControlConfig[] = [];
+}
+
+/**
+ * {@link GlobalConfig} / {@link ControlTowerConfig} / {@link ControlTowerControlConfig}
+ * Control Tower controls
+ *
+ * @see ControlTowerControlConfig
+ *
+ * This allows you to enable Strongly Recommended or Elective Controls
+ * https://docs.aws.amazon.com/controltower/latest/userguide/optional-controls.html
+ *
+ * @remarks AWS Control Tower is limited to 10 concurrent operations, where enabling a control for one Organizational Unit constitutes a single operation.
+ * To avoid throttling, please enable controls in batches of 10 or fewer each pipeline run. Keep in mind other Control Tower operations may use up some of the available quota.
+ *
+ * @example
+ * controlTowerControls:
+ *   - identifier: AWS-GR_RESTRICT_ROOT_USER_ACCESS_KEYS
+ *     enable: true
+ *     deploymentTargets:
+ *       organizationalUnits:
+ *         - Workloads
+ */
+export abstract class ControlTowerControlConfig
+  implements t.TypeOf<typeof GlobalConfigTypes.controlTowerControlConfig>
+{
+  /**
+   * Control Tower control identifier, for Strongly Recommended or Elective controls this should start with AWS-GR
+   */
+  readonly identifier: string = '';
+  /**
+   * Control enabled
+   */
+  readonly enable: boolean = true;
+  /**
+   * Control Tower control deployment targets, controls can only be deployed to Organizational Units
+   */
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
 }
 
 /**
@@ -1674,7 +1724,7 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
     } else {
       this.homeRegion = props.homeRegion;
       this.enabledRegions = [props.homeRegion as t.Region];
-      this.controlTower = props.controlTower;
+      this.controlTower = { ...props.controlTower, controls: [] };
       this.managementAccountAccessRole = props.managementAccountAccessRole;
     }
   }
