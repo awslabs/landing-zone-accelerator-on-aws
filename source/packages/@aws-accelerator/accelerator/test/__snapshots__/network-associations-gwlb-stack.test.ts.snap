@@ -1478,6 +1478,7 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
         "description": "Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling",
         "roleName": "AWSServiceRoleForAutoScaling",
         "serviceName": "autoscaling.amazonaws.com",
+        "uuid": "REPLACED-UUID",
       },
       "Type": "Custom::CreateServiceLinkedRole",
       "UpdateReplacePolicy": "Delete",

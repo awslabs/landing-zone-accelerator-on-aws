@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as path from 'path';
+import { v4 as uuidv4 } from 'uuid';
 /**
  * Initialized ServiceLinkedRoleProps properties
  */
@@ -91,6 +92,7 @@ export class ServiceLinkedRole extends Construct {
         serviceName: props.awsServiceName,
         description: props.description,
         roleName: props.roleName,
+        uuid: uuidv4(), // Generates a new UUID to force the resource to update
       },
     });
 

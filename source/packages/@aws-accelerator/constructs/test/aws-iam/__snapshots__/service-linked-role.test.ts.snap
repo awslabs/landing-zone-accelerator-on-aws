@@ -305,6 +305,7 @@ exports[`ServiceLinkedRole Construct(ServiceLinkedRole):  Snapshot Test 1`] = `
         "description": "some description",
         "roleName": "AWSServiceRoleForAwesomeService",
         "serviceName": "awesomeService.amazonaws.com",
+        "uuid": "REPLACED-UUID",
       },
       "Type": "Custom::CreateServiceLinkedRole",
       "UpdateReplacePolicy": "Delete",
