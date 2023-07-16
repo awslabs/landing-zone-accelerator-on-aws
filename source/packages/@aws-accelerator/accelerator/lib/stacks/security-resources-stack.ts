@@ -274,17 +274,22 @@ export class SecurityResourcesStack extends AcceleratorStack {
           stringValue: adminSecret.secretArn,
         });
 
+        let madAccessRoleArn: string;
+        if (this.props.globalConfig.cdkOptions.useManagementAccessRole) {
+          madAccessRoleArn = `arn:${cdk.Stack.of(this).partition}:iam::${madAccountId}:role/${
+            this.props.globalConfig.managementAccountAccessRole
+          }`;
+        } else {
+          madAccessRoleArn = `arn:${
+            cdk.Stack.of(this).partition
+          }:iam::${madAccountId}:role/cdk-accel-cfn-exec-role-${madAccountId}-${madRegion}`;
+        }
+
         // Attach MAD creation stack role to have access to the secret
         adminSecret.addToResourcePolicy(
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
-            principals: [
-              new cdk.aws_iam.ArnPrincipal(
-                `arn:${
-                  cdk.Stack.of(this).partition
-                }:iam::${madAccountId}:role/cdk-accel-cfn-exec-role-${madAccountId}-${madRegion}`,
-              ),
-            ],
+            principals: [new cdk.aws_iam.ArnPrincipal(madAccessRoleArn)],
             actions: ['secretsmanager:GetSecretValue'],
             resources: ['*'],
           }),
