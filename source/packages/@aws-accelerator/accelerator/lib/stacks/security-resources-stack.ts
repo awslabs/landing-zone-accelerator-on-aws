@@ -233,9 +233,13 @@ export class SecurityResourcesStack extends AcceleratorStack {
         });
 
         let madAccessRoleArn: string;
-        if (this.props.globalConfig.cdkOptions.useManagementAccessRole) {
+        if (this.props.globalConfig.cdkOptions?.useManagementAccessRole) {
           madAccessRoleArn = `arn:${cdk.Stack.of(this).partition}:iam::${madAccountId}:role/${
             this.props.globalConfig.managementAccountAccessRole
+          }`;
+        } else if (this.props.globalConfig.cdkOptions?.customDeploymentRole) {
+          madAccessRoleArn = `arn:${cdk.Stack.of(this).partition}:iam::${madAccountId}:role/${
+            this.props.globalConfig.cdkOptions.customDeploymentRole
           }`;
         } else {
           madAccessRoleArn = `arn:${
