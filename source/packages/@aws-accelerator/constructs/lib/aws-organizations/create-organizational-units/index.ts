@@ -22,8 +22,18 @@ import {
   DynamoDBDocumentPaginationConfiguration,
 } from '@aws-sdk/lib-dynamodb';
 
+import {
+  OrganizationsClient,
+  ListOrganizationalUnitsForParentCommand,
+  ListOrganizationalUnitsForParentCommandOutput,
+  ListRootsCommand,
+  ListRootsCommandOutput,
+  CreateOrganizationalUnitCommand,
+} from '@aws-sdk/client-organizations';
+import { ConfiguredRetryStrategy } from '@aws-sdk/util-retry';
+
 AWS.config.logger = console;
-let organizationsClient: AWS.Organizations;
+let organizationsClient: OrganizationsClient;
 const marshallOptions = {
   convertEmptyValues: false,
   //overriding default value of false
@@ -60,7 +70,6 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 > {
   const configTableName = event.ResourceProperties['configTableName'];
   const commitId = event.ResourceProperties['commitId'];
-  const controlTowerEnabled = event.ResourceProperties['controlTowerEnabled'];
   const organizationsEnabled = event.ResourceProperties['organizationsEnabled'];
   const partition = event.ResourceProperties['partition'];
   const organizationalUnitsToCreate: OrganizationConfigRecords = [];
@@ -76,18 +85,27 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      if (organizationsEnabled == 'false' || controlTowerEnabled == 'true') {
-        console.log('Stopping, either Organizations not enabled or ControlTower is enabled.');
+      if (organizationsEnabled == 'false') {
+        console.log('Stopping, Organizations not enabled.');
         return {
           Status: 'SUCCESS',
         };
       }
       if (partition === 'aws-us-gov') {
-        organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1' });
+        organizationsClient = new OrganizationsClient({
+          retryStrategy: new ConfiguredRetryStrategy(10, (attempt: number) => 100 + attempt * 1000),
+          region: 'us-gov-west-1',
+        });
       } else if (partition === 'aws-cn') {
-        organizationsClient = new AWS.Organizations({ region: 'cn-northwest-1' });
+        organizationsClient = new OrganizationsClient({
+          retryStrategy: new ConfiguredRetryStrategy(10, (attempt: number) => 100 + attempt * 1000),
+          region: 'cn-northwest-1',
+        });
       } else {
-        organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
+        organizationsClient = new OrganizationsClient({
+          retryStrategy: new ConfiguredRetryStrategy(10, (attempt: number) => 100 + attempt * 1000),
+          region: 'us-east-1',
+        });
       }
       //read config from table
       const organizationalUnitList = await getConfigFromTable(configTableName, commitId);
@@ -134,16 +152,17 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 }
 async function lookupOrganizationalUnit(name: string, parentId: string): Promise<string> {
   let nextToken: string | undefined = undefined;
-  const page = await throttlingBackOff(() =>
-    organizationsClient.listOrganizationalUnitsForParent({ ParentId: parentId, NextToken: nextToken }).promise(),
-  );
-  for (const ou of page.OrganizationalUnits ?? []) {
-    if (ou.Name == name) {
-      return ou.Id!;
+  do {
+    const page: ListOrganizationalUnitsForParentCommandOutput = await organizationsClient.send(
+      new ListOrganizationalUnitsForParentCommand({ ParentId: parentId, NextToken: nextToken }),
+    );
+    for (const ou of page.OrganizationalUnits ?? []) {
+      if (ou.Name == name) {
+        return ou.Id!;
+      }
+      nextToken = page.NextToken;
     }
-    nextToken = page.NextToken;
-  }
-  while (nextToken);
+  } while (nextToken);
   return '';
 }
 async function getConfigFromTable(configTableName: string, commitId: string): Promise<OrganizationConfigRecords> {
@@ -171,7 +190,7 @@ async function getRootId(): Promise<string> {
   let rootId = '';
   let nextToken: string | undefined = undefined;
   do {
-    const page = await throttlingBackOff(() => organizationsClient.listRoots({ NextToken: nextToken }).promise());
+    const page: ListRootsCommandOutput = await organizationsClient.send(new ListRootsCommand({ NextToken: nextToken }));
     for (const item of page.Roots ?? []) {
       if (item.Name === 'Root' && item.Id && item.Arn) {
         rootId = item.Id;
@@ -220,13 +239,11 @@ async function createOrganizationalUnitFromPath(
   }
   // Create the OU if not found
   try {
-    const organizationsResponse = await throttlingBackOff(() =>
-      organizationsClient
-        .createOrganizationalUnit({
-          Name: name,
-          ParentId: parentId,
-        })
-        .promise(),
+    const organizationsResponse = await organizationsClient.send(
+      new CreateOrganizationalUnitCommand({
+        Name: name,
+        ParentId: parentId,
+      }),
     );
     console.log(`Created OU with id: ${organizationsResponse.OrganizationalUnit?.Id}`);
     const params: UpdateCommandInput = {

@@ -817,7 +817,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B",
         "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40",
         "CreateOrganizationAccounts49A5350C",
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Properties": {
         "ServiceToken": {
@@ -855,7 +862,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B",
         "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40",
         "CreateOrganizationAccounts49A5350C",
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Properties": {
         "Code": {
@@ -913,7 +927,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B",
         "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40",
         "CreateOrganizationAccounts49A5350C",
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Metadata": {
         "cdk_nag": {
@@ -977,7 +998,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B",
         "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40",
         "CreateOrganizationAccounts49A5350C",
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Metadata": {
         "cdk_nag": {
@@ -1080,7 +1108,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B",
         "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40",
         "CreateOrganizationAccounts49A5350C",
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Properties": {
         "Code": {
@@ -1141,7 +1176,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B",
         "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40",
         "CreateOrganizationAccounts49A5350C",
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Metadata": {
         "cdk_nag": {
@@ -1205,7 +1247,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B",
         "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40",
         "CreateOrganizationAccounts49A5350C",
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Metadata": {
         "cdk_nag": {
@@ -1315,7 +1364,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B",
         "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40",
         "CreateOrganizationAccounts49A5350C",
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Properties": {
         "Code": {
@@ -1373,7 +1429,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B",
         "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40",
         "CreateOrganizationAccounts49A5350C",
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Metadata": {
         "cdk_nag": {
@@ -1437,7 +1500,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B",
         "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40",
         "CreateOrganizationAccounts49A5350C",
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Metadata": {
         "cdk_nag": {
@@ -1540,7 +1610,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B",
         "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40",
         "CreateOrganizationAccounts49A5350C",
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Properties": {
         "DefinitionString": {
@@ -1596,7 +1673,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B",
         "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40",
         "CreateOrganizationAccounts49A5350C",
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Metadata": {
         "cdk_nag": {
@@ -1697,7 +1781,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B",
         "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40",
         "CreateOrganizationAccounts49A5350C",
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -1738,7 +1829,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B",
         "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40",
         "CreateOrganizationAccounts49A5350C",
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Properties": {
         "Code": {
@@ -1787,7 +1885,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B",
         "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40",
         "CreateOrganizationAccounts49A5350C",
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Properties": {
         "KmsKeyId": {
@@ -1834,7 +1939,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B",
         "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40",
         "CreateOrganizationAccounts49A5350C",
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Metadata": {
         "cdk_nag": {
@@ -1900,7 +2012,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B",
         "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40",
         "CreateOrganizationAccounts49A5350C",
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Properties": {
         "Code": {
@@ -1956,7 +2075,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B",
         "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40",
         "CreateOrganizationAccounts49A5350C",
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Properties": {
         "KmsKeyId": {
@@ -2003,7 +2129,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B",
         "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40",
         "CreateOrganizationAccounts49A5350C",
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Metadata": {
         "cdk_nag": {
@@ -2079,7 +2212,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B",
         "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40",
         "CreateOrganizationAccounts49A5350C",
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Metadata": {
         "cdk_nag": {
@@ -2209,7 +2349,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B",
         "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40",
         "CreateOrganizationAccounts49A5350C",
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Properties": {
         "PortfolioId": {
@@ -2228,7 +2375,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
     "CreateOrganizationAccounts49A5350C": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Properties": {
         "ServiceToken": {
@@ -2246,7 +2400,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRoleDefaultPolicy217D2441",
         "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B",
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Properties": {
         "Code": {
@@ -2286,7 +2447,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
     "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Properties": {
         "KmsKeyId": {
@@ -2313,7 +2481,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
     },
     "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B": {
       "DependsOn": [
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Metadata": {
         "cdk_nag": {
@@ -2357,7 +2532,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
     },
     "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRoleDefaultPolicy217D2441": {
       "DependsOn": [
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Metadata": {
         "cdk_nag": {
@@ -2461,7 +2643,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
     "CreateOrganizationAccountsCreateOrganizationAccountsLogGroup00D93B3C": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Properties": {
         "KmsKeyId": {
@@ -2490,7 +2679,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkisCompleteServiceRoleDefaultPolicy17A8199B",
         "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkisCompleteServiceRole19A96F30",
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Properties": {
         "Code": {
@@ -2528,7 +2724,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
     },
     "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkisCompleteServiceRole19A96F30": {
       "DependsOn": [
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Metadata": {
         "cdk_nag": {
@@ -2572,7 +2775,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
     },
     "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkisCompleteServiceRoleDefaultPolicy17A8199B": {
       "DependsOn": [
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Metadata": {
         "cdk_nag": {
@@ -2655,7 +2865,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonEventServiceRoleDefaultPolicy5CD1CC20",
         "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonEventServiceRole66CD01EF",
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Properties": {
         "Code": {
@@ -2696,7 +2913,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
     },
     "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonEventServiceRole66CD01EF": {
       "DependsOn": [
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Metadata": {
         "cdk_nag": {
@@ -2740,7 +2964,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
     },
     "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonEventServiceRoleDefaultPolicy5CD1CC20": {
       "DependsOn": [
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Metadata": {
         "cdk_nag": {
@@ -2830,7 +3061,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonTimeoutServiceRoleDefaultPolicy7473AD40",
         "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonTimeoutServiceRoleA8ECA8F4",
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Properties": {
         "Code": {
@@ -2868,7 +3106,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
     },
     "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonTimeoutServiceRoleA8ECA8F4": {
       "DependsOn": [
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Metadata": {
         "cdk_nag": {
@@ -2912,7 +3157,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
     },
     "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonTimeoutServiceRoleDefaultPolicy7473AD40": {
       "DependsOn": [
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Metadata": {
         "cdk_nag": {
@@ -2995,7 +3247,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "CreateOrganizationAccountsCreateOrganizationAccountsProviderwaiterstatemachineRoleDefaultPolicyA69022C3",
         "CreateOrganizationAccountsCreateOrganizationAccountsProviderwaiterstatemachineRole22D85F30",
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Properties": {
         "DefinitionString": {
@@ -3031,7 +3290,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
     },
     "CreateOrganizationAccountsCreateOrganizationAccountsProviderwaiterstatemachineRole22D85F30": {
       "DependsOn": [
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -3051,7 +3317,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
     },
     "CreateOrganizationAccountsCreateOrganizationAccountsProviderwaiterstatemachineRoleDefaultPolicyA69022C3": {
       "DependsOn": [
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Metadata": {
         "cdk_nag": {
@@ -3133,7 +3406,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
     "CreateOrganizationAccountsDDA8AFE1": {
       "DependsOn": [
         "CreateOrganizationAccountsServiceRole99CB3720",
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Properties": {
         "Code": {
@@ -3161,7 +3441,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
     },
     "CreateOrganizationAccountsServiceRole99CB3720": {
       "DependsOn": [
-        "ValidateEnvironmentConfigB40B464F",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
       ],
       "Metadata": {
         "cdk_nag": {
@@ -3701,212 +3988,6 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Role",
     },
-    "CustomValidateEnvironmentConfigCustomResourceProviderHandlerEAD4D66C": {
-      "DependsOn": [
-        "CustomValidateEnvironmentConfigCustomResourceProviderRole990C76D0",
-      ],
-      "Properties": {
-        "Code": {
-          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
-          "S3Key": "REPLACED-GENERATED-NAME.zip",
-        },
-        "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
-        "Role": {
-          "Fn::GetAtt": [
-            "CustomValidateEnvironmentConfigCustomResourceProviderRole990C76D0",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs16.x",
-        "Timeout": 600,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "CustomValidateEnvironmentConfigCustomResourceProviderLogGroup94525987": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "KmsKeyId": {
-          "Fn::GetAtt": [
-            "AcceleratorManagementCloudWatchKeyE630915F",
-            "Arn",
-          ],
-        },
-        "LogGroupName": {
-          "Fn::Join": [
-            "",
-            [
-              "/aws/lambda/",
-              {
-                "Ref": "CustomValidateEnvironmentConfigCustomResourceProviderHandlerEAD4D66C",
-              },
-            ],
-          ],
-        },
-        "RetentionInDays": 3653,
-      },
-      "Type": "AWS::Logs::LogGroup",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "CustomValidateEnvironmentConfigCustomResourceProviderRole990C76D0": {
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-          },
-        ],
-        "Policies": [
-          {
-            "PolicyDocument": {
-              "Statement": [
-                {
-                  "Action": [
-                    "organizations:ListAccounts",
-                    "servicecatalog:SearchProvisionedProducts",
-                    "organizations:ListChildren",
-                    "organizations:ListPoliciesForTarget",
-                    "organizations:ListOrganizationalUnitsForParent",
-                    "organizations:ListRoots",
-                    "organizations:ListAccountsForParent",
-                    "organizations:ListParents",
-                    "organizations:ListPolicies",
-                    "organizations:ListTagsForResource",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": "*",
-                  "Sid": "OrganizationsLookup",
-                },
-                {
-                  "Action": [
-                    "dynamodb:PutItem",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": [
-                    {
-                      "Fn::GetAtt": [
-                        "NewOrgAccountsE5BA262F",
-                        "Arn",
-                      ],
-                    },
-                    {
-                      "Fn::GetAtt": [
-                        "NewCTAccountsE326CD07",
-                        "Arn",
-                      ],
-                    },
-                  ],
-                  "Sid": "dynamodb",
-                },
-                {
-                  "Action": [
-                    "dynamodb:Query",
-                    "dynamodb:UpdateItem",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": [
-                    {
-                      "Fn::GetAtt": [
-                        "AcceleratorConfigTable590367C4",
-                        "Arn",
-                      ],
-                    },
-                  ],
-                  "Sid": "dynamodbConfigTable",
-                },
-                {
-                  "Action": [
-                    "kms:Encrypt",
-                    "kms:Decrypt",
-                    "kms:GenerateDataKey*",
-                    "kms:DescribeKey",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": [
-                    {
-                      "Fn::GetAtt": [
-                        "ManagementKey0813A4D9",
-                        "Arn",
-                      ],
-                    },
-                    {
-                      "Fn::GetAtt": [
-                        "ManagementKey0813A4D9",
-                        "Arn",
-                      ],
-                    },
-                  ],
-                  "Sid": "kms",
-                },
-                {
-                  "Action": [
-                    "cloudformation:DescribeStacks",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": [
-                    "arn:aws:cloudformation:us-east-1:111111111111:stack/AWSAccelerator-PrepareStack-111111111111-us-east-1*",
-                  ],
-                  "Sid": "cloudformation",
-                },
-                {
-                  "Action": [
-                    "ssm:GetParameter",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": [
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":ssm:us-east-1:111111111111:parameter",
-                          {
-                            "Ref": "AcceleratorControlTowerDriftParameter217B3055",
-                          },
-                        ],
-                      ],
-                    },
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":ssm:us-east-1:111111111111:parameter",
-                          {
-                            "Ref": "AcceleratorControlTowerDriftMessageParameter153D37CE",
-                          },
-                        ],
-                      ],
-                    },
-                  ],
-                  "Sid": "sms",
-                },
-              ],
-              "Version": "2012-10-17",
-            },
-            "PolicyName": "Inline",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
     "GetPortFolioId5CA7347E": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
@@ -4286,15 +4367,363 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "ValidateEnvironmentConfigB40B464F": {
-      "DeletionPolicy": "Delete",
+    "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7": {
       "DependsOn": [
-        "CustomValidateEnvironmentConfigCustomResourceProviderLogGroup94525987",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
       ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-PrepareStack-111111111111-us-east-1/ValidateEnvironmentConfig/Custom::ValidateEnvironmentConfiguration)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "CDK created resource",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Policy permissions are part cdk provider framework",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "Roles": [
+          {
+            "Ref": "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77": {
+      "DependsOn": [
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Validate Environment Configuration",
+        "Handler": "index.handler",
+        "MemorySize": 1024,
+        "Role": {
+          "Fn::GetAtt": [
+            "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "AcceleratorManagementCloudWatchKeyE630915F",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "CDK created resource",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "CDK created resource",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "organizations:ListAccounts",
+                "servicecatalog:SearchProvisionedProducts",
+                "organizations:ListChildren",
+                "organizations:ListPoliciesForTarget",
+                "organizations:ListOrganizationalUnitsForParent",
+                "organizations:ListRoots",
+                "organizations:ListAccountsForParent",
+                "organizations:ListParents",
+                "organizations:ListPolicies",
+                "organizations:ListTagsForResource",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "OrganizationsLookup",
+            },
+            {
+              "Action": "dynamodb:PutItem",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "NewOrgAccountsE5BA262F",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::GetAtt": [
+                    "NewCTAccountsE326CD07",
+                    "Arn",
+                  ],
+                },
+              ],
+              "Sid": "dynamodb",
+            },
+            {
+              "Action": [
+                "dynamodb:Query",
+                "dynamodb:UpdateItem",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "AcceleratorConfigTable590367C4",
+                  "Arn",
+                ],
+              },
+              "Sid": "dynamodbConfigTable",
+            },
+            {
+              "Action": [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "ManagementKey0813A4D9",
+                  "Arn",
+                ],
+              },
+              "Sid": "kms",
+            },
+            {
+              "Action": "cloudformation:DescribeStacks",
+              "Effect": "Allow",
+              "Resource": "arn:aws:cloudformation:us-east-1:111111111111:stack/AWSAccelerator-PrepareStack-111111111111-us-east-1*",
+              "Sid": "cloudformation",
+            },
+            {
+              "Action": "ssm:GetParameter",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":ssm:us-east-1:111111111111:parameter",
+                      {
+                        "Ref": "AcceleratorControlTowerDriftParameter217B3055",
+                      },
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":ssm:us-east-1:111111111111:parameter",
+                      {
+                        "Ref": "AcceleratorControlTowerDriftMessageParameter153D37CE",
+                      },
+                    ],
+                  ],
+                },
+              ],
+              "Sid": "sms",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "Roles": [
+          {
+            "Ref": "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179": {
+      "DeletionPolicy": "Delete",
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
-            "CustomValidateEnvironmentConfigCustomResourceProviderHandlerEAD4D66C",
+            "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
             "Arn",
           ],
         },
@@ -4357,7 +4786,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "stackName": "AWSAccelerator-PrepareStack-111111111111-us-east-1",
         "uuid": "REPLACED-UUID",
       },
-      "Type": "Custom::ValidateEnvironmentConfig",
+      "Type": "Custom::ValidateEnvironmentConfiguration",
       "UpdateReplacePolicy": "Delete",
     },
     "govCloudAccountMapping0E3D2AD8": {
