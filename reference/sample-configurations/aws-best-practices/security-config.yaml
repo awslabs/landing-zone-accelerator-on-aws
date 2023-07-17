@@ -1,5 +1,16 @@
+##################################################################################################################
+# For additional configurable services, features, and property descriptions,                                     #
+# please review our network configuration reference in our README.md:                                            #
+# https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.SecurityConfig.html  #
+##################################################################################################################
+
 homeRegion: &HOME_REGION us-east-1
 centralSecurityServices:
+  ##################################################################################################################
+  # Based upon AWS Security Reference Architecture (AWS SRA),                                                      #
+  # Assigning delegated administrator to security tooling (Audit) account                                          #
+  # https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/security-tooling.html #
+  ##################################################################################################################
   delegatedAdminAccount: Audit
   ebsDefaultVolumeEncryption:
     enable: true
@@ -40,58 +51,34 @@ centralSecurityServices:
   detective:
     enable: false
     excludeRegions: []
+  ##################################################################################################################
+  # AWS Security Hub Configurations                                                                                #
+  ##################################################################################################################
   securityHub:
     enable: true
     regionAggregation: true
-    excludeRegions: []
     standards:
+      #############################################################################################################
+      # Enable AWS Security Hub standards based upon a customer specific requirements                             #
+      # For the best practices, we have enabled the following standards:                                          #
+      # - AWS Foundational Security Best Practices (FSBP)                                                         #
+      # - Center for Internet Security (CIS) AWS Foundations Benchmark v1.4.0                                     #
+      # - National Institute of Standards and Technology (NIST) SP 800-53 Rev. 5                                  #                                                                                                       #
+      # Controls that you might want to disable based upon Security Hub recommendation                            #
+      # https://docs.aws.amazon.com/securityhub/latest/userguide/controls-to-disable.html                         #
+      #############################################################################################################
       - name: AWS Foundational Security Best Practices v1.0.0
         # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards-fsbp-controls.html
         enable: true
-        controlsToDisable:
-          - IAM.1
-          - EC2.10
-          - Lambda.4
-      - name: PCI DSS v3.2.1
-        # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-pci-controls.html
-        enable: true
-        controlsToDisable:
-          - PCI.IAM.3
-          - PCI.S3.3
-          - PCI.EC2.3
-          - PCI.Lambda.2
       - name: CIS AWS Foundations Benchmark v1.4.0
         # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html
         enable: true
-        controlsToDisable:
-          - CIS.1.17
-          - CIS.1.16
       - name: NIST Special Publication 800-53 Revision 5
         # https://docs.aws.amazon.com/securityhub/latest/userguide/nist-standard.html
         enable: true
-        controlstoDisable: []
   ssmAutomation:
     excludeRegions: []
-    documentSets:
-      - shareTargets:
-          organizationalUnits:
-            - Root
-        documents:
-          # Calls the AWS CLI to enable access logs on a specified ELB
-          - name: SSM-ELB-Enable-Logging
-            template: ssm-documents/ssm-elb-enable-logging.yaml
-          # Enables S3 encryption using KMS
-          - name: Put-S3-Encryption
-            template: ssm-documents/s3-encryption.yaml
-          # Attaches instance profiles to an EC2 instance
-          - name: Attach-IAM-Instance-Profile
-            template: ssm-documents/attach-iam-instance-profile.yaml
-          # Attaches Aws IAM Managed Policy to IAM Role
-          - name: Attach-IAM-Role-Policy
-            template: ssm-documents/attach-iam-role-policy.yaml
-          # Turns on CloudWatch logging for WAF ACLs
-          - name: WAF-Enable-Logging
-            template: ssm-documents/waf-enable-logging.yaml
+    documentSets: []
 accessAnalyzer:
   enable: true
 iamPasswordPolicy:
@@ -112,149 +99,9 @@ awsConfig:
         organizationalUnits:
           - Root
       rules:
-        - name: accelerator-waf-logging-enabled
-          type: Custom
-          description: Custom rule for checking WAF logging enabled
-          inputParameters:
-          customRule:
-            lambda:
-              sourceFilePath: custom-config-rules/waf-logging-enabled.zip
-              handler: index.handler
-              runtime: python3.7
-              rolePolicyFile: custom-config-rules/waf-logging-enabled-detection-role.json
-            periodic: true
-            maximumExecutionFrequency: Six_Hours
-            configurationChanges: true
-            triggeringResources:
-              lookupType: ResourceTypes
-              lookupKey: ResourceTypes
-              lookupValue:
-                - AWS::WAF::WebACL
-                - AWS::WAFRegional::WebACL
-                - AWS::WAFv2::WebACL
-          remediation:
-            rolePolicyFile: custom-config-rules/waf-logging-enabled-remediation-role.json
-            automatic: true
-            targetId: WAF-Enable-Logging
-            retryAttemptSeconds: 60
-            maximumAutomaticAttempts: 5
-            parameters:
-              - name: WebACLId
-                value: RESOURCE_ID
-                type: String
-        - name: accelerator-attach-ec2-instance-profile
-          type: Custom
-          description: Custom rule for checking EC2 instance IAM profile attachment
-          inputParameters:
-          customRule:
-            lambda:
-              sourceFilePath: custom-config-rules/attach-ec2-instance-profile.zip
-              handler: index.handler
-              runtime: nodejs16.x
-              rolePolicyFile: custom-config-rules/attach-ec2-instance-profile-detection-role.json
-            periodic: true
-            maximumExecutionFrequency: Six_Hours
-            configurationChanges: true
-            triggeringResources:
-              lookupType: ResourceTypes
-              lookupKey: ResourceTypes
-              lookupValue:
-                - AWS::EC2::Instance
-          remediation:
-            rolePolicyFile: custom-config-rules/attach-ec2-instance-profile-remediation-role.json
-            automatic: true
-            targetId: Attach-IAM-Instance-Profile
-            retryAttemptSeconds: 60
-            maximumAutomaticAttempts: 5
-            parameters:
-              - name: InstanceId
-                value: RESOURCE_ID
-                type: String
-              - name: IamInstanceProfile
-                value: ${ACCEL_LOOKUP::InstanceProfile:EC2-Default-SSM-AD-Role}
-                type: StringList
-        # Note these example CustomerManagedPolicies are hardcoded for us-east-1
-        - name: accelerator-ec2-instance-profile-permission
-          type: Custom
-          description: Custom role to remediate EC2 instance profile permission
-          inputParameters:
-            AWSManagedPolicies: AmazonSSMManagedInstanceCore,AmazonSSMDirectoryServiceAccess,CloudWatchAgentServerPolicy
-            #            CustomerManagedPolicies: ${ACCEL_LOOKUP::CustomerManagedPolicy:AWSAccelerator-SessionManagerLogging-us-east-1}
-            #            CustomerManagedPolicies: ${ACCEL_LOOKUP::CustomerManagedPolicy:<POLICY_NAME>},${ACCEL_LOOKUP::CustomerManagedPolicy:<POLICY_NAME>}
-            ResourceId: RESOURCE_ID
-          customRule:
-            lambda:
-              sourceFilePath: custom-config-rules/ec2-instance-profile-permissions.zip
-              handler: index.handler
-              runtime: nodejs16.x
-              rolePolicyFile: custom-config-rules/ec2-instance-profile-permissions-detection-role.json
-            periodic: true
-            maximumExecutionFrequency: Six_Hours
-            configurationChanges: true
-            triggeringResources:
-              lookupType: ResourceTypes
-              lookupKey: ResourceTypes
-              lookupValue:
-                - AWS::IAM::Role
-          remediation:
-            rolePolicyFile: custom-config-rules/ec2-instance-profile-permissions-remediation-role.json
-            automatic: true
-            targetId: Attach-IAM-Role-Policy
-            targetAccountName: Audit
-            retryAttemptSeconds: 60
-            maximumAutomaticAttempts: 5
-            parameters:
-              - name: ResourceId
-                value: RESOURCE_ID
-                type: String
-              - name: AWSManagedPolicies
-                value: AmazonSSMManagedInstanceCore,AmazonSSMDirectoryServiceAccess,CloudWatchAgentServerPolicy
-                type: StringList
-              # - name: CustomerManagedPolicies
-              #   value: ${ACCEL_LOOKUP::CustomerManagedPolicy:policy-00},${ACCEL_LOOKUP::CustomerManagedPolicy:policy-01}
-              #   type: StringList
-              # - name: CustomerManagedPolicies
-              #   value: ${ACCEL_LOOKUP::CustomerManagedPolicy:AWSAccelerator-SessionManagerLogging-us-east-1}
-              #   type: StringList
-        # Note, included in Security Hub AFBP but this one has an automated remediation
-        - name: accelerator-s3-bucket-server-side-encryption-enabled
-          identifier: S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED
-          complianceResourceTypes:
-            - AWS::S3::Bucket
-          remediation:
-            rolePolicyFile: custom-config-rules/bucket-sse-enabled-remediation-role.json
-            automatic: true
-            targetId: Put-S3-Encryption
-            retryAttemptSeconds: 60
-            maximumAutomaticAttempts: 5
-            parameters:
-              - name: BucketName
-                value: RESOURCE_ID
-                type: String
-              - name: KMSMasterKey
-                value: ${ACCEL_LOOKUP::KMS}
-                type: StringList
-        # Security Hub AFBP has a similar rule, but this one has an automated remediation.
-        - name: accelerator-elb-logging-enabled
-          identifier: ELB_LOGGING_ENABLED
-          complianceResourceTypes:
-            - AWS::ElasticLoadBalancing::LoadBalancer
-            - AWS::ElasticLoadBalancingV2::LoadBalancer
-          inputParameters:
-            s3BucketNames: ${ACCEL_LOOKUP::Bucket:elbLogs}
-          remediation:
-            rolePolicyFile: custom-config-rules/elb-logging-enabled-remediation-role.json
-            automatic: true
-            targetId: SSM-ELB-Enable-Logging
-            retryAttemptSeconds: 60
-            maximumAutomaticAttempts: 5
-            parameters:
-              - name: LoadBalancerArn
-                value: RESOURCE_ID
-                type: String
-              - name: LogDestination
-                value: ${ACCEL_LOOKUP::Bucket:elbLogs}
-                type: StringList
+        #############################################################################
+        # Enabling additional config rules not implemented through AWS Security Hub #
+        #############################################################################
         - name: accelerator-iam-user-group-membership-check
           complianceResourceTypes:
             - AWS::IAM::User

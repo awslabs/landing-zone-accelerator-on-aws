@@ -985,7 +985,11 @@ export class DetectiveConfig implements t.TypeOf<typeof SecurityConfigTypes.dete
  *    organizationalUnits:
  *     -  Root
  *   enable: true
- *   controlsToDisable: []
+ *   controlsToDisable:
+ *     # Refer to the document for the controls
+ *     # https://docs.aws.amazon.com/securityhub/latest/userguide/pci-standard.html
+ *     - Control1
+ *     - Control2
  * ```
  */
 export class SecurityHubStandardConfig implements t.TypeOf<typeof SecurityConfigTypes.securityHubStandardConfig> {
@@ -1064,8 +1068,10 @@ export class SecurityHubLoggingConfig implements t.TypeOf<typeof SecurityConfigT
  *         -  Root
  *       enable: true
  *       controlsToDisable:
- *         - IAM.1
- *         - EC2.10
+ *         # Refer to the document for the controls
+ *         # https://docs.aws.amazon.com/securityhub/latest/userguide/fsbp-standard.html
+ *         - Control1
+ *         - Control2
  *   logging:
  *     cloudWatch:
  *       enable: true
@@ -1305,11 +1311,30 @@ export class SsmAutomationConfig implements t.TypeOf<typeof SecurityConfigTypes.
  *     excludeRegions: []
  *     standards:
  *       - name: AWS Foundational Security Best Practices v1.0.0
- *         deploymentTargets:
- *          organizationalUnits:
- *            -  Root
  *         enable: true
- *         controlsToDisable: []
+ *       - name: PCI DSS v3.2.1
+ *         enable: true
+ *         controlsToDisable:
+ *           # Refer to the document for the controls
+ *           # https://docs.aws.amazon.com/securityhub/latest/userguide/pci-standard.html
+ *           - Control1
+ *           - Control2
+ *       - name: CIS AWS Foundations Benchmark v1.2.0
+ *         enable: true
+ *       - name: CIS AWS Foundations Benchmark v1.4.0
+ *         enable: true
+ *         controlsToDisable:
+ *           # Refer to the document for the controls
+ *           # https://docs.aws.amazon.com/securityhub/latest/userguide/cis-aws-foundations-benchmark.html#cis1v4-standard
+ *           - Control1
+ *           - Control2
+ *       - name: NIST Special Publication 800-53 Revision 5
+ *         enable: true
+ *         controlsToDisable:
+ *           # Refer to the document for the controls
+ *           # https://docs.aws.amazon.com/securityhub/latest/userguide/nist-standard.html
+ *           - Control1
+ *           - Control2
  *   ssmAutomation:
  *     documentSets: []
  *```
@@ -1437,7 +1462,7 @@ export class CentralSecurityServicesConfig
    * Accelerator use this parameter to define AWS Security Hub configuration.
    *
    * To enable AWS Security Hub for all regions and
-   * enable "AWS Foundational Security Best Practices v1.0.0" security standard for IAM.1 & EC2.10 controls
+   * enable "AWS Foundational Security Best Practices v1.0.0" security standard, deployment targets and disable controls
    * you need provide below value for this parameter.
    *
    * @example
@@ -1455,8 +1480,10 @@ export class CentralSecurityServicesConfig
    *            - Root
    *         enable: true
    *         controlsToDisable:
-   *           - IAM.1
-   *           - EC2.10
+   *           # Refer to the document for the control ID
+   *           # https://docs.aws.amazon.com/securityhub/latest/userguide/fsbp-standard.html
+   *           - Control1
+   *           - Control2
    * ```
    */
   readonly securityHub: SecurityHubConfig = new SecurityHubConfig();
