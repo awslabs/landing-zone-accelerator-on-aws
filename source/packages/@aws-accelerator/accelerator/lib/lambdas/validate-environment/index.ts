@@ -34,6 +34,11 @@ type serviceControlPolicyType = {
   targets: { name: string; id: string }[];
 };
 
+type provisionedProductStatus = {
+  status: string;
+  statusMessage: string;
+};
+
 const marshallOptions = {
   convertEmptyValues: false,
   //overriding default value of false
@@ -136,7 +141,6 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     pageSize: 100,
   };
 
-  console.log(stackName);
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
@@ -532,56 +536,42 @@ async function validateControlTower() {
     validationErrors.push(driftDetectedMessage.Parameter?.Value ?? '');
   }
 
-  // retrieve all of the accounts provisioned in control tower
-  const provisionedControlTowerAccounts = await getControlTowerProvisionedAccounts();
-  // confirm workload accounts exist in control tower without errors
   if (workloadAccounts) {
     for (const workloadAccount of workloadAccounts) {
       const accountConfig = JSON.parse(workloadAccount['dataBag']);
       const accountName = accountConfig['name'];
-      const provisionedControlTowerAccount = provisionedControlTowerAccounts.find(pcta => pcta.Name == accountName);
-      if (provisionedControlTowerAccount) {
-        switch (provisionedControlTowerAccount['Status']) {
-          case 'AVAILABLE':
-            break;
-          case 'TAINTED':
-            validationErrors.push(
-              `AWS Account ${workloadAccount['acceleratorKey']} is TAINTED state. Message: ${provisionedControlTowerAccount.StatusMessage}. Check Service Catalog`,
-            );
-            break;
-          case 'ERROR':
-            validationErrors.push(
-              `AWS Account ${workloadAccount['acceleratorKey']} is in ERROR state. Message: ${provisionedControlTowerAccount.StatusMessage}. Check Service Catalog`,
-            );
-            break;
-          case 'UNDER_CHANGE':
-            break;
-          case 'PLAN_IN_PROGRESS':
-            break;
-        }
-      } else {
-        // confirm account doesn't exist in control tower with a different name
-        // if enrolled directly in console the name in service catalog won't match
-        // look up by physical id if it exists
-        const checkAccountId = organizationAccounts.find(oa => oa.Email == workloadAccount['acceleratorKey']);
-        if (checkAccountId) {
-          const provisionedControlTowerOrgAccount = provisionedControlTowerAccounts.find(
-            pcta => pcta.PhysicalId === checkAccountId.Id,
+      const account = organizationAccounts.find(oa => oa.Email == workloadAccount['acceleratorKey']);
+
+      if (!account) {
+        console.log(`push to ctAccountsToAdd does not exist ${accountName}`);
+        ctAccountsToAdd.push(workloadAccount);
+        continue;
+      }
+
+      const provisionedProductStatus = await getControlTowerProvisionedProductStatus(account.Id!);
+      if (!provisionedProductStatus) {
+        console.log(`push to ctAccountsToAdd not enrolled in CT ${accountName}`);
+        ctAccountsToAdd.push(workloadAccount);
+        continue;
+      }
+      console.log(`Found provisioned account ${accountName}`);
+      switch (provisionedProductStatus.status) {
+        case 'AVAILABLE':
+          break;
+        case 'TAINTED':
+          validationErrors.push(
+            `AWS Account ${workloadAccount['acceleratorKey']} is TAINTED state. Message: ${provisionedProductStatus.statusMessage}. Check Service Catalog`,
           );
-          if (
-            provisionedControlTowerOrgAccount?.Status === 'TAINTED' ||
-            provisionedControlTowerOrgAccount?.Status === 'ERROR'
-          ) {
-            validationErrors.push(
-              `AWS Account ${workloadAccount['acceleratorKey']} is in ERROR state. Message: ${provisionedControlTowerOrgAccount.StatusMessage}. Check Service Catalog`,
-            );
-          }
-          if (!provisionedControlTowerOrgAccount) {
-            ctAccountsToAdd.push(workloadAccount);
-          }
-        } else {
-          ctAccountsToAdd.push(workloadAccount);
-        }
+          break;
+        case 'ERROR':
+          validationErrors.push(
+            `AWS Account ${workloadAccount['acceleratorKey']} is in ERROR state. Message: ${provisionedProductStatus.statusMessage}. Check Service Catalog`,
+          );
+          break;
+        case 'UNDER_CHANGE':
+          break;
+        case 'PLAN_IN_PROGRESS':
+          break;
       }
     }
   }
@@ -595,32 +585,34 @@ async function getOuName(name: string): Promise<string> {
   return result;
 }
 
-async function getControlTowerProvisionedAccounts(): Promise<AWS.ServiceCatalog.ProvisionedProductAttribute[]> {
-  const provisionedProducts: AWS.ServiceCatalog.ProvisionedProductAttribute[] = [];
-  let nextToken: string | undefined = undefined;
-  do {
-    const page = await throttlingBackOff(() =>
-      serviceCatalogClient
-        .searchProvisionedProducts({
-          Filters: {
-            SearchQuery: ['type: CONTROL_TOWER_ACCOUNT'],
-          },
-          AccessLevelFilter: {
-            Key: 'Account',
-            Value: 'self',
-          },
-          PageToken: nextToken,
-        })
-        .promise(),
-    );
+async function getControlTowerProvisionedProductStatus(
+  accountId: string,
+): Promise<provisionedProductStatus | undefined> {
+  const provisionedProduct = await throttlingBackOff(() =>
+    serviceCatalogClient
+      .searchProvisionedProducts({
+        Filters: {
+          SearchQuery: [`physicalId: ${accountId}`],
+        },
+        AccessLevelFilter: {
+          Key: 'Account',
+          Value: 'self',
+        },
+      })
+      .promise(),
+  );
 
-    for (const product of page.ProvisionedProducts ?? []) {
-      provisionedProducts.push(product);
+  if (provisionedProduct === undefined || provisionedProduct.ProvisionedProducts === undefined) {
+    return undefined;
+  }
+
+  for (const product of provisionedProduct.ProvisionedProducts) {
+    if (product.Type === 'CONTROL_TOWER_ACCOUNT') {
+      return { status: product.Status, statusMessage: product.StatusMessage } as provisionedProductStatus;
     }
-    nextToken = page.NextPageToken;
-  } while (nextToken);
+  }
 
-  return provisionedProducts;
+  return undefined;
 }
 
 async function getOrganizationAccounts(

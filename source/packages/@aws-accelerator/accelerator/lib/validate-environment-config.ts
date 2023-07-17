@@ -15,6 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { v4 as uuidv4 } from 'uuid';
 import { Construct } from 'constructs';
 import path = require('path');
+import { NagSuppressions } from 'cdk-nag';
 
 export interface ValidateEnvironmentConfigProps {
   readonly acceleratorConfigTable: cdk.aws_dynamodb.ITable;
@@ -54,74 +55,87 @@ export class ValidateEnvironmentConfig extends Construct {
   constructor(scope: Construct, id: string, props: ValidateEnvironmentConfigProps) {
     super(scope, id);
 
-    const VALIDATE_ENVIRONMENT_RESOURCE_TYPE = 'Custom::ValidateEnvironmentConfig';
+    const stack = cdk.Stack.of(scope);
+    const VALIDATE_ENVIRONMENT_RESOURCE_TYPE = 'Custom::ValidateEnvironmentConfiguration';
 
-    //
-    // Function definition for the custom resource
-    //
-    const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, VALIDATE_ENVIRONMENT_RESOURCE_TYPE, {
-      codeDirectory: path.join(__dirname, 'lambdas/validate-environment/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
-      timeout: cdk.Duration.minutes(10),
-      policyStatements: [
-        {
-          Effect: 'Allow',
-          Sid: 'OrganizationsLookup',
-          Action: [
-            'organizations:ListAccounts',
-            'servicecatalog:SearchProvisionedProducts',
-            'organizations:ListChildren',
-            'organizations:ListPoliciesForTarget',
-            'organizations:ListOrganizationalUnitsForParent',
-            'organizations:ListRoots',
-            'organizations:ListAccountsForParent',
-            'organizations:ListParents',
-            'organizations:ListPolicies',
-            'organizations:ListTagsForResource',
-          ],
-          Resource: '*',
-        },
-        {
-          Sid: 'dynamodb',
-          Effect: 'Allow',
-          Action: ['dynamodb:PutItem'],
-          Resource: [props.newOrgAccountsTable.tableArn, props.newCTAccountsTable?.tableArn],
-        },
-        {
-          Sid: 'dynamodbConfigTable',
-          Effect: 'Allow',
-          Action: ['dynamodb:Query', 'dynamodb:UpdateItem'],
-          Resource: [props.acceleratorConfigTable.tableArn],
-        },
-        {
-          Sid: 'kms',
-          Effect: 'Allow',
-          Action: ['kms:Encrypt', 'kms:Decrypt', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
-          Resource: [props.newOrgAccountsTable.encryptionKey?.keyArn, props.newCTAccountsTable.encryptionKey?.keyArn],
-        },
-        {
-          Sid: 'cloudformation',
-          Effect: 'Allow',
-          Action: ['cloudformation:DescribeStacks'],
-          Resource: [
-            `arn:${props.partition}:cloudformation:${props.region}:${props.managementAccountId}:stack/${props.stackName}*`,
-          ],
-        },
-        {
-          Sid: 'sms',
-          Effect: 'Allow',
-          Action: ['ssm:GetParameter'],
-          Resource: [props.driftDetectionParameter.parameterArn, props.driftDetectionMessageParameter.parameterArn],
-        },
+    const organizationsPolicy = new cdk.aws_iam.PolicyStatement({
+      effect: cdk.aws_iam.Effect.ALLOW,
+      sid: 'OrganizationsLookup',
+      actions: [
+        'organizations:ListAccounts',
+        'servicecatalog:SearchProvisionedProducts',
+        'organizations:ListChildren',
+        'organizations:ListPoliciesForTarget',
+        'organizations:ListOrganizationalUnitsForParent',
+        'organizations:ListRoots',
+        'organizations:ListAccountsForParent',
+        'organizations:ListParents',
+        'organizations:ListPolicies',
+        'organizations:ListTagsForResource',
+      ],
+      resources: ['*'],
+    });
+    const ddbPutItemPolicy = new cdk.aws_iam.PolicyStatement({
+      sid: 'dynamodb',
+      effect: cdk.aws_iam.Effect.ALLOW,
+      actions: ['dynamodb:PutItem'],
+      resources: [props.newOrgAccountsTable.tableArn, props.newCTAccountsTable?.tableArn],
+    });
+    const ddbConfigTablePolicy = new cdk.aws_iam.PolicyStatement({
+      sid: 'dynamodbConfigTable',
+      effect: cdk.aws_iam.Effect.ALLOW,
+      actions: ['dynamodb:Query', 'dynamodb:UpdateItem'],
+      resources: [props.acceleratorConfigTable.tableArn],
+    });
+    const kmsPolicy = new cdk.aws_iam.PolicyStatement({
+      sid: 'kms',
+      effect: cdk.aws_iam.Effect.ALLOW,
+      actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
+      resources: [props.newOrgAccountsTable.encryptionKey!.keyArn, props.newCTAccountsTable.encryptionKey!.keyArn],
+    });
+    const cloudformationPolicy = new cdk.aws_iam.PolicyStatement({
+      sid: 'cloudformation',
+      effect: cdk.aws_iam.Effect.ALLOW,
+      actions: ['cloudformation:DescribeStacks'],
+      resources: [
+        `arn:${props.partition}:cloudformation:${props.region}:${props.managementAccountId}:stack/${props.stackName}*`,
       ],
     });
+    const ssmPolicy = new cdk.aws_iam.PolicyStatement({
+      sid: 'sms',
+      effect: cdk.aws_iam.Effect.ALLOW,
+      actions: ['ssm:GetParameter'],
+      resources: [props.driftDetectionParameter.parameterArn, props.driftDetectionMessageParameter.parameterArn],
+    });
 
-    //
-    // Custom Resource definition. We want this resource to be evaluated on
-    // every CloudFormation update, so we generate a new uuid to force
-    // re-evaluation.
-    //
-    const resource = new cdk.CustomResource(this, 'Resource', {
+    const providerLambda = new cdk.aws_lambda.Function(this, 'ValidateEnvironmentFunction', {
+      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
+      code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, './lambdas/validate-environment/dist')),
+      handler: 'index.handler',
+      timeout: cdk.Duration.minutes(15),
+      description: 'Validate Environment Configuration',
+      memorySize: 1024,
+    });
+    providerLambda.addToRolePolicy(organizationsPolicy);
+    providerLambda.addToRolePolicy(ddbPutItemPolicy);
+    providerLambda.addToRolePolicy(ddbConfigTablePolicy);
+    providerLambda.addToRolePolicy(kmsPolicy);
+    providerLambda.addToRolePolicy(cloudformationPolicy);
+    providerLambda.addToRolePolicy(ssmPolicy);
+
+    // Custom resource lambda log group
+    new cdk.aws_logs.LogGroup(this, `${providerLambda.node.id}LogGroup`, {
+      logGroupName: `/aws/lambda/${providerLambda.functionName}`,
+      retention: props.logRetentionInDays,
+      encryptionKey: props.kmsKey,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    const provider = new cdk.custom_resources.Provider(this, VALIDATE_ENVIRONMENT_RESOURCE_TYPE, {
+      onEventHandler: providerLambda,
+    });
+
+    const resource = new cdk.CustomResource(this, 'ValidateEnvironmentResource', {
       resourceType: VALIDATE_ENVIRONMENT_RESOURCE_TYPE,
       serviceToken: provider.serviceToken,
       properties: {
@@ -140,21 +154,49 @@ export class ValidateEnvironmentConfig extends Construct {
       },
     });
 
-    /**
-     * Singleton pattern to define the log group for the singleton function
-     * in the stack
-     */
-    const stack = cdk.Stack.of(scope);
-    const logGroup =
-      (stack.node.tryFindChild(`${provider.node.id}LogGroup`) as cdk.aws_logs.LogGroup) ??
-      new cdk.aws_logs.LogGroup(stack, `${provider.node.id}LogGroup`, {
-        logGroupName: `/aws/lambda/${(provider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref}`,
-        retention: props.logRetentionInDays,
-        encryptionKey: props.kmsKey,
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-      });
-    resource.node.addDependency(logGroup);
+    NagSuppressions.addResourceSuppressionsByPath(
+      stack,
+      `${stack.stackName}/ValidateEnvironmentConfig/ValidateEnvironmentFunction/ServiceRole/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'CDK created resource',
+        },
+      ],
+    );
 
+    NagSuppressions.addResourceSuppressionsByPath(
+      stack,
+      `${stack.stackName}/ValidateEnvironmentConfig/${VALIDATE_ENVIRONMENT_RESOURCE_TYPE}/framework-onEvent/ServiceRole/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'CDK created resource',
+        },
+      ],
+    );
+
+    NagSuppressions.addResourceSuppressionsByPath(
+      stack,
+      `${stack.stackName}/ValidateEnvironmentConfig/ValidateEnvironmentFunction/ServiceRole/DefaultPolicy/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'CDK created resource',
+        },
+      ],
+    );
+
+    NagSuppressions.addResourceSuppressionsByPath(
+      stack,
+      `${stack.stackName}/ValidateEnvironmentConfig/${VALIDATE_ENVIRONMENT_RESOURCE_TYPE}/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Policy permissions are part cdk provider framework',
+        },
+      ],
+    );
     this.id = resource.ref;
   }
 }
