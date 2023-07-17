@@ -602,14 +602,14 @@ vpcs:
             destination: 0.0.0.0/0
             type: networkFirewall
             target: az-id-firewall
-            targetAvailabilityZone: c
+            targetAvailabilityZone: 1
       - name: Network-Secondary-D-Rt
         routes:
           - name: NfwRoute
             destination: 0.0.0.0/0
             type: networkFirewall
             target: az-id-firewall
-            targetAvailabilityZone: d
+            targetAvailabilityZone: 2
     subnets:
       - name: Network-Secondary-A
         availabilityZone: a
@@ -624,13 +624,13 @@ vpcs:
           ipamPoolName: home-region-prod-pool
           netmaskLength: 28
       - name: Network-Secondary-C
-        availabilityZone: c
+        availabilityZone: 1
         routeTable: Network-Secondary-C-Rt
         ipamAllocation:
           ipamPoolName: home-region-prod-pool
           netmaskLength: 28
       - name: Network-Secondary-D
-        availabilityZone: d
+        availabilityZone: 2
         routeTable: Network-Secondary-D-Rt
         ipamAllocation:
           ipamPoolName: home-region-prod-pool
