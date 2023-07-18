@@ -57,6 +57,7 @@ centralSecurityServices:
   securityHub:
     enable: true
     regionAggregation: true
+    excludeRegions: []
     standards:
       #############################################################################################################
       # Enable AWS Security Hub standards based upon a customer specific requirements                             #
