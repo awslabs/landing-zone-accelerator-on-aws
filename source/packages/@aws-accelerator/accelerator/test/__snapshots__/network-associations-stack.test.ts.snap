@@ -75,6 +75,10 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Default": "/accelerator/network/transitGateways/Network-Main/routeTables/Network-Main-Standalone/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsalbappAalb01idC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Endpoints/alb/appA-alb-01/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -1385,6 +1389,36 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         ],
       },
       "Type": "AWS::IAM::Role",
+    },
+    "ListenerNetworkEndpointsappAAlb01appAListener2": {
+      "Properties": {
+        "Certificates": [
+          {},
+        ],
+        "DefaultActions": [
+          {
+            "ForwardConfig": {
+              "TargetGroups": [
+                {
+                  "TargetGroupArn": {
+                    "Ref": "NetworkEndpointsappAalbtg176E11B7D",
+                  },
+                },
+              ],
+            },
+            "TargetGroupArn": {
+              "Ref": "NetworkEndpointsappAalbtg176E11B7D",
+            },
+            "Type": "forward",
+          },
+        ],
+        "LoadBalancerArn": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsalbappAalb01idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "Port": 80,
+        "Protocol": "HTTP",
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
     },
     "ListenerNetworkEndpointsappANlb01appAListener1": {
       "Properties": {

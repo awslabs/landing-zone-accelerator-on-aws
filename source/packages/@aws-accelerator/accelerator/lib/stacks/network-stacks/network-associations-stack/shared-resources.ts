@@ -112,7 +112,7 @@ export class SharedResources {
       for (const albItem of vpcItem.loadBalancers?.applicationLoadBalancers || []) {
         if (albItem.shareTargets) {
           const sharedAlb = this.stack.checkResourceShare(albItem.shareTargets);
-          if (sharedAlb) {
+          if (sharedAlb && vpcItem.region === cdk.Stack.of(this.stack).region) {
             for (const subnetItem of albItem.subnets ?? []) {
               const subnetId = cdk.aws_ssm.StringParameter.valueForStringParameter(
                 this.stack,
@@ -200,7 +200,7 @@ export class SharedResources {
     for (const listener of albItem.listeners ?? []) {
       if (albItem.shareTargets) {
         const sharedAlb = this.stack.checkResourceShare(albItem.shareTargets);
-        if (sharedAlb) {
+        if (sharedAlb && vpcItem.region === cdk.Stack.of(this.stack).region) {
           const targetGroup = targetGroupMap.get(`${vpcItem.name}-${listener.targetGroup}`);
           if (!targetGroup) {
             this.stack.addLogs(
