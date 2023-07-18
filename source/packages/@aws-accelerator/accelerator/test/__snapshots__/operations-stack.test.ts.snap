@@ -265,6 +265,37 @@ exports[`OperationsStack Construct(OperationsStack):  Snapshot Test 1`] = `
       "Type": "AWS::Backup::BackupVault",
       "UpdateReplacePolicy": "Retain",
     },
+    "BackupVaultInfrastructureVault94AE1FE1": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "AccessPolicy": {
+          "Statement": [
+            {
+              "Action": "backup:DeleteRecoveryPoint",
+              "Condition": {
+                "Bool": {
+                  "aws:MultiFactorAuthPresent": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": "*",
+              "Resource": "*",
+              "Sid": "DenyDeleteRecoveryPoint",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "BackupVaultName": "InfrastructureVault",
+        "EncryptionKeyArn": {
+          "Fn::GetAtt": [
+            "BackupKey60B97760",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::Backup::BackupVault",
+      "UpdateReplacePolicy": "Retain",
+    },
     "BreakGlassUser01AA051328": {
       "Properties": {
         "Groups": [

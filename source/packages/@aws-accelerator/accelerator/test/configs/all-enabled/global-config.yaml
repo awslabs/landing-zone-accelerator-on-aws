@@ -177,3 +177,8 @@ backup:
       deploymentTargets:
         organizationalUnits:
           - Root
+    - name: InfrastructureVault
+      deploymentTargets:
+        accounts:
+          - Management
+      policy: backup-vault-policies/infrastructure-vault-policy.json

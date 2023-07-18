@@ -105,6 +105,10 @@ export class GlobalConfigValidator {
     // Control Tower control validation
     //
     this.validateControlTowerControls(values, errors);
+    //
+    // AWS Backup validation
+    //
+    this.validateAwsBackup(configDir, values, errors);
 
     if (errors.length) {
       throw new Error(`${GlobalConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
@@ -598,6 +602,16 @@ export class GlobalConfigValidator {
         errors.push(
           `Control Tower controls can only be deployed to Organizational Units. Please remove all account deployment targets from ${control.identifier}`,
         );
+      }
+    }
+  }
+
+  private validateAwsBackup(configDir: string, values: GlobalConfig, errors: string[]) {
+    for (const vault of values.backup?.vaults ?? []) {
+      if (vault?.policy) {
+        if (!fs.existsSync(path.join(configDir, vault.policy))) {
+          errors.push(`Policy definition file for Backup Vault ${vault.name} not found !!!`);
+        }
       }
     }
   }
