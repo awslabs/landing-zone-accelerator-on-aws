@@ -431,7 +431,8 @@ export class NetworkAssociationsStack extends NetworkStack {
       for (const vpcItem of this.props.networkConfig.vpcs ?? []) {
         for (const albItem of vpcItem.loadBalancers?.applicationLoadBalancers ?? []) {
           // Logic to determine that ALBs that are not shared are only created in the account of the VPC.
-          if (!albItem.shareTargets && vpcItem.account === cdk.Stack.of(this).account) {
+          const accountId = this.props.accountsConfig.getAccountId(vpcItem.account);
+          if (!albItem.shareTargets && this.isTargetStack([accountId], [vpcItem.region])) {
             const albArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
               this,
               this.getSsmPath(SsmResourceType.ALB, [vpcItem.name, albItem.name]),
@@ -639,7 +640,8 @@ export class NetworkAssociationsStack extends NetworkStack {
               this.createInstanceOrIpTargetGroups(vpcItem, vpcId, targetGroupItem, targetGroupMap);
             }
           }
-          if (!targetGroupItem.shareTargets && vpcItem.region === cdk.Stack.of(this).region) {
+          const vpcAccountId = this.props.accountsConfig.getAccountId(vpcItem.account);
+          if (!targetGroupItem.shareTargets && this.isTargetStack([vpcAccountId], [vpcItem.region])) {
             const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
               this,
               this.getSsmPath(SsmResourceType.VPC, [vpcItem.name]),
@@ -648,6 +650,7 @@ export class NetworkAssociationsStack extends NetworkStack {
           }
         }
       }
+
       return targetGroupMap;
     } catch (err) {
       this.logger.error(err);
