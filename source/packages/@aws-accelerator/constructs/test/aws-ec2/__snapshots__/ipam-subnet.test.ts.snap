@@ -175,6 +175,7 @@ exports[`IpamSubnet Construct(IpamSubnet):  Snapshot Test 1`] = `
                   "Action": [
                     "ec2:CreateTags",
                     "ec2:DeleteSubnet",
+                    "ec2:DeleteTags",
                     "ec2:ModifySubnetAttribute",
                   ],
                   "Effect": "Allow",

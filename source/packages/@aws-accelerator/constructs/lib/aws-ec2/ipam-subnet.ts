@@ -182,7 +182,7 @@ export class IpamSubnet extends cdk.Resource implements IIpamSubnet {
       policyStatements: [
         {
           Effect: 'Allow',
-          Action: ['ec2:CreateTags', 'ec2:DeleteSubnet', 'ec2:ModifySubnetAttribute'],
+          Action: ['ec2:CreateTags', 'ec2:DeleteSubnet', 'ec2:DeleteTags', 'ec2:ModifySubnetAttribute'],
           Resource: `arn:${cdk.Aws.PARTITION}:ec2:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:subnet/*`,
         },
         {
