@@ -717,41 +717,7 @@ export class LoggingStack extends AcceleratorStack {
       glueDatabaseName: `${this.props.prefixes.databaseName}-subscription-database`,
       transformationTableName: `${this.props.prefixes.databaseName}-firehose-transformation-table`,
     });
-    // FirehosePrefixProcessingLambda/ServiceRole AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies.
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `${this.stackName}/FirehoseToS3Setup/FirehosePrefixProcessingLambda/ServiceRole/Resource`,
-      [
-        {
-          id: 'AwsSolutions-IAM4',
-          reason: 'AWS Managed policy for Lambda basic execution attached.',
-        },
-      ],
-    );
 
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `${this.stackName}/FirehoseToS3Setup/FirehoseS3ServiceRole/Resource`,
-      [
-        {
-          id: 'AwsSolutions-IAM5',
-          reason:
-            'Bucket permissions are wildcards to abort downloads and clean up objects. KMS permissions are wildcards to re-encrypt entities.',
-        },
-      ],
-    );
-
-    // Kinesis-Firehose-Stream-Dynamic-Partitioning AwsSolutions-KDF1: The Kinesis Data Firehose delivery stream does have server-side encryption enabled.
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `${this.stackName}/FirehoseToS3Setup/Kinesis-Firehose-Stream-Dynamic-Partitioning`,
-      [
-        {
-          id: 'AwsSolutions-KDF1',
-          reason: 'Customer managed key is used to encrypt firehose delivery stream.',
-        },
-      ],
-    );
     return cloudwatchCfnDestination;
   }
   private cloudwatchLogCreatingAccount() {
