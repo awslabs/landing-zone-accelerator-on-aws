@@ -28,35 +28,27 @@
 
 # Landing Zone Accelerator on AWS
 
-The Landing Zone Accelerator on AWS solution helps you quickly deploy a secure,
-resilient, scalable, and fully automated cloud foundation that accelerates your
-readiness for your cloud compliance program. A landing zone is a cloud
-environment that offers a recommended starting point, including default
-accounts, account structure, network and security layouts, and so forth. From a
-landing zone, you can deploy workloads that utilize your solutions and
-applications.
+The Landing Zone Accelerator on AWS (LZA) is architected to align with AWS best practices
+and in conformance with multiple, global compliance frameworks. We recommend customers
+deploy AWS Control Tower as the foundational landing zone and enhance their landing zone
+capabilities with Landing Zone Accelerator. These complementary capabilities provides a
+comprehensive no-code solution across 35+ AWS services to manage and govern a multi-account
+environment built to support customers with highly-regulated workloads and complex compliance
+requirements. AWS Control Tower and Landing Zone Accelerator help you establish platform
+readiness with security, compliance, and operational capabilities.
 
-The Landing Zone Accelerator (LZA) is architected to align with AWS best
-practices and in conformance with multiple, global compliance frameworks. When
-used in coordination with services such as AWS Control Tower, the Landing Zone
-Accelerator provides a comprehensive no-code solution across 35+ AWS services to
-manage and govern a multi-account environment built to support customers with
-highly-regulated workloads and complex compliance requirements. The LZA helps
-you establish platform readiness with security, compliance, and operational
-capabilities.
-
-This solution is provided as an open-source project that is built using the AWS
-Cloud Development Kit (CDK). You install directly into your environment giving
-you full access to the infrastructure as code (IaC) solution. Through a
+Landing Zone Accelerator is provided as an open-source project that is built using the AWS
+Cloud Development Kit (CDK). You install directly into your environment to
+get full access to the infrastructure as code (IaC) solution. Through a
 simplified set of configuration files, you are able to configure additional
-functionality, guardrails and security services (eg. AWS Managed Config Rules,
-and AWS SecurityHub), manage your foundational networking topology (eg. VPCs,
+functionality, controls and security services (eg. AWS Managed Config Rules,
+and AWS Security Hub), manage your foundational networking topology (eg. VPCs,
 Transit Gateways, and Network Firewall), and generate additional workload
 accounts using the AWS Control Tower Account Factory.
 
 There are no additional charges or upfront commitments required to use Landing
 Zone Accelerator on AWS. You pay only for AWS services enabled in order to set
-up your platform and operate your guardrails. This solution can also support
+up your platform and operate your controls. This solution can also support
 non-standard AWS partitions, including AWS GovCloud (US), and the US Secret and
 Top Secret regions.
 
@@ -85,6 +77,20 @@ disable this capability, please see the [implementation guide](https://docs.aws.
 ---
 
 ## Included Services, Features, and Configuration References
+
+The latest version of our configuration reference is hosted here: https://awslabs.github.io/landing-zone-accelerator-on-aws/.
+Direct links to specific service configuration references are included in the following sections.
+
+**Documentation for previous minor releases:**
+
+- _v1.3.0_ - https://awslabs.github.io/landing-zone-accelerator-on-aws/v1.3.0
+- _v1.2.0_ - https://awslabs.github.io/landing-zone-accelerator-on-aws/v1.2.0
+- _v1.1.0_ - https://awslabs.github.io/landing-zone-accelerator-on-aws/v1.1.0
+- _v1.0.0_ - https://awslabs.github.io/landing-zone-accelerator-on-aws/v1.0.0
+
+> NOTE: You can navigate to patch release versions of the solution's configuration reference by modifying the version number of
+> the URL. For example, to navigate to v1.3.2 documentation, you can use
+> https://awslabs.github.io/landing-zone-accelerator-on-aws/v1.3.2.
 
 ### Account Configuration
 
@@ -248,7 +254,7 @@ The Landing Zone Accelerator Centralized Logging solution provides the ability t
 | Log Type                         |                                                    S3 Path                                                     |                                                                                      Example                                                                                       | Supported Centralization Methods |
 | :------------------------------- | :------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | -------------------------------: |
 | ELB                              |                                             {account#}/{region}/\*                                             |                                             s3://aws-accelerator-elb-access-logs-123456789016-us-east-1/{account#}/{region}/\*.log.gz                                              |                   S3 Replication |
-| VPC Flow Logs                    |                 vpc-flow-logs/AWSLogs/{account#}/vpcflowlogs/{region}/{year}/{month}/{day}/\*                  |                       s3://aws-accelerator-central-logs-123456789016-us-east-1/vpc-flow-logs/AWSLogs/123456789016/vpcflowlogs/us-east-1/2023/04/14/\*.log.gz                       |   Log Streaming / S3 Replication |
+| VPC Flow Logs                    |                 vpc-flow-logs/AWSLogs/{account#}/vpcflowlogs/{region}/{year}/{month}/{day}/\*                  |                       s3://aws-accelerator-central-logs-123456789016-us-east-1/vpc-flow-logs/AWSLogs/123456789016/vpcflowlogs/us-east-1/2023/04/14/\*.log.gz                       |   Log Streaming / Serivce-Native |
 | Macie Reports                    |                             macie/{account#}/AWSLogs/{account#}/Macie/{region}/\*                              |                            s3://aws-accelerator-central-logs-123456789016-us-east-1/macie/123456789016/AWSLogs/123456789016/Macie/us-east-1/\*.jsonl.gz                            |                   Service-Native |
 | Cost and Usage Reports           |                                       cur/{account#}/accelerator-cur/\*                                        |                           s3://aws-accelerator-central-logs-123456789016-us-east-1/cur/123456789016/accelerator-cur/20220901-20221001/\*.snappy.parquet                            |                   S3 Replication |
 | Config History                   |                config/AWSLogs/{account#}/Config/{region}/{year}/{month}/{day}/ConfigHistory/\*                 |                         s3://aws-accelerator-central-logs-123456789016-us-east-1/AWSLogs/123456789016/Config/us-east-1/2023/4/10/ConfigHistory/\*.json.gz                          |                   Service-Native |
