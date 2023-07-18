@@ -25,6 +25,7 @@ import {
   IdentityCenterPermissionSetConfig,
   RoleConfig,
   RoleSetConfig,
+  VaultConfig,
   VpcConfig,
   VpcTemplatesConfig,
 } from '@aws-accelerator/config';
@@ -667,11 +668,33 @@ export class OperationsStack extends AcceleratorStack {
           });
         }
 
+        const vaultPolicy = this.getBackupVaultAccessPolicy(vault);
         new cdk.aws_backup.BackupVault(this, `BackupVault_${vault.name}`, {
+          accessPolicy: vaultPolicy,
           backupVaultName: vault.name,
           encryptionKey: backupKey,
         });
       }
+    }
+  }
+
+  private getBackupVaultAccessPolicy(vault: VaultConfig) {
+    if (vault.policy) {
+      const policyDocument = JSON.parse(
+        this.generatePolicyReplacements(path.join(this.props.configDirPath, vault.policy), false, this.organizationId),
+      );
+
+      // Create a statements list using the PolicyStatement factory
+      const statements: cdk.aws_iam.PolicyStatement[] = [];
+      for (const statement of policyDocument.Statement) {
+        statements.push(cdk.aws_iam.PolicyStatement.fromJson(statement));
+      }
+
+      return new cdk.aws_iam.PolicyDocument({
+        statements: statements,
+      });
+    } else {
+      return undefined;
     }
   }
 

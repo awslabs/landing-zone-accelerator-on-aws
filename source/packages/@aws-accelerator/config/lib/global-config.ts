@@ -203,6 +203,7 @@ export abstract class GlobalConfigTypes {
   static readonly vaultConfig = t.interface({
     name: t.nonEmptyString,
     deploymentTargets: t.deploymentTargets,
+    policy: t.optional(t.nonEmptyString),
   });
 
   static readonly backupConfig = t.interface({
@@ -1250,7 +1251,7 @@ export class ReportConfig implements t.TypeOf<typeof GlobalConfigTypes.reportCon
 /**
  * *{@link GlobalConfig} / {@link BackupConfig} / {@link VaultConfig}*
  *
- * Backup vault configuration
+ * AWS Backup vault configuration
  *
  * @example
  * ```
@@ -1258,6 +1259,7 @@ export class ReportConfig implements t.TypeOf<typeof GlobalConfigTypes.reportCon
  *   deploymentTargets:
  *     organizationalUnits:
  *      - Root
+ *   policy: policies/backup-vault-policy.json
  * ```
  */
 export class VaultConfig implements t.TypeOf<typeof GlobalConfigTypes.vaultConfig> {
@@ -1270,6 +1272,11 @@ export class VaultConfig implements t.TypeOf<typeof GlobalConfigTypes.vaultConfi
    * Which OU's or Accounts the vault will be deployed to
    */
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
+
+  /**
+   * The path to a JSON file defining Backup Vault access policy
+   */
+  readonly policy: string = '';
 }
 
 /**
