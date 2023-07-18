@@ -10,7 +10,8 @@ wget -v 'https://s3.amazonaws.com/viperlight-scanner/latest/viperlight.zip'
 unzip -qo viperlight.zip -d ../viperlight
 rm -r ./viperlight.zip
 ../viperlight/bin/viperlight scan
-
 cd source
 yarn lerna run precommit --stream
+# Validate all enabled config files
+yarn validate-config packages/@aws-accelerator/accelerator/test/configs/all-enabled/
 yarn run test 

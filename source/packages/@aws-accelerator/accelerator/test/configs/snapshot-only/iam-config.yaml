@@ -1,0 +1,243 @@
+policySets:
+  - deploymentTargets:
+      organizationalUnits:
+        - Root
+    policies:
+      - name: Default-Boundary-Policy
+        policy: iam-policies/boundary-policy.json
+  - deploymentTargets:
+      organizationalUnits:
+        - Root
+    identityCenterDependency: true
+    policies:
+      - name: lzaManagedPolicy01
+        policy: iam-policies/ResourceConfigurationCollectorPolicy-policy.json
+      - name: lzaManagedPolicy02
+        policy: iam-policies/ResourceConfigurationCollectorPolicy-policy.json
+roleSets:
+  - deploymentTargets:
+      organizationalUnits:
+        - Root
+    roles:
+      - name: EC2-Default-SSM-AD-Role
+        instanceProfile: true
+        assumedBy:
+          - type: service
+            principal: ec2.amazonaws.com
+        policies:
+          awsManaged:
+            - AmazonSSMManagedInstanceCore
+            - AmazonSSMDirectoryServiceAccess
+            - CloudWatchAgentServerPolicy
+        boundaryPolicy: Default-Boundary-Policy
+      - name: Backup-Role
+        assumedBy:
+          - type: service
+            principal: backup.amazonaws.com
+        policies:
+          awsManaged:
+            - service-role/AWSBackupServiceRolePolicyForBackup
+            - service-role/AWSBackupServiceRolePolicyForRestores
+groupSets:
+  - deploymentTargets:
+      organizationalUnits:
+        - Root
+    groups:
+      - name: Administrators
+        policies:
+          awsManaged:
+            - AdministratorAccess
+identityCenter:
+  name: identityCenter1
+  delegatedAdminAccount: Audit
+  identityCenterPermissionSets:
+    - name: PermissionSet1
+      policies:
+        awsManaged:
+          - arn:aws:iam::aws:policy/AdministratorAccess
+          - arn:aws:iam::aws:policy/CloudFrontFullAccess
+          - PowerUserAccess
+          - ReadOnlyAccess
+        customerManaged:
+          - ResourceConfigurationCollectorPolicy
+        acceleratorManaged:
+          - lzaManagedPolicy01
+          - lzaManagedPolicy02
+        inlinePolicy: iam-policies/sso-permissionSet1-inline-policy.json
+        permissionsBoundary: 
+          # customerManagedPolicy:
+          #   name: lzaManagedPolicy01
+          #   path: /
+          awsManagedPolicyName: PowerUserAccess
+      # sessionDuration: 100
+    - name: PermissionSet2
+      policies:
+        awsManaged:
+          - PowerUserAccess
+          - ReadOnlyAccess
+        customerManaged:
+          - ResourceConfigurationCollectorPolicy
+        acceleratorManaged:
+          - lzaManagedPolicy01
+          # - lzaManagedPolicy02
+        inlinePolicy: iam-policies/sso-permissionSet1-inline-policy.json
+        permissionsBoundary: 
+          customerManagedPolicy:
+            name: lzaManagedPolicy01
+            path: /
+          # awsManagedPolicyName: PowerUserAccess
+      sessionDuration: 60
+  identityCenterAssignments:
+    - name: Assignment1
+      permissionSetName: PermissionSet1
+      principalId: 'abcd1234-1001-70f0-9c12-56a6aa967ca4'
+      principalType: USER
+      principals:
+        - type: USER
+          name: lza-accelerator-user-01
+        - type: GROUP
+          name: lza-accelerator-group-01
+        - type: USER
+          name: lza-accelerator-user-02
+        - type: GROUP
+          name: lza-accelerator-group-02
+      deploymentTargets:
+        accounts:
+          - LogArchive
+    - name: Assignment2
+      permissionSetName: PermissionSet1
+      principalId: '1234abcd-1001-70f0-9c12-56a6aa967ca4'
+      principalType: GROUP
+      deploymentTargets:
+        organizationalUnits:
+          - Security
+userSets:
+  - deploymentTargets:
+      accounts:
+        - Management
+    users:
+      - username: breakGlassUser01
+        group: Administrators
+        boundaryPolicy: Default-Boundary-Policy
+      - username: breakGlassUser02
+        group: Administrators
+        boundaryPolicy: Default-Boundary-Policy
+secretSets:
+  - deploymentTargets:
+      accounts:
+        - SharedServices
+    secrets:
+      - name: managedActiveDirectoryAdminUserSecret
+        description: Managed AD admin user secret
+        # kmsKeyName: Key1
+        userName: Admin
+        passwordPolicy:
+          excludeUppercase: false
+          excludeLowercase: false
+          excludeNumbers: false
+          requireEachIncludedType: true
+          includeSpace: false
+          passwordLength: 32
+          excludePunctuation: false
+          excludeCharacters: '@#'
+managedActiveDirectories:
+  - name: AcceleratorManagedActiveDirectory
+    type: AWS Managed Microsoft AD
+    account: SharedServices
+    region: us-east-1
+    dnsName: example.com
+    netBiosDomainName: example
+    description: Example managed AD
+    edition: Standard
+    vpcSettings:
+      vpcName: SharedServices-Main
+      subnets:
+        - SharedServices-App-A
+        - SharedServices-App-B
+    resolverRuleName: example-rule
+    secretConfig:
+      account: Audit
+      region: us-east-1
+      adminSecretName: my-admin-002
+    sharedOrganizationalUnits:
+        organizationalUnits: 
+          - Root
+        excludedAccounts:
+          - Audit
+    # sharedAccounts:
+    #   - Network
+    #   - Management
+    logs:
+      groupName: /aws/directoryservice/AcceleratorManagedActiveDirectory
+      retentionInDays: 30
+    activeDirectoryConfigurationInstance:
+      instanceType: t3.large
+      vpcName: SharedServices-Main
+      subnetName: SharedServices-App-A
+      imagePath: /aws/service/ami-windows-latest/Windows_Server-2016-English-Full-Base
+      securityGroupInboundSources: 
+          - 10.4.0.0/16
+      # securityGroupInboundConfigs: 
+      #   - description: Allow RDP and HTTPS Traffic Inbound
+      #     types: 
+      #       - RDP
+      #       - HTTPS
+      #     sources:
+      #       - 10.4.0.0/16
+      # securityGroupName: ActiveDirectoryConfigInstanceSG
+      instanceRole: EC2-Default-SSM-AD-Role
+      enableTerminationProtection: false
+      userDataScripts:
+        - scriptName: JoinDomain
+          scriptFilePath: ad-config-scripts/Join-Domain.ps1
+        - scriptName: AWSQuickStart
+          scriptFilePath: ad-config-scripts/AWSQuickStart.psm1
+        - scriptName: ADGroupSetup
+          scriptFilePath: ad-config-scripts/AD-group-setup.ps1
+        - scriptName: ADUserSetup
+          scriptFilePath: ad-config-scripts/AD-user-setup.ps1           
+        - scriptName: ADUserGroupSetup
+          scriptFilePath: ad-config-scripts/AD-user-group-setup.ps1
+        - scriptName: ADGroupGrantPermissionsSetup
+          scriptFilePath: ad-config-scripts/AD-group-grant-permissions-setup.ps1
+        - scriptName: ADConnectorPermissionsSetup
+          scriptFilePath: ad-config-scripts/AD-connector-permissions-setup.ps1
+        - scriptName: ConfigurePasswordPolicy
+          scriptFilePath: ad-config-scripts/Configure-password-policy.ps1
+      adGroups:
+        - aws-Provisioning
+        - aws-Billing
+      adPerAccountGroups:
+        - "*-Admin"
+        - "*-PowerUser"
+        - "*-View"
+      adConnectorGroup: ADConnector-grp
+      adPasswordPolicy:
+        history: 24
+        maximumAge: 90
+        minimumAge: 1
+        minimumLength: 14
+        complexity: true
+        reversible: false
+        failedAttempts: 6
+        lockoutDuration: 30
+        lockoutAttemptsReset: 30
+      adUsers:
+        - name: adconnector-user-01
+          email: example-adconnector-user@example.com
+          groups:
+            - ADConnector-grp
+        - name: user1-01
+          email: example-user1@example.com
+          groups:
+            - aws-Provisioning
+            - "*-View"
+            - "*-Admin"
+            - "*-PowerUser"
+            - AWS Delegated Administrators
+        - name: user2-002
+          email: example-user2@example.com
+          groups:
+            - aws-Provisioning
+            - "*-View"
+

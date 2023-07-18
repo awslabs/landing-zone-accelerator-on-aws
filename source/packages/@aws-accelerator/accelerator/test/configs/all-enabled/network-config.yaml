@@ -25,7 +25,7 @@ transitGateways:
           - destinationCidrBlock: 10.200.0.0/16
             attachment:
               directConnectGatewayName: Network-DXGW
-          - destinationCidrBlock: 10.300.0.0/16
+          - destinationCidrBlock: 10.30.0.0/16
             attachment:
               vpnConnectionName: accelerator-vpn
           - destinationCidrBlock: 1.1.1.1/32
@@ -166,7 +166,11 @@ centralNetworkServices:
           locale: *HOME_REGION
           provisionedCidrs:
             - 10.0.0.0/16
+            - 10.2.0.0/16
           sourceIpamPool: *BASE_POOL
+          shareTargets:
+            organizationalUnits:
+              - Infrastructure
         - name: home-region-prod-pool
           description: Pool for prod environment
           allocationResourceTags:
@@ -175,6 +179,7 @@ centralNetworkServices:
           locale: *HOME_REGION
           provisionedCidrs:
             - 10.0.0.0/24
+            - 10.2.0.0/24
           shareTargets:
             organizationalUnits:
               - Infrastructure
@@ -185,6 +190,9 @@ centralNetworkServices:
           provisionedCidrs:
             - 10.1.0.0/16
           sourceIpamPool: *BASE_POOL
+          shareTargets:
+            organizationalUnits:
+              - Infrastructure
   gatewayLoadBalancers:
     - name: Accelerator-GWLB
       subnets:
@@ -211,6 +219,17 @@ centralNetworkServices:
           - Network-Inspection-A
           - Network-Inspection-B
         vpc: Network-Inspection
+        loggingConfiguration:
+          - destination: s3
+            type: ALERT
+          - destination: cloud-watch-logs
+            type: FLOW
+      - name: az-id-firewall
+        firewallPolicy: accelerator-policy
+        subnets:
+          - Network-Secondary-C
+          - Network-Secondary-D
+        vpc: Network-Secondary
         loggingConfiguration:
           - destination: s3
             type: ALERT
@@ -392,13 +411,13 @@ centralNetworkServices:
             customDomainList: dns-firewall-domain-lists/domain-list-1.txt
             priority: 100
             blockResponse: NXDOMAIN
-          - name: override-block-rule
-            action: BLOCK
-            customDomainList: dns-firewall-domain-lists/domain-list-1.txt
-            priority: 200
-            blockResponse: OVERRIDE
-            blockOverrideDomain: amazon.com
-            blockOverrideTtl: 3600
+          # - name: override-block-rule
+          #   action: BLOCK
+          #   customDomainList: dns-firewall-domain-lists/domain-list-2.txt
+          #   priority: 200
+          #   blockResponse: OVERRIDE
+          #   blockOverrideDomain: amazon.com
+          #   blockOverrideTtl: 3600
           - name: managed-rule
             action: BLOCK
             managedDomainList: AWSManagedDomainsBotnetCommandandControl
@@ -457,87 +476,17 @@ vpcs:
         ipamAllocation:
           ipamPoolName: home-region-pool
           netmaskLength: 28
-        shareTargets:
-          organizationalUnits:
-            - Infrastructure
       - name: SharedServices-B
         availabilityZone: b
         routeTable: SharedServices-B-Rt
         ipamAllocation:
           ipamPoolName: home-region-pool
           netmaskLength: 28
-        shareTargets:
-          organizationalUnits:
-            - Infrastructure
     gatewayEndpoints:
       defaultPolicy: Default
       endpoints:
         - service: s3
         - service: dynamodb
-    securityGroups:
-      - name: 'Management'
-        description: 'Management Security Group'
-        inboundRules:
-          - description: 'Management RDP Traffic Inbound'
-            types:
-              - RDP
-            sources:
-              - '10.0.0.0/8'
-              - '100.96.252.0/23'
-              - '100.96.250.0/23'
-              - account: SharedServices
-                vpc: SharedServices-Ipam-East
-                subnets:
-                  - SharedServices-A
-                  - SharedServices-B
-              - securityGroups:
-                  - Management
-              - prefixLists:
-                  - accelerator-prefix-list
-          - description: 'Management SSH Traffic Inbound'
-            types: []
-            tcpPorts:
-              - 22
-            udpPorts:
-              - 22
-            sources:
-              - 10.0.0.0/8
-              - 100.96.252.0/23
-              - 100.96.250.0/23
-              - account: SharedServices
-                vpc: SharedServices-Ipam-East
-                subnets:
-                  - SharedServices-A
-                  - SharedServices-B
-              - securityGroups:
-                  - Management
-              - prefixLists:
-                  - accelerator-prefix-list
-        outboundRules:
-          - description: 'All Outbound'
-            types:
-              - ALL
-            sources:
-              - 10.0.0.0/8
-              - 100.96.252.0/23
-              - 100.96.250.0/23
-              - account: SharedServices
-                vpc: SharedServices-Ipam-East
-                subnets:
-                  - SharedServices-A
-                  - SharedServices-B
-              - securityGroups:
-                  - Management
-              - prefixLists:
-                  - accelerator-prefix-list
-          - description: 'All Outbound'
-            types: []
-            tcpPorts:
-              - 22
-            udpPorts:
-              - 22
-            sources:
-              - 10.0.0.0/8
 
   - name: SharedServices-Ipam-West
     account: SharedServices
@@ -622,6 +571,20 @@ vpcs:
         routes: []
       - name: Network-Secondary-B-Rt
         routes: []
+      - name: Network-Secondary-C-Rt
+        routes:
+          - name: NfwRoute
+            destination: 0.0.0.0/0
+            type: networkFirewall
+            target: az-id-firewall
+            targetAvailabilityZone: a
+      - name: Network-Secondary-D-Rt
+        routes:
+          - name: NfwRoute
+            destination: 0.0.0.0/0
+            type: networkFirewall
+            target: az-id-firewall
+            targetAvailabilityZone: b
     subnets:
       - name: Network-Secondary-A
         availabilityZone: a
@@ -635,11 +598,25 @@ vpcs:
         ipamAllocation:
           ipamPoolName: home-region-prod-pool
           netmaskLength: 28
+      - name: Network-Secondary-C
+        availabilityZone: a
+        routeTable: Network-Secondary-C-Rt
+        ipamAllocation:
+          ipamPoolName: home-region-prod-pool
+          netmaskLength: 28
+      - name: Network-Secondary-D
+        availabilityZone: b
+        routeTable: Network-Secondary-D-Rt
+        ipamAllocation:
+          ipamPoolName: home-region-prod-pool
+          netmaskLength: 28
     networkAcls:
       - name: TestNacl
         subnetAssociations:
           - Network-Secondary-A
           - Network-Secondary-B
+          - Network-Secondary-C
+          - Network-Secondary-D
         outboundRules:
           - rule: 101
             action: allow
@@ -779,6 +756,9 @@ vpcs:
       endpoints:
         - service: s3
         - service: dynamodb
+      tags:
+        - key: env
+          value: prod
 
   - name: Network-Endpoints
     account: Network
@@ -788,7 +768,7 @@ vpcs:
         netmaskLength: 25
       - ipamPoolName: home-region-prod-pool
         netmaskLength: 25
-    internetGateway: false
+    internetGateway: true
     dhcpOptions: accelerator-dhcp-opts
     enableDnsHostnames: true
     enableDnsSupport: true
@@ -856,7 +836,7 @@ vpcs:
           organizationalUnits:
             - Infrastructure
           accounts:
-            - Network
+            - SharedServices
         tags:
           - key: exampleKey
             value: exampleValue
@@ -1002,7 +982,6 @@ vpcs:
               - prefixLists:
                   - accelerator-prefix-list
           - description: 'Management SSH Traffic Inbound'
-            types: []
             tcpPorts:
               - 22
             udpPorts:
@@ -1037,8 +1016,7 @@ vpcs:
                   - Management
               - prefixLists:
                   - accelerator-prefix-list
-          - description: 'All Outbound'
-            types: []
+          - description: 'Limited Outbound'
             tcpPorts:
               - 22
             udpPorts:
@@ -1116,88 +1094,91 @@ vpcs:
         - pkt-dst-aws-service
         - flow-direction
         - traffic-path
-    loadBalancers:
-      applicationLoadBalancers:
-        - name: appA-alb-01
-          scheme: internet-facing
-          subnets:
-            - 'Network-EndpointsTgwAttach-A'
-            - 'Network-EndpointsTgwAttach-B'
-          securityGroups:
-            - Management
-          listeners:
-            - name: appA-listener-2
-              port: 80
-              protocol: HTTP
-              targetGroup: appA-alb-tg-1
-              type: forward
-      networkLoadBalancers:
-        - name: appA-nlb-01
-          scheme: internet-facing
-          deletionProtection: false
-          subnets:
-            - 'Network-EndpointsTgwAttach-A'
-            - 'Network-EndpointsTgwAttach-B'
-          listeners:
-            - name: appA-listener-1
-              port: 80
-              protocol: TCP
-              targetGroup: appA-nlb-tg-1
-            - name: appA-listener-2
-              port: 80
-              protocol: TCP
-              targetGroup: appA-nlb-tg-2
-    targetGroups:
-      - name: appA-nlb-tg-1
-        port: 80
-        protocol: TCP
-        type: instance
-        connectionTermination: true
-        preserveClientIp: true
-        proxyProtocolV2: true
-        healthCheck:
-          enabled: true
-          port: 80
-          protocol: TCP
-      - name: appA-alb-tg-1
-        port: 80
-        protocol: HTTP
-        type: instance
-        connectionTermination: true
-        preserveClientIp: true
-        proxyProtocolV2: true
-        healthCheck:
-          enabled: true
-          port: 80
-          protocol: HTTP
-      - name: appA-nlb-tg-2
-        port: 80
-        protocol: TCP
-        type: ip
-        targets:
-          - account: Network
-            region: *HOME_REGION
-            nlbName: appA-nlb-01
-        connectionTermination: true
-        preserveClientIp: true
-        proxyProtocolV2: true
-        healthCheck:
-          enabled: true
-          port: 80
-          protocol: TCP
+    # loadBalancers:
+    #   applicationLoadBalancers:
+    #     - name: appA-alb-01
+    #       scheme: internet-facing
+    #       subnets:
+    #         - 'Network-EndpointsTgwAttach-A'
+    #         - 'Network-EndpointsTgwAttach-B'
+    #       securityGroups:
+    #         - Management
+    #       listeners:
+    #         - name: appA-listener-2
+    #           port: 80
+    #           protocol: HTTP
+    #           targetGroup: appA-alb-tg-1
+    #           type: forward
+    #   networkLoadBalancers:
+    #     - name: appA-nlb-01
+    #       scheme: internet-facing
+    #       deletionProtection: false
+    #       subnets:
+    #         - 'Network-EndpointsTgwAttach-A'
+    #         - 'Network-EndpointsTgwAttach-B'
+    #       listeners:
+    #         - name: appA-listener-1
+    #           port: 80
+    #           protocol: TCP
+    #           targetGroup: appA-nlb-tg-1
+    #         - name: appA-listener-2
+    #           port: 80
+    #           protocol: TCP
+    #           targetGroup: appA-nlb-tg-2
+    # targetGroups:
+    #   - name: appA-nlb-tg-1
+    #     port: 80
+    #     protocol: TCP
+    #     type: instance
+    #     connectionTermination: true
+    #     preserveClientIp: true
+    #     proxyProtocolV2: true
+    #     healthCheck:
+    #       enabled: true
+    #       port: 80
+    #       protocol: TCP
+    #   - name: appA-alb-tg-1
+    #     port: 80
+    #     protocol: HTTP
+    #     type: instance
+    #     connectionTermination: true
+    #     preserveClientIp: true
+    #     proxyProtocolV2: true
+    #     healthCheck:
+    #       enabled: true
+    #       port: 80
+    #       protocol: HTTP
+    #   - name: appA-nlb-tg-2
+    #     port: 80
+    #     protocol: TCP
+    #     type: ip
+    #     targets:
+    #       - account: Network
+    #         region: *HOME_REGION
+    #         nlbName: appA-nlb-01
+    #     connectionTermination: true
+    #     preserveClientIp: true
+    #     proxyProtocolV2: true
+    #     healthCheck:
+    #       enabled: true
+    #       port: 80
+    #       protocol: TCP
+    tags:
+      - key: env
+        value: prod
 
   - name: Network-Inspection
     account: Network
     region: *HOME_REGION
     cidrs:
       - 10.2.0.0/22
-      - 192.168.0.0/16
+      - 10.3.0.0/16
     defaultSecurityGroupRulesDeletion: true
     internetGateway: true
     natGateways:
       - name: accelerator-nat-gw-a
         subnet: Network-Inspection-A
-        allocationId: eipalloc-acbdefg123456
+        # allocationId: eipalloc-acbdefg123456 # This is a placeholder value and should not be used in a test config
       - name: accelerator-nat-gw-b
         subnet: Network-Inspection-B
       - name: accelerator-nat-gw-c
@@ -1236,7 +1217,7 @@ vpcs:
             target: accelerator-firewall
             targetAvailabilityZone: a
           - name: GwlbRoute
-            destination: 0.0.0.0/0
+            destination: 10.0.0.0/8
             type: gatewayLoadBalancerEndpoint
             target: Endpoint-A
       - name: Network-Inspection-Tgw-B
@@ -1247,12 +1228,30 @@ vpcs:
             target: accelerator-firewall
             targetAvailabilityZone: b
           - name: GwlbRoute
-            destination: 0.0.0.0/0
+            destination: 10.0.0.0/8
             type: gatewayLoadBalancerEndpoint
             target: Endpoint-B
       - name: Network-Inspection-Gateway
         gatewayAssociation: internetGateway
-        routes: []
+        routes:
+          - name: NfwRouteDynamic-A
+            destination: Network-Inspection-A
+            type: networkFirewall
+            target: accelerator-firewall
+            targetAvailabilityZone: a
+          - name: GwlbRouteDynamic-A
+            destination: Network-InspectionTgwAttach-A
+            type: gatewayLoadBalancerEndpoint
+            target: Endpoint-A
+          - name: NfwRouteDynamic-B
+            destination: Network-Inspection-B
+            type: networkFirewall
+            target: accelerator-firewall
+            targetAvailabilityZone: b
+          - name: GwlbRouteDynamic-B
+            destination: Network-InspectionTgwAttach-B
+            type: gatewayLoadBalancerEndpoint
+            target: Endpoint-B
     subnets:
       - name: Network-Inspection-A
         availabilityZone: a
@@ -1315,6 +1314,12 @@ vpcs:
     cidrs:
       - 10.4.0.0/16
     routeTables:
+      - name: SharedServices-Main-Default
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
       - name: SharedServices-Tgw-A
         routes: []
       - name: SharedServices-Tgw-B
@@ -1354,12 +1359,21 @@ vpcs:
     subnets:
       - name: SharedServices-App-A
         availabilityZone: a
-        routeTable: SharedServices-App-A
+        routeTable: SharedServices-Main-Default
         ipv4CidrBlock: 10.4.0.0/24
+        shareTargets:
+          organizationalUnits:
+            - Security
+        tags:
+          - key: Name
+            value: SharedServices-App-A
       - name: SharedServices-App-B
         availabilityZone: b
         routeTable: SharedServices-App-B
         ipv4CidrBlock: 10.4.1.0/24
+        shareTargets:
+          organizationalUnits:
+            - Security
       - name: SharedServices-MainTgwAttach-A
         availabilityZone: a
         routeTable: SharedServices-Tgw-A
@@ -1368,6 +1382,35 @@ vpcs:
         availabilityZone: b
         routeTable: SharedServices-Tgw-B
         ipv4CidrBlock: 10.4.255.224/28
+    loadBalancers:
+      applicationLoadBalancers:
+        - name: appA-alb-test-01
+          scheme: internal
+          subnets:
+            - SharedServices-App-A
+            - SharedServices-App-B
+          securityGroups:
+            - InternalHTTP-SG
+          listeners:
+            - name: appA-listener-3
+              port: 443
+              protocol: HTTPS
+              targetGroup: deployed-tg-2
+              order: 3
+              type: forward
+              certificate: cert1
+              sslPolicy: ELBSecurityPolicy-2016-08
+          shareTargets:
+            organizationalUnits:
+              - Security
+    targetGroups:
+      - name: deployed-tg-2
+        port: 443
+        protocol: HTTPS
+        type: instance
+        shareTargets:
+          organizationalUnits:
+            - Security
     transitGatewayAttachments:
       - name: SharedServices-Main
         transitGateway:
@@ -1403,7 +1446,21 @@ vpcs:
               - 10.0.0.0/8
         outboundRules:
           - description: All Outbound
-            type:
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: InternalHTTP-SG
+        description: Accelerator Security Group
+        inboundRules:
+          - description: HTTP access security group rule
+            types:
+              - HTTP
+            sources:
+              - 10.0.0.0/16
+        outboundRules:
+          - description: Allow all outbound
+            types:
               - ALL
             sources:
               - 0.0.0.0/0
@@ -1453,17 +1510,17 @@ directConnectGateways:
     account: Network
     asn: 65000
     gatewayName: Network-DXGW
-    virtualInterfaces:
-      - name: Accelrator-VIF
-        connectionId: dxcon-test1234
-        customerAsn: 65002
-        interfaceName: Accelrator-VIF
-        ownerAccount: Network
-        region: us-east-1
-        type: transit
-        vlan: 575
-        enableSiteLink: true
-        jumboFrames: true
+    # virtualInterfaces:
+    #   - name: Accelrator-VIF
+    #     connectionId: dxcon-test1234
+    #     customerAsn: 65002
+    #     interfaceName: Accelrator-VIF
+    #     ownerAccount: Network
+    #     region: us-east-1
+    #     type: transit
+    #     vlan: 575
+    #     enableSiteLink: true
+    #     jumboFrames: true
     transitGatewayAssociations:
       - name: Network-Main
         account: Network
@@ -1476,10 +1533,10 @@ directConnectGateways:
           - Network-Main-Core
 
 vpcPeering:
-  - name: NetworkEndpointsToInspection
+  - name: NetworkEndpointsToSecondary
     vpcs:
       - Network-Endpoints
-      - Network-Inspection
+      - Network-Secondary
   - name: CrossAccount
     vpcs:
       - Network-Endpoints
@@ -1552,16 +1609,22 @@ vpcFlowLogs:
     - traffic-path
 
 certificates:
-  - name: certA
+  - name: cert1
     type: import
-    privKey: certificates/certA/privKey.key
-    cert: certificates/certA/cert.crt
+    privKey: cert1/privKey.key
+    cert: cert1/cert.crt
+    deploymentTargets:
+      organizationalUnits:
+        - Security
+  - name: cert2
+    type: import
+    privKey: cert1/privKey.key
+    cert: cert1/cert.crt
     deploymentTargets:
       accounts:
-        - SharedServices
-      excludeRegions:
-        - us-west-2
-  - name: cert2
+        - Management
+        - Audit
+  - name: cert3
     type: request
     validation: DNS
     domain: example.com

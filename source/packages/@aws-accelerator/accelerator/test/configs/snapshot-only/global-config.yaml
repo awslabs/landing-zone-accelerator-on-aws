@@ -1,0 +1,150 @@
+homeRegion: &HOME_REGION us-east-1
+enabledRegions:
+  - *HOME_REGION
+  - us-west-2
+managementAccountAccessRole: AWSControlTowerExecution
+cloudwatchLogRetentionInDays: 3653
+acceleratorMetadata:
+  enable: true
+  account: LogArchive
+  readOnlyAccessRoleArns:
+    - arn:aws:iam::111111111111:role/test-access-role
+snsTopics:
+  deploymentTargets:
+    organizationalUnits:
+      - Root
+  topics:
+    - name: Security
+      emailAddresses:
+        - <notify-security>@example.com <----- UPDATE EMAIL ADDRESS
+terminationProtection: true
+controlTower:
+  enable: true
+cdkOptions:
+  centralizeBuckets: true
+  useManagementAccessRole: true
+  customDeploymentRole: AWSA-Deployment
+  forceBootstrap: true
+logging:
+  account: LogArchive
+  centralizedLoggingRegion: us-west-2
+
+      
+  cloudtrail:
+    enable: true
+    organizationTrail: false
+    accountTrails:
+      - name: AWSAccelerator-Account-CloudTrail
+        regions:
+          - us-east-1
+        deploymentTargets:
+          organizationalUnits:
+            - Root
+        settings:
+          multiRegionTrail: true
+          globalServiceEvents: true
+          managementEvents: true
+          s3DataEvents: true
+          lambdaDataEvents: true
+          sendToCloudWatchLogs: true
+          apiErrorRateInsight: false
+          apiCallRateInsight: false
+
+  sessionManager:
+    sendToCloudWatchLogs: false
+    sendToS3: true
+  cloudwatchLogs:
+    enable: true
+    dynamicPartitioning: dynamic-partitioning/log-filters.json
+    exclusions:
+      - organizationalUnits:
+          - Infrastructure
+        excludeAll: true
+      - organizationalUnits:
+          - Root
+        logGroupNames:
+          - test1/*
+      - accounts:
+          - Management
+        regions:
+          - us-east-1
+        logGroupNames:
+          - test/*
+tags:
+  - key: Environment
+    value: Dev
+  - key: ResourceOwner
+    value: AcmeApp
+limits:
+  - serviceCode: lambda
+    quotaCode: L-B99A9384
+    desiredValue: 1000
+    deploymentTargets:
+      organizationalUnits:
+        - Root
+reports:
+  costAndUsageReport:
+    compression: Parquet
+    format: Parquet
+    reportName: accelerator-cur
+    s3Prefix: cur
+    timeUnit: DAILY
+    refreshClosedReports: true
+    reportVersioning: CREATE_NEW_REPORT
+  budgets:
+    - deploymentTargets:
+        accounts:
+          - Management
+      name: accel-budget
+      timeUnit: MONTHLY
+      type: COST
+      amount: 2000
+      includeUpfront: true
+      includeTax: true
+      includeSupport: true
+      includeSubscription: true
+      includeRecurring: true
+      includeOtherSubscription: true
+      includeDiscount: true
+      includeCredit: false
+      includeRefund: false
+      useBlended: false
+      useAmortized: false
+      unit: USD
+      notifications:
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 100
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: myemail+pa-budg@example.com
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 90
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: myemail+pa-budg@example.com
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 80
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: myemail+pa-budg@example.com
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 75
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: myemail+pa-budg@example.com
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 50
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: myemail+pa-budg@example.com
+backup:
+  vaults:
+    - name: BackupVault
+      deploymentTargets:
+        organizationalUnits:
+          - Root

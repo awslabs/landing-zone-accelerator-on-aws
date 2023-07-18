@@ -4997,12 +4997,45 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
           {
             "name": "PermissionSet1",
             "policies": {
+              "acceleratorManaged": [
+                "lzaManagedPolicy01",
+                "lzaManagedPolicy02",
+              ],
               "awsManaged": [
                 "arn:aws:iam::aws:policy/AdministratorAccess",
+                "arn:aws:iam::aws:policy/CloudFrontFullAccess",
+                "PowerUserAccess",
+                "ReadOnlyAccess",
               ],
               "customerManaged": [
                 "ResourceConfigurationCollectorPolicy",
               ],
+              "inlinePolicy": "REPLACED-JSON-PATH.json",
+              "permissionsBoundary": {
+                "awsManagedPolicyName": "PowerUserAccess",
+              },
+            },
+          },
+          {
+            "name": "PermissionSet2",
+            "policies": {
+              "acceleratorManaged": [
+                "lzaManagedPolicy01",
+              ],
+              "awsManaged": [
+                "PowerUserAccess",
+                "ReadOnlyAccess",
+              ],
+              "customerManaged": [
+                "ResourceConfigurationCollectorPolicy",
+              ],
+              "inlinePolicy": "REPLACED-JSON-PATH.json",
+              "permissionsBoundary": {
+                "customerManagedPolicy": {
+                  "name": "lzaManagedPolicy01",
+                  "path": "/",
+                },
+              },
             },
             "sessionDuration": 60,
           },
