@@ -3297,7 +3297,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-LoggingStack-333333333333-us-east-1/version",
         "Type": "String",
-        "Value": "1.4.2",
+        "Value": "1.4.3",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -6740,7 +6740,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-LoggingStack-333333333333-us-east-1/version",
         "Type": "String",
-        "Value": "1.4.2",
+        "Value": "1.4.3",
       },
       "Type": "AWS::SSM::Parameter",
     },

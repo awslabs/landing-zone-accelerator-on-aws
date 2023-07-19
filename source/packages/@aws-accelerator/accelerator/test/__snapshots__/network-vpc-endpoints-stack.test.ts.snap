@@ -1196,7 +1196,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkVpcEndpointsStack-555555555555-us-east-1/version",
         "Type": "String",
-        "Value": "1.4.2",
+        "Value": "1.4.3",
       },
       "Type": "AWS::SSM::Parameter",
     },
