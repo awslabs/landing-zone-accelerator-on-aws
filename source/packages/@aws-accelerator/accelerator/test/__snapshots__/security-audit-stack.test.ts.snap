@@ -2644,7 +2644,7 @@ def script_handler(events, context):
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-SecurityAuditStack-222222222222-us-east-1/version",
         "Type": "String",
-        "Value": "1.4.2",
+        "Value": "1.4.3",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -4950,7 +4950,7 @@ def script_handler(events, context):
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-SecurityAuditStack-222222222222-us-east-1/version",
         "Type": "String",
-        "Value": "1.4.2",
+        "Value": "1.4.3",
       },
       "Type": "AWS::SSM::Parameter",
     },
