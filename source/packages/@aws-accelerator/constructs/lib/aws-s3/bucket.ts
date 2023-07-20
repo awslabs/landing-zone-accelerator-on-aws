@@ -59,6 +59,7 @@ export interface S3LifeCycleRule {
   noncurrentVersionExpiration: number;
   transitions: Transition[];
   noncurrentVersionTransitions: Transition[];
+  prefix: string;
 }
 
 /**
@@ -349,19 +350,19 @@ export class Bucket extends Construct {
           };
           noncurrentVersionTransitions.push(noncurrentVersionTransitionsConfig);
         }
-
         this.lifecycleRules.push({
           abortIncompleteMultipartUploadAfter: cdk.Duration.days(
             lifecycleRuleConfig.abortIncompleteMultipartUploadAfter,
           ),
           enabled: lifecycleRuleConfig.enabled,
           expiration: cdk.Duration.days(lifecycleRuleConfig.expiration),
+          prefix: lifecycleRuleConfig.prefix,
           transitions,
           noncurrentVersionTransitions,
           noncurrentVersionExpiration: cdk.Duration.days(lifecycleRuleConfig.noncurrentVersionExpiration),
           expiredObjectDeleteMarker: lifecycleRuleConfig.expiredObjectDeleteMarker,
-          id: `LifecycleRule${this.props.s3BucketName}`,
-        });
+          id: `LifecycleRule${this.props.s3BucketName}${lifecycleRuleConfig.prefix}`,
+          });
       }
     } else {
       this.lifecycleRules.push({

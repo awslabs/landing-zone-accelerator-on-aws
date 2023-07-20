@@ -211,6 +211,7 @@ describe('Bucket', () => {
       s3LifeCycleRules: [
         {
           id: '1',
+          prefix: 'object-prefix',
           abortIncompleteMultipartUploadAfter: 1,
           enabled: true,
           expiration: 24,

@@ -530,6 +530,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
         expiration: lifecycleRule.expiration,
         expiredObjectDeleteMarker: lifecycleRule.expiredObjectDeleteMarker,
         id: lifecycleRule.id,
+        prefix: lifecycleRule.prefix,
         noncurrentVersionExpiration: lifecycleRule.noncurrentVersionExpiration,
         noncurrentVersionTransitions,
         transitions,

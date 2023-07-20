@@ -338,6 +338,7 @@ export const lifecycleRuleConfig = t.interface({
   noncurrentVersionExpiration: optional(t.number),
   noncurrentVersionTransitions: optional(t.array(transition)),
   transitions: optional(t.array(transition)),
+  prefix: optional(t.string),
 });
 
 export const resourcePolicyStatement = t.interface({
@@ -355,6 +356,7 @@ export class LifeCycleRule implements t.TypeOf<typeof lifecycleRuleConfig> {
   readonly noncurrentVersionExpiration: number = 366;
   readonly noncurrentVersionTransitions: Transition[] = [];
   readonly transitions: Transition[] = [];
+  readonly prefix: string = '';
 }
 
 export const shareTargets = t.interface({
