@@ -362,7 +362,7 @@ export class Bucket extends Construct {
           noncurrentVersionExpiration: cdk.Duration.days(lifecycleRuleConfig.noncurrentVersionExpiration),
           expiredObjectDeleteMarker: lifecycleRuleConfig.expiredObjectDeleteMarker,
           id: `LifecycleRule${this.props.s3BucketName}${lifecycleRuleConfig.prefix}`,
-          });
+        });
       }
     } else {
       this.lifecycleRules.push({
