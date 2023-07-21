@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 
+import * as path from 'path';
 import * as cdk from 'aws-cdk-lib';
 import { NetworkFirewall } from '../../lib/aws-networkfirewall/firewall';
 import { snapShotTest } from '../snapshot-test';
@@ -22,7 +23,48 @@ const stack = new cdk.Stack();
 
 const firewallPolicyArn = 'arn:aws:network-firewall:us-east-1:222222222222:firewall-policy/TestPolicy';
 
+const importedFirewallArn = 'arn:aws:network-firewall:us-east-1:222222222222:firewall/TestImportedFirewall';
+
 new NetworkFirewall(stack, 'TestFirewall', {
+  firewallPolicyArn: firewallPolicyArn,
+  name: 'TestFirewall',
+  subnets: ['Test-Subnet-1', 'Test-Subnet-2'],
+  vpcId: 'TestVpc',
+  tags: [],
+});
+
+const importedFirewall = NetworkFirewall.fromAttributes(stack, 'TestImportFirewall', {
+  firewallArn: importedFirewallArn,
+  firewallName: 'ImportedFirewallName',
+});
+importedFirewall.addLogging({
+  logDestinationConfigs: [
+    {
+      logDestinationType: 'CloudWatchLogs',
+      logDestination: {
+        logGroup: 'firewallAlertLogGroupArn',
+      },
+      logType: 'ALERT',
+    },
+  ],
+});
+
+importedFirewall.addNetworkFirewallRoute(
+  'endpointRouteId',
+  '10.0.0.6/32',
+  '1',
+  new cdk.aws_kms.Key(stack, 'CloudWatchKey', {}),
+  365,
+  'routeTableId',
+);
+
+const app = new cdk.App();
+const includedStack = new cdk.Stack(app, `placeHolder`, {});
+const firewallStack = new cdk.cloudformation_include.CfnInclude(includedStack, 'IncludedStack', {
+  templateFile: path.join(__dirname, 'includedStacks/firewall-stack.json'),
+});
+
+NetworkFirewall.includedCfnResource(firewallStack, 'firewallLogicalId', {
   firewallPolicyArn: firewallPolicyArn,
   name: 'TestFirewall',
   subnets: ['Test-Subnet-1', 'Test-Subnet-2'],
@@ -35,4 +77,5 @@ new NetworkFirewall(stack, 'TestFirewall', {
  */
 describe('Network Firewall', () => {
   snapShotTest(testNamePrefix, stack);
+  snapShotTest(testNamePrefix, includedStack);
 });

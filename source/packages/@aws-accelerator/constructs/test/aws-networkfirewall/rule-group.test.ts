@@ -134,6 +134,11 @@ new NetworkFirewallRuleGroup(stack, 'TestGroupStateless', {
   ruleGroup: statelessRule,
   tags: [{ key: 'someKey', value: 'someValue' }],
 });
+
+NetworkFirewallRuleGroup.fromAttributes(stack, 'TestImportGroup', {
+  groupArn: 'importedGroupArn',
+  groupName: 'importedGroupName',
+});
 /*
  * Network Firewall construct test
  */

@@ -18,6 +18,8 @@ import { describe, it } from '@jest/globals';
 
 const testNamePrefix = 'Construct(NetworkFirewallPolicy): ';
 
+const importedFirewallPolicyArn = 'arn:aws:network-firewall:us-east-1:222222222222:firewall-policy/TestImportedPolicy';
+
 //Initialize stack for resource configuration test
 const stack = new cdk.Stack();
 
@@ -79,6 +81,13 @@ describe('Network Firewall Policy', () => {
       firewallPolicy: testFirewallPolicy,
       name: 'TestFirewallPolicy1',
       tags: [],
+    });
+  });
+
+  it('test import policy', () => {
+    NetworkFirewallPolicy.fromAttributes(stack, 'TestImportPolicy', {
+      policyName: importedFirewallPolicyArn,
+      policyArn: 'importedPolicyArn',
     });
   });
 

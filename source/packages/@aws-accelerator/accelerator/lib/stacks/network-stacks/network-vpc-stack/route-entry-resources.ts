@@ -13,12 +13,12 @@
 
 import { RouteTableConfig, RouteTableEntryConfig, VpcConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
 import {
-  NatGateway,
+  INatGateway,
+  ITransitGatewayAttachment,
   PrefixList,
   PrefixListRoute,
   RouteTable,
   Subnet,
-  TransitGatewayAttachment,
 } from '@aws-accelerator/constructs';
 import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'pascal-case';
@@ -34,9 +34,9 @@ export class RouteEntryResources {
     networkVpcStack: NetworkVpcStack,
     routeTableMap: Map<string, RouteTable>,
     transitGatewayIds: Map<string, string>,
-    tgwAttachmentMap: Map<string, TransitGatewayAttachment>,
+    tgwAttachmentMap: Map<string, ITransitGatewayAttachment>,
     subnetMap: Map<string, Subnet>,
-    natGatewayMap: Map<string, NatGateway>,
+    natGatewayMap: Map<string, INatGateway>,
     prefixListMap: Map<string, PrefixList>,
   ) {
     this.stack = networkVpcStack;
@@ -68,9 +68,9 @@ export class RouteEntryResources {
     vpcResources: (VpcConfig | VpcTemplatesConfig)[],
     routeTableMap: Map<string, RouteTable>,
     transitGatewayIds: Map<string, string>,
-    tgwAttachmentMap: Map<string, TransitGatewayAttachment>,
+    tgwAttachmentMap: Map<string, ITransitGatewayAttachment>,
     subnetMap: Map<string, Subnet>,
-    natGatewayMap: Map<string, NatGateway>,
+    natGatewayMap: Map<string, INatGateway>,
     prefixListMap: Map<string, PrefixList>,
   ): Map<string, cdk.aws_ec2.CfnRoute | PrefixListRoute> {
     const routeTableEntryMap = new Map<string, cdk.aws_ec2.CfnRoute | PrefixListRoute>();
@@ -109,9 +109,9 @@ export class RouteEntryResources {
     routeTable: RouteTable,
     maps: {
       transitGatewayIds: Map<string, string>;
-      tgwAttachments: Map<string, TransitGatewayAttachment>;
+      tgwAttachments: Map<string, ITransitGatewayAttachment>;
       subnets: Map<string, Subnet>;
-      natGateways: Map<string, NatGateway>;
+      natGateways: Map<string, INatGateway>;
       prefixLists: Map<string, PrefixList>;
     },
   ): Map<string, cdk.aws_ec2.CfnRoute | PrefixListRoute> {
@@ -149,7 +149,7 @@ export class RouteEntryResources {
             const tgwRoute = routeTable.addTransitGatewayRoute(
               routeId,
               transitGatewayId,
-              transitGatewayAttachment.node.defaultChild as cdk.aws_ec2.CfnTransitGatewayAttachment,
+              transitGatewayAttachment,
               destination,
               destinationPrefixListId,
               this.stack.cloudwatchKey,

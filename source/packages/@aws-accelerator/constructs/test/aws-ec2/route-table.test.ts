@@ -16,6 +16,7 @@ import { RouteTable } from '../../lib/aws-ec2/route-table';
 import { NatGateway, Vpc, Subnet } from '../../lib/aws-ec2/vpc';
 import { snapShotTest } from '../snapshot-test';
 import { describe, it, expect } from '@jest/globals';
+import { TransitGatewayAttachment } from '../../lib/aws-ec2/transit-gateway';
 
 const testNamePrefix = 'Construct(RouteTable): ';
 
@@ -51,7 +52,9 @@ const subnet = new Subnet(stack, 'test-subnet', {
 
 const ngw = new NatGateway(stack, 'ngw', { name: 'ngw', subnet });
 
-const tgwAttachment = new cdk.aws_ec2.CfnTransitGatewayAttachment(stack, 'tgwAttachment', {
+const tgwAttachment = new TransitGatewayAttachment(stack, 'tgwAttachment', {
+  name: 'someTgwAttachment',
+  partition: 'partition',
   subnetIds: ['subnet-123'],
   transitGatewayId: 'tgw-12324',
   vpcId: vpc.vpcId,

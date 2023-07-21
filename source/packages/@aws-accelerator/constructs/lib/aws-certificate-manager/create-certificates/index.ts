@@ -41,6 +41,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const sanString: string | undefined = event.ResourceProperties['san'];
   const assetBucketName: string = event.ResourceProperties['assetBucketName'];
   const homeRegion: string = event.ResourceProperties['homeRegion'];
+  const isExistingCertificate = event.ResourceProperties['isExisting'];
 
   const san = sanString ? sanString.split(',') : undefined;
   const solutionId = process.env['SOLUTION_ID'];
@@ -51,6 +52,28 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 
   switch (event.RequestType) {
     case 'Create':
+      if (isExistingCertificate === 'true') {
+        const certArn = await throttlingBackOff(() => ssmClient.getParameter({ Name: parameterName }).promise());
+        if (!certArn) {
+          throw new Error(`No SSM Parameter "${parameterName}" found for existing Certificate`);
+        }
+        break;
+      }
+      await createUpdateEventHandler({
+        acmClient,
+        s3Client,
+        ssmClient,
+        parameterName,
+        type,
+        assetBucketName,
+        privKey,
+        cert,
+        chain,
+        domain,
+        validation,
+        san,
+      });
+      break;
     case 'Update':
       await createUpdateEventHandler({
         acmClient,

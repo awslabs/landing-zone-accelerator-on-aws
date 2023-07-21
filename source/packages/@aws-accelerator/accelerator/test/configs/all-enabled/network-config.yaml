@@ -1776,6 +1776,14 @@ certificates:
     deploymentTargets:
       organizationalUnits:
         - Security
+  - name: cert4
+    isExisting: true
+    type: import
+    privKey: cert4/privKey.key
+    cert: cert4/cert.crt
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
 
 firewallManager:
   delegatedAdminAccount: Audit

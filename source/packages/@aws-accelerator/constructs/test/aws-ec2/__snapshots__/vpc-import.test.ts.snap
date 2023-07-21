@@ -95,7 +95,7 @@ exports[`VpcImport Construct(Vpc):  Snapshot Test 1`] = `
     },
     "ImportedSubnet2RouteTableAssociationC26BEA90": {
       "Properties": {
-        "RouteTableId": "ImportedRouteTable",
+        "RouteTableId": "someImportedRouteTableId",
         "SubnetId": "someImportedSubnetId2",
       },
       "Type": "AWS::EC2::SubnetRouteTableAssociation",

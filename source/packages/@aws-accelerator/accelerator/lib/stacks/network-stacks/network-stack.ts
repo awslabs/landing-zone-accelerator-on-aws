@@ -464,7 +464,10 @@ export abstract class NetworkStack extends AcceleratorStack {
         // Get firewall policy ARN
         let policyArn: string;
 
-        if (delegatedAdminAccountId === cdk.Stack.of(this).account) {
+        if (
+          delegatedAdminAccountId === cdk.Stack.of(this).account ||
+          this.isManagedByAsea(AseaResourceType.NFW, firewallItem.name)
+        ) {
           policyArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
             this,
             this.getSsmPath(SsmResourceType.NFW_POLICY, [firewallItem.firewallPolicy]),
@@ -589,7 +592,7 @@ export abstract class NetworkStack extends AcceleratorStack {
       return false;
     }
     const accountId = cdk.Stack.of(this).account;
-    const naclAccount = this.props.accountsConfig.getAccountId(naclItem.account);
+    const naclAccount = naclItem.account ? this.props.accountsConfig.getAccountId(naclItem.account) : accountId;
     const region = cdk.Stack.of(this).region;
     const naclRegion = naclItem.region;
 

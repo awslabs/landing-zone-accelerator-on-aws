@@ -1026,25 +1026,12 @@ export function importAseaResourceStacks(
       logger.warn(`No ASEA stack found for account ${accountId} in region ${enabledRegion} for ${phase.toString()}`);
       continue;
     }
-    let synthesizer: cdk.CliCredentialsStackSynthesizer | cdk.DefaultStackSynthesizer;
-    if (
-      accountId === props.accountsConfig.getManagementAccountId() &&
-      enabledRegion === props.globalConfig.homeRegion
-    ) {
-      synthesizer = getAseaStackSynthesizer({
-        accelProps: props,
-        accountId,
-        region: enabledRegion,
-        roleName: `${acceleratorPrefix}PipelineRole`,
-      });
-    } else {
-      synthesizer = getAseaStackSynthesizer({
-        accelProps: props,
-        accountId,
-        region: enabledRegion,
-        roleName: `${acceleratorPrefix}PipelineRole`,
-      });
-    }
+    const synthesizer = getAseaStackSynthesizer({
+      accelProps: props,
+      accountId,
+      region: enabledRegion,
+      roleName: `${acceleratorPrefix}PipelineRole`,
+    });
 
     for (const aseaStack of aseaStacks.filter(stack => !stack.nestedStack)) {
       const { resourceMapping: stackResourceMapping } = new ImportAseaResourcesStack(app, aseaStack.stackName, {

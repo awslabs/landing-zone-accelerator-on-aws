@@ -11,8 +11,8 @@
  *  and limitations under the License.
  */
 
-import { VpcConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
-import { NatGateway, Subnet } from '@aws-accelerator/constructs';
+import { AseaResourceType, VpcConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
+import { INatGateway, NatGateway, Subnet } from '@aws-accelerator/constructs';
 import { SsmResourceType } from '@aws-accelerator/utils';
 import { pascalCase } from 'pascal-case';
 import { LogLevel } from '../network-stack';
@@ -20,7 +20,7 @@ import { getSubnet } from '../utils/getter-utils';
 import { NetworkVpcStack } from './network-vpc-stack';
 
 export class NatGwResources {
-  public readonly natGatewayMap: Map<string, NatGateway>;
+  public readonly natGatewayMap: Map<string, INatGateway>;
   private stack: NetworkVpcStack;
 
   constructor(networkVpcStack: NetworkVpcStack, subnetMap: Map<string, Subnet>) {
@@ -39,8 +39,8 @@ export class NatGwResources {
   private createNatGateways(
     vpcResources: (VpcConfig | VpcTemplatesConfig)[],
     subnetMap: Map<string, Subnet>,
-  ): Map<string, NatGateway> {
-    const natGatewayMap = new Map<string, NatGateway>();
+  ): Map<string, INatGateway> {
+    const natGatewayMap = new Map<string, INatGateway>();
 
     for (const vpcItem of vpcResources) {
       for (const natGatewayItem of vpcItem.natGateways ?? []) {
@@ -50,24 +50,39 @@ export class NatGwResources {
           LogLevel.INFO,
           `Adding NAT Gateway ${natGatewayItem.name} to VPC ${vpcItem.name} subnet ${natGatewayItem.subnet}`,
         );
-        const natGateway = new NatGateway(
-          this.stack,
-          pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${natGatewayItem.name}NatGateway`),
-          {
-            name: natGatewayItem.name,
-            allocationId: natGatewayItem.allocationId,
-            private: natGatewayItem.private,
-            subnet,
-            tags: natGatewayItem.tags,
-          },
-        );
-        natGatewayMap.set(`${vpcItem.name}_${natGatewayItem.name}`, natGateway);
+        let natGateway;
+        if (this.stack.isManagedByAsea(AseaResourceType.NAT_GATEWAY, `${vpcItem.name}/${natGatewayItem.name}`)) {
+          const natGatewayId = this.stack.getExternalResourceParameter(
+            this.stack.getSsmPath(SsmResourceType.NAT_GW, [vpcItem.name, natGatewayItem.name]),
+          );
+          natGateway = NatGateway.fromAttributes(
+            this.stack,
+            pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${natGatewayItem.name}NatGateway`),
+            {
+              natGatewayId,
+              natGatewayName: natGatewayItem.name,
+            },
+          );
+        } else {
+          natGateway = new NatGateway(
+            this.stack,
+            pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${natGatewayItem.name}NatGateway`),
+            {
+              name: natGatewayItem.name,
+              allocationId: natGatewayItem.allocationId,
+              private: natGatewayItem.private,
+              subnet,
+              tags: natGatewayItem.tags,
+            },
+          );
 
-        this.stack.addSsmParameter({
-          logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(natGatewayItem.name)}NatGatewayId`),
-          parameterName: this.stack.getSsmPath(SsmResourceType.NAT_GW, [vpcItem.name, natGatewayItem.name]),
-          stringValue: natGateway.natGatewayId,
-        });
+          this.stack.addSsmParameter({
+            logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(natGatewayItem.name)}NatGatewayId`),
+            parameterName: this.stack.getSsmPath(SsmResourceType.NAT_GW, [vpcItem.name, natGatewayItem.name]),
+            stringValue: natGateway.natGatewayId,
+          });
+        }
+        natGatewayMap.set(`${vpcItem.name}_${natGatewayItem.name}`, natGateway);
       }
     }
     return natGatewayMap;

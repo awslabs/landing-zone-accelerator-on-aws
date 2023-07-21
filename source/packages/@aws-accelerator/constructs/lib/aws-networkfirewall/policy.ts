@@ -15,6 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
 import { NfwRuleSourceCustomActionConfig } from '@aws-accelerator/config';
+import { transformPolicy } from './utils';
 
 interface INetworkFirewallPolicy extends cdk.IResource {
   /**
@@ -75,13 +76,52 @@ interface NetworkFirewallPolicyProps {
   readonly tags?: cdk.CfnTag[];
 }
 
-export class NetworkFirewallPolicy extends cdk.Resource implements INetworkFirewallPolicy {
+abstract class NetworkFirewallPolicyBase extends cdk.Resource implements INetworkFirewallPolicy {
+  public abstract readonly policyArn: string;
+  public abstract readonly policyId: string;
+  public abstract readonly policyName: string;
+}
+
+export class NetworkFirewallPolicy extends NetworkFirewallPolicyBase {
   public readonly policyArn: string;
   public readonly policyId: string;
   public readonly policyName: string;
-  private firewallPolicy: cdk.aws_networkfirewall.CfnFirewallPolicy.FirewallPolicyProperty;
-  private customActions?: cdk.aws_networkfirewall.CfnFirewallPolicy.CustomActionProperty[];
-  private statefulOptions?: cdk.aws_networkfirewall.CfnFirewallPolicy.StatefulEngineOptionsProperty;
+
+  /**
+   * Returns CfnFirewallPolicy by applying updates to included resource
+   * @param scope Stack in which included FirewallPolicy is created/managed
+   * @param id logicalId of FirewallPolicy
+   * @param attrs
+   */
+  static includedCfnResource(
+    scope: cdk.cloudformation_include.CfnInclude,
+    id: string,
+    props: NetworkFirewallPolicyProps,
+  ) {
+    const resource = scope.getResource(id) as cdk.aws_networkfirewall.CfnFirewallPolicy;
+    // Transform properties as necessary
+    resource.firewallPolicy = transformPolicy(props.firewallPolicy);
+    resource.description = props.description;
+    return resource;
+  }
+
+  static fromAttributes(
+    scope: Construct,
+    id: string,
+    attrs: { policyArn: string; policyName: string },
+  ): INetworkFirewallPolicy {
+    class Import extends NetworkFirewallPolicyBase {
+      public readonly policyArn = attrs.policyArn;
+      public readonly policyName = attrs.policyName;
+      // policyId is not used anywhere. Need to store in SSM if needed
+      public readonly policyId = '';
+
+      constructor(scope: Construct, id: string) {
+        super(scope, id);
+      }
+    }
+    return new Import(scope, id);
+  }
 
   constructor(scope: Construct, id: string, props: NetworkFirewallPolicyProps) {
     super(scope, id);
@@ -89,30 +129,14 @@ export class NetworkFirewallPolicy extends cdk.Resource implements INetworkFirew
     // Set initial properties
     this.policyName = props.name;
 
-    // Transform properties as necessary
-    if (props.firewallPolicy.statelessCustomActions) {
-      this.transformCustom(props.firewallPolicy);
-    }
-    if (props.firewallPolicy.statefulEngineOptions) {
-      this.transformEngineOptions(props.firewallPolicy);
-    }
-
     // Set firewall policy property
-    this.firewallPolicy = {
-      statelessDefaultActions: props.firewallPolicy.statelessDefaultActions,
-      statelessFragmentDefaultActions: props.firewallPolicy.statelessFragmentDefaultActions,
-      statefulDefaultActions: props.firewallPolicy.statefulDefaultActions,
-      statefulEngineOptions: this.statefulOptions,
-      statefulRuleGroupReferences: props.firewallPolicy.statefulRuleGroupReferences,
-      statelessCustomActions: this.customActions,
-      statelessRuleGroupReferences: props.firewallPolicy.statelessRuleGroupReferences,
-    };
+    const firewallPolicy = transformPolicy(props.firewallPolicy);
 
     // Set name tag
     props.tags?.push({ key: 'Name', value: this.policyName });
 
     const resource = new cdk.aws_networkfirewall.CfnFirewallPolicy(this, 'Resource', {
-      firewallPolicy: this.firewallPolicy,
+      firewallPolicy: firewallPolicy,
       firewallPolicyName: this.policyName,
       description: props.description,
       tags: props.tags,
@@ -120,41 +144,5 @@ export class NetworkFirewallPolicy extends cdk.Resource implements INetworkFirew
 
     this.policyArn = resource.ref;
     this.policyId = resource.attrFirewallPolicyId;
-  }
-
-  /**
-   * Transform custom actions to conform with L1 construct.
-   *
-   * @param props
-   */
-  private transformCustom(props: FirewallPolicyProperty) {
-    const property = props.statelessCustomActions;
-    this.customActions = [];
-
-    for (const action of property ?? []) {
-      this.customActions.push({
-        actionDefinition: {
-          publishMetricAction: {
-            dimensions: action.actionDefinition.publishMetricAction.dimensions.map(item => {
-              return { value: item };
-            }),
-          },
-        },
-        actionName: action.actionName,
-      });
-    }
-  }
-
-  /**
-   * Transform engine options to conform with L1 construct.
-   *
-   * @param props
-   */
-  private transformEngineOptions(props: FirewallPolicyProperty) {
-    const property = props.statefulEngineOptions;
-
-    if (property) {
-      this.statefulOptions = { ruleOrder: property };
-    }
   }
 }

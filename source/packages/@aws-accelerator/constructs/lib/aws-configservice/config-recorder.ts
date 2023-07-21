@@ -102,7 +102,6 @@ export class ConfigServiceRecorder extends Construct {
     });
 
     const lambdaRole = new cdk.aws_iam.Role(this, 'ConfigServiceRecorderFunctionRole', {
-      roleName: `${props.acceleratorPrefix}-Config`,
       assumedBy: new cdk.aws_iam.ServicePrincipal('lambda.amazonaws.com'),
       managedPolicies: [cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole')],
       inlinePolicies: { configRecorder: configRecorderFunctionPolicies },

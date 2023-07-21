@@ -12,12 +12,14 @@
  */
 
 import {
+  AseaResourceType,
   TransitGatewayAttachmentConfig,
   TransitGatewayPeeringConfig,
   VpcConfig,
   VpcTemplatesConfig,
 } from '@aws-accelerator/config';
 import {
+  ITransitGatewayAttachment,
   PutSsmParameter,
   SsmParameterLookup,
   Subnet,
@@ -35,7 +37,7 @@ import { getSubnet, getTransitGatewayId, getVpc } from '../utils/getter-utils';
 import { NetworkVpcStack } from './network-vpc-stack';
 
 export class TgwResources {
-  public readonly tgwAttachmentMap: Map<string, TransitGatewayAttachment>;
+  public readonly tgwAttachmentMap: Map<string, ITransitGatewayAttachment>;
   public readonly tgwPeeringMap: Map<string, string>;
   public readonly vpcAttachmentRole?: cdk.aws_iam.Role;
 
@@ -164,8 +166,8 @@ export class TgwResources {
     vpcMap: Map<string, Vpc>,
     subnetMap: Map<string, Subnet>,
     partition: string,
-  ): Map<string, TransitGatewayAttachment> {
-    const transitGatewayAttachments = new Map<string, TransitGatewayAttachment>();
+  ): Map<string, ITransitGatewayAttachment> {
+    const transitGatewayAttachments = new Map<string, ITransitGatewayAttachment>();
 
     for (const vpcItem of vpcResources) {
       for (const tgwAttachmentItem of vpcItem.transitGatewayAttachments ?? []) {
@@ -178,28 +180,50 @@ export class TgwResources {
           LogLevel.INFO,
           `Adding Transit Gateway Attachment to VPC ${vpcItem.name} for TGW ${tgwAttachmentItem.transitGateway.name}`,
         );
-        const attachment = new TransitGatewayAttachment(
-          this.stack,
-          pascalCase(`${tgwAttachmentItem.name}VpcTransitGatewayAttachment`),
-          {
-            name: tgwAttachmentItem.name,
-            partition,
-            transitGatewayId,
-            subnetIds,
-            vpcId: vpc.vpcId,
-            options: tgwAttachmentItem.options,
-            tags: tgwAttachmentItem.tags,
-          },
-        );
+        let attachment;
+        if (
+          this.stack.isManagedByAsea(
+            AseaResourceType.TRANSIT_GATEWAY_ATTACHMENT,
+            `${vpcItem.name}/${tgwAttachmentItem.name}`,
+          )
+        ) {
+          const attachmentId = this.stack.getExternalResourceParameter(
+            this.stack.getSsmPath(SsmResourceType.TGW_ATTACHMENT, [vpcItem.name, tgwAttachmentItem.name]),
+          );
+          attachment = TransitGatewayAttachment.fromTransitGatewayAttachmentId(
+            this.stack,
+            pascalCase(`${tgwAttachmentItem.name}VpcTransitGatewayAttachment`),
+            {
+              attachmentId,
+              attachmentName: tgwAttachmentItem.name,
+            },
+          );
+        } else {
+          attachment = new TransitGatewayAttachment(
+            this.stack,
+            pascalCase(`${tgwAttachmentItem.name}VpcTransitGatewayAttachment`),
+            {
+              name: tgwAttachmentItem.name,
+              partition,
+              transitGatewayId,
+              subnetIds,
+              vpcId: vpc.vpcId,
+              options: tgwAttachmentItem.options,
+              tags: tgwAttachmentItem.tags,
+            },
+          );
+          this.stack.addSsmParameter({
+            logicalId: pascalCase(
+              `SsmParam${pascalCase(vpcItem.name) + pascalCase(tgwAttachmentItem.name)}TransitGatewayAttachmentId`,
+            ),
+            parameterName: this.stack.getSsmPath(SsmResourceType.TGW_ATTACHMENT, [
+              vpcItem.name,
+              tgwAttachmentItem.name,
+            ]),
+            stringValue: attachment.transitGatewayAttachmentId,
+          });
+        }
         transitGatewayAttachments.set(`${vpcItem.name}_${tgwAttachmentItem.transitGateway.name}`, attachment);
-
-        this.stack.addSsmParameter({
-          logicalId: pascalCase(
-            `SsmParam${pascalCase(vpcItem.name) + pascalCase(tgwAttachmentItem.name)}TransitGatewayAttachmentId`,
-          ),
-          parameterName: this.stack.getSsmPath(SsmResourceType.TGW_ATTACHMENT, [vpcItem.name, tgwAttachmentItem.name]),
-          stringValue: attachment.transitGatewayAttachmentId,
-        });
       }
     }
     return transitGatewayAttachments;

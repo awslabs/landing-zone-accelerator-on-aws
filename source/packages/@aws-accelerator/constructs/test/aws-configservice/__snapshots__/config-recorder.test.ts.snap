@@ -225,7 +225,6 @@ exports[`ConfigServiceRecorder Construct(ConfigServiceDeliveryChannel):  Snapsho
             "PolicyName": "configRecorder",
           },
         ],
-        "RoleName": "AWSAccelerator-Config",
       },
       "Type": "AWS::IAM::Role",
     },

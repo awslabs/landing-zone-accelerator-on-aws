@@ -1857,6 +1857,8 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
       this.externalLandingZoneResources.resourceParameters[`${accountId}-${region}`] = {
         ...(await this.getParametersByPath(getSsmPath(t.AseaResourceTypePaths.IAM), ssmClient)),
         ...(await this.getParametersByPath(getSsmPath(t.AseaResourceTypePaths.VPC), ssmClient)),
+        ...(await this.getParametersByPath(getSsmPath(t.AseaResourceTypePaths.TRANSIT_GATEWAY), ssmClient)),
+        ...(await this.getParametersByPath(getSsmPath(t.AseaResourceTypePaths.VPC_PEERING), ssmClient)),
       };
     }
   }

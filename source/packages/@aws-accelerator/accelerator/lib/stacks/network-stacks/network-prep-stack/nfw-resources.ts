@@ -12,6 +12,7 @@
  */
 
 import {
+  AseaResourceType,
   CentralNetworkServicesConfig,
   NfwRuleGroupConfig,
   NfwRuleGroupRuleConfig,
@@ -65,29 +66,43 @@ export class NfwResources {
       // Create regional rule groups in the delegated admin account
       if (this.stack.isTargetStack([accountId], regions)) {
         this.stack.addLogs(LogLevel.INFO, `Create network firewall rule group ${ruleItem.name}`);
+        let rule;
+        if (this.stack.isManagedByAsea(AseaResourceType.NFW_RULE_GROUP, ruleItem.name)) {
+          const groupArn = this.stack.getExternalResourceParameter(
+            this.stack.getSsmPath(SsmResourceType.NFW_RULE_GROUP, [ruleItem.name]),
+          );
+          rule = NetworkFirewallRuleGroup.fromAttributes(
+            this.stack,
+            pascalCase(`${ruleItem.name}NetworkFirewallRuleGroup`),
+            {
+              groupArn,
+              groupName: ruleItem.name,
+            },
+          );
+        } else {
+          //
+          // Create rule group
+          rule = new NetworkFirewallRuleGroup(this.stack, pascalCase(`${ruleItem.name}NetworkFirewallRuleGroup`), {
+            capacity: ruleItem.capacity,
+            name: ruleItem.name,
+            type: ruleItem.type,
+            description: ruleItem.description,
+            ruleGroup: this.getRuleGroupRuleConfig(ruleItem, props),
+            tags: ruleItem.tags ?? [],
+          });
 
-        //
-        // Create rule group
-        const rule = new NetworkFirewallRuleGroup(this.stack, pascalCase(`${ruleItem.name}NetworkFirewallRuleGroup`), {
-          capacity: ruleItem.capacity,
-          name: ruleItem.name,
-          type: ruleItem.type,
-          description: ruleItem.description,
-          ruleGroup: this.getRuleGroupRuleConfig(ruleItem, props),
-          tags: ruleItem.tags ?? [],
-        });
-        ruleGroupMap.set(ruleItem.name, rule.groupArn);
+          this.stack.addSsmParameter({
+            logicalId: pascalCase(`SsmParam${ruleItem.name}NetworkFirewallRuleGroup`),
+            parameterName: this.stack.getSsmPath(SsmResourceType.NFW_RULE_GROUP, [ruleItem.name]),
+            stringValue: rule.groupArn,
+          });
 
-        this.stack.addSsmParameter({
-          logicalId: pascalCase(`SsmParam${ruleItem.name}NetworkFirewallRuleGroup`),
-          parameterName: this.stack.getSsmPath(SsmResourceType.NFW_RULE_GROUP, [ruleItem.name]),
-          stringValue: rule.groupArn,
-        });
-
-        if (ruleItem.shareTargets) {
-          this.stack.addLogs(LogLevel.INFO, `Share Network Firewall rule group ${ruleItem.name}`);
-          this.stack.addResourceShare(ruleItem, `${ruleItem.name}_NetworkFirewallRuleGroupShare`, [rule.groupArn]);
+          if (ruleItem.shareTargets) {
+            this.stack.addLogs(LogLevel.INFO, `Share Network Firewall rule group ${ruleItem.name}`);
+            this.stack.addResourceShare(ruleItem, `${ruleItem.name}_NetworkFirewallRuleGroupShare`, [rule.groupArn]);
+          }
         }
+        ruleGroupMap.set(ruleItem.name, rule.groupArn);
       }
     }
     return ruleGroupMap;
@@ -166,41 +181,56 @@ export class NfwResources {
 
       // Create regional rule groups in the delegated admin account
       if (this.stack.isTargetStack([accountId], regions)) {
-        // Create new firewall policy object with rule group references
-        const firewallPolicy: FirewallPolicyProperty = {
-          statelessDefaultActions: policyItem.firewallPolicy.statelessDefaultActions,
-          statelessFragmentDefaultActions: policyItem.firewallPolicy.statelessFragmentDefaultActions,
-          statefulDefaultActions: policyItem.firewallPolicy.statefulDefaultActions,
-          statefulEngineOptions: policyItem.firewallPolicy.statefulEngineOptions,
-          statefulRuleGroupReferences: policyItem.firewallPolicy.statefulRuleGroups
-            ? this.getStatefulRuleGroupReferences(policyItem.firewallPolicy.statefulRuleGroups, ruleGroupMap)
-            : [],
-          statelessCustomActions: policyItem.firewallPolicy.statelessCustomActions,
-          statelessRuleGroupReferences: policyItem.firewallPolicy.statelessRuleGroups
-            ? this.getStatelessRuleGroupReferences(policyItem.firewallPolicy.statelessRuleGroups, ruleGroupMap)
-            : [],
-        };
-
         // Instantiate firewall policy construct
         this.stack.addLogs(LogLevel.INFO, `Create network firewall policy ${policyItem.name}`);
-        const policy = new NetworkFirewallPolicy(this.stack, pascalCase(`${policyItem.name}NetworkFirewallPolicy`), {
-          name: policyItem.name,
-          firewallPolicy: firewallPolicy,
-          description: policyItem.description,
-          tags: policyItem.tags ?? [],
-        });
-        policyMap.set(policyItem.name, policy.policyArn);
+        let policy;
+        if (this.stack.isManagedByAsea(AseaResourceType.NFW_POLICY, policyItem.name)) {
+          const policyArn = this.stack.getExternalResourceParameter(
+            this.stack.getSsmPath(SsmResourceType.NFW_POLICY, [policyItem.name]),
+          );
+          policy = NetworkFirewallPolicy.fromAttributes(
+            this.stack,
+            pascalCase(`${policyItem.name}NetworkFirewallPolicy`),
+            {
+              policyArn,
+              policyName: policyItem.name,
+            },
+          );
+        } else {
+          // Create new firewall policy object with rule group references
+          const firewallPolicy: FirewallPolicyProperty = {
+            statelessDefaultActions: policyItem.firewallPolicy.statelessDefaultActions,
+            statelessFragmentDefaultActions: policyItem.firewallPolicy.statelessFragmentDefaultActions,
+            statefulDefaultActions: policyItem.firewallPolicy.statefulDefaultActions,
+            statefulEngineOptions: policyItem.firewallPolicy.statefulEngineOptions,
+            statefulRuleGroupReferences: policyItem.firewallPolicy.statefulRuleGroups
+              ? this.getStatefulRuleGroupReferences(policyItem.firewallPolicy.statefulRuleGroups, ruleGroupMap)
+              : [],
+            statelessCustomActions: policyItem.firewallPolicy.statelessCustomActions,
+            statelessRuleGroupReferences: policyItem.firewallPolicy.statelessRuleGroups
+              ? this.getStatelessRuleGroupReferences(policyItem.firewallPolicy.statelessRuleGroups, ruleGroupMap)
+              : [],
+          };
+          policy = new NetworkFirewallPolicy(this.stack, pascalCase(`${policyItem.name}NetworkFirewallPolicy`), {
+            name: policyItem.name,
+            firewallPolicy,
+            description: policyItem.description,
+            tags: policyItem.tags ?? [],
+          });
+          this.stack.addSsmParameter({
+            logicalId: pascalCase(`SsmParam${policyItem.name}NetworkFirewallPolicy`),
+            parameterName: this.stack.getSsmPath(SsmResourceType.NFW_POLICY, [policyItem.name]),
+            stringValue: policy.policyArn,
+          });
 
-        this.stack.addSsmParameter({
-          logicalId: pascalCase(`SsmParam${policyItem.name}NetworkFirewallPolicy`),
-          parameterName: this.stack.getSsmPath(SsmResourceType.NFW_POLICY, [policyItem.name]),
-          stringValue: policy.policyArn,
-        });
-
-        if (policyItem.shareTargets) {
-          this.stack.addLogs(LogLevel.INFO, `Share Network Firewall policy ${policyItem.name}`);
-          this.stack.addResourceShare(policyItem, `${policyItem.name}_NetworkFirewallPolicyShare`, [policy.policyArn]);
+          if (policyItem.shareTargets) {
+            this.stack.addLogs(LogLevel.INFO, `Share Network Firewall policy ${policyItem.name}`);
+            this.stack.addResourceShare(policyItem, `${policyItem.name}_NetworkFirewallPolicyShare`, [
+              policy.policyArn,
+            ]);
+          }
         }
+        policyMap.set(policyItem.name, policy.policyArn);
       }
     }
     return policyMap;

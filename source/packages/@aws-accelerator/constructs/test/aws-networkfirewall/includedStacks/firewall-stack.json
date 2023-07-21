@@ -1,0 +1,26 @@
+{
+  "Resources": {
+    "firewallLogicalId": {
+      "Properties": {
+        "FirewallName": "TestFirewall",
+        "FirewallPolicyArn": "arn:aws:network-firewall:us-east-1:222222222222:firewall-policy/TestPolicy",
+        "SubnetMappings": [
+          {
+            "SubnetId": "Test-Subnet-1"
+          },
+          {
+            "SubnetId": "Test-Subnet-2"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "TestFirewall"
+          }
+        ],
+        "VpcId": "TestVpc"
+      },
+      "Type": "AWS::NetworkFirewall::Firewall"
+    }
+  }
+}
