@@ -1,4 +1,5 @@
 *.js
+*.js.map
 !deployment/.typescript/cdk-solution-helper/index.js
 !**/create-govcloud-account/index.js
 package-lock.json
@@ -62,7 +63,7 @@ development
 
 ### Viperlight
 viperlight*.zip
-
+/.idea/
 
 ### Sonarqube
 .scannerwork
