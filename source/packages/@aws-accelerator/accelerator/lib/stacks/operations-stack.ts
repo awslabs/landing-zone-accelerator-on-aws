@@ -158,6 +158,11 @@ export class OperationsStack extends AcceleratorStack {
     }
 
     //
+    // Add SSM Parameters
+    //
+    this.addSsmParameters();
+
+    //
     // Create firewall configuration S3 bucket
     //
     this.createFirewallConfigBucket(props, firewallRoles, assetBucketKmsKey);
@@ -1415,5 +1420,41 @@ export class OperationsStack extends AcceleratorStack {
     });
 
     return firewallConfigRole;
+  }
+
+  /**
+   * Add SSM Parameters
+   */
+  private addSsmParameters() {
+    let index = 1;
+    const parameterMap = new Map<number, cdk.aws_ssm.StringParameter>();
+
+    for (const ssmParametersItem of this.props.globalConfig.ssmParameters ?? []) {
+      if (!this.isIncluded(ssmParametersItem.deploymentTargets)) {
+        continue;
+      }
+
+      for (const parameterItem of ssmParametersItem.parameters) {
+        this.logger.info(`[operations-stack] Add SSM Parameter ${parameterItem.path}`);
+        // Create parameter
+        const parameter = new cdk.aws_ssm.StringParameter(this, pascalCase(`SSMParameter-${parameterItem.name}`), {
+          parameterName: parameterItem.path,
+          stringValue: parameterItem.value,
+        });
+        parameterMap.set(index, parameter);
+
+        // Add a dependency for every 5 parameters
+        if (index > 5) {
+          const dependsOnParam = parameterMap.get(index - (index % 5));
+          if (!dependsOnParam) {
+            this.logger.error(`Error creating SSM parameter ${parameterItem.name}: previous SSM parameter undefined`);
+            throw new Error(`Configuration validation failed at runtime.`);
+          }
+          parameter.node.addDependency(dependsOnParam);
+        }
+        // Increment index
+        index += 1;
+      }
+    }
   }
 }

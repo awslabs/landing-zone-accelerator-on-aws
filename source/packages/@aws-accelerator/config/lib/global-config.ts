@@ -225,6 +225,17 @@ export abstract class GlobalConfigTypes {
     deploymentTargets: t.deploymentTargets,
   });
 
+  static readonly ssmParameterConfig = t.interface({
+    name: t.nonEmptyString,
+    path: t.nonEmptyString,
+    value: t.nonEmptyString,
+  });
+
+  static readonly ssmParametersConfig = t.interface({
+    parameters: t.array(this.ssmParameterConfig),
+    deploymentTargets: t.deploymentTargets,
+  });
+
   static readonly acceleratorMetadataConfig = t.interface({
     enable: t.boolean,
     account: t.string,
@@ -247,6 +258,7 @@ export abstract class GlobalConfigTypes {
     snsTopics: t.optional(GlobalConfigTypes.snsConfig),
     ssmInventory: t.optional(GlobalConfigTypes.ssmInventoryConfig),
     tags: t.optional(t.array(t.tag)),
+    ssmParameters: t.optional(t.array(GlobalConfigTypes.ssmParametersConfig)),
     limits: t.optional(t.array(this.serviceQuotaLimitsConfig)),
     acceleratorMetadata: t.optional(GlobalConfigTypes.acceleratorMetadataConfig),
   });
@@ -1423,6 +1435,66 @@ export class SsmInventoryConfig implements t.TypeOf<typeof GlobalConfigTypes.ssm
 }
 
 /**
+ * *{@link GlobalConfig} / {@link ssmParametersConfig}*
+ *
+ * @example
+ * ```
+ * ssmParameters:
+ *   - deploymentTargets:
+ *       organizationalUnits:
+ *         - Workloads
+ *     parameters:
+ *       - name: MyWorkloadParameter
+ *         path: /my/custom/path/variable
+ *         value: 'MySSMParameterValue'
+ * ```
+ *
+ */
+
+export class SsmParametersConfig implements t.TypeOf<typeof GlobalConfigTypes.ssmParametersConfig> {
+  /**
+   * A list of SSM parameters to create
+   */
+  readonly parameters: SsmParameterConfig[] = [];
+  /**
+   * Configure the Deployment Targets
+   */
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
+}
+
+/**
+ * *{@link GlobalConfig} / {@link ssmParametersConfig} / {@link ssmParameterConfig}*
+ *
+ * @example
+ * ```
+ * ssmParameters:
+ *   - deploymentTargets:
+ *       organizationalUnits:
+ *         - Workloads
+ *     parameters:
+ *       - name: WorkloadsSsmParameter
+ *         path: /my/custom/path/variable
+ *         value: 'MySSMParameterValue'
+ * ```
+ *
+ */
+
+export class SsmParameterConfig implements t.TypeOf<typeof GlobalConfigTypes.ssmParameterConfig> {
+  /**
+   * The friendly name of the SSM Parameter, this is used to generate the CloudFormation Logical Id.
+   */
+  readonly name = '';
+  /**
+   * The path or name used when creating SSM Parameter.
+   */
+  readonly path = '';
+  /**
+   * The value of the SSM Parameter
+   */
+  readonly value = '';
+}
+
+/**
  * Accelerator global configuration
  */
 export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalConfig> {
@@ -1621,6 +1693,25 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    *             accounts:
    */
   readonly limits: ServiceQuotaLimitsConfig[] | undefined = undefined;
+
+  /**
+   * SSM parameter configurations
+   *
+   * Create SSM parameters through the LZA. Parameters can be deployed to Organizational Units or Accounts using deploymentTargets
+   *
+   * @example
+   * ```
+   * ssmParameters:
+   *   - deploymentTargets:
+   *       organizationalUnits:
+   *         - Workloads
+   *     parameters:
+   *       - name: WorkloadParameter
+   *         path: /my/custom/path/variable
+   *         value: 'MySSMParameterValue'
+   * ```
+   */
+  readonly ssmParameters: SsmParametersConfig[] | undefined;
 
   /**
    * Backup Vaults Configuration

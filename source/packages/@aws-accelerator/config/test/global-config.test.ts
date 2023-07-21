@@ -23,21 +23,26 @@ import * as fs from 'fs';
 
 describe('GlobalConfig', () => {
   describe('Test config', () => {
-    // it('has loaded successfully', () => {
-    //   const globalConfig = new GlobalConfig({
-    //     homeRegion: 'us-east-1',
-    //   });
-    //   const globalConfigFromFile = GlobalConfig.load(path.resolve('../accelerator/test/configs/all-enabled'), true);
+    it('has loaded successfully', () => {
+      // const globalConfig = new GlobalConfig({
+      //   homeRegion: 'us-east-1',
+      // });
+      const globalConfigFromFile = GlobalConfig.load(path.resolve('../accelerator/test/configs/snapshot-only'));
 
-    //   expect(globalConfig.accountNames).toStrictEqual([]);
-    //   expect(globalConfigFromFile.accountNames).toStrictEqual([
-    //     'Management',
-    //     'LogArchive',
-    //     'Audit',
-    //     'SharedServices',
-    //     'Network',
-    //   ]);
-    // });
+      expect(globalConfigFromFile.ssmParameters?.length).toBe(1);
+      expect(globalConfigFromFile.ssmParameters?.at(0)?.parameters?.at(0)?.name).toBe('parameterTest');
+      expect(globalConfigFromFile.ssmParameters?.at(0)?.parameters?.at(0)?.path).toBe('/my/parameter/structure');
+      expect(globalConfigFromFile.ssmParameters?.at(0)?.parameters?.at(0)?.value).toBe('parameterTestValue');
+
+      //   expect(globalConfig.accountNames).toStrictEqual([]);
+      //   expect(globalConfigFromFile.accountNames).toStrictEqual([
+      //     'Management',
+      //     'LogArchive',
+      //     'Audit',
+      //     'SharedServices',
+      //     'Network',
+      //   ]);
+    });
 
     it('loads from string', () => {
       const buffer = fs.readFileSync(

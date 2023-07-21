@@ -182,3 +182,16 @@ backup:
         accounts:
           - Management
       policy: backup-vault-policies/infrastructure-vault-policy.json
+ssmParameters:
+  - deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+      accounts:
+        - Management
+    parameters:
+      - name: parameterTest
+        path: /my/parameter/structure
+        value: parameterTestValue
+      - name: someOtherName
+        path: /my/account/structure
+        value: someOtherValue

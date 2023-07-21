@@ -916,6 +916,22 @@ exports[`OperationsStack Construct(OperationsStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "SsmParameterParameterTest8FE0D600": {
+      "Properties": {
+        "Name": "/my/parameter/structure",
+        "Type": "String",
+        "Value": "parameterTestValue",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParameterSomeOtherName594B7F4C": {
+      "Properties": {
+        "Name": "/my/account/structure",
+        "Type": "String",
+        "Value": "someOtherValue",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "StackSetAdminRole10A324D2": {
       "Metadata": {
         "cdk_nag": {
