@@ -18,6 +18,7 @@ import { Construct } from 'constructs';
 import * as path from 'path';
 
 import {
+  AseaResourceType,
   GatewayEndpointServiceConfig,
   InterfaceEndpointServiceConfig,
   NfwFirewallConfig,
@@ -28,6 +29,7 @@ import {
   VpcTemplatesConfig,
 } from '@aws-accelerator/config';
 import {
+  INetworkFirewall,
   NetworkFirewall,
   ResolverEndpoint,
   SecurityGroup,
@@ -49,7 +51,7 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
   private vpcMap: Map<string, string>;
   private subnetMap: Map<string, string>;
   private routeTableMap: Map<string, string>;
-  private firewallMap: Map<string, NetworkFirewall>;
+  private firewallMap: Map<string, INetworkFirewall>;
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
@@ -348,72 +350,82 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
     vpcId: string,
     subnets: string[],
     firewallLogBucket: cdk.aws_s3.IBucket,
-  ): NetworkFirewall {
+  ): INetworkFirewall {
     this.logger.info(`Add Network Firewall ${firewallItem.name} to VPC ${firewallItem.vpc}`);
 
-    // Fetch policy ARN
-    const policyArn = this.nfwPolicyMap.get(firewallItem.firewallPolicy);
-    if (!policyArn) {
-      this.logger.error(`Unable to locate Network Firewall policy ${firewallItem.firewallPolicy}`);
-      throw new Error(`Configuration validation failed at runtime.`);
-    }
-    // Create firewall
-    const nfw = new NetworkFirewall(this, pascalCase(`${firewallItem.vpc}${firewallItem.name}NetworkFirewall`), {
-      firewallPolicyArn: policyArn,
-      name: firewallItem.name,
-      description: firewallItem.description,
-      subnets: subnets,
-      vpcId: vpcId,
-      deleteProtection: firewallItem.deleteProtection,
-      firewallPolicyChangeProtection: firewallItem.firewallPolicyChangeProtection,
-      subnetChangeProtection: firewallItem.subnetChangeProtection,
-      tags: firewallItem.tags ?? [],
-    });
-    // Create SSM parameters
-    this.ssmParameters.push({
-      logicalId: pascalCase(`SsmParam${pascalCase(firewallItem.vpc) + pascalCase(firewallItem.name)}FirewallArn`),
-      parameterName: this.getSsmPath(SsmResourceType.NFW, [firewallItem.vpc, firewallItem.name]),
-      stringValue: nfw.firewallArn,
-    });
+    let nfw;
+    if (this.isManagedByAsea(AseaResourceType.NFW, firewallItem.name)) {
+      const nfwArn = this.getExternalResourceParameter(
+        this.getSsmPath(SsmResourceType.NFW, [firewallItem.vpc, firewallItem.name]),
+      );
+      nfw = NetworkFirewall.fromAttributes(this, pascalCase(`${firewallItem.vpc}${firewallItem.name}NetworkFirewall`), {
+        firewallArn: nfwArn,
+        firewallName: firewallItem.name,
+      });
+    } else {
+      // Fetch policy ARN
+      const policyArn = this.nfwPolicyMap.get(firewallItem.firewallPolicy);
+      if (!policyArn) {
+        this.logger.error(`Unable to locate Network Firewall policy ${firewallItem.firewallPolicy}`);
+        throw new Error(`Configuration validation failed at runtime.`);
+      }
+      // Create firewall
+      nfw = new NetworkFirewall(this, pascalCase(`${firewallItem.vpc}${firewallItem.name}NetworkFirewall`), {
+        firewallPolicyArn: policyArn,
+        name: firewallItem.name,
+        description: firewallItem.description,
+        subnets: subnets,
+        vpcId: vpcId,
+        deleteProtection: firewallItem.deleteProtection,
+        firewallPolicyChangeProtection: firewallItem.firewallPolicyChangeProtection,
+        subnetChangeProtection: firewallItem.subnetChangeProtection,
+        tags: firewallItem.tags ?? [],
+      });
+      // Create SSM parameters
+      this.ssmParameters.push({
+        logicalId: pascalCase(`SsmParam${pascalCase(firewallItem.vpc) + pascalCase(firewallItem.name)}FirewallArn`),
+        parameterName: this.getSsmPath(SsmResourceType.NFW, [firewallItem.vpc, firewallItem.name]),
+        stringValue: nfw.firewallArn,
+      });
+      // Add logging configurations
+      const destinationConfigs: cdk.aws_networkfirewall.CfnLoggingConfiguration.LogDestinationConfigProperty[] = [];
+      for (const logItem of firewallItem.loggingConfiguration ?? []) {
+        if (logItem.destination === 'cloud-watch-logs') {
+          // Create log group and log configuration
+          this.logger.info(`Add CloudWatch ${logItem.type} logs for Network Firewall ${firewallItem.name}`);
+          const logGroup = new cdk.aws_logs.LogGroup(this, pascalCase(`${firewallItem.name}${logItem.type}LogGroup`), {
+            encryptionKey: this.cloudwatchKey,
+            retention: this.logRetention,
+          });
+          destinationConfigs.push({
+            logDestination: {
+              logGroup: logGroup.logGroupName,
+            },
+            logDestinationType: 'CloudWatchLogs',
+            logType: logItem.type,
+          });
+        }
 
-    // Add logging configurations
-    const destinationConfigs: cdk.aws_networkfirewall.CfnLoggingConfiguration.LogDestinationConfigProperty[] = [];
-    for (const logItem of firewallItem.loggingConfiguration ?? []) {
-      if (logItem.destination === 'cloud-watch-logs') {
-        // Create log group and log configuration
-        this.logger.info(`Add CloudWatch ${logItem.type} logs for Network Firewall ${firewallItem.name}`);
-        const logGroup = new cdk.aws_logs.LogGroup(this, pascalCase(`${firewallItem.name}${logItem.type}LogGroup`), {
-          encryptionKey: this.cloudwatchKey,
-          retention: this.logRetention,
-        });
-        destinationConfigs.push({
-          logDestination: {
-            logGroup: logGroup.logGroupName,
-          },
-          logDestinationType: 'CloudWatchLogs',
-          logType: logItem.type,
-        });
+        if (logItem.destination === 's3') {
+          this.logger.info(`Add S3 ${logItem.type} logs for Network Firewall ${firewallItem.name}`);
+
+          destinationConfigs.push({
+            logDestination: {
+              bucketName: firewallLogBucket.bucketName,
+              prefix: 'firewall',
+            },
+            logDestinationType: 'S3',
+            logType: logItem.type,
+          });
+        }
       }
 
-      if (logItem.destination === 's3') {
-        this.logger.info(`Add S3 ${logItem.type} logs for Network Firewall ${firewallItem.name}`);
-
-        destinationConfigs.push({
-          logDestination: {
-            bucketName: firewallLogBucket.bucketName,
-            prefix: 'firewall',
-          },
-          logDestinationType: 'S3',
-          logType: logItem.type,
-        });
-      }
+      // Add logging configuration
+      const config = {
+        logDestinationConfigs: destinationConfigs,
+      };
+      nfw.addLogging(config);
     }
-
-    // Add logging configuration
-    const config = {
-      logDestinationConfigs: destinationConfigs,
-    };
-    nfw.addLogging(config);
 
     return nfw;
   }

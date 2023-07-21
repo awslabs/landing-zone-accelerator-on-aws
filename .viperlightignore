@@ -81,8 +81,8 @@ source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1108
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1109
 
 # Accelerator specific assume role declaration
-source/packages/@aws-accelerator/config/lib/global-config.ts:2015
-source/packages/@aws-accelerator/config/lib/global-config.ts:2016
+source/packages/@aws-accelerator/config/lib/global-config.ts:2017
+source/packages/@aws-accelerator/config/lib/global-config.ts:2018
 
 # Accelerator specific assume role declaration
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1106
@@ -159,3 +159,7 @@ source/packages/@aws-accelerator/constructs/lib/aws-cloudwatch-logs/create-log-g
 # empty file to simulate certs
 source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/certificates/certA/privKey.key
 source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/certificates/certA/cert.crt
+
+# Ignore password policy construct files
+source/packages/@aws-accelerator/constructs/lib/aws-iam/password-policy.ts
+source/packages/@aws-accelerator/constructs/test/aws-iam/password-policy.test.ts

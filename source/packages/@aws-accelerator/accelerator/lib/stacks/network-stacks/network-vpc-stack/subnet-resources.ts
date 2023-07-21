@@ -71,7 +71,9 @@ export class SubnetResources {
   ): number {
     // Retrieve items required to create subnet
     const vpc = getVpc(maps.vpcs, vpcItem.name) as Vpc;
-    const routeTable = getRouteTable(maps.routeTables, vpcItem.name, subnetItem.routeTable) as RouteTable;
+    const routeTable = subnetItem.routeTable
+      ? (getRouteTable(maps.routeTables, vpcItem.name, subnetItem.routeTable) as RouteTable)
+      : undefined;
     const basePool = subnetItem.ipamAllocation ? this.getBasePool(subnetItem, ipamConfig) : undefined;
     const outpost = subnetItem.outpost
       ? this.stack.getOutpost(maps.outposts, vpcItem.name, subnetItem.outpost)
@@ -79,7 +81,7 @@ export class SubnetResources {
     const availabilityZone = this.setAvailabilityZone(subnetItem);
 
     // Create subnet
-    const subnet = this.createSubnetItem(vpcItem, subnetItem, availabilityZone, routeTable, vpc, basePool, outpost);
+    const subnet = this.createSubnetItem(vpcItem, subnetItem, availabilityZone, vpc, routeTable, basePool, outpost);
     maps.subnets.set(`${vpcItem.name}_${subnetItem.name}`, subnet);
 
     // Need to ensure IPAM subnets are created one at a time to avoid duplicate allocations
@@ -212,8 +214,8 @@ export class SubnetResources {
     vpcItem: VpcConfig | VpcTemplatesConfig,
     subnetItem: SubnetConfig,
     availabilityZone: string,
-    routeTable: RouteTable,
     vpc: Vpc,
+    routeTable?: RouteTable,
     basePool?: string[],
     outpost?: OutpostsConfig,
   ): Subnet {

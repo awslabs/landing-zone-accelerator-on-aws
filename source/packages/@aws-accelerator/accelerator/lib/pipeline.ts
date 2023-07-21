@@ -471,20 +471,6 @@ export class AcceleratorPipeline extends Construct {
     // Add review stage based on parameter
     this.addReviewStage();
 
-    // Adds ASEA Import Resources stage
-    if (props.enableAseaMigration) {
-      this.pipeline.addStage({
-        stageName: 'ImportAseaResources',
-        actions: [
-          this.createToolkitStage({
-            actionName: 'Import_Asea_Resources',
-            command: `deploy`,
-            stage: AcceleratorStage.IMPORT_ASEA_RESOURCES,
-          }),
-        ],
-      });
-    }
-
     /**
      * The Logging stack establishes all the logging assets that are needed in
      * all the accounts and will configure:
@@ -505,6 +491,20 @@ export class AcceleratorPipeline extends Construct {
         }),
       ],
     });
+
+    // Adds ASEA Import Resources stage
+    if (props.enableAseaMigration) {
+      this.pipeline.addStage({
+        stageName: 'ImportAseaResources',
+        actions: [
+          this.createToolkitStage({
+            actionName: 'Import_Asea_Resources',
+            command: `deploy`,
+            stage: AcceleratorStage.IMPORT_ASEA_RESOURCES,
+          }),
+        ],
+      });
+    }
 
     this.pipeline.addStage({
       stageName: 'Organization',

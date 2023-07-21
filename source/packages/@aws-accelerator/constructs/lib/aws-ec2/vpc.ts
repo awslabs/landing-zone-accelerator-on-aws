@@ -64,7 +64,7 @@ export interface SubnetProps {
   readonly availabilityZone?: string;
   readonly availabilityZoneId?: string;
   readonly mapPublicIpOnLaunch?: boolean;
-  readonly routeTable: IRouteTable;
+  readonly routeTable?: IRouteTable;
   readonly vpc: IVpc;
   readonly basePool?: string[];
   readonly ipamAllocation?: IpamAllocationConfig;
@@ -78,13 +78,13 @@ export interface SubnetProps {
 export interface ImportedSubnetProps {
   readonly subnetId: string;
   readonly name: string;
-  readonly routeTable: IRouteTable;
+  readonly routeTable?: IRouteTable;
   readonly ipv4CidrBlock: string;
 }
 
 abstract class SubnetBase extends cdk.Resource implements ISubnet {
   public abstract readonly subnetName: string;
-  public abstract readonly routeTable: IRouteTable;
+  public abstract readonly routeTable?: IRouteTable;
   public abstract readonly subnetId: string;
   public abstract readonly subnetArn: string;
   public abstract readonly ipv4CidrBlock: string;
@@ -94,7 +94,7 @@ abstract class SubnetBase extends cdk.Resource implements ISubnet {
 
 export class ImportedSubnet extends SubnetBase {
   public readonly subnetName: string;
-  public readonly routeTable: IRouteTable;
+  public readonly routeTable?: IRouteTable;
   public readonly subnetId: string;
   public readonly subnetArn: string;
   public readonly ipv4CidrBlock: string;
@@ -109,15 +109,17 @@ export class ImportedSubnet extends SubnetBase {
       service: 'ec2',
       resource: 'subnet',
       arnFormat: cdk.ArnFormat.SLASH_RESOURCE_NAME,
-      resourceName: id,
+      resourceName: props.subnetId,
     });
     this.ipv4CidrBlock = props.ipv4CidrBlock;
 
-    // Route Table is not imported, Associating Subnet to new RouteTable
-    new cdk.aws_ec2.CfnSubnetRouteTableAssociation(this, 'RouteTableAssociation', {
-      subnetId: this.subnetId,
-      routeTableId: props.routeTable.routeTableId,
-    });
+    if (props.routeTable) {
+      // Route Table is not imported, Associating Subnet to new RouteTable
+      new cdk.aws_ec2.CfnSubnetRouteTableAssociation(this, 'RouteTableAssociation', {
+        subnetId: this.subnetId,
+        routeTableId: props.routeTable.routeTableId,
+      });
+    }
   }
 }
 export class Subnet extends SubnetBase {
@@ -126,7 +128,7 @@ export class Subnet extends SubnetBase {
   public readonly availabilityZoneId?: string;
   public readonly ipv4CidrBlock: string;
   public readonly mapPublicIpOnLaunch?: boolean;
-  public readonly routeTable: IRouteTable;
+  public readonly routeTable?: IRouteTable;
   public readonly subnetId: string;
   public readonly subnetArn: string;
   public readonly outpostArn?: string;
@@ -211,10 +213,12 @@ export class Subnet extends SubnetBase {
       });
     }
 
-    new cdk.aws_ec2.CfnSubnetRouteTableAssociation(this, 'RouteTableAssociation', {
-      subnetId: this.subnetId,
-      routeTableId: props.routeTable.routeTableId,
-    });
+    if (props.routeTable) {
+      new cdk.aws_ec2.CfnSubnetRouteTableAssociation(this, 'RouteTableAssociation', {
+        subnetId: this.subnetId,
+        routeTableId: props.routeTable.routeTableId,
+      });
+    }
   }
 
   static fromSubnetAttributes(scope: Construct, id: string, props: ImportedSubnetProps) {
@@ -250,6 +254,22 @@ export class NatGateway extends cdk.Resource implements INatGateway {
   public readonly natGatewayId: string;
   public readonly natGatewayName: string;
   private natGatewayArgs?: cdk.aws_ec2.CfnNatGatewayProps;
+
+  static fromAttributes(
+    scope: Construct,
+    id: string,
+    attrs: { natGatewayId: string; natGatewayName: string },
+  ): INatGateway {
+    class Import extends cdk.Resource implements INatGateway {
+      public readonly natGatewayId: string = attrs.natGatewayId;
+      public readonly natGatewayName: string = attrs.natGatewayName;
+
+      constructor(scope: Construct, id: string) {
+        super(scope, id);
+      }
+    }
+    return new Import(scope, id);
+  }
 
   constructor(scope: Construct, id: string, props: NatGatewayProps) {
     super(scope, id);

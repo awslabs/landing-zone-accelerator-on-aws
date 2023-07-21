@@ -16,12 +16,11 @@ import { Construct } from 'constructs';
 
 import { GetNetworkFirewallEndpoint } from './get-network-firewall-endpoint';
 
-interface INetworkFirewall extends cdk.IResource {
+export interface INetworkFirewall extends cdk.IResource {
   /**
    * The unique IDs of the firewall endpoints for all of the subnets that you attached to the firewall.
    */
-  readonly endpointIds: string[];
-
+  readonly endpointIds?: string[];
   /**
    * The Amazon Resource Name (ARN) of the firewall.
    */
@@ -30,12 +29,23 @@ interface INetworkFirewall extends cdk.IResource {
   /**
    * The ID of the firewall.
    */
-  readonly firewallId: string;
+  readonly firewallId?: string;
 
   /**
    * The name of the policy.
    */
   readonly firewallName: string;
+
+  addLogging: (config: cdk.aws_networkfirewall.CfnLoggingConfiguration.LoggingConfigurationProperty) => void;
+
+  addNetworkFirewallRoute: (
+    id: string,
+    destination: string,
+    endpointAz: string,
+    logGroupKmsKey: cdk.aws_kms.Key,
+    logRetentionInDays: number,
+    routeTableId: string,
+  ) => void;
 }
 
 interface NetworkFirewallProps {
@@ -85,42 +95,12 @@ interface NetworkFirewallProps {
   readonly tags?: cdk.CfnTag[];
 }
 
-export class NetworkFirewall extends cdk.Resource implements INetworkFirewall {
-  public readonly endpointIds: string[];
-  public readonly firewallArn: string;
-  public readonly firewallId: string;
-  public readonly firewallName: string;
-  private subnetMapping: cdk.aws_networkfirewall.CfnFirewall.SubnetMappingProperty[];
-
-  constructor(scope: Construct, id: string, props: NetworkFirewallProps) {
-    super(scope, id);
-
-    // Set initial properties
-    this.firewallName = props.name;
-    this.subnetMapping = props.subnets.map(item => {
-      return { subnetId: item };
-    });
-
-    // Set name tag
-    props.tags?.push({ key: 'Name', value: this.firewallName });
-
-    const resource = new cdk.aws_networkfirewall.CfnFirewall(this, 'Resource', {
-      firewallName: this.firewallName,
-      firewallPolicyArn: props.firewallPolicyArn,
-      subnetMappings: this.subnetMapping,
-      vpcId: props.vpcId,
-      deleteProtection: props.deleteProtection,
-      description: props.description,
-      firewallPolicyChangeProtection: props.firewallPolicyChangeProtection,
-      subnetChangeProtection: props.subnetChangeProtection,
-      tags: props.tags,
-    });
-
-    // Set remaining properties
-    this.endpointIds = resource.attrEndpointIds;
-    this.firewallArn = resource.ref;
-    this.firewallId = resource.attrFirewallId;
-  }
+abstract class NetworkFirewallBase extends cdk.Resource implements INetworkFirewall {
+  public abstract readonly firewallArn: string;
+  public abstract readonly firewallName: string;
+  public abstract readonly firewallId?: string;
+  public abstract readonly endpointIds?: string[];
+  // protected abstract subnetMapping?: cdk.aws_networkfirewall.CfnFirewall.SubnetMappingProperty[];
 
   public addLogging(config: cdk.aws_networkfirewall.CfnLoggingConfiguration.LoggingConfigurationProperty) {
     new cdk.aws_networkfirewall.CfnLoggingConfiguration(this, 'LoggingConfig', {
@@ -151,5 +131,85 @@ export class NetworkFirewall extends cdk.Resource implements INetworkFirewall {
       destinationCidrBlock: destination,
       vpcEndpointId,
     });
+  }
+}
+export class NetworkFirewall extends NetworkFirewallBase {
+  public readonly firewallArn: string;
+  public readonly firewallName: string;
+  public readonly firewallId?: string;
+  public readonly endpointIds?: string[];
+  protected subnetMapping: cdk.aws_networkfirewall.CfnFirewall.SubnetMappingProperty[];
+
+  static fromAttributes(
+    scope: Construct,
+    id: string,
+    attrs: {
+      firewallArn: string;
+      firewallName: string;
+    },
+  ): INetworkFirewall {
+    class Import extends NetworkFirewallBase {
+      public readonly firewallArn: string;
+      public readonly firewallName: string;
+      public readonly firewallId?: string;
+      public readonly endpointIds?: string[];
+      constructor(scope: Construct, id: string) {
+        super(scope, id);
+        this.firewallArn = attrs.firewallArn;
+        this.firewallName = attrs.firewallName;
+      }
+    }
+    return new Import(scope, id);
+  }
+
+  /**
+   * Returns CfnFirewall by applying updates to included resource
+   * @param scope Stack in which included Firewall is created/managed
+   * @param id logicalId of Firewall
+   * @param attrs
+   */
+  static includedCfnResource(scope: cdk.cloudformation_include.CfnInclude, id: string, props: NetworkFirewallProps) {
+    // Set initial properties
+    const subnetMapping = props.subnets.map(item => {
+      return { subnetId: item };
+    });
+    const resource = scope.getResource(id) as cdk.aws_networkfirewall.CfnFirewall;
+    resource.deleteProtection = props.deleteProtection;
+    resource.subnetChangeProtection = props.subnetChangeProtection;
+    resource.subnetMappings = subnetMapping;
+    resource.firewallPolicyArn = props.firewallPolicyArn;
+    resource.firewallPolicyChangeProtection = props.firewallPolicyChangeProtection;
+    resource.description = props.description;
+    return resource;
+  }
+
+  constructor(scope: Construct, id: string, props: NetworkFirewallProps) {
+    super(scope, id);
+
+    // Set initial properties
+    this.firewallName = props.name;
+    this.subnetMapping = props.subnets.map(item => {
+      return { subnetId: item };
+    });
+
+    // Set name tag
+    props.tags?.push({ key: 'Name', value: this.firewallName });
+
+    const resource = new cdk.aws_networkfirewall.CfnFirewall(this, 'Resource', {
+      firewallName: this.firewallName,
+      firewallPolicyArn: props.firewallPolicyArn,
+      subnetMappings: this.subnetMapping,
+      vpcId: props.vpcId,
+      deleteProtection: props.deleteProtection,
+      description: props.description,
+      firewallPolicyChangeProtection: props.firewallPolicyChangeProtection,
+      subnetChangeProtection: props.subnetChangeProtection,
+      tags: props.tags,
+    });
+
+    // Set remaining properties
+    this.endpointIds = resource.attrEndpointIds;
+    this.firewallArn = resource.ref;
+    this.firewallId = resource.attrFirewallId;
   }
 }

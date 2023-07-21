@@ -455,6 +455,11 @@ export class SecurityConfigTypes {
      */
     // parameters: t.optional(t.dictionary(t.nonEmptyString, t.nonEmptyString)),
     parameters: t.optional(t.array(SecurityConfigTypes.remediationParametersConfigType)),
+
+    /**
+     * List of AWS Region names to be excluded from applying remediation
+     */
+    excludeRegions: t.optional(t.array(t.region)),
   });
 
   static readonly configRule = t.interface({
@@ -1660,6 +1665,112 @@ export class AwsConfigAggregation implements t.TypeOf<typeof SecurityConfigTypes
 }
 
 /**
+ * *{@link SecurityConfig} / {@link AwsConfig} / {@link AwsConfigRuleSet} / {@link ConfigRule} / {@link ConfigRuleRemediation}*
+ *
+ * A remediation for the config rule, auto remediation to automatically remediate noncompliant resources.
+ *
+ * @example
+ *
+ * Managed Config rule with remediation:
+ * ```
+ * - name: accelerator-s3-bucket-server-side-encryption-enabled
+ *   identifier: S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED
+ *   complianceResourceTypes:
+ *     - AWS::S3::Bucket
+ *   remediation:
+ *     rolePolicyFile: path/to/policy.json
+ *     automatic: true
+ *     targetId: Put-S3-Encryption
+ *     retryAttemptSeconds: 60
+ *     maximumAutomaticAttempts: 5
+ *     parameters:
+ *       - name: BucketName
+ *         value: RESOURCE_ID
+ *         type: String
+ *       - name: KMSMasterKey
+ *         value: ${ACCEL_LOOKUP::KMS}
+ *         type: StringList
+ * ```
+ */
+export class ConfigRuleRemediation implements t.TypeOf<typeof SecurityConfigTypes.configRuleRemediationType> {
+  /**
+   * Remediation assume role policy definition json file. This file must be present in config repository.
+   *
+   * Create your own custom remediation actions using AWS Systems Manager Automation documents.
+   * When a role needed to be created to perform custom remediation actions, role permission needs to be defined in this file.
+   */
+  readonly rolePolicyFile = '';
+  /**
+   * The remediation is triggered automatically.
+   */
+  readonly automatic = true;
+  /**
+   * Target ID is the name of the public document.
+   *
+   * The name of the AWS SSM document to perform custom remediation actions.
+   */
+  readonly targetId = '';
+  /**
+   * Name of the account owning the public document to perform custom remediation actions.
+   * Accelerator creates these documents in Audit account and shared with other accounts.
+   */
+  readonly targetAccountName = '';
+  /**
+   * Version of the target. For example, version of the SSM document.
+   *
+   * If you make backward incompatible changes to the SSM document, you must call PutRemediationConfiguration API again to ensure the remediations can run.
+   */
+  readonly targetVersion = '';
+  /**
+   * Target SSM document remediation lambda function
+   */
+  readonly targetDocumentLambda = {
+    /**
+     * The source code file path of your Lambda function. This is a zip file containing lambda function, this file must be available in config repository.
+     */
+    sourceFilePath: '',
+    /**
+     * The name of the method within your code that Lambda calls to execute your function. The format includes the file name. It can also include namespaces and other qualifiers, depending on the runtime.
+     * For more information, see https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-features.html#gettingstarted-features-programmingmodel.
+     */
+    handler: '',
+    /**
+     * The runtime environment for the Lambda function that you are uploading. For valid values, see the Runtime property in the AWS Lambda Developer Guide.
+     */
+    runtime: '',
+    /**
+     * Lambda execution role policy definition file
+     */
+    rolePolicyFile: '',
+    /**
+     * Lambda function execution timeout in seconds
+     */
+    timeout: 3,
+  };
+  /**
+   * Maximum time in seconds that AWS Config runs auto-remediation. If you do not select a number, the default is 60 seconds.
+   *
+   * For example, if you specify RetryAttemptSeconds as 50 seconds and MaximumAutomaticAttempts as 5, AWS Config will run auto-remediations 5 times within 50 seconds before throwing an exception.
+   */
+  readonly retryAttemptSeconds = 0;
+  /**
+   * The maximum number of failed attempts for auto-remediation. If you do not select a number, the default is 5.
+   *
+   * For example, if you specify MaximumAutomaticAttempts as 5 with RetryAttemptSeconds as 50 seconds, AWS Config will put a RemediationException on your behalf for the failing resource after the 5th failed attempt within 50 seconds.
+   */
+  readonly maximumAutomaticAttempts = 0;
+  /**
+   * List of remediation parameters
+   *
+   */
+  readonly parameters = [];
+
+  /**
+   * List of AWS Region names to be excluded from applying remediation
+   */
+  readonly excludeRegions: t.Region[] = [];
+}
+/**
  * *{@link SecurityConfig} / {@link AwsConfig} / {@link AwsConfigRuleSet} / {@link ConfigRule}*
  *
  * AWS ConfigRule configuration
@@ -1821,79 +1932,7 @@ export class ConfigRule implements t.TypeOf<typeof SecurityConfigTypes.configRul
   /**
    * A remediation for the config rule, auto remediation to automatically remediate noncompliant resources.
    */
-  readonly remediation = {
-    /**
-     * Remediation assume role policy definition json file. This file must be present in config repository.
-     *
-     * Create your own custom remediation actions using AWS Systems Manager Automation documents.
-     * When a role needed to be created to perform custom remediation actions, role permission needs to be defined in this file.
-     */
-    rolePolicyFile: '',
-    /**
-     * The remediation is triggered automatically.
-     */
-    automatic: true,
-    /**
-     * Target ID is the name of the public document.
-     *
-     * The name of the AWS SSM document to perform custom remediation actions.
-     */
-    targetId: '',
-    /**
-     * Name of the account owning the public document to perform custom remediation actions.
-     * Accelerator creates these documents in Audit account and shared with other accounts.
-     */
-    targetAccountName: '',
-    /**
-     * Version of the target. For example, version of the SSM document.
-     *
-     * If you make backward incompatible changes to the SSM document, you must call PutRemediationConfiguration API again to ensure the remediations can run.
-     */
-    targetVersion: '',
-    /**
-     * Target SSM document remediation lambda function
-     */
-    targetDocumentLambda: {
-      /**
-       * The source code file path of your Lambda function. This is a zip file containing lambda function, this file must be available in config repository.
-       */
-      sourceFilePath: '',
-      /**
-       * The name of the method within your code that Lambda calls to execute your function. The format includes the file name. It can also include namespaces and other qualifiers, depending on the runtime.
-       * For more information, see https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-features.html#gettingstarted-features-programmingmodel.
-       */
-      handler: '',
-      /**
-       * The runtime environment for the Lambda function that you are uploading. For valid values, see the Runtime property in the AWS Lambda Developer Guide.
-       */
-      runtime: '',
-      /**
-       * Lambda execution role policy definition file
-       */
-      rolePolicyFile: '',
-      /**
-       * Lambda function execution timeout in seconds
-       */
-      timeout: 3,
-    },
-    /**
-     * Maximum time in seconds that AWS Config runs auto-remediation. If you do not select a number, the default is 60 seconds.
-     *
-     * For example, if you specify RetryAttemptSeconds as 50 seconds and MaximumAutomaticAttempts as 5, AWS Config will run auto-remediations 5 times within 50 seconds before throwing an exception.
-     */
-    retryAttemptSeconds: 0,
-    /**
-     * The maximum number of failed attempts for auto-remediation. If you do not select a number, the default is 5.
-     *
-     * For example, if you specify MaximumAutomaticAttempts as 5 with RetryAttemptSeconds as 50 seconds, AWS Config will put a RemediationException on your behalf for the failing resource after the 5th failed attempt within 50 seconds.
-     */
-    maximumAutomaticAttempts: 0,
-    /**
-     * List of remediation parameters
-     *
-     */
-    parameters: [],
-  };
+  readonly remediation: ConfigRuleRemediation = new ConfigRuleRemediation();
 }
 
 /**

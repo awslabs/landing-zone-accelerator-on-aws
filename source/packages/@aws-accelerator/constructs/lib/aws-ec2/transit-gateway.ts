@@ -76,6 +76,8 @@ export class TransitGatewayRouteTablePropagation extends cdk.Resource implements
 export interface ITransitGatewayAttachment extends cdk.IResource {
   readonly transitGatewayAttachmentId: string;
   readonly transitGatewayAttachmentName: string;
+
+  addDependency: (dependent: Construct) => void;
 }
 
 export interface TransitGatewayAttachmentProps {
@@ -111,13 +113,22 @@ export interface TransitGatewayAttachmentLookupOptions {
   readonly logRetentionInDays: number;
 }
 
-export class TransitGatewayAttachment extends cdk.Resource implements ITransitGatewayAttachment {
+abstract class TransitGatewayAttachmentBase extends cdk.Resource implements ITransitGatewayAttachment {
+  public abstract readonly transitGatewayAttachmentId: string;
+  public abstract readonly transitGatewayAttachmentName: string;
+
+  addDependency(dependent: Construct) {
+    dependent.node.addDependency(this);
+  }
+}
+
+export class TransitGatewayAttachment extends TransitGatewayAttachmentBase {
   public static fromLookup(
     scope: Construct,
     id: string,
     options: TransitGatewayAttachmentLookupOptions,
   ): ITransitGatewayAttachment {
-    class Import extends cdk.Resource implements ITransitGatewayAttachment {
+    class Import extends TransitGatewayAttachmentBase {
       public readonly transitGatewayAttachmentId: string;
       public readonly transitGatewayAttachmentName = options.name;
 
@@ -185,6 +196,25 @@ export class TransitGatewayAttachment extends cdk.Resource implements ITransitGa
         resource.node.addDependency(logGroup);
 
         this.transitGatewayAttachmentId = resource.ref;
+      }
+    }
+    return new Import(scope, id);
+  }
+
+  public static fromTransitGatewayAttachmentId(
+    scope: Construct,
+    id: string,
+    options: {
+      attachmentId: string;
+      attachmentName: string;
+    },
+  ): ITransitGatewayAttachment {
+    class Import extends TransitGatewayAttachmentBase {
+      public readonly transitGatewayAttachmentId: string;
+      public readonly transitGatewayAttachmentName = options.attachmentName;
+      constructor(scope: Construct, id: string) {
+        super(scope, id);
+        this.transitGatewayAttachmentId = options.attachmentId;
       }
     }
     return new Import(scope, id);
@@ -319,10 +349,50 @@ export interface TransitGatewayProps {
   readonly tags?: cdk.CfnTag[];
 }
 
+interface TransitGatewayAttributes {
+  /**
+   * The ID of the TransitGateway.
+   */
+  transitGatewayId: string;
+  /**
+   * The Name of the TransitGateway.
+   */
+  transitGatewayName: string;
+}
+
+abstract class TransitGatewayBase extends cdk.Resource implements ITransitGateway {
+  public abstract readonly transitGatewayId: string;
+  public abstract readonly transitGatewayName: string;
+  public abstract readonly transitGatewayArn: string;
+}
+
+export class ImportedTransitGateway extends TransitGatewayBase {
+  readonly transitGatewayId: string;
+
+  readonly transitGatewayName: string;
+
+  readonly transitGatewayArn: string;
+
+  constructor(scope: Construct, id: string, props: TransitGatewayAttributes) {
+    super(scope, id);
+
+    this.transitGatewayId = props.transitGatewayId;
+
+    this.transitGatewayName = props.transitGatewayName;
+
+    this.transitGatewayArn = cdk.Stack.of(this).formatArn({
+      service: 'ec2',
+      resource: 'transit-gateway',
+      arnFormat: cdk.ArnFormat.SLASH_RESOURCE_NAME,
+      resourceName: this.transitGatewayId,
+    });
+  }
+}
+
 /**
  * Creates a Transit Gateway
  */
-export class TransitGateway extends cdk.Resource implements ITransitGateway {
+export class TransitGateway extends TransitGatewayBase {
   readonly transitGatewayId: string;
 
   readonly transitGatewayName: string;
@@ -353,5 +423,9 @@ export class TransitGateway extends cdk.Resource implements ITransitGateway {
       arnFormat: cdk.ArnFormat.SLASH_RESOURCE_NAME,
       resourceName: this.transitGatewayId,
     });
+  }
+
+  static fromTransitGatewayAttributes(scope: Construct, id: string, attrs: TransitGatewayAttributes) {
+    return new ImportedTransitGateway(scope, id, attrs);
   }
 }

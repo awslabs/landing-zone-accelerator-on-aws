@@ -231,7 +231,7 @@ export class NetworkConfigTypes {
   static readonly subnetConfig = t.interface({
     name: t.nonEmptyString,
     availabilityZone: t.optional(t.union([t.nonEmptyString, t.number])),
-    routeTable: t.nonEmptyString,
+    routeTable: t.optional(t.nonEmptyString),
     ipv4CidrBlock: t.optional(t.nonEmptyString),
     mapPublicIpOnLaunch: t.optional(t.boolean),
     ipamAllocation: t.optional(this.ipamAllocationConfig),
@@ -377,7 +377,7 @@ export class NetworkConfigTypes {
   );
 
   static readonly networkAclSubnetSelection = t.interface({
-    account: t.nonEmptyString,
+    account: t.optional(t.nonEmptyString),
     vpc: t.nonEmptyString,
     subnet: t.nonEmptyString,
     region: t.optional(t.region),
@@ -915,6 +915,7 @@ export class NetworkConfigTypes {
     domain: t.optional(t.nonEmptyString),
     san: t.optional(t.array(t.nonEmptyString)),
     deploymentTargets: t.deploymentTargets,
+    isExisting: t.optional(t.boolean),
   });
 
   static readonly networkConfig = t.interface({
@@ -2285,7 +2286,7 @@ export class SubnetConfig implements t.TypeOf<typeof NetworkConfigTypes.subnetCo
   /**
    * The friendly name of the route table to associate with the subnet.
    */
-  readonly routeTable: string = '';
+  readonly routeTable: string | undefined = undefined;
   /**
    * The IPAM pool configuration for the subnet.
    *
@@ -6882,6 +6883,11 @@ export class CertificateConfig implements t.TypeOf<typeof NetworkConfigTypes.cer
    * ACM deployment target. This should be provided to deploy ACM into OUs or account.
    */
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
+
+  /**
+   * Is ACM cert existing (Imported/Requested). All existing certificates should have SSM Parameter of format /acm/<name>/arn created in account and region
+   */
+  readonly isExisting: boolean | undefined = false;
 }
 /**
  * *{@link NetworkConfig} / {@link FirewallManagerConfig}*

@@ -2200,7 +2200,7 @@ export class VpcValidator {
     vpcItem.routeTables?.forEach(routeTable => tableNames.push(routeTable.name));
 
     vpcItem.subnets?.forEach(subnet => {
-      if (!tableNames.includes(subnet.routeTable)) {
+      if (subnet.routeTable && !tableNames.includes(subnet.routeTable)) {
         errors.push(
           `[VPC ${vpcItem.name} subnet ${subnet.name}]: route table "${subnet.routeTable}" does not exist in the VPC`,
         );

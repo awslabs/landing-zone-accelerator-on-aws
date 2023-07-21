@@ -11,15 +11,17 @@
  *  and limitations under the License.
  */
 import { Construct } from 'constructs';
-import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
-import { AseaStackInfo, CfnResourceType, DeploymentTargets, AseaResourceMapping } from '@aws-accelerator/config';
+import * as cdk from 'aws-cdk-lib';
+import { AcceleratorKeyType, AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import { AseaStackInfo, DeploymentTargets, AseaResourceMapping, CfnResourceType } from '@aws-accelerator/config';
 import { ManagedPolicies } from '../asea-resources/managed-policies';
 import { Roles } from '../asea-resources/iam-roles';
 import { Groups } from '../asea-resources/iam-groups';
 import { Users } from '../asea-resources/iam-users';
-import { CfnInclude, CfnIncludeProps } from 'aws-cdk-lib/cloudformation-include';
 import { VpcResources } from '../asea-resources/vpc-resources';
 import { AcceleratorStage } from '../accelerator-stage';
+import { TransitGateways } from '../asea-resources/transit-gateways';
+import { VpcPeeringConnection } from '../asea-resources/vpc-peering-connection';
 
 /**
  * Enum for log level
@@ -46,14 +48,18 @@ export interface ImportAseaResourcesStackProps extends AcceleratorStackProps {
   stage: AcceleratorStage.IMPORT_ASEA_RESOURCES | AcceleratorStage.POST_IMPORT_ASEA_RESOURCES;
 }
 export class ImportAseaResourcesStack extends AcceleratorStack {
-  includedStack: CfnInclude;
+  includedStack: cdk.cloudformation_include.CfnInclude;
   private readonly stackInfo: AseaStackInfo;
   public resourceMapping: AseaResourceMapping[] = [];
+  public cloudwatchKey: cdk.aws_kms.IKey;
+  public firewallBucket: cdk.aws_s3.IBucket;
   constructor(scope: Construct, id: string, props: ImportAseaResourcesStackProps) {
     super(scope, id, props);
     this.stackInfo = props.stackInfo;
-    const nestedStacks: { [stackName: string]: CfnIncludeProps } = {};
-    this.includedStack = new CfnInclude(this, `stack`, {
+    const nestedStacks: { [stackName: string]: cdk.cloudformation_include.CfnIncludeProps } = {};
+    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
+    this.firewallBucket = cdk.aws_s3.Bucket.fromBucketName(this, 'FirewallLogsBucket', this.centralLogsBucketName);
+    this.includedStack = new cdk.cloudformation_include.CfnInclude(this, `stack`, {
       templateFile: this.stackInfo.templatePath,
       preserveLogicalIds: true,
       loadNestedStacks: nestedStacks,
@@ -78,7 +84,9 @@ export class ImportAseaResourcesStack extends AcceleratorStack {
     new Roles(this, { ...props, policies });
     const { groups } = new Groups(this, { ...props, policies });
     new Users(this, { ...props, policies, groups });
+    new TransitGateways(this, props);
     new VpcResources(this, { ...props, nestedStacksInfo });
+    new VpcPeeringConnection(this, props);
     this.createSsmParameters();
   }
 

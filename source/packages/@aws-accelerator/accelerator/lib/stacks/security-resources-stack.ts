@@ -17,7 +17,7 @@ import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import path from 'path';
 import { Tag as ConfigRuleTag } from '@aws-sdk/client-config-service';
-import { AccountCloudTrailConfig, AwsConfigRuleSet, ConfigRule, Tag } from '@aws-accelerator/config';
+import { AccountCloudTrailConfig, AwsConfigRuleSet, ConfigRule, Region, Tag } from '@aws-accelerator/config';
 
 import {
   ConfigServiceRecorder,
@@ -903,9 +903,11 @@ export class SecurityResourcesStack extends AcceleratorStack {
       if (configRule) {
         // Tag rule
         this.setupConfigServicesTagging(rule, configRule);
-
         // Create remediation for config rule
-        if (rule.remediation) {
+        if (
+          rule.remediation &&
+          (rule.remediation.excludeRegions ?? []).indexOf(cdk.Stack.of(this).region as Region) === -1
+        ) {
           this.setupConfigRuleRemediation(rule, configRule);
         }
 

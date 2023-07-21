@@ -106,6 +106,12 @@ describe('TransitGatewayAttachment', () => {
       vpcId: 'vpcId',
     });
   });
+  it('tgw from id', () => {
+    TransitGatewayAttachment.fromTransitGatewayAttachmentId(stack, 'TgwAttachId', {
+      attachmentId: 'transitGatewayAttachmentId',
+      attachmentName: 'name',
+    });
+  });
   snapShotTest('Construct(TransitGatewayAttachment): ', stack);
 });
 
@@ -137,4 +143,14 @@ describe('TransitGateway', () => {
     tags: [{ key: 'key', value: 'value' }],
   });
   snapShotTest('Construct(TransitGateway): ', stack);
+});
+/**
+ * Import TransitGateway construct test
+ */
+describe('ImportTransitGateway', () => {
+  TransitGateway.fromTransitGatewayAttributes(stack, 'ImportTransitGateway', {
+    transitGatewayId: 'someTransitGatewayId',
+    transitGatewayName: 'someTransitGateway',
+  });
+  snapShotTest('Construct(ImportTransitGateway): ', stack);
 });

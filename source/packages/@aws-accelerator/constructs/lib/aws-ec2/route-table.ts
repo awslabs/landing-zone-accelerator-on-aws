@@ -15,6 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
 import { PrefixListRoute } from './prefix-list-route';
+import { ITransitGatewayAttachment } from './transit-gateway';
 import { Vpc } from './vpc';
 
 export interface IRouteTable extends cdk.IResource {
@@ -50,7 +51,7 @@ export abstract class RouteTableBase extends cdk.Resource implements IRouteTable
   public addTransitGatewayRoute(
     id: string,
     transitGatewayId: string,
-    transitGatewayAttachment: cdk.CfnResource,
+    transitGatewayAttachment: ITransitGatewayAttachment,
     destination?: string,
     destinationPrefixListId?: string,
     logGroupKmsKey?: cdk.aws_kms.Key,
@@ -85,7 +86,7 @@ export abstract class RouteTableBase extends cdk.Resource implements IRouteTable
       });
     }
 
-    route.node.addDependency(transitGatewayAttachment);
+    transitGatewayAttachment.addDependency(route);
     return route;
   }
 
@@ -245,7 +246,7 @@ export class ImportedRouteTable extends RouteTableBase {
 
   constructor(scope: Construct, id: string, props: ImportRouteTableProps) {
     super(scope, id);
-    this.routeTableId = id;
+    this.routeTableId = props.routeTableId;
     this.vpc = props.vpc;
   }
 }

@@ -19,6 +19,7 @@ import { Construct } from 'constructs';
 import {
   ApplicationLoadBalancerConfig,
   ApplicationLoadBalancerListenerConfig,
+  AseaResourceType,
   CustomerGatewayConfig,
   DxGatewayConfig,
   DxTransitGatewayAssociationConfig,
@@ -1686,25 +1687,35 @@ export class NetworkAssociationsStack extends NetworkStack {
           this.getSsmPath(SsmResourceType.VPC, [peering.accepter.name]),
         );
       }
-
-      // Create VPC peering
-      this.logger.info(
-        `Create VPC peering ${peering.name} between ${peering.requester.name} and ${peering.accepter.name}`,
-      );
-      const vpcPeering = new VpcPeering(this, `${peering.name}VpcPeering`, {
-        name: peering.name,
-        peerOwnerId: accepterAccountId,
-        peerRegion: peering.accepter.region,
-        peerVpcId: accepterVpcId,
-        peerRoleName: accepterRoleName,
-        vpcId: requesterVpcId,
-        tags: peering.tags ?? [],
-      });
-      this.ssmParameters.push({
-        logicalId: pascalCase(`SsmParam${pascalCase(peering.name)}VpcPeering`),
-        parameterName: this.getSsmPath(SsmResourceType.VPC_PEERING, [peering.name]),
-        stringValue: vpcPeering.peeringId,
-      });
+      let vpcPeering;
+      if (this.isManagedByAsea(AseaResourceType.EC2_VPC_PEERING, peering.name)) {
+        const peeringId = this.getExternalResourceParameter(
+          this.getSsmPath(SsmResourceType.VPC_PEERING, [peering.name]),
+        );
+        vpcPeering = VpcPeering.fromPeeringAttributes(this, `${peering.name}VpcPeering`, {
+          name: peering.name,
+          peeringId: peeringId,
+        });
+      } else {
+        // Create VPC peering
+        this.logger.info(
+          `Create VPC peering ${peering.name} between ${peering.requester.name} and ${peering.accepter.name}`,
+        );
+        vpcPeering = new VpcPeering(this, `${peering.name}VpcPeering`, {
+          name: peering.name,
+          peerOwnerId: accepterAccountId,
+          peerRegion: peering.accepter.region,
+          peerVpcId: accepterVpcId,
+          peerRoleName: accepterRoleName,
+          vpcId: requesterVpcId,
+          tags: peering.tags ?? [],
+        });
+        this.ssmParameters.push({
+          logicalId: pascalCase(`SsmParam${pascalCase(peering.name)}VpcPeering`),
+          parameterName: this.getSsmPath(SsmResourceType.VPC_PEERING, [peering.name]),
+          stringValue: vpcPeering.peeringId,
+        });
+      }
 
       // Put cross-account SSM parameter if necessary
       if (crossAccountCondition) {

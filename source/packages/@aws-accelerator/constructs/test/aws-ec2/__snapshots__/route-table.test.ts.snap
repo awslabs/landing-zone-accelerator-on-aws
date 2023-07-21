@@ -260,7 +260,7 @@ exports[`RouteTable Construct(RouteTable):  Snapshot Test 1`] = `
     },
     "RouteTabletgCEFADE05": {
       "DependsOn": [
-        "tgwAttachment",
+        "tgwAttachment1E239374",
       ],
       "Properties": {
         "DestinationCidrBlock": "10.0.5.0/24",
@@ -275,7 +275,7 @@ exports[`RouteTable Construct(RouteTable):  Snapshot Test 1`] = `
       "DeletionPolicy": "Delete",
       "DependsOn": [
         "CustomPrefixListRouteCustomResourceProviderLogGroup68DB81A5",
-        "tgwAttachment",
+        "tgwAttachment1E239374",
       ],
       "Properties": {
         "ServiceToken": {
@@ -450,10 +450,16 @@ exports[`RouteTable Construct(RouteTable):  Snapshot Test 1`] = `
       },
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
     },
-    "tgwAttachment": {
+    "tgwAttachment1E239374": {
       "Properties": {
         "SubnetIds": [
           "subnet-123",
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "someTgwAttachment",
+          },
         ],
         "TransitGatewayId": "tgw-12324",
         "VpcId": {
