@@ -18,31 +18,46 @@ import { AwsSolutionsChecks } from 'cdk-nag';
 import 'source-map-support/register';
 import { version } from '../../../../package.json';
 import * as installer from '../lib/installer-stack';
+import { createLogger } from '@aws-accelerator/utils';
+import { isAseaMigrationEnabled } from '../utils/installer-utils';
 
-const app = new cdk.App();
-cdk.Aspects.of(app).add(new AwsSolutionsChecks());
+const logger = createLogger(['installer']);
 
-const useExternalPipelineAccount = app.node.tryGetContext('use-external-pipeline-account') === 'true';
-const enableTester = app.node.tryGetContext('enable-tester') === 'true';
-const managementCrossAccountRoleName = app.node.tryGetContext('management-cross-account-role-name');
-const enableSingleAccountMode = app.node.tryGetContext('enable-single-account-mode') === 'true';
-const enableAseaMigration = app.node.tryGetContext('enable-asea-migration') === 'true';
+async function main() {
+  const app = new cdk.App();
+  cdk.Aspects.of(app).add(new AwsSolutionsChecks());
 
-if (enableTester && managementCrossAccountRoleName === undefined) {
-  console.log(`Invalid --management-cross-account-role-name ${managementCrossAccountRoleName}`);
-  throw new Error(
-    'Usage: app.ts [--context use-external-pipeline-account=BOOLEAN] [--context enable-tester=BOOLEAN] [--context management-cross-account-role-name=MANAGEMENT_CROSS_ACCOUNT_ROLE_NAME]',
-  );
+  const useExternalPipelineAccount = app.node.tryGetContext('use-external-pipeline-account') === 'true';
+  const enableTester = app.node.tryGetContext('enable-tester') === 'true';
+  const managementCrossAccountRoleName = app.node.tryGetContext('management-cross-account-role-name');
+  const enableSingleAccountMode = app.node.tryGetContext('enable-single-account-mode') === 'true';
+  const enableAseaMigration = await isAseaMigrationEnabled();
+
+  if (enableTester && managementCrossAccountRoleName === undefined) {
+    console.log(`Invalid --management-cross-account-role-name ${managementCrossAccountRoleName}`);
+    throw new Error(
+      'Usage: app.ts [--context use-external-pipeline-account=BOOLEAN] [--context enable-tester=BOOLEAN] [--context management-cross-account-role-name=MANAGEMENT_CROSS_ACCOUNT_ROLE_NAME]',
+    );
+  }
+
+  new installer.InstallerStack(app, 'AWSAccelerator-InstallerStack', {
+    description: `(SO0199) Landing Zone Accelerator on AWS. Version ${version}.`,
+    synthesizer: new cdk.DefaultStackSynthesizer({
+      generateBootstrapVersionRule: false,
+    }),
+    useExternalPipelineAccount: useExternalPipelineAccount,
+    enableTester: enableTester,
+    managementCrossAccountRoleName: managementCrossAccountRoleName,
+    enableSingleAccountMode,
+    enableAseaMigration,
+  });
 }
 
-new installer.InstallerStack(app, 'AWSAccelerator-InstallerStack', {
-  description: `(SO0199) Landing Zone Accelerator on AWS. Version ${version}.`,
-  synthesizer: new cdk.DefaultStackSynthesizer({
-    generateBootstrapVersionRule: false,
-  }),
-  useExternalPipelineAccount: useExternalPipelineAccount,
-  enableTester: enableTester,
-  managementCrossAccountRoleName: managementCrossAccountRoleName,
-  enableSingleAccountMode,
-  enableAseaMigration,
-});
+(async () => {
+  try {
+    await main();
+  } catch (err) {
+    logger.error(err);
+    throw new Error(`${err}`);
+  }
+})();
