@@ -17,6 +17,7 @@ export function policyReplacements(props: {
   managementAccountAccessRole: string;
   partition: string;
   additionalReplacements: { [key: string]: string | string[] };
+  acceleratorName: string;
 }): string {
   const { acceleratorPrefix, additionalReplacements, managementAccountAccessRole, partition } = props;
   let { content } = props;
@@ -27,6 +28,7 @@ export function policyReplacements(props: {
 
   const replacements = {
     '\\${MANAGEMENT_ACCOUNT_ACCESS_ROLE}': managementAccountAccessRole,
+    '\\${ACCELERATOR_NAME}' : props.acceleratorName,
     '\\${ACCELERATOR_PREFIX}': acceleratorPrefix,
     '\\${PARTITION}': partition,
   };
