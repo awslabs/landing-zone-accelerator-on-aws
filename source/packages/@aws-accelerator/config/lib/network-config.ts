@@ -451,7 +451,7 @@ export class NetworkConfigTypes {
   static readonly outpostsConfig = t.interface({
     name: t.nonEmptyString,
     arn: t.nonEmptyString,
-    availabilityZone: t.nonEmptyString,
+    availabilityZone: t.union([t.nonEmptyString, t.number]),
     localGateway: t.optional(this.localGatewayConfig),
   });
 
@@ -2615,9 +2615,11 @@ export class OutpostsConfig implements t.TypeOf<typeof NetworkConfigTypes.outpos
    * The availability zone where the Outpost resides
    *
    * @remarks
-   * Include only the letter of the AZ name (i.e. 'a' for 'us-east-1a').
+   * Include only the letter of the AZ name (i.e. 'a' for 'us-east-1a') to target a subnet created in a specific AZ. Use an integer
+   * (i.e. 1) for subnets using a physical mapping ID to an AZ. Please reference the documentation {@link https://docs.aws.amazon.com/ram/latest/userguide/working-with-az-ids.html | Availability Zone IDs for your AWS resources}
+   *  for more information.
    */
-  readonly availabilityZone: string = '';
+  readonly availabilityZone: string | number = '';
   /**
    * The Local Gateway configuration for the Outpost
    */

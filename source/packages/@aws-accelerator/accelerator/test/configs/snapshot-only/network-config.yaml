@@ -635,6 +635,25 @@ vpcs:
         ipamAllocation:
           ipamPoolName: home-region-prod-pool
           netmaskLength: 28
+      - name: Network-Secondary-Outposts-A
+        routeTable: Network-Secondary-A-Rt
+        outpost: accelerator-outpost-a
+        ipamAllocation:
+          ipamPoolName: home-region-prod-pool
+          netmaskLength: 28
+      - name: Network-Secondary-Outposts-1
+        routeTable: Network-Secondary-A-Rt
+        outpost: accelerator-outpost-1
+        ipamAllocation:
+          ipamPoolName: home-region-prod-pool
+          netmaskLength: 28
+    outposts:
+      - name: accelerator-outpost-a
+        arn: test-arn
+        availabilityZone: a
+      - name: accelerator-outpost-1
+        arn: test-arn-2
+        availabilityZone: 1
     networkAcls:
       - name: TestNacl
         subnetAssociations:

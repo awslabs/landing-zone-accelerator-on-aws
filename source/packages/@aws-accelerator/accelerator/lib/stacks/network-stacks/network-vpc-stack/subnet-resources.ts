@@ -78,7 +78,7 @@ export class SubnetResources {
     const outpost = subnetItem.outpost
       ? this.stack.getOutpost(maps.outposts, vpcItem.name, subnetItem.outpost)
       : undefined;
-    const availabilityZone = this.setAvailabilityZone(subnetItem);
+    const availabilityZone = this.setAvailabilityZone(subnetItem, outpost);
 
     // Create subnet
     const subnet = this.createSubnetItem(vpcItem, subnetItem, availabilityZone, vpc, routeTable, basePool, outpost);
@@ -179,22 +179,18 @@ export class SubnetResources {
    * @param outpost
    * @returns
    */
-  private setAvailabilityZone(subnetItem: SubnetConfig, outpost?: OutpostsConfig) {
-    let availabilityZone: string | undefined = undefined;
-    const availabilityZoneId = getAvailabilityZoneMap(cdk.Stack.of(this.stack).region);
-    if (typeof subnetItem.availabilityZone === 'string') {
-      availabilityZone = `${cdk.Stack.of(this.stack).region}${subnetItem.availabilityZone}`;
-    } else if (typeof subnetItem.availabilityZone === 'number') {
-      availabilityZone = availabilityZoneId?.concat(subnetItem.availabilityZone.toString());
-    } else if (outpost?.availabilityZone) {
-      availabilityZone = outpost.availabilityZone;
-    }
+  private setAvailabilityZone(subnetItem: SubnetConfig, outpost?: OutpostsConfig): string {
+    let availabilityZone = outpost?.availabilityZone ? outpost.availabilityZone : subnetItem.availabilityZone;
 
     if (!availabilityZone) {
       this.stack.addLogs(LogLevel.ERROR, `Error creating subnet ${subnetItem.name}: Availability Zone not defined.`);
       throw new Error(`Configuration validation failed at runtime.`);
     }
-    return availabilityZone;
+
+    return (availabilityZone =
+      typeof availabilityZone === 'string'
+        ? `${cdk.Stack.of(this.stack).region}${availabilityZone}`
+        : `${getAvailabilityZoneMap(cdk.Stack.of(this.stack).region)}${availabilityZone}`);
   }
 
   /**
@@ -220,14 +216,8 @@ export class SubnetResources {
     outpost?: OutpostsConfig,
   ): Subnet {
     this.stack.addLogs(LogLevel.INFO, `Adding subnet ${subnetItem.name} to VPC ${vpcItem.name}`);
-    let isAvailabilityZoneId: boolean;
-    let availabilityZoneId: string | undefined;
-    if (availabilityZone.includes(cdk.Stack.of(this.stack).region)) {
-      isAvailabilityZoneId = false;
-    } else {
-      isAvailabilityZoneId = true;
-      availabilityZoneId = availabilityZone;
-    }
+
+    const isAvailabilityZoneId = !availabilityZone.includes(cdk.Stack.of(this.stack).region);
     let subnet;
     if (this.stack.isManagedByAsea(AseaResourceType.EC2_SUBNET, `${vpcItem.name}/${subnetItem.name}`)) {
       const subnetId = this.stack.getExternalResourceParameter(
@@ -246,8 +236,8 @@ export class SubnetResources {
     } else {
       subnet = new Subnet(this.stack, pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${subnetItem.name}Subnet`), {
         name: subnetItem.name,
-        availabilityZone: isAvailabilityZoneId === false ? availabilityZone : undefined,
-        availabilityZoneId: isAvailabilityZoneId === true ? availabilityZoneId : undefined,
+        availabilityZone: isAvailabilityZoneId ? undefined : availabilityZone,
+        availabilityZoneId: isAvailabilityZoneId ? availabilityZone : undefined,
         basePool,
         ipamAllocation: subnetItem.ipamAllocation,
         ipv4CidrBlock: subnetItem.ipv4CidrBlock,
