@@ -25,10 +25,9 @@ export function policyReplacements(props: {
   for (const [key, value] of Object.entries(additionalReplacements)) {
     content = content.replace(new RegExp(key, 'g'), typeof value === 'string' ? value : JSON.stringify(value));
   }
-
   const replacements = {
     '\\${MANAGEMENT_ACCOUNT_ACCESS_ROLE}': managementAccountAccessRole,
-    '\\${ACCELERATOR_NAME}' : props.acceleratorName,
+    '\\${ACCELERATOR_NAME}': props.acceleratorName,
     '\\${ACCELERATOR_PREFIX}': acceleratorPrefix,
     '\\${PARTITION}': partition,
   };

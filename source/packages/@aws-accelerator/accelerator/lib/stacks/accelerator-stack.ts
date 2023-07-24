@@ -1394,7 +1394,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
       managementAccountAccessRole: this.props.globalConfig.managementAccountAccessRole,
       partition: this.props.partition,
       additionalReplacements,
-      acceleratorName: this.props.globalConfig.externalLandingZoneResources?.acceleratorName || 'lza'
+      acceleratorName: this.props.globalConfig.externalLandingZoneResources?.acceleratorName || 'lza',
     });
 
     if (returnTempPath) {
