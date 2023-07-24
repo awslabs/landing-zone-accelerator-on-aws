@@ -48,6 +48,7 @@ export const isThrottlingError = (
   e.code === 'InternalErrorException' ||
   e.code === 'InternalException' ||
   e.code === 'ECONNRESET' ||
+  e.code === 'ENOTFOUND' ||
   e.code === 'EPIPE' ||
   e.code === 'ETIMEDOUT' ||
   // SDKv3 Error Structure

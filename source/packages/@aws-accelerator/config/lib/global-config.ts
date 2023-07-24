@@ -1919,14 +1919,18 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
     if (!this.externalLandingZoneResources.resourceParameters) {
       this.externalLandingZoneResources.resourceParameters = {};
     }
+    const lzaResourcesPromises = [];
     for (const region of this.enabledRegions) {
-      await this.loadRegionLzaResources(
-        region,
-        partition,
-        prefix,
-        this.externalLandingZoneResources?.accountsDeployedExternally || [],
+      lzaResourcesPromises.push(
+        this.loadRegionLzaResources(
+          region,
+          partition,
+          prefix,
+          this.externalLandingZoneResources?.accountsDeployedExternally || [],
+        ),
       );
     }
+    await Promise.all(lzaResourcesPromises);
   }
 
   private async loadRegionLzaResources(region: string, partition: string, prefix: string, accounts: string[]) {
@@ -1945,12 +1949,19 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
       // Loading all to avoid reading SSM Params multiple times
       // Can also use DynamoDB for resource status instead of SSM Parameters,
       // But with DynamoDB knowing resource creation status in CloudFormation is difficult
-      this.externalLandingZoneResources.resourceParameters[`${accountId}-${region}`] = {
-        ...(await this.getParametersByPath(getSsmPath(t.AseaResourceTypePaths.IAM), ssmClient)),
-        ...(await this.getParametersByPath(getSsmPath(t.AseaResourceTypePaths.VPC), ssmClient)),
-        ...(await this.getParametersByPath(getSsmPath(t.AseaResourceTypePaths.TRANSIT_GATEWAY), ssmClient)),
-        ...(await this.getParametersByPath(getSsmPath(t.AseaResourceTypePaths.VPC_PEERING), ssmClient)),
-      };
+      const ssmPromises = [
+        this.getParametersByPath(getSsmPath(t.AseaResourceTypePaths.IAM), ssmClient),
+        this.getParametersByPath(getSsmPath(t.AseaResourceTypePaths.VPC), ssmClient),
+        this.getParametersByPath(getSsmPath(t.AseaResourceTypePaths.TRANSIT_GATEWAY), ssmClient),
+        this.getParametersByPath(getSsmPath(t.AseaResourceTypePaths.VPC_PEERING), ssmClient),
+      ];
+      const ssmResults = await Promise.all(ssmPromises);
+      this.externalLandingZoneResources.resourceParameters[`${accountId}-${region}`] = ssmResults.reduce(
+        (resources, result) => {
+          return { ...resources, ...result };
+        },
+        {},
+      );
     }
   }
 
