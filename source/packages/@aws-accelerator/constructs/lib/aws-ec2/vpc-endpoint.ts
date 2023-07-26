@@ -22,6 +22,8 @@ export interface IVpcEndpoint extends cdk.IResource {
   readonly vpcId: string;
   readonly dnsName?: string;
   readonly hostedZoneId?: string;
+
+  createEndpointRoute: (id: string, destination: string, routeTableId: string) => void;
 }
 
 export enum VpcEndpointType {
@@ -43,12 +45,48 @@ export interface VpcEndpointProps {
   readonly serviceName?: string;
 }
 
-export class VpcEndpoint extends cdk.Resource implements IVpcEndpoint {
+abstract class VpcEndpointBase extends cdk.Resource implements IVpcEndpoint {
+  public abstract readonly vpcEndpointId: string;
+  public abstract readonly vpcId: string;
+  public abstract readonly service: string;
+  public abstract readonly dnsName?: string;
+  public abstract readonly hostedZoneId?: string;
+
+  public createEndpointRoute(id: string, destination: string, routeTableId: string): void {
+    new cdk.aws_ec2.CfnRoute(this, id, {
+      destinationCidrBlock: destination,
+      routeTableId,
+      vpcEndpointId: this.vpcEndpointId,
+    });
+  }
+}
+
+interface VpcEndpointAttributes {
+  vpcId: string;
+  vpcEndpointId: string;
+  service: string;
+}
+
+export class VpcEndpoint extends VpcEndpointBase {
   public readonly vpcEndpointId: string;
   public readonly vpcId: string;
   public readonly service: string;
   public readonly dnsName?: string;
   public readonly hostedZoneId?: string;
+
+  static fromAttributes(scope: Construct, id: string, attrs: VpcEndpointAttributes): IVpcEndpoint {
+    class Import extends VpcEndpointBase {
+      public readonly vpcEndpointId = attrs.vpcEndpointId;
+      public readonly vpcId = attrs.vpcId;
+      public readonly service = attrs.service;
+      public readonly dnsName?: string;
+      public readonly hostedZoneId?: string;
+      constructor(scope: Construct, id: string) {
+        super(scope, id);
+      }
+    }
+    return new Import(scope, id);
+  }
 
   constructor(scope: Construct, id: string, props: VpcEndpointProps) {
     super(scope, id);
@@ -120,13 +158,5 @@ export class VpcEndpoint extends cdk.Resource implements IVpcEndpoint {
     }
 
     throw new Error('Invalid vpcEndpointType specified');
-  }
-
-  public createEndpointRoute(id: string, destination: string, routeTableId: string): void {
-    new cdk.aws_ec2.CfnRoute(this, id, {
-      destinationCidrBlock: destination,
-      routeTableId,
-      vpcEndpointId: this.vpcEndpointId,
-    });
   }
 }

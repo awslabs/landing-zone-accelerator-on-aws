@@ -1058,6 +1058,13 @@ export class NetworkAssociationsStack extends NetworkStack {
       throw new Error(`Configuration validation failed at runtime.`);
     }
     for (const routeTableItem of tgwAttachmentItem.routeTableAssociations ?? []) {
+      if (
+        this.isManagedByAsea(
+          AseaResourceType.TRANSIT_GATEWAY_ASSOCIATION,
+          `${owningAccount}/${tgwAttachmentItem.transitGateway.name}/${tgwAttachmentItem.name}/${routeTableItem}`,
+        )
+      )
+        continue;
       const associationsKey = `${tgwAttachmentItem.transitGateway.name}_${routeTableItem}`;
       let associationId: string;
       if (NetworkConfigTypes.vpcConfig.is(vpcItem)) {
@@ -1151,6 +1158,13 @@ export class NetworkAssociationsStack extends NetworkStack {
       throw new Error(`Configuration validation failed at runtime.`);
     }
     for (const routeTableItem of tgwAttachmentItem.routeTablePropagations ?? []) {
+      if (
+        this.isManagedByAsea(
+          AseaResourceType.TRANSIT_GATEWAY_PROPAGATION,
+          `${owningAccount}/${tgwAttachmentItem.transitGateway.name}/${tgwAttachmentItem.name}/${routeTableItem}`,
+        )
+      )
+        continue;
       const propagationsKey = `${tgwAttachmentItem.transitGateway.name}_${routeTableItem}`;
       let propagationId: string;
       if (NetworkConfigTypes.vpcConfig.is(vpcItem)) {

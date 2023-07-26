@@ -12,8 +12,16 @@
  */
 import { Construct } from 'constructs';
 import * as cdk from 'aws-cdk-lib';
-import { AcceleratorKeyType, AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
-import { AseaStackInfo, DeploymentTargets, AseaResourceMapping, CfnResourceType } from '@aws-accelerator/config';
+import { AcceleratorStackProps } from './accelerator-stack';
+import {
+  AseaStackInfo,
+  DeploymentTargets,
+  AseaResourceMapping,
+  CfnResourceType,
+  NetworkConfigTypes,
+  VpcConfig,
+  VpcTemplatesConfig,
+} from '@aws-accelerator/config';
 import { ManagedPolicies } from '../asea-resources/managed-policies';
 import { Roles } from '../asea-resources/iam-roles';
 import { Groups } from '../asea-resources/iam-groups';
@@ -22,6 +30,9 @@ import { VpcResources } from '../asea-resources/vpc-resources';
 import { AcceleratorStage } from '../accelerator-stage';
 import { TransitGateways } from '../asea-resources/transit-gateways';
 import { VpcPeeringConnection } from '../asea-resources/vpc-peering-connection';
+import { SharedSecurityGroups } from '../asea-resources/shared-security-groups';
+import { NetworkStack } from './network-stacks/network-stack';
+import { TgwCrossAccountResources } from '../asea-resources/tgw-cross-account-resources';
 
 /**
  * Enum for log level
@@ -47,17 +58,19 @@ export interface ImportAseaResourcesStackProps extends AcceleratorStackProps {
 
   stage: AcceleratorStage.IMPORT_ASEA_RESOURCES | AcceleratorStage.POST_IMPORT_ASEA_RESOURCES;
 }
-export class ImportAseaResourcesStack extends AcceleratorStack {
+
+/**
+ * Extending from NetworkStack since most of the reusable functions are from NetworkStack
+ */
+export class ImportAseaResourcesStack extends NetworkStack {
   includedStack: cdk.cloudformation_include.CfnInclude;
   private readonly stackInfo: AseaStackInfo;
   public resourceMapping: AseaResourceMapping[] = [];
-  public cloudwatchKey: cdk.aws_kms.IKey;
   public firewallBucket: cdk.aws_s3.IBucket;
   constructor(scope: Construct, id: string, props: ImportAseaResourcesStackProps) {
     super(scope, id, props);
     this.stackInfo = props.stackInfo;
     const nestedStacks: { [stackName: string]: cdk.cloudformation_include.CfnIncludeProps } = {};
-    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
     this.firewallBucket = cdk.aws_s3.Bucket.fromBucketName(this, 'FirewallLogsBucket', this.centralLogsBucketName);
     this.includedStack = new cdk.cloudformation_include.CfnInclude(this, `stack`, {
       templateFile: this.stackInfo.templatePath,
@@ -87,7 +100,26 @@ export class ImportAseaResourcesStack extends AcceleratorStack {
     new TransitGateways(this, props);
     new VpcResources(this, { ...props, nestedStacksInfo });
     new VpcPeeringConnection(this, props);
+    new SharedSecurityGroups(this, { ...props, nestedStacksInfo });
+    new TgwCrossAccountResources(this, props);
     this.createSsmParameters();
+  }
+
+  /**
+   * Get account names and excluded account IDs for transit gateway attachments
+   * @param vpcItem
+   * @returns
+   */
+  getTransitGatewayAttachmentAccounts(vpcItem: VpcConfig | VpcTemplatesConfig): [string[], string[]] {
+    let accountNames: string[];
+    let excludedAccountIds: string[] = [];
+    if (NetworkConfigTypes.vpcConfig.is(vpcItem)) {
+      accountNames = [vpcItem.account];
+    } else {
+      accountNames = this.getAccountNamesFromDeploymentTarget(vpcItem.deploymentTargets);
+      excludedAccountIds = this.getExcludedAccountIds(vpcItem.deploymentTargets);
+    }
+    return [accountNames, excludedAccountIds];
   }
 
   /**

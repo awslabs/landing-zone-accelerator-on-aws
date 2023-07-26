@@ -1,12 +1,13 @@
+import * as cdk from 'aws-cdk-lib';
 import { SsmResourceType } from '@aws-accelerator/utils';
 import { AseaResource, AseaResourceProps } from './resource';
 import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
 import { pascalCase } from 'pascal-case';
-import { CfnTransitGateway } from 'aws-cdk-lib/aws-ec2';
-import { AseaResourceType } from '@aws-accelerator/config';
+import { AseaResourceType, AseaStackInfo, TransitGatewayConfig } from '@aws-accelerator/config';
 
 const enum RESOURCE_TYPE {
   TRANSIT_GATEWAY = 'AWS::EC2::TransitGateway',
+  TRANSIT_GATEWAY_ROUTE_TABLE = 'AWS::EC2::TransitGatewayRouteTable',
 }
 const ASEA_PHASE_NUMBER = 0;
 
@@ -15,8 +16,10 @@ const ASEA_PHASE_NUMBER = 0;
  * All Transit Gateways driven by ASEA configuration are deployed in Phase-0
  */
 export class TransitGateways extends AseaResource {
+  private readonly stackInfo: AseaStackInfo;
   constructor(scope: ImportAseaResourcesStack, props: AseaResourceProps) {
     super(scope, props);
+    this.stackInfo = props.stackInfo;
     if (props.stackInfo.phase !== ASEA_PHASE_NUMBER) {
       this.scope.addLogs(
         LogLevel.INFO,
@@ -32,13 +35,14 @@ export class TransitGateways extends AseaResource {
     for (const tgwItem of props.networkConfig.transitGateways ?? []) {
       const tgwResource = this.findResourceByTag(existingTransitGatewaysResources, tgwItem.name);
       if (!tgwResource) continue;
-      const transitGateway = this.stack.getResource(tgwResource.logicalResourceId) as CfnTransitGateway;
+      const transitGateway = this.stack.getResource(tgwResource.logicalResourceId) as cdk.aws_ec2.CfnTransitGateway;
       transitGateway.amazonSideAsn = tgwItem.asn;
       transitGateway.autoAcceptSharedAttachments = tgwItem.autoAcceptSharingAttachments;
       transitGateway.defaultRouteTableAssociation = tgwItem.defaultRouteTableAssociation;
       transitGateway.defaultRouteTablePropagation = tgwItem.defaultRouteTablePropagation;
       transitGateway.dnsSupport = tgwItem.dnsSupport;
       transitGateway.vpnEcmpSupport = tgwItem.vpnEcmpSupport;
+      this.createTgwRouteTables(tgwItem, tgwResource.logicalResourceId);
       this.scope.addSsmParameter({
         logicalId: pascalCase(`SsmParam${tgwItem.name}TransitGatewayId`),
         parameterName: this.scope.getSsmPath(SsmResourceType.TGW, [tgwItem.name]),
@@ -57,5 +61,30 @@ export class TransitGateways extends AseaResource {
         );
         // TODO: Add Delete TGW
       });
+  }
+
+  private createTgwRouteTables(tgwItem: TransitGatewayConfig, tgwId: string) {
+    const allTgwRouteTables = this.filterResourcesByType(
+      this.stackInfo.resources,
+      RESOURCE_TYPE.TRANSIT_GATEWAY_ROUTE_TABLE,
+    );
+    const tgwRouteTables = this.filterResourcesByRef(allTgwRouteTables, 'TransitGatewayId', tgwId);
+    if (tgwRouteTables.length === 0) return;
+    for (const routeTableItem of tgwItem.routeTables ?? []) {
+      const tgwRouteTableResource = this.findResourceByTag(tgwRouteTables, routeTableItem.name);
+      if (!tgwRouteTableResource) continue;
+      const tgwRouteTable = this.stack.getResource(
+        tgwRouteTableResource.logicalResourceId,
+      ) as cdk.aws_ec2.CfnTransitGatewayRouteTable;
+      this.scope.addSsmParameter({
+        logicalId: pascalCase(`SsmParam${tgwItem.name}${routeTableItem.name}TransitGatewayRouteTableId`),
+        parameterName: this.scope.getSsmPath(SsmResourceType.TGW_ROUTE_TABLE, [tgwItem.name, routeTableItem.name]),
+        stringValue: tgwRouteTable.ref,
+      });
+      this.scope.addAseaResource(
+        AseaResourceType.TRANSIT_GATEWAY_ROUTE_TABLE,
+        `${tgwItem.name}/${routeTableItem.name}`,
+      );
+    }
   }
 }
