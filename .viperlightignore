@@ -164,6 +164,7 @@ source/packages/@aws-accelerator/constructs/lib/aws-cloudwatch-logs/create-log-g
 source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/certificates/certA/privKey.key
 source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/certificates/certA/cert.crt
 
-# Ignore files with "password" in the name
+
+# contains word: password
 source/packages/@aws-accelerator/constructs/lib/aws-iam/password-policy.ts
 source/packages/@aws-accelerator/constructs/test/aws-iam/password-policy.test.ts
