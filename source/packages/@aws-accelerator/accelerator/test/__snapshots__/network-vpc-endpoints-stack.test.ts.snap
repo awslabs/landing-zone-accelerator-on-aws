@@ -127,6 +127,10 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
       "Default": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-D/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondarysubnetNetworkSecondaryOutpostsAidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-Outposts-A/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
   },
   "Resources": {
     "AcceleratorFirewallFlowLogGroupC8720B1F": {

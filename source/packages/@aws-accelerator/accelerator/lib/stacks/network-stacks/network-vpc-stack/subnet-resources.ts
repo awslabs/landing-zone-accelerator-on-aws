@@ -71,7 +71,7 @@ export class SubnetResources {
         const outpost = subnetItem.outpost
           ? this.stack.getOutpost(outpostMap, vpcItem.name, subnetItem.outpost)
           : undefined;
-        const availabilityZone = this.setAvailabilityZone(subnetItem);
+        const availabilityZone = this.setAvailabilityZone(subnetItem, outpost);
 
         // Create subnet
         const subnet = this.createSubnetItem(vpcItem, subnetItem, availabilityZone, routeTable, vpc, basePool, outpost);
@@ -132,19 +132,14 @@ export class SubnetResources {
    * @returns
    */
   private setAvailabilityZone(subnetItem: SubnetConfig, outpost?: OutpostsConfig) {
-    let availabilityZone: string | undefined = undefined;
-
-    if (subnetItem.availabilityZone) {
-      availabilityZone = `${cdk.Stack.of(this.stack).region}${subnetItem.availabilityZone}`;
-    } else if (outpost?.availabilityZone) {
-      availabilityZone = outpost.availabilityZone;
-    }
+    const availabilityZone = outpost?.availabilityZone ? outpost.availabilityZone : subnetItem.availabilityZone;
 
     if (!availabilityZone) {
       this.stack.addLogs(LogLevel.ERROR, `Error creating subnet ${subnetItem.name}: Availability Zone not defined.`);
       throw new Error(`Configuration validation failed at runtime.`);
     }
-    return availabilityZone;
+
+    return `${cdk.Stack.of(this.stack).region}${availabilityZone}`;
   }
 
   /**
