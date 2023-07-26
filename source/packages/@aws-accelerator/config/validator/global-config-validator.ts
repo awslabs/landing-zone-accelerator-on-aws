@@ -68,6 +68,10 @@ export class GlobalConfigValidator {
     this.validateLifecycleRuleExpirationForAccessLogBucket(values, errors);
     this.validateLifecycleRuleExpirationForReports(values, errors);
     //
+    // validate cost and reporting configuration
+    //
+    this.validateAdditionalArtifactsForCostAndReporting(values, errors);
+    //
     // validate cloudwatch logging
     //
     this.validateCloudWatch(values, configDir, ouIdNames, accountNames, errors);
@@ -210,6 +214,18 @@ export class GlobalConfigValidator {
       if (lifecycleRule.expiration && lifecycleRule.expiredObjectDeleteMarker) {
         errors.push('You may not configure expiredObjectDeleteMarker with expiration. Cost Reporting');
       }
+    }
+  }
+
+  /**
+   * Function to validate additional artifact config for Cost Reporting
+   * @param values
+   */
+
+  private validateAdditionalArtifactsForCostAndReporting(values: GlobalConfig, errors: string[]) {
+    if ((values.reports?.costAndUsageReport?.additionalArtifacts ?? []).length > 1) {
+      const enabledAdditionalArtifacts = values.reports?.costAndUsageReport?.additionalArtifacts;
+      errors.push(`You may not configure more than one "additionalArtifacts" in Cost Reporting: ${enabledAdditionalArtifacts}`)
     }
   }
 
