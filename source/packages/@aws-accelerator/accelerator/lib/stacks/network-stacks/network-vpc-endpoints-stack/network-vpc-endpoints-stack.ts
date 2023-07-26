@@ -497,7 +497,10 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
     //
     for (const gatewayEndpointItem of vpcItem.gatewayEndpoints?.endpoints ?? []) {
       this.logger.info(`Adding Gateway Endpoint for ${gatewayEndpointItem.service}`);
-
+      if (this.isManagedByAsea(AseaResourceType.VPC_ENDPOINT, `${vpcItem.name}/${gatewayEndpointItem.service}`)) {
+        this.logger.info(`Endpoint "${gatewayEndpointItem.service}" for VPC "${vpcItem.name}" is managed externally`);
+        continue;
+      }
       if (gatewayEndpointItem.service === 's3') {
         new VpcEndpoint(this, pascalCase(`${vpcItem.name}Vpc`) + pascalCase(gatewayEndpointItem.service), {
           vpcId,

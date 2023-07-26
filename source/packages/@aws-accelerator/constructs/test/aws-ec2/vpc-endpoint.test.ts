@@ -170,5 +170,13 @@ describe('VpcEndpoint', () => {
       routeTables: ['Test1', 'Test2'],
     });
   });
+
+  it('vpc gateway end point for s3', () => {
+    VpcEndpoint.fromAttributes(stack, 'ImportedVpcEndpointS3', {
+      service: 's3',
+      vpcEndpointId: 'importedEndpointId',
+      vpcId: 'Test',
+    });
+  });
   snapShotTest(testNamePrefix, stack);
 });

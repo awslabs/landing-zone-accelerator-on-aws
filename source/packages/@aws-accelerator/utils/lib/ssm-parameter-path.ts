@@ -107,6 +107,14 @@ export enum SsmResourceType {
    */
   VPC = '/network/vpc/${0}/id',
   /**
+   * VPC Endpoint ID
+   *
+   * `${0}` is  replaced with the VPC name
+   *
+   * `${1} is replaced with the service name
+   */
+  VPC_ENDPOINT = '/network/vpc/${0}/endpoint/${1}/id',
+  /**
    * VPC peering connection ID
    *
    * `${0}` is replaced with the VPC peering name

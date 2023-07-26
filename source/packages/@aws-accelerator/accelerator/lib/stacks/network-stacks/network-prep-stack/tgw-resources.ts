@@ -89,22 +89,38 @@ export class TgwResources {
     // Creaet TGW route tables
     for (const routeTableItem of tgwItem.routeTables ?? []) {
       this.stack.addLogs(LogLevel.INFO, `Add Transit Gateway Route Table ${routeTableItem.name}`);
+      let routeTable;
+      if (
+        this.stack.isManagedByAsea(
+          AseaResourceType.TRANSIT_GATEWAY_ROUTE_TABLE,
+          `${tgwItem.name}/${routeTableItem.name}`,
+        )
+      ) {
+        const routeTableId = this.stack.getExternalResourceParameter(
+          this.stack.getSsmPath(SsmResourceType.TGW_ROUTE_TABLE, [tgwItem.name, routeTableItem.name]),
+        );
+        routeTable = TransitGatewayRouteTable.fromRouteTableId(
+          this.stack,
+          pascalCase(`${routeTableItem.name}TransitGatewayRouteTable`),
+          routeTableId,
+        );
+      } else {
+        routeTable = new TransitGatewayRouteTable(
+          this.stack,
+          pascalCase(`${routeTableItem.name}TransitGatewayRouteTable`),
+          {
+            transitGatewayId: tgw.transitGatewayId,
+            name: routeTableItem.name,
+            tags: routeTableItem.tags,
+          },
+        );
 
-      const routeTable = new TransitGatewayRouteTable(
-        this.stack,
-        pascalCase(`${routeTableItem.name}TransitGatewayRouteTable`),
-        {
-          transitGatewayId: tgw.transitGatewayId,
-          name: routeTableItem.name,
-          tags: routeTableItem.tags,
-        },
-      );
-
-      this.stack.addSsmParameter({
-        logicalId: pascalCase(`SsmParam${tgwItem.name}${routeTableItem.name}TransitGatewayRouteTableId`),
-        parameterName: this.stack.getSsmPath(SsmResourceType.TGW_ROUTE_TABLE, [tgwItem.name, routeTableItem.name]),
-        stringValue: routeTable.id,
-      });
+        this.stack.addSsmParameter({
+          logicalId: pascalCase(`SsmParam${tgwItem.name}${routeTableItem.name}TransitGatewayRouteTableId`),
+          parameterName: this.stack.getSsmPath(SsmResourceType.TGW_ROUTE_TABLE, [tgwItem.name, routeTableItem.name]),
+          stringValue: routeTable.id,
+        });
+      }
     }
 
     if (tgwItem.shareTargets) {

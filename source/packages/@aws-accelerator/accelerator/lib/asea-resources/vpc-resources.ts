@@ -21,12 +21,13 @@ import {
 import { CfnInclude } from 'aws-cdk-lib/cloudformation-include';
 import {
   AseaStackInfo,
-  NetworkConfigTypes,
   VpcConfig,
   VpcTemplatesConfig,
   AseaResourceType,
   NfwFirewallConfig,
   NfwStatefulRuleGroupReferenceConfig,
+  RouteTableConfig,
+  TransitGatewayAttachmentConfig,
 } from '@aws-accelerator/config';
 import { SsmResourceType } from '@aws-accelerator/utils';
 import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
@@ -44,10 +45,15 @@ const enum RESOURCE_TYPE {
   SECURITY_GROUP_INGRESS = 'AWS::EC2::SecurityGroupIngress',
   ROUTE_TABLE = 'AWS::EC2::RouteTable',
   TGW_ATTACHMENT = 'AWS::EC2::TransitGatewayAttachment',
+  TGW_ASSOCIATION = 'AWS::EC2::TransitGatewayRouteTableAssociation',
+  TGW_PROPAGATION = 'AWS::EC2::TransitGatewayRouteTablePropagation',
+  TGW_ROUTE = 'AWS::EC2::TransitGatewayRoute',
   NETWORK_FIREWALL = 'AWS::NetworkFirewall::Firewall',
   NETWORK_FIREWALL_POLICY = 'AWS::NetworkFirewall::FirewallPolicy',
   NETWORK_FIREWALL_RULE_GROUP = 'AWS::NetworkFirewall::RuleGroup',
   NETWORK_FIREWALL_LOGGING = 'AWS::NetworkFirewall::LoggingConfiguration',
+  VPC_ENDPOINT = 'AWS::EC2::VPCEndpoint',
+  TRANSIT_GATEWAY_ROUTE_TABLE = 'AWS::EC2::TransitGatewayRouteTable',
 }
 const ASEA_PHASE_NUMBER = 1;
 
@@ -63,19 +69,19 @@ export interface VpcResourcesProps extends AseaResourceProps {
 export class VpcResources extends AseaResource {
   private readonly nestedStacksInfo: NestedAseaStackInfo[] = [];
   private readonly props: VpcResourcesProps;
-  private readonly vpcResources: (VpcConfig | VpcTemplatesConfig)[] = [];
+  private readonly stackInfo: AseaStackInfo;
   private ssmParameters: { logicalId: string; parameterName: string; stringValue: string }[];
   constructor(scope: ImportAseaResourcesStack, props: VpcResourcesProps) {
     super(scope, props);
     this.props = props;
+    this.stackInfo = props.stackInfo;
     this.ssmParameters = [];
     if (props.stackInfo.phase !== ASEA_PHASE_NUMBER) {
       this.scope.addLogs(LogLevel.INFO, `No ${RESOURCE_TYPE.VPC}s to handle in stack ${props.stackInfo.stackName}`);
       return;
     }
     this.nestedStacksInfo = props.nestedStacksInfo;
-    this.vpcResources = [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])];
-    const vpcsInScope = this.getVpcsInScope(this.vpcResources);
+    const vpcsInScope = this.scope.vpcsInScope;
     for (const vpcInScope of vpcsInScope) {
       // ASEA creates NestedStack for each VPC. All SSM Parameters related to VPC goes to nested stack
       this.ssmParameters = [];
@@ -124,8 +130,26 @@ export class VpcResources extends AseaResource {
       const subnets = this.createSubnets(vpcInScope, vpcStackInfo, nestedStack.includedTemplate);
       this.createNatGateways(vpcStackInfo, nestedStack.includedTemplate, vpcInScope, subnets);
       this.createSecurityGroups(vpcInScope, vpcStackInfo, nestedStack.includedTemplate);
-      this.createTransitGatewayAttachments(vpcInScope, vpcStackInfo, nestedStack.includedTemplate, subnets);
+      const tgwAttachmentMap = this.createTransitGatewayAttachments(
+        vpcInScope,
+        vpcStackInfo,
+        nestedStack.includedTemplate,
+        subnets,
+      );
+      this.createTransitGatewayRouteTablePropagation(
+        vpcInScope,
+        vpcStackInfo,
+        nestedStack.includedTemplate,
+        tgwAttachmentMap ?? {},
+      );
+      this.createTransitGatewayRouteTableAssociation(
+        vpcInScope,
+        vpcStackInfo,
+        nestedStack.includedTemplate,
+        tgwAttachmentMap ?? {},
+      );
       this.createNetworkFirewallResources(vpcInScope, vpcStackInfo, nestedStack.includedTemplate, vpc.ref, subnets);
+      this.gatewayEndpoints(vpcInScope, vpcStackInfo, nestedStack.includedTemplate);
       this.addSsmParameter({
         logicalId: pascalCase(`SsmParam${pascalCase(vpcInScope.name)}VpcId`),
         parameterName: this.scope.getSsmPath(SsmResourceType.VPC, [vpcInScope.name]),
@@ -495,6 +519,7 @@ export class VpcResources extends AseaResource {
     vpcStack: CfnInclude,
     subnetRefs: { [name: string]: CfnSubnet },
   ) {
+    const tgwAttachmentMap: { [name: string]: string } = {};
     const tgwAttachmentResources = this.filterResourcesByType(vpcStackInfo.resources, RESOURCE_TYPE.TGW_ATTACHMENT);
     if (tgwAttachmentResources.length === 0) return;
     if (vpcItem.transitGatewayAttachments?.length === 0 && tgwAttachmentResources.length > 0) {
@@ -531,7 +556,113 @@ export class VpcResources extends AseaResource {
         AseaResourceType.TRANSIT_GATEWAY_ATTACHMENT,
         `${vpcItem.name}/${tgwAttachmentItem.name}`,
       );
+      tgwAttachmentMap[tgwAttachmentItem.name] = tgwAttachmentResource.logicalResourceId;
     }
+    return tgwAttachmentMap;
+  }
+
+  // TODO: Refactor
+  // Can be moved to AseaResource class to make it available for all ASEA classes
+  private getTgwRouteTableId(routeTableName: string) {
+    if (!this.props.globalConfig.externalLandingZoneResources?.templateMap) {
+      return;
+    }
+    const tgwStackMapping = this.props.globalConfig.externalLandingZoneResources.templateMap.find(
+      stackInfo =>
+        stackInfo.phase === 0 &&
+        stackInfo.accountKey === this.stackInfo.accountKey &&
+        stackInfo.region === this.stackInfo.region,
+    );
+    const tgwRouteTableResources = this.filterResourcesByType(
+      tgwStackMapping?.resources ?? [],
+      RESOURCE_TYPE.TRANSIT_GATEWAY_ROUTE_TABLE,
+    );
+    const tgwRouteTableResource = this.findResourceByTag(tgwRouteTableResources, routeTableName);
+    return tgwRouteTableResource?.physicalResourceId;
+  }
+
+  private createTransitGatewayRouteTablePropagation(
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    vpcStackInfo: NestedAseaStackInfo,
+    vpcStack: CfnInclude,
+    tgwAttachMap: { [name: string]: string },
+  ) {
+    const tgwPropagations = this.filterResourcesByType(vpcStackInfo.resources, RESOURCE_TYPE.TGW_PROPAGATION);
+    if (tgwPropagations.length === 0) return;
+    const createPropagations = (tgwAttachmentItem: TransitGatewayAttachmentConfig) => {
+      for (const routeTableItem of tgwAttachmentItem.routeTablePropagations ?? []) {
+        const tgwPropagationRes = tgwPropagations.find(
+          propagation =>
+            propagation.resourceMetadata['Properties'].TransitGatewayAttachmentId.Ref ===
+              tgwAttachMap[tgwAttachmentItem.name] &&
+            propagation.resourceMetadata['Properties'].TransitGatewayRouteTableId ===
+              this.getTgwRouteTableId(routeTableItem),
+        );
+        if (!tgwPropagationRes) continue;
+        const tgwPropagation = vpcStack.getResource(
+          tgwPropagationRes.logicalResourceId,
+        ) as cdk.aws_ec2.CfnTransitGatewayRouteTablePropagation;
+        if (!tgwPropagation) {
+          this.scope.addLogs(
+            LogLevel.WARN,
+            `TGW Propagation for "${tgwAttachmentItem.name}/${routeTableItem}" exists in Mapping but not found in resources`,
+          );
+        }
+        // Propagation resourceId is not used anywhere in LZA. No need of SSM Parameter.
+        this.scope.addAseaResource(
+          AseaResourceType.TRANSIT_GATEWAY_PROPAGATION,
+          `${tgwAttachmentItem.transitGateway.account}/${tgwAttachmentItem.transitGateway.name}/${tgwAttachmentItem.name}/${routeTableItem}`,
+        );
+      }
+    };
+    if (vpcItem.transitGatewayAttachments?.length === 0) {
+      this.scope.addLogs(LogLevel.WARN, `TGW Attachment is removed from VPC "${vpcItem.name}" configuration`);
+      // TODO: Implement Delete logic
+      return;
+    }
+    (vpcItem.transitGatewayAttachments ?? []).map(createPropagations);
+  }
+
+  private createTransitGatewayRouteTableAssociation(
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    vpcStackInfo: NestedAseaStackInfo,
+    vpcStack: CfnInclude,
+    tgwAttachMap: { [name: string]: string },
+  ) {
+    const tgwAssociations = this.filterResourcesByType(vpcStackInfo.resources, RESOURCE_TYPE.TGW_ASSOCIATION);
+    if (tgwAssociations.length === 0) return;
+    const createAssociations = (tgwAttachmentItem: TransitGatewayAttachmentConfig) => {
+      for (const routeTableItem of tgwAttachmentItem.routeTableAssociations ?? []) {
+        const tgwAssociationRes = tgwAssociations.find(
+          propagation =>
+            propagation.resourceMetadata['Properties'].TransitGatewayAttachmentId.Ref ===
+              tgwAttachMap[tgwAttachmentItem.name] &&
+            propagation.resourceMetadata['Properties'].TransitGatewayRouteTableId ===
+              this.getTgwRouteTableId(routeTableItem),
+        );
+        if (!tgwAssociationRes) continue;
+        const tgwAssociation = vpcStack.getResource(
+          tgwAssociationRes.logicalResourceId,
+        ) as cdk.aws_ec2.CfnTransitGatewayRouteTableAssociation;
+        if (!tgwAssociation) {
+          this.scope.addLogs(
+            LogLevel.WARN,
+            `TGW Association for "${tgwAttachmentItem.name}/${routeTableItem}" exists in Mapping but not found in resources`,
+          );
+        }
+        // Propagation resourceId is not used anywhere in LZA. No need of SSM Parameter.
+        this.scope.addAseaResource(
+          AseaResourceType.TRANSIT_GATEWAY_ASSOCIATION,
+          `${tgwAttachmentItem.transitGateway.account}/${tgwAttachmentItem.transitGateway.name}/${tgwAttachmentItem.name}/${routeTableItem}`,
+        );
+      }
+    };
+    if (vpcItem.transitGatewayAttachments?.length === 0) {
+      this.scope.addLogs(LogLevel.WARN, `TGW Attachment is removed from VPC "${vpcItem.name}" configuration`);
+      // TODO: Implement Delete logic
+      return;
+    }
+    (vpcItem.transitGatewayAttachments ?? []).map(createAssociations);
   }
 
   createRouteTables(vpcItem: VpcConfig | VpcTemplatesConfig, vpcStackInfo: NestedAseaStackInfo, vpcStack: CfnInclude) {
@@ -547,49 +678,6 @@ export class VpcResources extends AseaResource {
       });
       this.scope.addAseaResource(AseaResourceType.ROUTE_TABLE, `${vpcItem.name}/${routeTableItem.name}`);
     }
-  }
-
-  /**
-   * Get VPCs in current scope of the stack context
-   * @param vpcResources
-   * @returns
-   */
-  private getVpcsInScope(vpcResources: (VpcConfig | VpcTemplatesConfig)[]): (VpcConfig | VpcTemplatesConfig)[] {
-    const vpcsInScope: (VpcConfig | VpcTemplatesConfig)[] = [];
-
-    for (const vpcItem of vpcResources) {
-      const vpcAccountIds = this.getVpcAccountIds(vpcItem);
-
-      if (this.isTargetStack(vpcAccountIds, [vpcItem.region])) {
-        vpcsInScope.push(vpcItem);
-      }
-    }
-    return vpcsInScope;
-  }
-
-  /**
-   * Returns true if provided account ID and region parameters match contextual values for the current stack
-   * @param accountIds
-   * @param regions
-   * @returns
-   */
-  public isTargetStack(accountIds: string[], regions: string[]): boolean {
-    return accountIds.includes(cdk.Stack.of(this.stack).account) && regions.includes(cdk.Stack.of(this.stack).region);
-  }
-
-  public getVpcAccountIds(vpcItem: VpcConfig | VpcTemplatesConfig): string[] {
-    let vpcAccountIds: string[];
-
-    if (NetworkConfigTypes.vpcConfig.is(vpcItem)) {
-      vpcAccountIds = [this.props.accountsConfig.getAccountId(vpcItem.account)];
-    } else {
-      const excludedAccountIds = this.scope.getExcludedAccountIds(vpcItem.deploymentTargets);
-      vpcAccountIds = this.scope
-        .getAccountIdsFromDeploymentTarget(vpcItem.deploymentTargets)
-        .filter(item => !excludedAccountIds.includes(item));
-    }
-
-    return vpcAccountIds;
   }
 
   /**
@@ -870,5 +958,84 @@ export class VpcResources extends AseaResource {
     const ruleGroupsMap = this.createNetworkFirewallRuleGroups(vpcStackInfo, vpcStack);
     const firewallPolicy = this.createNetworkFirewallPolicy(vpcStackInfo, vpcStack, ruleGroupsMap);
     this.createNetworkFirewall(vpcItem, vpcStackInfo, vpcStack, vpcId, subnets, firewallPolicy);
+  }
+
+  private gatewayEndpoints(
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    vpcStackInfo: NestedAseaStackInfo,
+    vpcStack: CfnInclude,
+  ) {
+    /**
+     * Function to get S3 and DynamoDB route table ids
+     * @param routeTableItem {@link RouteTableConfig}
+     * @param routeTableId string
+     */
+    const getS3DynamoDbRouteTableIds = (
+      routeTableItem: RouteTableConfig,
+      routeTableId: string,
+      s3EndpointRouteTables: string[],
+      dynamodbEndpointRouteTables: string[],
+    ) => {
+      for (const routeTableEntryItem of routeTableItem.routes ?? []) {
+        // Route: S3 Gateway Endpoint
+        if (routeTableEntryItem.target === 's3') {
+          if (!s3EndpointRouteTables.find(item => item === routeTableId)) {
+            s3EndpointRouteTables.push(routeTableId);
+          }
+        }
+
+        // Route: DynamoDb Gateway Endpoint
+        if (routeTableEntryItem.target === 'dynamodb') {
+          if (!dynamodbEndpointRouteTables.find(item => item === routeTableId)) {
+            dynamodbEndpointRouteTables.push(routeTableId);
+          }
+        }
+      }
+    };
+    const s3EndpointRouteTables: string[] = [];
+    const dynamodbEndpointRouteTables: string[] = [];
+    for (const routeTableItem of vpcItem.routeTables ?? []) {
+      const routeTableId = this.scope.getExternalResourceParameter(
+        this.scope.getSsmPath(SsmResourceType.ROUTE_TABLE, [vpcItem.name, routeTableItem.name]),
+      );
+      if (!routeTableId) continue; // Route table is not created yet
+      getS3DynamoDbRouteTableIds(routeTableItem, routeTableId, s3EndpointRouteTables, dynamodbEndpointRouteTables);
+    }
+    // ASEA Only creates VPC Endpoints in VPC Nested Stack
+    const gatewayEndpointResources = this.filterResourcesByType(vpcStackInfo.resources, RESOURCE_TYPE.VPC_ENDPOINT);
+    if (gatewayEndpointResources.length === 0) {
+      return;
+    } else if (!vpcItem.gatewayEndpoints?.endpoints) {
+      this.scope.addLogs(LogLevel.WARN, `Endpoints are removed from configuration`);
+      return;
+    }
+
+    for (const endpointItem of vpcItem.gatewayEndpoints.endpoints ?? []) {
+      const gatewayEndpointResource = gatewayEndpointResources.find(
+        cfnResource =>
+          cfnResource.resourceMetadata['Properties'].ServiceName['Fn::Join'][1].at(-1) === `.${endpointItem.service}`,
+      );
+      if (!gatewayEndpointResource) {
+        continue;
+      }
+      const endpoint = vpcStack.getResource(gatewayEndpointResource.logicalResourceId) as cdk.aws_ec2.CfnVPCEndpoint;
+      const routeTableIds = endpoint.routeTableIds;
+      if (!routeTableIds) {
+        endpoint.routeTableIds = endpointItem.service === 's3' ? s3EndpointRouteTables : dynamodbEndpointRouteTables;
+      } else {
+        (endpointItem.service === 's3' ? s3EndpointRouteTables : dynamodbEndpointRouteTables).forEach(routeTableId => {
+          if (!routeTableIds.includes(routeTableId)) {
+            routeTableIds.push(routeTableId);
+          }
+        });
+      }
+      endpoint.routeTableIds = routeTableIds;
+      this.ssmParameters.push({
+        logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(endpointItem.service)}EndpointId`),
+        parameterName: this.scope.getSsmPath(SsmResourceType.VPC_ENDPOINT, [vpcItem.name, endpointItem.service]),
+        stringValue: endpoint.ref,
+      });
+      this.scope.addAseaResource(AseaResourceType.VPC_ENDPOINT, `${vpcItem.name}/${endpointItem.service}`);
+    }
   }
 }

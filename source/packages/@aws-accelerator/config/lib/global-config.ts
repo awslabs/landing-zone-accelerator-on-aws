@@ -1885,6 +1885,7 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
         Bucket: this.externalLandingZoneResources.mappingFileBucket,
         Key: 'aseaResources.json',
         Body: JSON.stringify(resources),
+        ServerSideEncryption: 'AES256',
       })
       .promise();
   }

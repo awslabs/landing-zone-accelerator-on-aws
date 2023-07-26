@@ -60,4 +60,14 @@ export class AseaResource {
       ),
     );
   }
+
+  findResourceByTypeAndTag(cfnResources: CfnResourceType[], resourceType: string, tagValue: string, tagKame = 'Name') {
+    return cfnResources.find(
+      cfnResource =>
+        cfnResource.resourceType === resourceType &&
+        cfnResource.resourceMetadata['Properties'].Tags.find(
+          (tag: { Key: string; Value: string }) => tag.Key === tagKame && tag.Value === tagValue,
+        ),
+    );
+  }
 }
