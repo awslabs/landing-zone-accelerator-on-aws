@@ -427,10 +427,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
 
   private configureCloudwatchLogGroups() {
     for (const logGroupItem of this.props.securityConfig.cloudWatch.logGroups ?? []) {
-      if (
-        this.isAccountIncluded(logGroupItem.deploymentTargets.accounts) &&
-        !this.isRegionExcluded(logGroupItem.deploymentTargets.excludedRegions)
-      ) {
+      if (this.isIncluded(logGroupItem.deploymentTargets)) {
         let keyArn: string | undefined = undefined;
         if (logGroupItem.encryption?.kmsKeyName) {
           keyArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
