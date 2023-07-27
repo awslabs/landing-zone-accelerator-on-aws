@@ -151,7 +151,7 @@ exports[`VpcEndpoint Construct(VpcEndpoint):  Snapshot Test 1`] = `
             "Ref": "TestSecurityGroupDA4B5F83",
           },
         ],
-        "ServiceName": "com.aws.s3-global.accesspoint",
+        "ServiceName": "com.amazonaws.s3-global.accesspoint",
         "SubnetIds": [
           "Test1",
           "Test2",

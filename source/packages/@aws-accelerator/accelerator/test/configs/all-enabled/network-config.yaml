@@ -931,6 +931,14 @@ vpcs:
         - service: kms
         - service: logs
         - service: s3
+        - service: ecr.dkr
+        - service: appstream.api
+        - service: deviceadvisor.iot
+        - service: pinpoint-sms-voice-v2
+        - service: rum-dataplane
+        - service: s3-global.accesspoint
+        - service: codeartifact.repositories
+        - service: codeartifact.api
         # - service: secretsmanager
         # - service: cloudformation
         # - service: access-analyzer
@@ -946,7 +954,6 @@ vpcs:
         # - service: codepipeline
         # - service: config
         # - service: datasync
-        # - service: ecr.dkr
         # - service: ecs
         # - service: ecs-agent
         # - service: ecs-telemetry
@@ -972,7 +979,6 @@ vpcs:
         # - service: transfer
         # - service: workspaces
         # - service: awsconnector
-        # - service: ecr.api
         # - service: kinesis-firehose
         # - service: states
         # - service: acm-pca
@@ -1641,8 +1647,6 @@ vpcs:
         - pkt-dst-aws-service
         - flow-direction
         - traffic-path
-
-
 
 directConnectGateways:
   - name: Network-DXGW

@@ -154,9 +154,11 @@ export class NetworkVpcDnsStack extends NetworkStack {
         parameterName: this.getSsmPath(SsmResourceType.PHZ_ID, [vpcItem.name, endpointItem.service]),
         stringValue: hostedZone.hostedZoneId,
       });
-
-      // Create record sets
+      // Create additional S3 record sets
       this.createRecordSets(vpcItem, endpointItem, endpointMap, zoneMap, hostedZoneName, hostedZone);
+      if (endpointItem.service === 's3') {
+        this.createAdditionalS3Records(vpcItem, vpcId, endpointMap, zoneMap, endpointItem);
+      }
     }
   }
 
@@ -179,7 +181,21 @@ export class NetworkVpcDnsStack extends NetworkStack {
   ) {
     // Create the record set
     let recordSetName = hostedZoneName;
-    const wildcardServices = ['ecr.dkr', 's3'];
+    const wildcardServices = [
+      'appsync-api',
+      'codeartifact.repositories',
+      'deviceadvisor.iot',
+      'ecr.dkr',
+      'execute-api',
+      'grafana-workspace',
+      'lorawan.cups',
+      'lorawan.lns',
+      'notebook',
+      'studio',
+      's3',
+      's3-global.accesspoint',
+      'transfer.server',
+    ];
     if (wildcardServices.includes(endpointItem.service)) {
       recordSetName = `*.${hostedZoneName}`;
     }
@@ -207,8 +223,8 @@ export class NetworkVpcDnsStack extends NetworkStack {
       hostedZoneId: zoneId,
     });
 
-    // Create additional record for S3 endpoints
-    if (endpointItem.service === 's3') {
+    // Create additional record for wildcard services endpoints
+    if (wildcardServices.includes(endpointItem.service)) {
       this.logger.info(`Creating additional record for VPC:${vpcItem.name} endpoint:${endpointItem.service}`);
       new RecordSet(this, `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem.service)}EpRecordSetNonWildcard`, {
         type: 'A',
@@ -218,6 +234,58 @@ export class NetworkVpcDnsStack extends NetworkStack {
         hostedZoneId: zoneId,
       });
     }
+  }
+
+  /**
+   * Create record sets for centralized interface endpoints
+   * @param vpcItem
+   * @param endpointItem
+   * @param endpointMap
+   * @param zoneMap
+   * @param hostedZoneName
+   * @param hostedZone
+   */
+
+  private createAdditionalS3Records(
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    vpcId: string,
+    endpointMap: Map<string, string>,
+    zoneMap: Map<string, string>,
+    endpointItem: InterfaceEndpointServiceConfig,
+  ) {
+    const endpointKey = `${vpcItem.name}_${endpointItem.service}`;
+    const dnsName = endpointMap.get(endpointKey);
+    const zoneId = zoneMap.get(endpointKey);
+    const s3EndpointsArray = ['s3-control', 's3-accesspoint'];
+
+    s3EndpointsArray.forEach(endpoint => {
+      this.logger.info(`Creating private hosted zone for VPC:${vpcItem.name} endpoint:${endpoint}`);
+      const hostedZone = new HostedZone(this, `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpoint)}EpHostedZone`, {
+        hostedZoneName: `${endpoint}.${cdk.Stack.of(this).region}.amazonaws.com`,
+        vpcId,
+      });
+      this.ssmParameters.push({
+        logicalId: `SsmParam${pascalCase(vpcItem.name)}Vpc${pascalCase(endpoint)}EpHostedZone`,
+        parameterName: this.getSsmPath(SsmResourceType.PHZ_ID, [vpcItem.name, endpoint]),
+        stringValue: hostedZone.hostedZoneId,
+      });
+      this.logger.info(`Creating additional record for VPC:${vpcItem.name} endpoint:${endpoint}`);
+      new RecordSet(this, `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpoint)}EpRecordWildcard`, {
+        type: 'A',
+        name: `*.${hostedZone.hostedZoneName}`,
+        hostedZone: hostedZone,
+        dnsName: dnsName,
+        hostedZoneId: zoneId,
+      });
+
+      new RecordSet(this, `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpoint)}EpRecordSetNonWildcard`, {
+        type: 'A',
+        name: hostedZone.hostedZoneName,
+        hostedZone: hostedZone,
+        dnsName: dnsName,
+        hostedZoneId: zoneId,
+      });
+    });
   }
 
   /**

@@ -906,6 +906,7 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
       'codeguru-reviewer',
       'codepipeline',
       'datasync',
+      'deviceadvisor.iot',
       'ebs',
       'elastic-inference.runtime',
       'iot.data',
