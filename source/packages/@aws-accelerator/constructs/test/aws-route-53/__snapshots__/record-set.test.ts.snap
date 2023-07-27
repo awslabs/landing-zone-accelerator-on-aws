@@ -5,7 +5,7 @@ exports[`RecordSet Construct(RecordSet):  Snapshot Test 1`] = `
   "Resources": {
     "TestHostedZone68F306E4": {
       "Properties": {
-        "Name": "s3-global.accesspoint.aws.com",
+        "Name": "s3-global.accesspoint.amazonaws.com",
         "VPCs": [
           {
             "VPCId": "Test",
@@ -26,7 +26,7 @@ exports[`RecordSet Construct(RecordSet):  Snapshot Test 1`] = `
         "HostedZoneId": {
           "Ref": "TestHostedZone68F306E4",
         },
-        "Name": "s3-global.accesspoint.aws.com",
+        "Name": "s3-global.accesspoint.amazonaws.com",
         "Type": "A",
       },
       "Type": "AWS::Route53::RecordSet",
@@ -80,7 +80,7 @@ exports[`RecordSet Construct(RecordSet):  Snapshot Test 1`] = `
         "HostedZoneId": {
           "Ref": "TestHostedZone68F306E4",
         },
-        "Name": "s3-global.accesspoint.aws.com",
+        "Name": "s3-global.accesspoint.amazonaws.com",
         "Type": "A",
       },
       "Type": "AWS::Route53::RecordSet",

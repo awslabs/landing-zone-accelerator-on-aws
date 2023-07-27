@@ -103,7 +103,7 @@ export class VpcEndpoint extends VpcEndpointBase {
         serviceName = `aws.sagemaker.${cdk.Stack.of(this).region}.${props.service}`;
       }
       if (this.service === 's3-global.accesspoint') {
-        serviceName = `com.aws.${props.service}`;
+        serviceName = `com.amazonaws.${props.service}`;
       }
       // Add the ability against China region to override serviceName due to the prefix of
       // serviceName is inconsistent (com.amazonaws vs cn.com.amazonaws) for VPC interface
