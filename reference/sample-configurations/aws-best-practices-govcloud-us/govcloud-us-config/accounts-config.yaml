@@ -1,3 +1,9 @@
+############################################################################################################
+# For additional configurable services, features, and property descriptions,                               #
+# please review class AccountsConfig reference in our TypeDoc:                                             #
+# https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.AccountsConfig #
+############################################################################################################
+
 mandatoryAccounts:
   # We recommend you do not change mandatory account names. These are used within Landing Zone Accelerator to reference the accounts from other config files.
   # The "name" value does not currently support spaces
