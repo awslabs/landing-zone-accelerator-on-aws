@@ -20,6 +20,8 @@ import { v4 as uuidv4 } from 'uuid';
 import * as winston from 'winston';
 import { NagSuppressions } from 'cdk-nag';
 
+import { PrincipalOrgIdConditionType } from '@aws-accelerator/utils';
+
 import {
   AccountConfig,
   AccountsConfig,
@@ -60,9 +62,9 @@ export enum AcceleratorKeyType {
    */
   CLOUDWATCH_KEY = 'cloudwatch-key',
   /**
-   * Existing Central Log Bucket key
+   * Imported Central Log Bucket key
    */
-  EXISTING_CENTRAL_LOG_BUCKET = 'existing-central-log-bucket',
+  IMPORTED_CENTRAL_LOG_BUCKET = 'imported-central-log-bucket',
   /**
    * Lambda key
    */
@@ -251,11 +253,11 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * @returns
    *
    * @remarks
-   * If used returns existing server access logs bucket name else return solution defined bucket name
+   * If importedBucket used returns imported server access logs bucket name else return solution defined bucket name
    */
   protected getServerAccessLogsBucketName(): string {
-    if (this.props.globalConfig.logging.accessLogBucket?.existingBucket) {
-      return this.getBucketNameReplacement(this.props.globalConfig.logging.accessLogBucket.existingBucket.name);
+    if (this.props.globalConfig.logging.accessLogBucket?.importedBucketName) {
+      return this.getBucketNameReplacement(this.props.globalConfig.logging.accessLogBucket.importedBucketName);
     } else {
       return `${this.acceleratorResourceNames.bucketPrefixes.s3AccessLogs}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
     }
@@ -266,11 +268,11 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * @returns
    *
    * @remarks
-   * If used returns existing ELB logs bucket name else solution defined bucket name
+   * If importedBucket used returns imported ELB logs bucket name else solution defined bucket name
    */
   protected getElbLogsBucketName(): string {
-    if (this.props.globalConfig.logging.elbLogBucket?.existingBucket) {
-      return this.getBucketNameReplacement(this.props.globalConfig.logging.elbLogBucket.existingBucket.name);
+    if (this.props.globalConfig.logging.elbLogBucket?.importedBucketName) {
+      return this.getBucketNameReplacement(this.props.globalConfig.logging.elbLogBucket.importedBucketName);
     } else {
       return `${
         this.acceleratorResourceNames.bucketPrefixes.elbLogs
@@ -283,8 +285,8 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * @returns
    */
   private getCentralLogBucketName(): string {
-    if (this.props.globalConfig.logging.centralLogBucket?.existingBucket) {
-      return this.getBucketNameReplacement(this.props.globalConfig.logging.centralLogBucket.existingBucket.name);
+    if (this.props.globalConfig.logging.centralLogBucket?.importedBucketName) {
+      return this.getBucketNameReplacement(this.props.globalConfig.logging.centralLogBucket.importedBucketName);
     }
     return `${
       this.acceleratorResourceNames.bucketPrefixes.centralLogs
@@ -298,12 +300,12 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * @returns key {@link cdk.aws_kms.IKey}
    *
    * @remarks
-   * If used returns existing CentralLogs bucket cmk arn else return solution defined CentralLogs bucket cmk arn
+   * If importedBucket used returns imported CentralLogs bucket cmk arn else return solution defined CentralLogs bucket cmk arn
    */
   protected getCentralLogsBucketKey(customResourceLambdaCloudWatchLogKmsKey: cdk.aws_kms.IKey): cdk.aws_kms.Key {
-    if (this.props.globalConfig.logging.centralLogBucket?.existingBucket) {
+    if (this.props.globalConfig.logging.centralLogBucket?.importedBucketName) {
       return this.getAcceleratorKey(
-        AcceleratorKeyType.EXISTING_CENTRAL_LOG_BUCKET,
+        AcceleratorKeyType.IMPORTED_CENTRAL_LOG_BUCKET,
         customResourceLambdaCloudWatchLogKmsKey,
       );
     } else {
@@ -852,12 +854,12 @@ export abstract class AcceleratorStack extends cdk.Stack {
         }).getKey();
 
         break;
-      case AcceleratorKeyType.EXISTING_CENTRAL_LOG_BUCKET:
-        key = new KeyLookup(this, 'AcceleratorExistingCentralLogBucketKeyLookup', {
+      case AcceleratorKeyType.IMPORTED_CENTRAL_LOG_BUCKET:
+        key = new KeyLookup(this, 'AcceleratorImportedCentralLogBucketKeyLookup', {
           accountId: cdk.Stack.of(this).account,
           keyRegion: this.props.centralizedLoggingRegion,
           roleName: this.acceleratorResourceNames.roles.crossAccountSsmParameterShare,
-          keyArnParameterName: this.acceleratorResourceNames.parameters.existingCentralLogBucketCmkArn,
+          keyArnParameterName: this.acceleratorResourceNames.parameters.importedCentralLogBucketCmkArn,
           kmsKey: customResourceLambdaCloudWatchLogKmsKey,
           logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
           acceleratorPrefix: this.props.prefixes.accelerator,
@@ -1311,8 +1313,10 @@ export abstract class AcceleratorStack extends cdk.Stack {
 
   /**
    * Get the IAM condition context key for the organization.
+   * @param organizationId string | undefined
+   * @returns
    */
-  protected getPrincipalOrgIdCondition(organizationId: string | undefined): { [key: string]: string | string[] } {
+  protected getPrincipalOrgIdCondition(organizationId: string | undefined): PrincipalOrgIdConditionType {
     if (this.props.partition === 'aws-cn' || !this.props.organizationConfig.enable) {
       const accountIds = this.props.accountsConfig.getAccountIds();
       if (accountIds) {

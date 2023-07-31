@@ -51,14 +51,24 @@ logging:
   centralizedLoggingRegion: us-west-2
 
   centralLogBucket:
-    existingBucket: 
-      name: existing-central-log-bucket
+    importedBucketName: existing-central-log-bucket
+    applyAcceleratorManagedPolicy: true
+    s3ResourcePolicyAttachments:
+      - policy: bucket-policies/central-log-bucket.json
+    kmsResourcePolicyAttachments:
+      - policy: kms/central-logs-bucket-key-policy.json
+    lifecycleRules: []
   accessLogBucket:
-    existingBucket: 
-      name: existing-access-logs-bucket-${ACCOUNT_ID}-${REGION}
+    importedBucketName: existing-access-logs-bucket-${ACCOUNT_ID}-${REGION}
+    s3ResourcePolicyAttachments:
+      - policy: bucket-policies/access-logs-bucket.json
+    lifecycleRules: []
   elbLogBucket:
-    existingBucket: 
-      name: existing-elb-logs-bucket-${ACCOUNT_ID}-${REGION}
+    importedBucketName: existing-elb-logs-bucket-${ACCOUNT_ID}-${REGION}
+    applyAcceleratorManagedPolicy: false
+    s3ResourcePolicyAttachments:
+      - policy: bucket-policies/elb-logs-bucket.json
+    lifecycleRules: []
   cloudtrail:
     enable: true
     organizationTrail: false

@@ -20,25 +20,7 @@ import { BucketReplication, BucketReplicationProps } from './bucket-replication'
 import { BucketPrefix, BucketPrefixProps } from './bucket-prefix';
 import { Construct } from 'constructs';
 import { pascalCase } from 'change-case';
-
-export enum BucketAccessType {
-  /**
-   * When service need read only access to bucket and CMK
-   */
-  READONLY = 'readonly',
-  /**
-   * When service need write only access to bucket and CMK
-   */
-  WRITEONLY = 'writeonly',
-  /**
-   * When service need read write access to bucket and CMK
-   */
-  READWRITE = 'readwrite',
-  /**
-   * When service need no access like SessionManager, but the service name required for other logical changes in bucket or CMK policy
-   */
-  NO_ACCESS = 'no_access',
-}
+import { BucketAccessType } from '@aws-accelerator/utils';
 
 export enum BucketEncryptionType {
   SSE_S3 = 'sse-s3',
