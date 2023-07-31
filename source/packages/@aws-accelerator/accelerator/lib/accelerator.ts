@@ -763,7 +763,7 @@ export abstract class Accelerator {
       for (const account of nonLogArchiveAccounts) {
         logger.info(`Executing ${toolkitProps.stage} for ${account.name} account in ${region} region.`);
         const accountId = accountsConfig.getAccountId(account.name);
-        await delay(1000);
+        await delay(2000);
         promises.push(
           AcceleratorToolkit.execute({
             accountId,
