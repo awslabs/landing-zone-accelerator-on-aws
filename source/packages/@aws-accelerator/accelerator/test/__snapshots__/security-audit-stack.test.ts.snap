@@ -13,7 +13,7 @@ exports[`SecurityAuditStack Construct(SecurityAuditStack):  Snapshot Test 1`] = 
     },
   },
   "Resources": {
-    "AcceleratorExistingCentralLogBucketKeyLookup60D9CA07": {
+    "AcceleratorImportedCentralLogBucketKeyLookupCDD7B719": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
         "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
@@ -427,7 +427,7 @@ def script_handler(events, context):
           ],
         },
         "destinationBucketKeyArn": {
-          "Ref": "AcceleratorExistingCentralLogBucketKeyLookup60D9CA07",
+          "Ref": "AcceleratorImportedCentralLogBucketKeyLookupCDD7B719",
         },
         "prefix": "",
         "replicationRoleArn": {
@@ -558,7 +558,7 @@ def script_handler(events, context):
               "Action": "kms:Encrypt",
               "Effect": "Allow",
               "Resource": {
-                "Ref": "AcceleratorExistingCentralLogBucketKeyLookup60D9CA07",
+                "Ref": "AcceleratorImportedCentralLogBucketKeyLookupCDD7B719",
               },
             },
           ],

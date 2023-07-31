@@ -94,20 +94,24 @@ export abstract class GlobalConfigTypes {
 
   static readonly accessLogBucketConfig = t.interface({
     lifecycleRules: t.optional(t.array(t.lifecycleRuleConfig)),
-    existingBucket: t.optional(t.bucketConfig),
+    importedBucketName: t.optional(t.nonEmptyString),
+    s3ResourcePolicyAttachments: t.optional(t.array(t.resourcePolicyStatement)),
+    applyAcceleratorManagedPolicy: t.optional(t.boolean),
   });
 
   static readonly centralLogBucketConfig = t.interface({
     lifecycleRules: t.optional(t.array(t.lifecycleRuleConfig)),
     s3ResourcePolicyAttachments: t.optional(t.array(t.resourcePolicyStatement)),
     kmsResourcePolicyAttachments: t.optional(t.array(t.resourcePolicyStatement)),
-    existingBucket: t.optional(t.bucketConfig),
+    importedBucketName: t.optional(t.nonEmptyString),
+    applyAcceleratorManagedPolicy: t.optional(t.boolean),
   });
 
   static readonly elbLogBucketConfig = t.interface({
     lifecycleRules: t.optional(t.array(t.lifecycleRuleConfig)),
     s3ResourcePolicyAttachments: t.optional(t.array(t.resourcePolicyStatement)),
-    existingBucket: t.optional(t.bucketConfig),
+    importedBucketName: t.optional(t.nonEmptyString),
+    applyAcceleratorManagedPolicy: t.optional(t.boolean),
   });
 
   static readonly cloudWatchLogsExclusionConfig = t.interface({
@@ -674,8 +678,9 @@ export class SessionManagerConfig implements t.TypeOf<typeof GlobalConfigTypes.s
  * @example
  * ```
  * accessLogBucket:
- *   existingBucket:
- *     name: existing-access-logs-bucket-${ACCOUNT_ID}-${REGION}
+ *   importedBucketName: existing-access-logs-bucket-${ACCOUNT_ID}-${REGION}
+ *   s3ResourcePolicyAttachments:
+ *     - policy: s3-policies/policy1.json
  *   lifecycleRules:
  *     - enabled: true
  *       id: AccessLifecycle
@@ -697,14 +702,43 @@ export class AccessLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.
    */
   readonly lifecycleRules: t.LifeCycleRule[] | undefined = undefined;
   /**
-   * Existing bucket configuration.
+   * Bucket policy file
    *
    * @remarks
-   * Use this configuration when solution will use existing bucket, which were created prior to solution deploy.
-   * When using existing bucket, lifecycleRules property will be ignored,
-   * this property is used for solution deployed bucket only.
+   * This property is only applicable for imported bucket, when solution deployed bucket is used this property will be ignored
    */
-  readonly existingBucket: t.BucketConfig | undefined = undefined;
+  readonly s3ResourcePolicyAttachments: t.ResourcePolicyStatement[] | undefined = undefined;
+  /**
+   * Flag indicating accelerator will generate and apply bucket resource policy.
+   *
+   * @remarks
+   * Accelerator solution creates and applies required AccessLogBucket bucket resource policy.
+   *
+   * Accelerator deployed AccessLogBucket bucket -
+   *
+   * Default value is true, accelerator managed policy will be applied to bucket resource policy.
+   * External policy files provided through s3ResourcePolicyAttachments policy files will be ignored for solution deployed bucket.
+   * Accelerator solution maintains complete control on bucket policies for solution deployed bucket.
+   *
+   * Imported AccessLogBucket bucket -
+   *
+   * Default value is false, accelerator managed policy will NOT be applied to bucket resource policy.
+   * When external policy files are provided through s3ResourcePolicyAttachments policy files,
+   * solution will replace imported bucket resource policy with the statements from the external policy files.
+   * External policy files in s3ResourcePolicyAttachments must be complete resource policy you want to set for the bucket, because
+   * solution will replace existing policies with the statements from external policy files.
+   * If no external policy files are provided and value for this parameter is left to false, accelerator solution will not make changes to bucket resource policy.
+   * When value is set to true, accelerator solution will replace bucket resource policy with accelerator managed policies along with policies from external policy files if provided.
+   *
+   */
+  readonly applyAcceleratorManagedPolicy: boolean | undefined = undefined;
+  /**
+   * Existing bucket name.
+   *
+   * @remarks
+   * Use this configuration when solution will use existing bucket which is not created by the solution.
+   */
+  readonly importedBucketName: string | undefined = undefined;
 }
 
 /**
@@ -715,6 +749,7 @@ export class AccessLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.
  * @example
  * ```
  * centralLogBucket:
+ *   applyAcceleratorManagedPolicy: true
  *   lifecycleRules:
  *     - enabled: true
  *       id: CentralLifecycle
@@ -732,8 +767,7 @@ export class AccessLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.
  *     - policy: s3-policies/policy1.json
  *   kmsResourcePolicyAttachments:
  *     - policy: kms-policies/policy1.json
- *   existingBucket:
- *     name: central-log-bucket
+ *   importedBucketName: central-log-bucket
  * ```
  */
 export class CentralLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.centralLogBucketConfig> {
@@ -745,14 +779,40 @@ export class CentralLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes
   readonly s3ResourcePolicyAttachments: t.ResourcePolicyStatement[] | undefined = undefined;
   readonly kmsResourcePolicyAttachments: t.ResourcePolicyStatement[] | undefined = undefined;
   /**
-   * Existing bucket configuration.
+   * Flag indicating accelerator will generate and apply bucket resource policy and bucket encryption key policy.
    *
    * @remarks
-   * Use this configuration when solution will use existing bucket, which were created prior to solution deploy.
-   * When using existing bucket, lifecycleRules, s3ResourcePolicyAttachments or kmsResourcePolicyAttachments properties will be ignored,
-   * these properties are used for solution deployed bucket only.
+   * Accelerator solution creates CentralLogs bucket resource policy and encryption key policy based on various security services enabled by the solution.
+   * Example when macie is enabled, macie service will need access to the bucket and it's encryption key,
+   * accelerator solution dynamically generate policy statements based on various services require access to CentralLogs bucket.
+   *
+   * Accelerator deployed CentralLogs bucket -
+   *
+   * Default value is true, accelerator managed policy will be applied to bucket resource policy and encryption key policy.
+   * When external policy files are provided through s3ResourcePolicyAttachments and kmsResourcePolicyAttachments policy files,
+   * solution will add those statements along with accelerator managed policy.
+   * This parameter can have false when external policy files are provided through s3ResourcePolicyAttachments and kmsResourcePolicyAttachments.
+   *
+   * Imported CentralLogs bucket -
+   *
+   * Default value is false, accelerator managed policy will NOT be applied to bucket resource policy and encryption key policy.
+   * When external policy files are provided through s3ResourcePolicyAttachments and kmsResourcePolicyAttachments policy files,
+   * solution will replace imported bucket resource policy and encryption key policy with the statements from the external policy files.
+   * External policy files in s3ResourcePolicyAttachments and kmsResourcePolicyAttachments must be complete resource and kms policy, you want to set for the bucket and kms, because
+   * solution will replace existing policies with the statements from external policy files.
+   * If no external policy files are provided and value for this parameter is left to false, accelerator solution will not make changes to bucket resource policy and kms policy.
+   * When value is set to true, accelerator solution will replace bucket resource policy and kms policy with accelerator managed policies along with policies from external policy files if provided.
+   *
    */
-  readonly existingBucket: t.BucketConfig | undefined = undefined;
+  readonly applyAcceleratorManagedPolicy: boolean | undefined = undefined;
+  /**
+   * Existing bucket name.
+   *
+   * @remarks
+   * Use this configuration when solution will use existing bucket which is not created by the solution.
+   * Existing CentralLogs bucket must be present in LogArchive account central logging region.
+   */
+  readonly importedBucketName: string | undefined = undefined;
 }
 
 /**
@@ -763,6 +823,7 @@ export class CentralLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes
  * @example
  * ```
  * elbLogBucket:
+ *   applyAcceleratorManagedPolicy: true
  *   lifecycleRules:
  *     - enabled: true
  *       id: ElbLifecycle
@@ -778,6 +839,7 @@ export class CentralLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes
  *           transitionAfter: 365
  *   s3ResourcePolicyAttachments:
  *     - policy: s3-policies/policy1.json
+ *   importedBucketName: elb-logs-bucket
  * ```
  */
 export class ElbLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.elbLogBucketConfig> {
@@ -788,14 +850,37 @@ export class ElbLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.elb
   readonly lifecycleRules: t.LifeCycleRule[] | undefined = undefined;
   readonly s3ResourcePolicyAttachments: t.ResourcePolicyStatement[] | undefined = undefined;
   /**
-   * Existing bucket configuration.
+   * Flag indicating accelerator will generate and apply bucket resource policy.
    *
    * @remarks
-   * Use this configuration when solution will use existing bucket, which were created prior to solution deploy.
-   * When using existing bucket, lifecycleRules, s3ResourcePolicyAttachments properties will be ignored,
-   * these properties are used for solution deployed bucket only.
+   * Accelerator solution creates and applies required ElbLogBucket bucket resource policy.
+   *
+   * Accelerator deployed ElbLogBucket bucket -
+   *
+   * Default value is true, accelerator managed policy will be applied to bucket resource policy.
+   * When external policy files are provided through s3ResourcePolicyAttachments policy files,
+   * solution will add those statements along with accelerator managed policy.
+   * This parameter can have false when external policy files are provided through s3ResourcePolicyAttachments.
+   *
+   * Imported ElbLogBucket bucket -
+   *
+   * Default value is false, accelerator managed policy will NOT be applied to bucket resource policy.
+   * When external policy files are provided through s3ResourcePolicyAttachments policy files,
+   * solution will replace imported bucket resource policy with the statements from the external policy files.
+   * External policy files in s3ResourcePolicyAttachments must be complete resource policy you want to set for the bucket, because
+   * solution will replace existing policies with the statements from external policy files.
+   * If no external policy files are provided and value for this parameter is left to false, accelerator solution will not make changes to bucket resource policy.
+   * When value is set to true, accelerator solution will replace bucket resource policy with accelerator managed policies along with policies from external policy files if provided.
+   *
    */
-  readonly existingBucket: t.BucketConfig | undefined = undefined;
+  readonly applyAcceleratorManagedPolicy: boolean | undefined = undefined;
+  /**
+   * Existing bucket name.
+   *
+   * @remarks
+   * Use this configuration when solution will use existing bucket which is not created by the solution.
+   */
+  readonly importedBucketName: string | undefined = undefined;
 }
 /**
  * *{@link GlobalConfig} / {@link LoggingConfig} / {@link CloudWatchLogsConfig}/ {@link CloudWatchLogsExclusionConfig}*

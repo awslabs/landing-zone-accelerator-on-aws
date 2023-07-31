@@ -17,10 +17,9 @@ import fs from 'fs';
 import path from 'path';
 import winston from 'winston';
 import { AccountsConfig } from '../lib/accounts-config';
-import { AccessLogBucketConfig, CentralLogBucketConfig, ElbLogBucketConfig, GlobalConfig } from '../lib/global-config';
+import { GlobalConfig } from '../lib/global-config';
 import { IamConfig } from '../lib/iam-config';
 import { OrganizationConfig } from '../lib/organization-config';
-import { BucketConfig } from '../lib/common-types';
 
 export class GlobalConfigValidator {
   constructor(
@@ -55,10 +54,6 @@ export class GlobalConfigValidator {
     //
     this.validateCentralLogsBucketRegionName(values, errors);
     //
-    // Validate Existing buckets
-    //
-    this.validateExistingBucket(values, logger);
-    //
     // Validate budget deployment target OU
     //
     this.validateBudgetDeploymentTargetOUs(values, ouIdNames, errors);
@@ -66,6 +61,14 @@ export class GlobalConfigValidator {
     // budget notification email validation
     //
     this.validateBudgetNotificationEmailIds(values, errors);
+    //
+    // Validate ElbLogs bucket policies.
+    //
+    this.validateElbLogBucketPolicies(values, errors);
+    //
+    // Validate CentralLogs bucket policies.
+    //
+    this.validateCentralLogsBucketPolicies(values, errors);
     //
     // lifecycle rule expiration validation
     //
@@ -195,93 +198,6 @@ export class GlobalConfigValidator {
   }
 
   /**
-   * Function to validate existing central log bucket
-   * @param centralLogBucketConfig {@link CentralLogBucketConfig}
-   * @param existingBucket {@link BucketConfig}
-   * @param logger {@link winston.Logger}
-   */
-  private validateExistingCentralLogBucket(
-    centralLogBucketConfig: CentralLogBucketConfig,
-    existingBucket: BucketConfig,
-    logger: winston.Logger,
-  ) {
-    if (
-      centralLogBucketConfig.lifecycleRules ||
-      centralLogBucketConfig.s3ResourcePolicyAttachments ||
-      centralLogBucketConfig.kmsResourcePolicyAttachments
-    ) {
-      logger.warn(
-        `When using existing CentralLogs bucket ${existingBucket.name}, lifecycleRules, s3ResourcePolicyAttachments, kmsResourcePolicyAttachments properties ignored.`,
-      );
-    }
-  }
-
-  /**
-   * Function to validate existing server access logs bucket
-   * @param accessLogBucketConfig {@link AccessLogBucketConfig}
-   * @param existingBucket {@link BucketConfig}
-   * @param logger {@link winston.Logger}
-   */
-  private validateExistingServerAccessLogsBucket(
-    accessLogBucketConfig: AccessLogBucketConfig,
-    existingBucket: BucketConfig,
-    logger: winston.Logger,
-  ) {
-    if (accessLogBucketConfig.lifecycleRules) {
-      logger.warn(
-        `When using existing server access logs bucket ${existingBucket.name}, lifecycleRules property ignored.`,
-      );
-    }
-  }
-
-  /**
-   * Function to validate existing ELB logs bucket
-   * @param accessLogBucketConfig {@link ElbLogBucketConfig}
-   * @param existingBucket {@link BucketConfig}
-   * @param logger {@link winston.Logger}
-   */
-  private validateExistingElbLogsBucket(
-    elbLogBucketConfig: ElbLogBucketConfig,
-    existingBucket: BucketConfig,
-    logger: winston.Logger,
-  ) {
-    if (elbLogBucketConfig.lifecycleRules || elbLogBucketConfig.s3ResourcePolicyAttachments) {
-      logger.warn(
-        `When using existing elb logs bucket  ${existingBucket.name}, lifecycleRules and s3ResourcePolicyAttachments properties ignored.`,
-      );
-    }
-  }
-
-  private validateExistingBucket(values: GlobalConfig, logger: winston.Logger) {
-    //Validate existing CentralLogs bucket
-    if (values.logging.centralLogBucket?.existingBucket) {
-      this.validateExistingCentralLogBucket(
-        values.logging.centralLogBucket,
-        values.logging.centralLogBucket.existingBucket,
-        logger,
-      );
-    }
-
-    //Validate existing server access logs bucket
-    if (values.logging.accessLogBucket?.existingBucket) {
-      this.validateExistingServerAccessLogsBucket(
-        values.logging.accessLogBucket,
-        values.logging.accessLogBucket.existingBucket,
-        logger,
-      );
-    }
-
-    //Validate existing elb  logs bucket
-    if (values.logging.elbLogBucket?.existingBucket) {
-      this.validateExistingElbLogsBucket(
-        values.logging.elbLogBucket,
-        values.logging.elbLogBucket.existingBucket,
-        logger,
-      );
-    }
-  }
-
-  /**
    * Function to validate budget notification email address
    * @param values
    */
@@ -309,6 +225,57 @@ export class GlobalConfigValidator {
       }
       if (lifecycleRule.expiration && lifecycleRule.expiredObjectDeleteMarker) {
         errors.push('You may not configure expiredObjectDeleteMarker with expiration. Cost Reporting');
+      }
+    }
+  }
+
+  /**
+   * Function to validate CentralLogs bucket policy
+   * @param values {@link GlobalConfig}
+   * @param errors string[]
+   * @returns
+   */
+  private validateCentralLogsBucketPolicies(values: GlobalConfig, errors: string[]) {
+    if (!values.logging.centralLogBucket) {
+      return;
+    }
+    const importedBucketName = values.logging.centralLogBucket.importedBucketName;
+
+    if (!importedBucketName) {
+      const applyAcceleratorManagedPolicy = values.logging.centralLogBucket.applyAcceleratorManagedPolicy ?? true;
+      if (!applyAcceleratorManagedPolicy) {
+        if (
+          !values.logging.centralLogBucket.s3ResourcePolicyAttachments ||
+          !values.logging.centralLogBucket.kmsResourcePolicyAttachments
+        ) {
+          errors.push(
+            `Accelerator deployed CentralLogs bucket must have applyAcceleratorManagedPolicy set to true or provide external policy through s3ResourcePolicyAttachments and kmsResourcePolicyAttachments.`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to validate ElbLog bucket policy
+   * @param values {@link GlobalConfig}
+   * @param errors string[]
+   * @returns
+   */
+  private validateElbLogBucketPolicies(values: GlobalConfig, errors: string[]) {
+    if (!values.logging.elbLogBucket) {
+      return;
+    }
+    const importedBucketName = values.logging.elbLogBucket.importedBucketName;
+
+    if (!importedBucketName) {
+      const applyAcceleratorManagedPolicy = values.logging.elbLogBucket.applyAcceleratorManagedPolicy ?? true;
+      if (!applyAcceleratorManagedPolicy) {
+        if (!values.logging.elbLogBucket.s3ResourcePolicyAttachments) {
+          errors.push(
+            `Accelerator deployed CentralLogs bucket must have applyAcceleratorManagedPolicy set to true or provide external policy through s3ResourcePolicyAttachments.`,
+          );
+        }
       }
     }
   }

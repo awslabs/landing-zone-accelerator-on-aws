@@ -18,19 +18,15 @@ import { Construct } from 'constructs';
 import { pascalCase } from 'pascal-case';
 import path from 'path';
 
-import {
-  SnsTopicConfig,
-  VpcFlowLogsConfig,
-  CloudWatchLogsExclusionConfig,
-  BucketConfig,
-} from '@aws-accelerator/config';
+import { SnsTopicConfig, VpcFlowLogsConfig, CloudWatchLogsExclusionConfig } from '@aws-accelerator/config';
 import * as t from '@aws-accelerator/config/lib/common-types/types';
 import {
   Bucket,
-  BucketAccessType,
+  BucketEncryption,
   BucketEncryptionType,
-  BucketReplicationProps,
+  BucketPolicy,
   BucketPrefixProps,
+  BucketReplicationProps,
   CentralLogsBucket,
   CloudWatchDestination,
   CloudWatchLogsSubscriptionFilter,
@@ -40,7 +36,15 @@ import {
   SsmParameterLookup,
   ValidateBucket,
   PutSsmParameter,
+  BucketPolicyProps,
 } from '@aws-accelerator/constructs';
+
+import {
+  AcceleratorImportedBucketType,
+  AwsPrincipalAccessesType,
+  BucketAccessType,
+  PrincipalOrgIdConditionType,
+} from '@aws-accelerator/utils';
 
 import { AcceleratorElbRootAccounts, OptInRegions } from '../accelerator';
 import {
@@ -59,6 +63,15 @@ export type cloudwatchExclusionProcessedItem = {
 
 type excludeUniqueItemType = { account: string; region: string };
 
+type CentralLogsBucketPrincipalAndPrefixesType = {
+  awsPrincipalAccesses: AwsPrincipalAccessesType[];
+  bucketPrefixes: string[];
+};
+
+type PolicyAttachmentsType = {
+  policy: string;
+};
+
 export class LoggingStack extends AcceleratorStack {
   private cloudwatchKey: cdk.aws_kms.IKey;
   private lambdaKey: cdk.aws_kms.IKey;
@@ -66,11 +79,14 @@ export class LoggingStack extends AcceleratorStack {
   private centralLogBucketKey: cdk.aws_kms.IKey | undefined;
   private centralSnsKey: cdk.aws_kms.IKey | undefined;
   private snsForwarderFunction: cdk.aws_lambda.IFunction | undefined;
-  private existingCentralLogBucket: cdk.aws_s3.IBucket | undefined;
-  private existingCentralLogBucketKey: cdk.aws_kms.IKey | undefined;
+  private importedCentralLogBucket: cdk.aws_s3.IBucket | undefined;
+  private importedCentralLogBucketKey: cdk.aws_kms.IKey | undefined;
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
+
+    // Get principal organization condition
+    const principalOrgIdCondition = this.getPrincipalOrgIdCondition(this.organizationId);
 
     // Create S3 Key in all account
     const s3Key = this.createS3Key();
@@ -114,7 +130,7 @@ export class LoggingStack extends AcceleratorStack {
 
     //
     // Create or get existing central log bucket
-    this.createOrGetCentralLogsBucket(serverAccessLogsBucket);
+    this.createOrGetCentralLogsBucket(serverAccessLogsBucket, principalOrgIdCondition);
 
     //
     // Get central log bucket encryption key
@@ -140,7 +156,7 @@ export class LoggingStack extends AcceleratorStack {
     //
     // Create or get ELB access logs bucket
     //
-    this.createOrGetElbAccessLogsBucket(replicationProps);
+    this.createOrGetElbAccessLogsBucket(principalOrgIdCondition, replicationProps);
 
     //
     // Create Auto scaling service linked role
@@ -214,40 +230,53 @@ export class LoggingStack extends AcceleratorStack {
 
   /**
    * Function to create or get ELB access log bucket
+   * @param principalOrgIdCondition {@link PrincipalOrgIdConditionType}
    * @param replicationProps {@link BucketReplicationProps}
    * @returns
    */
-  private createOrGetElbAccessLogsBucket(replicationProps?: BucketReplicationProps): cdk.aws_s3.IBucket | undefined {
+  private createOrGetElbAccessLogsBucket(
+    principalOrgIdCondition: PrincipalOrgIdConditionType,
+    replicationProps?: BucketReplicationProps,
+  ): cdk.aws_s3.IBucket | undefined {
     /**
      * Create S3 Bucket for ELB Access Logs, this is created in log archive account
      * For ELB to write access logs bucket is needed to have SSE-S3 server-side encryption
      */
     if (cdk.Stack.of(this).account === this.props.accountsConfig.getLogArchiveAccountId()) {
-      if (this.props.globalConfig.logging.elbLogBucket?.existingBucket) {
-        return this.getExistingBucket(this.props.globalConfig.logging.elbLogBucket.existingBucket, 'elb-logs', 's3');
+      const elbAccountId = this.getElbAccountId();
+      if (this.props.globalConfig.logging.elbLogBucket?.importedBucketName) {
+        const applyAcceleratorManagedPolicy =
+          this.props.globalConfig.logging.elbLogBucket.applyAcceleratorManagedPolicy ?? false;
+
+        const bucket = this.getImportedBucket(
+          this.props.globalConfig.logging.elbLogBucket.importedBucketName,
+          AcceleratorImportedBucketType.ELB_LOGS_BUCKET,
+          's3',
+        );
+
+        this.updateImportedBucketPolicy(
+          applyAcceleratorManagedPolicy,
+          bucket,
+          AcceleratorImportedBucketType.ELB_LOGS_BUCKET,
+          this.props.globalConfig.logging.elbLogBucket.s3ResourcePolicyAttachments,
+          principalOrgIdCondition,
+          undefined,
+          elbAccountId,
+        );
+
+        return bucket;
       } else {
-        return this.createElbAccessLogsBucket(replicationProps);
+        return this.createElbAccessLogsBucket(replicationProps, elbAccountId);
       }
     }
     return undefined;
   }
 
   /**
-   * Function to create ELB access logs bucket
-   * @param replicationProps {@link BucketReplicationProps}
-   * @returns {@link cdk.aws_s3.IBucket} | undefined
-   *
-   * @remarks
-   * Create S3 Bucket for ELB Access Logs, this is created in log archive account.
-   * For ELB to write access logs bucket is needed to have SSE-S3 server-side encryption
+   * Function to get ELB account id
+   * @returns
    */
-  private createElbAccessLogsBucket(replicationProps?: BucketReplicationProps): cdk.aws_s3.IBucket | undefined {
-    const elbAccessLogsBucket = new Bucket(this, 'ElbAccessLogsBucket', {
-      encryptionType: BucketEncryptionType.SSE_S3, // Server access logging does not support SSE-KMS
-      s3BucketName: this.getElbLogsBucketName(),
-      replicationProps,
-      s3LifeCycleRules: this.getS3LifeCycleRules(this.props.globalConfig.logging.elbLogBucket?.lifecycleRules),
-    });
+  private getElbAccountId() {
     let elbAccountId = undefined;
     if (AcceleratorElbRootAccounts[cdk.Stack.of(this).region]) {
       elbAccountId = AcceleratorElbRootAccounts[cdk.Stack.of(this).region];
@@ -257,6 +286,32 @@ export class LoggingStack extends AcceleratorStack {
         item => item.region === cdk.Stack.of(this).region,
       )!.accountId;
     }
+
+    return elbAccountId;
+  }
+
+  /**
+   * Function to create ELB access logs bucket
+   * @param replicationProps {@link BucketReplicationProps}
+   * @param elbAccountId string
+   *
+   * @returns bucket {@link cdk.aws_s3.IBucket} | undefined
+   *
+   * @remarks
+   * Create S3 Bucket for ELB Access Logs, this is created in log archive account.
+   * For ELB to write access logs bucket is needed to have SSE-S3 server-side encryption
+   */
+  private createElbAccessLogsBucket(
+    replicationProps?: BucketReplicationProps,
+    elbAccountId?: string,
+  ): cdk.aws_s3.IBucket | undefined {
+    const elbAccessLogsBucket = new Bucket(this, 'ElbAccessLogsBucket', {
+      encryptionType: BucketEncryptionType.SSE_S3, // Server access logging does not support SSE-KMS
+      s3BucketName: this.getElbLogsBucketName(),
+      replicationProps,
+      s3LifeCycleRules: this.getS3LifeCycleRules(this.props.globalConfig.logging.elbLogBucket?.lifecycleRules),
+    });
+
     // To make sure central log bucket created before elb access log bucket, this is required when logging stack executes in home region
     if (this.centralLogsBucket) {
       elbAccessLogsBucket.node.addDependency(this.centralLogsBucket);
@@ -357,15 +412,26 @@ export class LoggingStack extends AcceleratorStack {
 
   /**
    * Function to get or create server access log bucket
-   * @returns {@link cdk.aws_s3.IBucket}
+   * @returns bucket {@link cdk.aws_s3.IBucket}
    */
   private createOrGetServerAccessLogBucket(): cdk.aws_s3.IBucket {
-    if (this.props.globalConfig.logging.accessLogBucket?.existingBucket) {
-      return this.getExistingBucket(
-        this.props.globalConfig.logging.accessLogBucket.existingBucket,
-        'access-logs',
+    if (this.props.globalConfig.logging.accessLogBucket?.importedBucketName) {
+      const applyAcceleratorManagedPolicy =
+        this.props.globalConfig.logging.accessLogBucket.applyAcceleratorManagedPolicy ?? false;
+
+      const bucket = this.getImportedBucket(
+        this.props.globalConfig.logging.accessLogBucket.importedBucketName,
+        AcceleratorImportedBucketType.SERVER_ACCESS_LOGS_BUCKET,
         's3',
       );
+      this.updateImportedBucketPolicy(
+        applyAcceleratorManagedPolicy,
+        bucket,
+        AcceleratorImportedBucketType.SERVER_ACCESS_LOGS_BUCKET,
+        this.props.globalConfig.logging.accessLogBucket.s3ResourcePolicyAttachments,
+      );
+
+      return bucket;
     } else {
       return this.createServerAccessLogBucket();
     }
@@ -425,12 +491,11 @@ export class LoggingStack extends AcceleratorStack {
    * All other environment stacks will need custom resource to get key arn from ssm parameter.
    */
   private getCentralLogBucketKey(): cdk.aws_kms.IKey {
-    //this.acceleratorResourceNames.parameters.existingCentralLogBucketCmkArn
-    if (this.props.globalConfig.logging.centralLogBucket?.existingBucket) {
-      if (this.existingCentralLogBucket) {
-        return this.existingCentralLogBucketKey!;
+    if (this.props.globalConfig.logging.centralLogBucket?.importedBucketName) {
+      if (this.importedCentralLogBucket) {
+        return this.importedCentralLogBucketKey!;
       } else {
-        return this.getAcceleratorKey(AcceleratorKeyType.EXISTING_CENTRAL_LOG_BUCKET, this.cloudwatchKey);
+        return this.getAcceleratorKey(AcceleratorKeyType.IMPORTED_CENTRAL_LOG_BUCKET, this.cloudwatchKey);
       }
     } else {
       if (this.centralLogsBucket) {
@@ -1329,11 +1394,12 @@ export class LoggingStack extends AcceleratorStack {
     }
   }
 
-  private createCentralLogsBucketPrincipalAndPrefixes(): {
-    awsPrincipalAccesses: { name: string; principal: string; accessType: string }[];
-    bucketPrefixes: string[];
-  } {
-    const awsPrincipalAccesses: { name: string; principal: string; accessType: string }[] = [];
+  /**
+   * Create list of principal needs access to CentralLogs bucket
+   * @returns
+   */
+  private createCentralLogsBucketPrincipalAndPrefixes(): CentralLogsBucketPrincipalAndPrefixesType {
+    const awsPrincipalAccesses: AwsPrincipalAccessesType[] = [];
     const bucketPrefixes: string[] = [];
     if (this.props.securityConfig.centralSecurityServices.macie.enable) {
       awsPrincipalAccesses.push({
@@ -1385,27 +1451,25 @@ export class LoggingStack extends AcceleratorStack {
 
   /**
    * Function to get existing bucket
-   * @param existingBucketConfig {@link BucketConfig}
-   * @param bucketType string
+   * @param importedBucketName string
+   * @param bucketType {@link AcceleratorImportedBucketType}
    * @param encryptionType 'kms' | 's3'
-   * @param bucketKmsArnParameterName string
-   * @returns existingBucket {@link cdk.aws_s3.IBucket}
+   * @returns bucket {@link cdk.aws_s3.IBucket}
    */
-  private getExistingBucket(
-    existingBucketConfig: BucketConfig,
-    bucketType: string,
+  private getImportedBucket(
+    importedBucketName: string,
+    bucketType: AcceleratorImportedBucketType,
     encryptionType: 'kms' | 's3',
-    bucketKmsArnParameterName?: string,
   ): cdk.aws_s3.IBucket {
     // Get existing bucket
-    const existingBucket = cdk.aws_s3.Bucket.fromBucketName(
+    const bucket = cdk.aws_s3.Bucket.fromBucketName(
       this,
-      pascalCase(`Existing${bucketType}Bucket`),
-      this.getBucketNameReplacement(existingBucketConfig.name),
+      pascalCase(`Imported${bucketType}Bucket`),
+      this.getBucketNameReplacement(importedBucketName),
     );
 
-    const validateBucket = new ValidateBucket(this, pascalCase(`ValidateExisting${bucketType}Bucket`), {
-      bucket: existingBucket,
+    new ValidateBucket(this, pascalCase(`ValidateImported${bucketType}Bucket`), {
+      bucket: bucket,
       validationCheckList: ['encryption'],
       encryptionType,
       customResourceLambdaEnvironmentEncryptionKmsKey: this.lambdaKey,
@@ -1413,9 +1477,198 @@ export class LoggingStack extends AcceleratorStack {
       customResourceLambdaLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
     });
 
-    if (bucketKmsArnParameterName) {
-      // Store existing central log bucket's encryption key arn for future usage
-      new PutSsmParameter(this, pascalCase(`PutExisting${bucketType}BucketKmsArnParameter`), {
+    return bucket;
+  }
+
+  /**
+   * Function to create kms policy statements for imported bucket
+   * @param applyAcceleratorManagedPolicy boolean
+   * @param bucketType {@link AcceleratorImportedBucketType}
+   * @param kmsResourcePolicyAttachments {@link PolicyAttachmentsType}
+   * @param principalOrgIdCondition {@link PrincipalOrgIdConditionType}
+   * @param centralLogsBucketPrincipalAndPrefixes {@link CentralLogsBucketPrincipalAndPrefixesType}
+   * @returns policyStatements {@link cdk.aws_iam.PolicyStatement}[]
+   */
+  private createImportedBucketPolicyStatements(
+    applyAcceleratorManagedPolicy: boolean,
+    bucketType: AcceleratorImportedBucketType,
+    kmsResourcePolicyAttachments: PolicyAttachmentsType[],
+    principalOrgIdCondition: PrincipalOrgIdConditionType,
+    centralLogsBucketPrincipalAndPrefixes?: CentralLogsBucketPrincipalAndPrefixesType,
+  ): cdk.aws_iam.PolicyStatement[] {
+    const policyStatements: cdk.aws_iam.PolicyStatement[] = [];
+
+    if (bucketType === AcceleratorImportedBucketType.CENTRAL_LOGS_BUCKET && applyAcceleratorManagedPolicy) {
+      policyStatements.push(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'Enable IAM User Permissions',
+          principals: [new cdk.aws_iam.AccountRootPrincipal()],
+          actions: ['kms:*'],
+          resources: ['*'],
+        }),
+      );
+
+      policyStatements.push(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'Allow S3 use of the key',
+          actions: [
+            'kms:Decrypt',
+            'kms:DescribeKey',
+            'kms:Encrypt',
+            'kms:GenerateDataKey',
+            'kms:GenerateDataKeyWithoutPlaintext',
+            'kms:GenerateRandom',
+            'kms:GetKeyPolicy',
+            'kms:GetKeyRotationStatus',
+            'kms:ListAliases',
+            'kms:ListGrants',
+            'kms:ListKeyPolicies',
+            'kms:ListKeys',
+            'kms:ListResourceTags',
+            'kms:ListRetirableGrants',
+            'kms:ReEncryptFrom',
+            'kms:ReEncryptTo',
+          ],
+          principals: [new cdk.aws_iam.ServicePrincipal('s3.amazonaws.com')],
+          resources: ['*'],
+        }),
+      );
+
+      policyStatements.push(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'Allow AWS Services to encrypt and describe logs',
+          actions: [
+            'kms:Decrypt',
+            'kms:DescribeKey',
+            'kms:Encrypt',
+            'kms:GenerateDataKey',
+            'kms:GenerateDataKeyPair',
+            'kms:GenerateDataKeyPairWithoutPlaintext',
+            'kms:GenerateDataKeyWithoutPlaintext',
+            'kms:ReEncryptFrom',
+            'kms:ReEncryptTo',
+          ],
+          principals: [
+            new cdk.aws_iam.ServicePrincipal('config.amazonaws.com'),
+            new cdk.aws_iam.ServicePrincipal('cloudtrail.amazonaws.com'),
+            new cdk.aws_iam.ServicePrincipal('delivery.logs.amazonaws.com'),
+            new cdk.aws_iam.ServicePrincipal('ssm.amazonaws.com'),
+          ],
+          resources: ['*'],
+        }),
+      );
+
+      policyStatements.push(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'Allow Organization use of the key',
+          actions: [
+            'kms:Decrypt',
+            'kms:DescribeKey',
+            'kms:Encrypt',
+            'kms:GenerateDataKey',
+            'kms:GenerateDataKeyPair',
+            'kms:GenerateDataKeyPairWithoutPlaintext',
+            'kms:GenerateDataKeyWithoutPlaintext',
+            'kms:ReEncryptFrom',
+            'kms:ReEncryptTo',
+            'kms:ListAliases',
+          ],
+          principals: [new cdk.aws_iam.AnyPrincipal()],
+          resources: ['*'],
+          conditions: {
+            StringEquals: {
+              ...principalOrgIdCondition,
+            },
+          },
+        }),
+      );
+
+      if (centralLogsBucketPrincipalAndPrefixes?.awsPrincipalAccesses) {
+        const awsPrincipalAccesses = centralLogsBucketPrincipalAndPrefixes.awsPrincipalAccesses;
+        // Allow bucket encryption key for given aws principals
+        awsPrincipalAccesses
+          .filter(item => item.accessType !== BucketAccessType.NO_ACCESS)
+          .forEach(item => {
+            policyStatements.push(
+              new cdk.aws_iam.PolicyStatement({
+                sid: `Allow ${item.name} service to use the encryption key`,
+                principals: [new cdk.aws_iam.ServicePrincipal(item.principal)],
+                actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
+                resources: ['*'],
+              }),
+            );
+          });
+      }
+    }
+
+    for (const kmsResourcePolicyAttachment of kmsResourcePolicyAttachments) {
+      const policyDocument = JSON.parse(
+        this.generatePolicyReplacements(
+          path.join(this.props.configDirPath, kmsResourcePolicyAttachment.policy),
+          false,
+          this.organizationId,
+        ),
+      );
+
+      for (const statement of policyDocument.Statement) {
+        policyStatements.push(cdk.aws_iam.PolicyStatement.fromJson(statement));
+      }
+    }
+
+    return policyStatements;
+  }
+
+  /**
+   * Function to update imported bucket encryption key
+   * @param applyAcceleratorManagedPolicy boolean
+   * @param bucketType {@link AcceleratorImportedBucketType}
+   * @param bucket {@link cdk.aws_s3.IBucket}
+   * @param principalOrgIdCondition {@link PrincipalOrgIdConditionType}
+   * @param kmsResourcePolicyAttachments {@link PolicyAttachmentsType}
+   * @param centralLogsBucketPrincipalAndPrefixes {@link CentralLogsBucketPrincipalAndPrefixesType}
+   * @param bucketKmsArnParameterName string
+   */
+  private updateImportedBucketEncryption(
+    applyAcceleratorManagedPolicy: boolean,
+    bucketType: AcceleratorImportedBucketType,
+    bucket: cdk.aws_s3.IBucket,
+    principalOrgIdCondition: PrincipalOrgIdConditionType,
+    kmsResourcePolicyAttachments?: PolicyAttachmentsType[],
+    centralLogsBucketPrincipalAndPrefixes?: CentralLogsBucketPrincipalAndPrefixesType,
+    bucketKmsArnParameterName?: string,
+  ) {
+    const key = new cdk.aws_kms.Key(this, pascalCase(`Imported${bucketType}BucketKey`), {
+      enableKeyRotation: true,
+      alias: this.acceleratorResourceNames.customerManagedKeys.importedCentralLogsBucket.alias,
+      description: this.acceleratorResourceNames.customerManagedKeys.importedCentralLogsBucket.description,
+    });
+
+    if (kmsResourcePolicyAttachments) {
+      const policyStatements = this.createImportedBucketPolicyStatements(
+        applyAcceleratorManagedPolicy,
+        bucketType,
+        kmsResourcePolicyAttachments,
+        principalOrgIdCondition,
+        centralLogsBucketPrincipalAndPrefixes,
+      );
+
+      for (const policyStatement of policyStatements) {
+        key.addToResourcePolicy(policyStatement);
+      }
+    }
+
+    new BucketEncryption(this, pascalCase(`Imported${bucketType}BucketEncryption`), {
+      bucket: bucket,
+      kmsKey: key,
+      customResourceLambdaEnvironmentEncryptionKmsKey: this.lambdaKey,
+      customResourceLambdaCloudWatchLogKmsKey: this.cloudwatchKey,
+      customResourceLambdaLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+    });
+
+    if (bucketKmsArnParameterName && bucketType === AcceleratorImportedBucketType.CENTRAL_LOGS_BUCKET) {
+      // Store existing central log bucket's encryption key arn in ssm parameter for future usage,
+      // parameter will be created in every account central logging region only
+      new PutSsmParameter(this, pascalCase(`PutImported${bucketType}BucketKmsArnParameter`), {
         accountIds: this.getActiveAccountIds(),
         region: cdk.Stack.of(this).region,
         roleName: this.acceleratorResourceNames.roles.crossAccountSsmParameterShare,
@@ -1424,46 +1677,140 @@ export class LoggingStack extends AcceleratorStack {
         parameters: [
           {
             name: bucketKmsArnParameterName,
-            value: validateBucket.bucketKmsArn,
+            value: key.keyArn,
           },
         ],
         invokingAccountId: cdk.Stack.of(this).account,
         acceleratorPrefix: this.props.prefixes.accelerator,
       });
-    }
 
-    if (bucketType === 'central-logs') {
-      this.existingCentralLogBucketKey = cdk.aws_kms.Key.fromKeyArn(
-        this,
-        'ExistingCentralLogsBucketKey',
-        validateBucket.bucketKmsArn,
+      this.importedCentralLogBucketKey = cdk.aws_kms.Key.fromKeyArn(this, 'ImportedCentralLogsBucketKey', key.keyArn);
+    }
+  }
+
+  /**
+   * Function to update imported bucket's policy
+   * @param applyAcceleratorManagedPolicy boolean
+   * @param importedBucket {@link cdk.aws_s3.IBucket}
+   * @param bucketType {@link AcceleratorImportedBucketType}
+   * @param s3ResourcePolicyAttachments {@link PolicyAttachmentsType}[]
+   * @param principalOrgIdCondition {@link PrincipalOrgIdConditionType}
+   * @param centralLogsBucketPrincipalAndPrefixes {@link CentralLogsBucketPrincipalAndPrefixesType}
+   * @param elbAccountId string
+   */
+  private updateImportedBucketPolicy(
+    applyAcceleratorManagedPolicy: boolean,
+    importedBucket: cdk.aws_s3.IBucket,
+    bucketType: AcceleratorImportedBucketType,
+    s3ResourcePolicyAttachments?: PolicyAttachmentsType[],
+    principalOrgIdCondition?: PrincipalOrgIdConditionType,
+    centralLogsBucketPrincipalAndPrefixes?: CentralLogsBucketPrincipalAndPrefixesType,
+    elbAccountId?: string,
+  ) {
+    const bucketPolicyFilePaths: string[] = [];
+
+    for (const s3ResourcePolicyAttachment of s3ResourcePolicyAttachments ?? []) {
+      bucketPolicyFilePaths.push(
+        this.generatePolicyReplacements(
+          path.join(this.props.configDirPath, s3ResourcePolicyAttachment.policy),
+          true,
+          undefined,
+          `replaced-${path.parse(s3ResourcePolicyAttachment.policy).base}`,
+        ),
       );
     }
 
-    return existingBucket;
+    const organizationId = this.organizationId;
+    let props: BucketPolicyProps = {
+      bucketType: AcceleratorImportedBucketType.SERVER_ACCESS_LOGS_BUCKET,
+      applyAcceleratorManagedPolicy,
+      bucket: importedBucket,
+      bucketPolicyFilePaths,
+      customResourceLambdaEnvironmentEncryptionKmsKey: this.lambdaKey,
+      customResourceLambdaCloudWatchLogKmsKey: this.cloudwatchKey,
+      customResourceLambdaLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+    };
+
+    if (bucketType === AcceleratorImportedBucketType.CENTRAL_LOGS_BUCKET) {
+      props = {
+        bucketType: AcceleratorImportedBucketType.CENTRAL_LOGS_BUCKET,
+        applyAcceleratorManagedPolicy,
+        bucket: importedBucket,
+        bucketPolicyFilePaths,
+        principalOrgIdCondition,
+        awsPrincipalAccesses: centralLogsBucketPrincipalAndPrefixes!.awsPrincipalAccesses,
+        organizationId,
+        customResourceLambdaEnvironmentEncryptionKmsKey: this.lambdaKey,
+        customResourceLambdaCloudWatchLogKmsKey: this.cloudwatchKey,
+        customResourceLambdaLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+      };
+    }
+
+    if (bucketType === AcceleratorImportedBucketType.ELB_LOGS_BUCKET) {
+      props = {
+        bucketType: AcceleratorImportedBucketType.ELB_LOGS_BUCKET,
+        applyAcceleratorManagedPolicy,
+        bucket: importedBucket,
+        bucketPolicyFilePaths,
+        principalOrgIdCondition,
+        organizationId,
+        elbAccountId,
+        customResourceLambdaEnvironmentEncryptionKmsKey: this.lambdaKey,
+        customResourceLambdaCloudWatchLogKmsKey: this.cloudwatchKey,
+        customResourceLambdaLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+      };
+    }
+    new BucketPolicy(this, pascalCase(`Imported${bucketType}BucketPolicy`), props);
   }
 
   /**
    * Function to create or get existing CentralLogBucket
    * @param serverAccessLogsBucket {@link Bucket} | {@link cdk.aws_s3.IBucket}
+   * @param principalOrgIdCondition {@link PrincipalOrgIdConditionType}
    *
    * @remarks
-   * When existing bucket is used solution will lookup the existing bucket else solution will deploy central log bucket.
+   * When imported bucket is used solution will lookup the existing bucket else solution will deploy central log bucket.
    */
-  private createOrGetCentralLogsBucket(serverAccessLogsBucket: cdk.aws_s3.IBucket) {
+  private createOrGetCentralLogsBucket(
+    serverAccessLogsBucket: cdk.aws_s3.IBucket,
+    principalOrgIdCondition: PrincipalOrgIdConditionType,
+  ) {
     if (
       cdk.Stack.of(this).region === this.props.centralizedLoggingRegion &&
       cdk.Stack.of(this).account === this.props.accountsConfig.getLogArchiveAccountId()
     ) {
-      if (this.props.globalConfig.logging.centralLogBucket?.existingBucket) {
-        this.existingCentralLogBucket = this.getExistingBucket(
-          this.props.globalConfig.logging.centralLogBucket.existingBucket,
-          'central-logs',
+      const centralLogsBucketPrincipalAndPrefixes = this.createCentralLogsBucketPrincipalAndPrefixes();
+
+      if (this.props.globalConfig.logging.centralLogBucket?.importedBucketName) {
+        const applyAcceleratorManagedPolicy =
+          this.props.globalConfig.logging.centralLogBucket.applyAcceleratorManagedPolicy ?? false;
+
+        this.importedCentralLogBucket = this.getImportedBucket(
+          this.props.globalConfig.logging.centralLogBucket.importedBucketName,
+          AcceleratorImportedBucketType.CENTRAL_LOGS_BUCKET,
           'kms',
-          this.acceleratorResourceNames.parameters.existingCentralLogBucketCmkArn,
+        );
+
+        this.updateImportedBucketEncryption(
+          applyAcceleratorManagedPolicy,
+          AcceleratorImportedBucketType.CENTRAL_LOGS_BUCKET,
+          this.importedCentralLogBucket,
+          principalOrgIdCondition,
+          this.props.globalConfig.logging.centralLogBucket.kmsResourcePolicyAttachments,
+          centralLogsBucketPrincipalAndPrefixes,
+          this.acceleratorResourceNames.parameters.importedCentralLogBucketCmkArn,
+        );
+
+        this.updateImportedBucketPolicy(
+          applyAcceleratorManagedPolicy,
+          this.importedCentralLogBucket,
+          AcceleratorImportedBucketType.CENTRAL_LOGS_BUCKET,
+          this.props.globalConfig.logging.centralLogBucket.s3ResourcePolicyAttachments,
+          principalOrgIdCondition,
+          centralLogsBucketPrincipalAndPrefixes,
         );
       } else {
-        this.createCentralLogsBucket(serverAccessLogsBucket);
+        this.createCentralLogsBucket(serverAccessLogsBucket, centralLogsBucketPrincipalAndPrefixes);
       }
     }
   }
@@ -1473,17 +1820,21 @@ export class LoggingStack extends AcceleratorStack {
    * @param serverAccessLogsBucket {@link Bucket}
    *
    * @remarks
-   * If not used existing central log bucket Create then Central Logs Bucket - This is done only in the home region of the log-archive account.
+   * When existing central log bucket not used then create Central Logs Bucket - This is done only in the home region of the log-archive account.
    * This is the destination bucket for all logs such as AWS CloudTrail, AWS Config, and VPC Flow logs.
    * Addition logs can also be sent to this bucket through AWS CloudWatch Logs, such as application logs, OS logs, or server logs.
    */
-  private createCentralLogsBucket(serverAccessLogsBucket: cdk.aws_s3.IBucket) {
+  private createCentralLogsBucket(
+    serverAccessLogsBucket: cdk.aws_s3.IBucket,
+    centralLogsBucketPrincipalAndPrefixes: {
+      awsPrincipalAccesses: AwsPrincipalAccessesType[];
+      bucketPrefixes: string[];
+    },
+  ) {
     if (
       cdk.Stack.of(this).region === this.props.centralizedLoggingRegion &&
       cdk.Stack.of(this).account === this.props.accountsConfig.getLogArchiveAccountId()
     ) {
-      const centralLogsBucketPrincipalAndPrefixes = this.createCentralLogsBucketPrincipalAndPrefixes();
-
       const bucketPrefixProps: BucketPrefixProps = {
         source: {
           bucketName: this.centralLogsBucketName,

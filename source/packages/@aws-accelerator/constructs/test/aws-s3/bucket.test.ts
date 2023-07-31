@@ -12,7 +12,8 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { Bucket, BucketEncryptionType, BucketAccessType } from '../../lib/aws-s3/bucket';
+import { BucketAccessType } from '@aws-accelerator/utils';
+import { Bucket, BucketEncryptionType } from '../../lib/aws-s3/bucket';
 import { snapShotTest } from '../snapshot-test';
 import { describe, it, expect } from '@jest/globals';
 

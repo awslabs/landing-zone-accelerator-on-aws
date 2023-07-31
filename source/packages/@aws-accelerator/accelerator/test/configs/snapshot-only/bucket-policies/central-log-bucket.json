@@ -1,0 +1,24 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "This is from policy file",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "*"
+            },
+            "Action": [
+                "s3:List*"
+            ],
+            "Resource": [
+                "arn:aws:s3:::existing-central-log-bucket",
+                "arn:aws:s3:::existing-central-log-bucket/*"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:PrincipalOrgID": "${ORG_ID}"
+                }
+            }
+        }        
+    ]
+  }

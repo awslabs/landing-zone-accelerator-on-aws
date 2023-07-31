@@ -21,7 +21,7 @@ exports[`SecurityStack Construct(SecurityStack):  Snapshot Test 1`] = `
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "AcceleratorExistingCentralLogBucketKeyLookup60D9CA07": {
+    "AcceleratorImportedCentralLogBucketKeyLookupCDD7B719": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
         "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
@@ -263,7 +263,7 @@ exports[`SecurityStack Construct(SecurityStack):  Snapshot Test 1`] = `
         "bucketName": "existing-central-log-bucket",
         "keyPrefix": "macie/111111111111/",
         "kmsKeyArn": {
-          "Ref": "AcceleratorExistingCentralLogBucketKeyLookup60D9CA07",
+          "Ref": "AcceleratorImportedCentralLogBucketKeyLookupCDD7B719",
         },
         "region": "us-east-1",
       },
@@ -1132,7 +1132,7 @@ exports[`SecurityStack Construct(SecurityStack):  Snapshot Test 1`] = `
         "exportDestinationOverride": true,
         "exportDestinationType": "S3",
         "kmsKeyArn": {
-          "Ref": "AcceleratorExistingCentralLogBucketKeyLookup60D9CA07",
+          "Ref": "AcceleratorImportedCentralLogBucketKeyLookupCDD7B719",
         },
         "region": "us-east-1",
       },

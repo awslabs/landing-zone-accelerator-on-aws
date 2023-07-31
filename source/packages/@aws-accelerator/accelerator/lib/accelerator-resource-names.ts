@@ -20,7 +20,7 @@ interface RoleNames {
   firewallConfigFunctionRoleName: string;
 }
 interface ParameterNames {
-  existingCentralLogBucketCmkArn: string;
+  importedCentralLogBucketCmkArn: string;
   centralLogBucketCmkArn: string;
   controlTowerDriftDetection: string;
   controlTowerLastDriftMessage: string;
@@ -46,6 +46,7 @@ interface ParameterNames {
 interface CmkDetails {
   orgTrailLog: { alias: string; description: string };
   centralLogsBucket: { alias: string; description: string };
+  importedCentralLogsBucket: { alias: string; description: string };
   metadataBucket: { alias: string; description: string };
   ebsDefault: { alias: string; description: string };
   s3: { alias: string; description: string };
@@ -90,7 +91,7 @@ export class AcceleratorResourceNames {
     firewallConfigFunctionRoleName: 'PLACE_HOLDER',
   };
   public parameters: ParameterNames = {
-    existingCentralLogBucketCmkArn: 'PLACE_HOLDER',
+    importedCentralLogBucketCmkArn: 'PLACE_HOLDER',
     centralLogBucketCmkArn: 'PLACE_HOLDER',
     controlTowerDriftDetection: 'PLACE_HOLDER',
     controlTowerLastDriftMessage: 'PLACE_HOLDER',
@@ -116,6 +117,7 @@ export class AcceleratorResourceNames {
   public customerManagedKeys: CmkDetails = {
     orgTrailLog: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
     centralLogsBucket: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
+    importedCentralLogsBucket: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
     metadataBucket: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
     ebsDefault: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
     s3: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
@@ -166,7 +168,7 @@ export class AcceleratorResourceNames {
 
     //
     // SSM Parameter initializations
-    this.parameters.existingCentralLogBucketCmkArn =
+    this.parameters.importedCentralLogBucketCmkArn =
       props.prefixes.importResourcesSsmParamName + '/logging/central-bucket/kms/arn';
     this.parameters.centralLogBucketCmkArn = props.prefixes.ssmParamName + '/logging/central-bucket/kms/arn';
     this.parameters.controlTowerDriftDetection = props.prefixes.ssmParamName + '/controltower/driftDetected';
@@ -202,6 +204,10 @@ export class AcceleratorResourceNames {
     this.customerManagedKeys.centralLogsBucket = {
       alias: props.prefixes.kmsAlias + '/central-logs/s3',
       description: 'AWS Accelerator Central Logs Bucket CMK',
+    };
+    this.customerManagedKeys.importedCentralLogsBucket = {
+      alias: props.prefixes.kmsAlias + '/imported-bucket/central-logs/s3',
+      description: 'AWS Accelerator Imported Central Logs Bucket CMK',
     };
     this.customerManagedKeys.metadataBucket = {
       alias: props.prefixes.kmsAlias + '/kms/metadata/key',

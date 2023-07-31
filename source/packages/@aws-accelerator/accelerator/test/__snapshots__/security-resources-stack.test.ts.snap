@@ -469,7 +469,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         "IsMultiRegionTrail": true,
         "IsOrganizationTrail": false,
         "KMSKeyId": {
-          "Ref": "AcceleratorExistingCentralLogBucketKeyLookup60D9CA07",
+          "Ref": "AcceleratorImportedCentralLogBucketKeyLookupCDD7B719",
         },
         "S3BucketName": "existing-central-log-bucket",
         "S3KeyPrefix": "cloudtrail-AWSAccelerator-Account-CloudTrail",
@@ -1339,40 +1339,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       },
       "Type": "AWS::Config::ConfigRule",
     },
-    "AcceleratorExistingCentralLogBucketKeyLookup60D9CA07": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
-            "Arn",
-          ],
-        },
-        "assumeRoleArn": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":iam::111111111111:role/AWSAccelerator-CrossAccountSsmParameterShare",
-            ],
-          ],
-        },
-        "invokingAccountID": "111111111111",
-        "invokingRegion": "us-east-1",
-        "parameterAccountID": "111111111111",
-        "parameterName": "/accelerator/imported-resources/logging/central-bucket/kms/arn",
-        "parameterRegion": "us-west-2",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::SsmGetParameterValue",
-      "UpdateReplacePolicy": "Delete",
-    },
     "AcceleratorGuarddutyNonArchivedFindings32ED20C9": {
       "DependsOn": [
         "ConfigRecorder",
@@ -1469,6 +1435,40 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         },
       },
       "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorImportedCentralLogBucketKeyLookupCDD7B719": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
+            "Arn",
+          ],
+        },
+        "assumeRoleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::111111111111:role/AWSAccelerator-CrossAccountSsmParameterShare",
+            ],
+          ],
+        },
+        "invokingAccountID": "111111111111",
+        "invokingRegion": "us-east-1",
+        "parameterAccountID": "111111111111",
+        "parameterName": "/accelerator/imported-resources/logging/central-bucket/kms/arn",
+        "parameterRegion": "us-west-2",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::SsmGetParameterValue",
+      "UpdateReplacePolicy": "Delete",
     },
     "AcceleratorInternetGatewayAuthorizedVpcOnly75CCD662": {
       "DependsOn": [
@@ -4439,7 +4439,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
               ],
               "Effect": "Allow",
               "Resource": {
-                "Ref": "AcceleratorExistingCentralLogBucketKeyLookup60D9CA07",
+                "Ref": "AcceleratorImportedCentralLogBucketKeyLookupCDD7B719",
               },
               "Sid": "S3CentralLogsEncryption",
             },
