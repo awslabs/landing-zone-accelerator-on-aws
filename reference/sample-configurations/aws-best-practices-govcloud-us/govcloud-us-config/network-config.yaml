@@ -1,14 +1,26 @@
+################################################################################################################
+# For additional configurable services, features, and property descriptions,                                   #
+# please review class NetworkConfig reference in our TypeDoc:                                                  #
+# https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.NetworkConfig.html #
+################################################################################################################
+
 homeRegion: &HOME_REGION us-gov-west-1
+#####################################
+# Delete default VPCs-- use this    #
+# object to delete default VPCs in  #
+# any non-excluded accounts         #
+#####################################
 defaultVpc:
   delete: true
   excludeAccounts: []
+
+# Transit Gateway Configurations
 transitGateways:
   - name: Network-Main
     account: Network
     region: *HOME_REGION
     shareTargets:
       organizationalUnits:
-        - Security
         - Infrastructure
     asn: 65521
     dnsSupport: enable
@@ -24,22 +36,31 @@ transitGateways:
         routes: []
       - name: Network-Main-SharedServices-Main
         routes: []
-      - name: Network-Main-SharedServices-External-Access
-        routes: []
 
+#####################################
+# Endpoint policies -- use this     #
+# object to define standard policies #
+# for VPC endpoints                 #
+#####################################
 endpointPolicies: []
+
+#####################################
+# VPCs-- use this object to deploy  #
+# a VPC in a single account and     #
+# region.                           #
+#####################################
 vpcs:
   #RFC 1918 Range
   # 10.0.0.0 - 10.255.255.255 (10/8 prefix)
   # 172.16.0.0 - 172.31.255.255 (172.16/12 prefix)
   # 192.168.0.0 - 192.168.255.255 (192.168/16 prefix)
-  # Replace the vpc and subnet cidr ranges based upon the used block
+  # Replace the vpc and subnet cidr ranges based on the requirements
 
   # Network Account
-  ## Network-Boundary VPC
-  ### This vpc creates 4 subnets in each AZs
-  ### Subnets includes untrust, trust, management and tgw attach
-  ### This vpc host firewall appliances
+  # Deploys the Network-Boundary VPC
+  # Creates 4 subnets in each AZs
+  # Subnets includes untrust, trust, management and tgw attach
+  # This vpc host firewall appliances
   - name: Network-Boundary
     account: Network
     region: *HOME_REGION
@@ -144,15 +165,14 @@ vpcs:
         routeTablePropagations:
           - Network-Main-Internal
           - Network-Main-SharedServices-Main
-          - Network-Main-SharedServices-External-Access
         subnets:
           - Network-Boundary-TgwAttach-A
           - Network-Boundary-TgwAttach-B
 
   # Shared Services Account
-  ## SharedServices-Main VPC
-  ### This vpc creates 3 subnets in each AZs
-  ### Subnets includes app, data and tgw attach.
+  # SharedServices-Main VPC
+  # This vpc creates 3 subnets in each AZs
+  # Subnets includes app, data and tgw attach.
   ### This vpc host sharedsevices applications.
   - name: SharedServices-Main
     account: SharedServices
@@ -215,98 +235,9 @@ vpcs:
         routeTablePropagations:
           - Network-Main-Internal
           - Network-Main-Network-Boundary
-          - Network-Main-SharedServices-External-Access
         subnets:
           - SharedServices-Main-TgwAttach-A
           - SharedServices-Main-TgwAttach-B
-
-  ## SharedServices-External-Access VPC
-  ### This vpc creates 3 subnets in each AZs
-  ### Subnets includes app, data and tgw attach.
-  ### This vpc host jump box for access to environment.
-  - name: SharedServices-External-Access
-    account: SharedServices
-    region: *HOME_REGION
-    cidrs:
-      - 10.1.16.0/24
-    internetGateway: true
-    enableDnsHostnames: true
-    enableDnsSupport: true
-    instanceTenancy: default
-    routeTables:
-      - name: SharedServices-External-Access-Public-Rt-A
-        routes:
-          - name: IgwRoute
-            destination: 0.0.0.0/0
-            type: internetGateway
-            target: IGW
-      - name: SharedServices-External-Access-Public-Rt-B
-        routes:
-          - name: IgwRoute
-            destination: 0.0.0.0/0
-            type: internetGateway
-            target: IGW
-      - name: SharedServices-External-Access-Private-Rt-A
-        routes:
-          - name: TgwRoute
-            destination: 10.0.0.0/8
-            type: transitGateway
-            target: Network-Main
-          - name: IgwRoute
-            destination: 0.0.0.0/0
-            type: internetGateway
-            target: IGW
-      - name: SharedServices-External-Access-Private-Rt-B
-        routes:
-          - name: TgwRoute
-            destination: 10.0.0.0/8
-            type: transitGateway
-            target: Network-Main
-          - name: IgwRoute
-            destination: 0.0.0.0/0
-            type: internetGateway
-            target: IGW
-      - name: SharedServices-External-Access-TgwAttach-Rt-A
-      - name: SharedServices-External-Access-TgwAttach-Rt-B
-    subnets:
-      - name: SharedServices-External-Access-Public-A
-        availabilityZone: a
-        routeTable: SharedServices-External-Access-Public-Rt-A
-        ipv4CidrBlock: 10.1.16.0/27
-      - name: SharedServices-External-Access-Public-B
-        availabilityZone: b
-        routeTable: SharedServices-External-Access-Public-Rt-B
-        ipv4CidrBlock: 10.1.16.32/27
-      - name: SharedServices-External-Access-Private-A
-        availabilityZone: a
-        routeTable: SharedServices-External-Access-Private-Rt-A
-        ipv4CidrBlock: 10.1.16.96/27
-      - name: SharedServices-External-Access-Private-B
-        availabilityZone: b
-        routeTable: SharedServices-External-Access-Private-Rt-B
-        ipv4CidrBlock: 10.1.16.128/27
-      - name: SharedServices-External-Access-TgwAttach-A
-        availabilityZone: a
-        routeTable: SharedServices-External-Access-TgwAttach-Rt-A
-        ipv4CidrBlock: 10.1.16.208/28
-      - name: SharedServices-External-Access-TgwAttach-B
-        availabilityZone: b
-        routeTable: SharedServices-External-Access-TgwAttach-Rt-B
-        ipv4CidrBlock: 10.1.16.224/28
-    transitGatewayAttachments:
-      - name: SharedServices-External-Access
-        transitGateway:
-          name: Network-Main
-          account: Network
-        routeTableAssociations:
-          - Network-Main-SharedServices-External-Access
-        routeTablePropagations:
-          - Network-Main-Internal
-          - Network-Main-Network-Boundary
-          - Network-Main-SharedServices-Main
-        subnets:
-          - SharedServices-External-Access-TgwAttach-A
-          - SharedServices-External-Access-TgwAttach-B
 
 ##############################################################
 # Global configuration for VPC flow logs                     #
