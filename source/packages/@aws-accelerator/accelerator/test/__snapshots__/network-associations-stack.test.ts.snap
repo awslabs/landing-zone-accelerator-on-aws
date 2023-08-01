@@ -91,20 +91,12 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Default": "/accelerator/network/vpc/Network-Endpoints/nlb/appA-nlb-01/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZoneappstreamapiidC96584B6F00A464EAD1953AFF4B05118Parameter": {
-      "Default": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/appstream.api/id",
-      "Type": "AWS::SSM::Parameter::Value<String>",
-    },
     "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonecodeartifactapiidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/codeartifact.api/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonecodeartifactrepositoriesidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/codeartifact.repositories/id",
-      "Type": "AWS::SSM::Parameter::Value<String>",
-    },
-    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonedeviceadvisoriotidC96584B6F00A464EAD1953AFF4B05118Parameter": {
-      "Default": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/deviceadvisor.iot/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZoneec2idC96584B6F00A464EAD1953AFF4B05118Parameter": {
@@ -125,14 +117,6 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
     },
     "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonelogsidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/logs/id",
-      "Type": "AWS::SSM::Parameter::Value<String>",
-    },
-    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonepinpointsmsvoicev2idC96584B6F00A464EAD1953AFF4B05118Parameter": {
-      "Default": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/pinpoint-sms-voice-v2/id",
-      "Type": "AWS::SSM::Parameter::Value<String>",
-    },
-    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonerumdataplaneidC96584B6F00A464EAD1953AFF4B05118Parameter": {
-      "Default": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/rum-dataplane/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZones3globalaccesspointidC96584B6F00A464EAD1953AFF4B05118Parameter": {
@@ -315,18 +299,6 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           },
           {
             "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZoneecrdkridC96584B6F00A464EAD1953AFF4B05118Parameter",
-          },
-          {
-            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZoneappstreamapiidC96584B6F00A464EAD1953AFF4B05118Parameter",
-          },
-          {
-            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonedeviceadvisoriotidC96584B6F00A464EAD1953AFF4B05118Parameter",
-          },
-          {
-            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonepinpointsmsvoicev2idC96584B6F00A464EAD1953AFF4B05118Parameter",
-          },
-          {
-            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonerumdataplaneidC96584B6F00A464EAD1953AFF4B05118Parameter",
           },
           {
             "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZones3globalaccesspointidC96584B6F00A464EAD1953AFF4B05118Parameter",

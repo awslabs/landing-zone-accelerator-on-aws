@@ -471,30 +471,6 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
       },
       "Type": "AWS::IAM::Role",
     },
-    "NetworkEndpointsVpcAppstreamApiEpF6A84187": {
-      "Properties": {
-        "PrivateDnsEnabled": false,
-        "SecurityGroupIds": [
-          {
-            "Ref": "NetworkEndpointsVpchttpsEpSecurityGroup90D555DD",
-          },
-        ],
-        "ServiceName": "com.amazonaws.us-east-1.appstream.api",
-        "SubnetIds": [
-          {
-            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsAidC96584B6F00A464EAD1953AFF4B05118Parameter",
-          },
-          {
-            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsBidC96584B6F00A464EAD1953AFF4B05118Parameter",
-          },
-        ],
-        "VpcEndpointType": "Interface",
-        "VpcId": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-      },
-      "Type": "AWS::EC2::VPCEndpoint",
-    },
     "NetworkEndpointsVpcCodeartifactApiEp2E4B51E8": {
       "Properties": {
         "PolicyDocument": {
@@ -594,30 +570,6 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
           },
         ],
         "ServiceName": "com.amazonaws.us-east-1.codeartifact.repositories",
-        "SubnetIds": [
-          {
-            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsAidC96584B6F00A464EAD1953AFF4B05118Parameter",
-          },
-          {
-            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsBidC96584B6F00A464EAD1953AFF4B05118Parameter",
-          },
-        ],
-        "VpcEndpointType": "Interface",
-        "VpcId": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-      },
-      "Type": "AWS::EC2::VPCEndpoint",
-    },
-    "NetworkEndpointsVpcDeviceadvisorIotEp568A5196": {
-      "Properties": {
-        "PrivateDnsEnabled": false,
-        "SecurityGroupIds": [
-          {
-            "Ref": "NetworkEndpointsVpchttpsEpSecurityGroup90D555DD",
-          },
-        ],
-        "ServiceName": "com.amazonaws.us-east-1.deviceadvisor.iot",
         "SubnetIds": [
           {
             "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsAidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -964,120 +916,6 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
           },
         ],
         "ServiceName": "com.amazonaws.us-east-1.logs",
-        "SubnetIds": [
-          {
-            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsAidC96584B6F00A464EAD1953AFF4B05118Parameter",
-          },
-          {
-            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsBidC96584B6F00A464EAD1953AFF4B05118Parameter",
-          },
-        ],
-        "VpcEndpointType": "Interface",
-        "VpcId": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-      },
-      "Type": "AWS::EC2::VPCEndpoint",
-    },
-    "NetworkEndpointsVpcPinpointSmsVoiceV2Ep6173A72B": {
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": "*",
-              "Condition": {
-                "StringEquals": {
-                  "aws:PrincipalOrgID": "o-asdf123456",
-                },
-              },
-              "Effect": "Allow",
-              "Principal": {
-                "AWS": "*",
-              },
-              "Resource": "*",
-              "Sid": "AllowRequestsByOrgsIdentities",
-            },
-            {
-              "Action": "*",
-              "Condition": {
-                "Bool": {
-                  "aws:PrincipalIsAWSService": "true",
-                },
-              },
-              "Effect": "Allow",
-              "Principal": {
-                "AWS": "*",
-              },
-              "Resource": "*",
-              "Sid": "AllowRequestsByAWSServicePrincipals",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PrivateDnsEnabled": false,
-        "SecurityGroupIds": [
-          {
-            "Ref": "NetworkEndpointsVpchttpsEpSecurityGroup90D555DD",
-          },
-        ],
-        "ServiceName": "com.amazonaws.us-east-1.pinpoint-sms-voice-v2",
-        "SubnetIds": [
-          {
-            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsAidC96584B6F00A464EAD1953AFF4B05118Parameter",
-          },
-          {
-            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsBidC96584B6F00A464EAD1953AFF4B05118Parameter",
-          },
-        ],
-        "VpcEndpointType": "Interface",
-        "VpcId": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-      },
-      "Type": "AWS::EC2::VPCEndpoint",
-    },
-    "NetworkEndpointsVpcRumDataplaneEp2A80C673": {
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": "*",
-              "Condition": {
-                "StringEquals": {
-                  "aws:PrincipalOrgID": "o-asdf123456",
-                },
-              },
-              "Effect": "Allow",
-              "Principal": {
-                "AWS": "*",
-              },
-              "Resource": "*",
-              "Sid": "AllowRequestsByOrgsIdentities",
-            },
-            {
-              "Action": "*",
-              "Condition": {
-                "Bool": {
-                  "aws:PrincipalIsAWSService": "true",
-                },
-              },
-              "Effect": "Allow",
-              "Principal": {
-                "AWS": "*",
-              },
-              "Resource": "*",
-              "Sid": "AllowRequestsByAWSServicePrincipals",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PrivateDnsEnabled": false,
-        "SecurityGroupIds": [
-          {
-            "Ref": "NetworkEndpointsVpchttpsEpSecurityGroup90D555DD",
-          },
-        ],
-        "ServiceName": "com.amazonaws.us-east-1.rum-dataplane",
         "SubnetIds": [
           {
             "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsAidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -2048,69 +1886,10 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SsmParamNetworkEndpointsappstreamApiDns8D6A82F6": {
-      "DependsOn": [
-        "SsmParamNetworkEndpointss3PhzE2EECCBF",
-      ],
-      "Properties": {
-        "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/appstream.api/dns",
-        "Type": "String",
-        "Value": {
-          "Fn::Select": [
-            1,
-            {
-              "Fn::Split": [
-                ":",
-                {
-                  "Fn::Select": [
-                    0,
-                    {
-                      "Fn::GetAtt": [
-                        "NetworkEndpointsVpcAppstreamApiEpF6A84187",
-                        "DnsEntries",
-                      ],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
-    "SsmParamNetworkEndpointsappstreamApiPhzB11B0187": {
-      "DependsOn": [
-        "SsmParamNetworkEndpointss3PhzE2EECCBF",
-      ],
-      "Properties": {
-        "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/appstream.api/hostedZoneId",
-        "Type": "String",
-        "Value": {
-          "Fn::Select": [
-            0,
-            {
-              "Fn::Split": [
-                ":",
-                {
-                  "Fn::Select": [
-                    0,
-                    {
-                      "Fn::GetAtt": [
-                        "NetworkEndpointsVpcAppstreamApiEpF6A84187",
-                        "DnsEntries",
-                      ],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
     "SsmParamNetworkEndpointscodeartifactApiDnsD1D4C462": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointscodeartifactRepositoriesDnsD49322BB",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/codeartifact.api/dns",
         "Type": "String",
@@ -2140,7 +1919,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
     },
     "SsmParamNetworkEndpointscodeartifactApiPhzEDB90881": {
       "DependsOn": [
-        "SsmParamNetworkEndpointscodeartifactApiDnsD1D4C462",
+        "SsmParamNetworkEndpointscodeartifactRepositoriesDnsD49322BB",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/codeartifact.api/hostedZoneId",
@@ -2170,9 +1949,6 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointscodeartifactRepositoriesDnsD49322BB": {
-      "DependsOn": [
-        "SsmParamNetworkEndpointsrumDataplanePhz5F7A8195",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/codeartifact.repositories/dns",
         "Type": "String",
@@ -2202,7 +1978,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
     },
     "SsmParamNetworkEndpointscodeartifactRepositoriesPhzDC1F51C9": {
       "DependsOn": [
-        "SsmParamNetworkEndpointsrumDataplanePhz5F7A8195",
+        "SsmParamNetworkEndpointscodeartifactRepositoriesDnsD49322BB",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/codeartifact.repositories/hostedZoneId",
@@ -2219,65 +1995,6 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
                     {
                       "Fn::GetAtt": [
                         "NetworkEndpointsVpcCodeartifactRepositoriesEp7F59D69F",
-                        "DnsEntries",
-                      ],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
-    "SsmParamNetworkEndpointsdeviceadvisorIotDns2D97B4FF": {
-      "Properties": {
-        "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/deviceadvisor.iot/dns",
-        "Type": "String",
-        "Value": {
-          "Fn::Select": [
-            1,
-            {
-              "Fn::Split": [
-                ":",
-                {
-                  "Fn::Select": [
-                    0,
-                    {
-                      "Fn::GetAtt": [
-                        "NetworkEndpointsVpcDeviceadvisorIotEp568A5196",
-                        "DnsEntries",
-                      ],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
-    "SsmParamNetworkEndpointsdeviceadvisorIotPhz914EC55A": {
-      "DependsOn": [
-        "SsmParamNetworkEndpointsdeviceadvisorIotDns2D97B4FF",
-      ],
-      "Properties": {
-        "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/deviceadvisor.iot/hostedZoneId",
-        "Type": "String",
-        "Value": {
-          "Fn::Select": [
-            0,
-            {
-              "Fn::Split": [
-                ":",
-                {
-                  "Fn::Select": [
-                    0,
-                    {
-                      "Fn::GetAtt": [
-                        "NetworkEndpointsVpcDeviceadvisorIotEp568A5196",
                         "DnsEntries",
                       ],
                     },
@@ -2585,127 +2302,6 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SsmParamNetworkEndpointspinpointSmsVoiceV2Dns9F9E50BB": {
-      "DependsOn": [
-        "SsmParamNetworkEndpointsdeviceadvisorIotDns2D97B4FF",
-      ],
-      "Properties": {
-        "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/pinpoint-sms-voice-v2/dns",
-        "Type": "String",
-        "Value": {
-          "Fn::Select": [
-            1,
-            {
-              "Fn::Split": [
-                ":",
-                {
-                  "Fn::Select": [
-                    0,
-                    {
-                      "Fn::GetAtt": [
-                        "NetworkEndpointsVpcPinpointSmsVoiceV2Ep6173A72B",
-                        "DnsEntries",
-                      ],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
-    "SsmParamNetworkEndpointspinpointSmsVoiceV2PhzC14C63DA": {
-      "DependsOn": [
-        "SsmParamNetworkEndpointsdeviceadvisorIotDns2D97B4FF",
-      ],
-      "Properties": {
-        "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/pinpoint-sms-voice-v2/hostedZoneId",
-        "Type": "String",
-        "Value": {
-          "Fn::Select": [
-            0,
-            {
-              "Fn::Split": [
-                ":",
-                {
-                  "Fn::Select": [
-                    0,
-                    {
-                      "Fn::GetAtt": [
-                        "NetworkEndpointsVpcPinpointSmsVoiceV2Ep6173A72B",
-                        "DnsEntries",
-                      ],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
-    "SsmParamNetworkEndpointsrumDataplaneDns93BC0EEB": {
-      "DependsOn": [
-        "SsmParamNetworkEndpointsdeviceadvisorIotDns2D97B4FF",
-      ],
-      "Properties": {
-        "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/rum-dataplane/dns",
-        "Type": "String",
-        "Value": {
-          "Fn::Select": [
-            1,
-            {
-              "Fn::Split": [
-                ":",
-                {
-                  "Fn::Select": [
-                    0,
-                    {
-                      "Fn::GetAtt": [
-                        "NetworkEndpointsVpcRumDataplaneEp2A80C673",
-                        "DnsEntries",
-                      ],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
-    "SsmParamNetworkEndpointsrumDataplanePhz5F7A8195": {
-      "Properties": {
-        "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/rum-dataplane/hostedZoneId",
-        "Type": "String",
-        "Value": {
-          "Fn::Select": [
-            0,
-            {
-              "Fn::Split": [
-                ":",
-                {
-                  "Fn::Select": [
-                    0,
-                    {
-                      "Fn::GetAtt": [
-                        "NetworkEndpointsVpcRumDataplaneEp2A80C673",
-                        "DnsEntries",
-                      ],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
     "SsmParamNetworkEndpointss3DnsA83EEA61": {
       "DependsOn": [
         "SsmParamNetworkEndpointskmsDns52AB3E63",
@@ -2739,7 +2335,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
     },
     "SsmParamNetworkEndpointss3GlobalAccesspointDns50F35D30": {
       "DependsOn": [
-        "SsmParamNetworkEndpointsrumDataplanePhz5F7A8195",
+        "SsmParamNetworkEndpointss3PhzE2EECCBF",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/s3-global.accesspoint/dns",
@@ -2770,7 +2366,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
     },
     "SsmParamNetworkEndpointss3GlobalAccesspointPhz46A7E80B": {
       "DependsOn": [
-        "SsmParamNetworkEndpointsrumDataplanePhz5F7A8195",
+        "SsmParamNetworkEndpointss3PhzE2EECCBF",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/s3-global.accesspoint/hostedZoneId",
@@ -2953,7 +2549,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
     },
     "SsmParamNetworkInspectionAcceleratorFirewallFirewallArn40D3C53C": {
       "DependsOn": [
-        "SsmParamNetworkEndpointscodeartifactApiDnsD1D4C462",
+        "SsmParamacceleratorOutboundResolverEndpoint9F3A81CE",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/networkFirewall/accelerator-firewall/arn",
@@ -2986,7 +2582,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
     },
     "SsmParamacceleratorInboundResolverEndpoint80E88844": {
       "DependsOn": [
-        "SsmParamNetworkEndpointscodeartifactApiDnsD1D4C462",
+        "SsmParamNetworkEndpointscodeartifactRepositoriesDnsD49322BB",
       ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/endpoints/accelerator-inbound/id",
@@ -3001,9 +2597,6 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamacceleratorOutboundResolverEndpoint9F3A81CE": {
-      "DependsOn": [
-        "SsmParamNetworkEndpointscodeartifactApiDnsD1D4C462",
-      ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/endpoints/accelerator-outbound/id",
         "Type": "String",
