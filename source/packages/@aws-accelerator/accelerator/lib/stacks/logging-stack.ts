@@ -1715,7 +1715,9 @@ export class LoggingStack extends AcceleratorStack {
           path.join(this.props.configDirPath, s3ResourcePolicyAttachment.policy),
           true,
           undefined,
-          `replaced-${path.parse(s3ResourcePolicyAttachment.policy).base}`,
+          `${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}-replaced-${
+            path.parse(s3ResourcePolicyAttachment.policy).base
+          }`,
         ),
       );
     }
