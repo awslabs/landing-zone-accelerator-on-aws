@@ -25,6 +25,7 @@ import {
   BucketEncryption,
   BucketEncryptionType,
   BucketPolicy,
+  BucketPrefix,
   BucketPrefixProps,
   BucketReplicationProps,
   CentralLogsBucket,
@@ -1811,6 +1812,11 @@ export class LoggingStack extends AcceleratorStack {
           principalOrgIdCondition,
           centralLogsBucketPrincipalAndPrefixes,
         );
+
+        this.createImportedLogBucketPrefixes(
+          this.importedCentralLogBucket,
+          centralLogsBucketPrincipalAndPrefixes.bucketPrefixes,
+        );
       } else {
         this.createCentralLogsBucket(serverAccessLogsBucket, centralLogsBucketPrincipalAndPrefixes);
       }
@@ -2627,6 +2633,23 @@ export class LoggingStack extends AcceleratorStack {
           stringValue: key.keyArn,
         });
       }
+    }
+  }
+
+  /**
+   * Function to create imported central log bucket prefixes
+   * @param centralLogBucket {@link cdk.aws_s3.IBucket}
+   * @param bucketPrefixes {@link string[]}
+   */
+  private createImportedLogBucketPrefixes(centralLogBucket: cdk.aws_s3.IBucket, bucketPrefixes: string[]) {
+    // Configure prefix creation
+    if (bucketPrefixes) {
+      new BucketPrefix(this, 'ImportedLogBucketPrefix', {
+        source: { bucket: centralLogBucket },
+        bucketPrefixes: bucketPrefixes,
+        kmsKey: this.cloudwatchKey,
+        logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+      });
     }
   }
 }
