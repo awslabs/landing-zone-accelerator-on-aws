@@ -690,7 +690,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
     lambdaKey: cdk.aws_kms.Key,
   ): ServiceLinkedRole {
     // create service linked roles only in the partitions that allow it
-    return this.createServiceLinkedRole(ServiceLinkedRoleType.FMS, cloudwatchKey, lambdaKey);
+    const serviceLinkedRole = this.createServiceLinkedRole(ServiceLinkedRoleType.FMS, cloudwatchKey, lambdaKey);
     this.nagSuppressionInputs.push({
       id: NagSuppressionRuleIds.IAM4,
       details: [
@@ -729,6 +729,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
         },
       ],
     });
+    return serviceLinkedRole;
   }
   /**
    * Function to create Service Linked Role for given type
