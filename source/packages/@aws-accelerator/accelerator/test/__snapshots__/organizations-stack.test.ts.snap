@@ -1932,6 +1932,16 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
       "UpdateReplacePolicy": "Delete",
     },
     "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRole4B6F4F45": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Custom resource Lambda role policy.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -1963,6 +1973,16 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
       "Type": "AWS::IAM::Role",
     },
     "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicyBF2D7C58": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Custom resource Lambda role policy.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "PolicyDocument": {
           "Statement": [
@@ -2020,6 +2040,16 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
       "Type": "AWS::Lambda::Function",
     },
     "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole41A12BB9": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Custom resource Lambda role policy.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -2051,6 +2081,16 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
       "Type": "AWS::IAM::Role",
     },
     "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy65EE4B90": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Custom resource Lambda role policy.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "PolicyDocument": {
           "Statement": [
@@ -7420,6 +7460,16 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
       "UpdateReplacePolicy": "Delete",
     },
     "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRole4B6F4F45": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Custom resource Lambda role policy.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -7451,6 +7501,16 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
       "Type": "AWS::IAM::Role",
     },
     "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicyBF2D7C58": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Custom resource Lambda role policy.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "PolicyDocument": {
           "Statement": [
@@ -7508,6 +7568,16 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
       "Type": "AWS::Lambda::Function",
     },
     "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole41A12BB9": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Custom resource Lambda role policy.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -7539,6 +7609,16 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
       "Type": "AWS::IAM::Role",
     },
     "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy65EE4B90": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Custom resource Lambda role policy.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "PolicyDocument": {
           "Statement": [
