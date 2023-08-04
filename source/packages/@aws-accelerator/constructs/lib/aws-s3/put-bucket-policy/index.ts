@@ -56,35 +56,35 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      const generatedPolicyString = generateBucketPolicy(
-        applyAcceleratorManagedPolicy,
-        partition,
-        sourceAccount,
-        bucketType,
-        bucketArn,
-        bucketPolicyFilePaths,
-        principalOrgIdCondition,
-        awsPrincipalAccesses,
-        elbAccountId,
-      );
+      if (applyAcceleratorManagedPolicy === 'true' || bucketPolicyFilePaths.length > 0) {
+        const generatedPolicyString = generateBucketPolicy(
+          applyAcceleratorManagedPolicy,
+          partition,
+          sourceAccount,
+          bucketType,
+          bucketArn,
+          bucketPolicyFilePaths,
+          principalOrgIdCondition,
+          awsPrincipalAccesses,
+          elbAccountId,
+        );
 
-      let replacedPolicyString = generatedPolicyString;
-      if (organizationId) {
-        replacedPolicyString = generatedPolicyString.replace('${ORG_ID}', organizationId);
+        let replacedPolicyString = generatedPolicyString;
+        if (organizationId) {
+          replacedPolicyString = generatedPolicyString.replace('${ORG_ID}', organizationId);
+        }
+
+        await throttlingBackOff(() =>
+          s3Client.putBucketPolicy({ Bucket: bucketName, Policy: replacedPolicyString }).promise(),
+        );
       }
-
-      await throttlingBackOff(() =>
-        s3Client.putBucketPolicy({ Bucket: bucketName, Policy: replacedPolicyString }).promise(),
-      );
-
       return {
         PhysicalResourceId: bucketName,
         Status: 'SUCCESS',
       };
 
     case 'Delete':
-      // Delete bucket policy
-      await throttlingBackOff(() => s3Client.deleteBucketPolicy({ Bucket: bucketName }).promise());
+      // Skip delete bucket policy
       return {
         PhysicalResourceId: event.PhysicalResourceId,
         Status: 'SUCCESS',
