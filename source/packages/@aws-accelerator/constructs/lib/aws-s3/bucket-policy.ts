@@ -123,7 +123,7 @@ export class BucketPolicy extends Construct {
         roleInitialPolicy: [
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
-            actions: ['s3:PutBucketPolicy', 's3:DeleteBucketPolicy'],
+            actions: ['s3:PutBucketPolicy'],
             resources: [props.bucket.bucketArn],
           }),
         ],

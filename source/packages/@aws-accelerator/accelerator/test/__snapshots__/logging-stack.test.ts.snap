@@ -2465,10 +2465,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "PolicyDocument": {
           "Statement": [
             {
-              "Action": [
-                "s3:PutBucketPolicy",
-                "s3:DeleteBucketPolicy",
-              ],
+              "Action": "s3:PutBucketPolicy",
               "Effect": "Allow",
               "Resource": {
                 "Fn::Join": [
@@ -2729,10 +2726,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "PolicyDocument": {
           "Statement": [
             {
-              "Action": [
-                "s3:PutBucketPolicy",
-                "s3:DeleteBucketPolicy",
-              ],
+              "Action": "s3:PutBucketPolicy",
               "Effect": "Allow",
               "Resource": {
                 "Fn::Join": [
