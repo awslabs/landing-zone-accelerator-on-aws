@@ -50,28 +50,28 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   }
 
   const logsClient = new AWS.CloudWatchLogs({ customUserAgent: solutionId });
-  let nextToken: string | undefined;
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      do {
-        const page = await throttlingBackOff(() => logsClient.describeLogGroups({ nextToken }).promise());
-        for (const logGroup of page.logGroups ?? []) {
-          await updateRetentionPolicy(logsClient, parseInt(acceleratorLogRetentionInDays), logGroup);
+      const logGroups = await getLogGroups(logsClient, acceleratorCreatedLogDestinationArn, logExclusionParse);
 
-          await manageLogSubscriptions(
-            logsClient,
-            logGroup.logGroupName!,
-            acceleratorCreatedLogDestinationArn,
-            acceleratorLogSubscriptionRoleArn,
-            replaceLogDestinationArn,
-            logExclusionParse,
-          );
+      // Process retention and encryption setting for ALL log groups
+      for (const allLogGroup of logGroups.allLogGroups) {
+        await updateRetentionPolicy(logsClient, parseInt(acceleratorLogRetentionInDays), allLogGroup);
 
-          await updateLogGroupEncryption(logsClient, logGroup, acceleratorLogKmsKeyArn);
-        }
-        nextToken = page.nextToken;
-      } while (nextToken);
+        await updateLogGroupEncryption(logsClient, allLogGroup, acceleratorLogKmsKeyArn);
+      }
+
+      // Process subscription only for included log groups
+      for (const includedLogGroup of logGroups.includedLogGroups) {
+        await manageLogSubscriptions(
+          logsClient,
+          includedLogGroup.logGroupName!,
+          acceleratorCreatedLogDestinationArn,
+          acceleratorLogSubscriptionRoleArn,
+          replaceLogDestinationArn,
+        );
+      }
       break;
     case 'Delete':
       // Remove the subscription filter
@@ -80,6 +80,45 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       break;
   }
   return { Status: 'SUCCESS' };
+}
+
+/**
+ * Function to process log replication exclusion list and return inclusion list of log groups and all log groups list
+ * @param logsClient {@link AWS.CloudWatchLogs}
+ * @param acceleratorCreatedLogDestinationArn string
+ * @param logExclusionSetting {@link cloudwatchExclusionProcessedItem}
+ * @returns
+ */
+async function getLogGroups(
+  logsClient: AWS.CloudWatchLogs,
+  acceleratorCreatedLogDestinationArn: string,
+  logExclusionSetting?: cloudwatchExclusionProcessedItem,
+): Promise<{ allLogGroups: AWS.CloudWatchLogs.LogGroup[]; includedLogGroups: AWS.CloudWatchLogs.LogGroup[] }> {
+  const allLogGroups: AWS.CloudWatchLogs.LogGroup[] = [];
+  const includedLogGroups: AWS.CloudWatchLogs.LogGroup[] = [];
+
+  let nextToken: string | undefined;
+  do {
+    const page = await throttlingBackOff(() => logsClient.describeLogGroups({ nextToken }).promise());
+    for (const logGroup of page.logGroups ?? []) {
+      if (!logGroup.logGroupName!.includes('aws-controltower')) {
+        allLogGroups.push(logGroup);
+        if (isLogGroupExcluded(logGroup.logGroupName!, logExclusionSetting)) {
+          await deleteSubscription(logsClient, logGroup.logGroupName!, acceleratorCreatedLogDestinationArn);
+        } else {
+          includedLogGroups.push(logGroup);
+        }
+      }
+    }
+    nextToken = page.nextToken;
+  } while (nextToken);
+
+  if (logExclusionSetting?.excludeAll) {
+    await deleteAllLogGroupSubscriptions(logsClient, acceleratorCreatedLogDestinationArn);
+    return { allLogGroups: allLogGroups, includedLogGroups: [] };
+  }
+
+  return { allLogGroups: allLogGroups, includedLogGroups: includedLogGroups };
 }
 
 /**
@@ -120,7 +159,7 @@ async function updateRetentionPolicy(
     return;
   }
 
-  if (acceleratorRetentionInDays > currentRetentionInDays && !logGroup.logGroupName!.includes('aws-controltower')) {
+  if (acceleratorRetentionInDays > currentRetentionInDays) {
     await throttlingBackOff(() =>
       logsClient
         .putRetentionPolicy({
@@ -139,7 +178,6 @@ async function updateRetentionPolicy(
  * @param acceleratorCreatedLogDestinationArn string
  * @param acceleratorLogSubscriptionRoleArn string
  * @param replaceLogDestinationArn string
- * @param logExclusionSetting {@link cloudwatchExclusionProcessedItem}
  */
 async function manageLogSubscriptions(
   logsClient: AWS.CloudWatchLogs,
@@ -147,19 +185,14 @@ async function manageLogSubscriptions(
   acceleratorCreatedLogDestinationArn: string,
   acceleratorLogSubscriptionRoleArn: string,
   replaceLogDestinationArn?: string,
-  logExclusionSetting?: cloudwatchExclusionProcessedItem,
 ): Promise<void> {
-  if (logExclusionSetting) {
-    await processExclusion(logsClient, logGroupName, acceleratorCreatedLogDestinationArn, logExclusionSetting);
-  }
-
   let nextToken: string | undefined = undefined;
   do {
     const page = await throttlingBackOff(() =>
       logsClient.describeSubscriptionFilters({ logGroupName: logGroupName, nextToken }).promise(),
     );
 
-    if (page.subscriptionFilters && !isLogGroupExcluded(logGroupName, logExclusionSetting)) {
+    if (page.subscriptionFilters) {
       const subscriptionFilters = page.subscriptionFilters;
 
       await removeReplaceDestination(logsClient, logGroupName, subscriptionFilters, replaceLogDestinationArn);
@@ -253,28 +286,6 @@ async function removeReplaceDestination(
         .deleteSubscriptionFilter({ logGroupName: logGroupName, filterName: replaceLogDestinationFilter.filterName! })
         .promise(),
     );
-  }
-}
-
-/**
- * Function to process log replication exclusion list
- * @param logsClient {@link AWS.CloudWatchLogs}
- * @param logGroupName
- * @param acceleratorCreatedLogDestinationArn
- * @param logExclusionSetting
- */
-async function processExclusion(
-  logsClient: AWS.CloudWatchLogs,
-  logGroupName: string,
-  acceleratorCreatedLogDestinationArn: string,
-  logExclusionSetting: cloudwatchExclusionProcessedItem,
-) {
-  if (logExclusionSetting.excludeAll) {
-    await deleteAllLogGroupSubscriptions(logsClient, acceleratorCreatedLogDestinationArn);
-  } else {
-    if (isLogGroupExcluded(logGroupName, logExclusionSetting)) {
-      await deleteSubscription(logsClient, logGroupName, acceleratorCreatedLogDestinationArn);
-    }
   }
 }
 

@@ -109,7 +109,6 @@ export class CloudWatchLogsSubscriptionFilter extends Construct {
             }:log-group:*`,
           ],
         },
-        // 'logs:PutSubscriptionFilter',
 
         {
           Effect: 'Allow',
