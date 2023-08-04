@@ -79,9 +79,19 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         nextToken = page.NextToken;
       } while (nextToken);
 
-      await throttlingBackOff(() =>
-        guardDutyClient.send(new CreateMembersCommand({ DetectorId: detectorId!, AccountDetails: allAccounts })),
-      );
+      const chunkAccounts: AccountDetail[][] = [];
+      const chunkSize = 50;
+      let index = 0;
+      while (index < allAccounts.length) {
+        chunkAccounts.push(allAccounts.slice(index, index + chunkSize));
+        index += chunkSize;
+      }
+
+      for (const accounts of chunkAccounts) {
+        await throttlingBackOff(() =>
+          guardDutyClient.send(new CreateMembersCommand({ DetectorId: detectorId!, AccountDetails: accounts })),
+        );
+      }
 
       const features = getOrganizationFeaturesEnabled(enableS3Protection, enableEksProtection);
 
