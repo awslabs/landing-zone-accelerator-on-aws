@@ -186,6 +186,7 @@ export class PrepareStack extends AcceleratorStack {
           kmsKey: cloudwatchKey,
           logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
           enableSingleAccountMode: props.enableSingleAccountMode,
+          isOrgsEnabled: props.organizationConfig.enable,
         });
 
         this.logger.info(`Call create ou construct`);

@@ -643,7 +643,9 @@ export class BootstrapStack extends AcceleratorStack {
         this.logger.error(`Could not load account ids.`);
         throw new Error(`Configuration validation failed at runtime.`);
       }
-      principals = this.props.accountsConfig.accountIds?.map(accountId => new cdk.aws_iam.AccountPrincipal(accountId));
+      principals = this.props.accountsConfig.accountIds?.map(
+        accountId => new cdk.aws_iam.AccountPrincipal(accountId.accountId),
+      );
     }
     return principals;
   }

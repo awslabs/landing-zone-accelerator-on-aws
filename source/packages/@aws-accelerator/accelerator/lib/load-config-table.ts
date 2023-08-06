@@ -42,6 +42,10 @@ export interface LoadAcceleratorConfigTableProps {
    * Boolean for single account mode (i.e. AWS Jam or Workshop)
    */
   readonly enableSingleAccountMode: boolean;
+  /**
+   * Boolean for organization
+   */
+  readonly isOrgsEnabled: boolean;
 }
 
 /**
@@ -61,6 +65,10 @@ export class LoadAcceleratorConfigTable extends Construct {
 
     if (props.enableSingleAccountMode) {
       environment['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE'] = 'true';
+    }
+
+    if (props.isOrgsEnabled) {
+      environment['ACCELERATOR_USE_ORGS'] = 'true';
     }
 
     //

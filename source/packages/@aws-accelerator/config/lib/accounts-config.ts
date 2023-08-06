@@ -312,7 +312,12 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
    * Loads account ids by utilizing the organizations client if account ids are
    * not provided in the config.
    */
-  public async loadAccountIds(partition: string, enableSingleAccountMode: boolean): Promise<void> {
+  public async loadAccountIds(
+    partition: string,
+    enableSingleAccountMode: boolean,
+    isOrgsEnabled: boolean,
+    accountsConfig: AccountsConfig,
+  ): Promise<void> {
     if (this.accountIds === undefined) {
       this.accountIds = [];
     }
@@ -324,6 +329,18 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
         this.mandatoryAccounts.forEach(item => {
           this.accountIds?.push({ email: item.email, accountId: currentAccountId });
         });
+        // if orgs is disabled, the accountId is read from accounts config.
+        //There should be 3 or more accounts in accounts config.
+      } else if (!isOrgsEnabled && (accountsConfig.accountIds ?? []).length > 2) {
+        for (const account of accountsConfig.accountIds ?? []) {
+          this.accountIds?.push({ email: account.email, accountId: account.accountId });
+        }
+        // if orgs is disabled, the accountId is read from accounts config.
+        //But less than 3 account Ids are provided then throw an error
+      } else if (!isOrgsEnabled && (accountsConfig.accountIds ?? []).length < 3) {
+        throw new Error(
+          `Use existing roles is enabled, but the number of accounts in the accounts config is less than 2`,
+        );
       } else {
         let organizationsClient: AWS.Organizations;
         if (partition === 'aws-us-gov') {

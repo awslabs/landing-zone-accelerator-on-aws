@@ -27,7 +27,7 @@ import {
 } from '@aws-sdk/client-ssm';
 import { S3Client, HeadBucketCommand } from '@aws-sdk/client-s3';
 import { IAMClient, GetRoleCommand, GetRoleCommandInput } from '@aws-sdk/client-iam';
-import { AccountsConfig, GlobalConfig } from '@aws-accelerator/config';
+import { AccountsConfig, GlobalConfig, OrganizationConfig } from '@aws-accelerator/config';
 import { createLogger, throttlingBackOff } from '@aws-accelerator/utils';
 import { AssumeProfilePlugin } from '@aws-cdk-extensions/cdk-plugin-assume-role';
 import { isBeforeBootstrapStage } from '../utils/app-utils';
@@ -241,7 +241,13 @@ export abstract class Accelerator {
       // if not provided as inputs in accountsConfig
       //
       const accountsConfig = AccountsConfig.load(props.configDirPath);
-      await accountsConfig.loadAccountIds(props.partition, props.enableSingleAccountMode);
+      const organizationsConfig = OrganizationConfig.load(props.configDirPath);
+      await accountsConfig.loadAccountIds(
+        props.partition,
+        props.enableSingleAccountMode,
+        organizationsConfig.enable,
+        accountsConfig,
+      );
       //
       // Set details about mandatory accounts
       //

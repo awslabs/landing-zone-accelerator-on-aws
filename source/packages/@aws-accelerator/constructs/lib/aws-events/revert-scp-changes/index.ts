@@ -24,6 +24,8 @@ const acceleratorRolePrefix = process.env['ACCELERATOR_PREFIX'] ?? 'AWSAccelerat
 const snsTopicArn = process.env['SNS_TOPIC_ARN'];
 const partition = process.env['AWS_PARTITION']!;
 const homeRegion = process.env['HOME_REGION']!;
+const isOrgsEnabled = process.env['ORGANIZATIONS_ENABLED'] === 'true';
+const singleAccountMode = process.env['SINGLE_ACCOUNT_MODE'] === 'true';
 
 const snsClient = new AWS.SNS({ region: homeRegion });
 
@@ -191,7 +193,7 @@ async function getOrganizationConfig(): Promise<OrganizationConfig> {
 
 async function getAccountConfig(): Promise<AccountsConfig> {
   const accountsConfig = AccountsConfig.load(path.join(__dirname, '/config'));
-  await accountsConfig.loadAccountIds(partition, false);
+  await accountsConfig.loadAccountIds(partition, singleAccountMode, isOrgsEnabled, accountsConfig);
   if (!accountsConfig) {
     await publishErrorToSns(`Error automatically remediating SCP modification. Investigate recent changes to SCPs.`);
     throw Error('Error parsing account-config file, object undefined');

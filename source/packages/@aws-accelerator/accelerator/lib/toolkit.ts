@@ -333,8 +333,10 @@ export class AcceleratorToolkit {
       options.centralizeCdkBootstrap ||
       options.cdkOptions?.centralizeBuckets ||
       options.cdkOptions?.useManagementAccessRole ||
-      options.cdkOptions?.customDeploymentRole
+      options.cdkOptions?.customDeploymentRole ||
+      options.useExistingRoles
     ) {
+      console.debug('Using custom bootstrapping template');
       if (options.cdkOptions?.customDeploymentRole) {
         bootstrapEnvOptions = {
           ...bootstrapEnvOptions,
@@ -411,7 +413,13 @@ export class AcceleratorToolkit {
     if (fs.existsSync(path.join(configDirPath, 'customizations-config.yaml'))) {
       const customizationsConfig = CustomizationsConfig.load(configDirPath);
       const accountsConfig = AccountsConfig.load(configDirPath);
-      await accountsConfig.loadAccountIds(options.partition, options.enableSingleAccountMode);
+      const organizationConfig = OrganizationConfig.load(configDirPath);
+      await accountsConfig.loadAccountIds(
+        options.partition,
+        options.enableSingleAccountMode,
+        organizationConfig.enable,
+        accountsConfig,
+      );
       const customStacks = customizationsConfig.getCustomStacks();
       for (const stack of customStacks) {
         const deploymentAccts = accountsConfig.getAccountIdsFromDeploymentTarget(stack.deploymentTargets);
@@ -421,7 +429,6 @@ export class AcceleratorToolkit {
         }
       }
       const appStacks = customizationsConfig.getAppStacks();
-      const organizationConfig = OrganizationConfig.load(configDirPath);
       for (const application of appStacks) {
         if (
           isIncluded(

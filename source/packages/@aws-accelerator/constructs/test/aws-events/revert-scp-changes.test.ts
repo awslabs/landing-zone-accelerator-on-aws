@@ -42,8 +42,32 @@ new RevertScpChanges(stack, 'RevertScpChanges', {
       tempPath: `${configDirPath}/service-control-policies/guardrails-2.json`,
     },
   ],
+  singleAccountMode: true,
 });
 
+new RevertScpChanges(stack, 'RevertScpChanges2', {
+  acceleratorPrefix: 'AWSAccelerator',
+  configDirPath: `${__dirname}/../../../accelerator/test/configs/snapshot-only`,
+  homeRegion: 'us-west-2',
+  kmsKeyCloudWatch: new cdk.aws_kms.Key(stack, 'CustomCloudWatchKey2', {}),
+  kmsKeyLambda: new cdk.aws_kms.Key(stack, 'CustomLambdaKey2', {}),
+  logRetentionInDays: 365,
+  acceleratorTopicNamePrefix: 'aws-accelerator',
+  snsTopicName: 'Security',
+  scpFilePaths: [
+    {
+      name: 'AcceleratorGuardrails1',
+      path: 'service-control-policies/guardrails-1.json',
+      tempPath: `${configDirPath}/service-control-policies/guardrails-1.json`,
+    },
+    {
+      name: 'AcceleratorGuardrails2',
+      path: 'service-control-policies/guardrails-2.json',
+      tempPath: `${configDirPath}/service-control-policies/guardrails-2.json`,
+    },
+  ],
+  singleAccountMode: false,
+});
 /**
  * RevertScpChanges construct test
  */
