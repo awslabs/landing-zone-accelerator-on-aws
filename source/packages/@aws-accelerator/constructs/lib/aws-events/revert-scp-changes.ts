@@ -62,6 +62,10 @@ export interface RevertScpChangesProps {
    * SCP File Paths
    */
   readonly scpFilePaths: { name: string; path: string; tempPath: string }[];
+  /**
+   * Single Account mode
+   */
+  readonly singleAccountMode: boolean;
 }
 
 export class RevertScpChanges extends Construct {
@@ -123,6 +127,7 @@ export class RevertScpChanges extends Construct {
         AWS_PARTITION: cdk.Aws.PARTITION,
         HOME_REGION: props.homeRegion,
         SNS_TOPIC_ARN: snsTopicArn ?? '',
+        SINGLE_ACCOUNT_MODE: `${props.singleAccountMode}`,
       },
       environmentEncryption: props.kmsKeyLambda,
       initialPolicy: revertScpChangesPolicyList,

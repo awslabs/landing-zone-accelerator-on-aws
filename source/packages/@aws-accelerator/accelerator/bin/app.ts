@@ -226,7 +226,12 @@ async function main() {
     // if not provided as inputs in accountsConfig
     //
     logger.info('Loading account IDs for the environment...');
-    await props.accountsConfig.loadAccountIds(context.partition, acceleratorEnv.enableSingleAccountMode);
+    await props.accountsConfig.loadAccountIds(
+      context.partition,
+      acceleratorEnv.enableSingleAccountMode,
+      props.organizationConfig.enable,
+      props.accountsConfig,
+    );
     logger.info('Loading organizational units for the environment...');
     await props.organizationConfig.loadOrganizationalUnitIds(context.partition);
     //

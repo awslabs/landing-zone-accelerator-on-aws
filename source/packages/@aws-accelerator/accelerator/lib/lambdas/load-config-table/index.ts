@@ -272,7 +272,9 @@ async function onCreateUpdateFunction(
     ? process.env['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE'] === 'true'
     : false;
 
-  await accountsConfig.loadAccountIds(partition, enableSingleAccountMode);
+  const isOrgsEnabled = process.env['ACCELERATOR_USE_ORGS'] ? process.env['ACCELERATOR_USE_ORGS'] === 'true' : false;
+
+  await accountsConfig.loadAccountIds(partition, enableSingleAccountMode, isOrgsEnabled, accountsConfig);
 
   for (const account of accountsConfig.mandatoryAccounts) {
     switch (account.name) {

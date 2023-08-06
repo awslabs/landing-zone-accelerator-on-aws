@@ -473,6 +473,7 @@ export class AccountsStack extends AcceleratorStack {
         acceleratorTopicNamePrefix: props.prefixes.snsTopicName,
         snsTopicName: props.securityConfig.centralSecurityServices.scpRevertChangesConfig?.snsTopicName,
         scpFilePaths: this.scpGeneratedFilePathList,
+        singleAccountMode: props.enableSingleAccountMode,
       });
     }
   }
