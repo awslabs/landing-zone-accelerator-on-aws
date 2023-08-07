@@ -1418,6 +1418,51 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       },
       "Type": "AWS::IAM::Role",
     },
+    "EnhancedVpnNetworkMainCoreAssociation2D5BE78A": {
+      "Properties": {
+        "TransitGatewayAttachmentId": {
+          "Ref": "EnhancedVpnVpnTransitGatewayAttachment579ECAAD",
+        },
+        "TransitGatewayRouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTableAssociation",
+    },
+    "EnhancedVpnNetworkMainCorePropagation47AEEE67": {
+      "Properties": {
+        "TransitGatewayAttachmentId": {
+          "Ref": "EnhancedVpnVpnTransitGatewayAttachment579ECAAD",
+        },
+        "TransitGatewayRouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
+    },
+    "EnhancedVpnVpnTransitGatewayAttachment579ECAAD": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
+            "Arn",
+          ],
+        },
+        "name": "enhanced-vpn",
+        "region": "us-east-1",
+        "transitGatewayId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "type": "vpn",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::GetTransitGatewayAttachment",
+      "UpdateReplacePolicy": "Delete",
+    },
     "ListenerNetworkEndpointsappAAlb01appAListener2": {
       "Properties": {
         "Certificates": [

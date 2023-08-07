@@ -21,6 +21,7 @@ import { IpamAllocationConfig, OutpostsConfig, VirtualPrivateGatewayConfig } fro
 import { IpamSubnet } from './ipam-subnet';
 import { IPrefixList } from './prefix-list';
 import { IRouteTable } from './route-table';
+import { VpnConnection } from './vpn-connection';
 
 export interface ISubnet extends cdk.IResource {
   /**
@@ -818,6 +819,7 @@ export class ImportedVpc extends VpcBase {
   public readonly name: string;
   public readonly vpcId: string;
   public readonly cidrs: cdk.aws_ec2.CfnVPCCidrBlock[];
+  public readonly vpnConnections: VpnConnection[] = [];
 
   constructor(scope: Construct, id: string, props: ImportedVpcProps) {
     super(scope, id);
@@ -836,6 +838,7 @@ export class Vpc extends VpcBase {
   public readonly name: string;
   public readonly vpcId: string;
   public readonly cidrs: cdk.aws_ec2.CfnVPCCidrBlock[];
+  public readonly vpnConnections: VpnConnection[] = [];
   constructor(scope: Construct, id: string, props: VpcProps) {
     super(scope, id);
     this.name = props.name;

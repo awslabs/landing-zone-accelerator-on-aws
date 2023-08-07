@@ -455,13 +455,73 @@ export class NetworkConfigTypes {
     localGateway: t.optional(this.localGatewayConfig),
   });
 
+  static readonly dpdTimeoutActionEnum = t.enums('DpdTimeoutActionEnum', ['clear', 'none', 'restart']);
+
+  static readonly startupActionEnum = t.enums('StartupActionEnum', ['add', 'start']);
+
+  static readonly ikeVersionEnum = t.enums('IkeVersionEnum', [1, 2]);
+
+  static readonly phase1DhGroupEnum = t.enums('Phase1DhGroupEnum', [2, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]);
+
+  static readonly phase2DhGroupEnum = t.enums('Phase2DhGroupEnum', [2, 5, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]);
+
+  static readonly encryptionAlgorithmEnum = t.enums('EncryptionAlgorithmEnum', [
+    'AES128',
+    'AES256',
+    'AES128-GCM-16',
+    'AES256-GCM-16',
+  ]);
+
+  static readonly integrityAlgorithmEnum = t.enums('IntegrityAlgorithmEnum', [
+    'SHA1',
+    'SHA2-256',
+    'SHA2-384',
+    'SHA2-512',
+  ]);
+
+  static readonly vpnLoggingOutputFormatEnum = t.enums('VpnLoggingOutputFormatEnum', ['json', 'text']);
+
+  static readonly phase1Config = t.interface({
+    dhGroups: t.optional(t.array(this.phase1DhGroupEnum)),
+    encryptionAlgorithms: t.optional(t.array(this.encryptionAlgorithmEnum)),
+    integrityAlgorithms: t.optional(t.array(this.integrityAlgorithmEnum)),
+    lifetimeSeconds: t.optional(t.number),
+  });
+
+  static readonly phase2Config = t.interface({
+    dhGroups: t.optional(t.array(this.phase2DhGroupEnum)),
+    encryptionAlgorithms: t.optional(t.array(this.encryptionAlgorithmEnum)),
+    integrityAlgorithms: t.optional(t.array(this.integrityAlgorithmEnum)),
+    lifetimeSeconds: t.optional(t.number),
+  });
+
+  static readonly vpnLoggingConfig = t.interface({
+    enable: t.optional(t.boolean),
+    logGroupName: t.optional(t.nonEmptyString),
+    outputFormat: t.optional(this.vpnLoggingOutputFormatEnum),
+  });
+
   static readonly vpnTunnelOptionsSpecificationsConfig = t.interface({
+    dpdTimeoutAction: t.optional(this.dpdTimeoutActionEnum),
+    dpdTimeoutSeconds: t.optional(t.number),
+    ikeVersions: t.optional(t.array(this.ikeVersionEnum)),
+    logging: t.optional(this.vpnLoggingConfig),
+    phase1: t.optional(this.phase1Config),
+    phase2: t.optional(this.phase2Config),
     preSharedKey: t.optional(t.nonEmptyString),
+    rekeyFuzzPercentage: t.optional(t.number),
+    rekeyMarginTimeSeconds: t.optional(t.number),
+    replayWindowSize: t.optional(t.number),
+    startupAction: t.optional(this.startupActionEnum),
     tunnelInsideCidr: t.optional(t.nonEmptyString),
+    tunnelLifecycleControl: t.optional(t.boolean),
   });
 
   static readonly vpnConnectionConfig = t.interface({
     name: t.nonEmptyString,
+    amazonIpv4NetworkCidr: t.optional(t.nonEmptyString),
+    customerIpv4NetworkCidr: t.optional(t.nonEmptyString),
+    enableVpnAcceleration: t.optional(t.boolean),
     transitGateway: t.optional(t.nonEmptyString),
     routeTableAssociations: t.optional(t.array(t.nonEmptyString)),
     routeTablePropagations: t.optional(t.array(t.nonEmptyString)),
@@ -3710,13 +3770,233 @@ export class EndpointPolicyConfig implements t.TypeOf<typeof NetworkConfigTypes.
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CustomerGatewayConfig} / {@link VpnConnectionConfig} / {@link VpnTunnelOptionsSpecificationsConfig} / {@link VpnLoggingConfig}*
+ *
+ * {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/monitoring-logs.html | AWS Site-to-Site VPN logging} configuration.
+ * Use this configuration to define CloudWatch log groups for your Site-to-Site VPN connections.
+ * AWS Site-to-Site VPN logs provide you with deeper visibility into your Site-to-Site VPN deployments.
+ * With this feature, you have access to Site-to-Site VPN connection logs that provide details on IP Security (IPsec) tunnel establishment,
+ * Internet Key Exchange (IKE) negotiations, and dead peer detection (DPD) protocol messages.
+ *
+ * @example
+ * Custom settings:
+ * ```
+ * enable: true
+ * logGroupName: /vpn/logs/accelerator-vpn/tunnel1
+ * outputFormat: text
+ * ```
+ *
+ * Default settings:
+ * ```
+ * enable: true
+ * ```
+ */
+export class VpnLoggingConfig implements t.TypeOf<typeof NetworkConfigTypes.vpnLoggingConfig> {
+  /**
+   * (OPTIONAL) Enable site-to-site VPN tunnel logging to CloudWatch Logs.
+   *
+   * @remarks
+   * If you enable this property, a log group will be created along with the VPN connection.
+   * You may customize the name of the log group using the `logGroupName` property.
+   *
+   * The global {@link cloudwatchLogRetentionInDays} configuration and accelerator-provisioned KMS key
+   * will be applied to the log group.
+   */
+  readonly enable: boolean | undefined = undefined;
+  /**
+   * (OPTIONAL) The name of the CloudWatch Logs log group that you would like tunnel logs to be sent to.
+   *
+   * Default - Randomly generated name based on CDK stack and VPN resource name.
+   *
+   * @remarks
+   * If defined, this value must be unique within the account the VPN connection is deployed to.
+   */
+  readonly logGroupName: string | undefined = undefined;
+  /**
+   * (OPTIONAL) The output format of the VPN tunnel logs.
+   *
+   * Default - `json`
+   */
+  readonly outputFormat: t.TypeOf<typeof NetworkConfigTypes.vpnLoggingOutputFormatEnum> | undefined = undefined;
+}
+
+/**
+ * *{@link NetworkConfig} / {@link CustomerGatewayConfig} / {@link VpnConnectionConfig} / {@link VpnTunnelOptionsSpecificationsConfig} / {@link Phase1Config}*
+ *
+ * Internet Key Exchange (IKE) Phase 1 tunnel options configuration.
+ * Use this configuration to restrict the permitted Diffie-Hellman group numbers, encryption algorithms, and integrity algorithms for IKE Phase 1 negotiations.
+ * You may also modify the Phase 1 lifetime for the VPN tunnel.
+ *
+ * @example
+ * ```
+ * dhGroups: [14, 20, 24]
+ * encryptionAlgorithms: [AES256, AES256-GCM-16]
+ * integrityAlgorithms: [SHA2-256, SHA2-384, SHA2-512]
+ * lifetime: 3600
+ * ```
+ */
+export class Phase1Config implements t.TypeOf<typeof NetworkConfigTypes.phase1Config> {
+  /**
+   * (OPTIONAL) An array of permitted Diffie-Hellman group numbers used in the IKE Phase 1 for initial authentication.
+   *
+   * Default - `[2, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]`
+   *
+   * @remarks
+   * If you update this property after deployment, your VPN tunnel will become temporarily unavailable. Please see
+   * {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/endpoint-replacements.html#endpoint-replacements-for-vpn-modifications | Customer initiated endpoint replacements} for
+   * additional details.
+   */
+  readonly dhGroups: t.TypeOf<typeof NetworkConfigTypes.phase1DhGroupEnum>[] | undefined = undefined;
+  /**
+   * (OPTIONAL) An array of encryption algorithms permitted for IKE Phase 1 negotiations.
+   *
+   * Default - `[AES128, AES256, AES128-GCM-16, AES256-GCM-16]`
+   *
+   * @remarks
+   * If you update this property after deployment, your VPN tunnel will become temporarily unavailable. Please see
+   * {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/endpoint-replacements.html#endpoint-replacements-for-vpn-modifications | Customer initiated endpoint replacements} for
+   * additional details.
+   */
+  readonly encryptionAlgorithms: t.TypeOf<typeof NetworkConfigTypes.encryptionAlgorithmEnum>[] | undefined = undefined;
+  /**
+   * (OPTIONAL) An array of integrity algorithms permitted for IKE Phase 1 negotiations.
+   *
+   * Default - `[SHA1, SHA2-256, SHA2-384, SHA2-512]`
+   *
+   * @remarks
+   * If you update this property after deployment, your VPN tunnel will become temporarily unavailable. Please see
+   * {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/endpoint-replacements.html#endpoint-replacements-for-vpn-modifications | Customer initiated endpoint replacements} for
+   * additional details.
+   */
+  readonly integrityAlgorithms: t.TypeOf<typeof NetworkConfigTypes.integrityAlgorithmEnum>[] | undefined = undefined;
+  /**
+   * (OPTIONAL) The IKE Phase 1 lifetime (in seconds) for the VPN tunnel.
+   *
+   * Default: `28800` (8 hours)
+   *
+   * @remarks
+   * If you update this property after deployment, your VPN tunnel will become temporarily unavailable. Please see
+   * {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/endpoint-replacements.html#endpoint-replacements-for-vpn-modifications | Customer initiated endpoint replacements} for
+   * additional details.
+   *
+   * You can specify a value between 900 and 28800
+   */
+  readonly lifetimeSeconds: number | undefined = undefined;
+}
+
+/**
+ * *{@link NetworkConfig} / {@link CustomerGatewayConfig} / {@link VpnConnectionConfig} / {@link VpnTunnelOptionsSpecificationsConfig} / {@link Phase2Config}*
+ *
+ * Internet Key Exchange (IKE) Phase 2 tunnel options configuration.
+ * Use this configuration to restrict the permitted Diffie-Hellman group numbers, encryption algorithms, and integrity algorithms for IKE Phase 2 negotiations.
+ * You may also modify the Phase 2 lifetime for the VPN tunnel.
+ *
+ * @example
+ * ```
+ * dhGroups: [14, 20, 24]
+ * encryptionAlgorithms: [AES256, AES256-GCM-16]
+ * integrityAlgorithms: [SHA2-256, SHA2-384, SHA2-512]
+ * lifetime: 1800
+ * ```
+ */
+export class Phase2Config implements t.TypeOf<typeof NetworkConfigTypes.phase2Config> {
+  /**
+   * (OPTIONAL) An array of permitted Diffie-Hellman group numbers used in the IKE Phase 2 negotiations.
+   *
+   * Default - `[2, 5, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]`
+   *
+   * @remarks
+   * If you update this property after deployment, your VPN tunnel will become temporarily unavailable. Please see
+   * {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/endpoint-replacements.html#endpoint-replacements-for-vpn-modifications | Customer initiated endpoint replacements} for
+   * additional details.
+   */
+  readonly dhGroups: t.TypeOf<typeof NetworkConfigTypes.phase2DhGroupEnum>[] | undefined = undefined;
+  /**
+   * (OPTIONAL) An array of encryption algorithms permitted for IKE Phase 2 negotiations.
+   *
+   * Default - `[AES128, AES256, AES128-GCM-16, AES256-GCM-16]`
+   *
+   * @remarks
+   * If you update this property after deployment, your VPN tunnel will become temporarily unavailable. Please see
+   * {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/endpoint-replacements.html#endpoint-replacements-for-vpn-modifications | Customer initiated endpoint replacements} for
+   * additional details.
+   */
+  readonly encryptionAlgorithms: t.TypeOf<typeof NetworkConfigTypes.encryptionAlgorithmEnum>[] | undefined = undefined;
+  /**
+   * (OPTIONAL) An array of integrity algorithms permitted for IKE Phase 2 negotiations.
+   *
+   * Default - `[SHA1, SHA2-256, SHA2-384, SHA2-512]`
+   *
+   * @remarks
+   * If you update this property after deployment, your VPN tunnel will become temporarily unavailable. Please see
+   * {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/endpoint-replacements.html#endpoint-replacements-for-vpn-modifications | Customer initiated endpoint replacements} for
+   * additional details.
+   */
+  readonly integrityAlgorithms: t.TypeOf<typeof NetworkConfigTypes.integrityAlgorithmEnum>[] | undefined = undefined;
+  /**
+   * (OPTIONAL) The IKE Phase 2 lifetime (in seconds) for the VPN tunnel.
+   *
+   * Default: `3600` (1 hour)
+   *
+   * @remarks
+   * If you update this property after deployment, your VPN tunnel will become temporarily unavailable. Please see
+   * {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/endpoint-replacements.html#endpoint-replacements-for-vpn-modifications | Customer initiated endpoint replacements} for
+   * additional details.
+   *
+   * You can specify a value between 900 and 3600
+   */
+  readonly lifetimeSeconds: number | undefined = undefined;
+}
+
+/**
  * *{@link NetworkConfig} / {@link CustomerGatewayConfig} / {@link VpnConnectionConfig} / {@link VpnTunnelOptionsSpecificationsConfig}*
  *
  * {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/VPNTunnels.html | VPN tunnel options} specification configuration.
- * Use this configuration to define optional tunnel IP addresses and/or pre-shared keys
- * for a site-to-site VPN connection.
+ * Use this configuration to define optional tunnel configurations for a site-to-site VPN connection.
+ *
+ * **IMPORTANT**: After initial deployment of your VPN connection with any of the v1.5.0+ options noted below, you can only make property changes to one VPN tunnel per core pipeline run.
+ * You may make multiple property changes in that one VPN tunnel if necessary. Trying to modify properties in both tunnels will result in a pipeline failure. This is due to the fact that
+ * only a single mutating API call can be made at a time for AWS Site-to-Site VPN connections.
+ *
+ * Note: you may manually roll back the resulting CloudFormation stack should you encounter this failure. More details on how to skip failed resources in the following reference:
+ * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-continueupdaterollback.html
+ *
  *
  * @example
+ * Versions v1.5.0 and up:
+ * ```
+ * - dpdTimeoutAction: restart
+ *   dpdTimeoutSeconds: 60
+ *   ikeVersions: [2]
+ *   logging:
+ *     enable: true
+ *   phase1:
+ *     dhGroups: [14]
+ *     encryptionAlgorithms: [AES256]
+ *     integrityAlgorithms: [SHA2-256]
+ *   phase2:
+ *     dhGroups: [14]
+ *     encryptionAlgorithms: [AES256]
+ *     integrityAlgorithms: [SHA2-256]
+ *   tunnelInsideCidr: 169.254.200.0/30
+ *   preSharedKey: Key1-AbcXyz
+ * - dpdTimeoutAction: restart
+ *   dpdTimeoutSeconds: 60
+ *   ikeVersions: [2]
+ *   logging:
+ *     enable: true
+ *   phase1:
+ *     dhGroups: [14]
+ *     encryptionAlgorithms: [AES256]
+ *     integrityAlgorithms: [SHA2-256]
+ *   phase2:
+ *     dhGroups: [14]
+ *     encryptionAlgorithms: [AES256]
+ *     integrityAlgorithms: [SHA2-256]
+ *   tunnelInsideCidr: 169.254.200.100/30
+ *   preSharedKey: Key1-AbcXyz
+ * ```
+ * Versions prior to v1.5.0:
  * ```
  * - tunnelInsideCidr: 169.254.200.0/30
  *   preSharedKey: Key1-AbcXyz
@@ -3727,6 +4007,100 @@ export class EndpointPolicyConfig implements t.TypeOf<typeof NetworkConfigTypes.
 export class VpnTunnelOptionsSpecificationsConfig
   implements t.TypeOf<typeof NetworkConfigTypes.vpnTunnelOptionsSpecificationsConfig>
 {
+  /**
+   * (OPTIONAL) Dead Peer Detection (DPD) timeout action. You can specify the action to take after DPD timeout occurs.
+   *
+   * Default - `clear`
+   *
+   * @remarks
+   * **CAUTION:** if you configure this property on a VPN connection that was deployed prior to v1.5.0, your VPN connection
+   * will be recreated. Please be aware that any downstream dependencies may cause this property update to fail. To ensure
+   * a clean replacement, we highly recommend deleting the original connection and its downstream dependencies prior to making this change.
+   *
+   * If you update this property after deployment, your VPN tunnel will become temporarily unavailable. Please see
+   * {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/endpoint-replacements.html#endpoint-replacements-for-vpn-modifications | Customer initiated endpoint replacements} for
+   * additional details.
+   *
+   * Available actions:
+   * * `clear`: End the IKE session when DPD timeout occurs (stop the tunnel and clear the routes)
+   * * `none`: Take no action when DPD timeout occurs
+   * * `restart`: Restart the IKE session when DPD timeout occurs
+   */
+  readonly dpdTimeoutAction: t.TypeOf<typeof NetworkConfigTypes.dpdTimeoutActionEnum> | undefined = undefined;
+  /**
+   * (OPTIONAL) The duration, in seconds, after which Dead Peer Detection (DPD) timeout occurs.
+   *
+   * Default - `30`
+   *
+   * @remarks
+   * **CAUTION:** if you configure this property on a VPN connection that was deployed prior to v1.5.0, your VPN connection
+   * will be recreated. Please be aware that any downstream dependencies may cause this property update to fail. To ensure
+   * a clean replacement, we highly recommend deleting the original connection and its downstream dependencies prior to making this change.
+   *
+   * If you update this property after deployment, your VPN tunnel will become temporarily unavailable. Please see
+   * {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/endpoint-replacements.html#endpoint-replacements-for-vpn-modifications | Customer initiated endpoint replacements} for
+   * additional details.
+   *
+   * The value must be 30 seconds or higher.
+   */
+  readonly dpdTimeoutSeconds: number | undefined = undefined;
+  /**
+   * (OPTIONAL) The Internet Key Exchange (IKE) versions that are permitted on the tunnel.
+   *
+   * Default - `ikev1`,`ikev2`
+   *
+   * @remarks
+   * **CAUTION:** if you configure this property on a VPN connection that was deployed prior to v1.5.0, your VPN connection
+   * will be recreated. Please be aware that any downstream dependencies may cause this property update to fail. To ensure
+   * a clean replacement, we highly recommend deleting the original connection and its downstream dependencies prior to making this change.
+   *
+   * If you update this property after deployment, your VPN tunnel will become temporarily unavailable. Please see
+   * {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/endpoint-replacements.html#endpoint-replacements-for-vpn-modifications | Customer initiated endpoint replacements} for
+   * additional details.
+   *
+   * Only include one or both versions of IKE in the array.
+   */
+  readonly ikeVersions: t.TypeOf<typeof NetworkConfigTypes.ikeVersionEnum>[] | undefined = undefined;
+  /**
+   * (OPTIONAL) Site-to-Site VPN CloudWatch logging configuration.
+   *
+   * @remarks
+   * **CAUTION:** if you configure this property on a VPN connection that was deployed prior to v1.5.0, your VPN connection
+   * will be recreated. Please be aware that any downstream dependencies may cause this property update to fail. To ensure
+   * a clean replacement, we highly recommend deleting the original connection and its downstream dependencies prior to making this change.
+   *
+   * If you update this property after deployment, your VPN tunnel will become temporarily unavailable. Please see
+   * {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/endpoint-replacements.html#endpoint-replacements-for-vpn-modifications | Customer initiated endpoint replacements} for
+   * additional details.
+   *
+   */
+  readonly logging: VpnLoggingConfig | undefined = undefined;
+  /**
+   * (OPTIONAL) Internet Key Exchange (IKE) phase 1 configuration.
+   *
+   * @remarks
+   * **CAUTION:** if you configure this property on a VPN connection that was deployed prior to v1.5.0, your VPN connection
+   * will be recreated. Please be aware that any downstream dependencies may cause this property update to fail. To ensure
+   * a clean replacement, we highly recommend deleting the original connection and its downstream dependencies prior to making this change.
+   *
+   * If you update this property after deployment, your VPN tunnel will become temporarily unavailable. Please see
+   * {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/endpoint-replacements.html#endpoint-replacements-for-vpn-modifications | Customer initiated endpoint replacements} for
+   * additional details.
+   */
+  readonly phase1: Phase1Config | undefined = undefined;
+  /**
+   * (OPTIONAL) Internet Key Exchange (IKE) phase 2 configuration.
+   *
+   * @remarks
+   * **CAUTION:** if you configure this property on a VPN connection that was deployed prior to v1.5.0, your VPN connection
+   * will be recreated. Please be aware that any downstream dependencies may cause this property update to fail. To ensure
+   * a clean replacement, we highly recommend deleting the original connection and its downstream dependencies prior to making this change.
+   *
+   * If you update this property after deployment, your VPN tunnel will become temporarily unavailable. Please see
+   * {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/endpoint-replacements.html#endpoint-replacements-for-vpn-modifications | Customer initiated endpoint replacements} for
+   * additional details.
+   */
+  readonly phase2: Phase2Config | undefined = undefined;
   /**
    * (OPTIONAL): The Secrets Manager name that stores the pre-shared key (PSK), that exists in the
    * same account and region that the VPN Connection will be created in.
@@ -3747,7 +4121,76 @@ export class VpnTunnelOptionsSpecificationsConfig
    * PSK for you.
    */
   readonly preSharedKey: string | undefined = undefined;
-
+  /**
+   * (OPTIONAL) The percentage of the rekey window (determined by the rekey margin time) within which the rekey time is randomly selected.
+   *
+   * Default - `100`
+   *
+   * @remarks
+   * **CAUTION:** if you configure this property on a VPN connection that was deployed prior to v1.5.0, your VPN connection
+   * will be recreated. Please be aware that any downstream dependencies may cause this property update to fail. To ensure
+   * a clean replacement, we highly recommend deleting the original connection and its downstream dependencies prior to making this change.
+   *
+   * If you update this property after deployment, your VPN tunnel will become temporarily unavailable. Please see
+   * {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/endpoint-replacements.html#endpoint-replacements-for-vpn-modifications | Customer initiated endpoint replacements} for
+   * additional details.
+   *
+   * You can specify a percentage value between 0 and 100.
+   */
+  readonly rekeyFuzzPercentage: number | undefined = undefined;
+  /**
+   * (OPTIONAL) The margin time in seconds before the phase 1 and phase 2 lifetime expires,
+   * during which the AWS side of the VPN connection performs an IKE rekey.
+   *
+   * Default - `270` (4.5 minutes)
+   *
+   * @remarks
+   * **CAUTION:** if you configure this property on a VPN connection that was deployed prior to v1.5.0, your VPN connection
+   * will be recreated. Please be aware that any downstream dependencies may cause this property update to fail. To ensure
+   * a clean replacement, we highly recommend deleting the original connection and its downstream dependencies prior to making this change.
+   *
+   * If you update this property after deployment, your VPN tunnel will become temporarily unavailable. Please see
+   * {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/endpoint-replacements.html#endpoint-replacements-for-vpn-modifications | Customer initiated endpoint replacements} for
+   * additional details.
+   *
+   * You can specify a number between 60 and half of the value of the phase 2 lifetime.
+   * The exact time of the rekey is randomly selected based on the value for rekey fuzz.
+   */
+  readonly rekeyMarginTimeSeconds: number | undefined = undefined;
+  /**
+   * (OPTIONAL) The number of packets in an IKE replay window.
+   *
+   * Default - `1024`
+   *
+   * @remarks
+   * **CAUTION:** if you configure this property on a VPN connection that was deployed prior to v1.5.0, your VPN connection
+   * will be recreated. Please be aware that any downstream dependencies may cause this property update to fail. To ensure
+   * a clean replacement, we highly recommend deleting the original connection and its downstream dependencies prior to making this change.
+   *
+   * If you update this property after deployment, your VPN tunnel will become temporarily unavailable. Please see
+   * {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/endpoint-replacements.html#endpoint-replacements-for-vpn-modifications | Customer initiated endpoint replacements} for
+   * additional details.
+   *
+   * You can specify a value between 64 and 2048.
+   */
+  readonly replayWindowSize: number | undefined = undefined;
+  /**
+   * (OPTIONAL) The action to take when the establishing the tunnel for the VPN connection.
+   * By default, your customer gateway device must initiate the IKE negotiation and bring up the tunnel.
+   * Specify `start` for Amazon Web Services to initiate the IKE negotiation.
+   *
+   * Default - `add`
+   *
+   * @remarks
+   * **CAUTION:** if you configure this property on a VPN connection that was deployed prior to v1.5.0, your VPN connection
+   * will be recreated. Please be aware that any downstream dependencies may cause this property update to fail. To ensure
+   * a clean replacement, we highly recommend deleting the original connection and its downstream dependencies prior to making this change.
+   *
+   * If you update this property after deployment, your VPN tunnel will become temporarily unavailable. Please see
+   * {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/endpoint-replacements.html#endpoint-replacements-for-vpn-modifications | Customer initiated endpoint replacements} for
+   * additional details.
+   */
+  readonly startupAction: t.TypeOf<typeof NetworkConfigTypes.startupActionEnum> | undefined = undefined;
   /**
    * (OPTIONAL): The range of inside IP addresses for the tunnel. Any specified CIDR blocks must be unique across
    * all VPN connections that use the same virtual private gateway.
@@ -3760,6 +4203,20 @@ export class VpnTunnelOptionsSpecificationsConfig
    * 169.254.2.0/30 - 169.254.3.0/30 - 169.254.4.0/30 - 169.254.5.0/30 - 169.254.169.252/30
    */
   readonly tunnelInsideCidr: string | undefined = undefined;
+  /**
+   * (OPTIONAL) Enable tunnel endpoint lifecycle control. This feature provides control over the schedule of endpoint replacements.
+   * For more information, see {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/tunnel-endpoint-lifecycle.html | Tunnel Endpoint Lifecycle Control}.
+   *
+   * @remarks
+   * **CAUTION:** if you configure this property on a VPN connection that was deployed prior to v1.5.0, your VPN connection
+   * will be recreated. Please be aware that any downstream dependencies may cause this property update to fail. To ensure
+   * a clean replacement, we highly recommend deleting the original connection and its downstream dependencies prior to making this change.
+   *
+   * If you update this property after deployment, your VPN tunnel will become temporarily unavailable. Please see
+   * {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/endpoint-replacements.html#endpoint-replacements-for-vpn-modifications | Customer initiated endpoint replacements} for
+   * additional details.
+   */
+  readonly tunnelLifecycleControl: boolean | undefined = undefined;
 }
 /**
  * *{@link NetworkConfig} / {@link CustomerGatewayConfig} / {@link VpnConnectionConfig}*
@@ -3772,6 +4229,13 @@ export class VpnTunnelOptionsSpecificationsConfig
  * AWS Site-to-Site VPN (Site-to-Site VPN) connection, and configuring routing
  * to pass traffic through the connection.
  *
+ * **IMPORTANT**: After initial deployment of your VPN connection with any of the v1.5.0+ options noted below, you can make property changes in one of {@link VpnConnectionConfig} or {@link VpnTunnelOptionsSpecificationsConfig}, but not both.
+ * You may make multiple property changes in one of those configurations if necessary. Trying to modify properties in both configurations will result in a pipeline failure. This is due to the fact that
+ * only a single mutating API call can be made at a time for AWS Site-to-Site VPN connections.
+ *
+ * Note: you may manually roll back the resulting CloudFormation stack should you encounter this failure. More details on how to skip failed resources in the following reference:
+ * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-continueupdaterollback.html
+ *
  * @example
  * VPN termination at a Transit Gateway:
  * ```
@@ -3782,7 +4246,7 @@ export class VpnTunnelOptionsSpecificationsConfig
  *   routeTablePropagations:
  *     - Network-Main-Core
  *   staticRoutesOnly: false
- *   # Tunnel specifications are optional
+ *   # Tunnel specifications are optional -- additional tunnel options available in configuration reference
  *   tunnelSpecifications:
  *     - tunnelInsideCidr: 169.254.200.0/30
  *       preSharedKey: Key1-AbcXyz
@@ -3794,7 +4258,7 @@ export class VpnTunnelOptionsSpecificationsConfig
  * - name: accelerator-vpn
  *   vpc: Inspection-Vpc
  *   staticRoutesOnly: false
- *   # Tunnel specifications are optional
+ *   # Tunnel specifications are optional -- additional tunnel options available in configuration reference
  *   tunnelSpecifications:
  *     - tunnelInsideCidr: 169.254.200.0/30
  *       preSharedKey: Key1-AbcXyz
@@ -3814,7 +4278,58 @@ export class VpnConnectionConfig implements t.TypeOf<typeof NetworkConfigTypes.v
    * Please be aware that any downstream dependencies may cause this property update to fail.
    */
   readonly name: string = '';
-
+  /**
+   * (OPTIONAL) The Amazon-side IPv4 CIDR range that is allowed through the site-to-site VPN tunnel.
+   * Configuring this option restricts the Amazon-side CIDR range that can communicate with your
+   * local network.
+   *
+   * Default - `0.0.0.0/0`
+   *
+   * @remarks
+   * **CAUTION:** if you configure this property on a VPN connection that was deployed prior to v1.5.0, your VPN connection
+   * will be recreated. Please be aware that any downstream dependencies may cause this property update to fail. To ensure
+   * a clean replacement, we highly recommend deleting the original connection and its downstream dependencies prior to making this change.
+   *
+   * If you update this property after deployment, both of your VPN tunnel endpoints will become temporarily unavailable. Please see
+   * {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/endpoint-replacements.html#endpoint-replacements-for-vpn-modifications | Customer initiated endpoint replacements} for
+   * additional details.
+   *
+   * Use CIDR notation, i.e. 10.0.0.0/16.
+   */
+  readonly amazonIpv4NetworkCidr: string | undefined = undefined;
+  /**
+   * (OPTIONAL) The customer-side IPv4 CIDR range that is allowed through the site-to-site VPN tunnel.
+   * Configuring this option restricts the local CIDR range that can communicate with your AWS environment.
+   *
+   * Default - `0.0.0.0/0`
+   *
+   * @remarks
+   * **CAUTION:** if you configure this property on a VPN connection that was deployed prior to v1.5.0, your VPN connection
+   * will be recreated. Please be aware that any downstream dependencies may cause this property update to fail. To ensure
+   * a clean replacement, we highly recommend deleting the original connection and its downstream dependencies prior to making this change.
+   *
+   * If you update this property after deployment, both of your VPN tunnel endpoints will become temporarily unavailable. Please see
+   * {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/endpoint-replacements.html#endpoint-replacements-for-vpn-modifications | Customer initiated endpoint replacements} for
+   * additional details.
+   *
+   * Use CIDR notation, i.e. 10.0.0.0/16.
+   */
+  readonly customerIpv4NetworkCidr: string | undefined = undefined;
+  /**
+   * (OPTIONAL) Enable Site-to-Site VPN Acceleration.
+   * For more information, see {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/accelerated-vpn.html | Accelerated Site-to-Site VPN connections}.
+   *
+   * @remarks
+   * **CAUTION:** if you configure this property on a VPN connection that was deployed prior to v1.5.0, your VPN connection
+   * will be recreated. Please be aware that any downstream dependencies may cause this property update to fail. To ensure
+   * a clean replacement, we highly recommend deleting the original connection and its downstream dependencies prior to making this change.
+   *
+   * If you update this property after deployment, your VPN tunnel will be recreated. VPN acceleration can only
+   * be enabled/disabled on initial VPN connection creation.
+   *
+   * **NOTE:** Accelerated VPNs are only supported on VPNs terminating on transit gateways.
+   */
+  readonly enableVpnAcceleration: boolean | undefined = undefined;
   /**
    * The logical name of the Transit Gateway that the customer Gateway is attached to
    * so that a VPN connection is established.

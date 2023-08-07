@@ -30,6 +30,7 @@ import {
   TransitGatewayConfig,
   VpcConfig,
   VpcTemplatesConfig,
+  VpnConnectionConfig,
 } from '@aws-accelerator/config';
 import {
   IIpamSubnet,
@@ -45,6 +46,8 @@ import {
   SsmParameterLookup,
   Subnet,
   Vpc,
+  VpnConnectionProps,
+  VpnTunnelOptionsSpecifications,
 } from '@aws-accelerator/constructs';
 import { SsmResourceType } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
@@ -65,6 +68,7 @@ import {
   processSecurityGroupSgEgressSources,
   processSecurityGroupSgIngressSources,
 } from './utils/security-group-utils';
+import { hasAdvancedVpnOptions } from './utils/validation-utils';
 
 /**
  * Resource share type for RAM resource shares
@@ -101,6 +105,10 @@ export abstract class NetworkStack extends AcceleratorStack {
    */
   public readonly cloudwatchKey: cdk.aws_kms.Key;
   /**
+   * Flag to determine if there is an advanced VPN in scope of the current stack context
+   */
+  public readonly containsAdvancedVpn: boolean;
+  /**
    * KMS Key used to encrypt custom resource lambda environment variables
    */
   public readonly lambdaKey: cdk.aws_kms.Key;
@@ -128,6 +136,7 @@ export abstract class NetworkStack extends AcceleratorStack {
 
     // Set properties
     this.acceleratorPrefix = props.prefixes.accelerator;
+    this.containsAdvancedVpn = this.setAdvancedVpnFlag(props);
     this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
     this.vpcResources = [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])];
     this.sharedVpcs = this.getSharedVpcs(this.vpcResources);
@@ -188,6 +197,23 @@ export abstract class NetworkStack extends AcceleratorStack {
       }
     }
     return vpcsInScope;
+  }
+
+  /**
+   * Determines if any of the VPN connections require advanced configuration options.
+   * @param props AcceleratorStackProps
+   * @returns boolean
+   */
+  private setAdvancedVpnFlag(props: AcceleratorStackProps): boolean {
+    for (const cgw of props.networkConfig.customerGateways ?? []) {
+      const cgwAccount = props.accountsConfig.getAccountId(cgw.account);
+      for (const vpnItem of cgw.vpnConnections ?? []) {
+        if (this.isTargetStack([cgwAccount], [cgw.region]) && hasAdvancedVpnOptions(vpnItem)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   /**
@@ -913,5 +939,104 @@ export abstract class NetworkStack extends AcceleratorStack {
     return ipamSubnetArray.includes(subnetKey)
       ? this.lookupLocalIpamSubnet(vpcName, routeTableEntryItem.destination!).ipv4CidrBlock
       : routeTableEntryItem.destination!;
+  }
+
+  /**
+   * Set site-to-site VPN connection properties.
+   * @param options
+   * @returns VpnConnectionProps
+   */
+  public setVpnProps(options: {
+    vpnItem: VpnConnectionConfig;
+    customerGatewayId: string;
+    customResourceHandler?: cdk.aws_lambda.IFunction;
+    transitGatewayId?: string;
+    virtualPrivateGateway?: string;
+  }): VpnConnectionProps {
+    return {
+      name: options.vpnItem.name,
+      customerGatewayId: options.customerGatewayId,
+      amazonIpv4NetworkCidr: options.vpnItem.amazonIpv4NetworkCidr,
+      customerIpv4NetworkCidr: options.vpnItem.customerIpv4NetworkCidr,
+      customResourceHandler: hasAdvancedVpnOptions(options.vpnItem) ? options.customResourceHandler : undefined,
+      enableVpnAcceleration: options.vpnItem.enableVpnAcceleration,
+      staticRoutesOnly: options.vpnItem.staticRoutesOnly,
+      tags: options.vpnItem.tags,
+      transitGatewayId: options.transitGatewayId,
+      virtualPrivateGateway: options.virtualPrivateGateway,
+      vpnTunnelOptionsSpecifications: this.setVpnTunnelOptions(options.vpnItem),
+    };
+  }
+
+  /**
+   * Set VPN tunnel options properties
+   * @param vpnItem VpnConnectionConfig
+   * @returns VpnTunnelOptionsSpecifications[] | undefined
+   */
+  private setVpnTunnelOptions(vpnItem: VpnConnectionConfig): VpnTunnelOptionsSpecifications[] | undefined {
+    if (!vpnItem.tunnelSpecifications) {
+      return;
+    }
+    const vpnTunnelOptions: VpnTunnelOptionsSpecifications[] = [];
+
+    for (const [index, tunnel] of vpnItem.tunnelSpecifications.entries()) {
+      let loggingConfig: { enable?: boolean; logGroupArn?: string; outputFormat?: string } | undefined = undefined;
+      let preSharedKeyValue: string | undefined = undefined;
+      //
+      // Rewrite logging config with log group ARN
+      if (tunnel.logging?.enable) {
+        loggingConfig = {
+          enable: true,
+          logGroupArn: this.createVpnLogGroup(vpnItem, index, tunnel.logging.logGroupName),
+          outputFormat: tunnel.logging.outputFormat,
+        };
+      }
+      //
+      // Rewrite PSK
+      if (tunnel.preSharedKey) {
+        const preSharedKeySecret = cdk.aws_secretsmanager.Secret.fromSecretNameV2(
+          this,
+          pascalCase(`${vpnItem.name}${tunnel.preSharedKey}Tunnel${index}PreSharedKeySecret`),
+          tunnel.preSharedKey,
+        );
+        //
+        // If advanced VPN, use the ARN. Otherwise, retrieve the secret value
+        preSharedKeyValue = hasAdvancedVpnOptions(vpnItem)
+          ? preSharedKeySecret.secretArn
+          : preSharedKeySecret.secretValue.toString();
+      }
+
+      vpnTunnelOptions.push({
+        dpdTimeoutAction: tunnel.dpdTimeoutAction,
+        dpdTimeoutSeconds: tunnel.dpdTimeoutSeconds,
+        ikeVersions: tunnel.ikeVersions,
+        logging: loggingConfig,
+        phase1: tunnel.phase1,
+        phase2: tunnel.phase2,
+        preSharedKey: preSharedKeyValue,
+        rekeyFuzzPercentage: tunnel.rekeyFuzzPercentage,
+        rekeyMarginTimeSeconds: tunnel.rekeyMarginTimeSeconds,
+        replayWindowSize: tunnel.replayWindowSize,
+        startupAction: tunnel.startupAction,
+        tunnelInsideCidr: tunnel.tunnelInsideCidr,
+        tunnelLifecycleControl: tunnel.tunnelLifecycleControl,
+      });
+    }
+    return vpnTunnelOptions;
+  }
+
+  /**
+   * Returns the ARN of a CloudWatch Log group created for the VPN tunnel.
+   * @param vpnItem VpnConnectionConfig
+   * @param index number
+   * @param logGroupName string | undefined
+   * @returns string
+   */
+  private createVpnLogGroup(vpnItem: VpnConnectionConfig, index: number, logGroupName?: string): string {
+    return new cdk.aws_logs.LogGroup(this, pascalCase(`${vpnItem.name}Tunnel${index}LogGroup`), {
+      logGroupName,
+      encryptionKey: this.cloudwatchKey,
+      retention: this.logRetention,
+    }).logGroupArn;
   }
 }

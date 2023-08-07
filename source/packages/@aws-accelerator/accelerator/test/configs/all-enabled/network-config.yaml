@@ -1706,6 +1706,54 @@ customerGateways:
           - tunnelInsideCidr: 169.254.100.0/30
           - tunnelInsideCidr: 169.254.100.100/30
 
+      - name: enhanced-vpn
+        amazonIpv4NetworkCidr: 10.0.0.0/16
+        customerIpv4NetworkCidr: 192.168.0.0/16
+        enableVpnAcceleration: true
+        transitGateway: Network-Main
+        routeTableAssociations:
+          - Network-Main-Core
+        routeTablePropagations:
+          - Network-Main-Core
+        staticRoutesOnly: false
+        tunnelSpecifications:
+          - tunnelInsideCidr: 169.254.200.0/30
+            dpdTimeoutAction: restart
+            dpdTimeoutSeconds: 60
+            ikeVersions: [2]
+            phase1:
+              dhGroups: [2,14,20,21,22]
+              encryptionAlgorithms: [AES256, AES256-GCM-16]
+              integrityAlgorithms: [SHA2-256, SHA2-512]
+              lifetimeSeconds: 3600
+            phase2:
+              dhGroups: [5,20]
+              encryptionAlgorithms: [AES128]
+              integrityAlgorithms: [SHA2-256]
+              lifetimeSeconds: 900
+            rekeyFuzzPercentage: 80
+            rekeyMarginTimeSeconds: 350
+            replayWindowSize: 64
+            startupAction: start
+            tunnelLifecycleControl: false
+          - tunnelInsideCidr: 169.254.200.100/30
+            dpdTimeoutAction: clear
+            dpdTimeoutSeconds: 120
+            ikeVersions: [2]
+            phase1:
+              dhGroups: [2,14,20,21,22]
+              encryptionAlgorithms: [AES256, AES256-GCM-16]
+              integrityAlgorithms: [SHA2-256, SHA2-512]
+              lifetimeSeconds: 3600
+            phase2:
+              dhGroups: [5,20]
+              encryptionAlgorithms: [AES128]
+              integrityAlgorithms: [SHA2-256]
+              lifetimeSeconds: 900
+            rekeyFuzzPercentage: 65
+            rekeyMarginTimeSeconds: 120
+            replayWindowSize: 64
+
 vpcFlowLogs:
   trafficType: ALL
   maxAggregationInterval: 60

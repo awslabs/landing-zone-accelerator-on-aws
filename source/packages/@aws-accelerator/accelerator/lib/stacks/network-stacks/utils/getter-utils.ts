@@ -218,3 +218,18 @@ export function getAvailabilityZoneMap(region: string) {
   }
   return availabilityZoneId;
 }
+
+/**
+ * Returns all keys with defined values for a given object
+ * @param obj object
+ * @returns string[]
+ */
+export function getObjectKeys(obj: object): string[] {
+  const keys: string[] = [];
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) {
+      keys.push(key);
+    }
+  }
+  return keys;
+}
