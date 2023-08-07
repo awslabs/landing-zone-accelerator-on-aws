@@ -29,7 +29,6 @@ const stacks: InstallerStack[] = [
     enableTester: true,
     managementCrossAccountRoleName: 'AWSControlTowerExecution',
     enableSingleAccountMode: false,
-    enableAseaMigration: false,
   }),
   // Initialize stack from management account without tester pipeline
   new InstallerStack(new cdk.App(), 'AWSAccelerator-Test-InstallerStack', {
@@ -39,7 +38,6 @@ const stacks: InstallerStack[] = [
     useExternalPipelineAccount: false,
     enableTester: false,
     enableSingleAccountMode: false,
-    enableAseaMigration: false,
   }),
   //Initialize stack from external pipeline account with tester pipeline
   new InstallerStack(new cdk.App(), 'AWSAccelerator-Test-InstallerStack', {
@@ -50,7 +48,6 @@ const stacks: InstallerStack[] = [
     enableTester: true,
     managementCrossAccountRoleName: 'AWSControlTowerExecution',
     enableSingleAccountMode: false,
-    enableAseaMigration: false,
   }),
   //Initialize stack from external pipeline account without tester pipeline
   new InstallerStack(new cdk.App(), 'AWSAccelerator-Test-InstallerStack', {
@@ -60,7 +57,6 @@ const stacks: InstallerStack[] = [
     useExternalPipelineAccount: true,
     enableTester: false,
     enableSingleAccountMode: false,
-    enableAseaMigration: false,
   }),
   //Initialize stack from external pipeline account without tester pipeline
   new InstallerStack(new cdk.App(), 'AWSAccelerator-Test-InstallerStack', {
@@ -70,7 +66,6 @@ const stacks: InstallerStack[] = [
     useExternalPipelineAccount: true,
     enableTester: false,
     enableSingleAccountMode: true,
-    enableAseaMigration: false,
   }),
 ];
 

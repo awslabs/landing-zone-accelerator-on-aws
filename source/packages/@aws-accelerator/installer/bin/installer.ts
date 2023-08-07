@@ -19,7 +19,6 @@ import 'source-map-support/register';
 import { version } from '../../../../package.json';
 import * as installer from '../lib/installer-stack';
 import { createLogger } from '@aws-accelerator/utils';
-import { isAseaMigrationEnabled } from '../utils/installer-utils';
 
 const logger = createLogger(['installer']);
 
@@ -31,7 +30,6 @@ async function main() {
   const enableTester = app.node.tryGetContext('enable-tester') === 'true';
   const managementCrossAccountRoleName = app.node.tryGetContext('management-cross-account-role-name');
   const enableSingleAccountMode = app.node.tryGetContext('enable-single-account-mode') === 'true';
-  const enableAseaMigration = await isAseaMigrationEnabled();
 
   if (enableTester && managementCrossAccountRoleName === undefined) {
     console.log(`Invalid --management-cross-account-role-name ${managementCrossAccountRoleName}`);
@@ -49,7 +47,6 @@ async function main() {
     enableTester: enableTester,
     managementCrossAccountRoleName: managementCrossAccountRoleName,
     enableSingleAccountMode,
-    enableAseaMigration,
   });
 }
 

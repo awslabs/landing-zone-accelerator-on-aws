@@ -229,7 +229,6 @@ export function createPipelineStack(
   context: AcceleratorContext,
   acceleratorEnv: AcceleratorEnvironment,
   resourcePrefixes: AcceleratorResourcePrefixes,
-  enableAseaMigration: boolean,
 ) {
   if (includeStage(context, { stage: AcceleratorStage.PIPELINE, account: context.account, region: context.region })) {
     const pipelineStack = new PipelineStack(
@@ -243,7 +242,6 @@ export function createPipelineStack(
         terminationProtection: true,
         partition: context.partition,
         prefixes: resourcePrefixes,
-        enableAseaMigration,
         ...acceleratorEnv,
       },
     );

@@ -1573,11 +1573,6 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
               "Value": "1",
             },
             {
-              "Name": "ENABLE_ASEA_MIGRATION",
-              "Type": "PLAINTEXT",
-              "Value": "false",
-            },
-            {
               "Name": "ACCELERATOR_REPOSITORY_SOURCE",
               "Type": "PLAINTEXT",
               "Value": {
@@ -1889,6 +1884,16 @@ phases:
                           unset AWS_SESSION_TOKEN;
                        fi
       - cd ../accelerator
+      - |-
+        aws ssm get-parameter --name /accelerator/migration --query "Parameter.Value" 2> /dev/null
+                          status=$?
+                          if [ $status -ne 0 ]; then
+                            echo "No SSM Parameter found, setting ENABLE_ASEA_MIGRATION to false";
+                            export ENABLE_ASEA_MIGRATION=false
+                          else
+                            echo "SSM Parameter Found, setting ENABLE_ASEA_MIGRATION to true"
+                            export ENABLE_ASEA_MIGRATION=true
+                          fi;
       - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
@@ -4943,11 +4948,6 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
               "Value": "1",
             },
             {
-              "Name": "ENABLE_ASEA_MIGRATION",
-              "Type": "PLAINTEXT",
-              "Value": "false",
-            },
-            {
               "Name": "ACCELERATOR_REPOSITORY_SOURCE",
               "Type": "PLAINTEXT",
               "Value": {
@@ -5249,6 +5249,16 @@ phases:
                           unset AWS_SESSION_TOKEN;
                        fi
       - cd ../accelerator
+      - |-
+        aws ssm get-parameter --name /accelerator/migration --query "Parameter.Value" 2> /dev/null
+                          status=$?
+                          if [ $status -ne 0 ]; then
+                            echo "No SSM Parameter found, setting ENABLE_ASEA_MIGRATION to false";
+                            export ENABLE_ASEA_MIGRATION=false
+                          else
+                            echo "SSM Parameter Found, setting ENABLE_ASEA_MIGRATION to true"
+                            export ENABLE_ASEA_MIGRATION=true
+                          fi;
       - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
@@ -8311,11 +8321,6 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
               "Value": "1",
             },
             {
-              "Name": "ENABLE_ASEA_MIGRATION",
-              "Type": "PLAINTEXT",
-              "Value": "false",
-            },
-            {
               "Name": "ACCELERATOR_REPOSITORY_SOURCE",
               "Type": "PLAINTEXT",
               "Value": {
@@ -8645,6 +8650,16 @@ phases:
                           unset AWS_SESSION_TOKEN;
                        fi
       - cd ../accelerator
+      - |-
+        aws ssm get-parameter --name /accelerator/migration --query "Parameter.Value" 2> /dev/null
+                          status=$?
+                          if [ $status -ne 0 ]; then
+                            echo "No SSM Parameter found, setting ENABLE_ASEA_MIGRATION to false";
+                            export ENABLE_ASEA_MIGRATION=false
+                          else
+                            echo "SSM Parameter Found, setting ENABLE_ASEA_MIGRATION to true"
+                            export ENABLE_ASEA_MIGRATION=true
+                          fi;
       - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
@@ -11694,11 +11709,6 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
               "Value": "1",
             },
             {
-              "Name": "ENABLE_ASEA_MIGRATION",
-              "Type": "PLAINTEXT",
-              "Value": "false",
-            },
-            {
               "Name": "ACCELERATOR_REPOSITORY_SOURCE",
               "Type": "PLAINTEXT",
               "Value": {
@@ -12018,6 +12028,16 @@ phases:
                           unset AWS_SESSION_TOKEN;
                        fi
       - cd ../accelerator
+      - |-
+        aws ssm get-parameter --name /accelerator/migration --query "Parameter.Value" 2> /dev/null
+                          status=$?
+                          if [ $status -ne 0 ]; then
+                            echo "No SSM Parameter found, setting ENABLE_ASEA_MIGRATION to false";
+                            export ENABLE_ASEA_MIGRATION=false
+                          else
+                            echo "SSM Parameter Found, setting ENABLE_ASEA_MIGRATION to true"
+                            export ENABLE_ASEA_MIGRATION=true
+                          fi;
       - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
@@ -15067,11 +15087,6 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
               "Value": "1",
             },
             {
-              "Name": "ENABLE_ASEA_MIGRATION",
-              "Type": "PLAINTEXT",
-              "Value": "false",
-            },
-            {
               "Name": "ACCELERATOR_REPOSITORY_SOURCE",
               "Type": "PLAINTEXT",
               "Value": {
@@ -15396,6 +15411,16 @@ phases:
                           unset AWS_SESSION_TOKEN;
                        fi
       - cd ../accelerator
+      - |-
+        aws ssm get-parameter --name /accelerator/migration --query "Parameter.Value" 2> /dev/null
+                          status=$?
+                          if [ $status -ne 0 ]; then
+                            echo "No SSM Parameter found, setting ENABLE_ASEA_MIGRATION to false";
+                            export ENABLE_ASEA_MIGRATION=false
+                          else
+                            echo "SSM Parameter Found, setting ENABLE_ASEA_MIGRATION to true"
+                            export ENABLE_ASEA_MIGRATION=true
+                          fi;
       - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",

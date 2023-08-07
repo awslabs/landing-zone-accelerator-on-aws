@@ -109,10 +109,6 @@ export interface AcceleratorPipelineProps {
    * Boolean for single account mode (i.e. AWS Jam or Workshop)
    */
   readonly enableSingleAccountMode: boolean;
-  /**
-   * Boolean for single account mode (i.e. AWS Jam or Workshop)
-   */
-  readonly enableAseaMigration: boolean;
 }
 
 /**
@@ -180,6 +176,8 @@ export class AcceleratorPipeline extends Construct {
         },
       };
     }
+
+    const enableAseaMigration = process.env['ENABLE_ASEA_MIGRATION']?.toLowerCase?.() === 'true';
 
     // Get installer key
     this.installerKey = cdk.aws_kms.Key.fromKeyArn(
@@ -493,7 +491,7 @@ export class AcceleratorPipeline extends Construct {
     });
 
     // Adds ASEA Import Resources stage
-    if (props.enableAseaMigration) {
+    if (enableAseaMigration) {
       this.pipeline.addStage({
         stageName: 'ImportAseaResources',
         actions: [
@@ -583,7 +581,7 @@ export class AcceleratorPipeline extends Construct {
     });
 
     // Add ASEA Import Resources
-    if (props.enableAseaMigration) {
+    if (enableAseaMigration) {
       this.pipeline.addStage({
         stageName: 'PostImportAseaResources',
         actions: [
