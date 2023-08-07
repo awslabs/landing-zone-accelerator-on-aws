@@ -4077,6 +4077,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "configTableName": {
           "Ref": "AcceleratorConfigTable590367C4",
         },
+        "isOrgsEnabled": true,
         "logArchiveAccountEmail": "all-enabled-logarchive-account@example.com",
         "managementAccountEmail": "all-enabled-management-account@example.com",
         "organizationsConfigS3Key": "f041192e85508146304663e03a7290e74c9b765850b286388201977a065879de.yaml",
