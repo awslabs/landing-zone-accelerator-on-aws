@@ -91,4 +91,47 @@ export class CommonValidatorFunctions {
     }
     return environments;
   }
+  /**
+   * Function receives input list of two account-regions and checks to see if first list is in the second list
+   * of environments with the format of account-region (e.g. Dev-us-east-1)
+   * useful for comparing DeploymentTargets of two entities in validation
+   * @param source
+   * @param target
+   * @returns
+   * true if source is part of target
+   * false if source is not part of target
+   */
+  public static compareDeploymentEnvironments(source: string[], target: string[]): { match: boolean; message: string } {
+    // make sure the arrays are unique
+    const uniqueSource = [...new Set(source)];
+    const uniqueTarget = [...new Set(target)];
+
+    let match = false;
+    let message = '';
+    if (uniqueSource.length > uniqueTarget.length) {
+      console.log(`Src length: ${uniqueSource.length}, target length: ${uniqueTarget.length}`);
+      //Source array is bigger than target
+      message = 'Source length exceeds target';
+    } else if (uniqueSource.sort().toString() == uniqueTarget.sort().toString()) {
+      // Source and target are exactly the same
+      match = true;
+      message = 'Source and target are same';
+    } else if (
+      !(uniqueSource.sort().toString() == uniqueTarget.sort().toString()) &&
+      uniqueSource.filter(x => !uniqueTarget.includes(x)).length > 0
+    ) {
+      // Source and target are not the same
+      // There is an element in source that is not in target
+      message = 'Source not in target';
+    } else if (
+      !(uniqueSource.sort().toString() == uniqueTarget.sort().toString()) &&
+      uniqueSource.filter(x => !uniqueTarget.includes(x)).length === 0
+    ) {
+      // Source and target are not the same
+      // There is an element in source that is in target
+      message = 'Source is in target';
+      match = true;
+    }
+    return { match, message };
+  }
 }
