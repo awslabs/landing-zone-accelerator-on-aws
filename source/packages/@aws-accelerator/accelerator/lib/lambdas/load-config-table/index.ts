@@ -61,6 +61,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const partition: string = event.ResourceProperties['partition'];
   const stackName: string = event.ResourceProperties['stackName'];
   const solutionId = process.env['SOLUTION_ID'];
+  const isOrgsEnabled: boolean = event.ResourceProperties['isOrgsEnabled'] === 'true';
 
   console.log(`Configuration Table Name: ${configTableName}`);
   console.log(`Configuration Repository Name: ${configRepositoryName}`);
@@ -97,6 +98,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
           auditAccount: auditAccountEmail,
           logArchiveAccount: logArchiveAccountEmail,
         },
+        isOrgsEnabled,
       );
 
     case 'Delete':
@@ -245,6 +247,7 @@ async function onCreateUpdateFunction(
     auditAccount: string;
     logArchiveAccount: string;
   },
+  isOrgsEnabled: boolean,
 ): Promise<{
   PhysicalResourceId: string | undefined;
   Status: string;
@@ -271,8 +274,6 @@ async function onCreateUpdateFunction(
   const enableSingleAccountMode = process.env['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE']
     ? process.env['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE'] === 'true'
     : false;
-
-  const isOrgsEnabled = process.env['ACCELERATOR_USE_ORGS'] ? process.env['ACCELERATOR_USE_ORGS'] === 'true' : false;
 
   await accountsConfig.loadAccountIds(partition, enableSingleAccountMode, isOrgsEnabled, accountsConfig);
 

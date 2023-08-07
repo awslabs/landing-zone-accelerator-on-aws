@@ -67,10 +67,6 @@ export class LoadAcceleratorConfigTable extends Construct {
       environment['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE'] = 'true';
     }
 
-    if (props.isOrgsEnabled) {
-      environment['ACCELERATOR_USE_ORGS'] = 'true';
-    }
-
     //
     // Function definition for the custom resource
     //
@@ -143,6 +139,7 @@ export class LoadAcceleratorConfigTable extends Construct {
         partition: props.partition,
         stackName: props.stackName,
         uuid: uuidv4(), // Generates a new UUID to force the resource to update
+        isOrgsEnabled: props.isOrgsEnabled,
       },
     });
 
