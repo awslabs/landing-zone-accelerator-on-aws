@@ -69,13 +69,19 @@ logging:
 
       
   accessLogBucket:
-    importedBucketName: existing-access-logs-bucket-${ACCOUNT_ID}-${REGION}
-    s3ResourcePolicyAttachments:
-      - policy: bucket-policies/access-logs-bucket.json
+    importedBucket: 
+      name: existing-access-logs-bucket-${ACCOUNT_ID}-${REGION}
+    customPolicyOverrides:
+      policy: bucket-policies/full-access-log-bucket.json
+    # s3ResourcePolicyAttachments:
+    #   - policy: bucket-policies/access-logs-bucket.json
     lifecycleRules: []
   elbLogBucket:
-    applyAcceleratorManagedPolicy: true
-    importedBucketName: existing-elb-logs-bucket-${ACCOUNT_ID}-${REGION}
+    importedBucket: 
+      name: existing-elb-logs-bucket-${ACCOUNT_ID}-${REGION}
+      applyAcceleratorManagedBucketPolicy: true
+    # customPolicyOverrides:
+    #   policy: bucket-policies/full-elb-log-bucket.json
     s3ResourcePolicyAttachments:
       - policy: bucket-policies/elb-logs-bucket.json
     lifecycleRules: []

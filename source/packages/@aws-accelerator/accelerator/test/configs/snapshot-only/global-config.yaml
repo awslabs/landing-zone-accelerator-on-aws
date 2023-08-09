@@ -51,21 +51,32 @@ logging:
   centralizedLoggingRegion: us-west-2
 
   centralLogBucket:
-    importedBucketName: existing-central-log-bucket
-    applyAcceleratorManagedPolicy: true
-    s3ResourcePolicyAttachments:
-      - policy: bucket-policies/central-log-bucket.json
-    kmsResourcePolicyAttachments:
-      - policy: kms/central-logs-bucket-key-policy.json
+    importedBucket:
+      name: existing-central-log-bucket
+      applyAcceleratorManagedBucketPolicy: false
+      createAcceleratorManagedKey: true
+    customPolicyOverrides:
+      s3Policy: bucket-policies/full-central-log-bucket.json
+      kmsPolicy: kms/full-central-logs-bucket-key-policy.json
+    # s3ResourcePolicyAttachments:
+    #   - policy: bucket-policies/central-log-bucket.json
+    # kmsResourcePolicyAttachments:
+    #   - policy: kms/central-logs-bucket-key-policy.json
     lifecycleRules: []
   accessLogBucket:
-    importedBucketName: existing-access-logs-bucket-${ACCOUNT_ID}-${REGION}
-    s3ResourcePolicyAttachments:
-      - policy: bucket-policies/access-logs-bucket.json
+    importedBucket: 
+      name: existing-access-logs-bucket-${ACCOUNT_ID}-${REGION}
+    customPolicyOverrides:
+      policy: bucket-policies/full-access-log-bucket.json
+    # s3ResourcePolicyAttachments:
+    #   - policy: bucket-policies/access-logs-bucket.json
     lifecycleRules: []
   elbLogBucket:
-    importedBucketName: existing-elb-logs-bucket-${ACCOUNT_ID}-${REGION}
-    applyAcceleratorManagedPolicy: false
+    importedBucket: 
+      name: existing-elb-logs-bucket-${ACCOUNT_ID}-${REGION}
+      applyAcceleratorManagedBucketPolicy: true
+    # customPolicyOverrides:
+    #   policy: bucket-policies/full-elb-log-bucket.json
     s3ResourcePolicyAttachments:
       - policy: bucket-policies/elb-logs-bucket.json
     lifecycleRules: []

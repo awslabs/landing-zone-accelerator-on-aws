@@ -1,0 +1,68 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "Policy from file",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "*"
+            },
+            "Action": [
+                "s3:List*"
+            ],
+            "Resource": [
+                "arn:aws:s3:::existing-elb-logs-bucket-${ACCOUNT_ID}-${REGION}",
+                "arn:aws:s3:::existing-elb-logs-bucket-${ACCOUNT_ID}-${REGION}/*"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:PrincipalOrgID": "${ORG_ID}"
+                }
+            }
+        },
+        {
+            "Sid": "Allow get acl access for SSM principal - from file",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "ssm.amazonaws.com"
+            },
+            "Action": "s3:GetBucketAcl",
+            "Resource": "arn:aws:s3:::existing-elb-logs-bucket-${ACCOUNT_ID}-${REGION}"
+        },
+        {
+            "Sid": "Allow write access for ELB Account principal - from file",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::${ACCOUNT_ID}:root"
+            },
+            "Action": "s3:PutObject",
+            "Resource": [
+                "arn:aws:s3:::existing-elb-logs-bucket-${ACCOUNT_ID}-${REGION}",
+                "arn:aws:s3:::existing-elb-logs-bucket-${ACCOUNT_ID}-${REGION}/*"
+            ]
+        },
+        {
+            "Sid": "Allow write access for delivery logging service principal - from file",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "delivery.logs.amazonaws.com"
+            },
+            "Action": "s3:PutObject",
+            "Resource": "arn:aws:s3:::existing-elb-logs-bucket-${ACCOUNT_ID}-${REGION}/*",
+            "Condition": {
+                "StringEquals": {
+                    "s3:x-amz-acl": "bucket-owner-full-control"
+                }
+            }
+        },
+        {
+            "Sid": "Allow read bucket ACL access for delivery logging service principal",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "delivery.logs.amazonaws.com"
+            },
+            "Action": "s3:GetBucketAcl",
+            "Resource": "arn:aws:s3:::existing-elb-logs-bucket-${ACCOUNT_ID}-${REGION}"
+        }        
+    ]
+  }

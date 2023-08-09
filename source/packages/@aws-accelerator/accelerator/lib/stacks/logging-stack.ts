@@ -18,7 +18,14 @@ import { Construct } from 'constructs';
 import { pascalCase } from 'pascal-case';
 import path from 'path';
 
-import { SnsTopicConfig, VpcFlowLogsConfig, CloudWatchLogsExclusionConfig } from '@aws-accelerator/config';
+import {
+  SnsTopicConfig,
+  VpcFlowLogsConfig,
+  CloudWatchLogsExclusionConfig,
+  CentralLogBucketConfig,
+  ElbLogBucketConfig,
+  AccessLogBucketConfig,
+} from '@aws-accelerator/config';
 import * as t from '@aws-accelerator/config/lib/common-types/types';
 import {
   Bucket,
@@ -32,6 +39,7 @@ import {
   CloudWatchDestination,
   CloudWatchLogsSubscriptionFilter,
   CloudWatchToS3Firehose,
+  KmsEncryption,
   NewCloudWatchLogEvent,
   S3PublicAccessBlock,
   SsmParameterLookup,
@@ -245,25 +253,22 @@ export class LoggingStack extends AcceleratorStack {
      */
     if (cdk.Stack.of(this).account === this.props.accountsConfig.getLogArchiveAccountId()) {
       const elbAccountId = this.getElbAccountId();
-      if (this.props.globalConfig.logging.elbLogBucket?.importedBucketName) {
-        const applyAcceleratorManagedPolicy =
-          this.props.globalConfig.logging.elbLogBucket.applyAcceleratorManagedPolicy ?? false;
-
+      if (this.props.globalConfig.logging.elbLogBucket?.importedBucket) {
         const bucket = this.getImportedBucket(
-          this.props.globalConfig.logging.elbLogBucket.importedBucketName,
+          this.props.globalConfig.logging.elbLogBucket.importedBucket.name,
           AcceleratorImportedBucketType.ELB_LOGS_BUCKET,
           's3',
-        );
+        ).bucket;
 
-        this.updateImportedBucketPolicy(
-          applyAcceleratorManagedPolicy,
-          bucket,
-          AcceleratorImportedBucketType.ELB_LOGS_BUCKET,
-          this.props.globalConfig.logging.elbLogBucket.s3ResourcePolicyAttachments,
+        this.updateImportedBucketResourcePolicy({
+          bucketConfig: this.props.globalConfig.logging.elbLogBucket,
+          importedBucket: bucket,
+          bucketType: AcceleratorImportedBucketType.ELB_LOGS_BUCKET,
+          overridePolicyFile: this.props.globalConfig.logging.elbLogBucket.customPolicyOverrides?.policy,
           principalOrgIdCondition,
-          undefined,
-          elbAccountId,
-        );
+          elbAccountId: elbAccountId,
+          organizationId: this.organizationId,
+        });
 
         return bucket;
       } else {
@@ -416,21 +421,20 @@ export class LoggingStack extends AcceleratorStack {
    * @returns bucket {@link cdk.aws_s3.IBucket}
    */
   private createOrGetServerAccessLogBucket(): cdk.aws_s3.IBucket {
-    if (this.props.globalConfig.logging.accessLogBucket?.importedBucketName) {
-      const applyAcceleratorManagedPolicy =
-        this.props.globalConfig.logging.accessLogBucket.applyAcceleratorManagedPolicy ?? false;
-
+    if (this.props.globalConfig.logging.accessLogBucket?.importedBucket) {
       const bucket = this.getImportedBucket(
-        this.props.globalConfig.logging.accessLogBucket.importedBucketName,
+        this.props.globalConfig.logging.accessLogBucket.importedBucket.name,
         AcceleratorImportedBucketType.SERVER_ACCESS_LOGS_BUCKET,
         's3',
-      );
-      this.updateImportedBucketPolicy(
-        applyAcceleratorManagedPolicy,
-        bucket,
-        AcceleratorImportedBucketType.SERVER_ACCESS_LOGS_BUCKET,
-        this.props.globalConfig.logging.accessLogBucket.s3ResourcePolicyAttachments,
-      );
+      ).bucket;
+
+      this.updateImportedBucketResourcePolicy({
+        bucketConfig: this.props.globalConfig.logging.accessLogBucket,
+        importedBucket: bucket,
+        bucketType: AcceleratorImportedBucketType.SERVER_ACCESS_LOGS_BUCKET,
+        overridePolicyFile: this.props.globalConfig.logging.accessLogBucket.customPolicyOverrides?.policy,
+        organizationId: this.organizationId,
+      });
 
       return bucket;
     } else {
@@ -492,7 +496,7 @@ export class LoggingStack extends AcceleratorStack {
    * All other environment stacks will need custom resource to get key arn from ssm parameter.
    */
   private getCentralLogBucketKey(): cdk.aws_kms.IKey {
-    if (this.props.globalConfig.logging.centralLogBucket?.importedBucketName) {
+    if (this.props.globalConfig.logging.centralLogBucket?.importedBucket?.name) {
       if (this.importedCentralLogBucket) {
         return this.importedCentralLogBucketKey!;
       } else {
@@ -1461,7 +1465,7 @@ export class LoggingStack extends AcceleratorStack {
     importedBucketName: string,
     bucketType: AcceleratorImportedBucketType,
     encryptionType: 'kms' | 's3',
-  ): cdk.aws_s3.IBucket {
+  ): { bucket: cdk.aws_s3.IBucket; bucketKmsArn: string | undefined } {
     // Get existing bucket
     const bucket = cdk.aws_s3.Bucket.fromBucketName(
       this,
@@ -1469,7 +1473,7 @@ export class LoggingStack extends AcceleratorStack {
       this.getBucketNameReplacement(importedBucketName),
     );
 
-    new ValidateBucket(this, pascalCase(`ValidateImported${bucketType}Bucket`), {
+    const validateBucket = new ValidateBucket(this, pascalCase(`ValidateImported${bucketType}Bucket`), {
       bucket: bucket,
       validationCheckList: ['encryption'],
       encryptionType,
@@ -1478,25 +1482,44 @@ export class LoggingStack extends AcceleratorStack {
       customResourceLambdaLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
     });
 
-    return bucket;
+    return { bucket: bucket, bucketKmsArn: validateBucket.bucketKmsArn };
+  }
+
+  private getExternalPolicyStatements(externalPolicyFilePaths: string[]): cdk.aws_iam.PolicyStatement[] {
+    const policyStatements: cdk.aws_iam.PolicyStatement[] = [];
+    for (const externalPolicyFilePath of externalPolicyFilePaths) {
+      const policyDocument = JSON.parse(
+        this.generatePolicyReplacements(externalPolicyFilePath, false, this.organizationId),
+      );
+
+      for (const statement of policyDocument.Statement) {
+        policyStatements.push(cdk.aws_iam.PolicyStatement.fromJson(statement));
+      }
+    }
+
+    return policyStatements;
   }
 
   /**
    * Function to create kms policy statements for imported bucket
+   * @param overridePolicy boolean
    * @param applyAcceleratorManagedPolicy boolean
    * @param bucketType {@link AcceleratorImportedBucketType}
-   * @param kmsResourcePolicyAttachments {@link PolicyAttachmentsType}
    * @param principalOrgIdCondition {@link PrincipalOrgIdConditionType}
    * @param centralLogsBucketPrincipalAndPrefixes {@link CentralLogsBucketPrincipalAndPrefixesType}
    * @returns policyStatements {@link cdk.aws_iam.PolicyStatement}[]
    */
-  private createImportedBucketPolicyStatements(
+  private createImportedBucketKmsPolicyStatements(
+    overridePolicy: boolean,
     applyAcceleratorManagedPolicy: boolean,
     bucketType: AcceleratorImportedBucketType,
-    kmsResourcePolicyAttachments: PolicyAttachmentsType[],
     principalOrgIdCondition: PrincipalOrgIdConditionType,
     centralLogsBucketPrincipalAndPrefixes?: CentralLogsBucketPrincipalAndPrefixesType,
   ): cdk.aws_iam.PolicyStatement[] {
+    if (overridePolicy) {
+      return [];
+    }
+
     const policyStatements: cdk.aws_iam.PolicyStatement[] = [];
 
     if (bucketType === AcceleratorImportedBucketType.CENTRAL_LOGS_BUCKET && applyAcceleratorManagedPolicy) {
@@ -1602,168 +1625,221 @@ export class LoggingStack extends AcceleratorStack {
       }
     }
 
-    for (const kmsResourcePolicyAttachment of kmsResourcePolicyAttachments) {
-      const policyDocument = JSON.parse(
+    return policyStatements;
+  }
+
+  private getExternalPolicyFilePaths(
+    overridePolicyFile?: string,
+    attachmentPolicies?: PolicyAttachmentsType[],
+  ): string[] {
+    const policyFilePaths: string[] = [];
+
+    if (overridePolicyFile) {
+      return [
         this.generatePolicyReplacements(
-          path.join(this.props.configDirPath, kmsResourcePolicyAttachment.policy),
-          false,
-          this.organizationId,
+          path.join(this.props.configDirPath, overridePolicyFile),
+          true,
+          undefined,
+          `${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}-replaced-${path.parse(overridePolicyFile).base}`,
+        ),
+      ];
+    }
+    for (const attachmentPolicy of attachmentPolicies ?? []) {
+      policyFilePaths.push(
+        this.generatePolicyReplacements(
+          path.join(this.props.configDirPath, attachmentPolicy.policy),
+          true,
+          undefined,
+          `${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}-replaced-${
+            path.parse(attachmentPolicy.policy).base
+          }`,
         ),
       );
-
-      for (const statement of policyDocument.Statement) {
-        policyStatements.push(cdk.aws_iam.PolicyStatement.fromJson(statement));
-      }
     }
 
-    return policyStatements;
+    return policyFilePaths;
   }
 
   /**
    * Function to update imported bucket encryption key
-   * @param applyAcceleratorManagedPolicy boolean
-   * @param bucketType {@link AcceleratorImportedBucketType}
-   * @param bucket {@link cdk.aws_s3.IBucket}
-   * @param principalOrgIdCondition {@link PrincipalOrgIdConditionType}
-   * @param kmsResourcePolicyAttachments {@link PolicyAttachmentsType}
-   * @param centralLogsBucketPrincipalAndPrefixes {@link CentralLogsBucketPrincipalAndPrefixesType}
-   * @param bucketKmsArnParameterName string
+   * @param options
    */
-  private updateImportedBucketEncryption(
-    applyAcceleratorManagedPolicy: boolean,
-    bucketType: AcceleratorImportedBucketType,
-    bucket: cdk.aws_s3.IBucket,
-    principalOrgIdCondition: PrincipalOrgIdConditionType,
-    kmsResourcePolicyAttachments?: PolicyAttachmentsType[],
-    centralLogsBucketPrincipalAndPrefixes?: CentralLogsBucketPrincipalAndPrefixesType,
-    bucketKmsArnParameterName?: string,
-  ) {
-    const key = new cdk.aws_kms.Key(this, pascalCase(`Imported${bucketType}BucketKey`), {
-      enableKeyRotation: true,
-      alias: this.acceleratorResourceNames.customerManagedKeys.importedCentralLogsBucket.alias,
-      description: this.acceleratorResourceNames.customerManagedKeys.importedCentralLogsBucket.description,
-    });
+  private updateImportedBucketEncryption(options: {
+    bucketConfig: CentralLogBucketConfig;
+    bucketType: AcceleratorImportedBucketType;
+    bucketItem: { bucket: cdk.aws_s3.IBucket; bucketKmsArn: string | undefined };
+    principalOrgIdCondition: PrincipalOrgIdConditionType;
+    centralLogsBucketPrincipalAndPrefixes?: CentralLogsBucketPrincipalAndPrefixesType;
+    bucketKmsArnParameterName?: string;
+    organizationId?: string;
+  }) {
+    const applyAcceleratorManagedPolicy =
+      options.bucketConfig.importedBucket!.applyAcceleratorManagedBucketPolicy ?? false;
+    const createAcceleratorManagedKey = options.bucketConfig.importedBucket!.createAcceleratorManagedKey ?? false;
+    const externalPolicyFilePaths: string[] = [];
+    let overridePolicy = false;
+    let bucketKeyArn = options.bucketItem.bucketKmsArn;
 
-    if (kmsResourcePolicyAttachments) {
-      const policyStatements = this.createImportedBucketPolicyStatements(
-        applyAcceleratorManagedPolicy,
-        bucketType,
-        kmsResourcePolicyAttachments,
-        principalOrgIdCondition,
-        centralLogsBucketPrincipalAndPrefixes,
+    if (options.bucketConfig.customPolicyOverrides?.kmsPolicy) {
+      overridePolicy = true;
+      externalPolicyFilePaths.push(
+        ...this.getExternalPolicyFilePaths(options.bucketConfig.customPolicyOverrides.kmsPolicy),
+      );
+    } else {
+      externalPolicyFilePaths.push(
+        ...this.getExternalPolicyFilePaths(undefined, options.bucketConfig.kmsResourcePolicyAttachments),
+      );
+    }
+
+    if (createAcceleratorManagedKey) {
+      const key = new cdk.aws_kms.Key(this, pascalCase(`Imported${options.bucketType}BucketKey`), {
+        enableKeyRotation: true,
+        alias: this.acceleratorResourceNames.customerManagedKeys.importedCentralLogsBucket.alias,
+        description: this.acceleratorResourceNames.customerManagedKeys.importedCentralLogsBucket.description,
+      });
+
+      bucketKeyArn = key.keyArn;
+
+      const policyStatements: cdk.aws_iam.PolicyStatement[] = [
+        ...this.getExternalPolicyStatements(externalPolicyFilePaths),
+      ];
+
+      policyStatements.push(
+        ...this.createImportedBucketKmsPolicyStatements(
+          overridePolicy,
+          applyAcceleratorManagedPolicy,
+          options.bucketType,
+          options.principalOrgIdCondition,
+          options.centralLogsBucketPrincipalAndPrefixes,
+        ),
       );
 
       for (const policyStatement of policyStatements) {
         key.addToResourcePolicy(policyStatement);
       }
+
+      // Set bucket encryption with accelerator created key
+      new BucketEncryption(this, pascalCase(`Imported${options.bucketType}BucketEncryption`), {
+        bucket: options.bucketItem.bucket,
+        kmsKey: key,
+        customResourceLambdaEnvironmentEncryptionKmsKey: this.lambdaKey,
+        customResourceLambdaCloudWatchLogKmsKey: this.cloudwatchKey,
+        customResourceLambdaLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+      });
+    } else {
+      if (externalPolicyFilePaths.length > 0 && options.bucketItem.bucketKmsArn) {
+        // Update imported bucket kms policy
+        new KmsEncryption(this, pascalCase(`Imported${options.bucketType}BucketKmsEncryption`), {
+          kmsArn: options.bucketItem.bucketKmsArn,
+          policyFilePaths: externalPolicyFilePaths,
+          organizationId: options.organizationId,
+          customResourceLambdaEnvironmentEncryptionKmsKey: this.lambdaKey,
+          customResourceLambdaCloudWatchLogKmsKey: this.cloudwatchKey,
+          customResourceLambdaLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+        });
+      }
     }
 
-    new BucketEncryption(this, pascalCase(`Imported${bucketType}BucketEncryption`), {
-      bucket: bucket,
-      kmsKey: key,
-      customResourceLambdaEnvironmentEncryptionKmsKey: this.lambdaKey,
-      customResourceLambdaCloudWatchLogKmsKey: this.cloudwatchKey,
-      customResourceLambdaLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-    });
-
-    if (bucketKmsArnParameterName && bucketType === AcceleratorImportedBucketType.CENTRAL_LOGS_BUCKET) {
+    if (options.bucketKmsArnParameterName && options.bucketType === AcceleratorImportedBucketType.CENTRAL_LOGS_BUCKET) {
       // Store existing central log bucket's encryption key arn in ssm parameter for future usage,
       // parameter will be created in every account central logging region only
-      new PutSsmParameter(this, pascalCase(`PutImported${bucketType}BucketKmsArnParameter`), {
-        accountIds: this.getActiveAccountIds(),
-        region: cdk.Stack.of(this).region,
+      new PutSsmParameter(this, pascalCase(`PutImported${options.bucketType}BucketKmsArnParameter`), {
+        accountIds: [this.props.accountsConfig.getLogArchiveAccountId()],
+        region: this.props.centralizedLoggingRegion,
         roleName: this.acceleratorResourceNames.roles.crossAccountSsmParameterShare,
         kmsKey: this.cloudwatchKey,
         logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
         parameters: [
           {
-            name: bucketKmsArnParameterName,
-            value: key.keyArn,
+            name: options.bucketKmsArnParameterName,
+            value: bucketKeyArn!,
           },
         ],
         invokingAccountId: cdk.Stack.of(this).account,
         acceleratorPrefix: this.props.prefixes.accelerator,
       });
 
-      this.importedCentralLogBucketKey = cdk.aws_kms.Key.fromKeyArn(this, 'ImportedCentralLogsBucketKey', key.keyArn);
+      this.importedCentralLogBucketKey = cdk.aws_kms.Key.fromKeyArn(
+        this,
+        'ImportedCentralLogsBucketKey',
+        bucketKeyArn!,
+      );
     }
   }
 
   /**
-   * Function to update imported bucket's policy
+   * Function to update imported bucket's resource policy
    * @param applyAcceleratorManagedPolicy boolean
    * @param importedBucket {@link cdk.aws_s3.IBucket}
    * @param bucketType {@link AcceleratorImportedBucketType}
+   * @param overridePolicyFile string
    * @param s3ResourcePolicyAttachments {@link PolicyAttachmentsType}[]
    * @param principalOrgIdCondition {@link PrincipalOrgIdConditionType}
    * @param centralLogsBucketPrincipalAndPrefixes {@link CentralLogsBucketPrincipalAndPrefixesType}
    * @param elbAccountId string
    */
-  private updateImportedBucketPolicy(
-    applyAcceleratorManagedPolicy: boolean,
-    importedBucket: cdk.aws_s3.IBucket,
-    bucketType: AcceleratorImportedBucketType,
-    s3ResourcePolicyAttachments?: PolicyAttachmentsType[],
-    principalOrgIdCondition?: PrincipalOrgIdConditionType,
-    centralLogsBucketPrincipalAndPrefixes?: CentralLogsBucketPrincipalAndPrefixesType,
-    elbAccountId?: string,
-  ) {
-    const bucketPolicyFilePaths: string[] = [];
+  private updateImportedBucketResourcePolicy(options: {
+    bucketConfig: CentralLogBucketConfig | ElbLogBucketConfig | AccessLogBucketConfig;
+    importedBucket: cdk.aws_s3.IBucket;
+    bucketType: AcceleratorImportedBucketType;
+    overridePolicyFile?: string;
+    principalOrgIdCondition?: PrincipalOrgIdConditionType;
+    centralLogsBucketPrincipalAndPrefixes?: CentralLogsBucketPrincipalAndPrefixesType;
+    elbAccountId?: string;
+    organizationId?: string;
+  }) {
+    const externalPolicyFilePaths: string[] = [];
+    let attachmentPolicyFiles: PolicyAttachmentsType[] | undefined;
 
-    for (const s3ResourcePolicyAttachment of s3ResourcePolicyAttachments ?? []) {
-      bucketPolicyFilePaths.push(
-        this.generatePolicyReplacements(
-          path.join(this.props.configDirPath, s3ResourcePolicyAttachment.policy),
-          true,
-          undefined,
-          `${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}-replaced-${
-            path.parse(s3ResourcePolicyAttachment.policy).base
-          }`,
-        ),
-      );
+    if (!options.overridePolicyFile) {
+      attachmentPolicyFiles = options.bucketConfig.s3ResourcePolicyAttachments;
     }
 
-    const organizationId = this.organizationId;
+    externalPolicyFilePaths.push(...this.getExternalPolicyFilePaths(options.overridePolicyFile, attachmentPolicyFiles));
+
+    const applyAcceleratorManagedPolicy =
+      options.bucketConfig.importedBucket!.applyAcceleratorManagedBucketPolicy ?? false;
+
     let props: BucketPolicyProps = {
       bucketType: AcceleratorImportedBucketType.SERVER_ACCESS_LOGS_BUCKET,
       applyAcceleratorManagedPolicy,
-      bucket: importedBucket,
-      bucketPolicyFilePaths,
+      bucket: options.importedBucket,
+      bucketPolicyFilePaths: externalPolicyFilePaths,
       customResourceLambdaEnvironmentEncryptionKmsKey: this.lambdaKey,
       customResourceLambdaCloudWatchLogKmsKey: this.cloudwatchKey,
       customResourceLambdaLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
     };
 
-    if (bucketType === AcceleratorImportedBucketType.CENTRAL_LOGS_BUCKET) {
+    if (options.bucketType === AcceleratorImportedBucketType.CENTRAL_LOGS_BUCKET) {
       props = {
         bucketType: AcceleratorImportedBucketType.CENTRAL_LOGS_BUCKET,
         applyAcceleratorManagedPolicy,
-        bucket: importedBucket,
-        bucketPolicyFilePaths,
-        principalOrgIdCondition,
-        awsPrincipalAccesses: centralLogsBucketPrincipalAndPrefixes!.awsPrincipalAccesses,
-        organizationId,
+        bucket: options.importedBucket,
+        bucketPolicyFilePaths: externalPolicyFilePaths,
+        principalOrgIdCondition: options.principalOrgIdCondition,
+        awsPrincipalAccesses: options.centralLogsBucketPrincipalAndPrefixes!.awsPrincipalAccesses,
+        organizationId: options.organizationId,
         customResourceLambdaEnvironmentEncryptionKmsKey: this.lambdaKey,
         customResourceLambdaCloudWatchLogKmsKey: this.cloudwatchKey,
         customResourceLambdaLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
       };
     }
 
-    if (bucketType === AcceleratorImportedBucketType.ELB_LOGS_BUCKET) {
+    if (options.bucketType === AcceleratorImportedBucketType.ELB_LOGS_BUCKET) {
       props = {
         bucketType: AcceleratorImportedBucketType.ELB_LOGS_BUCKET,
         applyAcceleratorManagedPolicy,
-        bucket: importedBucket,
-        bucketPolicyFilePaths,
-        principalOrgIdCondition,
-        organizationId,
-        elbAccountId,
+        bucket: options.importedBucket,
+        bucketPolicyFilePaths: externalPolicyFilePaths,
+        principalOrgIdCondition: options.principalOrgIdCondition,
+        organizationId: options.organizationId,
+        elbAccountId: options.elbAccountId,
         customResourceLambdaEnvironmentEncryptionKmsKey: this.lambdaKey,
         customResourceLambdaCloudWatchLogKmsKey: this.cloudwatchKey,
         customResourceLambdaLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
       };
     }
-    new BucketPolicy(this, pascalCase(`Imported${bucketType}BucketPolicy`), props);
+    new BucketPolicy(this, pascalCase(`Imported${options.bucketType}BucketPolicy`), props);
   }
 
   /**
@@ -1784,34 +1860,33 @@ export class LoggingStack extends AcceleratorStack {
     ) {
       const centralLogsBucketPrincipalAndPrefixes = this.createCentralLogsBucketPrincipalAndPrefixes();
 
-      if (this.props.globalConfig.logging.centralLogBucket?.importedBucketName) {
-        const applyAcceleratorManagedPolicy =
-          this.props.globalConfig.logging.centralLogBucket.applyAcceleratorManagedPolicy ?? false;
-
-        this.importedCentralLogBucket = this.getImportedBucket(
-          this.props.globalConfig.logging.centralLogBucket.importedBucketName,
+      if (this.props.globalConfig.logging.centralLogBucket?.importedBucket) {
+        const importedBucketItem = this.getImportedBucket(
+          this.props.globalConfig.logging.centralLogBucket.importedBucket.name,
           AcceleratorImportedBucketType.CENTRAL_LOGS_BUCKET,
           'kms',
         );
+        this.importedCentralLogBucket = importedBucketItem.bucket;
 
-        this.updateImportedBucketEncryption(
-          applyAcceleratorManagedPolicy,
-          AcceleratorImportedBucketType.CENTRAL_LOGS_BUCKET,
-          this.importedCentralLogBucket,
-          principalOrgIdCondition,
-          this.props.globalConfig.logging.centralLogBucket.kmsResourcePolicyAttachments,
-          centralLogsBucketPrincipalAndPrefixes,
-          this.acceleratorResourceNames.parameters.importedCentralLogBucketCmkArn,
-        );
-
-        this.updateImportedBucketPolicy(
-          applyAcceleratorManagedPolicy,
-          this.importedCentralLogBucket,
-          AcceleratorImportedBucketType.CENTRAL_LOGS_BUCKET,
-          this.props.globalConfig.logging.centralLogBucket.s3ResourcePolicyAttachments,
+        this.updateImportedBucketEncryption({
+          bucketConfig: this.props.globalConfig.logging.centralLogBucket,
+          bucketType: AcceleratorImportedBucketType.CENTRAL_LOGS_BUCKET,
+          bucketItem: importedBucketItem,
           principalOrgIdCondition,
           centralLogsBucketPrincipalAndPrefixes,
-        );
+          bucketKmsArnParameterName: this.acceleratorResourceNames.parameters.importedCentralLogBucketCmkArn,
+          organizationId: this.organizationId,
+        });
+
+        this.updateImportedBucketResourcePolicy({
+          bucketConfig: this.props.globalConfig.logging.centralLogBucket,
+          importedBucket: this.importedCentralLogBucket,
+          bucketType: AcceleratorImportedBucketType.CENTRAL_LOGS_BUCKET,
+          overridePolicyFile: this.props.globalConfig.logging.centralLogBucket.customPolicyOverrides?.s3Policy,
+          principalOrgIdCondition,
+          centralLogsBucketPrincipalAndPrefixes,
+          organizationId: this.organizationId,
+        });
 
         this.createImportedLogBucketPrefixes(
           this.importedCentralLogBucket,

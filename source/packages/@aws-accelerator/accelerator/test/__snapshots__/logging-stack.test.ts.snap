@@ -2627,7 +2627,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
-        "applyAcceleratorManagedPolicy": false,
+        "applyAcceleratorManagedPolicy": true,
         "bucketArn": {
           "Fn::Join": [
             "",

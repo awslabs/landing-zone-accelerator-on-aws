@@ -14,20 +14,24 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as path from 'path';
+import * as fs from 'fs';
 import { LzaCustomResource } from '../lza-custom-resource';
-
 /**
- * Initialized BucketEncryptionProps properties
+ * Initialized KmsEncryptionProps properties
  */
-export interface BucketEncryptionProps {
+export interface KmsEncryptionProps {
   /**
-   * Bucket where resource policy will be applied
+   * Sets the key policy on the specified KMS key arn
    */
-  readonly bucket: cdk.aws_s3.IBucket;
+  readonly kmsArn: string;
   /**
-   * Bucket Encryption Key
+   * JSON document policy file paths.
    */
-  readonly kmsKey: cdk.aws_kms.IKey;
+  readonly policyFilePaths: string[];
+  /**
+   * Organization Id
+   */
+  readonly organizationId?: string;
   /**
    * Custom resource lambda environment encryption key
    */
@@ -43,38 +47,51 @@ export interface BucketEncryptionProps {
 }
 
 /**
- * Class for BucketEncryption
+ * Class for KmsEncryption
  */
-export class BucketEncryption extends Construct {
-  constructor(scope: Construct, id: string, props: BucketEncryptionProps) {
+export class KmsEncryption extends Construct {
+  private assetPath: string;
+  constructor(scope: Construct, id: string, props: KmsEncryptionProps) {
     super(scope, id);
 
-    const resourceName = 'BucketEncryption';
-    const assetPath = path.join(__dirname, 'put-bucket-encryption/dist');
+    const resourceName = 'KmsEncryption';
+    this.assetPath = path.join(__dirname, 'put-key-policy/dist');
+    const policyFolderName = 'kms-policy';
+    fs.mkdirSync(path.join(this.assetPath, policyFolderName), { recursive: true });
+
+    const policyFilePaths: string[] = [];
+
+    for (const policyFilePath of props.policyFilePaths ?? []) {
+      const policyFileName = path.parse(policyFilePath).base;
+      fs.copyFileSync(policyFilePath, path.join(this.assetPath, policyFolderName, policyFileName));
+      policyFilePaths.push(`${policyFolderName}/${policyFileName}`);
+    }
 
     new LzaCustomResource(this, resourceName, {
       resource: {
         name: resourceName,
         parentId: id,
         properties: [
-          { bucketName: props.bucket.bucketName },
+          { sourceAccount: cdk.Stack.of(this).account },
+          { kmsArn: props.kmsArn },
           {
-            kmsKeyArn: props.kmsKey.keyArn,
+            policyFilePaths: policyFilePaths,
           },
+          { organizationId: props.organizationId },
         ],
+        forceUpdate: true,
       },
       lambda: {
-        assetPath,
+        assetPath: this.assetPath,
         environmentEncryptionKmsKey: props.customResourceLambdaEnvironmentEncryptionKmsKey,
         cloudWatchLogKmsKey: props.customResourceLambdaCloudWatchLogKmsKey,
         cloudWatchLogRetentionInDays: props.customResourceLambdaLogRetentionInDays,
         timeOut: cdk.Duration.minutes(5),
-        cloudWatchLogRemovalPolicy: cdk.RemovalPolicy.RETAIN,
         roleInitialPolicy: [
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
-            actions: ['s3:PutEncryptionConfiguration'],
-            resources: [props.bucket.bucketArn],
+            actions: ['kms:PutKeyPolicy'],
+            resources: [props.kmsArn],
           }),
         ],
       },

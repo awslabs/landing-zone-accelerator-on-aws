@@ -1,0 +1,199 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "deny-insecure-connections - From file",
+            "Effect": "Deny",
+            "Principal": {
+                "AWS": "*"
+            },
+            "Action": "s3:*",
+            "Resource": [
+                "arn:aws:s3:::existing-central-log-bucket",
+                "arn:aws:s3:::existing-central-log-bucket/*"
+            ],
+            "Condition": {
+                "Bool": {
+                    "aws:SecureTransport": "false"
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "Service": [
+                    "ssm.amazonaws.com",
+                    "delivery.logs.amazonaws.com",
+                    "config.amazonaws.com",
+                    "cloudtrail.amazonaws.com"
+                ]
+            },
+            "Action": "s3:PutObject",
+            "Resource": "arn:aws:s3:::existing-central-log-bucket/*",
+            "Condition": {
+                "StringEquals": {
+                    "s3:x-amz-acl": "bucket-owner-full-control"
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "Service": [
+                    "delivery.logs.amazonaws.com",
+                    "cloudtrail.amazonaws.com",
+                    "config.amazonaws.com"
+                ]
+            },
+            "Action": [
+                "s3:GetBucketAcl",
+                "s3:ListBucket"
+            ],
+            "Resource": "arn:aws:s3:::existing-central-log-bucket"
+        },
+        {
+            "Sid": "Allow Organization principals to use the bucket - From file",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "*"
+            },
+            "Action": [
+                "s3:GetBucketLocation",
+                "s3:GetBucketAcl",
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:ListBucket"
+            ],
+            "Resource": [
+                "arn:aws:s3:::existing-central-log-bucket",
+                "arn:aws:s3:::existing-central-log-bucket/*"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:PrincipalOrgID": "${ORG_ID}"
+                }
+            }
+        },
+        {
+            "Sid": "Allow Organization use of the bucket for replication - From file",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "*"
+            },
+            "Action": [
+                "s3:List*",
+                "s3:GetBucketVersioning",
+                "s3:PutBucketVersioning",
+                "s3:ReplicateDelete",
+                "s3:ReplicateObject",
+                "s3:ObjectOwnerOverrideToBucketOwner"
+            ],
+            "Resource": [
+                "arn:aws:s3:::existing-central-log-bucket",
+                "arn:aws:s3:::existing-central-log-bucket/*"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:PrincipalOrgID": "${ORG_ID}"
+                }
+            }
+        },
+        {
+            "Sid": "Allow read write access for Macie service principal - From file",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "macie.amazonaws.com"
+            },
+            "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*"
+            ],
+            "Resource": [
+                "arn:aws:s3:::existing-central-log-bucket",
+                "arn:aws:s3:::existing-central-log-bucket/*"
+            ]
+        },
+        {
+            "Sid": "Allow read write access for Guardduty service principal - From file",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "guardduty.amazonaws.com"
+            },
+            "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*"
+            ],
+            "Resource": [
+                "arn:aws:s3:::existing-central-log-bucket",
+                "arn:aws:s3:::existing-central-log-bucket/*"
+            ]
+        },
+        {
+            "Sid": "Allow Organization principals to put objects - From file",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "*"
+            },
+            "Action": [
+                "s3:PutObjectAcl",
+                "s3:PutObject"
+            ],
+            "Resource": "arn:aws:s3:::existing-central-log-bucket/*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:PrincipalOrgID": "${ORG_ID}"
+                }
+            }
+        },
+        {
+            "Sid": "Allow Organization principals to get encryption context and acl - From file",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "*"
+            },
+            "Action": [
+                "s3:GetEncryptionConfiguration",
+                "s3:GetBucketAcl"
+            ],
+            "Resource": "arn:aws:s3:::existing-central-log-bucket",
+            "Condition": {
+                "StringEquals": {
+                    "aws:PrincipalOrgID": "${ORG_ID}"
+                }
+            }
+        },
+        {
+            "Sid": "This is from policy file - From file",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "*"
+            },
+            "Action": "s3:List*",
+            "Resource": [
+                "arn:aws:s3:::existing-central-log-bucket",
+                "arn:aws:s3:::existing-central-log-bucket/*"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:PrincipalOrgID": "${ORG_ID}"
+                }
+            }
+        }
+    ]
+}

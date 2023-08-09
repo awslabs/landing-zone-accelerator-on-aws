@@ -50,7 +50,7 @@ export interface ValidateBucketProps {
  * Class for ValidateBucket
  */
 export class ValidateBucket extends Construct {
-  public bucketKmsArn: string;
+  public bucketKmsArn: string | undefined;
   constructor(scope: Construct, id: string, props: ValidateBucketProps) {
     super(scope, id);
 
@@ -83,6 +83,8 @@ export class ValidateBucket extends Construct {
       },
     });
 
-    this.bucketKmsArn = lzaCustomResource.resource.getAtt('bucketKmsArn').toString();
+    if (props.encryptionType === 'kms') {
+      this.bucketKmsArn = lzaCustomResource.resource.getAtt('bucketKmsArn').toString();
+    }
   }
 }
