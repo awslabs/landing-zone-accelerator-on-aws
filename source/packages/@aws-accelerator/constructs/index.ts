@@ -85,6 +85,7 @@ export * from './lib/aws-identitystore/users-groups-metadata';
 export * from './lib/aws-firehose/cloudwatch-to-s3-firehose';
 export * from './lib/aws-fms/fms-notification-channel';
 export * from './lib/aws-fms/fms-organization-admin-account';
+export * from './lib/aws-kms/key-encryption';
 export * from './lib/aws-kms/key-lookup';
 export * from './lib/aws-macie/macie-export-config-classification';
 export * from './lib/aws-macie/macie-members';

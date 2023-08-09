@@ -61,20 +61,29 @@ export class GlobalConfigValidator {
     // budget notification email validation
     //
     this.validateBudgetNotificationEmailIds(values, errors);
-    //
-    // Validate ElbLogs bucket policies.
-    //
-    this.validateElbLogBucketPolicies(values, errors);
+
     //
     // Validate CentralLogs bucket policies.
     //
-    this.validateCentralLogsBucketPolicies(values, errors);
+    this.validateImportedCentralLogsBucketPolicies(configDir, values, errors);
+    //
+    // Validate CentralLogs bucket encryption policies.
+    //
+    this.validateImportedCentralLogsBucketKmsPolicies(configDir, values, errors);
     //
     // lifecycle rule expiration validation
     //
     this.validateLifecycleRuleExpirationForCentralLogBucket(values, errors);
     this.validateLifecycleRuleExpirationForAccessLogBucket(values, errors);
     this.validateLifecycleRuleExpirationForReports(values, errors);
+    //
+    // Validate Imported ELB logs bucket resource policies
+    //
+    this.validateImportedElbLogsBucketPolicies(configDir, values, errors);
+    //
+    // Validate Imported Access logs bucket resource policies
+    //
+    this.validateImportedAccessLogsBucketPolicies(configDir, values, errors);
     //
     // validate cloudwatch logging
     //
@@ -230,52 +239,180 @@ export class GlobalConfigValidator {
   }
 
   /**
-   * Function to validate CentralLogs bucket policy
+   * Function to validate imported AccessLogs bucket policies
+   * @param configDir string
    * @param values {@link GlobalConfig}
    * @param errors string[]
    * @returns
    */
-  private validateCentralLogsBucketPolicies(values: GlobalConfig, errors: string[]) {
-    if (!values.logging.centralLogBucket) {
+  private validateImportedAccessLogsBucketPolicies(configDir: string, values: GlobalConfig, errors: string[]) {
+    if (!values.logging.accessLogBucket) {
       return;
     }
-    const importedBucketName = values.logging.centralLogBucket.importedBucketName;
 
-    if (!importedBucketName) {
-      const applyAcceleratorManagedPolicy = values.logging.centralLogBucket.applyAcceleratorManagedPolicy ?? true;
-      if (!applyAcceleratorManagedPolicy) {
-        if (
-          !values.logging.centralLogBucket.s3ResourcePolicyAttachments ||
-          !values.logging.centralLogBucket.kmsResourcePolicyAttachments
-        ) {
-          errors.push(
-            `Accelerator deployed CentralLogs bucket must have applyAcceleratorManagedPolicy set to true or provide external policy through s3ResourcePolicyAttachments and kmsResourcePolicyAttachments.`,
-          );
-        }
+    const accessLogBucketItem = values.logging.accessLogBucket;
+    const importedBucketItem = accessLogBucketItem.importedBucket;
+
+    if (importedBucketItem && accessLogBucketItem.customPolicyOverrides?.policy) {
+      if (!fs.existsSync(path.join(configDir, accessLogBucketItem.customPolicyOverrides?.policy))) {
+        errors.push(
+          `AccessLogs bucket custom policy overrides file ${accessLogBucketItem.customPolicyOverrides?.policy} not found !!!`,
+        );
+      }
+
+      if (importedBucketItem.applyAcceleratorManagedBucketPolicy) {
+        errors.push(
+          `Imported AccessLogs bucket with customPolicyOverrides.policy can not have applyAcceleratorManagedPolicy set to true.`,
+        );
+      }
+      if (accessLogBucketItem.s3ResourcePolicyAttachments) {
+        errors.push(
+          `Imported AccessLogs bucket with customPolicyOverrides.policy can not have s3ResourcePolicyAttachments.`,
+        );
+      }
+    }
+
+    for (const s3ResourcePolicyAttachment of accessLogBucketItem.s3ResourcePolicyAttachments ?? []) {
+      if (!fs.existsSync(path.join(configDir, s3ResourcePolicyAttachment.policy))) {
+        errors.push(
+          `AccessLogs bucket resource policy attachment file ${s3ResourcePolicyAttachment.policy} not found !!!`,
+        );
       }
     }
   }
 
   /**
-   * Function to validate ElbLog bucket policy
+   * Function to validate imported ElbLogs bucket policies
+   * @param configDir string
    * @param values {@link GlobalConfig}
    * @param errors string[]
    * @returns
    */
-  private validateElbLogBucketPolicies(values: GlobalConfig, errors: string[]) {
+  private validateImportedElbLogsBucketPolicies(configDir: string, values: GlobalConfig, errors: string[]) {
     if (!values.logging.elbLogBucket) {
       return;
     }
-    const importedBucketName = values.logging.elbLogBucket.importedBucketName;
 
-    if (!importedBucketName) {
-      const applyAcceleratorManagedPolicy = values.logging.elbLogBucket.applyAcceleratorManagedPolicy ?? true;
-      if (!applyAcceleratorManagedPolicy) {
-        if (!values.logging.elbLogBucket.s3ResourcePolicyAttachments) {
-          errors.push(
-            `Accelerator deployed CentralLogs bucket must have applyAcceleratorManagedPolicy set to true or provide external policy through s3ResourcePolicyAttachments.`,
-          );
-        }
+    const elbLogBucketItem = values.logging.elbLogBucket;
+    const importedBucketItem = elbLogBucketItem.importedBucket;
+
+    if (importedBucketItem && elbLogBucketItem.customPolicyOverrides?.policy) {
+      if (!fs.existsSync(path.join(configDir, elbLogBucketItem.customPolicyOverrides?.policy))) {
+        errors.push(
+          `ElbLogs bucket custom policy overrides file ${elbLogBucketItem.customPolicyOverrides?.policy} not found !!!`,
+        );
+      }
+
+      if (importedBucketItem.applyAcceleratorManagedBucketPolicy) {
+        errors.push(
+          `Imported ElbLogs bucket with customPolicyOverrides.policy can not have applyAcceleratorManagedPolicy set to true.`,
+        );
+      }
+      if (elbLogBucketItem.s3ResourcePolicyAttachments) {
+        errors.push(
+          `Imported ElbLogs bucket with customPolicyOverrides.policy can not have s3ResourcePolicyAttachments.`,
+        );
+      }
+    }
+
+    for (const s3ResourcePolicyAttachment of elbLogBucketItem.s3ResourcePolicyAttachments ?? []) {
+      if (!fs.existsSync(path.join(configDir, s3ResourcePolicyAttachment.policy))) {
+        errors.push(
+          `ElbLogs bucket resource policy attachment file ${s3ResourcePolicyAttachment.policy} not found !!!`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Function to validate imported CentralLogs bucket policies
+   * @param configDir string
+   * @param values {@link GlobalConfig}
+   * @param errors string[]
+   * @returns
+   */
+  private validateImportedCentralLogsBucketPolicies(configDir: string, values: GlobalConfig, errors: string[]) {
+    if (!values.logging.centralLogBucket) {
+      return;
+    }
+
+    const centralLogBucketItem = values.logging.centralLogBucket;
+    const importedBucketItem = centralLogBucketItem.importedBucket;
+
+    if (importedBucketItem && centralLogBucketItem.customPolicyOverrides?.s3Policy) {
+      if (!fs.existsSync(path.join(configDir, centralLogBucketItem.customPolicyOverrides.s3Policy))) {
+        errors.push(
+          `CentralLogs bucket custom policy overrides file ${centralLogBucketItem.customPolicyOverrides.s3Policy} not found !!!`,
+        );
+      }
+
+      if (importedBucketItem.applyAcceleratorManagedBucketPolicy) {
+        errors.push(
+          `Imported CentralLogs bucket with customPolicyOverrides.s3Policy can not have applyAcceleratorManagedPolicy set to true.`,
+        );
+      }
+      if (centralLogBucketItem.s3ResourcePolicyAttachments) {
+        errors.push(
+          `Imported CentralLogs bucket with customPolicyOverrides.s3Policy can not have s3ResourcePolicyAttachments.`,
+        );
+      }
+    }
+
+    for (const s3ResourcePolicyAttachment of centralLogBucketItem.s3ResourcePolicyAttachments ?? []) {
+      if (!fs.existsSync(path.join(configDir, s3ResourcePolicyAttachment.policy))) {
+        errors.push(
+          `CentralLogs bucket resource policy attachment file ${s3ResourcePolicyAttachment.policy} not found !!!`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Function to validate imported CentralLogs bucket kms policies
+   * @param configDir string
+   * @param values {@link GlobalConfig}
+   * @param errors string[]
+   * @returns
+   */
+  private validateImportedCentralLogsBucketKmsPolicies(configDir: string, values: GlobalConfig, errors: string[]) {
+    if (!values.logging.centralLogBucket) {
+      return;
+    }
+
+    const centralLogBucketItem = values.logging.centralLogBucket;
+    const importedBucketItem = centralLogBucketItem.importedBucket;
+
+    if (!importedBucketItem) {
+      return;
+    }
+
+    const createAcceleratorManagedKey = importedBucketItem.createAcceleratorManagedKey ?? false;
+
+    if (centralLogBucketItem.customPolicyOverrides?.kmsPolicy) {
+      if (!fs.existsSync(path.join(configDir, centralLogBucketItem.customPolicyOverrides.kmsPolicy))) {
+        errors.push(
+          `CentralLogs bucket encryption custom policy overrides file ${centralLogBucketItem.customPolicyOverrides.kmsPolicy} not found !!!`,
+        );
+      }
+
+      if (centralLogBucketItem.kmsResourcePolicyAttachments) {
+        errors.push(
+          `Imported CentralLogs bucket with customPolicyOverrides.kmsPolicy can not have policy attachments through centralLogBucketItem.kmsResourcePolicyAttachments.`,
+        );
+      }
+    }
+
+    if (!createAcceleratorManagedKey && centralLogBucketItem.kmsResourcePolicyAttachments) {
+      errors.push(
+        `Imported CentralLogs bucket with createAcceleratorManagedKey set to false can not have policy attachments through centralLogBucketItem.kmsResourcePolicyAttachments. Accelerator will not be able to attach policies for the bucket key not created by solution.`,
+      );
+    }
+
+    for (const kmsResourcePolicyAttachment of centralLogBucketItem.kmsResourcePolicyAttachments ?? []) {
+      if (!fs.existsSync(path.join(configDir, kmsResourcePolicyAttachment.policy))) {
+        errors.push(
+          `CentralLogs bucket encryption policy attachment file ${kmsResourcePolicyAttachment.policy} not found !!!`,
+        );
       }
     }
   }

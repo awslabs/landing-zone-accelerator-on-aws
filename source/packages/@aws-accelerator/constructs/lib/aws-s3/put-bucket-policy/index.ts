@@ -71,7 +71,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 
         let replacedPolicyString = generatedPolicyString;
         if (organizationId) {
-          replacedPolicyString = generatedPolicyString.replace('${ORG_ID}', organizationId);
+          replacedPolicyString = generatedPolicyString.replace(/\${ORG_ID}/g, organizationId);
         }
 
         await throttlingBackOff(() =>
@@ -106,229 +106,231 @@ function generateBucketPolicy(
   const policyStatements: PolicyStatementType[] = [];
 
   if (applyAcceleratorManagedPolicy === 'true') {
-    if (bucketType === AcceleratorImportedBucketType.CENTRAL_LOGS_BUCKET) {
-      policyStatements.push({
-        Sid: 'deny-insecure-connections',
-        Effect: 'Deny',
-        Principal: {
-          AWS: '*',
-        },
-        Action: 's3:*',
-        Resource: [bucketArn, `${bucketArn}/*`],
-        Condition: {
-          Bool: {
-            'aws:SecureTransport': 'false',
+    switch (bucketType) {
+      case AcceleratorImportedBucketType.CENTRAL_LOGS_BUCKET:
+        policyStatements.push({
+          Sid: 'deny-insecure-connections',
+          Effect: 'Deny',
+          Principal: {
+            AWS: '*',
           },
-        },
-      });
-
-      policyStatements.push({
-        Effect: 'Allow',
-        Principal: {
-          Service: [
-            'cloudtrail.amazonaws.com',
-            'config.amazonaws.com',
-            'delivery.logs.amazonaws.com',
-            'ssm.amazonaws.com',
-          ],
-        },
-        Action: 's3:PutObject',
-        Resource: [`${bucketArn}/*`],
-        Condition: {
-          StringEquals: {
-            's3:x-amz-acl': 'bucket-owner-full-control',
+          Action: 's3:*',
+          Resource: [bucketArn, `${bucketArn}/*`],
+          Condition: {
+            Bool: {
+              'aws:SecureTransport': 'false',
+            },
           },
-        },
-      });
+        });
 
-      policyStatements.push({
-        Effect: 'Allow',
-        Principal: {
-          Service: ['cloudtrail.amazonaws.com', 'config.amazonaws.com', 'delivery.logs.amazonaws.com'],
-        },
-        Action: ['s3:GetBucketAcl', 's3:ListBucket'],
-        Resource: [bucketArn],
-      });
-
-      policyStatements.push({
-        Sid: 'Allow Organization principals to use the bucket',
-        Effect: 'Allow',
-        Principal: {
-          AWS: '*',
-        },
-        Action: ['s3:GetBucketLocation', 's3:GetBucketAcl', 's3:PutObject', 's3:GetObject', 's3:ListBucket'],
-        Resource: [bucketArn, `${bucketArn}/*`],
-        Condition: {
-          StringEquals: {
-            ...principalOrgIdCondition,
-          },
-        },
-      });
-
-      policyStatements.push({
-        Sid: 'Allow Organization use of the bucket for replication',
-        Effect: 'Allow',
-        Action: [
-          's3:List*',
-          's3:GetBucketVersioning',
-          's3:PutBucketVersioning',
-          's3:ReplicateDelete',
-          's3:ReplicateObject',
-          's3:ObjectOwnerOverrideToBucketOwner',
-        ],
-        Principal: {
-          AWS: '*',
-        },
-        Resource: [bucketArn, `${bucketArn}/*`],
-        Condition: {
-          StringEquals: {
-            ...principalOrgIdCondition,
-          },
-        },
-      });
-
-      awsPrincipalAccesses?.forEach(item => {
-        if (item.name === 'SessionManager') {
-          policyStatements.push({
-            Sid: 'Allow Organization principals to put objects',
-            Effect: 'Allow',
-            Action: ['s3:PutObjectAcl', 's3:PutObject'],
-            Principal: {
-              AWS: '*',
-            },
-            Resource: [`${bucketArn}/*`],
-            Condition: {
-              StringEquals: {
-                ...principalOrgIdCondition,
-              },
-            },
-          });
-
-          policyStatements.push({
-            Sid: 'Allow Organization principals to get encryption context and acl',
-            Effect: 'Allow',
-            Action: ['s3:GetEncryptionConfiguration', 's3:GetBucketAcl'],
-            Principal: {
-              AWS: '*',
-            },
-            Resource: [bucketArn],
-            Condition: {
-              StringEquals: {
-                ...principalOrgIdCondition,
-              },
-            },
-          });
-        } else {
-          policyStatements.push({
-            Sid: `Allow read write access for ${item.name} service principal`,
-            Effect: 'Allow',
-            Action: [
-              's3:GetObject*',
-              's3:GetBucket*',
-              's3:List*',
-              's3:DeleteObject*',
-              's3:PutObject',
-              's3:PutObjectLegalHold',
-              's3:PutObjectRetention',
-              's3:PutObjectTagging',
-              's3:PutObjectVersionTagging',
-              's3:Abort*',
+        policyStatements.push({
+          Effect: 'Allow',
+          Principal: {
+            Service: [
+              'cloudtrail.amazonaws.com',
+              'config.amazonaws.com',
+              'delivery.logs.amazonaws.com',
+              'ssm.amazonaws.com',
             ],
-            Principal: {
-              Service: [item.principal],
+          },
+          Action: 's3:PutObject',
+          Resource: [`${bucketArn}/*`],
+          Condition: {
+            StringEquals: {
+              's3:x-amz-acl': 'bucket-owner-full-control',
             },
-            Resource: [bucketArn, `${bucketArn}/*`],
-          });
-        }
-      });
-    }
+          },
+        });
 
-    if (bucketType === AcceleratorImportedBucketType.ELB_LOGS_BUCKET) {
-      let elbPrincipal: PrincipalOrgIdConditionType = {
-        Service: ['logdelivery.elasticloadbalancing.amazonaws.com'],
-      };
+        policyStatements.push({
+          Effect: 'Allow',
+          Principal: {
+            Service: ['cloudtrail.amazonaws.com', 'config.amazonaws.com', 'delivery.logs.amazonaws.com'],
+          },
+          Action: ['s3:GetBucketAcl', 's3:ListBucket'],
+          Resource: [bucketArn],
+        });
 
-      if (elbAccountId) {
-        elbPrincipal = {
-          AWS: [`arn:${partition}:iam::${sourceAccount}:root`],
+        policyStatements.push({
+          Sid: 'Allow Organization principals to use the bucket',
+          Effect: 'Allow',
+          Principal: {
+            AWS: '*',
+          },
+          Action: ['s3:GetBucketLocation', 's3:GetBucketAcl', 's3:PutObject', 's3:GetObject', 's3:ListBucket'],
+          Resource: [bucketArn, `${bucketArn}/*`],
+          Condition: {
+            StringEquals: {
+              ...principalOrgIdCondition,
+            },
+          },
+        });
+
+        policyStatements.push({
+          Sid: 'Allow Organization use of the bucket for replication',
+          Effect: 'Allow',
+          Action: [
+            's3:List*',
+            's3:GetBucketVersioning',
+            's3:PutBucketVersioning',
+            's3:ReplicateDelete',
+            's3:ReplicateObject',
+            's3:ObjectOwnerOverrideToBucketOwner',
+          ],
+          Principal: {
+            AWS: '*',
+          },
+          Resource: [bucketArn, `${bucketArn}/*`],
+          Condition: {
+            StringEquals: {
+              ...principalOrgIdCondition,
+            },
+          },
+        });
+
+        awsPrincipalAccesses?.forEach(item => {
+          if (item.name === 'SessionManager') {
+            policyStatements.push({
+              Sid: 'Allow Organization principals to put objects',
+              Effect: 'Allow',
+              Action: ['s3:PutObjectAcl', 's3:PutObject'],
+              Principal: {
+                AWS: '*',
+              },
+              Resource: [`${bucketArn}/*`],
+              Condition: {
+                StringEquals: {
+                  ...principalOrgIdCondition,
+                },
+              },
+            });
+
+            policyStatements.push({
+              Sid: 'Allow Organization principals to get encryption context and acl',
+              Effect: 'Allow',
+              Action: ['s3:GetEncryptionConfiguration', 's3:GetBucketAcl'],
+              Principal: {
+                AWS: '*',
+              },
+              Resource: [bucketArn],
+              Condition: {
+                StringEquals: {
+                  ...principalOrgIdCondition,
+                },
+              },
+            });
+          } else {
+            policyStatements.push({
+              Sid: `Allow read write access for ${item.name} service principal`,
+              Effect: 'Allow',
+              Action: [
+                's3:GetObject*',
+                's3:GetBucket*',
+                's3:List*',
+                's3:DeleteObject*',
+                's3:PutObject',
+                's3:PutObjectLegalHold',
+                's3:PutObjectRetention',
+                's3:PutObjectTagging',
+                's3:PutObjectVersionTagging',
+                's3:Abort*',
+              ],
+              Principal: {
+                Service: [item.principal],
+              },
+              Resource: [bucketArn, `${bucketArn}/*`],
+            });
+          }
+        });
+        break;
+      case AcceleratorImportedBucketType.ELB_LOGS_BUCKET:
+        let elbPrincipal: PrincipalOrgIdConditionType = {
+          Service: ['logdelivery.elasticloadbalancing.amazonaws.com'],
         };
-      }
 
-      policyStatements.push({
-        Sid: 'Allow get acl access for SSM principal',
-        Effect: 'Allow',
-        Action: ['s3:GetBucketAcl'],
-        Principal: {
-          Service: ['ssm.amazonaws.com'],
-        },
-        Resource: [`${bucketArn}`],
-      });
+        if (elbAccountId) {
+          elbPrincipal = {
+            AWS: [`arn:${partition}:iam::${sourceAccount}:root`],
+          };
+        }
 
-      policyStatements.push({
-        Sid: 'Allow write access for ELB Account principal',
-        Effect: 'Allow',
-        Action: ['s3:PutObject'],
-        Principal: elbPrincipal,
-        Resource: [bucketArn, `${bucketArn}/*`],
-      });
-
-      policyStatements.push({
-        Sid: 'Allow write access for delivery logging service principal',
-        Effect: 'Allow',
-        Action: ['s3:PutObject'],
-        Principal: {
-          Service: ['delivery.logs.amazonaws.com'],
-        },
-        Resource: [`${bucketArn}/*`],
-        Condition: {
-          StringEquals: {
-            's3:x-amz-acl': 'bucket-owner-full-control',
+        policyStatements.push({
+          Sid: 'Allow get acl access for SSM principal',
+          Effect: 'Allow',
+          Action: ['s3:GetBucketAcl'],
+          Principal: {
+            Service: ['ssm.amazonaws.com'],
           },
-        },
-      });
+          Resource: [`${bucketArn}`],
+        });
 
-      policyStatements.push({
-        Sid: 'Allow read bucket ACL access for delivery logging service principal',
-        Effect: 'Allow',
-        Action: ['s3:GetBucketAcl'],
-        Principal: {
-          Service: ['delivery.logs.amazonaws.com'],
-        },
-        Resource: [`${bucketArn}`],
-      });
+        policyStatements.push({
+          Sid: 'Allow write access for ELB Account principal',
+          Effect: 'Allow',
+          Action: ['s3:PutObject'],
+          Principal: elbPrincipal,
+          Resource: [bucketArn, `${bucketArn}/*`],
+        });
 
-      policyStatements.push({
-        Sid: 'Allow Organization principals to use of the bucket',
-        Effect: 'Allow',
-        Action: ['s3:GetBucketLocation', 's3:PutObject'],
-        Principal: {
-          AWS: '*',
-        },
-        Resource: [bucketArn, `${bucketArn}/*`],
-        Condition: {
-          StringEquals: {
-            ...principalOrgIdCondition,
+        policyStatements.push({
+          Sid: 'Allow write access for delivery logging service principal',
+          Effect: 'Allow',
+          Action: ['s3:PutObject'],
+          Principal: {
+            Service: ['delivery.logs.amazonaws.com'],
           },
-        },
-      });
+          Resource: [`${bucketArn}/*`],
+          Condition: {
+            StringEquals: {
+              's3:x-amz-acl': 'bucket-owner-full-control',
+            },
+          },
+        });
+
+        policyStatements.push({
+          Sid: 'Allow read bucket ACL access for delivery logging service principal',
+          Effect: 'Allow',
+          Action: ['s3:GetBucketAcl'],
+          Principal: {
+            Service: ['delivery.logs.amazonaws.com'],
+          },
+          Resource: [`${bucketArn}`],
+        });
+
+        policyStatements.push({
+          Sid: 'Allow Organization principals to use of the bucket',
+          Effect: 'Allow',
+          Action: ['s3:GetBucketLocation', 's3:PutObject'],
+          Principal: {
+            AWS: '*',
+          },
+          Resource: [bucketArn, `${bucketArn}/*`],
+          Condition: {
+            StringEquals: {
+              ...principalOrgIdCondition,
+            },
+          },
+        });
+        break;
+      case AcceleratorImportedBucketType.SERVER_ACCESS_LOGS_BUCKET:
+        policyStatements.push({
+          Sid: 'Allow write access for logging service principal',
+          Effect: 'Allow',
+          Action: ['s3:PutObject'],
+          Principal: {
+            Service: ['logging.s3.amazonaws.com'],
+          },
+          Resource: [`${bucketArn}/*`],
+          Condition: {
+            StringEquals: {
+              'aws:SourceAccount': sourceAccount,
+            },
+          },
+        });
+        break;
+      default:
+        throw new Error(`Invalid bucket type ${bucketType}`);
     }
-  }
-
-  if (bucketType === AcceleratorImportedBucketType.SERVER_ACCESS_LOGS_BUCKET) {
-    policyStatements.push({
-      Sid: 'Allow write access for logging service principal',
-      Effect: 'Allow',
-      Action: ['s3:PutObject'],
-      Principal: {
-        Service: ['logging.s3.amazonaws.com'],
-      },
-      Resource: [`${bucketArn}/*`],
-      Condition: {
-        StringEquals: {
-          'aws:SourceAccount': sourceAccount,
-        },
-      },
-    });
   }
 
   for (const bucketPolicyFilePath of bucketPolicyFilePaths) {
