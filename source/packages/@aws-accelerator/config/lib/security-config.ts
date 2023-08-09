@@ -936,7 +936,7 @@ export class AuditManagerConfig implements t.TypeOf<typeof SecurityConfigTypes.a
    */
   readonly enable = false;
   /**
-   * (OPTIONAL) List of AWS Region names to be excluded from configuring AWS Audit Manager.
+   * (OPTIONAL) List of AWS Region names to be excluded from configuring AWS Audit Manager. Please ensure any regions enabled in the global configuration that do not support Audit Manager are added to the excluded regions list. {@link https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/ | Supported services by region}.
    */
   readonly excludeRegions: t.Region[] = [];
   /**
@@ -971,7 +971,7 @@ export class DetectiveConfig implements t.TypeOf<typeof SecurityConfigTypes.dete
    */
   readonly enable = false;
   /**
-   * (OPTIONAL) List of AWS Region names to be excluded from configuring Amazon Detective
+   * (OPTIONAL) List of AWS Region names to be excluded from configuring Amazon Detective. Please ensure any regions enabled in the global configuration that do not support Amazon Detective are added to the excluded regions list. {@link https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/ | Supported services by region}.
    */
   readonly excludeRegions: t.Region[] = [];
 }
