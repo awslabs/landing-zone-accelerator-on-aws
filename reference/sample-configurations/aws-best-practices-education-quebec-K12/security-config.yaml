@@ -1,0 +1,881 @@
+homeRegion: &HOME_REGION us-east-1
+centralSecurityServices:
+  delegatedAdminAccount: Audit
+  ebsDefaultVolumeEncryption:
+    enable: true
+    excludeRegions: []
+  s3PublicAccessBlock:
+    enable: true
+    excludeAccounts: []
+  scpRevertChangesConfig:
+    enable: true
+    snsTopicName: Security
+  macie:
+    enable: true
+    excludeRegions: []
+    policyFindingsPublishingFrequency: FIFTEEN_MINUTES
+    publishSensitiveDataFindings: true
+  guardduty:
+    enable: true
+    excludeRegions: []
+    s3Protection:
+      enable: true
+      excludeRegions: []
+    exportConfiguration:
+      enable: true
+      overrideExisting: true
+      destinationType: S3
+      exportFrequency: FIFTEEN_MINUTES
+  auditManager:
+    enable: true
+    excludeRegions: []
+    defaultReportsConfiguration:
+      enable: true
+      destinationType: S3
+    lifecycleRules:
+      - enabled: true
+        abortIncompleteMultipartUpload: 7
+        expiration: 730
+        noncurrentVersionExpiration: 730
+  detective:
+    enable: false
+    excludeRegions: []
+  securityHub:
+    enable: true
+    regionAggregation: true
+    excludeRegions: []
+    standards:
+      - name: AWS Foundational Security Best Practices v1.0.0
+        # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards-fsbp-controls.html
+        enable: true
+        controlsToDisable:
+          - IAM.1
+          - EC2.10
+          - Lambda.4
+      - name: PCI DSS v3.2.1
+        # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-pci-controls.html
+        enable: true
+        controlsToDisable:
+          - PCI.IAM.3
+          - PCI.S3.3
+          - PCI.EC2.3
+          - PCI.Lambda.2
+      - name: CIS AWS Foundations Benchmark v1.4.0
+        # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html
+        enable: true
+        controlsToDisable:
+          - CIS.1.17
+          - CIS.1.16
+  ssmAutomation:
+    excludeRegions: []
+    documentSets:
+      - shareTargets:
+          organizationalUnits:
+            - Root
+        documents:
+          # Calls the AWS CLI to enable access logs on a specified ELB
+          - name: SSM-ELB-Enable-Logging
+            template: ssm-documents/ssm-elb-enable-logging.yaml
+          # Enables S3 encryption using KMS
+          - name: Put-S3-Encryption
+            template: ssm-documents/s3-encryption.yaml
+          # Attaches instance profiles to an EC2 instance
+          - name: Attach-IAM-Instance-Profile
+            template: ssm-documents/attach-iam-instance-profile.yaml
+          # Attaches Aws IAM Managed Policy to IAM Role
+          - name: Attach-IAM-Role-Policy
+            template: ssm-documents/attach-iam-role-policy.yaml
+accessAnalyzer:
+  enable: true
+iamPasswordPolicy:
+  allowUsersToChangePassword: true
+  hardExpiry: false
+  requireUppercaseCharacters: true
+  requireLowercaseCharacters: true
+  requireSymbols: true
+  requireNumbers: true
+  minimumPasswordLength: 14
+  passwordReusePrevention: 24
+  maxPasswordAge: 90
+awsConfig:
+  enableConfigurationRecorder: true
+  enableDeliveryChannel: true
+  ruleSets:
+    - deploymentTargets:
+        organizationalUnits:
+          - Root
+      rules:
+        - name: accelerator-attach-ec2-instance-profile
+          type: Custom
+          description: Custom rule for checking EC2 instance IAM profile attachment
+          inputParameters:
+          customRule:
+            lambda:
+              sourceFilePath: custom-config-rules/attach-ec2-instance-profile.zip
+              handler: index.handler
+              runtime: nodejs16.x
+              rolePolicyFile: custom-config-rules/attach-ec2-instance-profile-detection-role.json
+            periodic: true
+            maximumExecutionFrequency: Six_Hours
+            configurationChanges: true
+            triggeringResources:
+              lookupType: ResourceTypes
+              lookupKey: ResourceTypes
+              lookupValue:
+                - AWS::EC2::Instance
+          remediation:
+            rolePolicyFile: custom-config-rules/attach-ec2-instance-profile-remediation-role.json
+            automatic: true
+            targetId: Attach-IAM-Instance-Profile
+            retryAttemptSeconds: 60
+            maximumAutomaticAttempts: 5
+            parameters:
+              - name: InstanceId
+                value: RESOURCE_ID
+                type: String
+              - name: IamInstanceProfile
+                value: ${ACCEL_LOOKUP::InstanceProfile:EC2-Default-SSM-AD-Role}
+                type: StringList
+        # Note these example CustomerManagedPolicies are hardcoded for us-east-1
+        - name: accelerator-ec2-instance-profile-permission
+          type: Custom
+          description: Custom role to remediate EC2 instance profile permission
+          inputParameters:
+            AWSManagedPolicies: AmazonSSMManagedInstanceCore,AmazonSSMDirectoryServiceAccess,CloudWatchAgentServerPolicy
+            #            CustomerManagedPolicies: ${ACCEL_LOOKUP::CustomerManagedPolicy:AWSAccelerator-SessionManagerLogging-us-east-1}
+            #            CustomerManagedPolicies: ${ACCEL_LOOKUP::CustomerManagedPolicy:<POLICY_NAME>},${ACCEL_LOOKUP::CustomerManagedPolicy:<POLICY_NAME>}
+            ResourceId: RESOURCE_ID
+          customRule:
+            lambda:
+              sourceFilePath: custom-config-rules/ec2-instance-profile-permissions.zip
+              handler: index.handler
+              runtime: nodejs16.x
+              rolePolicyFile: custom-config-rules/ec2-instance-profile-permissions-detection-role.json
+            periodic: true
+            maximumExecutionFrequency: Six_Hours
+            configurationChanges: true
+            triggeringResources:
+              lookupType: ResourceTypes
+              lookupKey: ResourceTypes
+              lookupValue:
+                - AWS::IAM::Role
+          remediation:
+            rolePolicyFile: custom-config-rules/ec2-instance-profile-permissions-remediation-role.json
+            automatic: true
+            targetId: Attach-IAM-Role-Policy
+            targetAccountName: Audit
+            retryAttemptSeconds: 60
+            maximumAutomaticAttempts: 5
+            parameters:
+              - name: ResourceId
+                value: RESOURCE_ID
+                type: String
+              - name: AWSManagedPolicies
+                value: AmazonSSMManagedInstanceCore,AmazonSSMDirectoryServiceAccess,CloudWatchAgentServerPolicy
+                type: StringList
+              # - name: CustomerManagedPolicies
+              #   value: ${ACCEL_LOOKUP::CustomerManagedPolicy:policy-00},${ACCEL_LOOKUP::CustomerManagedPolicy:policy-01}
+              #   type: StringList
+              # - name: CustomerManagedPolicies
+              #   value: ${ACCEL_LOOKUP::CustomerManagedPolicy:AWSAccelerator-SessionManagerLogging-us-east-1}
+              #   type: StringList
+        # Note, included in Security Hub AFBP but this one has an automated remediation    
+        - name: accelerator-s3-bucket-server-side-encryption-enabled
+          identifier: S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED
+          complianceResourceTypes:
+            - AWS::S3::Bucket
+          remediation:
+            rolePolicyFile: custom-config-rules/bucket-sse-enabled-remediation-role.json
+            automatic: true
+            targetId: Put-S3-Encryption
+            retryAttemptSeconds: 60
+            maximumAutomaticAttempts: 5
+            parameters:
+              - name: BucketName
+                value: RESOURCE_ID
+                type: String
+              - name: KMSMasterKey
+                value: ${ACCEL_LOOKUP::KMS}
+                type: StringList
+        # Security Hub AFBP has a similar rule, but this one has an automated remediation.
+        - name: accelerator-elb-logging-enabled
+          identifier: ELB_LOGGING_ENABLED
+          complianceResourceTypes:
+            - AWS::ElasticLoadBalancing::LoadBalancer
+            - AWS::ElasticLoadBalancingV2::LoadBalancer
+          inputParameters:
+            s3BucketNames: ${ACCEL_LOOKUP::Bucket:elbLogs}
+          remediation:
+            rolePolicyFile: custom-config-rules/elb-logging-enabled-remediation-role.json
+            automatic: true
+            targetId: SSM-ELB-Enable-Logging
+            retryAttemptSeconds: 60
+            maximumAutomaticAttempts: 5
+            parameters:
+              - name: LoadBalancerArn
+                value: RESOURCE_ID
+                type: String
+              - name: LogDestination
+                value: ${ACCEL_LOOKUP::Bucket:elbLogs}
+                type: StringList
+        - name: accelerator-iam-user-group-membership-check
+          complianceResourceTypes:
+            - AWS::IAM::User
+          identifier: IAM_USER_GROUP_MEMBERSHIP_CHECK
+        - name: accelerator-securityhub-enabled
+          identifier: SECURITYHUB_ENABLED
+        - name: accelerator-cloudtrail-enabled
+          identifier: CLOUD_TRAIL_ENABLED
+        - name: accelerator-rds-logging-enabled
+          complianceResourceTypes:
+            - AWS::RDS::DBInstance
+          identifier: RDS_LOGGING_ENABLED
+        - name: accelerator-cloudwatch-alarm-action-check
+          complianceResourceTypes:
+            - AWS::CloudWatch::Alarm
+          inputParameters:
+            alarmActionRequired: "TRUE"
+            insufficientDataActionRequired: "TRUE"
+            okActionRequired: "FALSE"
+          identifier: CLOUDWATCH_ALARM_ACTION_CHECK
+        - name: accelerator-redshift-cluster-configuration-check
+          inputParameters:
+            clusterDbEncrypted: "TRUE"
+            loggingEnabled: "TRUE"
+          complianceResourceTypes:
+            - AWS::Redshift::Cluster
+          identifier: REDSHIFT_CLUSTER_CONFIGURATION_CHECK
+        - name: accelerator-cloudtrail-s3-dataevents-enabled
+          identifier: CLOUDTRAIL_S3_DATAEVENTS_ENABLED
+        - name: accelerator-emr-kerberos-enabled
+          identifier: EMR_KERBEROS_ENABLED
+        - name: accelerator-iam-group-has-users-check
+          complianceResourceTypes:
+            - AWS::IAM::Group
+          identifier: IAM_GROUP_HAS_USERS_CHECK
+        - name: accelerator-s3-bucket-policy-grantee-check
+          complianceResourceTypes:
+            - AWS::S3::Bucket
+          identifier: S3_BUCKET_POLICY_GRANTEE_CHECK
+        - name: accelerator-lambda-inside-vpc
+          complianceResourceTypes:
+            - AWS::Lambda::Function
+          identifier: LAMBDA_INSIDE_VPC
+        - name: accelerator-ec2-instances-in-vpc
+          complianceResourceTypes:
+            - AWS::EC2::Instance
+          identifier: INSTANCES_IN_VPC
+        # Note, included in Security Hub AFBP slightly different with ports 80 and 443
+        - name: accelerator-vpc-sg-open-only-to-authorized-ports
+          inputParameters:
+            authorizedTcpPorts: "443"
+            # authorizedUdpPorts: "1020-1025"
+          complianceResourceTypes:
+            - AWS::EC2::SecurityGroup
+          identifier: VPC_SG_OPEN_ONLY_TO_AUTHORIZED_PORTS
+        - name: accelerator-ec2-instance-no-public-ip
+          complianceResourceTypes:
+            - AWS::EC2::Instance
+          identifier: EC2_INSTANCE_NO_PUBLIC_IP
+        - name: accelerator-elasticsearch-in-vpc-only
+          identifier: ELASTICSEARCH_IN_VPC_ONLY
+        - name: accelerator-internet-gateway-authorized-vpc-only
+          complianceResourceTypes:
+            - AWS::EC2::InternetGateway
+          identifier: INTERNET_GATEWAY_AUTHORIZED_VPC_ONLY
+        - name: accelerator-iam-no-inline-policy-check
+          complianceResourceTypes:
+            - AWS::IAM::User
+            - AWS::IAM::Role
+            - AWS::IAM::Group
+          identifier: IAM_NO_INLINE_POLICY_CHECK
+        - name: accelerator-elb-acm-certificate-required
+          complianceResourceTypes:
+            - AWS::ElasticLoadBalancing::LoadBalancer
+          identifier: ELB_ACM_CERTIFICATE_REQUIRED
+        - name: accelerator-alb-http-drop-invalid-header-enabled
+          complianceResourceTypes:
+            - AWS::ElasticLoadBalancingV2::LoadBalancer
+          identifier: ALB_HTTP_DROP_INVALID_HEADER_ENABLED
+        - name: accelerator-elb-tls-https-listeners-only
+          complianceResourceTypes:
+            - AWS::ElasticLoadBalancing::LoadBalancer
+          identifier: ELB_TLS_HTTPS_LISTENERS_ONLY
+        - name: accelerator-api-gw-execution-logging-enabled
+          complianceResourceTypes:
+            - AWS::ApiGateway::Stage
+            - AWS::ApiGatewayV2::Stage
+          identifier: API_GW_EXECUTION_LOGGING_ENABLED
+        - name: accelerator-cloudwatch-log-group-encrypted
+          identifier: CLOUDWATCH_LOG_GROUP_ENCRYPTED
+        - name: accelerator-s3-bucket-replication-enabled
+          complianceResourceTypes:
+            - AWS::S3::Bucket
+          identifier: S3_BUCKET_REPLICATION_ENABLED
+        - name: accelerator-cw-loggroup-retention-period-check
+          identifier: CW_LOGGROUP_RETENTION_PERIOD_CHECK
+        - name: accelerator-ec2-instance-detailed-monitoring-enabled
+          complianceResourceTypes:
+            - AWS::EC2::Instance
+          identifier: EC2_INSTANCE_DETAILED_MONITORING_ENABLED
+        - name: accelerator-ec2-volume-inuse-check
+          inputParameters:
+            deleteOnTermination: "TRUE"
+          complianceResourceTypes:
+            - AWS::EC2::Volume
+          identifier: EC2_VOLUME_INUSE_CHECK
+        - name: accelerator-elb-deletion-protection-enabled
+          complianceResourceTypes:
+            - AWS::ElasticLoadBalancingV2::LoadBalancer
+          identifier: ELB_DELETION_PROTECTION_ENABLED
+        - name: accelerator-cloudtrail-security-trail-enabled
+          identifier: CLOUDTRAIL_SECURITY_TRAIL_ENABLED
+        - name: accelerator-elasticache-redis-cluster-automatic-backup-check
+          identifier: ELASTICACHE_REDIS_CLUSTER_AUTOMATIC_BACKUP_CHECK
+        - name: accelerator-s3-bucket-versioning-enabled
+          complianceResourceTypes:
+            - AWS::S3::Bucket
+          identifier: S3_BUCKET_VERSIONING_ENABLED
+        - name: accelerator-vpc-vpn-2-tunnels-up
+          complianceResourceTypes:
+            - AWS::EC2::VPNConnection
+          identifier: VPC_VPN_2_TUNNELS_UP
+        - name: accelerator-elb-cross-zone-load-balancing-enabled
+          complianceResourceTypes:
+            - AWS::ElasticLoadBalancing::LoadBalancer
+          identifier: ELB_CROSS_ZONE_LOAD_BALANCING_ENABLED
+        - name: accelerator-iam-user-mfa-enabled
+          identifier: IAM_USER_MFA_ENABLED
+        - name: accelerator-guardduty-non-archived-findings
+          inputParameters:
+            daysHighSev: "1"
+            daysLowSev: "30"
+            daysMediumSev: "7"
+          identifier: GUARDDUTY_NON_ARCHIVED_FINDINGS
+        - name: accelerator-elasticsearch-node-to-node-encryption-check
+          complianceResourceTypes:
+            - AWS::Elasticsearch::Domain
+          identifier: ELASTICSEARCH_NODE_TO_NODE_ENCRYPTION_CHECK
+        - name: accelerator-kms-cmk-not-scheduled-for-deletion
+          complianceResourceTypes:
+            - AWS::KMS::Key
+          identifier: KMS_CMK_NOT_SCHEDULED_FOR_DELETION
+        - name: accelerator-api-gw-cache-enabled-and-encrypted
+          complianceResourceTypes:
+            - AWS::ApiGateway::Stage
+          identifier: API_GW_CACHE_ENABLED_AND_ENCRYPTED
+        - name: accelerator-sagemaker-endpoint-configuration-kms-key-configured
+          identifier: SAGEMAKER_ENDPOINT_CONFIGURATION_KMS_KEY_CONFIGURED
+        - name: accelerator-sagemaker-notebook-instance-kms-key-configured
+          identifier: SAGEMAKER_NOTEBOOK_INSTANCE_KMS_KEY_CONFIGURED
+        - name: accelerator-dynamodb-table-encrypted-kms
+          complianceResourceTypes:
+            - AWS::DynamoDB::Table
+          identifier: DYNAMODB_TABLE_ENCRYPTED_KMS
+        - name: accelerator-s3-bucket-default-lock-enabled
+          complianceResourceTypes:
+            - AWS::S3::Bucket
+          identifier: S3_BUCKET_DEFAULT_LOCK_ENABLED
+
+        # NIST 800-53-rev5 Conformance Pack - Additional 15
+        - name: accelerator-account-part-of-organizations
+          identifier: ACCOUNT_PART_OF_ORGANIZATIONS
+        - name: accelerator-alb-waf-enabled
+          complianceResourceTypes:
+            - AWS::ElasticLoadBalancingV2::LoadBalancer
+          identifier: ALB_WAF_ENABLED
+        - name: accelerator-codebuild-project-artifact-encryption
+          complianceResourceTypes:
+            - AWS::CodeBuild::Project
+          identifier: CODEBUILD_PROJECT_ARTIFACT_ENCRYPTION
+        - name: accelerator-dynamodb-in-backup-plan
+          identifier: DYNAMODB_IN_BACKUP_PLAN
+        - name: accelerator-dynamodb-throughput-limit-check
+          identifier: DYNAMODB_THROUGHPUT_LIMIT_CHECK
+        - name: accelerator-ebs-in-backup-plan
+          identifier: EBS_IN_BACKUP_PLAN      
+        - name: accelerator-ebs-optimized-instance
+          complianceResourceTypes:
+            - AWS::EC2::Instance
+          identifier: EBS_OPTIMIZED_INSTANCE    
+        - name: accelerator-elbv2-acm-certificate-required
+          identifier: ELBV2_ACM_CERTIFICATE_REQUIRED     
+        - name: accelerator-lambda-dlq-check
+          complianceResourceTypes:
+            - AWS::Lambda::Function
+          identifier: LAMBDA_DLQ_CHECK     
+        - name: accelerator-no-unrestricted-route-to-igw
+          complianceResourceTypes:
+            - AWS::EC2::RouteTable
+          identifier: NO_UNRESTRICTED_ROUTE_TO_IGW    
+        - name: accelerator-rds-snapshot-encrypted
+          complianceResourceTypes:
+            - AWS::RDS::DBSnapshot
+            - AWS::RDS::DBClusterSnapshot
+          identifier: RDS_SNAPSHOT_ENCRYPTED   
+        - name: accelerator-redshift-cluster-kms-enabled
+          complianceResourceTypes:
+            - AWS::Redshift::Cluster
+          identifier: REDSHIFT_CLUSTER_KMS_ENABLED        
+        - name: accelerator-s3-default-encryption-kms
+          complianceResourceTypes:
+            - AWS::S3::Bucket
+          identifier: S3_DEFAULT_ENCRYPTION_KMS 
+        - name: accelerator-secretsmanager-using-cmk
+          complianceResourceTypes:
+            - AWS::SecretsManager::Secret
+          identifier: SECRETSMANAGER_USING_CMK  
+        - name: accelerator-wafv2-logging-enabled
+          identifier: WAFV2_LOGGING_ENABLED   
+
+    # Enabled AWS Config rules to check for resources protected by backups. 
+    # Supports ACSC ISM and Essentials 8 Workload Compliance
+
+    - deploymentTargets:
+        organizationalUnits: 
+          - Root
+      rules:
+        - name: accelerator-backup-plan-min-frequency-and-min-retention-check
+          complianceResourceTypes:
+            - AWS::Backup::BackupPlan
+          identifier: BACKUP_PLAN_MIN_FREQUENCY_AND_MIN_RETENTION_CHECK
+        - name: accelerator-backup-recovery-point-encrypted
+          complianceResourceTypes:
+            - AWS::Backup::RecoveryPoint
+          identifier: BACKUP_RECOVERY_POINT_ENCRYPTED
+        - name: accelerator-backup-recovery-point-minimum-retention-check
+          complianceResourceTypes:
+          - AWS::Backup::RecoveryPoint
+          identifier: BACKUP_RECOVERY_POINT_MINIMUM_RETENTION_CHECK
+        - name: accelerator-backup-recovery-point-manual-deletion-disabled
+          complianceResourceTypes:
+            - AWS::Backup::BackupVault
+          identifier: BACKUP_RECOVERY_POINT_MANUAL_DELETION_DISABLED
+        - name: accelerator-ec2-resources-protected-by-backup-plan
+          complianceResourceTypes:
+            - AWS::EC2::Instance
+          identifier: EC2_RESOURCES_PROTECTED_BY_BACKUP_PLAN
+        - name: accelerator-rds-in-backup-plan
+          identifier: RDS_IN_BACKUP_PLAN
+        - name: accelerator-aurora-resources-protected-by-backup-plan
+          complianceResourceTypes:
+            - AWS::RDS::DBCluster
+          identifier: AURORA_RESOURCES_PROTECTED_BY_BACKUP_PLAN
+        - name: accelerator-rds-resources-protected-by-backup-plan
+          complianceResourceTypes:
+            - AWS::RDS::DBInstance
+          identifier: RDS_RESOURCES_PROTECTED_BY_BACKUP_PLAN
+        - name: accelerator-dynamodb-resources-protected-by-backup-plan
+          complianceResourceTypes:
+            - AWS::DynamoDB::Table
+          identifier: DYNAMODB_RESOURCES_PROTECTED_BY_BACKUP_PLAN
+        - name: accelerator
+          complianceResourceTypes:
+            - AWS::EFS::FileSystem
+          identifier: EFS_RESOURCES_PROTECTED_BY_BACKUP_PLAN
+        - name: accelerator-fsx-resources-protected-by-backup-plan
+          complianceResourceTypes:
+            - AWS::FSx::FileSystem
+          identifier: FSX_RESOURCES_PROTECTED_BY_BACKUP_PLAN          
+    
+    # Addtional Rules for Education Customers
+    - deploymentTargets:
+        organizationalUnits:
+          - Root
+      rules:
+        - name: accelerator-restricted-common-ports
+          complianceResourceTypes:
+            - AWS::EC2::SecurityGroup
+          identifier: RESTRICTED_INCOMING_TRAFFIC
+        - name: accelerator-ssm-unencrypted-parameter
+          type: Custom
+          description: Custom rule for detecting unencrypted SSM parameters
+          inputParameters:
+          customRule:
+            lambda:
+              sourceFilePath: custom-config-rules/ssm-unencrypted-parameter.zip
+              handler: lambda_function.lambda_handler
+              runtime: python3.8
+              rolePolicyFile: custom-config-rules/ssm-unencrypted-parameter-policy-role.json
+            periodic: true
+            maximumExecutionFrequency: Six_Hours
+            configurationChanges: false
+            triggeringResources:
+              lookupType: ResourceTypes
+              lookupKey: ResourceTypes
+              lookupValue:
+                - AWS::SSM::Parameter
+        - name: accelerator-rds-mysql-mariadb-unencrypted-transport
+          type: Custom
+          description: Custom rule for detecting unencrypted transport for RDS's MySQL & MariaDB engines
+          inputParameters:
+          customRule:
+            lambda:
+              sourceFilePath: custom-config-rules/rds-mysql-mariadb-unencrypted-transport.zip
+              handler: lambda_function.lambda_handler
+              runtime: python3.8
+              rolePolicyFile: custom-config-rules/rds-mysql-mariadb-unencrypted-transport-role.json
+            periodic: true
+            maximumExecutionFrequency: Six_Hours
+            configurationChanges: false
+            triggeringResources:
+              lookupType: ResourceTypes
+              lookupKey: ResourceTypes
+              lookupValue:
+                - AWS::RDS::DBInstance
+        - name: accelerator-rds-mssql-postgres-unencrypted-transport
+          type: Custom
+          description: Custom rule for detecting unencrypted transport for RDS Microsoft SQL/PostgreSQL
+          inputParameters:
+          customRule:
+            lambda:
+              sourceFilePath: custom-config-rules/rds-mssql-postgres-unencrypted-transport.zip
+              handler: lambda_function.lambda_handler
+              runtime: python3.8
+              rolePolicyFile: custom-config-rules/rds-mssql-postgres-unencrypted-transport-role.json
+            periodic: true
+            maximumExecutionFrequency: Six_Hours
+            configurationChanges: false
+            triggeringResources:
+              lookupType: ResourceTypes
+              lookupKey: ResourceTypes
+              lookupValue:
+                - AWS::RDS::DBInstance
+        - name: accelerator-rds-oracle-unencrypted-transport
+          type: Custom
+          description: Custom rule for detecting unencrypted transport for RDS Orcale
+          inputParameters:
+          customRule:
+            lambda:
+              sourceFilePath: custom-config-rules/rds-oracle-unencrypted-transport.zip
+              handler: lambda_function.lambda_handler
+              runtime: python3.8
+              rolePolicyFile: custom-config-rules/rds-oracle-unencrypted-transport-role.json
+            periodic: true
+            maximumExecutionFrequency: Six_Hours
+            configurationChanges: false
+            triggeringResources:
+              lookupType: ResourceTypes
+              lookupKey: ResourceTypes
+              lookupValue:
+                - AWS::RDS::DBInstance
+        - name: accelerator-workdocs-user-domain-detector
+          type: Custom
+          description: Custom rule for detecting Workdocs users not using defined domain
+          inputParameters:
+            # set the allowed domain for users 
+            WorkDocsDomain: "example.edu"
+          customRule:
+            lambda:
+              sourceFilePath: custom-config-rules/workdocs-user-domain-detector.zip
+              handler: lambda_function.lambda_handler
+              runtime: python3.8
+              rolePolicyFile: custom-config-rules/workdocs-user-domain-detector-role.json
+            periodic: true
+            maximumExecutionFrequency: Six_Hours
+            configurationChanges: false
+            triggeringResources:
+              lookupType: ResourceTypes
+              lookupKey: ResourceTypes
+              lookupValue:
+                - AWS::WorkDocs::User
+        - name: accelerator-cognito-password-complexity
+          type: Custom
+          description: Custom rule for validating Cognito password policy meets define parameters.
+          inputParameters:
+            # Adjust below parameters to preferred password policy requirements.
+            MinimumLength: "10"
+            RequireUppercase: "True"
+            RequireLowercase: "True"
+            RequireNumbers: "True"
+            RequireSymbols: "True"
+            TemporaryPasswordValidityDays: "15"
+          customRule:
+            lambda:
+              sourceFilePath: custom-config-rules/cognito-password-complexity.zip
+              handler: lambda_function.lambda_handler
+              runtime: python3.8
+              rolePolicyFile: custom-config-rules/cognito-password-complexity-role.json
+            periodic: true
+            maximumExecutionFrequency: Six_Hours
+            configurationChanges: false
+            triggeringResources:
+              lookupType: ResourceTypes
+              lookupKey: ResourceTypes
+              lookupValue:
+                  - AWS::Cognito::UserPool
+        - name: accelerator-emr-cluster-unencrypted-transport
+          type: Custom
+          description: Custom rule for detection of EMR clusters with security configuration not enforcing in-transit encryption.
+          inputParameters:
+          customRule:
+            lambda:
+              sourceFilePath: custom-config-rules/emr-cluster-unencrypted-transport.zip
+              handler: lambda_function.lambda_handler
+              runtime: python3.8
+              rolePolicyFile: custom-config-rules/emr-cluster-unencrypted-transport-role.json
+            periodic: True
+            maximumExecutionFrequency: Six_Hours
+            configurationChanges: False
+            triggeringResources:
+              lookupType: ResourceTypes
+              lookupKey: ResourceTypes
+              lookupValue:
+                  - AWS::EMR::Cluster
+cloudWatch:
+  metricSets:
+    - regions:
+        - *HOME_REGION
+      #####################################
+      # With landing zone version 3.0, AWS Control Tower now supports organization-level AWS CloudTrail trails.                                          #
+      # Going forward from landing zone 3.0, AWS Control Tower no longer will support account-level trails that AWS manages.                             #
+      # If your environment runs on prior version (3.0) of landing zone, you can change deployment targets for the metrics to Root organizational units  #
+      # Metrics deployment target should be management account for environment with landing zone version 3.0                                             #
+      # Please refer https://docs.aws.amazon.com/controltower/latest/userguide/2022-all.html#version-3.0 for more information                            #
+      #####################################
+      deploymentTargets:
+        accounts:
+          - Management
+      metrics:
+        # CIS 1.7 – Avoid the use of the "root" account
+        - filterName: RootAccountUsage
+          logGroupName: aws-controltower/CloudTrailLogs
+          filterPattern: '{$.userIdentity.type="Root" && $.userIdentity.invokedBy NOT EXISTS && $.eventType !="AwsServiceEvent"}'
+          metricNamespace: LogMetrics
+          metricName: RootAccount
+          metricValue: "1"
+        # CIS 4.4 – Ensure a log metric filter and alarm exist for IAM policy changes
+        - filterName: IAMPolicyChangesMetricFilter
+          logGroupName: aws-controltower/CloudTrailLogs
+          filterPattern: "{($.eventName=DeleteGroupPolicy) || ($.eventName=DeleteRolePolicy) || ($.eventName=DeleteUserPolicy) || ($.eventName=PutGroupPolicy) || ($.eventName=PutRolePolicy) || ($.eventName=PutUserPolicy) || ($.eventName=CreatePolicy) || ($.eventName=DeletePolicy) || ($.eventName=CreatePolicyVersion) || ($.eventName=DeletePolicyVersion) || ($.eventName=AttachRolePolicy) || ($.eventName=DetachRolePolicy) || ($.eventName=AttachUserPolicy) || ($.eventName=DetachUserPolicy) || ($.eventName=AttachGroupPolicy) || ($.eventName=DetachGroupPolicy)}"
+          metricNamespace: LogMetrics
+          metricName: IAMPolicyChanges
+          metricValue: "1"
+        # CIS 4.5 – Ensure a log metric filter and alarm exist for CloudTrail configuration changes
+        - filterName: CloudTrailChangesMetricFilter
+          logGroupName: aws-controltower/CloudTrailLogs
+          filterPattern: "{($.eventName=CreateTrail) || ($.eventName=UpdateTrail) || ($.eventName=DeleteTrail) || ($.eventName=StartLogging) || ($.eventName=StopLogging)}"
+          metricNamespace: LogMetrics
+          metricName: CloudTrailChanges
+          metricValue: "1"
+        # CIS 4.6 – Ensure a log metric filter and alarm exist for AWS Management Console authentication failures
+        - filterName: ConsoleAuthenticationFailureMetricFilter
+          logGroupName: aws-controltower/CloudTrailLogs
+          filterPattern: '{($.eventName=ConsoleLogin) && ($.errorMessage="Failed authentication")}'
+          metricNamespace: LogMetrics
+          metricName: ConsoleAuthenticationFailure
+          metricValue: "1"
+        # CIS 4.7 – Ensure a log metric filter and alarm exist for disabling or scheduled deletion of customer created CMKs
+        - filterName: DisableOrDeleteCMKMetricFilter
+          logGroupName: aws-controltower/CloudTrailLogs
+          filterPattern: "{($.eventSource=kms.amazonaws.com) && (($.eventName=DisableKey) || ($.eventName=ScheduleKeyDeletion))}"
+          metricNamespace: LogMetrics
+          metricName: DisableOrDeleteCMK
+          metricValue: "1"
+        # CIS 4.8 – Ensure a log metric filter and alarm exist for S3 bucket policy changes
+        - filterName: S3BucketPolicyChangesMetricFilter
+          logGroupName: aws-controltower/CloudTrailLogs
+          filterPattern: "{($.eventSource=s3.amazonaws.com) && (($.eventName=PutBucketAcl) || ($.eventName=PutBucketPolicy) || ($.eventName=PutBucketCors) || ($.eventName=PutBucketLifecycle) || ($.eventName=PutBucketReplication) || ($.eventName=DeleteBucketPolicy) || ($.eventName=DeleteBucketCors) || ($.eventName=DeleteBucketLifecycle) || ($.eventName=DeleteBucketReplication))}"
+          metricNamespace: LogMetrics
+          metricName: S3BucketPolicyChanges
+          metricValue: "1"
+        # CIS 4.9 – Ensure a log metric filter and alarm exist for AWS Config configuration changes
+        - filterName: AWSConfigChangesMetricFilter
+          logGroupName: aws-controltower/CloudTrailLogs
+          filterPattern: "{($.eventSource=config.amazonaws.com) && (($.eventName=StopConfigurationRecorder) || ($.eventName=DeleteDeliveryChannel) || ($.eventName=PutDeliveryChannel) || ($.eventName=PutConfigurationRecorder))}"
+          metricNamespace: LogMetrics
+          metricName: AWSConfigChanges
+          metricValue: "1"
+        # CIS 4.10 – Ensure a log metric filter and alarm exist for security group changes
+        - filterName: SecurityGroupChangesMetricFilter
+          logGroupName: aws-controltower/CloudTrailLogs
+          filterPattern: "{($.eventName=AuthorizeSecurityGroupIngress) || ($.eventName=AuthorizeSecurityGroupEgress) || ($.eventName=RevokeSecurityGroupIngress) || ($.eventName=RevokeSecurityGroupEgress) || ($.eventName=CreateSecurityGroup) || ($.eventName=DeleteSecurityGroup)}"
+          metricNamespace: LogMetrics
+          metricName: SecurityGroupChanges
+          metricValue: "1"
+        # CIS 4.11 – Ensure a log metric filter and alarm exist for changes to Network Access Control Lists (NACL)
+        - filterName: NetworkACLChangesMetricFilter
+          logGroupName: aws-controltower/CloudTrailLogs
+          filterPattern: "{($.eventName=CreateNetworkAcl) || ($.eventName=CreateNetworkAclEntry) || ($.eventName=DeleteNetworkAcl) || ($.eventName=DeleteNetworkAclEntry) || ($.eventName=ReplaceNetworkAclEntry) || ($.eventName=ReplaceNetworkAclAssociation)}"
+          metricNamespace: LogMetrics
+          metricName: NetworkACLChanges
+          metricValue: "1"
+        # CIS 4.12 – Ensure a log metric filter and alarm exist for changes to network gateways
+        - filterName: NetworkGatewayChangesMetricFilter
+          logGroupName: aws-controltower/CloudTrailLogs
+          filterPattern: "{($.eventName=CreateCustomerGateway) || ($.eventName=DeleteCustomerGateway) || ($.eventName=AttachInternetGateway) || ($.eventName=CreateInternetGateway) || ($.eventName=DeleteInternetGateway) || ($.eventName=DetachInternetGateway)}"
+          metricNamespace: LogMetrics
+          metricName: NetworkGatewayChanges
+          metricValue: "1"
+        # CIS 4.13 – Ensure a log metric filter and alarm exist for route table changes
+        - filterName: RouteTableChangesMetricFilter
+          logGroupName: aws-controltower/CloudTrailLogs
+          filterPattern: "{($.eventName=CreateRoute) || ($.eventName=CreateRouteTable) || ($.eventName=ReplaceRoute) || ($.eventName=ReplaceRouteTableAssociation) || ($.eventName=DeleteRouteTable) || ($.eventName=DeleteRoute) || ($.eventName=DisassociateRouteTable)}"
+          metricNamespace: LogMetrics
+          metricName: RouteTableChanges
+          metricValue: "1"
+        # CIS 4.14 – Ensure a log metric filter and alarm exist for VPC changes
+        - filterName: VPCChangesMetricFilter
+          logGroupName: aws-controltower/CloudTrailLogs
+          filterPattern: "{($.eventName=CreateVpc) || ($.eventName=DeleteVpc) || ($.eventName=ModifyVpcAttribute) || ($.eventName=AcceptVpcPeeringConnection) || ($.eventName=CreateVpcPeeringConnection) || ($.eventName=DeleteVpcPeeringConnection) || ($.eventName=RejectVpcPeeringConnection) || ($.eventName=AttachClassicLinkVpc) || ($.eventName=DetachClassicLinkVpc) || ($.eventName=DisableVpcClassicLink) || ($.eventName=EnableVpcClassicLink)}"
+          metricNamespace: LogMetrics
+          metricName: VPCChanges
+          metricValue: "1"
+  alarmSets:
+    - regions:
+        - *HOME_REGION
+      #####################################
+      # With landing zone version 3.0, AWS Control Tower now supports organization-level AWS CloudTrail trails.                                          #
+      # Going forward from landing zone 3.0, AWS Control Tower no longer will support account-level trails that AWS manages.                             #
+      # If your environment runs on prior version (3.0) of landing zone, you can change deployment targets for the metrics to Root organizational units  #
+      # Metrics deployment target should be management account for environment with landing zone version 3.0                                             #
+      # Please refer https://docs.aws.amazon.com/controltower/latest/userguide/2022-all.html#version-3.0 for more information                            #
+      #####################################
+      deploymentTargets:
+        accounts:
+          - Management
+      alarms:
+        # CIS 1.7 – Avoid the use of the "root" account
+        - alarmName: CIS-1.7-RootAccountUsage
+          alarmDescription: Alarm for usage of "root" account
+          snsTopicName: Security
+          metricName: RootAccountUsage
+          namespace: LogMetrics
+          comparisonOperator: GreaterThanOrEqualToThreshold
+          evaluationPeriods: 1
+          period: 300
+          statistic: Sum
+          threshold: 1
+          treatMissingData: notBreaching
+        # CIS 4.4 – Ensure a log metric filter and alarm exist for IAM policy changes
+        - alarmName: CIS-4.4-IAMPolicyChanges
+          alarmDescription: Alarm for IAM policy changes
+          snsTopicName: Security
+          metricName: IAMPolicyChanges
+          namespace: LogMetrics
+          comparisonOperator: GreaterThanOrEqualToThreshold
+          evaluationPeriods: 1
+          period: 300
+          statistic: Average
+          threshold: 1
+          treatMissingData: notBreaching
+        # CIS 4.5 – Ensure a log metric filter and alarm exist for CloudTrail configuration changes
+        - alarmName: CIS-4.5-CloudTrailChanges
+          alarmDescription: Alarm for CloudTrail configuration changes
+          snsTopicName: Security
+          metricName: CloudTrailChanges
+          namespace: LogMetrics
+          comparisonOperator: GreaterThanOrEqualToThreshold
+          evaluationPeriods: 1
+          period: 300
+          statistic: Sum
+          threshold: 1
+          treatMissingData: notBreaching
+        # CIS 4.6 – Ensure a log metric filter and alarm exist for AWS Management Console authentication failures
+        - alarmName: CIS-4.6-ConsoleAuthenticationFailure
+          alarmDescription: Alarm exist for AWS Management Console authentication failures
+          snsTopicName: Security
+          metricName: ConsoleAuthenticationFailure
+          namespace: LogMetrics
+          comparisonOperator: GreaterThanOrEqualToThreshold
+          evaluationPeriods: 1
+          period: 300
+          statistic: Sum
+          threshold: 1
+          treatMissingData: notBreaching
+        # CIS 4.7 – Ensure a log metric filter and alarm exist for disabling or scheduled deletion of customer created CMKs
+        - alarmName: CIS-4.7-DisableOrDeleteCMK
+          alarmDescription: Alarm for disabling or scheduled deletion of customer created CMKs
+          snsTopicName: Security
+          metricName: DisableOrDeleteCMK
+          namespace: LogMetrics
+          comparisonOperator: GreaterThanOrEqualToThreshold
+          evaluationPeriods: 1
+          period: 300
+          statistic: Sum
+          threshold: 1
+          treatMissingData: notBreaching
+        # CIS 4.8 – Ensure a log metric filter and alarm exist for S3 bucket policy changes
+        - alarmName: CIS-4.8-S3BucketPolicyChanges.
+          alarmDescription: Alarm for S3 bucket policy changes
+          snsTopicName: Security
+          metricName: S3BucketPolicyChanges
+          namespace: LogMetrics
+          comparisonOperator: GreaterThanOrEqualToThreshold
+          evaluationPeriods: 1
+          period: 300
+          statistic: Average
+          threshold: 1
+          treatMissingData: notBreaching
+        # CIS 4.9 – Ensure a log metric filter and alarm exist for AWS Config configuration changes
+        - alarmName: CIS-4.9-AWSConfigChanges
+          alarmDescription: Alarm for AWS Config configuration changes
+          snsTopicName: Security
+          metricName: AWSConfigChanges
+          namespace: LogMetrics
+          comparisonOperator: GreaterThanOrEqualToThreshold
+          evaluationPeriods: 1
+          period: 300
+          statistic: Sum
+          threshold: 1
+          treatMissingData: notBreaching
+        # CIS 4.10 – Ensure a log metric filter and alarm exist for security group changes
+        - alarmName: CIS-4.10-SecurityGroupChanges
+          alarmDescription: Alarm for security group changes
+          snsTopicName: Security
+          metricName: SecurityGroupChanges
+          namespace: LogMetrics
+          comparisonOperator: GreaterThanOrEqualToThreshold
+          evaluationPeriods: 1
+          period: 300
+          statistic: Sum
+          threshold: 1
+          treatMissingData: notBreaching
+        # CIS 4.11 – Ensure a log metric filter and alarm exist for changes to Network Access Control Lists (NACL)
+        - alarmName: CIS-4.11-NetworkACLChanges
+          alarmDescription: Alarm for changes to Network Access Control Lists (NACL)
+          snsTopicName: Security
+          metricName: NetworkACLChanges
+          namespace: LogMetrics
+          comparisonOperator: GreaterThanOrEqualToThreshold
+          evaluationPeriods: 1
+          period: 300
+          statistic: Sum
+          threshold: 1
+          treatMissingData: notBreaching
+        # CIS 4.12 – Ensure a log metric filter and alarm exist for changes to network gateways
+        - alarmName: CIS-4.12-NetworkGatewayChanges
+          alarmDescription: Alarm for changes to network gateways
+          snsTopicName: Security
+          metricName: NetworkGatewayChanges
+          namespace: LogMetrics
+          comparisonOperator: GreaterThanOrEqualToThreshold
+          evaluationPeriods: 1
+          period: 300
+          statistic: Sum
+          threshold: 1
+          treatMissingData: notBreaching
+        # CIS 4.13 – Ensure a log metric filter and alarm exist for route table changes
+        - alarmName: CIS-4.13-RouteTableChanges
+          alarmDescription: Alarm for route table changes
+          snsTopicName: Security
+          metricName: RouteTableChanges
+          namespace: LogMetrics
+          comparisonOperator: GreaterThanOrEqualToThreshold
+          evaluationPeriods: 1
+          period: 300
+          statistic: Average
+          threshold: 1
+          treatMissingData: notBreaching
+        # CIS 4.14 – Ensure a log metric filter and alarm exist for VPC changes
+        - alarmName: CIS-3.14-VPCChanges
+          alarmDescription: Alarm for VPC changes
+          snsTopicName: Security
+          metricName: VPCChanges
+          namespace: LogMetrics
+          comparisonOperator: GreaterThanOrEqualToThreshold
+          evaluationPeriods: 1
+          period: 300
+          statistic: Sum
+          threshold: 1
+          treatMissingData: notBreaching

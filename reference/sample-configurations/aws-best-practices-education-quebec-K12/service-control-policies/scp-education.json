@@ -1,0 +1,103 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "ElasticacheRedisAUTHEnabled",
+        "Effect": "Deny",
+        "Action": [
+          "elasticache:*"
+        ],
+        "Resource": [
+          "*"
+        ],
+        "Condition": {
+          "StringEquals": {
+            "elasticache:EngineType": [
+              "redis"
+            ]
+          },
+          "Bool": {
+            "elasticache:AuthTokenEnabled": [
+              "false"
+            ]
+          }
+        }
+      },
+      {
+        "Sid": "ElastiCacheRedisEncryptionInTransit",
+        "Effect": "Deny",
+        "Action": [
+          "elasticache:*"
+        ],
+        "Resource": [
+          "*"
+        ],
+        "Condition": {
+          "StringEquals": {
+            "elasticache:EngineType": [
+              "redis"
+            ]
+          },
+          "Bool": {
+            "elasticache:TransitEncryptionEnabled": [
+              "false"
+            ]
+          }
+        }
+      },
+      {
+        "Sid": "ElastiCacheRedisEncryptionAtRest",
+        "Effect": "Deny",
+        "Action": [
+          "elasticache:*"
+        ],
+        "Resource": [
+          "*"
+        ],
+        "Condition": {
+          "StringEquals": {
+            "elasticache:EngineType": [
+              "redis"
+            ]
+          },
+          "Bool": {
+            "elasticache:AtRestEncryptionEnabled": [
+              "false"
+            ]
+          }
+        }
+      },
+      {
+        "Sid": "MemcachedBlockNoAtRestEncryption",
+        "Effect": "Deny",
+        "Action": [
+          "elasticache:*"
+        ],
+        "Resource": [
+          "*"
+        ],
+        "Condition": {
+          "StringEquals": {
+            "elasticache:EngineType": [
+              "memcached"
+            ]
+          }
+        }
+      },
+      {
+        "Sid": "BlockRDSMsSQLExpressNoEncryption",
+        "Effect": "Deny",
+        "Action": [
+          "rds:CreateDBInstance"
+        ],
+        "Resource": [
+          "*"
+        ],
+        "Condition": {
+          "StringEquals": {
+            "rds:DatabaseEngine": "sqlserver-ex"
+          }
+        }
+      }
+    ]
+  }

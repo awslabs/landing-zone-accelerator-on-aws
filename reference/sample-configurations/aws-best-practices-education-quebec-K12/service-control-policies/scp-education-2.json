@@ -1,0 +1,28 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "BlockS3BucketRegions",
+        "Effect": "Deny",
+        "Action": "s3:CreateBucket",
+        "Resource": "arn:aws:s3:::*",
+        "Condition": {
+          "StringNotLike": {
+            "s3:LocationConstraint": [
+              "us-east-1",
+              "us-west-1",
+              "us-east-2",
+              "us-west-2"
+            ]
+          },
+          "ArnNotLike": {
+            "aws:PrincipalARN": [
+              "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
+              "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+              "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+            ]
+          }
+        }
+      }
+    ]
+  }
