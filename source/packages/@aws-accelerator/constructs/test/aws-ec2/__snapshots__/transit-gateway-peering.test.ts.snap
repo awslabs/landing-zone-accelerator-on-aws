@@ -206,6 +206,7 @@ exports[`TransitGatewayPeering Construct(TransitGatewayPrefixListReference):  Sn
             "TransitGatewayAttachmentId",
           ],
         },
+        "requesterTransitGatewayId": "tgw-0002",
         "requesterTransitGatewayRouteTableId": "tgw-0002",
         "uuid": "REPLACED-UUID",
       },

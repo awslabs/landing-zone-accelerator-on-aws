@@ -167,6 +167,7 @@ export class TransitGatewayPeering extends Construct {
         requesterRegion: cdk.Stack.of(this).region,
         requesterTransitGatewayRouteTableId: props.requester.transitGatewayRouteTableId,
         requesterTransitGatewayAttachmentId: this.peeringAttachmentId,
+        requesterTransitGatewayId: props.requester.transitGatewayId,
 
         autoAccept: props.accepter.autoAccept,
         peeringTags: tags.length === 0 ? undefined : tags,

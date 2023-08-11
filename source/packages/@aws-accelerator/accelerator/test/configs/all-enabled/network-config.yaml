@@ -103,6 +103,31 @@ transitGateways:
         routes:
           - destinationPrefixList: accelerator-prefix-list-001
             blackhole: true
+  - name: Network-Main-Us-West-2
+    account: Network
+    region: us-west-2
+    shareTargets:
+      organizationalUnits:
+        - Infrastructure
+    asn: 65521
+    dnsSupport: enable
+    vpnEcmpSupport: enable
+    defaultRouteTableAssociation: disable
+    defaultRouteTablePropagation: disable
+    autoAcceptSharingAttachments: enable
+    routeTables:
+      - name: Network-Main-Us-West-2-Core
+        routes: []
+      - name: Network-Main-Us-West-2-Segregated      
+        routes: []
+      - name: Network-Main-Us-West-2-Shared
+        routes: 
+          - destinationCidrBlock: 10.200.0.0/16
+          # - destinationPrefixList: accelerator-pl
+            attachment:
+              transitGatewayPeeringName: Network-Main-And-Network-Main-Us-West-2-And-Peering
+      - name: Network-Main-Standalone
+        routes: []   
 transitGatewayPeering:
   - name: Network-Main-And-SharedServices-Main-Peering
     requester:
@@ -151,6 +176,26 @@ transitGatewayPeering:
       account: Network
       region: *HOME_REGION
       routeTableAssociations: Network-Main-2-Core
+      autoAccept: true
+      applyTags: true
+  - name: Network-Main-And-Network-Main-Us-West-2-And-Peering
+    requester:
+      transitGatewayName: Network-Main
+      account: Network
+      region: *HOME_REGION
+      routeTableAssociations: Network-Main-Shared
+      tags: 
+      - key: Name
+        value: Network-Main-And-Network-Main-Us-West-2-And-Peering
+      - key: CostCenter
+        value: TSD-LZA
+      - key: Company
+        value: AWS
+    accepter:
+      transitGatewayName: Network-Main-Us-West-2
+      account: Network
+      region: us-west-2
+      routeTableAssociations: Network-Main-Us-West-2-Shared
       autoAccept: true
       applyTags: true
 dhcpOptions:
