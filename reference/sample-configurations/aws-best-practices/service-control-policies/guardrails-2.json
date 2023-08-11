@@ -63,6 +63,7 @@
         "guardduty:DeleteDetector",
         "guardduty:DeleteMembers",
         "guardduty:UpdateDetector",
+        "guardduty:UpdatePublishingDestination",
         "guardduty:StopMonitoringMembers",
         "guardduty:Disassociate*",
         "securityhub:BatchDisableStandards",
