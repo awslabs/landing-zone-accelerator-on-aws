@@ -6,7 +6,7 @@ enable: true
 organizationalUnits:
   - name: Security
   - name: Infrastructure
-  - name: Education
+  - name: Production
 quarantineNewAccounts:
   enable: true
   scpPolicyName: Quarantine
@@ -36,24 +36,7 @@ serviceControlPolicies:
     type: customerManaged
     deploymentTargets:
       organizationalUnits: []
-  # Education Focused SCPs
-  - name: EducationSCP
-    description: >
-      Education Controls SCP for Education OU
-    policy: service-control-policies/scp-education.json
-    type: customerManaged
-    deploymentTargets:
-      organizationalUnits:
-        - Education
-  # Not deployed by default, edit SCP for appropriate regions and deploy if needed.
-  - name: EducationSCP2
-    description: >
-      Education Controls to allow only specific s3 bucket regions
-    policy: service-control-policies/scp-education-2.json
-    type: customerManaged
-    deploymentTargets:
-      organizationalUnits: []
- # https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_tag-policies.html
+# https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_tag-policies.html
 taggingPolicies:
   - name: TagPolicy
     description: Organization Tagging Policy

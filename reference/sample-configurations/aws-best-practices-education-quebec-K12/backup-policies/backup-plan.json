@@ -1,0 +1,156 @@
+{
+  "plans": {
+    "Hourly_Plan": {
+      "regions": {
+        "@@append": ["us-east-1"]
+      },
+      "rules": {
+        "Backup_Rule": {
+          "schedule_expression": {
+            "@@assign": "cron(0 5/1 ? * * *)"
+          },
+          "lifecycle": {
+            "move_to_cold_storage_after_days": {
+              "@@assign": "365"
+            },
+            "delete_after_days": {
+              "@@assign": "1095"
+            }
+          },
+          "target_backup_vault_name": {
+            "@@assign": "BackupVault"
+          }
+        }
+      },
+      "selections": {
+        "tags": {
+          "Backup_Assignment": {
+            "iam_role_arn": {
+              "@@assign": "arn:aws:iam::$account:role/Backup-Role"
+            },
+            "tag_key": {
+              "@@assign": "BackupPlan"
+            },
+            "tag_value": {
+              "@@assign": ["Hourly"]
+            }
+          }
+        }
+      }
+    },
+    "Daily_Plan": {
+      "regions": {
+        "@@append": ["us-east-1"]
+      },
+      "rules": {
+        "Backup_Rule": {
+          "schedule_expression": {
+            "@@assign": "cron(0 5 ? * * *)"
+          },
+          "lifecycle": {
+            "move_to_cold_storage_after_days": {
+              "@@assign": "365"
+            },
+            "delete_after_days": {
+              "@@assign": "1095"
+            }
+          },
+          "target_backup_vault_name": {
+            "@@assign": "BackupVault"
+          }
+        }
+      },
+      "selections": {
+        "tags": {
+          "Backup_Assignment": {
+            "iam_role_arn": {
+              "@@assign": "arn:aws:iam::$account:role/Backup-Role"
+            },
+            "tag_key": {
+              "@@assign": "BackupPlan"
+            },
+            "tag_value": {
+              "@@assign": ["Daily"]
+            }
+          }
+        }
+      }
+    },
+    "Weekly_Plan": {
+      "regions": {
+        "@@append": ["us-east-1"]
+      },
+      "rules": {
+        "Backup_Rule": {
+          "schedule_expression": {
+            "@@assign": "cron(0 5 ? * 1 *)"
+          },
+          "lifecycle": {
+            "move_to_cold_storage_after_days": {
+              "@@assign": "365"
+            },
+            "delete_after_days": {
+              "@@assign": "1095"
+            }
+          },
+          "target_backup_vault_name": {
+            "@@assign": "BackupVault"
+          }
+        }
+      },
+      "selections": {
+        "tags": {
+          "Backup_Assignment": {
+            "iam_role_arn": {
+              "@@assign": "arn:aws:iam::$account:role/Backup-Role"
+            },
+            "tag_key": {
+              "@@assign": "BackupPlan"
+            },
+            "tag_value": {
+              "@@assign": ["Weekly"]
+            }
+          }
+        }
+      }
+    },
+    "Monthly_Plan": {
+      "regions": {
+        "@@append": ["us-east-1"]
+      },
+      "rules": {
+        "Backup_Rule": {
+          "schedule_expression": {
+            "@@assign": "cron(0 5 1 * ? *)"
+          },
+          "lifecycle": {
+            "move_to_cold_storage_after_days": {
+              "@@assign": "365"
+            },
+            "delete_after_days": {
+              "@@assign": "1095"
+            }
+          },
+          "target_backup_vault_name": {
+            "@@assign": "BackupVault"
+          }
+        }
+      },
+      "selections": {
+        "tags": {
+          "Backup_Assignment": {
+            "iam_role_arn": {
+              "@@assign": "arn:aws:iam::$account:role/Backup-Role"
+            },
+            "tag_key": {
+              "@@assign": "BackupPlan"
+            },
+            "tag_value": {
+              "@@assign": ["Monthly"]
+            }
+          }
+        }
+      }
+    }
+  }
+}

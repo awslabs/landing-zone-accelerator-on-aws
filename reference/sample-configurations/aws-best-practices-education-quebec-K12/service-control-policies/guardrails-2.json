@@ -1,0 +1,166 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "IamSettingsStatement",
+      "Effect": "Deny",
+      "Action": [
+        "iam:DeleteAccountPasswordPolicy",
+        "iam:UpdateAccountPasswordPolicy",
+        "iam:CreateAccountAlias",
+        "iam:DeleteAccountAlias"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
+            "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "IamRolesStatement",
+      "Effect": "Deny",
+      "Action": [
+        "iam:AttachRolePolicy",
+        "iam:CreateAccountAlias",
+        "iam:DeleteAccountAlias",
+        "iam:CreateUser",
+        "iam:DeleteUser",
+        "iam:CreateRole",
+        "iam:DeleteRole",
+        "iam:CreatePolicy",
+        "iam:DeletePolicy",
+        "iam:DeleteRolePermissionsBoundary",
+        "iam:DeleteRolePolicy",
+        "iam:DetachRolePolicy",
+        "iam:PutRolePermissionsBoundary",
+        "iam:PutRolePolicy",
+        "iam:UpdateAssumeRolePolicy",
+        "iam:UpdateRole",
+        "iam:UpdateRoleDescription"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*"
+      ],
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
+            "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "GDSecHubServicesStatement",
+      "Effect": "Deny",
+      "Action": [
+        "guardduty:DeleteDetector",
+        "guardduty:DeleteMembers",
+        "guardduty:UpdateDetector",
+        "guardduty:StopMonitoringMembers",
+        "guardduty:Disassociate*",
+        "securityhub:BatchDisableStandards",
+        "securityhub:DisableSecurityHub",
+        "securityhub:DeleteMembers",
+        "securityhub:Disassociate*"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
+            "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "MacieServiceStatement",
+      "Effect": "Deny",
+      "Action": [
+        "macie:AcceptInvitation",
+        "macie:CreateInvitations",
+        "macie:CreateMember",
+        "macie:DeclineInvitations",
+        "macie:DeleteInvitations",
+        "macie:DeleteMember",
+        "macie:DisableMacie",
+        "macie:DisableOrganizationAdminAccount",
+        "macie:Disassociate*",
+        "macie:Enable*",
+        "macie:UpdateMacieSession",
+        "macie:UpdateMemberSession",
+        "macie:UpdateOrganizationConfiguration"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
+            "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "CloudFormationStatement",
+      "Effect": "Deny",
+      "Action": ["cloudformation:Delete*"],
+      "Resource": "arn:${PARTITION}:cloudformation:*:*:stack/${ACCELERATOR_PREFIX}-*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
+            "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "PreventSSMModification",
+      "Effect": "Deny",
+      "Action": ["ssm:DeleteParameters"],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
+            "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "PreventCloudTrailModification",
+      "Effect": "Deny",
+      "Action": [
+        "cloudtrail:PutInsightSelectors", 
+        "cloudtrail:PutEventSelectors",
+        "cloudtrail:StopLogging",
+        "cloudtrail:DeleteTrail",
+        "cloudtrail:UpdateTrail",
+        "cloudtrail:CreateTrail"
+      ],
+      "Resource": "arn:${PARTITION}:cloudtrail:*:*:trail/AWSAccelerator-*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
+            "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+homeRegion: &HOME_REGION ca-central-1
+defaultVpc:
+    delete: false
+    excludeAccounts: []
+transitGateways: []
+endpointPolicies: []
+vpcs: []
