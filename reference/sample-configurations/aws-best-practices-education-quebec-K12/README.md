@@ -35,7 +35,7 @@ Suivez les étapes ci-dessous pour déployer la Landing Zone Accelerator pour le
 ## Requis de sécurité
 
 | Catégorie | Requis | Contrôle établi |
-| --------------------|--------------|
+| --------------------|--------------|-----------|
 | 1. Protéger les comptes racines | 1. Implémenter l’authentification multifacteur (MFA) | MFA au niveau du compte de gestion : à activer au démarrage de l'organisation. MFA au niveau des utilisateurs IAM dans le compte de gestion : à activer à chaque création d'utilisateur. MFA au niveau SSO : à activer au niveau du fournisseur d'identité utilisé. |
 | 1. Protéger les comptes racines | 2. Supprimer les clés d’accès du compte racine | Une SCP bloque l'utilisation des utilisateurs racine dans tous les comptes de l'organisation. (Voir QC-2-BloquerUtilisationUtilisateurRacine dans service-control-policies/scp-education-quebec.json) |
 | 1. Protéger les comptes racines | 3. Définir des comptes d’accès urgent ou « brise-glace » | Comptes brise-glace définis par la LZA dans aws-best-practices/iam-config.yaml |
