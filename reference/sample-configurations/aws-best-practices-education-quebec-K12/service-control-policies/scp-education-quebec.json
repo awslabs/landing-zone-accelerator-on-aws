@@ -1,26 +1,18 @@
 {
-    "Version": "2012-10-17",
-    "Statement": [
+  "Version": "2012-10-17",
+  "Statement": [
       {
-        "Sid": "BlockS3BucketRegions",
-        "Effect": "Deny",
-        "Action": "s3:CreateBucket",
-        "Resource": "arn:aws:s3:::*",
-        "Condition": {
-          "StringNotLike": {
-            "s3:LocationConstraint": [
-              "ca-central-1",
-              "us-east-1"
-            ]
-          },
-          "ArnNotLike": {
-            "aws:PrincipalARN": [
-              "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
-              "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
-              "arn:${PARTITION}:iam::*:role/cdk-accel-*"
-            ]
+          "Sid": "QC-2-BloquerUtilisationUtilisateurRacine",
+          "Action": "*",
+          "Resource": "*",
+          "Effect": "Deny",
+          "Condition": {
+              "StringLike": {
+                  "aws:PrincipalArn": [
+                      "arn:aws:iam::*:root"
+                  ]
+              }
           }
-        }
       }
-    ]
-  }
+  ]
+}
