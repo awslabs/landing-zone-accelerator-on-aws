@@ -2,6 +2,7 @@ homeRegion: &HOME_REGION ca-central-1
 enabledRegions:
   - *HOME_REGION
 managementAccountAccessRole: AWSControlTowerExecution
+# Par défaut, conservation des journaux CloudWatch pour 10 ans. Ajuster si désiré
 cloudwatchLogRetentionInDays: 3653
 terminationProtection: true
 cdkOptions:
@@ -20,6 +21,7 @@ controlTower:
 logging:
   account: LogArchive
   cloudtrail:
+    # Ne PAS activer ici, car la configuration CloudTrail d'organisation est faite au niveau AWS Control Tower
     enable: false
     organizationTrail: false
     organizationTrailSettings:
@@ -54,6 +56,7 @@ logging:
     lifecycleRules:
       - enabled: true
         abortIncompleteMultipartUpload: 7
+        # Par défaut, conservation des journaux de Session Manager pour 2 ans. Ajuster si désiré
         expiration: 730
         noncurrentVersionExpiration: 730
     attachPolicyToIamRoles:
@@ -64,6 +67,7 @@ logging:
     lifecycleRules:
       - enabled: true
         abortIncompleteMultipartUpload: 7
+        # Par défaut, conservation des journaux d'accès (S3) pour 1000 jours. Ajuster si désiré
         expiration: 1000
         noncurrentVersionExpiration: 1000
         transitions:
@@ -76,6 +80,7 @@ logging:
     lifecycleRules:
       - enabled: true
         abortIncompleteMultipartUpload: 7
+        # Par défaut, conservation des journaux CloudTrail centralisés dans S3 pour 1000 jours. Ajuster si désiré
         expiration: 1000
         noncurrentVersionExpiration: 1000
         transitions:
@@ -88,6 +93,7 @@ logging:
     lifecycleRules:
       - enabled: true
         abortIncompleteMultipartUpload: 7
+        # Par défaut, conservation des journaux ELB centralisés dans S3 pour 1000 jours. Ajuster si désiré
         expiration: 1000
         noncurrentVersionExpiration: 1000
         transitions:
@@ -108,6 +114,7 @@ reports:
     lifecycleRules:
       - enabled: true
         abortIncompleteMultipartUpload: 7
+        # Par défaut, conservation rapports de coûts et d'usage pour 2 ans. Ajuster si désiré
         expiration: 730
         noncurrentVersionExpiration: 730
   budgets:
@@ -117,6 +124,7 @@ reports:
       name: accel-budget
       timeUnit: MONTHLY
       type: COST
+      # Par défaut, budget mensuel pour le compte de gestion de 2000$ USD par mois. Ajuster si désiré
       amount: 2000
       includeUpfront: true
       includeTax: true

@@ -1,7 +1,658 @@
 homeRegion: &HOME_REGION ca-central-1
+#####################################
+# Delete default VPCs-- use this    #
+# object to delete default VPCs in  #
+# any non-excluded accounts         #
+#####################################
 defaultVpc:
-    delete: false
+    delete: true
     excludeAccounts: []
+
+######################################
+# Transit Gateways-- use this object #
+# to deploy transit gateways         #
+######################################
 transitGateways: []
-endpointPolicies: []
-vpcs: []
+
+######################################
+# Endpoint policies -- use this      #
+# object to define standard policies #
+# for VPC endpoints                  #
+######################################
+endpointPolicies:
+  - name: Default
+    document: vpc-endpoint-policies/default.json
+  - name: Ec2
+    document: vpc-endpoint-policies/ec2.json
+
+
+prefixLists:
+  - name: onpremises-prefix-list
+    deploymentTargets:
+      organizationalUnits: 
+        - Infrastructure
+        - Production
+    addressFamily: "IPv4"
+    maxEntries: 1
+    entries:
+    # Ajuster la plage d'adresses IP selon les IPs on-prem
+      - 10.1.0.1/32
+
+###################################################
+# VPC : Production
+###################################################
+vpcs:
+  - name: Production
+    tags:
+      - key: Name
+        value: Production
+    account: Network
+    region: *HOME_REGION
+    cidrs:
+      - 10.2.0.0/16
+    defaultSecurityGroupRulesDeletion: true
+    internetGateway: true
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    routeTables:
+      - name: Production-Private-A
+        routes:
+          - name: NatRoute
+            destination: 0.0.0.0/0
+            type: natGateway
+            target: Nat-Network-Sandbox-A
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+      - name: Production-Private-B
+        routes:
+          - name: NatRoute
+            destination: 0.0.0.0/0
+            type: natGateway
+            target: Nat-Network-Sandbox-B
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+      - name: Production-Data
+        routes:
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+      - name: Production-Public-A
+        routes:
+          - name: IgwRoute
+            destination: 0.0.0.0/0
+            type: internetGateway
+            target: IGW
+      - name: Production-Public-B
+        routes:
+          - name: IgwRoute
+            destination: 0.0.0.0/0
+            type: internetGateway
+            target: IGW
+    networkAcls:
+      - name: PermitDataTierFromAppTierOnly
+        subnetAssociations:
+          - Production-Data-A
+          - Production-Data-B
+        inboundRules:
+          - action: allow
+            rule: 25
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source:
+              account: Network
+              vpc: Production
+              subnet: Production-App-A
+          - action: allow
+            rule: 50
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source:
+              account: Network
+              vpc: Production
+              subnet: Production-App-B
+        outboundRules:
+          - action: allow
+            rule: 10
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            destination: 0.0.0.0/0
+    subnets:
+      - name: Production-Public-A
+        tags:
+          - key: Name
+            value: Production-Public-A
+        availabilityZone: a
+        routeTable: Production-Public-A
+        ipv4CidrBlock: 10.2.16.0/20
+        shareTargets:
+          organizationalUnits:
+            - Production
+      - name: Production-Public-B
+        tags:
+          - key: Name
+            value: Production-Public-B
+        availabilityZone: b
+        routeTable: Production-Public-B
+        ipv4CidrBlock: 10.2.32.0/20
+        shareTargets:
+          organizationalUnits:
+            - Production
+      - name: Production-Private-A
+        tags:
+          - key: Name
+            value: Production-Private-A
+        availabilityZone: a
+        routeTable: Production-Private-B
+        ipv4CidrBlock: 10.2.64.0/19
+        shareTargets:
+          organizationalUnits:
+            - Production
+      - name: Production-Private-B
+        tags:
+          - key: Name
+            value: Production-Private-B
+        availabilityZone: b
+        routeTable: Production-Private-B
+        ipv4CidrBlock: 10.2.96.0/19
+        shareTargets:
+          organizationalUnits:
+            - Production
+      - name: Production-Data-A
+        tags:
+          - key: Name
+            value: Production-Data-A
+        availabilityZone: a
+        routeTable: Production-Data
+        ipv4CidrBlock: 10.2.160.0/20
+        shareTargets:
+          organizationalUnits:
+            - Production
+      - name: Production-Data-B
+        tags:
+          - key: Name
+            value: Production-Data-B
+        availabilityZone: b
+        routeTable: Production-Data
+        ipv4CidrBlock: 10.2.176.0/20
+        shareTargets:
+          organizationalUnits:
+            - Production
+    securityGroups:
+      - name: "Web"
+        description: "Web Security Group for Production VPC"
+        inboundRules:
+          - description: "World Web Traffic Inbound"
+            types:
+              - HTTPS
+              - HTTP
+            sources:
+              - 0.0.0.0/0
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "App"
+        description: "App Security Group for Production VPC"
+        inboundRules:
+          - description: "Web Tier Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                - Web
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "Data"
+        description: "Data Security Group for Production VPC"
+        inboundRules:
+          - description: "App Tier Inbound"
+            types:
+              - MSSQL
+              - MYSQL/AURORA
+              - REDSHIFT
+              - POSTGRESQL
+              - ORACLE-RDS
+            sources:
+              - securityGroups:
+                - App
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+    natGateways:
+      - name: Production-NAT-A
+        subnet: Production-Public-A
+      - name: Production-NAT-B
+        subnet: Production-Public-B
+    gatewayEndpoints:
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+        - service: dynamodb
+    useCentralEndpoints: false
+
+###################################################
+# VPC : NonProduction
+###################################################
+  - name: NonProduction
+    tags:
+      - key: Name
+        value: NonProduction
+    account: Network
+    region: *HOME_REGION
+    cidrs:
+      - 10.4.0.0/16
+    defaultSecurityGroupRulesDeletion: true
+    internetGateway: true
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    routeTables:
+      - name: NonProduction-Private-A
+        routes:
+          - name: NatRoute
+            destination: 0.0.0.0/0
+            type: natGateway
+            target: Nat-Network-Sandbox-A
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+      - name: NonProduction-Private-B
+        routes:
+          - name: NatRoute
+            destination: 0.0.0.0/0
+            type: natGateway
+            target: Nat-Network-Sandbox-B
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+      - name: NonProduction-Data
+        routes:
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+      - name: NonProduction-Public-A
+        routes:
+          - name: IgwRoute
+            destination: 0.0.0.0/0
+            type: internetGateway
+            target: IGW
+      - name: NonProduction-Public-B
+        routes:
+          - name: IgwRoute
+            destination: 0.0.0.0/0
+            type: internetGateway
+            target: IGW
+    networkAcls:
+      - name: PermitDataTierFromAppTierOnly
+        subnetAssociations:
+          - NonProduction-Data-A
+          - NonProduction-Data-B
+        inboundRules:
+          - action: allow
+            rule: 25
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source:
+              account: Network
+              vpc: NonProduction
+              subnet: NonProduction-App-A
+          - action: allow
+            rule: 50
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source:
+              account: Network
+              vpc: NonProduction
+              subnet: NonProduction-App-B
+        outboundRules:
+          - action: allow
+            rule: 10
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            destination: 0.0.0.0/0
+    subnets:
+      - name: NonProduction-Public-A
+        tags:
+          - key: Name
+            value: NonProduction-Public-A
+        availabilityZone: a
+        routeTable: NonProduction-Public-A
+        ipv4CidrBlock: 10.4.16.0/20
+        shareTargets:
+          organizationalUnits:
+            - NonProduction
+      - name: NonProduction-Public-B
+        tags:
+          - key: Name
+            value: NonProduction-Public-B
+        availabilityZone: b
+        routeTable: NonProduction-Public-B
+        ipv4CidrBlock: 10.4.32.0/20
+        shareTargets:
+          organizationalUnits:
+            - NonProduction
+      - name: NonProduction-Private-A
+        tags:
+          - key: Name
+            value: NonProduction-Private-A
+        availabilityZone: a
+        routeTable: Production-Private-B
+        ipv4CidrBlock: 10.4.64.0/19
+        shareTargets:
+          organizationalUnits:
+            - NonProduction
+      - name: NonProduction-Private-B
+        tags:
+          - key: Name
+            value: NonProduction-Private-B
+        availabilityZone: b
+        routeTable: NonProduction-Private-B
+        ipv4CidrBlock: 10.4.96.0/19
+        shareTargets:
+          organizationalUnits:
+            - NonProduction
+      - name: NonProduction-Data-A
+        tags:
+          - key: Name
+            value: NonProduction-Data-A
+        availabilityZone: a
+        routeTable: NonProduction-Data
+        ipv4CidrBlock: 10.4.160.0/20
+        shareTargets:
+          organizationalUnits:
+            - NonProduction
+      - name: NonProduction-Data-B
+        tags:
+          - key: Name
+            value: NonProduction-Data-B
+        availabilityZone: b
+        routeTable: NonProduction-Data
+        ipv4CidrBlock: 10.4.176.0/20
+        shareTargets:
+          organizationalUnits:
+            - NonProduction
+    securityGroups:
+      - name: "Web"
+        description: "Web Security Group for NonProduction VPC"
+        inboundRules:
+          - description: "World Web Traffic Inbound"
+            types:
+              - HTTPS
+              - HTTP
+            sources:
+              - 0.0.0.0/0
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "App"
+        description: "App Security Group for NonProduction VPC"
+        inboundRules:
+          - description: "Web Tier Inbound"
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                - Web
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "Data"
+        description: "Data Security Group for NonProduction VPC"
+        inboundRules:
+          - description: "App Tier Inbound"
+            types:
+              - MSSQL
+              - MYSQL/AURORA
+              - REDSHIFT
+              - POSTGRESQL
+              - ORACLE-RDS
+            sources:
+              - securityGroups:
+                - App
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+    natGateways:
+      - name: NonProduction-NAT-A
+        subnet: NonProduction-Public-A
+      - name: NonProduction-NAT-B
+        subnet: NonProduction-Public-B
+    gatewayEndpoints:
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+        - service: dynamodb
+    useCentralEndpoints: false
+
+
+###################################################
+# VPC : Restricted
+###################################################
+  - name: Restricted
+    tags:
+      - key: Name
+        value: Restricted
+    account: Network
+    region: *HOME_REGION
+    cidrs:
+      - 10.6.0.0/16
+    defaultSecurityGroupRulesDeletion: true
+    internetGateway: true
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    routeTables:
+      - name: Restricted-Private-A
+        routes:
+          - name: NatRoute
+            destination: 0.0.0.0/0
+            type: natGateway
+            target: Nat-Network-Sandbox-A
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+      - name: Restricted-Private-B
+        routes:
+          - name: NatRoute
+            destination: 0.0.0.0/0
+            type: natGateway
+            target: Nat-Network-Sandbox-B
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+      - name: Restricted-Data
+        routes:
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+      - name: Restricted-Public-A
+        routes:
+          - name: IgwRoute
+            destination: 0.0.0.0/0
+            type: internetGateway
+            target: IGW
+      - name: Restricted-Public-B
+        routes:
+          - name: IgwRoute
+            destination: 0.0.0.0/0
+            type: internetGateway
+            target: IGW
+    networkAcls:
+      - name: PermitDataTierFromAppTierOnly
+        subnetAssociations:
+          - Restricted-Data-A
+          - Restricted-Data-B
+        inboundRules:
+          - action: allow
+            rule: 25
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source:
+              account: Network
+              vpc: Restricted
+              subnet: Restricted-App-A
+          - action: allow
+            rule: 50
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source:
+              account: Network
+              vpc: Restricted
+              subnet: Restricted-App-B
+        outboundRules:
+          - action: allow
+            rule: 10
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            destination: 0.0.0.0/0
+    subnets:
+      - name: Restricted-Public-A
+        tags:
+          - key: Name
+            value: Restricted-Public-A
+        availabilityZone: a
+        routeTable: Restricted-Public-A
+        ipv4CidrBlock: 10.6.16.0/20
+        # Ne pas partager les subnets publics aux comptes Restricted car ils sont utilisés uniquement pour les NAT gateways
+      - name: Restricted-Public-B
+        tags:
+          - key: Name
+            value: Restricted-Public-B
+        availabilityZone: b
+        routeTable: Restricted-Public-B
+        ipv4CidrBlock: 10.6.32.0/20
+      - name: Restricted-Private-A
+        tags:
+          - key: Name
+            value: Restricted-Private-A
+        availabilityZone: a
+        routeTable: Restricted-Private-B
+        ipv4CidrBlock: 10.6.64.0/19
+        shareTargets:
+          organizationalUnits:
+            - Restricted
+      - name: Restricted-Private-B
+        tags:
+          - key: Name
+            value: Restricted-Private-B
+        availabilityZone: b
+        routeTable: Restricted-Private-B
+        ipv4CidrBlock: 10.6.96.0/19
+        shareTargets:
+          organizationalUnits:
+            - Restricted
+      - name: Restricted-Data-A
+        tags:
+          - key: Name
+            value: Restricted-Data-A
+        availabilityZone: a
+        routeTable: Restricted-Data
+        ipv4CidrBlock: 10.6.160.0/20
+        shareTargets:
+          organizationalUnits:
+            - Restricted
+      - name: Restricted-Data-B
+        tags:
+          - key: Name
+            value: Restricted-Data-B
+        availabilityZone: b
+        routeTable: Restricted-Data
+        ipv4CidrBlock: 10.6.176.0/20
+        shareTargets:
+          organizationalUnits:
+            - Restricted
+    securityGroups:
+      - name: "App"
+        description: "App Security Group for Restricted VPC"
+        inboundRules: []
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: "Data"
+        description: "Data Security Group for Restricted VPC"
+        inboundRules:
+          - description: "App Tier Inbound"
+            types:
+              - MSSQL
+              - MYSQL/AURORA
+              - REDSHIFT
+              - POSTGRESQL
+              - ORACLE-RDS
+            sources:
+              - securityGroups:
+                - App
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+    natGateways:
+      - name: Restricted-NAT-A
+        subnet: Restricted-Public-A
+      - name: Restricted-NAT-B
+        subnet: Restricted-Public-B
+    gatewayEndpoints:
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+        - service: dynamodb
+    useCentralEndpoints: false
+

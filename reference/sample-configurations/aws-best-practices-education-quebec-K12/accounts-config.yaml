@@ -1,50 +1,53 @@
 mandatoryAccounts:
   - name: Management
     description: >-
-      The management (primary) account. Do not change the name field for this
-      mandatory account. Note, the account name key does not need to match the
-      AWS account name.
+      Compte de gestion (racine de l'organisation). Ne PAS changer le nom de ce compte.
+      Le nom effectif du compte AWS n'a pas besoin de correspondre au nom dans cette configuration.
     email: <Management>@example.com  <----- UPDATE EMAIL ADDRESS
     organizationalUnit: Root
     warm: false
   - name: LogArchive
     description: >-
-      The log archive account. Do not change the name field for this mandatory
-      account. Note, the account name key does not need to match the AWS account
-      name.
+      Compte d'archive de journaux. Ne PAS changer le nom de ce compte.
+      Le nom effectif du compte AWS n'a pas besoin de correspondre au nom dans cette configuration.
     email: <LogArchive>@example.com  <----- UPDATE EMAIL ADDRESS
     organizationalUnit: Security
     warm: false
   - name: Audit
     description: >-
-      The security audit account (also referred to as the audit account). Do not
-      change the name field for this mandatory account. Note, the account name
-      key does not need to match the AWS account name.
+      Compte de sécurité. Ne PAS changer le nom de ce compte.
+      Le nom effectif du compte AWS n'a pas besoin de correspondre au nom dans cette configuration.
     email: <Audit>@example.com  <----- UPDATE EMAIL ADDRESS
     organizationalUnit: Security
     warm: false
 workloadAccounts: 
   - name: SharedServices
-    description: The SharedServices account
+    description: >-
+      Compte pour les services partagés dans toute l'organisation. Ne PAS changer le nom de ce compte.
+      Le nom effectif du compte AWS n'a pas besoin de correspondre au nom dans cette configuration.
     email: <shared-services>@example.com  <----- UPDATE EMAIL ADDRESS
     organizationalUnit: Infrastructure
   - name: Network
-    description: The Network account
+    description: >-
+      Compte pour la réseautique centralisée dans toute l'organisation. Ne PAS changer le nom de ce compte.
+      Le nom effectif du compte AWS n'a pas besoin de correspondre au nom dans cette configuration.
     email: <Network>@example.com  <----- UPDATE EMAIL ADDRESS
     organizationalUnit: Infrastructure
-  - name:  Zone Acces Public
-    description: Production Account
-    email: <ZAP>@example.com  <----- UPDATE EMAIL ADDRESS
+  - name:  ProductionWorkloads
+    description: >-
+      (PRODUCTION) Compte pour les charges de travail de production.
+      Le nom effectif du compte AWS n'a pas besoin de correspondre au nom dans cette configuration.
+    email: <Production>@example.com  <----- UPDATE EMAIL ADDRESS
     organizationalUnit: Production
-  - name:  Zone Public
-    description: Production Account
-    email: <ZP>@example.com  <----- UPDATE EMAIL ADDRESS
-    organizationalUnit: Production
-  - name:  Zone Travail
-    description: Production Account
-    email: <ZT>@example.com  <----- UPDATE EMAIL ADDRESS
-    organizationalUnit: Production
-  - name:  Zone Restreint
-    description: Production Account
-    email: <ZR>@example.com  <----- UPDATE EMAIL ADDRESS
-    organizationalUnit: Production
+  - name:  RestrictedWorkloads
+    description: >-
+      (PRODUCTION) Compte pour les charges de travail comportant des renseignements sensibles (aucun accès Internet).
+      Le nom effectif du compte AWS n'a pas besoin de correspondre au nom dans cette configuration.
+    email: <Restricted>@example.com  <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: Restricted
+  - name:  NonProductionWorkloads
+    description: >-
+      (NON-PRODUCTION) Compte pour les charges de travail en cours de développement.
+      Le nom effectif du compte AWS n'a pas besoin de correspondre au nom dans cette configuration.
+    email: <NonProd>@example.com  <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: NonProduction

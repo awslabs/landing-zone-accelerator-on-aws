@@ -2,7 +2,7 @@
   "plans": {
     "Hourly_Plan": {
       "regions": {
-        "@@append": ["us-east-1"]
+        "@@append": ["ca-central-1"]
       },
       "rules": {
         "Backup_Rule": {
@@ -40,7 +40,7 @@
     },
     "Daily_Plan": {
       "regions": {
-        "@@append": ["us-east-1"]
+        "@@append": ["ca-central-1"]
       },
       "rules": {
         "Backup_Rule": {
@@ -78,7 +78,7 @@
     },
     "Weekly_Plan": {
       "regions": {
-        "@@append": ["us-east-1"]
+        "@@append": ["ca-central-1"]
       },
       "rules": {
         "Backup_Rule": {
@@ -116,7 +116,7 @@
     },
     "Monthly_Plan": {
       "regions": {
-        "@@append": ["us-east-1"]
+        "@@append": ["ca-central-1"]
       },
       "rules": {
         "Backup_Rule": {

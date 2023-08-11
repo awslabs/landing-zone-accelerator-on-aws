@@ -7,6 +7,8 @@ organizationalUnits:
   - name: Security
   - name: Infrastructure
   - name: Production
+  - name: Restricted
+  - name: NonProduction
 quarantineNewAccounts:
   enable: true
   scpPolicyName: Quarantine
@@ -36,14 +38,32 @@ serviceControlPolicies:
     type: customerManaged
     deploymentTargets:
       organizationalUnits: []
-# https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_tag-policies.html
-taggingPolicies:
-  - name: TagPolicy
-    description: Organization Tagging Policy
-    policy: tagging-policies/org-tag-policy.json
+  # Education Focused SCPs
+  - name: EducationSCP
+    description: >
+      Education Controls SCP for Production OU
+    policy: service-control-policies/scp-education.json
+    type: customerManaged
     deploymentTargets:
       organizationalUnits:
-        - Root
+        - Production
+  # Quebec Education Focused SCPs
+  - name: EducationSCPQuebec
+    description: >
+      Quebec Education Controls SCP for Production OU
+    policy: service-control-policies/scp-education-quebec.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - Production
+# https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_tag-policies.html
+#taggingPolicies:
+#  - name: TagPolicy
+#    description: Organization Tagging Policy
+#    policy: tagging-policies/org-tag-policy.json
+#    deploymentTargets:
+#      organizationalUnits:
+#        - Root
 # https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_backup.html
 # backup policies contain a `delete_after_days` value of 1095 days, or 3 years.  Before
 # enabling this policy, ensure that `delete_after_days` meets your organization's records retention
