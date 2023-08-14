@@ -92,10 +92,6 @@ export const BootstrapVersion = 18;
 // The accelerator stack prefix value
 //
 const stackPrefix = process.env['ACCELERATOR_PREFIX'] ?? 'AWSAccelerator';
-//
-// When running parallel, this will be the max concurrent stacks
-//
-const maxStacks = Number(process.env['MAX_CONCURRENT_STACKS'] ?? 250);
 
 /**
  * constant maintaining cloudformation stack names
@@ -181,6 +177,13 @@ export abstract class Accelerator {
       await globalConfig.loadExternalMapping(true);
       logger.info('Loaded ASEA mapping');
     }
+
+    //
+    // When running parallel, this will be the max concurrent stacks
+    //
+    const maxStacks = globalConfig?.acceleratorSettings?.maxConcurrentStacks
+      ? globalConfig?.acceleratorSettings?.maxConcurrentStacks
+      : Number(process.env['MAX_CONCURRENT_STACKS'] ?? 250);
 
     if (!this.isPipelineStage(props.stage)) {
       const assumeRoleName = setAssumeRoleName({
@@ -268,7 +271,7 @@ export abstract class Accelerator {
       //
       // Execute IMPORT_ASEA_RESOURCES Stage
       //
-      await this.executeImportAseaResources(toolkitProps, promises, globalConfig, accountsConfig);
+      await this.executeImportAseaResources(toolkitProps, promises, globalConfig, accountsConfig, maxStacks);
       //
       // Execute Bootstrap stacks for all identified accounts
       //
@@ -291,6 +294,7 @@ export abstract class Accelerator {
         globalConfig.enabledRegions,
         managementAccountDetails,
         auditAccountDetails,
+        maxStacks,
       );
       //
       // Execute LOGGING stage
@@ -301,6 +305,7 @@ export abstract class Accelerator {
         accountsConfig,
         logArchiveAccountDetails,
         globalConfig.enabledRegions,
+        maxStacks,
       );
       //
       // Execute all remaining stages
@@ -311,6 +316,7 @@ export abstract class Accelerator {
         accountsConfig,
         managementAccountDetails,
         globalConfig.enabledRegions,
+        maxStacks,
       );
 
       await Promise.all(promises);
@@ -636,6 +642,7 @@ export abstract class Accelerator {
     enabledRegions: string[],
     managementAccountDetails: { id: string; name: string },
     auditAccountDetails: { id: string; name: string },
+    maxStacks: number,
   ) {
     for (const region of enabledRegions) {
       switch (toolkitProps.stage) {
@@ -691,6 +698,7 @@ export abstract class Accelerator {
     accountsConfig: AccountsConfig,
     logArchiveAccountDetails: { id: string; name: string; centralizedLoggingRegion: string },
     enabledRegions: string[],
+    maxStacks: number,
   ) {
     if (toolkitProps.stage === AcceleratorStage.LOGGING) {
       //
@@ -715,6 +723,7 @@ export abstract class Accelerator {
         accountsConfig,
         logArchiveAccountDetails,
         enabledRegions,
+        maxStacks,
       );
     }
   }
@@ -760,6 +769,7 @@ export abstract class Accelerator {
     accountsConfig: AccountsConfig,
     logArchiveAccountDetails: { id: string; name: string; centralizedLoggingRegion: string },
     enabledRegions: string[],
+    maxStacks: number,
   ) {
     const nonLogArchiveAccounts = [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts].filter(
       accountItem => accountItem.name !== logArchiveAccountDetails.name,
@@ -800,6 +810,7 @@ export abstract class Accelerator {
     accountsConfig: AccountsConfig,
     managementAccountDetails: { id: string; name: string },
     enabledRegions: string[],
+    maxStacks: number,
   ) {
     if (
       toolkitProps.stage === AcceleratorStage.SECURITY ||
@@ -822,6 +833,7 @@ export abstract class Accelerator {
         accountsConfig,
         managementAccountDetails.name,
         enabledRegions,
+        maxStacks,
       );
     }
   }
@@ -864,6 +876,7 @@ export abstract class Accelerator {
     accountsConfig: AccountsConfig,
     managementAccountName: string,
     enabledRegions: string[],
+    maxStacks: number,
   ) {
     const nonManagementAccounts = [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts].filter(
       accountItem => accountItem.name !== managementAccountName,
@@ -894,6 +907,7 @@ export abstract class Accelerator {
     promises: Promise<void>[],
     globalConfig: GlobalConfig,
     accountsConfig: AccountsConfig,
+    maxStacks: number,
   ) {
     if (
       ![AcceleratorStage.IMPORT_ASEA_RESOURCES, AcceleratorStage.POST_IMPORT_ASEA_RESOURCES].includes(

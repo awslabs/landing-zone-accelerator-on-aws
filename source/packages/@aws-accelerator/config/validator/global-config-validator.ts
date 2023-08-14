@@ -122,6 +122,11 @@ export class GlobalConfigValidator {
     //
     this.validateAwsBackup(configDir, values, errors);
 
+    //
+    // Max concurrency validation
+    //
+    this.validateMaxConcurrency(values, errors);
+
     if (errors.length) {
       throw new Error(`${GlobalConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
     }
@@ -717,6 +722,18 @@ export class GlobalConfigValidator {
           errors.push(`Policy definition file for Backup Vault ${vault.name} not found !!!`);
         }
       }
+    }
+  }
+
+  /**
+   * validateMaxConcurrency
+   */
+  private validateMaxConcurrency(values: GlobalConfig, errors: string[]) {
+    if (values.acceleratorSettings?.maxConcurrentStacks ?? 250 > 250) {
+      errors.push(
+        `Provided acceleratorSettings.maxConcurrentStacks: ${values.acceleratorSettings!
+          .maxConcurrentStacks!} it cannot be greater than 250 `,
+      );
     }
   }
 }

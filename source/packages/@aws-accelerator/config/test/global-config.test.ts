@@ -16,6 +16,24 @@ import {
   CostAndUsageReportConfig,
   BudgetReportConfig,
   ServiceQuotaLimitsConfig,
+  SsmParameterConfig,
+  SsmParametersConfig,
+  SsmInventoryConfig,
+  AcceleratorSettingsConfig,
+  AcceleratorMetadataConfig,
+  SnsConfig,
+  SnsTopicConfig,
+  BackupConfig,
+  VaultConfig,
+  ReportConfig,
+  externalLandingZoneResourcesConfig,
+  centralizeCdkBucketsConfig,
+  AccountCloudTrailConfig,
+  AccessLogBucketConfig,
+  CentralLogBucketConfig,
+  ElbLogBucketConfig,
+  CloudWatchLogsExclusionConfig,
+  CloudWatchLogsConfig,
 } from '../lib/global-config';
 import { describe, it, expect } from '@jest/globals';
 import * as path from 'path';
@@ -103,6 +121,29 @@ describe('GlobalConfig', () => {
         excludedRegions: [],
         organizationalUnits: [],
       });
+    });
+    it('test static types', () => {
+      expect(new AccessLogBucketConfig().lifecycleRules).toEqual(undefined);
+      expect(new CentralLogBucketConfig().lifecycleRules).toEqual(undefined);
+      expect(new ElbLogBucketConfig().lifecycleRules).toEqual(undefined);
+      expect(new CloudWatchLogsExclusionConfig().regions).toEqual(undefined);
+      expect(new CloudWatchLogsConfig().enable).toEqual(undefined);
+
+      expect(new centralizeCdkBucketsConfig().enable).toEqual(true);
+      expect(new AccountCloudTrailConfig().regions).toEqual([]);
+      expect(new externalLandingZoneResourcesConfig().mappingFileBucket).toEqual('');
+      expect(new ReportConfig().budgets).toEqual([]);
+      expect(new VaultConfig().policy).toEqual('');
+      expect(new SsmParameterConfig().name).toEqual('');
+      expect(new SsmParametersConfig().parameters).toEqual([]);
+      expect(new SsmInventoryConfig().enable).toBeFalsy;
+
+      expect(new AcceleratorSettingsConfig().maxConcurrentStacks).toBeUndefined;
+
+      expect(new AcceleratorMetadataConfig().enable).toBeFalsy;
+      expect(new SnsConfig().topics).toEqual([]);
+      expect(new SnsTopicConfig().emailAddresses).toEqual([]);
+      expect(new BackupConfig().vaults).toEqual([]);
     });
   });
 });
