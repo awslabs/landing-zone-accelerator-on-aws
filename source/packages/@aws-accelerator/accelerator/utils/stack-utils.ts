@@ -231,20 +231,17 @@ export function createPipelineStack(
   resourcePrefixes: AcceleratorResourcePrefixes,
 ) {
   if (includeStage(context, { stage: AcceleratorStage.PIPELINE, account: context.account, region: context.region })) {
-    const pipelineStack = new PipelineStack(
-      app,
-      acceleratorEnv.qualifier
-        ? `${acceleratorEnv.qualifier}-${AcceleratorStage.PIPELINE}-stack-${context.account}-${context.region}`
-        : `${AcceleratorStackNames[AcceleratorStage.PIPELINE]}-${context.account}-${context.region}`,
-      {
-        env: { account: context.account, region: context.region },
-        description: `(SO0199-pipeline) Landing Zone Accelerator on AWS. Version ${version}.`,
-        terminationProtection: true,
-        partition: context.partition,
-        prefixes: resourcePrefixes,
-        ...acceleratorEnv,
-      },
-    );
+    const pipelineStackName = acceleratorEnv.qualifier
+      ? `${acceleratorEnv.qualifier}-${AcceleratorStage.PIPELINE}-stack-${context.account}-${context.region}`
+      : `${AcceleratorStackNames[AcceleratorStage.PIPELINE]}-${context.account}-${context.region}`;
+    const pipelineStack = new PipelineStack(app, pipelineStackName, {
+      env: { account: context.account, region: context.region },
+      description: `(SO0199-pipeline) Landing Zone Accelerator on AWS. Version ${version}.`,
+      terminationProtection: true,
+      partition: context.partition,
+      prefixes: resourcePrefixes,
+      ...acceleratorEnv,
+    });
     cdk.Aspects.of(pipelineStack).add(new AwsSolutionsChecks());
 
     NagSuppressions.addStackSuppressions(pipelineStack, [
@@ -258,13 +255,13 @@ export function createPipelineStack(
 
 /**
  * Create Tester Pipeline Stack
- * @param app
+ * @param rootApp
  * @param context
  * @param acceleratorEnv
  * @param resourcePrefixes
  */
 export function createTesterStack(
-  app: cdk.App,
+  rootApp: cdk.App,
   context: AcceleratorContext,
   acceleratorEnv: AcceleratorEnvironment,
   resourcePrefixes: AcceleratorResourcePrefixes,
@@ -273,20 +270,21 @@ export function createTesterStack(
     includeStage(context, { stage: AcceleratorStage.TESTER_PIPELINE, account: context.account, region: context.region })
   ) {
     if (acceleratorEnv.managementCrossAccountRoleName) {
-      const testerPipelineStack = new TesterPipelineStack(
-        app,
-        acceleratorEnv.qualifier
-          ? `${acceleratorEnv.qualifier}-${AcceleratorStage.TESTER_PIPELINE}-stack-${context.account}-${context.region}`
-          : `${AcceleratorStackNames[AcceleratorStage.TESTER_PIPELINE]}-${context.account}-${context.region}`,
-        {
-          env: { account: context.account, region: context.region },
-          description: `(SO0199-tester) Landing Zone Accelerator on AWS. Version ${version}.`,
-          terminationProtection: true,
-          prefixes: resourcePrefixes,
-          managementCrossAccountRoleName: acceleratorEnv.managementCrossAccountRoleName,
-          ...acceleratorEnv,
-        },
-      );
+      checkRootApp(rootApp);
+      const testerPipelineStackName = acceleratorEnv.qualifier
+        ? `${acceleratorEnv.qualifier}-${AcceleratorStage.TESTER_PIPELINE}-stack-${context.account}-${context.region}`
+        : `${AcceleratorStackNames[AcceleratorStage.TESTER_PIPELINE]}-${context.account}-${context.region}`;
+      const app = new cdk.App({
+        outdir: `cdk.out/${testerPipelineStackName}`,
+      });
+      const testerPipelineStack = new TesterPipelineStack(app, testerPipelineStackName, {
+        env: { account: context.account, region: context.region },
+        description: `(SO0199-tester) Landing Zone Accelerator on AWS. Version ${version}.`,
+        terminationProtection: true,
+        prefixes: resourcePrefixes,
+        managementCrossAccountRoleName: acceleratorEnv.managementCrossAccountRoleName,
+        ...acceleratorEnv,
+      });
       cdk.Aspects.of(testerPipelineStack).add(new AwsSolutionsChecks());
     }
   }
@@ -294,14 +292,14 @@ export function createTesterStack(
 
 /**
  * Create Prepare Stack
- * @param app
+ * @param rootApp
  * @param context
  * @param props
  * @param managementAccountId
  * @param homeRegion
  */
 export function createPrepareStack(
-  app: cdk.App,
+  rootApp: cdk.App,
   context: AcceleratorContext,
   props: AcceleratorStackProps,
   managementAccountId: string,
@@ -314,20 +312,21 @@ export function createPrepareStack(
       region: homeRegion,
     })
   ) {
-    const prepareStack = new PrepareStack(
-      app,
-      `${AcceleratorStackNames[AcceleratorStage.PREPARE]}-${managementAccountId}-${homeRegion}`,
-      {
-        env: {
-          account: managementAccountId,
-          region: homeRegion,
-        },
-        description: `(SO0199-prepare) Landing Zone Accelerator on AWS. Version ${version}.`,
-        synthesizer: getStackSynthesizer(props, managementAccountId, homeRegion, context.stage),
-        terminationProtection: props.globalConfig.terminationProtection ?? true,
-        ...props,
+    checkRootApp(rootApp);
+    const prepareStackName = `${AcceleratorStackNames[AcceleratorStage.PREPARE]}-${managementAccountId}-${homeRegion}`;
+    const app = new cdk.App({
+      outdir: `cdk.out/${prepareStackName}`,
+    });
+    const prepareStack = new PrepareStack(app, `${prepareStackName}`, {
+      env: {
+        account: managementAccountId,
+        region: homeRegion,
       },
-    );
+      description: `(SO0199-prepare) Landing Zone Accelerator on AWS. Version ${version}.`,
+      synthesizer: getStackSynthesizer(props, managementAccountId, homeRegion, context.stage),
+      terminationProtection: props.globalConfig.terminationProtection ?? true,
+      ...props,
+    });
     addAcceleratorTags(prepareStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(prepareStack).add(new AwsSolutionsChecks());
   }
@@ -335,14 +334,14 @@ export function createPrepareStack(
 
 /**
  * Create Finalize Stack
- * @param app
+ * @param rootApp
  * @param context
  * @param props
  * @param managementAccountId
  * @param globalRegion
  */
 export function createFinalizeStack(
-  app: cdk.App,
+  rootApp: cdk.App,
   context: AcceleratorContext,
   props: AcceleratorStackProps,
   managementAccountId: string,
@@ -355,20 +354,23 @@ export function createFinalizeStack(
       region: globalRegion,
     })
   ) {
-    const finalizeStack = new FinalizeStack(
-      app,
-      `${AcceleratorStackNames[AcceleratorStage.FINALIZE]}-${managementAccountId}-${globalRegion}`,
-      {
-        env: {
-          account: managementAccountId,
-          region: globalRegion,
-        },
-        description: `(SO0199-finalize) Landing Zone Accelerator on AWS. Version ${version}.`,
-        synthesizer: getStackSynthesizer(props, managementAccountId, globalRegion, context.stage),
-        terminationProtection: props.globalConfig.terminationProtection ?? true,
-        ...props,
+    checkRootApp(rootApp);
+    const finalizeStackName = `${
+      AcceleratorStackNames[AcceleratorStage.FINALIZE]
+    }-${managementAccountId}-${globalRegion}`;
+    const app = new cdk.App({
+      outdir: `cdk.out/${finalizeStackName}`,
+    });
+    const finalizeStack = new FinalizeStack(app, `${finalizeStackName}`, {
+      env: {
+        account: managementAccountId,
+        region: globalRegion,
       },
-    );
+      description: `(SO0199-finalize) Landing Zone Accelerator on AWS. Version ${version}.`,
+      synthesizer: getStackSynthesizer(props, managementAccountId, globalRegion, context.stage),
+      terminationProtection: props.globalConfig.terminationProtection ?? true,
+      ...props,
+    });
     addAcceleratorTags(finalizeStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(finalizeStack).add(new AwsSolutionsChecks());
   }
@@ -376,14 +378,14 @@ export function createFinalizeStack(
 
 /**
  * Create Accounts Stack
- * @param app
+ * @param rootApp
  * @param context
  * @param props
  * @param managementAccountId
  * @param globalRegion
  */
 export function createAccountsStack(
-  app: cdk.App,
+  rootApp: cdk.App,
   context: AcceleratorContext,
   props: AcceleratorStackProps,
   managementAccountId: string,
@@ -396,20 +398,23 @@ export function createAccountsStack(
       region: globalRegion,
     })
   ) {
-    const accountsStack = new AccountsStack(
-      app,
-      `${AcceleratorStackNames[AcceleratorStage.ACCOUNTS]}-${managementAccountId}-${globalRegion}`,
-      {
-        env: {
-          account: managementAccountId,
-          region: globalRegion,
-        },
-        description: `(SO0199-accounts) Landing Zone Accelerator on AWS. Version ${version}.`,
-        synthesizer: getStackSynthesizer(props, managementAccountId, globalRegion, context.stage),
-        terminationProtection: props.globalConfig.terminationProtection ?? true,
-        ...props,
+    checkRootApp(rootApp);
+    const accountsStackName = `${
+      AcceleratorStackNames[AcceleratorStage.ACCOUNTS]
+    }-${managementAccountId}-${globalRegion}`;
+    const app = new cdk.App({
+      outdir: `cdk.out/${accountsStackName}`,
+    });
+    const accountsStack = new AccountsStack(app, `${accountsStackName}`, {
+      env: {
+        account: managementAccountId,
+        region: globalRegion,
       },
-    );
+      description: `(SO0199-accounts) Landing Zone Accelerator on AWS. Version ${version}.`,
+      synthesizer: getStackSynthesizer(props, managementAccountId, globalRegion, context.stage),
+      terminationProtection: props.globalConfig.terminationProtection ?? true,
+      ...props,
+    });
     addAcceleratorTags(accountsStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(accountsStack).add(new AwsSolutionsChecks());
   }
@@ -417,14 +422,14 @@ export function createAccountsStack(
 
 /**
  * Create Organizations Stack
- * @param app
+ * @param rootApp
  * @param context
  * @param props
  * @param managementAccountId
  * @param enabledRegion
  */
 export function createOrganizationsStack(
-  app: cdk.App,
+  rootApp: cdk.App,
   context: AcceleratorContext,
   props: AcceleratorStackProps,
   managementAccountId: string,
@@ -437,20 +442,23 @@ export function createOrganizationsStack(
       region: enabledRegion,
     })
   ) {
-    const organizationStack = new OrganizationsStack(
-      app,
-      `${AcceleratorStackNames[AcceleratorStage.ORGANIZATIONS]}-${managementAccountId}-${enabledRegion}`,
-      {
-        env: {
-          account: managementAccountId,
-          region: enabledRegion,
-        },
-        description: `(SO0199-organizations) Landing Zone Accelerator on AWS. Version ${version}.`,
-        synthesizer: getStackSynthesizer(props, managementAccountId, enabledRegion, context.stage),
-        terminationProtection: props.globalConfig.terminationProtection ?? true,
-        ...props,
+    checkRootApp(rootApp);
+    const organizationStackName = `${
+      AcceleratorStackNames[AcceleratorStage.ORGANIZATIONS]
+    }-${managementAccountId}-${enabledRegion}`;
+    const app = new cdk.App({
+      outdir: `cdk.out/${organizationStackName}`,
+    });
+    const organizationStack = new OrganizationsStack(app, `${organizationStackName}`, {
+      env: {
+        account: managementAccountId,
+        region: enabledRegion,
       },
-    );
+      description: `(SO0199-organizations) Landing Zone Accelerator on AWS. Version ${version}.`,
+      synthesizer: getStackSynthesizer(props, managementAccountId, enabledRegion, context.stage),
+      terminationProtection: props.globalConfig.terminationProtection ?? true,
+      ...props,
+    });
     addAcceleratorTags(organizationStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(organizationStack).add(new AwsSolutionsChecks());
   }
@@ -458,14 +466,14 @@ export function createOrganizationsStack(
 
 /**
  * Create Security Audit Stack
- * @param app
+ * @param rootApp
  * @param context
  * @param props
  * @param auditAccountId
  * @param enabledRegion
  */
 export function createSecurityAuditStack(
-  app: cdk.App,
+  rootApp: cdk.App,
   context: AcceleratorContext,
   props: AcceleratorStackProps,
   auditAccountId: string,
@@ -478,20 +486,23 @@ export function createSecurityAuditStack(
       region: enabledRegion,
     })
   ) {
-    const auditStack = new SecurityAuditStack(
-      app,
-      `${AcceleratorStackNames[AcceleratorStage.SECURITY_AUDIT]}-${auditAccountId}-${enabledRegion}`,
-      {
-        env: {
-          account: auditAccountId,
-          region: enabledRegion,
-        },
-        description: `(SO0199-securityaudit) Landing Zone Accelerator on AWS. Version ${version}.`,
-        synthesizer: getStackSynthesizer(props, auditAccountId, enabledRegion, context.stage),
-        terminationProtection: props.globalConfig.terminationProtection ?? true,
-        ...props,
+    checkRootApp(rootApp);
+    const securityAuditStackName = `${
+      AcceleratorStackNames[AcceleratorStage.SECURITY_AUDIT]
+    }-${auditAccountId}-${enabledRegion}`;
+    const app = new cdk.App({
+      outdir: `cdk.out/${securityAuditStackName}`,
+    });
+    const auditStack = new SecurityAuditStack(app, `${securityAuditStackName}`, {
+      env: {
+        account: auditAccountId,
+        region: enabledRegion,
       },
-    );
+      description: `(SO0199-securityaudit) Landing Zone Accelerator on AWS. Version ${version}.`,
+      synthesizer: getStackSynthesizer(props, auditAccountId, enabledRegion, context.stage),
+      terminationProtection: props.globalConfig.terminationProtection ?? true,
+      ...props,
+    });
     addAcceleratorTags(auditStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(auditStack).add(new AwsSolutionsChecks());
   }
@@ -499,7 +510,7 @@ export function createSecurityAuditStack(
 
 /**
  * Creates the Key and Dependencies Stacks
- * @param app
+ * @param rootApp
  * @param context
  * @param props
  * @param env
@@ -507,7 +518,7 @@ export function createSecurityAuditStack(
  * @param enabledRegion
  */
 export function createKeyDependencyStacks(
-  app: cdk.App,
+  rootApp: cdk.App,
   context: AcceleratorContext,
   props: AcceleratorStackProps,
   env: cdk.Environment,
@@ -521,7 +532,12 @@ export function createKeyDependencyStacks(
       region: enabledRegion,
     })
   ) {
-    const keyStack = new KeyStack(app, `${AcceleratorStackNames[AcceleratorStage.KEY]}-${accountId}-${enabledRegion}`, {
+    checkRootApp(rootApp);
+    const keyStackName = `${AcceleratorStackNames[AcceleratorStage.KEY]}-${accountId}-${enabledRegion}`;
+    const app = new cdk.App({
+      outdir: `cdk.out/${keyStackName}`,
+    });
+    const keyStack = new KeyStack(app, `${keyStackName}`, {
       env,
       description: `(SO0199-key) Landing Zone Accelerator on AWS. Version ${version}.`,
       synthesizer: getStackSynthesizer(props, accountId, enabledRegion, context.stage),
@@ -531,17 +547,17 @@ export function createKeyDependencyStacks(
     addAcceleratorTags(keyStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(keyStack).add(new AwsSolutionsChecks());
 
-    const dependencyStack = new DependenciesStack(
-      app,
-      `${AcceleratorStackNames[AcceleratorStage.DEPENDENCIES]}-${accountId}-${enabledRegion}`,
-      {
-        env,
-        description: `(SO0199-dependencies) Landing Zone Accelerator on AWS. Version ${version}.`,
-        synthesizer: getStackSynthesizer(props, accountId, enabledRegion, context.stage),
-        terminationProtection: props.globalConfig.terminationProtection ?? true,
-        ...props,
-      },
-    );
+    const dependencyStackName = `${AcceleratorStackNames[AcceleratorStage.DEPENDENCIES]}-${accountId}-${enabledRegion}`;
+    const app2 = new cdk.App({
+      outdir: `cdk.out/${dependencyStackName}`,
+    });
+    const dependencyStack = new DependenciesStack(app2, `${dependencyStackName}`, {
+      env,
+      description: `(SO0199-dependencies) Landing Zone Accelerator on AWS. Version ${version}.`,
+      synthesizer: getStackSynthesizer(props, accountId, enabledRegion, context.stage),
+      terminationProtection: props.globalConfig.terminationProtection ?? true,
+      ...props,
+    });
     addAcceleratorTags(dependencyStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(dependencyStack).add(new AwsSolutionsChecks());
   }
@@ -549,7 +565,7 @@ export function createKeyDependencyStacks(
 
 /**
  * Create Bootstrap Stack
- * @param app
+ * @param rootApp
  * @param context
  * @param props
  * @param env
@@ -557,7 +573,7 @@ export function createKeyDependencyStacks(
  * @param enabledRegion
  */
 export function createBootstrapStack(
-  app: cdk.App,
+  rootApp: cdk.App,
   context: AcceleratorContext,
   props: AcceleratorStackProps,
   env: cdk.Environment,
@@ -571,17 +587,18 @@ export function createBootstrapStack(
       region: enabledRegion,
     })
   ) {
-    const bootstrapStack = new BootstrapStack(
-      app,
-      `${AcceleratorStackNames[AcceleratorStage.BOOTSTRAP]}-${accountId}-${enabledRegion}`,
-      {
-        env,
-        description: `(SO0199-bootstrap) Landing Zone Accelerator on AWS. Version ${version}.`,
-        synthesizer: getStackSynthesizer(props, accountId, enabledRegion, context.stage),
-        terminationProtection: props.globalConfig.terminationProtection ?? true,
-        ...props,
-      },
-    );
+    checkRootApp(rootApp);
+    const bootstrapStackName = `${AcceleratorStackNames[AcceleratorStage.BOOTSTRAP]}-${accountId}-${enabledRegion}`;
+    const app = new cdk.App({
+      outdir: `cdk.out/${bootstrapStackName}`,
+    });
+    const bootstrapStack = new BootstrapStack(app, `${bootstrapStackName}`, {
+      env,
+      description: `(SO0199-bootstrap) Landing Zone Accelerator on AWS. Version ${version}.`,
+      synthesizer: getStackSynthesizer(props, accountId, enabledRegion, context.stage),
+      terminationProtection: props.globalConfig.terminationProtection ?? true,
+      ...props,
+    });
     addAcceleratorTags(bootstrapStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(bootstrapStack).add(new AwsSolutionsChecks());
   }
@@ -589,7 +606,7 @@ export function createBootstrapStack(
 
 /**
  * Create Logging Stack
- * @param app
+ * @param rootApp
  * @param context
  * @param props
  * @param env
@@ -597,7 +614,7 @@ export function createBootstrapStack(
  * @param enabledRegion
  */
 export function createLoggingStack(
-  app: cdk.App,
+  rootApp: cdk.App,
   context: AcceleratorContext,
   props: AcceleratorStackProps,
   env: cdk.Environment,
@@ -611,17 +628,18 @@ export function createLoggingStack(
       region: enabledRegion,
     })
   ) {
-    const loggingStack = new LoggingStack(
-      app,
-      `${AcceleratorStackNames[AcceleratorStage.LOGGING]}-${accountId}-${enabledRegion}`,
-      {
-        env,
-        description: `(SO0199-logging) Landing Zone Accelerator on AWS. Version ${version}.`,
-        synthesizer: getStackSynthesizer(props, accountId, enabledRegion, context.stage),
-        terminationProtection: props.globalConfig.terminationProtection ?? true,
-        ...props,
-      },
-    );
+    checkRootApp(rootApp);
+    const loggingStackName = `${AcceleratorStackNames[AcceleratorStage.LOGGING]}-${accountId}-${enabledRegion}`;
+    const app = new cdk.App({
+      outdir: `cdk.out/${loggingStackName}`,
+    });
+    const loggingStack = new LoggingStack(app, `${loggingStackName}`, {
+      env,
+      description: `(SO0199-logging) Landing Zone Accelerator on AWS. Version ${version}.`,
+      synthesizer: getStackSynthesizer(props, accountId, enabledRegion, context.stage),
+      terminationProtection: props.globalConfig.terminationProtection ?? true,
+      ...props,
+    });
     addAcceleratorTags(loggingStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(loggingStack).add(new AwsSolutionsChecks());
   }
@@ -629,7 +647,7 @@ export function createLoggingStack(
 
 /**
  * Create Security Stack
- * @param app
+ * @param rootApp
  * @param context
  * @param props
  * @param env
@@ -637,7 +655,7 @@ export function createLoggingStack(
  * @param enabledRegion
  */
 export function createSecurityStack(
-  app: cdk.App,
+  rootApp: cdk.App,
   context: AcceleratorContext,
   props: AcceleratorStackProps,
   env: cdk.Environment,
@@ -651,17 +669,18 @@ export function createSecurityStack(
       region: enabledRegion,
     })
   ) {
-    const securityStack = new SecurityStack(
-      app,
-      `${AcceleratorStackNames[AcceleratorStage.SECURITY]}-${accountId}-${enabledRegion}`,
-      {
-        env,
-        description: `(SO0199-security) Landing Zone Accelerator on AWS. Version ${version}.`,
-        synthesizer: getStackSynthesizer(props, accountId, enabledRegion, context.stage),
-        terminationProtection: props.globalConfig.terminationProtection ?? true,
-        ...props,
-      },
-    );
+    checkRootApp(rootApp);
+    const securityStackName = `${AcceleratorStackNames[AcceleratorStage.SECURITY]}-${accountId}-${enabledRegion}`;
+    const app = new cdk.App({
+      outdir: `cdk.out/${securityStackName}`,
+    });
+    const securityStack = new SecurityStack(app, `${securityStackName}`, {
+      env,
+      description: `(SO0199-security) Landing Zone Accelerator on AWS. Version ${version}.`,
+      synthesizer: getStackSynthesizer(props, accountId, enabledRegion, context.stage),
+      terminationProtection: props.globalConfig.terminationProtection ?? true,
+      ...props,
+    });
     addAcceleratorTags(securityStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(securityStack).add(new AwsSolutionsChecks());
   }
@@ -669,7 +688,7 @@ export function createSecurityStack(
 
 /**
  * Create Operations Stack
- * @param app
+ * @param rootApp
  * @param context
  * @param props
  * @param env
@@ -678,7 +697,7 @@ export function createSecurityStack(
  * @param accountWarming
  */
 export function createOperationsStack(
-  app: cdk.App,
+  rootApp: cdk.App,
   context: AcceleratorContext,
   props: AcceleratorStackProps,
   env: cdk.Environment,
@@ -693,18 +712,19 @@ export function createOperationsStack(
       region: enabledRegion,
     })
   ) {
-    const operationsStack = new OperationsStack(
-      app,
-      `${AcceleratorStackNames[AcceleratorStage.OPERATIONS]}-${accountId}-${enabledRegion}`,
-      {
-        env,
-        description: `(SO0199-operations) Landing Zone Accelerator on AWS. Version ${version}.`,
-        synthesizer: getStackSynthesizer(props, accountId, enabledRegion, context.stage),
-        terminationProtection: props.globalConfig.terminationProtection ?? true,
-        ...props,
-        accountWarming,
-      },
-    );
+    checkRootApp(rootApp);
+    const operationsStackName = `${AcceleratorStackNames[AcceleratorStage.OPERATIONS]}-${accountId}-${enabledRegion}`;
+    const app = new cdk.App({
+      outdir: `cdk.out/${operationsStackName}`,
+    });
+    const operationsStack = new OperationsStack(app, `${operationsStackName}`, {
+      env,
+      description: `(SO0199-operations) Landing Zone Accelerator on AWS. Version ${version}.`,
+      synthesizer: getStackSynthesizer(props, accountId, enabledRegion, context.stage),
+      terminationProtection: props.globalConfig.terminationProtection ?? true,
+      ...props,
+      accountWarming,
+    });
     addAcceleratorTags(operationsStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(operationsStack).add(new AwsSolutionsChecks());
   }
@@ -712,7 +732,7 @@ export function createOperationsStack(
 
 /**
  * Create Network Prep Stack
- * @param app
+ * @param rootApp
  * @param context
  * @param props
  * @param env
@@ -720,7 +740,7 @@ export function createOperationsStack(
  * @param enabledRegion
  */
 export function createNetworkPrepStack(
-  app: cdk.App,
+  rootApp: cdk.App,
   context: AcceleratorContext,
   props: AcceleratorStackProps,
   env: cdk.Environment,
@@ -734,17 +754,20 @@ export function createNetworkPrepStack(
       region: enabledRegion,
     })
   ) {
-    const networkPrepStack = new NetworkPrepStack(
-      app,
-      `${AcceleratorStackNames[AcceleratorStage.NETWORK_PREP]}-${accountId}-${enabledRegion}`,
-      {
-        env,
-        description: `(SO0199-networkprep) Landing Zone Accelerator on AWS. Version ${version}.`,
-        synthesizer: getStackSynthesizer(props, accountId, enabledRegion, context.stage),
-        terminationProtection: props.globalConfig.terminationProtection ?? true,
-        ...props,
-      },
-    );
+    checkRootApp(rootApp);
+    const networkPrepStackName = `${
+      AcceleratorStackNames[AcceleratorStage.NETWORK_PREP]
+    }-${accountId}-${enabledRegion}`;
+    const app = new cdk.App({
+      outdir: `cdk.out/${networkPrepStackName}`,
+    });
+    const networkPrepStack = new NetworkPrepStack(app, `${networkPrepStackName}`, {
+      env,
+      description: `(SO0199-networkprep) Landing Zone Accelerator on AWS. Version ${version}.`,
+      synthesizer: getStackSynthesizer(props, accountId, enabledRegion, context.stage),
+      terminationProtection: props.globalConfig.terminationProtection ?? true,
+      ...props,
+    });
     addAcceleratorTags(networkPrepStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(networkPrepStack).add(new AwsSolutionsChecks());
   }
@@ -752,7 +775,7 @@ export function createNetworkPrepStack(
 
 /**
  * Create Security Resources Stack
- * @param app
+ * @param rootApp
  * @param context
  * @param props
  * @param env
@@ -760,7 +783,7 @@ export function createNetworkPrepStack(
  * @param enabledRegion
  */
 export function createSecurityResourcesStack(
-  app: cdk.App,
+  rootApp: cdk.App,
   context: AcceleratorContext,
   props: AcceleratorStackProps,
   env: cdk.Environment,
@@ -774,17 +797,20 @@ export function createSecurityResourcesStack(
       region: enabledRegion,
     })
   ) {
-    const securityResourcesStack = new SecurityResourcesStack(
-      app,
-      `${AcceleratorStackNames[AcceleratorStage.SECURITY_RESOURCES]}-${accountId}-${enabledRegion}`,
-      {
-        env,
-        description: `(SO0199-securityresources) Landing Zone Accelerator on AWS. Version ${version}.`,
-        synthesizer: getStackSynthesizer(props, accountId, enabledRegion, context.stage),
-        terminationProtection: props.globalConfig.terminationProtection ?? true,
-        ...props,
-      },
-    );
+    checkRootApp(rootApp);
+    const securityResourcesStackName = `${
+      AcceleratorStackNames[AcceleratorStage.SECURITY_RESOURCES]
+    }-${accountId}-${enabledRegion}`;
+    const app = new cdk.App({
+      outdir: `cdk.out/${securityResourcesStackName}`,
+    });
+    const securityResourcesStack = new SecurityResourcesStack(app, `${securityResourcesStackName}`, {
+      env,
+      description: `(SO0199-securityresources) Landing Zone Accelerator on AWS. Version ${version}.`,
+      synthesizer: getStackSynthesizer(props, accountId, enabledRegion, context.stage),
+      terminationProtection: props.globalConfig.terminationProtection ?? true,
+      ...props,
+    });
     addAcceleratorTags(securityResourcesStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(securityResourcesStack).add(new AwsSolutionsChecks());
   }
@@ -792,7 +818,7 @@ export function createSecurityResourcesStack(
 
 /**
  * Create all Network VPC stage stacks
- * @param app
+ * @param rootApp
  * @param context
  * @param props
  * @param env
@@ -800,7 +826,7 @@ export function createSecurityResourcesStack(
  * @param enabledRegion
  */
 export function createNetworkVpcStacks(
-  app: cdk.App,
+  rootApp: cdk.App,
   context: AcceleratorContext,
   props: AcceleratorStackProps,
   env: cdk.Environment,
@@ -814,6 +840,12 @@ export function createNetworkVpcStacks(
       region: enabledRegion,
     })
   ) {
+    checkRootApp(rootApp);
+    const dnsStackName = `${AcceleratorStackNames[AcceleratorStage.NETWORK_VPC_DNS]}-${accountId}-${enabledRegion}`;
+
+    const app = new cdk.App({
+      outdir: `cdk.out/${dnsStackName}`,
+    });
     const vpcStack = new NetworkVpcStack(
       app,
       `${AcceleratorStackNames[AcceleratorStage.NETWORK_VPC]}-${accountId}-${enabledRegion}`,
@@ -843,17 +875,13 @@ export function createNetworkVpcStacks(
     endpointsStack.addDependency(vpcStack);
     cdk.Aspects.of(endpointsStack).add(new AwsSolutionsChecks());
 
-    const dnsStack = new NetworkVpcDnsStack(
-      app,
-      `${AcceleratorStackNames[AcceleratorStage.NETWORK_VPC_DNS]}-${accountId}-${enabledRegion}`,
-      {
-        env,
-        description: `(SO0199-networkdns) Landing Zone Accelerator on AWS. Version ${version}.`,
-        synthesizer: getStackSynthesizer(props, accountId, enabledRegion, context.stage),
-        terminationProtection: props.globalConfig.terminationProtection ?? true,
-        ...props,
-      },
-    );
+    const dnsStack = new NetworkVpcDnsStack(app, `${dnsStackName}`, {
+      env,
+      description: `(SO0199-networkdns) Landing Zone Accelerator on AWS. Version ${version}.`,
+      synthesizer: getStackSynthesizer(props, accountId, enabledRegion, context.stage),
+      terminationProtection: props.globalConfig.terminationProtection ?? true,
+      ...props,
+    });
     addAcceleratorTags(dnsStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     dnsStack.addDependency(endpointsStack);
     cdk.Aspects.of(dnsStack).add(new AwsSolutionsChecks());
@@ -862,7 +890,7 @@ export function createNetworkVpcStacks(
 
 /**
  * Create all Network Associations stage stacks
- * @param app
+ * @param rootApp
  * @param context
  * @param props
  * @param env
@@ -870,7 +898,7 @@ export function createNetworkVpcStacks(
  * @param enabledRegion
  */
 export function createNetworkAssociationsStacks(
-  app: cdk.App,
+  rootApp: cdk.App,
   context: AcceleratorContext,
   props: AcceleratorStackProps,
   env: cdk.Environment,
@@ -884,31 +912,37 @@ export function createNetworkAssociationsStacks(
       region: enabledRegion,
     })
   ) {
-    const networkAssociationsStack = new NetworkAssociationsStack(
-      app,
-      `${AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS]}-${accountId}-${enabledRegion}`,
-      {
-        env,
-        description: `(SO0199-networkassociations) Landing Zone Accelerator on AWS. Version ${version}.`,
-        synthesizer: getStackSynthesizer(props, accountId, enabledRegion, context.stage),
-        terminationProtection: props.globalConfig.terminationProtection ?? true,
-        ...props,
-      },
-    );
+    checkRootApp(rootApp);
+    const networkAssociationsStackName = `${
+      AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS]
+    }-${accountId}-${enabledRegion}`;
+    const app = new cdk.App({
+      outdir: `cdk.out/${networkAssociationsStackName}`,
+    });
+
+    const networkAssociationsStack = new NetworkAssociationsStack(app, `${networkAssociationsStackName}`, {
+      env,
+      description: `(SO0199-networkassociations) Landing Zone Accelerator on AWS. Version ${version}.`,
+      synthesizer: getStackSynthesizer(props, accountId, enabledRegion, context.stage),
+      terminationProtection: props.globalConfig.terminationProtection ?? true,
+      ...props,
+    });
     addAcceleratorTags(networkAssociationsStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(networkAssociationsStack).add(new AwsSolutionsChecks());
 
-    const networkGwlbStack = new NetworkAssociationsGwlbStack(
-      app,
-      `${AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS_GWLB]}-${accountId}-${enabledRegion}`,
-      {
-        env,
-        description: `(SO0199-networkgwlb) Landing Zone Accelerator on AWS. Version ${version}.`,
-        synthesizer: getStackSynthesizer(props, accountId, enabledRegion, context.stage),
-        terminationProtection: props.globalConfig.terminationProtection ?? true,
-        ...props,
-      },
-    );
+    const networkGwlbStackName = `${
+      AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS_GWLB]
+    }-${accountId}-${enabledRegion}`;
+    const app2 = new cdk.App({
+      outdir: `cdk.out/${networkGwlbStackName}`,
+    });
+    const networkGwlbStack = new NetworkAssociationsGwlbStack(app2, `${networkGwlbStackName}`, {
+      env,
+      description: `(SO0199-networkgwlb) Landing Zone Accelerator on AWS. Version ${version}.`,
+      synthesizer: getStackSynthesizer(props, accountId, enabledRegion, context.stage),
+      terminationProtection: props.globalConfig.terminationProtection ?? true,
+      ...props,
+    });
     addAcceleratorTags(networkGwlbStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(networkGwlbStack).add(new AwsSolutionsChecks());
   }
@@ -916,7 +950,7 @@ export function createNetworkAssociationsStacks(
 
 /**
  * Create all Customizations stage stacks
- * @param app
+ * @param rootApp
  * @param context
  * @param props
  * @param env
@@ -924,7 +958,7 @@ export function createNetworkAssociationsStacks(
  * @param enabledRegion
  */
 export function createCustomizationsStacks(
-  app: cdk.App,
+  rootApp: cdk.App,
   context: AcceleratorContext,
   props: AcceleratorStackProps,
   env: cdk.Environment,
@@ -938,17 +972,20 @@ export function createCustomizationsStacks(
       region: enabledRegion,
     })
   ) {
-    const customizationsStack = new CustomizationsStack(
-      app,
-      `${AcceleratorStackNames[AcceleratorStage.CUSTOMIZATIONS]}-${accountId}-${enabledRegion}`,
-      {
-        env,
-        description: `(SO0199-customizations) Landing Zone Accelerator on AWS. Version ${version}.`,
-        synthesizer: getStackSynthesizer(props, accountId, enabledRegion, context.stage),
-        terminationProtection: props.globalConfig.terminationProtection ?? true,
-        ...props,
-      },
-    );
+    checkRootApp(rootApp);
+    const customizationsStackName = `${
+      AcceleratorStackNames[AcceleratorStage.CUSTOMIZATIONS]
+    }-${accountId}-${enabledRegion}`;
+    const app = new cdk.App({
+      outdir: `cdk.out/${customizationsStackName}`,
+    });
+    const customizationsStack = new CustomizationsStack(app, `${customizationsStackName}`, {
+      env,
+      description: `(SO0199-customizations) Landing Zone Accelerator on AWS. Version ${version}.`,
+      synthesizer: getStackSynthesizer(props, accountId, enabledRegion, context.stage),
+      terminationProtection: props.globalConfig.terminationProtection ?? true,
+      ...props,
+    });
     cdk.Aspects.of(customizationsStack).add(new AwsSolutionsChecks());
 
     createCustomStacks(app, props, env, accountId, enabledRegion);
@@ -959,7 +996,7 @@ export function createCustomizationsStacks(
 
 /**
  * Import ASEA CloudFormation stacks manage resources using LZA CDK App
- * @param app
+ * @param rootApp
  * @param context
  * @param props
  * @param accountId
@@ -990,9 +1027,7 @@ export function importAseaResourceStacks(
   }
   // Since we use different apps and stacks are not part of rootApp, adding empty stack
   // to app to avoid command failure for no stacks in app
-  if (!rootApp.node.tryFindChild(`placeHolder`)) {
-    new cdk.Stack(rootApp, `placeHolder`, {});
-  }
+  checkRootApp(rootApp);
   const aseaStackMap = props.globalConfig.externalLandingZoneResources?.templateMap;
   const acceleratorPrefix = props.globalConfig.externalLandingZoneResources?.acceleratorPrefix;
 
@@ -1073,7 +1108,7 @@ export function saveAseaResourceMapping(
 
 /**
  * Create custom CloudFormation stacks
- * @param app
+ * @param rootApp
  * @param context
  * @param props
  * @param env
@@ -1081,7 +1116,7 @@ export function saveAseaResourceMapping(
  * @param enabledRegion
  */
 function createCustomStacks(
-  app: cdk.App,
+  rootApp: cdk.App,
   props: AcceleratorStackProps,
   env: cdk.Environment,
   accountId: string,
@@ -1095,10 +1130,14 @@ function createCustomStacks(
       accountId,
       enabledRegion,
     );
-
+    checkRootApp(rootApp);
     for (const stack of customStackList ?? []) {
       logger.info(`New custom stack ${stack.stackConfig.name}`);
-      stack.stackObj = new CustomStack(app, `${stack.stackConfig.name}-${accountId}-${enabledRegion}`, {
+      const customStackName = `${stack.stackConfig.name}-${accountId}-${enabledRegion}`;
+      const app = new cdk.App({
+        outdir: `cdk.out/${customStackName}`,
+      });
+      stack.stackObj = new CustomStack(app, `${customStackName}`, {
         env,
         description: stack.stackConfig.description,
         runOrder: stack.stackConfig.runOrder,
@@ -1137,14 +1176,14 @@ function addCustomStackDependencies(
 
 /**
  * Create custom applications stacks
- * @param app
+ * @param rootApp
  * @param props
  * @param env
  * @param accountId
  * @param enabledRegion
  */
 function createApplicationsStacks(
-  app: cdk.App,
+  rootApp: cdk.App,
   props: AcceleratorStackProps,
   env: cdk.Environment,
   accountId: string,
@@ -1162,6 +1201,10 @@ function createApplicationsStacks(
     ) {
       const applicationStackName = `${props.prefixes.accelerator}-App-${application.name}-${accountId}-${enabledRegion}`;
 
+      checkRootApp(rootApp);
+      const app = new cdk.App({
+        outdir: `cdk.out/${applicationStackName}`,
+      });
       const applicationStack = new ApplicationsStack(app, applicationStackName, {
         env,
         description: `(SO0199-customizations) Landing Zone Accelerator on AWS. Version ${version}.`,
@@ -1186,4 +1229,16 @@ function isBeforeBootstrapStage(stage?: string): boolean {
   }
 
   return preBootstrapStages.includes(stage);
+}
+
+/**
+ * Function to check if the root app has a placeholder
+ * this avoids command failure of no stacks in app
+ */
+function checkRootApp(rootApp: cdk.App): cdk.App | cdk.Stack {
+  if (!rootApp.node.tryFindChild(`placeHolder`)) {
+    return new cdk.Stack(rootApp, `placeHolder`, {});
+  } else {
+    return rootApp;
+  }
 }

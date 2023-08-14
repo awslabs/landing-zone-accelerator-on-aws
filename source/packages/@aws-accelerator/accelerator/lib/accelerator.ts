@@ -752,7 +752,6 @@ export abstract class Accelerator {
           const accountId = accountsConfig.getAccountId(account.name);
           logger.info(`Executing ${toolkitProps.stage} for ${account.name} account in ${region} region.`);
 
-          await delay(2000);
           promises.push(
             AcceleratorToolkit.execute({
               accountId,
@@ -859,7 +858,6 @@ export abstract class Accelerator {
     for (const region of enabledRegions) {
       for (const account of nonManagementAccounts) {
         const accountId = accountsConfig.getAccountId(account.name);
-        await delay(1000);
         logger.info(`Executing ${toolkitProps.stage} for ${account.name} account in ${region} region.`);
         promises.push(
           AcceleratorToolkit.execute({
