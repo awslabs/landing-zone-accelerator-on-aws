@@ -188,7 +188,6 @@ export class AcceleratorToolkit {
         _: [options.command as Command, ...[]],
         versionReporting: false,
         pathMetadata: false,
-        output: 'cdk.out',
         assetMetadata: false,
         staging: false,
         lookups: false,
@@ -232,18 +231,18 @@ export class AcceleratorToolkit {
 
     switch (options.command) {
       case Command.BOOTSTRAP:
-        await AcceleratorToolkit.bootstrapToolKitStacks(cli, configuration, toolkitStackName, options);
+        await AcceleratorToolkit.bootstrapToolKitStacks(context, configuration, toolkitStackName, options);
         break;
       case Command.DIFF:
         await cli.diff({ stackNames: [] });
         break;
 
       case Command.DEPLOY:
-        await AcceleratorToolkit.deployStacks(cli, toolkitStackName, options);
+        await AcceleratorToolkit.deployStacks(context, toolkitStackName, options);
         break;
       case Command.SYNTHESIZE:
       case Command.SYNTH:
-        await cli.synth([], false, true);
+        await AcceleratorToolkit.synthStacks(cli);
         break;
 
       default:
@@ -311,7 +310,7 @@ export class AcceleratorToolkit {
    * @param options {@link AcceleratorToolkitProps}
    */
   private static async bootstrapToolKitStacks(
-    cli: CdkToolkit,
+    context: string[],
     configuration: Configuration,
     toolkitStackName: string,
     options: AcceleratorToolkitProps,
@@ -334,6 +333,9 @@ export class AcceleratorToolkit {
         cloudFormationExecutionPolicies: [`arn:${options.partition}:iam::aws:policy/AdministratorAccess`],
       },
     };
+    const bootstrapStackName = `${AcceleratorStackNames[AcceleratorStage.BOOTSTRAP]}-${options.accountId}-${
+      options.region
+    }`;
 
     // Use custom bootstrapping template if cdk options are set
     if (
@@ -351,15 +353,14 @@ export class AcceleratorToolkit {
         };
       }
       process.env['CDK_NEW_BOOTSTRAP'] = '1';
-      const templatePath = `./cdk.out/${AcceleratorStackNames[AcceleratorStage.BOOTSTRAP]}-${options.accountId}-${
-        options.region
-      }.template.json`;
+      const templatePath = `./cdk.out/${bootstrapStackName}/${bootstrapStackName}.template.json`;
       source = { source: 'custom', templateFile: templatePath };
     } else {
       source = { source: 'default' };
     }
 
     const bootstrapper = new Bootstrapper(source);
+    const cli = await AcceleratorToolkit.getCdkToolKit(context, options, bootstrapStackName);
 
     await cli.bootstrap(environments, bootstrapper, bootstrapEnvOptions);
   }
@@ -471,10 +472,30 @@ export class AcceleratorToolkit {
    * @param toolkitStackName string
    * @param options {@link AcceleratorToolkitProps}
    */
-  private static async deployStacks(cli: CdkToolkit, toolkitStackName: string, options: AcceleratorToolkitProps) {
+  private static async deployStacks(context: string[], toolkitStackName: string, options: AcceleratorToolkitProps) {
+    const stackName = await AcceleratorToolkit.getStackNames(options);
+
+    let roleArn;
+    if (!isBeforeBootstrapStage(options.command, options.stage)) {
+      roleArn = getDeploymentRoleArn({
+        account: options.accountId,
+        region: options.region,
+        cdkOptions: options.cdkOptions,
+      });
+    }
+    const deployPromises: Promise<void>[] = [];
+    for (const stack of stackName) {
+      deployPromises.push(AcceleratorToolkit.runDeployStackCli(context, options, stack, toolkitStackName, roleArn));
+    }
+    await Promise.all(deployPromises);
+  }
+  /**
+   * Function to get stack names for bootstrapping
+   * @param options {@link AcceleratorToolkitProps}
+   */
+  private static async getStackNames(options: AcceleratorToolkitProps): Promise<string[]> {
     const stageName = AcceleratorToolkit.validateAndGetDeployStage(options);
     let stackName = [`${AcceleratorStackNames[stageName]}-${options.accountId}-${options.region}`];
-
     switch (options.stage) {
       case AcceleratorStage.PIPELINE:
         stackName = [
@@ -519,18 +540,96 @@ export class AcceleratorToolkit {
         stackName = [options.stack!];
         break;
     }
-    let roleArn;
-    if (!isBeforeBootstrapStage(options.command, options.stage)) {
-      roleArn = getDeploymentRoleArn({
-        account: options.accountId,
-        region: options.region,
-        cdkOptions: options.cdkOptions,
-      });
+
+    return stackName;
+  }
+  /**
+   * Function to synth stacks
+   * @param cli {@link CdkToolkit}
+   * @param toolkitStackName string
+   * @param options {@link AcceleratorToolkitProps}
+   */
+  private static async synthStacks(cli: CdkToolkit) {
+    await cli.synth([], false, true).catch(err => {
+      logger.error(err);
+      throw new Error(`Synthesis of stacks failed`);
+    });
+  }
+
+  private static async getCdkToolKit(context: string[], options: AcceleratorToolkitProps, stackName: string) {
+    let app: string | undefined;
+    if (options.stage === AcceleratorStage.PIPELINE) {
+      app = options.app;
+    } else if (options.stage === AcceleratorStage.NETWORK_ASSOCIATIONS_GWLB) {
+      app = `cdk.out/${
+        AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS]
+      }-${options.accountId!}-${options.region!}`;
+    } else if (
+      options.stage === AcceleratorStage.NETWORK_VPC_ENDPOINTS ||
+      options.stage === AcceleratorStage.NETWORK_VPC
+    ) {
+      app = `cdk.out/${
+        AcceleratorStackNames[AcceleratorStage.NETWORK_VPC_DNS]
+      }-${options.accountId!}-${options.region!}`;
+    } else {
+      app = `cdk.out/${stackName}`;
     }
+    const configuration = new Configuration({
+      commandLineArguments: {
+        _: [options.command as Command, ...[]],
+        versionReporting: false,
+        pathMetadata: false,
+        assetMetadata: false,
+        staging: false,
+        lookups: false,
+        app,
+        context,
+      },
+    });
+    await configuration.load();
+
+    const sdkProvider = await SdkProvider.withAwsCliCompatibleDefaults({
+      profile: configuration.settings.get(['profile']),
+      ec2creds: options.ec2Creds,
+      httpOptions: {
+        proxyAddress: options.proxyAddress,
+        caBundlePath: options.caBundlePath,
+      },
+    });
+
+    const deployments = new Deployments({ sdkProvider });
+
+    let outDirLock: ILock | undefined;
+    const cloudExecutable = new CloudExecutable({
+      configuration,
+      sdkProvider,
+      synthesizer: async (aws, config) => {
+        await outDirLock?.release();
+        const { assembly, lock } = await execProgram(aws, config);
+        outDirLock = lock;
+        return assembly;
+      },
+    });
+
+    return new CdkToolkit({
+      cloudExecutable,
+      deployments,
+      configuration,
+      sdkProvider,
+    });
+  }
+  private static async runDeployStackCli(
+    context: string[],
+    options: AcceleratorToolkitProps,
+    stack: string,
+    toolkitStackName: string,
+    roleArn: string | undefined,
+  ) {
+    const cli = await AcceleratorToolkit.getCdkToolKit(context, options, stack);
     const selector: StackSelector = {
-      patterns: stackName,
+      patterns: [stack],
     };
-    const changeSetName = `${stackName[0]}-change-set`;
+    const changeSetName = `${stack}-change-set`;
     await cli
       .deploy({
         selector,
