@@ -245,6 +245,9 @@ export abstract class GlobalConfigTypes {
     account: t.string,
     readOnlyAccessRoleArns: t.optional(t.array(t.string)),
   });
+  static readonly acceleratorSettingsConfig = t.interface({
+    maxConcurrentStacks: t.optional(t.number),
+  });
 
   static readonly globalConfig = t.interface({
     homeRegion: t.nonEmptyString,
@@ -265,6 +268,7 @@ export abstract class GlobalConfigTypes {
     ssmParameters: t.optional(t.array(GlobalConfigTypes.ssmParametersConfig)),
     limits: t.optional(t.array(this.serviceQuotaLimitsConfig)),
     acceleratorMetadata: t.optional(GlobalConfigTypes.acceleratorMetadataConfig),
+    acceleratorSettings: t.optional(GlobalConfigTypes.acceleratorSettingsConfig),
   });
 }
 
@@ -1537,6 +1541,33 @@ export class AcceleratorMetadataConfig implements t.TypeOf<typeof GlobalConfigTy
 }
 
 /**
+ * *{@link GlobalConfig} / {@link AcceleratorSettingsConfig}*
+ *
+ * @example
+ *
+ * Accelerator Settings Configuration
+ * Allows setting additional properties for accelerator
+ *
+ * @example
+ * ```
+ * acceleratorSettings:
+ *  maxConcurrentStacks: 250
+ * ```
+ *
+ */
+
+export class AcceleratorSettingsConfig implements t.TypeOf<typeof GlobalConfigTypes.acceleratorSettingsConfig> {
+  /**
+   * Accelerator Settings
+   */
+
+  /**
+   * Set maximum number of concurrent stacks that can be processed at a time while transpiling the application.
+   * If no value is specified it defaults to 250
+   */
+  readonly maxConcurrentStacks: number | undefined = undefined;
+}
+/**
  * *{@link GlobalConfig} / {@link SsmInventoryConfig}*
  *
  * @example
@@ -1927,6 +1958,19 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    *
    */
   readonly acceleratorMetadata: AcceleratorMetadataConfig | undefined = undefined;
+
+  /**
+   * Accelerator Settings Configuration
+   * Allows setting additional properties for accelerator
+   *
+   * @example
+   * ```
+   * acceleratorSettings:
+   *  maxConcurrentStacks: 250
+   * ```
+   *
+   */
+  readonly acceleratorSettings: AcceleratorSettingsConfig | undefined = undefined;
 
   /**
    *
