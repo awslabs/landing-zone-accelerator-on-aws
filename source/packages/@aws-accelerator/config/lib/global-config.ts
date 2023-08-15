@@ -71,7 +71,7 @@ export abstract class GlobalConfigTypes {
 
   static readonly cdkOptionsConfig = t.interface({
     centralizeBuckets: t.boolean,
-    useManagementAccessRole: t.boolean,
+    useManagementAccessRole: t.optional(t.boolean),
     customDeploymentRole: t.optional(t.string),
     forceBootstrap: t.optional(t.boolean),
   });
