@@ -233,7 +233,7 @@ describe('Bucket', () => {
           abortIncompleteMultipartUploadAfter: 1,
           enabled: true,
           expiration: 24,
-          expiredObjectDeleteMarker: true,
+          expiredObjectDeleteMarker: false,
           noncurrentVersionExpiration: 12,
           transitions: [
             {
