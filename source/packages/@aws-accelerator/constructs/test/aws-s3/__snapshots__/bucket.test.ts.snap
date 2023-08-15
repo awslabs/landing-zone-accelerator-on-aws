@@ -789,7 +789,7 @@ exports[`Bucket Construct(Bucket):  Snapshot Test 1`] = `
                 "DaysAfterInitiation": 1,
               },
               "ExpirationInDays": 24,
-              "ExpiredObjectDeleteMarker": true,
+              "ExpiredObjectDeleteMarker": false,
               "Id": {
                 "Fn::Join": [
                   "",

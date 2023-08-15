@@ -48,7 +48,7 @@
   "dependencies": {
     "@aws-accelerator/config": "^0.0.0",
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-cdk/cx-api": "2.79.1",
+    "@aws-cdk/cx-api": "2.91.0",
     "@aws-sdk/client-backup": "3.92.0",
     "@aws-sdk/client-cloudformation": "3.92.0",
     "@aws-sdk/client-cloudwatch-logs": "3.92.0",
