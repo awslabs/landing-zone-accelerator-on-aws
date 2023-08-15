@@ -317,8 +317,9 @@ export class IamConfigValidator {
         item => item.name,
       );
 
-      const identityCenterAssignments = iamConfig.identityCenter.identityCenterAssignments ?? [];
+      this.validateIdentityCenterPermissionSetAssignmentsForManagement(iamConfig, errors);
 
+      const identityCenterAssignments = iamConfig.identityCenter.identityCenterAssignments ?? [];
       for (const identityCenterAssignment of identityCenterAssignments) {
         if (!permissionSetNames.includes(identityCenterAssignment.permissionSetName)) {
           errors.push(
@@ -359,6 +360,34 @@ export class IamConfigValidator {
             `Duplicate users in principals [${users.join(',')}] defined in IdentityCenter ${
               iamConfig.identityCenter.name
             } for assignment ${identityCenterAssignment.name} `,
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to validate Identity Center Permission set assignments are not deployed to management account
+   * @param iamConfig
+   * @param errors
+   */
+  private validateIdentityCenterPermissionSetAssignmentsForManagement(
+    iamConfig: t.TypeOf<typeof IamConfigTypes.iamConfig>,
+    errors: string[],
+  ) {
+    const identityCenterAssignments = iamConfig!.identityCenter?.identityCenterAssignments ?? [];
+    for (const identityCenterAssignment of identityCenterAssignments ?? []) {
+      const excludedAccounts = identityCenterAssignment?.deploymentTargets?.excludedAccounts ?? [];
+      if (!excludedAccounts.includes('Management')) {
+        if (identityCenterAssignment.deploymentTargets.accounts?.includes('Management')) {
+          errors.push(
+            `Cannot create permissionSetAssignment for Management account in delegated administrator account, remove Management account from deployment targets`,
+          );
+        }
+
+        if (identityCenterAssignment.deploymentTargets.organizationalUnits?.includes('Root')) {
+          errors.push(
+            `Cannot create permissionSetAssignment for Management account in delegated administrator account, remove Root OU from deployment targets or add Management as an excluded account.`,
           );
         }
       }
