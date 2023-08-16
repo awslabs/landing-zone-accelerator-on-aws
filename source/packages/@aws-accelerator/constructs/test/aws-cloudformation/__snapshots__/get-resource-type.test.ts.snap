@@ -219,7 +219,7 @@ exports[`GetCloudFormationResourceType Construct(GetCloudFormationResourceType):
             "Arn",
           ],
         },
-        "Runtime": "nodejs18.x",
+        "Runtime": "nodejs14.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
