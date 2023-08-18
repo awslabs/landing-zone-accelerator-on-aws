@@ -95,6 +95,7 @@ Several helper scripts are built into the project that support performing common
  - `yarn test` - run unit tests
  - `yarn test:clean` - remove test reports
  - `yarn validate-config /path/to/aws-accelerator-config` - shorthand for the configuration validator script documented in the previous section
+ - `yarn update-snapshots` - verify current release version and automatically update snapshots
 
 ## Feature development
 

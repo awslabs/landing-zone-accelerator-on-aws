@@ -50,7 +50,8 @@
     "prepare": "cd ../ && husky install source/.husky",
     "postinstall": "cd ../ && husky install source/.husky && cd source",
     "lint": "lerna run lint --stream",
-    "prettier": "lerna run prettier --stream"
+    "prettier": "lerna run prettier --stream",
+    "update-snapshots": "../deployment/update-snapshots.sh"
   },
   "workspaces": {
     "packages": [
