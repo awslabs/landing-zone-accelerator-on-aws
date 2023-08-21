@@ -101,8 +101,19 @@ export class PrefixListValidator {
       }
       // Validate CIDR ranges
       list.entries.forEach(entry => {
-        if (!helpers.isValidIpv4Cidr(entry)) {
-          errors.push(`[Prefix list ${list.name}]: entry "${entry}" is invalid. Value must be a valid IPv4 CIDR range`);
+        if (list.addressFamily === 'IPv4') {
+          if (!helpers.isValidIpv4Cidr(entry)) {
+            errors.push(
+              `[Prefix list ${list.name}]: entry "${entry}" is invalid. Value must be a valid IPv4 CIDR range`,
+            );
+          }
+        }
+        if (list.addressFamily === 'IPv6') {
+          if (!helpers.isValidIpv6Cidr(entry)) {
+            errors.push(
+              `[Prefix list ${list.name}]: entry "${entry}" is invalid. Value must be a valid IPv6 CIDR range`,
+            );
+          }
         }
       });
     });
