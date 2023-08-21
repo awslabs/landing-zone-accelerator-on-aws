@@ -19,6 +19,10 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Default": "/accelerator/network/prefixList/accelerator-prefix-list/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworkprefixListacceleratorprefixlistipv6idC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/prefixList/accelerator-prefix-list-ipv6/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratornetworkroute53ResolverfirewallruleGroupsacceleratorblockgroupidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/route53Resolver/firewall/ruleGroups/accelerator-block-group/id",
       "Type": "AWS::SSM::Parameter::Value<String>",

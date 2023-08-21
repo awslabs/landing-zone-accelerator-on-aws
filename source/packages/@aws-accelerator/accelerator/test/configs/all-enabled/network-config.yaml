@@ -471,6 +471,20 @@ prefixLists:
     maxEntries: 1
     entries:
       - 10.100.0.1/32
+  - name: accelerator-prefix-list-ipv6
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+    addressFamily: IPv6
+    maxEntries: 10
+    entries:
+      - 2400:cb00::/32
+      - 2606:4700::/32
+      - 2803:f800::/32
+      - 2405:b500::/32
+      - 2405:8100::/32
+      - 2a06:98c0::/29
+      - 2c0f:f248::/32
 
 endpointPolicies:
   - name: Default
@@ -1722,12 +1736,12 @@ customerGateways:
             dpdTimeoutSeconds: 60
             ikeVersions: [2]
             phase1:
-              dhGroups: [2,14,20,21,22]
+              dhGroups: [2, 14, 20, 21, 22]
               encryptionAlgorithms: [AES256, AES256-GCM-16]
               integrityAlgorithms: [SHA2-256, SHA2-512]
               lifetimeSeconds: 3600
             phase2:
-              dhGroups: [5,20]
+              dhGroups: [5, 20]
               encryptionAlgorithms: [AES128]
               integrityAlgorithms: [SHA2-256]
               lifetimeSeconds: 900
@@ -1741,12 +1755,12 @@ customerGateways:
             dpdTimeoutSeconds: 120
             ikeVersions: [2]
             phase1:
-              dhGroups: [2,14,20,21,22]
+              dhGroups: [2, 14, 20, 21, 22]
               encryptionAlgorithms: [AES256, AES256-GCM-16]
               integrityAlgorithms: [SHA2-256, SHA2-512]
               lifetimeSeconds: 3600
             phase2:
-              dhGroups: [5,20]
+              dhGroups: [5, 20]
               encryptionAlgorithms: [AES128]
               integrityAlgorithms: [SHA2-256]
               lifetimeSeconds: 900
