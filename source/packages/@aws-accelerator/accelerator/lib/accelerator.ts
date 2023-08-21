@@ -713,9 +713,6 @@ export abstract class Accelerator {
         ...toolkitProps,
       });
       //
-      // Execute in all other regions in the LogArchive account
-      await this.executeLogArchiveNonCentralRegions(toolkitProps, logArchiveAccountDetails, enabledRegions);
-      //
       // Execute in all other regions and accounts
       await this.executeRemainingLoggingStage(
         toolkitProps,
@@ -725,33 +722,6 @@ export abstract class Accelerator {
         enabledRegions,
         maxStacks,
       );
-    }
-  }
-
-  /**
-   * Executes logging stage for the LogArchive account
-   * in all regions except for the centralized logging
-   * region
-   * @param toolkitProps
-   * @param logArchiveAccountDetails
-   * @param enabledRegions
-   */
-  private static async executeLogArchiveNonCentralRegions(
-    toolkitProps: AcceleratorToolkitProps,
-    logArchiveAccountDetails: { id: string; name: string; centralizedLoggingRegion: string },
-    enabledRegions: string[],
-  ) {
-    const nonCentralRegions = enabledRegions.filter(
-      regionItem => regionItem !== logArchiveAccountDetails.centralizedLoggingRegion,
-    );
-
-    for (const region of nonCentralRegions) {
-      logger.info(`Executing ${toolkitProps.stage} for ${logArchiveAccountDetails.name} account in ${region} region.`);
-      await AcceleratorToolkit.execute({
-        accountId: logArchiveAccountDetails.id,
-        region: region,
-        ...toolkitProps,
-      });
     }
   }
 
@@ -771,26 +741,32 @@ export abstract class Accelerator {
     enabledRegions: string[],
     maxStacks: number,
   ) {
-    const nonLogArchiveAccounts = [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts].filter(
-      accountItem => accountItem.name !== logArchiveAccountDetails.name,
-    );
+    const allAccounts = [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts];
 
     for (const region of enabledRegions) {
-      for (const account of nonLogArchiveAccounts) {
-        logger.info(`Executing ${toolkitProps.stage} for ${account.name} account in ${region} region.`);
-        const accountId = accountsConfig.getAccountId(account.name);
-        await delay(2000);
-        promises.push(
-          AcceleratorToolkit.execute({
-            accountId,
-            region,
-            ...toolkitProps,
-          }),
-        );
+      for (const account of allAccounts) {
+        if (
+          !(
+            account.name === logArchiveAccountDetails.name &&
+            region === logArchiveAccountDetails.centralizedLoggingRegion
+          )
+        ) {
+          const accountId = accountsConfig.getAccountId(account.name);
+          logger.info(`Executing ${toolkitProps.stage} for ${account.name} account in ${region} region.`);
 
-        if (promises.length >= maxStacks) {
-          await Promise.all(promises);
-          promises.length = 0;
+          await delay(2000);
+          promises.push(
+            AcceleratorToolkit.execute({
+              accountId,
+              region,
+              ...toolkitProps,
+            }),
+          );
+
+          if (promises.length >= maxStacks) {
+            await Promise.all(promises);
+            promises.length = 0;
+          }
         }
       }
     }
