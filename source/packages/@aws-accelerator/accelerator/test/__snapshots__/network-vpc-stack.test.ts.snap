@@ -1667,6 +1667,48 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
     },
+    "NetworkEndpointsVpcNetworkEndpointsCustomEndpointSgSg4BB9279D": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-EC23",
+              "reason": "User defined an all ingress rule in configuration.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "GroupDescription": "Accelerator security group for custom endpoint",
+        "GroupName": "Network-Endpoints-CustomEndpointSg",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound",
+            "IpProtocol": "-1",
+          },
+        ],
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow access to 443",
+            "FromPort": 443,
+            "IpProtocol": "tcp",
+            "ToPort": 443,
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Network-Endpoints-CustomEndpointSg",
+          },
+        ],
+        "VpcId": {
+          "Ref": "NetworkEndpointsVpc619A1F01",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
     "NetworkEndpointsVpcNetworkEndpointsTgwARouteTable9117846C": {
       "Properties": {
         "Tags": [
@@ -3609,9 +3651,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::NetworkAclEntry",
     },
     "SsmParamAcceleratorGwlbGwlbArn7CF5F889": {
-      "DependsOn": [
-        "SsmParamNetworkInspectionDataSecurityGroup1FD45226",
-      ],
       "Properties": {
         "Name": "/accelerator/network/gwlb/Accelerator-GWLB/arn",
         "Type": "String",
@@ -3623,7 +3662,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamAcceleratorGwlbGwlbServiceIdF93A23BF": {
       "DependsOn": [
-        "SsmParamNetworkInspectionDataSecurityGroup1FD45226",
+        "SsmParamNetworkEndpointsNetworkEndpointsCustomEndpointSgSecurityGroupE01E3A88",
       ],
       "Properties": {
         "Name": "/accelerator/network/gwlb/Accelerator-GWLB/endpointService/id",
@@ -3743,6 +3782,16 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "SsmParamNetworkEndpointsNetworkEndpointsCustomEndpointSgSecurityGroupE01E3A88": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Endpoints/securityGroup/Network-Endpoints-CustomEndpointSg/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkEndpointsVpcNetworkEndpointsCustomEndpointSgSg4BB9279D",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "SsmParamNetworkEndpointsNetworkEndpointsTgwARouteTableId2037B6B4": {
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/routeTable/Network-Endpoints-Tgw-A/id",
@@ -3807,7 +3856,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkEndpointsTestNaclNaclED9584AC": {
       "DependsOn": [
-        "SsmParamNetworkInspectionDataSecurityGroup1FD45226",
+        "SsmParamNetworkEndpointsNetworkEndpointsCustomEndpointSgSecurityGroupE01E3A88",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/networkAcl/TestNACL/id",
@@ -3865,6 +3914,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionDataSecurityGroup1FD45226": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointsNetworkEndpointsCustomEndpointSgSecurityGroupE01E3A88",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/securityGroup/Data/id",
         "Type": "String",
@@ -4137,7 +4189,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkSecondaryTestNaclNacl0FC3F602": {
       "DependsOn": [
-        "SsmParamNetworkInspectionDataSecurityGroup1FD45226",
+        "SsmParamNetworkEndpointsNetworkEndpointsCustomEndpointSgSecurityGroupE01E3A88",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Secondary/networkAcl/TestNacl/id",
@@ -4221,6 +4273,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
     },
     "appAalb01NetworkEndpointsssmF399A7CC": {
+      "DependsOn": [
+        "SsmParamAcceleratorGwlbGwlbArn7CF5F889",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/alb/appA-alb-01/id",
         "Type": "String",
@@ -4282,7 +4337,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "appAnlb01NetworkEndpointsssm0DA0AE1E": {
       "DependsOn": [
-        "appAalb01NetworkEndpointsssmF399A7CC",
+        "SsmParamAcceleratorGwlbGwlbArn7CF5F889",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/nlb/appA-nlb-01/id",

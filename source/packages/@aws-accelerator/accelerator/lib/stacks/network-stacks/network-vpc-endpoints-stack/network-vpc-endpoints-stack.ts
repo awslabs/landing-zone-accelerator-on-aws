@@ -508,6 +508,7 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
           service: gatewayEndpointItem.service,
           routeTables: s3EndpointRouteTables,
           policyDocument: this.createVpcEndpointPolicy(vpcItem, gatewayEndpointItem, true),
+          serviceName: gatewayEndpointItem.serviceName ?? undefined,
         });
       }
       if (gatewayEndpointItem.service === 'dynamodb') {
@@ -517,6 +518,7 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
           service: gatewayEndpointItem.service,
           routeTables: dynamodbEndpointRouteTables,
           policyDocument: this.createVpcEndpointPolicy(vpcItem, gatewayEndpointItem, true),
+          serviceName: gatewayEndpointItem.serviceName ?? undefined,
         });
       }
     }
@@ -584,6 +586,13 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
     securityGroupMap: Map<string, SecurityGroup>,
     vpcId: string,
   ): SecurityGroup {
+    if (endpointItem.securityGroup) {
+      const endpointSecurityGroupId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        this.getSsmPath(SsmResourceType.SECURITY_GROUP, [vpcItem.name, endpointItem.securityGroup]),
+      );
+      return SecurityGroup.fromSecurityGroupId(this, endpointSecurityGroupId);
+    }
     const interfaceEndpointSecurityGroupItem = this.getInterfaceEndpointSecurityGroupItem(
       endpointItem,
       securityGroupMap,
@@ -931,46 +940,42 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
       return undefined;
     }
 
-    // Identify if custom policy is specified, create custom or default policy
-    let policyName: string | undefined;
-    let policyDocument: cdk.aws_iam.PolicyDocument | undefined = undefined;
-    if (endpointItem.policy) {
-      this.logger.info(`Add custom endpoint policy for ${endpointItem.service}`);
-      policyName = endpointItem.policy;
-    } else if (!endpointItem.policy && isGatewayEndpoint) {
-      this.logger.info(`Add default endpoint policy for gateway endpoint ${endpointItem.service}`);
-      policyName = vpcItem.gatewayEndpoints?.defaultPolicy;
+    // by default, if nothing is specified policy is applied
+    if (endpointItem.applyPolicy ?? true) {
+      // Identify if custom policy is specified, create custom or default policy
+      let policyName: string | undefined;
+      let policyDocument: cdk.aws_iam.PolicyDocument | undefined = undefined;
+      if (endpointItem.policy) {
+        this.logger.info(`Add custom endpoint policy for ${endpointItem.service}`);
+        policyName = endpointItem.policy;
+      } else if (!endpointItem.policy && isGatewayEndpoint) {
+        this.logger.info(`Add default endpoint policy for gateway endpoint ${endpointItem.service}`);
+        policyName = vpcItem.gatewayEndpoints?.defaultPolicy;
+      } else {
+        this.logger.info(`Add default endpoint policy for interface endpoint ${endpointItem.service}`);
+        policyName = vpcItem.interfaceEndpoints?.defaultPolicy;
+      }
+
+      // Find matching endpoint policy item
+      if (!policyName) {
+        this.logger.error(`Create endpoint policy: unable to set a policy name.`);
+        throw new Error(`Configuration validation failed at runtime.`);
+      }
+      const policyItem = this.props.networkConfig.endpointPolicies.filter(item => item.name === policyName);
+
+      // Set location and fetch document
+      const document = JSON.parse(
+        this.generatePolicyReplacements(
+          path.join(this.props.configDirPath, policyItem[0].document),
+          false,
+          this.organizationId,
+        ),
+      );
+
+      policyDocument = cdk.aws_iam.PolicyDocument.fromJson(document);
+      return policyDocument;
     } else {
-      this.logger.info(`Add default endpoint policy for interface endpoint ${endpointItem.service}`);
-      policyName = vpcItem.interfaceEndpoints?.defaultPolicy;
+      return undefined;
     }
-
-    // Find matching endpoint policy item
-    if (!policyName) {
-      this.logger.error(`Create endpoint policy: unable to set a policy name.`);
-      throw new Error(`Configuration validation failed at runtime.`);
-    }
-    const policyItem = this.props.networkConfig.endpointPolicies.filter(item => item.name === policyName);
-
-    // Verify there is only one endpoint policy with the same name
-    if (policyItem.length > 1) {
-      this.logger.error(`Create endpoint policy: more than one policy with the name ${policyName} is configured.`);
-      throw new Error(`Configuration validation failed at runtime.`);
-    } else if (policyItem.length === 0) {
-      this.logger.error(`Create endpoint policy: unable to locate policy with the name ${policyName}.`);
-      throw new Error(`Configuration validation failed at runtime.`);
-    }
-
-    // Set location and fetch document
-    const document = JSON.parse(
-      this.generatePolicyReplacements(
-        path.join(this.props.configDirPath, policyItem[0].document),
-        false,
-        this.organizationId,
-      ),
-    );
-
-    policyDocument = cdk.aws_iam.PolicyDocument.fromJson(document);
-    return policyDocument;
   }
 }

@@ -994,7 +994,10 @@ vpcs:
         - service: s3-global.accesspoint
         - service: codeartifact.repositories
         - service: codeartifact.api
-        # - service: secretsmanager
+        - service: eks
+          applyPolicy: false
+        - service: secretsmanager
+          securityGroup: Network-Endpoints-CustomEndpointSg
         # - service: cloudformation
         # - service: access-analyzer
         # - service: application-autoscaling
@@ -1109,6 +1112,21 @@ vpcs:
               - 22
             sources:
               - 10.0.0.0/8
+      - name: Network-Endpoints-CustomEndpointSg
+        description: Accelerator security group for custom endpoint
+        inboundRules:
+          - description: Allow access to 443
+            types:
+              - HTTPS
+            sources:
+              - 0.0.0.0/0
+
+        outboundRules:
+          - description: Allow all outbound
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
     networkAcls:
       - name: TestNACL
         subnetAssociations:
