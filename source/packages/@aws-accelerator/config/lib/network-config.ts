@@ -295,6 +295,8 @@ export class NetworkConfigTypes {
   static readonly gatewayEndpointServiceConfig = t.interface({
     service: this.gatewayEndpointEnum,
     policy: t.optional(t.nonEmptyString),
+    applyPolicy: t.optional(t.boolean),
+    serviceName: t.optional(t.nonEmptyString),
   });
 
   static readonly gatewayEndpointConfig = t.interface({
@@ -306,6 +308,8 @@ export class NetworkConfigTypes {
     service: t.nonEmptyString,
     serviceName: t.optional(t.nonEmptyString),
     policy: t.optional(t.nonEmptyString),
+    applyPolicy: t.optional(t.boolean),
+    securityGroup: t.optional(t.nonEmptyString),
   });
 
   static readonly interfaceEndpointConfig = t.interface({
@@ -2792,6 +2796,18 @@ export class GatewayEndpointServiceConfig implements t.TypeOf<typeof NetworkConf
    * @see {@link EndpointPolicyConfig}
    */
   readonly policy: string | undefined = undefined;
+  /**
+   * (OPTIONAL) Specify whether or not a policy is applied to the endpoint. By default, if no policy is specified in the `policy` property, a default policy is applied. Specifying this option as `false` will ensure no policy is applied to the endpoint. This property defaults to `true` if not specified.
+   */
+  readonly applyPolicy: boolean = true;
+  /**
+   * (OPTIONAL) The full name of the service to create the endpoint for.
+   *
+   * @remarks
+   * This property can be used to input the full endpoint service names that do not
+   * conform with the standard `com.amazonaws.<REGION>.<SERVICE>` syntax.
+   */
+  readonly serviceName: string | undefined = undefined;
 }
 
 /**
@@ -2871,6 +2887,14 @@ export class InterfaceEndpointServiceConfig
    * @see {@link EndpointPolicyConfig}
    */
   readonly policy: string | undefined = undefined;
+  /**
+   * (OPTIONAL) Specify whether or not a policy is applied to the endpoint. By default, if no policy is specified in the `policy` property, a default policy is applied. Specifying this option as `false` will ensure no policy is applied to the endpoint. This property defaults to `true` if not specified.
+   */
+  readonly applyPolicy: boolean | undefined = true;
+  /**
+   * (OPTIONAL) Apply the provided security group for this interface endpoint.
+   */
+  readonly securityGroup: string | undefined = undefined;
 }
 
 /**

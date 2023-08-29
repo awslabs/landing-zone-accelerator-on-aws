@@ -59,6 +59,14 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
       "Default": "/accelerator/network/vpc/Network-Endpoints/endpoints/ecr.dkr/hostedZoneId",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointseksdnsC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Endpoints/endpoints/eks/dns",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointsekshostedZoneIdC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Endpoints/endpoints/eks/hostedZoneId",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointskmsdnsC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/endpoints/kms/dns",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -89,6 +97,14 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
     },
     "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointss3hostedZoneIdC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/endpoints/s3/hostedZoneId",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointssecretsmanagerdnsC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Endpoints/endpoints/secretsmanager/dns",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointssecretsmanagerhostedZoneIdC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Endpoints/endpoints/secretsmanager/hostedZoneId",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointsssmdnsC96584B6F00A464EAD1953AFF4B05118Parameter": {
@@ -568,6 +584,38 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::Route53::RecordSet",
     },
+    "NetworkEndpointsVpcEksEpHostedZoneB3A66C5D": {
+      "Properties": {
+        "Name": "eks.us-east-1.amazonaws.com",
+        "VPCs": [
+          {
+            "VPCId": {
+              "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
+            },
+            "VPCRegion": "us-east-1",
+          },
+        ],
+      },
+      "Type": "AWS::Route53::HostedZone",
+    },
+    "NetworkEndpointsVpcEksEpRecordSet48754069": {
+      "Properties": {
+        "AliasTarget": {
+          "DNSName": {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointseksdnsC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+          "HostedZoneId": {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointsekshostedZoneIdC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+        },
+        "HostedZoneId": {
+          "Ref": "NetworkEndpointsVpcEksEpHostedZoneB3A66C5D",
+        },
+        "Name": "eks.us-east-1.amazonaws.com",
+        "Type": "A",
+      },
+      "Type": "AWS::Route53::RecordSet",
+    },
     "NetworkEndpointsVpcKmsEpHostedZoneC9CFEF9D": {
       "Properties": {
         "Name": "kms.us-east-1.amazonaws.com",
@@ -832,6 +880,38 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::Route53::RecordSet",
     },
+    "NetworkEndpointsVpcSecretsmanagerEpHostedZoneE5742A7A": {
+      "Properties": {
+        "Name": "secretsmanager.us-east-1.amazonaws.com",
+        "VPCs": [
+          {
+            "VPCId": {
+              "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
+            },
+            "VPCRegion": "us-east-1",
+          },
+        ],
+      },
+      "Type": "AWS::Route53::HostedZone",
+    },
+    "NetworkEndpointsVpcSecretsmanagerEpRecordSet4FD8850B": {
+      "Properties": {
+        "AliasTarget": {
+          "DNSName": {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointssecretsmanagerdnsC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+          "HostedZoneId": {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointssecretsmanagerhostedZoneIdC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+        },
+        "HostedZoneId": {
+          "Ref": "NetworkEndpointsVpcSecretsmanagerEpHostedZoneE5742A7A",
+        },
+        "Name": "secretsmanager.us-east-1.amazonaws.com",
+        "Type": "A",
+      },
+      "Type": "AWS::Route53::RecordSet",
+    },
     "NetworkEndpointsVpcSsmEpHostedZoneE400276D": {
       "Properties": {
         "Name": "ssm.us-east-1.amazonaws.com",
@@ -960,6 +1040,19 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "SsmParamNetworkEndpointsVpcEksEpHostedZone07095F43": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointsVpcEcrDkrEpHostedZone77F74872",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/eks/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkEndpointsVpcEksEpHostedZoneB3A66C5D",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "SsmParamNetworkEndpointsVpcKmsEpHostedZoneFA42C849": {
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/kms/id",
@@ -1035,6 +1128,16 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "SsmParamNetworkEndpointsVpcSecretsmanagerEpHostedZone8D952494": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/secretsmanager/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkEndpointsVpcSecretsmanagerEpHostedZoneE5742A7A",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "SsmParamNetworkEndpointsVpcSsmEpHostedZone52E166EC": {
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/ssm/id",
@@ -1067,7 +1170,7 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
     },
     "SsmParamexampleRuleResolverRuleE76DD02F": {
       "DependsOn": [
-        "SsmParamNetworkEndpointsVpcEcrDkrEpHostedZone77F74872",
+        "SsmParamNetworkEndpointsVpcSecretsmanagerEpHostedZone8D952494",
       ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/rules/example-rule/id",
@@ -1082,6 +1185,9 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParaminboundTargetRuleResolverRule19318804": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointsVpcSecretsmanagerEpHostedZone8D952494",
+      ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/rules/inbound-target-rule/id",
         "Type": "String",

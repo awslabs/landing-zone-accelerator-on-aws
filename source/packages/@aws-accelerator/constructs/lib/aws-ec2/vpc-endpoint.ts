@@ -130,20 +130,20 @@ export class VpcEndpoint extends VpcEndpointBase {
       this.dnsName = cdk.Fn.select(1, cdk.Fn.split(':', cdk.Fn.select(dnsEntriesIndex, resource.attrDnsEntries)));
       this.hostedZoneId = cdk.Fn.select(0, cdk.Fn.split(':', cdk.Fn.select(dnsEntriesIndex, resource.attrDnsEntries)));
       return;
-    }
-
-    if (props.vpcEndpointType === VpcEndpointType.GATEWAY) {
+    } else if (props.vpcEndpointType === VpcEndpointType.GATEWAY) {
+      let serviceName = new cdk.aws_ec2.GatewayVpcEndpointAwsService(props.service).name;
+      if (props.serviceName) {
+        serviceName = props.serviceName;
+      }
       const resource = new cdk.aws_ec2.CfnVPCEndpoint(this, 'Resource', {
-        serviceName: new cdk.aws_ec2.GatewayVpcEndpointAwsService(props.service).name,
+        serviceName,
         vpcId: this.vpcId,
         routeTableIds: props.routeTables,
         policyDocument: props.policyDocument,
       });
       this.vpcEndpointId = resource.ref;
       return;
-    }
-
-    if (props.vpcEndpointType === VpcEndpointType.GWLB) {
+    } else {
       const servicePrefix = props.partition === 'aws-cn' ? 'cn.com.amazonaws' : 'com.amazonaws';
       const serviceName = `${servicePrefix}.vpce.${cdk.Stack.of(this).region}.${props.service}`;
 
@@ -156,7 +156,5 @@ export class VpcEndpoint extends VpcEndpointBase {
       this.vpcEndpointId = resource.ref;
       return;
     }
-
-    throw new Error('Invalid vpcEndpointType specified');
   }
 }

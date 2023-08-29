@@ -178,5 +178,41 @@ describe('VpcEndpoint', () => {
       vpcId: 'Test',
     });
   });
+  it('serviceName override for gatewayEndpoint', () => {
+    const checkVpcEndpointGatewayEndpointServiceNameStack = new cdk.Stack();
+    new VpcEndpoint(checkVpcEndpointGatewayEndpointServiceNameStack, 'VpcEndpointGatewayEndpointServiceName', {
+      vpcId: 'Test',
+      vpcEndpointType: VpcEndpointType.GATEWAY,
+      service: 'service',
+      serviceName: 'testGatewayEndpointServiceName',
+      subnets: ['Test1', 'Test2'],
+      securityGroups: [securityGroup],
+      privateDnsEnabled: true,
+      policyDocument: new cdk.aws_iam.PolicyDocument({
+        statements: [
+          new cdk.aws_iam.PolicyStatement({
+            sid: 'AccessToTrustedPrincipalsAndResources',
+            actions: ['*'],
+            effect: cdk.aws_iam.Effect.ALLOW,
+            resources: ['*'],
+            principals: [new cdk.aws_iam.AnyPrincipal()],
+            conditions: {
+              StringEquals: {
+                'aws:PrincipalOrgID': ['organizationId'],
+              },
+            },
+          }),
+        ],
+      }),
+      routeTables: ['Test1', 'Test2'],
+    });
+    const checkVpcEndpointGatewayEndpointServiceNameTemplate = cdk.assertions.Template.fromStack(
+      checkVpcEndpointGatewayEndpointServiceNameStack,
+    );
+    checkVpcEndpointGatewayEndpointServiceNameTemplate.hasResourceProperties('AWS::EC2::VPCEndpoint', {
+      ServiceName: cdk.assertions.Match.exact('testGatewayEndpointServiceName'),
+    });
+  });
+
   snapShotTest(testNamePrefix, stack);
 });
