@@ -19,12 +19,14 @@ import {
   CreateTagsCommand,
   DeleteTagsCommand,
   DescribeSubnetsCommand,
+  DeleteTagsCommandInput,
+  TagDescription,
 } from '@aws-sdk/client-ec2';
 
 let ec2Client: EC2Client;
 interface Tag {
-  readonly Key: string;
-  readonly Value: string;
+  readonly Key: string | undefined;
+  readonly Value: string | undefined;
 }
 
 /**
@@ -42,8 +44,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 > {
   console.log(JSON.stringify(event));
 
-  const vpcTags = event.ResourceProperties['vpcTags'] || [];
-  const subnetTags = event.ResourceProperties['subnetTags'] || [];
+  const vpcTags = convertTags(event.ResourceProperties['vpcTags'] || []);
+  const subnetTags = convertTags(event.ResourceProperties['subnetTags'] || []);
   const sharedSubnetId: string = event.ResourceProperties['sharedSubnetId'];
   const sharedSubnetName: string = event.ResourceProperties['sharedSubnetName'];
   const vpcName: string = event.ResourceProperties['vpcName'];
@@ -63,10 +65,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         'Shared subnet',
         sharedSubnetId,
       );
-      await updateSubnetTags(convertTags(subnetTags), sharedSubnetId);
-      if (vpcTags?.length > 0) {
-        await updateVpcTags(convertTags(vpcTags), sharedSubnetId, ssmClient, vpcName, ssmParamNamePrefix);
-      }
+      await updateSubnetTags(subnetTags, sharedSubnetId);
+      await updateVpcTags(vpcTags, sharedSubnetId, ssmClient, vpcName, ssmParamNamePrefix);
       return {
         PhysicalResourceId: sharedSubnetId,
         Status: 'SUCCESS',
@@ -86,7 +86,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   }
 }
 
-async function isParameterExists(ssmClient: AWS.SSM, name: string): Promise<boolean> {
+async function parameterExists(ssmClient: AWS.SSM, name: string): Promise<boolean> {
   console.log(`Checking if parameter ${name} exists`);
   try {
     await throttlingBackOff(() =>
@@ -119,7 +119,7 @@ async function isParameterExists(ssmClient: AWS.SSM, name: string): Promise<bool
 
 async function createParameter(ssmClient: AWS.SSM, name: string, description: string, value: string): Promise<void> {
   console.log(`Creating parameter ${name}`);
-  if (!(await isParameterExists(ssmClient, name))) {
+  if (!(await parameterExists(ssmClient, name))) {
     await throttlingBackOff(() =>
       ssmClient
         .putParameter({
@@ -136,7 +136,7 @@ async function createParameter(ssmClient: AWS.SSM, name: string, description: st
 
 async function deleteParameter(ssmClient: AWS.SSM, name: string): Promise<void> {
   console.log(`Deleting parameter ${name}`);
-  if (!(await isParameterExists(ssmClient, name))) {
+  if (!(await parameterExists(ssmClient, name))) {
     await throttlingBackOff(() =>
       ssmClient
         .deleteParameter({
@@ -147,32 +147,29 @@ async function deleteParameter(ssmClient: AWS.SSM, name: string): Promise<void> 
   }
 }
 
-async function updateSubnetTags(subnetTags: Tag[], subnetId: string) {
-  console.log(subnetTags);
+async function updateSubnetTags(newSubnetTags: Tag[], subnetId: string) {
   console.info('updateSubnetTags');
-  const describeTagsResponse = await throttlingBackOff(() =>
-    ec2Client.send(new DescribeTagsCommand({ Filters: [{ Name: 'resource-id', Values: [subnetId] }] })),
-  );
+  const existingSubnetTags = await getResourceTags(subnetId);
+  const tagsToDelete = getTagsToDelete(existingSubnetTags, newSubnetTags);
+  const tagsToAdd = getTagsToAdd(existingSubnetTags, newSubnetTags);
+  const tagsToUpdate = getTagsToUpdate(existingSubnetTags, newSubnetTags);
+  const tagsToCreateAndUpdate = [...tagsToAdd, ...tagsToUpdate];
 
-  console.debug('describeTagsResponse: ', describeTagsResponse);
-
-  // if tags don't exist create them
-  if (describeTagsResponse.Tags?.length === 0) {
-    await createTags(subnetId, subnetTags);
-    return;
+  if (tagsToDelete.length > 0) {
+    console.info(`Deleting subnet tags for subnet ${subnetId}`);
+    console.info(JSON.stringify(tagsToDelete, null, 2));
+    await deleteTags(subnetId, tagsToDelete);
   }
 
-  // remove existing tags
-  console.debug('Deleting existing subnet tags');
-  await deleteTags(subnetId);
-
-  // insert updated tags
-  console.debug('Adding subnet tags');
-  await createTags(subnetId, subnetTags);
+  if (tagsToCreateAndUpdate.length > 0) {
+    console.info(`Adding and updating subnet tags for subnet ${subnetId}`);
+    console.info(JSON.stringify(tagsToCreateAndUpdate, null, 2));
+    await createTags(subnetId, tagsToCreateAndUpdate);
+  }
 }
 
 async function updateVpcTags(
-  vpcTags: Tag[],
+  newVpcTags: Tag[],
   subnetId: string,
   ssmClient: AWS.SSM,
   vpcName: string,
@@ -201,34 +198,31 @@ async function updateVpcTags(
     return;
   }
 
-  const describeTagsResponse = await throttlingBackOff(() =>
-    ec2Client.send(new DescribeTagsCommand({ Filters: [{ Name: 'resource-id', Values: [vpcId] }] })),
-  );
-  console.debug('describeTagsResponse: ', describeTagsResponse);
+  const existingVpcTags = await getResourceTags(vpcId);
+  const tagsToDelete = getTagsToDelete(existingVpcTags, newVpcTags);
+  const tagsToAdd = getTagsToAdd(existingVpcTags, newVpcTags);
+  const tagsToUpdate = getTagsToUpdate(existingVpcTags, newVpcTags);
+  const tagsToCreateAndUpdate = [...tagsToAdd, ...tagsToUpdate];
 
-  // if tags don't exist create them
-  if (describeTagsResponse.Tags?.length === 0) {
-    console.info('Adding vpc tags');
-    const addTagResponse = await throttlingBackOff(() =>
-      ec2Client.send(new CreateTagsCommand({ Resources: [vpcId], Tags: vpcTags })),
-    );
-    console.log(addTagResponse);
-    return;
+  if (tagsToDelete.length > 0) {
+    console.info(`Deleting vpc tags for vpc ${vpcId}`);
+    console.info(JSON.stringify(tagsToDelete, null, 2));
+    await deleteTags(vpcId, tagsToDelete);
   }
 
-  // remove existing tags
-  console.debug('Deleting existing vpc tags');
-  await deleteTags(vpcId);
-
-  // insert updated tags
-  console.debug('Adding vpc tags');
-  await createTags(vpcId, vpcTags);
+  if (tagsToCreateAndUpdate.length > 0) {
+    console.log(`Adding and updating vpc tags for VPC ${vpcId}`);
+    console.log(JSON.stringify(tagsToCreateAndUpdate, null, 2));
+    await createTags(vpcId, tagsToCreateAndUpdate);
+  }
 }
 
-async function deleteTags(itemId: string) {
-  const deleteTagsResponse = await throttlingBackOff(() =>
-    ec2Client.send(new DeleteTagsCommand({ Resources: [itemId] })),
-  );
+async function deleteTags(itemId: string, tagsToDelete?: Tag[]) {
+  const deleteTagRequest: DeleteTagsCommandInput = {
+    Resources: [itemId],
+    Tags: tagsToDelete,
+  };
+  const deleteTagsResponse = await throttlingBackOff(() => ec2Client.send(new DeleteTagsCommand(deleteTagRequest)));
   console.debug('Delete Tags response: ', deleteTagsResponse);
 }
 
@@ -245,4 +239,58 @@ function convertTags(tags: []): Tag[] {
     convertedTags.push({ Key: tag['key'], Value: tag['value'] });
   }
   return convertedTags;
+}
+
+async function getResourceTags(resourceId: string): Promise<Tag[]> {
+  const tags: Tag[] = [];
+  let nextToken;
+  do {
+    const describeTagsResponse = await throttlingBackOff(() =>
+      ec2Client.send(new DescribeTagsCommand({ Filters: [{ Name: 'resource-id', Values: [resourceId] }] })),
+    );
+    nextToken = describeTagsResponse.NextToken;
+    if (describeTagsResponse.Tags) {
+      const tagKeyValueList = describeTagsResponse.Tags.map((tag: TagDescription) => {
+        return {
+          Key: tag.Key,
+          Value: tag.Value,
+        };
+      });
+      tags.push(...tagKeyValueList);
+    }
+  } while (nextToken);
+  return tags;
+}
+
+function getTagsToDelete(currentTags: Tag[], newTags: Tag[]): Tag[] {
+  const tagsToDelete: Tag[] = [];
+  for (const currentTag of currentTags) {
+    const foundTag: Tag | undefined = newTags.find(newTag => newTag.Key === currentTag.Key);
+    if (!foundTag) {
+      tagsToDelete.push(currentTag);
+    }
+  }
+  return tagsToDelete;
+}
+
+function getTagsToAdd(currentTags: Tag[], newTags: Tag[]): Tag[] {
+  const tagsToAdd: Tag[] = [];
+  for (const newTag of newTags) {
+    const foundTag: Tag | undefined = currentTags.find(currentTag => currentTag.Key === newTag.Key);
+    if (!foundTag) {
+      tagsToAdd.push(newTag);
+    }
+  }
+  return tagsToAdd;
+}
+
+function getTagsToUpdate(currentTags: Tag[], newTags: Tag[]): Tag[] {
+  const tagsToUpdate: Tag[] = [];
+  for (const newTag of newTags) {
+    const foundTag = currentTags.find(currentTag => currentTag.Key === newTag.Key);
+    if (foundTag?.Value !== newTag.Value) {
+      tagsToUpdate.push(newTag);
+    }
+  }
+  return tagsToUpdate;
 }

@@ -35,6 +35,7 @@ import {
   RouteTableEntryConfig,
   ShareTargets,
   SubnetConfig,
+  Tag,
   TargetGroupItemConfig,
   TransitGatewayAttachmentConfig,
   TransitGatewayConfig,
@@ -2798,8 +2799,7 @@ export class NetworkAssociationsStack extends NetworkStack {
    * Only get the shared subnets that have tags configured
    */
   private createShareSubnetTags(vpc: VpcConfig, subnet: SubnetConfig, owningAccountId: string): void {
-    //only get the shared subnets that have tags configured
-    if (subnet.shareTargets && subnet.tags) {
+    if (subnet.shareTargets) {
       const shared = this.checkResourceShare(subnet.shareTargets);
       if (shared) {
         const sharedSubnet = this.getResourceShare(
@@ -2809,8 +2809,8 @@ export class NetworkAssociationsStack extends NetworkStack {
           this.cloudwatchKey,
           vpc.name,
         );
-        const vpcTags = vpc.tags;
-        const subnetTags = subnet.tags;
+        const vpcTags = this.setVpcTags(vpc);
+        const subnetTags = this.setSubnetTags(subnet);
         const sharedSubnetId = sharedSubnet.resourceShareItemId;
         this.logger.info('Applying subnet and vpc tags for RAM shared resources');
         new ShareSubnetTags(this, `ShareSubnetTags${vpc.account}-${subnet.name}`, {
@@ -2828,6 +2828,31 @@ export class NetworkAssociationsStack extends NetworkStack {
     }
   }
 
+  private setVpcTags(vpc: VpcConfig) {
+    const vpcTags: Tag[] = [];
+    if (vpc.tags) {
+      vpcTags.push(...vpc.tags);
+    }
+    const vpcNameTagExists = vpcTags.find(tag => tag.key === 'Name');
+    if (!vpcNameTagExists) {
+      vpcTags.push({ key: 'Name', value: vpc.name });
+    }
+    return vpcTags;
+  }
+
+  private setSubnetTags(subnet: SubnetConfig) {
+    const subnetTags: Tag[] = [];
+    if (subnet.tags) {
+      subnetTags.push(...subnet.tags);
+    }
+    const subnetNameExists = subnetTags.find(tag => tag.key === 'Name');
+
+    if (!subnetNameExists) {
+      subnetTags.push({ key: 'Name', value: subnet.name });
+    }
+
+    return subnetTags;
+  }
   private shareSubnetTags() {
     for (const vpc of this.props.networkConfig.vpcs) {
       const owningAccountId = this.props.accountsConfig.getAccountId(vpc.account);
