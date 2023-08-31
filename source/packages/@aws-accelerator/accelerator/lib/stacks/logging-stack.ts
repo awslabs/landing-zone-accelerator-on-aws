@@ -957,6 +957,8 @@ export class LoggingStack extends AcceleratorStack {
       useExistingRoles: this.props.useExistingRoles ?? false,
       firehoseRecordsProcessorFunctionName:
         this.acceleratorResourceNames.parameters.firehoseRecordsProcessorFunctionName,
+      logsKmsKey: this.cloudwatchKey,
+      logsRetentionInDaysValue: this.props.globalConfig.cloudwatchLogRetentionInDays.toString(),
     });
     return cloudwatchCfnDestination;
   }

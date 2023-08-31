@@ -37,6 +37,8 @@ describe('CloudWatchToS3Firehose', () => {
     acceleratorPrefix: 'AWSAccelerator',
     useExistingRoles: false,
     firehoseRecordsProcessorFunctionName: 'test',
+    logsKmsKey: new cdk.aws_kms.Key(stack, 'CustomLogsKey', {}),
+    logsRetentionInDaysValue: '7',
   });
   snapShotTest(testNamePrefix, stack);
 });
@@ -54,6 +56,8 @@ describe('CloudWatchToS3FirehoseBucketName', () => {
     acceleratorPrefix: 'AWSAccelerator',
     useExistingRoles: false,
     firehoseRecordsProcessorFunctionName: 'test',
+    logsKmsKey: new cdk.aws_kms.Key(stack, 'CustomLogsKeyBucketName', {}),
+    logsRetentionInDaysValue: '7',
   });
   snapShotTest(testNamePrefix, stack);
 });
@@ -73,6 +77,8 @@ test('should throw an exception for bucket name and bucket are present', () => {
       acceleratorPrefix: 'AWSAccelerator',
       useExistingRoles: false,
       firehoseRecordsProcessorFunctionName: 'test',
+      logsKmsKey: new cdk.aws_kms.Key(stack, 'CustomLogsKeyBucketErrorName', {}),
+      logsRetentionInDaysValue: '7',
     });
   }
 
@@ -94,6 +100,8 @@ describe('CloudWatchToS3FirehoseExistingIam', () => {
     acceleratorPrefix: 'AWSAccelerator',
     useExistingRoles: true,
     firehoseRecordsProcessorFunctionName: 'test',
+    logsKmsKey: new cdk.aws_kms.Key(stack, 'CustomLogsKeyExistingIam', {}),
+    logsRetentionInDaysValue: '7',
   });
   snapShotTest(testNamePrefix, stack);
 });

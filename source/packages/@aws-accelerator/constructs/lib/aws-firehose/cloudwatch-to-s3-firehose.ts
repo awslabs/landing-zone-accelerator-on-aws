@@ -80,6 +80,16 @@ export interface CloudWatchToS3FirehoseProps {
    * Firehose preprocessor function name
    */
   firehoseRecordsProcessorFunctionName: string;
+  /**
+   *
+   * KMS key to encrypt the CloudWatch log group
+   */
+  logsKmsKey: cdk.aws_kms.IKey;
+  /**
+   *
+   * CloudWatch Logs Retention in days from global config
+   */
+  logsRetentionInDaysValue: string;
 }
 /**
  * Class to configure CloudWatch replication on logs receiving account
@@ -142,6 +152,18 @@ export class CloudWatchToS3Firehose extends Construct {
         resources: [props.kinesisKmsKey.keyArn],
       }),
     );
+    const firehoseCloudwatchLogs = new cdk.aws_logs.LogGroup(this, 'FirehoseCloudwatchLogs', {
+      logGroupName: `/accelerator/logs/firehose/${props.kinesisStream.streamName}`,
+      retention: parseInt(props.logsRetentionInDaysValue),
+      encryptionKey: props.logsKmsKey,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    const firehoseCloudwatchLogStream = new cdk.aws_logs.LogStream(this, 'FirehoseCloudWatchLogStream', {
+      logGroup: firehoseCloudwatchLogs,
+      logStreamName: 'DestinationDeliveryError',
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
 
     const firehose = new cdk.aws_kinesisfirehose.CfnDeliveryStream(this, 'FirehoseStream', {
       deliveryStreamType: 'KinesisStreamAsSource',
@@ -160,6 +182,11 @@ export class CloudWatchToS3Firehose extends Construct {
           intervalInSeconds: 60,
           sizeInMBs: 64, // Minimum value that this can take
         },
+        cloudWatchLoggingOptions: {
+          enabled: true,
+          logGroupName: firehoseCloudwatchLogs.logGroupName,
+          logStreamName: firehoseCloudwatchLogStream.logStreamName,
+        },
         compressionFormat: 'UNCOMPRESSED',
         dataFormatConversionConfiguration: {
           enabled: false,
@@ -171,6 +198,9 @@ export class CloudWatchToS3Firehose extends Construct {
           firehosePrefixProcessingLambda.functionArn,
           props.acceleratorPrefix,
           props.useExistingRoles,
+          firehoseCloudwatchLogs,
+          firehoseCloudwatchLogStream.logStreamName,
+          props.logsKmsKey,
         ),
         dynamicPartitioningConfiguration: {
           enabled: true,
@@ -272,6 +302,9 @@ export class CloudWatchToS3Firehose extends Construct {
     processingLambdaArn: string,
     acceleratorPrefix: string,
     useExistingRoles: boolean,
+    firehoseCloudwatchLogs: cdk.aws_logs.LogGroup,
+    firehoseCloudwatchLogStream: string,
+    logsKmsKey: cdk.aws_kms.IKey,
   ) {
     if (useExistingRoles) {
       return `arn:${cdk.Stack.of(this).partition}:iam::${
@@ -308,6 +341,14 @@ export class CloudWatchToS3Firehose extends Construct {
         new cdk.aws_iam.PolicyStatement({
           actions: ['lambda:InvokeFunction', 'lambda:GetFunctionConfiguration'],
           resources: [`${processingLambdaArn}:*`, `${processingLambdaArn}`],
+        }),
+        new cdk.aws_iam.PolicyStatement({
+          actions: ['logs:PutLogEvents'],
+          resources: [`${firehoseCloudwatchLogs.logGroupArn}:logstream:${firehoseCloudwatchLogStream}`],
+        }),
+        new cdk.aws_iam.PolicyStatement({
+          actions: ['kms:Encrypt*', 'kms:Describe*'],
+          resources: [logsKmsKey.keyArn],
         }),
       ],
     });
