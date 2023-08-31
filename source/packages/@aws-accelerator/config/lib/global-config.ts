@@ -22,6 +22,8 @@ import { SSMClient, GetParametersByPathCommand } from '@aws-sdk/client-ssm';
 import { createLogger, throttlingBackOff } from '@aws-accelerator/utils';
 
 import * as t from './common-types';
+import { AccountsConfig } from './accounts-config';
+import { ReplacementsConfig } from './replacements-config';
 
 const logger = createLogger(['global-config']);
 /**
@@ -2008,8 +2010,9 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    * @param validateConfig
    * @returns
    */
-  static load(dir: string): GlobalConfig {
-    const buffer = fs.readFileSync(path.join(dir, GlobalConfig.FILENAME), 'utf8');
+  static load(dir: string, replacementsConfig?: ReplacementsConfig): GlobalConfig {
+    const initialBuffer = fs.readFileSync(path.join(dir, GlobalConfig.FILENAME), 'utf8');
+    const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
     const values = t.parse(GlobalConfigTypes.globalConfig, yaml.load(buffer));
 
     const homeRegion = values.homeRegion;
@@ -2024,6 +2027,27 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
       },
       values,
     );
+  }
+
+  /**
+   * Loads the file raw with default replacements placeholders just to get
+   * the management account access role. This is required to get the Role name
+   * that can be assumed to load the replacements, so cannot be done using the
+   * normal loading method. This is abstracted away so that this method of
+   * loading is not accidentally used to partially load config files.
+   */
+  static loadRawGlobalConfig(dir: string): GlobalConfig {
+    const accountsConfig = AccountsConfig.load(dir);
+    let replacementsConfig: ReplacementsConfig;
+
+    if (fs.existsSync(path.join(dir, ReplacementsConfig.FILENAME))) {
+      replacementsConfig = ReplacementsConfig.load(dir, accountsConfig, true);
+    } else {
+      replacementsConfig = new ReplacementsConfig();
+    }
+
+    replacementsConfig.loadReplacementValues({});
+    return GlobalConfig.load(dir, replacementsConfig);
   }
 
   /**

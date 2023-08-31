@@ -217,20 +217,6 @@ async function main() {
   const props = await setAcceleratorStackProps(context, acceleratorEnv, resourcePrefixes, globalRegion);
 
   if (props) {
-    //
-    // Load in account and organizational unit IDs using the Organizations client
-    // if not provided as inputs in accountsConfig
-    //
-    logger.info('Loading account IDs for the environment...');
-    await props.accountsConfig.loadAccountIds(
-      context.partition,
-      acceleratorEnv.enableSingleAccountMode,
-      props.organizationConfig.enable,
-      props.accountsConfig,
-    );
-    logger.info('Loading organizational units for the environment...');
-    await props.organizationConfig.loadOrganizationalUnitIds(context.partition);
-    //
     // Set common variables used in stacks
     const homeRegion = props.globalConfig.homeRegion;
     const managementAccountId = props.accountsConfig.getManagementAccountId();

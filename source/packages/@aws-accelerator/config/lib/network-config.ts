@@ -19,6 +19,7 @@ import { createLogger } from '@aws-accelerator/utils';
 
 import * as t from './common-types';
 import * as CustomizationsConfig from './customizations-config';
+import { ReplacementsConfig } from './replacements-config';
 
 const logger = createLogger(['network-config']);
 
@@ -7619,8 +7620,9 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
    * @param dir
    * @returns
    */
-  static load(dir: string): NetworkConfig {
-    const buffer = fs.readFileSync(path.join(dir, NetworkConfig.FILENAME), 'utf8');
+  static load(dir: string, replacementsConfig?: ReplacementsConfig): NetworkConfig {
+    const initialBuffer = fs.readFileSync(path.join(dir, NetworkConfig.FILENAME), 'utf8');
+    const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
     const values = t.parse(NetworkConfigTypes.networkConfig, yaml.load(buffer));
     return new NetworkConfig(values);
   }

@@ -171,7 +171,9 @@ export abstract class Accelerator {
     const managementAccountCredentials = !this.isPipelineStage(props.stage)
       ? await this.getManagementAccountCredentials(props.partition)
       : undefined;
-    const globalConfig = !this.isPipelineStage(props.stage) ? GlobalConfig.load(props.configDirPath) : undefined;
+    const globalConfig = !this.isPipelineStage(props.stage)
+      ? GlobalConfig.loadRawGlobalConfig(props.configDirPath)
+      : undefined;
     if (globalConfig?.externalLandingZoneResources?.importExternalLandingZoneResources) {
       logger.info('Loading ASEA mapping for stacks list');
       await globalConfig.loadExternalMapping(true);
@@ -337,11 +339,7 @@ export abstract class Accelerator {
         sessionToken: credentials.SessionToken,
       });
     }
-    if (
-      process.env['MANAGEMENT_ACCOUNT_ID'] &&
-      process.env['MANAGEMENT_ACCOUNT_ROLE_NAME'] &&
-      process.env['ACCOUNT_ID'] !== process.env['MANAGEMENT_ACCOUNT_ID']
-    ) {
+    if (process.env['MANAGEMENT_ACCOUNT_ID'] && process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']) {
       logger.info('set management account credentials');
       logger.info(`managementAccountId => ${process.env['MANAGEMENT_ACCOUNT_ID']}`);
       logger.info(`management account role name => ${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`);

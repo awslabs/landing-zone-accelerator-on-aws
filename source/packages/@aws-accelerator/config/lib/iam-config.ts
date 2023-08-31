@@ -18,6 +18,7 @@ import * as path from 'path';
 import { createLogger } from '@aws-accelerator/utils';
 
 import { AccountsConfig } from './accounts-config';
+import { ReplacementsConfig } from './replacements-config';
 import * as t from './common-types';
 
 const logger = createLogger(['iam-config']);
@@ -1823,10 +1824,13 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
   /**
    * Load from config file content
    * @param dir
+   * @param replacementsConfig
    * @returns
    */
-  static load(dir: string): IamConfig {
-    const buffer = fs.readFileSync(path.join(dir, IamConfig.FILENAME), 'utf8');
+
+  static load(dir: string, replacementsConfig?: ReplacementsConfig): IamConfig {
+    const initialBuffer = fs.readFileSync(path.join(dir, IamConfig.FILENAME), 'utf8');
+    const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
     const values = t.parse(IamConfigTypes.iamConfig, yaml.load(buffer));
     return new IamConfig(values);
   }

@@ -26,76 +26,161 @@ import {
   NetworkConfigValidator,
   OrganizationConfig,
   OrganizationConfigValidator,
+  ReplacementsConfig,
   SecurityConfig,
   SecurityConfigValidator,
 } from '@aws-accelerator/config';
 import { createLogger } from '@aws-accelerator/utils';
+import { Accelerator } from './accelerator';
+import { getReplacementsConfig } from '../utils/app-utils';
 
 const logger = createLogger(['config-validator']);
 const configDirPath = process.argv[2];
+const homeRegion = GlobalConfig.loadRawGlobalConfig(configDirPath).homeRegion;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const initErrors: { file: string; message: any }[] = [];
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const configErrors: any[] = [];
 
+const fileNameList = [
+  AccountsConfig.FILENAME,
+  CustomizationsConfig.FILENAME,
+  GlobalConfig.FILENAME,
+  IamConfig.FILENAME,
+  NetworkConfig.FILENAME,
+  OrganizationConfig.FILENAME,
+  SecurityConfig.FILENAME,
+];
+
+const enableSingleAccountMode = process.env['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE']
+  ? process.env['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE'] === 'true'
+  : false;
+
+const props = {
+  partition: process.env['PARTITION'] ?? 'aws',
+  region: process.env['AWS_REGION'],
+  account: process.env['ACCOUNT_ID'],
+  enableSingleAccountMode: enableSingleAccountMode,
+  replacementsPresent: areReplacementsPresent(),
+};
+
 if (configDirPath) {
   logger.info(`Config source directory -  ${configDirPath}`);
+  validateConfig(props);
+} else {
+  logger.info('Config source directory undefined !!!');
+}
+
+function areReplacementsPresent() {
+  const regex = new RegExp('{{.+}}');
+  let replacementsPresent = false;
+
+  for (const fileName of fileNameList) {
+    if (
+      fileName === CustomizationsConfig.FILENAME &&
+      !fs.existsSync(path.join(configDirPath, CustomizationsConfig.FILENAME))
+    ) {
+      continue;
+    } else {
+      replacementsPresent = checkFileForReplacements(regex, fileName);
+    }
+
+    if (replacementsPresent) {
+      break;
+    }
+  }
+  return replacementsPresent;
+}
+
+function checkFileForReplacements(regex: RegExp, fileName: string): boolean {
+  let replacementsFound = false;
+  const data = fs.readFileSync(path.join(configDirPath, fileName));
+  if (regex.test(data.toString())) {
+    logger.info(`Found replacement variables in ${fileName}`);
+    replacementsFound = true;
+  }
+  return replacementsFound;
+}
+
+async function validateConfig(props: {
+  partition: string;
+  region: string | undefined;
+  enableSingleAccountMode: boolean;
+  account: string | undefined;
+  replacementsPresent: boolean;
+}) {
+  if (props.replacementsPresent) {
+    await Accelerator.getManagementAccountCredentials(props.partition);
+  }
+  const orgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(configDirPath).enable;
 
   // Load accounts config
   let accountsConfig: AccountsConfig | undefined = undefined;
   try {
     accountsConfig = AccountsConfig.load(configDirPath);
+    if (props.replacementsPresent) {
+      await accountsConfig.loadAccountIds(props.partition, props.enableSingleAccountMode, orgsEnabled, accountsConfig);
+    }
   } catch (e) {
-    initErrors.push({ file: 'accounts-config.yaml', message: e });
+    initErrors.push({ file: AccountsConfig.FILENAME, message: e });
+  }
+
+  // Load replacements config
+  let replacementsConfig: ReplacementsConfig | undefined = undefined;
+  try {
+    replacementsConfig = getReplacementsConfig(configDirPath, accountsConfig!);
+    await replacementsConfig.loadReplacementValues({ region: homeRegion });
+  } catch (e) {
+    initErrors.push({ file: ReplacementsConfig.FILENAME, message: e });
   }
 
   // Load global config
   let globalConfig: GlobalConfig | undefined = undefined;
   try {
-    globalConfig = GlobalConfig.load(configDirPath);
+    globalConfig = GlobalConfig.load(configDirPath, replacementsConfig);
   } catch (e) {
-    initErrors.push({ file: 'global-config.yaml', message: e });
+    initErrors.push({ file: GlobalConfig.FILENAME, message: e });
   }
 
   // Load IAM config
   let iamConfig: IamConfig | undefined = undefined;
   try {
-    iamConfig = IamConfig.load(configDirPath);
+    iamConfig = IamConfig.load(configDirPath, replacementsConfig);
   } catch (e) {
-    initErrors.push({ file: 'iam-config.yaml', message: e });
+    initErrors.push({ file: IamConfig.FILENAME, message: e });
   }
 
   // Load network config
   let networkConfig: NetworkConfig | undefined = undefined;
   try {
-    networkConfig = NetworkConfig.load(configDirPath);
+    networkConfig = NetworkConfig.load(configDirPath, replacementsConfig);
   } catch (e) {
-    initErrors.push({ file: 'network-config.yaml', message: e });
+    initErrors.push({ file: NetworkConfig.FILENAME, message: e });
   }
 
   // Load organization config
   let organizationConfig: OrganizationConfig | undefined = undefined;
   try {
-    organizationConfig = OrganizationConfig.load(configDirPath);
+    organizationConfig = OrganizationConfig.load(configDirPath, replacementsConfig);
   } catch (e) {
-    initErrors.push({ file: 'organization-config.yaml', message: e });
+    initErrors.push({ file: OrganizationConfig.FILENAME, message: e });
   }
 
   // Load security config
   let securityConfig: SecurityConfig | undefined = undefined;
   try {
-    securityConfig = SecurityConfig.load(configDirPath);
+    securityConfig = SecurityConfig.load(configDirPath, replacementsConfig);
   } catch (e) {
-    initErrors.push({ file: 'security-config.yaml', message: e });
+    initErrors.push({ file: SecurityConfig.FILENAME, message: e });
   }
 
   // Validate optional configuration files if they exist
   let customizationsConfig: CustomizationsConfig | undefined = undefined;
-  if (fs.existsSync(path.join(configDirPath, 'customizations-config.yaml'))) {
+  if (fs.existsSync(path.join(configDirPath, CustomizationsConfig.FILENAME))) {
     try {
-      customizationsConfig = CustomizationsConfig.load(configDirPath);
+      customizationsConfig = CustomizationsConfig.load(configDirPath, replacementsConfig);
     } catch (e) {
-      initErrors.push({ file: 'customizations-config.yaml', message: e });
+      initErrors.push({ file: CustomizationsConfig.FILENAME, message: e });
     }
   }
 
@@ -117,8 +202,6 @@ if (configDirPath) {
   // Process errors
   //
   processErrors(initErrors, configErrors);
-} else {
-  logger.info('Config source directory undefined !!!');
 }
 
 /**

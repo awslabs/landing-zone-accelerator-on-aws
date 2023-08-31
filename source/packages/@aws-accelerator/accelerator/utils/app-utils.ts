@@ -18,6 +18,7 @@ import {
   IamConfig,
   NetworkConfig,
   OrganizationConfig,
+  ReplacementsConfig,
   SecurityConfig,
 } from '@aws-accelerator/config';
 import * as cdk from 'aws-cdk-lib';
@@ -373,16 +374,23 @@ export async function setAcceleratorStackProps(
   if (!context.configDirPath) {
     return;
   }
+  const homeRegion = GlobalConfig.loadRawGlobalConfig(context.configDirPath).homeRegion;
+  const orgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(context.configDirPath).enable;
 
-  const globalConfig = GlobalConfig.load(context.configDirPath);
-  let customizationsConfig: CustomizationsConfig;
+  const accountsConfig = AccountsConfig.load(context.configDirPath);
+  await accountsConfig.loadAccountIds(
+    context.partition,
+    acceleratorEnv.enableSingleAccountMode,
+    orgsEnabled,
+    accountsConfig,
+  );
 
-  // Create empty customizationsConfig if optional configuration file does not exist
-  if (fs.existsSync(path.join(context.configDirPath, 'customizations-config.yaml'))) {
-    customizationsConfig = CustomizationsConfig.load(context.configDirPath);
-  } else {
-    customizationsConfig = new CustomizationsConfig();
-  }
+  const replacementsConfig = getReplacementsConfig(context.configDirPath, accountsConfig);
+  await replacementsConfig.loadReplacementValues({ region: homeRegion });
+
+  const globalConfig = GlobalConfig.load(context.configDirPath, replacementsConfig);
+  const organizationConfig = OrganizationConfig.load(context.configDirPath, replacementsConfig);
+  await organizationConfig.loadOrganizationalUnitIds(context.partition);
 
   if (globalConfig.externalLandingZoneResources?.importExternalLandingZoneResources) {
     await globalConfig.loadExternalMapping(true);
@@ -391,13 +399,13 @@ export async function setAcceleratorStackProps(
 
   return {
     configDirPath: context.configDirPath,
-    accountsConfig: AccountsConfig.load(context.configDirPath),
-    customizationsConfig,
+    accountsConfig: accountsConfig,
+    customizationsConfig: getCustomizationsConfig(context.configDirPath, replacementsConfig),
     globalConfig,
-    iamConfig: IamConfig.load(context.configDirPath),
-    networkConfig: NetworkConfig.load(context.configDirPath),
-    organizationConfig: OrganizationConfig.load(context.configDirPath),
-    securityConfig: SecurityConfig.load(context.configDirPath),
+    iamConfig: IamConfig.load(context.configDirPath, replacementsConfig),
+    networkConfig: NetworkConfig.load(context.configDirPath, replacementsConfig),
+    organizationConfig: organizationConfig,
+    securityConfig: SecurityConfig.load(context.configDirPath, replacementsConfig),
     partition: context.partition,
     globalRegion,
     centralizedLoggingRegion: globalConfig.logging.centralizedLoggingRegion ?? globalConfig.homeRegion,
@@ -428,4 +436,41 @@ export function isBeforeBootstrapStage(command: string, stage?: string): boolean
   }
 
   return preBootstrapStages.includes(stage);
+}
+
+/**
+ * Get customizationsConfig object
+ * @param configDirPath
+ * @returns
+ */
+export function getCustomizationsConfig(
+  configDirPath: string,
+  replacementsConfig: ReplacementsConfig,
+): CustomizationsConfig {
+  let customizationsConfig: CustomizationsConfig;
+
+  // Create empty customizationsConfig if optional configuration file does not exist
+  if (fs.existsSync(path.join(configDirPath, CustomizationsConfig.FILENAME))) {
+    customizationsConfig = CustomizationsConfig.load(configDirPath, replacementsConfig);
+  } else {
+    customizationsConfig = new CustomizationsConfig();
+  }
+  return customizationsConfig;
+}
+
+/**
+ * Get replacementsConfig object
+ * @param configDirPath
+ * @returns
+ */
+export function getReplacementsConfig(configDirPath: string, accountsConfig: AccountsConfig): ReplacementsConfig {
+  let replacementsConfig: ReplacementsConfig;
+
+  // Create empty replacementsConfig if optional configuration file does not exist
+  if (fs.existsSync(path.join(configDirPath, ReplacementsConfig.FILENAME))) {
+    replacementsConfig = ReplacementsConfig.load(configDirPath, accountsConfig);
+  } else {
+    replacementsConfig = new ReplacementsConfig();
+  }
+  return replacementsConfig;
 }

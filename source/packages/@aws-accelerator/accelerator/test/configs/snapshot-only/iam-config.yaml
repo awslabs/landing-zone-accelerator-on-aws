@@ -34,6 +34,8 @@ roleSets:
         assumedBy:
           - type: service
             principal: backup.amazonaws.com
+          - type: account
+            principal: '123456789012'
         policies:
           awsManaged:
             - service-role/AWSBackupServiceRolePolicyForBackup

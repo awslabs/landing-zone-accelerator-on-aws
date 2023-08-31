@@ -18,6 +18,7 @@ export * from './lib/global-config';
 export * from './lib/iam-config';
 export * from './lib/network-config';
 export * from './lib/organization-config';
+export * from './lib/replacements-config';
 export * from './lib/security-config';
 export * from './validator/accounts-config-validator';
 export * from './validator/customizations-config-validator';

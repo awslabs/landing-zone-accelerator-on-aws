@@ -18,6 +18,8 @@ import * as path from 'path';
 import { createLogger, loadOrganizationalUnits } from '@aws-accelerator/utils';
 
 import * as t from './common-types';
+import { ReplacementsConfig } from './replacements-config';
+import { AccountsConfig } from './accounts-config';
 
 const logger = createLogger(['organization-config']);
 
@@ -438,10 +440,51 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
    * @param validateConfig
    * @returns
    */
-  static load(dir: string): OrganizationConfig {
-    const buffer = fs.readFileSync(path.join(dir, OrganizationConfig.FILENAME), 'utf8');
+  static load(dir: string, replacementsConfig?: ReplacementsConfig): OrganizationConfig {
+    const initialBuffer = fs.readFileSync(path.join(dir, OrganizationConfig.FILENAME), 'utf8');
+    const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
     const values = t.parse(OrganizationConfigTypes.organizationConfig, yaml.load(buffer));
     return new OrganizationConfig(values);
+  }
+
+  /**
+   * Loads the file raw with default replacements placeholders to determine if organizations is enabled.
+   */
+  static loadRawOrganizationsConfig(dir: string): OrganizationConfig {
+    const accountsConfig = AccountsConfig.load(dir);
+    let replacementsConfig: ReplacementsConfig;
+
+    if (fs.existsSync(path.join(dir, ReplacementsConfig.FILENAME))) {
+      replacementsConfig = ReplacementsConfig.load(dir, accountsConfig, true);
+    } else {
+      replacementsConfig = new ReplacementsConfig();
+    }
+
+    replacementsConfig.loadReplacementValues({});
+    return OrganizationConfig.load(dir, replacementsConfig);
+  }
+
+  /**
+   * Load from string
+   * @param initialBuffer
+   * @param replacementsConfig
+   * @returns
+   */
+  static loadFromString(initialBuffer: string, replacementsConfig?: ReplacementsConfig): OrganizationConfig {
+    const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
+    const values = t.parse(OrganizationConfigTypes.organizationConfig, yaml.load(buffer));
+    return new OrganizationConfig(values);
+  }
+
+  /**
+   * Load from buffer
+   * @param dir
+   * @param replacementsConfig
+   * @returns
+   */
+  static loadBuffer(dir: string, replacementsConfig?: ReplacementsConfig): string {
+    const initialBuffer = fs.readFileSync(path.join(dir, OrganizationConfig.FILENAME), 'utf8');
+    return replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
   }
 
   /**

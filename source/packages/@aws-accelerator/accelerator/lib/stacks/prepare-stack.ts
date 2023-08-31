@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { SnsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import { Construct } from 'constructs';
+import * as fs from 'fs';
 import path from 'path';
 
 import {
@@ -28,7 +29,12 @@ import {
 import { LoadAcceleratorConfigTable } from '../load-config-table';
 import { ValidateEnvironmentConfig } from '../validate-environment-config';
 import { AcceleratorStack, AcceleratorStackProps, NagSuppressionRuleIds } from './accelerator-stack';
-import { ServiceControlPolicyConfig } from '@aws-accelerator/config';
+import {
+  AccountsConfig,
+  OrganizationConfig,
+  ReplacementsConfig,
+  ServiceControlPolicyConfig,
+} from '@aws-accelerator/config';
 
 type scpTargetType = 'ou' | 'account';
 
@@ -79,11 +85,17 @@ export class PrepareStack extends AcceleratorStack {
       // Make assets from the configuration directory
       this.logger.info(`Configuration assets creation`);
       const accountConfigAsset = new cdk.aws_s3_assets.Asset(this, 'AccountConfigAsset', {
-        path: path.join(props.configDirPath, 'accounts-config.yaml'),
+        path: path.join(props.configDirPath, AccountsConfig.FILENAME),
       });
       const organizationsConfigAsset = new cdk.aws_s3_assets.Asset(this, 'OrganizationConfigAsset', {
-        path: path.join(props.configDirPath, 'organization-config.yaml'),
+        path: path.join(props.configDirPath, OrganizationConfig.FILENAME),
       });
+      let replacementsConfigAsset = undefined;
+      if (fs.existsSync(path.join(props.configDirPath, ReplacementsConfig.FILENAME))) {
+        replacementsConfigAsset = new cdk.aws_s3_assets.Asset(this, 'ReplacementsConfigAsset', {
+          path: path.join(props.configDirPath, ReplacementsConfig.FILENAME),
+        });
+      }
 
       const driftDetectedParameter = new cdk.aws_ssm.StringParameter(this, 'AcceleratorControlTowerDriftParameter', {
         parameterName: this.acceleratorResourceNames.parameters.controlTowerDriftDetection,
@@ -178,6 +190,7 @@ export class PrepareStack extends AcceleratorStack {
           configS3Bucket: organizationsConfigAsset.s3BucketName,
           organizationsConfigS3Key: organizationsConfigAsset.s3ObjectKey,
           accountConfigS3Key: accountConfigAsset.s3ObjectKey,
+          replacementsConfigS3Key: replacementsConfigAsset?.s3ObjectKey,
           commitId,
           partition: props.partition,
           region: cdk.Stack.of(this).region,

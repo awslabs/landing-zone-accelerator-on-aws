@@ -218,6 +218,24 @@ exports[`OperationsStack Construct(OperationsStack):  Snapshot Test 1`] = `
                 "Service": "backup.amazonaws.com",
               },
             },
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::123456789012:root",
+                    ],
+                  ],
+                },
+              },
+            },
           ],
           "Version": "2012-10-17",
         },

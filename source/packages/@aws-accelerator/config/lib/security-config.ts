@@ -18,6 +18,7 @@ import * as path from 'path';
 import { createLogger } from '@aws-accelerator/utils';
 
 import * as t from './common-types';
+import { ReplacementsConfig } from './replacements-config';
 
 const logger = createLogger(['security-config']);
 
@@ -2642,11 +2643,14 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
   /**
    *
    * @param dir
-   * @param validateConfig
+   * @param replacementsConfig
    * @returns
    */
-  static load(dir: string): SecurityConfig {
-    const buffer = fs.readFileSync(path.join(dir, SecurityConfig.FILENAME), 'utf8');
+
+  static load(dir: string, replacementsConfig?: ReplacementsConfig): SecurityConfig {
+    const initialBuffer = fs.readFileSync(path.join(dir, SecurityConfig.FILENAME), 'utf8');
+    const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
+
     const values = t.parse(SecurityConfigTypes.securityConfig, yaml.load(buffer));
     return new SecurityConfig(values);
   }

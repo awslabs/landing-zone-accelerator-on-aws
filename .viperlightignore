@@ -75,22 +75,24 @@ source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:72
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:73
 
 # Accelerator specific assume role declaration
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:365
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:366
-
-
-# Accelerator specific assume role declaration
-source/packages/@aws-accelerator/config/lib/global-config.ts:2291
-source/packages/@aws-accelerator/config/lib/global-config.ts:2292
-
-
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:363
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:364
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1126
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1127
 
 # Accelerator specific assume role declaration
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1104
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1105
+source/packages/@aws-accelerator/config/lib/global-config.ts:2315
+source/packages/@aws-accelerator/config/lib/global-config.ts:2316
+
+# Accelerator specific assume role declaration
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1102
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1103
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1114
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1115
 
+# Accelerator specific assume role declaration
+source/packages/@aws-accelerator/config/lib/global-config.ts:2229
+source/packages/@aws-accelerator/config/lib/global-config.ts:2230
 
 # Accelerator specific assume role declaration
 source/packages/@aws-accelerator/constructs/lib/aws-directory-service/share-directory/index.ts:143
