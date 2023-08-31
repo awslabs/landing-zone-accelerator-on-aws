@@ -1794,7 +1794,7 @@ export class ConfigRuleRemediation implements t.TypeOf<typeof SecurityConfigType
  *       lambda:
  *         sourceFilePath: path/to/function.zip
  *         handler: index.handler
- *         runtime: nodejs14.x
+ *         runtime: nodejsXX.x
  *         rolePolicyFile: path/to/policy.json
  *       periodic: true
  *       maximumExecutionFrequency: Six_Hours
@@ -1985,7 +1985,7 @@ export class AwsConfigRuleSet implements t.TypeOf<typeof SecurityConfigTypes.aws
    *             lambda:
    *               sourceFilePath: custom-config-rules/attach-ec2-instance-profile.zip
    *               handler: index.handler
-   *               runtime: nodejs14.x
+   *               runtime: nodejsXX.x
    *               timeout: 3
    *             periodic: true
    *             maximumExecutionFrequency: Six_Hours
