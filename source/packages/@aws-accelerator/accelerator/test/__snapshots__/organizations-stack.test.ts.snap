@@ -4886,6 +4886,272 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
       "Type": "Custom::EnableSharingWithAwsOrganization",
       "UpdateReplacePolicy": "Delete",
     },
+    "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionA541DABF": {
+      "DependsOn": [
+        "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicyBF2D7C58",
+        "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRole4B6F4F45",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Custom resource provider to create service linked role",
+        "Handler": "index.handler",
+        "KmsKeyArn": {
+          "Ref": "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "MemorySize": 256,
+        "Role": {
+          "Fn::GetAtt": [
+            "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRole4B6F4F45",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionLogGroup162E628B": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionA541DABF",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRole4B6F4F45": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Custom resource Lambda role policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicyBF2D7C58": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Custom resource Lambda role policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "iam:CreateServiceLinkedRole",
+                "iam:GetRole",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicyBF2D7C58",
+        "Roles": [
+          {
+            "Ref": "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRole4B6F4F45",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventEE1DB34B": {
+      "DependsOn": [
+        "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy65EE4B90",
+        "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole41A12BB9",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-OrganizationsStack-111111111111-us-east-1/FirewallManagerServiceLinkedRole/CreateServiceLinkedRoleProvider)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionA541DABF",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole41A12BB9",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole41A12BB9": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Custom resource Lambda role policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy65EE4B90": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Custom resource Lambda role policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionA541DABF",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionA541DABF",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy65EE4B90",
+        "Roles": [
+          {
+            "Ref": "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole41A12BB9",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleResourceE252DEA3": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventEE1DB34B",
+            "Arn",
+          ],
+        },
+        "roleName": "AWSServiceRoleForFMS",
+        "serviceName": "fms.amazonaws.com",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::CreateServiceLinkedRole",
+      "UpdateReplacePolicy": "Delete",
+    },
     "GuardDutyEnableOrganizationAdminAccount90D7393E": {
       "DeletionPolicy": "Delete",
       "DependsOn": [

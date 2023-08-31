@@ -1428,6 +1428,16 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
       "Type": "AWS::CodeBuild::Project",
     },
     "PipelineBuildRoleDC686070": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Managed policy for External Pipeline Deployment Lookups attached.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -1441,6 +1451,11 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
           ],
           "Version": "2012-10-17",
         },
+        "ManagedPolicyArns": [
+          {
+            "Ref": "PipelineValidateConfigPolicyDocument5A45073D",
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -2423,6 +2438,26 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
         "TimeoutInMinutes": 300,
       },
       "Type": "AWS::CodeBuild::Project",
+    },
+    "PipelineValidateConfigPolicyDocument5A45073D": {
+      "Properties": {
+        "Description": "",
+        "Path": "/",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "organizations:ListAccounts",
+                "ssm:GetParameter",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::ManagedPolicy",
     },
     "SsmParamAcceleratorVersionFF83282D": {
       "Properties": {

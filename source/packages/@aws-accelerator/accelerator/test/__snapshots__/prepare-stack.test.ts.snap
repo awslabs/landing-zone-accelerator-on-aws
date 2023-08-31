@@ -3821,6 +3821,14 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
                 },
                 {
                   "Action": [
+                    "ssm:GetParameter",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "getReplacements",
+                },
+                {
+                  "Action": [
                     "dynamodb:UpdateItem",
                     "dynamodb:PutItem",
                   ],

@@ -15,6 +15,7 @@ import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
 import * as t from './common-types';
+import { ReplacementsConfig } from './replacements-config';
 
 /**
  * Customization configuration items.
@@ -2751,11 +2752,12 @@ export class CustomizationsConfig implements t.TypeOf<typeof CustomizationsConfi
   /**
    * Load from config file content
    * @param dir
-   * @param validateConfig
+   * @param replacementsConfig
    * @returns
    */
-  static load(dir: string): CustomizationsConfig {
-    const buffer = fs.readFileSync(path.join(dir, CustomizationsConfig.FILENAME), 'utf8');
+  static load(dir: string, replacementsConfig?: ReplacementsConfig): CustomizationsConfig {
+    const initialBuffer = fs.readFileSync(path.join(dir, CustomizationsConfig.FILENAME), 'utf8');
+    const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
     const values = t.parse(CustomizationsConfigTypes.customizationsConfig, yaml.load(buffer));
     return new CustomizationsConfig(values);
   }

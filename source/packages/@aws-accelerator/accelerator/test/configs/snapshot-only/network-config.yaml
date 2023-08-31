@@ -1794,7 +1794,11 @@ vpcFlowLogs:
     - cloud-watch-logs
   destinationsConfig:
     s3:
-      lifecycleRules: []
+      lifecycleRules: 
+        - abortIncompleteMultipartUpload: 1
+          enabled: true
+          expiration: 365
+          noncurrentVersionExpiration: 30
     cloudWatchLogs:
       retentionInDays: 3653
   defaultFormat: true
@@ -1859,7 +1863,7 @@ certificates:
       organizationalUnits:
         - Security
 
-firewallManager:
+firewallManagerService:
   delegatedAdminAccount: Audit
   notificationChannels:
     - snsTopic: Security

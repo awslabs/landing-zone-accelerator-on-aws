@@ -26,11 +26,18 @@ import { HotswapMode } from 'aws-cdk/lib/api/hotswap/common';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { AccountsConfig, cdkOptionsConfig, CustomizationsConfig, OrganizationConfig } from '@aws-accelerator/config';
+import {
+  AccountsConfig,
+  cdkOptionsConfig,
+  CustomizationsConfig,
+  GlobalConfig,
+  OrganizationConfig,
+} from '@aws-accelerator/config';
+import { getReplacementsConfig } from '../utils/app-utils';
 import { createLogger } from '@aws-accelerator/utils';
 import { isBeforeBootstrapStage } from '../utils/app-utils';
 
-import { AcceleratorStackNames } from './accelerator';
+import { Accelerator, AcceleratorStackNames } from './accelerator';
 import { AcceleratorStage } from './accelerator-stage';
 import { isIncluded } from './stacks/custom-stack';
 
@@ -410,16 +417,25 @@ export class AcceleratorToolkit {
   ): Promise<string[]> {
     const configDirPath = AcceleratorToolkit.validateAndGetConfigDirectory(options.configDirPath);
 
-    if (fs.existsSync(path.join(configDirPath, 'customizations-config.yaml'))) {
-      const customizationsConfig = CustomizationsConfig.load(configDirPath);
+    if (fs.existsSync(path.join(configDirPath, CustomizationsConfig.FILENAME))) {
+      await Accelerator.getManagementAccountCredentials(options.partition);
       const accountsConfig = AccountsConfig.load(configDirPath);
-      const organizationConfig = OrganizationConfig.load(configDirPath);
+      const homeRegion = GlobalConfig.loadRawGlobalConfig(configDirPath).homeRegion;
+      const replacementsConfig = getReplacementsConfig(configDirPath, accountsConfig);
+      await replacementsConfig.loadReplacementValues({ region: homeRegion });
+      const organizationConfig = OrganizationConfig.load(configDirPath, replacementsConfig);
       await accountsConfig.loadAccountIds(
         options.partition,
         options.enableSingleAccountMode,
         organizationConfig.enable,
         accountsConfig,
       );
+
+      logger.info('Loading account IDs for the environment...');
+      logger.info('Loading organizational units for the environment...');
+      await organizationConfig.loadOrganizationalUnitIds(options.partition);
+
+      const customizationsConfig = CustomizationsConfig.load(configDirPath, replacementsConfig);
       const customStacks = customizationsConfig.getCustomStacks();
       for (const stack of customStacks) {
         const deploymentAccts = accountsConfig.getAccountIdsFromDeploymentTarget(stack.deploymentTargets);
