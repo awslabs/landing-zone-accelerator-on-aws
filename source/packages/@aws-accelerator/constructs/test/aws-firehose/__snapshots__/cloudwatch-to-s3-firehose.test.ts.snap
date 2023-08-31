@@ -25,6 +25,42 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
     },
   },
   "Resources": {
+    "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchLogStreamC585C3CD": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "LogGroupName": {
+          "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudwatchLogs2559CE32",
+        },
+        "LogStreamName": "DestinationDeliveryError",
+      },
+      "Type": "AWS::Logs::LogStream",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CloudWatchToS3FirehoseBucketNameFirehoseCloudwatchLogs2559CE32": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "CustomLogsKeyBucketName076BAD56",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/accelerator/logs/firehose/",
+              {
+                "Ref": "CustomStreamBucketName9F2BF3F7",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 7,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
     "CloudWatchToS3FirehoseBucketNameFirehoseKinesisStreamServiceRole9577C2D5": {
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -337,6 +373,40 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
                     },
                   ],
                 },
+                {
+                  "Action": "logs:PutLogEvents",
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        {
+                          "Fn::GetAtt": [
+                            "CloudWatchToS3FirehoseBucketNameFirehoseCloudwatchLogs2559CE32",
+                            "Arn",
+                          ],
+                        },
+                        ":logstream:",
+                        {
+                          "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchLogStreamC585C3CD",
+                        },
+                      ],
+                    ],
+                  },
+                },
+                {
+                  "Action": [
+                    "kms:Encrypt*",
+                    "kms:Describe*",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "CustomLogsKeyBucketName076BAD56",
+                      "Arn",
+                    ],
+                  },
+                },
               ],
               "Version": "2012-10-17",
             },
@@ -375,6 +445,15 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
           "BufferingHints": {
             "IntervalInSeconds": 60,
             "SizeInMBs": 64,
+          },
+          "CloudWatchLoggingOptions": {
+            "Enabled": true,
+            "LogGroupName": {
+              "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudwatchLogs2559CE32",
+            },
+            "LogStreamName": {
+              "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchLogStreamC585C3CD",
+            },
           },
           "CompressionFormat": "UNCOMPRESSED",
           "DataFormatConversionConfiguration": {
@@ -449,6 +528,42 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
         },
       },
       "Type": "AWS::KinesisFirehose::DeliveryStream",
+    },
+    "CloudWatchToS3FirehoseExistingIamFirehoseCloudWatchLogStream4369D67C": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "LogGroupName": {
+          "Ref": "CloudWatchToS3FirehoseExistingIamFirehoseCloudwatchLogsE7A42868",
+        },
+        "LogStreamName": "DestinationDeliveryError",
+      },
+      "Type": "AWS::Logs::LogStream",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CloudWatchToS3FirehoseExistingIamFirehoseCloudwatchLogsE7A42868": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "CustomLogsKeyExistingIamA40FEFF2",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/accelerator/logs/firehose/",
+              {
+                "Ref": "CustomStreamExistingIamFE5F8092",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 7,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
     },
     "CloudWatchToS3FirehoseExistingIamFirehosePrefixProcessingLambdaF852AD4B": {
       "DependsOn": [
@@ -613,6 +728,15 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
             "IntervalInSeconds": 60,
             "SizeInMBs": 64,
           },
+          "CloudWatchLoggingOptions": {
+            "Enabled": true,
+            "LogGroupName": {
+              "Ref": "CloudWatchToS3FirehoseExistingIamFirehoseCloudwatchLogsE7A42868",
+            },
+            "LogStreamName": {
+              "Ref": "CloudWatchToS3FirehoseExistingIamFirehoseCloudWatchLogStream4369D67C",
+            },
+          },
           "CompressionFormat": "UNCOMPRESSED",
           "DataFormatConversionConfiguration": {
             "Enabled": false,
@@ -706,6 +830,42 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
         },
       },
       "Type": "AWS::KinesisFirehose::DeliveryStream",
+    },
+    "CloudWatchToS3FirehoseFirehoseCloudWatchLogStream3886AD4D": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "LogGroupName": {
+          "Ref": "CloudWatchToS3FirehoseFirehoseCloudwatchLogs25E5D35A",
+        },
+        "LogStreamName": "DestinationDeliveryError",
+      },
+      "Type": "AWS::Logs::LogStream",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CloudWatchToS3FirehoseFirehoseCloudwatchLogs25E5D35A": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "CustomLogsKeyA36F38C8",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/accelerator/logs/firehose/",
+              {
+                "Ref": "CustomStreamE8E9158E",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 7,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
     },
     "CloudWatchToS3FirehoseFirehoseKinesisStreamServiceRole80E25BD8": {
       "Properties": {
@@ -1017,6 +1177,40 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
                     },
                   ],
                 },
+                {
+                  "Action": "logs:PutLogEvents",
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        {
+                          "Fn::GetAtt": [
+                            "CloudWatchToS3FirehoseFirehoseCloudwatchLogs25E5D35A",
+                            "Arn",
+                          ],
+                        },
+                        ":logstream:",
+                        {
+                          "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchLogStream3886AD4D",
+                        },
+                      ],
+                    ],
+                  },
+                },
+                {
+                  "Action": [
+                    "kms:Encrypt*",
+                    "kms:Describe*",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "CustomLogsKeyA36F38C8",
+                      "Arn",
+                    ],
+                  },
+                },
               ],
               "Version": "2012-10-17",
             },
@@ -1049,6 +1243,15 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
           "BufferingHints": {
             "IntervalInSeconds": 60,
             "SizeInMBs": 64,
+          },
+          "CloudWatchLoggingOptions": {
+            "Enabled": true,
+            "LogGroupName": {
+              "Ref": "CloudWatchToS3FirehoseFirehoseCloudwatchLogs25E5D35A",
+            },
+            "LogStreamName": {
+              "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchLogStream3886AD4D",
+            },
           },
           "CompressionFormat": "UNCOMPRESSED",
           "DataFormatConversionConfiguration": {
@@ -1410,6 +1613,111 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
       "UpdateReplacePolicy": "Retain",
     },
     "CustomLambdaKeyExistingIamC416D475": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomLogsKeyA36F38C8": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomLogsKeyBucketName076BAD56": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomLogsKeyExistingIamA40FEFF2": {
       "DeletionPolicy": "Retain",
       "Properties": {
         "KeyPolicy": {
@@ -1530,6 +1838,42 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
     },
   },
   "Resources": {
+    "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchLogStreamC585C3CD": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "LogGroupName": {
+          "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudwatchLogs2559CE32",
+        },
+        "LogStreamName": "DestinationDeliveryError",
+      },
+      "Type": "AWS::Logs::LogStream",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CloudWatchToS3FirehoseBucketNameFirehoseCloudwatchLogs2559CE32": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "CustomLogsKeyBucketName076BAD56",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/accelerator/logs/firehose/",
+              {
+                "Ref": "CustomStreamBucketName9F2BF3F7",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 7,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
     "CloudWatchToS3FirehoseBucketNameFirehoseKinesisStreamServiceRole9577C2D5": {
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -1842,6 +2186,40 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
                     },
                   ],
                 },
+                {
+                  "Action": "logs:PutLogEvents",
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        {
+                          "Fn::GetAtt": [
+                            "CloudWatchToS3FirehoseBucketNameFirehoseCloudwatchLogs2559CE32",
+                            "Arn",
+                          ],
+                        },
+                        ":logstream:",
+                        {
+                          "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchLogStreamC585C3CD",
+                        },
+                      ],
+                    ],
+                  },
+                },
+                {
+                  "Action": [
+                    "kms:Encrypt*",
+                    "kms:Describe*",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "CustomLogsKeyBucketName076BAD56",
+                      "Arn",
+                    ],
+                  },
+                },
               ],
               "Version": "2012-10-17",
             },
@@ -1880,6 +2258,15 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
           "BufferingHints": {
             "IntervalInSeconds": 60,
             "SizeInMBs": 64,
+          },
+          "CloudWatchLoggingOptions": {
+            "Enabled": true,
+            "LogGroupName": {
+              "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudwatchLogs2559CE32",
+            },
+            "LogStreamName": {
+              "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchLogStreamC585C3CD",
+            },
           },
           "CompressionFormat": "UNCOMPRESSED",
           "DataFormatConversionConfiguration": {
@@ -1954,6 +2341,42 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
         },
       },
       "Type": "AWS::KinesisFirehose::DeliveryStream",
+    },
+    "CloudWatchToS3FirehoseExistingIamFirehoseCloudWatchLogStream4369D67C": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "LogGroupName": {
+          "Ref": "CloudWatchToS3FirehoseExistingIamFirehoseCloudwatchLogsE7A42868",
+        },
+        "LogStreamName": "DestinationDeliveryError",
+      },
+      "Type": "AWS::Logs::LogStream",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CloudWatchToS3FirehoseExistingIamFirehoseCloudwatchLogsE7A42868": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "CustomLogsKeyExistingIamA40FEFF2",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/accelerator/logs/firehose/",
+              {
+                "Ref": "CustomStreamExistingIamFE5F8092",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 7,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
     },
     "CloudWatchToS3FirehoseExistingIamFirehosePrefixProcessingLambdaF852AD4B": {
       "DependsOn": [
@@ -2118,6 +2541,15 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
             "IntervalInSeconds": 60,
             "SizeInMBs": 64,
           },
+          "CloudWatchLoggingOptions": {
+            "Enabled": true,
+            "LogGroupName": {
+              "Ref": "CloudWatchToS3FirehoseExistingIamFirehoseCloudwatchLogsE7A42868",
+            },
+            "LogStreamName": {
+              "Ref": "CloudWatchToS3FirehoseExistingIamFirehoseCloudWatchLogStream4369D67C",
+            },
+          },
           "CompressionFormat": "UNCOMPRESSED",
           "DataFormatConversionConfiguration": {
             "Enabled": false,
@@ -2211,6 +2643,42 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
         },
       },
       "Type": "AWS::KinesisFirehose::DeliveryStream",
+    },
+    "CloudWatchToS3FirehoseFirehoseCloudWatchLogStream3886AD4D": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "LogGroupName": {
+          "Ref": "CloudWatchToS3FirehoseFirehoseCloudwatchLogs25E5D35A",
+        },
+        "LogStreamName": "DestinationDeliveryError",
+      },
+      "Type": "AWS::Logs::LogStream",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CloudWatchToS3FirehoseFirehoseCloudwatchLogs25E5D35A": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "CustomLogsKeyA36F38C8",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/accelerator/logs/firehose/",
+              {
+                "Ref": "CustomStreamE8E9158E",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 7,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
     },
     "CloudWatchToS3FirehoseFirehoseKinesisStreamServiceRole80E25BD8": {
       "Properties": {
@@ -2522,6 +2990,40 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
                     },
                   ],
                 },
+                {
+                  "Action": "logs:PutLogEvents",
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        {
+                          "Fn::GetAtt": [
+                            "CloudWatchToS3FirehoseFirehoseCloudwatchLogs25E5D35A",
+                            "Arn",
+                          ],
+                        },
+                        ":logstream:",
+                        {
+                          "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchLogStream3886AD4D",
+                        },
+                      ],
+                    ],
+                  },
+                },
+                {
+                  "Action": [
+                    "kms:Encrypt*",
+                    "kms:Describe*",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "CustomLogsKeyA36F38C8",
+                      "Arn",
+                    ],
+                  },
+                },
               ],
               "Version": "2012-10-17",
             },
@@ -2554,6 +3056,15 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
           "BufferingHints": {
             "IntervalInSeconds": 60,
             "SizeInMBs": 64,
+          },
+          "CloudWatchLoggingOptions": {
+            "Enabled": true,
+            "LogGroupName": {
+              "Ref": "CloudWatchToS3FirehoseFirehoseCloudwatchLogs25E5D35A",
+            },
+            "LogStreamName": {
+              "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchLogStream3886AD4D",
+            },
           },
           "CompressionFormat": "UNCOMPRESSED",
           "DataFormatConversionConfiguration": {
@@ -2949,6 +3460,111 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
+    "CustomLogsKeyA36F38C8": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomLogsKeyBucketName076BAD56": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomLogsKeyExistingIamA40FEFF2": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
     "CustomStreamBucketName9F2BF3F7": {
       "Properties": {
         "RetentionPeriodHours": 24,
@@ -3035,6 +3651,42 @@ exports[`CloudWatchToS3FirehoseExistingIam Construct(CloudWatchToS3Firehose):  S
     },
   },
   "Resources": {
+    "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchLogStreamC585C3CD": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "LogGroupName": {
+          "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudwatchLogs2559CE32",
+        },
+        "LogStreamName": "DestinationDeliveryError",
+      },
+      "Type": "AWS::Logs::LogStream",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CloudWatchToS3FirehoseBucketNameFirehoseCloudwatchLogs2559CE32": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "CustomLogsKeyBucketName076BAD56",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/accelerator/logs/firehose/",
+              {
+                "Ref": "CustomStreamBucketName9F2BF3F7",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 7,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
     "CloudWatchToS3FirehoseBucketNameFirehoseKinesisStreamServiceRole9577C2D5": {
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -3347,6 +3999,40 @@ exports[`CloudWatchToS3FirehoseExistingIam Construct(CloudWatchToS3Firehose):  S
                     },
                   ],
                 },
+                {
+                  "Action": "logs:PutLogEvents",
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        {
+                          "Fn::GetAtt": [
+                            "CloudWatchToS3FirehoseBucketNameFirehoseCloudwatchLogs2559CE32",
+                            "Arn",
+                          ],
+                        },
+                        ":logstream:",
+                        {
+                          "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchLogStreamC585C3CD",
+                        },
+                      ],
+                    ],
+                  },
+                },
+                {
+                  "Action": [
+                    "kms:Encrypt*",
+                    "kms:Describe*",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "CustomLogsKeyBucketName076BAD56",
+                      "Arn",
+                    ],
+                  },
+                },
               ],
               "Version": "2012-10-17",
             },
@@ -3385,6 +4071,15 @@ exports[`CloudWatchToS3FirehoseExistingIam Construct(CloudWatchToS3Firehose):  S
           "BufferingHints": {
             "IntervalInSeconds": 60,
             "SizeInMBs": 64,
+          },
+          "CloudWatchLoggingOptions": {
+            "Enabled": true,
+            "LogGroupName": {
+              "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudwatchLogs2559CE32",
+            },
+            "LogStreamName": {
+              "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchLogStreamC585C3CD",
+            },
           },
           "CompressionFormat": "UNCOMPRESSED",
           "DataFormatConversionConfiguration": {
@@ -3459,6 +4154,42 @@ exports[`CloudWatchToS3FirehoseExistingIam Construct(CloudWatchToS3Firehose):  S
         },
       },
       "Type": "AWS::KinesisFirehose::DeliveryStream",
+    },
+    "CloudWatchToS3FirehoseExistingIamFirehoseCloudWatchLogStream4369D67C": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "LogGroupName": {
+          "Ref": "CloudWatchToS3FirehoseExistingIamFirehoseCloudwatchLogsE7A42868",
+        },
+        "LogStreamName": "DestinationDeliveryError",
+      },
+      "Type": "AWS::Logs::LogStream",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CloudWatchToS3FirehoseExistingIamFirehoseCloudwatchLogsE7A42868": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "CustomLogsKeyExistingIamA40FEFF2",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/accelerator/logs/firehose/",
+              {
+                "Ref": "CustomStreamExistingIamFE5F8092",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 7,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
     },
     "CloudWatchToS3FirehoseExistingIamFirehosePrefixProcessingLambdaF852AD4B": {
       "DependsOn": [
@@ -3623,6 +4354,15 @@ exports[`CloudWatchToS3FirehoseExistingIam Construct(CloudWatchToS3Firehose):  S
             "IntervalInSeconds": 60,
             "SizeInMBs": 64,
           },
+          "CloudWatchLoggingOptions": {
+            "Enabled": true,
+            "LogGroupName": {
+              "Ref": "CloudWatchToS3FirehoseExistingIamFirehoseCloudwatchLogsE7A42868",
+            },
+            "LogStreamName": {
+              "Ref": "CloudWatchToS3FirehoseExistingIamFirehoseCloudWatchLogStream4369D67C",
+            },
+          },
           "CompressionFormat": "UNCOMPRESSED",
           "DataFormatConversionConfiguration": {
             "Enabled": false,
@@ -3716,6 +4456,42 @@ exports[`CloudWatchToS3FirehoseExistingIam Construct(CloudWatchToS3Firehose):  S
         },
       },
       "Type": "AWS::KinesisFirehose::DeliveryStream",
+    },
+    "CloudWatchToS3FirehoseFirehoseCloudWatchLogStream3886AD4D": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "LogGroupName": {
+          "Ref": "CloudWatchToS3FirehoseFirehoseCloudwatchLogs25E5D35A",
+        },
+        "LogStreamName": "DestinationDeliveryError",
+      },
+      "Type": "AWS::Logs::LogStream",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CloudWatchToS3FirehoseFirehoseCloudwatchLogs25E5D35A": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "CustomLogsKeyA36F38C8",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/accelerator/logs/firehose/",
+              {
+                "Ref": "CustomStreamE8E9158E",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 7,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
     },
     "CloudWatchToS3FirehoseFirehoseKinesisStreamServiceRole80E25BD8": {
       "Properties": {
@@ -4027,6 +4803,40 @@ exports[`CloudWatchToS3FirehoseExistingIam Construct(CloudWatchToS3Firehose):  S
                     },
                   ],
                 },
+                {
+                  "Action": "logs:PutLogEvents",
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        {
+                          "Fn::GetAtt": [
+                            "CloudWatchToS3FirehoseFirehoseCloudwatchLogs25E5D35A",
+                            "Arn",
+                          ],
+                        },
+                        ":logstream:",
+                        {
+                          "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchLogStream3886AD4D",
+                        },
+                      ],
+                    ],
+                  },
+                },
+                {
+                  "Action": [
+                    "kms:Encrypt*",
+                    "kms:Describe*",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "CustomLogsKeyA36F38C8",
+                      "Arn",
+                    ],
+                  },
+                },
               ],
               "Version": "2012-10-17",
             },
@@ -4059,6 +4869,15 @@ exports[`CloudWatchToS3FirehoseExistingIam Construct(CloudWatchToS3Firehose):  S
           "BufferingHints": {
             "IntervalInSeconds": 60,
             "SizeInMBs": 64,
+          },
+          "CloudWatchLoggingOptions": {
+            "Enabled": true,
+            "LogGroupName": {
+              "Ref": "CloudWatchToS3FirehoseFirehoseCloudwatchLogs25E5D35A",
+            },
+            "LogStreamName": {
+              "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchLogStream3886AD4D",
+            },
           },
           "CompressionFormat": "UNCOMPRESSED",
           "DataFormatConversionConfiguration": {
@@ -4530,6 +5349,146 @@ exports[`CloudWatchToS3FirehoseExistingIam Construct(CloudWatchToS3Firehose):  S
       "UpdateReplacePolicy": "Retain",
     },
     "CustomLambdaKeyExistingIamC416D475": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomLogsKeyA36F38C8": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomLogsKeyBucketErrorName6DEB7FC4": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomLogsKeyBucketName076BAD56": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomLogsKeyExistingIamA40FEFF2": {
       "DeletionPolicy": "Retain",
       "Properties": {
         "KeyPolicy": {

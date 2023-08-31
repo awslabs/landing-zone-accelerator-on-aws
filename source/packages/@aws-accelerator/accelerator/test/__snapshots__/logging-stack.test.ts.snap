@@ -1894,6 +1894,65 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Role",
     },
+    "FirehoseToS3SetupFirehoseCloudWatchLogStreamC16DD5F5": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "LogGroupName": {
+          "Ref": "FirehoseToS3SetupFirehoseCloudwatchLogs4286DAE2",
+        },
+        "LogStreamName": "DestinationDeliveryError",
+      },
+      "Type": "AWS::Logs::LogStream",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "FirehoseToS3SetupFirehoseCloudwatchLogs4286DAE2": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "AcceleratorCloudWatchKeyF93B6E17",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/accelerator/logs/firehose/",
+              {
+                "Fn::Select": [
+                  1,
+                  {
+                    "Fn::Split": [
+                      "/",
+                      {
+                        "Fn::Select": [
+                          5,
+                          {
+                            "Fn::Split": [
+                              ":",
+                              {
+                                "Fn::GetAtt": [
+                                  "LogsKinesisStreamCfn",
+                                  "Arn",
+                                ],
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
     "FirehoseToS3SetupFirehoseKinesisStreamServiceRoleDCF2BF9E": {
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -2211,6 +2270,40 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
                     },
                   ],
                 },
+                {
+                  "Action": "logs:PutLogEvents",
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        {
+                          "Fn::GetAtt": [
+                            "FirehoseToS3SetupFirehoseCloudwatchLogs4286DAE2",
+                            "Arn",
+                          ],
+                        },
+                        ":logstream:",
+                        {
+                          "Ref": "FirehoseToS3SetupFirehoseCloudWatchLogStreamC16DD5F5",
+                        },
+                      ],
+                    ],
+                  },
+                },
+                {
+                  "Action": [
+                    "kms:Encrypt*",
+                    "kms:Describe*",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "AcceleratorCloudWatchKeyF93B6E17",
+                      "Arn",
+                    ],
+                  },
+                },
               ],
               "Version": "2012-10-17",
             },
@@ -2249,6 +2342,15 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           "BufferingHints": {
             "IntervalInSeconds": 60,
             "SizeInMBs": 64,
+          },
+          "CloudWatchLoggingOptions": {
+            "Enabled": true,
+            "LogGroupName": {
+              "Ref": "FirehoseToS3SetupFirehoseCloudwatchLogs4286DAE2",
+            },
+            "LogStreamName": {
+              "Ref": "FirehoseToS3SetupFirehoseCloudWatchLogStreamC16DD5F5",
+            },
           },
           "CompressionFormat": "UNCOMPRESSED",
           "DataFormatConversionConfiguration": {
@@ -6584,6 +6686,65 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
       },
       "Type": "AWS::S3::BucketPolicy",
     },
+    "FirehoseToS3SetupFirehoseCloudWatchLogStreamC16DD5F5": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "LogGroupName": {
+          "Ref": "FirehoseToS3SetupFirehoseCloudwatchLogs4286DAE2",
+        },
+        "LogStreamName": "DestinationDeliveryError",
+      },
+      "Type": "AWS::Logs::LogStream",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "FirehoseToS3SetupFirehoseCloudwatchLogs4286DAE2": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "AcceleratorCloudWatchKeyF93B6E17",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/accelerator/logs/firehose/",
+              {
+                "Fn::Select": [
+                  1,
+                  {
+                    "Fn::Split": [
+                      "/",
+                      {
+                        "Fn::Select": [
+                          5,
+                          {
+                            "Fn::Split": [
+                              ":",
+                              {
+                                "Fn::GetAtt": [
+                                  "LogsKinesisStreamCfn",
+                                  "Arn",
+                                ],
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
     "FirehoseToS3SetupFirehoseKinesisStreamServiceRoleDCF2BF9E": {
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -6901,6 +7062,40 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
                     },
                   ],
                 },
+                {
+                  "Action": "logs:PutLogEvents",
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        {
+                          "Fn::GetAtt": [
+                            "FirehoseToS3SetupFirehoseCloudwatchLogs4286DAE2",
+                            "Arn",
+                          ],
+                        },
+                        ":logstream:",
+                        {
+                          "Ref": "FirehoseToS3SetupFirehoseCloudWatchLogStreamC16DD5F5",
+                        },
+                      ],
+                    ],
+                  },
+                },
+                {
+                  "Action": [
+                    "kms:Encrypt*",
+                    "kms:Describe*",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "AcceleratorCloudWatchKeyF93B6E17",
+                      "Arn",
+                    ],
+                  },
+                },
               ],
               "Version": "2012-10-17",
             },
@@ -6939,6 +7134,15 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
           "BufferingHints": {
             "IntervalInSeconds": 60,
             "SizeInMBs": 64,
+          },
+          "CloudWatchLoggingOptions": {
+            "Enabled": true,
+            "LogGroupName": {
+              "Ref": "FirehoseToS3SetupFirehoseCloudwatchLogs4286DAE2",
+            },
+            "LogStreamName": {
+              "Ref": "FirehoseToS3SetupFirehoseCloudWatchLogStreamC16DD5F5",
+            },
           },
           "CompressionFormat": "UNCOMPRESSED",
           "DataFormatConversionConfiguration": {
