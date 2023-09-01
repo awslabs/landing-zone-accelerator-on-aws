@@ -121,6 +121,9 @@ run_cdk_project_test() {
     echo "------------------------------------------------------------------------------"
     cd $component_path
 
+    # Clean up cache prior to install
+    yarn cache clean
+
     # install and build for unit testing
     yarn install
     yarn build
@@ -129,7 +132,7 @@ run_cdk_project_test() {
     # export overrideWarningsEnabled=false
 
     # run unit tests
-    yarn run test
+    yarn test
 
     # prepare coverage reports
     # prepare_jest_coverage_report $component_name
