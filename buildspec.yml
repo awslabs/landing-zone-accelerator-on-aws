@@ -1,11 +1,11 @@
 version: 0.2
 env:
   variables:
-    NODE_OPTIONS: "--max_old_space_size=8192"
+    NODE_OPTIONS: "--max_old_space_size=16384"
 phases:
   install:
     runtime-versions:
-      nodejs: 16
+      nodejs: 18
     commands:
       - echo "nothing to do in install"
   pre_build:
