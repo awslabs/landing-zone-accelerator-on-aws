@@ -345,7 +345,6 @@ export class AcceleratorToolkit {
       options.cdkOptions?.customDeploymentRole ||
       options.useExistingRoles
     ) {
-      console.debug('Using custom bootstrapping template');
       if (options.cdkOptions?.customDeploymentRole) {
         bootstrapEnvOptions = {
           ...bootstrapEnvOptions,
@@ -570,6 +569,10 @@ export class AcceleratorToolkit {
     ) {
       app = `cdk.out/${
         AcceleratorStackNames[AcceleratorStage.NETWORK_VPC_DNS]
+      }-${options.accountId!}-${options.region!}`;
+    } else if (options.stage === AcceleratorStage.CUSTOMIZATIONS) {
+      app = `cdk.out/${
+        AcceleratorStackNames[AcceleratorStage.CUSTOMIZATIONS]
       }-${options.accountId!}-${options.region!}`;
     } else {
       app = `cdk.out/${stackName}`;
