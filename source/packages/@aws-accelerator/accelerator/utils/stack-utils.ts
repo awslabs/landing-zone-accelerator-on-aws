@@ -1116,7 +1116,7 @@ export function saveAseaResourceMapping(
  * @param enabledRegion
  */
 function createCustomStacks(
-  rootApp: cdk.App,
+  app: cdk.App,
   props: AcceleratorStackProps,
   env: cdk.Environment,
   accountId: string,
@@ -1130,13 +1130,9 @@ function createCustomStacks(
       accountId,
       enabledRegion,
     );
-    checkRootApp(rootApp);
     for (const stack of customStackList ?? []) {
       logger.info(`New custom stack ${stack.stackConfig.name}`);
       const customStackName = `${stack.stackConfig.name}-${accountId}-${enabledRegion}`;
-      const app = new cdk.App({
-        outdir: `cdk.out/${customStackName}`,
-      });
       stack.stackObj = new CustomStack(app, `${customStackName}`, {
         env,
         description: stack.stackConfig.description,
