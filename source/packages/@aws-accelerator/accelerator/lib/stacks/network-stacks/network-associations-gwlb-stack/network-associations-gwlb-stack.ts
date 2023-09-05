@@ -42,8 +42,9 @@ import { SsmResourceType } from '@aws-accelerator/utils';
 
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import { NetworkStack } from '../network-stack';
-import { setIpamSubnetRouteTableEntryArray } from '../utils/setter-utils';
 import { getVpc } from '../utils/getter-utils';
+import { setIpamSubnetRouteTableEntryArray } from '../utils/setter-utils';
+import { FirewallVpnResources } from './firewall-vpn-resources';
 
 interface FirewallConfigDetails {
   /**
@@ -63,6 +64,7 @@ interface FirewallConfigDetails {
 export class NetworkAssociationsGwlbStack extends NetworkStack {
   private firewallConfigDetails: FirewallConfigDetails;
   private gwlbMap: Map<string, string>;
+  private instanceMap: Map<string, FirewallInstance>;
   private routeTableMap: Map<string, string>;
   private securityGroupMap: Map<string, string>;
   private subnetMap: Map<string, string>;
@@ -95,21 +97,27 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
         this.acceleratorResourceNames.roles.firewallConfigFunctionRoleName,
       ),
     };
-
     //
     // Create firewall instances and target groups
     //
-    this.targetGroupMap = this.createInitialFirewallResources();
-
+    this.instanceMap = this.createFirewallInstances();
+    this.targetGroupMap = this.createFirewallTargetGroups(this.instanceMap);
+    //
+    // Crete firewall VPN resources
+    //
+    new FirewallVpnResources(this, props, this.instanceMap);
     //
     // Create firewall autoscaling groups
     //
     this.createFirewallAutoScalingGroups();
-
     //
     // Create Gateway Load Balancer resources
     //
     this.createGwlbResources();
+    //
+    // Add nag suppressions
+    //
+    this.addResourceSuppressionsByPath();
 
     this.logger.info('Completed stack synthesis');
   }
@@ -146,19 +154,6 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
       }
     }
     return gwlbMap;
-  }
-
-  /**
-   * Create EC2-based firewall instances and target groups
-   * @returns
-   */
-  private createInitialFirewallResources() {
-    // Create firewall instances
-    const instanceMap = this.createFirewallInstances();
-    // Create target groups
-    const targetGroupMap = this.createFirewallTargetGroups(instanceMap);
-
-    return targetGroupMap;
   }
 
   /**
@@ -231,6 +226,8 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
             { instanceId: instance.instanceId },
             { licenseFile: firewallInstance.licenseFile },
             { vpcId: getVpc(this.vpcMap, firewallInstance.vpc) as string },
+            { roleName: this.acceleratorResourceNames.roles.crossAccountVpnRoleName },
+            { vpnConnections: instance.vpnConnections },
           ],
           role: this.firewallConfigDetails.customResourceRole,
         },

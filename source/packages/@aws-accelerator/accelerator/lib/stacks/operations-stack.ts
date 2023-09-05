@@ -1362,7 +1362,7 @@ export class OperationsStack extends AcceleratorStack {
       statements: [
         new cdk.aws_iam.PolicyStatement({
           effect: cdk.aws_iam.Effect.ALLOW,
-          actions: ['ec2:DescribeInstances', 'ec2:DescribeSubnets', 'ec2:DescribeVpcs'],
+          actions: ['ec2:DescribeInstances', 'ec2:DescribeSubnets', 'ec2:DescribeVpcs', 'ec2:DescribeVpnConnections'],
           resources: ['*'],
         }),
         new cdk.aws_iam.PolicyStatement({
@@ -1374,6 +1374,13 @@ export class OperationsStack extends AcceleratorStack {
           effect: cdk.aws_iam.Effect.ALLOW,
           actions: ['kms:Decrypt'],
           resources: [assetBucketKmsKey.keyArn],
+        }),
+        new cdk.aws_iam.PolicyStatement({
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['sts:AssumeRole'],
+          resources: [
+            `arn:${this.partition}:iam::*:role/${this.acceleratorResourceNames.roles.crossAccountVpnRoleName}`,
+          ],
         }),
       ],
     });

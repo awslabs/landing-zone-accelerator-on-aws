@@ -13,11 +13,13 @@
 
 import {
   AseaResourceType,
+  CustomerGatewayConfig,
   DnsFirewallRuleGroupConfig,
   DnsQueryLogsConfig,
   IpamAllocationConfig,
   IpamPoolConfig,
   NetworkAclSubnetSelection,
+  NetworkConfig,
   NfwFirewallConfig,
   NfwFirewallPolicyConfig,
   NfwRuleGroupConfig,
@@ -33,9 +35,11 @@ import {
   VpnConnectionConfig,
 } from '@aws-accelerator/config';
 import {
+  CloudWatchLogGroups,
   IIpamSubnet,
   IResourceShareItem,
   IpamSubnet,
+  LzaLambda,
   PrefixList,
   ResourceShare,
   ResourceShareItem,
@@ -59,8 +63,9 @@ import {
   AcceleratorStack,
   AcceleratorStackProps,
   NagSuppressionDetailType,
+  NagSuppressionRuleIds,
 } from '../accelerator-stack';
-import { getSecurityGroup, getVpc } from './utils/getter-utils';
+import { getFirewallInstanceConfig, getSecurityGroup, getVpc, getVpcConfig } from './utils/getter-utils';
 import {
   containsAllIngressRule,
   processSecurityGroupEgressRules,
@@ -68,7 +73,7 @@ import {
   processSecurityGroupSgEgressSources,
   processSecurityGroupSgIngressSources,
 } from './utils/security-group-utils';
-import { hasAdvancedVpnOptions } from './utils/validation-utils';
+import { hasAdvancedVpnOptions, isIpv4 } from './utils/validation-utils';
 
 /**
  * Resource share type for RAM resource shares
@@ -109,6 +114,10 @@ export abstract class NetworkStack extends AcceleratorStack {
    */
   public readonly containsAdvancedVpn: boolean;
   /**
+   * Advanced VPN types that exist in the current stack context
+   */
+  public readonly advancedVpnTypes: string[] = [];
+  /**
    * KMS Key used to encrypt custom resource lambda environment variables
    */
   public readonly lambdaKey: cdk.aws_kms.Key;
@@ -117,9 +126,17 @@ export abstract class NetworkStack extends AcceleratorStack {
    */
   public readonly logRetention: number;
   /**
+   * Accelerator network configuration
+   */
+  public readonly networkConfig: NetworkConfig;
+  /**
    * VPCs with subnets shared via Resource Access Manager (RAM) in scope of the current stack context
    */
   public readonly sharedVpcs: (VpcConfig | VpcTemplatesConfig)[];
+  /**
+   * Transit gateways in scope of the current stack context
+   */
+  public readonly tgwsInScope: TransitGatewayConfig[];
   /**
    * VPCs and VPC templates in scope of the current stack context
    */
@@ -129,8 +146,6 @@ export abstract class NetworkStack extends AcceleratorStack {
    */
   public readonly vpcResources: (VpcConfig | VpcTemplatesConfig)[];
 
-  protected nagSuppressionInputs: NagSuppressionDetailType[] = [];
-
   protected constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
@@ -138,9 +153,11 @@ export abstract class NetworkStack extends AcceleratorStack {
     this.acceleratorPrefix = props.prefixes.accelerator;
     this.containsAdvancedVpn = this.setAdvancedVpnFlag(props);
     this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
+    this.networkConfig = props.networkConfig;
     this.vpcResources = [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])];
     this.sharedVpcs = this.getSharedVpcs(this.vpcResources);
     this.vpcsInScope = this.getVpcsInScope(this.vpcResources);
+    this.tgwsInScope = this.getTgwsInScope(props.networkConfig.transitGateways);
 
     this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
     this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
@@ -208,12 +225,43 @@ export abstract class NetworkStack extends AcceleratorStack {
     for (const cgw of props.networkConfig.customerGateways ?? []) {
       const cgwAccount = props.accountsConfig.getAccountId(cgw.account);
       for (const vpnItem of cgw.vpnConnections ?? []) {
-        if (this.isTargetStack([cgwAccount], [cgw.region]) && hasAdvancedVpnOptions(vpnItem)) {
+        if (this.isTargetStack([cgwAccount], [cgw.region]) && hasAdvancedVpnOptions(vpnItem) && isIpv4(cgw.ipAddress)) {
+          this.setAdvancedVpnType(vpnItem);
           return true;
         }
       }
     }
     return false;
+  }
+
+  /**
+   * Sets the advanced VPN type that is included in this stack context.
+   * Used to determine when to create a VPN custom resource handlers.
+   * @param vpnItem VpnConnectionConfig
+   */
+  private setAdvancedVpnType(vpnItem: VpnConnectionConfig) {
+    if (vpnItem.vpc && !this.advancedVpnTypes.includes('vpc')) {
+      this.advancedVpnTypes.push('vpc');
+    } else if (vpnItem.transitGateway && !this.advancedVpnTypes.includes('tgw')) {
+      this.advancedVpnTypes.push('tgw');
+    }
+  }
+
+  /**
+   * Gets TGWs in scope of the current stack context
+   * @param transitGateways TransitGatewaysConfig[]
+   * @returns TransitGatewayConfig[]
+   */
+  private getTgwsInScope(transitGateways: TransitGatewayConfig[]): TransitGatewayConfig[] {
+    const tgwsInScope: TransitGatewayConfig[] = [];
+
+    for (const tgw of transitGateways) {
+      const tgwAccount = this.props.accountsConfig.getAccountId(tgw.account);
+      if (this.isTargetStack([tgwAccount], [tgw.region])) {
+        tgwsInScope.push(tgw);
+      }
+    }
+    return tgwsInScope;
   }
 
   /**
@@ -286,6 +334,14 @@ export abstract class NetworkStack extends AcceleratorStack {
         this.logger.error(message);
         break;
     }
+  }
+
+  /**
+   * Public mutator method to add cdk-nag suppressions
+   * @param nagSuppression NagSuppressionDetailType
+   */
+  public addNagSuppression(nagSuppression: NagSuppressionDetailType) {
+    this.nagSuppressionInputs.push(nagSuppression);
   }
 
   /**
@@ -942,6 +998,142 @@ export abstract class NetworkStack extends AcceleratorStack {
   }
 
   /**
+   * Returns the VPC configuration that a given firewall instance is deployed to
+   * @param customerGateway
+   * @returns VpcConfig | VpcTemplatesConfig
+   */
+  public getFirewallVpcConfig(customerGateway: CustomerGatewayConfig): VpcConfig | VpcTemplatesConfig {
+    try {
+      const firewallName = customerGateway.ipAddress.split(':')[4].replace('}', '');
+      const firewallConfig = getFirewallInstanceConfig(
+        firewallName,
+        this.props.customizationsConfig.firewalls?.instances,
+      );
+      return getVpcConfig(this.vpcResources, firewallConfig.vpc);
+    } catch (e) {
+      throw new Error(`Error while processing customer gateway firewall reference variable: ${e}`);
+    }
+  }
+
+  /**
+   * Returns a boolean indicating if the VPC a given firewall is deployed to
+   * is in the same account as the customer gateway
+   * @param customerGateway CustomerGatewayConfig
+   * @returns boolean
+   */
+  public firewallVpcInScope(customerGateway: CustomerGatewayConfig): boolean {
+    const cgwAccountId = this.props.accountsConfig.getAccountId(customerGateway.account);
+    const firewallVpcConfig = this.getFirewallVpcConfig(customerGateway);
+    const vpcAccountIds = this.getVpcAccountIds(firewallVpcConfig);
+
+    return vpcAccountIds.includes(cgwAccountId) && firewallVpcConfig.region === this.region;
+  }
+
+  /**
+   * Creates a custom resource onEventHandler for VPN connections
+   * requiring advanced configuration parameters
+   * @param props AcceleratorStackProps
+   * @returns cdk.aws_lambda.IFunction
+   */
+  public createVpnOnEventHandler(): cdk.aws_lambda.IFunction {
+    const lambdaExecutionPolicy = cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName(
+      'service-role/AWSLambdaBasicExecutionRole',
+    );
+
+    const managedVpnPolicy = new cdk.aws_iam.ManagedPolicy(this, 'VpnOnEventHandlerPolicy', {
+      statements: [
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'S2SVPNCRUD',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: [
+            'ec2:CreateTags',
+            'ec2:CreateVpnConnection',
+            'ec2:DeleteTags',
+            'ec2:DeleteVpnConnection',
+            'ec2:DescribeVpnConnections',
+            'ec2:ModifyVpnConnectionOptions',
+            'ec2:ModifyVpnTunnelOptions',
+          ],
+          resources: ['*'],
+        }),
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'LogDeliveryCRUD',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: [
+            'logs:CreateLogDelivery',
+            'logs:GetLogDelivery',
+            'logs:UpdateLogDelivery',
+            'logs:DeleteLogDelivery',
+            'logs:ListLogDeliveries',
+          ],
+          resources: ['*'],
+        }),
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'S2SVPNLoggingCWL',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['logs:PutResourcePolicy', 'logs:DescribeResourcePolicies', 'logs:DescribeLogGroups'],
+          resources: ['*'],
+        }),
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'S2SVPNAssumeRole',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['sts:AssumeRole'],
+          resources: [
+            `arn:${this.partition}:iam::*:role/${this.acceleratorResourceNames.roles.crossAccountVpnRoleName}`,
+          ],
+        }),
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'SecretsManagerReadOnly',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['secretsmanager:GetSecretValue', 'kms:Decrypt'],
+          resources: ['*'],
+        }),
+      ],
+    });
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
+    // rule suppression with evidence for this permission.
+    this.addNagSuppression({
+      id: NagSuppressionRuleIds.IAM5,
+      details: [
+        {
+          path: managedVpnPolicy.node.path,
+          reason: 'Managed policy allows access for VPN CRUD operations',
+        },
+      ],
+    });
+    //
+    // Create event handler role
+    const vpnRole = new cdk.aws_iam.Role(this, 'VpnRole', {
+      assumedBy: new cdk.aws_iam.ServicePrincipal(`lambda.${this.urlSuffix}`),
+      description: 'Landing Zone Accelerator site-to-site VPN custom resource access role',
+      managedPolicies: [managedVpnPolicy, lambdaExecutionPolicy],
+    });
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+    // rule suppression with evidence for this permission.
+    this.addNagSuppression({
+      id: NagSuppressionRuleIds.IAM4,
+      details: [
+        {
+          path: vpnRole.node.path,
+          reason: 'IAM Role for lambda needs AWS managed policy',
+        },
+      ],
+    });
+    //
+    // Create Lambda handler
+    return new LzaLambda(this, 'VpnOnEventHandler', {
+      assetPath: '../constructs/lib/aws-ec2/custom-vpn-connection/dist',
+      environmentEncryptionKmsKey: this.lambdaKey,
+      cloudWatchLogKmsKey: this.cloudwatchKey,
+      cloudWatchLogRetentionInDays: this.logRetention,
+      description: 'Custom resource onEvent handler for site-to-site VPN',
+      role: vpnRole,
+      timeOut: cdk.Duration.minutes(15),
+      nagSuppressionPrefix: 'VpnOnEventHandler',
+    }).resource;
+  }
+
+  /**
    * Set site-to-site VPN connection properties.
    * @param options
    * @returns VpnConnectionProps
@@ -950,30 +1142,51 @@ export abstract class NetworkStack extends AcceleratorStack {
     vpnItem: VpnConnectionConfig;
     customerGatewayId: string;
     customResourceHandler?: cdk.aws_lambda.IFunction;
+    owningAccountId?: string;
+    owningRegion?: string;
     transitGatewayId?: string;
     virtualPrivateGateway?: string;
   }): VpnConnectionProps {
+    const hasCrossAccountOptions = options.owningAccountId || options.owningRegion ? true : false;
+
     return {
       name: options.vpnItem.name,
       customerGatewayId: options.customerGatewayId,
       amazonIpv4NetworkCidr: options.vpnItem.amazonIpv4NetworkCidr,
       customerIpv4NetworkCidr: options.vpnItem.customerIpv4NetworkCidr,
-      customResourceHandler: hasAdvancedVpnOptions(options.vpnItem) ? options.customResourceHandler : undefined,
+      customResourceHandler:
+        hasAdvancedVpnOptions(options.vpnItem) || hasCrossAccountOptions ? options.customResourceHandler : undefined,
       enableVpnAcceleration: options.vpnItem.enableVpnAcceleration,
+      owningAccountId: options.owningAccountId,
+      owningRegion: options.owningRegion,
+      roleName: this.acceleratorResourceNames.roles.crossAccountVpnRoleName,
       staticRoutesOnly: options.vpnItem.staticRoutesOnly,
       tags: options.vpnItem.tags,
       transitGatewayId: options.transitGatewayId,
       virtualPrivateGateway: options.virtualPrivateGateway,
-      vpnTunnelOptionsSpecifications: this.setVpnTunnelOptions(options.vpnItem),
+      vpnTunnelOptionsSpecifications: this.setVpnTunnelOptions(
+        options.vpnItem,
+        hasCrossAccountOptions,
+        options.owningAccountId,
+        options.owningRegion,
+      ),
     };
   }
 
   /**
    * Set VPN tunnel options properties
    * @param vpnItem VpnConnectionConfig
+   * @param hasCrossAccountOptions boolean
+   * @param owningAccountId string | undefined
+   * @param owningRegion string | undefined
    * @returns VpnTunnelOptionsSpecifications[] | undefined
    */
-  private setVpnTunnelOptions(vpnItem: VpnConnectionConfig): VpnTunnelOptionsSpecifications[] | undefined {
+  private setVpnTunnelOptions(
+    vpnItem: VpnConnectionConfig,
+    hasCrossAccountOptions: boolean,
+    owningAccountId?: string,
+    owningRegion?: string,
+  ): VpnTunnelOptionsSpecifications[] | undefined {
     if (!vpnItem.tunnelSpecifications) {
       return;
     }
@@ -987,7 +1200,13 @@ export abstract class NetworkStack extends AcceleratorStack {
       if (tunnel.logging?.enable) {
         loggingConfig = {
           enable: true,
-          logGroupArn: this.createVpnLogGroup(vpnItem, index, tunnel.logging.logGroupName),
+          logGroupArn: this.createVpnLogGroup(
+            vpnItem,
+            index,
+            tunnel.logging.logGroupName,
+            owningAccountId,
+            owningRegion,
+          ),
           outputFormat: tunnel.logging.outputFormat,
         };
       }
@@ -999,11 +1218,14 @@ export abstract class NetworkStack extends AcceleratorStack {
           pascalCase(`${vpnItem.name}${tunnel.preSharedKey}Tunnel${index}PreSharedKeySecret`),
           tunnel.preSharedKey,
         );
+        const suffixLength = preSharedKeySecret.secretName.split('-').at(-1)!.length + 1;
+        const secretName = preSharedKeySecret.secretName.slice(0, -suffixLength);
         //
-        // If advanced VPN, use the ARN. Otherwise, retrieve the secret value
-        preSharedKeyValue = hasAdvancedVpnOptions(vpnItem)
-          ? preSharedKeySecret.secretArn
-          : preSharedKeySecret.secretValue.toString();
+        // If advanced or cross-account VPN, use the secret name. Otherwise, retrieve the secret value
+        preSharedKeyValue =
+          hasAdvancedVpnOptions(vpnItem) || hasCrossAccountOptions
+            ? secretName
+            : preSharedKeySecret.secretValue.toString();
       }
 
       vpnTunnelOptions.push({
@@ -1030,13 +1252,35 @@ export abstract class NetworkStack extends AcceleratorStack {
    * @param vpnItem VpnConnectionConfig
    * @param index number
    * @param logGroupName string | undefined
+   * @param owningAccountId string | undefined
+   * @param owningRegion string | undefined
    * @returns string
    */
-  private createVpnLogGroup(vpnItem: VpnConnectionConfig, index: number, logGroupName?: string): string {
-    return new cdk.aws_logs.LogGroup(this, pascalCase(`${vpnItem.name}Tunnel${index}LogGroup`), {
-      logGroupName,
-      encryptionKey: this.cloudwatchKey,
-      retention: this.logRetention,
-    }).logGroupArn;
+  private createVpnLogGroup(
+    vpnItem: VpnConnectionConfig,
+    index: number,
+    logGroupName?: string,
+    owningAccountId?: string,
+    owningRegion?: string,
+  ): string {
+    const logicalId = pascalCase(`${vpnItem.name}Tunnel${index}LogGroup`);
+
+    if (owningAccountId || owningRegion) {
+      return new CloudWatchLogGroups(this, logicalId, {
+        logGroupName: logGroupName ? `${this.acceleratorPrefix}${logGroupName}` : undefined,
+        logRetentionInDays: this.logRetention,
+        customLambdaLogKmsKey: this.cloudwatchKey,
+        customLambdaLogRetention: this.logRetention,
+        owningAccountId,
+        owningRegion,
+        roleName: this.acceleratorResourceNames.roles.crossAccountLogsRoleName,
+      }).logGroupArn;
+    } else {
+      return new cdk.aws_logs.LogGroup(this, logicalId, {
+        logGroupName: logGroupName ? `${this.acceleratorPrefix}${logGroupName}` : undefined,
+        encryptionKey: this.cloudwatchKey,
+        retention: this.logRetention,
+      }).logGroupArn;
+    }
   }
 }

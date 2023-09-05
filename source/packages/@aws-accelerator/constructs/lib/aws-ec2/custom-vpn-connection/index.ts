@@ -27,6 +27,7 @@ import {
   VpnTunnelOptionsSpecification,
 } from '@aws-sdk/client-ec2';
 import { GetSecretValueCommand, SecretsManagerClient } from '@aws-sdk/client-secrets-manager';
+import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
 import { VpnConnectionDiff, VpnOptions, VpnTunnelOptions } from './vpn-types';
 
 export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
@@ -37,17 +38,18 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   | undefined
 > {
   //
+  // Set VPN options
+  const newVpnOptions = setVpnOptions(event.ResourceProperties, event.ServiceToken);
+  //
   // Set up clients
-  const ec2Client = new EC2Client({ customUserAgent: process.env['SOLUTION_ID'] });
-  const secretsClient = new SecretsManagerClient({ customUserAgent: process.env['SOLUTION_ID'] });
+  const [ec2Client, secretsClient] = await setAwsClients(newVpnOptions, process.env['SOLUTION_ID']);
   //
   // Begin custom resource logic
   switch (event.RequestType) {
     case 'Create':
       //
       // Create VPN
-      const vpnOptions = setVpnOptions(event.ResourceProperties);
-      const vpnConnectionId = await createVpnConnection(ec2Client, await setVpnProps(secretsClient, vpnOptions));
+      const vpnConnectionId = await createVpnConnection(ec2Client, await setVpnProps(secretsClient, newVpnOptions));
       //
       // Wait for VPN to be in a stable state
       await vpnConnectionStatus(ec2Client, vpnConnectionId, 'available');
@@ -59,8 +61,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     case 'Update':
       //
       // Set VPN props
-      const newVpnOptions = setVpnOptions(event.ResourceProperties);
-      const oldVpnOptions = setVpnOptions(event.OldResourceProperties);
+      const oldVpnOptions = setVpnOptions(event.OldResourceProperties, event.ServiceToken);
       //
       // Update VPN connection
       const updateVpnConnectionId = await updateVpnConnection(
@@ -99,18 +100,110 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
  * @returns VpnOptions
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function setVpnOptions(resourceProperties: { [key: string]: any }): VpnOptions {
+function setVpnOptions(resourceProperties: { [key: string]: any }, serviceToken: string): VpnOptions {
   return {
     customerGatewayId: resourceProperties['customerGatewayId'] as string,
     amazonIpv4NetworkCidr: (resourceProperties['amazonIpv4NetworkCidr'] as string) ?? undefined,
     customerIpv4NetworkCidr: (resourceProperties['customerIpv4NetworkCidr'] as string) ?? undefined,
     enableVpnAcceleration: resourceProperties['enableVpnAcceleration'] === 'true',
+    invokingAccountId: serviceToken.split(':')[4],
+    invokingRegion: serviceToken.split(':')[3],
+    partition: serviceToken.split(':')[1],
+    owningAccountId: (resourceProperties['owningAccountId'] as string) ?? undefined,
+    owningRegion: (resourceProperties['owningRegion'] as string) ?? undefined,
+    roleName: (resourceProperties['roleName'] as string) ?? undefined,
     staticRoutesOnly: resourceProperties['staticRoutesOnly'] === 'true',
     tags: (resourceProperties['tags'] as Tag[]) ?? undefined,
     transitGatewayId: (resourceProperties['transitGatewayId'] as string) ?? undefined,
     vpnGatewayId: (resourceProperties['vpnGatewayId'] as string) ?? undefined,
     vpnTunnelOptions: (resourceProperties['vpnTunnelOptions'] as VpnTunnelOptions[]) ?? undefined,
   };
+}
+
+/**
+ * Returns local or cross-account/cross-region AWS API clients based on input parameters
+ * @param vpnOptions VpnOptions
+ * @param solutionId string | undefined
+ * @returns Promise<[EC2Client, SecretsManagerClient]>
+ */
+async function setAwsClients(vpnOptions: VpnOptions, solutionId?: string): Promise<[EC2Client, SecretsManagerClient]> {
+  const roleArn = `arn:${vpnOptions.partition}:iam::${vpnOptions.owningAccountId}:role/${vpnOptions.roleName}`;
+  const stsClient = new STSClient({ region: vpnOptions.invokingRegion, customUserAgent: solutionId });
+
+  if (vpnOptions.owningAccountId && vpnOptions.owningRegion) {
+    if (!vpnOptions.roleName) {
+      throw new Error(`Cross-account VPN required but roleName parameter is undefined`);
+    }
+    //
+    // Assume role via STS
+    const credentials = await getStsCredentials(stsClient, roleArn);
+    //
+    // Return clients
+    const clientSettings = {
+      region: vpnOptions.owningRegion,
+      customUserAgent: solutionId,
+      credentials,
+    };
+    return [new EC2Client(clientSettings), new SecretsManagerClient(clientSettings)];
+  } else if (vpnOptions.owningAccountId && !vpnOptions.owningRegion) {
+    if (!vpnOptions.roleName) {
+      throw new Error(`Cross-account VPN required but roleName parameter is undefined`);
+    }
+    //
+    // Assume role via STS
+    const credentials = await getStsCredentials(stsClient, roleArn);
+    //
+    // Return clients
+    const clientSettings = {
+      region: vpnOptions.invokingRegion,
+      customUserAgent: solutionId,
+      credentials,
+    };
+    return [new EC2Client(clientSettings), new SecretsManagerClient(clientSettings)];
+  } else {
+    const clientSettings = {
+      region: vpnOptions.owningRegion ?? vpnOptions.invokingRegion,
+      customUserAgent: solutionId,
+    };
+    return [new EC2Client(clientSettings), new SecretsManagerClient(clientSettings)];
+  }
+}
+
+/**
+ * Returns STS credentials for a given role ARN
+ * @param stsClient STSClient
+ * @param roleArn string
+ * @returns `Promise<{ accessKeyId: string; secretAccessKey: string; sessionToken: string }>`
+ */
+async function getStsCredentials(
+  stsClient: STSClient,
+  roleArn: string,
+): Promise<{ accessKeyId: string; secretAccessKey: string; sessionToken: string }> {
+  console.log(`Assuming role ${roleArn}...`);
+  try {
+    const response = await throttlingBackOff(() =>
+      stsClient.send(new AssumeRoleCommand({ RoleArn: roleArn, RoleSessionName: 'AcceleratorAssumeRole' })),
+    );
+    //
+    // Validate response
+    if (!response.Credentials?.AccessKeyId) {
+      throw new Error(`Access key ID not returned from AssumeRole command`);
+    }
+    if (!response.Credentials.SecretAccessKey) {
+      throw new Error(`Secret access key not returned from AssumeRole command`);
+    }
+    if (!response.Credentials.SessionToken) {
+      throw new Error(`Session token not returned from AssumeRole command`);
+    }
+
+    return {
+      accessKeyId: response.Credentials.AccessKeyId,
+      secretAccessKey: response.Credentials.SecretAccessKey,
+      sessionToken: response.Credentials.SessionToken,
+    };
+  } catch (e) {
+    throw new Error(`Could not assume role: ${e}`);
+  }
 }
 
 /**
@@ -207,14 +300,14 @@ async function setVpnTunnelProps(
 /**
  * Retrieves a pre-shared key value from Secrets Manager
  * @param secretsClient SecretsManagerClient
- * @param secretArn string
+ * @param secretName string
  * @returns string
  */
-async function getSecretValue(secretsClient: SecretsManagerClient, secretArn: string): Promise<string> {
-  console.log(`Retrieving pre-shared key value ${secretArn} from Secrets Manager...`);
+async function getSecretValue(secretsClient: SecretsManagerClient, secretName: string): Promise<string> {
+  console.log(`Retrieving pre-shared key value ${secretName} from Secrets Manager...`);
   try {
     const response = await throttlingBackOff(() =>
-      secretsClient.send(new GetSecretValueCommand({ SecretId: secretArn })),
+      secretsClient.send(new GetSecretValueCommand({ SecretId: secretName })),
     );
 
     if (!response.SecretString) {

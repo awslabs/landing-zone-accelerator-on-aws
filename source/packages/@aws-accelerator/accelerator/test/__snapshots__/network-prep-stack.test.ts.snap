@@ -494,6 +494,329 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       },
       "Type": "AWS::EC2::IPAMPool",
     },
+    "CrossAccountCgwPolicy9EED0A31": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Cross account policy allows access for CGW CRUD operations",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Description": "",
+        "Path": "/",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "ec2:CreateCustomerGateway",
+                "ec2:CreateTags",
+                "ec2:DeleteCustomerGateway",
+                "ec2:DeleteTags",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "CGWCRUD",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::ManagedPolicy",
+    },
+    "CrossAccountCgwRole33146FF0": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "IAM Role for lambda needs AWS managed policy",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalOrgID": "o-asdf123456",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Ref": "CrossAccountCgwPolicy9EED0A31",
+          },
+        ],
+        "RoleName": "AWSAccelerator-CrossAccount-CustomerGateway-Role",
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CrossAccountCgwTgwVpnSharedParameters0A7B809A": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomSsmPutParameterValueCustomResourceProviderLogGroupB0109C68",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomSsmPutParameterValueCustomResourceProviderHandler2A0BDE7F",
+            "Arn",
+          ],
+        },
+        "invokingAccountId": "555555555555",
+        "parameterAccountIds": [
+          "444444444444",
+        ],
+        "parameters": [
+          {
+            "name": "/accelerator/network/transitGateways/Network-Main/id",
+            "value": {
+              "Ref": "NetworkMainTransitGatewayF6473E53",
+            },
+          },
+          {
+            "name": "/accelerator/network/transitGateways/Network-Main/routeTables/Network-Main-Core/id",
+            "value": {
+              "Ref": "NetworkMainCoreTransitGatewayRouteTableE04FCA1B",
+            },
+          },
+          {
+            "name": "/accelerator/network/transitGateways/Network-Main/routeTables/Network-Main-Segregated/id",
+            "value": {
+              "Ref": "NetworkMainSegregatedTransitGatewayRouteTableFD7A15B0",
+            },
+          },
+          {
+            "name": "/accelerator/network/transitGateways/Network-Main/routeTables/Network-Main-Shared/id",
+            "value": {
+              "Ref": "NetworkMainSharedTransitGatewayRouteTable7A039C6C",
+            },
+          },
+          {
+            "name": "/accelerator/network/transitGateways/Network-Main/routeTables/Network-Main-Standalone/id",
+            "value": {
+              "Ref": "NetworkMainStandaloneTransitGatewayRouteTable663AEF73",
+            },
+          },
+        ],
+        "region": "us-east-1",
+        "roleName": "AWSAccelerator-CrossAccountSsmParameterShare",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::SsmPutParameterValue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CrossAccountLogsPolicyA5C7DC3B": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Cross account policy allows access for Logs CRUD operations",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Description": "",
+        "Path": "/",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "kms:DescribeKey",
+                "kms:ListKeys",
+                "logs:DescribeLogGroups",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "LogsList",
+            },
+            {
+              "Action": [
+                "logs:AssociateKmsKey",
+                "logs:CreateLogGroup",
+                "logs:DeleteLogGroup",
+                "logs:PutRetentionPolicy",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":logs:*:555555555555:log-group:AWSAccelerator*",
+                  ],
+                ],
+              },
+              "Sid": "LogsCRUD",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::ManagedPolicy",
+    },
+    "CrossAccountLogsRole90E58DD7": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "IAM Role for lambda needs AWS managed policy",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalOrgID": "o-asdf123456",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Ref": "CrossAccountLogsPolicyA5C7DC3B",
+          },
+        ],
+        "RoleName": "AWSAccelerator-CrossAccount-PutLogs-Role",
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CrossAccountVpnPolicyB19C2485": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Cross account policy allows access for VPN CRUD operations",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Description": "",
+        "Path": "/",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "ec2:CreateTags",
+                "ec2:CreateVpnConnection",
+                "ec2:DeleteTags",
+                "ec2:DeleteVpnConnection",
+                "ec2:DescribeVpnConnections",
+                "ec2:ModifyVpnConnectionOptions",
+                "ec2:ModifyVpnTunnelOptions",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "S2SVPNCRUD",
+            },
+            {
+              "Action": [
+                "logs:CreateLogDelivery",
+                "logs:GetLogDelivery",
+                "logs:UpdateLogDelivery",
+                "logs:DeleteLogDelivery",
+                "logs:ListLogDeliveries",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "LogDeliveryCRUD",
+            },
+            {
+              "Action": [
+                "logs:PutResourcePolicy",
+                "logs:DescribeResourcePolicies",
+                "logs:DescribeLogGroups",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "S2SVPNLoggingCWL",
+            },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "kms:Decrypt",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "SecretsManagerReadOnly",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::ManagedPolicy",
+    },
+    "CrossAccountVpnRole2816F7C4": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "IAM Role for lambda needs AWS managed policy",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalOrgID": "o-asdf123456",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Ref": "CrossAccountVpnPolicyB19C2485",
+          },
+        ],
+        "RoleName": "AWSAccelerator-CrossAccount-SiteToSiteVpn-Role",
+      },
+      "Type": "AWS::IAM::Role",
+    },
     "CustomDirectConnectGatewayCustomResourceProviderHandler82F9382C": {
       "DependsOn": [
         "CustomDirectConnectGatewayCustomResourceProviderRole60C5A7B2",
@@ -780,6 +1103,115 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       },
       "Type": "AWS::IAM::Role",
     },
+    "CustomSsmPutParameterValueCustomResourceProviderHandler2A0BDE7F": {
+      "DependsOn": [
+        "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Custom resource provider to put cross-account ssm parameter value",
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomSsmPutParameterValueCustomResourceProviderLogGroupB0109C68": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomSsmPutParameterValueCustomResourceProviderHandler2A0BDE7F",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ssm:DeleteParameter",
+                    "ssm:PutParameter",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    "*",
+                  ],
+                  "Sid": "SsmPutParameterActions",
+                },
+                {
+                  "Action": [
+                    "sts:AssumeRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::*:role/AWSAccelerator*",
+                        ],
+                      ],
+                    },
+                  ],
+                  "Sid": "StsAssumeRoleActions",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
     "DomainList1DomainListBF84D823": {
       "Properties": {
         "DomainFileUrl": "s3://cdk-hnb659fds-assets-555555555555-us-east-1/82f4f8c337dd7186cc85614bbe281dceae50920818a45eea246ef414ba6f9bf1.txt",
@@ -875,6 +1307,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
         },
         "customerIpv4NetworkCidr": "192.168.0.0/16",
         "enableVpnAcceleration": true,
+        "roleName": "AWSAccelerator-CrossAccount-SiteToSiteVpn-Role",
         "staticRoutesOnly": false,
         "tags": [
           {
@@ -2109,7 +2542,6 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource onEvent handler for site-to-site VPN",
-        "FunctionName": "AWSAccelerator-555555555555-VpnOnEventHandler",
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Ref": "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -2177,6 +2609,23 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
               "Effect": "Allow",
               "Resource": "*",
               "Sid": "S2SVPNLoggingCWL",
+            },
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":iam::*:role/AWSAccelerator-CrossAccount-SiteToSiteVpn-Role",
+                  ],
+                ],
+              },
+              "Sid": "S2SVPNAssumeRole",
             },
             {
               "Action": [

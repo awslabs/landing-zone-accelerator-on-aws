@@ -62,6 +62,10 @@ export class NetworkPrepStack extends NetworkStack {
     // Create SSM Parameters
     //
     this.createSsmParameters();
+    //
+    // Add nag suppressions
+    //
+    this.addResourceSuppressionsByPath();
 
     this.logger.info('Completed stack synthesis');
   }

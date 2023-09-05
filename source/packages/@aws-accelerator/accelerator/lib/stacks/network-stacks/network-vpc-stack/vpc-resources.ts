@@ -13,22 +13,32 @@
 
 import {
   AseaResourceType,
+  CustomerGatewayConfig,
   DefaultVpcsConfig,
   VpcConfig,
   VpcFlowLogsConfig,
   VpcTemplatesConfig,
 } from '@aws-accelerator/config';
-import { DeleteDefaultSecurityGroupRules, DeleteDefaultVpc, Vpc, VpnConnection } from '@aws-accelerator/constructs';
+import {
+  DeleteDefaultSecurityGroupRules,
+  DeleteDefaultVpc,
+  PutSsmParameter,
+  SsmParameterProps,
+  Vpc,
+  VpnConnection,
+} from '@aws-accelerator/constructs';
 import { SsmResourceType } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'pascal-case';
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import { LogLevel, NetworkStack } from '../network-stack';
-import { getVpc } from '../utils/getter-utils';
+import { getVpc, getVpcConfig } from '../utils/getter-utils';
+import { isIpv4 } from '../utils/validation-utils';
 
 export class VpcResources {
   public readonly deleteDefaultVpc: boolean;
+  public readonly sharedParameterMap: Map<string, SsmParameterProps[]>;
   public readonly vpcMap: Map<string, Vpc>;
   public readonly vpnMap: Map<string, string>;
   public readonly centralEndpointRole?: cdk.aws_iam.Role;
@@ -52,20 +62,20 @@ export class VpcResources {
     // Create VPCs
     this.vpcMap = this.createVpcs(this.stack.vpcsInScope, ipamPoolMap, dhcpOptionsIds, props);
     //
-    // Get VPN custom resource handler
-    // This handler is created in the network-prep
-    // stack, so we know it exists if there are
-    // advanced VPN options
-    const customResourceHandler = this.stack.containsAdvancedVpn
-      ? cdk.aws_lambda.Function.fromFunctionName(
-          this.stack,
-          'VpnCustomResourceOnEventHandler',
-          `${this.stack.acceleratorPrefix}-${this.stack.account}-VpnOnEventHandler`,
-        )
+    // Create VPN custom resource handler if needed
+    const customResourceHandler = this.stack.advancedVpnTypes.includes('vpc')
+      ? this.stack.createVpnOnEventHandler()
       : undefined;
     //
     // Create VPN connections
     this.vpnMap = this.createVpnConnections(this.vpcMap, props, customResourceHandler);
+    //
+    // Create cross-account/cross-region SSM parameters
+    this.sharedParameterMap = this.createSharedParameters(
+      this.stack.vpcsInScope,
+      this.vpcMap,
+      props.networkConfig.customerGateways,
+    );
   }
 
   /**
@@ -329,58 +339,14 @@ export class VpcResources {
       }
       poolNetmask = vpcItem.ipamAllocations[0].netmaskLength;
     }
-
-    let vpc: Vpc;
-
-    if (this.stack.isManagedByAsea(AseaResourceType.EC2_VPC, vpcItem.name)) {
-      //
-      // Import VPC
-      //
-      const vpcId = this.stack.getExternalResourceParameter(this.stack.getSsmPath(SsmResourceType.VPC, [vpcItem.name]));
-      const internetGatewayId = this.stack.getExternalResourceParameter(
-        this.stack.getSsmPath(SsmResourceType.IGW, [vpcItem.name]),
-      );
-      const virtualPrivateGatewayId = this.stack.getExternalResourceParameter(
-        this.stack.getSsmPath(SsmResourceType.VPN_GW, [vpcItem.name]),
-      );
-      vpc = Vpc.fromVpcAttributes(this.stack, pascalCase(`${vpcItem.name}Vpc`), {
-        name: vpcItem.name,
-        vpcId,
-        internetGatewayId,
-        virtualPrivateGatewayId,
-      });
-      if (vpcItem.internetGateway && !internetGatewayId) {
-        vpc.addInternetGateway();
-      }
-      if (vpcItem.virtualPrivateGateway && !virtualPrivateGatewayId) {
-        vpc.addVirtualPrivateGateway(vpcItem.virtualPrivateGateway.asn);
-      }
-      if (vpcItem.dhcpOptions) {
-        vpc.setDhcpOptions(vpcItem.dhcpOptions);
-      }
-    } else {
-      //
-      // Create VPC
-      //
-      vpc = new Vpc(this.stack, pascalCase(`${vpcItem.name}Vpc`), {
-        name: vpcItem.name,
-        ipv4CidrBlock: cidr,
-        internetGateway: vpcItem.internetGateway,
-        dhcpOptions: dhcpOptionsIds.get(vpcItem.dhcpOptions ?? ''),
-        enableDnsHostnames: vpcItem.enableDnsHostnames ?? true,
-        enableDnsSupport: vpcItem.enableDnsSupport ?? true,
-        instanceTenancy: vpcItem.instanceTenancy ?? 'default',
-        ipv4IpamPoolId: poolId,
-        ipv4NetmaskLength: poolNetmask,
-        tags: vpcItem.tags,
-        virtualPrivateGateway: vpcItem.virtualPrivateGateway,
-      });
-      this.stack.addSsmParameter({
-        logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name)}VpcId`),
-        parameterName: this.stack.getSsmPath(SsmResourceType.VPC, [vpcItem.name]),
-        stringValue: vpc.vpcId,
-      });
-    }
+    // Create or import VPC
+    const vpc = this.createOrImportVpc({
+      vpcItem,
+      dhcpOptionsIds,
+      cidr,
+      poolId,
+      poolNetmask,
+    });
     //
     // Create additional CIDRs
     //
@@ -397,6 +363,82 @@ export class VpcResources {
     // Delete default security group rules
     //
     this.deleteDefaultSgRules(vpc, vpcItem);
+    return vpc;
+  }
+
+  /**
+   * Create or import the configured VPC
+   * @param options
+   * @returns Vpc
+   */
+  private createOrImportVpc(options: {
+    vpcItem: VpcConfig | VpcTemplatesConfig;
+    dhcpOptionsIds: Map<string, string>;
+    cidr?: string;
+    poolId?: string;
+    poolNetmask?: number;
+  }): Vpc {
+    let vpc: Vpc;
+
+    if (this.stack.isManagedByAsea(AseaResourceType.EC2_VPC, options.vpcItem.name)) {
+      //
+      // Import VPC
+      //
+      const vpcId = this.stack.getExternalResourceParameter(
+        this.stack.getSsmPath(SsmResourceType.VPC, [options.vpcItem.name]),
+      );
+      const internetGatewayId = this.stack.getExternalResourceParameter(
+        this.stack.getSsmPath(SsmResourceType.IGW, [options.vpcItem.name]),
+      );
+      const virtualPrivateGatewayId = this.stack.getExternalResourceParameter(
+        this.stack.getSsmPath(SsmResourceType.VPN_GW, [options.vpcItem.name]),
+      );
+      vpc = Vpc.fromVpcAttributes(this.stack, pascalCase(`${options.vpcItem.name}Vpc`), {
+        name: options.vpcItem.name,
+        vpcId,
+        internetGatewayId,
+        virtualPrivateGatewayId,
+      });
+      if (options.vpcItem.internetGateway && !internetGatewayId) {
+        vpc.addInternetGateway();
+      }
+      if (options.vpcItem.virtualPrivateGateway && !virtualPrivateGatewayId) {
+        vpc.addVirtualPrivateGateway(options.vpcItem.virtualPrivateGateway.asn);
+      }
+      if (options.vpcItem.dhcpOptions) {
+        vpc.setDhcpOptions(options.vpcItem.dhcpOptions);
+      }
+    } else {
+      //
+      // Create VPC
+      //
+      vpc = new Vpc(this.stack, pascalCase(`${options.vpcItem.name}Vpc`), {
+        name: options.vpcItem.name,
+        ipv4CidrBlock: options.cidr,
+        internetGateway: options.vpcItem.internetGateway,
+        dhcpOptions: options.dhcpOptionsIds.get(options.vpcItem.dhcpOptions ?? ''),
+        enableDnsHostnames: options.vpcItem.enableDnsHostnames ?? true,
+        enableDnsSupport: options.vpcItem.enableDnsSupport ?? true,
+        instanceTenancy: options.vpcItem.instanceTenancy ?? 'default',
+        ipv4IpamPoolId: options.poolId,
+        ipv4NetmaskLength: options.poolNetmask,
+        tags: options.vpcItem.tags,
+        virtualPrivateGateway: options.vpcItem.virtualPrivateGateway,
+      });
+      this.stack.addSsmParameter({
+        logicalId: pascalCase(`SsmParam${pascalCase(options.vpcItem.name)}VpcId`),
+        parameterName: this.stack.getSsmPath(SsmResourceType.VPC, [options.vpcItem.name]),
+        stringValue: vpc.vpcId,
+      });
+
+      if (vpc.virtualPrivateGatewayId) {
+        this.stack.addSsmParameter({
+          logicalId: pascalCase(`SsmParam${pascalCase(options.vpcItem.name)}VpnGatewayId`),
+          parameterName: this.stack.getSsmPath(SsmResourceType.VPN_GW, [options.vpcItem.name]),
+          stringValue: vpc.virtualPrivateGatewayId!,
+        });
+      }
+    }
     return vpc;
   }
 
@@ -569,8 +611,9 @@ export class VpcResources {
     customResourceHandler?: cdk.aws_lambda.IFunction,
   ): Map<string, string> {
     const vpnMap = new Map<string, string>();
+    const ipv4Cgws = props.networkConfig.customerGateways?.filter(cgw => isIpv4(cgw.ipAddress));
 
-    for (const cgw of props.networkConfig.customerGateways ?? []) {
+    for (const cgw of ipv4Cgws ?? []) {
       for (const vpnItem of cgw.vpnConnections ?? []) {
         if (vpnItem.vpc && vpcMap.has(vpnItem.vpc)) {
           //
@@ -617,5 +660,80 @@ export class VpcResources {
     } else {
       return pascalCase(`${vpc.name}${vpnName}-VgwVpnConnection`);
     }
+  }
+
+  /**
+   * Create cross-account/cross-region SSM parameters for site-to-site VPN connections
+   * that must reference the TGW/TGW route table in cross-account VPN scenarios
+   * @param vpcResources (VpcConfig | VpcTemplatesConfig)[]
+   * @param vpcMap Map<string, Vpc>
+   * @param customerGateways CustomerGatewayConfig[]
+   * @returns Map<string, SsmParameterProps[]>
+   */
+  private createSharedParameters(
+    vpcResources: (VpcConfig | VpcTemplatesConfig)[],
+    vpcMap: Map<string, Vpc>,
+    customerGateways?: CustomerGatewayConfig[],
+  ): Map<string, SsmParameterProps[]> {
+    const sharedParameterMap = new Map<string, SsmParameterProps[]>();
+    const vpcNames = vpcResources.map(vpc => vpc.name);
+    const vgwVpnCustomerGateways = customerGateways
+      ? customerGateways.filter(cgw => cgw.vpnConnections?.filter(vpn => vpcNames.includes(vpn.vpc ?? '')))
+      : [];
+    const crossAcctFirewallReferenceCgws = vgwVpnCustomerGateways.filter(
+      cgw => !isIpv4(cgw.ipAddress) && !this.stack.firewallVpcInScope(cgw),
+    );
+
+    for (const crossAcctCgw of crossAcctFirewallReferenceCgws) {
+      const firewallVpcConfig = this.stack.getFirewallVpcConfig(crossAcctCgw);
+      const accountIds = this.stack.getVpcAccountIds(firewallVpcConfig);
+      const parameters = this.setCrossAccountSsmParameters(crossAcctCgw, vpcResources, vpcMap);
+
+      if (parameters.length > 0) {
+        console.log(`Putting cross-account/cross-region SSM parameters for VPC ${firewallVpcConfig.name}`);
+        // Put SSM parameters
+        new PutSsmParameter(this.stack, pascalCase(`${crossAcctCgw.name}VgwVpnSharedParameters`), {
+          accountIds,
+          region: firewallVpcConfig.region,
+          roleName: this.stack.acceleratorResourceNames.roles.crossAccountSsmParameterShare,
+          kmsKey: this.stack.cloudwatchKey,
+          logRetentionInDays: this.stack.logRetention,
+          parameters,
+          invokingAccountId: this.stack.account,
+          acceleratorPrefix: this.stack.acceleratorPrefix,
+        });
+        sharedParameterMap.set(crossAcctCgw.name, parameters);
+      }
+    }
+    return sharedParameterMap;
+  }
+
+  /**
+   * Returns an array of SSM parameters for cross-account VGW VPN connections
+   * @param cgw CustomerGatewayConfig
+   * @param vpcResources (VpcConfig | VpcTemplatesConfig)[]
+   * @param vpcMap Map<string, Vpc>
+   * @returns SsmParameterProps[]
+   */
+  private setCrossAccountSsmParameters(
+    cgw: CustomerGatewayConfig,
+    vpcResources: (VpcConfig | VpcTemplatesConfig)[],
+    vpcMap: Map<string, Vpc>,
+  ) {
+    const ssmParameters: SsmParameterProps[] = [];
+
+    for (const vpnItem of cgw.vpnConnections ?? []) {
+      if (vpnItem.vpc && vpcMap.has(vpnItem.vpc)) {
+        //
+        // Set VGW ID
+        const vpcConfig = getVpcConfig(vpcResources, vpnItem.vpc);
+        const vpc = getVpc(vpcMap, vpnItem.vpc) as Vpc;
+        ssmParameters.push({
+          name: this.stack.getSsmPath(SsmResourceType.VPN_GW, [vpcConfig.name]),
+          value: vpc.virtualPrivateGatewayId ?? '',
+        });
+      }
+    }
+    return ssmParameters;
   }
 }

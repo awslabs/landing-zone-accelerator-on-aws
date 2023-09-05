@@ -31,7 +31,8 @@ interface FirewallConfigReplacementProps {
   /**
    * Custom resource properties
    */
-  readonly properties: { [key: string]: string | undefined }[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  readonly properties: { [key: string]: any }[];
   /**
    * Custom resource role
    */

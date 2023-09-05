@@ -197,7 +197,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
 
   protected centralLogsBucketName: string;
 
-  protected organizationId: string | undefined;
+  public readonly organizationId: string | undefined;
 
   public acceleratorResourceNames: AcceleratorResourceNames;
 

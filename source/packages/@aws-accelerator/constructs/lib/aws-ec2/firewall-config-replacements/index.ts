@@ -11,17 +11,17 @@
  *  and limitations under the License.
  */
 
+import { throttlingBackOff } from '@aws-accelerator/utils';
 import { EC2Client } from '@aws-sdk/client-ec2';
 import {
-  S3Client,
   CopyObjectCommand,
+  CopyObjectCommandOutput,
   GetObjectCommand,
   PutObjectCommand,
-  CopyObjectCommandOutput,
   PutObjectCommandOutput,
+  S3Client,
 } from '@aws-sdk/client-s3';
-import { initReplacements, VpcReplacements } from './replacements';
-import { throttlingBackOff } from '@aws-accelerator/utils';
+import { FirewallReplacements, VpnConnectionProps, initReplacements } from './replacements';
 
 export async function handler(
   event: AWSLambda.CloudFormationCustomResourceEvent,
@@ -34,6 +34,8 @@ export async function handler(
   const firewallName: string | undefined = event.ResourceProperties['firewallName'];
   const instanceId: string | undefined = event.ResourceProperties['instanceId'];
   const licenseFileKey: string | undefined = event.ResourceProperties['licenseFile'];
+  const roleName: string | undefined = event.ResourceProperties['roleName'];
+  const vpnConnections: VpnConnectionProps[] | undefined = event.ResourceProperties['vpnConnections'];
   const vpcId: string = event.ResourceProperties['vpcId'];
   //
   // Set up clients
@@ -50,7 +52,15 @@ export async function handler(
       //
       // Process config file replacements
       const replacements = configFileKey
-        ? await initReplacements(ec2Client, vpcId, firewallName, instanceId)
+        ? await initReplacements({
+            ec2Client,
+            serviceToken: event.ServiceToken,
+            vpcId,
+            firewallName,
+            instanceId,
+            roleName,
+            vpnConnections,
+          })
         : undefined;
       await processConfigFileReplacements(s3Client, assetBucketName, configBucketName, configFileKey, replacements);
 
@@ -119,7 +129,7 @@ async function processConfigFileReplacements(
   assetBucketName: string,
   configBucketName: string,
   configFileKey?: string,
-  replacements?: VpcReplacements,
+  replacements?: FirewallReplacements,
 ): Promise<PutObjectCommandOutput | undefined> {
   //
   // Validate input
@@ -171,7 +181,7 @@ async function getRawConfigFile(
  * @param configFile
  * @returns string
  */
-function transformConfigFile(replacements: VpcReplacements, configFile?: string): string {
+function transformConfigFile(replacements: FirewallReplacements, configFile?: string): string {
   if (!configFile) {
     throw new Error(`Encountered an error retrieving configuration file from S3`);
   }

@@ -2735,7 +2735,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         },
         "keyArn": "arn:aws:kms:us-east-1:111111111111:key/121ac3b6-8d53-4d8a-a05c-1234567789",
         "logGroupName": "/App/Test2",
-        "region": "us-east-1",
         "retention": 180,
         "terminationProtected": false,
       },

@@ -19,6 +19,10 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
       "Default": "/accelerator/network/gwlb/Accelerator-GWLB/endpointService/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/transitGateways/Network-Main/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -105,6 +109,10 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
     },
     "SsmParameterValueacceleratornetworkvpcNetworkInspectionsubnetNetworkInspectionTgwAttachBidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Inspection/subnet/Network-InspectionTgwAttach-B/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkInspectionvirtualPrivateGatewayidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Inspection/virtualPrivateGateway/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter": {
@@ -506,9 +514,34 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
           "Ref": "NetworkInspectionacceleratorFirewallFirewall23AAB613",
         },
         "licenseFile": "license.lic",
+        "roleName": "AWSAccelerator-CrossAccount-SiteToSiteVpn-Role",
         "vpcId": {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
+        "vpnConnections": [
+          {
+            "awsBgpAsn": 65521,
+            "cgwBgpAsn": 65500,
+            "cgwOutsideIp": {
+              "Ref": "NetworkInspectionacceleratorFirewallFirewallElasticIp1628ED846",
+            },
+            "id": {
+              "Ref": "SameAccountTgwVpnVpnConnection83EBF560",
+            },
+            "name": "same-account-tgw-vpn",
+          },
+          {
+            "awsBgpAsn": 65000,
+            "cgwBgpAsn": 65500,
+            "cgwOutsideIp": {
+              "Ref": "NetworkInspectionacceleratorFirewallFirewallElasticIp1628ED846",
+            },
+            "id": {
+              "Ref": "SameAccountVgwVpnVpnConnectionD0DEB61E",
+            },
+            "name": "same-account-vgw-vpn",
+          },
+        ],
       },
       "Type": "AWS::CloudFormation::CustomResource",
       "UpdateReplacePolicy": "Delete",
@@ -640,6 +673,10 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
       "Type": "AWS::IAM::Policy",
     },
     "NetworkInspectionacceleratorFirewallFirewall23AAB613": {
+      "DependsOn": [
+        "SameAccountTgwVpnVpnConnection83EBF560",
+        "SameAccountVgwVpnVpnConnectionD0DEB61E",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -675,7 +712,30 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
       },
       "Type": "AWS::EC2::Instance",
     },
+    "NetworkInspectionacceleratorFirewallFirewallEipAssociation18F25714C": {
+      "Properties": {
+        "AllocationId": {
+          "Fn::GetAtt": [
+            "NetworkInspectionacceleratorFirewallFirewallElasticIp1628ED846",
+            "AllocationId",
+          ],
+        },
+        "NetworkInterfaceId": {
+          "Ref": "NetworkInspectionacceleratorFirewallFirewallNetworkInterface13C23C566",
+        },
+      },
+      "Type": "AWS::EC2::EIPAssociation",
+    },
+    "NetworkInspectionacceleratorFirewallFirewallElasticIp1628ED846": {
+      "Properties": {
+        "Domain": "vpc",
+      },
+      "Type": "AWS::EC2::EIP",
+    },
     "NetworkInspectionacceleratorFirewallFirewallLaunchTemplate74BB830F": {
+      "DependsOn": [
+        "NetworkInspectionacceleratorFirewallFirewallEipAssociation18F25714C",
+      ],
       "Properties": {
         "LaunchTemplateData": {
           "BlockDeviceMappings": [
@@ -764,15 +824,9 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
               },
             },
             {
-              "Description": "Secondary",
               "DeviceIndex": 1,
-              "Groups": [
-                {
-                  "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsecurityGroupDataidC96584B6F00A464EAD1953AFF4B05118Parameter",
-                },
-              ],
-              "SubnetId": {
-                "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsubnetNetworkInspectionAidC96584B6F00A464EAD1953AFF4B05118Parameter",
+              "NetworkInterfaceId": {
+                "Ref": "NetworkInspectionacceleratorFirewallFirewallNetworkInterface13C23C566",
               },
             },
           ],
@@ -781,6 +835,20 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
         "LaunchTemplateName": "firewall-lt",
       },
       "Type": "AWS::EC2::LaunchTemplate",
+    },
+    "NetworkInspectionacceleratorFirewallFirewallNetworkInterface13C23C566": {
+      "Properties": {
+        "Description": "Secondary",
+        "GroupSet": [
+          {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsecurityGroupDataidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+        ],
+        "SubnetId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsubnetNetworkInspectionAidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::NetworkInterface",
     },
     "NetworkInspectionacceleratorManagerFirewallB809D98F": {
       "Metadata": {
@@ -1595,6 +1663,58 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
         "LaunchTemplateName": "asg",
       },
       "Type": "AWS::EC2::LaunchTemplate",
+    },
+    "SameAccountFirewallCgwCustomerGatewayC0237E66": {
+      "Properties": {
+        "BgpAsn": 65500,
+        "IpAddress": {
+          "Ref": "NetworkInspectionacceleratorFirewallFirewallElasticIp1628ED846",
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "same-account-firewall-cgw",
+          },
+        ],
+        "Type": "ipsec.1",
+      },
+      "Type": "AWS::EC2::CustomerGateway",
+    },
+    "SameAccountTgwVpnVpnConnection83EBF560": {
+      "Properties": {
+        "CustomerGatewayId": {
+          "Ref": "SameAccountFirewallCgwCustomerGatewayC0237E66",
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "same-account-tgw-vpn",
+          },
+        ],
+        "TransitGatewayId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "Type": "ipsec.1",
+      },
+      "Type": "AWS::EC2::VPNConnection",
+    },
+    "SameAccountVgwVpnVpnConnectionD0DEB61E": {
+      "Properties": {
+        "CustomerGatewayId": {
+          "Ref": "SameAccountFirewallCgwCustomerGatewayC0237E66",
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "same-account-vgw-vpn",
+          },
+        ],
+        "Type": "ipsec.1",
+        "VpnGatewayId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionvirtualPrivateGatewayidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::VPNConnection",
     },
     "SsmParamAcceleratorVersionFF83282D": {
       "Properties": {

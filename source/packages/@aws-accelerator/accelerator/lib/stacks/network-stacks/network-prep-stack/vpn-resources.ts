@@ -12,19 +12,22 @@
  */
 
 import { CustomerGatewayConfig, VpnConnectionConfig } from '@aws-accelerator/config';
-import { CustomerGateway, LzaLambda, VpnConnection } from '@aws-accelerator/constructs';
+import { CustomerGateway, VpnConnection } from '@aws-accelerator/constructs';
 import { SsmResourceType } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
-import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'pascal-case';
-import { AcceleratorStackProps } from '../../accelerator-stack';
+import { AcceleratorStackProps, NagSuppressionRuleIds } from '../../accelerator-stack';
 import { LogLevel } from '../network-stack';
 import { getTransitGatewayId } from '../utils/getter-utils';
+import { isIpv4 } from '../utils/validation-utils';
 import { NetworkPrepStack } from './network-prep-stack';
 
 export class VpnResources {
   public readonly cgwMap: Map<string, string>;
   public readonly vpnMap: Map<string, string>;
+  public readonly crossAccountCgwRole?: cdk.aws_iam.Role;
+  public readonly crossAccountLogsRole?: cdk.aws_iam.Role;
+  public readonly crossAccountVpnRole?: cdk.aws_iam.Role;
   private stack: NetworkPrepStack;
   private transitGatewayMap: Map<string, string>;
 
@@ -38,8 +41,17 @@ export class VpnResources {
     this.transitGatewayMap = transitGatewayMap;
 
     // Create CGWs and VPN connections
-    const customResourceHandler = this.stack.containsAdvancedVpn ? this.createVpnOnEventHandler() : undefined;
+    const customResourceHandler = this.stack.advancedVpnTypes.includes('tgw')
+      ? this.stack.createVpnOnEventHandler()
+      : undefined;
     [this.cgwMap, this.vpnMap] = this.createVpnConnectionResources(props, customResourceHandler);
+
+    // Create cross-account VPN roles, if needed
+    if (this.hasCrossAccountVpn(props)) {
+      this.crossAccountCgwRole = this.createCrossAccountCgwRole();
+      this.crossAccountLogsRole = this.createCrossAccountLogsRole();
+      this.crossAccountVpnRole = this.createCrossAccountVpnRole();
+    }
   }
 
   /**
@@ -57,7 +69,7 @@ export class VpnResources {
     //
     for (const cgwItem of props.networkConfig.customerGateways ?? []) {
       const accountId = props.accountsConfig.getAccountId(cgwItem.account);
-      if (this.stack.isTargetStack([accountId], [cgwItem.region])) {
+      if (this.stack.isTargetStack([accountId], [cgwItem.region]) && isIpv4(cgwItem.ipAddress)) {
         this.stack.addLogs(LogLevel.INFO, `Add Customer Gateway ${cgwItem.name} in ${cgwItem.region}`);
         const cgw = new CustomerGateway(this.stack, pascalCase(`${cgwItem.name}CustomerGateway`), {
           name: cgwItem.name,
@@ -126,17 +138,131 @@ export class VpnResources {
   }
 
   /**
-   * Creates a custom resource onEventHandler for VPN connections
-   * requiring advanced configuration parameters
+   * Returns true in the home region if there are CGWs referencing a firewall instance deployed to a different account/region
+   * than the CGW's target account/region
    * @param props AcceleratorStackProps
-   * @returns cdk.aws_lambda.IFunction
+   * @returns boolean
    */
-  private createVpnOnEventHandler(): cdk.aws_lambda.IFunction {
-    const lambdaExecutionPolicy = cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName(
-      'service-role/AWSLambdaBasicExecutionRole',
-    );
+  private hasCrossAccountVpn(props: AcceleratorStackProps): boolean {
+    for (const cgw of props.networkConfig.customerGateways ?? []) {
+      const cgwAccountId = props.accountsConfig.getAccountId(cgw.account);
+      if (
+        this.stack.isTargetStack([cgwAccountId], [props.globalConfig.homeRegion]) &&
+        !isIpv4(cgw.ipAddress) &&
+        !this.stack.firewallVpcInScope(cgw)
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
 
-    const managedVpnPolicy = new cdk.aws_iam.ManagedPolicy(this.stack, 'VpnOnEventHandlerPolicy', {
+  /**
+   * Create cross-account CGW role to allow CGW CRUD operations
+   * @returns cdk.aws_iam.Role
+   */
+  private createCrossAccountCgwRole(): cdk.aws_iam.Role {
+    const managedCgwPolicy = new cdk.aws_iam.ManagedPolicy(this.stack, 'CrossAccountCgwPolicy', {
+      statements: [
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'CGWCRUD',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['ec2:CreateCustomerGateway', 'ec2:CreateTags', 'ec2:DeleteCustomerGateway', 'ec2:DeleteTags'],
+          resources: ['*'],
+        }),
+      ],
+    });
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
+    // rule suppression with evidence for this permission.
+    this.stack.addNagSuppression({
+      id: NagSuppressionRuleIds.IAM5,
+      details: [
+        {
+          path: managedCgwPolicy.node.path,
+          reason: 'Cross account policy allows access for CGW CRUD operations',
+        },
+      ],
+    });
+
+    const crossAccountCgwRole = new cdk.aws_iam.Role(this.stack, 'CrossAccountCgwRole', {
+      assumedBy: this.stack.getOrgPrincipals(this.stack.organizationId),
+      managedPolicies: [managedCgwPolicy],
+      roleName: this.stack.acceleratorResourceNames.roles.crossAccountCustomerGatewayRoleName,
+    });
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+    // rule suppression with evidence for this permission.
+    this.stack.addNagSuppression({
+      id: NagSuppressionRuleIds.IAM4,
+      details: [
+        {
+          path: crossAccountCgwRole.node.path,
+          reason: 'IAM Role for lambda needs AWS managed policy',
+        },
+      ],
+    });
+    return crossAccountCgwRole;
+  }
+
+  /**
+   * Create cross-account CloudWatch Logs role
+   * @returns cdk.aws_iam.Role
+   */
+  private createCrossAccountLogsRole(): cdk.aws_iam.Role {
+    const managedLogsPolicy = new cdk.aws_iam.ManagedPolicy(this.stack, 'CrossAccountLogsPolicy', {
+      statements: [
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'LogsList',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['kms:DescribeKey', 'kms:ListKeys', 'logs:DescribeLogGroups'],
+          resources: ['*'],
+        }),
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'LogsCRUD',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['logs:AssociateKmsKey', 'logs:CreateLogGroup', 'logs:DeleteLogGroup', 'logs:PutRetentionPolicy'],
+          resources: [
+            `arn:${this.stack.partition}:logs:*:${this.stack.account}:log-group:${this.stack.acceleratorPrefix}*`,
+          ],
+        }),
+      ],
+    });
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
+    // rule suppression with evidence for this permission.
+    this.stack.addNagSuppression({
+      id: NagSuppressionRuleIds.IAM5,
+      details: [
+        {
+          path: managedLogsPolicy.node.path,
+          reason: 'Cross account policy allows access for Logs CRUD operations',
+        },
+      ],
+    });
+
+    const crossAccountLogsRole = new cdk.aws_iam.Role(this.stack, 'CrossAccountLogsRole', {
+      assumedBy: this.stack.getOrgPrincipals(this.stack.organizationId),
+      managedPolicies: [managedLogsPolicy],
+      roleName: this.stack.acceleratorResourceNames.roles.crossAccountLogsRoleName,
+    });
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+    // rule suppression with evidence for this permission.
+    this.stack.addNagSuppression({
+      id: NagSuppressionRuleIds.IAM4,
+      details: [
+        {
+          path: crossAccountLogsRole.node.path,
+          reason: 'IAM Role for lambda needs AWS managed policy',
+        },
+      ],
+    });
+    return crossAccountLogsRole;
+  }
+
+  /**
+   * Create cross-account VPN role
+   * @returns cdk.aws_iam.Role
+   */
+  private createCrossAccountVpnRole(): cdk.aws_iam.Role {
+    const managedVpnPolicy = new cdk.aws_iam.ManagedPolicy(this.stack, 'CrossAccountVpnPolicy', {
       statements: [
         new cdk.aws_iam.PolicyStatement({
           sid: 'S2SVPNCRUD',
@@ -180,39 +306,31 @@ export class VpnResources {
     });
     // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
     // rule suppression with evidence for this permission.
-    NagSuppressions.addResourceSuppressions(managedVpnPolicy, [
-      {
-        id: 'AwsSolutions-IAM5',
-        reason: 'Managed policy allows access for VPN CRUD operations',
-      },
-    ]);
-    //
-    // Create event handler role
-    const vpnRole = new cdk.aws_iam.Role(this.stack, 'VpnRole', {
-      assumedBy: new cdk.aws_iam.ServicePrincipal(`lambda.${this.stack.urlSuffix}`),
-      description: 'Landing Zone Accelerator site-to-site VPN custom resource access role',
-      managedPolicies: [managedVpnPolicy, lambdaExecutionPolicy],
+    this.stack.addNagSuppression({
+      id: NagSuppressionRuleIds.IAM5,
+      details: [
+        {
+          path: managedVpnPolicy.node.path,
+          reason: 'Cross account policy allows access for VPN CRUD operations',
+        },
+      ],
+    });
+    const crossAccountVpnRole = new cdk.aws_iam.Role(this.stack, 'CrossAccountVpnRole', {
+      assumedBy: this.stack.getOrgPrincipals(this.stack.organizationId),
+      managedPolicies: [managedVpnPolicy],
+      roleName: this.stack.acceleratorResourceNames.roles.crossAccountVpnRoleName,
     });
     // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
     // rule suppression with evidence for this permission.
-    NagSuppressions.addResourceSuppressions(vpnRole, [
-      {
-        id: 'AwsSolutions-IAM4',
-        reason: 'IAM Role for lambda needs AWS managed policy',
-      },
-    ]);
-    //
-    // Create Lambda handler
-    return new LzaLambda(this.stack, 'VpnOnEventHandler', {
-      assetPath: '../constructs/lib/aws-ec2/custom-vpn-connection/dist',
-      environmentEncryptionKmsKey: this.stack.lambdaKey,
-      cloudWatchLogKmsKey: this.stack.cloudwatchKey,
-      cloudWatchLogRetentionInDays: this.stack.logRetention,
-      description: 'Custom resource onEvent handler for site-to-site VPN',
-      functionName: `${this.stack.acceleratorPrefix}-${this.stack.account}-VpnOnEventHandler`,
-      role: vpnRole,
-      timeOut: cdk.Duration.minutes(15),
-      nagSuppressionPrefix: 'VpnOnEventHandler',
-    }).resource;
+    this.stack.addNagSuppression({
+      id: NagSuppressionRuleIds.IAM4,
+      details: [
+        {
+          path: crossAccountVpnRole.node.path,
+          reason: 'IAM Role for lambda needs AWS managed policy',
+        },
+      ],
+    });
+    return crossAccountVpnRole;
   }
 }

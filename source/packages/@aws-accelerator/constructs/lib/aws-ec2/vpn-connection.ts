@@ -20,53 +20,55 @@ export interface VpnConnectionProps {
    * Name of the VPN Connection
    */
   readonly name: string;
-
   /**
    * Identifier of the Customer Gateway
    */
   readonly customerGatewayId: string;
-
   /**
    * Amazon-side IPv4 CIDR
    */
   readonly amazonIpv4NetworkCidr?: string;
-
   /**
    * Customer-side IPv4 CIDR
    */
   readonly customerIpv4NetworkCidr?: string;
-
   /**
    * If advanced VPN options are enabled, a custom resource handler to
    * maintain the resource
    */
   readonly customResourceHandler?: cdk.aws_lambda.IFunction;
-
   /**
    * Enable VPN acceleration
    */
   readonly enableVpnAcceleration?: boolean;
-
+  /**
+   * The owning account ID, if the VPN tunnel needs to be created cross-account
+   */
+  readonly owningAccountId?: string;
+  /**
+   * The owning region, if the VPN tunnel needs to be created cross-region
+   */
+  readonly owningRegion?: string;
+  /**
+   * The role name to assume if creating a cross-account VPN
+   */
+  readonly roleName?: string;
   /**
    * The name of the Transit Gateway to terminate the VPN Connection.
    */
   readonly transitGatewayId?: string;
-
   /**
    * The name of the Virtual Private Gateway to terminate the VPN Connection.
    */
   readonly virtualPrivateGateway?: string;
-
   /**
    * Determine if static routes will be used or dynamic for the VPN Connection.
    */
   readonly staticRoutesOnly?: boolean;
-
   /**
    * The optional configuration of the VPN Tunnels of a VPN Connection
    */
   readonly vpnTunnelOptionsSpecifications?: VpnTunnelOptionsSpecifications[];
-
   /**
    * The array of tag values to add onto the VPN Connection.
    */
@@ -194,6 +196,9 @@ export class VpnConnection extends cdk.Resource implements IVpnConnection {
               customerIpv4NetworkCidr: props.customerIpv4NetworkCidr,
               enableVpnAcceleration: props.enableVpnAcceleration,
               customerGatewayId: props.customerGatewayId,
+              owningAccountId: props.owningAccountId,
+              owningRegion: props.owningRegion,
+              roleName: props.roleName,
               staticRoutesOnly: props.staticRoutesOnly,
               transitGatewayId: props.transitGatewayId,
               vpnGatewayId: props.virtualPrivateGateway,

@@ -618,6 +618,22 @@ export class Ec2FirewallInstanceConfig implements t.TypeOf<typeof Customizations
    *     * ROUTERIP - the VPC router address of the subnet (i.e. 10.0.0.1)
    *   * Index numbering is zero-based, so the primary interface of the instance is `0`.
    *   * Example usage: `${ACCEL_LOOKUP::EC2:ENI_0:SUBNET_CIDR}` - translates to the subnet CIDR range of the primary network interface
+   * * VPN replacements - look up metadata about VPNs that are directly connected to the EC2 firewall instance. NOTE: these replacements are
+   * only supported for EC2 firewalls that are referenced in a {@link CustomerGatewayConfig} in network-config.yaml.
+   *   * Format: `${ACCEL_LOOKUP::EC2:VPN:<METADATA_TYPE>:<VPN_NAME>}`, where `<METADATA_TYPE>` is a type listed
+   * below, and `<VPN_NAME>` is the logical name of the VPN connection as defined in `network-config.yaml`.
+   *   * Metadata types:
+   *     * AWS_BGPASN - the BGP autonomous system number (ASN) of the AWS gateway device
+   *     * CGW_BGPASN - the BGP autonomous system number (ASN) of the customer gateway device
+   *     * CGW_OUTSIDEIP - the outside (public) IP address of the customer gateway device
+   *     * AWS_INSIDEIP_<TUNNEL_INDEX> - the inside (link-local) IP address of the AWS gateway device, where <TUNNEL_INDEX> is the index number of the VPN tunnel
+   *     * CGW_INSIDEIP_<TUNNEL_INDEX> - the inside (link-local) IP address of the customer gateway device, where <TUNNEL_INDEX> is the index number of the VPN tunnel
+   *     * AWS_OUTSIDEIP_<TUNNEL_INDEX> - the outside (public) IP address of the AWS gateway device, where <TUNNEL_INDEX> is the index number of the VPN tunnel
+   *     * INSIDE_CIDR_<TUNNEL_INDEX> - the inside (link-local) CIDR range of the tunnel, where <TUNNEL_INDEX> is the index number of the VPN tunnel
+   *     * INSIDE_NETMASK_<TUNNEL_INDEX> - the inside (link-local) subnet mask of the tunnel, where <TUNNEL_INDEX> is the index number of the VPN tunnel
+   *     * PSK_<TUNNEL_INDEX> - the pre-shared key of the tunnel, where <TUNNEL_INDEX> is the index number of the VPN tunnel
+   *   * Index numbering is zero-based, so the primary VPN tunnel is `0`.
+   *   * Example usage: `${ACCEL_LOOKUP::EC2:VPN:AWS_OUTSIDEIP_0:accelerator-vpn}` - translates to the AWS-side public IP of the primary VPN tunnel for a VPN named `accelerator-vpn`
    *
    * * For replacements that are supported in firewall userdata, see {@link LaunchTemplateConfig.userData}.
    */
@@ -778,7 +794,7 @@ export class Ec2FirewallAutoScalingGroupConfig
    *     * NETWORKIP - the network address of the subnet (i.e. 10.0.0.0)
    *     * ROUTERIP - the VPC router address of the subnet (i.e. 10.0.0.1)
    *   * Example usage: `${ACCEL_LOOKUP::EC2:SUBNET:CIDR:firewall-data-subnet-a}` - translates to the CIDR range of a subnet named `firewall-data-subnet-a`
-   * * Hostname and network interface replacements are NOT supported for firewall AutoScaling groups.
+   * * Hostname, network interface, and VPN replacements are NOT supported for firewall AutoScaling groups.
    *
    * For replacements that are supported in firewall userdata, see {@link LaunchTemplateConfig.userData}.
    */

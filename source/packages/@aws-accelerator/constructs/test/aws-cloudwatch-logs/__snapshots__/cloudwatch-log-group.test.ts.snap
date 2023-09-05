@@ -290,9 +290,6 @@ exports[`CloudWatchLogGroups Construct(CloudWatchLogGroups):  Snapshot Test 1`] 
         },
         "keyArn": "REPLACED-UUID",
         "logGroupName": "/App/Test1",
-        "region": {
-          "Ref": "AWS::Region",
-        },
         "retention": 30,
       },
       "Type": "Custom::CreateLogGroup",
@@ -311,9 +308,6 @@ exports[`CloudWatchLogGroups Construct(CloudWatchLogGroups):  Snapshot Test 1`] 
           ],
         },
         "logGroupName": "/App/Test2",
-        "region": {
-          "Ref": "AWS::Region",
-        },
         "retention": 180,
       },
       "Type": "Custom::CreateLogGroup",

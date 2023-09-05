@@ -82,6 +82,7 @@ import path from 'path';
 import { AcceleratorStackProps, NagSuppressionRuleIds } from '../../accelerator-stack';
 import { NetworkStack } from '../network-stack';
 import { SharedResources } from './shared-resources';
+import { isIpv4 } from '../utils/validation-utils';
 
 interface Peering {
   name: string;
@@ -887,10 +888,12 @@ export class NetworkAssociationsStack extends NetworkStack {
     // for VPN attachments
     //
     for (const cgwItem of props.networkConfig.customerGateways ?? []) {
-      for (const vpnItem of cgwItem.vpnConnections ?? []) {
-        this.setTransitGatewayVpnAttachmentsMap(props, cgwItem, vpnItem);
-        this.createVpnTransitGatewayAssociations(cgwItem, vpnItem);
-        this.createVpnTransitGatewayPropagations(cgwItem, vpnItem);
+      if (isIpv4(cgwItem.ipAddress)) {
+        for (const vpnItem of cgwItem.vpnConnections ?? []) {
+          this.setTransitGatewayVpnAttachmentsMap(props, cgwItem, vpnItem);
+          this.createVpnTransitGatewayAssociations(cgwItem, vpnItem);
+          this.createVpnTransitGatewayPropagations(cgwItem, vpnItem);
+        }
       }
     }
   }

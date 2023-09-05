@@ -1418,6 +1418,7 @@ vpcs:
     region: *HOME_REGION
     cidrs:
       - 10.4.0.0/16
+    internetGateway: true
     routeTables:
       - name: SharedServices-Main-Default
         routes:
@@ -1785,6 +1786,26 @@ customerGateways:
             rekeyFuzzPercentage: 65
             rekeyMarginTimeSeconds: 120
             replayWindowSize: 64
+  - name: cross-account-cgw
+    account: Network
+    region: *HOME_REGION
+    ipAddress: ${ACCEL_LOOKUP::EC2:ENI_0:cross-account-firewall}
+    asn: 65500
+    vpnConnections:
+      - name: cross-account-tgw-vpn
+        transitGateway: Network-Main
+      - name: cross-account-vgw-vpn
+        vpc: Network-Inspection
+  - name: same-account-firewall-cgw
+    account: Network
+    region: *HOME_REGION
+    ipAddress: ${ACCEL_LOOKUP::EC2:ENI_1:accelerator-firewall}
+    asn: 65500
+    vpnConnections:
+      - name: same-account-tgw-vpn
+        transitGateway: Network-Main
+      - name: same-account-vgw-vpn
+        vpc: Network-Inspection
 
 vpcFlowLogs:
   trafficType: ALL
