@@ -54,9 +54,11 @@ export interface FirewallProps {
 
 export class Firewall extends cdk.Resource implements IFirewall {
   public readonly name: string;
+  protected publicIpAddresses: Map<number, string> = new Map<number, string>();
   protected launchTemplate: LaunchTemplate;
   protected networkInterfaces: NetworkInterfaceItemConfig[];
   protected props: FirewallProps;
+  private eipAssociations: cdk.aws_ec2.CfnEIPAssociation[] = [];
 
   constructor(scope: Construct, id: string, props: FirewallProps) {
     super(scope, id);
@@ -67,6 +69,8 @@ export class Firewall extends cdk.Resource implements IFirewall {
     this.networkInterfaces = this.setNetworkInterfaceProps();
     // Create launch template
     this.launchTemplate = this.createLaunchTemplate();
+    // Create EIP interface dependencies
+    this.eipAssociations.forEach(association => this.launchTemplate.node.addDependency(association));
   }
 
   /**
@@ -159,6 +163,9 @@ export class Firewall extends cdk.Resource implements IFirewall {
       domain: 'vpc',
     });
 
+    // Add public IP to map
+    this.publicIpAddresses.set(deviceIndex, eip.ref);
+
     // Create interface
     const eipInterface = new cdk.aws_ec2.CfnNetworkInterface(this, `NetworkInterface${deviceIndex}`, {
       description: networkInterface.description,
@@ -174,10 +181,12 @@ export class Firewall extends cdk.Resource implements IFirewall {
     });
 
     // Associate EIP
-    new cdk.aws_ec2.CfnEIPAssociation(this, `EipAssociation${deviceIndex}`, {
-      allocationId: eip.attrAllocationId,
-      networkInterfaceId: eipInterface.ref,
-    });
+    this.eipAssociations.push(
+      new cdk.aws_ec2.CfnEIPAssociation(this, `EipAssociation${deviceIndex}`, {
+        allocationId: eip.attrAllocationId,
+        networkInterfaceId: eipInterface.ref,
+      }),
+    );
 
     return {
       deviceIndex: deviceIndex,

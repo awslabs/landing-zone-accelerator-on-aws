@@ -48,32 +48,39 @@ export interface CloudWatchLogGroupsProps {
    * Custom resource lambda log group encryption key
    */
   readonly customLambdaLogKmsKey: cdk.aws_kms.IKey;
-
   /**
    * How long, in days, the log contents for the Lambda function
    * will be retained.
    */
   readonly customLambdaLogRetention: number;
-
-  /**
-   * KMS Key Arn to encrypt CloudWatch Logs Group at rest.
-   */
-  readonly keyArn?: string;
-
-  /**
-   *
-   * Name of the CloudWatch Logs Group
-   */
-  readonly logGroupName: string;
-
   /**
    * How long, in days, the log contents will be retained.
    *
    * To retain all logs, set this value to undefined.
    *
    */
-  readonly logRetentionInDays: LogGroupRetention;
-
+  readonly logRetentionInDays: LogGroupRetention | number;
+  /**
+   * KMS Key Arn to encrypt CloudWatch Logs Group at rest.
+   */
+  readonly keyArn?: string;
+  /**
+   *
+   * Name of the CloudWatch Logs Group
+   */
+  readonly logGroupName?: string;
+  /**
+   * For cross-account log groups, the owning account ID
+   */
+  readonly owningAccountId?: string;
+  /**
+   * For cross-region log groups, the owning region
+   */
+  readonly owningRegion?: string;
+  /**
+   * For cross-account log groups, the IAM role name to assume
+   */
+  readonly roleName?: string;
   /**
    *
    * Determine termination policy on CloudWatch Logs Group
@@ -81,35 +88,62 @@ export interface CloudWatchLogGroupsProps {
   readonly terminationProtected?: boolean;
 }
 
+interface ILogGroup {
+  /**
+   * The name of the log group
+   */
+  readonly logGroupName: string;
+  /**
+   * The ARN of the log group
+   */
+  readonly logGroupArn: string;
+}
+
 /**
  * Class to configure CloudWatch Log Groups
  */
-export class CloudWatchLogGroups extends cdk.Resource {
+export class CloudWatchLogGroups extends cdk.Resource implements ILogGroup {
+  public readonly logGroupName: string;
+  public readonly logGroupArn: string;
+
   constructor(scope: Construct, id: string, props: CloudWatchLogGroupsProps) {
     super(scope, id);
     const CLOUD_WATCH_LOG_GROUPS = 'Custom::CreateLogGroup';
+    this.logGroupName = props.logGroupName ?? cdk.Names.uniqueResourceName(this, { separator: '-' });
 
     //
     // Function definition for the custom resource
     //
-    const provider = cdk.CustomResourceProvider.getOrCreateProvider(
-      this,
-      pascalCase(`${props.logGroupName}-${CLOUD_WATCH_LOG_GROUPS}`),
-      {
-        codeDirectory: path.join(__dirname, 'create-log-groups/dist'),
-        runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
-        policyStatements: [
+    const policyStatements = props.owningAccountId
+      ? [
+          {
+            Effect: 'Allow',
+            Action: ['sts:AssumeRole'],
+            Resource: `arn:${this.stack.partition}:iam::*:role/${props.roleName}`,
+          },
+        ]
+      : [
           {
             Effect: 'Allow',
             Action: ['logs:CreateLogGroup', 'logs:DeleteLogGroup', 'logs:PutRetentionPolicy'],
-            Resource: `arn:${this.stack.partition}:logs:${this.stack.region}:${this.stack.account}:log-group:${props.logGroupName}:*`,
+            Resource: `arn:${this.stack.partition}:logs:${props.owningRegion ?? this.stack.region}:${
+              this.stack.account
+            }:log-group:${this.logGroupName}:*`,
           },
           {
             Effect: 'Allow',
             Action: ['kms:DescribeKey', 'kms:ListKeys', 'logs:AssociateKmsKey', 'logs:DescribeLogGroups'],
             Resource: '*',
           },
-        ],
+        ];
+
+    const provider = cdk.CustomResourceProvider.getOrCreateProvider(
+      this,
+      pascalCase(`${this.logGroupName}-${CLOUD_WATCH_LOG_GROUPS}`),
+      {
+        codeDirectory: path.join(__dirname, 'create-log-groups/dist'),
+        runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
+        policyStatements,
       },
     );
 
@@ -117,13 +151,16 @@ export class CloudWatchLogGroups extends cdk.Resource {
       resourceType: CLOUD_WATCH_LOG_GROUPS,
       serviceToken: provider.serviceToken,
       properties: {
-        logGroupName: props.logGroupName,
+        logGroupName: this.logGroupName,
         retention: props.logRetentionInDays,
         keyArn: props.keyArn,
+        owningAccountId: props.owningAccountId,
+        owningRegion: props.owningRegion,
+        roleName: props.roleName,
         terminationProtected: props.terminationProtected,
-        region: this.stack.region,
       },
     });
+    this.logGroupArn = resource.getAttString('LogGroupArn');
 
     /**
      * Singleton pattern to define the log group for the singleton function

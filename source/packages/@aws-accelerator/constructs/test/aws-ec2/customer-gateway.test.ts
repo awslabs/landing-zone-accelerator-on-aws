@@ -28,6 +28,16 @@ new CustomerGateway(stack, 'TestCgw', {
   tags: [{ key: 'Test-Key', value: 'Test-Value' }],
 });
 
+new CustomerGateway(stack, 'TestCustomCgw', {
+  name: 'Custom-CGW',
+  bgpAsn: 65123,
+  ipAddress: '1.2.3.4',
+  customResourceHandler: cdk.aws_lambda.Function.fromFunctionName(stack, 'Function', 'TestFunction'),
+  owningAccountId: '111111111111',
+  owningRegion: 'us-west-2',
+  roleName: 'test-role',
+});
+
 /**
  * CustomerGateway construct test
  */

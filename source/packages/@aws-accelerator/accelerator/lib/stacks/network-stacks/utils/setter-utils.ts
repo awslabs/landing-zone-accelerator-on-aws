@@ -12,7 +12,7 @@
  */
 
 import { RouteTableEntryConfig, VpcConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
-import { IPv4CidrRange } from 'ip-num';
+import { isIpv4Cidr } from './validation-utils';
 
 /**
  * Returns an array containing the keys of IPAM subnets that need to be looked up
@@ -48,19 +48,4 @@ function parseIpamSubnetRouteTableEntries(
     }
   }
   return ipamSubnets;
-}
-
-/**
- * Returns true if the route destination is a valid IPv4 CIDR.
- *
- * @param destination
- * @returns
- */
-function isIpv4Cidr(destination: string): boolean {
-  try {
-    IPv4CidrRange.fromCidr(destination);
-    return true;
-  } catch (e) {
-    return false;
-  }
 }

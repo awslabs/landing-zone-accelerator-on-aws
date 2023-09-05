@@ -1,3 +1,16 @@
+/**
+ *  Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance
+ *  with the License. A copy of the License is located at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  or in the 'license' file accompanying this file. This file is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES
+ *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
+ *  and limitations under the License.
+ */
+
 import { AcceleratorResourcePrefixes } from '../utils/app-utils';
 export interface AcceleratorResourceNamesProps {
   readonly prefixes: AcceleratorResourcePrefixes;
@@ -8,7 +21,10 @@ interface RoleNames {
   ipamSsmParameterAccess: string;
   ipamSubnetLookup: string;
   crossAccountCentralLogBucketCmkArnSsmParameterAccess: string;
+  crossAccountCustomerGatewayRoleName: string;
+  crossAccountLogsRoleName: string;
   crossAccountSecretsCmkParameterAccess: string;
+  crossAccountVpnRoleName: string;
   moveAccountConfig: string;
   tgwPeering: string;
   madShareAccept: string;
@@ -79,7 +95,10 @@ export class AcceleratorResourceNames {
     ipamSsmParameterAccess: 'PLACE_HOLDER',
     ipamSubnetLookup: 'PLACE_HOLDER',
     crossAccountCentralLogBucketCmkArnSsmParameterAccess: 'PLACE_HOLDER',
+    crossAccountCustomerGatewayRoleName: 'PLACE_HOLDER',
+    crossAccountLogsRoleName: 'PLACE_HOLDER',
     crossAccountSecretsCmkParameterAccess: 'PLACE_HOLDER',
+    crossAccountVpnRoleName: 'PLACE_HOLDER',
     moveAccountConfig: 'PLACE_HOLDER',
     tgwPeering: 'PLACE_HOLDER',
     madShareAccept: 'PLACE_HOLDER',
@@ -153,8 +172,10 @@ export class AcceleratorResourceNames {
     this.roles.ipamSsmParameterAccess = props.prefixes.accelerator + '-Ipam-GetSsmParamRole';
     this.roles.ipamSubnetLookup = props.prefixes.accelerator + '-GetIpamCidrRole';
     this.roles.crossAccountCmkArnSsmParameterAccess = props.prefixes.accelerator + '-CrossAccount-SsmParameter-Role';
-
+    this.roles.crossAccountCustomerGatewayRoleName = props.prefixes.accelerator + '-CrossAccount-CustomerGateway-Role';
+    this.roles.crossAccountLogsRoleName = props.prefixes.accelerator + '-CrossAccount-PutLogs-Role';
     this.roles.crossAccountSecretsCmkParameterAccess = props.prefixes.accelerator + '-CrossAccount-SecretsKms-Role';
+    this.roles.crossAccountVpnRoleName = props.prefixes.accelerator + '-CrossAccount-SiteToSiteVpn-Role';
     this.roles.moveAccountConfig = props.prefixes.accelerator + '-MoveAccountConfigRule-Role';
     this.roles.tgwPeering = props.prefixes.accelerator + '-TgwPeering-Role';
     this.roles.madShareAccept = props.prefixes.accelerator + '-MadAccept-Role';

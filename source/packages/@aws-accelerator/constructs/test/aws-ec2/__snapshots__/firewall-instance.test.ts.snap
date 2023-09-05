@@ -46,6 +46,9 @@ exports[`LaunchTemplate Construct(FirewallInstance):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::EIP",
     },
     "TestFirewallLaunchTemplateFF1988AF": {
+      "DependsOn": [
+        "TestFirewallEipAssociation049F6348D",
+      ],
       "Properties": {
         "LaunchTemplateData": {
           "BlockDeviceMappings": [

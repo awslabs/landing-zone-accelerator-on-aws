@@ -12,11 +12,12 @@
  */
 
 import { IPv4CidrRange } from 'ip-num';
+import { CustomizationsConfig, Ec2FirewallInstanceConfig } from '../../lib/customizations-config';
 import {
-  NetworkConfig,
   CustomerGatewayConfig,
-  VpnConnectionConfig,
+  NetworkConfig,
   NetworkConfigTypes,
+  VpnConnectionConfig,
   VpnTunnelOptionsSpecificationsConfig,
 } from '../../lib/network-config';
 import { NetworkValidatorFunctions } from './network-validator-functions';
@@ -25,7 +26,12 @@ import { NetworkValidatorFunctions } from './network-validator-functions';
  * Class to validate Customer Gateways
  */
 export class CustomerGatewaysValidator {
-  constructor(values: NetworkConfig, helpers: NetworkValidatorFunctions, errors: string[]) {
+  constructor(
+    values: NetworkConfig,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+    customizationsConfig?: CustomizationsConfig,
+  ) {
     //
     // Validate gateway load balancers deployment account names
     //
@@ -33,7 +39,7 @@ export class CustomerGatewaysValidator {
     //
     // Validate CGW configuration
     //
-    this.validateCgwConfiguration(values, helpers, errors);
+    this.validateCgwConfiguration(values, helpers, errors, customizationsConfig);
   }
 
   private validateCgwTargetAccounts(values: NetworkConfig, helpers: NetworkValidatorFunctions, errors: string[]) {
@@ -50,14 +56,118 @@ export class CustomerGatewaysValidator {
    * Validate customer gateways and VPN confections
    * @param values
    */
-  private validateCgwConfiguration(values: NetworkConfig, helpers: NetworkValidatorFunctions, errors: string[]) {
+  private validateCgwConfiguration(
+    values: NetworkConfig,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+    customizationsConfig?: CustomizationsConfig,
+  ) {
     for (const cgw of values.customerGateways ?? []) {
       if (cgw.asn < 1 || cgw.asn > 2147483647) {
         errors.push(`[Customer Gateway ${cgw.name}]: ASN ${cgw.asn} out of range 1-2147483647`);
       }
-
+      // Validate CGW IP targets
+      this.validateCgwIpTarget(cgw, helpers, errors, customizationsConfig);
       // Validate VPN configurations
       this.validateVpnConfiguration(cgw, values, helpers, errors);
+    }
+  }
+
+  /**
+   * Validates that the CGW is targeting
+   * @param cgw CustomerGatewayConfig
+   * @param helpers NetworkValidatorFunctions
+   * @param errors string[]
+   * @param customizationsConfig CustomizationsConfig | undefined
+   */
+  private validateCgwIpTarget(
+    cgw: CustomerGatewayConfig,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+    customizationsConfig?: CustomizationsConfig,
+  ) {
+    if (!helpers.isValidIpv4(cgw.ipAddress)) {
+      if (!this.isValidFirewallReference(cgw, helpers, errors, customizationsConfig)) {
+        errors.push(
+          `[Customer Gateway ${cgw.name}]: IP address must either be a valid IPv4 address or EC2 firewall reference variable. Value entered: ${cgw.ipAddress}`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Validates that the referenced firewall exists in customizations config
+   * @param cgw CustomerGatewayConfig
+   * @param helpers NetworkValidatorFunctions
+   * @param errors string[]
+   * @param customizationsConfig CustomizationsConfig | undefined
+   * @returns boolean
+   */
+  private isValidFirewallReference(
+    cgw: CustomerGatewayConfig,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+    customizationsConfig?: CustomizationsConfig,
+  ): boolean {
+    //
+    // Match variable pattern
+    if (!helpers.matchesRegex(cgw.ipAddress, '^\\${ACCEL_LOOKUP::EC2:ENI_\\d:.+}$')) {
+      errors.push(
+        `[Customer Gateway ${cgw.name}]: Incorrect EC2 firewall reference variable entered. Pattern accepted: "^\\$\{ACCEL_LOOKUP::EC2:ENI_\\d:.+}$" Value entered: ${cgw.ipAddress}`,
+      );
+      return false;
+    } else {
+      //
+      // Check that customizations config is defined
+      if (!customizationsConfig) {
+        errors.push(
+          `[Customer Gateway ${cgw.name}]: EC2 firewall reference variable entered but customizations-config.yaml is not defined.`,
+        );
+        return false;
+      } else {
+        //
+        // Check that firewall exists
+        const firewallName = cgw.ipAddress.split(':')[4].replace('}', '');
+        const firewall = customizationsConfig.firewalls?.instances?.find(instance => instance.name === firewallName);
+        if (!firewall) {
+          errors.push(
+            `[Customer Gateway ${cgw.name}]: EC2 firewall instance "${firewallName}" is not defined in customizations-config.yaml`,
+          );
+          return false;
+        }
+        //
+        // Check device index for elastic IP
+        this.validateFirewallInterface(cgw, firewall, errors);
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Validates that the referenced network interface has an elastic IP associated
+   * @param cgw CustomerGatewayConfig
+   * @param firewall Ec2FirewallInstanceConfig
+   * @param errors string[]
+   */
+  private validateFirewallInterface(cgw: CustomerGatewayConfig, firewall: Ec2FirewallInstanceConfig, errors: string[]) {
+    if (!firewall.launchTemplate.networkInterfaces) {
+      errors.push(
+        `[Customer Gateway ${cgw.name}]: EC2 firewall instance "${firewall.name}" launch template does not have network interfaces defined in customizations-config.yaml`,
+      );
+    } else {
+      const deviceIndex = Number(cgw.ipAddress.split(':')[3].split('_')[1]);
+      if (deviceIndex > firewall.launchTemplate.networkInterfaces.length - 1) {
+        errors.push(
+          `[Customer Gateway ${cgw.name}]: EC2 firewall instance "${firewall.name}" device index ${deviceIndex} does not exist in customizations-config.yaml`,
+        );
+      } else {
+        const networkInterface = firewall.launchTemplate.networkInterfaces[deviceIndex];
+        if (!networkInterface.associateElasticIp) {
+          errors.push(
+            `[Customer Gateway ${cgw.name}]: EC2 firewall instance "${firewall.name}" device index ${deviceIndex} does not have the associateElasticIp property set in customizations-config.yaml`,
+          );
+        }
+      }
     }
   }
 

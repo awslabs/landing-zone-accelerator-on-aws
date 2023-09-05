@@ -3835,6 +3835,8 @@ export class VpnLoggingConfig implements t.TypeOf<typeof NetworkConfigTypes.vpnL
    *
    * @remarks
    * If defined, this value must be unique within the account the VPN connection is deployed to.
+   * For security purposes, your custom log group name will be prefixed with the Accelerator prefix
+   * value (AWSAccelerator or the custom prefix defined in the installer stack)
    */
   readonly logGroupName: string | undefined = undefined;
   /**
@@ -4211,9 +4213,6 @@ export class VpnTunnelOptionsSpecificationsConfig
    * will be recreated. Please be aware that any downstream dependencies may cause this property update to fail. To ensure
    * a clean replacement, we highly recommend deleting the original connection and its downstream dependencies prior to making this change.
    *
-   * If you update this property after deployment, your VPN tunnel will become temporarily unavailable. Please see
-   * {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/endpoint-replacements.html#endpoint-replacements-for-vpn-modifications | Customer initiated endpoint replacements} for
-   * additional details.
    */
   readonly startupAction: t.TypeOf<typeof NetworkConfigTypes.startupActionEnum> | undefined = undefined;
   /**
@@ -4486,6 +4485,20 @@ export class CustomerGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes
    * @remarks
    * **CAUTION**: Changing this property value after initial deployment causes the VPN to be recreated.
    * Please be aware that any downstream dependencies may cause this property update to fail.
+   *
+   * To define a customer gateway that references an external appliance (i.e. on-premise or otherwise external to the accelerator), use a public-facing IPv4 address (i.e. 1.2.3.4).
+   *
+   * This property supports `ACCEL_LOOKUP` replacement variables to target the public IP address of a network interface attached to an
+   * {@link Ec2FirewallInstanceConfig} defined in `customizations-config.yaml`. The target network interface MUST be configured with the `associateElasticIp` property set to `true`.
+   *
+   * **NOTE:** This lookup value is not supported for firewalls defined in {@link Ec2FirewallAutoScalingGroupConfig}.
+   *
+   * Supported replacement:
+   * * Network interface replacement - look up a network interface attached to a firewall instance defined in `customizations-config.yaml`
+   *   * Format:`${ACCEL_LOOKUP::EC2:ENI_<ENI_INDEX>:<FIREWALL_INSTANCE_NAME>}`, where `<ENI_INDEX>` is the device index of the network interface
+   * as defined in the firewall launch template and `<FIREWALL_INSTANCE_NAME>` is the name of the firewall instance.
+   *   * Index numbering is zero-based, so the primary interface of the instance is `0`.
+   *   * Example usage: `${ACCEL_LOOKUP::EC2:ENI_0:accelerator-firewall}` - translates to the primary public IP address of the primary network interface of a firewall named `accelerator-firewall`.
    */
   readonly ipAddress: string = '';
 

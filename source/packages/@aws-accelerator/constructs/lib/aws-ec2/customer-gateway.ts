@@ -13,23 +13,40 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+import { LzaCustomResource } from '../lza-custom-resource';
 
-export interface CfnCustomerGatewayProps {
+export interface CustomerGatewayProps {
   /**
    * Name of the Customer Gateway
    */
   readonly name: string;
-
   /**
    * Gateway IP address for customer gateway
    */
   readonly ipAddress: string;
-
   /**
    * Gateway ASN for customer gateway
    */
   readonly bgpAsn: number;
-
+  /**
+   * Custom resource handler for cross-account customer gateways
+   */
+  readonly customResourceHandler?: cdk.aws_lambda.IFunction;
+  /**
+   * Owning account ID for cross-account customer gateways
+   */
+  readonly owningAccountId?: string;
+  /**
+   * Owning region for cross-account customer gateways
+   */
+  readonly owningRegion?: string;
+  /**
+   * Role name for cross-account customer gateways
+   */
+  readonly roleName?: string;
+  /**
+   * Tags for the customer gateway
+   */
   readonly tags?: cdk.CfnTag[];
 }
 
@@ -40,37 +57,67 @@ interface ICustomerGateway extends cdk.IResource {
    * @attribute
    */
   readonly customerGatewayId: string;
-
   /**
-   * The identifier of the customer gateway
-   *
-   * @attribute
+   * The BGP ASN of the customer gateway
    */
-  readonly customerGatewayName: string;
+  readonly bgpAsn: number;
+  /**
+   * The IP address of the customer gateway
+   */
+  readonly ipAddress: string;
 }
 
 /**
  * Class for Customer Gateway
  */
 export class CustomerGateway extends cdk.Resource implements ICustomerGateway {
+  public readonly bgpAsn: number;
   public readonly customerGatewayId: string;
-  public readonly customerGatewayName: string;
+  public readonly ipAddress: string;
   public readonly name: string;
 
-  constructor(scope: Construct, id: string, props: CfnCustomerGatewayProps) {
+  constructor(scope: Construct, id: string, props: CustomerGatewayProps) {
     super(scope, id);
     this.name = props.name;
+    this.bgpAsn = props.bgpAsn;
+    this.ipAddress = props.ipAddress;
 
-    const resource = new cdk.aws_ec2.CfnCustomerGateway(this, 'CustomerGateway', {
-      bgpAsn: props.bgpAsn,
-      ipAddress: props.ipAddress,
-      type: 'ipsec.1',
-      tags: props.tags,
-    });
-    cdk.Tags.of(this).add('Name', this.name);
+    let resource: cdk.aws_ec2.CfnCustomerGateway | cdk.CustomResource;
 
+    if (!props.customResourceHandler) {
+      resource = new cdk.aws_ec2.CfnCustomerGateway(this, 'CustomerGateway', {
+        bgpAsn: props.bgpAsn,
+        ipAddress: props.ipAddress,
+        type: 'ipsec.1',
+        tags: props.tags,
+      });
+      cdk.Tags.of(this).add('Name', this.name);
+    } else {
+      // Convert tags to EC2 API format
+      const tags =
+        props.tags?.map(tag => {
+          return { Key: tag.key, Value: tag.value };
+        }) ?? [];
+      tags.push({ Key: 'Name', Value: props.name });
+
+      resource = new LzaCustomResource(this, 'CustomResource', {
+        resource: {
+          name: 'CustomResource',
+          parentId: id,
+          properties: [
+            {
+              bgpAsn: props.bgpAsn,
+              ipAddress: props.ipAddress,
+              owningAccountId: props.owningAccountId,
+              owningRegion: props.owningRegion,
+              roleName: props.roleName,
+              tags,
+            },
+          ],
+          onEventHandler: props.customResourceHandler,
+        },
+      }).resource;
+    }
     this.customerGatewayId = resource.ref;
-
-    this.customerGatewayName = props.name;
   }
 }

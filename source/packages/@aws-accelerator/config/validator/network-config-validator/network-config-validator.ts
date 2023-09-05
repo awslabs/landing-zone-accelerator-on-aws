@@ -82,7 +82,7 @@ export class NetworkConfigValidator {
     new EndpointPoliciesValidator(values, configDir, helpers, errors);
     new PrefixListValidator(values, helpers, errors);
     new VpcValidator(values, helpers, errors);
-    new CustomerGatewaysValidator(values, helpers, errors);
+    new CustomerGatewaysValidator(values, helpers, errors, customizationsConfig);
     new DirectConnectGatewaysValidator(values, errors);
     new FirewallManagerValidator(values, helpers, errors);
     new CertificatesValidator(values, errors);

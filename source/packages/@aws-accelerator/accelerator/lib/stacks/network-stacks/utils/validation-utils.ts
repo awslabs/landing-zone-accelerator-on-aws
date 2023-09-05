@@ -12,6 +12,7 @@
  */
 
 import { VpnConnectionConfig } from '@aws-accelerator/config';
+import { IPv4, IPv4CidrRange } from 'ip-num';
 import { getObjectKeys } from './getter-utils';
 
 /**
@@ -49,4 +50,34 @@ export function hasAdvancedVpnOptions(vpn: VpnConnectionConfig): boolean {
     return true;
   }
   return false;
+}
+
+/**
+ * Returns true if the passed string is a valid IPv4 CIDR.
+ *
+ * @param cidr string
+ * @returns boolean
+ */
+export function isIpv4Cidr(cidr: string): boolean {
+  try {
+    IPv4CidrRange.fromCidr(cidr);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
+ * Returns true if the passed string is a valid IPv4 address.
+ *
+ * @param ip string
+ * @returns boolean
+ */
+export function isIpv4(ip: string): boolean {
+  try {
+    IPv4.fromString(ip);
+    return true;
+  } catch (e) {
+    return false;
+  }
 }

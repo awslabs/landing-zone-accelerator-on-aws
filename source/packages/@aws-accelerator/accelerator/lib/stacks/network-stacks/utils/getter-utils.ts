@@ -11,7 +11,13 @@
  *  and limitations under the License.
  */
 
-import { SubnetConfig, VpcConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
+import {
+  Ec2FirewallInstanceConfig,
+  SubnetConfig,
+  TransitGatewayConfig,
+  VpcConfig,
+  VpcTemplatesConfig,
+} from '@aws-accelerator/config';
 import { PrefixList, RouteTable, Subnet, Vpc, IIpamSubnet, SecurityGroup } from '@aws-accelerator/constructs';
 import { createLogger } from '@aws-accelerator/utils';
 
@@ -125,6 +131,29 @@ export function getTransitGatewayId(transitGatewayMap: Map<string, string>, tgwN
 }
 
 /**
+ * Get Transit Gateway route table ID from a given map, if it exists
+ * @param tgwRouteTableMap Map<string, string>
+ * @param tgwName string
+ * @param routeTableName string
+ * @returns string
+ */
+export function getTgwRouteTableId(
+  tgwRouteTableMap: Map<string, string>,
+  tgwName: string,
+  routeTableName: string,
+): string {
+  const key = `${tgwName}_${routeTableName}`;
+  const routeTableId = tgwRouteTableMap.get(key);
+
+  if (!routeTableId) {
+    logger.error(`Transit Gateway ${tgwName} route table ${routeTableName} does not exist in map`);
+    throw new Error(`Configuration validation failed at runtime.`);
+  }
+
+  return routeTableId;
+}
+
+/**
  * Returns a VPC construct object from a given map if it exists
  * @param vpcMap
  * @param vpcName
@@ -139,6 +168,21 @@ export function getVpc(vpcMap: Map<string, Vpc> | Map<string, string>, vpcName: 
   }
 
   return vpc;
+}
+
+/**
+ * Returns a Transit Gateway configuration object from a given list of configurations if it exists
+ * @param tgwResources TransitGatewayConfig[]
+ * @param tgwName string
+ * @returns TransitGatewayConfig
+ */
+export function getTgwConfig(tgwResources: TransitGatewayConfig[], tgwName: string): TransitGatewayConfig {
+  const tgwConfig = tgwResources.find(tgw => tgw.name === tgwName);
+  if (!tgwConfig) {
+    logger.error(`Transit Gateway configuration for TGW ${tgwName} not found`);
+    throw new Error(`Configuration validation failed at runtime.`);
+  }
+  return tgwConfig;
 }
 
 /**
@@ -172,6 +216,31 @@ export function getSubnetConfig(vpcItem: VpcConfig | VpcTemplatesConfig, subnetN
     throw new Error(`Configuration validation failed at runtime.`);
   }
   return subnetConfig;
+}
+
+/**
+ * Returns a firewall instance configuration object from a given list of configurations if it exists
+ * @param firewallName string
+ * @param firewallInstanceConfig Ec2FirewallInstanceConfig[] | undefined
+ * @returns Ec2FirewallInstanceConfig
+ */
+export function getFirewallInstanceConfig(
+  firewallName: string,
+  firewallInstanceConfig?: Ec2FirewallInstanceConfig[],
+): Ec2FirewallInstanceConfig {
+  if (!firewallInstanceConfig) {
+    logger.error(
+      `Firewall instance configuration for firewall ${firewallName} not found. Firewall instances are not configured in customizations-config.yaml.`,
+    );
+    throw new Error(`Configuration validation failed at runtime.`);
+  }
+
+  const instanceConfig = firewallInstanceConfig.find(firewall => firewall.name === firewallName);
+  if (!instanceConfig) {
+    logger.error(`Firewall instance configuration for firewall ${firewallName} not found`);
+    throw new Error(`Configuration validation failed at runtime.`);
+  }
+  return instanceConfig;
 }
 
 /**

@@ -96,6 +96,18 @@ export interface VpnOptions {
    */
   readonly enableVpnAcceleration: boolean;
   /**
+   * Invoking account ID for the custom resource
+   */
+  readonly invokingAccountId: string;
+  /**
+   * Invoking region for the custom resource
+   */
+  readonly invokingRegion: string;
+  /**
+   * Custom resource partition
+   */
+  readonly partition: string;
+  /**
    * Static routes only for the VPN connection
    */
   readonly staticRoutesOnly: boolean;
@@ -107,6 +119,18 @@ export interface VpnOptions {
    * Customer-side IPv4 CIDR
    */
   readonly customerIpv4NetworkCidr?: string;
+  /**
+   * Owning account ID for cross-account customer gateways
+   */
+  readonly owningAccountId?: string;
+  /**
+   * Owning region for cross-account customer gateways
+   */
+  readonly owningRegion?: string;
+  /**
+   * Role name for cross-account customer gateways
+   */
+  readonly roleName?: string;
   /**
    * Tags to apply to the VPN connection
    */
