@@ -17,6 +17,7 @@ import { Construct } from 'constructs';
 import { NagSuppressions } from 'cdk-nag';
 
 import {
+  AseaResourceType,
   InterfaceEndpointServiceConfig,
   Region,
   ResolverEndpointConfig,
@@ -138,26 +139,33 @@ export class NetworkVpcDnsStack extends NetworkStack {
     zoneMap: Map<string, string>,
   ): void {
     for (const endpointItem of vpcItem.interfaceEndpoints?.endpoints ?? []) {
-      // Create the private hosted zone
-      this.logger.info(`Creating private hosted zone for VPC:${vpcItem.name} endpoint:${endpointItem.service}`);
-      const hostedZoneName = HostedZone.getHostedZoneNameForService(endpointItem.service, cdk.Stack.of(this).region);
-      const hostedZone = new HostedZone(
-        this,
-        `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem.service)}EpHostedZone`,
-        {
-          hostedZoneName,
-          vpcId,
-        },
-      );
-      this.ssmParameters.push({
-        logicalId: `SsmParam${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem.service)}EpHostedZone`,
-        parameterName: this.getSsmPath(SsmResourceType.PHZ_ID, [vpcItem.name, endpointItem.service]),
-        stringValue: hostedZone.hostedZoneId,
-      });
-      // Create additional S3 record sets
-      this.createRecordSets(vpcItem, endpointItem, endpointMap, zoneMap, hostedZoneName, hostedZone);
-      if (endpointItem.service === 's3') {
-        this.createAdditionalS3Records(vpcItem, vpcId, endpointMap, zoneMap, endpointItem);
+      if (this.isManagedByAsea(AseaResourceType.ROUTE_53_PHZ_ID, `${vpcItem.name}/${endpointItem.service}`)) {
+        this.logger.info(
+          `PHZ for Interface Endpoint "${endpointItem.service}", VPC "${vpcItem.name}" is managed externally`,
+        );
+        continue;
+      } else {
+        // Create the private hosted zone
+        this.logger.info(`Creating private hosted zone for VPC:${vpcItem.name} endpoint:${endpointItem.service}`);
+        const hostedZoneName = HostedZone.getHostedZoneNameForService(endpointItem.service, cdk.Stack.of(this).region);
+        const hostedZone = new HostedZone(
+          this,
+          `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem.service)}EpHostedZone`,
+          {
+            hostedZoneName,
+            vpcId,
+          },
+        );
+        this.ssmParameters.push({
+          logicalId: `SsmParam${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem.service)}EpHostedZone`,
+          parameterName: this.getSsmPath(SsmResourceType.PHZ_ID, [vpcItem.name, endpointItem.service]),
+          stringValue: hostedZone.hostedZoneId,
+        });
+        // Create additional S3 record sets
+        this.createRecordSets(vpcItem, endpointItem, endpointMap, zoneMap, hostedZoneName, hostedZone);
+        if (endpointItem.service === 's3') {
+          this.createAdditionalS3Records(vpcItem, vpcId, endpointMap, zoneMap, endpointItem);
+        }
       }
     }
   }

@@ -3,7 +3,7 @@ import { SsmResourceType } from '@aws-accelerator/utils';
 import { AseaResource, AseaResourceProps } from './resource';
 import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
 import { pascalCase } from 'pascal-case';
-import { AseaResourceType, AseaStackInfo, TransitGatewayConfig } from '@aws-accelerator/config';
+import { AseaResourceType, TransitGatewayConfig } from '@aws-accelerator/config';
 
 const enum RESOURCE_TYPE {
   TRANSIT_GATEWAY = 'AWS::EC2::TransitGateway',
@@ -16,10 +16,8 @@ const ASEA_PHASE_NUMBER = 0;
  * All Transit Gateways driven by ASEA configuration are deployed in Phase-0
  */
 export class TransitGateways extends AseaResource {
-  private readonly stackInfo: AseaStackInfo;
   constructor(scope: ImportAseaResourcesStack, props: AseaResourceProps) {
     super(scope, props);
-    this.stackInfo = props.stackInfo;
     if (props.stackInfo.phase !== ASEA_PHASE_NUMBER) {
       this.scope.addLogs(
         LogLevel.INFO,

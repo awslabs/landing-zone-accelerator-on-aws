@@ -58,7 +58,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 
   nextToken = undefined;
   do {
-    const page = await throttlingBackOff(() => macie2Client.listMembers({ nextToken }).promise());
+    const page = await throttlingBackOff(() =>
+      macie2Client.listMembers({ nextToken, onlyAssociated: 'false' }).promise(),
+    );
     for (const member of page.members ?? []) {
       existingMembers.push(member);
     }
@@ -80,7 +82,14 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       }
 
       for (const account of allAccounts.filter(item => item.Id !== adminAccountId) ?? []) {
-        if (!existingMembers.find(member => member.accountId !== account.Id)) {
+        const existingMember = existingMembers.find(member => member.accountId !== account.Id);
+        if (existingMember && existingMember.relationshipStatus === 'Removed') {
+          console.log(
+            `OU account - ${account.Id} macie membership status is "Removed", deleting member before adding again`,
+          );
+          await throttlingBackOff(() => macie2Client.deleteMember({ id: account.Id! }).promise());
+        }
+        if (!existingMember || existingMember.relationshipStatus === 'Removed') {
           console.log(`OU account - ${account.Id} macie membership status is "not a macie member", adding as a member`);
           await throttlingBackOff(() =>
             macie2Client

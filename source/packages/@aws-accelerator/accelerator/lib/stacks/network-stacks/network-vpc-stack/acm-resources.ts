@@ -79,7 +79,6 @@ export class AcmResources {
       }-${props.accountsConfig.getManagementAccountId()}-${props.globalConfig.homeRegion}`,
       cloudWatchLogsKmsKey: this.stack.cloudwatchKey,
       logRetentionInDays: this.stack.logRetention,
-      isExisting: certificate.isExisting,
     });
 
     // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission

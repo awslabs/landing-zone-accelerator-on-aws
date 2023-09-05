@@ -73,11 +73,6 @@ export interface CertificateProps {
    * Custom resource lambda log retention in days
    */
   logRetentionInDays: number;
-  /**
-   * Is certificate already Imported or Requested.
-   * Only verifies SSM Parameter in Custom Resource handler if certificate is imported
-   */
-  isExisting?: boolean;
 }
 
 /**
@@ -128,7 +123,6 @@ export class Certificate extends Construct {
         san: props.san?.join(','),
         homeRegion: props.homeRegion,
         assetBucketName: props.assetBucketName,
-        isExisting: props.isExisting,
       },
     });
 

@@ -33,6 +33,8 @@ import { VpcPeeringConnection } from '../asea-resources/vpc-peering-connection';
 import { SharedSecurityGroups } from '../asea-resources/shared-security-groups';
 import { NetworkStack } from './network-stacks/network-stack';
 import { TgwCrossAccountResources } from '../asea-resources/tgw-cross-account-resources';
+import { TransitGatewayRoutes } from '../asea-resources/transit-gateway-routes';
+import { VpcEndpoints } from '../asea-resources/vpc-endpoints';
 
 /**
  * Enum for log level
@@ -102,6 +104,8 @@ export class ImportAseaResourcesStack extends NetworkStack {
     new VpcPeeringConnection(this, props);
     new SharedSecurityGroups(this, { ...props, nestedStacksInfo });
     new TgwCrossAccountResources(this, props);
+    new TransitGatewayRoutes(this, props);
+    new VpcEndpoints(this, props);
     this.createSsmParameters();
   }
 

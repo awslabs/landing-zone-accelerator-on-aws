@@ -2517,6 +2517,10 @@ export class NetworkAssociationsStack extends NetworkStack {
         routeId = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-blackhole`;
       }
 
+      if (this.isManagedByAsea(AseaResourceType.TRANSIT_GATEWAY_ROUTE, routeId)) {
+        return;
+      }
+
       // Create static route
       new TransitGatewayStaticRoute(this, routeId, {
         transitGatewayRouteTableId,
@@ -2541,6 +2545,10 @@ export class NetworkAssociationsStack extends NetworkStack {
 
       const plRouteId = prefixListReferenceConfig.plRouteId;
       const transitGatewayAttachmentId = prefixListReferenceConfig.transitGatewayAttachmentId;
+
+      if (this.isManagedByAsea(AseaResourceType.TRANSIT_GATEWAY_ROUTE, plRouteId)) {
+        return;
+      }
 
       // Create prefix list reference
       new TransitGatewayPrefixListReference(this, plRouteId, {
