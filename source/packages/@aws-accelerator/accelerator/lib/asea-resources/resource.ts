@@ -30,9 +30,11 @@ export class AseaResource {
   readonly scope: ImportAseaResourcesStack;
   readonly stack: cdk.cloudformation_include.CfnInclude;
   readonly resourceSsmParameters: { [key: string]: string } = {};
+  readonly stackInfo: AseaStackInfo;
   constructor(scope: ImportAseaResourcesStack, props: AseaResourceProps) {
     this.scope = scope;
     this.stack = scope.includedStack;
+    this.stackInfo = props.stackInfo;
     this.resourceSsmParameters =
       props.globalConfig.externalLandingZoneResources?.resourceParameters[
         `${this.scope.account}-${this.scope.region}`

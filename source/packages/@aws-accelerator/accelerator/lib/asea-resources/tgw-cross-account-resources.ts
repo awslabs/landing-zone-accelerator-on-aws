@@ -20,14 +20,12 @@ const enum RESOURCE_TYPE {
 const ASEA_PHASE_NUMBER = 2;
 
 export class TgwCrossAccountResources extends AseaResource {
-  private readonly stackInfo: AseaStackInfo;
   private readonly props: AseaResourceProps;
   private readonly propagationResources: CfnResourceType[] = [];
   private readonly associationResources: CfnResourceType[] = [];
   constructor(scope: ImportAseaResourcesStack, props: AseaResourceProps) {
     super(scope, props);
     this.props = props;
-    this.stackInfo = props.stackInfo;
     if (props.stackInfo.phase !== ASEA_PHASE_NUMBER) {
       this.scope.addLogs(LogLevel.INFO, `No Resources to handle in stack ${props.stackInfo.stackName}`);
       return;

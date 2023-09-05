@@ -658,6 +658,7 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
     bucketArn?: string;
     useExistingRoles: boolean;
     acceleratorPrefix: string;
+    s3LogPath?: string;
   }) {
     // Validate maxAggregationInterval
     const maxAggregationInterval = options.maxAggregationInterval;
@@ -696,11 +697,17 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
       });
     }
 
+    let s3LogDestination = `${options.bucketArn}/vpc-flow-logs/`;
+    if (options.s3LogPath) {
+      const replacedS3LogPath = this.replaceVpcFlowLogDestName(options.s3LogPath, this.name, this.env.account);
+      s3LogDestination = `${options.bucketArn}/${replacedS3LogPath}`;
+    }
+
     // Destination: S3
     if (options.destinations.includes('s3')) {
       new cdk.aws_ec2.CfnFlowLog(this, 'S3FlowLog', {
         logDestinationType: 's3',
-        logDestination: `${options.bucketArn}/vpc-flow-logs/`,
+        logDestination: s3LogDestination,
         resourceId: this.vpcId,
         resourceType: 'VPC',
         trafficType: options.trafficType,
@@ -709,6 +716,26 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
       });
     }
   }
+
+  /**
+   * Replaces Lookup Values for VPC Name in string
+   * Currently supports look ups for VPC_Name and ACCOUNT_ID for VPC Flow Logs Destinations
+   * @param inputString
+   * @param replacementValue
+   * @returns
+   */
+  private replaceVpcFlowLogDestName(inputString: string, replacementValue: string, accountId: string): string {
+    const replacements = {
+      '\\${ACCEL_LOOKUP::VPC_NAME}': replacementValue,
+      '\\${ACCEL_LOOKUP::ACCOUNT_ID}': accountId,
+    };
+
+    for (const [key, value] of Object.entries(replacements)) {
+      inputString = inputString.replace(new RegExp(key, 'g'), value);
+    }
+    return inputString;
+  }
+
   private createVpcFlowLogsRoleCloudWatchLogs(
     logGroupArn: string,
     useExistingRoles: boolean,

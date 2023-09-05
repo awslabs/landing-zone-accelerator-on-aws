@@ -69,12 +69,10 @@ export interface VpcResourcesProps extends AseaResourceProps {
 export class VpcResources extends AseaResource {
   private readonly nestedStacksInfo: NestedAseaStackInfo[] = [];
   private readonly props: VpcResourcesProps;
-  private readonly stackInfo: AseaStackInfo;
   private ssmParameters: { logicalId: string; parameterName: string; stringValue: string }[];
   constructor(scope: ImportAseaResourcesStack, props: VpcResourcesProps) {
     super(scope, props);
     this.props = props;
-    this.stackInfo = props.stackInfo;
     this.ssmParameters = [];
     if (props.stackInfo.phase !== ASEA_PHASE_NUMBER) {
       this.scope.addLogs(LogLevel.INFO, `No ${RESOURCE_TYPE.VPC}s to handle in stack ${props.stackInfo.stackName}`);

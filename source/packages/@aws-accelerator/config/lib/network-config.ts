@@ -980,7 +980,6 @@ export class NetworkConfigTypes {
     domain: t.optional(t.nonEmptyString),
     san: t.optional(t.array(t.nonEmptyString)),
     deploymentTargets: t.deploymentTargets,
-    isExisting: t.optional(t.boolean),
   });
 
   static readonly networkConfig = t.interface({
@@ -7438,11 +7437,6 @@ export class CertificateConfig implements t.TypeOf<typeof NetworkConfigTypes.cer
    * ACM deployment target. This should be provided to deploy ACM into OUs or account.
    */
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
-
-  /**
-   * Is ACM cert existing (Imported/Requested). All existing certificates should have SSM Parameter of format /acm/<name>/arn created in account and region
-   */
-  readonly isExisting: boolean | undefined = false;
 }
 /**
  * *{@link NetworkConfig} / {@link FirewallManagerConfig}*

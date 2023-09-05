@@ -599,6 +599,7 @@ export const logDestinationTypeEnum = enums(
 
 const vpcFlowLogsS3BucketConfig = t.interface({
   lifecycleRules: optional(t.array(lifecycleRuleConfig)),
+  s3LogPath: optional(nonEmptyString),
 });
 
 const vpcFlowLogsCloudWatchLogsConfig = t.interface({
@@ -629,6 +630,15 @@ class VpcFlowLogsS3BucketConfig implements t.TypeOf<typeof vpcFlowLogsS3BucketCo
    * Flow log destination S3 bucket life cycle rules
    */
   readonly lifecycleRules: LifeCycleRule[] = [];
+
+  /**
+   * @optional
+   * Flow log destination S3 path. This allows customization of where VPC Flow Logs will be stored in S3.
+   * This value currently supports replacements for:
+   * ${ACCEL_LOOKUP::VPC_NAME}'
+   * ${ACCEL_LOOKUP::ACCOUNT_ID}'
+   */
+  readonly s3LogPath: string = '';
 }
 
 /**
@@ -660,6 +670,7 @@ class VpcFlowLogsDestinationConfig implements t.TypeOf<typeof vpcFlowLogsDestina
    *     s3:
    *       enable: true
    *       lifecycleRules: []
+   *       s3LogPath: ''
    * ```
    */
   readonly s3: VpcFlowLogsS3BucketConfig = new VpcFlowLogsS3BucketConfig();
@@ -845,6 +856,7 @@ export enum AseaResourceType {
   NFW_POLICY = 'NETWORK_FIREWALL_POLICY',
   NFW_RULE_GROUP = 'NETWORK_FIREWALL_RULE_GROUP',
   VPC_ENDPOINT = 'VPC_ENDPOINT',
+  ROUTE_53_PHZ_ID = 'ROUTE_53_PHZ',
 }
 
 /**
