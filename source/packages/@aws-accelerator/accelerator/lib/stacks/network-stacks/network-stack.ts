@@ -605,11 +605,15 @@ export abstract class NetworkStack extends AcceleratorStack {
     vpcName?: string,
   ): IResourceShareItem {
     // Generate a logical ID
-    const resourceName = resourceShareName.split('_')[0];
+    const resourceShareNameArr = resourceShareName.split('_');
+    let resourceName = resourceShareName.split('_')[0];
+    if (resourceShareNameArr.length > 2) {
+      resourceShareNameArr.pop();
+      resourceName = resourceShareNameArr.join('_');
+    }
     const logicalId = vpcName
       ? `${vpcName}${resourceName}${itemType.split(':')[1]}`
       : `${resourceName}${itemType.split(':')[1]}`;
-
     // Lookup resource share
     const resourceShare = ResourceShare.fromLookup(this, pascalCase(`${logicalId}Share`), {
       resourceShareOwner: ResourceShareOwner.OTHER_ACCOUNTS,
