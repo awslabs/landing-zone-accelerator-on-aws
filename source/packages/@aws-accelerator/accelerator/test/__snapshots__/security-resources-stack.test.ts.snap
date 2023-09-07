@@ -5027,7 +5027,7 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
               {
                 "Ref": "AWS::Partition",
               },
-              ":iam::333333333333:role/AWSAccelerator-CentralBucket-KeyArnParam-Role",
+              ":iam::333333333333:role/AWSAccelerator-us-west-2-CentralBucket-KeyArnParam-Role",
             ],
           ],
         },

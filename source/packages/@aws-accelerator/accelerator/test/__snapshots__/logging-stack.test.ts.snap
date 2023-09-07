@@ -4590,7 +4590,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
               {
                 "Ref": "AWS::Partition",
               },
-              ":iam::333333333333:role/AWSAccelerator-CentralBucket-KeyArnParam-Role",
+              ":iam::333333333333:role/AWSAccelerator-us-west-2-CentralBucket-KeyArnParam-Role",
             ],
           ],
         },

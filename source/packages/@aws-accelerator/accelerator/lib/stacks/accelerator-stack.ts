@@ -219,7 +219,10 @@ export abstract class AcceleratorStack extends cdk.Stack {
     this.organizationId = props.organizationConfig.getOrganizationId();
     //
     // Initialize resource names
-    this.acceleratorResourceNames = new AcceleratorResourceNames({ prefixes: props.prefixes });
+    this.acceleratorResourceNames = new AcceleratorResourceNames({
+      prefixes: props.prefixes,
+      centralizedLoggingRegion: props.centralizedLoggingRegion,
+    });
 
     //
     // Get CentralLogBucket name

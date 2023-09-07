@@ -14,6 +14,10 @@
 import { AcceleratorResourcePrefixes } from '../utils/app-utils';
 export interface AcceleratorResourceNamesProps {
   readonly prefixes: AcceleratorResourcePrefixes;
+  /**
+   * Centralize Logging region
+   */
+  readonly centralizedLoggingRegion: string;
 }
 
 interface RoleNames {
@@ -168,7 +172,7 @@ export class AcceleratorResourceNames {
     //
     // Role name initializations
     this.roles.crossAccountCentralLogBucketCmkArnSsmParameterAccess =
-      props.prefixes.accelerator + '-CentralBucket-KeyArnParam-Role';
+      props.prefixes.accelerator + '-' + props.centralizedLoggingRegion + '-CentralBucket-KeyArnParam-Role';
     this.roles.ipamSsmParameterAccess = props.prefixes.accelerator + '-Ipam-GetSsmParamRole';
     this.roles.ipamSubnetLookup = props.prefixes.accelerator + '-GetIpamCidrRole';
     this.roles.crossAccountCmkArnSsmParameterAccess = props.prefixes.accelerator + '-CrossAccount-SsmParameter-Role';
