@@ -742,7 +742,7 @@ export class VpcFlowLogsConfig implements t.TypeOf<typeof vpcFlowLogsConfig> {
    */
   readonly trafficType = 'ALL';
   /**
-   * The maximum log aggregation interval in days.
+   * The maximum log aggregation interval in seconds.
    */
   readonly maxAggregationInterval: number = 600;
   /**
