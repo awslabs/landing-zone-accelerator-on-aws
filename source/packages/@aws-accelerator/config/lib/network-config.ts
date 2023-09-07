@@ -654,6 +654,7 @@ export class NetworkConfigTypes {
     name: t.nonEmptyString,
     destinations: t.array(t.logDestinationTypeEnum),
     shareTargets: t.optional(t.shareTargets),
+    excludedRegions: t.optional(t.array(t.region)),
   });
 
   static readonly dnsFirewallRuleActionTypeEnum = t.enums('DnsFirewallRuleAction', ['ALLOW', 'ALERT', 'BLOCK']);
@@ -5493,6 +5494,8 @@ export class DnsQueryLogsConfig implements t.TypeOf<typeof NetworkConfigTypes.dn
    * @see {@link ShareTargets}
    */
   readonly shareTargets: t.ShareTargets | undefined = undefined;
+
+  readonly excludedRegions: t.Region[] | undefined = undefined;
 }
 
 /**
