@@ -710,6 +710,10 @@ export abstract class Accelerator {
         region: logArchiveAccountDetails.centralizedLoggingRegion,
         ...toolkitProps,
       });
+
+      // Execute in all other regions in the LogArchive account
+      await this.executeLogArchiveNonCentralRegions(toolkitProps, logArchiveAccountDetails, enabledRegions);
+
       //
       // Execute in all other regions and accounts
       await this.executeRemainingLoggingStage(
@@ -721,6 +725,28 @@ export abstract class Accelerator {
         maxStacks,
       );
     }
+  }
+
+  private static async executeLogArchiveNonCentralRegions(
+    toolkitProps: AcceleratorToolkitProps,
+    logArchiveAccountDetails: { id: string; name: string; centralizedLoggingRegion: string },
+    enabledRegions: string[],
+  ) {
+    const nonCentralRegions = enabledRegions.filter(
+      regionItem => regionItem !== logArchiveAccountDetails.centralizedLoggingRegion,
+    );
+    const loggingAccountPromises = [];
+    for (const region of nonCentralRegions) {
+      logger.info(`Executing ${toolkitProps.stage} for ${logArchiveAccountDetails.name} account in ${region} region.`);
+      loggingAccountPromises.push(
+        AcceleratorToolkit.execute({
+          accountId: logArchiveAccountDetails.id,
+          region: region,
+          ...toolkitProps,
+        }),
+      );
+    }
+    await Promise.all(loggingAccountPromises);
   }
 
   /**
@@ -739,10 +765,12 @@ export abstract class Accelerator {
     enabledRegions: string[],
     maxStacks: number,
   ) {
-    const allAccounts = [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts];
+    const nonLogArchiveAccounts = [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts].filter(
+      accountItem => accountItem.name !== logArchiveAccountDetails.name,
+    );
 
     for (const region of enabledRegions) {
-      for (const account of allAccounts) {
+      for (const account of nonLogArchiveAccounts) {
         if (
           !(
             account.name === logArchiveAccountDetails.name &&
@@ -751,7 +779,6 @@ export abstract class Accelerator {
         ) {
           const accountId = accountsConfig.getAccountId(account.name);
           logger.info(`Executing ${toolkitProps.stage} for ${account.name} account in ${region} region.`);
-
           promises.push(
             AcceleratorToolkit.execute({
               accountId,
