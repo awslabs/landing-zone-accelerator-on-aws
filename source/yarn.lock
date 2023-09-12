@@ -10442,7 +10442,7 @@ npmlog@^6.0.0, npmlog@^6.0.2:
     gauge "^4.0.3"
     set-blocking "^2.0.0"
 
-nx@16.8.0, "nx@>=16.5.1 < 17", nx@^16.8.0:
+nx@16.8.0, "nx@>=16.5.1 < 17":
   version "16.8.0"
   resolved "https://registry.yarnpkg.com/nx/-/nx-16.8.0.tgz#05466e6d979524cdbc4770d92c3722a29bb9d5c0"
   integrity sha512-n32nk+y0h5iBuyxBvZJ4YJlFzs/ovT1q9mEXBkXWYgZp74t8nFu5qkLD/ndIOvw/9bvyw4/894vzb6uNDp8jBQ==
