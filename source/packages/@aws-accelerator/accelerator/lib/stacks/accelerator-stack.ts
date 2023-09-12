@@ -1307,6 +1307,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
         noncurrentVersionExpiration: lifecycleRule.noncurrentVersionExpiration,
         noncurrentVersionTransitions,
         transitions,
+        prefix: lifecycleRule.prefix,
       };
       rules.push(rule);
     }

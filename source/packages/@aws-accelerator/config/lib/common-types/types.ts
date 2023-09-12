@@ -496,6 +496,7 @@ export const lifecycleRuleConfig = t.interface({
   noncurrentVersionExpiration: optional(t.number),
   noncurrentVersionTransitions: optional(t.array(transition)),
   transitions: optional(t.array(transition)),
+  prefix: optional(nonEmptyString),
 });
 
 export const resourcePolicyStatement = t.interface({
@@ -504,15 +505,78 @@ export const resourcePolicyStatement = t.interface({
 
 export type ResourcePolicyStatement = t.TypeOf<typeof resourcePolicyStatement>;
 
+/**
+ * S3 bucket life cycle rules object.
+ *
+ * @example
+ * ```
+ *   lifecycleRules:
+ *     - enabled: true
+ *       id: ElbLifecycle-01
+ *       abortIncompleteMultipartUpload: 14
+ *       expiration: 3563
+ *       expiredObjectDeleteMarker: false
+ *       noncurrentVersionExpiration: 3653
+ *       noncurrentVersionTransitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       transitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       prefix: PREFIX
+ *     - enabled: true
+ *       id: ElbLifecycle-02
+ *       abortIncompleteMultipartUpload: 14
+ *       expiredObjectDeleteMarker: true
+ *       noncurrentVersionExpiration: 3653
+ *       noncurrentVersionTransitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       transitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       prefix: PREFIX
+ * ```
+ */
 export class LifeCycleRule implements t.TypeOf<typeof lifecycleRuleConfig> {
+  /**
+   * Specifies a lifecycle rule that aborts incomplete multipart uploads to an Amazon S3 bucket.
+   */
   readonly abortIncompleteMultipartUpload: number = 1;
+  /**
+   * Whether this rule is enabled.
+   */
   readonly enabled: boolean = true;
-  readonly expiration: number = 1825;
+  /**
+   * Indicates the number of days after creation when objects are deleted from Amazon S3 and Amazon Glacier.
+   */
+  readonly expiration: number | undefined = undefined;
+  /**
+   * Indicates whether Amazon S3 will remove a delete marker with no noncurrent versions.
+   * If set to true, the delete marker will be expired.
+   */
   readonly expiredObjectDeleteMarker: boolean = false;
+  /**
+   * Friendly name for the rule. Rule name must be unique.
+   */
   readonly id: string = '';
+  /**
+   * Time between when a new version of the object is uploaded to the bucket and when old versions of the object expire.
+   */
   readonly noncurrentVersionExpiration: number = 366;
+  /**
+   * One or more transition rules that specify when non-current objects transition to a specified storage class.
+   */
   readonly noncurrentVersionTransitions: Transition[] = [];
+  /**
+   * One or more transition rules that specify when an object transitions to a specified storage class.
+   */
   readonly transitions: Transition[] = [];
+  /**
+   * Object key prefix that identifies one or more objects to which this rule applies.
+   * @default - Rule applies to all objects
+   */
+  readonly prefix: string | undefined = undefined;
 }
 
 export const shareTargets = t.interface({
@@ -623,6 +687,7 @@ export const vpcFlowLogsConfig = t.interface({
 
 /**
  * VPC flow logs S3 destination bucket configuration.
+ *
  */
 class VpcFlowLogsS3BucketConfig implements t.TypeOf<typeof vpcFlowLogsS3BucketConfig> {
   /**

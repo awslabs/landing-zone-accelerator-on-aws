@@ -248,6 +248,47 @@ describe('Bucket', () => {
             },
           ],
         },
+        {
+          id: '2',
+          abortIncompleteMultipartUploadAfter: 1,
+          enabled: true,
+          expiration: 24,
+          expiredObjectDeleteMarker: false,
+          noncurrentVersionExpiration: 12,
+          transitions: [
+            {
+              storageClass: 'STANDARD_IA',
+              transitionAfter: 7,
+            },
+          ],
+          noncurrentVersionTransitions: [
+            {
+              storageClass: 'GLACIER',
+              transitionAfter: 365,
+            },
+          ],
+          prefix: 'PREFIX1',
+        },
+        {
+          id: '3',
+          abortIncompleteMultipartUploadAfter: 1,
+          enabled: true,
+          expiredObjectDeleteMarker: true,
+          noncurrentVersionExpiration: 12,
+          transitions: [
+            {
+              storageClass: 'STANDARD_IA',
+              transitionAfter: 7,
+            },
+          ],
+          noncurrentVersionTransitions: [
+            {
+              storageClass: 'GLACIER',
+              transitionAfter: 365,
+            },
+          ],
+          prefix: 'PREFIX2',
+        },
       ],
     });
   });
