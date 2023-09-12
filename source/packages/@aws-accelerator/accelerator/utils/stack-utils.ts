@@ -45,6 +45,7 @@ import { SecurityStack } from '../lib/stacks/security-stack';
 import { TesterPipelineStack } from '../lib/stacks/tester-pipeline-stack';
 import { AcceleratorContext, AcceleratorEnvironment, AcceleratorResourcePrefixes } from './app-utils';
 import { ImportAseaResourcesStack } from '../lib/stacks/import-asea-resources-stack';
+import { AcceleratorAspects } from '../lib/accelerator-aspects';
 
 const logger = createLogger(['stack-utils']);
 
@@ -286,6 +287,7 @@ export function createTesterStack(
         ...acceleratorEnv,
       });
       cdk.Aspects.of(testerPipelineStack).add(new AwsSolutionsChecks());
+      new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
     }
   }
 }
@@ -329,6 +331,7 @@ export function createPrepareStack(
     });
     addAcceleratorTags(prepareStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(prepareStack).add(new AwsSolutionsChecks());
+    new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
 
@@ -373,6 +376,7 @@ export function createFinalizeStack(
     });
     addAcceleratorTags(finalizeStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(finalizeStack).add(new AwsSolutionsChecks());
+    new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
 
@@ -417,6 +421,7 @@ export function createAccountsStack(
     });
     addAcceleratorTags(accountsStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(accountsStack).add(new AwsSolutionsChecks());
+    new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
 
@@ -461,6 +466,7 @@ export function createOrganizationsStack(
     });
     addAcceleratorTags(organizationStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(organizationStack).add(new AwsSolutionsChecks());
+    new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
 
@@ -505,6 +511,7 @@ export function createSecurityAuditStack(
     });
     addAcceleratorTags(auditStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(auditStack).add(new AwsSolutionsChecks());
+    new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
 
@@ -560,6 +567,7 @@ export function createKeyDependencyStacks(
     });
     addAcceleratorTags(dependencyStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(dependencyStack).add(new AwsSolutionsChecks());
+    new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
 
@@ -601,6 +609,7 @@ export function createBootstrapStack(
     });
     addAcceleratorTags(bootstrapStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(bootstrapStack).add(new AwsSolutionsChecks());
+    new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
 
@@ -642,6 +651,7 @@ export function createLoggingStack(
     });
     addAcceleratorTags(loggingStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(loggingStack).add(new AwsSolutionsChecks());
+    new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
 
@@ -683,6 +693,7 @@ export function createSecurityStack(
     });
     addAcceleratorTags(securityStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(securityStack).add(new AwsSolutionsChecks());
+    new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
 
@@ -727,6 +738,7 @@ export function createOperationsStack(
     });
     addAcceleratorTags(operationsStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(operationsStack).add(new AwsSolutionsChecks());
+    new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
 
@@ -770,6 +782,7 @@ export function createNetworkPrepStack(
     });
     addAcceleratorTags(networkPrepStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(networkPrepStack).add(new AwsSolutionsChecks());
+    new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
 
@@ -813,6 +826,7 @@ export function createSecurityResourcesStack(
     });
     addAcceleratorTags(securityResourcesStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(securityResourcesStack).add(new AwsSolutionsChecks());
+    new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
 
@@ -885,6 +899,7 @@ export function createNetworkVpcStacks(
     addAcceleratorTags(dnsStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     dnsStack.addDependency(endpointsStack);
     cdk.Aspects.of(dnsStack).add(new AwsSolutionsChecks());
+    new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
 
@@ -945,6 +960,7 @@ export function createNetworkAssociationsStacks(
     });
     addAcceleratorTags(networkGwlbStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(networkGwlbStack).add(new AwsSolutionsChecks());
+    new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
 
@@ -987,10 +1003,11 @@ export function createCustomizationsStacks(
       ...props,
     });
     cdk.Aspects.of(customizationsStack).add(new AwsSolutionsChecks());
+    new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
 
     createCustomStacks(app, props, env, accountId, enabledRegion);
 
-    createApplicationsStacks(app, props, env, accountId, enabledRegion);
+    createApplicationsStacks(app, context, props, env, accountId, enabledRegion);
   }
 }
 
@@ -1180,6 +1197,7 @@ function addCustomStackDependencies(
  */
 function createApplicationsStacks(
   rootApp: cdk.App,
+  context: AcceleratorContext,
   props: AcceleratorStackProps,
   env: cdk.Environment,
   accountId: string,
@@ -1210,6 +1228,7 @@ function createApplicationsStacks(
         appConfigItem: application,
       });
       cdk.Aspects.of(applicationStack).add(new AwsSolutionsChecks());
+      new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
     }
   }
 }
