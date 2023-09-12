@@ -1063,7 +1063,7 @@ export function importAseaResourceStacks(
       accelProps: props,
       accountId,
       region: enabledRegion,
-      roleName: `${acceleratorPrefix}PipelineRole`,
+      roleName: props.globalConfig.cdkOptions.customDeploymentRole || `${acceleratorPrefix}-PipelineRole`,
     });
 
     for (const aseaStack of aseaStacks.filter(stack => !stack.nestedStack)) {
