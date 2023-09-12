@@ -15,7 +15,7 @@ exports[`GuardDutyDetectorConfig Construct(GuardDutyDetectorConfig):  Snapshot T
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGuardDutyUpdateDetectorCustomResourceProviderRole3014073E",
