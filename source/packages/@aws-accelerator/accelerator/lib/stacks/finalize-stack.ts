@@ -33,7 +33,7 @@ export class FinalizeStack extends AcceleratorStack {
         });
       }
 
-      if (props.organizationConfig.quarantineNewAccounts?.enable && props.partition == 'aws') {
+      if (props.organizationConfig.quarantineNewAccounts?.enable && props.partition === 'aws') {
         this.logger.debug(`Creating resources to detach quarantine scp`);
         const policyId = cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,

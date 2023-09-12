@@ -186,9 +186,8 @@ export class AccountsStack extends AcceleratorStack {
           resources: ['*'],
           conditions: {
             ArnLike: {
-              'kms:EncryptionContext:aws:logs:arn': `arn:${cdk.Stack.of(this).partition}:logs:${
-                cdk.Stack.of(this).region
-              }:${cdk.Stack.of(this).account}:log-group:*`,
+              'kms:EncryptionContext:aws:logs:arn': `arn:${cdk.Stack.of(this).partition}:logs:${cdk.Stack.of(this).region
+                }:${cdk.Stack.of(this).account}:log-group:*`,
             },
           },
         }),
@@ -387,7 +386,7 @@ export class AccountsStack extends AcceleratorStack {
 
     if (
       serviceControlPolicy.name == props.organizationConfig.quarantineNewAccounts?.scpPolicyName &&
-      props.partition == 'aws'
+      props.partition === 'aws'
     ) {
       this.ssmParameters.push({
         logicalId: pascalCase(`SsmParam${scp.name}ScpPolicyId`),
@@ -508,8 +507,7 @@ export class AccountsStack extends AcceleratorStack {
         effect: cdk.aws_iam.Effect.ALLOW,
         actions: ['organizations:AttachPolicy'],
         resources: [
-          `arn:${
-            this.partition
+          `arn:${this.partition
           }:organizations::${props.accountsConfig.getManagementAccountId()}:policy/o-*/service_control_policy/${quarantineScpId}`,
           `arn:${this.partition}:organizations::${props.accountsConfig.getManagementAccountId()}:account/o-*/*`,
         ],
