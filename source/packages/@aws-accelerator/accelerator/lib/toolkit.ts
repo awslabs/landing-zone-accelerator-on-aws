@@ -557,7 +557,7 @@ export class AcceleratorToolkit {
 
   private static async getCdkToolKit(context: string[], options: AcceleratorToolkitProps, stackName: string) {
     let app: string | undefined;
-    if (options.stage === AcceleratorStage.PIPELINE) {
+    if (options.stage === AcceleratorStage.PIPELINE || options.stage === AcceleratorStage.IMPORT_ASEA_RESOURCES) {
       app = options.app;
     } else if (options.stage === AcceleratorStage.NETWORK_ASSOCIATIONS_GWLB) {
       app = `cdk.out/${
