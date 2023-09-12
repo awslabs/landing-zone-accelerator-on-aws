@@ -35,12 +35,13 @@ interface Transition {
 export interface S3LifeCycleRule {
   abortIncompleteMultipartUploadAfter: number;
   enabled: boolean;
-  expiration: number;
+  expiration?: number;
   expiredObjectDeleteMarker: boolean;
   id: string;
   noncurrentVersionExpiration: number;
   transitions: Transition[];
   noncurrentVersionTransitions: Transition[];
+  prefix?: string;
 }
 
 /**
@@ -339,12 +340,16 @@ export class Bucket extends Construct {
             lifecycleRuleConfig.abortIncompleteMultipartUploadAfter,
           ),
           enabled: lifecycleRuleConfig.enabled,
-          expiration: cdk.Duration.days(lifecycleRuleConfig.expiration),
+          expiration:
+            lifecycleRuleConfig.expiration !== undefined
+              ? cdk.Duration.days(lifecycleRuleConfig.expiration)
+              : undefined,
           transitions,
           noncurrentVersionTransitions,
           noncurrentVersionExpiration: cdk.Duration.days(lifecycleRuleConfig.noncurrentVersionExpiration),
           expiredObjectDeleteMarker: lifecycleRuleConfig.expiredObjectDeleteMarker,
-          id: `LifecycleRule${this.props.s3BucketName}`,
+          id: `LifecycleRule${this.props.s3BucketName}${lifecycleRuleConfig.id}`,
+          prefix: lifecycleRuleConfig.prefix,
         });
       }
     } else {

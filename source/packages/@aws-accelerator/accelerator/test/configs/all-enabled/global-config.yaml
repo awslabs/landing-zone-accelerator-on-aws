@@ -68,7 +68,46 @@ logging:
           apiCallRateInsight: false
  
 
-      
+  centralLogBucket:
+    lifecycleRules:
+      - enabled: true
+        id: CentralLogsBucketLifecycleRule-01
+        abortIncompleteMultipartUpload: 15
+        expiration: 3563
+        expiredObjectDeleteMarker: false
+        noncurrentVersionExpiration: 3653
+        noncurrentVersionTransitions:
+          - storageClass: GLACIER
+            transitionAfter: 365
+        transitions:
+          - storageClass: GLACIER
+            transitionAfter: 365
+      - enabled: true
+        id: CentralLogsBucketLifecycleRule-02
+        abortIncompleteMultipartUpload: 15
+        expiration: 3563
+        expiredObjectDeleteMarker: false
+        noncurrentVersionExpiration: 3653
+        noncurrentVersionTransitions:
+          - storageClass: GLACIER
+            transitionAfter: 365
+        transitions:
+          - storageClass: GLACIER
+            transitionAfter: 365
+        prefix: 'guardduty'
+      - enabled: true
+        id: CentralLogsBucketLifecycleRule-03
+        abortIncompleteMultipartUpload: 15
+        expiredObjectDeleteMarker: true
+        noncurrentVersionExpiration: 3653
+        noncurrentVersionTransitions:
+          - storageClass: GLACIER
+            transitionAfter: 365
+        transitions:
+          - storageClass: GLACIER
+            transitionAfter: 365
+        prefix: 'macie'
+
   accessLogBucket:
     importedBucket: 
       name: existing-access-logs-bucket-${ACCOUNT_ID}-${REGION}

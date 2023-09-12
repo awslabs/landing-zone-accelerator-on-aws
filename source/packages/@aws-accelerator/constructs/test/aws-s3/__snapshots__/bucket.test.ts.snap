@@ -802,6 +802,7 @@ exports[`Bucket Construct(Bucket):  Snapshot Test 1`] = `
                     {
                       "Ref": "AWS::Region",
                     },
+                    "1",
                   ],
                 ],
               },
@@ -814,6 +815,85 @@ exports[`Bucket Construct(Bucket):  Snapshot Test 1`] = `
                   "TransitionInDays": 365,
                 },
               ],
+              "Status": "Enabled",
+              "Transitions": [
+                {
+                  "StorageClass": "STANDARD_IA",
+                  "TransitionInDays": 7,
+                },
+              ],
+            },
+            {
+              "AbortIncompleteMultipartUpload": {
+                "DaysAfterInitiation": 1,
+              },
+              "ExpirationInDays": 24,
+              "ExpiredObjectDeleteMarker": false,
+              "Id": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "LifecycleRuleaws-accelerator-macie-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    "2",
+                  ],
+                ],
+              },
+              "NoncurrentVersionExpiration": {
+                "NoncurrentDays": 12,
+              },
+              "NoncurrentVersionTransitions": [
+                {
+                  "StorageClass": "GLACIER",
+                  "TransitionInDays": 365,
+                },
+              ],
+              "Prefix": "PREFIX1",
+              "Status": "Enabled",
+              "Transitions": [
+                {
+                  "StorageClass": "STANDARD_IA",
+                  "TransitionInDays": 7,
+                },
+              ],
+            },
+            {
+              "AbortIncompleteMultipartUpload": {
+                "DaysAfterInitiation": 1,
+              },
+              "ExpiredObjectDeleteMarker": true,
+              "Id": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "LifecycleRuleaws-accelerator-macie-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    "3",
+                  ],
+                ],
+              },
+              "NoncurrentVersionExpiration": {
+                "NoncurrentDays": 12,
+              },
+              "NoncurrentVersionTransitions": [
+                {
+                  "StorageClass": "GLACIER",
+                  "TransitionInDays": 365,
+                },
+              ],
+              "Prefix": "PREFIX2",
               "Status": "Enabled",
               "Transitions": [
                 {

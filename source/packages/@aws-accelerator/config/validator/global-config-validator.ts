@@ -230,7 +230,12 @@ export class GlobalConfigValidator {
    * @param values
    */
   private validateLifecycleRuleExpirationForReports(values: GlobalConfig, errors: string[]) {
+    const ruleNames: string[] = [];
     for (const lifecycleRule of values.reports?.costAndUsageReport?.lifecycleRules ?? []) {
+      if (ruleNames.includes(lifecycleRule.id)) {
+        errors.push('LifeCycle rule ids must be unique.');
+      }
+      ruleNames.push(lifecycleRule.id);
       if (lifecycleRule.expiration && !lifecycleRule.noncurrentVersionExpiration) {
         errors.push('You must supply a value for noncurrentVersionExpiration. Cost Reporting');
       }
@@ -427,7 +432,13 @@ export class GlobalConfigValidator {
    * @param values
    */
   private validateLifecycleRuleExpirationForCentralLogBucket(values: GlobalConfig, errors: string[]) {
+    const ruleNames: string[] = [];
     for (const lifecycleRule of values.logging.centralLogBucket?.lifecycleRules ?? []) {
+      if (ruleNames.includes(lifecycleRule.id)) {
+        errors.push('LifeCycle rule ids must be unique.');
+      }
+      ruleNames.push(lifecycleRule.id);
+
       if (lifecycleRule.expiration && !lifecycleRule.noncurrentVersionExpiration) {
         errors.push('You must supply a value for noncurrentVersionExpiration. Central Log Bucket');
       }
@@ -441,7 +452,13 @@ export class GlobalConfigValidator {
   }
 
   private validateLifecycleRuleExpirationForAccessLogBucket(values: GlobalConfig, errors: string[]) {
-    for (const lifecycleRule of values.logging.centralLogBucket?.lifecycleRules ?? []) {
+    const ruleNames: string[] = [];
+    for (const lifecycleRule of values.logging.accessLogBucket?.lifecycleRules ?? []) {
+      if (ruleNames.includes(lifecycleRule.id)) {
+        errors.push('LifeCycle rule ids must be unique.');
+      }
+      ruleNames.push(lifecycleRule.id);
+
       if (lifecycleRule.expiration && !lifecycleRule.noncurrentVersionExpiration) {
         errors.push('You must supply a value for noncurrentVersionExpiration. S3 Access Log Bucket');
       }

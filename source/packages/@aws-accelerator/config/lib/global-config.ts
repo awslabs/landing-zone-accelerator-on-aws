@@ -688,9 +688,21 @@ export class SessionManagerConfig implements t.TypeOf<typeof GlobalConfigTypes.s
  *     - policy: s3-policies/policy1.json
  *   lifecycleRules:
  *     - enabled: true
- *       id: AccessLifecycle
- *       abortIncompleteMultipartUpload: 15
+ *       id: AccessLifecycle-01
+ *       abortIncompleteMultipartUpload: 14
  *       expiration: 3563
+ *       expiredObjectDeleteMarker: false
+ *       noncurrentVersionExpiration: 3653
+ *       noncurrentVersionTransitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       transitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       prefix: PREFIX
+ *     - enabled: true
+ *       id: AccessLifecycle-02
+ *       abortIncompleteMultipartUpload: 14
  *       expiredObjectDeleteMarker: true
  *       noncurrentVersionExpiration: 3653
  *       noncurrentVersionTransitions:
@@ -699,6 +711,7 @@ export class SessionManagerConfig implements t.TypeOf<typeof GlobalConfigTypes.s
  *       transitions:
  *         - storageClass: GLACIER
  *           transitionAfter: 365
+ *       prefix: PREFIX
  *   importedBucket:
  *     name: existing-access-log-bucket
  *     applyAcceleratorManagedBucketPolicy: true
@@ -765,9 +778,21 @@ export class AccessLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.
  *   applyAcceleratorManagedPolicy: true
  *   lifecycleRules:
  *     - enabled: true
- *       id: CentralLifecycle
+ *       id: CentralLifecycleRule-01
  *       abortIncompleteMultipartUpload: 14
  *       expiration: 3563
+ *       expiredObjectDeleteMarker: false
+ *       noncurrentVersionExpiration: 3653
+ *       noncurrentVersionTransitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       transitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       prefix: PREFIX
+ *     - enabled: true
+ *       id: CentralLifecycleRule-02
+ *       abortIncompleteMultipartUpload: 14
  *       expiredObjectDeleteMarker: true
  *       noncurrentVersionExpiration: 3653
  *       noncurrentVersionTransitions:
@@ -776,6 +801,7 @@ export class AccessLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.
  *       transitions:
  *         - storageClass: GLACIER
  *           transitionAfter: 365
+ *       prefix: PREFIX
  *   s3ResourcePolicyAttachments:
  *     - policy: s3-policies/policy1.json
  *   kmsResourcePolicyAttachments:
@@ -862,9 +888,21 @@ export class CentralLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes
  *   applyAcceleratorManagedPolicy: true
  *   lifecycleRules:
  *     - enabled: true
- *       id: ElbLifecycle
+ *       id: ElbLifecycleRule-01
  *       abortIncompleteMultipartUpload: 14
  *       expiration: 3563
+ *       expiredObjectDeleteMarker: false
+ *       noncurrentVersionExpiration: 3653
+ *       noncurrentVersionTransitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       transitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       prefix: PREFIX
+ *     - enabled: true
+ *       id: ElbLifecycleRule-02
+ *       abortIncompleteMultipartUpload: 14
  *       expiredObjectDeleteMarker: true
  *       noncurrentVersionExpiration: 3653
  *       noncurrentVersionTransitions:
@@ -873,6 +911,7 @@ export class CentralLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes
  *       transitions:
  *         - storageClass: GLACIER
  *           transitionAfter: 365
+ *       prefix: PREFIX
  *   s3ResourcePolicyAttachments:
  *     - policy: s3-policies/policy1.json
  *   importedBucket:
@@ -1120,13 +1159,31 @@ export class LoggingConfig implements t.TypeOf<typeof GlobalConfigTypes.loggingC
  *     refreshClosedReports: true
  *     reportVersioning: CREATE_NEW_REPORT
  *     lifecycleRules:
- *       storageClass: DEEP_ARCHIVE
- *       enabled: true
- *       multiPart: 1
- *       expiration: 1825
- *       deleteMarker: false
- *       nonCurrentExpiration: 366
- *       transitionAfter: 365
+ *     - enabled: true
+ *       id: CostAndUsageBucketLifecycleRule-01
+ *       abortIncompleteMultipartUpload: 14
+ *       expiration: 3563
+ *       expiredObjectDeleteMarker: false
+ *       noncurrentVersionExpiration: 3653
+ *       noncurrentVersionTransitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       transitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       prefix: PREFIX
+ *     - enabled: true
+ *       id: CostAndUsageBucketLifecycleRule-02
+ *       abortIncompleteMultipartUpload: 14
+ *       expiredObjectDeleteMarker: true
+ *       noncurrentVersionExpiration: 3653
+ *       noncurrentVersionTransitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       transitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       prefix: PREFIX
  * ```
  */
 export class CostAndUsageReportConfig implements t.TypeOf<typeof GlobalConfigTypes.costAndUsageReportConfig> {
@@ -1347,13 +1404,31 @@ export class ReportConfig implements t.TypeOf<typeof GlobalConfigTypes.reportCon
    *     refreshClosedReports: true
    *     reportVersioning: CREATE_NEW_REPORT
    *     lifecycleRules:
-   *       storageClass: DEEP_ARCHIVE
-   *       enabled: true
-   *       multiPart: 1
-   *       expiration: 1825
-   *       deleteMarker: false
-   *       nonCurrentExpiration: 366
-   *       transitionAfter: 365
+   *     - enabled: true
+   *       id: CostAndUsageBucketLifecycleRule-01
+   *       abortIncompleteMultipartUpload: 14
+   *       expiration: 3563
+   *       expiredObjectDeleteMarker: false
+   *       noncurrentVersionExpiration: 3653
+   *       noncurrentVersionTransitions:
+   *         - storageClass: GLACIER
+   *           transitionAfter: 365
+   *       transitions:
+   *         - storageClass: GLACIER
+   *           transitionAfter: 365
+   *       prefix: PREFIX
+   *     - enabled: true
+   *       id: CostAndUsageBucketLifecycleRule-02
+   *       abortIncompleteMultipartUpload: 14
+   *       expiredObjectDeleteMarker: true
+   *       noncurrentVersionExpiration: 3653
+   *       noncurrentVersionTransitions:
+   *         - storageClass: GLACIER
+   *           transitionAfter: 365
+   *       transitions:
+   *         - storageClass: GLACIER
+   *           transitionAfter: 365
+   *       prefix: PREFIX
    * ```
    */
   readonly costAndUsageReport = new CostAndUsageReportConfig();
