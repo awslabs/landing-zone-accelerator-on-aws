@@ -12,6 +12,7 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
+import { chunkArray } from '@aws-accelerator/accelerator/utils/stack-utils';
 import * as AWS from 'aws-sdk';
 AWS.config.logger = console;
 
@@ -31,6 +32,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const region = event.ResourceProperties['region'];
   const partition = event.ResourceProperties['partition'];
   const solutionId = process.env['SOLUTION_ID'];
+  const chunkSize = process.env['CHUNK_SIZE'] ? parseInt(process.env['CHUNK_SIZE']) : 50;
 
   let organizationsClient: AWS.Organizations;
   if (partition === 'aws-us-gov') {
@@ -61,9 +63,14 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         nextToken = page.NextToken;
       } while (nextToken);
 
-      await throttlingBackOff(() =>
-        detectiveClient.createMembers({ GraphArn: graphArn!, Accounts: allAccounts }).promise(),
-      );
+      const chunkedAccountsForCreate = chunkArray(allAccounts, chunkSize);
+
+      for (const accounts of chunkedAccountsForCreate) {
+        console.log(`Initiating createMembers request for ${accounts.length} accounts`);
+        await throttlingBackOff(() =>
+          detectiveClient.createMembers({ GraphArn: graphArn!, Accounts: accounts }).promise(),
+        );
+      }
 
       return { Status: 'Success', StatusCode: 200 };
 
@@ -82,9 +89,14 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       } while (nextToken);
 
       if (existingMemberAccountIds.length > 0) {
-        await throttlingBackOff(() =>
-          detectiveClient.deleteMembers({ AccountIds: existingMemberAccountIds, GraphArn: graphArn! }).promise(),
-        );
+        const chunkedAccountsForDelete = chunkArray(existingMemberAccountIds, chunkSize);
+
+        for (const existingMemberAccountIdBatch of chunkedAccountsForDelete) {
+          console.log(`Initiating deleteMembers request for ${existingMemberAccountIdBatch.length} accounts`);
+          await throttlingBackOff(() =>
+            detectiveClient.deleteMembers({ AccountIds: existingMemberAccountIdBatch, GraphArn: graphArn! }).promise(),
+          );
+        }
       }
 
       return { Status: 'Success', StatusCode: 200 };

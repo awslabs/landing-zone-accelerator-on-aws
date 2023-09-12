@@ -25,6 +25,7 @@ import {
   BadRequestException,
 } from '@aws-sdk/client-guardduty';
 import { OrganizationsClient, ListAccountsCommand } from '@aws-sdk/client-organizations';
+import { chunkArray } from '@aws-accelerator/accelerator/utils/stack-utils';
 
 /**
  * enable-guardduty - lambda handler
@@ -44,6 +45,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const enableS3Protection: boolean = event.ResourceProperties['enableS3Protection'] === 'true';
   const enableEksProtection: boolean = event.ResourceProperties['enableEksProtection'] === 'true';
   const solutionId = process.env['SOLUTION_ID'];
+  const chunkSize = process.env['CHUNK_SIZE'] ? parseInt(process.env['CHUNK_SIZE']) : 50;
 
   let organizationsClient: OrganizationsClient;
   if (partition === 'aws-us-gov') {
@@ -79,15 +81,10 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         nextToken = page.NextToken;
       } while (nextToken);
 
-      const chunkAccounts: AccountDetail[][] = [];
-      const chunkSize = 50;
-      let index = 0;
-      while (index < allAccounts.length) {
-        chunkAccounts.push(allAccounts.slice(index, index + chunkSize));
-        index += chunkSize;
-      }
+      const chunkedAccountsForCreate = chunkArray(allAccounts, chunkSize);
 
-      for (const accounts of chunkAccounts) {
+      for (const accounts of chunkedAccountsForCreate) {
+        console.log(`Initiating createMembers request for ${accounts.length} accounts`);
         await throttlingBackOff(() =>
           guardDutyClient.send(new CreateMembersCommand({ DetectorId: detectorId!, AccountDetails: accounts })),
         );
@@ -128,17 +125,23 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       } while (nextToken);
 
       if (existingMemberAccountIds.length > 0) {
-        await throttlingBackOff(() =>
-          guardDutyClient.send(
-            new DisassociateMembersCommand({ AccountIds: existingMemberAccountIds, DetectorId: detectorId! }),
-          ),
-        );
+        const chunkedAccountsForDelete = chunkArray(existingMemberAccountIds, chunkSize);
 
-        await throttlingBackOff(() =>
-          guardDutyClient.send(
-            new DeleteMembersCommand({ AccountIds: existingMemberAccountIds, DetectorId: detectorId! }),
-          ),
-        );
+        for (const existingMemberAccountIdBatch of chunkedAccountsForDelete) {
+          console.log(`Initiating disassociateMembers request for ${existingMemberAccountIdBatch.length} accounts`);
+          await throttlingBackOff(() =>
+            guardDutyClient.send(
+              new DisassociateMembersCommand({ AccountIds: existingMemberAccountIdBatch, DetectorId: detectorId! }),
+            ),
+          );
+
+          console.log(`Initiating deleteMembers request for ${existingMemberAccountIdBatch.length} accounts`);
+          await throttlingBackOff(() =>
+            guardDutyClient.send(
+              new DeleteMembersCommand({ AccountIds: existingMemberAccountIdBatch, DetectorId: detectorId! }),
+            ),
+          );
+        }
       }
 
       return { Status: 'Success', StatusCode: 200 };
