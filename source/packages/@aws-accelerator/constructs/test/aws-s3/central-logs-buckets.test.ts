@@ -36,6 +36,7 @@ new CentralLogsBucket(stack, 'CentralLogsBucket', {
   acceleratorPrefix: 'AWSAccelerator',
   crossAccountAccessRoleName: 'AWSAccelerator-CentralBucket-KeyArnParam-Role',
   cmkArnSsmParameterName: '/accelerator/logging/central-bucket/kms/arn',
+  managementAccountAccessRole: 'AWSControlTowerExecution',
 });
 
 /**

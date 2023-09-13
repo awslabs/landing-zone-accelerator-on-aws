@@ -269,11 +269,12 @@ function runValidators(
   }
 
   // IAM config validator
-  if (accountsConfig && iamConfig && networkConfig && organizationConfig && securityConfig) {
+  if (accountsConfig && globalConfig && iamConfig && networkConfig && organizationConfig && securityConfig) {
     try {
       new IamConfigValidator(
         iamConfig,
         accountsConfig,
+        globalConfig,
         networkConfig,
         organizationConfig,
         securityConfig,

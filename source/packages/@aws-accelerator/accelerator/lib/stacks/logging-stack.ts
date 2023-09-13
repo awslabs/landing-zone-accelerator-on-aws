@@ -1943,6 +1943,7 @@ export class LoggingStack extends AcceleratorStack {
         crossAccountAccessRoleName:
           this.acceleratorResourceNames.roles.crossAccountCentralLogBucketCmkArnSsmParameterAccess,
         cmkArnSsmParameterName: this.acceleratorResourceNames.parameters.centralLogBucketCmkArn,
+        managementAccountAccessRole: this.props.globalConfig.managementAccountAccessRole,
       });
 
       // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
