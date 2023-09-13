@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
+import { GlobalConfig } from '@aws-accelerator/config';
 import { S3LifeCycleRule } from './bucket';
 import { BucketPrefixProps } from './bucket-prefix';
 import { AwsPrincipalAccessesType, BucketAccessType } from '@aws-accelerator/utils';
@@ -36,6 +37,7 @@ export interface CentralLogsBucketProps {
    */
   awsPrincipalAccesses?: AwsPrincipalAccessesType[];
   bucketPrefixProps?: BucketPrefixProps;
+  globalConfig?: GlobalConfig;
   /**
    * Accelerator Prefix
    */
@@ -48,6 +50,10 @@ export interface CentralLogsBucketProps {
    * Accelerator central log bucket cmk arn ssm parameter name
    */
   readonly cmkArnSsmParameterName: string;
+  /**
+   * Accelerator management account access role.
+   */
+  readonly managementAccountAccessRole: string;
 }
 
 /**
@@ -189,6 +195,13 @@ export class CentralLogsBucket extends Construct {
               StringEquals: {
                 ...props.principalOrgIdCondition,
               },
+              ArnLike: {
+                'aws:PrincipalARN': [
+                  `arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.acceleratorPrefix}-*`,
+                  `arn:${cdk.Stack.of(this).partition}:iam::*:role/cdk-accel-*`,
+                  `arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.managementAccountAccessRole}-*`,
+                ],
+              },
             },
           }),
         );
@@ -221,6 +234,13 @@ export class CentralLogsBucket extends Construct {
         conditions: {
           StringEquals: {
             ...props.principalOrgIdCondition,
+          },
+          ArnLike: {
+            'aws:PrincipalARN': [
+              `arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.acceleratorPrefix}-*`,
+              `arn:${cdk.Stack.of(this).partition}:iam::*:role/cdk-accel-*`,
+              `arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.managementAccountAccessRole}-*`,
+            ],
           },
         },
       }),

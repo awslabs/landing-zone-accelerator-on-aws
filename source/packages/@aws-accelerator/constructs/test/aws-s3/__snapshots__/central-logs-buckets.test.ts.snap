@@ -611,6 +611,46 @@ exports[`CentralLogsBucket Construct(CentralLogsBucket):  Snapshot Test 1`] = `
                 "s3:ListBucket",
               ],
               "Condition": {
+                "ArnLike": {
+                  "aws:PrincipalARN": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::*:role/AWSAccelerator-*",
+                        ],
+                      ],
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::*:role/cdk-accel-*",
+                        ],
+                      ],
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::*:role/AWSControlTowerExecution-*",
+                        ],
+                      ],
+                    },
+                  ],
+                },
                 "StringEquals": {
                   "aws:PrincipalOrgID": "acceleratorOrg",
                 },
