@@ -581,7 +581,7 @@ firewalls:
               encrypted: true
               volumeSize: 10
         iamInstanceProfile: EC2-Default-SSM-AD-Role
-        imageId: ${ACCEL_LOOKUP::ImageId:/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2}
+        imageId: ami-0e1c5d8c23330dee3
         instanceType: t3.large
         networkInterfaces:
           - deviceIndex: 0
@@ -610,7 +610,7 @@ firewalls:
               encrypted: true
               volumeSize: 10
         iamInstanceProfile: EC2-Default-SSM-AD-Role
-        imageId: ${ACCEL_LOOKUP::ImageId:/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2}
+        imageId: ami-0e1c5d8c23330dee3
         instanceType: t3.large
         networkInterfaces:
           - deviceIndex: 0
