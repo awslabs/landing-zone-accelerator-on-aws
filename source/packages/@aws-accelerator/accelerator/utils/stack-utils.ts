@@ -553,12 +553,13 @@ export function createKeyDependencyStacks(
     });
     addAcceleratorTags(keyStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(keyStack).add(new AwsSolutionsChecks());
+    new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
 
     const dependencyStackName = `${AcceleratorStackNames[AcceleratorStage.DEPENDENCIES]}-${accountId}-${enabledRegion}`;
-    const app2 = new cdk.App({
+    const appDependency = new cdk.App({
       outdir: `cdk.out/${dependencyStackName}`,
     });
-    const dependencyStack = new DependenciesStack(app2, `${dependencyStackName}`, {
+    const dependencyStack = new DependenciesStack(appDependency, `${dependencyStackName}`, {
       env,
       description: `(SO0199-dependencies) Landing Zone Accelerator on AWS. Version ${version}.`,
       synthesizer: getStackSynthesizer(props, accountId, enabledRegion, context.stage),
@@ -567,7 +568,7 @@ export function createKeyDependencyStacks(
     });
     addAcceleratorTags(dependencyStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(dependencyStack).add(new AwsSolutionsChecks());
-    new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
+    new AcceleratorAspects(appDependency, context.partition, context.useExistingRoles ?? false);
   }
 }
 
@@ -944,14 +945,15 @@ export function createNetworkAssociationsStacks(
     });
     addAcceleratorTags(networkAssociationsStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(networkAssociationsStack).add(new AwsSolutionsChecks());
+    new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
 
     const networkGwlbStackName = `${
       AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS_GWLB]
     }-${accountId}-${enabledRegion}`;
-    const app2 = new cdk.App({
+    const appGwlb = new cdk.App({
       outdir: `cdk.out/${networkGwlbStackName}`,
     });
-    const networkGwlbStack = new NetworkAssociationsGwlbStack(app2, `${networkGwlbStackName}`, {
+    const networkGwlbStack = new NetworkAssociationsGwlbStack(appGwlb, `${networkGwlbStackName}`, {
       env,
       description: `(SO0199-networkgwlb) Landing Zone Accelerator on AWS. Version ${version}.`,
       synthesizer: getStackSynthesizer(props, accountId, enabledRegion, context.stage),
@@ -960,7 +962,7 @@ export function createNetworkAssociationsStacks(
     });
     addAcceleratorTags(networkGwlbStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(networkGwlbStack).add(new AwsSolutionsChecks());
-    new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
+    new AcceleratorAspects(appGwlb, context.partition, context.useExistingRoles ?? false);
   }
 }
 
