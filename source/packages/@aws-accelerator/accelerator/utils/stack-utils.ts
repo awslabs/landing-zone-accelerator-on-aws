@@ -177,7 +177,9 @@ function addAcceleratorTags(
       if (resource instanceof cdk.aws_ec2.CfnTransitGateway && partition !== 'aws') {
         continue;
       }
-      new cdk.Tag('Accel-P', acceleratorPrefix).visit(resource);
+      if (resource.cfnResourceType === 'AWS::EC2::SecurityGroup') {
+        new cdk.Tag('Accel-P', acceleratorPrefix).visit(resource);
+      }
       new cdk.Tag('Accelerator', acceleratorPrefix).visit(resource);
 
       if (globalConfig?.tags) {
