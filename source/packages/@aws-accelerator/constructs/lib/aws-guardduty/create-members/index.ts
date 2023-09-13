@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { throttlingBackOff } from '@aws-accelerator/utils';
+import { throttlingBackOff, chunkArray } from '@aws-accelerator/utils';
 import {
   GuardDutyClient,
   AccountDetail,
@@ -25,7 +25,6 @@ import {
   BadRequestException,
 } from '@aws-sdk/client-guardduty';
 import { OrganizationsClient, ListAccountsCommand } from '@aws-sdk/client-organizations';
-import { chunkArray } from '@aws-accelerator/accelerator/utils/stack-utils';
 
 /**
  * enable-guardduty - lambda handler

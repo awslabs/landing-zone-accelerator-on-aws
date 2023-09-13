@@ -12,6 +12,7 @@
  */
 
 export * from './lib/common-resources';
+export * from './lib/common-functions';
 export * from './lib/logger';
 export * from './lib/policy-replacements';
 export * from './lib/ssm-parameter-path';

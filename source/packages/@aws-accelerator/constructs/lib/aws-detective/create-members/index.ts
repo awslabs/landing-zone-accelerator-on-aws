@@ -11,8 +11,7 @@
  *  and limitations under the License.
  */
 
-import { throttlingBackOff } from '@aws-accelerator/utils';
-import { chunkArray } from '@aws-accelerator/accelerator/utils/stack-utils';
+import { throttlingBackOff, chunkArray } from '@aws-accelerator/utils';
 import * as AWS from 'aws-sdk';
 AWS.config.logger = console;
 
