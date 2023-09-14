@@ -859,8 +859,8 @@ export abstract class Accelerator {
           ...toolkitProps,
         }),
       );
-      await Promise.all(promises);
     }
+    await Promise.all(promises);
   }
 
   /**

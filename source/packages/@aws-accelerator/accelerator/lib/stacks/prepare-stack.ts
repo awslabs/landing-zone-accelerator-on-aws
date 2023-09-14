@@ -324,7 +324,11 @@ export class PrepareStack extends AcceleratorStack {
     cloudwatchKey: cdk.aws_kms.Key;
   }) {
     this.logger.info(`Tables`);
-    if (options.props.partition === 'aws' || options.props.partition === 'aws-us-gov' || options.props.partition === 'aws-cn') {
+    if (
+      options.props.partition === 'aws' ||
+      options.props.partition === 'aws-us-gov' ||
+      options.props.partition === 'aws-cn'
+    ) {
       this.logger.info(`Create mapping table`);
       let govCloudAccountMappingTable: cdk.aws_dynamodb.ITable | undefined;
       this.logger.info(`newOrgAccountsTable`);
@@ -532,7 +536,8 @@ export class PrepareStack extends AcceleratorStack {
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: ['organizations:DescribeOrganizationalUnit', 'organizations:ListParents'],
             resources: [
-              `arn:${cdk.Stack.of(this).partition
+              `arn:${
+                cdk.Stack.of(this).partition
               }:organizations::${options.props.accountsConfig.getManagementAccountId()}:account/o-*/*`,
             ],
           }),
@@ -670,7 +675,8 @@ export class PrepareStack extends AcceleratorStack {
         conditions: {
           ArnLike: {
             'aws:PrincipalARN': [
-              `arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:role/${props.prefixes.accelerator
+              `arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:role/${
+                props.prefixes.accelerator
               }-*`,
             ],
           },
@@ -689,8 +695,9 @@ export class PrepareStack extends AcceleratorStack {
         resources: ['*'],
         conditions: {
           ArnLike: {
-            'kms:EncryptionContext:aws:logs:arn': `arn:${cdk.Stack.of(this).partition}:logs:${cdk.Stack.of(this).region
-              }:${cdk.Stack.of(this).account}:log-group:*`,
+            'kms:EncryptionContext:aws:logs:arn': `arn:${cdk.Stack.of(this).partition}:logs:${
+              cdk.Stack.of(this).region
+            }:${cdk.Stack.of(this).account}:log-group:*`,
           },
         },
       }),
@@ -739,8 +746,9 @@ export class PrepareStack extends AcceleratorStack {
         resources: ['*'],
         conditions: {
           ArnLike: {
-            'kms:EncryptionContext:aws:logs:arn': `arn:${cdk.Stack.of(this).partition}:logs:${cdk.Stack.of(this).region
-              }:${cdk.Stack.of(this).account}:log-group:*`,
+            'kms:EncryptionContext:aws:logs:arn': `arn:${cdk.Stack.of(this).partition}:logs:${
+              cdk.Stack.of(this).region
+            }:${cdk.Stack.of(this).account}:log-group:*`,
           },
         },
       }),
