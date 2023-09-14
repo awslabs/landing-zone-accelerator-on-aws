@@ -22,7 +22,7 @@
   "devDependencies": {
     "@types/jest": "29.4.0",
     "@types/node": "18.14.0",
-    "@aws-sdk/types": "3.347.0",
+    "@aws-sdk/types": "3.410.0",
     "esbuild": "0.17.10",
     "eslint": "8.34.0",
     "eslint-config-prettier": "8.6.0",
@@ -40,6 +40,6 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-sdk/client-config-service": "3.347.1"
+    "@aws-sdk/client-config-service": "3.410.0"
   }
 }

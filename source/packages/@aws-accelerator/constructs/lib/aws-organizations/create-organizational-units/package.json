@@ -39,9 +39,9 @@
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
     "aws-sdk": "2.1379.0",
-    "@aws-sdk/client-dynamodb": "3.347.1",
-    "@aws-sdk/lib-dynamodb": "3.347.1",
-    "@aws-sdk/client-organizations": "3.370.0",
-    "@aws-sdk/util-retry": "3.370.0"
+    "@aws-sdk/client-dynamodb": "3.410.0",
+    "@aws-sdk/lib-dynamodb": "3.410.0",
+    "@aws-sdk/client-organizations": "3.410.0",
+    "@aws-sdk/util-retry": "3.374.0"
   }
 }
