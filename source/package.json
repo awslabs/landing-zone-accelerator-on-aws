@@ -41,6 +41,8 @@
     "cleanup": "lerna run cleanup --stream && rm -rf node_modules",
     "cleanup:tsc": "lerna run cleanup:tsc --stream",
     "build": "lerna run build --stream",
+    "git-clean": "cd .. && git clean -Xfd -e !development -e !development/** -e !.vscode -e !.vscode/**",
+    "build-clean": "yarn run git-clean && yarn install && yarn run build", 
     "validate-config": "ts-node ./packages/@aws-accelerator/accelerator/lib/config-validator.ts",
     "test": "lerna run test --stream",
     "test:clean": "rm -f ./test-reports/*.xml",
