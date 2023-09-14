@@ -39,6 +39,6 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-sdk/client-iam": "3.272.0"
+    "@aws-sdk/client-iam": "3.410.0"
   }
 }

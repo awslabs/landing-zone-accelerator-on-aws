@@ -24,7 +24,7 @@
     "@babel/core": "7.21.0",
     "@babel/preset-env": "7.20.2",
     "@babel/preset-typescript": "7.21.0",
-    "@aws-sdk/types": "3.347.0",
+    "@aws-sdk/types": "3.410.0",
     "aws-sdk-client-mock": "2.1.0",
     "esbuild": "0.17.10",
     "eslint": "8.34.0",
@@ -43,6 +43,6 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-sdk/client-config-service": "3.347.1"
+    "@aws-sdk/client-config-service": "3.410.0"
   }
 }
