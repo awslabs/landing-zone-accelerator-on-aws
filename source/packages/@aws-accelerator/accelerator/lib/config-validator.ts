@@ -274,7 +274,6 @@ function runValidators(
       new IamConfigValidator(
         iamConfig,
         accountsConfig,
-        globalConfig,
         networkConfig,
         organizationConfig,
         securityConfig,

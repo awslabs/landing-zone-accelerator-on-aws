@@ -18,7 +18,6 @@ import { createLogger } from '@aws-accelerator/utils';
 import { AccountsConfig } from '../lib/accounts-config';
 import { CommonValidatorFunctions } from './common/common-validator-functions';
 import * as t from '../lib/common-types';
-import { GlobalConfig } from '../lib/global-config';
 import { IamConfig, IamConfigTypes } from '../lib/iam-config';
 import { NetworkConfig } from '../lib/network-config';
 import { OrganizationConfig } from '../lib/organization-config';
@@ -39,7 +38,6 @@ export class IamConfigValidator {
   constructor(
     values: IamConfig,
     accountsConfig: AccountsConfig,
-    globalConfig: GlobalConfig,
     networkConfig: NetworkConfig,
     organizationConfig: OrganizationConfig,
     securityConfig: SecurityConfig,
@@ -50,7 +48,6 @@ export class IamConfigValidator {
 
     const errors: string[] = [];
     const logger = createLogger(['iam-config-validator']);
-    const acceleratorPrefix = process.env['ACCELERATOR_PREFIX'] ?? 'AWSAccelerator';
 
     logger.info(`${IamConfig.FILENAME} file validation started`);
 
@@ -81,7 +78,7 @@ export class IamConfigValidator {
     //
     // Validate IAM roles
     //
-    this.validateRoles(values, globalConfig, acceleratorPrefix, errors);
+    this.validateRoles(values, errors);
 
     // Validate target OU names
     this.validateDeploymentTargetOUs(values, ouIdNames, errors);
@@ -227,14 +224,11 @@ export class IamConfigValidator {
    * @param values
    * @param errors
    */
-  private validateRoles(values: IamConfig, global: GlobalConfig, acceleratorPrefix: string, errors: string[]) {
+  private validateRoles(values: IamConfig, errors: string[]) {
     //
     // Validate role names
     //
     this.validateRoleNames(values, errors);
-
-    //Validate that accelerator named IAM roles are not created through the accelerator
-    this.validateForAcceleratorRoleNames(values, global, acceleratorPrefix, errors);
   }
 
   /**
@@ -255,31 +249,6 @@ export class IamConfigValidator {
     if (hasDuplicates(roleNames)) {
       errors.push(`Duplicate role names defined. Role names must be unique. Role names defined: ${roleNames}`);
     }
-  }
-
-  /**
-   * Checks role names for accelerator naming conventions
-   * @param values
-   * @param global
-   * @param errors
-   */
-  private validateForAcceleratorRoleNames(
-    values: IamConfig,
-    global: GlobalConfig,
-    acceleratorPrefix: string,
-    errors: string[],
-  ) {
-    const reservedRoleNamePatterns = [global.managementAccountAccessRole, 'cdk-accel', acceleratorPrefix];
-
-    values.roleSets?.forEach(roleSet => {
-      roleSet.roles?.forEach(role => {
-        if (reservedRoleNamePatterns.some(name => role.name.startsWith(name))) {
-          errors.push(
-            `The IAM Role: ${role.name} is using a reserved naming convention. Please change the name of this role.`,
-          );
-        }
-      });
-    });
   }
 
   /**
@@ -758,7 +727,7 @@ export class IamConfigValidator {
     this.validateAssignmentAccountNames(values, accountNames, errors);
 
     //
-    // Validate IAM princiapl assignments for roles
+    // Validate IAM principal assignments for roles
     //
     this.validateAssignmentPrincipalsForIamRoles(values, accountNames, errors);
   }
