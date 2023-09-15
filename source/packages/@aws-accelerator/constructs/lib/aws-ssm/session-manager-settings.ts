@@ -28,6 +28,7 @@ export interface SsmSessionManagerSettingsProps {
   readonly attachPolicyToIamRoles?: string[];
   readonly cloudWatchEncryptionKey: cdk.aws_kms.IKey;
   readonly region: string;
+  readonly rolesInAccounts?: { account: string; region: string; parametersByPath: { [key: string]: string } }[];
   /**
    * Custom resource lambda log group encryption key
    */
@@ -227,13 +228,15 @@ export class SsmSessionManagerSettings extends Construct {
 
     // Attach policies to configured roles
     for (const iamRoleName of props.attachPolicyToIamRoles ?? []) {
-      const role = cdk.aws_iam.Role.fromRoleArn(
-        this,
-        `AcceleratorSessionManager-${iamRoleName}`,
-        `arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:role/${iamRoleName}`,
-        { defaultPolicyName: `Region${props.region}` },
-      );
-      role.attachInlinePolicy(sessionManagerRegionEC2Policy);
+      if (this.isRoleInAccount(iamRoleName, cdk.Stack.of(this).account, props.rolesInAccounts)) {
+        const role = cdk.aws_iam.Role.fromRoleArn(
+          this,
+          `AcceleratorSessionManager-${iamRoleName}`,
+          `arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:role/${iamRoleName}`,
+          { defaultPolicyName: `Region${props.region}` },
+        );
+        role.attachInlinePolicy(sessionManagerRegionEC2Policy);
+      }
     }
 
     // Create an EC2 role that can be used for Session Manager
@@ -310,5 +313,24 @@ export class SsmSessionManagerSettings extends Construct {
     resource.node.addDependency(logGroup);
 
     this.id = resource.ref;
+  }
+
+  isRoleInAccount(
+    roleName: string,
+    account: string,
+    rolesInAccount?: { account: string; region: string; parametersByPath: { [key: string]: string } }[],
+  ) {
+    if (!rolesInAccount || rolesInAccount.length === 0) {
+      return true;
+    }
+    for (const ssmAccount of rolesInAccount) {
+      if (account === ssmAccount.account) {
+        const roleExists = Object.keys(ssmAccount.parametersByPath).filter(parameter => parameter.includes(roleName));
+        if (roleExists.length > 0) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 }
