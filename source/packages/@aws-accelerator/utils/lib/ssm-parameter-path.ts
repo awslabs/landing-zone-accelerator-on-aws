@@ -353,6 +353,37 @@ export enum SsmResourceType {
    * `${0}` is  replaced with the IAM Username
    */
   IAM_USER = '/iam/user/${0}/arn',
+  /**
+   * EC2 firewall dependency resources
+   */
+  /**
+   * Prefix list ID (for cross-account EC2 firewall CGWs)
+   * `${0}` is replaced with the CGW name
+   * `${1}` is replaced with the prefix list name
+   */
+  CROSS_ACCOUNT_PREFIX_LIST = '/network/customerGateways/${0}/prefixList/${1}/id',
+  /**
+   * Cross-account TGW ID (for cross-account EC2 firewall CGWs)
+   *
+   * `${0}` is replaced with the CGW name
+   * `${1}` is replaced with the TGW name
+   */
+  CROSS_ACCOUNT_TGW = '/network/customerGateways/${0}/transitGateways/${1}/id',
+  /**
+   * Cross-account TGW route table ID (for cross-account EC2 firewall CGWs)
+   *
+   * `${0}` is replaced with the CGW name
+   * `${1}` is replaced with the TGW name
+   * `${2}` is replaced with the TGW route table name
+   */
+  CROSS_ACCOUNT_TGW_ROUTE_TABLE = '/network/customerGateways/${0}/transitGateways/${1}/routeTables/${2}/id',
+  /**
+   * Cross-account VGW ID (for cross-account EC2 firewall CGWs)
+   *
+   * `${0}` is replaced with the CGW name
+   * `${1}` is replaced with the VPC name
+   */
+  CROSS_ACCOUNT_VGW = '/network/customerGateways/${0}/virtualPrivateGateway/${1}/id',
 }
 
 export class SsmParameterPath {

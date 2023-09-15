@@ -28,6 +28,7 @@ interface RoleNames {
   crossAccountCustomerGatewayRoleName: string;
   crossAccountLogsRoleName: string;
   crossAccountSecretsCmkParameterAccess: string;
+  crossAccountTgwRouteRoleName: string;
   crossAccountVpnRoleName: string;
   moveAccountConfig: string;
   tgwPeering: string;
@@ -102,6 +103,7 @@ export class AcceleratorResourceNames {
     crossAccountCustomerGatewayRoleName: 'PLACE_HOLDER',
     crossAccountLogsRoleName: 'PLACE_HOLDER',
     crossAccountSecretsCmkParameterAccess: 'PLACE_HOLDER',
+    crossAccountTgwRouteRoleName: 'PLACE_HOLDER',
     crossAccountVpnRoleName: 'PLACE_HOLDER',
     moveAccountConfig: 'PLACE_HOLDER',
     tgwPeering: 'PLACE_HOLDER',
@@ -179,6 +181,7 @@ export class AcceleratorResourceNames {
     this.roles.crossAccountCustomerGatewayRoleName = props.prefixes.accelerator + '-CrossAccount-CustomerGateway-Role';
     this.roles.crossAccountLogsRoleName = props.prefixes.accelerator + '-CrossAccount-PutLogs-Role';
     this.roles.crossAccountSecretsCmkParameterAccess = props.prefixes.accelerator + '-CrossAccount-SecretsKms-Role';
+    this.roles.crossAccountTgwRouteRoleName = props.prefixes.accelerator + '-CrossAccount-TgwRoutes-Role';
     this.roles.crossAccountVpnRoleName = props.prefixes.accelerator + '-CrossAccount-SiteToSiteVpn-Role';
     this.roles.moveAccountConfig = props.prefixes.accelerator + '-MoveAccountConfigRule-Role';
     this.roles.tgwPeering = props.prefixes.accelerator + '-TgwPeering-Role';

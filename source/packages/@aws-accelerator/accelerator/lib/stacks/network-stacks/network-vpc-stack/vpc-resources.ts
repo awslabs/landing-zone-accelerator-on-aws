@@ -735,11 +735,11 @@ export class VpcResources {
         const vpcConfig = getVpcConfig(vpcResources, vpnItem.vpc);
         const vpc = getVpc(vpcMap, vpnItem.vpc) as Vpc;
         ssmParameters.push({
-          name: this.stack.getSsmPath(SsmResourceType.VPN_GW, [vpcConfig.name]),
+          name: this.stack.getSsmPath(SsmResourceType.CROSS_ACCOUNT_VGW, [cgw.name, vpcConfig.name]),
           value: vpc.virtualPrivateGatewayId ?? '',
         });
       }
     }
-    return ssmParameters;
+    return [...new Set(ssmParameters)];
   }
 }

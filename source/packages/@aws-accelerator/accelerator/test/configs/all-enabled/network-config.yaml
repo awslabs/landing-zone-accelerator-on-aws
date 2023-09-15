@@ -35,6 +35,12 @@ transitGateways:
             attachment:
               vpcName: Network-Endpoints
               account: Network
+          - destinationCidrBlock: 10.40.0.0/16
+            attachment:
+              vpnConnectionName: same-account-tgw-vpn
+          - destinationCidrBlock: 10.50.0.0/16
+            attachment:
+              vpnConnectionName: same-account-tgw-vpn
       - name: Network-Main-Segregated
         routes: []
       - name: Network-Main-Shared
@@ -42,8 +48,14 @@ transitGateways:
           - destinationCidrBlock: 10.200.0.0/16
             attachment:
               transitGatewayPeeringName: Network-Main-And-SharedServices-Main-Peering
+          - destinationPrefixList: accelerator-prefix-list
+            attachment:
+              vpnConnectionName: cross-account-tgw-vpn
       - name: Network-Main-Standalone
-        routes: []
+        routes:
+          - destinationPrefixList: accelerator-prefix-list
+            attachment:
+              vpnConnectionName: same-account-tgw-vpn
   - name: Network-Main-2
     account: Network
     region: *HOME_REGION
@@ -1842,6 +1854,11 @@ customerGateways:
     vpnConnections:
       - name: cross-account-tgw-vpn
         transitGateway: Network-Main
+        routeTableAssociations:
+          - Network-Main-Shared
+        routeTablePropagations:
+          - Network-Main-Core
+          - Network-Main-Shared
       - name: cross-account-vgw-vpn
         vpc: Network-Inspection
   - name: same-account-firewall-cgw
@@ -1852,6 +1869,11 @@ customerGateways:
     vpnConnections:
       - name: same-account-tgw-vpn
         transitGateway: Network-Main
+        routeTableAssociations:
+          - Network-Main-Shared
+        routeTablePropagations:
+          - Network-Main-Core
+          - Network-Main-Shared
       - name: same-account-vgw-vpn
         vpc: Network-Inspection
 

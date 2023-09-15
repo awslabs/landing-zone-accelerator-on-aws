@@ -12,13 +12,22 @@
  */
 
 import {
+  CustomerGatewayConfig,
   Ec2FirewallInstanceConfig,
   SubnetConfig,
   TransitGatewayConfig,
   VpcConfig,
   VpcTemplatesConfig,
 } from '@aws-accelerator/config';
-import { PrefixList, RouteTable, Subnet, Vpc, IIpamSubnet, SecurityGroup } from '@aws-accelerator/constructs';
+import {
+  IIpamSubnet,
+  PrefixList,
+  RouteTable,
+  SecurityGroup,
+  Subnet,
+  Vpc,
+  VpnConnection,
+} from '@aws-accelerator/constructs';
 import { createLogger } from '@aws-accelerator/utils';
 
 const logger = createLogger(['getter-utils']);
@@ -171,6 +180,48 @@ export function getVpc(vpcMap: Map<string, Vpc> | Map<string, string>, vpcName: 
 }
 
 /**
+ * Returns a TGW VPN connection construct object from a given map if it exists
+ * @param vpnMap Map<string, VpnConnection>
+ * @param tgwName string
+ * @param vpnName string
+ * @returns VpnConnection
+ */
+export function getTgwVpnConnection(
+  vpnMap: Map<string, VpnConnection>,
+  tgwName: string,
+  vpnName: string,
+): VpnConnection {
+  const key = `${tgwName}_${vpnName}`;
+  const vpn = vpnMap.get(key);
+
+  if (!vpn) {
+    logger.error(`VPN connection ${vpnName} for transit gateway ${tgwName} does not exist in map`);
+    throw new Error(`Configuration validation failed at runtime.`);
+  }
+
+  return vpn;
+}
+
+/**
+ * Returns a TGW VPN attachment ID from a given map if it exists
+ * @param attachmentMap Map<string, string>
+ * @param tgwName string
+ * @param vpnName string
+ * @returns string
+ */
+export function getVpnAttachmentId(attachmentMap: Map<string, string>, tgwName: string, vpnName: string): string {
+  const key = `${tgwName}_${vpnName}`;
+  const attachmentId = attachmentMap.get(key);
+
+  if (!attachmentId) {
+    logger.error(`VPN attachment ID for VPN ${vpnName} to transit gateway ${tgwName} does not exist in map`);
+    throw new Error(`Configuration validation failed at runtime.`);
+  }
+
+  return attachmentId;
+}
+
+/**
  * Returns a Transit Gateway configuration object from a given list of configurations if it exists
  * @param tgwResources TransitGatewayConfig[]
  * @param tgwName string
@@ -241,6 +292,21 @@ export function getFirewallInstanceConfig(
     throw new Error(`Configuration validation failed at runtime.`);
   }
   return instanceConfig;
+}
+
+/**
+ * Returns a customer gateway name associated with the given VPN connection name
+ * @param customerGateway CustomerGatewayConfig[]
+ * @param vpnName string
+ * @returns string
+ */
+export function getCustomerGatewayName(customerGateways: CustomerGatewayConfig[], vpnName: string): string {
+  const customerGatewayName = customerGateways.find(cgw => cgw.vpnConnections?.find(vpn => vpn.name === vpnName))?.name;
+  if (!customerGatewayName) {
+    logger.error(`Customer gateway name for VPN ${vpnName} not found`);
+    throw new Error(`Configuration validation failed at runtime.`);
+  }
+  return customerGatewayName;
 }
 
 /**

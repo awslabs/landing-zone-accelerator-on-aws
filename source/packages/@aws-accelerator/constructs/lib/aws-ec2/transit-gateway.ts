@@ -16,6 +16,7 @@ import { Construct } from 'constructs';
 import { v4 as uuidv4 } from 'uuid';
 
 import { TransitGatewayAttachmentOptionsConfig } from '@aws-accelerator/config';
+import { LzaCustomResource } from '../lza-custom-resource';
 
 const path = require('path');
 
@@ -27,6 +28,22 @@ export interface ITransitGatewayRouteTableAssociation extends cdk.IResource {
 export interface TransitGatewayRouteTableAssociationProps {
   readonly transitGatewayAttachmentId: string;
   readonly transitGatewayRouteTableId: string;
+  /**
+   * Custom resource handler for cross-account TGW associations
+   */
+  readonly customResourceHandler?: cdk.aws_lambda.IFunction;
+  /**
+   * Owning account ID for cross-account TGW associations
+   */
+  readonly owningAccountId?: string;
+  /**
+   * Owning region for cross-account TGW associations
+   */
+  readonly owningRegion?: string;
+  /**
+   * Role name for cross-account TGW associations
+   */
+  readonly roleName?: string;
 }
 
 export class TransitGatewayRouteTableAssociation extends cdk.Resource implements ITransitGatewayRouteTableAssociation {
@@ -39,10 +56,29 @@ export class TransitGatewayRouteTableAssociation extends cdk.Resource implements
     this.transitGatewayAttachmentId = props.transitGatewayAttachmentId;
     this.transitGatewayRouteTableId = props.transitGatewayRouteTableId;
 
-    new cdk.aws_ec2.CfnTransitGatewayRouteTableAssociation(this, 'Resource', {
-      transitGatewayAttachmentId: props.transitGatewayAttachmentId,
-      transitGatewayRouteTableId: props.transitGatewayRouteTableId,
-    });
+    if (!props.customResourceHandler) {
+      new cdk.aws_ec2.CfnTransitGatewayRouteTableAssociation(this, 'Resource', {
+        transitGatewayAttachmentId: props.transitGatewayAttachmentId,
+        transitGatewayRouteTableId: props.transitGatewayRouteTableId,
+      });
+    } else {
+      new LzaCustomResource(this, 'CustomResource', {
+        resource: {
+          name: 'CustomResource',
+          parentId: id,
+          properties: [
+            {
+              transitGatewayAttachmentId: props.transitGatewayAttachmentId,
+              transitGatewayRouteTableId: props.transitGatewayRouteTableId,
+              owningAccountId: props.owningAccountId,
+              owningRegion: props.owningRegion,
+              roleName: props.roleName,
+            },
+          ],
+          onEventHandler: props.customResourceHandler,
+        },
+      });
+    }
   }
 }
 
@@ -54,6 +90,22 @@ export interface ITransitGatewayRouteTablePropagation extends cdk.IResource {
 export interface TransitGatewayRouteTablePropagationProps {
   readonly transitGatewayAttachmentId: string;
   readonly transitGatewayRouteTableId: string;
+  /**
+   * Custom resource handler for cross-account TGW propagations
+   */
+  readonly customResourceHandler?: cdk.aws_lambda.IFunction;
+  /**
+   * Owning account ID for cross-account TGW propagations
+   */
+  readonly owningAccountId?: string;
+  /**
+   * Owning region for cross-account TGW propagations
+   */
+  readonly owningRegion?: string;
+  /**
+   * Role name for cross-account TGW propagations
+   */
+  readonly roleName?: string;
 }
 
 export class TransitGatewayRouteTablePropagation extends cdk.Resource implements ITransitGatewayRouteTablePropagation {
@@ -66,10 +118,29 @@ export class TransitGatewayRouteTablePropagation extends cdk.Resource implements
     this.transitGatewayAttachmentId = props.transitGatewayAttachmentId;
     this.transitGatewayRouteTableId = props.transitGatewayRouteTableId;
 
-    new cdk.aws_ec2.CfnTransitGatewayRouteTablePropagation(this, 'Resource', {
-      transitGatewayAttachmentId: props.transitGatewayAttachmentId,
-      transitGatewayRouteTableId: props.transitGatewayRouteTableId,
-    });
+    if (!props.customResourceHandler) {
+      new cdk.aws_ec2.CfnTransitGatewayRouteTablePropagation(this, 'Resource', {
+        transitGatewayAttachmentId: props.transitGatewayAttachmentId,
+        transitGatewayRouteTableId: props.transitGatewayRouteTableId,
+      });
+    } else {
+      new LzaCustomResource(this, 'CustomResource', {
+        resource: {
+          name: 'CustomResource',
+          parentId: id,
+          properties: [
+            {
+              transitGatewayAttachmentId: props.transitGatewayAttachmentId,
+              transitGatewayRouteTableId: props.transitGatewayRouteTableId,
+              owningAccountId: props.owningAccountId,
+              owningRegion: props.owningRegion,
+              roleName: props.roleName,
+            },
+          ],
+          onEventHandler: props.customResourceHandler,
+        },
+      });
+    }
   }
 }
 
@@ -111,6 +182,28 @@ export interface TransitGatewayAttachmentLookupOptions {
    * Custom resource lambda log retention in days
    */
   readonly logRetentionInDays: number;
+  /**
+   * Cross-account lookup options
+   *
+   * @remarks
+   * These options should only be used for cross-account VPN attachment
+   * lookups. Currently the only use case is for dynamic EC2 firewall
+   * VPN connections
+   */
+  readonly crossAccountVpnOptions?: {
+    /**
+     * Owning account ID of the VPN attachment
+     */
+    readonly owningAccountId?: string;
+    /**
+     * Owning region of the VPN attachment
+     */
+    readonly owningRegion?: string;
+    /**
+     * Role name to assume
+     */
+    readonly roleName?: string;
+  };
 }
 
 abstract class TransitGatewayAttachmentBase extends cdk.Resource implements ITransitGatewayAttachment {
@@ -177,6 +270,7 @@ export class TransitGatewayAttachment extends TransitGatewayAttachmentBase {
             type: options.type,
             roleArn,
             uuid: uuidv4(), // Generates a new UUID to force the resource to update
+            crossAccountVpnOptions: options.crossAccountVpnOptions,
           },
         });
 

@@ -1021,7 +1021,7 @@ export abstract class NetworkStack extends AcceleratorStack {
 
   /**
    * Returns a boolean indicating if the VPC a given firewall is deployed to
-   * is in the same account as the customer gateway
+   * is in the same account+region as the customer gateway
    * @param customerGateway CustomerGatewayConfig
    * @returns boolean
    */
