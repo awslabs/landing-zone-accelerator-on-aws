@@ -387,7 +387,6 @@ export async function setAcceleratorStackProps(
 
   const replacementsConfig = getReplacementsConfig(context.configDirPath, accountsConfig);
   await replacementsConfig.loadReplacementValues({ region: homeRegion });
-
   const globalConfig = GlobalConfig.load(context.configDirPath, replacementsConfig);
   const organizationConfig = OrganizationConfig.load(context.configDirPath, replacementsConfig);
   await organizationConfig.loadOrganizationalUnitIds(context.partition);
@@ -395,6 +394,16 @@ export async function setAcceleratorStackProps(
   if (globalConfig.externalLandingZoneResources?.importExternalLandingZoneResources) {
     await globalConfig.loadExternalMapping(true);
     await globalConfig.loadLzaResources(context.partition, prefixes.accelerator);
+  }
+  if (context.stage === AcceleratorStage.SECURITY_RESOURCES) {
+    const accountIds = accountsConfig.accountIds?.map(account => account.accountId) ?? [];
+    await globalConfig.loadIAMRoleSSMParameters(
+      globalConfig.homeRegion,
+      process.env['PARTITION'] ?? 'aws',
+      process.env['ACCELERATOR_PREFIX'] ?? 'AWSAccelerator',
+      accountIds,
+    );
+    console.log(JSON.stringify(globalConfig.iamRoleSsmParameters, null, 4));
   }
 
   return {

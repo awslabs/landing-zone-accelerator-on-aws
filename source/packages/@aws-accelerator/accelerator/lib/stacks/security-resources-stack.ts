@@ -1375,6 +1375,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
           logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
           region: cdk.Stack.of(this).region,
           acceleratorPrefix: this.props.prefixes.accelerator,
+          rolesInAccounts: this.props.globalConfig.iamRoleSsmParameters,
         });
 
         // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.

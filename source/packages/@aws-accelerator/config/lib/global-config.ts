@@ -2050,6 +2050,12 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
   readonly acceleratorSettings: AcceleratorSettingsConfig | undefined = undefined;
 
   /**
+   * SSM IAM Role Parameters to be loaded for session manager policy attachments
+   */
+
+  iamRoleSsmParameters: { account: string; region: string; parametersByPath: { [key: string]: string } }[] = [];
+
+  /**
    *
    * @param props
    * @param values
@@ -2203,7 +2209,40 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
     }
     await Promise.all(lzaResourcesPromises);
   }
+  public async loadIAMRoleSSMParameters(region: string, partition: string, prefix: string, accounts: string[]) {
+    const ssmPath = `/${prefix}/iam/role/`;
+    const promises = [];
+    const ssmParameters = [];
+    for (const account of accounts) {
+      promises.push(this.loadIAMRoleSSMParametersByEnv(ssmPath, account, region, partition));
+      if (promises.length > 800) {
+        const resolvedPromises = await Promise.all(promises);
+        ssmParameters.push(...resolvedPromises);
+        promises.length = 0;
+      }
+    }
+    const resolvedPromises = await Promise.all(promises);
+    ssmParameters.push(...resolvedPromises);
+    promises.length = 0;
 
+    this.iamRoleSsmParameters = ssmParameters;
+  }
+
+  private async loadIAMRoleSSMParametersByEnv(ssmPath: string, account: string, region: string, partition: string) {
+    const crossAccountCredentials = await this.getCrossAccountCredentials(
+      account,
+      region,
+      partition,
+      this.managementAccountAccessRole,
+    );
+    const ssmClient = this.getCrossAccountSsmClient(region, crossAccountCredentials);
+    const parametersByPath = await this.getParametersByPath(ssmPath, ssmClient);
+    return {
+      account,
+      region,
+      parametersByPath,
+    };
+  }
   private async loadRegionLzaResources(region: string, partition: string, prefix: string, accounts: string[]) {
     const getSsmPath = (resourceType: t.AseaResourceTypePaths) => `/${prefix}${resourceType}`;
     if (!this.externalLandingZoneResources?.importExternalLandingZoneResources) return;
@@ -2384,7 +2423,7 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
     }
   }
 
-  private async getCrossAccountSsmClient(region: string, assumeRoleCredential: AssumeRoleCommandOutput) {
+  private getCrossAccountSsmClient(region: string, assumeRoleCredential: AssumeRoleCommandOutput) {
     return new SSMClient({
       credentials: {
         accessKeyId: assumeRoleCredential.Credentials!.AccessKeyId!,
