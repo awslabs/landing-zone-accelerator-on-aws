@@ -298,19 +298,23 @@ export class TgwResources {
         // Set TGW ID
         const tgwConfig = getTgwConfig(transitGateways, vpnItem.transitGateway);
         ssmParameters.push({
-          name: this.stack.getSsmPath(SsmResourceType.TGW, [tgwConfig.name]),
+          name: this.stack.getSsmPath(SsmResourceType.CROSS_ACCOUNT_TGW, [cgw.name, tgwConfig.name]),
           value: getTransitGatewayId(transitGatewayMap, tgwConfig.name),
         });
         //
         // Set TGW Route Table IDs
         for (const routeTableItem of tgwConfig.routeTables ?? []) {
           ssmParameters.push({
-            name: this.stack.getSsmPath(SsmResourceType.TGW_ROUTE_TABLE, [tgwConfig.name, routeTableItem.name]),
+            name: this.stack.getSsmPath(SsmResourceType.CROSS_ACCOUNT_TGW_ROUTE_TABLE, [
+              cgw.name,
+              tgwConfig.name,
+              routeTableItem.name,
+            ]),
             value: getTgwRouteTableId(tgwRouteTableMap, tgwConfig.name, routeTableItem.name),
           });
         }
       }
     }
-    return ssmParameters;
+    return [...new Set(ssmParameters)];
   }
 }

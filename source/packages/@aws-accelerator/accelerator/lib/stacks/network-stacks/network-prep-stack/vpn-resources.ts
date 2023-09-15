@@ -27,6 +27,7 @@ export class VpnResources {
   public readonly vpnMap: Map<string, string>;
   public readonly crossAccountCgwRole?: cdk.aws_iam.Role;
   public readonly crossAccountLogsRole?: cdk.aws_iam.Role;
+  public readonly crossAccountTgwRoutesRole?: cdk.aws_iam.Role;
   public readonly crossAccountVpnRole?: cdk.aws_iam.Role;
   private stack: NetworkPrepStack;
   private transitGatewayMap: Map<string, string>;
@@ -47,10 +48,16 @@ export class VpnResources {
     [this.cgwMap, this.vpnMap] = this.createVpnConnectionResources(props, customResourceHandler);
 
     // Create cross-account VPN roles, if needed
-    if (this.hasCrossAccountVpn(props)) {
+    const [hasCrossAcctVpn, hasCrossAcctTgwVpn] = this.hasCrossAccountVpn(props);
+    if (hasCrossAcctVpn) {
       this.crossAccountCgwRole = this.createCrossAccountCgwRole();
       this.crossAccountLogsRole = this.createCrossAccountLogsRole();
       this.crossAccountVpnRole = this.createCrossAccountVpnRole();
+    }
+
+    // Create cross-account TGW VPN role, if needed
+    if (hasCrossAcctTgwVpn) {
+      this.crossAccountTgwRoutesRole = this.createCrossAccountTgwRoutesRole();
     }
   }
 
@@ -138,23 +145,44 @@ export class VpnResources {
   }
 
   /**
-   * Returns true in the home region if there are CGWs referencing a firewall instance deployed to a different account/region
-   * than the CGW's target account/region
+   * Returns true in the home region if there are CGWs referencing a firewall instance deployed to a different account
+   * than the CGW's target account
    * @param props AcceleratorStackProps
-   * @returns boolean
+   * @returns boolean[]
    */
-  private hasCrossAccountVpn(props: AcceleratorStackProps): boolean {
+  private hasCrossAccountVpn(props: AcceleratorStackProps): boolean[] {
+    let [hasCrossAcctVpn, hasCrossAcctTgwVpn] = [false, false];
+
     for (const cgw of props.networkConfig.customerGateways ?? []) {
       const cgwAccountId = props.accountsConfig.getAccountId(cgw.account);
       if (
         this.stack.isTargetStack([cgwAccountId], [props.globalConfig.homeRegion]) &&
         !isIpv4(cgw.ipAddress) &&
-        !this.stack.firewallVpcInScope(cgw)
+        !this.firewallVpcInAccount(cgw, props)
       ) {
-        return true;
+        hasCrossAcctVpn = true;
+        //
+        // Check if the CGW has VPNs to a transit gateway
+        if (cgw.vpnConnections?.find(vpn => vpn.transitGateway)) {
+          hasCrossAcctTgwVpn = true;
+        }
       }
     }
-    return false;
+    return [hasCrossAcctVpn, hasCrossAcctTgwVpn];
+  }
+
+  /**
+   * Returns a boolean indicating if the VPC a given firewall is deployed to
+   * is in the same account as the customer gateway
+   * @param customerGateway CustomerGatewayConfig
+   * @returns boolean
+   */
+  private firewallVpcInAccount(customerGateway: CustomerGatewayConfig, props: AcceleratorStackProps): boolean {
+    const cgwAccountId = props.accountsConfig.getAccountId(customerGateway.account);
+    const firewallVpcConfig = this.stack.getFirewallVpcConfig(customerGateway);
+    const vpcAccountIds = this.stack.getVpcAccountIds(firewallVpcConfig);
+
+    return vpcAccountIds.includes(cgwAccountId);
   }
 
   /**
@@ -185,7 +213,7 @@ export class VpnResources {
     });
 
     const crossAccountCgwRole = new cdk.aws_iam.Role(this.stack, 'CrossAccountCgwRole', {
-      assumedBy: this.stack.getOrgPrincipals(this.stack.organizationId),
+      assumedBy: this.stack.getOrgPrincipals(this.stack.organizationId, true),
       managedPolicies: [managedCgwPolicy],
       roleName: this.stack.acceleratorResourceNames.roles.crossAccountCustomerGatewayRoleName,
     });
@@ -239,7 +267,7 @@ export class VpnResources {
     });
 
     const crossAccountLogsRole = new cdk.aws_iam.Role(this.stack, 'CrossAccountLogsRole', {
-      assumedBy: this.stack.getOrgPrincipals(this.stack.organizationId),
+      assumedBy: this.stack.getOrgPrincipals(this.stack.organizationId, true),
       managedPolicies: [managedLogsPolicy],
       roleName: this.stack.acceleratorResourceNames.roles.crossAccountLogsRoleName,
     });
@@ -316,7 +344,7 @@ export class VpnResources {
       ],
     });
     const crossAccountVpnRole = new cdk.aws_iam.Role(this.stack, 'CrossAccountVpnRole', {
-      assumedBy: this.stack.getOrgPrincipals(this.stack.organizationId),
+      assumedBy: this.stack.getOrgPrincipals(this.stack.organizationId, true),
       managedPolicies: [managedVpnPolicy],
       roleName: this.stack.acceleratorResourceNames.roles.crossAccountVpnRoleName,
     });
@@ -332,5 +360,62 @@ export class VpnResources {
       ],
     });
     return crossAccountVpnRole;
+  }
+
+  /**
+   * Create cross-account TGW routes role
+   * @returns cdk.aws_iam.Role
+   */
+  private createCrossAccountTgwRoutesRole(): cdk.aws_iam.Role {
+    const managedTgwRoutesPolicy = new cdk.aws_iam.ManagedPolicy(this.stack, 'CrossAccountTgwRoutesPolicy', {
+      statements: [
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'TGWRouteCRUD',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: [
+            'ec2:AssociateTransitGatewayRouteTable',
+            'ec2:CreateTransitGatewayRoute',
+            'ec2:CreateTransitGatewayPrefixListReference',
+            'ec2:DeleteTransitGatewayPrefixListReference',
+            'ec2:DeleteTransitGatewayRoute',
+            'ec2:DescribeTransitGatewayAttachments',
+            'ec2:DescribeVpnConnections',
+            'ec2:DisableTransitGatewayRouteTablePropagation',
+            'ec2:DisassociateTransitGatewayRouteTable',
+            'ec2:EnableTransitGatewayRouteTablePropagation',
+            'ec2:ModifyTransitGatewayPrefixListReference',
+          ],
+          resources: ['*'],
+        }),
+      ],
+    });
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
+    // rule suppression with evidence for this permission.
+    this.stack.addNagSuppression({
+      id: NagSuppressionRuleIds.IAM5,
+      details: [
+        {
+          path: managedTgwRoutesPolicy.node.path,
+          reason: 'Cross account policy allows access for TGW route CRUD operations',
+        },
+      ],
+    });
+    const crossAccountTgwRoutesRole = new cdk.aws_iam.Role(this.stack, 'CrossAccountTgwRoutesRole', {
+      assumedBy: this.stack.getOrgPrincipals(this.stack.organizationId, true),
+      managedPolicies: [managedTgwRoutesPolicy],
+      roleName: this.stack.acceleratorResourceNames.roles.crossAccountTgwRouteRoleName,
+    });
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+    // rule suppression with evidence for this permission.
+    this.stack.addNagSuppression({
+      id: NagSuppressionRuleIds.IAM4,
+      details: [
+        {
+          path: crossAccountTgwRoutesRole.node.path,
+          reason: 'IAM Role for lambda needs AWS managed policy',
+        },
+      ],
+    });
+    return crossAccountTgwRoutesRole;
   }
 }

@@ -175,6 +175,40 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::EC2::PrefixList",
     },
+    "CrossAccountCgwPrefixListSharedParameters45B03549": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomSsmPutParameterValueCustomResourceProviderLogGroupB0109C68",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomSsmPutParameterValueCustomResourceProviderHandler2A0BDE7F",
+            "Arn",
+          ],
+        },
+        "invokingAccountId": "555555555555",
+        "parameterAccountIds": [
+          "444444444444",
+        ],
+        "parameters": [
+          {
+            "name": "/accelerator/network/customerGateways/cross-account-cgw/prefixList/accelerator-prefix-list/id",
+            "value": {
+              "Fn::GetAtt": [
+                "AcceleratorPrefixListPrefixList8ACB36CF",
+                "PrefixListId",
+              ],
+            },
+          },
+        ],
+        "region": "us-east-1",
+        "roleName": "AWSAccelerator-CrossAccountSsmParameterShare",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::SsmPutParameterValue",
+      "UpdateReplacePolicy": "Delete",
+    },
     "CrossAccountCgwVgwVpnSharedParameters71C8F415": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
@@ -193,7 +227,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         ],
         "parameters": [
           {
-            "name": "/accelerator/network/vpc/Network-Inspection/virtualPrivateGateway/id",
+            "name": "/accelerator/network/customerGateways/cross-account-cgw/virtualPrivateGateway/Network-Inspection/id",
             "value": {
               "Ref": "NetworkInspectionVpcVirtualPrivateGatewayB665C776",
             },

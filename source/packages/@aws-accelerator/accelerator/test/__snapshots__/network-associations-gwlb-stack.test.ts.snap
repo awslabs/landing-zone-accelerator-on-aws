@@ -19,8 +19,24 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
       "Default": "/accelerator/network/gwlb/Accelerator-GWLB/endpointService/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworkprefixListacceleratorprefixlistidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/prefixList/accelerator-prefix-list/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/transitGateways/Network-Main/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/transitGateways/Network-Main/routeTables/Network-Main-Core/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainSharedidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/transitGateways/Network-Main/routeTables/Network-Main-Shared/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainStandaloneidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/transitGateways/Network-Main/routeTables/Network-Main-Standalone/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter": {
@@ -250,6 +266,183 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
                   ],
                   "Effect": "Allow",
                   "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354": {
+      "DependsOn": [
+        "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "sts:AssumeRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+                {
+                  "Action": [
+                    "ec2:DescribeTransitGatewayAttachments",
+                    "ec2:DescribeVpnConnections",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomTransitGatewayPrefixListReferenceCustomResourceProviderHandler9BAD63E3": {
+      "DependsOn": [
+        "CustomTransitGatewayPrefixListReferenceCustomResourceProviderRoleC5D4C080",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomTransitGatewayPrefixListReferenceCustomResourceProviderRoleC5D4C080",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomTransitGatewayPrefixListReferenceCustomResourceProviderLogGroupBC9F3669": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomTransitGatewayPrefixListReferenceCustomResourceProviderHandler9BAD63E3",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomTransitGatewayPrefixListReferenceCustomResourceProviderRoleC5D4C080": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ec2:CreateTransitGatewayPrefixListReference",
+                    "ec2:ModifyTransitGatewayPrefixListReference",
+                    "ec2:DeleteTransitGatewayPrefixListReference",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "AllowModifyTgwReferences",
                 },
               ],
               "Version": "2012-10-17",
@@ -1664,6 +1857,57 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
       },
       "Type": "AWS::EC2::LaunchTemplate",
     },
+    "NetworkMainCore10400016sameAccountTgwVpnStaticRoute68BFCB50": {
+      "Properties": {
+        "DestinationCidrBlock": "10.40.0.0/16",
+        "TransitGatewayAttachmentId": {
+          "Ref": "SameAccountTgwVpnVpnTransitGatewayAttachment33D92C61",
+        },
+        "TransitGatewayRouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRoute",
+    },
+    "NetworkMainCore10500016sameAccountTgwVpnStaticRouteE9B062C3": {
+      "Properties": {
+        "DestinationCidrBlock": "10.50.0.0/16",
+        "TransitGatewayAttachmentId": {
+          "Ref": "SameAccountTgwVpnVpnTransitGatewayAttachment33D92C61",
+        },
+        "TransitGatewayRouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRoute",
+    },
+    "NetworkMainStandaloneacceleratorPrefixListsameAccountTgwVpnFCA3D5F2": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomTransitGatewayPrefixListReferenceCustomResourceProviderLogGroupBC9F3669",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomTransitGatewayPrefixListReferenceCustomResourceProviderHandler9BAD63E3",
+            "Arn",
+          ],
+        },
+        "prefixListReference": {
+          "PrefixListId": {
+            "Ref": "SsmParameterValueacceleratornetworkprefixListacceleratorprefixlistidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+          "TransitGatewayAttachmentId": {
+            "Ref": "SameAccountTgwVpnVpnTransitGatewayAttachment33D92C61",
+          },
+          "TransitGatewayRouteTableId": {
+            "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainStandaloneidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+        },
+      },
+      "Type": "Custom::TransitGatewayPrefixListReference",
+      "UpdateReplacePolicy": "Delete",
+    },
     "SameAccountFirewallCgwCustomerGatewayC0237E66": {
       "Properties": {
         "BgpAsn": 65500,
@@ -1679,6 +1923,39 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
         "Type": "ipsec.1",
       },
       "Type": "AWS::EC2::CustomerGateway",
+    },
+    "SameAccountTgwVpnNetworkMainCorePropagation9D8E7774": {
+      "Properties": {
+        "TransitGatewayAttachmentId": {
+          "Ref": "SameAccountTgwVpnVpnTransitGatewayAttachment33D92C61",
+        },
+        "TransitGatewayRouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
+    },
+    "SameAccountTgwVpnNetworkMainSharedAssociationEED2CCFB": {
+      "Properties": {
+        "TransitGatewayAttachmentId": {
+          "Ref": "SameAccountTgwVpnVpnTransitGatewayAttachment33D92C61",
+        },
+        "TransitGatewayRouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainSharedidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTableAssociation",
+    },
+    "SameAccountTgwVpnNetworkMainSharedPropagation4D265167": {
+      "Properties": {
+        "TransitGatewayAttachmentId": {
+          "Ref": "SameAccountTgwVpnVpnTransitGatewayAttachment33D92C61",
+        },
+        "TransitGatewayRouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainSharedidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
     },
     "SameAccountTgwVpnVpnConnection83EBF560": {
       "Properties": {
@@ -1697,6 +1974,31 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
         "Type": "ipsec.1",
       },
       "Type": "AWS::EC2::VPNConnection",
+    },
+    "SameAccountTgwVpnVpnTransitGatewayAttachment33D92C61": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3",
+        "SameAccountTgwVpnVpnConnection83EBF560",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
+            "Arn",
+          ],
+        },
+        "crossAccountVpnOptions": {},
+        "name": "same-account-tgw-vpn",
+        "region": "us-east-1",
+        "transitGatewayId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "type": "vpn",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::GetTransitGatewayAttachment",
+      "UpdateReplacePolicy": "Delete",
     },
     "SameAccountVgwVpnVpnConnectionD0DEB61E": {
       "Properties": {

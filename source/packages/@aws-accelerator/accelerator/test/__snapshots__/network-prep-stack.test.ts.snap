@@ -544,6 +544,20 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
             {
               "Action": "sts:AssumeRole",
               "Condition": {
+                "ArnLike": {
+                  "aws:PrincipalArn": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":iam::*:role/AWSAccelerator*",
+                      ],
+                    ],
+                  },
+                },
                 "StringEquals": {
                   "aws:PrincipalOrgID": "o-asdf123456",
                 },
@@ -583,31 +597,31 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
         ],
         "parameters": [
           {
-            "name": "/accelerator/network/transitGateways/Network-Main/id",
+            "name": "/accelerator/network/customerGateways/cross-account-cgw/transitGateways/Network-Main/id",
             "value": {
               "Ref": "NetworkMainTransitGatewayF6473E53",
             },
           },
           {
-            "name": "/accelerator/network/transitGateways/Network-Main/routeTables/Network-Main-Core/id",
+            "name": "/accelerator/network/customerGateways/cross-account-cgw/transitGateways/Network-Main/routeTables/Network-Main-Core/id",
             "value": {
               "Ref": "NetworkMainCoreTransitGatewayRouteTableE04FCA1B",
             },
           },
           {
-            "name": "/accelerator/network/transitGateways/Network-Main/routeTables/Network-Main-Segregated/id",
+            "name": "/accelerator/network/customerGateways/cross-account-cgw/transitGateways/Network-Main/routeTables/Network-Main-Segregated/id",
             "value": {
               "Ref": "NetworkMainSegregatedTransitGatewayRouteTableFD7A15B0",
             },
           },
           {
-            "name": "/accelerator/network/transitGateways/Network-Main/routeTables/Network-Main-Shared/id",
+            "name": "/accelerator/network/customerGateways/cross-account-cgw/transitGateways/Network-Main/routeTables/Network-Main-Shared/id",
             "value": {
               "Ref": "NetworkMainSharedTransitGatewayRouteTable7A039C6C",
             },
           },
           {
-            "name": "/accelerator/network/transitGateways/Network-Main/routeTables/Network-Main-Standalone/id",
+            "name": "/accelerator/network/customerGateways/cross-account-cgw/transitGateways/Network-Main/routeTables/Network-Main-Standalone/id",
             "value": {
               "Ref": "NetworkMainStandaloneTransitGatewayRouteTable663AEF73",
             },
@@ -691,6 +705,20 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
             {
               "Action": "sts:AssumeRole",
               "Condition": {
+                "ArnLike": {
+                  "aws:PrincipalArn": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":iam::*:role/AWSAccelerator*",
+                      ],
+                    ],
+                  },
+                },
                 "StringEquals": {
                   "aws:PrincipalOrgID": "o-asdf123456",
                 },
@@ -709,6 +737,98 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
           },
         ],
         "RoleName": "AWSAccelerator-CrossAccount-PutLogs-Role",
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CrossAccountTgwRoutesPolicyDCC39B57": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Cross account policy allows access for TGW route CRUD operations",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Description": "",
+        "Path": "/",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "ec2:AssociateTransitGatewayRouteTable",
+                "ec2:CreateTransitGatewayRoute",
+                "ec2:CreateTransitGatewayPrefixListReference",
+                "ec2:DeleteTransitGatewayPrefixListReference",
+                "ec2:DeleteTransitGatewayRoute",
+                "ec2:DescribeTransitGatewayAttachments",
+                "ec2:DescribeVpnConnections",
+                "ec2:DisableTransitGatewayRouteTablePropagation",
+                "ec2:DisassociateTransitGatewayRouteTable",
+                "ec2:EnableTransitGatewayRouteTablePropagation",
+                "ec2:ModifyTransitGatewayPrefixListReference",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "TGWRouteCRUD",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::ManagedPolicy",
+    },
+    "CrossAccountTgwRoutesRole6DAD417B": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "IAM Role for lambda needs AWS managed policy",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Condition": {
+                "ArnLike": {
+                  "aws:PrincipalArn": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":iam::*:role/AWSAccelerator*",
+                      ],
+                    ],
+                  },
+                },
+                "StringEquals": {
+                  "aws:PrincipalOrgID": "o-asdf123456",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Ref": "CrossAccountTgwRoutesPolicyDCC39B57",
+          },
+        ],
+        "RoleName": "AWSAccelerator-CrossAccount-TgwRoutes-Role",
       },
       "Type": "AWS::IAM::Role",
     },
@@ -796,6 +916,20 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
             {
               "Action": "sts:AssumeRole",
               "Condition": {
+                "ArnLike": {
+                  "aws:PrincipalArn": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":iam::*:role/AWSAccelerator*",
+                      ],
+                    ],
+                  },
+                },
                 "StringEquals": {
                   "aws:PrincipalOrgID": "o-asdf123456",
                 },

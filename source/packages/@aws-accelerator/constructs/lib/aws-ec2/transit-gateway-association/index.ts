@@ -11,33 +11,23 @@
  *  and limitations under the License.
  */
 
-/**
- * aws-ec2-transit-gateway-prefix-list-reference - lambda handler
- *
- * @param event
- * @returns
- */
-
-import {
-  CreateTransitGatewayPrefixListReferenceCommand,
-  DeleteTransitGatewayPrefixListReferenceCommand,
-  EC2Client,
-  ModifyTransitGatewayPrefixListReferenceCommand,
-} from '@aws-sdk/client-ec2';
-
 import { throttlingBackOff } from '@aws-accelerator/utils';
+import {
+  AssociateTransitGatewayRouteTableCommand,
+  DisassociateTransitGatewayRouteTableCommand,
+  EC2Client,
+} from '@aws-sdk/client-ec2';
 import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
 
-interface ReferenceOptions {
+interface TgwAssociationOptions {
   /**
-   * API props
+   * Transit gateway attachment ID
    */
-  readonly props: {
-    readonly PrefixListId: string;
-    readonly TransitGatewayRouteTableId: string;
-    readonly Blackhole?: boolean;
-    readonly TransitGatewayAttachmentId?: string;
-  };
+  readonly transitGatewayAttachmentId: string;
+  /**
+   * Transit gateway route table ID
+   */
+  readonly transitGatewayRouteTableId: string;
   /**
    * Invoking account ID for the custom resource
    */
@@ -64,40 +54,32 @@ interface ReferenceOptions {
   readonly roleName?: string;
 }
 
-export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
-  | {
-      Status: string | undefined;
-    }
-  | undefined
-> {
+export async function handler(
+  event: AWSLambda.CloudFormationCustomResourceEvent,
+): Promise<{ Status: string } | undefined> {
+  //
+  // Set resource properties
   const options = setOptions(event.ResourceProperties, event.ServiceToken);
+  //
+  // Set EC2 client
   const ec2Client = await setEc2Client(options, process.env['SOLUTION_ID']);
-
+  //
+  // Begin custom resource logic
   switch (event.RequestType) {
     case 'Create':
-      await throttlingBackOff(() => ec2Client.send(new CreateTransitGatewayPrefixListReferenceCommand(options.props)));
-
+      await createTgwAssociation(ec2Client, options);
       return {
         Status: 'SUCCESS',
       };
-
     case 'Update':
-      await throttlingBackOff(() => ec2Client.send(new ModifyTransitGatewayPrefixListReferenceCommand(options.props)));
-
+      const oldOptions = setOptions(event.OldResourceProperties, event.ServiceToken);
+      await deleteTgwAssociation(ec2Client, oldOptions);
+      await createTgwAssociation(ec2Client, options);
       return {
         Status: 'SUCCESS',
       };
-
     case 'Delete':
-      await throttlingBackOff(() =>
-        ec2Client.send(
-          new DeleteTransitGatewayPrefixListReferenceCommand({
-            PrefixListId: options.props.PrefixListId,
-            TransitGatewayRouteTableId: options.props.TransitGatewayRouteTableId,
-          }),
-        ),
-      );
-
+      await deleteTgwAssociation(ec2Client, options);
       return {
         Status: 'SUCCESS',
       };
@@ -105,20 +87,16 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 }
 
 /**
- * Set TGW prefix list reference options based on event
+ * Set TGW association options based on event
  * @param resourceProperties { [key: string]: any }
  * @param serviceToken string
- * @returns ReferenceOptions
+ * @returns TgwAssociationOptions
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function setOptions(resourceProperties: { [key: string]: any }, serviceToken: string): ReferenceOptions {
+function setOptions(resourceProperties: { [key: string]: any }, serviceToken: string): TgwAssociationOptions {
   return {
-    props: {
-      PrefixListId: resourceProperties['prefixListReference']['PrefixListId'],
-      TransitGatewayRouteTableId: resourceProperties['prefixListReference']['TransitGatewayRouteTableId'],
-      Blackhole: resourceProperties['prefixListReference']['Blackhole'] === 'true' ?? undefined,
-      TransitGatewayAttachmentId: resourceProperties['prefixListReference']['TransitGatewayAttachmentId'],
-    },
+    transitGatewayAttachmentId: resourceProperties['transitGatewayAttachmentId'],
+    transitGatewayRouteTableId: resourceProperties['transitGatewayRouteTableId'],
     invokingAccountId: serviceToken.split(':')[4],
     invokingRegion: serviceToken.split(':')[3],
     partition: serviceToken.split(':')[1],
@@ -130,17 +108,17 @@ function setOptions(resourceProperties: { [key: string]: any }, serviceToken: st
 
 /**
  * Returns a local or cross-account/cross-region EC2 client based on input parameters
- * @param options ReferenceOptions
+ * @param options options
  * @param solutionId string | undefined
  * @returns Promise<EC2Client>
  */
-async function setEc2Client(options: ReferenceOptions, solutionId?: string): Promise<EC2Client> {
+async function setEc2Client(options: TgwAssociationOptions, solutionId?: string): Promise<EC2Client> {
   const roleArn = `arn:${options.partition}:iam::${options.owningAccountId}:role/${options.roleName}`;
   const stsClient = new STSClient({ region: options.invokingRegion, customUserAgent: solutionId });
 
   if (options.owningAccountId && options.owningRegion) {
     if (!options.roleName) {
-      throw new Error(`Cross-account TGW prefix list reference required but roleName parameter is undefined`);
+      throw new Error(`Cross-account TGW association required but roleName parameter is undefined`);
     }
     //
     // Assume role via STS
@@ -154,7 +132,7 @@ async function setEc2Client(options: ReferenceOptions, solutionId?: string): Pro
     });
   } else if (options.owningAccountId && !options.owningRegion) {
     if (!options.roleName) {
-      throw new Error(`Cross-account TGW prefix list reference required but roleName parameter is undefined`);
+      throw new Error(`Cross-account TGW association required but roleName parameter is undefined`);
     }
     //
     // Assume role via STS
@@ -208,5 +186,53 @@ async function getStsCredentials(
     };
   } catch (e) {
     throw new Error(`Could not assume role: ${e}`);
+  }
+}
+
+/**
+ * Create TGW route table association
+ * @param ec2Client
+ * @param options
+ * @returns Promise<string>
+ */
+async function createTgwAssociation(ec2Client: EC2Client, options: TgwAssociationOptions): Promise<void> {
+  console.log(
+    `Associating attachment ${options.transitGatewayAttachmentId} to TGW route table ${options.transitGatewayRouteTableId}...`,
+  );
+  try {
+    await throttlingBackOff(() =>
+      ec2Client.send(
+        new AssociateTransitGatewayRouteTableCommand({
+          TransitGatewayAttachmentId: options.transitGatewayAttachmentId,
+          TransitGatewayRouteTableId: options.transitGatewayRouteTableId,
+        }),
+      ),
+    );
+  } catch (e) {
+    throw new Error(`Could not complete AssociateTransitGateway command: ${e}`);
+  }
+}
+
+/**
+ * Delete TGW route table association
+ * @param ec2Client
+ * @param options
+ * @returns Promise<string>
+ */
+async function deleteTgwAssociation(ec2Client: EC2Client, options: TgwAssociationOptions): Promise<void> {
+  console.log(
+    `Disassociating attachment ${options.transitGatewayAttachmentId} from TGW route table ${options.transitGatewayRouteTableId}...`,
+  );
+  try {
+    await throttlingBackOff(() =>
+      ec2Client.send(
+        new DisassociateTransitGatewayRouteTableCommand({
+          TransitGatewayAttachmentId: options.transitGatewayAttachmentId,
+          TransitGatewayRouteTableId: options.transitGatewayRouteTableId,
+        }),
+      ),
+    );
+  } catch (e) {
+    throw new Error(`Could not complete AssociateTransitGateway command: ${e}`);
   }
 }

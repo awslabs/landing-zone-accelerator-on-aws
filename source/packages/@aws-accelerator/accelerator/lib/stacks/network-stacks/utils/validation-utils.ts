@@ -11,7 +11,12 @@
  *  and limitations under the License.
  */
 
-import { VpnConnectionConfig } from '@aws-accelerator/config';
+import {
+  CustomerGatewayConfig,
+  NetworkConfigTypes,
+  TransitGatewayRouteEntryConfig,
+  VpnConnectionConfig,
+} from '@aws-accelerator/config';
 import { IPv4, IPv4CidrRange } from 'ip-num';
 import { getObjectKeys } from './getter-utils';
 
@@ -80,4 +85,27 @@ export function isIpv4(ip: string): boolean {
   } catch (e) {
     return false;
   }
+}
+
+/**
+ * Returns true if the passed TGW route item belongs to a dynamic EC2 firewall customer gateway
+ * @param customerGateways CustomerGatewayConfig[]
+ * @param routeItem TransitGatewayRouteEntryConfig
+ * @returns boolean
+ */
+export function isEc2FirewallVpnRoute(
+  customerGateways: CustomerGatewayConfig[],
+  routeItem: TransitGatewayRouteEntryConfig,
+): boolean {
+  if (routeItem.attachment && NetworkConfigTypes.transitGatewayRouteTableVpnEntryConfig.is(routeItem.attachment)) {
+    const vpnName = routeItem.attachment.vpnConnectionName;
+    const cgw = customerGateways.find(cgwItem => cgwItem.vpnConnections?.find(vpnItem => vpnItem.name === vpnName));
+
+    if (!cgw) {
+      throw new Error(`VPN connection "${vpnName}" not found in customer gateway configuration.`);
+    } else {
+      return !isIpv4(cgw.ipAddress);
+    }
+  }
+  return false;
 }

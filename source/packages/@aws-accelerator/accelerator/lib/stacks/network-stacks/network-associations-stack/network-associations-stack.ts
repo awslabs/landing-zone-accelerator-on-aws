@@ -49,7 +49,6 @@ import {
   ActiveDirectory,
   ActiveDirectoryConfiguration,
   ActiveDirectoryResolverRule,
-  albListenerActionProperty,
   AssociateHostedZones,
   CrossAccountRouteFramework,
   DirectConnectGatewayAssociation,
@@ -75,14 +74,15 @@ import {
   UserDataScriptsType,
   VpcIdLookup,
   VpcPeering,
+  albListenerActionProperty,
 } from '@aws-accelerator/constructs';
 import { SsmResourceType } from '@aws-accelerator/utils';
 
 import path from 'path';
 import { AcceleratorStackProps, NagSuppressionRuleIds } from '../../accelerator-stack';
 import { NetworkStack } from '../network-stack';
+import { isEc2FirewallVpnRoute, isIpv4 } from '../utils/validation-utils';
 import { SharedResources } from './shared-resources';
-import { isIpv4 } from '../utils/validation-utils';
 
 interface Peering {
   name: string;
@@ -2416,71 +2416,67 @@ export class NetworkAssociationsStack extends NetworkStack {
       plRouteId = pascalCase(`${routeTableItem.name}${routeItem.destinationPrefixList}Blackhole`);
     }
 
-    // If route is for VPC attachment
-    if (routeItem.attachment && NetworkConfigTypes.transitGatewayRouteTableVpcEntryConfig.is(routeItem.attachment)) {
-      this.logger.info(
-        `Adding prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
-      );
-      plRouteId = pascalCase(
-        `${routeTableItem.name}${routeItem.destinationPrefixList}${routeItem.attachment.vpcName}${routeItem.attachment.account}`,
-      );
+    if (routeItem.attachment) {
+      // If route is for VPC attachment
+      if (NetworkConfigTypes.transitGatewayRouteTableVpcEntryConfig.is(routeItem.attachment)) {
+        this.logger.info(
+          `Adding prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
+        );
+        plRouteId = pascalCase(
+          `${routeTableItem.name}${routeItem.destinationPrefixList}${routeItem.attachment.vpcName}${routeItem.attachment.account}`,
+        );
 
-      // Get TGW attachment ID
-      transitGatewayAttachmentId = this.transitGatewayAttachments.get(
-        `${tgwItem.name}_${routeItem.attachment.account}_${routeItem.attachment.vpcName}`,
-      );
-    }
+        // Get TGW attachment ID
+        transitGatewayAttachmentId = this.transitGatewayAttachments.get(
+          `${tgwItem.name}_${routeItem.attachment.account}_${routeItem.attachment.vpcName}`,
+        );
+      }
 
-    // If route is for DX Gateway attachment
-    if (
-      routeItem.attachment &&
-      NetworkConfigTypes.transitGatewayRouteTableDxGatewayEntryConfig.is(routeItem.attachment)
-    ) {
-      this.logger.info(
-        `Adding prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
-      );
-      plRouteId = pascalCase(
-        `${routeTableItem.name}${routeItem.destinationPrefixList}${routeItem.attachment.directConnectGatewayName}`,
-      );
+      // If route is for DX Gateway attachment
+      if (NetworkConfigTypes.transitGatewayRouteTableDxGatewayEntryConfig.is(routeItem.attachment)) {
+        this.logger.info(
+          `Adding prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
+        );
+        plRouteId = pascalCase(
+          `${routeTableItem.name}${routeItem.destinationPrefixList}${routeItem.attachment.directConnectGatewayName}`,
+        );
 
-      // Get TGW attachment ID
-      transitGatewayAttachmentId = this.transitGatewayAttachments.get(
-        `${routeItem.attachment.directConnectGatewayName}_${tgwItem.name}`,
-      );
-    }
+        // Get TGW attachment ID
+        transitGatewayAttachmentId = this.transitGatewayAttachments.get(
+          `${routeItem.attachment.directConnectGatewayName}_${tgwItem.name}`,
+        );
+      }
 
-    // If route is for VPN attachment
-    if (routeItem.attachment && NetworkConfigTypes.transitGatewayRouteTableVpnEntryConfig.is(routeItem.attachment)) {
-      this.logger.info(
-        `Adding prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
-      );
-      plRouteId = pascalCase(
-        `${routeTableItem.name}${routeItem.destinationPrefixList}${routeItem.attachment.vpnConnectionName}`,
-      );
+      // If route is for VPN attachment
+      if (NetworkConfigTypes.transitGatewayRouteTableVpnEntryConfig.is(routeItem.attachment)) {
+        this.logger.info(
+          `Adding prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
+        );
+        plRouteId = pascalCase(
+          `${routeTableItem.name}${routeItem.destinationPrefixList}${routeItem.attachment.vpnConnectionName}`,
+        );
 
-      // Get TGW attachment ID
-      transitGatewayAttachmentId = this.transitGatewayAttachments.get(
-        `${routeItem.attachment.vpnConnectionName}_${tgwItem.name}`,
-      );
-    }
+        // Get TGW attachment ID
+        transitGatewayAttachmentId = this.transitGatewayAttachments.get(
+          `${routeItem.attachment.vpnConnectionName}_${tgwItem.name}`,
+        );
+      }
 
-    // If route is for TGW peering attachment
-    if (
-      routeItem.attachment &&
-      NetworkConfigTypes.transitGatewayRouteTableTgwPeeringEntryConfig.is(routeItem.attachment)
-    ) {
-      this.logger.info(
-        `Adding prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
-      );
-      plRouteId = pascalCase(
-        `${routeTableItem.name}${routeItem.destinationPrefixList}${routeItem.attachment.transitGatewayPeeringName}`,
-      );
+      // If route is for TGW peering attachment
+      if (NetworkConfigTypes.transitGatewayRouteTableTgwPeeringEntryConfig.is(routeItem.attachment)) {
+        this.logger.info(
+          `Adding prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
+        );
+        plRouteId = pascalCase(
+          `${routeTableItem.name}${routeItem.destinationPrefixList}${routeItem.attachment.transitGatewayPeeringName}`,
+        );
 
-      // Get TGW attachment ID
-      transitGatewayAttachmentId = this.getTgwPeeringAttachmentId(
-        routeItem.attachment.transitGatewayPeeringName,
-        tgwItem,
-      );
+        // Get TGW attachment ID
+        transitGatewayAttachmentId = this.getTgwPeeringAttachmentId(
+          routeItem.attachment.transitGatewayPeeringName,
+          tgwItem,
+        );
+      }
     }
 
     if (routeItem.attachment && !transitGatewayAttachmentId) {
@@ -2506,7 +2502,10 @@ export class NetworkAssociationsStack extends NetworkStack {
     //
     // Create static routes
     //
-    if (routeItem.destinationCidrBlock) {
+    if (
+      routeItem.destinationCidrBlock &&
+      !isEc2FirewallVpnRoute(this.props.networkConfig.customerGateways ?? [], routeItem)
+    ) {
       const attachmentConfig = this.getStaticRouteAttachmentConfig(routeItem, routeTableItem, tgwItem);
       let routeId = attachmentConfig.routeId;
       const transitGatewayAttachmentId = attachmentConfig.transitGatewayAttachmentId;
@@ -2533,7 +2532,10 @@ export class NetworkAssociationsStack extends NetworkStack {
     //
     // Create prefix list references
     //
-    if (routeItem.destinationPrefixList) {
+    if (
+      routeItem.destinationPrefixList &&
+      !isEc2FirewallVpnRoute(this.props.networkConfig.customerGateways ?? [], routeItem)
+    ) {
       // Get PL ID from map
       const prefixListId = this.prefixListMap.get(routeItem.destinationPrefixList);
       if (!prefixListId) {

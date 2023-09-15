@@ -1379,7 +1379,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
   /**
    * Get the IAM principals for the organization.
    */
-  public getOrgPrincipals(organizationId: string | undefined): cdk.aws_iam.IPrincipal {
+  public getOrgPrincipals(organizationId: string | undefined, withPrefixCondition?: boolean): cdk.aws_iam.IPrincipal {
     if (this.props.partition === 'aws-cn' || !this.props.organizationConfig.enable) {
       const accountIds = this.props.accountsConfig.getAccountIds();
       if (accountIds) {
@@ -1387,11 +1387,23 @@ export abstract class AcceleratorStack extends cdk.Stack {
         accountIds.forEach(accountId => {
           principals.push(new cdk.aws_iam.AccountPrincipal(accountId));
         });
-        return new cdk.aws_iam.CompositePrincipal(...principals);
+        return withPrefixCondition
+          ? new cdk.aws_iam.CompositePrincipal(...principals).withConditions({
+              ArnLike: {
+                'aws:PrincipalArn': `arn:${this.partition}:iam::*:role/${this.props.prefixes.accelerator}*`,
+              },
+            })
+          : new cdk.aws_iam.CompositePrincipal(...principals);
       }
     }
     if (organizationId) {
-      return new cdk.aws_iam.OrganizationPrincipal(organizationId);
+      return withPrefixCondition
+        ? new cdk.aws_iam.OrganizationPrincipal(organizationId).withConditions({
+            ArnLike: {
+              'aws:PrincipalArn': `arn:${this.partition}:iam::*:role/${this.props.prefixes.accelerator}*`,
+            },
+          })
+        : new cdk.aws_iam.OrganizationPrincipal(organizationId);
     }
     this.logger.error('Organization ID not found or account IDs not found');
     throw new Error(`Configuration validation failed at runtime.`);

@@ -26,10 +26,16 @@ const testNamePrefix = 'Construct(TransitGatewayRouteTableAssociation): ';
 
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
+const customResourceHandler = cdk.aws_lambda.Function.fromFunctionName(stack, 'test', 'test');
 
 new TransitGatewayRouteTableAssociation(stack, 'TransitGatewayRouteTableAssociation', {
   transitGatewayAttachmentId: 'transitGatewayAttachmentId',
   transitGatewayRouteTableId: 'transitGatewayRouteTableId',
+});
+new TransitGatewayRouteTableAssociation(stack, 'TransitGatewayRouteTableAssociationCustom', {
+  transitGatewayAttachmentId: 'transitGatewayAttachmentId',
+  transitGatewayRouteTableId: 'transitGatewayRouteTableId',
+  customResourceHandler,
 });
 /**
  * TransitGatewayRouteTableAssociation construct test
@@ -122,6 +128,11 @@ describe('TransitGatewayRouteTablePropagation', () => {
   new TransitGatewayRouteTablePropagation(stack, 'TransitGatewayRouteTablePropagation', {
     transitGatewayAttachmentId: 'transitGatewayAttachmentId',
     transitGatewayRouteTableId: 'transitGatewayRouteTableId',
+  });
+  new TransitGatewayRouteTablePropagation(stack, 'TransitGatewayRouteTablePropagationCustom', {
+    transitGatewayAttachmentId: 'transitGatewayAttachmentId',
+    transitGatewayRouteTableId: 'transitGatewayRouteTableId',
+    customResourceHandler,
   });
   snapShotTest('Construct(TransitGatewayRouteTablePropagation): ', stack);
 });
