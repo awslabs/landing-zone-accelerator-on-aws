@@ -400,10 +400,10 @@ export async function setAcceleratorStackProps(
     await globalConfig.loadIAMRoleSSMParameters(
       globalConfig.homeRegion,
       process.env['PARTITION'] ?? 'aws',
-      process.env['ACCELERATOR_PREFIX'] ?? 'AWSAccelerator',
+      process.env['ACCELERATOR_PREFIX'] ?? 'accelerator',
       accountIds,
+      accountsConfig.getManagementAccountId(),
     );
-    console.log(JSON.stringify(globalConfig.iamRoleSsmParameters, null, 4));
   }
 
   return {
