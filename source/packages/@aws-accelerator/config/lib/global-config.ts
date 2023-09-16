@@ -2209,12 +2209,21 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
     }
     await Promise.all(lzaResourcesPromises);
   }
-  public async loadIAMRoleSSMParameters(region: string, partition: string, prefix: string, accounts: string[]) {
+  public async loadIAMRoleSSMParameters(
+    region: string,
+    partition: string,
+    prefix: string,
+    accounts: string[],
+    managementAccountId: string,
+  ) {
+    if (prefix === 'AWSAccelerator') {
+      prefix = 'accelerator';
+    }
     const ssmPath = `/${prefix}/iam/role/`;
     const promises = [];
     const ssmParameters = [];
     for (const account of accounts) {
-      promises.push(this.loadIAMRoleSSMParametersByEnv(ssmPath, account, region, partition));
+      promises.push(this.loadIAMRoleSSMParametersByEnv(ssmPath, account, region, partition, managementAccountId));
       if (promises.length > 800) {
         const resolvedPromises = await Promise.all(promises);
         ssmParameters.push(...resolvedPromises);
@@ -2228,14 +2237,23 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
     this.iamRoleSsmParameters = ssmParameters;
   }
 
-  private async loadIAMRoleSSMParametersByEnv(ssmPath: string, account: string, region: string, partition: string) {
-    const crossAccountCredentials = await this.getCrossAccountCredentials(
-      account,
-      region,
-      partition,
-      this.managementAccountAccessRole,
-    );
-    const ssmClient = this.getCrossAccountSsmClient(region, crossAccountCredentials);
+  private async loadIAMRoleSSMParametersByEnv(
+    ssmPath: string,
+    account: string,
+    region: string,
+    partition: string,
+    managementAccountId: string,
+  ) {
+    let ssmClient = new SSMClient({ region });
+    if (account !== managementAccountId) {
+      const crossAccountCredentials = await this.getCrossAccountCredentials(
+        account,
+        region,
+        partition,
+        this.managementAccountAccessRole,
+      );
+      ssmClient = this.getCrossAccountSsmClient(region, crossAccountCredentials);
+    }
     const parametersByPath = await this.getParametersByPath(ssmPath, ssmClient);
     return {
       account,
@@ -2277,21 +2295,27 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
 
   private async getParametersByPath(path: string, ssmClient: SSMClient) {
     const parameters: { [key: string]: string } = {};
-    let nextToken: string | undefined = undefined;
-    do {
-      const parametersOutput = await throttlingBackOff(() =>
-        ssmClient.send(
-          new GetParametersByPathCommand({
-            Path: path,
-            MaxResults: 10,
-            NextToken: nextToken,
-            Recursive: true,
-          }),
-        ),
-      );
-      nextToken = parametersOutput.NextToken;
-      parametersOutput.Parameters?.forEach(parameter => (parameters[parameter.Name!] = parameter.Value!));
-    } while (nextToken);
+    try {
+      let nextToken: string | undefined = undefined;
+      do {
+        const parametersOutput = await throttlingBackOff(() =>
+          ssmClient.send(
+            new GetParametersByPathCommand({
+              Path: path,
+              MaxResults: 10,
+              NextToken: nextToken,
+              Recursive: true,
+            }),
+          ),
+        );
+        nextToken = parametersOutput.NextToken;
+        parametersOutput.Parameters?.forEach(parameter => (parameters[parameter.Name!] = parameter.Value!));
+      } while (nextToken);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      logger.error(`Failed to retrieve parameter path for path ${path}`);
+      throw new Error(err);
+    }
     return parameters;
   }
 
