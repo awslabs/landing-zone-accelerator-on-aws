@@ -58,7 +58,9 @@ export async function onCreate(event: AWSLambda.CloudFormationCustomResourceCrea
   const recorderRoleArn = event.ResourceProperties['recorderRoleArn'];
 
   console.log('check config recorders');
-  const configRecorders = await configClient.send(new DescribeConfigurationRecordersCommand({}));
+  const configRecorders = await throttlingBackOff(() =>
+    configClient.send(new DescribeConfigurationRecordersCommand({})),
+  );
   console.log(`${JSON.stringify(configRecorders)}`);
 
   let existingConfigRecorderName: string | undefined = undefined;
@@ -68,8 +70,10 @@ export async function onCreate(event: AWSLambda.CloudFormationCustomResourceCrea
 
   if (existingConfigRecorderName) {
     console.info('Stopping config recorder');
-    await configClient.send(
-      new StopConfigurationRecorderCommand({ ConfigurationRecorderName: existingConfigRecorderName }),
+    await throttlingBackOff(() =>
+      configClient.send(
+        new StopConfigurationRecorderCommand({ ConfigurationRecorderName: existingConfigRecorderName }),
+      ),
     );
   }
 
@@ -80,7 +84,9 @@ export async function onCreate(event: AWSLambda.CloudFormationCustomResourceCrea
   await createUpdateDeliveryChannel(s3BucketName, s3BucketKmsKeyArn);
 
   console.info('Starting config recorder');
-  await configClient.send(new StartConfigurationRecorderCommand({ ConfigurationRecorderName: configRecorderName }));
+  await throttlingBackOff(() =>
+    configClient.send(new StartConfigurationRecorderCommand({ ConfigurationRecorderName: configRecorderName })),
+  );
 
   return {
     PhysicalResourceId: uuidv4(),
@@ -94,7 +100,9 @@ async function onUpdate(event: AWSLambda.CloudFormationCustomResourceUpdateEvent
   const s3BucketKmsKeyArn = event.ResourceProperties['s3BucketKmsKeyArn'];
   const recorderRoleArn = event.ResourceProperties['recorderRoleArn'];
 
-  const configRecorders = await configClient.send(new DescribeConfigurationRecordersCommand({}));
+  const configRecorders = await throttlingBackOff(() =>
+    configClient.send(new DescribeConfigurationRecordersCommand({})),
+  );
   let existingConfigRecorderName: string | undefined = undefined;
 
   if (configRecorders.ConfigurationRecorders?.length === 1) {
@@ -103,8 +111,10 @@ async function onUpdate(event: AWSLambda.CloudFormationCustomResourceUpdateEvent
 
   if (existingConfigRecorderName) {
     console.info('Stopping config recorder');
-    await configClient.send(
-      new StopConfigurationRecorderCommand({ ConfigurationRecorderName: existingConfigRecorderName }),
+    await throttlingBackOff(() =>
+      configClient.send(
+        new StopConfigurationRecorderCommand({ ConfigurationRecorderName: existingConfigRecorderName }),
+      ),
     );
   }
 
@@ -114,7 +124,9 @@ async function onUpdate(event: AWSLambda.CloudFormationCustomResourceUpdateEvent
   await createUpdateDeliveryChannel(s3BucketName, s3BucketKmsKeyArn);
 
   console.info('Starting config recorder');
-  await configClient.send(new StartConfigurationRecorderCommand({ ConfigurationRecorderName: configRecorderName }));
+  await throttlingBackOff(() =>
+    configClient.send(new StartConfigurationRecorderCommand({ ConfigurationRecorderName: configRecorderName })),
+  );
 
   return {
     PhysicalResourceId: event.PhysicalResourceId,
@@ -124,7 +136,9 @@ async function onUpdate(event: AWSLambda.CloudFormationCustomResourceUpdateEvent
 }
 
 async function onDelete(event: AWSLambda.CloudFormationCustomResourceDeleteEvent) {
-  const configRecorders = await configClient.send(new DescribeConfigurationRecordersCommand({}));
+  const configRecorders = await throttlingBackOff(() =>
+    configClient.send(new DescribeConfigurationRecordersCommand({})),
+  );
   let existingConfigRecorderName: string | undefined = undefined;
 
   if (configRecorders.ConfigurationRecorders?.length === 1) {
@@ -133,8 +147,10 @@ async function onDelete(event: AWSLambda.CloudFormationCustomResourceDeleteEvent
 
   if (existingConfigRecorderName) {
     console.info('Stopping config recorder');
-    await configClient.send(
-      new StopConfigurationRecorderCommand({ ConfigurationRecorderName: existingConfigRecorderName }),
+    await throttlingBackOff(() =>
+      configClient.send(
+        new StopConfigurationRecorderCommand({ ConfigurationRecorderName: existingConfigRecorderName }),
+      ),
     );
   }
 
@@ -151,7 +167,9 @@ async function onDelete(event: AWSLambda.CloudFormationCustomResourceDeleteEvent
 
 async function createUpdateDeliveryChannel(s3BucketName: string, s3BucketKmsKeyArn: string): Promise<void> {
   console.log('In create update delivery channel');
-  const deliveryChannels = await configClient.send(new DescribeDeliveryChannelStatusCommand({}));
+  const deliveryChannels = await throttlingBackOff(() =>
+    configClient.send(new DescribeDeliveryChannelStatusCommand({})),
+  );
   console.info(`Delivery channels: ${JSON.stringify(deliveryChannels)}`);
   let existingDeliveryChannelName: string | undefined = undefined;
   // should return one or none
@@ -185,7 +203,9 @@ async function createUpdateDeliveryChannel(s3BucketName: string, s3BucketKmsKeyA
 
 async function deleteConfigRecorder(): Promise<void> {
   console.log('In delete config recorder');
-  const configRecorders = await configClient.send(new DescribeConfigurationRecordersCommand({}));
+  const configRecorders = await throttlingBackOff(() =>
+    configClient.send(new DescribeConfigurationRecordersCommand({})),
+  );
   let existingConfigRecorderName: string | undefined = undefined;
 
   if (configRecorders.ConfigurationRecorders?.length === 1) {
@@ -209,7 +229,9 @@ async function deleteConfigRecorder(): Promise<void> {
 
 async function deleteDeliveryChannel() {
   console.log('In delete delivery channel');
-  const deliveryChannels = await configClient.send(new DescribeDeliveryChannelStatusCommand({}));
+  const deliveryChannels = await throttlingBackOff(() =>
+    configClient.send(new DescribeDeliveryChannelStatusCommand({})),
+  );
   let existingDeliveryChannelName: string | undefined = undefined;
 
   if (deliveryChannels.DeliveryChannelsStatus?.length === 1) {
@@ -231,7 +253,9 @@ async function deleteDeliveryChannel() {
 
 async function createUpdateRecorder(recorderRoleArn: string): Promise<string> {
   console.log('In create update recorder');
-  const configRecorders = await configClient.send(new DescribeConfigurationRecordersCommand({}));
+  const configRecorders = await throttlingBackOff(() =>
+    configClient.send(new DescribeConfigurationRecordersCommand({})),
+  );
   let existingConfigRecorderName: string | undefined = undefined;
   if (configRecorders.ConfigurationRecorders?.length === 1) {
     existingConfigRecorderName = configRecorders.ConfigurationRecorders[0].name;
