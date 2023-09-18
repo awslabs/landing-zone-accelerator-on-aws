@@ -663,7 +663,7 @@ export const logDestinationTypeEnum = enums(
 
 const vpcFlowLogsS3BucketConfig = t.interface({
   lifecycleRules: optional(t.array(lifecycleRuleConfig)),
-  s3LogPath: optional(nonEmptyString),
+  overrideS3LogPath: optional(nonEmptyString),
 });
 
 const vpcFlowLogsCloudWatchLogsConfig = t.interface({
@@ -685,6 +685,35 @@ export const vpcFlowLogsConfig = t.interface({
   customFields: optional(t.array(nonEmptyString)),
 });
 
+export const prefixConfig = t.interface({
+  /**
+   * Indicates whether or not to add a custom prefix to LZA Default Centralized Logging location.
+   * If useCustomPrefix is set to true, logs will be stored in the Centralized Logging Bucket prefix.
+   */
+  useCustomPrefix: t.boolean,
+  /**
+   * (Optional) Prefix to be used for Centralized Logging Path
+   */
+  customOverride: optional(nonEmptyString),
+});
+
+/**
+ * (Optional) Central Log Bucket Path configuration.
+ */
+export class PrefixConfig implements t.TypeOf<typeof prefixConfig> {
+  /**
+   *  Indicates whether or not to add a custom prefix to LZA Default Centralized Logging location.
+   *  If useCustomPrefix is set to false, logs will be stored in the default LZA Centralized Logging Bucket prefix.
+   */
+  readonly useCustomPrefix: boolean = false;
+
+  /**
+   * @optional
+   * (Optional) Prefix to be used for Centralized Logging Path
+   */
+  readonly customOverride = undefined;
+}
+
 /**
  * VPC flow logs S3 destination bucket configuration.
  *
@@ -703,7 +732,7 @@ class VpcFlowLogsS3BucketConfig implements t.TypeOf<typeof vpcFlowLogsS3BucketCo
    * ${ACCEL_LOOKUP::VPC_NAME}'
    * ${ACCEL_LOOKUP::ACCOUNT_ID}'
    */
-  readonly s3LogPath: string = '';
+  readonly overrideS3LogPath: string = '';
 }
 
 /**

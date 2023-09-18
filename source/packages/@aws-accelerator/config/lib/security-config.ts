@@ -179,6 +179,10 @@ export class SecurityConfigTypes {
      * Possible values FIFTEEN_MINUTES, ONE_HOUR, or SIX_HOURS
      */
     exportFrequency: t.enums('ExportFrequencyType', ['FIFTEEN_MINUTES', 'ONE_HOUR', 'SIX_HOURS']),
+    /**
+     * Boolean to determine whether or not to remove GuardDuty Prefix for logging.
+     */
+    overrideGuardDutyPrefix: t.optional(t.prefixConfig),
   });
 
   /**
@@ -830,6 +834,10 @@ export class GuardDutyExportFindingsConfig
    * Possible values FIFTEEN_MINUTES, ONE_HOUR, or SIX_HOURS
    */
   readonly exportFrequency = 'FIFTEEN_MINUTES';
+  /**
+   * (OPTIONAL) AWS GuardDuty Prefix for centralized logging path.
+   */
+  readonly overrideGuardDutyPrefix: t.PrefixConfig | undefined = undefined;
 }
 
 /**

@@ -167,13 +167,26 @@ export class SecurityStack extends AcceleratorStack {
       if (this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.enable) {
         // Validate Delegated Admin Account name is part of account config
         this.validateDelegatedAdminAccountName('Guardduty');
+        let destinationPrefix = 'guardduty';
+        if (
+          this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.overrideGuardDutyPrefix
+            ?.useCustomPrefix
+        ) {
+          destinationPrefix =
+            this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.overrideGuardDutyPrefix
+              ?.customOverride ?? '';
+        }
+
+        const destinationArn = `arn:${cdk.Stack.of(this).partition}:s3:::${
+          this.centralLogsBucketName
+        }/${destinationPrefix}`;
 
         new GuardDutyPublishingDestination(this, 'GuardDutyPublishingDestination', {
           exportDestinationType:
             this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.destinationType,
           exportDestinationOverride:
             this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.overrideExisting ?? false,
-          destinationArn: `arn:${cdk.Stack.of(this).partition}:s3:::${this.centralLogsBucketName}/guardduty`,
+          destinationArn: destinationArn,
           destinationKmsKey: this.centralLogsBucketKey,
           logKmsKey: this.cloudwatchKey,
           logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
