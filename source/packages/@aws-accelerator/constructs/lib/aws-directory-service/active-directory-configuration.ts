@@ -147,10 +147,6 @@ export class ActiveDirectoryConfiguration extends Construct {
 
     this.activeDirectoryConfigurationProps = props;
 
-    const keyPair = new cdk.aws_ec2.CfnKeyPair(this, pascalCase(`${props.managedActiveDirectoryName}InstanceKeyPair`), {
-      keyName: pascalCase(`${props.managedActiveDirectoryName}InstanceKeyPair`),
-    });
-
     const role = cdk.aws_iam.Role.fromRoleName(
       this,
       pascalCase(`${props.managedActiveDirectoryName}InstanceRole`),
@@ -185,7 +181,6 @@ export class ActiveDirectoryConfiguration extends Construct {
       instanceType: props.instanceType,
       iamInstanceProfile: role.roleName,
       imageId: cdk.aws_ssm.StringParameter.valueForStringParameter(this, props.imagePath),
-      keyName: keyPair.keyName,
       subnetId: props.subnetId,
       securityGroupIds: [props.securityGroupId],
       blockDeviceMappings: [
@@ -205,8 +200,6 @@ export class ActiveDirectoryConfiguration extends Construct {
         launchTemplateName: launchTemplateId,
       },
     });
-
-    instance.node.addDependency(keyPair);
 
     instance.cfnOptions.creationPolicy = { resourceSignal: { count: 1, timeout: 'PT30M' } };
 
