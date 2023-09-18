@@ -247,6 +247,29 @@ centralNetworkServices:
           account: Network
           subnet: Network-Inspection-B
           vpc: Network-Inspection
+    - name: Accelerator-GWLB-secondary
+      subnets:
+        - Network-Secondary-A
+        - Network-Secondary-B
+      vpc: Network-Secondary
+      deletionProtection: true
+      endpoints:
+        - name: Secondary-Endpoint-A
+          account: Network
+          subnet: Network-Secondary-A
+          vpc: Network-Secondary
+        - name: Secondary-Endpoint-B
+          account: Network
+          subnet: Network-Secondary-B
+          vpc: Network-Secondary
+        - name: SharedServices-Endpoint-A
+          account: SharedServices
+          subnet: SharedServices-A
+          vpc: SharedServices-Ipam-East
+        - name: SharedServices-Endpoint-B
+          account: SharedServices
+          subnet: SharedServices-B
+          vpc: SharedServices-Ipam-East
   networkFirewall:
     firewalls:
       - name: accelerator-firewall
@@ -1837,7 +1860,7 @@ vpcFlowLogs:
     - cloud-watch-logs
   destinationsConfig:
     s3:
-      lifecycleRules: 
+      lifecycleRules:
         - abortIncompleteMultipartUpload: 1
           enabled: true
           expiration: 365

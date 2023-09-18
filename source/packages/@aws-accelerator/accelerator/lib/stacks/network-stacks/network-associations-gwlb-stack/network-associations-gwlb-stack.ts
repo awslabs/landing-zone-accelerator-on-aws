@@ -33,7 +33,6 @@ import {
   FirewallAutoScalingGroup,
   FirewallConfigReplacements,
   FirewallInstance,
-  SsmParameterLookup,
   TargetGroup,
   VpcEndpoint,
   VpcEndpointType,
@@ -637,22 +636,18 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
    * Create Gateway Load Balancer endpoint resources
    */
   private createGwlbEndpointResources() {
-    for (const vpcItem of this.vpcResources) {
+    for (const vpcItem of this.vpcsInScope) {
       // Get account IDs
-      const vpcAccountIds = this.getVpcAccountIds(vpcItem);
-
-      if (this.isTargetStack(vpcAccountIds, [vpcItem.region])) {
-        const vpcId = this.vpcMap.get(vpcItem.name);
-        if (!vpcId) {
-          this.logger.error(`Unable to locate VPC ${vpcItem.name}`);
-          throw new Error(`Configuration validation failed at runtime.`);
-        }
-        // Create GWLB endpoints and set map
-        const gwlbEndpointMap = this.createGwlbEndpoints(vpcItem, vpcId);
-
-        // Create GWLB route table entries
-        this.createGwlbRouteTableEntries(vpcItem, gwlbEndpointMap);
+      const vpcId = this.vpcMap.get(vpcItem.name);
+      if (!vpcId) {
+        this.logger.error(`Unable to locate VPC ${vpcItem.name}`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
+      // Create GWLB endpoints and set map
+      const gwlbEndpointMap = this.createGwlbEndpoints(vpcItem, vpcId);
+
+      // Create GWLB route table entries
+      this.createGwlbRouteTableEntries(vpcItem, gwlbEndpointMap);
     }
   }
 
@@ -666,19 +661,9 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
     const gwlbEndpointMap = new Map<string, VpcEndpoint>();
     if (this.props.networkConfig.centralNetworkServices?.gatewayLoadBalancers) {
       const loadBalancers = this.props.networkConfig.centralNetworkServices.gatewayLoadBalancers;
-      const delegatedAdminAccountId = this.props.accountsConfig.getAccountId(
-        this.props.networkConfig.centralNetworkServices.delegatedAdminAccount,
-      );
-
       // Create GWLB endpoints and add them to a map
       for (const loadBalancerItem of loadBalancers) {
-        const lbItemEndpointMap = this.createGwlbEndpointMap(
-          vpcId,
-          vpcItem,
-          loadBalancerItem,
-          delegatedAdminAccountId,
-          this.props.partition,
-        );
+        const lbItemEndpointMap = this.createGwlbEndpointMap(vpcId, vpcItem, loadBalancerItem, this.props.partition);
         lbItemEndpointMap.forEach((endpoint, name) => gwlbEndpointMap.set(name, endpoint));
       }
     }
@@ -697,7 +682,6 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
     vpcId: string,
     vpcItem: VpcConfig | VpcTemplatesConfig,
     loadBalancerItem: GwlbConfig,
-    delegatedAdminAccountId: string,
     partition: string,
   ): Map<string, VpcEndpoint> {
     const endpointMap = new Map<string, VpcEndpoint>();
@@ -705,27 +689,10 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
     for (const endpointItem of loadBalancerItem.endpoints) {
       if (endpointItem.vpc === vpcItem.name) {
         // Get endpoint service ID
-        if (!endpointServiceId) {
-          if (delegatedAdminAccountId !== cdk.Stack.of(this).account) {
-            endpointServiceId = new SsmParameterLookup(this, pascalCase(`SsmParamLookup${loadBalancerItem.name}`), {
-              name: this.getSsmPath(SsmResourceType.GWLB_SERVICE, [loadBalancerItem.name]),
-              accountId: delegatedAdminAccountId,
-              parameterRegion: cdk.Stack.of(this).region,
-              roleName: `${this.props.prefixes.accelerator}-Get${pascalCase(loadBalancerItem.name)}SsmParamRole-${
-                cdk.Stack.of(this).region
-              }`,
-              kmsKey: this.cloudwatchKey,
-              logRetentionInDays: this.logRetention,
-              acceleratorPrefix: this.props.prefixes.accelerator,
-            }).value;
-          } else {
-            endpointServiceId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-              this,
-              this.getSsmPath(SsmResourceType.GWLB_SERVICE, [loadBalancerItem.name]),
-            );
-          }
-        }
-
+        endpointServiceId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+          this,
+          this.getSsmPath(SsmResourceType.GWLB_SERVICE, [loadBalancerItem.name]),
+        );
         // Create endpoint and add to map
         const endpoint = this.createGwlbEndpointItem(endpointItem, vpcId, endpointServiceId, partition);
         endpointMap.set(endpointItem.name, endpoint);

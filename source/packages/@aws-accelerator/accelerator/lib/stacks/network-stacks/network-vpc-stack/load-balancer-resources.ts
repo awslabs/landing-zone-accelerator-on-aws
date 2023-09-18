@@ -16,7 +16,9 @@ import {
   ApplicationLoadBalancer,
   GatewayLoadBalancer,
   NetworkLoadBalancer,
+  PutSsmParameter,
   SecurityGroup,
+  SsmParameterProps,
   Subnet,
 } from '@aws-accelerator/constructs';
 import { SsmResourceType } from '@aws-accelerator/utils';
@@ -31,7 +33,6 @@ import { NetworkVpcStack } from './network-vpc-stack';
 export class LoadBalancerResources {
   public readonly albMap: Map<string, ApplicationLoadBalancer>;
   public readonly gwlbMap: Map<string, GatewayLoadBalancer>;
-  public readonly gwlbRoleMap: Map<string, cdk.aws_iam.Role>;
   public readonly nlbMap: Map<string, NetworkLoadBalancer>;
   private stack: NetworkVpcStack;
 
@@ -44,7 +45,6 @@ export class LoadBalancerResources {
     this.stack = networkVpcStack;
 
     // Create GWLB resources
-    this.gwlbRoleMap = this.createGwlbRoles(this.stack.vpcsInScope, props);
     this.gwlbMap = this.createGwlbs(this.stack.vpcsInScope, subnetMap, props);
 
     // Create ALBs
@@ -52,77 +52,6 @@ export class LoadBalancerResources {
 
     // Create NLBs
     this.nlbMap = this.createNetworkLoadBalancers(this.stack.vpcsInScope, subnetMap, props);
-  }
-
-  /**
-   * Create GWLB cross-account access roles as needed
-   * @param vpcResources
-   * @param props
-   * @returns
-   */
-  private createGwlbRoles(
-    vpcResources: (VpcConfig | VpcTemplatesConfig)[],
-    props: AcceleratorStackProps,
-  ): Map<string, cdk.aws_iam.Role> {
-    const gwlbRoleMap = new Map<string, cdk.aws_iam.Role>();
-
-    for (const vpcItem of vpcResources) {
-      for (const loadBalancerItem of props.networkConfig.centralNetworkServices?.gatewayLoadBalancers ?? []) {
-        if (vpcItem.name === loadBalancerItem.vpc) {
-          const role = this.createGwlbRole(loadBalancerItem, props);
-
-          // Add role to map if it exists
-          if (role) {
-            gwlbRoleMap.set(loadBalancerItem.name, role);
-          }
-        }
-      }
-    }
-    return gwlbRoleMap;
-  }
-
-  /**
-   * Create GWLB cross-account role
-   * @param loadBalancerItem
-   * @param props
-   * @returns
-   */
-  private createGwlbRole(loadBalancerItem: GwlbConfig, props: AcceleratorStackProps): cdk.aws_iam.Role | undefined {
-    const allowedPrincipals = this.setGwlbAllowedPrincipals(loadBalancerItem, props);
-
-    // Create cross-account role
-    if (allowedPrincipals.length > 0) {
-      const principals: cdk.aws_iam.PrincipalBase[] = [];
-      allowedPrincipals.forEach(accountId => {
-        principals.push(new cdk.aws_iam.AccountPrincipal(accountId));
-      });
-      const role = new cdk.aws_iam.Role(this.stack, `Get${pascalCase(loadBalancerItem.name)}SsmParamRole`, {
-        roleName: `${props.prefixes.accelerator}-Get${pascalCase(loadBalancerItem.name)}SsmParamRole-${
-          cdk.Stack.of(this.stack).region
-        }`,
-        assumedBy: new cdk.aws_iam.CompositePrincipal(...principals),
-        inlinePolicies: {
-          default: new cdk.aws_iam.PolicyDocument({
-            statements: [
-              new cdk.aws_iam.PolicyStatement({
-                effect: cdk.aws_iam.Effect.ALLOW,
-                actions: ['ssm:GetParameter'],
-                resources: [
-                  `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter${props.prefixes.ssmParamName}/network/gwlb/${loadBalancerItem.name}/*`,
-                ],
-              }),
-            ],
-          }),
-        },
-      });
-      // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
-      NagSuppressions.addResourceSuppressions(role, [
-        { id: 'AwsSolutions-IAM5', reason: 'Allow cross-account resources to get SSM parameters under this path.' },
-      ]);
-
-      return role;
-    }
-    return undefined;
   }
 
   /**
@@ -164,6 +93,7 @@ export class LoadBalancerResources {
           const allowedPrincipals = this.setGwlbAllowedPrincipals(loadBalancerItem, props);
           const gwlb = this.createGwlb(vpcItem, loadBalancerItem, subnetMap, allowedPrincipals);
           gwlbMap.set(loadBalancerItem.name, gwlb);
+          this.setGwlbEndpointParameters(gwlb, loadBalancerItem, allowedPrincipals, vpcItem.name);
         }
       }
     }
@@ -211,6 +141,7 @@ export class LoadBalancerResources {
         tags: loadBalancerItem.tags,
       },
     );
+
     // Add SSM parameters
     this.stack.addSsmParameter({
       logicalId: pascalCase(`SsmParam${pascalCase(loadBalancerItem.name)}GwlbServiceId`),
@@ -229,6 +160,58 @@ export class LoadBalancerResources {
     ]);
 
     return loadBalancer;
+  }
+
+  /**
+   * Create gateway load balancer parameter stores for applicable accounts.
+   * @param gwlb Gateway Load Balancer config
+   * @param loadBalancerItem Gateway Load Balancer
+   * @param allowedPrincipals Allowed Principals
+   * @param vpcName Name of the VPC
+   */
+  private setGwlbEndpointParameters(
+    gwlb: GatewayLoadBalancer,
+    loadBalancerItem: GwlbConfig,
+    allowedPrincipals: string[],
+    vpcName: string,
+  ) {
+    const accountIds: string[] = [];
+
+    allowedPrincipals.forEach(account => {
+      if (account !== cdk.Stack.of(this.stack).account) {
+        accountIds.push(account);
+      }
+    });
+
+    const parameters = this.setCrossAccountGwlbSsmParameters(gwlb, loadBalancerItem);
+    if (accountIds.length > 0 && parameters.length > 0) {
+      new PutSsmParameter(this.stack, pascalCase(`${loadBalancerItem.name}-${vpcName}-SharedSsmParameters`), {
+        accountIds,
+        region: cdk.Stack.of(this.stack).region,
+        roleName: this.stack.acceleratorResourceNames.roles.crossAccountSsmParameterShare,
+        kmsKey: this.stack.cloudwatchKey,
+        logRetentionInDays: this.stack.logRetention,
+        parameters,
+        invokingAccountId: this.stack.account,
+        acceleratorPrefix: this.stack.acceleratorPrefix,
+      });
+    }
+  }
+
+  /**
+   * Returns an array of SSM parameters for cross-account Gateway Load Balancer Service Endpoints
+   * @param gwlb Gateway Load Balancer config
+   * @param loadBalancerItem Gateway Load Balancer
+   * @returns SsmParameterProps[]
+   */
+  private setCrossAccountGwlbSsmParameters(gwlb: GatewayLoadBalancer, loadBalancerItem: GwlbConfig) {
+    const ssmParameters: SsmParameterProps[] = [];
+
+    ssmParameters.push({
+      name: this.stack.getSsmPath(SsmResourceType.GWLB_SERVICE, [loadBalancerItem.name]),
+      value: gwlb.endpointServiceId,
+    });
+    return [...new Set(ssmParameters)];
   }
 
   /**

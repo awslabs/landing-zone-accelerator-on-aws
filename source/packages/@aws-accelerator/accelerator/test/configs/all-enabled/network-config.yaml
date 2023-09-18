@@ -130,16 +130,16 @@ transitGateways:
     routeTables:
       - name: Network-Main-Us-West-2-Core
         routes: []
-      - name: Network-Main-Us-West-2-Segregated      
+      - name: Network-Main-Us-West-2-Segregated
         routes: []
       - name: Network-Main-Us-West-2-Shared
-        routes: 
+        routes:
           - destinationCidrBlock: 10.200.0.0/16
-          # - destinationPrefixList: accelerator-pl
+            # - destinationPrefixList: accelerator-pl
             attachment:
               transitGatewayPeeringName: Network-Main-And-Network-Main-Us-West-2-And-Peering
       - name: Network-Main-Standalone
-        routes: []   
+        routes: []
 transitGatewayPeering:
   - name: Network-Main-And-SharedServices-Main-Peering
     requester:
@@ -196,13 +196,13 @@ transitGatewayPeering:
       account: Network
       region: *HOME_REGION
       routeTableAssociations: Network-Main-Shared
-      tags: 
-      - key: Name
-        value: Network-Main-And-Network-Main-Us-West-2-And-Peering
-      - key: CostCenter
-        value: TSD-LZA
-      - key: Company
-        value: AWS
+      tags:
+        - key: Name
+          value: Network-Main-And-Network-Main-Us-West-2-And-Peering
+        - key: CostCenter
+          value: TSD-LZA
+        - key: Company
+          value: AWS
     accepter:
       transitGatewayName: Network-Main-Us-West-2
       account: Network
@@ -292,6 +292,30 @@ centralNetworkServices:
           account: Network
           subnet: Network-Inspection-B
           vpc: Network-Inspection
+    - name: Accelerator-GWLB-secondary
+      subnets:
+        - Network-Secondary-A
+        - Network-Secondary-B
+      vpc: Network-Secondary
+      deletionProtection: true
+      endpoints:
+        - name: Secondary-Endpoint-A
+          account: Network
+          subnet: Network-Secondary-A
+          vpc: Network-Secondary
+        - name: Secondary-Endpoint-B
+          account: Network
+          subnet: Network-Secondary-B
+          vpc: Network-Secondary
+        - name: SharedServices-Endpoint-A
+          account: SharedServices
+          subnet: SharedServices-A
+          vpc: SharedServices-Ipam-East
+        - name: SharedServices-Endpoint-B
+          account: SharedServices
+          subnet: SharedServices-B
+          vpc: SharedServices-Ipam-East
+
   networkFirewall:
     firewalls:
       - name: accelerator-firewall
