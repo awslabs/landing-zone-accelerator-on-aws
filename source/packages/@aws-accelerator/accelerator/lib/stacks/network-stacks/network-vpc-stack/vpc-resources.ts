@@ -554,7 +554,7 @@ export class VpcResources {
   ) {
     let logFormat: string | undefined = undefined;
     let destinationBucketArn: string | undefined;
-    let s3LogPath: string | undefined = undefined;
+    let overrideS3LogPath: string | undefined = undefined;
 
     if (vpcFlowLogs.destinations.includes('s3')) {
       destinationBucketArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
@@ -562,8 +562,8 @@ export class VpcResources {
         this.stack.acceleratorResourceNames.parameters.flowLogsDestinationBucketArn,
       );
 
-      if (vpcFlowLogs.destinationsConfig?.s3?.s3LogPath) {
-        s3LogPath = vpcFlowLogs.destinationsConfig?.s3?.s3LogPath;
+      if (vpcFlowLogs.destinationsConfig?.s3?.overrideS3LogPath) {
+        overrideS3LogPath = vpcFlowLogs.destinationsConfig?.s3?.overrideS3LogPath;
       }
     }
 
@@ -581,7 +581,7 @@ export class VpcResources {
       bucketArn: destinationBucketArn,
       useExistingRoles,
       acceleratorPrefix,
-      s3LogPath,
+      overrideS3LogPath,
     });
   }
 

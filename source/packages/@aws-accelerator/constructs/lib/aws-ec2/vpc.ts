@@ -658,7 +658,7 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
     bucketArn?: string;
     useExistingRoles: boolean;
     acceleratorPrefix: string;
-    s3LogPath?: string;
+    overrideS3LogPath?: string;
   }) {
     // Validate maxAggregationInterval
     const maxAggregationInterval = options.maxAggregationInterval;
@@ -698,8 +698,8 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
     }
 
     let s3LogDestination = `${options.bucketArn}/vpc-flow-logs/`;
-    if (options.s3LogPath) {
-      const replacedS3LogPath = this.replaceVpcFlowLogDestName(options.s3LogPath, this.name, this.env.account);
+    if (options.overrideS3LogPath) {
+      const replacedS3LogPath = this.replaceVpcFlowLogDestName(options.overrideS3LogPath, this.name, this.env.account);
       s3LogDestination = `${options.bucketArn}/${replacedS3LogPath}`;
     }
 

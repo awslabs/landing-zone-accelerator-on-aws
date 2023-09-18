@@ -1422,7 +1422,18 @@ export class LoggingStack extends AcceleratorStack {
         principal: 'guardduty.amazonaws.com',
         accessType: BucketAccessType.READWRITE,
       });
-      bucketPrefixes.push('guardduty');
+      let guardDutyPrefix: string | undefined = 'guardduty';
+      if (
+        this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.overrideGuardDutyPrefix
+          ?.useCustomPrefix
+      ) {
+        guardDutyPrefix =
+          this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.overrideGuardDutyPrefix
+            ?.customOverride ?? undefined;
+      }
+      if (guardDutyPrefix) {
+        bucketPrefixes.push(guardDutyPrefix);
+      }
 
       for (const region of this.props.globalConfig.enabledRegions) {
         if (OptInRegions.includes(region)) {
@@ -1431,7 +1442,18 @@ export class LoggingStack extends AcceleratorStack {
             principal: `guardduty.${region}.amazonaws.com`,
             accessType: BucketAccessType.READWRITE,
           });
-          bucketPrefixes.push('guardduty');
+          let guardDutyPrefix: string | undefined = 'guardduty';
+          if (
+            !this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.overrideGuardDutyPrefix
+              ?.useCustomPrefix
+          ) {
+            guardDutyPrefix =
+              this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.overrideGuardDutyPrefix
+                ?.customOverride ?? undefined;
+          }
+          if (guardDutyPrefix) {
+            bucketPrefixes.push(guardDutyPrefix);
+          }
         }
       }
     }
