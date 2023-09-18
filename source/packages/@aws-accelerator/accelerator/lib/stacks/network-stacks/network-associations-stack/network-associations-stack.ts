@@ -3225,8 +3225,8 @@ export class NetworkAssociationsStack extends NetworkStack {
         // Update resolver group rule with mad dns ips
         this.updateActiveDirectoryResolverGroupRule(
           managedActiveDirectory.name,
-          managedActiveDirectory.resolverRuleName,
           activeDirectory.dnsIpAddresses,
+          managedActiveDirectory.resolverRuleName,
         );
 
         // Configure managed active directory using provisioned EC2 instance user data
@@ -3247,14 +3247,18 @@ export class NetworkAssociationsStack extends NetworkStack {
   /**
    * Function to update resolver rule with MAD dns ips
    * @param directoryName
-   * @param resolverRuleName
    * @param dnsIpAddresses
+   * @param resolverRuleName
    */
   private updateActiveDirectoryResolverGroupRule(
     directoryName: string,
-    resolverRuleName: string,
     dnsIpAddresses: string[],
+    resolverRuleName?: string,
   ) {
+    if (!resolverRuleName) {
+      return;
+    }
+
     this.logger.info(`Updating resolver group for directory ${directoryName}`);
     new ActiveDirectoryResolverRule(this, `${pascalCase(directoryName)}ResolverRule`, {
       route53ResolverRuleName: resolverRuleName,

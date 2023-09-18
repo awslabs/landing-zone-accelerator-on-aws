@@ -354,7 +354,7 @@ export class IamConfigTypes {
     description: t.optional(t.nonEmptyString),
     edition: t.enums('DirectorySize', ['Standard', 'Enterprise']),
     vpcSettings: IamConfigTypes.managedActiveDirectoryVpcSettingsConfig,
-    resolverRuleName: t.nonEmptyString,
+    resolverRuleName: t.optional(t.nonEmptyString),
     secretConfig: t.optional(this.managedActiveDirectorySecretConfig),
     sharedOrganizationalUnits: t.optional(this.managedActiveDirectorySharedOuConfig),
     sharedAccounts: t.optional(t.array(t.nonEmptyString)),
@@ -783,35 +783,40 @@ export class ManagedActiveDirectoryConfig implements t.TypeOf<typeof IamConfigTy
    */
   readonly vpcSettings: ManagedActiveDirectoryVpcSettingsConfig = new ManagedActiveDirectoryVpcSettingsConfig();
   /**
-   * Active directory route 53 resolver rule name
+   * (OPTIONAL) Active directory route 53 resolver rule name
+   *
+   * @remarks
+   * This is the `name` property of a Route 53 resolver rule as defined in
+   * network-config.yaml {@link ResolverRuleConfig}. When this property is defined,
+   * the configured resolver rule will be updated with the IP addresses of the Managed AD instances.
    */
-  readonly resolverRuleName = '';
+  readonly resolverRuleName: string | undefined = undefined;
   /**
-   * Active directory admin user secret configuration.
+   * (OPTIONAL) Active directory admin user secret configuration.
    *
    * *{@link IamConfig} / {@link ManagedActiveDirectoryConfig} / {@link ManagedActiveDirectorySecretConfig}
    */
   readonly secretConfig: ManagedActiveDirectorySecretConfig | undefined = undefined;
   /**
-   * Active directory shared ou configuration.
+   * (OPTIONAL) Active directory shared ou configuration.
    *
    * *{@link IamConfig} / {@link ManagedActiveDirectoryConfig} / {@link ManagedActiveDirectorySharedOuConfig}
    */
   readonly sharedOrganizationalUnits: ManagedActiveDirectorySharedOuConfig | undefined = undefined;
   /**
-   * Active directory shared account name list.
+   * (OPTIONAL) Active directory shared account name list.
    */
   readonly sharedAccounts: string[] | undefined = undefined;
   /**
    * *{@link IamConfig} / {@link ManagedActiveDirectoryConfig} / {@link ManagedActiveDirectoryLogConfig}
    *
-   * Active directory logs configuration
+   * (OPTIONAL) Active directory logs configuration
    */
   readonly logs: ManagedActiveDirectoryLogConfig | undefined = undefined;
   /**
    * *{@link IamConfig} / {@link ManagedActiveDirectoryConfig} / {@link ActiveDirectoryConfigurationInstanceConfig}*
    *
-   * Active directory instance to configure active directory
+   * (OPTIONAL) Active directory instance to configure active directory
    */
   readonly activeDirectoryConfigurationInstance: ActiveDirectoryConfigurationInstanceConfig | undefined = undefined;
 }
@@ -993,11 +998,34 @@ export class GroupSetConfig implements t.TypeOf<typeof IamConfigTypes.groupSetCo
  *
  * AssumedBy configuration
  *
+ * Service principal:
  * @example
  * ```
  * - principal: ec2.amazonaws.com
  *   type: service
  * ```
+ *
+ * Account principals can be defined using either the account ID (with quotes), the account arn or the name assigned to the account in the accounts-config.yaml.
+ *
+ *
+ * @example
+ * ```
+ * assumedBy:
+ *   - type: account
+ *     principal: '111111111111'
+ * ```
+ * @example
+ * ```
+ * assumedBy:
+ *   - type: account
+ *     principal: Audit
+ * ```
+ * @example
+ * ```
+ * assumedBy:
+ *   - type: account
+ *     principal: 'arn:aws:iam::111111111111:root'
+ * ``
  */
 export class AssumedByConfig implements t.TypeOf<typeof IamConfigTypes.assumedByConfig> {
   /**
