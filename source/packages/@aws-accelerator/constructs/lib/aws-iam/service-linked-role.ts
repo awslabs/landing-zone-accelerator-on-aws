@@ -52,6 +52,7 @@ export interface ServiceLinkedRoleProps {
  * Class for ServiceLinkedRole
  */
 export class ServiceLinkedRole extends Construct {
+  public readonly resource: cdk.CustomResource;
   public readonly roleArn: string;
   public readonly roleName: string;
   constructor(scope: Construct, id: string, props: ServiceLinkedRoleProps) {
@@ -85,7 +86,7 @@ export class ServiceLinkedRole extends Construct {
       onEventHandler: lambdaFunction,
     });
 
-    const resource = new cdk.CustomResource(this, 'CreateServiceLinkedRoleResource', {
+    this.resource = new cdk.CustomResource(this, 'CreateServiceLinkedRoleResource', {
       resourceType: 'Custom::CreateServiceLinkedRole',
       serviceToken: provider.serviceToken,
       properties: {
@@ -96,7 +97,7 @@ export class ServiceLinkedRole extends Construct {
       },
     });
 
-    this.roleArn = resource.getAtt('roleArn').toString();
-    this.roleName = resource.getAtt('roleName').toString();
+    this.roleArn = this.resource.getAtt('roleArn').toString();
+    this.roleName = this.resource.getAtt('roleName').toString();
   }
 }

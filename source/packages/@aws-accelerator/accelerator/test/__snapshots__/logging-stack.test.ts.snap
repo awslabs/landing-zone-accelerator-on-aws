@@ -511,6 +511,10 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
     },
     "AcceleratorKmsKeyKey1660964AC": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleResourceE203F878",
+        "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleResource5A765F9A",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -562,6 +566,10 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "AcceleratorKmsKeyKey1Alias6B1D2C45": {
+      "DependsOn": [
+        "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleResourceE203F878",
+        "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleResource5A765F9A",
+      ],
       "Properties": {
         "AliasName": "alias/accelerator/test-key/key1",
         "TargetKeyId": {
@@ -4720,6 +4728,10 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
     },
     "AcceleratorKmsKeyKey1660964AC": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleResourceE203F878",
+        "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleResource5A765F9A",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -4771,6 +4783,10 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
       "UpdateReplacePolicy": "Delete",
     },
     "AcceleratorKmsKeyKey1Alias6B1D2C45": {
+      "DependsOn": [
+        "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleResourceE203F878",
+        "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleResource5A765F9A",
+      ],
       "Properties": {
         "AliasName": "alias/accelerator/test-key/key1",
         "TargetKeyId": {

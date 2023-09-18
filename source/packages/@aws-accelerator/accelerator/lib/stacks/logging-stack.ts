@@ -46,6 +46,7 @@ import {
   ValidateBucket,
   PutSsmParameter,
   BucketPolicyProps,
+  ServiceLinkedRole,
 } from '@aws-accelerator/constructs';
 
 import {
@@ -106,10 +107,6 @@ export class LoggingStack extends AcceleratorStack {
     this.createManagedDirectoryAdminSecretsManagerKey();
 
     //
-    // Create KMS keys defined in config
-    this.createKeys();
-
-    //
     // Create CloudWatch key
     //
     this.cloudwatchKey = this.createCloudWatchKey(props);
@@ -118,6 +115,26 @@ export class LoggingStack extends AcceleratorStack {
     // Create Lambda key
     //
     this.lambdaKey = this.createLambdaKey(props);
+
+    //
+    // Create Auto scaling service linked role
+    //
+    const autoScalingSlr = this.createAutoScalingServiceLinkedRole(
+      this.cloudwatchKey as cdk.aws_kms.Key,
+      this.lambdaKey as cdk.aws_kms.Key,
+    );
+
+    //
+    // Create AWS Cloud9 service linked role
+    //
+    const cloud9Slr = this.createAwsCloud9ServiceLinkedRole(
+      this.cloudwatchKey as cdk.aws_kms.Key,
+      this.lambdaKey as cdk.aws_kms.Key,
+    );
+
+    //
+    // Create KMS keys defined in config
+    this.createKeys(autoScalingSlr, cloud9Slr);
 
     // Create Notification Role for FMS Notifications if enabled
     this.createFMSNotificationRole();
@@ -166,16 +183,6 @@ export class LoggingStack extends AcceleratorStack {
     // Create or get ELB access logs bucket
     //
     this.createOrGetElbAccessLogsBucket(principalOrgIdCondition, replicationProps);
-
-    //
-    // Create Auto scaling service linked role
-    //
-    this.createAutoScalingServiceLinkedRole(this.cloudwatchKey as cdk.aws_kms.Key, this.lambdaKey as cdk.aws_kms.Key);
-
-    //
-    // Create AWS Cloud9 service linked role
-    //
-    this.createAwsCloud9ServiceLinkedRole(this.cloudwatchKey as cdk.aws_kms.Key, this.lambdaKey as cdk.aws_kms.Key);
 
     //
     // Configure CloudWatchLogs to S3 replication
@@ -1341,7 +1348,7 @@ export class LoggingStack extends AcceleratorStack {
   /**
    * Function to create KMS Keys defined in config file
    */
-  private createKeys() {
+  private createKeys(autoScalingSlr?: ServiceLinkedRole, cloud9Slr?: ServiceLinkedRole) {
     if (!this.props.securityConfig.keyManagementService) {
       return;
     }
@@ -1360,6 +1367,15 @@ export class LoggingStack extends AcceleratorStack {
         enableKeyRotation: keyItem.enableKeyRotation,
         removalPolicy: keyItem.removalPolicy as cdk.RemovalPolicy,
       });
+      // Add dependency on service-linked roles
+      // This is required for KMS keys to reference SLRs
+      // in their key policies
+      if (autoScalingSlr) {
+        key.node.addDependency(autoScalingSlr.resource);
+      }
+      if (cloud9Slr) {
+        key.node.addDependency(cloud9Slr.resource);
+      }
 
       if (keyItem.policy) {
         // Read in the policy document which should be properly formatted json

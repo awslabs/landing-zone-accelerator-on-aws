@@ -550,12 +550,19 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * @remarks
    * AutoScaling when ebsDefaultVolumeEncryption flag is ON. Or when firewall is used.
    */
-  protected createAutoScalingServiceLinkedRole(cloudwatchKey: cdk.aws_kms.Key, lambdaKey: cdk.aws_kms.Key) {
+  protected createAutoScalingServiceLinkedRole(
+    cloudwatchKey: cdk.aws_kms.Key,
+    lambdaKey: cdk.aws_kms.Key,
+  ): ServiceLinkedRole | undefined {
     if (
       this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable &&
       this.serviceLinkedRoleSupportedPartitionList.includes(this.props.partition)
     ) {
-      this.createServiceLinkedRole(ServiceLinkedRoleType.AUTOSCALING, cloudwatchKey, lambdaKey);
+      const serviceLinkedRole = this.createServiceLinkedRole(
+        ServiceLinkedRoleType.AUTOSCALING,
+        cloudwatchKey,
+        lambdaKey,
+      );
 
       this.nagSuppressionInputs.push({
         id: NagSuppressionRuleIds.IAM4,
@@ -596,7 +603,9 @@ export abstract class AcceleratorStack extends cdk.Stack {
           },
         ],
       });
+      return serviceLinkedRole;
     }
+    return;
   }
 
   /**
@@ -631,12 +640,19 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * @remarks
    * AWS CLOUD9 when ebsDefaultVolumeEncryption flag is ON and partition is 'aws'
    */
-  protected createAwsCloud9ServiceLinkedRole(cloudwatchKey: cdk.aws_kms.Key, lambdaKey: cdk.aws_kms.Key) {
+  protected createAwsCloud9ServiceLinkedRole(
+    cloudwatchKey: cdk.aws_kms.Key,
+    lambdaKey: cdk.aws_kms.Key,
+  ): ServiceLinkedRole | undefined {
     if (
       this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable &&
       this.props.partition === 'aws'
     ) {
-      this.createServiceLinkedRole(ServiceLinkedRoleType.AWS_CLOUD9, cloudwatchKey, lambdaKey);
+      const serviceLinkedRole = this.createServiceLinkedRole(
+        ServiceLinkedRoleType.AWS_CLOUD9,
+        cloudwatchKey,
+        lambdaKey,
+      );
 
       this.nagSuppressionInputs.push({
         id: NagSuppressionRuleIds.IAM4,
@@ -677,7 +693,9 @@ export abstract class AcceleratorStack extends cdk.Stack {
           },
         ],
       });
+      return serviceLinkedRole;
     }
+    return;
   }
 
   /**
@@ -762,7 +780,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
         break;
       case ServiceLinkedRoleType.GUARDDUTY:
         this.logger.debug('Create GuardDutyServiceLinkedRole');
-        new ServiceLinkedRole(this, 'GuardDutyServiceLinkedRole', {
+        serviceLinkedRole = new ServiceLinkedRole(this, 'GuardDutyServiceLinkedRole', {
           awsServiceName: 'guardduty.amazonaws.com',
           description: 'A service-linked role required for Amazon GuardDuty to access your resources. ',
           environmentEncryptionKmsKey: lambdaKey,
@@ -778,7 +796,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
           this.props.securityConfig.centralSecurityServices.securityHub.enable
         ) {
           this.logger.debug('Create SecurityHubServiceLinkedRole');
-          new ServiceLinkedRole(this, 'SecurityHubServiceLinkedRole', {
+          serviceLinkedRole = new ServiceLinkedRole(this, 'SecurityHubServiceLinkedRole', {
             awsServiceName: 'securityhub.amazonaws.com',
             description: 'A service-linked role required for AWS Security Hub to access your resources.',
             environmentEncryptionKmsKey: lambdaKey,
@@ -791,7 +809,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
       case ServiceLinkedRoleType.MACIE:
         if (this.props.organizationConfig.enable && this.props.securityConfig.centralSecurityServices.macie.enable) {
           this.logger.debug('Create MacieServiceLinkedRole');
-          new ServiceLinkedRole(this, 'MacieServiceLinkedRole', {
+          serviceLinkedRole = new ServiceLinkedRole(this, 'MacieServiceLinkedRole', {
             awsServiceName: 'macie.amazonaws.com',
             environmentEncryptionKmsKey: lambdaKey,
             cloudWatchLogKmsKey: cloudwatchKey,
@@ -802,7 +820,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
         break;
       case ServiceLinkedRoleType.AUTOSCALING:
         this.logger.debug('Create AutoScalingServiceLinkedRole');
-        new ServiceLinkedRole(this, 'AutoScalingServiceLinkedRole', {
+        serviceLinkedRole = new ServiceLinkedRole(this, 'AutoScalingServiceLinkedRole', {
           awsServiceName: 'autoscaling.amazonaws.com',
           description:
             'Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling',
@@ -818,7 +836,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
           this.props.partition === 'aws'
         ) {
           this.logger.debug('Create Aws Cloud9 Service Linked Role');
-          new ServiceLinkedRole(this, 'AWSServiceRoleForAWSCloud9', {
+          serviceLinkedRole = new ServiceLinkedRole(this, 'AWSServiceRoleForAWSCloud9', {
             awsServiceName: 'cloud9.amazonaws.com',
             description: 'Service linked role for AWS Cloud9',
             environmentEncryptionKmsKey: lambdaKey,
@@ -830,7 +848,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
         break;
       case ServiceLinkedRoleType.FMS:
         this.logger.debug('Create FirewallManagerServiceLinkedRole');
-        new ServiceLinkedRole(this, 'FirewallManagerServiceLinkedRole', {
+        serviceLinkedRole = new ServiceLinkedRole(this, 'FirewallManagerServiceLinkedRole', {
           awsServiceName: 'fms.amazonaws.com',
           environmentEncryptionKmsKey: lambdaKey,
           cloudWatchLogKmsKey: cloudwatchKey,
