@@ -19,6 +19,14 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
       "Default": "/accelerator/network/gwlb/Accelerator-GWLB/endpointService/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworkgwlbAcceleratorGWLBsecondaryarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/gwlb/Accelerator-GWLB-secondary/arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkgwlbAcceleratorGWLBsecondaryendpointServiceidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/gwlb/Accelerator-GWLB-secondary/endpointService/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratornetworkprefixListacceleratorprefixlistidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/prefixList/accelerator-prefix-list/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -1907,6 +1915,56 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
       },
       "Type": "Custom::TransitGatewayPrefixListReference",
       "UpdateReplacePolicy": "Delete",
+    },
+    "NetworkSecondaryVpcSecondaryEndpointAGwlbEpB92A94A3": {
+      "Properties": {
+        "ServiceName": {
+          "Fn::Join": [
+            "",
+            [
+              "com.amazonaws.vpce.us-east-1.",
+              {
+                "Ref": "SsmParameterValueacceleratornetworkgwlbAcceleratorGWLBsecondaryendpointServiceidC96584B6F00A464EAD1953AFF4B05118Parameter",
+              },
+            ],
+          ],
+        },
+        "SubnetIds": [
+          {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondarysubnetNetworkSecondaryAidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+        ],
+        "VpcEndpointType": "GatewayLoadBalancer",
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
+    },
+    "NetworkSecondaryVpcSecondaryEndpointBGwlbEpA752124D": {
+      "Properties": {
+        "ServiceName": {
+          "Fn::Join": [
+            "",
+            [
+              "com.amazonaws.vpce.us-east-1.",
+              {
+                "Ref": "SsmParameterValueacceleratornetworkgwlbAcceleratorGWLBsecondaryendpointServiceidC96584B6F00A464EAD1953AFF4B05118Parameter",
+              },
+            ],
+          ],
+        },
+        "SubnetIds": [
+          {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondarysubnetNetworkSecondaryBidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+        ],
+        "VpcEndpointType": "GatewayLoadBalancer",
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
     },
     "SameAccountFirewallCgwCustomerGatewayC0237E66": {
       "Properties": {
