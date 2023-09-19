@@ -5,30 +5,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.4.3] - 2023-07-19
-
-### Fixed
-- fix(logging): cloudwatch logging, change log format in firehose to json
-- fix(organizations): large OU organizations fail to load during prepare stage
-- fix(networking): cannot provision new IPAM subnets when VPC has CIDRs from non-contiguous CIDR blocks
-- fix(networking): Modify Transit Gateway resource lookup construct ids
-- fix(validate-config): ValidateEnvironmentConfig improperly evaluates enrolled CT accounts as not enrolled
-
-### Configuration Changes
-- chore(aws-best-practices-tse-se): include granular billing SCP permission updates
-- chore(aws-best-practices-cccs-medium): include granular billing SCP permission updates
-
-## [1.4.2] - 2023-06-16
-
-### Fixed
-
-- fix(ssm): PutSsmParameters custom resource ignores new accounts
-- chore(organizations): moved getOrganizationId to organizations-config
-- fix(iam): service linked roles fail to create in multi-region deployment
-- fix(validation): TGW route validation fails when prefixList deployment targets do not have excluded regions
-- fix(validation): incorrectly configured security delegated admin account isn’t caught by validation
-- fix(docs): README indicates S3 server access logs are replicated to central logs bucket
-
 ## [1.4.1] - 2023-05-18
 
 ### Fixed
