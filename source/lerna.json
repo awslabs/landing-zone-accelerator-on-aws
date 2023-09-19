@@ -1,7 +1,22 @@
 {
-  "npmClient": "yarn",
-  "rejectCycles": "true",
+  "$schema": "node_modules/lerna/schemas/lerna-schema.json",
   "version": "2.0.0",
-  "packages": ["packages/@aws-accelerator/**"],
-  "$schema": "node_modules/lerna/schemas/lerna-schema.json"
+  "packages": [
+    "packages/@aws-accelerator/accelerator",
+    "packages/@aws-accelerator/accelerator/lib/lambdas/*",
+    "packages/@aws-accelerator/config",
+    "packages/@aws-accelerator/constructs",
+    "packages/@aws-accelerator/constructs/lib/aws-*/*",
+    "packages/@aws-accelerator/installer",
+    "packages/@aws-accelerator/govcloud-account-vending",
+    "packages/@aws-accelerator/govcloud-account-vending/lib/lambdas/*",
+    "packages/@aws-accelerator/tester",
+    "packages/@aws-accelerator/tester/lambdas",
+    "packages/@aws-accelerator/tools",
+    "packages/@aws-accelerator/utils",
+    "packages/@aws-cdk-extensions/cdk-extensions",
+    "packages/@aws-cdk-extensions/cdk-plugin-assume-role"
+  ],
+  "npmClient": "yarn",
+  "useNx": true
 }
