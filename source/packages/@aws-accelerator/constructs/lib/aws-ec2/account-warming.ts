@@ -36,7 +36,7 @@ export class WarmAccount extends Construct {
     const ec2Policy = new cdk.aws_iam.PolicyStatement({
       sid: 'ec2',
       effect: cdk.aws_iam.Effect.ALLOW,
-      actions: ['ec2:DescribeVpcs', 'ec2:DescribeInstances', 'ec2:DescribeSubnets', 'ec2:RunInstances'],
+      actions: ['ec2:DescribeVpcs', 'ec2:DescribeInstances', 'ec2:DescribeSubnets'],
       resources: ['*'],
     });
 
