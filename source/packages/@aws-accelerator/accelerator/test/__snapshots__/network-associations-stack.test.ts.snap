@@ -223,6 +223,10 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Default": "/accelerator/network/vpc/Network-Secondary/routeTable/Network-Secondary-D-Rt/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworkvpcSharedServicesMainidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/SharedServices-Main/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
   },
   "Resources": {
     "AcceleratorVpnNetworkMainCoreAssociationEF397C51": {
@@ -715,6 +719,30 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Type": "Custom::CrossAccountRoute",
       "UpdateReplacePolicy": "Delete",
     },
+    "CrossAccountVpcPeeringSharedServicesMainVpcSharedServicesAppCRouteTableVpcPeerAC82CB89": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CrossAccountRouteFrameworkCrossAccountRouteProviderframeworkonEventE7CF8ACC",
+            "Arn",
+          ],
+        },
+        "region": "us-east-1",
+        "roleArn": "arn:aws:iam::444444444444:role/AWSAccelerator-VpcPeeringRole-us-east-1",
+        "routeDefinition": {
+          "DestinationCidrBlock": "10.0.0.0/24",
+          "RouteTableId": {
+            "Ref": "SsmParamLookupSharedServicesAppC18786262",
+          },
+          "VpcPeeringConnectionId": {
+            "Ref": "CrossAccountVpcPeering9E0C69A2",
+          },
+        },
+      },
+      "Type": "Custom::CrossAccountRoute",
+      "UpdateReplacePolicy": "Delete",
+    },
     "CrossAcctSsmParamCrossAccountVpcPeeringEB560383": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
@@ -952,6 +980,152 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       },
       "Type": "AWS::IAM::Role",
     },
+    "CustomGetResourceShareCustomResourceProviderHandler5DB0EF7A": {
+      "DependsOn": [
+        "CustomGetResourceShareCustomResourceProviderRoleBC3FCEEF",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomGetResourceShareCustomResourceProviderRoleBC3FCEEF",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomGetResourceShareCustomResourceProviderRoleBC3FCEEF": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ram:AcceptResourceShareInvitation",
+                    "ram:GetResourceShareInvitations",
+                    "ram:GetResourceShares",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomGetResourceShareItemCustomResourceProviderHandlerE72D791B": {
+      "DependsOn": [
+        "CustomGetResourceShareItemCustomResourceProviderRoleA7181EBA",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomGetResourceShareItemCustomResourceProviderRoleA7181EBA",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomGetResourceShareItemCustomResourceProviderLogGroup6DB08FC0": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomGetResourceShareItemCustomResourceProviderHandlerE72D791B",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomGetResourceShareItemCustomResourceProviderRoleA7181EBA": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ram:ListResources",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
     "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354": {
       "DependsOn": [
         "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D",
@@ -1122,6 +1296,141 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
                   "Effect": "Allow",
                   "Resource": "*",
                   "Sid": "Route53AssociateHostedZonesActions",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomShareSubnetTagsCustomResourceProviderHandler4A04C5EC": {
+      "DependsOn": [
+        "CustomShareSubnetTagsCustomResourceProviderRole2582495C",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomShareSubnetTagsCustomResourceProviderRole2582495C",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomShareSubnetTagsCustomResourceProviderLogGroupA1F3F80A": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomShareSubnetTagsCustomResourceProviderHandler4A04C5EC",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomShareSubnetTagsCustomResourceProviderRole2582495C": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ec2:DeleteTags",
+                    "ec2:CreateTags",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":ec2:",
+                          {
+                            "Ref": "AWS::Region",
+                          },
+                          ":*:subnet/*",
+                        ],
+                      ],
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":ec2:",
+                          {
+                            "Ref": "AWS::Region",
+                          },
+                          ":*:vpc/*",
+                        ],
+                      ],
+                    },
+                  ],
+                },
+                {
+                  "Action": [
+                    "ec2:DescribeTags",
+                    "ec2:DescribeVpcs",
+                    "ec2:DescribeSubnets",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+                {
+                  "Action": [
+                    "ssm:GetParameter",
+                    "ssm:PutParameter",
+                    "ssm:DeleteParameter",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
                 },
               ],
               "Version": "2012-10-17",
@@ -2267,6 +2576,40 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       },
       "Type": "AWS::EC2::NetworkAclEntry",
     },
+    "ShareSubnetTagsSharedServicesSharedServicesAppC062D4D03": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomShareSubnetTagsCustomResourceProviderLogGroupA1F3F80A",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomShareSubnetTagsCustomResourceProviderHandler4A04C5EC",
+            "Arn",
+          ],
+        },
+        "acceleratorSsmParamPrefix": "/accelerator",
+        "sharedSubnetId": {
+          "Ref": "SharedServicesMainSharedServicesAppCSubnetE0D5A73C",
+        },
+        "sharedSubnetName": "SharedServices-App-C",
+        "subnetTags": [
+          {
+            "key": "Name",
+            "value": "SharedServices-App-C",
+          },
+        ],
+        "vpcName": "SharedServices-Main",
+        "vpcTags": [
+          {
+            "key": "Name",
+            "value": "SharedServices-Main",
+          },
+        ],
+      },
+      "Type": "Custom::ShareSubnetTags",
+      "UpdateReplacePolicy": "Delete",
+    },
     "SharedServicesMainNetworkMainCorePropagationB8A9444B": {
       "Properties": {
         "TransitGatewayAttachmentId": {
@@ -2311,6 +2654,57 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       },
       "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
     },
+    "SharedServicesMainSharedServicesAppCSubnetE0D5A73C": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomGetResourceShareItemCustomResourceProviderLogGroup6DB08FC0",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomGetResourceShareItemCustomResourceProviderHandlerE72D791B",
+            "Arn",
+          ],
+        },
+        "resourceOwner": "OTHER-ACCOUNTS",
+        "resourceShareArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":ram:us-east-1:444444444444:resource-share/",
+              {
+                "Ref": "SharedServicesMainSharedServicesAppCSubnetShare33CA4D7C",
+              },
+            ],
+          ],
+        },
+        "resourceType": "ec2:Subnet",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::GetResourceShareItem",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SharedServicesMainSharedServicesAppCSubnetShare33CA4D7C": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomGetResourceShareCustomResourceProviderHandler5DB0EF7A",
+            "Arn",
+          ],
+        },
+        "name": "SharedServices-App-C_SubnetShare",
+        "owningAccountId": "444444444444",
+        "resourceOwner": "OTHER-ACCOUNTS",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::GetResourceShare",
+      "UpdateReplacePolicy": "Delete",
+    },
     "SharedServicesMainSharedServicesVpcTransitGatewayAttachmentE1E0A8A8": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
@@ -2345,6 +2739,45 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       },
       "Type": "Custom::GetTransitGatewayAttachment",
       "UpdateReplacePolicy": "Delete",
+    },
+    "SharedServicesMainVpcSharedServicesMainRsyslogSgSg82BD8A5A": {
+      "Properties": {
+        "GroupDescription": "Security Group for AWS Accelerator rsyslog",
+        "GroupName": "SharedServices-Main-Rsyslog-sg",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "All Outbound",
+            "IpProtocol": "-1",
+          },
+        ],
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": "10.0.0.0/8",
+            "Description": "allow inbound traffic",
+            "FromPort": 514,
+            "IpProtocol": "tcp",
+            "ToPort": 514,
+          },
+          {
+            "CidrIp": "10.0.0.0/8",
+            "Description": "allow inbound traffic",
+            "FromPort": 514,
+            "IpProtocol": "udp",
+            "ToPort": 514,
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "SharedServices-Main-Rsyslog-sg",
+          },
+        ],
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcSharedServicesMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
     },
     "SsmParamAcceleratorVersionFF83282D": {
       "Properties": {
@@ -2466,12 +2899,56 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Type": "Custom::SsmGetParameterValue",
       "UpdateReplacePolicy": "Delete",
     },
+    "SsmParamLookupSharedServicesAppC18786262": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
+            "Arn",
+          ],
+        },
+        "assumeRoleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::444444444444:role/AWSAccelerator-VpcPeeringRole-us-east-1",
+            ],
+          ],
+        },
+        "invokingAccountID": "555555555555",
+        "invokingRegion": "us-east-1",
+        "parameterAccountID": "444444444444",
+        "parameterName": "/accelerator/network/vpc/SharedServices-Main/routeTable/SharedServices-App-C/id",
+        "parameterRegion": "us-east-1",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::SsmGetParameterValue",
+      "UpdateReplacePolicy": "Delete",
+    },
     "SsmParamNetworkEndpointsToSecondaryVpcPeeringED109890": {
       "Properties": {
         "Name": "/accelerator/network/vpcPeering/NetworkEndpointsToSecondary/id",
         "Type": "String",
         "Value": {
           "Ref": "NetworkEndpointsToSecondaryVpcPeering08A08BA2",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamSharedServicesMainSharedServicesMainRsyslogSgSecurityGroupFCDC7FBA": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/SharedServices-Main/securityGroup/SharedServices-Main-Rsyslog-sg/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "SharedServicesMainVpcSharedServicesMainRsyslogSgSg82BD8A5A",
         },
       },
       "Type": "AWS::SSM::Parameter",
