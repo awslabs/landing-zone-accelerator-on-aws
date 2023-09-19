@@ -1,9 +1,6 @@
-# Ignore Config used with code.amazon.com
-
 Config
 
 # Use of opensource-codeofconduct email for amazon is expected
-
 CODE_OF_CONDUCT.md:4
 
 cdk.out/
@@ -17,7 +14,6 @@ dist/
 .snap
 
 yarn.lock
-
 
 # Ignore typescript documentation
 docs
