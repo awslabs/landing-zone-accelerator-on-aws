@@ -15,13 +15,13 @@
     "cleanup:tsc": "tsc --build ./ --clean",
     "build": "tsc",
     "watch": "tsc -w",
-    "test": "jest --coverage --ci",
+    "test": "jest --coverage --ci --passWithNoTests",
     "lint": "eslint --fix  --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
     "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" "
   },
   "devDependencies": {
     "@aws-cdk/assert": "2.68.0",
-    "aws-cdk-lib": "2.80.0",
+    "aws-cdk-lib": "2.93.0",
     "constructs": "10.0.12",
     "@types/jest": "29.4.0",
     "@types/node": "18.14.0",
@@ -46,6 +46,6 @@
     "indent": 4
   },
   "dependencies": {
-    "aws-cdk-lib": "2.80.0"
+    "aws-cdk-lib": "2.93.0"
   }
 }

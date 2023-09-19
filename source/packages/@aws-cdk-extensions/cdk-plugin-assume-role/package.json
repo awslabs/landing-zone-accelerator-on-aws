@@ -15,15 +15,15 @@
     "cleanup:tsc": "tsc --build ./ --clean",
     "build": "tsc",
     "watch": "tsc -w",
-    "test": "",
+    "test": "jest --coverage --ci --passWithNoTests",
     "lint": "eslint --fix  --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}'",
     "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}'"
   },
   "dependencies": {
     "@typescript-eslint/eslint-plugin": "5.53.0",
     "@typescript-eslint/parser": "5.53.0",
-    "aws-cdk-lib": "2.80.0",
-    "aws-cdk": "2.80.0",
+    "aws-cdk-lib": "2.93.0",
+    "aws-cdk": "2.93.0",
     "aws-sdk": "2.1379.0",
     "colors": "1.4.0",
     "exponential-backoff": "3.1.1"

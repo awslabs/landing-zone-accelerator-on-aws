@@ -204,7 +204,6 @@ export class TesterPipeline extends Construct {
             commands: [
               'cd source',
               'yarn install',
-              'yarn lerna link',
               'yarn build',
               'cd packages/@aws-accelerator/tester',
               'env',

@@ -15,7 +15,7 @@
     "cleanup:tsc": "tsc --build ./ --clean",
     "build": "tsc",
     "watch": "tsc -w",
-    "test": "jest --coverage --ci",
+    "test": "jest --coverage --ci --passWithNoTests",
     "lint": "eslint --fix  --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
     "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" "
   },
@@ -48,7 +48,7 @@
   "dependencies": {
     "@aws-accelerator/config": "^0.0.0",
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-cdk/cx-api": "2.80.0",
+    "@aws-cdk/cx-api": "2.93.0",
     "@aws-sdk/client-backup": "3.92.0",
     "@aws-sdk/client-cloudformation": "3.92.0",
     "@aws-sdk/client-cloudwatch-logs": "3.92.0",

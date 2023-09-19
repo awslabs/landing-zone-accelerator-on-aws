@@ -35,8 +35,7 @@ do
         continue
     fi
     git checkout $tag
-    yarn install
-    yarn lerna link
+    yarn install    
     yarn build
     yarn docs --out ./docs/${tag}
     yarn cleanup

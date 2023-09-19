@@ -10,7 +10,6 @@ Only deploy this in standard (commercial) AWS Partition. The solution assumes a 
 1. Clone the repo and run 
     - `cd source`
     - `yarn install`
-    - `yarn lerna link`
     - `yarn build`
     - `cd packages/@aws-accelerator/govcloud-account-vending `
     - `yarn cdk deploy --require-approval never `

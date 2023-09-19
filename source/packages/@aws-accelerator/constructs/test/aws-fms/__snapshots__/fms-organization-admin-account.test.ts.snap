@@ -185,7 +185,7 @@ exports[`FMSOrganizationAdminAccount Construct(FMSOrganizationAdminAccount):  Sn
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs18.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",

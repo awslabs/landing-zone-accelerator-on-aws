@@ -345,7 +345,7 @@ directly via the AWS CLI or console. Below are the commands for completing the d
 
 ```
 cd <rootDir>/source
-yarn install && yarn lerna link
+yarn install
 ```
 
 - To run the CDK synthesis
