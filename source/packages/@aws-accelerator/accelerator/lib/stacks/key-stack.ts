@@ -21,8 +21,6 @@ export class KeyStack extends AcceleratorStack {
     super(scope, id, props);
 
     if (cdk.Stack.of(this).account === props.accountsConfig.getAuditAccountId()) {
-      this.organizationId = props.organizationConfig.enable ? new Organization(this, 'Organization').id : '';
-
       //
       // Create Accelerator Key
       //

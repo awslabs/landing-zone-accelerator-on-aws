@@ -58,9 +58,6 @@ export class LoggingStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
-    // Set Organization ID
-    this.organizationId = this.getOrganizationId();
-
     // Create S3 Key in all account
     const s3Key = this.createS3Key();
 

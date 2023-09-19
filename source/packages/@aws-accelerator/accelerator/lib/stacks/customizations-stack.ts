@@ -214,7 +214,7 @@ export class CustomizationsStack extends AcceleratorStack {
         portfolioId: portfolio.portfolioId,
         organizationalUnitIds: organizationalUnitIds,
         tagShareOptions: portfolioItem.shareTagOptions ?? false,
-        organizationId: shareToEntireOrg ? this.organizationId : '',
+        organizationId: shareToEntireOrg && this.organizationId ? this.organizationId : '',
         kmsKey: this.cloudwatchKey,
         logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
       });

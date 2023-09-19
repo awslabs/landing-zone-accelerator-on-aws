@@ -67,7 +67,6 @@ export class SecurityResourcesStack extends AcceleratorStack {
 
   private snsKey: cdk.aws_kms.IKey | undefined;
 
-  organizationId: string | undefined;
   configRecorder: cdk.aws_config.CfnConfigurationRecorder | undefined;
   deliveryChannel: cdk.aws_config.CfnDeliveryChannel | undefined;
   accountTrailCloudWatchLogGroups: Map<string, cdk.aws_logs.LogGroup>;
@@ -80,10 +79,6 @@ export class SecurityResourcesStack extends AcceleratorStack {
     this.stackProperties = props;
     this.auditAccountId = props.accountsConfig.getAuditAccountId();
     this.logArchiveAccountId = props.accountsConfig.getLogArchiveAccountId();
-
-    //
-    // Set Organization Id
-    this.organizationId = this.getOrganizationId();
 
     this.centralLogS3Key = new KeyLookup(this, 'AcceleratorCentralLogS3Key', {
       accountId: this.props.accountsConfig.getLogArchiveAccountId(),

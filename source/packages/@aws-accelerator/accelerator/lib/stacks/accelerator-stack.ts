@@ -40,7 +40,7 @@ import {
   VpcConfig,
   VpcTemplatesConfig,
 } from '@aws-accelerator/config';
-import { KeyLookup, Organization, S3LifeCycleRule } from '@aws-accelerator/constructs';
+import { KeyLookup, S3LifeCycleRule } from '@aws-accelerator/constructs';
 import { createLogger, policyReplacements, SsmParameterPath, SsmResourceType } from '@aws-accelerator/utils';
 
 import { version } from '../../../../../package.json';
@@ -217,6 +217,8 @@ export abstract class AcceleratorStack extends cdk.Stack {
 
   protected centralLogsBucketName: string;
 
+  protected organizationId: string | undefined;
+
   public acceleratorResourceNames: AcceleratorResourceNames;
 
   public stackParameters: Map<string, cdk.aws_ssm.StringParameter>;
@@ -227,6 +229,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
     this.logger = createLogger([cdk.Stack.of(this).stackName]);
     this.props = props;
     this.ssmParameters = [];
+    this.organizationId = props.organizationConfig.getOrganizationId();
     //
     // Initialize resource names
     this.acceleratorResourceNames = new AcceleratorResourceNames({ prefixes: props.prefixes });

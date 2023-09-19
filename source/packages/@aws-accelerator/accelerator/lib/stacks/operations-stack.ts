@@ -27,7 +27,6 @@ import {
   Inventory,
   KeyLookup,
   LimitsDefinition,
-  Organization,
   UsersGroupsMetadata,
   WarmAccount,
 } from '@aws-accelerator/constructs';
