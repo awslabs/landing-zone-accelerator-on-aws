@@ -33,9 +33,6 @@ export interface AutoscalingGroupProps {
   readonly healthCheckType?: string;
   readonly targetGroups?: string[];
   readonly subnets: string[];
-  readonly lambdaKey: cdk.aws_kms.IKey;
-  readonly cloudWatchLogKmsKey: cdk.aws_kms.IKey;
-  readonly cloudWatchLogRetentionInDays: number;
   readonly tags?: cdk.CfnTag[];
   readonly lambdaKey: cdk.aws_kms.IKey;
   readonly cloudWatchLogKmsKey: cdk.aws_kms.IKey;

@@ -183,7 +183,6 @@ process.on('uncaughtException', err => {
 export abstract class AcceleratorStack extends cdk.Stack {
   protected logger: winston.Logger;
   protected props: AcceleratorStackProps;
-  protected organizationId: string | undefined;
 
   /**
    * Nag suppression input list

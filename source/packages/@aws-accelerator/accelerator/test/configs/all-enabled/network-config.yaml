@@ -679,9 +679,6 @@ vpcs:
   - name: Network-Secondary
     account: Network
     region: *HOME_REGION
-    tags:
-      - key: env
-        value: prod
     ipamAllocations:
       - ipamPoolName: home-region-prod-pool
         netmaskLength: 25

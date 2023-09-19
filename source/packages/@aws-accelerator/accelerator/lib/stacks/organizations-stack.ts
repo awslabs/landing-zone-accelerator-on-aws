@@ -185,8 +185,6 @@ export class OrganizationsStack extends AcceleratorStack {
     // Configure Trusted Services and Delegated Management Accounts
     //
     //
-    this.addResourceSuppressionsByPath(this.nagSuppressionInputs);
-
     this.logger.info('Completed stack synthesis');
   }
 

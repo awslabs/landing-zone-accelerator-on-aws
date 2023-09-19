@@ -501,8 +501,6 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
     if (this.organizationalUnitIds?.length == 0) {
       this.organizationalUnitIds = await loadOrganizationalUnits(partition, this.organizationalUnits);
     }
-    logger.error('Organizations not enabled or error getting Organization Id');
-    throw new Error('configuration validation failed.');
   }
 
   public getOrganizationId(): string | undefined {

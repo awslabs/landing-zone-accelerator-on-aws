@@ -118,8 +118,6 @@ export class ApplicationsStack extends AcceleratorStack {
   private securityGroupMap: Map<string, string>;
   private subnetMap: Map<string, string>;
   private vpcMap: Map<string, string>;
-  private cloudwatchKey: cdk.aws_kms.IKey;
-  private lambdaKey: cdk.aws_kms.IKey;
   constructor(scope: Construct, id: string, props: ApplicationStackProps) {
     super(scope, id, props);
     this.props = props;
