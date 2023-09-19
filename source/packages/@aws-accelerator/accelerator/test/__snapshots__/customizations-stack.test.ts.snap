@@ -542,7 +542,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] 
         "partition": {
           "Ref": "AWS::Partition",
         },
-        "portfolioDefinition": "{"name":"My-Portfolio","provider":"LZA","account":"Management","regions":["us-east-1","us-west-2"],"shareTargets":{"organizationalUnits":["Security"]},"shareTagOptions":true,"portfolioAssociations":[{"type":"Group","name":"Administrators","propagateAssociation":true},{"type":"Role","name":"EC2-Default-SSM-AD-Role"},{"type":"User","name":"breakGlassUser01"}],"products":[{"name":"My-Product","description":"Sample product by lZA.","owner":"LZA","distributor":"LZA","versions":[{"name":"v1","description":"product version is v1","template":"cloudformation-templates/custom-s3-bucket.yaml","deprecated":false}],"constraints":{"launch":{"type":"LocalRole","role":"testRole"},"tagUpdate":false,"notifications":["AWSAccelerator-ControlTowerNotification"]},"support":{"description":"Please include account ID and provisioned product ID.","email":"support@example.com","url":"https://support.amazon.com"}}]}",
+        "portfolioDefinition": "{"name":"My-Portfolio","provider":"LZA","account":"Management","regions":["us-east-1","us-west-2"],"shareTargets":{"organizationalUnits":["Security"]},"shareTagOptions":true,"portfolioAssociations":[{"type":"Group","name":"Administrators","propagateAssociation":true},{"type":"Role","name":"EC2-Default-SSM-AD-Role"},{"type":"User","name":"breakGlassUser01"}],"products":[{"name":"My-Product","description":"Sample product by lZA.","owner":"LZA","distributor":"LZA","versions":[{"name":"v1","description":"product version is v1","template":"cloudformation-templates/custom-s3-bucket.yaml","deprecated":false}],"support":{"description":"Please include account ID and provisioned product ID.","email":"support@example.com","url":"https://support.amazon.com"}}]}",
         "portfolioId": {
           "Ref": "MyPortfolioPortfolio94625F45",
         },
@@ -847,6 +847,22 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 2`] 
         ],
       },
       "Type": "AWS::IAM::Policy",
+    },
+    "Organization29A5FC3F": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomOrganizationsDescribeOrganizationCustomResourceProviderHandler4C6F49D1",
+            "Arn",
+          ],
+        },
+        "partition": {
+          "Ref": "AWS::Partition",
+        },
+      },
+      "Type": "Custom::DescribeOrganization",
+      "UpdateReplacePolicy": "Delete",
     },
     "SsmParamAcceleratorVersionFF83282D": {
       "Properties": {

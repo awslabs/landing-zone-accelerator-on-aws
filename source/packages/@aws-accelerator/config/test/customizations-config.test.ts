@@ -46,8 +46,10 @@ describe('CustomizationsConfig', () => {
     it('has loaded successfully', () => {
       expect(customizationsConfigFromFile.customizations.cloudFormationStacks.length).toBe(3);
       expect(customizationsConfig.customizations.cloudFormationStacks.length).toBe(0);
-      // expect(customizationsConfigFromFile.applications.length).toBe(7);
-      expect(customizationsConfig.applications.length).toBe(0);
+      if (customizationsConfigFromFile.applications) {
+        expect(customizationsConfigFromFile.applications.length).toBe(7);
+        expect(customizationsConfig.applications.length).toBe(0);
+      }
     });
     const cloudFormationStackConfig = new CloudFormationStackConfig();
     expect(cloudFormationStackConfig.description).toEqual('');

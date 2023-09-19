@@ -66,6 +66,8 @@ customizations:
           name: EC2-Default-SSM-AD-Role
         - type: User
           name: breakGlassUser01
+        # - type: PermissionSet
+        #   name: PermissionSet1
       products:
         - name: My-Product
           description: Sample product by lZA.
@@ -387,7 +389,7 @@ customizations:
 #         port: 80
 #         protocol: TCP
 #         type: instance
-#         attributes:
+#         attributes: 
 #           connectionTermination: true
 #           preserveClientIp: true
 #           proxyProtocolV2: true
@@ -448,7 +450,7 @@ customizations:
 #         port: 80
 #         protocol: TCP
 #         type: instance
-#         attributes:
+#         attributes: 
 #           connectionTermination: true
 #           preserveClientIp: true
 #           proxyProtocolV2: true
@@ -550,7 +552,7 @@ customizations:
 #       name: appG-nlb-01
 #       scheme: internal
 #       deletionProtection: false
-#       subnets:
+#       subnets: 
 #         - SharedServices-App-A
 #         - SharedServices-App-B
 #       listeners:
@@ -568,7 +570,7 @@ customizations:
 #     applicationLoadBalancer:
 #       name: appG-alb-01
 #       scheme: internet-facing
-#       subnets:
+#       subnets: 
 #         - SharedServices-App-A
 #         - SharedServices-App-B
 #       securityGroups:
