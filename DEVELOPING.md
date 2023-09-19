@@ -104,3 +104,99 @@ This section outlines guidance for developing features for Landing Zone Accelera
 When developing features for the accelerator, you may encounter situations where resources in one stack may need to reference resources created in prior stages of the pipeline. This is especially true if you need to ensure a certain resource is available in all accounts and regions managed by the solution before that resource is consumed by subsequent stacks (e.g. cross-account IAM roles, S3 buckets). `DependenciesStack` has been introduced to the pipeline for this use case. Deployed during the `Key` stage of the pipeline, any resources added to this stack may be utilized globally by the accelerator in subsequent stacks. This stack may be considered a means to "bootstrap" the environment with accelerator-specific (non-CDK) dependencies.
 
 The `DependenciesStack` may be found in `./source/packages/@aws-accelerator/accelerator/stacks/dependencies-stack.ts`.
+
+### Adding Validation
+
+The LZA runs a set of validation functions against the provided configuration repository in order to alert customers of syntactical errors. These validations save customers significant time as this can reduce the time for the pipeline to fail in the event of a misconfiguration. This occurs during the `Build` stage of the pipeline, where the CodeBuild project runs the same `config-validator.ts` script referenced in [Configuration Validation](#configuration-validator). This script orchestrates a collection of configuration-file-specific validation classes defined in the `./source/packages/@aws-accelerator/accelerator/config/validator` directory.
+
+When developing a feature that modifies or creates new possible configurations, please ensure you create new validation functions in the appropriate validator class. Examples of common validations include:
+- Validate account and organizational unit names referenced in `deploymentTargets` are valid
+```
+  private validateSsmDocumentDeploymentTargetOUs(
+    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
+    ouIdNames: string[],
+    errors: string[],
+  ) {
+    for (const documentSet of values.centralSecurityServices.ssmAutomation.documentSets ?? []) {
+      for (const ou of documentSet.shareTargets.organizationalUnits ?? []) {
+        if (ouIdNames.indexOf(ou) === -1) {
+          errors.push(`Deployment target OU ${ou} for SSM documents does not exists in organization-config.yaml file.`);
+        }
+      }
+    }
+  }
+```
+- Validate referenced files exist
+```
+  private validateTaggingPolicyFile(configDir: string, values: OrganizationConfig, errors: string[]) {
+    for (const taggingPolicy of values.taggingPolicies ?? []) {
+      if (!fs.existsSync(path.join(configDir, taggingPolicy.policy))) {
+        errors.push(`Invalid policy file ${taggingPolicy.policy} for tagging policy ${taggingPolicy.name} !!!`);
+      }
+    }
+  }
+```
+- Validate AWS service-specific properties
+```
+  private validateCloudTrailSettings(values: GlobalConfig, errors: string[]) {
+    if (
+      values.logging.cloudtrail.organizationTrail &&
+      values.logging.cloudtrail.organizationTrailSettings?.multiRegionTrail &&
+      !values.logging.cloudtrail.organizationTrailSettings.globalServiceEvents
+    ) {
+      errors.push(
+        `The organization CloudTrail setting multiRegionTrail is enabled, the globalServiceEvents must be enabled as well`,
+      );
+    }
+    for (const accountTrail of values.logging.cloudtrail.accountTrails ?? []) {
+      if (accountTrail.settings.multiRegionTrail && !accountTrail.settings.globalServiceEvents) {
+        errors.push(
+          `The account CloudTrail with the name ${accountTrail.name} setting multiRegionTrail is enabled, the globalServiceEvents must be enabled as well`,
+        );
+      }
+    }
+  }
+```
+- Validate resource names for uniqueness
+```
+  private validateStackNameForUniqueness(
+    values: t.TypeOf<typeof CustomizationsConfigTypes.customizationsConfig>,
+    errors: string[],
+  ) {
+    const stackNames = [...(values.customizations?.cloudFormationStacks ?? [])].map(item => item.name);
+    const stackSetNames = [...(values.customizations?.cloudFormationStackSets ?? [])].map(item => item.name);
+
+    if (new Set(stackNames).size !== stackNames.length) {
+      errors.push(`Duplicate custom stack names defined [${stackNames}].`);
+    }
+
+    if (new Set(stackSetNames).size !== stackSetNames.length) {
+      errors.push(`Duplicate custom stackset names defined [${stackSetNames}].`);
+    }
+  }
+```
+
+### Snapshot Testing
+
+The LZA currently utilizes [snapshot testing](https://jestjs.io/docs/snapshot-testing) to identify and mitigate unintended consequences of new features. Snapshot testing occurs at the stack level, the config level, and the construct level. 
+
+To update snapshot tests, run the following command from the appropriate directory (`accelerator`, `constructs`, or `config` within `source/packages/@aws-accelerator/`):
+```
+yarn test -u {test directory/name}
+```
+To execute all tests, change directory to `source` and run
+```
+yarn test
+```
+
+#### Accelerator Test Updates
+
+When developing a new feature, please enable or create the new resource by updating the [all-enabled](https://github.com/awslabs/landing-zone-accelerator-on-aws/tree/main/source/packages/%40aws-accelerator/accelerator/test/configs/all-enabled) configuration directory. After updating the configuration, run `yarn test -u` from the `accelerator` directory.
+
+#### Config Test Updates
+
+If you create a new config type, please update the appropriate configuration test within `config/test`. After making this update, run `yarn test -u` from the `config` directory.
+
+#### Construct Test Updates
+
+If you create a new construct, please create a new unit test for the construct within `constructs/test`. Similar to the folder structure within `constructs/lib`, these test files are separated by AWS service. After creating a new unit test, run `yarn test -u` from the `constructs` directory.
