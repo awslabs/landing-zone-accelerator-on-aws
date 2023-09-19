@@ -262,11 +262,11 @@ centralNetworkServices:
           account: Network
           subnet: Network-Secondary-B
           vpc: Network-Secondary
-        - name: SharedServices-Endpoint-A
+        - name: SharedServices-Endpoint-B #Need to use us-east-1b in Shared Services
           account: SharedServices
           subnet: SharedServices-App-B
           vpc: SharedServices-Main
-        - name: SharedServices-Endpoint-B
+        - name: SharedServices-Endpoint-C #Need to use us-east-1c in Shared Services
           account: SharedServices
           subnet: SharedServices-App-C
           vpc: SharedServices-Main
