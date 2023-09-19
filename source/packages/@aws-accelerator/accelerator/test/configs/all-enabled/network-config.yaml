@@ -1497,6 +1497,22 @@ vpcs:
             destination: 10.0.0.0/24
             type: vpcPeering
             target: CrossAccount
+      - name: SharedServices-App-C
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+          - name: VpcPeer
+            destination: 10.0.0.0/24
+            type: vpcPeering
+            target: CrossAccount
     subnets:
       - name: SharedServices-App-A
         availabilityZone: a
@@ -1512,6 +1528,13 @@ vpcs:
         availabilityZone: b
         routeTable: SharedServices-App-B
         ipv4CidrBlock: 10.4.1.0/24
+        shareTargets:
+          organizationalUnits:
+            - Infrastructure
+      - name: SharedServices-App-C
+        availabilityZone: c
+        routeTable: SharedServices-App-C
+        ipv4CidrBlock: 10.4.2.0/24
         shareTargets:
           organizationalUnits:
             - Infrastructure
