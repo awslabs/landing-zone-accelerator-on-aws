@@ -1236,7 +1236,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
     return accountIds;
   }
 
-  protected isRegionExcluded(regions: string[]): boolean {
+  public isRegionExcluded(regions: string[]): boolean {
     if (regions?.includes(cdk.Stack.of(this).region)) {
       this.logger.info(`${cdk.Stack.of(this).region} region explicitly excluded`);
       return true;

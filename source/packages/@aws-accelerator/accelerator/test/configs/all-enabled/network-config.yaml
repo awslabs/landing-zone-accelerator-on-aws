@@ -2,6 +2,7 @@ homeRegion: &HOME_REGION us-east-1
 defaultVpc:
   delete: true
   excludeAccounts: []
+  excludeRegions: []
 
 transitGateways:
   - name: Network-Main

@@ -64,6 +64,10 @@ export class VpcValidator {
     // Validate VPC peering configurations
     //
     this.validateVpcPeeringConfiguration(values, errors);
+    //
+    // Validate Default VPC Configuration
+    //
+    this.validateDefaultVpcConfiguration(values, helpers, errors);
   }
 
   private getCentralEndpointVpcs(
@@ -2624,6 +2628,73 @@ export class VpcValidator {
           errors.push(`[VPC peering connection ${peering.name}]: more than one VPC named ${vpc}`);
         }
       }
+    }
+  }
+
+  /**
+   * Validate default VPC configuration
+   * @param values
+   * @param helpers
+   * @param global
+   * @param errors
+   */
+  private validateDefaultVpcConfiguration(values: NetworkConfig, helpers: NetworkValidatorFunctions, errors: string[]) {
+    this.validateDefaultVpcRegionConfiguration(values, helpers, errors);
+    this.validateDefaultVpcAccountConfiguration(values, helpers, errors);
+  }
+
+  /**
+   * Validate default VPC region excludes configuration
+   * @param values
+   * @param helpers
+   * @param global
+   * @param errors
+   */
+  private validateDefaultVpcRegionConfiguration(
+    values: NetworkConfig,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+  ) {
+    const invalidRegions: string[] = [];
+    for (const region of values.defaultVpc.excludeRegions ?? []) {
+      const validRegion = helpers.isEnabledRegion(region);
+      if (!validRegion) {
+        invalidRegions.push(region);
+      }
+    }
+    if (invalidRegions.length > 0) {
+      errors.push(
+        `[Default Vpc Configuration contains the following regions that are not in the enabledRegions: ${invalidRegions.join(
+          ', ',
+        )}`,
+      );
+    }
+  }
+
+  /**
+   * Validate default VPC account excludes configuration
+   * @param values
+   * @param helpers
+   * @param global
+   * @param errors
+   */
+  private validateDefaultVpcAccountConfiguration(
+    values: NetworkConfig,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+  ) {
+    const invalidAccounts: string[] = [];
+    for (const account of values.defaultVpc.excludeAccounts ?? []) {
+      if (!helpers.accountExists(account)) {
+        invalidAccounts.push(account);
+      }
+    }
+    if (invalidAccounts.length > 0) {
+      errors.push(
+        `[Default Vpc Configuration contains the following accounts that are not in the accounts config: ${invalidAccounts.join(
+          ', ',
+        )}`,
+      );
     }
   }
 }

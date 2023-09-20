@@ -85,8 +85,9 @@ export class VpcResources {
    */
   private deleteDefaultVpcMethod(defaultVpc: DefaultVpcsConfig): boolean {
     const accountExcluded = defaultVpc.excludeAccounts && this.stack.isAccountExcluded(defaultVpc.excludeAccounts);
+    const regionExcluded = defaultVpc.excludeRegions && this.stack.isRegionExcluded(defaultVpc.excludeRegions);
 
-    if (defaultVpc.delete && !accountExcluded) {
+    if (defaultVpc.delete && !accountExcluded && !regionExcluded) {
       this.stack.addLogs(LogLevel.INFO, 'Add DeleteDefaultVpc');
       new DeleteDefaultVpc(this.stack, 'DeleteDefaultVpc', {
         kmsKey: this.stack.cloudwatchKey,

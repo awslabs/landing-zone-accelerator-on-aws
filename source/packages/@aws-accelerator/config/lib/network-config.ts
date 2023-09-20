@@ -31,6 +31,7 @@ export class NetworkConfigTypes {
   static readonly defaultVpcsConfig = t.interface({
     delete: t.boolean,
     excludeAccounts: t.optional(t.array(t.string)),
+    excludeRegions: t.optional(t.array(t.region)),
   });
 
   static readonly transitGatewayRouteTableVpcEntryConfig = t.interface({
@@ -1019,6 +1020,7 @@ export class NetworkConfigTypes {
  * defaultVpc:
  *   delete: true
  *   excludeAccounts: []
+ *   excludeRegions: []
  * ```
  */
 export class DefaultVpcsConfig implements t.TypeOf<typeof NetworkConfigTypes.defaultVpcsConfig> {
@@ -1027,13 +1029,22 @@ export class DefaultVpcsConfig implements t.TypeOf<typeof NetworkConfigTypes.def
    */
   readonly delete = false;
   /**
-   * Include an array of friendly account names
+   * (OPTIONAL) Include an array of friendly account names
    * to exclude from default VPC deletion.
    *
    * @remarks
    * Note: This is the logical name for accounts as defined in accounts-config.yaml.
    */
   readonly excludeAccounts: string[] | undefined = [];
+
+  /**
+   * (OPTIONAL) Include an array of AWS regions
+   * to exclude from default VPC deletion.
+   *
+   * @remarks
+   * Note: The regions included in the array must exist in the `enabledRegions` section of the global-config.yaml.
+   */
+  readonly excludeRegions: t.Region[] | undefined = undefined;
 }
 
 /**
