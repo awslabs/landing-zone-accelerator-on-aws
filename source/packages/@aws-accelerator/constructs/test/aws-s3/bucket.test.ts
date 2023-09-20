@@ -43,6 +43,7 @@ describe('Bucket', () => {
         useExistingRoles: false,
         acceleratorPrefix: 'AWSAccelerator',
       },
+      nagSuppressionPrefix: 'BucketPrefix/Resource',
     });
     // test methods to call bucket and bucket kms key
     // the values are cdk tokens so just check if they are string

@@ -77,6 +77,7 @@ export class CentralLogsBucket extends Construct {
       s3LifeCycleRules: props.s3LifeCycleRules,
       awsPrincipalAccesses: awsPrincipalAccesses.filter(item => item.accessType !== BucketAccessType.NO_ACCESS),
       bucketPrefixProps: props.bucketPrefixProps,
+      nagSuppressionPrefix: `${id}/Resource`,
     });
 
     this.bucket.getKey().addToResourcePolicy(
