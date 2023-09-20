@@ -24,4 +24,16 @@
 ## Possible fixes
 <!-- If you can, link to the line of code that might be responsible for the problem !-->
 
+## Please complete the following information about the solution:
+
+- [ ] Version: [e.g. v1.4.0]
+
+     > To get the version of the solution, you can look at the description of the created AWS CloudFormation stack used to install the LZA (AWSAccelerator-InstallerStack). For example, "__(SO0199) Landing Zone Accelerator on AWS. **Version 1.4.0.**__". If the description does not contain the version information, you can look at the Parameters of the stack for the **RepositoryBranchName** as that should contain the version number.
+
+- [ ] Region: [e.g. us-east-1]
+- [ ] Was the solution modified from the version published on this repository?
+- [ ] If the answer to the previous question was yes, are the changes available on GitHub?
+- [ ] Have you checked your [service quotas](https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html) for the sevices this solution uses?
+- [ ] Were there any errors in the CloudWatch Logs?
+
 /label ~Bug ~New
