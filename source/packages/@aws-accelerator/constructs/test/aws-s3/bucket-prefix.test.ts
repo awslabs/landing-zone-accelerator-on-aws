@@ -23,8 +23,9 @@ const stack = new cdk.Stack();
 new BucketPrefix(stack, 'BucketPrefix', {
   source: { bucketName: `aws-accelerator-central-logs-bucket-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}` },
   bucketPrefixes: ['guardduty'],
-  kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
-  logRetentionInDays: 3653,
+  customResourceLambdaEnvironmentEncryptionKmsKey: new cdk.aws_kms.Key(stack, 'LambdaKey', {}),
+  customResourceLambdaCloudWatchLogKmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
+  customResourceLambdaLogRetentionInDays: 3653,
 });
 
 /**

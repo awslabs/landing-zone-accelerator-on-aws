@@ -3,15 +3,146 @@
 exports[`BucketPrefix Construct(BucketPrefix):  Snapshot Test 1`] = `
 {
   "Resources": {
-    "BucketPrefix28078755": {
-      "DeletionPolicy": "Delete",
+    "BucketPrefixS3CreateBucketPrefixFunction9F1947D5": {
       "DependsOn": [
-        "CustomS3CreateBucketPrefixCustomResourceProviderLogGroup63AD059D",
+        "BucketPrefixS3CreateBucketPrefixFunctionServiceRoleDefaultPolicyD7D21A5D",
+        "BucketPrefixS3CreateBucketPrefixFunctionServiceRoleFB8AFED9",
       ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Accelerator deployed S3CreateBucketPrefix custom resource lambda function.",
+        "Handler": "index.handler",
+        "KmsKeyArn": {
+          "Fn::GetAtt": [
+            "LambdaKey984A39D9",
+            "Arn",
+          ],
+        },
+        "MemorySize": 256,
+        "Role": {
+          "Fn::GetAtt": [
+            "BucketPrefixS3CreateBucketPrefixFunctionServiceRoleFB8AFED9",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 300,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "BucketPrefixS3CreateBucketPrefixFunctionResourceLogGroup54BAB5A2": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "CustomKey1E6D0D07",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "BucketPrefixS3CreateBucketPrefixFunction9F1947D5",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "BucketPrefixS3CreateBucketPrefixFunctionServiceRoleDefaultPolicyD7D21A5D": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "AWS Lambda needs Managed policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "iam:PassRole",
+                "s3:ListBucket",
+                "s3:GetObject",
+                "s3:PutObject",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "BucketPrefixS3CreateBucketPrefixFunctionServiceRoleDefaultPolicyD7D21A5D",
+        "Roles": [
+          {
+            "Ref": "BucketPrefixS3CreateBucketPrefixFunctionServiceRoleFB8AFED9",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "BucketPrefixS3CreateBucketPrefixFunctionServiceRoleFB8AFED9": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Lambda needs Managed policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "BucketPrefixS3CreateBucketPrefixS3CreateBucketPrefixResourceF5F00D3C": {
+      "DeletionPolicy": "Delete",
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
-            "CustomS3CreateBucketPrefixCustomResourceProviderHandler59EF6BD6",
+            "BucketPrefixS3CreateBucketPrefixframeworkonEvent26FE41DA",
             "Arn",
           ],
         },
@@ -33,9 +164,138 @@ exports[`BucketPrefix Construct(BucketPrefix):  Snapshot Test 1`] = `
             ],
           ],
         },
+        "uuid": "REPLACED-UUID",
       },
-      "Type": "Custom::S3CreateBucketPrefix",
+      "Type": "AWS::CloudFormation::CustomResource",
       "UpdateReplacePolicy": "Delete",
+    },
+    "BucketPrefixS3CreateBucketPrefixframeworkonEvent26FE41DA": {
+      "DependsOn": [
+        "BucketPrefixS3CreateBucketPrefixframeworkonEventServiceRoleDefaultPolicy21D6F213",
+        "BucketPrefixS3CreateBucketPrefixframeworkonEventServiceRoleD3350EF1",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/BucketPrefix/S3CreateBucketPrefix/Resource)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "BucketPrefixS3CreateBucketPrefixFunction9F1947D5",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "BucketPrefixS3CreateBucketPrefixframeworkonEventServiceRoleD3350EF1",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "BucketPrefixS3CreateBucketPrefixframeworkonEventServiceRoleD3350EF1": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "BucketPrefixS3CreateBucketPrefixframeworkonEventServiceRoleDefaultPolicy21D6F213": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "BucketPrefixS3CreateBucketPrefixFunction9F1947D5",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "BucketPrefixS3CreateBucketPrefixFunction9F1947D5",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "BucketPrefixS3CreateBucketPrefixframeworkonEventServiceRoleDefaultPolicy21D6F213",
+        "Roles": [
+          {
+            "Ref": "BucketPrefixS3CreateBucketPrefixframeworkonEventServiceRoleD3350EF1",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "CustomKey1E6D0D07": {
       "DeletionPolicy": "Retain",
@@ -72,97 +332,40 @@ exports[`BucketPrefix Construct(BucketPrefix):  Snapshot Test 1`] = `
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomS3CreateBucketPrefixCustomResourceProviderHandler59EF6BD6": {
-      "DependsOn": [
-        "CustomS3CreateBucketPrefixCustomResourceProviderRoleFE87F141",
-      ],
+    "LambdaKey984A39D9": {
+      "DeletionPolicy": "Retain",
       "Properties": {
-        "Code": {
-          "S3Bucket": {
-            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
-          },
-          "S3Key": "REPLACED-GENERATED-NAME.zip",
-        },
-        "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
-        "Role": {
-          "Fn::GetAtt": [
-            "CustomS3CreateBucketPrefixCustomResourceProviderRoleFE87F141",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs16.x",
-        "Timeout": 900,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "CustomS3CreateBucketPrefixCustomResourceProviderLogGroup63AD059D": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "KmsKeyId": {
-          "Fn::GetAtt": [
-            "CustomKey1E6D0D07",
-            "Arn",
-          ],
-        },
-        "LogGroupName": {
-          "Fn::Join": [
-            "",
-            [
-              "/aws/lambda/",
-              {
-                "Ref": "CustomS3CreateBucketPrefixCustomResourceProviderHandler59EF6BD6",
-              },
-            ],
-          ],
-        },
-        "RetentionInDays": 3653,
-      },
-      "Type": "AWS::Logs::LogGroup",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "CustomS3CreateBucketPrefixCustomResourceProviderRoleFE87F141": {
-      "Properties": {
-        "AssumeRolePolicyDocument": {
+        "KeyPolicy": {
           "Statement": [
             {
-              "Action": "sts:AssumeRole",
+              "Action": "kms:*",
               "Effect": "Allow",
               "Principal": {
-                "Service": "lambda.amazonaws.com",
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
               },
+              "Resource": "*",
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-          },
-        ],
-        "Policies": [
-          {
-            "PolicyDocument": {
-              "Statement": [
-                {
-                  "Action": [
-                    "iam:PassRole",
-                    "s3:ListBucket",
-                    "s3:GetObject",
-                    "s3:PutObject",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": "*",
-                  "Sid": "S3PutBucketPrefixConfigurationTaskActions",
-                },
-              ],
-              "Version": "2012-10-17",
-            },
-            "PolicyName": "Inline",
-          },
-        ],
       },
-      "Type": "AWS::IAM::Role",
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
     },
   },
 }
