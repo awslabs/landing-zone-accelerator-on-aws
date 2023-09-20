@@ -48,6 +48,10 @@ export interface BucketPrefixProps {
    * Custom resource lambda log retention in days
    */
   readonly customResourceLambdaLogRetentionInDays: number;
+  /**
+   * Prefix for nag suppression
+   */
+  readonly nagSuppressionPrefix?: string;
 }
 
 /**
@@ -103,6 +107,7 @@ export class BucketPrefix extends Construct {
           }),
         ],
       },
+      nagSuppressionPrefix: props.nagSuppressionPrefix,
     });
   }
 }

@@ -26,6 +26,7 @@ new BucketPrefix(stack, 'BucketPrefix', {
   customResourceLambdaEnvironmentEncryptionKmsKey: new cdk.aws_kms.Key(stack, 'LambdaKey', {}),
   customResourceLambdaCloudWatchLogKmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
   customResourceLambdaLogRetentionInDays: 3653,
+  nagSuppressionPrefix: 'BucketPrefix/Resource/BucketPrefix',
 });
 
 /**

@@ -61,16 +61,6 @@ exports[`BucketPrefix Construct(BucketPrefix):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "BucketPrefixS3CreateBucketPrefixFunctionServiceRoleDefaultPolicyD7D21A5D": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM5",
-              "reason": "AWS Lambda needs Managed policy.",
-            },
-          ],
-        },
-      },
       "Properties": {
         "PolicyDocument": {
           "Statement": [
@@ -97,16 +87,6 @@ exports[`BucketPrefix Construct(BucketPrefix):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Policy",
     },
     "BucketPrefixS3CreateBucketPrefixFunctionServiceRoleFB8AFED9": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM4",
-              "reason": "AWS Lambda needs Managed policy.",
-            },
-          ],
-        },
-      },
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -205,16 +185,6 @@ exports[`BucketPrefix Construct(BucketPrefix):  Snapshot Test 1`] = `
       "Type": "AWS::Lambda::Function",
     },
     "BucketPrefixS3CreateBucketPrefixframeworkonEventServiceRoleD3350EF1": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM4",
-              "reason": "AWS Custom resource provider framework-role created by cdk.",
-            },
-          ],
-        },
-      },
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -246,16 +216,6 @@ exports[`BucketPrefix Construct(BucketPrefix):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Role",
     },
     "BucketPrefixS3CreateBucketPrefixframeworkonEventServiceRoleDefaultPolicy21D6F213": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific policy.",
-            },
-          ],
-        },
-      },
       "Properties": {
         "PolicyDocument": {
           "Statement": [

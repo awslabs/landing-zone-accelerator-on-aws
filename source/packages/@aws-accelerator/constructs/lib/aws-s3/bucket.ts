@@ -122,6 +122,10 @@ export interface BucketProps {
    * Optional bucket prefix property
    */
   bucketPrefixProps?: BucketPrefixProps;
+  /**
+   * Prefix for nag suppression
+   */
+  readonly nagSuppressionPrefix?: string;
 }
 
 /**
@@ -247,6 +251,8 @@ export class Bucket extends Construct {
           props.bucketPrefixProps.customResourceLambdaEnvironmentEncryptionKmsKey,
         customResourceLambdaCloudWatchLogKmsKey: props.bucketPrefixProps.customResourceLambdaCloudWatchLogKmsKey,
         customResourceLambdaLogRetentionInDays: props.bucketPrefixProps.customResourceLambdaLogRetentionInDays,
+        nagSuppressionPrefix:
+          props.nagSuppressionPrefix !== undefined ? `${props.nagSuppressionPrefix}/${id}Prefix` : undefined,
       });
     }
   }
