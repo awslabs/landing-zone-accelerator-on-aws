@@ -279,4 +279,13 @@ export class NetworkValidatorFunctions {
     const regex = new RegExp(expression);
     return regex.test(value);
   }
+
+  /**
+   * Returns true if region is included in the enabledRegions
+   * @param global
+   * @returns
+   */
+  public isEnabledRegion(region: string): boolean {
+    return this.enabledRegions.includes(region as t.Region);
+  }
 }
