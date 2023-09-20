@@ -16,6 +16,7 @@ import { Construct } from 'constructs';
 
 import { pascalCase } from 'change-case';
 import path from 'path';
+import { LzaCustomResource } from '../lza-custom-resource';
 /**
  * Construction properties for an S3 Bucket replication.
  */
@@ -36,13 +37,17 @@ export interface BucketPrefixProps {
   };
   bucketPrefixes: string[];
   /**
+   * Custom resource lambda environment encryption key
+   */
+  readonly customResourceLambdaEnvironmentEncryptionKmsKey: cdk.aws_kms.IKey;
+  /**
    * Custom resource lambda log group encryption key
    */
-  readonly kmsKey: cdk.aws_kms.IKey;
+  readonly customResourceLambdaCloudWatchLogKmsKey: cdk.aws_kms.IKey;
   /**
    * Custom resource lambda log retention in days
    */
-  readonly logRetentionInDays: number;
+  readonly customResourceLambdaLogRetentionInDays: number;
 }
 
 /**
@@ -71,44 +76,33 @@ export class BucketPrefix extends Construct {
       this.sourceBucket = props.source!.bucket!;
     }
 
-    const RESOURCE_TYPE = 'Custom::S3CreateBucketPrefix';
+    const resourceName = 'S3CreateBucketPrefix';
 
-    const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
-      codeDirectory: path.join(__dirname, 'put-bucket-prefix/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
-      policyStatements: [
-        {
-          Sid: 'S3PutBucketPrefixConfigurationTaskActions',
-          Effect: 'Allow',
-          Action: ['iam:PassRole', 's3:ListBucket', 's3:GetObject', 's3:PutObject'],
-          Resource: '*',
-        },
-      ],
-    });
-
-    const resource = new cdk.CustomResource(this, 'Resource', {
-      resourceType: RESOURCE_TYPE,
-      serviceToken: provider.serviceToken,
-      properties: {
-        sourceBucketName: this.sourceBucket.bucketName,
-        sourceBucketKeyArn: this.sourceBucket.encryptionKey?.keyArn,
-        bucketPrefixes: props.bucketPrefixes,
+    new LzaCustomResource(this, resourceName, {
+      resource: {
+        name: resourceName,
+        parentId: id,
+        properties: [
+          { sourceBucketName: this.sourceBucket.bucketName },
+          { sourceBucketKeyArn: this.sourceBucket.encryptionKey?.keyArn },
+          { bucketPrefixes: props.bucketPrefixes },
+        ],
+        forceUpdate: true,
+      },
+      lambda: {
+        assetPath: path.join(__dirname, 'put-bucket-prefix/dist'),
+        environmentEncryptionKmsKey: props.customResourceLambdaEnvironmentEncryptionKmsKey,
+        cloudWatchLogKmsKey: props.customResourceLambdaCloudWatchLogKmsKey,
+        cloudWatchLogRetentionInDays: props.customResourceLambdaLogRetentionInDays,
+        timeOut: cdk.Duration.minutes(5),
+        roleInitialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ['iam:PassRole', 's3:ListBucket', 's3:GetObject', 's3:PutObject'],
+            resources: ['*'],
+          }),
+        ],
       },
     });
-
-    /**
-     * Singleton pattern to define the log group for the singleton function
-     * in the stack
-     */
-    const stack = cdk.Stack.of(scope);
-    const logGroup =
-      (stack.node.tryFindChild(`${provider.node.id}LogGroup`) as cdk.aws_logs.LogGroup) ??
-      new cdk.aws_logs.LogGroup(stack, `${provider.node.id}LogGroup`, {
-        logGroupName: `/aws/lambda/${(provider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref}`,
-        retention: props.logRetentionInDays,
-        encryptionKey: props.kmsKey,
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-      });
-    resource.node.addDependency(logGroup);
   }
 }

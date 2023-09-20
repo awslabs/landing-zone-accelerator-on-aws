@@ -34,8 +34,6 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const solutionId = process.env['SOLUTION_ID'];
   const s3Client = new AWS.S3({ customUserAgent: solutionId });
 
-  console.log('starting - put bucket prefix');
-
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
@@ -51,10 +49,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
             })
             .promise(),
         );
-        console.log(listObjectsResponse);
         if (!('Contents' in listObjectsResponse) || listObjectsResponse.Contents?.length === 0) {
           console.log(`starting - create bucket prefix for ${prefix}`);
-          const putObjectResponse = await throttlingBackOff(() =>
+          await throttlingBackOff(() =>
             s3Client
               .putObject({
                 Bucket: sourceBucketName,
@@ -64,7 +61,6 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
               })
               .promise(),
           );
-          console.log(putObjectResponse);
         }
       }
       return {

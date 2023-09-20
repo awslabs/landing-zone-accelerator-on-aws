@@ -1963,8 +1963,9 @@ export class LoggingStack extends AcceleratorStack {
           bucketName: this.centralLogsBucketName,
         },
         bucketPrefixes: centralLogsBucketPrincipalAndPrefixes.bucketPrefixes,
-        kmsKey: this.cloudwatchKey,
-        logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+        customResourceLambdaEnvironmentEncryptionKmsKey: this.lambdaKey,
+        customResourceLambdaCloudWatchLogKmsKey: this.cloudwatchKey,
+        customResourceLambdaLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
       };
 
       this.centralLogsBucket = new CentralLogsBucket(this, 'CentralLogsBucket', {
@@ -2763,8 +2764,9 @@ export class LoggingStack extends AcceleratorStack {
       new BucketPrefix(this, 'ImportedLogBucketPrefix', {
         source: { bucket: centralLogBucket },
         bucketPrefixes: bucketPrefixes,
-        kmsKey: this.cloudwatchKey,
-        logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+        customResourceLambdaEnvironmentEncryptionKmsKey: this.lambdaKey,
+        customResourceLambdaCloudWatchLogKmsKey: this.cloudwatchKey,
+        customResourceLambdaLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
       });
     }
   }

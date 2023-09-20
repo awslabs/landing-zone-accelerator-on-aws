@@ -243,8 +243,10 @@ export class Bucket extends Construct {
       new BucketPrefix(this, id + 'Prefix', {
         source: { bucket: this.bucket },
         bucketPrefixes: props.bucketPrefixProps.bucketPrefixes,
-        kmsKey: props.bucketPrefixProps.kmsKey,
-        logRetentionInDays: props.bucketPrefixProps.logRetentionInDays,
+        customResourceLambdaEnvironmentEncryptionKmsKey:
+          props.bucketPrefixProps.customResourceLambdaEnvironmentEncryptionKmsKey,
+        customResourceLambdaCloudWatchLogKmsKey: props.bucketPrefixProps.customResourceLambdaCloudWatchLogKmsKey,
+        customResourceLambdaLogRetentionInDays: props.bucketPrefixProps.customResourceLambdaLogRetentionInDays,
       });
     }
   }
