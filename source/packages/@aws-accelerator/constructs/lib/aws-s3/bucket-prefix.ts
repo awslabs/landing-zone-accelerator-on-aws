@@ -102,7 +102,7 @@ export class BucketPrefix extends Construct {
         roleInitialPolicy: [
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
-            actions: ['iam:PassRole', 's3:ListBucket', 's3:GetObject', 's3:PutObject'],
+            actions: ['s3:ListBucket', 's3:GetObject', 's3:PutObject'],
             resources: ['*'],
           }),
         ],
