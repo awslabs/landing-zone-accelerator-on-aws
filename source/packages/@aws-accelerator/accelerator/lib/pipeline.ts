@@ -408,7 +408,7 @@ export class AcceleratorPipeline extends Construct {
       projectName: toolkitProjectName,
       encryptionKey: this.installerKey,
       role: this.props.toolkitRole,
-      timeout: cdk.Duration.hours(5),
+      timeout: cdk.Duration.hours(8),
       buildSpec: codebuild.BuildSpec.fromObject({
         version: '0.2',
         phases: {
@@ -422,7 +422,7 @@ export class AcceleratorPipeline extends Construct {
               'env',
               'cd source',
               'cd packages/@aws-accelerator/accelerator',
-              `if [ -z "\${ACCELERATOR_STAGE}" ]; then yarn run ts-node --transpile-only cdk.ts synth --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION}; fi`,
+              `if [ -z "\${ACCELERATOR_STAGE}" ]; then for STAGE in "key" "logging" "organizations" "security-audit" "network-prep" "security" "operations" "network-vpc" "security-resources" "network-associations" "customizations" "finalize" "bootstrap"; do yarn run ts-node --transpile-only cdk.ts synth --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION} --stage $STAGE; done; fi`,
               `if [ ! -z "\${ACCELERATOR_STAGE}" ]; then yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION}; fi`,
               `yarn run ts-node --transpile-only cdk.ts --require-approval never $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION} --app cdk.out`,
             ],
@@ -434,9 +434,13 @@ export class AcceleratorPipeline extends Construct {
         privileged: false, // Allow access to the Docker daemon
         computeType: codebuild.ComputeType.LARGE,
         environmentVariables: {
+          LOG_LEVEL: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: 'error',
+          },
           NODE_OPTIONS: {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: '--max_old_space_size=8192',
+            value: '--max_old_space_size=12288',
           },
           CDK_METHOD: {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
