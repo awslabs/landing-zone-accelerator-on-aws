@@ -2316,9 +2316,14 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
           "ComputeType": "BUILD_GENERAL1_LARGE",
           "EnvironmentVariables": [
             {
+              "Name": "LOG_LEVEL",
+              "Type": "PLAINTEXT",
+              "Value": "error",
+            },
+            {
               "Name": "NODE_OPTIONS",
               "Type": "PLAINTEXT",
-              "Value": "--max_old_space_size=8192",
+              "Value": "--max_old_space_size=12288",
             },
             {
               "Name": "CDK_METHOD",
@@ -2411,11 +2416,11 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
         "env",
         "cd source",
         "cd packages/@aws-accelerator/accelerator",
-        "if [ -z \\"\${ACCELERATOR_STAGE}\\" ]; then yarn run ts-node --transpile-only cdk.ts synth --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+        "if [ -z \\"\${ACCELERATOR_STAGE}\\" ]; then for STAGE in \\"key\\" \\"logging\\" \\"organizations\\" \\"security-audit\\" \\"network-prep\\" \\"security\\" \\"operations\\" \\"network-vpc\\" \\"security-resources\\" \\"network-associations\\" \\"customizations\\" \\"finalize\\" \\"bootstrap\\"; do yarn run ts-node --transpile-only cdk.ts synth --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
-                "; fi",
+                " --stage $STAGE; done; fi",
         "if [ ! -z \\"\${ACCELERATOR_STAGE}\\" ]; then yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
@@ -2435,7 +2440,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
           },
           "Type": "CODEPIPELINE",
         },
-        "TimeoutInMinutes": 300,
+        "TimeoutInMinutes": 480,
       },
       "Type": "AWS::CodeBuild::Project",
     },

@@ -361,7 +361,16 @@ export class AcceleratorToolkit {
     const bootstrapper = new Bootstrapper(source);
     const cli = await AcceleratorToolkit.getCdkToolKit(context, options, bootstrapStackName);
 
-    await cli.bootstrap(environments, bootstrapper, bootstrapEnvOptions);
+    try {
+      await cli.bootstrap(environments, bootstrapper, bootstrapEnvOptions);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      if (e.code === 'ExpiredToken' || e.name === 'ExpiredToken') {
+        throw new Error(
+          `Credentials expired for account ${options.accountId} in region ${options.region} running command ${options.command}`,
+        );
+      }
+    }
   }
 
   /**
