@@ -25,25 +25,24 @@ Before proceeding with the update you should carefully review the release notes 
 
 Changes to this configuration are released at the same time than LZA releases and share the same version numbers.
 
-### v1.3.0
+### v1.5.0
 
-The first version of this reference configuration was released with LZA version 1.3.0.
-
-### v1.4.0
-
-This version introduces support for Control Tower in the configuration. **IMPORTANT**: Control Tower can only be enabled in the initial installation and not through an update.
-
-This version includes updates to some SCP statements, make sure to compare the changes and apply them to your configuration
-
-Security groups defined in shared VPCs are now replicated to accounts where the subnets are shared. If you reference a prefix list from a security group, you need to update the deployment targets of the prefix list to deploy the prefix list in all shared accounts. (network-config.yaml)
-
-Lambda runtimes for AWS Config rules were updated to NodeJs16. (security-config.yaml)
-
-### Next release
-
-- Use dedicated AWSAccelerator-RDGW-Role for Managed Active Directory management instance
+- Use dedicated `AWSAccelerator-RDGW-Role` for Managed Active Directory management instance 
 - Deployment of default Web, App and Data security groups in all VPCs and workload accounts (ASEA parity)
 - Add configuration to delete rules of default security groups. Best practice is to not use the default security groups. Please review if your existing workloads use the default security groups before applying this change
 - Add deployment of interface endpoints for Secrets Manager, CloudFormation and Monitoring (ASEA parity)
 - SCP updates for granular billing permissions
-- Add additional Route Table entries in the GWLB Perimeter Subnets to target the NWFW
+- Add additional Route Table entries in the GWLB Perimeter Subnets to target the 
+- Refactor AWS Config rules to avoid duplication (security-config.yaml)
+- Fix to accelerator-ec2-instance-profile-permission Config rule
+
+### v1.4.0
+
+- This version introduces support for Control Tower in the configuration. **IMPORTANT**: Control Tower can only be enabled in the initial installation and not through an update.
+- This version includes updates to some SCP statements, make sure to compare the changes and apply them to your configuration
+- Security groups defined in shared VPCs are now replicated to accounts where the subnets are shared. If you reference a prefix list from a security group, you need to update the deployment targets of the prefix list to deploy the prefix list in all shared accounts. (network-config.yaml)
+- Lambda runtimes for AWS Config rules were updated to NodeJs16. (security-config.yaml)
+
+### v1.3.0
+
+- The first version of this reference configuration was released with LZA version 1.3.0.
