@@ -206,6 +206,15 @@ export class SecurityAuditStack extends AcceleratorStack {
     );
 
     if (this.props.securityConfig.centralSecurityServices.auditManager?.enable) {
+      if (
+        this.props.securityConfig.centralSecurityServices.auditManager.excludeRegions.includes(
+          cdk.Stack.of(this).region as Region,
+        )
+      ) {
+        this.logger.info(`Audit Manager enabled, but excluded in ${cdk.Stack.of(this).region} region.`);
+        return;
+      }
+
       this.logger.info('Adding Audit Manager ');
 
       const bucket = new Bucket(this, 'AuditManagerPublishingDestinationBucket', {
