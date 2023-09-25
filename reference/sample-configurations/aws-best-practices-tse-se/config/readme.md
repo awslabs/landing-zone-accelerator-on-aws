@@ -34,8 +34,11 @@ The Landing Zone Accelerator on AWS builds on top of an existing AWS Control Tow
 The three mandatory accounts must be created manually in AWS Organizations with the default **OrganizationAccountAccessRole** cross-account role before beginning.
 
 ### AWS Control Tower
+_Note: Government of Canada customers are required to skip this step and deploy using AWS Organizations and NOT Control Tower_
+
 You should first configure AWS Control Tower in your home region using the documentation from [Getting started with AWS Control Tower](https://docs.aws.amazon.com/controltower/latest/userguide/getting-started-with-control-tower.html)
 - When deploying Control Tower, leave the Region deny setting set to Not enabled - the Accelerator needs a customized region deny policy.
+- Select all regions for **Additional AWS Regions for governance**
 
 After Control Tower deployment you should have a **Security** and **Sandbox** OU as well as the three mandatory accounts.
 
@@ -90,7 +93,7 @@ Use the following steps to deploy this solution on AWS. For detailed instruction
 [Step 3. Copy the configuration files](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/step-3.-update-the-configuration-files.html)
 - Clone the `aws-accelerator-config` AWS CodeCommit repository.
 - Clone the `landing-zone-accelerator-on-aws` repo
-- Copy the contents from the `aws-best-practice-cccs-medium` folder under reference/sample-configurations to your local `aws-accelerator-config` repo. You may be prompted to over-write duplicate configs, such as accounts-config.yaml.
+- Copy the contents from the `aws-best-practice-tse-se` folder under reference/sample-configurations to your local `aws-accelerator-config` repo. You may be prompted to over-write duplicate configs, such as accounts-config.yaml.
 
 Step 4. Update the configuration files and release a change.
 

@@ -142,9 +142,8 @@
         "securityhub:InviteMembers",
         "securityhub:CreateMembers",
         "securityhub:DisableSecurityHub",
-        "securityhub:DisassociateFromMasterAccount",
+        "securityhub:Disassociate*",
         "securityhub:DeleteInsight",
-        "securityhub:DisassociateMembers",
         "securityhub:DeleteActionTarget",
         "securityhub:BatchDisableStandards",
         "securityhub:UpdateSecurityHubConfiguration",
@@ -163,7 +162,7 @@
         "macie2:UpdateMacieSession",
         "macie2:UpdateMemberSession",
         "macie2:UpdateOrganizationConfiguration",
-        "fms:DisassociateAdminAccount",
+        "fms:Disassociate*",
         "access-analyzer:DeleteAnalyzer",
         "account:EnableRegion",
         "account:DisableRegion",
@@ -180,7 +179,7 @@
       "Resource": "*",
       "Condition": {
         "ArnNotLike": {
-          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/AWSA*"]
+          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/AWSA*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"]
         }
       }
     },

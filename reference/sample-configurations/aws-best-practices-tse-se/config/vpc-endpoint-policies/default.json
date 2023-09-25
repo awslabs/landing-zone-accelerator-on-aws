@@ -1,33 +1,10 @@
 {
   "Statement": [
-    {
-      "Sid": "AllowRequestsByOrgsIdentities",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "*"
-      },
-      "Action": "*",
-      "Resource": "*",
-      "Condition": {
-        "StringEquals": {
-          "aws:PrincipalOrgID": "${ORG_ID}",
-          "aws:ResourceOrgID": "${ORG_ID}"
-        }
+      {
+          "Effect": "Allow",
+          "Principal": "*",
+          "Action": "*",
+          "Resource": "*"
       }
-    },
-    {
-      "Sid": "AllowRequestsByAWSServicePrincipals",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "*"
-      },
-      "Action": "*",
-      "Resource": "*",
-      "Condition": {
-        "Bool": {
-          "aws:PrincipalIsAWSService": "true"
-        }
-      }
-    }
   ]
 }

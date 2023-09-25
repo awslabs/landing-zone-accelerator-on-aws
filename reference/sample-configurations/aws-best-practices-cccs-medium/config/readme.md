@@ -26,8 +26,11 @@ The Landing Zone Accelerator on AWS builds on top of an existing AWS Control Tow
 The three mandatory accounts must be created manually in AWS Organizations with the default **OrganizationAccountAccessRole** cross-account role before beginning.
 
 ### AWS Control Tower
+_Note: Government of Canada customers are required to skip this step and deploy using AWS Organizations and NOT Control Tower_
+
 You should first configure AWS Control Tower in your home region using the documentation from [Getting started with AWS Control Tower](https://docs.aws.amazon.com/controltower/latest/userguide/getting-started-with-control-tower.html)
 - When deploying Control Tower, leave the Region deny setting set to Not enabled - the Accelerator needs a customized region deny policy.
+- Select all regions for **Additional AWS Regions for governance**
 
 After Control Tower deployment you should have a **Security** and **Sandbox** OU as well as the three mandatory accounts.
 
