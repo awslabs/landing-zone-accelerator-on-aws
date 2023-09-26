@@ -386,7 +386,18 @@ exports[`BootstrapStack Construct(BootstrapStack):  Snapshot Test 1`] = `
               "Action": "sts:AssumeRole",
               "Condition": {
                 "StringEquals": {
-                  "AWS:PrincipalArn": "arn:aws:iam::111111111111:role/AWSA-Deployment",
+                  "AWS:PrincipalArn": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":iam::111111111111:role/AWSA-Deployment",
+                      ],
+                    ],
+                  },
                 },
               },
               "Effect": "Allow",

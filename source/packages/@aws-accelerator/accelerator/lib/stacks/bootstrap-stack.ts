@@ -676,7 +676,7 @@ export class BootstrapStack extends AcceleratorStack {
         actions: ['sts:AssumeRole'],
         conditions: {
           StringEquals: {
-            'AWS:PrincipalArn': `arn:aws:iam::${cdk.Stack.of(this).account}:role/${
+            'AWS:PrincipalArn': `arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:role/${
               this.props.globalConfig.cdkOptions?.customDeploymentRole
             }`,
           },
