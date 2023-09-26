@@ -11,7 +11,13 @@
  *  and limitations under the License.
  */
 
-import { GetRoleCommand, IAMClient, CreateServiceLinkedRoleCommand, NoSuchEntityException } from '@aws-sdk/client-iam';
+import {
+  GetRoleCommand,
+  IAMClient,
+  CreateServiceLinkedRoleCommand,
+  NoSuchEntityException,
+  InvalidInputException,
+} from '@aws-sdk/client-iam';
 
 /**
  * create-service-linked-role - lambda handler
@@ -89,6 +95,13 @@ export async function createServiceLinkedRole(
       throw new Error(`Response did not have Role. ${JSON.stringify(resp)}`);
     }
   } catch (error) {
+    if (error instanceof InvalidInputException && error.message.includes('has been taken in this account')) {
+      //role does not need to be created
+      return {
+        Status: 'SUCCESS',
+        Data: undefined,
+      };
+    }
     throw new Error(`There was an error in service linked role creation: ${JSON.stringify(error)}`);
   }
 }
