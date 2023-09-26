@@ -18,7 +18,7 @@ import { RequireApproval } from 'aws-cdk/lib/diff';
 import { Command } from 'aws-cdk/lib/settings';
 import * as AWS from 'aws-sdk';
 import * as fs from 'fs';
-import { STSClient, AssumeRoleCommand, AssumeRoleCommandInput, AssumeRoleCommandOutput } from '@aws-sdk/client-sts';
+import { AssumeRoleCommandOutput } from '@aws-sdk/client-sts';
 import {
   SSMClient,
   GetParameterCommand,
@@ -28,7 +28,7 @@ import {
 import { S3Client, HeadBucketCommand } from '@aws-sdk/client-s3';
 import { IAMClient, GetRoleCommand, GetRoleCommandInput } from '@aws-sdk/client-iam';
 import { AccountsConfig, GlobalConfig, OrganizationConfig } from '@aws-accelerator/config';
-import { createLogger, throttlingBackOff } from '@aws-accelerator/utils';
+import { createLogger, throttlingBackOff, getCrossAccountCredentials } from '@aws-accelerator/utils';
 import { AssumeProfilePlugin } from '@aws-cdk-extensions/cdk-plugin-assume-role';
 import { isBeforeBootstrapStage } from '../utils/app-utils';
 import { AcceleratorStage } from './accelerator-stage';
@@ -138,6 +138,7 @@ export interface AcceleratorProps {
   readonly enableSingleAccountMode: boolean;
   readonly useExistingRoles: boolean;
 }
+let maxStacks = Number(process.env['MAX_CONCURRENT_STACKS'] ?? 250);
 
 /**
  * Wrapper around the CdkToolkit. The Accelerator defines this wrapper to add
@@ -179,14 +180,16 @@ export abstract class Accelerator {
       await globalConfig.loadExternalMapping(true);
       logger.info('Loaded ASEA mapping');
     }
+    await checkDiffStage(props);
 
     //
     // When running parallel, this will be the max concurrent stacks
     //
-    const maxStacks = globalConfig?.acceleratorSettings?.maxConcurrentStacks
-      ? globalConfig?.acceleratorSettings?.maxConcurrentStacks
-      : Number(process.env['MAX_CONCURRENT_STACKS'] ?? 250);
-
+    if (props.command === 'deploy') {
+      maxStacks = globalConfig?.acceleratorSettings?.maxConcurrentStacks
+        ? globalConfig?.acceleratorSettings?.maxConcurrentStacks
+        : Number(process.env['MAX_CONCURRENT_STACKS'] ?? 250);
+    }
     if (!this.isPipelineStage(props.stage)) {
       const assumeRoleName = setAssumeRoleName({
         stage: props.stage,
@@ -404,9 +407,7 @@ export abstract class Accelerator {
 
   private static isSingleStackAction(props: AcceleratorProps) {
     return (
-      props.account ||
-      props.region ||
-      [Command.SYNTH.toString(), Command.SYNTHESIZE.toString(), Command.DIFF.toString()].includes(props.command)
+      props.account || props.region || [Command.SYNTH.toString(), Command.SYNTHESIZE.toString()].includes(props.command)
     );
   }
 
@@ -964,6 +965,52 @@ export abstract class Accelerator {
   }
 }
 
+export async function checkDiffStage(props: AcceleratorProps) {
+  const diffPromises: Promise<void>[] = [];
+  const allStages = [
+    AcceleratorStage.ORGANIZATIONS,
+    AcceleratorStage.KEY,
+    AcceleratorStage.CUSTOMIZATIONS,
+    AcceleratorStage.DEPENDENCIES,
+    AcceleratorStage.FINALIZE,
+    AcceleratorStage.LOGGING,
+    AcceleratorStage.NETWORK_ASSOCIATIONS,
+    AcceleratorStage.NETWORK_ASSOCIATIONS_GWLB,
+    AcceleratorStage.NETWORK_PREP,
+    AcceleratorStage.NETWORK_VPC,
+    AcceleratorStage.NETWORK_VPC_DNS,
+    AcceleratorStage.NETWORK_VPC_ENDPOINTS,
+    AcceleratorStage.OPERATIONS,
+    AcceleratorStage.ORGANIZATIONS,
+    AcceleratorStage.SECURITY,
+    AcceleratorStage.SECURITY_AUDIT,
+    AcceleratorStage.SECURITY_RESOURCES,
+  ];
+
+  // if diff command is run and no stage is set then run all stages
+  if (props.command === Command.DIFF.toString() && !props.stage) {
+    for (const diffStage of allStages) {
+      const diffProps: AcceleratorProps = {
+        app: props.app,
+        command: props.command,
+        configDirPath: props.configDirPath,
+        stage: diffStage,
+        account: props.account,
+        region: props.region,
+        partition: props.partition,
+        requireApproval: props.requireApproval,
+        caBundlePath: props.caBundlePath,
+        ec2Creds: props.ec2Creds,
+        proxyAddress: props.proxyAddress,
+        enableSingleAccountMode: props.enableSingleAccountMode,
+        useExistingRoles: props.useExistingRoles,
+      };
+      diffPromises.push(Accelerator.run(diffProps));
+    }
+    await Promise.all(diffPromises);
+  }
+}
+
 /**
  * Sets the global region for API calls based on the given partition
  * @param partition
@@ -1084,35 +1131,6 @@ async function getSsmParameterValue(parameterName: string, ssmClient: SSMClient)
       logger.info(`Value not found for SSM Parameter: ${parameterName}`);
       return '';
     }
-    logger.error(JSON.stringify(e));
-    throw new Error(e.message);
-  }
-}
-
-async function getCrossAccountCredentials(
-  accountId: string,
-  region: string,
-  partition: string,
-  managementAccountAccessRole: string,
-) {
-  const stsClient = new STSClient({ region: region });
-  const stsParams: AssumeRoleCommandInput = {
-    RoleArn: `arn:${partition}:iam::${accountId}:role/${managementAccountAccessRole}`,
-    RoleSessionName: 'acceleratorBootstrapCheck',
-    DurationSeconds: 900,
-  };
-  let assumeRoleCredential: AssumeRoleCommandOutput | undefined = undefined;
-  try {
-    assumeRoleCredential = await throttlingBackOff(() => stsClient.send(new AssumeRoleCommand(stsParams)));
-    if (assumeRoleCredential) {
-      return assumeRoleCredential;
-    } else {
-      throw new Error(
-        `Error assuming role ${managementAccountAccessRole} in account ${accountId} for bootstrap checks`,
-      );
-    }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (e: any) {
     logger.error(JSON.stringify(e));
     throw new Error(e.message);
   }

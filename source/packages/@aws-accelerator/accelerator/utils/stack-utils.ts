@@ -1207,6 +1207,9 @@ function createApplicationsStacks(
   accountId: string,
   enabledRegion: string,
 ) {
+  const customizationStackName = `${
+    AcceleratorStackNames[AcceleratorStage.CUSTOMIZATIONS]
+  }-${accountId}-${enabledRegion}`;
   for (const application of props.customizationsConfig.applications ?? []) {
     if (
       isIncluded(
@@ -1217,11 +1220,13 @@ function createApplicationsStacks(
         props.organizationConfig,
       )
     ) {
+      // application stacks are created in customization stage
+      // so the output directory will be customizations folder specific to that account and region
       const applicationStackName = `${props.prefixes.accelerator}-App-${application.name}-${accountId}-${enabledRegion}`;
 
       checkRootApp(rootApp);
       const app = new cdk.App({
-        outdir: `cdk.out/${applicationStackName}`,
+        outdir: `cdk.out/${customizationStackName}`,
       });
       const applicationStack = new ApplicationsStack(app, applicationStackName, {
         env,

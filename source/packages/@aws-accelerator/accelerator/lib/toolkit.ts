@@ -34,7 +34,7 @@ import {
   OrganizationConfig,
 } from '@aws-accelerator/config';
 import { getReplacementsConfig } from '../utils/app-utils';
-import { createLogger } from '@aws-accelerator/utils';
+import { createLogger, getCloudFormationTemplate, printStackDiff } from '@aws-accelerator/utils';
 import { isBeforeBootstrapStage } from '../utils/app-utils';
 
 import { Accelerator, AcceleratorStackNames } from './accelerator';
@@ -234,7 +234,7 @@ export class AcceleratorToolkit {
         await AcceleratorToolkit.bootstrapToolKitStacks(context, configuration, toolkitStackName, options);
         break;
       case Command.DIFF:
-        await cli.diff({ stackNames: [] });
+        await AcceleratorToolkit.diffStacks(options);
         break;
 
       case Command.DEPLOY:
@@ -242,7 +242,7 @@ export class AcceleratorToolkit {
         break;
       case Command.SYNTHESIZE:
       case Command.SYNTH:
-        await AcceleratorToolkit.synthStacks(cli);
+        await AcceleratorToolkit.synthStacks(cli, options);
         break;
 
       default:
@@ -497,6 +497,22 @@ export class AcceleratorToolkit {
     }
     await Promise.all(deployPromises);
   }
+
+  /**
+   * Function to diff stacks
+   * @param cli {@link CdkToolkit}
+   * @param toolkitStackName string
+   * @param options {@link AcceleratorToolkitProps}
+   */
+  private static async diffStacks(options: AcceleratorToolkitProps) {
+    const stackName = await AcceleratorToolkit.getStackNames(options);
+
+    const diffPromises: Promise<void>[] = [];
+    for (const stack of stackName) {
+      diffPromises.push(AcceleratorToolkit.runDiffStackCli(options, stack));
+    }
+    await Promise.all(diffPromises);
+  }
   /**
    * Function to get stack names for bootstrapping
    * @param options {@link AcceleratorToolkitProps}
@@ -557,39 +573,16 @@ export class AcceleratorToolkit {
    * @param toolkitStackName string
    * @param options {@link AcceleratorToolkitProps}
    */
-  private static async synthStacks(cli: CdkToolkit) {
+  private static async synthStacks(cli: CdkToolkit, options: AcceleratorToolkitProps) {
     await cli.synth([], false, true).catch(err => {
       logger.error(err);
+      logger.error(`Options were: ${JSON.stringify(options)}`);
       throw new Error(`Synthesis of stacks failed`);
     });
   }
 
   private static async getCdkToolKit(context: string[], options: AcceleratorToolkitProps, stackName: string) {
-    let app: string | undefined;
-    if (
-      options.stage === AcceleratorStage.PIPELINE ||
-      options.stage === AcceleratorStage.IMPORT_ASEA_RESOURCES ||
-      options.stage === AcceleratorStage.POST_IMPORT_ASEA_RESOURCES
-    ) {
-      app = options.app;
-    } else if (options.stage === AcceleratorStage.NETWORK_ASSOCIATIONS_GWLB) {
-      app = `cdk.out/${
-        AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS]
-      }-${options.accountId!}-${options.region!}`;
-    } else if (
-      options.stage === AcceleratorStage.NETWORK_VPC_ENDPOINTS ||
-      options.stage === AcceleratorStage.NETWORK_VPC
-    ) {
-      app = `cdk.out/${
-        AcceleratorStackNames[AcceleratorStage.NETWORK_VPC_DNS]
-      }-${options.accountId!}-${options.region!}`;
-    } else if (options.stage === AcceleratorStage.CUSTOMIZATIONS) {
-      app = `cdk.out/${
-        AcceleratorStackNames[AcceleratorStage.CUSTOMIZATIONS]
-      }-${options.accountId!}-${options.region!}`;
-    } else {
-      app = `cdk.out/${stackName}`;
-    }
+    const app = await AcceleratorToolkit.setOutputDirectory(options, stackName);
     const configuration = new Configuration({
       commandLineArguments: {
         _: [options.command as Command, ...[]],
@@ -660,6 +653,54 @@ export class AcceleratorToolkit {
         logger.error(err);
         throw new Error('Deployment failed');
       });
+  }
+  private static async runDiffStackCli(options: AcceleratorToolkitProps, stack: string) {
+    const saveDirectory = await AcceleratorToolkit.setOutputDirectory(options, stack);
+    const savePath = path.join(__dirname, '..', saveDirectory!);
+    const roleName = GlobalConfig.loadRawGlobalConfig(options.configDirPath!).managementAccountAccessRole;
+
+    await getCloudFormationTemplate(options.accountId!, options.region!, options.partition!, stack, savePath, roleName);
+    const stream = fs.createWriteStream(path.join(savePath, `${stack}.diff`), { flags: 'w' });
+    await stream.write(`\nStack: ${stack} \n`);
+    await printStackDiff(
+      path.join(savePath, `${stack}.json`),
+      path.join(savePath, `${stack}.template.json`),
+      false,
+      3,
+      false,
+      stream,
+    );
+    await stream.close();
+  }
+
+  private static async setOutputDirectory(
+    options: AcceleratorToolkitProps,
+    stackName: string,
+  ): Promise<string | undefined> {
+    if (
+      options.stage === AcceleratorStage.PIPELINE ||
+      options.stage === AcceleratorStage.IMPORT_ASEA_RESOURCES ||
+      options.stage === AcceleratorStage.POST_IMPORT_ASEA_RESOURCES
+    ) {
+      return options.app;
+    } else if (options.stage === AcceleratorStage.NETWORK_ASSOCIATIONS_GWLB) {
+      return `cdk.out/${
+        AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS]
+      }-${options.accountId!}-${options.region!}`;
+    } else if (
+      options.stage === AcceleratorStage.NETWORK_VPC_ENDPOINTS ||
+      options.stage === AcceleratorStage.NETWORK_VPC
+    ) {
+      return `cdk.out/${
+        AcceleratorStackNames[AcceleratorStage.NETWORK_VPC_DNS]
+      }-${options.accountId!}-${options.region!}`;
+    } else if (options.stage === AcceleratorStage.CUSTOMIZATIONS) {
+      return `cdk.out/${
+        AcceleratorStackNames[AcceleratorStage.CUSTOMIZATIONS]
+      }-${options.accountId!}-${options.region!}`;
+    } else {
+      return `cdk.out/${stackName}`;
+    }
   }
 }
 

@@ -58,6 +58,7 @@ export const isThrottlingError = (
   e.name === 'ConcurrentModifications' || // Retry for AssociateHostedZone
   e.name === 'LimitExceededException' || // Retry for SecurityHub
   e.name === 'OperationNotPermittedException' || // Retry for RAM
+  e.name === 'CredentialsProviderError' || // Retry for STS
   e.name === 'TooManyRequestsException' ||
   e.name === 'Throttling' ||
   e.name === 'ThrottlingException' ||
@@ -65,6 +66,7 @@ export const isThrottlingError = (
   e.name === 'InternalException' ||
   e.name === 'ECONNRESET' ||
   e.name === 'EPIPE' ||
+  e.name === 'ENOTFOUND' ||
   e.name === 'ETIMEDOUT';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
