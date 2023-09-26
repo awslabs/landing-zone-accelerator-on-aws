@@ -75,10 +75,10 @@ source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:72
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:73
 
 # Accelerator specific assume role declaration
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:363
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:364
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1133
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1134
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:366
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:367
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1145
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1146
 
 # Accelerator specific assume role declaration
 source/packages/@aws-accelerator/config/lib/global-config.ts:2353
@@ -171,3 +171,7 @@ source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/certificat
 # Ignore password policy construct files
 source/packages/@aws-accelerator/constructs/lib/aws-iam/password-policy.ts
 source/packages/@aws-accelerator/constructs/test/aws-iam/password-policy.test.ts
+
+# Assume role declaration for cross account
+source/packages/@aws-accelerator/utils/lib/get-template.ts:63
+source/packages/@aws-accelerator/utils/lib/get-template.ts:64

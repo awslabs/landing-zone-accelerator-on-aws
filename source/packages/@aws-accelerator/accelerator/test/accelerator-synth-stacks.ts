@@ -85,7 +85,6 @@ export class AcceleratorSynthStacks {
     const globalConfig = GlobalConfig.load(this.configDirPath);
 
     let customizationsConfig: CustomizationsConfig;
-    // console.log(`Using config directory ${this.configDirPath}`);
     // Create empty customizationsConfig if optional configuration file does not exist
     if (fs.existsSync(path.join(this.configDirPath, 'customizations-config.yaml'))) {
       customizationsConfig = CustomizationsConfig.load(this.configDirPath);
@@ -96,7 +95,6 @@ export class AcceleratorSynthStacks {
     this.props = {
       configDirPath: this.configDirPath,
       accountsConfig: AccountsConfig.load(this.configDirPath),
-      // customizationsConfig: CustomizationsConfig.load(this.configDirPath),
       customizationsConfig,
       globalConfig,
       iamConfig: IamConfig.load(this.configDirPath),

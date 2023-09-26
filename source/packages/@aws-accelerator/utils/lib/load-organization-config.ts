@@ -17,7 +17,7 @@ import {
   ListRootsCommand,
   ListOrganizationalUnitsForParentCommandOutput,
 } from '@aws-sdk/client-organizations';
-import { ConfiguredRetryStrategy } from '@aws-sdk/util-retry';
+import { setRetryStrategy } from './common-functions';
 
 type OrgUnit = {
   Id: string;
@@ -43,7 +43,7 @@ export async function loadOrganizationalUnits(
   arrayFromConfig: OrganizationConfigArray[],
 ): Promise<AcceleratorOu[]> {
   const client = new OrganizationsClient({
-    retryStrategy: new ConfiguredRetryStrategy(10, (attempt: number) => 100 + attempt * 1000),
+    retryStrategy: setRetryStrategy(),
     region: await getRegion(partition),
   });
   const acceleratorOrganizationalUnit: AcceleratorOu[] = [];

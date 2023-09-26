@@ -2430,7 +2430,8 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                 {
                   "Ref": "AWS::Partition",
                 },
-                " --app cdk.out"
+                " --app cdk.out",
+        "if [ \\"diff\\" = \\"\${CDK_OPTIONS}\\" ]; then find ./cdk.out -type f -name \\"*.diff\\" -exec cat \\"{}\\" \\\\;;  fi"
       ]
     }
   }
