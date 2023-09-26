@@ -73,6 +73,10 @@ The following network diagram is an example foundational network topology.  The 
 ![Landing Zone Accelerator on AWS architecture -- networking
 resources.](./images/image2.png)
 
+## AWS Control Tower Enabled for Latest Configurations
+
+AWS Control Tower has been enabled in the latest best practices configuration. New deployment will automatically leverage AWS Control Tower to streamline your multi-account environment. If you are an existing customer using AWS Organizations, you can continue using your current configuration.
+
 ## For Further Consideration
 
 AWS provides resources that you should consult as you begin customizing your deployment:
