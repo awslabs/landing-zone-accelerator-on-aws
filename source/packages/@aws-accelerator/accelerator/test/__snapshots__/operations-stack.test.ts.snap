@@ -819,6 +819,25 @@ exports[`OperationsStack Construct(OperationsStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Role",
     },
+    "ServiceQuotaUpdatesL4019AD8B15624D57B3": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomServiceQuotaLimitsCustomResourceProviderLogGroupBC81BDCC",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomServiceQuotaLimitsCustomResourceProviderHandler81BAABBF",
+            "Arn",
+          ],
+        },
+        "desiredValue": 15,
+        "quotaCode": "L-4019AD8B",
+        "serviceCode": "iam",
+      },
+      "Type": "Custom::ServiceQuotaLimits",
+      "UpdateReplacePolicy": "Delete",
+    },
     "ServiceQuotaUpdatesLB99A93841000457ABA73": {
       "DeletionPolicy": "Delete",
       "DependsOn": [

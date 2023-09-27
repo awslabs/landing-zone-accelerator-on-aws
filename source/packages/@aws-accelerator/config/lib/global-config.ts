@@ -199,6 +199,7 @@ export abstract class GlobalConfigTypes {
     quotaCode: t.string,
     desiredValue: t.number,
     deploymentTargets: t.deploymentTargets,
+    regions: t.optional(t.array(t.region)),
   });
 
   static readonly reportConfig = t.interface({
@@ -629,6 +630,10 @@ export class ServiceQuotaLimitsConfig implements t.TypeOf<typeof GlobalConfigTyp
    * List of AWS Account names to be included in the Service Quota changes
    */
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
+  /**
+   * (Optional) Region(s) where this service quota increase will be requested. Service Quota increases will be requested in the home region only if this property is not defined.
+   */
+  readonly regions: t.Region[] | undefined = undefined;
 }
 
 /**
@@ -1920,12 +1925,13 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    * @example
    * ```
    * limits:
-   *     - serviceCode: lambda
-   *       quotaCode: L-2ACBD22F
-   *       value: 2000
-   *       deploymentTargets:
-   *           - organizationalUnits: root
-   *             accounts:
+   *   - serviceCode: lambda
+   *     quotaCode: L-2ACBD22F
+   *     desiredValue: 2000
+   *     deploymentTargets:
+   *       organizationalUnits:
+   *         - Infrastructure
+   * ```
    */
   readonly limits: ServiceQuotaLimitsConfig[] | undefined = undefined;
 

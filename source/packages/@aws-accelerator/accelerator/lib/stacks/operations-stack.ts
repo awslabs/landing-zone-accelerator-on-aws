@@ -23,6 +23,7 @@ import {
   IdentityCenterAssignmentConfig,
   IdentityCenterConfig,
   IdentityCenterPermissionSetConfig,
+  Region,
   RoleConfig,
   RoleSetConfig,
   VaultConfig,
@@ -130,10 +131,6 @@ export class OperationsStack extends AcceleratorStack {
       // Budgets
       //
       this.enableBudgetReports();
-      //
-      // Service Quota Limits
-      //
-      this.increaseLimits();
 
       // Create Accelerator Access Role in every region
       this.createAssetAccessRole(assetBucketKmsKey);
@@ -144,6 +141,11 @@ export class OperationsStack extends AcceleratorStack {
       // warm account here
       this.warmAccount(props.accountWarming);
     }
+
+    //
+    // Service Quota Limits
+    //
+    this.increaseLimits();
 
     //
     // Backup Vaults
@@ -184,16 +186,42 @@ export class OperationsStack extends AcceleratorStack {
    *
    */
   private increaseLimits() {
+    const globalServices = ['account', 'cloudfront', 'iam', 'organizations', 'route53'];
+
     for (const limit of this.props.globalConfig.limits ?? []) {
       if (this.isIncluded(limit.deploymentTargets ?? [])) {
-        this.logger.info(`Updating limits for provided services.`);
-        new LimitsDefinition(this, `ServiceQuotaUpdates${limit.quotaCode}` + `${limit.desiredValue}`, {
-          serviceCode: limit.serviceCode,
-          quotaCode: limit.quotaCode,
-          desiredValue: limit.desiredValue,
-          kmsKey: this.cloudwatchKey,
-          logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-        });
+        if (globalServices.includes(limit.serviceCode) && this.props.globalRegion === cdk.Stack.of(this).region) {
+          this.logger.info(
+            `Creating service quota increase for global service ${limit.serviceCode} in ${this.props.globalRegion}`,
+          );
+          new LimitsDefinition(this, `ServiceQuotaUpdates${limit.quotaCode}` + `${limit.desiredValue}`, {
+            serviceCode: limit.serviceCode,
+            quotaCode: limit.quotaCode,
+            desiredValue: limit.desiredValue,
+            kmsKey: this.cloudwatchKey,
+            logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+          });
+        } else if (limit.regions && limit.regions.includes(cdk.Stack.of(this).region as Region)) {
+          this.logger.info(`Regions explicitly defined for service quota increase ${limit.quotaCode}`);
+          new LimitsDefinition(this, `ServiceQuotaUpdates${limit.quotaCode}` + `${limit.desiredValue}`, {
+            serviceCode: limit.serviceCode,
+            quotaCode: limit.quotaCode,
+            desiredValue: limit.desiredValue,
+            kmsKey: this.cloudwatchKey,
+            logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+          });
+        } else if (this.props.globalConfig.homeRegion === cdk.Stack.of(this).region) {
+          this.logger.info(
+            `Regions property not specified, creating service quota increase ${limit.quotaCode} in home region`,
+          );
+          new LimitsDefinition(this, `ServiceQuotaUpdates${limit.quotaCode}` + `${limit.desiredValue}`, {
+            serviceCode: limit.serviceCode,
+            quotaCode: limit.quotaCode,
+            desiredValue: limit.desiredValue,
+            kmsKey: this.cloudwatchKey,
+            logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+          });
+        }
       }
     }
   }

@@ -170,6 +170,14 @@ limits:
     deploymentTargets:
       organizationalUnits:
         - Root
+    regions:
+      - us-west-2
+  - serviceCode: iam
+    quotaCode: L-4019AD8B
+    desiredValue: 15
+    deploymentTargets:
+      accounts: 
+        - Management
 reports:
   costAndUsageReport:
     compression: Parquet
