@@ -489,6 +489,7 @@ export class AcceleratorToolkit {
         account: options.accountId,
         region: options.region,
         cdkOptions: options.cdkOptions,
+        partition: options.partition,
       });
     }
     const deployPromises: Promise<void>[] = [];
@@ -704,14 +705,18 @@ export class AcceleratorToolkit {
   }
 }
 
-function getDeploymentRoleArn(props: { account?: string; region?: string; cdkOptions?: cdkOptionsConfig }) {
+function getDeploymentRoleArn(props: {
+  account?: string;
+  region?: string;
+  cdkOptions?: cdkOptionsConfig;
+  partition: string;
+}) {
   if (!props.account || !props.region) {
     return;
   }
-  const partition = process.env['PARTITION'] ?? 'aws';
   let roleArn;
   if (props.cdkOptions?.customDeploymentRole) {
-    roleArn = `arn:${partition}:iam::${props.account}:role/${props.cdkOptions.customDeploymentRole}`;
+    roleArn = `arn:${props.partition}:iam::${props.account}:role/${props.cdkOptions.customDeploymentRole}`;
   }
   return roleArn;
 }
