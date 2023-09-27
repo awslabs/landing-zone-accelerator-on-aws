@@ -118,6 +118,10 @@ export class GlobalConfigValidator {
     //
     this.validateControlTowerControls(values, errors);
     //
+    // Service Limit Quotas validation
+    //
+    this.validateServiceLimitQuotas(values, errors);
+    //
     // AWS Backup validation
     //
     this.validateAwsBackup(configDir, values, errors);
@@ -727,6 +731,22 @@ export class GlobalConfigValidator {
       if (control.deploymentTargets?.accounts?.length > 0) {
         errors.push(
           `Control Tower controls can only be deployed to Organizational Units. Please remove all account deployment targets from ${control.identifier}`,
+        );
+      }
+    }
+  }
+
+  private validateServiceLimitQuotas(values: GlobalConfig, errors: string[]) {
+    const globalServices = ['account', 'cloudfront', 'iam', 'organizations', 'route53'];
+    for (const limit of values.limits ?? []) {
+      // Check for global services and us-east-1 or us-gov-west-1 enabled
+      if (
+        globalServices.includes(limit.serviceCode) &&
+        !values.enabledRegions.includes('us-east-1') &&
+        !values.enabledRegions.includes('us-gov-west-1')
+      ) {
+        errors.push(
+          `Service limit increase requested for ${limit.serviceCode}, but global region not included in enabledRegions. Please add the global region for your partition to request service limit increases for global services.`,
         );
       }
     }
