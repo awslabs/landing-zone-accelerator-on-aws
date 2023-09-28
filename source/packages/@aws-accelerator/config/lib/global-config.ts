@@ -1066,6 +1066,32 @@ export class CloudWatchLogsExclusionConfig implements t.TypeOf<typeof GlobalConf
 export class CloudWatchLogsConfig implements t.TypeOf<typeof GlobalConfigTypes.cloudwatchLogsConfig> {
   /**
    * Declaration of Dynamic Partition for Kinesis Firehose.
+   *
+   * @remarks
+   * Kinesis firehose Dynamic Partition allows streaming Cloudwatch logs data to be assigned to a specific prefix. The input provided here is the path to log filter JSON file array. More details in the link: https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/centralized-logging.html
+   * Each item in the array is of the format
+   * ```
+   * { "logGroupPattern": "LogGroupName", "s3Prefix": "s3-prefix" }
+   * ```
+   * The logs end up in central logs bucket under prefix CloudWatchLogs.
+   * In the above example, the log group with `LogGroupName` will stream to `s3://<central-logs-bucket>/CloudWatchLogs/s3-prefix/`
+   *
+   * It is possible to use `*` for grouping log groups into same prefix. So, in the example below:
+   * ```
+   * [{ "logGroupPattern": "Application*", "s3Prefix": "app" }]
+   * ```
+   * The above will take log groups with name `ApplicationA`, `ApplicationB`, `ApplicationC` into s3 prefix `app`.
+   * Please make sure that `logGroupPattern` do not conflict each other as the logs are streamed to one destination and not replicated.
+   * For example, extending the above example to below
+   * ```
+   * [{ "logGroupPattern": "Application*", "s3Prefix": "app" }, { "logGroupPattern": "App*", "s3Prefix": "apple" }]
+   * ```
+   * In the above case, logs from `ApplicationA` can either end up in `app` or `apple`. They will not be replicated to both prefixes.
+   *
+   *  For more information on Kinesis Firehose dynamic partitioning limits please refer to::
+   * https://docs.aws.amazon.com/firehose/latest/dev/limits.html
+   *
+   *
    */
   readonly dynamicPartitioning: string | undefined = undefined;
   /**
