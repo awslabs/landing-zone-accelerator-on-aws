@@ -21,7 +21,7 @@ const path = require('path');
  */
 export interface SecurityHubStandardsProps {
   /**
-   * Security hun standard
+   * Security hub standards
    */
   readonly standards: { name: string; enable: boolean; controlsToDisable: string[] | undefined }[];
   /**
