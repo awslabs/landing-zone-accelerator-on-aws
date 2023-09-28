@@ -40,11 +40,15 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       //check if role exists if it does return success
       if (!(await isRoleExists(iamClient, event.ResourceProperties['roleName']))) {
         // role needs to be created
-        return await createServiceLinkedRole(
+        const createServiceLinkedRoleResponse = await createServiceLinkedRole(
           iamClient,
           event.ResourceProperties['serviceName'],
           event.ResourceProperties['description'] ?? undefined,
         );
+
+        // Delay to allow service linked role to propagate after creation of SLR
+        await delay(60000);
+        return createServiceLinkedRoleResponse;
       } else {
         //role does not need to be created
         return {
