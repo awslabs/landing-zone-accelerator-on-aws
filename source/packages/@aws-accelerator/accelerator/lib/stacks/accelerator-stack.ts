@@ -172,6 +172,17 @@ export interface AcceleratorStackProps extends cdk.StackProps {
    * Use existing roles for deployment
    */
   readonly useExistingRoles: boolean;
+  /**
+   * Central logs kms key arn
+   * @remarks
+   * this is only possible after logging stack is run in centralizedLoggingRegion
+   * It will be used in
+   * - logging stack for replication to s3 bucket
+   * - organizations stack for org trail
+   * - security-audit stack for AWS config service, SSM session manager, account trail
+   * - security stack for macie and guard duty
+   */
+  centralLogsBucketKmsKeyArn?: string;
 }
 
 process.on('uncaughtException', err => {
@@ -910,6 +921,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
           kmsKey: customResourceLambdaCloudWatchLogKmsKey,
           logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
           acceleratorPrefix: this.props.prefixes.accelerator,
+          kmsKeyArn: this.props.centralLogsBucketKmsKeyArn,
         }).getKey();
 
         break;
@@ -922,6 +934,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
           kmsKey: customResourceLambdaCloudWatchLogKmsKey,
           logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
           acceleratorPrefix: this.props.prefixes.accelerator,
+          kmsKeyArn: this.props.centralLogsBucketKmsKeyArn,
         }).getKey();
         break;
       default:

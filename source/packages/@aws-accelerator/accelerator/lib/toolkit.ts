@@ -146,6 +146,17 @@ export interface AcceleratorToolkitProps {
    * Use existing roles for deployment
    */
   useExistingRoles: boolean;
+  /**
+   * Central logs kms key arn
+   * @remarks
+   * this is only possible after logging stack is run in centralizedLoggingRegion
+   * It will be used in
+   * - logging stack for replication to s3 bucket
+   * - organizations stack for org trail
+   * - security-audit stack for AWS config service, SSM session manager, account trail
+   * - security stack for macie and guard duty
+   */
+  centralLogsBucketKmsKeyArn?: string;
 }
 
 /**

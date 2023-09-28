@@ -47,6 +47,10 @@ export interface KeyLookupProps {
    * Accelerator Prefix
    */
   readonly acceleratorPrefix: string;
+  /**
+   * KMS Key ARN
+   */
+  readonly kmsKeyArn?: string;
 }
 
 /**
@@ -72,6 +76,7 @@ export class KeyLookup extends Construct {
         kmsKey: props.kmsKey,
         logRetentionInDays: props.logRetentionInDays,
         acceleratorPrefix: props.acceleratorPrefix,
+        resolvedValue: props.kmsKeyArn,
       }).value;
     }
 

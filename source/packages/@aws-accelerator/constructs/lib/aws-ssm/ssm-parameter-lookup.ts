@@ -49,6 +49,10 @@ export interface SsmParameterLookupProps {
    * Accelerator Prefix
    */
   readonly acceleratorPrefix: string;
+  /**
+   * Resolved parameter value
+   */
+  readonly resolvedValue?: string;
 }
 
 /**
@@ -95,7 +99,7 @@ export class SsmParameterLookup extends Construct {
         parameterName: props.name,
         assumeRoleArn: roleArn,
         invokingAccountID: cdk.Stack.of(this).account,
-        uuid: uuidv4(),
+        uuid: props.resolvedValue ?? uuidv4(),
       },
     });
 
