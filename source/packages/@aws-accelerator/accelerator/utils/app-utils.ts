@@ -26,6 +26,8 @@ import fs from 'fs';
 import path from 'path';
 import { AcceleratorStage } from '../lib/accelerator-stage';
 import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
+import { getCentralLogBucketKmsKeyArn } from '../lib/accelerator';
+import { AcceleratorResourceNames } from '../lib/accelerator-resource-names';
 
 export interface AcceleratorContext {
   /**
@@ -405,6 +407,25 @@ export async function setAcceleratorStackProps(
       accountsConfig.getManagementAccountId(),
     );
   }
+  const centralizedLoggingRegion = globalConfig.logging.centralizedLoggingRegion ?? globalConfig.homeRegion;
+
+  const acceleratorResourceNames = new AcceleratorResourceNames({
+    prefixes: prefixes,
+    centralizedLoggingRegion,
+  });
+
+  let centralLogBucketCmkParameter: string = acceleratorResourceNames.parameters.centralLogBucketCmkArn;
+  if (globalConfig.logging.centralLogBucket?.importedBucket?.name) {
+    centralLogBucketCmkParameter = acceleratorResourceNames.parameters.importedCentralLogBucketCmkArn;
+  }
+
+  const centralLogsBucketKmsKeyArn = await getCentralLogBucketKmsKeyArn(
+    centralizedLoggingRegion,
+    context.partition,
+    accountsConfig.getLogArchiveAccountId(),
+    globalConfig.managementAccountAccessRole,
+    centralLogBucketCmkParameter,
+  );
 
   return {
     configDirPath: context.configDirPath,
@@ -417,9 +438,10 @@ export async function setAcceleratorStackProps(
     securityConfig: SecurityConfig.load(context.configDirPath, replacementsConfig),
     partition: context.partition,
     globalRegion,
-    centralizedLoggingRegion: globalConfig.logging.centralizedLoggingRegion ?? globalConfig.homeRegion,
+    centralizedLoggingRegion,
     prefixes,
     useExistingRoles: context.useExistingRoles,
+    centralLogsBucketKmsKeyArn,
     ...acceleratorEnv,
   };
 }

@@ -224,6 +224,8 @@ export abstract class Accelerator {
       centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
       cdkOptions: globalConfig?.cdkOptions,
       useExistingRoles: props.useExistingRoles,
+      // central logs bucket kms key arn is dynamic and will be populated in app-utils
+      centralLogsBucketKmsKeyArn: undefined,
     };
     //
     // When an account and region is specified, execute as single stack.
@@ -1178,4 +1180,24 @@ function setAssumeRoleName(props: {
   }
 
   return assumeRoleName;
+}
+
+export async function getCentralLogBucketKmsKeyArn(
+  region: string,
+  partition: string,
+  accountId: string,
+  managementAccountAccessRole: string,
+  parameterName: string,
+): Promise<string> {
+  const crossAccountCredentials = await getCrossAccountCredentials(
+    accountId,
+    region,
+    partition,
+    managementAccountAccessRole,
+  );
+  const ssmClient = (await getCrossAccountClient(region, crossAccountCredentials, 'SSM')) as SSMClient;
+
+  const ssmValue = await getSsmParameterValue(parameterName, ssmClient);
+  logger.warn(`SSM value is: ${ssmValue}`);
+  return ssmValue;
 }
