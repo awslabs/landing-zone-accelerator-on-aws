@@ -1197,7 +1197,5 @@ export async function getCentralLogBucketKmsKeyArn(
   );
   const ssmClient = (await getCrossAccountClient(region, crossAccountCredentials, 'SSM')) as SSMClient;
 
-  const ssmValue = await getSsmParameterValue(parameterName, ssmClient);
-  logger.warn(`SSM value is: ${ssmValue}`);
-  return ssmValue;
+  return await getSsmParameterValue(parameterName, ssmClient);
 }
