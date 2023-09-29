@@ -34,11 +34,14 @@ This software includes third party software subject to the following copyrights:
 @aws-sdk/client-dynamodb - Apache-2.0
 @aws-sdk/client-ec2 - Apache-2.0
 @aws-sdk/client-ecr - Apache-2.0
+@aws-sdk/client-guardduty - Apache-2.0
 @aws-sdk/client-iam - Apache-2.0
 @aws-sdk/client-kms - Apache-2.0
+@aws-sdk/client-network-firewall - Apache-2.0
 @aws-sdk/client-organizations - Apache-2.0
 @aws-sdk/client-s3 - Apache-2.0
 @aws-sdk/client-s3 - Apache-2.0
+@aws-sdk/client-secrets-manager - Apache-2.0
 @aws-sdk/client-sns - Apache-2.0
 @aws-sdk/client-ssm - - Apache-2.0
 @aws-sdk/client-sts - Apache-2.0
@@ -50,6 +53,7 @@ This software includes third party software subject to the following copyrights:
 @babel/preset-env - MIT
 @babel/preset-typescript - MIT
 @types/aws-lambda - MIT
+@types/diff - MIT
 @types/fs-extra - MIT
 @types/jest - MIT
 @types/js-yaml - MIT
@@ -102,6 +106,7 @@ jsii - Apache-2.0
 jsii-pacmak - Apache-2.0
 lerna - MIT
 lint-staged - MIT
+minimatch - ISC
 monocle-ts - MIT
 mri - MIT
 newtype-ts - MIT
