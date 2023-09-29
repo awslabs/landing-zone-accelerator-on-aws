@@ -2746,6 +2746,11 @@ export class TransitGatewayAttachmentConfig
    * An array of the friendly names of VPC subnets for the attachment to be deployed.
    *
    * @remarks
+   * **CAUTION**: Changing this value after initial deployment causes a new attachment to be created.
+   * VPCs can only have a single attachment at a time.
+   * To avoid core pipeline failures, use multiple core pipeline runs to 1) delete the existing VPC attachment and any
+   * downstream dependencies and then 2) create a new attachment with your updated subnets.
+   *
    * This is the logical `name` property of the subnet as defined in network-config.yaml.
    *
    * @see {@link SubnetConfig}
