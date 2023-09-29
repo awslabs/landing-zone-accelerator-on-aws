@@ -21,7 +21,6 @@ const testNamePrefix = 'Construct(IdentityCenterGetInstanceId): ';
 const stack = new cdk.Stack();
 
 new UsersGroupsMetadata(stack, 'UsersGroupsMetadata', {
-  globalRegion: 'us-east-1',
   identityStoreId: 'd-906751796e',
   principals: [
     { type: 'USER', name: 'lza-accelerator-user' },

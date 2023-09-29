@@ -22,10 +22,6 @@ import { LzaCustomResource } from '../lza-custom-resource';
  */
 export interface UsersGroupsMetadataProps {
   /**
-   * Global region
-   */
-  readonly globalRegion: string;
-  /**
    * Identity Store Id
    */
   readonly identityStoreId: string;
@@ -69,7 +65,6 @@ export class UsersGroupsMetadata extends Construct {
           name: resourceName,
           parentId: id,
           properties: [
-            { globalRegion: props.globalRegion },
             { identityStoreId: props.identityStoreId },
             { principalType: principal.type },
             { principalName: principal.name },

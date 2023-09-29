@@ -33,7 +33,6 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     case 'Update':
       const iamClient = new AWS.IdentityStore({
         customUserAgent: process.env['SOLUTION_ID'],
-        region: process.env['globalRegion'],
       });
 
       const identityStoreId = event.ResourceProperties['identityStoreId'];

@@ -15,7 +15,7 @@ import { throttlingBackOff } from '@aws-accelerator/utils';
 import * as AWS from 'aws-sdk';
 AWS.config.logger = console;
 
-const iamClient = new AWS.IAM();
+const iamClient = new AWS.IAM({ customUserAgent: process.env['SOLUTION_ID'] });
 const ssoRolePrefix = '/aws-reserved/sso.amazonaws.com/';
 
 export interface responseData {

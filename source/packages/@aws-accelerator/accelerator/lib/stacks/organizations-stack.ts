@@ -830,7 +830,6 @@ export class OrganizationsStack extends AcceleratorStack {
           );
 
       const identityCenterInstance = new IdentityCenterInstance(this, 'IdentityCenterInstance', {
-        globalRegion: this.props.globalRegion,
         customResourceLambdaEnvironmentEncryptionKmsKey: this.lambdaKey!,
         customResourceLambdaCloudWatchLogKmsKey: this.cloudwatchKey,
         customResourceLambdaLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,

@@ -176,7 +176,7 @@ exports[`IdentityCenterInstance Construct(IdentityCenterGetInstanceId):  Snapsho
             "Arn",
           ],
         },
-        "globalRegion": "us-east-1",
+        "debug": false,
       },
       "Type": "AWS::CloudFormation::CustomResource",
       "UpdateReplacePolicy": "Delete",
