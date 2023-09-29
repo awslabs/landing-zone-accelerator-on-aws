@@ -18,6 +18,7 @@ serviceControlPolicies:
     deploymentTargets:
       organizationalUnits:
         - Infrastructure
+        - Security
   - name: AcceleratorGuardrails2
     description: >
       Accelerator GuardRails 2
@@ -26,6 +27,7 @@ serviceControlPolicies:
     deploymentTargets:
       organizationalUnits:
         - Infrastructure
+        - Security
   - name: Quarantine
     description: >
       This SCP is used to prevent changes to new accounts until the Accelerator
