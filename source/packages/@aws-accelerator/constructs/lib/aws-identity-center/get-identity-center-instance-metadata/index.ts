@@ -29,7 +29,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     }
   | undefined
 > {
-  const identityCenterClient = new AWS.SSOAdmin({ region: event.ResourceProperties['globalRegion'] });
+  const identityCenterClient = new AWS.SSOAdmin({ customUserAgent: process.env['SOLUTION_ID'] });
 
   let data: { identityStoreId: string; instanceArn: string } | undefined;
 

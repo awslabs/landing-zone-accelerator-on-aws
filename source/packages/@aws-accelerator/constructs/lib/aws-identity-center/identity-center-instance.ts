@@ -21,10 +21,6 @@ import { LzaCustomResource } from '../lza-custom-resource';
  */
 export interface IdentityCenterInstanceProps {
   /**
-   * Global region
-   */
-  readonly globalRegion: string;
-  /**
    * Custom resource lambda environment encryption key
    */
   readonly customResourceLambdaEnvironmentEncryptionKmsKey: cdk.aws_kms.IKey;
@@ -53,7 +49,6 @@ export class IdentityCenterInstance extends Construct {
       resource: {
         name: resourceName,
         parentId: id,
-        properties: [{ globalRegion: props.globalRegion }],
       },
       lambda: {
         assetPath: path.join(__dirname, 'get-identity-center-instance-metadata/dist'),

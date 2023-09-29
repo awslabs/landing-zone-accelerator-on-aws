@@ -21,7 +21,6 @@ const testNamePrefix = 'Construct(IdentityCenterGetInstanceId): ';
 const stack = new cdk.Stack();
 
 new IdentityCenterInstance(stack, 'IdentityCenterInstance', {
-  globalRegion: 'us-east-1',
   customResourceLambdaEnvironmentEncryptionKmsKey: new cdk.aws_kms.Key(stack, 'LambdaKey', {}),
   customResourceLambdaCloudWatchLogKmsKey: new cdk.aws_kms.Key(stack, 'CloudWatchKey', {}),
   customResourceLambdaLogRetentionInDays: 365,

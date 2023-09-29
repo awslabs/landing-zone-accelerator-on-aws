@@ -1019,7 +1019,6 @@ export class OperationsStack extends AcceleratorStack {
       this,
       pascalCase(`UsersGroupsMetadata-${assignment.name}-${targetAccountId}`),
       {
-        globalRegion: this.props.globalRegion,
         identityStoreId: identityStoreId,
         principals: assignment.principals,
         resourceUniqueIdentifier: `${targetAccountId}-${assignment.name}`,

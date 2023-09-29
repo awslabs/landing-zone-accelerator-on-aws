@@ -32,8 +32,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   | undefined
 > {
   console.log(JSON.stringify(event, null, 4));
-  let organizationsClient = new AWS.Organizations();
-  const identityCenterClient = new AWS.SSOAdmin();
+  let organizationsClient = new AWS.Organizations({ customUserAgent: process.env['SOLUTION_ID'] });
+  const identityCenterClient = new AWS.SSOAdmin({ customUserAgent: process.env['SOLUTION_ID'] });
   const identityCenterServicePrincipal = 'sso.amazonaws.com';
   const partition = event.ResourceProperties['partition'];
   if (partition === 'aws-us-gov') {
