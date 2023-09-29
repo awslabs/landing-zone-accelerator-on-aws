@@ -18,7 +18,7 @@ import { createLogger } from '@aws-accelerator/utils';
 import { AccountsConfig } from '../lib/accounts-config';
 import { CommonValidatorFunctions } from './common/common-validator-functions';
 import * as t from '../lib/common-types';
-import { IamConfig, IamConfigTypes } from '../lib/iam-config';
+import { IamConfig, IamConfigTypes, PolicySetConfig } from '../lib/iam-config';
 import { NetworkConfig } from '../lib/network-config';
 import { OrganizationConfig } from '../lib/organization-config';
 import { SecurityConfig } from '../lib/security-config';
@@ -88,6 +88,11 @@ export class IamConfigValidator {
 
     // Validate Identity Center Object
     this.validateIdentityCenter(values, accountsConfig, errors);
+
+    //
+    // Validate IAM principal assignments for roles
+    //
+    this.validateIamPolicyTargets(values, accountsConfig, errors);
 
     // Validate Managed active directory
     new ManagedActiveDirectoryValidator(values, vpcSubnetLists, ouIdNames, accountNames, errors);
@@ -248,6 +253,200 @@ export class IamConfigValidator {
     // Check names for duplicates
     if (hasDuplicates(roleNames)) {
       errors.push(`Duplicate role names defined. Role names must be unique. Role names defined: ${roleNames}`);
+    }
+  }
+
+  /**
+   * Function to validate managed policy availability for IAM resources
+   * @param values
+   * @param accountsConfig
+   * @param errors
+   */
+  private validateIamPolicyTargets(
+    values: t.TypeOf<typeof IamConfigTypes.iamConfig>,
+    accountsConfig: AccountsConfig,
+    errors: string[],
+  ) {
+    for (const policyItem of values.policySets ?? []) {
+      // Validate IAM Users
+      this.validateIamUserTarget(values, accountsConfig, policyItem as PolicySetConfig, errors);
+
+      // Validate IAM Roles
+      this.validateIamRoleTarget(values, accountsConfig, policyItem as PolicySetConfig, errors);
+
+      // Validate IAM Groups
+      this.validateIamGroupTarget(values, accountsConfig, policyItem as PolicySetConfig, errors);
+    }
+  }
+
+  /**
+   * Function to validate managed policy availability for IAM users
+   * @param values
+   * @param accountsConfig
+   * @param policyItem PolicySetConfig
+   * @param errors
+   */
+  private validateIamUserTarget(
+    values: t.TypeOf<typeof IamConfigTypes.iamConfig>,
+    accountsConfig: AccountsConfig,
+    policyItem: PolicySetConfig,
+    errors: string[],
+  ) {
+    let invalidIamUserTargets: string[] = [];
+    for (const iamItem of values.userSets ?? []) {
+      for (const userItem of iamItem.users) {
+        if (userItem.boundaryPolicy) {
+          policyItem.policies.find(item => {
+            if (userItem.boundaryPolicy === item.name) {
+              const userDeploymentTargetSets = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
+                accountsConfig,
+                iamItem.deploymentTargets as t.DeploymentTargets,
+              );
+              const policyTargets = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
+                accountsConfig,
+                policyItem.deploymentTargets as t.DeploymentTargets,
+              );
+              // Check the policies and validate that they're deployment is available for respective user boundary-policy configuration.
+              for (const targetItem of userDeploymentTargetSets ?? []) {
+                if (policyTargets.indexOf(targetItem) === -1) {
+                  if (!invalidIamUserTargets.includes(userItem.username)) {
+                    invalidIamUserTargets.push(userItem.username);
+                  }
+                }
+              }
+            }
+          });
+        }
+      }
+    }
+    if (invalidIamUserTargets.length > 0) {
+      errors.push(
+        `Deployment target account(s) for the following user(s): ${invalidIamUserTargets.join(
+          ', ',
+        )} reference policies that are not available in the target accounts.`,
+      );
+    }
+  }
+
+  /**
+   * Function to validate managed policy availability for IAM Roles
+   * @param values
+   * @param accountsConfig
+   * @param policyItem PolicySetConfig
+   * @param errors
+   */
+  private validateIamRoleTarget(
+    values: t.TypeOf<typeof IamConfigTypes.iamConfig>,
+    accountsConfig: AccountsConfig,
+    policyItem: PolicySetConfig,
+    errors: string[],
+  ) {
+    let invalidIamRoleTargets: string[] = [];
+    for (const iamItem of values.roleSets ?? []) {
+      for (const roleItem of iamItem.roles) {
+        if (roleItem.boundaryPolicy) {
+          policyItem.policies.find(item => {
+            if (roleItem.boundaryPolicy === item.name) {
+              const userDeploymentTargetSets = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
+                accountsConfig,
+                iamItem.deploymentTargets as t.DeploymentTargets,
+              );
+              const policyTargets = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
+                accountsConfig,
+                policyItem.deploymentTargets as t.DeploymentTargets,
+              );
+              // Check the boundary policy and validate that it's deployment is available for respective role boundary-policy configuration.
+              for (const targetItem of userDeploymentTargetSets ?? []) {
+                if (policyTargets.indexOf(targetItem) === -1) {
+                  if (!invalidIamRoleTargets.includes(roleItem.name)) {
+                    invalidIamRoleTargets.push(roleItem.name);
+                  }
+                }
+              }
+            }
+          });
+        }
+        // Check the customer managed policies and validate that it's deployment is available for configurations..
+        for (const customerPolicy of roleItem.policies?.customerManaged ?? []) {
+          policyItem.policies.find(item => {
+            if (customerPolicy === item.name) {
+              const userDeploymentTargetSets = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
+                accountsConfig,
+                iamItem.deploymentTargets as t.DeploymentTargets,
+              );
+              const policyTargets = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
+                accountsConfig,
+                policyItem.deploymentTargets as t.DeploymentTargets,
+              );
+              // Check the policies and validate that they're deployment is available for respective user boundary-policy configuration.
+              for (const targetItem of userDeploymentTargetSets ?? []) {
+                if (policyTargets.indexOf(targetItem) === -1) {
+                  if (!invalidIamRoleTargets.includes(roleItem.name)) {
+                    invalidIamRoleTargets.push(roleItem.name);
+                  }
+                }
+              }
+            }
+          });
+        }
+      }
+    }
+    if (invalidIamRoleTargets.length > 0) {
+      errors.push(
+        `Deployment target account(s) for the following role(s): ${invalidIamRoleTargets.join(
+          ', ',
+        )} reference policies that are not available in the target accounts.`,
+      );
+    }
+  }
+
+  /**
+   * Function to validate managed policy availability for IAM Groups
+   * @param values
+   * @param accountsConfig
+   * @param policyItem PolicySetConfig
+   * @param errors
+   */
+  private validateIamGroupTarget(
+    values: t.TypeOf<typeof IamConfigTypes.iamConfig>,
+    accountsConfig: AccountsConfig,
+    policyItem: PolicySetConfig,
+    errors: string[],
+  ) {
+    let invalidIamGroupTargets: string[] = [];
+    for (const iamItem of values.groupSets ?? []) {
+      for (const groupItem of iamItem.groups) {
+        // Check the customer managed policies and validate that it's deployment is available for configurations..
+        for (const customerPolicy of groupItem.policies?.customerManaged ?? []) {
+          policyItem.policies.find(item => {
+            if (customerPolicy === item.name) {
+              const userDeploymentTargetSets = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
+                accountsConfig,
+                iamItem.deploymentTargets as t.DeploymentTargets,
+              );
+              const policyTargets = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
+                accountsConfig,
+                policyItem.deploymentTargets as t.DeploymentTargets,
+              );
+              // Check the policies and validate that they're deployment is available for respective group policy configuration.
+              for (const targetItem of userDeploymentTargetSets ?? []) {
+                if (policyTargets.indexOf(targetItem) === -1) {
+                  if (!invalidIamGroupTargets.includes(groupItem.name)) {
+                    invalidIamGroupTargets.push(groupItem.name);
+                  }
+                }
+              }
+            }
+          });
+        }
+      }
+    }
+    if (invalidIamGroupTargets.length > 0) {
+      errors.push(
+        `Deployment target account(s) for the following group(s): ${invalidIamGroupTargets.join(
+          ', ',
+        )} reference policies that are not available in the target accounts.`,
+      );
     }
   }
 
