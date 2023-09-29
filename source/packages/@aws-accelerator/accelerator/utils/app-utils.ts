@@ -401,8 +401,8 @@ export async function setAcceleratorStackProps(
     const accountIds = accountsConfig.accountIds?.map(account => account.accountId) ?? [];
     await globalConfig.loadIAMRoleSSMParameters(
       globalConfig.homeRegion,
-      process.env['PARTITION'] ?? 'aws',
-      process.env['ACCELERATOR_PREFIX'] ?? 'accelerator',
+      context.partition,
+      prefixes.ssmParamName,
       accountIds,
       accountsConfig.getManagementAccountId(),
     );
