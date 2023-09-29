@@ -2248,10 +2248,7 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
     accounts: string[],
     managementAccountId: string,
   ) {
-    if (prefix === 'AWSAccelerator') {
-      prefix = 'accelerator';
-    }
-    const ssmPath = `/${prefix}/iam/role/`;
+    const ssmPath = `${prefix}/iam/role/`;
     const promises = [];
     const ssmParameters = [];
     for (const account of accounts) {
