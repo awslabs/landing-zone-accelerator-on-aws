@@ -195,7 +195,6 @@ export class NetworkConfigTypes {
       'localGateway',
       'gatewayEndpoint',
       'gatewayLoadBalancerEndpoint',
-      'networkInterface',
       'networkFirewall',
       'virtualPrivateGateway',
       'vpcPeering',
@@ -2200,7 +2199,7 @@ export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes
    * @see {@link SubnetConfig} and {@link RouteTableConfig}.
    *
    * Either `destination` or `destinationPrefixList` must be specified for the following route entry types:
-   * `transitGateway`, `natGateway`, `internetGateway`, `networkInterface`, `vpcPeering`, `virtualPrivateGateway`.
+   * `transitGateway`, `natGateway`, `internetGateway`, `vpcPeering`, `virtualPrivateGateway`.
    *
    * `destination` MUST be specified for route entry type `networkFirewall` or `gatewayLoadBalancerEndpoint`.
    *
@@ -2214,7 +2213,7 @@ export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes
    * This is the logical `name` property of the prefix list as defined in network-config.yaml.
    *
    * Either `destination` or `destinationPrefixList` must be specified for the following route entry types:
-   * `transitGateway`, `natGateway`, `internetGateway`, `networkInterface`, `vpcPeering`, `virtualPrivateGateway`.
+   * `transitGateway`, `natGateway`, `internetGateway`, `vpcPeering`, `virtualPrivateGateway`.
    *
    * Cannot be specified for route entry type `networkFirewall` or `gatewayLoadBalancerEndpoint`. Use `destination` instead.
    *
