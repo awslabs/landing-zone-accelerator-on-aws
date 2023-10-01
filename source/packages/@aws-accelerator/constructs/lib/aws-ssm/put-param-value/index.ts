@@ -55,8 +55,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       break;
 
     case 'Update':
-      const oldParameters: SsmParameterProps[] = event.OldResourceProperties['parameters'];
-      const oldAccountIds: string[] = event.OldResourceProperties['parameterAccountIds'];
+      const oldParameters: SsmParameterProps[] = event.OldResourceProperties['parameters'] ?? [];
+      const oldAccountIds: string[] = event.OldResourceProperties['parameterAccountIds'] ?? [];
       const removedAccountIds = oldAccountIds.filter(id => !parameterAccountIds.includes(id));
       const addedAccountIds = parameterAccountIds.filter(id => !oldAccountIds.includes(id));
 
