@@ -292,7 +292,7 @@ export class IamConfigValidator {
     policyItem: PolicySetConfig,
     errors: string[],
   ) {
-    let invalidIamUserTargets: string[] = [];
+    const invalidIamUserTargets: string[] = [];
     for (const iamItem of values.userSets ?? []) {
       for (const userItem of iamItem.users) {
         if (userItem.boundaryPolicy) {
@@ -341,7 +341,7 @@ export class IamConfigValidator {
     policyItem: PolicySetConfig,
     errors: string[],
   ) {
-    let invalidIamRoleTargets: string[] = [];
+    const invalidIamRoleTargets: string[] = [];
     for (const iamItem of values.roleSets ?? []) {
       for (const roleItem of iamItem.roles) {
         if (roleItem.boundaryPolicy) {
@@ -413,7 +413,7 @@ export class IamConfigValidator {
     policyItem: PolicySetConfig,
     errors: string[],
   ) {
-    let invalidIamGroupTargets: string[] = [];
+    const invalidIamGroupTargets: string[] = [];
     for (const iamItem of values.groupSets ?? []) {
       for (const groupItem of iamItem.groups) {
         // Check the customer managed policies and validate that it's deployment is available for configurations..
