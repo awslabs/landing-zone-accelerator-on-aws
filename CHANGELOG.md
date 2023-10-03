@@ -5,6 +5,160 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [1.5.0] - 2023-10-05
+
+### Added
+- feat(backup) add Backup vault policy
+- feat(config): allow users to set stack concurrency
+- feat(config) M2131 WAF logging enabled
+- feat(control-tower): add control tower controls
+- feat(identity-center): add IdentityCenter extended permission set and assignment
+- feat(logging): enable non-accelerator subscription filter destination replacement
+- feat(logging): move larger CloudWatch logs payloads back into kinesis stream for re-ingestion
+- feat(networking): add ability to reference dynamic configuration file replacements and license files for EC2 firewalls
+- feat(networking): add dynamic EC2 firewall site-to-site VPN connections and configuration replacements
+- feat(networking): add exclude regions for default VPC
+- feat(networking): allow gateway and interface endpoint service customizations
+- feat(networking): Created Shared ALB and supporting resources (ACM, Target Groups)
+- feat(replacements): support Policy Replacements in VPC Endpoint policies
+- feat(s3): allow import of S3 buckets
+- feat(s3): support lifecycle rules for given prefix
+- feat(security-hub): allow customers to disable Security Hub CloudWatch logs
+- feat(service-catalog): support service catalog product constraints
+- feat(ssm): allow SSM replacements through replacements-config.yaml
+- feat(ssm): allow creation of custom SSM parameters
+- feat(tags): Support Customer Tags
+### Changed
+- enhancement(docs): add script to generate versioned TypeDocs
+- enhancement(iam): make managed AD resolverRuleName property optional
+- enhancement(networking): add ability to define advanced VPN tunnel configuration parameters
+- enhancement(networking): add ability to dynamically reference same-VPC subnets as a route destination 
+- enhancement(networking): add ability to reference physical IDs for subnet availability zones and for Network Firewall endpoint lookups
+- enhancement(networking): add AWSManagedAggregateThreatList to supported DNS firewall managed domain lists
+- enhancement(pipeline): allow synth and deploy to write to stack specific directories
+- enhancement(validation): Add config rule name validation
+- enhancement(validation): add name uniqueness check for IAM policies and roles
+- enhancement(validation): add validation for security delegated admin account
+- chore(deps): bump semver to 7.5.2
+- chore(deps): bump lerna to 7.2.0
+- chore(deps): bump proxy-agent to 6.3.0
+- chore(deps): bump aws-cdk to 2.93.0
+- chore(docs): added instructions for validations and tests
+- chore(docs): added documentation for excluded regions in audit manager
+- chore(docs): document dynamic partitioning format in TypeDocs
+- chore(docs): remove invalid targets for routeTableEntry
+- chore(docs): update TransitGatewayAttachmentConfig docs to reflect subnet update behavior
+- chore(docs): updated typedoc example for budget notifications
+- chore(docs): update maxAggregationInterval to match appropriate unit
+- chore(docs): VPC Flow Logs central logging method indicated service-native S3 logging
+- chore(logging): add accelerator roles to central bucket policy
+- chore(organizations): Moved getOrgId function to config
+- chore(organizations): Removed Check for Tag and Backup policies in AWS GovCloud
+- chore(test): update test pipeline lambda functions to Node.js 16 runtime
+- chore(utils): moved chunkArray to utils
+- chore(validation): Remove let from config validation
+- chore: license file updates
+- chore: refactor engine to reduce complexity
+- chore: updated dependencies for aws-sdk
+### Fixed
+- fix(accelerator-prefix): accelerator prefix remains hardcoded in some constructs
+- fix(accounts): allow Control Tower account enrollment in GovCloud
+- fix(acm): Duplicate certificate imported on CR update
+- fix(applications): allow launchTemplates without userData, remove securityGroup checks
+- fix(audit-manager): excluded regions list ignored in security audit stack
+- fix(bootstrap): synth large environments runs out of memory
+- fix(cdk): fixed promise bug for parallel deployments
+- fix(cloudwatch): log replication with exclusion times out
+- fix(cloudwatch): Updated logic to deploy CW log groups to OUs
+- fix(customizations): make security groups optional in launch templates
+- fix(deployment) - Enforce IMDS v2 for Managed Active Directory controlling EC2 instance
+- fix(guardduty): create guardduty prefix in s3 destination when prefix deleted by life cycle policy
+- fix(guardduty): support account create and delete actions for more than 50 accounts
+- fix(guardduty): Delete publishing destination when enabled is false
+- fix(guardduty): Updated createMembers function to use SDKv3
+- fix(iam): remove permissive runInstance from policy
+- fix(iam): add IAM validation for roles, groups, users to Policies
+- fix(iam): failed to assume role with static partition
+- fix(iam): Added error handling for service linked role already existing
+- fix(iam): update boundary control policy IAM get user actions
+- fix(identity-center): incorrect sso regional endpoint
+- fix(identity-center): fix api rate exceeded issue
+- fix(limits): Allow service quota limits to be defined with regions
+- fix(logging): change kms key lookup for central bucket
+- fix(logging): fixed logging stack deployment order
+- fix(logging): central log bucket cmk role exists when centralized logging changed
+- fix(logging): enable CloudWatch logging on Firehose
+- fix(logging): Add prefix creation for imported central log buckets
+- fix(logging): add firehose records processor to exclusion list default
+- fix(logging): compress logs within lambda and set firehose transform to uncompressed
+- fix(MAD): Remove key pair from MAD instance
+- fix(networking): duplicate construct error when creating GWLB endpoints in multiple VPCs under the same account
+- fix(networking): fix underscore subnet names
+- fix(networking): Transit gateway peering fails when multiple accepter tgw has multiple requester
+- fix(networking): Fixed IPv6 validation for Prefix Lists
+- fix(networking): incorrect private hosted zones created for interface endpoint services with specific API subdomains
+- fix(networking): AZ not defined error when outpost subnet is configured
+- fix(networking): fixed isTarget conditions for target groups
+- fix(networking): update regional conditions for shared ALBs
+- fix(networking): EC2 firewall config replacements incorrectly matches multiple variables on a single line
+- fix(networking): EC2 firewall config replacements missing hostname lookup
+- fix(organizations): load ou units asynchronously
+- fix(pipeline): useManagementAccessRole optional
+- fix(pipeline): time out in CodePipeline Review stage
+- fix(pipeline): change assume role behavior on management account
+- fix(pipeline): add nagSupression to firewall service linked role
+- fix(pipeline): toolkit does not use prefix variable
+- fix(replacements): Updated generatePolicyReplacements arguments to include organization id
+- fix(roles): add UUID to service linked role to prevent accidental deletion
+- fix(roles): make security audit stack partition aware
+- fix(roles): add delay on service linked role creation
+- fix(roles): create service linked role in custom resource
+- fix(saml): SAML login is hardcoded
+- fix(s3): access logs bucket external policy fix
+- fix(scp): scpRevertChanges should use accelerator prefix
+- fix(security): bring your own KMS key cannot reference service-linked roles in key policy file
+- fix(security): Increased memory for GuardDuty custom resource
+- fix(security): custom config rule discarding triggering resource types
+- fix(ssm): PutSsmParameter upgrade from v1.3.x to v1.4.2+ fails
+- fix(ssm): Added check to see if roles exist before policy attachment
+- fix(sso): Added validation to flag permission set assignments created for management account
+- fix(tagging): Accel-P tag is appropriately set on resources
+- fix(uninstaller) detach customer policies prior to delete
+- fix(validation): Add config rule name validation
+- fix(validation): validate certificate deployment target
+- fix(validation): undefined Config remediation target account name causes false positive
+### Configuration Changes
+- enhancement(aws-best-practices): Added README for Best Practices
+- enhancement(aws-best-practices): Update Macie Permissions
+- enhancement(aws-best-practices): apply SCPs to security OU
+- enhancement(aws-best-practices-govcloud):update AWS GovCloud(US) configuration per FedRAMP assessment
+- chore(education): migrate EDU sample configuration directory to external repository
+- chore(elections): remove election sample directory
+- chore(config): cccs/tse Config updates
+## [1.4.3] - 2023-07-19
+
+### Fixed
+- fix(logging): cloudwatch logging, change log format in firehose to json
+- fix(organizations): large OU organizations fail to load during prepare stage
+- fix(networking): cannot provision new IPAM subnets when VPC has CIDRs from non-contiguous CIDR blocks
+- fix(networking): Modify Transit Gateway resource lookup construct ids
+- fix(validate-config): ValidateEnvironmentConfig improperly evaluates enrolled CT accounts as not enrolled
+
+### Configuration Changes
+- chore(aws-best-practices-tse-se): include granular billing SCP permission updates
+- chore(aws-best-practices-cccs-medium): include granular billing SCP permission updates
+
+## [1.4.2] - 2023-06-16
+
+### Fixed
+
+- fix(ssm): PutSsmParameters custom resource ignores new accounts
+- chore(organizations): moved getOrganizationId to organizations-config
+- fix(iam): service linked roles fail to create in multi-region deployment
+- fix(validation): TGW route validation fails when prefixList deployment targets do not have excluded regions
+- fix(validation): incorrectly configured security delegated admin account isn’t caught by validation
+- fix(docs): README indicates S3 server access logs are replicated to central logs bucket
 ## [1.4.1] - 2023-05-18
 
 ### Fixed
