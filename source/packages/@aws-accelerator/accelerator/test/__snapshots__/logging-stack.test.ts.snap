@@ -8243,7 +8243,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-LoggingStack-333333333333-us-west-2/version",
         "Type": "String",
-        "Value": "1.4.1",
+        "Value": "1.5.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
