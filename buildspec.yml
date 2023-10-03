@@ -39,7 +39,7 @@ artifacts:
     - NOTICE.txt
     - CODE_OF_CONDUCT.md
     - CONTRIBUTING.md
-    - .github/**
+    - .github/**/*
     - buildspec.yml
     - CHANGELOG.md
     - .cfnnag_*
