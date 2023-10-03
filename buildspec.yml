@@ -30,13 +30,16 @@ phases:
 
 artifacts:
   files:
-    - deployment/**/*
+    - deployment/**
     - source/**/*
     - .gitignore
     - sonar-project.properties
     - README.md
     - LICENSE.txt
     - NOTICE.txt
+    - CODE_OF_CONDUCT.md
+    - CONTRIBUTING.md
+    - .github/**
     - buildspec.yml
     - CHANGELOG.md
     - .cfnnag_*
