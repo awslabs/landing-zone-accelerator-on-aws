@@ -45,7 +45,6 @@ export class TgwCrossAccountResources extends AseaResource {
     if (this.propagationResources.length === 0) return;
     if (vpcItem.transitGatewayAttachments?.length === 0) {
       this.scope.addLogs(LogLevel.WARN, `TGW Attachment is removed from VPC "${vpcItem.name}" configuration`);
-      // TODO: Implement Delete logic
       return;
     }
     for (const tgwAttachmentItem of vpcItem.transitGatewayAttachments ?? []) {
@@ -115,8 +114,6 @@ export class TgwCrossAccountResources extends AseaResource {
     return tgwAttachment.physicalResourceId;
   }
 
-  // TODO: Refactor
-  // Can be moved to AseaResource class to make it available for all ASEA classes
   private getTgwRouteTableId(routeTableName: string) {
     if (!this.props.globalConfig.externalLandingZoneResources?.templateMap) {
       return;

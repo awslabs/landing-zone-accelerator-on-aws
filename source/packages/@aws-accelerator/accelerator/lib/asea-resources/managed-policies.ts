@@ -27,7 +27,6 @@ const ASEA_PHASE_NUMBER = 1;
 /**
  * Handles ManagedPolicies created by ASEA.
  * All Managed Policies driven by ASEA configuration are deployed in Phase-1
- * TODO: Finish delete on configuration remove
  */
 export class ManagedPolicies extends AseaResource {
   readonly policies: { [key: string]: CfnManagedPolicy } = {};
