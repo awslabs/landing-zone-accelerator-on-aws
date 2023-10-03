@@ -48,7 +48,7 @@ The following conventions are used throughout this document
 
 #### 2.4.0.1. AWS Account Numbers
 
-AWS account numbers are decimal-digit pseudorandom identifiers with 12 digits (e.g. `651278770121`). This document will use the convention that an AWS Organization Management (root) account has the account ID `123456789012`, and child accounts are represented by `111111111111`, `222222222222`, etc.
+AWS account numbers are decimal-digit pseudorandom identifiers with 12 digits (e.g. `111122223333`). This document will use the convention that an AWS Organization Management (root) account has the account ID `123456789012`, and child accounts are represented by `111122223333`, `444455556666`, etc.
 For example the following ARN would refer to a VPC subnet in the `ca-central-1` region in the Organization Management (root) account:
 
 ```
