@@ -41,7 +41,6 @@ export interface RolesProps extends AseaResourceProps {
 /**
  * Handles IAM Roles created by ASEA.
  * All IAM Roles driven by ASEA configuration are deployed in Phase-1
- * TODO: Address grantManagedActiveDirectorySecretAccess functionality in operations-stack.createRole()
  */
 export class Roles extends AseaResource {
   private readonly props: RolesProps;

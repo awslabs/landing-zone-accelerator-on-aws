@@ -57,7 +57,6 @@ export class TransitGateways extends AseaResource {
           LogLevel.INFO,
           `TGW ${tgwResource.logicalResourceId} is in ASEA Cfn but not found in configuration`,
         );
-        // TODO: Add Delete TGW
       });
   }
 

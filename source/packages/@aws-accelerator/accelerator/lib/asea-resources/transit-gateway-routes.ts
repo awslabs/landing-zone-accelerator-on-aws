@@ -63,7 +63,6 @@ export class TransitGatewayRoutes extends AseaResource {
   private setTransitGatewayResourcesMap(tgwItem: TransitGatewayConfig) {
     for (const routeTableItem of tgwItem.routeTables ?? []) {
       // ASEA RouteTable name includes TGW Name. No need to use TGW Id since TGW names are unique
-      // TODO: Add TGW LogicalId verification if same TGW name is used in account and region.
       const routeTableResource = this.findResourceByTag(this.allRouteTables, routeTableItem.name);
       if (!routeTableResource) continue;
       this.transitGatewayRouteTables.set(
@@ -148,8 +147,6 @@ export class TransitGatewayRoutes extends AseaResource {
           `Adding route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
         );
         // routeId = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-${routeItem.attachment.directConnectGatewayName}`;
-
-        // TODO: Get TGW attachment ID for directConnectGateway
       }
 
       // If route is for VPN attachment
@@ -159,8 +156,6 @@ export class TransitGatewayRoutes extends AseaResource {
           `Adding route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
         );
         // routeId = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-${routeItem.attachment.vpnConnectionName}`;
-
-        // TODO: Get TGW attachment ID for vpnConnection
       }
 
       // If route is for TGW peering attachment
@@ -170,7 +165,6 @@ export class TransitGatewayRoutes extends AseaResource {
           `Adding route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
         );
         // routeId = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-${routeItem.attachment.transitGatewayPeeringName}`;
-        // TODO: Implement TGW Peering attachment route after implementing TGW Peering
       }
     }
 

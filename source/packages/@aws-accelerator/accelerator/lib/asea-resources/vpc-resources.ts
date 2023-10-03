@@ -100,7 +100,6 @@ export class VpcResources extends AseaResource {
       vpc.enableDnsHostnames = vpcInScope.enableDnsHostnames;
       vpc.enableDnsSupport = vpcInScope.enableDnsSupport;
       vpc.instanceTenancy = vpcInScope.instanceTenancy;
-      // TODO: Add LZA tags if required
       if (vpcInScope.cidrs!.length > 1) {
         const additionalCidrResources = this.getAdditionalCidrs(vpcStackInfo);
         const existingAdditionalCidrBlocks: string[] = additionalCidrResources.map(
@@ -123,7 +122,6 @@ export class VpcResources extends AseaResource {
           .cidrs!.slice(1)
           .filter(cidr => !existingAdditionalCidrBlocks.includes(cidr));
         this.scope.addLogs(LogLevel.INFO, `Removed Additional CIDR created by ASEA are ${removedAseaCidrs}`);
-        // TODO: Remove Additional CIDRs created by ASEA
       }
       const subnets = this.createSubnets(vpcInScope, vpcStackInfo, nestedStack.includedTemplate);
       this.createNatGateways(vpcStackInfo, nestedStack.includedTemplate, vpcInScope, subnets);
@@ -471,7 +469,6 @@ export class VpcResources extends AseaResource {
     //               configIngressRule.sourceValue) ||
     //             true),
     //       );
-    //       // TODO Handle delete if resource not found in resource map
     //       // Updated to existing ingress is not handled here.
     //       if (existingIngressRuleEntry)
     //         this.scope.addAseaResource(
@@ -499,7 +496,6 @@ export class VpcResources extends AseaResource {
     //               configEgressRule.sourceValue) ||
     //             true),
     //       );
-    //       // TODO Handle delete if resource not found in resource map
     //       // Updated to existing egress is not handled here.
     //       if (existingEgressRuleEntry)
     //         this.scope.addAseaResource(
@@ -522,7 +518,6 @@ export class VpcResources extends AseaResource {
     if (tgwAttachmentResources.length === 0) return;
     if (vpcItem.transitGatewayAttachments?.length === 0 && tgwAttachmentResources.length > 0) {
       this.scope.addLogs(LogLevel.WARN, `TGW Attachment is removed from VPC "${vpcItem.name}" configuration`);
-      // TODO: Implement Delete logic
       return;
     }
     for (const tgwAttachmentItem of vpcItem.transitGatewayAttachments ?? []) {
@@ -559,8 +554,6 @@ export class VpcResources extends AseaResource {
     return tgwAttachmentMap;
   }
 
-  // TODO: Refactor
-  // Can be moved to AseaResource class to make it available for all ASEA classes
   private getTgwRouteTableId(routeTableName: string) {
     if (!this.props.globalConfig.externalLandingZoneResources?.templateMap) {
       return;
@@ -615,7 +608,6 @@ export class VpcResources extends AseaResource {
     };
     if (vpcItem.transitGatewayAttachments?.length === 0) {
       this.scope.addLogs(LogLevel.WARN, `TGW Attachment is removed from VPC "${vpcItem.name}" configuration`);
-      // TODO: Implement Delete logic
       return;
     }
     (vpcItem.transitGatewayAttachments ?? []).map(createPropagations);
@@ -657,7 +649,6 @@ export class VpcResources extends AseaResource {
     };
     if (vpcItem.transitGatewayAttachments?.length === 0) {
       this.scope.addLogs(LogLevel.WARN, `TGW Attachment is removed from VPC "${vpcItem.name}" configuration`);
-      // TODO: Implement Delete logic
       return;
     }
     (vpcItem.transitGatewayAttachments ?? []).map(createAssociations);
