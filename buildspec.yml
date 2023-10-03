@@ -30,7 +30,7 @@ phases:
 
 artifacts:
   files:
-    - deployment/**
+    - deployment/**/*
     - source/**/*
     - .gitignore
     - sonar-project.properties
