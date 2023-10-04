@@ -11,7 +11,13 @@
  *  and limitations under the License.
  */
 
-import { RouteTableConfig, RouteTableEntryConfig, VpcConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
+import {
+  OutpostsConfig,
+  RouteTableConfig,
+  RouteTableEntryConfig,
+  VpcConfig,
+  VpcTemplatesConfig,
+} from '@aws-accelerator/config';
 import {
   INatGateway,
   ITransitGatewayAttachment,
@@ -38,6 +44,7 @@ export class RouteEntryResources {
     subnetMap: Map<string, Subnet>,
     natGatewayMap: Map<string, INatGateway>,
     prefixListMap: Map<string, PrefixList>,
+    outpostMap: Map<string, OutpostsConfig>,
   ) {
     this.stack = networkVpcStack;
 
@@ -50,11 +57,12 @@ export class RouteEntryResources {
       subnetMap,
       natGatewayMap,
       prefixListMap,
+      outpostMap,
     );
   }
 
   /**
-   * Create route table entiries
+   * Create route table entries
    * @param vpcResources
    * @param routeTableMap
    * @param transitGatewayIds
@@ -72,6 +80,7 @@ export class RouteEntryResources {
     subnetMap: Map<string, Subnet>,
     natGatewayMap: Map<string, INatGateway>,
     prefixListMap: Map<string, PrefixList>,
+    outpostMap: Map<string, OutpostsConfig>,
   ): Map<string, cdk.aws_ec2.CfnRoute | PrefixListRoute> {
     const routeTableEntryMap = new Map<string, cdk.aws_ec2.CfnRoute | PrefixListRoute>();
 
@@ -84,6 +93,7 @@ export class RouteEntryResources {
           subnets: subnetMap,
           natGateways: natGatewayMap,
           prefixLists: prefixListMap,
+          outposts: outpostMap,
         });
         routeTableItemEntryMap.forEach((value, key) => routeTableEntryMap.set(key, value));
       }
@@ -113,6 +123,7 @@ export class RouteEntryResources {
       subnets: Map<string, Subnet>;
       natGateways: Map<string, INatGateway>;
       prefixLists: Map<string, PrefixList>;
+      outposts: Map<string, OutpostsConfig>;
     },
   ): Map<string, cdk.aws_ec2.CfnRoute | PrefixListRoute> {
     const routeTableItemEntryMap = new Map<string, cdk.aws_ec2.CfnRoute | PrefixListRoute>();
@@ -122,7 +133,7 @@ export class RouteEntryResources {
         pascalCase(`${vpcItem.name}Vpc`) +
         pascalCase(`${routeTableItem.name}RouteTable`) +
         pascalCase(routeTableEntryItem.name);
-      const entryTypes = ['transitGateway', 'internetGateway', 'natGateway', 'virtualPrivateGateway'];
+      const entryTypes = ['transitGateway', 'internetGateway', 'natGateway', 'virtualPrivateGateway', 'localGateway'];
 
       // Check if using a prefix list or CIDR as the destination
       if (routeTableEntryItem.type && entryTypes.includes(routeTableEntryItem.type)) {
@@ -198,6 +209,25 @@ export class RouteEntryResources {
               this.stack.logRetention,
             );
             routeTableItemEntryMap.set(`${vpcItem.name}_${routeTableItem.name}_${routeTableEntryItem.name}`, vgwRoute);
+            break;
+          case 'localGateway':
+            this.stack.addLogs(LogLevel.INFO, `Adding Local Gateway Route Table Entry ${routeTableEntryItem.name}`);
+
+            const localGatewayId = this.stack.getLocalGatewayFromOutpostMap(
+              maps.outposts,
+              vpcItem.name,
+              routeTableEntryItem.target!,
+            );
+
+            const lgwRoute = routeTable.addLocalGatewayRoute(
+              routeId,
+              localGatewayId,
+              destination,
+              destinationPrefixListId,
+              this.stack.cloudwatchKey,
+              this.stack.logRetention,
+            );
+            routeTableItemEntryMap.set(`${vpcItem.name}_${routeTableItem.name}_${routeTableEntryItem.name}`, lgwRoute);
             break;
         }
       }

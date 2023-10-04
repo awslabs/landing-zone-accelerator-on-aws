@@ -645,7 +645,11 @@ vpcs:
       - name: Network-Secondary-A-Rt
         routes: []
       - name: Network-Secondary-B-Rt
-        routes: []
+        routes:
+        - name: LgwRoute
+          destination: 0.0.0.0/0
+          type: localGateway
+          target: accelerator-lgw-1
       - name: Network-Secondary-C-Rt
         routes:
           - name: NfwRoute
@@ -692,7 +696,7 @@ vpcs:
           ipamPoolName: home-region-prod-pool
           netmaskLength: 28
       - name: Network-Secondary-Outposts-1
-        routeTable: Network-Secondary-A-Rt
+        routeTable: Network-Secondary-B-Rt
         outpost: accelerator-outpost-1
         ipamAllocation:
           ipamPoolName: home-region-prod-pool
@@ -701,9 +705,17 @@ vpcs:
       - name: accelerator-outpost-a
         arn: test-arn
         availabilityZone: a
+        localGateway:
+          name: accelerator-lgw-1
+          id: lgw-abcxyz
+          routeTables: []
       - name: accelerator-outpost-1
         arn: test-arn-2
         availabilityZone: 1
+        localGateway:
+          name: accelerator-lgw-2
+          id: lgw-abcxyz
+          routeTables: []
     networkAcls:
       - name: TestNacl
         subnetAssociations:

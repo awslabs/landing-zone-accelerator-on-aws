@@ -129,6 +129,45 @@ export abstract class RouteTableBase extends cdk.Resource implements IRouteTable
     return route;
   }
 
+  public addLocalGatewayRoute(
+    id: string,
+    localGatewayId: string,
+    destination?: string,
+    destinationPrefixListId?: string,
+    logGroupKmsKey?: cdk.aws_kms.Key,
+    logRetentionInDays?: number,
+  ): cdk.aws_ec2.CfnRoute | PrefixListRoute {
+    let route: cdk.aws_ec2.CfnRoute | PrefixListRoute;
+
+    if (destinationPrefixListId) {
+      if (!logGroupKmsKey) {
+        throw new Error('Attempting to add prefix list route without specifying log group KMS key');
+      }
+      if (!logRetentionInDays) {
+        throw new Error('Attempting to add prefix list route without specifying log group retention period');
+      }
+
+      route = new PrefixListRoute(this, id, {
+        routeTableId: this.routeTableId,
+        destinationPrefixListId,
+        logGroupKmsKey,
+        logRetentionInDays,
+        localGatewayId,
+      });
+    } else {
+      if (!destination) {
+        throw new Error('Attempting to add CIDR route without specifying destination');
+      }
+
+      route = new cdk.aws_ec2.CfnRoute(this, id, {
+        routeTableId: this.routeTableId,
+        destinationCidrBlock: destination,
+        localGatewayId: localGatewayId,
+      });
+    }
+    return route;
+  }
+
   public addInternetGatewayRoute(
     id: string,
     destination?: string,

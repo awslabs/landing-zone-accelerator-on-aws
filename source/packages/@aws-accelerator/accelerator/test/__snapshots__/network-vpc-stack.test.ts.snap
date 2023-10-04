@@ -3096,6 +3096,16 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::EC2::RouteTable",
     },
+    "NetworkSecondaryVpcNetworkSecondaryBRtRouteTableNetworkSecondaryVpcNetworkSecondaryBRtRouteTableLgwRouteAE021913": {
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "LocalGatewayId": "lgw-abcxyz",
+        "RouteTableId": {
+          "Ref": "NetworkSecondaryVpcNetworkSecondaryBRtRouteTable851997AF",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
     "NetworkSecondaryVpcNetworkSecondaryBSubnetDD64E26D": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
@@ -3305,7 +3315,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       ],
       "Properties": {
         "RouteTableId": {
-          "Ref": "NetworkSecondaryVpcNetworkSecondaryARtRouteTable649EACD5",
+          "Ref": "NetworkSecondaryVpcNetworkSecondaryBRtRouteTable851997AF",
         },
         "SubnetId": {
           "Ref": "NetworkSecondaryVpcNetworkSecondaryOutposts1Subnet92FEAC1C",
