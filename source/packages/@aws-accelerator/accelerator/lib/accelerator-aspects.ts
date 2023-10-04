@@ -126,7 +126,12 @@ class LambdaDefaultMemoryAspect implements cdk.IAspect {
     if (node instanceof cdk.CfnResource) {
       if (node.cfnResourceType === 'AWS::Lambda::Function') {
         const cfnProps = (node as cdk.aws_lambda.CfnFunction)['_cfnProperties'];
-        const memorySize = cfnProps['MemorySize']?.toString();
+        let memorySize = cfnProps['MemorySize']?.toString();
+
+        if (!memorySize) {
+          memorySize = (node as cdk.aws_lambda.CfnFunction).memorySize;
+        }
+
         if (!memorySize || memorySize < 256) {
           node.addPropertyOverride('MemorySize', 256);
         }
