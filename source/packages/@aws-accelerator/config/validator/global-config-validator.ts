@@ -222,8 +222,16 @@ export class GlobalConfigValidator {
   private validateBudgetNotificationEmailIds(values: GlobalConfig, errors: string[]) {
     for (const budget of values.reports?.budgets ?? []) {
       for (const notification of budget.notifications ?? []) {
-        if (!emailValidator.validate(notification.address!)) {
-          errors.push(`Invalid report notification email ${notification.address!}.`);
+        if (notification.subscriptionType === 'EMAIL') {
+          if (!emailValidator.validate(notification.address!)) {
+            errors.push(`Invalid report notification email ${notification.address!}.`);
+          }
+        } else if (notification.subscriptionType === 'SNS') {
+          const snsGetArnRegex = new RegExp('^arn:.*:sns:.*:(.*):(.*)$');
+          const validSnsArn = snsGetArnRegex.test(notification.address);
+          if (!validSnsArn) {
+            errors.push(`The following SNS Topic Arn is malformatted: ${notification.address}.`);
+          }
         }
       }
     }
