@@ -94,6 +94,7 @@ export class NetworkVpcStack extends NetworkStack {
       subnetResources.subnetMap,
       natGatewayResources.natGatewayMap,
       plResources.prefixListMap,
+      outpostMap,
     );
     //
     // Create security groups
@@ -186,6 +187,34 @@ export class NetworkVpcStack extends NetworkStack {
     }
 
     return natGatewayMap.get(key)!;
+  }
+
+  /**
+   * Returns a Local gateway object from a given map if it exists
+   * Requires iterating over all outposts
+   * @param outpostMap
+   * @param vpcName
+   * @param localGatewayName
+   * @returns
+   */
+  public getLocalGatewayFromOutpostMap(
+    outpostMap: Map<string, OutpostsConfig>,
+    vpcName: string,
+    localGatewayName: string,
+  ): string {
+    let localGatewayId = undefined;
+
+    for (const outpost of outpostMap.values()) {
+      if (outpost.localGateway && outpost.localGateway.name === localGatewayName) {
+        localGatewayId = outpost.localGateway.id;
+      }
+    }
+
+    if (!localGatewayId) {
+      this.logger.error(`VPC ${vpcName} Local Gateway ${localGatewayName} does not exist in map`);
+      throw new Error(`Configuration validation failed at runtime.`);
+    }
+    return localGatewayId;
   }
 
   /**

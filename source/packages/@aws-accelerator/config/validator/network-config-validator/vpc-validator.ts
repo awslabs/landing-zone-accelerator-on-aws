@@ -61,6 +61,10 @@ export class VpcValidator {
     //
     this.validateVpcConfiguration(values, helpers, errors);
     //
+    // Validate Outpost and Local Gateway (LGW) configurations
+    //
+    this.validateOutpostConfiguration(values, helpers, errors);
+    //
     // Validate VPC peering configurations
     //
     this.validateVpcPeeringConfiguration(values, errors);
@@ -368,7 +372,40 @@ export class VpcValidator {
   ) {
     if (!vpcItem.virtualPrivateGateway) {
       errors.push(
-        `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} is targeting an VGW, but now VGW is attached to the VPC`,
+        `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} is targeting an VGW, but no VGW is attached to the VPC`,
+      );
+    }
+  }
+
+  /**
+   * Validate LGW routes are associated with a VPC with an Outpost and Local Gateway attached
+   * @param routeTableEntryItem
+   * @param routeTableName
+   * @param vpcItem
+   */
+  private validateLgwRouteEntry(
+    routeTableEntryItem: RouteTableEntryConfig,
+    routeTableName: string,
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    errors: string[],
+  ) {
+    if (!('outposts' in vpcItem)) {
+      errors.push(
+        `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} is targeting an LGW, but no Outpost and LGW are associated with the VPC`,
+      );
+    }
+
+    const vpc = vpcItem as VpcConfig;
+    let lgwNameFound = false;
+    for (const outpost of vpc.outposts ?? []) {
+      if (outpost.localGateway?.name === routeTableEntryItem.target) {
+        lgwNameFound = true;
+      }
+    }
+
+    if (!lgwNameFound) {
+      errors.push(
+        `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} is targeting LGW ${routeTableEntryItem.target}, but the LGW is not associated with the VPC`,
       );
     }
   }
@@ -473,6 +510,11 @@ export class VpcValidator {
         // Validate VGW route
         if (entry.type && entry.type === 'virtualPrivateGateway') {
           this.validateVgwRouteEntry(entry, routeTableItem.name, vpcItem, errors);
+        }
+
+        // Validate LGW route
+        if (entry.type && entry.type === 'localGateway') {
+          this.validateLgwRouteEntry(entry, routeTableItem.name, vpcItem, errors);
         }
 
         // Validate target exists
@@ -636,6 +678,21 @@ export class VpcValidator {
         );
       }
     });
+  }
+
+  /**
+   * Function to validate conditional dependencies for Outpost and Local Gateway configurations.
+   * @param values
+   */
+  private validateOutpostConfiguration(values: NetworkConfig, helpers: NetworkValidatorFunctions, errors: string[]) {
+    //
+    // Validate that local gateways do not have the same name across different outposts
+    //
+    this.validateLocalGatewayNames(values, helpers, errors);
+    //
+    // Validate that all outpost names are unique
+    //
+    this.validateOutpostNames(values, helpers, errors);
   }
 
   /**
@@ -2602,6 +2659,54 @@ export class VpcValidator {
         `[VPC ${vpcItem.name} TGW attachment ${attach.name}]: duplicate TGW attachment subnet AZs defined. Subnet AZs must be unique. AZs configured: ${subnetAzs}`,
       );
     }
+  }
+
+  /**
+   * Validate Outpost Local Gateway names
+   * @param values
+   * @param helpers
+   * @param errors
+   */
+  private validateLocalGatewayNames(values: NetworkConfig, helpers: NetworkValidatorFunctions, errors: string[]) {
+    values.vpcs.forEach(vpcItem => {
+      const lgwNames = [];
+      if (vpcItem.outposts) {
+        for (const outpost of vpcItem.outposts) {
+          if (outpost.localGateway?.name) {
+            lgwNames.push(outpost.localGateway?.name);
+          }
+        }
+
+        // Validate no VPC names are duplicated
+        if (helpers.hasDuplicates(lgwNames)) {
+          errors.push(`Duplicate Local Gateway names exist, LGW names must be unique. LGW names in file: ${lgwNames}`);
+        }
+      }
+    });
+  }
+
+  /**
+   * Validate uniqueness of Outpost names
+   * @param values
+   * @param helpers
+   * @param errors
+   */
+  private validateOutpostNames(values: NetworkConfig, helpers: NetworkValidatorFunctions, errors: string[]) {
+    values.vpcs.forEach(vpcItem => {
+      const outpostNames = [];
+      if (vpcItem.outposts) {
+        for (const outpost of vpcItem.outposts) {
+          outpostNames.push(outpost.name);
+        }
+
+        // Validate no VPC names are duplicated
+        if (helpers.hasDuplicates(outpostNames)) {
+          errors.push(
+            `Duplicate Outpost names exist, Outpost names must be unique. Outpost names in file: ${outpostNames}`,
+          );
+        }
+      }
+    });
   }
 
   /**

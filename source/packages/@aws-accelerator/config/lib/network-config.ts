@@ -2178,6 +2178,14 @@ export class IpamConfig implements t.TypeOf<typeof NetworkConfigTypes.ipamConfig
  *   type: gatewayLoadBalancerEndpoint
  *   target: Endpoint-A
  * ```
+ *
+ * Local Gateway associated with an AWS Outpost:
+ * ```
+ * - name: LgwRoute
+ *   destination: 10.0.0.0/16
+ *   type: localGateway
+ *   target: LocalGateway-A
+ * ```
  */
 export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes.routeTableEntryConfig> {
   /**
