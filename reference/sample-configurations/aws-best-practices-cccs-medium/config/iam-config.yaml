@@ -2,14 +2,7 @@ homeRegion: &HOME_REGION ca-central-1
 policySets:
   - deploymentTargets:
       organizationalUnits:
-        - Security
-        - Infrastructure
-        - Central
-        - Dev
-        - Test
-        - Prod
-        - UnClass
-        - Sandbox
+        - Root
     policies:
       - name: AWSAccelerator-Default-Boundary-Policy
         policy: iam-policies/boundary-policy.json
