@@ -32,9 +32,10 @@ Changes to this configuration are released at the same time than LZA releases an
 - Add configuration to delete rules of default security groups. Best practice is to not use the default security groups. Please review if your existing workloads use the default security groups before applying this change
 - Add deployment of interface endpoints for Secrets Manager, CloudFormation and Monitoring (ASEA parity)
 - SCP updates for granular billing permissions
-- Add additional Route Table entries in the GWLB Perimeter Subnets to target the 
+- Add additional Route Table entries in the Network Firewall Perimeter subnets to target the NAT Gateway in the proper availability zone
 - Refactor AWS Config rules to avoid duplication (security-config.yaml)
 - Fix to accelerator-ec2-instance-profile-permission Config rule
+- Changed deployment target of `AWSAccelerator-Default-Boundary-Policy` to align with the deployment target of the roles referencing this policy.
 
 ### v1.4.0
 
