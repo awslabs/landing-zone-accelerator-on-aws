@@ -100,7 +100,7 @@
       ],
       "Resource": [
         "arn:${PARTITION}:logs:*:*:log-group:aws-accelerator-*",
-        "arn:${PARTITION}:logs:*:*:log-group:/aws/lambda/AWSAccelerator-*"
+        "arn:${PARTITION}:logs:*:*:log-group:/aws/lambda/${ACCELERATOR_PREFIX}-*"
       ],
       "Condition": {
         "ArnNotLike": {
@@ -118,7 +118,7 @@
       "Action": ["logs:DeleteLogStream"],
       "Resource": [
         "arn:${PARTITION}:logs:*:*:log-group:aws-accelerator-*:log-stream:*",
-        "arn:${PARTITION}:logs:*:*:log-group:/aws/lambda/AWSAccelerator-*:log-stream:*"
+        "arn:${PARTITION}:logs:*:*:log-group:/aws/lambda/${ACCELERATOR_PREFIX}-*:log-stream:*"
       ],
       "Condition": {
         "ArnNotLike": {

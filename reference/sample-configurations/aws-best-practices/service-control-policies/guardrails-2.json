@@ -24,34 +24,19 @@
     {
       "Sid": "IamRolesStatement",
       "Effect": "Deny",
-      "Action": [
-        "iam:AttachRolePolicy",
-        "iam:CreateAccountAlias",
-        "iam:DeleteAccountAlias",
-        "iam:CreateUser",
-        "iam:DeleteUser",
-        "iam:CreateRole",
-        "iam:DeleteRole",
-        "iam:CreatePolicy",
-        "iam:DeletePolicy",
-        "iam:DeleteRolePermissionsBoundary",
-        "iam:DeleteRolePolicy",
-        "iam:DetachRolePolicy",
-        "iam:PutRolePermissionsBoundary",
-        "iam:PutRolePolicy",
-        "iam:UpdateAssumeRolePolicy",
-        "iam:UpdateRole",
-        "iam:UpdateRoleDescription"
-      ],
+      "Action": ["iam:*"],
       "Resource": [
-        "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*"
+        "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
+        "arn:${PARTITION}:iam::*:role/cdk-accel-*",
+        "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
       ],
       "Condition": {
         "ArnNotLike": {
           "aws:PrincipalARN": [
             "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
+            "arn:${PARTITION}:iam::*:role/cdk-accel-*",
             "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
-            "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+            "arn:${PARTITION}:iam::*:role/AWSServiceRoleForConfig"
           ]
         }
       }
@@ -144,14 +129,14 @@
       "Sid": "PreventCloudTrailModification",
       "Effect": "Deny",
       "Action": [
-        "cloudtrail:PutInsightSelectors", 
+        "cloudtrail:PutInsightSelectors",
         "cloudtrail:PutEventSelectors",
         "cloudtrail:StopLogging",
         "cloudtrail:DeleteTrail",
         "cloudtrail:UpdateTrail",
         "cloudtrail:CreateTrail"
       ],
-      "Resource": "arn:${PARTITION}:cloudtrail:*:*:trail/AWSAccelerator-*",
+      "Resource": "arn:${PARTITION}:cloudtrail:*:*:trail/${ACCELERATOR_PREFIX}-*",
       "Condition": {
         "ArnNotLike": {
           "aws:PrincipalARN": [
