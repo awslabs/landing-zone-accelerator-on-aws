@@ -125,7 +125,8 @@ class LambdaDefaultMemoryAspect implements cdk.IAspect {
   visit(node: IConstruct): void {
     if (node instanceof cdk.CfnResource) {
       if (node.cfnResourceType === 'AWS::Lambda::Function') {
-        const memorySize = (node as cdk.aws_lambda.CfnFunction).memorySize;
+        const cfnProps = (node as cdk.aws_lambda.CfnFunction)['_cfnProperties'];
+        const memorySize = cfnProps['MemorySize']?.toString();
         if (!memorySize || memorySize < 256) {
           node.addPropertyOverride('MemorySize', 256);
         }
@@ -133,7 +134,6 @@ class LambdaDefaultMemoryAspect implements cdk.IAspect {
     }
   }
 }
-
 /**
  * Default deletion override for Service linked role resources
  */
