@@ -20,14 +20,16 @@ serviceControlPolicies:
     deploymentTargets:
       organizationalUnits:
         - Infrastructure
+        - Security
   - name: AcceleratorGuardrails2
     description: >
       Accelerator GuardRails 2
     policy: service-control-policies/guardrails-2.json
     type: customerManaged
     deploymentTargets:
-      accounts:
-        - SharedServices
+      organizationalUnits:
+        - Infrastructure
+        - Security
   - name: Quarantine
     description: >
       This SCP is used to prevent changes to new accounts until the Accelerator
