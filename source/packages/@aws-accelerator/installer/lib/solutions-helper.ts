@@ -30,14 +30,14 @@ export class SolutionHelper extends Construct {
     super(scope, id);
     const metricsMapping = new cdk.CfnMapping(this, 'AnonymousData', {
       mapping: {
-        SendAnonymousData: {
+        SendAnonymizedData: {
           Data: 'Yes',
         },
       },
     });
 
     const metricsCondition = new cdk.CfnCondition(this, 'AnonymousDataToAWS', {
-      expression: cdk.Fn.conditionEquals(metricsMapping.findInMap('SendAnonymousData', 'Data'), 'Yes'),
+      expression: cdk.Fn.conditionEquals(metricsMapping.findInMap('SendAnonymizedData', 'Data'), 'Yes'),
     });
 
     const helperFunction = new lambda.Function(this, 'SolutionHelper', {
