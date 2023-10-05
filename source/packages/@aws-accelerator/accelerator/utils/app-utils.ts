@@ -395,7 +395,7 @@ export async function setAcceleratorStackProps(
 
   if (globalConfig.externalLandingZoneResources?.importExternalLandingZoneResources) {
     await globalConfig.loadExternalMapping(true);
-    await globalConfig.loadLzaResources(context.partition, prefixes.accelerator);
+    await globalConfig.loadLzaResources(context.partition, prefixes.ssmParamName);
   }
   if (context.stage === AcceleratorStage.SECURITY_RESOURCES) {
     const accountIds = accountsConfig.accountIds?.map(account => account.accountId) ?? [];
