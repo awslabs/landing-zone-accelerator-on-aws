@@ -16,7 +16,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
         {
           "Fn::FindInMap": [
             "SolutionHelperAnonymousData14B64A81",
-            "SendAnonymousData",
+            "SendAnonymizedData",
             "Data",
           ],
         },
@@ -59,7 +59,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
       },
     },
     "SolutionHelperAnonymousData14B64A81": {
-      "SendAnonymousData": {
+      "SendAnonymizedData": {
         "Data": "Yes",
       },
     },
@@ -3390,7 +3390,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
         {
           "Fn::FindInMap": [
             "SolutionHelperAnonymousData14B64A81",
-            "SendAnonymousData",
+            "SendAnonymizedData",
             "Data",
           ],
         },
@@ -3433,7 +3433,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
       },
     },
     "SolutionHelperAnonymousData14B64A81": {
-      "SendAnonymousData": {
+      "SendAnonymizedData": {
         "Data": "Yes",
       },
     },
@@ -6754,7 +6754,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
         {
           "Fn::FindInMap": [
             "SolutionHelperAnonymousData14B64A81",
-            "SendAnonymousData",
+            "SendAnonymizedData",
             "Data",
           ],
         },
@@ -6797,7 +6797,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
       },
     },
     "SolutionHelperAnonymousData14B64A81": {
-      "SendAnonymousData": {
+      "SendAnonymizedData": {
         "Data": "Yes",
       },
     },
@@ -10141,7 +10141,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
         {
           "Fn::FindInMap": [
             "SolutionHelperAnonymousData14B64A81",
-            "SendAnonymousData",
+            "SendAnonymizedData",
             "Data",
           ],
         },
@@ -10184,7 +10184,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
       },
     },
     "SolutionHelperAnonymousData14B64A81": {
-      "SendAnonymousData": {
+      "SendAnonymizedData": {
         "Data": "Yes",
       },
     },
@@ -13518,7 +13518,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
         {
           "Fn::FindInMap": [
             "SolutionHelperAnonymousData14B64A81",
-            "SendAnonymousData",
+            "SendAnonymizedData",
             "Data",
           ],
         },
@@ -13561,7 +13561,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
       },
     },
     "SolutionHelperAnonymousData14B64A81": {
-      "SendAnonymousData": {
+      "SendAnonymizedData": {
         "Data": "Yes",
       },
     },
