@@ -329,6 +329,12 @@ export class OperationsStack extends AcceleratorStack {
           const accountIdRegex = /^\d{12}$/;
           const accountArnRegex = new RegExp('^arn:' + partition + ':iam::(\\d{12}):root$');
 
+          // test if principal length exceeds IAM Role length limit of 2048 characters.
+          // Ref: https://docs.aws.amazon.com/IAM/latest/APIReference/API_Role.html
+          // this will mitigate polynomial regular expression used on uncontrolled data
+          if (assumedByItem.principal!.length > 2048) {
+            throw new Error(`The principal defined in arn ${assumedByItem.principal} is too long`);
+          }
           if (accountIdRegex.test(assumedByItem.principal)) {
             principals.push(new cdk.aws_iam.AccountPrincipal(assumedByItem.principal));
           } else if (accountArnRegex.test(assumedByItem.principal)) {
