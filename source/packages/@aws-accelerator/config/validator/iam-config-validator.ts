@@ -762,8 +762,12 @@ export class IamConfigValidator {
           if (assumedByItem.type === 'account') {
             const accountIdRegex = /^\d{12}$/;
             const accountArnRegex = new RegExp('^arn:.*$');
-
-            if (accountIdRegex.test(assumedByItem.principal!)) {
+            // test if principal length exceeds IAM Role length limit of 2048 characters.
+            // Ref: https://docs.aws.amazon.com/IAM/latest/APIReference/API_Role.html
+            // this will mitigate polynomial regular expression used on uncontrolled data
+            if (assumedByItem.principal!.length > 2048) {
+              errors.push(`The account ID defined in arn ${assumedByItem.principal} is too long`);
+            } else if (accountIdRegex.test(assumedByItem.principal!)) {
               continue;
             } else if (accountArnRegex.test(assumedByItem.principal!)) {
               const accountArnGetIdRegex = new RegExp('^arn:.*:.*::(.*):.*$');
