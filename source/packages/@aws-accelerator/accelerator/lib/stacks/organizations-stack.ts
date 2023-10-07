@@ -274,7 +274,7 @@ export class OrganizationsStack extends AcceleratorStack {
    * Function to add Cost and Usage Report
    */
   private addCostAndUsageReport() {
-    if (this.stackProperties.globalConfig.reports?.costAndUsageReport) {
+    if (this.stackProperties.globalConfig.reports?.costAndUsageReport && this.props.partition != 'aws-us-gov') {
       this.logger.info('Adding Cost and Usage Reports');
 
       const reportBucket = new Bucket(this, 'ReportBucket', {

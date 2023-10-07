@@ -659,7 +659,7 @@ export class OperationsStack extends AcceleratorStack {
    * Enables budget reports
    */
   private enableBudgetReports() {
-    if (this.props.globalConfig.reports?.budgets) {
+    if (this.props.globalConfig.reports?.budgets && this.props.partition != 'aws-us-gov') {
       for (const budget of this.props.globalConfig.reports.budgets ?? []) {
         if (this.isIncluded(budget.deploymentTargets ?? [])) {
           this.logger.info(`Add budget ${budget.name}`);
