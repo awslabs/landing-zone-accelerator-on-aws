@@ -65,11 +65,10 @@ accelerator-test:
     - "unzip -qo viperlight.zip -d ../viperlight"
     - "rm -r ./viperlight.zip"
     - "../viperlight/bin/viperlight scan"
-    - "echo Temporary disabled viperlight till the issue fixed"
     - "cd source"
     - "npm install --global yarn"
     - "yarn install"
-    - "yarn lint"
+    - "yarn lerna run precommit --stream"
     - "yarn build"
     - "export ACCELERATOR_PREFIX=AWSAccelerator"
     - "yarn validate-config packages/@aws-accelerator/accelerator/test/configs/all-enabled/" # Validate all enabled config files
