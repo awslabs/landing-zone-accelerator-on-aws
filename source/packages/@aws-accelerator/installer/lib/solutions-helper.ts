@@ -28,7 +28,7 @@ export interface SolutionHelperProps {
 export class SolutionHelper extends Construct {
   constructor(scope: Construct, id: string, props: SolutionHelperProps) {
     super(scope, id);
-    const metricsMapping = new cdk.CfnMapping(this, 'AnonymousData', {
+    const metricsMapping = new cdk.CfnMapping(this, 'AnonymizedData', {
       mapping: {
         SendAnonymizedData: {
           Data: 'Yes',
@@ -194,7 +194,7 @@ export class SolutionHelper extends Construct {
         RepositoryOwner: props.repositoryOwner.valueAsString,
         RepositorySource: props.repositorySource.valueAsString,
       },
-      resourceType: 'Custom::AnonymousData',
+      resourceType: 'Custom::AnonymizedData',
     });
 
     (helperFunction.node.defaultChild as lambda.CfnFunction).cfnOptions.condition = metricsCondition;
