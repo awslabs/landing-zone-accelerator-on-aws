@@ -1808,7 +1808,13 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
   readonly managementAccountAccessRole: string = '';
 
   /**
-   * CloudWatchLogs retention in days, accelerator's custom resource lambda function logs retention period is configured based on this value.
+   * Global {@link https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CloudWatchLogsConcepts.html | CloudWatch Logs retention in days} configuration.
+   *
+   * @remarks
+   * This retention setting will be applied to all CloudWatch log groups created by the accelerator.
+   * Additionally, this retention setting will be applied to any CloudWatch log groups that already exist
+   * in the target environment if the log group's retention setting is LOWER than this configured value.
+   *
    */
   readonly cloudwatchLogRetentionInDays = 3653;
 
