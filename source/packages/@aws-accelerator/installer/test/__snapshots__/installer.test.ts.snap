@@ -15,7 +15,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
       "Fn::Equals": [
         {
           "Fn::FindInMap": [
-            "SolutionHelperAnonymizedData8F5336FB",
+            "SolutionHelperAnonymousData14B64A81",
             "SendAnonymizedData",
             "Data",
           ],
@@ -58,7 +58,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
         "regionName": "us-gov-west-1",
       },
     },
-    "SolutionHelperAnonymizedData8F5336FB": {
+    "SolutionHelperAnonymousData14B64A81": {
       "SendAnonymizedData": {
         "Data": "Yes",
       },
@@ -2695,7 +2695,7 @@ phases:
           ],
         },
       },
-      "Type": "Custom::AnonymizedData",
+      "Type": "Custom::AnonymousData",
       "UpdateReplacePolicy": "Delete",
     },
     "SsmParamAcceleratorVersionFF83282D": {
@@ -3389,7 +3389,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
       "Fn::Equals": [
         {
           "Fn::FindInMap": [
-            "SolutionHelperAnonymizedData8F5336FB",
+            "SolutionHelperAnonymousData14B64A81",
             "SendAnonymizedData",
             "Data",
           ],
@@ -3432,7 +3432,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
         "regionName": "us-gov-west-1",
       },
     },
-    "SolutionHelperAnonymizedData8F5336FB": {
+    "SolutionHelperAnonymousData14B64A81": {
       "SendAnonymizedData": {
         "Data": "Yes",
       },
@@ -6059,7 +6059,7 @@ phases:
           ],
         },
       },
-      "Type": "Custom::AnonymizedData",
+      "Type": "Custom::AnonymousData",
       "UpdateReplacePolicy": "Delete",
     },
     "SsmParamAcceleratorVersionFF83282D": {
@@ -6753,7 +6753,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
       "Fn::Equals": [
         {
           "Fn::FindInMap": [
-            "SolutionHelperAnonymizedData8F5336FB",
+            "SolutionHelperAnonymousData14B64A81",
             "SendAnonymizedData",
             "Data",
           ],
@@ -6796,7 +6796,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
         "regionName": "us-gov-west-1",
       },
     },
-    "SolutionHelperAnonymizedData8F5336FB": {
+    "SolutionHelperAnonymousData14B64A81": {
       "SendAnonymizedData": {
         "Data": "Yes",
       },
@@ -9467,7 +9467,7 @@ phases:
           ],
         },
       },
-      "Type": "Custom::AnonymizedData",
+      "Type": "Custom::AnonymousData",
       "UpdateReplacePolicy": "Delete",
     },
     "SsmParamAcceleratorVersionFF83282D": {
@@ -10140,7 +10140,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
       "Fn::Equals": [
         {
           "Fn::FindInMap": [
-            "SolutionHelperAnonymizedData8F5336FB",
+            "SolutionHelperAnonymousData14B64A81",
             "SendAnonymizedData",
             "Data",
           ],
@@ -10183,7 +10183,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
         "regionName": "us-gov-west-1",
       },
     },
-    "SolutionHelperAnonymizedData8F5336FB": {
+    "SolutionHelperAnonymousData14B64A81": {
       "SendAnonymizedData": {
         "Data": "Yes",
       },
@@ -12844,7 +12844,7 @@ phases:
           ],
         },
       },
-      "Type": "Custom::AnonymizedData",
+      "Type": "Custom::AnonymousData",
       "UpdateReplacePolicy": "Delete",
     },
     "SsmParamAcceleratorVersionFF83282D": {
@@ -13517,7 +13517,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
       "Fn::Equals": [
         {
           "Fn::FindInMap": [
-            "SolutionHelperAnonymizedData8F5336FB",
+            "SolutionHelperAnonymousData14B64A81",
             "SendAnonymizedData",
             "Data",
           ],
@@ -13560,7 +13560,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
         "regionName": "us-gov-west-1",
       },
     },
-    "SolutionHelperAnonymizedData8F5336FB": {
+    "SolutionHelperAnonymousData14B64A81": {
       "SendAnonymizedData": {
         "Data": "Yes",
       },
@@ -16226,7 +16226,7 @@ phases:
           ],
         },
       },
-      "Type": "Custom::AnonymizedData",
+      "Type": "Custom::AnonymousData",
       "UpdateReplacePolicy": "Delete",
     },
     "SsmParamAcceleratorVersionFF83282D": {
