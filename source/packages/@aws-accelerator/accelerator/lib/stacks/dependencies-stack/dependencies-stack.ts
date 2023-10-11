@@ -70,7 +70,7 @@ export class DependenciesStack extends AcceleratorStack {
    */
   private createPutSsmParameterRole(ssmPrefix: string, partition: string, organizationId?: string): cdk.aws_iam.Role {
     const role = new cdk.aws_iam.Role(this, 'PutSsmParameterRole', {
-      assumedBy: this.getOrgPrincipals(organizationId),
+      assumedBy: this.getOrgPrincipals(organizationId, true),
       roleName: this.acceleratorResourceNames.roles.crossAccountSsmParameterShare,
       inlinePolicies: {
         default: new cdk.aws_iam.PolicyDocument({
