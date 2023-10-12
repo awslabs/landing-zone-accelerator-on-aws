@@ -36,3 +36,10 @@ const stackOuTargets = acceleratorTestStacksOuTargets.stacks.get(`LogArchive-us-
 describe('LoggingStackOuTargets', () => {
   snapShotTest('Construct(LoggingStackOuTargets): ', stackOuTargets);
 });
+
+const centralizedRegionTestStacks = new AcceleratorSynthStacks(AcceleratorStage.LOGGING, 'aws', 'us-west-2');
+const centralizedRegionTestStack = centralizedRegionTestStacks.stacks.get(`LogArchive-us-west-2`)!;
+
+describe('LoggingStack', () => {
+  snapShotTest(testNamePrefix, centralizedRegionTestStack);
+});
