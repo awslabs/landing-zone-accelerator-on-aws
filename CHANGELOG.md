@@ -57,11 +57,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Configuration Changes
 
-- feat(aws-best-practices-education): Added additional security-config controls
-- feat(aws-best-practices-tse-se): Added AWS Control Tower installation instructions
-- enhancement(aws-best-practices): Replace hard-coded management role in guardrail SCPs with a variable
-- enhancement(aws-best-practices-cccs-medium): updated configuration to utilize accelerator prefix feature
-- enhancement(aws-best-practices-tse-se): updated install instructions for GitHub personal access token
+- feat(lza-sample-config-education): Added additional security-config controls
+- feat(lza-sample-config-tse-se): Added AWS Control Tower installation instructions
+- enhancement(lza-sample-config): Replace hard-coded management role in guardrail SCPs with a variable
+- enhancement(lza-sample-config-cccs-medium): updated configuration to utilize accelerator prefix feature
+- enhancement(lza-sample-config-tse-se): updated install instructions for GitHub personal access token
 
 ## [1.3.2] - 2023-03-02
 
@@ -74,7 +74,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Configuration Changes
 
-- chore: update best practices config to use nist 800-53 security hub standard
+- chore: update sample config to use nist 800-53 security hub standard
 
 ## [1.3.1] - 2023-02-28
 
@@ -141,10 +141,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Configuration Changes
 
-- chore: consolidate finance configs to best-practices
-- chore: remove default limits increase from aws-best-practices config
+- chore: consolidate finance configs to lza-sample-config
+- chore: remove default limits increase from lza-sample-config config
 - chore: update education config
-- chore: add lifecycle rules to aws-best-practices
+- chore: add lifecycle rules to lza-sample-config
 - fix: update the readme file name in AWS GovCloud (US) configurations
 - fix: update lock down scp with control tower role
 - enhancement: enabled versioning on sample template s3 buckets
@@ -221,7 +221,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - feat(govcloud): add updated govcloud config files
 - feat(govcloud): add govcloud account vending service catalog product
-- feat(configs): add healthcare best practices config files
+- feat(configs): add healthcare sample config files
 - feat(configs): add support aws-cn and config files
 
 ### Changed
@@ -235,7 +235,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(installer): solution-helper is emitting delete event
 - fix(installer): remove installer kms key from loggroup
 - fix(logging): log replication KMS created in log receiving account only
-- fix(config): update network config to align with best practices diagram
+- fix(config): update network config to align with diagrams
 - fix(logging): set resource dependence for accountTrail CloudWatch log group.
 - fix (pipeline): fix issue with changeset creation and bootstrap
 

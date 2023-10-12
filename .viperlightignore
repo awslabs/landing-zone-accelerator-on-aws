@@ -144,7 +144,10 @@ source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1959
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:2041
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:2042
 
-reference/sample-configurations/aws-best-practices-us-slg-central-it/README.md:102
+# Sample configuration READMEs
+reference/sample-configurations/lza-sample-config-healthcare/README.md:48
+reference/sample-configurations/lza-sample-config-us-slg-central-it/README.md:102
+reference/sample-configurations/lza-sample-config-us-slg-central-it/README.md:109
 
 # Accelerator specific assume role declaration
 source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/index.ts:46
