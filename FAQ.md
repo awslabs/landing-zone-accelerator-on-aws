@@ -8,8 +8,8 @@
     - [Where can I get additional technical assistance for Landing Zone Accelerator?](#where-can-i-get-additional-technical-assistance-for-landing-zone-accelerator)
   - [Solution - Architecture](#solution---architecture)
     - [What does the solution deploy?](#what-does-the-solution-deploy)
-    - [What does the AWS best practices configuration deploy?](#what-does-the-aws-best-practices-configuration-deploy)
-    - [Is there a best practices configuration for my industry?](#is-there-a-best-practices-configuration-for-my-industry)
+    - [What does the AWS sample configuration deploy?](#what-does-the-lza-sample-config-configuration-deploy)
+    - [Is there a sample configuration for my industry?](#is-there-a-lza-sample-configuration-for-my-industry)
     - [How do I customize what the solution deploys?](#how-do-i-customize-what-the-solution-deploys)
   - [Solution - Control Tower and Organizational Governance](#solution---control-tower-and-organizational-governance)
     - [How does this solution relate to AWS Control Tower?](#how-does-this-solution-relate-to-aws-control-tower)
@@ -51,7 +51,7 @@
     - [Can I create a target group for my Gateway Load Balancer?](#can-i-create-a-target-group-for-my-gateway-load-balancer)
     - [How do I deploy Gateway Load Balancer endpoints?](#how-do-i-deploy-gateway-load-balancer-endpoints)
   - [Security - General](#security---general)
-    - [What purpose do the breakGlassUsers in `reference/sample-configurations/aws-best-practices/iam-config.yaml` serve, and what do I do with them?](#what-purpose-do-the-breakglassusers-in-referencesample-configurationsaws-best-practicesiam-configyaml-serve-and-what-do-i-do-with-them)
+    - [What purpose do the breakGlassUsers in `reference/sample-configurations/lza-sample-config/iam-config.yaml` serve, and what do I do with them?](#what-purpose-do-the-breakglassusers-in-referencesample-configurationslza-sample-configiam-configyaml-serve-and-what-do-i-do-with-them)
 
 # Frequently Asked Questions
 
@@ -93,17 +93,17 @@ The Landing Zone Accelerator is ultimately an orchestration engine that will dep
 
 For further details on the Landing Zone Accelerator orchestration engine, see [Architecture overview](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/architecture-overview.html) and [Architecture details](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/architecture-details.html) in the implementation guide.
 
-### What does the AWS best practices configuration deploy?
+### What does the AWS sample configuration deploy?
 
-The Landing Zone Accelerator provides opinionated configurations that are based on our years of building environments for customers with highly regulated workloads. By using the [aws-best-practices configuration](reference/sample-configurations/aws-best-practices), you can expect the architecture in the solution’s [Architecture overview](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/architecture-overview.html) to be deployed.
+The Landing Zone Accelerator provides opinionated configurations that are based on our years of building environments for customers with highly regulated workloads. By using the [lza-sample-config configuration](reference/sample-configurations/lza-sample-config), you can expect the architecture in the solution’s [Architecture overview](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/architecture-overview.html) to be deployed.
 
-### Is there a best practices configuration for my industry?
+### Is there a sample configuration for my industry?
 
 You may find the current list of supported industry best practice configurations in the [sample configurations](reference/sample-configurations) directory of our GitHub repository. Supporting documentation for these best practice configurations can be found in the [Support for specific regions and industries](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/industry-and-regional-guidance.html) section of the solution implementation guide.
 
 ### How do I customize what the solution deploys?
 
-The solution's [configuration files](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/configuration-files.html) are the primary interface for what the accelerator deploys. The supported services, features, and API references for these config files can be found in the [README](README.md) of our GitHub repository. You may use the configuration reference to update a best practices configuration to meet your organization's needs, or to craft your own configuration from scratch.
+The solution's [configuration files](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/configuration-files.html) are the primary interface for what the accelerator deploys. The supported services, features, and API references for these config files can be found in the [README](README.md) of our GitHub repository. You may use the configuration reference to update a sample configuration to meet your organization's needs, or to craft your own configuration from scratch.
 
 ## Solution - Control Tower and Organizational Governance
 
@@ -355,6 +355,6 @@ Successful creation of cross-account endpoints is dependent on the Availability 
 
 ## Security - General
 
-### What purpose do the breakGlassUsers in `reference/sample-configurations/aws-best-practices/iam-config.yaml` serve, and what do I do with them?
+### What purpose do the breakGlassUsers in `reference/sample-configurations/lza-sample-config/iam-config.yaml` serve, and what do I do with them?
 
 Break glass access is a [recommended best practice](https://docs.aws.amazon.com/whitepapers/latest/organizing-your-aws-environment/break-glass-access.html) for gaining access to the organization management account or sub-accounts when there is a security incident or failure of the Identity Provider (IdP) infrastructure. [MFA](https://aws.amazon.com/iam/features/mfa/) and [password reset on next sign-in](https://docs.aws.amazon.com/IAM/latest/APIReference/API_CreateLoginProfile.html) policies are enforced for break glass users through the `iam-policies/boundary-policy.json` and `iam-config.yaml` settings. It is imperative for the organization management admin to register [MFA devices](https://docs.aws.amazon.com/singlesignon/latest/userguide/how-to-register-device.html) and reset the Landing Zone Accelerator generated passwords before they expire, per the `maxPasswordAge` (https://docs.aws.amazon.com/IAM/latest/APIReference/API_UpdateAccountPasswordPolicy.html) setting in `security-config.yaml`. Of equal importance is the protection of the hardware MFA devices and passwords against unauthorized disclosure. This often involves enforcing [dual authorization](https://csrc.nist.gov/glossary/term/dual_authorization), that is, one trusted individual having access to the password and a different trusted individual having access to the MFA token.

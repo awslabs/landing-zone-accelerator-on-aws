@@ -436,7 +436,7 @@ export class ManagedActiveDirectorySecretConfig
  *
  * User data scripts to create users, groups, password policy.
  *
- * Accelerator can provision users, groups when following user data scripts are provided, these scripts are part of Accelerator best practices configuration
+ * Accelerator can provision users, groups when following user data scripts are provided, these scripts are part of Accelerator sample configuration
  *  @example
  * ```
  *      userDataScripts:

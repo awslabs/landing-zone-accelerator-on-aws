@@ -1,4 +1,4 @@
-# General Best Practices
+# Standard Configuration
 
 # 1. Table of Contents
 
@@ -21,11 +21,11 @@ After deploying LZA and implementing these configuration files, you can:
 - Manage your foundational networking topology such as [Amazon Virtual Private Cloud](http://aws.amazon.com/vpc/) (Amazon VPC), [AWS Transit Gateway](http://aws.amazon.com/transit-gateway/), and [AWS Network Firewall](http://aws.amazon.com/network-firewall/)
 - Generate additional workload accounts using the [AWS Control Tower Account Factory](https://docs.aws.amazon.com/controltower/latest/userguide/account-factory.html) or [AWS Organizations](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_introduction.html)
 
-This guide describes architectural considerations, design, and configuration steps for deploying the LZA best practices configuration files.
+This guide describes architectural considerations, design, and configuration steps for deploying the LZA sample configuration files.
 
 We recommend you familiarize yourself with the [best practices for for managing your configuration files](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/configuration-file-best-practices.html) before making any chances to your environment.
 
-**Note:** This README is focused on the [general best practices configuration](/reference/sample-configurations/aws-best-practices), not the industry specific configuration files which can be found [here](/reference/sample-configurations).
+**Note:** This README is focused on the [general sample configuration](/reference/sample-configurations/lza-sample-config), not the industry specific configuration files which can be found [here](/reference/sample-configurations).
 
 ## 2.1. Design Principles
 
@@ -82,7 +82,7 @@ This document will make no reference to specific AWS customers. Where naming is 
 
 ## 3.1. Overview
 
-_Landing Zone Accelerator_ uses AWS Accounts to enforce strong isolation between teams, business units and application functions. The sections below discuss the account design, the best practices configuration files create through, [AWS Control Tower](https://aws.amazon.com/controltower/) or [AWS Organizations](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_introduction.html).
+_Landing Zone Accelerator_ uses AWS Accounts to enforce strong isolation between teams, business units and application functions. The sections below discuss the account design, the sample configuration files create through, [AWS Control Tower](https://aws.amazon.com/controltower/) or [AWS Organizations](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_introduction.html).
 
 ## 3.2. Organization structure
 
@@ -100,7 +100,7 @@ The AWS Organization resides in the [Organization Management (root) AWS account]
 
 Underneath the root of the organization, [Organizational Units (OU)](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_getting-started_concepts.html) (OUs) provide a mechanism for grouping accounts into logical collections. LZA makes use of OUs to enforce specific preventative controls through [service control policies (SCPs)](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_getting-started_concepts.html), resource sharing across the organization through [Resource Access Manager](https://aws.amazon.com/ram/), and the ability to apply LZA configurations to groups of accounts e.g. a specific network pattern deployment.
 
-The Default best practices configuration files OU structure is shown below:
+The Default sample configuration files OU structure is shown below:
 
 ![Default OU Structure](./images/default_ou_structure.jpg "Default OU Structure")
 
@@ -108,14 +108,14 @@ For further details to help you plan your OU structure beyond the defaults provi
 
 ### 3.3.1. Security OU
 
-The [accounts in this OU](https://docs.aws.amazon.com/whitepapers/latest/organizing-your-aws-environment/security-ou-and-accounts.html) are considered administrative in nature with access often restricted to IT security personnel. The best practices configuration files add two accounts to this OU:
+The [accounts in this OU](https://docs.aws.amazon.com/whitepapers/latest/organizing-your-aws-environment/security-ou-and-accounts.html) are considered administrative in nature with access often restricted to IT security personnel. The sample configuration files add two accounts to this OU:
 
 - [Security Tooling account](https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/security-tooling.html)
 - [Log Archive account](https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/log-archive.html)
 
 ### 3.3.2. Infrastructure OU
 
-The [accounts in this OU](https://docs.aws.amazon.com/whitepapers/latest/organizing-your-aws-environment/infrastructure-ou-and-accounts.html) are also considered administrative in nature with access often restricted to IT operations personnel. The best practices configuration files add two accounts to this OU:
+The [accounts in this OU](https://docs.aws.amazon.com/whitepapers/latest/organizing-your-aws-environment/infrastructure-ou-and-accounts.html) are also considered administrative in nature with access often restricted to IT operations personnel. The sample configuration files add two accounts to this OU:
 
 - [Network account](https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/network.html)
 - [Shared Services account](https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/shared-services.html)
@@ -124,7 +124,7 @@ The [accounts in this OU](https://docs.aws.amazon.com/whitepapers/latest/organiz
 
 Core accounts can be defined as accounts that have special significance within the organization. Often these will provide functions shared across accounts within the organization, for example, centralized logging or network services.
 
-The Landing Zone Accelerator deployment enforces a subset of core accounts as defined in the [mandatory accounts section of the implementation guide](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/mandatory-accounts.html). The best practices configuration adds additional core accounts for the specific functions listed below.
+The Landing Zone Accelerator deployment enforces a subset of core accounts as defined in the [mandatory accounts section of the implementation guide](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/mandatory-accounts.html). The sample configuration adds additional core accounts for the specific functions listed below.
 
 ![Mandatory Accounts](./images/mandatory_accounts.jpg "Mandatory Accounts")
 
@@ -140,7 +140,7 @@ The Landing Zone Accelerator deployment enforces a subset of core accounts as de
 
 ## 3.6. Account Level Security Settings
 
-The LZA best practices configuration files enable certain account-wide features on account creation. Namely, these include:
+The LZA sample configuration files enable certain account-wide features on account creation. Namely, these include:
 
 1. [S3 Public Access Block](https://docs.aws.amazon.com/AmazonS3/latest/dev/access-control-block-public-access.html#access-control-block-public-access-options)
 2. [Default encryption of EBS volumes](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html#encryption-by-default) using a customer managed local account KMS key
@@ -165,7 +165,7 @@ The vast majority of end-users of the AWS cloud within the organization will nev
 
 ## 4.4. Break Glass Accounts
 
-The Management account is used to provide [break glass access](https://docs.aws.amazon.com/whitepapers/latest/organizing-your-aws-environment/break-glass-access.html) to AWS accounts within the organization. The details of the break glass usernames can be found within [iam-config.yaml](./iam-config.yaml). The password details can be found in the Management account AWS Secrets Manager in the region LZA was deployed to. After the deployment of the best practices configuration files is complete, multi-factor authentication (MFA) should be enabled on these accounts (please see the next section for more details).
+The Management account is used to provide [break glass access](https://docs.aws.amazon.com/whitepapers/latest/organizing-your-aws-environment/break-glass-access.html) to AWS accounts within the organization. The details of the break glass usernames can be found within [iam-config.yaml](./iam-config.yaml). The password details can be found in the Management account AWS Secrets Manager in the region LZA was deployed to. After the deployment of the sample configuration files is complete, multi-factor authentication (MFA) should be enabled on these accounts (please see the next section for more details).
 
 ## 4.5. Multi-Factor Authentication (MFA)
 
@@ -220,13 +220,13 @@ These guardrails apply across the organization and protect the resources deploye
 
 ### 4.9 SCP Protection
 
-SCPs are protected from changes by enabling the **scpRevertChangesConfig** key in the best practices [security-config.yaml](./security-config.yaml) configuration file. [This configuration property](https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.ScpRevertChangesConfig.html) will monitor for manual changes to SCPs and revert them. This is enabled by default in the best practices configuration.
+SCPs are protected from changes by enabling the **scpRevertChangesConfig** key in the [security-config.yaml](./security-config.yaml) configuration file. [This configuration property](https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.ScpRevertChangesConfig.html) will monitor for manual changes to SCPs and revert them. This is enabled by default in the sample configuration.
 
 # 5. Logging and Monitoring
 
 ## 5.1. Overview
 
-The best practices configuration files for LZA introduce a centralized logging pattern to capture cloud audit logs, security logs, and CloudWatch logs (which can be used to capture and centralize system and application logs).
+The sample configuration files for LZA introduce a centralized logging pattern to capture cloud audit logs, security logs, and CloudWatch logs (which can be used to capture and centralize system and application logs).
 
 ![Centralized Logging](./images/lza-centralized-logging.png "Centralized Logging")
 
@@ -236,17 +236,17 @@ The AWS CloudTrail service provides a comprehensive log of control plane and dat
 
 ## 5.3. VPC Flow Logs
 
-VPC Flow Logs capture information about the IP traffic going to and from network interfaces in a VPC such as source and destination IPs, protocol, ports, and success/failure of the flow. The LZA best practices [network-config.yaml](./network-config.yaml) configuration file enables ALL (i.e. both accepted and rejected traffic) logs for all VPCs in all accounts to a local CloudWatch log group. It is important to use custom flow log formats to ensure all fields are captured as important fields are not part of the basic format. More details about VPC Flow Logs are [available here](https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs.html).
+VPC Flow Logs capture information about the IP traffic going to and from network interfaces in a VPC such as source and destination IPs, protocol, ports, and success/failure of the flow. The [network-config.yaml](./network-config.yaml) configuration file enables ALL (i.e. both accepted and rejected traffic) logs for all VPCs in all accounts to a local CloudWatch log group. It is important to use custom flow log formats to ensure all fields are captured as important fields are not part of the basic format. More details about VPC Flow Logs are [available here](https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs.html).
 It should be noted that certain categories of network flows are not captured, including traffic to and from the instance metadata service (`169.254.169.254`), and DNS traffic with an Amazon VPC DNS resolver. DNS logs are available by configuring [Route 53 Resolver query logs](https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.ResolverConfig.html#queryLogs).
 
 ## 5.4. GuardDuty
 
-Amazon GuardDuty is a cloud native threat detection and Intrusion Detection Service (IDS) that continuously monitors for malicious activity and unauthorized behavior to protect your AWS accounts and workloads. The service uses machine learning, anomaly detection, and integrated threat intelligence to identify and prioritize potential threats. GuardDuty uses a number of data sources including VPC Flow Logs, DNS logs, CloudTrail logs and several threat feeds. [Amazon GuardDuty](https://aws.amazon.com/guardduty/) is enabled in the [security-config.yaml](./security-config.yaml) best practices configuration file.
+Amazon GuardDuty is a cloud native threat detection and Intrusion Detection Service (IDS) that continuously monitors for malicious activity and unauthorized behavior to protect your AWS accounts and workloads. The service uses machine learning, anomaly detection, and integrated threat intelligence to identify and prioritize potential threats. GuardDuty uses a number of data sources including VPC Flow Logs, DNS logs, CloudTrail logs and several threat feeds. [Amazon GuardDuty](https://aws.amazon.com/guardduty/) is enabled in the [security-config.yaml](./security-config.yaml) sample configuration file.
 
 ## 5.5. Config
 
 [AWS Config](https://docs.aws.amazon.com/config/latest/developerguide/WhatIsConfig.html) provides a detailed view of the resources associated with each account in the AWS Organization, including how they are configured, how they are related to one another, and how the configurations have changed over time. Resources can be evaluated on the basis of their compliance with Config Rules - for example, a Config Rule might continually examine EBS volumes and check that they are encrypted.
-Config may is enabled at the organization level in the LZA best practices [security-config.yaml](./security-config.yaml) configuration file - this provides an overall view of the compliance status of all resources across the organization. The AWS Config multi-account multi-region data aggregation capability has been located in both the Organization Management account and the Security account.
+Config is enabled at the organization level in the [security-config.yaml](./security-config.yaml) configuration file - this provides an overall view of the compliance status of all resources across the organization. The AWS Config multi-account multi-region data aggregation capability has been located in both the Organization Management account and the Security account.
 
 ## 5.6. CloudWatch Logs
 
@@ -263,7 +263,7 @@ Config may is enabled at the organization level in the LZA best practices [secur
 
 ## 5.7. Security Hub
 
-The primary dashboard for Operators to assess the security posture of the AWS footprint is the centralized [AWS Security Hub](https://aws.amazon.com/security-hub/) service. This is enabled in the best practices [security-config.yaml](./security-config.yaml) configuration file. Security Hub needs to be configured to aggregate findings from Amazon GuardDuty, Amazon Macie, AWS Config, Systems Manager, Firewall Manager, Amazon Detective, Amazon Inspector and IAM Access Analyzers. Events from security integrations are correlated and displayed on the Security Hub dashboard as ‘findings’ with a severity level (informational, low, medium, high, critical).
+The primary dashboard for Operators to assess the security posture of the AWS footprint is the centralized [AWS Security Hub](https://aws.amazon.com/security-hub/) service. This is enabled in the [security-config.yaml](./security-config.yaml) configuration file. Security Hub needs to be configured to aggregate findings from Amazon GuardDuty, Amazon Macie, AWS Config, Systems Manager, Firewall Manager, Amazon Detective, Amazon Inspector and IAM Access Analyzers. Events from security integrations are correlated and displayed on the Security Hub dashboard as ‘findings’ with a severity level (informational, low, medium, high, critical).
 
 ## 5.8. Systems Manager Session Manager and Fleet Manager
 
@@ -271,7 +271,7 @@ The primary dashboard for Operators to assess the security posture of the AWS fo
 
 With Session Manager, customers can gain quick access to Windows and Linux instances through the AWS console or using their preferred clients. [AWS Systems Manager Fleet Manager](https://docs.aws.amazon.com/systems-manager/latest/userguide/fleet.html) additionally allows connecting graphically to Windows desktops directly from the AWS console without the need for command line tools or RDSH/RDP clients.
 
-The LZA enforces session encryption and stores encrypted session log data in the centralized S3 bucket for auditing purposes. This is enabled in the best practices [global-config.yaml](./global-config.yaml) configuration file; optionally, session logging can also be enabled for CloudWatch Logs.
+The LZA enforces session encryption and stores encrypted session log data in the centralized S3 bucket for auditing purposes. This is enabled in the [global-config.yaml](./global-config.yaml) configuration file; optionally, session logging can also be enabled for CloudWatch Logs.
 
 ## 5.10. Other Services
 
@@ -281,9 +281,9 @@ Amazon Detective can optionally be enabled 48 hours after an account is deployed
 
 # 6. Networking
 
-## 6.1 Networking best practice
+## 6.1 Overview
 
-The **network-config.yaml** best practices configuration is intended to set up various centralized networking constructs that you can use to customize and build additional infrastructure. Specific IP address ranges; AWS Transit Gateway routing configurations; and advanced capabilities such as Amazon Route 53 Resolver, Amazon VPC IP Address Manager, and AWS Network Firewall likely require additional customization. The solution doesn't deploy these configuration items as default.
+The **network-config.yaml** sample configuration is intended to set up various centralized networking constructs that you can use to customize and build additional infrastructure. Specific IP address ranges; AWS Transit Gateway routing configurations; and advanced capabilities such as Amazon Route 53 Resolver, Amazon VPC IP Address Manager, and AWS Network Firewall likely require additional customization. The solution doesn't deploy these configuration items as default.
 
 ![Network Architecture](./images/best_practices_network.jpg "Network Architecture")
 
@@ -291,13 +291,13 @@ The **network-config.yaml** best practices configuration is intended to set up v
 
 2. The Inspection VPC provides a central point for deep packet inspection. Optionally, you can use this VPC to centrally manage Network Firewall or third-party intrusion detection system/intrusion prevention system (IDS/IPS) appliances. You can also use a [Gateway Load Balancer](http://aws.amazon.com/elasticloadbalancing/gateway-load-balancer/) for scalability and high availability of your third-party appliances. The Gateway Load Balancer isn't required for AWS Network Firewall deployments.
 
-*Note:* We designed the Inspection VPC generically, and you might require additional configuration if using third-party appliances. For example, a best practice when using Gateway Load Balancer is to separate the load balancer subnet and endpoint subnet so that you can manage network access control lists (ACLs) independently from one another. For similar reasons, you might also want to separate your appliances’ management and data network interfaces into separate subnets.
+_Note:_ We designed the Inspection VPC generically, and you might require additional configuration if using third-party appliances. For example, a best practice when using Gateway Load Balancer is to separate the load balancer subnet and endpoint subnet so that you can manage network access control lists (ACLs) independently from one another. For similar reasons, you might also want to separate your appliances’ management and data network interfaces into separate subnets.
 
 For more information on centralized inspection patterns, see the AWS Whitepaper [Building a Scalable and Secure Multi-VPC AWS Network Infrastructure](https://docs.aws.amazon.com/whitepapers/latest/building-scalable-secure-multi-vpc-network-infrastructure/welcome.html).
 
 3. When you design VPC endpoints in a centralized pattern, you can access multiple VPC endpoints in your environment from a central Endpoints VPC. This can help you save on your cost and management overhead of deploying interface endpoints to multiple workload VPCs. This solution deploys constructs for managing the centralization of these endpoints and their dependencies (for example, Route 53 private hosted zones). We provide more information about this pattern in [Centralized access to VPC private endpoints](https://docs.aws.amazon.com/whitepapers/latest/building-scalable-secure-multi-vpc-network-infrastructure/centralized-access-to-vpc-private-endpoints.html).
 
-*Note:* Centralized endpoints aren't available in the GovCloud (US) Regions.
+_Note:_ Centralized endpoints aren't available in the GovCloud (US) Regions.
 
 4. A central Transit Gateway provides a virtual router that allows you to attach multiple Amazon VPCs and hybrid network connections in a single place. You can use this in combination with routing patterns through Transit Gateway route tables to achieve network isolation, centralized inspection, and other strategies required for your compliance needs.
 
@@ -305,6 +305,6 @@ For more information on centralized inspection patterns, see the AWS Whitepaper 
 
 6. The Shared Services account and VPC provide commonly used patterns for organizations that have resources other than core network infrastructure that the organization needs to be share. Some examples include [AWS Directory Service for Microsoft Active Directory](http://aws.amazon.com/directoryservice/) (AWS Managed Microsoft AD), agile collaboration applications, and package or container repositories.
 
-7. An optional External Access VPC for shared applications, remote access (RDP/SSH) bastion hosts, or other resources that require public internet access is not included in the best practices configuration and is depicted for illustration purposes only.
+7. An optional External Access VPC for shared applications, remote access (RDP/SSH) bastion hosts, or other resources that require public internet access is not included in the sample configuration and is depicted for illustration purposes only.
 
-8. Additional workload accounts can have application VPCs and Transit Gateway attachments deployed when provisioned by the solution. Deployment of network infrastructure in these workload accounts is dependent on your input to the network-config.yaml file. 
+8. Additional workload accounts can have application VPCs and Transit Gateway attachments deployed when provisioned by the solution. Deployment of network infrastructure in these workload accounts is dependent on your input to the network-config.yaml file.
