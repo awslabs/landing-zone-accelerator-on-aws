@@ -2330,8 +2330,8 @@ export class VpcValidator {
     helpers: NetworkValidatorFunctions,
     errors: string[],
   ) {
-    let nonSharedSubnets: string[] = [];
-    let invalidAlbs: { name: string; subnets: string[] }[] = [];
+    const nonSharedSubnets: string[] = [];
+    const invalidAlbs: { name: string; subnets: string[] }[] = [];
     for (const subnetItem of vpcItem.subnets ?? []) {
       if (!subnetItem.shareTargets) {
         nonSharedSubnets.push(subnetItem.name);
@@ -2432,7 +2432,7 @@ export class VpcValidator {
     helpers: NetworkValidatorFunctions,
     errors: string[],
   ) {
-    let invalidAlbList: string[] = [];
+    const invalidAlbList: string[] = [];
     let missingAccountIds: string[] = [];
 
     for (const acmItem of values.certificates ?? []) {

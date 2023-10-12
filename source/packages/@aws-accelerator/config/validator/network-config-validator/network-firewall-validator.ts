@@ -719,7 +719,7 @@ export class NetworkFirewallValidator {
     for (const target of domainList.targets) {
       if (!helpers.matchesRegex(target, '^\\.?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-z]{2,8}$')) {
         errors.push(
-          `[Network Firewall rule group ${rule.name}]: target "${target}" is invalid. Targets must be formatted ".example.com" for wildcard domains and "example.com" for explicit match domains `,
+          `[Network Firewall rule group ${rule.name}]: target "${target}" is invalid. Targets must be formatted ".example.com" for wildcard domains and "example.com" for explicit match domains`,
         );
       }
     }
@@ -1076,7 +1076,7 @@ export class NetworkFirewallValidator {
         policy.firewallPolicy.statefulEngineOptions !== 'STRICT_ORDER'
       ) {
         errors.push(
-          `[Network Firewall policy ${policy.name}]: STRICT_ORDER must be set for statefulEngineOptions property if definin g statefulDefaultActions`,
+          `[Network Firewall policy ${policy.name}]: STRICT_ORDER must be set for statefulEngineOptions property if defining statefulDefaultActions`,
         );
       }
 

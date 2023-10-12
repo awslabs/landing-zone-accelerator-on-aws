@@ -31,6 +31,7 @@
     "jest": "29.4.3",
     "jest-junit": "15.0.0",
     "lerna": "7.2.0",
+    "lint-staged": "^14.0.1",
     "prettier": "2.8.4",
     "ts-jest": "29.0.5",
     "ts-node": "10.9.1",
@@ -42,7 +43,7 @@
     "cleanup:tsc": "lerna run cleanup:tsc --stream",
     "build": "lerna run build --stream",
     "git-clean": "cd .. && git clean -Xfd -e !development -e !development/** -e !.vscode -e !.vscode/**",
-    "build-clean": "yarn run git-clean && yarn install && yarn run build", 
+    "build-clean": "yarn run git-clean && yarn install && yarn run build",
     "validate-config": "ts-node ./packages/@aws-accelerator/accelerator/lib/config-validator.ts",
     "test": "lerna run test --stream",
     "test:clean": "rm -f ./test-reports/*.xml",
@@ -54,6 +55,9 @@
     "lint": "lerna run lint --stream",
     "prettier": "lerna run prettier --stream",
     "update-snapshots": "../deployment/update-snapshots.sh"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": "eslint --fix --max-warnings 0 -c .eslintrc.json --ignore-pattern \"*.d.ts\""
   },
   "workspaces": {
     "packages": [
