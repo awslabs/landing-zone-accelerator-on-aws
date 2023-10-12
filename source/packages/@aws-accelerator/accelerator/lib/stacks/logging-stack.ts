@@ -951,7 +951,7 @@ export class LoggingStack extends AcceleratorStack {
     // Setup Firehose to take records from Kinesis and place in S3
     // Dynamic partition incoming records
     // so files from particular log group can be placed in their respective S3 prefix
-    new CloudWatchToS3Firehose(this, 'FirehoseToS3Setup', {
+    const cloudWatchToS3Firehose = new CloudWatchToS3Firehose(this, 'FirehoseToS3Setup', {
       dynamicPartitioningValue: this.props.globalConfig.logging.cloudwatchLogs?.dynamicPartitioning ?? undefined,
       bucketName: centralLogsBucketName,
       kinesisStream: logsKinesisStream,
@@ -967,6 +967,11 @@ export class LoggingStack extends AcceleratorStack {
       logsKmsKey: this.cloudwatchKey,
       logsRetentionInDaysValue: this.props.globalConfig.cloudwatchLogRetentionInDays.toString(),
     });
+
+    if (this.centralLogsBucket) {
+      cloudWatchToS3Firehose.node.addDependency(this.centralLogsBucket);
+    }
+
     return cloudwatchCfnDestination;
   }
   private cloudwatchLogCreatingAccount() {
