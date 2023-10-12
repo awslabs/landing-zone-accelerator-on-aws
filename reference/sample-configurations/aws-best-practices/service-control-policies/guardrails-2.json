@@ -113,8 +113,8 @@
     {
       "Sid": "PreventSSMModification",
       "Effect": "Deny",
-      "Action": ["ssm:DeleteParameters"],
-      "Resource": "*",
+      "Action": ["ssm:DeleteParameter*", "ssm:PutParameter"],
+      "Resource": "arn:${PARTITION}:ssm:*:*:parameter${ACCELERATOR_SSM_PREFIX}*",
       "Condition": {
         "ArnNotLike": {
           "aws:PrincipalARN": [
