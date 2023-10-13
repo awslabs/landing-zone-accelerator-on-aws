@@ -373,6 +373,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
         },
         "configPolicyNames": [
           "AcceleratorGuardrails1",
+          "DataPerimeter",
         ],
         "partition": {
           "Ref": "AWS::Partition",
@@ -443,6 +444,37 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
         "policyTagKey": "AWSAcceleratorManaged",
         "strategy": "allow-list",
         "targetId": "ou-asdf-33333333",
+        "type": "SERVICE_CONTROL_POLICY",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::AttachPolicy",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AttachDataPerimeterInfrastructure774B8264": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039",
+        "DataPerimeter67F0B7E1",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomOrganizationsAttachPolicyCustomResourceProviderHandlerB3233202",
+            "Arn",
+          ],
+        },
+        "configPolicyNames": [
+          "AcceleratorGuardrails1",
+          "DataPerimeter",
+        ],
+        "partition": {
+          "Ref": "AWS::Partition",
+        },
+        "policyId": {
+          "Ref": "DataPerimeter67F0B7E1",
+        },
+        "policyTagKey": "AWSAcceleratorManaged",
+        "targetId": "ou-asdf-22222222",
         "type": "SERVICE_CONTROL_POLICY",
         "uuid": "REPLACED-UUID",
       },
@@ -1026,6 +1058,32 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
         ],
       },
       "Type": "AWS::IAM::Role",
+    },
+    "DataPerimeter67F0B7E1": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomOrganizationsCreatePolicyCustomResourceProviderLogGroup019B74A9",
+        "enablePolicyTypeScpB4BC96BE",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomOrganizationsCreatePolicyCustomResourceProviderHandler7A188619",
+            "Arn",
+          ],
+        },
+        "bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+        "description": "Data Perimeter SCP
+",
+        "key": "REPLACED-JSON-PATH.json",
+        "name": "DataPerimeter",
+        "partition": "aws",
+        "policyTagKey": "AWSAcceleratorManaged",
+        "type": "SERVICE_CONTROL_POLICY",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::CreatePolicy",
+      "UpdateReplacePolicy": "Delete",
     },
     "GuardDutyServiceLinkedRoleCreateServiceLinkedRoleFunction151BCBCB": {
       "DependsOn": [

@@ -24,6 +24,7 @@ import {
   IamConfig,
   NetworkConfig,
   OrganizationConfig,
+  ReplacementsConfig,
   SecurityConfig,
 } from '@aws-accelerator/config';
 
@@ -92,15 +93,19 @@ export class AcceleratorSynthStacks {
       customizationsConfig = new CustomizationsConfig();
     }
 
+    const accountsConfig = AccountsConfig.load(this.configDirPath);
+    const replacementsConfig = ReplacementsConfig.load(this.configDirPath, accountsConfig);
+    replacementsConfig.loadReplacementValues({});
     this.props = {
       configDirPath: this.configDirPath,
-      accountsConfig: AccountsConfig.load(this.configDirPath),
+      accountsConfig: accountsConfig,
       customizationsConfig,
       globalConfig,
       iamConfig: IamConfig.load(this.configDirPath),
       networkConfig: NetworkConfig.load(this.configDirPath),
       organizationConfig: OrganizationConfig.load(this.configDirPath),
       securityConfig: SecurityConfig.load(this.configDirPath),
+      replacementsConfig: replacementsConfig,
       partition: this.partition,
       globalRegion: this.globalRegion,
       centralizedLoggingRegion: globalConfig.logging.centralizedLoggingRegion ?? globalConfig.homeRegion,

@@ -4088,8 +4088,9 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "isOrgsEnabled": true,
         "logArchiveAccountEmail": "all-enabled-logarchive-account@example.com",
         "managementAccountEmail": "all-enabled-management-account@example.com",
-        "organizationsConfigS3Key": "f041192e85508146304663e03a7290e74c9b765850b286388201977a065879de.yaml",
+        "organizationsConfigS3Key": "dabf332fedb490477ec26c3fbf7102d24f827a0e69e4fbf8dc39730a85e542cc.yaml",
         "partition": "aws",
+        "replacementsConfigS3Key": "43902f9b49ec9d00c56c665a14e57bc669fb10695dd206414062c8ab5b4ec74e.yaml",
         "stackName": "AWSAccelerator-PrepareStack-111111111111-us-east-1",
         "uuid": "REPLACED-UUID",
       },
@@ -4799,6 +4800,17 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
               {
                 "id": "ou-asdf-33333333",
                 "name": "SecureWorkloads",
+              },
+            ],
+          },
+          {
+            "name": "DataPerimeter",
+            "strategy": "deny-list",
+            "targetType": "ou",
+            "targets": [
+              {
+                "id": "ou-asdf-22222222",
+                "name": "Infrastructure",
               },
             ],
           },

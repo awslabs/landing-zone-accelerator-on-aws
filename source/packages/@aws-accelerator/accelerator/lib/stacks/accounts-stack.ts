@@ -251,6 +251,7 @@ export class AccountsStack extends AcceleratorStack {
           path.join(props.configDirPath, serviceControlPolicy.policy),
           true,
           this.organizationId,
+          undefined,
         ),
       });
     }

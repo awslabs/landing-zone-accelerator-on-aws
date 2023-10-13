@@ -1,0 +1,16 @@
+globalReplacements:
+  - key: ALLOWED_CORPORATE_CIDRS
+    type: StringList
+    value: 
+      - 10.0.1.0/24
+      - 10.0.2.0/24
+  - key: ALLOWED_PRINCIPAL_ARNS
+    type: StringList
+    value:
+      - arn:aws:iam::*:role/cdk-accel-*
+      - arn:aws:iam::*:role/AWSA*
+      - arn:aws:iam::*:role/OrganizationAccountAccessRole
+  - key: ALLOWED_EXTERNAL_ACCOUNTS
+    type: StringList
+    value:
+      - "1234567890"
