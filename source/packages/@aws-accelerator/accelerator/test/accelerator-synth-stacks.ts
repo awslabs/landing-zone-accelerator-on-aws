@@ -189,6 +189,9 @@ export class AcceleratorSynthStacks {
       case AcceleratorStage.SECURITY_RESOURCES:
         this.synthSecurityResourcesStacks();
         break;
+      case AcceleratorStage.DATA_PERIMETER:
+        this.synthDataPerimeterStacks();
+        break;
       case AcceleratorStage.SECURITY:
         this.synthSecurityStacks();
         break;
@@ -638,6 +641,33 @@ export class AcceleratorSynthStacks {
           new SecurityResourcesStack(
             this.app,
             `${AcceleratorStackNames[AcceleratorStage.SECURITY_RESOURCES]}-${accountId}-${region}`,
+            {
+              env: {
+                account: accountId,
+                region: region,
+              },
+              ...this.props,
+            },
+          ),
+        );
+      }
+    }
+  }
+  /**
+   * synth DataPerimeter stacks
+   */
+  private synthDataPerimeterStacks() {
+    for (const region of this.props.globalConfig.enabledRegions) {
+      for (const account of [
+        ...this.props.accountsConfig.mandatoryAccounts,
+        ...this.props.accountsConfig.workloadAccounts,
+      ]) {
+        const accountId = this.props.accountsConfig.getAccountId(account.name);
+        this.stacks.set(
+          `${account.name}-${region}`,
+          new SecurityResourcesStack(
+            this.app,
+            `${AcceleratorStackNames[AcceleratorStage.DATA_PERIMETER]}-${accountId}-${region}`,
             {
               env: {
                 account: accountId,

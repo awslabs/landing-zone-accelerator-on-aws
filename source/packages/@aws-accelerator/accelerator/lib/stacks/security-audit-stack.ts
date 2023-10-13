@@ -18,7 +18,7 @@ import * as yaml from 'js-yaml';
 import { pascalCase } from 'pascal-case';
 import * as path from 'path';
 
-import { Region } from '@aws-accelerator/config';
+import { DataPerimeterConfig, Region } from '@aws-accelerator/config';
 import {
   Bucket,
   BucketEncryptionType,
@@ -33,6 +33,7 @@ import {
   MacieMembers,
   SecurityHubMembers,
   SecurityHubRegionAggregation,
+  RemediationSsmDocument,
 } from '@aws-accelerator/constructs';
 
 import {
@@ -98,6 +99,13 @@ export class SecurityAuditStack extends AcceleratorStack {
     this.configureSsmDocuments();
 
     //
+    // SSM Automation doc for Data Perimeter
+    //
+    if (this.props.securityConfig.dataPerimeter?.enable) {
+      this.configureDataPerimeterSsmDocument();
+    }
+
+    //
     // IAM Access Analyzer (Does not have a native service enabler)
     //
     this.configureIamAnalyzer();
@@ -124,6 +132,20 @@ export class SecurityAuditStack extends AcceleratorStack {
     this.addResourceSuppressionsByPath();
 
     this.logger.info('Completed stack synthesis');
+  }
+
+  private configureDataPerimeterSsmDocument() {
+    let documentName =
+      this.props.securityConfig.dataPerimeter!.ssmDocumentName || DataPerimeterConfig.DEFAULT_SSM_DOCUMENT_NAME;
+    documentName = documentName.startsWith(this.props.prefixes.accelerator)
+      ? documentName
+      : `${this.props.prefixes.accelerator}-${documentName}`;
+    new RemediationSsmDocument(this, 'DataPerimeterRemediationDocument', {
+      documentName,
+      sharedAccountIds: this.props.accountsConfig.getAccountIds(),
+      globalConfig: this.props.globalConfig,
+      cloudwatchKey: this.cloudwatchKey,
+    });
   }
 
   /**

@@ -98,6 +98,7 @@ export class SecurityConfigValidator {
 
     this.validateAwsCloudWatchLogGroups(values, errors);
     this.validateAwsCloudWatchLogGroupsRetention(values, errors);
+    this.validateDataPerimeterConfig(values, ouIdNames, accountNames, errors);
 
     if (errors.length) {
       throw new Error(`${SecurityConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
@@ -758,6 +759,33 @@ export class SecurityConfigValidator {
       errors.push(
         `Delegated admin account '${values.awsConfig.aggregation?.delegatedAdminAccount}' provided for config aggregation does not exist in the accounts-config.yaml file.`,
       );
+    }
+  }
+
+  private validateDataPerimeterConfig(
+    securityConfig: SecurityConfig,
+    ouIdNames: string[],
+    accountNames: string[],
+    errors: string[],
+  ) {
+    if (!securityConfig.dataPerimeter) return;
+    const dataPerimeterConfig = securityConfig.dataPerimeter;
+    for (const resourcePolicy of dataPerimeterConfig.policySets) {
+      for (const ou of resourcePolicy.deploymentTargets.organizationalUnits ?? []) {
+        if (ouIdNames.indexOf(ou) === -1) {
+          errors.push(
+            `Deployment target OU ${ou} for Data Perimeter AWS Config rules does not exists in organization-config.yaml file.`,
+          );
+        }
+      }
+
+      for (const account of resourcePolicy.deploymentTargets.accounts ?? []) {
+        if (accountNames.indexOf(account) === -1) {
+          errors.push(
+            `Deployment target account ${account} for Data Perimeter AWS Config rules does not exists in accounts-config.yaml file.`,
+          );
+        }
+      }
     }
   }
 }

@@ -108,6 +108,7 @@ export const AcceleratorStackNames: Record<string, string> = {
   [AcceleratorStage.DEPENDENCIES]: `${stackPrefix}-DependenciesStack`,
   [AcceleratorStage.SECURITY]: `${stackPrefix}-SecurityStack`,
   [AcceleratorStage.SECURITY_RESOURCES]: `${stackPrefix}-SecurityResourcesStack`,
+  [AcceleratorStage.DATA_PERIMETER]: `${stackPrefix}-DataPerimeterStack`,
   [AcceleratorStage.OPERATIONS]: `${stackPrefix}-OperationsStack`,
   [AcceleratorStage.NETWORK_PREP]: `${stackPrefix}-NetworkPrepStack`,
   [AcceleratorStage.NETWORK_VPC]: `${stackPrefix}-NetworkVpcStack`,
@@ -818,6 +819,7 @@ export abstract class Accelerator {
     if (
       toolkitProps.stage === AcceleratorStage.SECURITY ||
       toolkitProps.stage === AcceleratorStage.SECURITY_RESOURCES ||
+      toolkitProps.stage === AcceleratorStage.DATA_PERIMETER ||
       toolkitProps.stage === AcceleratorStage.OPERATIONS ||
       toolkitProps.stage === AcceleratorStage.NETWORK_PREP ||
       toolkitProps.stage === AcceleratorStage.NETWORK_VPC ||

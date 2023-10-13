@@ -945,3 +945,27 @@ cloudWatch:
           statistic: Sum
           threshold: 1
           treatMissingData: notBreaching
+dataPerimeter:
+  enable: true
+  resourcePolicies:
+    - name: IAM
+      document: resource-policies/iam.json
+    - name: S3
+      document: resource-policies/s3.json
+    - name: KMS
+      document: resource-policies/kms.json
+  remediation:
+      automatic: false
+      retryAttemptSeconds: 60
+      maximumAutomaticAttempts: 5
+  policySets:
+    - resourcePolicies:
+        - name: IAM
+          document: resource-policies/iam.json
+        - name: S3
+          document: resource-policies/s3.json
+        - name: KMS
+          document: resource-policies/kms.json
+      deploymentTargets:
+        accounts:
+          - Management

@@ -45,6 +45,7 @@ import {
   createPipelineStack,
   createPrepareStack,
   createSecurityAuditStack,
+  createDataPerimeterStack,
   createSecurityResourcesStack,
   createSecurityStack,
   createTesterStack,
@@ -182,6 +183,9 @@ function createMultiAccountMultiRegionStacks(app: cdk.App, context: AcceleratorC
       //
       // All NETWORK_ASSOCIATIONS stage stacks
       createNetworkAssociationsStacks(app, context, props, env, accountId, enabledRegion);
+      //
+      // Security Data Perimeter Stack
+      createDataPerimeterStack(app, context, props, env, accountId, enabledRegion);
       //
       // All CUSTOMIZATIONS stage stacks
       createCustomizationsStacks(app, context, props, env, accountId, enabledRegion);

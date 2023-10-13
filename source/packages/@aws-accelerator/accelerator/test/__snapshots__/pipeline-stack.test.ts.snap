@@ -838,6 +838,37 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   "Version": "1",
                 },
                 "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage data-perimeter"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"data-perimeter"}]",
+                  "PrimarySource": "Build",
+                  "ProjectName": {
+                    "Ref": "PipelineToolkitProjectBCBD6910",
+                  },
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "Build",
+                  },
+                  {
+                    "Name": "Config",
+                  },
+                ],
+                "Name": "Data_Perimeter",
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "PipelinePipelineRole6D983AD5",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 4,
+              },
+              {
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": {
                   "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage customizations"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"customizations"}]",
                   "PrimarySource": "Build",
                   "ProjectName": {
