@@ -29,6 +29,7 @@ import {
   ReplacementsConfig,
   SecurityConfig,
   SecurityConfigValidator,
+  ReplacementsConfigValidator,
 } from '@aws-accelerator/config';
 import { createLogger } from '@aws-accelerator/utils';
 import { Accelerator } from './accelerator';
@@ -196,6 +197,7 @@ async function validateConfig(props: {
     networkConfig,
     organizationConfig,
     securityConfig,
+    replacementsConfig,
   );
 
   //
@@ -223,6 +225,7 @@ function runValidators(
   networkConfig?: NetworkConfig,
   organizationConfig?: OrganizationConfig,
   securityConfig?: SecurityConfig,
+  replacementsConfig?: ReplacementsConfig,
 ) {
   // Accounts config validator
   if (accountsConfig && organizationConfig) {
@@ -314,6 +317,14 @@ function runValidators(
   if (accountsConfig && globalConfig && organizationConfig && securityConfig) {
     try {
       new SecurityConfigValidator(securityConfig, accountsConfig, globalConfig, organizationConfig, configDirPath);
+    } catch (e) {
+      configErrors.push(e);
+    }
+  }
+
+  if (replacementsConfig) {
+    try {
+      new ReplacementsConfigValidator(replacementsConfig);
     } catch (e) {
       configErrors.push(e);
     }

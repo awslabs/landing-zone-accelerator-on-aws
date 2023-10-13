@@ -37,6 +37,7 @@ import {
   NetworkConfigTypes,
   OrganizationConfig,
   Region,
+  ReplacementsConfig,
   SecurityConfig,
   ShareTargets,
   VpcConfig,
@@ -157,6 +158,7 @@ export interface AcceleratorStackProps extends cdk.StackProps {
   readonly organizationConfig: OrganizationConfig;
   readonly securityConfig: SecurityConfig;
   readonly customizationsConfig: CustomizationsConfig;
+  readonly replacementsConfig: ReplacementsConfig;
   readonly partition: string;
   readonly configRepositoryName: string;
   readonly qualifier?: string;
@@ -1454,9 +1456,10 @@ export abstract class AcceleratorStack extends cdk.Stack {
     returnTempPath: boolean,
     organizationId?: string,
     tempFileName?: string,
+    parameters?: { [key: string]: string | string[] },
   ): string {
     // Transform policy document
-    let policyContent: string = JSON.stringify(require(policyPath));
+    let policyContent: string = fs.readFileSync(policyPath, 'utf8');
     const acceleratorPrefix = this.props.prefixes.accelerator;
     const acceleratorPrefixNoDash = acceleratorPrefix.endsWith('-')
       ? acceleratorPrefix.slice(0, -1)
@@ -1479,6 +1482,15 @@ export abstract class AcceleratorStack extends cdk.Stack {
       additionalReplacements['\\${ORG_ID}'] = organizationId;
     }
 
+    const policyParams: { [key: string]: string | string[] } = {
+      ...this.props.replacementsConfig.placeholders,
+      ...parameters,
+    };
+
+    for (const key of Object.keys(policyParams)) {
+      additionalReplacements[`\\\${${ReplacementsConfig.POLICY_PARAMETER_PREFIX}:${key}}`] = policyParams[key];
+    }
+
     policyContent = policyReplacements({
       content: policyContent,
       acceleratorPrefix,
@@ -1488,6 +1500,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
       acceleratorName: this.props.globalConfig.externalLandingZoneResources?.acceleratorName || 'lza',
     });
 
+    policyContent = JSON.stringify(JSON.parse(policyContent));
     if (returnTempPath) {
       return this.createTempFile(policyContent, tempFileName);
     } else {

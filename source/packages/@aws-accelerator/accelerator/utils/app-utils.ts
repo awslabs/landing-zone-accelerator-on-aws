@@ -436,6 +436,7 @@ export async function setAcceleratorStackProps(
     networkConfig: NetworkConfig.load(context.configDirPath, replacementsConfig),
     organizationConfig: organizationConfig,
     securityConfig: SecurityConfig.load(context.configDirPath, replacementsConfig),
+    replacementsConfig: replacementsConfig,
     partition: context.partition,
     globalRegion,
     centralizedLoggingRegion,

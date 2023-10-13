@@ -27,3 +27,4 @@ export * from './validator/iam-config-validator';
 export * from './validator/organization-config-validator';
 export * from './validator/network-config-validator/network-config-validator';
 export * from './validator/security-config-validator';
+export * from './validator/replacements-config-validator';

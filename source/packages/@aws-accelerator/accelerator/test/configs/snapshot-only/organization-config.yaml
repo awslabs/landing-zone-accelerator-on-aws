@@ -46,6 +46,14 @@ serviceControlPolicies:
     deploymentTargets:
       organizationalUnits:
         - SecureWorkloads
+  - name: DataPerimeter
+    description: >
+      Data Perimeter SCP
+    policy: service-control-policies/data-perimeter.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
 taggingPolicies:
   - name: TagPolicy
     description: Organization Tagging Policy
