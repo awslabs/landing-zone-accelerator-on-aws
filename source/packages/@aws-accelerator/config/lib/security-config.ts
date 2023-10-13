@@ -360,6 +360,43 @@ export class SecurityConfigTypes {
     keySets: t.array(SecurityConfigTypes.keyConfig),
   });
 
+  static readonly resourcePolicyConfig = t.interface({
+    name: t.nonEmptyString,
+    document: t.nonEmptyString,
+  });
+
+  static readonly resourcePolicyRemediationType = t.interface({
+    /**
+     * The remediation is triggered automatically.
+     */
+    automatic: t.boolean,
+    /**
+     * Maximum time in seconds that AWS Config runs auto-remediation. If you do not select a number, the default is 60 seconds.
+     */
+    retryAttemptSeconds: t.optional(t.number),
+    /**
+     * The maximum number of failed attempts for auto-remediation. If you do not select a number, the default is 5.
+     */
+    maximumAutomaticAttempts: t.optional(t.number),
+  });
+
+  static readonly resourcePolicySetConfig = t.interface({
+    deploymentTargets: t.deploymentTargets,
+    resourcePolicies: t.array(SecurityConfigTypes.resourcePolicyConfig),
+  });
+
+  /**
+   * Data Perimeter configuration
+   */
+  static readonly dataPerimeterConfig = t.interface({
+    enable: t.boolean,
+    ruleName: t.optional(t.nonEmptyString),
+    ssmDocumentName: t.optional(t.nonEmptyString),
+    resourcePolicies: t.array(SecurityConfigTypes.resourcePolicyConfig),
+    remediation: SecurityConfigTypes.resourcePolicyRemediationType,
+    policySets: t.array(SecurityConfigTypes.resourcePolicySetConfig),
+  });
+
   static readonly accessAnalyzerConfig = t.interface({
     enable: t.boolean,
   });
@@ -561,6 +598,7 @@ export class SecurityConfigTypes {
     awsConfig: this.awsConfig,
     cloudWatch: this.cloudWatchConfig,
     keyManagementService: t.optional(this.keyManagementServiceConfig),
+    dataPerimeter: t.optional(this.dataPerimeterConfig),
   });
 }
 
@@ -710,6 +748,74 @@ export class KeyConfig implements t.TypeOf<typeof SecurityConfigTypes.keyConfig>
  */
 export class KeyManagementServiceConfig implements t.TypeOf<typeof SecurityConfigTypes.keyManagementServiceConfig> {
   readonly keySets: KeyConfig[] = [];
+}
+
+export class ResourcePolicyConfig implements t.TypeOf<typeof SecurityConfigTypes.resourcePolicyConfig> {
+  readonly name: string = '';
+  readonly document: string = '';
+}
+
+export class ResourcePolicyRemediation implements t.TypeOf<typeof SecurityConfigTypes.resourcePolicyRemediationType> {
+  readonly automatic = true;
+  readonly retryAttemptSeconds = 0;
+  readonly maximumAutomaticAttempts = 0;
+}
+
+export class ResourcePolicySetConfig implements t.TypeOf<typeof SecurityConfigTypes.resourcePolicySetConfig> {
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
+  readonly resourcePolicies: ResourcePolicyConfig[] = [];
+}
+
+/**
+ * *{@link SecurityConfig} / {@link DataPerimeterConfig}*
+ *
+ *  Data Perimeter Config. The data perimeter configuration allows you to deploy AWS Config rules to
+ *  automatically apply resource-based policies to AWS resources including S3 buckets, IAM roles, and KMS keys.
+ *
+ * Currently, only KMS, S3 and IAM Role are supported. Check the config rule defined in {@link DataPerimeterStack} for more detail
+ *
+ * @example
+ * ```
+ *
+ * dataPerimeter:
+ *   enable: true
+ *   ruleName: AWSAccelerator-check-resource-policy
+ *   resourcePolicies:
+ *     - name: IAM
+ *       document: path/to/iam-policy-template.json
+ *     - name: S3
+ *       document: path/to/s3-policy-template.json
+ *     - name: KMS
+ *       document: path/to/kms-policy-template.json
+ *   remediation:
+ *       automatic: false
+ *       retryAttemptSeconds: 60
+ *       maximumAutomaticAttempts: 5
+ *   policySets:
+ *       deploymentTargets:
+ *         accounts:
+ *           - Management
+ *     - resourcePolicies:
+ *         - name: IAM
+ *           document: resource-policies/iam-workload.json
+ *         - name: S3
+ *           document: resource-policies/s3-workload.json
+ *         - name: KMS
+ *           document: resource-policies/kms-workload.json
+ *       deploymentTargets:
+ *         accounts:
+ *           - TrustedWorkload1
+ */
+export class DataPerimeterConfig implements t.TypeOf<typeof SecurityConfigTypes.dataPerimeterConfig> {
+  static readonly DEFAULT_RULE_NAME = 'Check-Resource-Policy';
+  static readonly DEFAULT_SSM_DOCUMENT_NAME = `Attach-Resource-Based-Policy`;
+
+  readonly enable = false;
+  readonly ruleName: string | undefined;
+  readonly ssmDocumentName: string | undefined;
+  readonly resourcePolicies: ResourcePolicyConfig[] = [];
+  readonly remediation: ResourcePolicyRemediation = new ResourcePolicyRemediation();
+  readonly policySets: ResourcePolicySetConfig[] = [];
 }
 
 /**
@@ -2628,6 +2734,7 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
   readonly awsConfig: AwsConfig = new AwsConfig();
   readonly cloudWatch: CloudWatchConfig = new CloudWatchConfig();
   readonly keyManagementService: KeyManagementServiceConfig = new KeyManagementServiceConfig();
+  readonly dataPerimeter: DataPerimeterConfig | undefined;
 
   /**
    *

@@ -1,0 +1,22 @@
+description: Resource-based Policy
+schemaVersion: '0.3'
+assumeRole: '{{ AutomationAssumeRole }}'
+parameters:
+  ResourceId:
+    type: String
+  FunctionName:
+    type: String
+  AutomationAssumeRole:
+    type: String
+  ConfigRuleName:
+    type: String
+mainSteps:
+  - name: invokeLambdaFunction
+    action: 'aws:invokeLambdaFunction'
+    inputs:
+      InvocationType: RequestResponse
+      FunctionName: "{{ FunctionName }}"
+      InputPayload:
+        ResourceId: "{{ ResourceId }}"
+        ConfigRuleName: "{{ ConfigRuleName }}"
+      

@@ -1,0 +1,46 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "EnforceIdentityPerimeter",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Effect": "Deny",
+      "Action": ["sts:AssumeRole", "sts:AssumeRoleWithWebIdentity"],
+      "Condition": {
+        "StringNotEqualsIfExists": {
+          "aws:PrincipalOrgID": "${ORG_ID}"
+        },
+        "BoolIfExists": {
+          "aws:PrincipalIsAWSService": "false"
+        }
+      }
+    },
+    {
+      "Sid": "EnforceNetworkPerimeter",
+      "Effect": "Deny",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": [
+        "sts:AssumeRole",
+        "sts:AssumeRoleWithSAML",
+        "sts:AssumeRoleWithWebIdentity"
+      ],
+      "Condition": {
+        "BoolIfExists": {
+          "aws:PrincipalIsAWSService": "false",
+          "aws:ViaAWSService": "false"
+        },
+        "ArnNotLikeIfExists": {
+          "aws:PrincipalArn": [
+            "arn:aws:iam::*:role/aws-service-role/*",
+            "arn:aws:iam::*:role/aws:ec2-infrastructure",
+            "arn:aws:iam::*:role/AWSAccelerator-*"
+          ]
+        }
+      }
+    }
+  ]
+}

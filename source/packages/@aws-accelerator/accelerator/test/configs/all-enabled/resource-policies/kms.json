@@ -1,0 +1,43 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "EnforceIdentityPerimeter",
+      "Effect": "Deny",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:Encrypt",
+      "Resource": "*",
+      "Condition": {
+        "StringNotEqualsIfExists": {
+          "aws:PrincipalOrgID": "${ORG_ID}"
+        },
+        "BoolIfExists": {
+          "aws:PrincipalIsAWSService": "false"
+        }
+      }
+    },
+    {
+      "Sid": "EnforceNetworkPerimeter",
+      "Effect": "Deny",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:Encrypt",
+      "Resource": "*",
+      "Condition": {
+        "BoolIfExists": {
+          "aws:PrincipalIsAWSService": "false",
+          "aws:ViaAWSService": "false"
+        },
+        "ArnNotLikeIfExists": {
+          "aws:PrincipalArn": [
+            "arn:aws:iam::*:role/aws-service-role/*",
+            "arn:aws:iam::*:role/aws:ec2-infrastructure"
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "EnforceIdentityPerimeter",
+      "Principal": "*",
+      "Effect": "Deny",
+      "Action": "s3:GetObject",
+      "Resource": [
+        "${ACCEL_LOOKUP::REPLACEMENTS:ATTACHED_RESOURCE_ARN}",
+        "${ACCEL_LOOKUP::REPLACEMENTS:ATTACHED_RESOURCE_ARN}/*"
+      ],
+      "Condition": {
+        "StringNotEqualsIfExists": {
+          "aws:PrincipalOrgID": "${ORG_ID}"
+        },
+        "BoolIfExists": {
+          "aws:PrincipalIsAWSService": "false"
+        }
+      }
+    },
+    {
+      "Sid": "EnforceNetworkPerimeter",
+      "Effect": "Deny",
+      "Principal": "*",
+      "Action": "s3:GetObject",
+      "Resource": [
+        "${ACCEL_LOOKUP::REPLACEMENTS:ATTACHED_RESOURCE_ARN}",
+        "${ACCEL_LOOKUP::REPLACEMENTS:ATTACHED_RESOURCE_ARN}/*"
+      ],
+      "Condition": {
+        "BoolIfExists": {
+          "aws:PrincipalIsAWSService": "false",
+          "aws:ViaAWSService": "false"
+        },
+        "ArnNotLikeIfExists": {
+          "aws:PrincipalArn": ["arn:aws:iam::*:role/aws-service-role/*", "arn:aws:iam::*:role/AWSAccelerator-*"]
+        }
+      }
+    }
+  ]
+}
