@@ -2278,7 +2278,13 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
     region: string,
     partition: string,
     managementAccountId: string,
-  ) {
+  ): Promise<{
+    account: string;
+    region: string;
+    parametersByPath: {
+      [key: string]: string;
+    };
+  }> {
     let ssmClient = new SSMClient({ region });
     if (account !== managementAccountId) {
       const crossAccountCredentials = await this.getCrossAccountCredentials(
@@ -2287,6 +2293,13 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
         partition,
         this.managementAccountAccessRole,
       );
+      if (!crossAccountCredentials) {
+        return {
+          account,
+          region,
+          parametersByPath: {},
+        };
+      }
       ssmClient = this.getCrossAccountSsmClient(region, crossAccountCredentials);
     }
     const parametersByPath = await this.getParametersByPath(ssmPath, ssmClient);
@@ -2296,7 +2309,12 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
       parametersByPath,
     };
   }
-  private async loadRegionLzaResources(region: string, partition: string, prefix: string, accounts: string[]) {
+  private async loadRegionLzaResources(
+    region: string,
+    partition: string,
+    prefix: string,
+    accounts: string[],
+  ): Promise<void> {
     const getSsmPath = (resourceType: t.AseaResourceTypePaths) => `${prefix}${resourceType}`;
     if (!this.externalLandingZoneResources?.importExternalLandingZoneResources) return;
     for (const accountId of accounts) {
@@ -2306,6 +2324,10 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
         partition,
         this.managementAccountAccessRole,
       );
+
+      if (!crossAccountCredentials) {
+        return;
+      }
       const ssmClient = await this.getCrossAccountSsmClient(region, crossAccountCredentials);
       // Get Resources which are there in both external Accelerator and LZA
       // Can load only resources which are maintained in both
@@ -2458,7 +2480,7 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
     partition: string,
     managementAccountAccessRole: string,
     sessionName = 'acceleratorResourceMapping',
-  ) {
+  ): Promise<AssumeRoleCommandOutput | undefined> {
     const stsClient = new STSClient({ region: region });
     const stsParams: AssumeRoleCommandInput = {
       RoleArn: `arn:${partition}:iam::${accountId}:role/${managementAccountAccessRole}`,
@@ -2477,6 +2499,12 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
+      if (e.name === 'AccessDenied') {
+        logger.warn(e.name + ': ' + e.message);
+        logger.warn(`${stsParams.RoleArn} NOT FOUND in ${accountId} account`);
+        return undefined;
+      }
+
       logger.error(JSON.stringify(e));
       throw new Error(e.message);
     }
