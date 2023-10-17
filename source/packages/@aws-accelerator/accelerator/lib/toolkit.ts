@@ -451,10 +451,6 @@ export class AcceleratorToolkit {
         accountsConfig,
       );
 
-      logger.info('Loading account IDs for the environment...');
-      logger.info('Loading organizational units for the environment...');
-      await organizationConfig.loadOrganizationalUnitIds(options.partition);
-
       const customizationsConfig = CustomizationsConfig.load(configDirPath, replacementsConfig);
       const customStacks = customizationsConfig.getCustomStacks();
       for (const stack of customStacks) {
