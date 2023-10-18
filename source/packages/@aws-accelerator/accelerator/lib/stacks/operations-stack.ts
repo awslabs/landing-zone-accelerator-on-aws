@@ -91,6 +91,11 @@ export class OperationsStack extends AcceleratorStack {
   private cloudwatchKey: cdk.aws_kms.Key;
 
   /**
+   * KMS Key used to encrypt custom resource lambda environment variables
+   */
+  private lambdaKey: cdk.aws_kms.Key;
+
+  /**
    * Constructor for OperationsStack
    *
    * @param scope
@@ -101,6 +106,7 @@ export class OperationsStack extends AcceleratorStack {
     super(scope, id, props);
 
     this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
+    this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
 
     // Security Services delegated admin account configuration
     // Global decoration for security services
@@ -1028,7 +1034,7 @@ export class OperationsStack extends AcceleratorStack {
         identityStoreId: identityStoreId,
         principals: assignment.principals,
         resourceUniqueIdentifier: `${targetAccountId}-${assignment.name}`,
-        customResourceLambdaEnvironmentEncryptionKmsKey: this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY),
+        customResourceLambdaEnvironmentEncryptionKmsKey: this.lambdaKey,
         customResourceLambdaCloudWatchLogKmsKey: this.cloudwatchKey,
         customResourceLambdaLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
       },

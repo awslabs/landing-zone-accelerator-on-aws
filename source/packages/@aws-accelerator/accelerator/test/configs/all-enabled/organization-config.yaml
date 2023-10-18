@@ -8,6 +8,8 @@ organizationalUnits:
   - name: Infrastructure
   - name: GovCloud
   - name: SecureWorkloads
+  - name: Suspended
+    ignore: true
 quarantineNewAccounts:
   enable: true
   scpPolicyName: Quarantine

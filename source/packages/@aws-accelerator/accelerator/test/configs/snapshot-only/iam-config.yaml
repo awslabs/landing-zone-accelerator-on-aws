@@ -104,8 +104,10 @@ identityCenter:
         - type: GROUP
           name: lza-accelerator-group-02
       deploymentTargets:
-        accounts:
-          - LogArchive
+        organizationalUnits:
+          - Root
+        excludedAccounts:
+          - Management 
     - name: Assignment2
       permissionSetName: PermissionSet1
       principalId: '1234abcd-1001-70f0-9c12-56a6aa967ca4'
