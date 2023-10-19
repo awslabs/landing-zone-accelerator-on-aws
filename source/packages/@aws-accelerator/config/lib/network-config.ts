@@ -358,6 +358,7 @@ export class NetworkConfigTypes {
   static readonly securityGroupRuleConfig = t.interface({
     description: t.nonEmptyString,
     types: t.optional(t.array(this.securityGroupRuleTypeEnum)),
+    ipProtocols: t.optional(t.array(t.string)),
     tcpPorts: t.optional(t.array(t.number)),
     udpPorts: t.optional(t.array(t.number)),
     fromPort: t.optional(t.number),
@@ -3245,6 +3246,16 @@ export class PrefixListConfig implements t.TypeOf<typeof NetworkConfigTypes.pref
  *       subnets:
  *         - Network-Endpoints-A
  * ```
+ * IP Protocol:
+ * ```
+ * - description: 'IP Protocol Rule'
+ *   ipProtocols:
+ *     - ESP
+ *     - IDRP
+ *     - ST
+ *   sources:
+ *     - 10.0.0.0/8
+ * ```
  */
 export class SecurityGroupRuleConfig implements t.TypeOf<typeof NetworkConfigTypes.securityGroupRuleConfig> {
   /**
@@ -3314,6 +3325,22 @@ export class SecurityGroupRuleConfig implements t.TypeOf<typeof NetworkConfigTyp
    * {@link SecurityGroupSourceConfig} | {@link PrefixListSourceConfig} | {@link SubnetSourceConfig}
    */
   readonly sources: string[] | SecurityGroupSourceConfig[] | PrefixListSourceConfig[] | SubnetSourceConfig[] = [];
+  /**
+   * (OPTIONAL) An array of custom IP Protocols for the security group rule
+   *
+   * @remarks
+   * Use only IP protocols that aren't either of the following: 'RDP', 'SSH', 'HTTP',  'HTTPS', 'MSSQL',
+   * 'MYSQL/AURORA', 'REDSHIFT', 'POSTGRESQL', 'ORACLE-RDS', 'TCP', 'UDP','ICMP','ALL'.
+   *
+   * For input values, please use values from the `Keyword` column via - https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml
+   *
+   * NOTE: Can only use `ipProtocols` or 'types'. If you need to allow the same source IP address, use multiple ingress/egress
+   * rules.
+   *
+   *
+   *
+   */
+  readonly ipProtocols: string[] = [];
 }
 
 /**

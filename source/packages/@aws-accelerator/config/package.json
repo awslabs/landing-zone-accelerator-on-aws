@@ -20,6 +20,7 @@
     "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}' 'validator/**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" "
   },
   "devDependencies": {
+    "aws-cdk-lib": "2.93.0",
     "@types/jest": "29.4.0",
     "@types/node": "18.14.0",
     "@typescript-eslint/eslint-plugin": "5.53.0",
