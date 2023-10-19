@@ -646,10 +646,10 @@ vpcs:
         routes: []
       - name: Network-Secondary-B-Rt
         routes:
-        - name: LgwRoute
-          destination: 0.0.0.0/0
-          type: localGateway
-          target: accelerator-lgw-1
+          - name: LgwRoute
+            destination: 0.0.0.0/0
+            type: localGateway
+            target: accelerator-lgw-1
       - name: Network-Secondary-C-Rt
         routes:
           - name: NfwRoute
@@ -1111,6 +1111,13 @@ vpcs:
                   - Management
               - prefixLists:
                   - accelerator-prefix-list
+          - description: 'IP Protocol Rule'
+            ipProtocols:
+              - ESP
+              - IDRP
+              - ST
+            sources:
+              - 100.96.252.0/23
         outboundRules:
           - description: 'All Outbound'
             types:
@@ -1133,6 +1140,13 @@ vpcs:
               - 22
             udpPorts:
               - 22
+            sources:
+              - 10.0.0.0/8
+          - description: 'IP Protocol Rule'
+            ipProtocols:
+              - ESP
+              - IDRP
+              - ST
             sources:
               - 10.0.0.0/8
       - name: Network-Endpoints-CustomEndpointSg

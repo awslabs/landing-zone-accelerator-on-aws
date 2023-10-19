@@ -27,6 +27,7 @@ import {
   VpcTemplatesConfig,
 } from '../../lib/network-config';
 import { NetworkValidatorFunctions } from './network-validator-functions';
+import * as cdk from 'aws-cdk-lib';
 
 /**
  * Class to validate Vpcs
@@ -1571,47 +1572,13 @@ export class VpcValidator {
   ): boolean {
     const toFromPorts = ['fromPort', 'toPort'];
     const tcpUdpPorts = ['tcpPorts', 'udpPorts'];
-    const toFromTypes = ['ICMP', 'TCP', 'UDP'];
-    const tcpUdpTypes = ['TCP', 'UDP'];
     let allValid = true;
 
     vpcItem.securityGroups?.forEach(group => {
       group.inboundRules.forEach(inbound => {
         const keys = helpers.getObjectKeys(inbound);
         if (inbound.types) {
-          // Validate types and tcpPorts/udpPorts are not defined in the same rule
-          if (keys.some(key => tcpUdpPorts.includes(key))) {
-            allValid = false;
-            errors.push(
-              `[VPC ${vpcItem.name} security group ${group.name}]: inboundRules cannot contain ${tcpUdpPorts} properties when types property is defined`,
-            );
-          }
-          // Validate type is correct if using fromPort/toPort
-          if (
-            inbound.types.some(type => toFromTypes.includes(type)) &&
-            toFromPorts.some(item => !keys.includes(item))
-          ) {
-            allValid = false;
-            errors.push(
-              `[VPC ${vpcItem.name} security group ${group.name}]: inboundRules must contain ${toFromPorts} properties when one of the following types is specified: ${toFromTypes}`,
-            );
-          }
-          if (
-            inbound.types.some(type => !toFromTypes.includes(type)) &&
-            toFromPorts.some(item => keys.includes(item))
-          ) {
-            allValid = false;
-            errors.push(
-              `[VPC ${vpcItem.name} security group ${group.name}]: inboundRules may only contain ${toFromPorts} properties when one of the following types is specified: ${toFromTypes}`,
-            );
-          }
-          // Validate both TCP/UDP and ICMP are not used in the same rule
-          if (inbound.types.some(type => tcpUdpTypes.includes(type)) && inbound.types.includes('ICMP')) {
-            allValid = false;
-            errors.push(
-              `[VPC ${vpcItem.name} security group ${group.name}]: inboundRules cannot contain both ICMP and TCP/UDP types in the same rule`,
-            );
-          }
+          allValid = this.securityGroupValidateTypes(group, inbound, keys, vpcItem, errors);
         } else {
           // Validate to/fromPorts don't exist
           if (toFromPorts.some(item => keys.includes(item))) {
@@ -1621,12 +1588,15 @@ export class VpcValidator {
             );
           }
           // Validate tcpPorts/udpPorts exists
-          if (!inbound.tcpPorts && !inbound.udpPorts) {
+          if (!inbound.tcpPorts && !inbound.udpPorts && !inbound.ipProtocols) {
             allValid = false;
             errors.push(
-              `[VPC ${vpcItem.name} security group ${group.name}]: inboundRules must contain one of ${tcpUdpPorts} properties when types property is undefined`,
+              `[VPC ${vpcItem.name} security group ${group.name}]: inboundRules must contain one of ${tcpUdpPorts} properties when both the types and ipProtocols properties are undefined.`,
             );
           }
+        }
+        if (inbound.ipProtocols) {
+          allValid = this.securityGroupValidateIpProtocols(group, inbound, vpcItem, errors);
         }
       });
     });
@@ -1647,47 +1617,13 @@ export class VpcValidator {
   ): boolean {
     const toFromPorts = ['fromPort', 'toPort'];
     const tcpUdpPorts = ['tcpPorts', 'udpPorts'];
-    const toFromTypes = ['ICMP', 'TCP', 'UDP'];
-    const tcpUdpTypes = ['TCP', 'UDP'];
     let allValid = true;
 
     vpcItem.securityGroups?.forEach(group => {
       group.outboundRules.forEach(outbound => {
         const keys = helpers.getObjectKeys(outbound);
         if (outbound.types) {
-          // Validate types and tcpPorts/udpPorts are not defined in the same rule
-          if (keys.some(key => tcpUdpPorts.includes(key))) {
-            allValid = false;
-            errors.push(
-              `[VPC ${vpcItem.name} security group ${group.name}]: outboundRules cannot contain ${tcpUdpPorts} properties when types property is defined`,
-            );
-          }
-          // Validate type is correct if using fromPort/toPort
-          if (
-            outbound.types.some(type => toFromTypes.includes(type)) &&
-            toFromPorts.some(item => !keys.includes(item))
-          ) {
-            allValid = false;
-            errors.push(
-              `[VPC ${vpcItem.name} security group ${group.name}]: outboundRules must contain ${toFromPorts} properties when one of the following types is specified: ${toFromTypes}`,
-            );
-          }
-          if (
-            outbound.types.some(type => !toFromTypes.includes(type)) &&
-            toFromPorts.some(item => keys.includes(item))
-          ) {
-            allValid = false;
-            errors.push(
-              `[VPC ${vpcItem.name} security group ${group.name}]: outboundRules may only contain ${toFromPorts} properties when one of the following types is specified: ${toFromTypes}`,
-            );
-          }
-          // Validate both TCP/UDP and ICMP are not used in the same rule
-          if (outbound.types.some(type => tcpUdpTypes.includes(type)) && outbound.types.includes('ICMP')) {
-            allValid = false;
-            errors.push(
-              `[VPC ${vpcItem.name} security group ${group.name}]: outboundRules cannot contain both ICMP and TCP/UDP types in the same rule`,
-            );
-          }
+          allValid = this.securityGroupValidateTypes(group, outbound, keys, vpcItem, errors);
         } else {
           // Validate to/fromPorts don't exist
           if (toFromPorts.some(item => keys.includes(item))) {
@@ -1697,15 +1633,117 @@ export class VpcValidator {
             );
           }
           // Validate tcpPorts/udpPorts exists
-          if (!outbound.tcpPorts && !outbound.udpPorts) {
+          if (!outbound.tcpPorts && !outbound.udpPorts && !outbound.ipProtocols) {
             allValid = false;
             errors.push(
-              `[VPC ${vpcItem.name} security group ${group.name}]: outboundRules must contain one of ${tcpUdpPorts} properties when types property is undefined`,
+              `[VPC ${vpcItem.name} security group ${group.name}]: outboundRules must contain one of ${tcpUdpPorts} properties when both the types and ipProtocols properties are undefined.`,
             );
           }
         }
+        if (outbound.ipProtocols) {
+          allValid = this.securityGroupValidateIpProtocols(group, outbound, vpcItem, errors);
+        }
       });
     });
+    return allValid;
+  }
+
+  /**
+   * Validate security group types
+   * @param securityGroupItem
+   * @param vpcItem
+   * @param helpers
+   * @param errors
+   */
+  private securityGroupValidateTypes(
+    group: SecurityGroupConfig,
+    securityGroupItem: SecurityGroupRuleConfig,
+    keys: string[],
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    errors: string[],
+  ): boolean {
+    let allValid = true;
+    const toFromPorts = ['fromPort', 'toPort'];
+    const tcpUdpPorts = ['tcpPorts', 'udpPorts'];
+    const toFromTypes = ['ICMP', 'TCP', 'UDP'];
+    const tcpUdpTypes = ['TCP', 'UDP'];
+
+    // Validate types and tcpPorts/udpPorts are not defined in the same rule
+    if (keys.some(key => tcpUdpPorts.includes(key))) {
+      allValid = false;
+      errors.push(
+        `[VPC ${vpcItem.name} security group ${group.name}]: Rules cannot contain ${tcpUdpPorts} properties when types property is defined`,
+      );
+    }
+    // Validate type is correct if using fromPort/toPort
+    if (
+      securityGroupItem.types!.some(type => toFromTypes.includes(type)) &&
+      toFromPorts.some(item => !keys.includes(item))
+    ) {
+      allValid = false;
+      errors.push(
+        `[VPC ${vpcItem.name} security group ${group.name}]: Rules must contain ${toFromPorts} properties when one of the following types is specified: ${toFromTypes}`,
+      );
+    }
+    if (
+      securityGroupItem.types!.some(type => !toFromTypes.includes(type)) &&
+      toFromPorts.some(item => keys.includes(item))
+    ) {
+      allValid = false;
+      errors.push(
+        `[VPC ${vpcItem.name} security group ${group.name}]: Rules may only contain ${toFromPorts} properties when one of the following types is specified: ${toFromTypes}`,
+      );
+    }
+    // Validate both TCP/UDP and ICMP are not used in the same rule
+    if (
+      securityGroupItem.types!.some(type => tcpUdpTypes.includes(type)) &&
+      securityGroupItem.types!.includes('ICMP')
+    ) {
+      allValid = false;
+      errors.push(
+        `[VPC ${vpcItem.name} security group ${group.name}]: Rules cannot contain both ICMP and TCP/UDP types in the same rule`,
+      );
+    }
+    if (securityGroupItem.ipProtocols) {
+      allValid = false;
+      errors.push(
+        `[VPC ${vpcItem.name} security group ${group.name}]: Rules cannot contain both types and ipProtocols for the same rule. Create separate rules for both.`,
+      );
+    }
+    return allValid;
+  }
+
+  /**
+   * Validate security group ip protocols
+   * @param securityGroupItem
+   * @param vpcItem
+   * @param helpers
+   * @param errors
+   */
+  private securityGroupValidateIpProtocols(
+    group: SecurityGroupConfig,
+    securityGroupItem: SecurityGroupRuleConfig,
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    errors: string[],
+  ): boolean {
+    let allValid = true;
+    const invalidProtocols: string[] = [];
+    for (const ipProtocolItem of securityGroupItem.ipProtocols ?? []) {
+      const protocolExists = ipProtocolItem in cdk.aws_ec2.Protocol;
+      if (!protocolExists) {
+        if (!invalidProtocols.includes(ipProtocolItem)) {
+          invalidProtocols.push(ipProtocolItem);
+        }
+      }
+    }
+    if (invalidProtocols.length > 0) {
+      allValid = false;
+      errors.push(
+        `[VPC ${vpcItem.name} security group ${
+          group.name
+        }]: Is using the following unsupported IP Protocols: [${invalidProtocols.join(', ')}]`,
+      );
+    }
     return allValid;
   }
 

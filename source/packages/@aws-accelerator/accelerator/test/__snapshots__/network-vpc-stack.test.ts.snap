@@ -1312,6 +1312,21 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
             "IpProtocol": "udp",
             "ToPort": 22,
           },
+          {
+            "CidrIp": "10.0.0.0/8",
+            "Description": "IP Protocol Rule",
+            "IpProtocol": "50",
+          },
+          {
+            "CidrIp": "10.0.0.0/8",
+            "Description": "IP Protocol Rule",
+            "IpProtocol": "45",
+          },
+          {
+            "CidrIp": "10.0.0.0/8",
+            "Description": "IP Protocol Rule",
+            "IpProtocol": "5",
+          },
         ],
         "SecurityGroupIngress": [
           {
@@ -1484,6 +1499,21 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
               ],
             },
             "ToPort": 22,
+          },
+          {
+            "CidrIp": "100.96.252.0/23",
+            "Description": "IP Protocol Rule",
+            "IpProtocol": "50",
+          },
+          {
+            "CidrIp": "100.96.252.0/23",
+            "Description": "IP Protocol Rule",
+            "IpProtocol": "45",
+          },
+          {
+            "CidrIp": "100.96.252.0/23",
+            "Description": "IP Protocol Rule",
+            "IpProtocol": "5",
           },
         ],
         "Tags": [

@@ -419,11 +419,50 @@ function processSecurityGroupRules(
     rules.push(
       ...processTcpSources(vpcResources, item, subnetMap, prefixListMap, securityGroupMap, vpcName),
       ...processUdpSources(vpcResources, item, subnetMap, prefixListMap, securityGroupMap, vpcName),
+      ...processIpProtocols(vpcResources, item, subnetMap, prefixListMap, securityGroupMap, vpcName),
     );
   } else {
     rules.push(...processTypeSources(vpcResources, item, subnetMap, prefixListMap, securityGroupMap, vpcName));
   }
   return rules;
+}
+
+/**
+ * Process IP Protocols for security group rules
+ * @param vpcResources
+ * @param securityGroupRuleItem
+ * @param subnetMap
+ * @param prefixListMap
+ * @param securityGroupMap
+ * @param vpcName
+ * @returns
+ */
+function processIpProtocols(
+  vpcResources: (VpcConfig | VpcTemplatesConfig)[],
+  securityGroupRuleItem: SecurityGroupRuleConfig,
+  subnetMap: Map<string, Subnet> | Map<string, IIpamSubnet>,
+  prefixListMap: Map<string, PrefixList> | Map<string, string>,
+  securityGroupMap?: Map<string, SecurityGroup>,
+  vpcName?: string,
+): SecurityGroupRuleProps[] {
+  const ipProtocolRules: SecurityGroupRuleProps[] = [];
+  for (const protocolItem of securityGroupRuleItem.ipProtocols ?? []) {
+    ipProtocolRules.push(
+      ...processSecurityGroupRuleSources(
+        vpcResources,
+        securityGroupRuleItem.sources,
+        subnetMap,
+        prefixListMap,
+        {
+          ipProtocol: cdk.aws_ec2.Protocol[protocolItem as keyof typeof cdk.aws_ec2.Protocol],
+          description: securityGroupRuleItem.description,
+        },
+        securityGroupMap,
+        vpcName,
+      ),
+    );
+  }
+  return ipProtocolRules;
 }
 
 /**
