@@ -6,6 +6,13 @@ labels: bug
 assignees: ""
 ---
 
+<!--
+For urgent operational issues, please contact AWS Support directly.
+https://aws.amazon.com/premiumsupport/
+
+Please provide the following information:
+-->
+
 **Describe the bug**
 A clear and concise description of what the bug is.
 
@@ -17,22 +24,14 @@ A clear and concise description of what you expected to happen.
 
 **Please complete the following information about the solution:**
 
-- [ ] Version: [e.g. v1.1.0]
+- [ ] Version: [e.g. v1.5.1]
 
-To get the version of the solution, you can look at the description of the created CloudFormation stack. For example, "_(SO0021) - Video On Demand workflow with AWS Step Functions, MediaConvert, MediaPackage, S3, CloudFront and DynamoDB. Version **v5.0.0**_". If the description does not contain the version information, you can look at the mappings section of the template:
-
-```yaml
-Mappings:
-  SourceCode:
-    General:
-      S3Bucket: "solutions"
-      KeyPrefix: "video-on-demand-on-aws/v5.0.0"
-```
+> To get the version of the solution, you can look at the description of the created AWS CloudFormation stack used to install the LZA (AWSAccelerator-InstallerStack). For example, "__(SO0199) Landing Zone Accelerator on AWS. **Version 1.5.1.**__". If the description does not contain the version information, you can look at the Parameters of the stack for the **RepositoryBranchName** as that should contain the version number.
 
 - [ ] Region: [e.g. us-east-1]
 - [ ] Was the solution modified from the version published on this repository?
 - [ ] If the answer to the previous question was yes, are the changes available on GitHub?
-- [ ] Have you checked your [service quotas](https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html) for the sevices this solution uses?
+- [ ] Have you checked your [service quotas](https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html) for the services this solution uses?
 - [ ] Were there any errors in the CloudWatch Logs?
 
 **Screenshots**
