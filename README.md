@@ -70,7 +70,7 @@ you comply with the non-technical administrative requirements.
 
 ---
 
-This solution collects anonymous operational metrics to help AWS improve the
+This solution collects anonymized operational metrics to help AWS improve the
 quality of features of the solution. For more information, including how to
 disable this capability, please see the [implementation guide](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/collection-of-operational-metrics.html).
 
@@ -390,6 +390,8 @@ Store the personal access token in Secrets Manager.
 ```
 cd <rootDir>/source/packages/@aws-accelerator/installer
 aws s3 mb s3://<bucket name>
+export ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+aws s3api head-bucket --bucket <bucket name> --expected-bucket-owner $ACCOUNT_ID
 aws s3 cp ./cdk.out/AWSAccelerator-InstallerStack.template.json s3://<bucket name>
 ```
 
