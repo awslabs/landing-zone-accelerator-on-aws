@@ -53,6 +53,42 @@ export class CommonValidatorFunctions {
   }
 
   /**
+   * Get account names for a share target or deployment target object
+   * @param targets
+   * @returns
+   */
+  public static getAccountNamesFromTargets(
+    accountsConfig: AccountsConfig,
+    targets: t.DeploymentTargets | t.ShareTargets,
+  ): string[] {
+    const accountNames: string[] = [];
+
+    for (const ou of targets.organizationalUnits ?? []) {
+      if (ou === 'Root') {
+        for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
+          accountNames.push(account.name);
+        }
+      } else {
+        for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
+          if (ou === account.organizationalUnit) {
+            accountNames.push(account.name);
+          }
+        }
+      }
+    }
+
+    for (const account of targets.accounts ?? []) {
+      accountNames.push(account);
+    }
+
+    const filterAccountNames = t.deploymentTargets.is(targets)
+      ? accountNames.filter(item => !targets.excludedAccounts?.includes(item))
+      : accountNames;
+
+    return [...new Set(filterAccountNames)];
+  }
+
+  /**
    * Function that will retrieve the regions from the deploymentTargets object that is passed in.
    * @param target {@link t.DeploymentTargets}
    * @param globalConfig {@link globalConfig}

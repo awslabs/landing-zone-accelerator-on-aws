@@ -621,6 +621,31 @@ firewalls:
             subnetId: SharedServices-App-A
         securityGroups: []
       vpc: SharedServices-Main
+    - name: firewall-with-shared-subnet
+      launchTemplate:
+        name: firewall-lt
+        blockDeviceMappings:
+          - deviceName: /dev/xvda
+            ebs:
+              encrypted: true
+              volumeSize: 20
+          - deviceName: /dev/xvdb
+            ebs:
+              encrypted: true
+              volumeSize: 10
+        iamInstanceProfile: EC2-Default-SSM-AD-Role
+        imageId: ami-0e1c5d8c23330dee3
+        instanceType: t3.large
+        networkInterfaces:
+          - deviceIndex: 0
+            description: Primary interface
+            associateElasticIp: true
+            groups:
+              - SharedServices-Main-Rsyslog-sg
+            subnetId: SharedServices-App-C
+        securityGroups: []
+      vpc: SharedServices-Main
+      account: Network
   autoscalingGroups:
     - name: test-asg
       autoscaling:

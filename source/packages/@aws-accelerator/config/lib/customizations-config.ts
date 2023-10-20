@@ -464,6 +464,7 @@ export class CustomizationsConfigTypes {
     name: t.nonEmptyString,
     launchTemplate: this.launchTemplateConfig,
     vpc: t.nonEmptyString,
+    account: t.optional(t.nonEmptyString),
     configFile: t.optional(t.nonEmptyString),
     detailedMonitoring: t.optional(t.boolean),
     licenseFile: t.optional(t.nonEmptyString),
@@ -476,6 +477,7 @@ export class CustomizationsConfigTypes {
     autoscaling: this.autoscalingConfig,
     launchTemplate: this.launchTemplateConfig,
     vpc: t.nonEmptyString,
+    account: t.optional(t.nonEmptyString),
     configFile: t.optional(t.nonEmptyString),
     licenseFile: t.optional(t.nonEmptyString),
     tags: t.optional(t.array(t.tag)),
@@ -559,6 +561,13 @@ export class Ec2FirewallInstanceConfig implements t.TypeOf<typeof Customizations
    * This VPC must contain the subnet(s) defined for the network interfaces under the `launchTemplate` property
    */
   readonly vpc: string = '';
+  /**
+   * (OPTIONAL) The logical name of the account to deploy the firewall instance to
+   *
+   * @remarks
+   * This is the logical `name` property of the account as defined in accounts-config.yaml.
+   */
+  readonly account: string | undefined = undefined;
   /**
    * (OPTIONAL) Specify a relative S3 object path to pull a firewall configuration file from.
    *
@@ -756,6 +765,13 @@ export class Ec2FirewallAutoScalingGroupConfig
    * This VPC must contain the subnet(s) defined for the network interfaces under the `launchTemplate` property
    */
   readonly vpc: string = '';
+  /**
+   * (OPTIONAL) The logical name of the account to deploy the firewall autoscaling group to
+   *
+   * @remarks
+   * This is the logical `name` property of the account as defined in accounts-config.yaml.
+   */
+  readonly account: string | undefined = undefined;
   /**
    * (OPTIONAL) Specify a relative S3 object path to pull a firewall configuration file from.
    *
