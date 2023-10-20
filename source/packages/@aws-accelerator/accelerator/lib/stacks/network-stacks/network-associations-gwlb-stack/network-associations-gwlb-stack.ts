@@ -66,20 +66,28 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
   private instanceMap: Map<string, FirewallInstance>;
   private routeTableMap: Map<string, string>;
   private securityGroupMap: Map<string, string>;
+  // Map to store subnet IDs of owned and shared subnets
   private subnetMap: Map<string, string>;
   private ipamSubnetArray: string[];
   private targetGroupMap: Map<string, TargetGroup>;
+  // Map to store all vpc mapping of owned and shared VPCs
   private vpcMap: Map<string, string>;
+  // Map to store only local vpcs which are created in account
+  private vpcsInScopeMap: Map<string, string>;
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
     // Set initial private properties
-    this.vpcMap = this.setVpcMap(this.vpcsInScope);
-    this.subnetMap = this.setSubnetMap(this.vpcsInScope);
-    this.ipamSubnetArray = setIpamSubnetRouteTableEntryArray(this.vpcsInScope);
+    // Since VPC names are unique there is only one VPC in the list which is either shared or native to account with name
+    const vpcs = [...this.vpcsInScope, ...this.sharedVpcs];
+    this.vpcMap = this.setVpcMap(vpcs);
+    this.vpcsInScopeMap = this.setVpcMap(this.vpcsInScope);
+    const ownedSubnetsMap = this.setSubnetMap(this.vpcsInScope);
+    this.subnetMap = new Map([...ownedSubnetsMap.entries(), ...this.getSharedSubnetsMap().entries()]);
+    this.ipamSubnetArray = setIpamSubnetRouteTableEntryArray(vpcs);
     this.routeTableMap = this.setRouteTableMap(this.vpcsInScope);
-    this.securityGroupMap = this.setSecurityGroupMap(this.vpcsInScope);
+    this.securityGroupMap = this.setSecurityGroupMap(vpcs);
     this.gwlbMap = this.setInitialMaps(this.vpcsInScope);
 
     // Set firewall config custom resource details
@@ -156,6 +164,45 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
   }
 
   /**
+   * Returns a map of subnet IDs of shared subnets
+   * @returns
+   */
+  private getSharedSubnetsMap(): Map<string, string> {
+    const subnetMap = new Map<string, string>();
+    for (const vpcItem of this.sharedVpcs) {
+      for (const subnetItem of vpcItem.subnets ?? []) {
+        if (
+          subnetItem.shareTargets &&
+          (this.isOrganizationalUnitIncluded(subnetItem.shareTargets.organizationalUnits) ||
+            this.isAccountIncluded(subnetItem.shareTargets.accounts))
+        ) {
+          const subnetId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+            this,
+            this.getSsmPath(SsmResourceType.SUBNET, [vpcItem.name, subnetItem.name]),
+          );
+          subnetMap.set(`${vpcItem.name}_${subnetItem.name}`, subnetId);
+        }
+      }
+    }
+    return subnetMap;
+  }
+
+  /**
+   * Function to check scope of resource based on vpcName and account.
+   * @param vpcName
+   * @param account
+   * @returns
+   */
+  private isInScope(vpcName: string, account?: string) {
+    return (
+      (account &&
+        cdk.Stack.of(this).account === this.props.accountsConfig.getAccountId(account) &&
+        this.vpcMap.has(vpcName)) ||
+      (!account && this.vpcsInScopeMap.has(vpcName))
+    );
+  }
+
+  /**
    * Create EC2-based firewall and firewall management instances
    * @returns
    */
@@ -166,7 +213,7 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
       ...(this.props.customizationsConfig.firewalls?.managerInstances ?? []),
     ];
     for (const firewallInstance of firewallInstances) {
-      if (this.vpcMap.has(firewallInstance.vpc)) {
+      if (this.isInScope(firewallInstance.vpc, firewallInstance.account)) {
         instanceMap.set(firewallInstance.name, this.createFirewallInstance(firewallInstance));
       }
     }
@@ -252,7 +299,7 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
       // Check if any autoscaling groups reference the target group
       for (const asg of this.props.customizationsConfig.firewalls?.autoscalingGroups ?? []) {
         const asgTargetGroups = asg.autoscaling.targetGroups;
-        if (asgTargetGroups && asgTargetGroups[0] === group.name && this.vpcMap.has(asg.vpc)) {
+        if (asgTargetGroups && asgTargetGroups[0] === group.name && this.isInScope(asg.vpc, asg.account)) {
           targetGroupMap.set(group.name, this.createTargetGroup(group, asg.vpc));
         }
       }
@@ -354,7 +401,7 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
    */
   private createFirewallAutoScalingGroups() {
     for (const group of this.props.customizationsConfig.firewalls?.autoscalingGroups ?? []) {
-      if (this.vpcMap.has(group.vpc)) {
+      if (this.isInScope(group.vpc, group.account)) {
         this.createFirewallAutoScalingGroup(group);
       }
     }

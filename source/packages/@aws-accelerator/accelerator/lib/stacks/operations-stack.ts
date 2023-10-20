@@ -1346,7 +1346,7 @@ export class OperationsStack extends AcceleratorStack {
 
     for (const firewall of firewalls) {
       if (
-        this.isFirewallVpcInScope(vpcResources, firewall) &&
+        this.isFirewallInScope(vpcResources, firewall) &&
         firewall.launchTemplate.iamInstanceProfile &&
         (firewall.configFile || firewall.licenseFile)
       ) {
@@ -1362,13 +1362,17 @@ export class OperationsStack extends AcceleratorStack {
    * @param firewall {@link Ec2FirewallInstanceConfig} | {@link Ec2FirewallAutoScalingGroupConfig}
    * @returns boolean
    */
-  private isFirewallVpcInScope(
+  private isFirewallInScope(
     vpcResources: (VpcConfig | VpcTemplatesConfig)[],
     firewall: Ec2FirewallInstanceConfig | Ec2FirewallAutoScalingGroupConfig,
   ): boolean {
     const vpc = getVpcConfig(vpcResources, firewall.vpc);
     const vpcAccountIds = this.getVpcAccountIds(vpc);
-    return vpcAccountIds.includes(cdk.Stack.of(this).account) && vpc.region === cdk.Stack.of(this).region;
+    // If no account specified in Firewall Config Firewall is in scope of VPC.
+    const instanceAccountIds = firewall.account
+      ? [this.props.accountsConfig.getAccountId(firewall.account)]
+      : vpcAccountIds;
+    return instanceAccountIds.includes(cdk.Stack.of(this).account) && vpc.region === cdk.Stack.of(this).region;
   }
 
   /**

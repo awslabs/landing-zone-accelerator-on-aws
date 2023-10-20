@@ -183,6 +183,18 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
       "Default": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-Outposts-A/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworkvpcSharedServicesMainidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/SharedServices-Main/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcSharedServicesMainsecurityGroupSharedServicesMainRsyslogsgidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/SharedServices-Main/securityGroup/SharedServices-Main-Rsyslog-sg/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcSharedServicesMainsubnetSharedServicesAppCidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/SharedServices-Main/subnet/SharedServices-App-C/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratorsecuritystackebsDefaultVolumeEncryptionKeyArnC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/security-stack/ebsDefaultVolumeEncryptionKeyArn",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -2075,6 +2087,168 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
         },
       },
       "Type": "AWS::EC2::VPNConnection",
+    },
+    "SharedServicesMainfirewallWithSharedSubnetFirewallB18C6438": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-EC28",
+              "reason": "Detailed monitoring not enabled by configuration.",
+            },
+            {
+              "id": "AwsSolutions-EC29",
+              "reason": "Termination protection not enabled by configuration.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "LaunchTemplate": {
+          "LaunchTemplateId": {
+            "Ref": "SharedServicesMainfirewallWithSharedSubnetFirewallLaunchTemplate62AEA644",
+          },
+          "Version": {
+            "Fn::GetAtt": [
+              "SharedServicesMainfirewallWithSharedSubnetFirewallLaunchTemplate62AEA644",
+              "LatestVersionNumber",
+            ],
+          },
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "firewall-with-shared-subnet",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::Instance",
+    },
+    "SharedServicesMainfirewallWithSharedSubnetFirewallEipAssociation0360D7D9A": {
+      "Properties": {
+        "AllocationId": {
+          "Fn::GetAtt": [
+            "SharedServicesMainfirewallWithSharedSubnetFirewallElasticIp0C1D2D48E",
+            "AllocationId",
+          ],
+        },
+        "NetworkInterfaceId": {
+          "Ref": "SharedServicesMainfirewallWithSharedSubnetFirewallNetworkInterface0C2930B84",
+        },
+      },
+      "Type": "AWS::EC2::EIPAssociation",
+    },
+    "SharedServicesMainfirewallWithSharedSubnetFirewallElasticIp0C1D2D48E": {
+      "Properties": {
+        "Domain": "vpc",
+      },
+      "Type": "AWS::EC2::EIP",
+    },
+    "SharedServicesMainfirewallWithSharedSubnetFirewallLaunchTemplate62AEA644": {
+      "DependsOn": [
+        "SharedServicesMainfirewallWithSharedSubnetFirewallEipAssociation0360D7D9A",
+      ],
+      "Properties": {
+        "LaunchTemplateData": {
+          "BlockDeviceMappings": [
+            {
+              "DeviceName": "/dev/xvda",
+              "Ebs": {
+                "Encrypted": true,
+                "KmsKeyId": {
+                  "Fn::Select": [
+                    1,
+                    {
+                      "Fn::Split": [
+                        "/",
+                        {
+                          "Fn::Select": [
+                            5,
+                            {
+                              "Fn::Split": [
+                                ":",
+                                {
+                                  "Ref": "SsmParameterValueacceleratorsecuritystackebsDefaultVolumeEncryptionKeyArnC96584B6F00A464EAD1953AFF4B05118Parameter",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+                "VolumeSize": 20,
+              },
+            },
+            {
+              "DeviceName": "/dev/xvdb",
+              "Ebs": {
+                "Encrypted": true,
+                "KmsKeyId": {
+                  "Fn::Select": [
+                    1,
+                    {
+                      "Fn::Split": [
+                        "/",
+                        {
+                          "Fn::Select": [
+                            5,
+                            {
+                              "Fn::Split": [
+                                ":",
+                                {
+                                  "Ref": "SsmParameterValueacceleratorsecuritystackebsDefaultVolumeEncryptionKeyArnC96584B6F00A464EAD1953AFF4B05118Parameter",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+                "VolumeSize": 10,
+              },
+            },
+          ],
+          "IamInstanceProfile": {
+            "Name": "EC2-Default-SSM-AD-Role",
+          },
+          "ImageId": {
+            "Ref": "SsmParameterValueawsserviceamiamazonlinuxlatestamzn2amihvmx8664gp2C96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+          "InstanceType": "t3.large",
+          "MetadataOptions": {
+            "HttpTokens": "required",
+          },
+          "NetworkInterfaces": [
+            {
+              "DeviceIndex": 0,
+              "NetworkInterfaceId": {
+                "Ref": "SharedServicesMainfirewallWithSharedSubnetFirewallNetworkInterface0C2930B84",
+              },
+            },
+          ],
+          "SecurityGroupIds": [],
+        },
+        "LaunchTemplateName": "firewall-lt",
+      },
+      "Type": "AWS::EC2::LaunchTemplate",
+    },
+    "SharedServicesMainfirewallWithSharedSubnetFirewallNetworkInterface0C2930B84": {
+      "Properties": {
+        "Description": "Primary interface",
+        "GroupSet": [
+          {
+            "Ref": "SsmParameterValueacceleratornetworkvpcSharedServicesMainsecurityGroupSharedServicesMainRsyslogsgidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+        ],
+        "SubnetId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcSharedServicesMainsubnetSharedServicesAppCidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::NetworkInterface",
     },
     "SsmParamAcceleratorVersionFF83282D": {
       "Properties": {

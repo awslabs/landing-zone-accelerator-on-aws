@@ -85,7 +85,7 @@ export class CustomizationsConfigValidator {
     );
 
     // Validate firewalls
-    new FirewallValidator(values, networkConfig, securityConfig, configDir, helpers, errors);
+    new FirewallValidator(values, networkConfig, securityConfig, accountsConfig, configDir, helpers, errors);
 
     if (errors.length) {
       throw new Error(`${CustomizationsConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
@@ -1066,26 +1066,28 @@ class FirewallValidator {
     values: CustomizationsConfig,
     networkConfig: NetworkConfig,
     securityConfig: SecurityConfig,
+    accountsConfig: AccountsConfig,
     configDir: string,
     helpers: CustomizationHelperMethods,
     errors: string[],
   ) {
     // Validate firewall instances
-    this.validateFirewalls(values, networkConfig, securityConfig, configDir, helpers, errors);
+    this.validateFirewalls(values, networkConfig, securityConfig, accountsConfig, configDir, helpers, errors);
   }
 
   private validateFirewalls(
     values: CustomizationsConfig,
     networkConfig: NetworkConfig,
     securityConfig: SecurityConfig,
+    accountsConfig: AccountsConfig,
     configDir: string,
     helpers: CustomizationHelperMethods,
     errors: string[],
   ) {
     // Validate firewall instance configs
-    this.validateFirewallInstances(values, helpers, configDir, networkConfig, securityConfig, errors);
+    this.validateFirewallInstances(values, helpers, configDir, networkConfig, securityConfig, accountsConfig, errors);
     // Validate firewall ASG configs
-    this.validateFirewallAsgs(values, helpers, configDir, networkConfig, securityConfig, errors);
+    this.validateFirewallAsgs(values, helpers, configDir, networkConfig, securityConfig, accountsConfig, errors);
     // Validate firewall target groups
     this.validateFirewallTargetGroups(values, helpers, errors);
   }
@@ -1105,6 +1107,7 @@ class FirewallValidator {
     configDir: string,
     networkConfig: NetworkConfig,
     securityConfig: SecurityConfig,
+    accountsConfig: AccountsConfig,
     errors: string[],
   ) {
     const firewallInstances = [...(values.firewalls?.instances ?? []), ...(values.firewalls?.managerInstances ?? [])];
@@ -1127,7 +1130,7 @@ class FirewallValidator {
 
       // Validate launch template
       if (NetworkConfigTypes.vpcConfig.is(vpc) && firewall.launchTemplate.networkInterfaces) {
-        this.validateLaunchTemplate(vpc, firewall, configDir, securityConfig, helpers, errors);
+        this.validateLaunchTemplate(vpc, firewall, configDir, securityConfig, accountsConfig, helpers, errors);
       }
     }
   }
@@ -1138,6 +1141,7 @@ class FirewallValidator {
     configDir: string,
     networkConfig: NetworkConfig,
     securityConfig: SecurityConfig,
+    accountsConfig: AccountsConfig,
     errors: string[],
   ) {
     for (const group of values.firewalls?.autoscalingGroups ?? []) {
@@ -1166,7 +1170,7 @@ class FirewallValidator {
 
       // Validate launch template
       if (NetworkConfigTypes.vpcConfig.is(vpc)) {
-        this.validateLaunchTemplate(vpc, group, configDir, securityConfig, helpers, errors);
+        this.validateLaunchTemplate(vpc, group, configDir, securityConfig, accountsConfig, helpers, errors);
         this.validateAsgTargetGroups(values, group, errors);
       }
     }
@@ -1250,13 +1254,14 @@ class FirewallValidator {
       | t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallAutoScalingGroupConfig>,
     configDir: string,
     securityConfig: SecurityConfig,
+    accountsConfig: AccountsConfig,
     helpers: CustomizationHelperMethods,
     errors: string[],
   ) {
     // Validate security groups
     this.validateLaunchTemplateSecurityGroups(vpc, firewall, helpers, errors);
     // Validate subnets
-    this.validateLaunchTemplateSubnets(vpc, firewall, helpers, errors);
+    this.validateLaunchTemplateSubnets(vpc, firewall, helpers, accountsConfig, errors);
     // Validate IAM instance profile
     this.validateIamInstanceProfile(vpc, firewall, helpers, errors);
     // Validate block devices
@@ -1356,10 +1361,11 @@ class FirewallValidator {
       | t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallInstanceConfig>
       | t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallAutoScalingGroupConfig>,
     helpers: CustomizationHelperMethods,
+    accountsConfig: AccountsConfig,
     errors: string[],
   ) {
     if (CustomizationsConfigTypes.ec2FirewallInstanceConfig.is(firewall)) {
-      this.validateInstanceLaunchTemplateSubnets(vpc, firewall, helpers, errors);
+      this.validateInstanceLaunchTemplateSubnets(vpc, firewall, helpers, accountsConfig, errors);
     }
     if (CustomizationsConfigTypes.ec2FirewallAutoScalingGroupConfig.is(firewall)) {
       this.validateAsgLaunchTemplateSubnets(vpc, firewall, helpers, errors);
@@ -1377,6 +1383,7 @@ class FirewallValidator {
     vpc: VpcConfig,
     firewall: t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallInstanceConfig>,
     helpers: CustomizationHelperMethods,
+    accountsConfig: AccountsConfig,
     errors: string[],
   ) {
     // Validate a subnet is associated with each network interface
@@ -1389,6 +1396,8 @@ class FirewallValidator {
     const interfaceSubnets = firewall.launchTemplate.networkInterfaces!.map(interfaceItem => {
       return interfaceItem.subnetId!;
     });
+    // Subnet configs
+    const subnets: t.TypeOf<typeof NetworkConfigTypes.subnetConfig>[] = [];
     const subnetsExist = helpers.checkSubnetsInConfig(interfaceSubnets, vpc);
     if (!subnetsExist) {
       errors.push(
@@ -1398,7 +1407,6 @@ class FirewallValidator {
     // Validate subnet AZs
     if (subnetsExist) {
       // Retrieve subnet configs
-      const subnets: t.TypeOf<typeof NetworkConfigTypes.subnetConfig>[] = [];
       interfaceSubnets.forEach(subnet => subnets.push(vpc.subnets!.find(item => item.name === subnet)!));
 
       // Map AZs
@@ -1412,6 +1420,24 @@ class FirewallValidator {
         );
       }
     }
+    const isFirewallLocal = !firewall.account || vpc.account === firewall.account;
+    if (isFirewallLocal) {
+      // No more validations to perform
+      return;
+    }
+    const invalidInterfaceSubnets: string[] = [];
+    subnets.map(
+      subnet =>
+        !CommonValidatorFunctions.getAccountNamesFromTargets(
+          accountsConfig,
+          (subnet.shareTargets ?? {}) as t.ShareTargets,
+        ).includes(firewall.account!) && invalidInterfaceSubnets.push(subnet.name),
+    );
+    invalidInterfaceSubnets.forEach(subnetName =>
+      errors.push(
+        `[Firewall instance ${firewall.name}]: launch template network interface references Subnet ${subnetName} does not share to Account ${firewall.account}`,
+      ),
+    );
   }
 
   /**
