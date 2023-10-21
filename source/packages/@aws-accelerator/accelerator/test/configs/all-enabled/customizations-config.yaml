@@ -616,7 +616,7 @@ firewalls:
       vpc: SharedServices-Main
     - name: firewall-with-shared-subnet
       launchTemplate:
-        name: firewall-lt
+        name: shared-subnet-firewall-lt
         blockDeviceMappings:
           - deviceName: /dev/xvda
             ebs:
