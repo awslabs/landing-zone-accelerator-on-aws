@@ -29,23 +29,16 @@ export interface SolutionHelperProps {
 export class SolutionHelper extends Construct {
   constructor(scope: Construct, id: string, props: SolutionHelperProps) {
     super(scope, id);
-    const sendAnonymousDataToAWS = new cdk.CfnParameter(this, 'SendAnonymousDataToAWS', {
-      type: 'String',
-      allowedValues: ['Yes', 'No'],
-      default: 'Yes',
-      description: 'Whether to send anonymous data to AWS',
-    });
-
     const metricsMapping = new cdk.CfnMapping(this, 'AnonymousData', {
       mapping: {
         SendAnonymizedData: {
-          Data: sendAnonymousDataToAWS.valueAsString,
+          Data: props.sendAnonymousDataToAWS.valueAsString,
         },
       },
     });
 
     const metricsCondition = new cdk.CfnCondition(this, 'AnonymousDataToAWS', {
-      expression: cdk.Fn.conditionEquals(metricsMapping.findInMap('SendAnonymizedData', 'Data'), sendAnonymousDataToAWS.valueAsString),
+      expression: cdk.Fn.conditionEquals(metricsMapping.findInMap('SendAnonymizedData', 'Data'), 'Yes'),
     });
 
     const helperFunction = new lambda.Function(this, 'SolutionHelper', {
