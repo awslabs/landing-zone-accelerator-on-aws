@@ -560,7 +560,6 @@ export class AcceleratorToolkit {
         break;
       case AcceleratorStage.NETWORK_ASSOCIATIONS:
         stackName = [
-          `${AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS]}-${options.accountId}-${options.region}`,
           `${AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS_GWLB]}-${options.accountId}-${options.region}`,
         ];
         break;
