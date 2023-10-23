@@ -561,6 +561,11 @@ firewalls:
     - name: accelerator-firewall
       configFile: instance-config.txt
       licenseFile: license.lic
+      staticReplacements:
+        - key: CORP_CIDR_1
+          value: 10.0.0.0/16
+        - key: CORP_CIDR_2
+          value: 192.168.0.0/16
       launchTemplate:
         name: firewall-lt
         blockDeviceMappings:

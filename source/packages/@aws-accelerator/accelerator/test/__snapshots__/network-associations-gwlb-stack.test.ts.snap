@@ -728,6 +728,16 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
         },
         "licenseFile": "license.lic",
         "roleName": "AWSAccelerator-CrossAccount-SiteToSiteVpn-Role",
+        "staticReplacements": [
+          {
+            "key": "CORP_CIDR_1",
+            "value": "10.0.0.0/16",
+          },
+          {
+            "key": "CORP_CIDR_2",
+            "value": "192.168.0.0/16",
+          },
+        ],
         "vpcId": {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
