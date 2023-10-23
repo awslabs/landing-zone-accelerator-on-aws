@@ -460,6 +460,11 @@ export class CustomizationsConfigTypes {
     serviceCatalogPortfolios: t.optional(t.array(this.portfolioConfig)),
   });
 
+  static readonly firewallStaticReplacementsConfig = t.interface({
+    key: t.nonEmptyString,
+    value: t.nonEmptyString,
+  });
+
   static readonly ec2FirewallInstanceConfig = t.interface({
     name: t.nonEmptyString,
     launchTemplate: this.launchTemplateConfig,
@@ -468,6 +473,7 @@ export class CustomizationsConfigTypes {
     configFile: t.optional(t.nonEmptyString),
     detailedMonitoring: t.optional(t.boolean),
     licenseFile: t.optional(t.nonEmptyString),
+    staticReplacements: t.optional(t.array(this.firewallStaticReplacementsConfig)),
     terminationProtection: t.optional(t.boolean),
     tags: t.optional(t.array(t.tag)),
   });
@@ -480,6 +486,7 @@ export class CustomizationsConfigTypes {
     account: t.optional(t.nonEmptyString),
     configFile: t.optional(t.nonEmptyString),
     licenseFile: t.optional(t.nonEmptyString),
+    staticReplacements: t.optional(t.array(this.firewallStaticReplacementsConfig)),
     tags: t.optional(t.array(t.tag)),
   });
 
@@ -495,6 +502,27 @@ export class CustomizationsConfigTypes {
     applications: t.optional(t.array(this.appConfigItem)),
     firewalls: t.optional(this.ec2FirewallConfig),
   });
+}
+/**
+ * *{@link CustomizationsConfig} / {@link Ec2FirewallConfig} / {@link Ec2FirewallInstanceConfig} | {@link Ec2FirewallAutoScalingGroupConfig} / {@link FirewallStaticReplacementsConfig}*
+ *
+ * @example
+ * ```
+ * - key: CORP_CIDR_RANGE
+ *   value: 10.0.0.0/16
+ * ```
+ */
+export class FirewallStaticReplacementsConfig
+  implements t.TypeOf<typeof CustomizationsConfigTypes.firewallStaticReplacementsConfig>
+{
+  /**
+   * The key name for the static replacement
+   */
+  readonly key: string = '';
+  /**
+   * The value of the static replacement
+   */
+  readonly value: string = '';
 }
 
 /**
@@ -670,6 +698,21 @@ export class Ec2FirewallInstanceConfig implements t.TypeOf<typeof Customizations
    */
   readonly licenseFile: string | undefined = undefined;
   /**
+   * (OPTIONAL) Static firewall configuration replacements definition.
+   *
+   * @remarks
+   * Use this property to define static key/value pairs that can be referenced as variables in firewall configuration files.
+   *
+   * If setting this property, the `configFile` property MUST also be set.
+   *
+   * Replacement syntax:
+   * * Format: `${ACCEL_LOOKUP::CUSTOM:<KEY>}`, where `<KEY>` is the key name for the replacement as defined in `customizations-config.yaml`.
+   * * Example usage: `${ACCEL_LOOKUP::CUSTOM:CORP_CIDR_RANGE}` - translates to the static value entered for CORP_CIDR_RANGE.
+   *
+   * @see {@link Ec2FirewallInstanceConfig.configFile}
+   */
+  readonly staticReplacements: FirewallStaticReplacementsConfig[] | undefined = undefined;
+  /**
    * (OPTIONAL) If you set this parameter to true , you can't terminate the instance using the Amazon EC2 console, CLI, or API.
    *
    * More information: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingDisableAPITermination
@@ -833,6 +876,21 @@ export class Ec2FirewallAutoScalingGroupConfig
    * * For replacements that are supported in firewall userdata, see {@link LaunchTemplateConfig.userData}.
    */
   readonly licenseFile: string | undefined = undefined;
+  /**
+   * (OPTIONAL) Static firewall configuration replacements definition.
+   *
+   * @remarks
+   * Use this property to define static key/value pairs that can be referenced as replacement variables in firewall configuration files.
+   *
+   * If setting this property, the `configFile` property MUST also be set.
+   *
+   * Replacement syntax:
+   * * Format: `${ACCEL_LOOKUP::CUSTOM:<KEY>}`, where `<KEY>` is the key name for the replacement as defined in `customizations-config.yaml`.
+   * * Example usage: `${ACCEL_LOOKUP::CUSTOM:CORP_CIDR_RANGE}` - translates to the static value entered for CORP_CIDR_RANGE.
+   *
+   * @see {@link Ec2FirewallAutoScalingGroupConfig.configFile}
+   */
+  readonly staticReplacements: FirewallStaticReplacementsConfig[] | undefined = undefined;
   /**
    * (OPTIONAL) An array of tags
    */

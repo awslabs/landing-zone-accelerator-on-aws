@@ -26,6 +26,8 @@ import {
   ApplicationLoadBalancerConfig,
   TargetGroupItemConfig,
   NetworkLoadBalancerConfig,
+  Ec2FirewallInstanceConfig,
+  Ec2FirewallAutoScalingGroupConfig,
 } from '../lib/customizations-config';
 import { GlobalConfig } from '../lib/global-config';
 import { IamConfig } from '../lib/iam-config';
@@ -1131,7 +1133,24 @@ class FirewallValidator {
       // Validate launch template
       if (NetworkConfigTypes.vpcConfig.is(vpc) && firewall.launchTemplate.networkInterfaces) {
         this.validateLaunchTemplate(vpc, firewall, configDir, securityConfig, accountsConfig, helpers, errors);
+        this.validateReplacementConfig(firewall, errors);
       }
+    }
+  }
+
+  /**
+   * Checks if the object structure is correct when static replacements are defined
+   * @param firewall Ec2FirewallInstanceConfig | Ec2FirewallAutoScalingGroupConfig
+   * @param errors string[]
+   */
+  private validateReplacementConfig(
+    firewall: Ec2FirewallInstanceConfig | Ec2FirewallAutoScalingGroupConfig,
+    errors: string[],
+  ) {
+    if (firewall.staticReplacements && !firewall.configFile) {
+      errors.push(
+        `[Firewall ${firewall.name}]: configFile property must be set when defining static firewall replacements configuration`,
+      );
     }
   }
 
@@ -1171,6 +1190,7 @@ class FirewallValidator {
       // Validate launch template
       if (NetworkConfigTypes.vpcConfig.is(vpc)) {
         this.validateLaunchTemplate(vpc, group, configDir, securityConfig, accountsConfig, helpers, errors);
+        this.validateReplacementConfig(group, errors);
         this.validateAsgTargetGroups(values, group, errors);
       }
     }

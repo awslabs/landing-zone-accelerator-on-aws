@@ -25,6 +25,7 @@ import {
 } from '@aws-sdk/client-ec2';
 import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
 import { IPv4CidrRange } from 'ip-num';
+import { FirewallReplacementOptions, IStaticReplacements } from './index';
 
 /**
  * Describes a network interface
@@ -206,6 +207,193 @@ export interface VpnConnectionProps {
 }
 
 /**
+ * Describes the regex patterns for replacement variables
+ */
+interface IReplacementRegex {
+  /**
+   * Hostname replacement regex
+   */
+  hostname: RegExp;
+  /**
+   * ENI match regex
+   */
+  eni: RegExp;
+  /**
+   * ENI private IP replacement regex
+   *
+   * @example
+   * ${ACCEL_LOOKUP::EC2:ENI_0:PRIVATEIP_0}
+   */
+  eniPrivateIp: RegExp;
+  /**
+   * ENI public IP replacement regex
+   *
+   * @example
+   * ${ACCEL_LOOKUP::EC2:ENI_0:PUBLICIP_0}
+   */
+  eniPublicIp: RegExp;
+  /**
+   * ENI subnet CIDR replacement regex
+   *
+   * @example
+   * ${ACCEL_LOOKUP::EC2:ENI_0:SUBNET_CIDR}
+   */
+  eniSubnetCidr: RegExp;
+  /**
+   * ENI subnet mask replacement regex
+   *
+   * @example
+   * ${ACCEL_LOOKUP::EC2:ENI_0:SUBNET_NETMASK}
+   */
+  eniSubnetMask: RegExp;
+  /**
+   * ENI subnet network IP replacement regex
+   *
+   * @example
+   * ${ACCEL_LOOKUP::EC2:ENI_0:SUBNET_NETWORKIP}
+   */
+  eniSubnetNetIp: RegExp;
+  /**
+   * ENI subnet router IP replacement regex
+   *
+   * @example
+   * ${ACCEL_LOOKUP::EC2:ENI_0:SUBNET_ROUTERIP}
+   */
+  eniSubnetRouterIp: RegExp;
+  /**
+   * Custom static replacement regex
+   *
+   * @example
+   * ${ACCEL_LOOKUP::CUSTOM:KEY}
+   */
+  static: RegExp;
+  /**
+   * Subnet match regex
+   */
+  subnet: RegExp;
+  /**
+   * Subnet CIDR regex
+   *
+   * @example
+   * ${ACCEL_LOOKUP::EC2:SUBNET:CIDR:subnetName}
+   */
+  subnetCidr: RegExp;
+  /**
+   * Subnet netmask replacement regex
+   *
+   * @example
+   * ${ACCEL_LOOKUP::EC2:SUBNET:NETMASK:subnetName}
+   */
+  subnetMask: RegExp;
+  /**
+   * Subnet network IP replacement regex
+   *
+   * @example
+   * ${ACCEL_LOOKUP::EC2:SUBNET:NETWORKIP:subnetName}
+   */
+  subnetNetIp: RegExp;
+  /**
+   * Subnet router IP replacement regex
+   *
+   * @example
+   * ${ACCEL_LOOKUP::EC2:SUBNET:ROUTERIP:subnetName}
+   */
+  subnetRouterIp: RegExp;
+  /**
+   * VPC match regex
+   */
+  vpc: RegExp;
+  /**
+   * VPC CIDR replacement regex
+   *
+   * @example
+   * ${ACCEL_LOOKUP::EC2:VPC:CIDR_0}
+   */
+  vpcCidr: RegExp;
+  /**
+   * VPC netmask replacement regex
+   *
+   * @example
+   * ${ACCEL_LOOKUP::EC2:VPC:NETMASK_0}
+   */
+  vpcNetmask: RegExp;
+  /**
+   * VPC network IP replacement regex
+   *
+   * @example
+   * ${ACCEL_LOOKUP::EC2:VPC:NETWORKIP_0}
+   */
+  vpcNetIp: RegExp;
+  /**
+   * VPC router IP replacement regex
+   *
+   * @example
+   * ${ACCEL_LOOKUP::EC2:VPC:ROUTERIP_0}
+   */
+  vpcRouterIp: RegExp;
+  /**
+   * VPN match regex
+   */
+  vpn: RegExp;
+  /**
+   * VPN AWS BGP ASN
+   *
+   * @example
+   * ${ACCEL_LOOKUP::EC2:VPN:AWS_BGPASN:vpnName}
+   */
+  vpnAwsBgpAsn: RegExp;
+  /**
+   * VPN tunnel AWS inside IP
+   *
+   * @example ${ACCEL_LOOKUP::EC2:VPN:AWS_INSIDEIP_0:vpnName}
+   */
+  vpnAwsInsideIp: RegExp;
+  /**
+   * VPN tunnel AWS outside IP
+   *
+   * @example ${ACCEL_LOOKUP::EC2:VPN:AWS_OUTSIDEIP_0:vpnName}
+   */
+  vpnAwsOutsideIp: RegExp;
+  /**
+   * VPN CGW BGP ASN
+   *
+   * @example
+   * ${ACCEL_LOOKUP::EC2:VPN:CGW_BGPASN:vpnName}
+   */
+  vpnCgwBgpAsn: RegExp;
+  /**
+   * VPN tunnel CGW inside IP
+   *
+   * @example ${ACCEL_LOOKUP::EC2:VPN:CGW_INSIDEIP_0:vpnName}
+   */
+  vpnCgwInsideIp: RegExp;
+  /**
+   * VPN tunnel CGW outside IP
+   *
+   * @example ${ACCEL_LOOKUP::EC2:VPN:CGW_OUTSIDEIP:vpnName}
+   */
+  vpnCgwOutsideIp: RegExp;
+  /**
+   * VPN tunnel inside CIDR
+   *
+   * @example ${ACCEL_LOOKUP::EC2:VPN:INSIDE_CIDR_0:vpnName}
+   */
+  vpnInsideCidr: RegExp;
+  /**
+   * VPN inside netmask
+   *
+   * @example ${ACCEL_LOOKUP::EC2:VPN:INSIDE_NETMASK_0:vpnName}
+   */
+  vpnInsideNetmask: RegExp;
+  /**
+   * VPN tunnel pre-shared key
+   *
+   * @example ${ACCEL_LOOKUP::EC2:VPN:PSK_0:vpnName}
+   */
+  vpnPsk: RegExp;
+}
+
+/**
  * Describes a VPC with third-party firewall resources
  */
 interface IFirewallReplacements {
@@ -216,182 +404,7 @@ interface IFirewallReplacements {
   /**
    * The replacement regex patterns
    */
-  readonly replacementRegex: {
-    /**
-     * Hostname replacement regex
-     */
-    hostname: RegExp;
-    /**
-     * ENI match regex
-     */
-    eni: RegExp;
-    /**
-     * ENI private IP replacement regex
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:ENI_0:PRIVATEIP_0}
-     */
-    eniPrivateIp: RegExp;
-    /**
-     * ENI public IP replacement regex
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:ENI_0:PUBLICIP_0}
-     */
-    eniPublicIp: RegExp;
-    /**
-     * ENI subnet CIDR replacement regex
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:ENI_0:SUBNET_CIDR}
-     */
-    eniSubnetCidr: RegExp;
-    /**
-     * ENI subnet mask replacement regex
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:ENI_0:SUBNET_NETMASK}
-     */
-    eniSubnetMask: RegExp;
-    /**
-     * ENI subnet network IP replacement regex
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:ENI_0:SUBNET_NETWORKIP}
-     */
-    eniSubnetNetIp: RegExp;
-    /**
-     * ENI subnet router IP replacement regex
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:ENI_0:SUBNET_ROUTERIP}
-     */
-    eniSubnetRouterIp: RegExp;
-    /**
-     * Subnet match regex
-     */
-    subnet: RegExp;
-    /**
-     * Subnet CIDR regex
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:SUBNET:CIDR:subnetName}
-     */
-    subnetCidr: RegExp;
-    /**
-     * Subnet netmask replacement regex
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:SUBNET:NETMASK:subnetName}
-     */
-    subnetMask: RegExp;
-    /**
-     * Subnet network IP replacement regex
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:SUBNET:NETWORKIP:subnetName}
-     */
-    subnetNetIp: RegExp;
-    /**
-     * Subnet router IP replacement regex
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:SUBNET:ROUTERIP:subnetName}
-     */
-    subnetRouterIp: RegExp;
-    /**
-     * VPC match regex
-     */
-    vpc: RegExp;
-    /**
-     * VPC CIDR replacement regex
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:VPC:CIDR_0}
-     */
-    vpcCidr: RegExp;
-    /**
-     * VPC netmask replacement regex
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:VPC:NETMASK_0}
-     */
-    vpcNetmask: RegExp;
-    /**
-     * VPC network IP replacement regex
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:VPC:NETWORKIP_0}
-     */
-    vpcNetIp: RegExp;
-    /**
-     * VPC router IP replacement regex
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:VPC:ROUTERIP_0}
-     */
-    vpcRouterIp: RegExp;
-    /**
-     * VPN match regex
-     */
-    vpn: RegExp;
-    /**
-     * VPN AWS BGP ASN
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:VPN:AWS_BGPASN:vpnName}
-     */
-    vpnAwsBgpAsn: RegExp;
-    /**
-     * VPN tunnel AWS inside IP
-     *
-     * @example ${ACCEL_LOOKUP::EC2:VPN:AWS_INSIDEIP_0:vpnName}
-     */
-    vpnAwsInsideIp: RegExp;
-    /**
-     * VPN tunnel AWS outside IP
-     *
-     * @example ${ACCEL_LOOKUP::EC2:VPN:AWS_OUTSIDEIP_0:vpnName}
-     */
-    vpnAwsOutsideIp: RegExp;
-    /**
-     * VPN CGW BGP ASN
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:VPN:CGW_BGPASN:vpnName}
-     */
-    vpnCgwBgpAsn: RegExp;
-    /**
-     * VPN tunnel CGW inside IP
-     *
-     * @example ${ACCEL_LOOKUP::EC2:VPN:CGW_INSIDEIP_0:vpnName}
-     */
-    vpnCgwInsideIp: RegExp;
-    /**
-     * VPN tunnel CGW outside IP
-     *
-     * @example ${ACCEL_LOOKUP::EC2:VPN:CGW_OUTSIDEIP:vpnName}
-     */
-    vpnCgwOutsideIp: RegExp;
-    /**
-     * VPN tunnel inside CIDR
-     *
-     * @example ${ACCEL_LOOKUP::EC2:VPN:INSIDE_CIDR_0:vpnName}
-     */
-    vpnInsideCidr: RegExp;
-    /**
-     * VPN inside netmask
-     *
-     * @example ${ACCEL_LOOKUP::EC2:VPN:INSIDE_NETMASK_0:vpnName}
-     */
-    vpnInsideNetmask: RegExp;
-    /**
-     * VPN tunnel pre-shared key
-     *
-     * @example ${ACCEL_LOOKUP::EC2:VPN:PSK_0:vpnName}
-     */
-    vpnPsk: RegExp;
-  };
+  readonly replacementRegex: IReplacementRegex;
   /**
    * The name of the firewall instance
    */
@@ -400,6 +413,18 @@ interface IFirewallReplacements {
    * The ID of the firewall instance
    */
   readonly instanceId?: string;
+  /**
+   * The role name used for cross-account VPN lookups
+   */
+  readonly roleName?: string;
+  /**
+   * Static key/value pair replacements defined for the firewall
+   */
+  readonly staticReplacements?: IStaticReplacements[];
+  /**
+   * VPN connection properties for VPN connections associated with this firewall
+   */
+  readonly vpnConnectionProps?: VpnConnectionProps[];
 }
 
 enum FirewallReplacementType {
@@ -456,6 +481,13 @@ enum FirewallReplacementType {
    * ${ACCEL_LOOKUP::EC2:INSTANCE:HOSTNAME}
    */
   HOSTNAME = '^\\${ACCEL_LOOKUP::EC2:INSTANCE:HOSTNAME}$',
+  /**
+   * Custom static replacement regex
+   *
+   * @example
+   * ${ACCEL_LOOKUP::CUSTOM:KEY}
+   */
+  STATIC = '^\\${ACCEL_LOOKUP::CUSTOM:.+}$',
   /**
    * Subnet match regex
    */
@@ -590,188 +622,30 @@ export class FirewallReplacements implements IFirewallReplacements {
   private networkInterfaces: NetworkInterface[] = [];
   private subnets: Subnet[] = [];
   private vpnConnections: VpnConnection[] = [];
-  public readonly replacementRegex: {
-    /**
-     * ENI match regex
-     */
-    eni: RegExp;
-    /**
-     * ENI private IP replacement regex
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:ENI_0:PRIVATEIP_0}
-     */
-    eniPrivateIp: RegExp;
-    /**
-     * ENI public IP replacement regex
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:ENI_0:PUBLICIP_0}
-     */
-    eniPublicIp: RegExp;
-    /**
-     * ENI subnet CIDR replacement regex
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:ENI_0:SUBNET_CIDR}
-     */
-    eniSubnetCidr: RegExp;
-    /**
-     * ENI subnet mask replacement regex
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:ENI_0:SUBNET_NETMASK}
-     */
-    eniSubnetMask: RegExp;
-    /**
-     * ENI subnet network IP replacement regex
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:ENI_0:SUBNET_NETWORKIP}
-     */
-    eniSubnetNetIp: RegExp;
-    /**
-     * ENI subnet router IP replacement regex
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:ENI_0:SUBNET_ROUTERIP}
-     */
-    eniSubnetRouterIp: RegExp;
-    /**
-     * Hostname replacement regex
-     */
-    hostname: RegExp;
-    /**
-     * Subnet match regex
-     */
-    subnet: RegExp;
-    /**
-     * Subnet CIDR regex
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:SUBNET:CIDR:subnetName}
-     */
-    subnetCidr: RegExp;
-    /**
-     * Subnet netmask replacement regex
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:SUBNET:NETMASK:subnetName}
-     */
-    subnetMask: RegExp;
-    /**
-     * Subnet network IP replacement regex
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:SUBNET:NETWORKIP:subnetName}
-     */
-    subnetNetIp: RegExp;
-    /**
-     * Subnet router IP replacement regex
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:SUBNET:ROUTERIP:subnetName}
-     */
-    subnetRouterIp: RegExp;
-    /**
-     * VPC match regex
-     */
-    vpc: RegExp;
-    /**
-     * VPC CIDR replacement regex
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:VPC:CIDR_0}
-     */
-    vpcCidr: RegExp;
-    /**
-     * VPC netmask replacement regex
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:VPC:NETMASK_0}
-     */
-    vpcNetmask: RegExp;
-    /**
-     * VPC network IP replacement regex
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:VPC:NETWORKIP_0}
-     */
-    vpcNetIp: RegExp;
-    /**
-     * VPC router IP replacement regex
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:VPC:ROUTERIP_0}
-     */
-    vpcRouterIp: RegExp;
-    /**
-     * VPN match regex
-     */
-    vpn: RegExp;
-    /**
-     * VPN AWS BGP ASN
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:VPN:AWS_BGPASN:vpnName}
-     */
-    vpnAwsBgpAsn: RegExp;
-    /**
-     * VPN tunnel AWS inside IP
-     *
-     * @example ${ACCEL_LOOKUP::EC2:VPN:AWS_INSIDEIP_0:vpnName}
-     */
-    vpnAwsInsideIp: RegExp;
-    /**
-     * VPN tunnel AWS outside IP
-     *
-     * @example ${ACCEL_LOOKUP::EC2:VPN:AWS_OUTSIDEIP_0:vpnName}
-     */
-    vpnAwsOutsideIp: RegExp;
-    /**
-     * VPN CGW BGP ASN
-     *
-     * @example
-     * ${ACCEL_LOOKUP::EC2:VPN:CGW_BGPASN:vpnName}
-     */
-    vpnCgwBgpAsn: RegExp;
-    /**
-     * VPN tunnel CGW inside IP
-     *
-     * @example ${ACCEL_LOOKUP::EC2:VPN:CGW_INSIDEIP_0:vpnName}
-     */
-    vpnCgwInsideIp: RegExp;
-    /**
-     * VPN tunnel CGW outside IP
-     *
-     * @example ${ACCEL_LOOKUP::EC2:VPN:CGW_OUTSIDEIP:vpnName}
-     */
-    vpnCgwOutsideIp: RegExp;
-    /**
-     * VPN tunnel inside CIDR
-     *
-     * @example ${ACCEL_LOOKUP::EC2:VPN:INSIDE_CIDR_0:vpnName}
-     */
-    vpnInsideCidr: RegExp;
-    /**
-     * VPN inside netmask
-     *
-     * @example ${ACCEL_LOOKUP::EC2:VPN:INSIDE_NETMASK_0:vpnName}
-     */
-    vpnInsideNetmask: RegExp;
-    /**
-     * VPN tunnel pre-shared key
-     *
-     * @example ${ACCEL_LOOKUP::EC2:VPN:PSK_0:vpnName}
-     */
-    vpnPsk: RegExp;
-  };
+  public readonly replacementRegex: IReplacementRegex;
   public readonly vpcId: string;
   public readonly firewallName?: string;
   public readonly instanceId?: string;
+  public readonly roleName?: string;
+  public readonly staticReplacements?: IStaticReplacements[];
+  public readonly vpnConnectionProps?: VpnConnectionProps[];
 
-  constructor(vpcId: string, firewallName?: string, instanceId?: string) {
-    this.replacementRegex = {
+  constructor(options: FirewallReplacementOptions) {
+    this.replacementRegex = this.setReplacementRegex();
+    this.vpcId = options.vpcId;
+    this.firewallName = options.firewallName;
+    this.instanceId = options.instanceId;
+    this.roleName = options.roleName;
+    this.staticReplacements = options.staticReplacements;
+    this.vpnConnectionProps = options.vpnConnectionProps;
+  }
+
+  /**
+   * Set replacement regex patterns
+   * @returns IReplacementRegex
+   */
+  private setReplacementRegex(): IReplacementRegex {
+    return {
       eni: new RegExp(FirewallReplacementType.ENI, 'i'),
       eniPrivateIp: new RegExp(FirewallReplacementType.ENI_PRIVATEIP, 'i'),
       eniPublicIp: new RegExp(FirewallReplacementType.ENI_PUBLICIP, 'i'),
@@ -780,6 +654,7 @@ export class FirewallReplacements implements IFirewallReplacements {
       eniSubnetNetIp: new RegExp(FirewallReplacementType.ENI_SUBNET_NETWORK_IP, 'i'),
       eniSubnetRouterIp: new RegExp(FirewallReplacementType.ENI_SUBNET_ROUTER_IP, 'i'),
       hostname: new RegExp(FirewallReplacementType.HOSTNAME, 'i'),
+      static: new RegExp(FirewallReplacementType.STATIC, 'i'),
       subnet: new RegExp(FirewallReplacementType.SUBNET, 'i'),
       subnetCidr: new RegExp(FirewallReplacementType.SUBNET_CIDR, 'i'),
       subnetMask: new RegExp(FirewallReplacementType.SUBNET_NETMASK, 'i'),
@@ -801,24 +676,15 @@ export class FirewallReplacements implements IFirewallReplacements {
       vpnInsideNetmask: new RegExp(FirewallReplacementType.VPN_INSIDE_NETMASK, 'i'),
       vpnPsk: new RegExp(FirewallReplacementType.VPN_PSK, 'i'),
     };
-    this.vpcId = vpcId;
-    this.firewallName = firewallName;
-    this.instanceId = instanceId;
   }
 
   /**
    * Initialize the VPC replacements object
    * @param ec2Client EC2Client
    * @param serviceToken string
-   * @param roleName string | undefined
-   * @param vpnConnections VpnConnectionProps[] | undefined
+   * @returns Promise<FirewallReplacements>
    */
-  public async init(
-    ec2Client: EC2Client,
-    serviceToken: string,
-    roleName?: string,
-    vpnConnections?: VpnConnectionProps[],
-  ): Promise<FirewallReplacements> {
+  public async init(ec2Client: EC2Client, serviceToken: string): Promise<FirewallReplacements> {
     //
     // Set VPC CIDR details
     await this.setVpcCidrDetails(ec2Client);
@@ -832,9 +698,9 @@ export class FirewallReplacements implements IFirewallReplacements {
     }
     //
     // Set up VPN replacements
-    for (const vpnItem of vpnConnections ?? []) {
+    for (const vpnItem of this.vpnConnectionProps ?? []) {
       const vpn = new VpnConnection(vpnItem);
-      this.vpnConnections.push(await vpn.init(vpnItem, serviceToken, roleName));
+      this.vpnConnections.push(await vpn.init(vpnItem, serviceToken, this.roleName));
     }
 
     return this;
@@ -1088,6 +954,23 @@ export class FirewallReplacements implements IFirewallReplacements {
   }
 
   /**
+   * Accessor method to retrieve a static replacement value
+   * @param keyName string
+   * @returns string
+   */
+  public getStaticReplacementByName(keyName: string): string {
+    const replacement = this.staticReplacements?.find(staticItem => staticItem.key === keyName);
+
+    if (!replacement) {
+      throw new Error(
+        `Static replacement with key name ${keyName} is not defined for this firewall in customizations-config.yaml`,
+      );
+    }
+
+    return replacement.value;
+  }
+
+  /**
    * Accessor method to get a subnet by ID
    * @param subnetId string
    * @returns Subnet
@@ -1141,23 +1024,64 @@ export class FirewallReplacements implements IFirewallReplacements {
     const replacements: string[] = [];
 
     for (const variable of variables) {
-      if (this.replacementRegex.vpc.test(variable)) {
-        replacements.push(this.processVpcReplacement(variable));
-      } else if (this.replacementRegex.subnet.test(variable)) {
-        replacements.push(this.processSubnetReplacement(variable));
-      } else if (this.replacementRegex.eni.test(variable)) {
-        replacements.push(this.processNetworkInterfaceReplacement(variable));
-      } else if (this.replacementRegex.vpn.test(variable)) {
-        replacements.push(this.processVpnReplacement(variable));
-      } else if (this.replacementRegex.hostname.test(variable)) {
-        replacements.push(this.firewallName ?? '');
-      } else {
+      const replacement = this.processStaticReplacement(variable) ?? this.processDynamicReplacement(variable);
+
+      if (!replacement) {
         throw new Error(
           `Unable to parse replacement variable ${variable}. Please verify the variable is using the correct syntax.`,
         );
       }
+      replacements.push(replacement);
     }
     return replacements;
+  }
+
+  /**
+   * Process a static replacement variable, or return undefined if no match
+   * @param variable string
+   * @returns string | undefined
+   */
+  private processStaticReplacement(variable: string): string | undefined {
+    if (this.replacementRegex.hostname.test(variable)) {
+      return this.firewallName ?? '';
+    } else if (this.replacementRegex.static.test(variable)) {
+      return this.processCustomStaticReplacement(variable);
+    } else {
+      return;
+    }
+  }
+
+  /**
+   * Process a custom static replacement variable
+   * @param variable string
+   * @returns string
+   */
+  private processCustomStaticReplacement(variable: string): string {
+    try {
+      const keyName = variable.split(':')[3].replace('}', '');
+      return this.getStaticReplacementByName(keyName);
+    } catch (e) {
+      throw new Error(`Unable to process static replacement variable ${variable}. Error message: ${e}`);
+    }
+  }
+
+  /**
+   * Process a dynamic replacement variable, or return undefined if no match
+   * @param variable string
+   * @returns string | undefined
+   */
+  private processDynamicReplacement(variable: string): string | undefined {
+    if (this.replacementRegex.vpc.test(variable)) {
+      return this.processVpcReplacement(variable);
+    } else if (this.replacementRegex.subnet.test(variable)) {
+      return this.processSubnetReplacement(variable);
+    } else if (this.replacementRegex.eni.test(variable)) {
+      return this.processNetworkInterfaceReplacement(variable);
+    } else if (this.replacementRegex.vpn.test(variable)) {
+      return this.processVpnReplacement(variable);
+    } else {
+      return;
+    }
   }
 
   /**
@@ -1648,20 +1572,16 @@ class VpnConnection implements IVpnConnection {
 /**
  * Initialize the firewall replacements object
  * @param ec2Client EC2Client
- * @param vpcId string
- * @param instanceId string | undefined
+ * @param serviceToken string
+ * @param options FirewallReplacementOptions
  * @returns FirewallReplacements
  */
-export async function initReplacements(options: {
-  ec2Client: EC2Client;
-  serviceToken: string;
-  vpcId: string;
-  firewallName?: string;
-  instanceId?: string;
-  roleName?: string;
-  vpnConnections?: VpnConnectionProps[];
-}): Promise<FirewallReplacements> {
-  const replacements = new FirewallReplacements(options.vpcId, options.firewallName, options.instanceId);
-  await replacements.init(options.ec2Client, options.serviceToken, options.roleName, options.vpnConnections);
+export async function initReplacements(
+  ec2Client: EC2Client,
+  serviceToken: string,
+  options: FirewallReplacementOptions,
+): Promise<FirewallReplacements> {
+  const replacements = new FirewallReplacements(options);
+  await replacements.init(ec2Client, serviceToken);
   return replacements;
 }
