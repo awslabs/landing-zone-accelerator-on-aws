@@ -938,8 +938,11 @@ export function createNetworkAssociationsStacks(
     const networkAssociationsStackName = `${
       AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS]
     }-${accountId}-${enabledRegion}`;
+    const networkGwlbStackName = `${
+      AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS_GWLB]
+    }-${accountId}-${enabledRegion}`;
     const app = new cdk.App({
-      outdir: `cdk.out/${networkAssociationsStackName}`,
+      outdir: `cdk.out/${networkGwlbStackName}`,
     });
 
     const networkAssociationsStack = new NetworkAssociationsStack(app, `${networkAssociationsStackName}`, {
@@ -951,15 +954,8 @@ export function createNetworkAssociationsStacks(
     });
     addAcceleratorTags(networkAssociationsStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(networkAssociationsStack).add(new AwsSolutionsChecks());
-    new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
 
-    const networkGwlbStackName = `${
-      AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS_GWLB]
-    }-${accountId}-${enabledRegion}`;
-    const appGwlb = new cdk.App({
-      outdir: `cdk.out/${networkGwlbStackName}`,
-    });
-    const networkGwlbStack = new NetworkAssociationsGwlbStack(appGwlb, `${networkGwlbStackName}`, {
+    const networkGwlbStack = new NetworkAssociationsGwlbStack(app, networkGwlbStackName, {
       env,
       description: `(SO0199-networkgwlb) Landing Zone Accelerator on AWS. Version ${version}.`,
       synthesizer: getStackSynthesizer(props, accountId, enabledRegion, context.stage),
@@ -967,8 +963,10 @@ export function createNetworkAssociationsStacks(
       ...props,
     });
     addAcceleratorTags(networkGwlbStack, context.partition, props.globalConfig, props.prefixes.accelerator);
+    // Since shared security groups are created in networkAssociations. NetworkGwlbStack depends on NetworkAssociationsStack
+    networkGwlbStack.addDependency(networkAssociationsStack);
     cdk.Aspects.of(networkGwlbStack).add(new AwsSolutionsChecks());
-    new AcceleratorAspects(appGwlb, context.partition, context.useExistingRoles ?? false);
+    new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
 
