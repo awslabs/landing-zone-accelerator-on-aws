@@ -125,7 +125,6 @@ applications:
         - SharedServices
       excludedRegions:
         - us-west-2
-        - us-east-1
     autoscaling:
       name: appA-asg
       maxSize: 2
@@ -237,7 +236,6 @@ applications:
         - SharedServices
       excludedRegions:
         - us-west-2
-        - us-east-1
     autoscaling:
       name: testTgAsg-asg
       maxSize: 2
@@ -308,7 +306,6 @@ applications:
         - SharedServices
       excludedRegions:
         - us-west-2
-        - us-east-1
     targetGroups:
       - name: appC-nlb-tg-1
         port: 80
@@ -331,7 +328,6 @@ applications:
         - SharedServices
       excludedRegions:
         - us-west-2
-        - us-east-1
     targetGroups:
       - name: appD-nlb-tg-1
         port: 80
@@ -376,7 +372,6 @@ applications:
         - SharedServices
       excludedRegions:
         - us-west-2
-        - us-east-1
     targetGroups:
       - name: appE-nlb-tg-1
         port: 80
@@ -433,7 +428,6 @@ applications:
         - SharedServices
       excludedRegions:
         - us-west-2
-        - us-east-1
     targetGroups:
       - name: appF-nlb-tg-1
         port: 80
@@ -477,7 +471,6 @@ applications:
         - SharedServices
       excludedRegions:
         - us-west-2
-        - us-east-1
     targetGroups:
       - name: appG-nlb-tg-1
         port: 80
