@@ -365,7 +365,6 @@ export class Bucket extends Construct {
         abortIncompleteMultipartUploadAfter: cdk.Duration.days(1),
         enabled: true,
         expiration: cdk.Duration.days(1825),
-        expiredObjectDeleteMarker: false,
         id: `LifecycleRule${this.props.s3BucketName}`,
         noncurrentVersionExpiration: cdk.Duration.days(1825),
         noncurrentVersionTransitions: [
