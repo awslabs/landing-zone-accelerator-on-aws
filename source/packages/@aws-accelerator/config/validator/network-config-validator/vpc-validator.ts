@@ -33,11 +33,18 @@ import { NetworkValidatorFunctions } from './network-validator-functions';
  */
 export class VpcValidator {
   private centralEndpointVpcRegions: string[];
+
+  private sharedEndpointVpcRegionsMap: Map<string, string[]>;
+
   constructor(values: NetworkConfig, helpers: NetworkValidatorFunctions, errors: string[]) {
     //
     // Determine if there is a central endpoint VPC
     //
     this.centralEndpointVpcRegions = this.getCentralEndpointVpcs(values, helpers, errors);
+    //
+    // Determine if there are shared endpoint VPCs
+    //
+    this.sharedEndpointVpcRegionsMap = this.getSharedEndpointVpcs(values, helpers, errors);
     //
     // Validate VPC names are unique
     this.validateVpcNames(values, helpers, errors);
@@ -74,6 +81,56 @@ export class VpcValidator {
     this.validateDefaultVpcConfiguration(values, helpers, errors);
   }
 
+  private getSharedEndpointVpcs(
+    values: NetworkConfig,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+  ): Map<string, string[]> {
+    const vpcs = [...values.vpcs, ...(values.vpcTemplates ?? [])];
+    const sharedEndpointIds: string[] = [];
+    const sharedEndpointsVpcs: Map<string, VpcConfig[]> = new Map();
+    const unsupportedRegions = ['us-gov-west-1', 'us-gov-east-1'];
+    // Get VPCs marked with sharedEndpointsId; do not allow VPC templates
+    vpcs.forEach(vpc => {
+      if (vpc.interfaceEndpoints?.sharedEndpointsId !== undefined && !NetworkConfigTypes.vpcConfig.is(vpc)) {
+        errors.push(
+          `[VPC ${vpc.name}]: cannot define a VPC template as a central interface endpoint (with sharedEndpointsId) VPC`,
+        );
+      }
+
+      if (vpc.interfaceEndpoints?.sharedEndpointsId !== undefined && NetworkConfigTypes.vpcConfig.is(vpc)) {
+        let vpcconfigs = sharedEndpointsVpcs.get(vpc.interfaceEndpoints?.sharedEndpointsId);
+        if (vpcconfigs === undefined) {
+          vpcconfigs = [];
+          sharedEndpointIds.push(vpc.interfaceEndpoints?.sharedEndpointsId);
+        }
+        vpcconfigs.push(vpc);
+        sharedEndpointsVpcs.set(vpc.interfaceEndpoints?.sharedEndpointsId, vpcconfigs);
+      }
+    });
+
+    // Check regions
+    const vpcRegionsMap: Map<string, string[]> = new Map();
+    sharedEndpointIds.forEach(id => {
+      const vpcRegions: string[] = [];
+      sharedEndpointsVpcs.get(id)?.forEach(vpc => vpcRegions.push(vpc.region));
+
+      if (helpers.hasDuplicates(vpcRegions)) {
+        errors.push(
+          `More than one central endpoint (with sharedEndpointsId) VPC configured in a single region. One central endpoint VPC per region is supported. Central endpoint VPC regions configured: ${vpcRegions}`,
+        );
+      }
+      if (vpcRegions.some(region => unsupportedRegions.includes(region))) {
+        errors.push(
+          `Central endpoints VPC configured (with sharedEndpointsId) in an unsupported region. Central endpoint VPC regions configured: ${vpcRegions}`,
+        );
+      }
+      vpcRegionsMap.set(id, vpcRegions);
+    });
+
+    return vpcRegionsMap;
+  }
+
   private getCentralEndpointVpcs(
     values: NetworkConfig,
     helpers: NetworkValidatorFunctions,
@@ -87,6 +144,13 @@ export class VpcValidator {
       if (vpc.interfaceEndpoints?.central && !NetworkConfigTypes.vpcConfig.is(vpc)) {
         errors.push(`[VPC ${vpc.name}]: cannot define a VPC template as a central interface endpoint VPC`);
       }
+      // Do not allow the sharedEndpointsId to be set as well as the central property.
+      if (vpc.interfaceEndpoints?.central && vpc.interfaceEndpoints?.sharedEndpointsId !== undefined) {
+        errors.push(
+          `[VPC ${vpc.name}]: cannot define a VPC template as a central interface endpoint VPC and also define the sharedEndpointsId parameter`,
+        );
+      }
+
       if (vpc.interfaceEndpoints?.central && NetworkConfigTypes.vpcConfig.is(vpc)) {
         centralVpcs.push(vpc);
       }
@@ -801,6 +865,16 @@ export class VpcValidator {
     if (vpcItem.useCentralEndpoints && !this.centralEndpointVpcRegions.includes(vpcItem.region)) {
       allValid = false;
       errors.push(`[VPC ${vpcItem.name}]: useCentralEndpoints is true, but no central endpoint VPC defined in region`);
+    }
+    // If the VPC is using sharedEndpointsId, ensure there is a central endpoints VPC in the region which has the same Id
+    if (
+      vpcItem.sharedEndpointsId &&
+      !this.sharedEndpointVpcRegionsMap.get(vpcItem.sharedEndpointsId)?.includes(vpcItem.region)
+    ) {
+      allValid = false;
+      errors.push(
+        `[VPC ${vpcItem.name} for shared endpoints ID ${vpcItem.sharedEndpointsId}]: sharedEndpointsId is set, but no matching shared endpoint VPC defined in region`,
+      );
     }
     vpcItem.routeTables?.forEach(routeTableItem => {
       // Throw error if gateway association exists but no internet gateway
