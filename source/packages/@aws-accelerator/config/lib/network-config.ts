@@ -318,6 +318,7 @@ export class NetworkConfigTypes {
     endpoints: t.array(this.interfaceEndpointServiceConfig),
     subnets: t.array(t.nonEmptyString),
     central: t.optional(t.boolean),
+    sharedEndpointsId: t.optional(t.string),
     allowedCidrs: t.optional(t.array(t.nonEmptyString)),
   });
 
@@ -574,6 +575,7 @@ export class NetworkConfigTypes {
     ipamAllocations: t.optional(t.array(this.ipamAllocationConfig)),
     natGateways: t.optional(t.array(this.natGatewayConfig)),
     useCentralEndpoints: t.optional(t.boolean),
+    sharedEndpointsId: t.optional(t.string),
     securityGroups: t.optional(t.array(this.securityGroupConfig)),
     networkAcls: t.optional(t.array(this.networkAclConfig)),
     queryLogs: t.optional(t.array(t.nonEmptyString)),
@@ -606,6 +608,7 @@ export class NetworkConfigTypes {
     ipamAllocations: t.optional(t.array(this.ipamAllocationConfig)),
     natGateways: t.optional(t.array(this.natGatewayConfig)),
     useCentralEndpoints: t.optional(t.boolean),
+    sharedEndpointsId: t.optional(t.string),
     securityGroups: t.optional(t.array(this.securityGroupConfig)),
     networkAcls: t.optional(t.array(this.networkAclConfig)),
     queryLogs: t.optional(t.array(t.nonEmptyString)),
@@ -2968,12 +2971,28 @@ export class InterfaceEndpointConfig implements t.TypeOf<typeof NetworkConfigTyp
    * created for each of them. These hosted zones are associated with any VPCs configured
    * with the `useCentralEndpoints` property enabled.
    *
-   * **NOTE**: You may only define one centralized endpoint VPC per region.
+   * **NOTE**: You may only define one centralized endpoint VPC per region and this may not be used
+   * in conjunction with {@link sharedEndpointsId}
    *
    * For additional information on this pattern, please refer to
    * {@link https://github.com/awslabs/landing-zone-accelerator-on-aws/blob/main/FAQ.md#how-do-i-define-a-centralized-interface-endpoint-vpc | our FAQ}.
    */
   readonly central: boolean | undefined = undefined;
+  /**
+   * (OPTIONAL) Set to define interface endpoints as centralized endpoints with the given identifier.
+   *
+   * @remarks
+   * Endpoints defined as centralized endpoints will have Route 53 private hosted zones
+   * created for each of them. These hosted zones are associated with any VPCs configured
+   * with the `sharedEndpointsId` property which matches.
+   *
+   * **NOTE**: You may only define one centralized endpoint VPC per region and this may not be used
+   * in conjunction with {@link central}
+   *
+   * For additional information on this pattern, please refer to
+   * {@link https://github.com/awslabs/landing-zone-accelerator-on-aws/blob/main/FAQ.md#how-do-i-define-a-centralized-interface-endpoint-vpc | our FAQ}.
+   */
+  readonly sharedEndpointsId: string | undefined = undefined;
   /**
    * (OPTIONAL) An array of source CIDRs allowed to communicate with the endpoints.
    *
@@ -4861,6 +4880,21 @@ export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> 
   readonly useCentralEndpoints: boolean | undefined = false;
 
   /**
+   * (OPTIONAL) When set, this VPC will be configured to utilize centralized
+   * endpoints with the given identfier. This includes having the Route 53 Private
+   * Hosted Zone associated with this VPC. Centralized endpoints are configured per
+   * region, and can span to spoke accounts
+   *
+   * @remarks
+   * A VPC deployed in the same region as this VPC in network-config.yaml must be configured with {@link InterfaceEndpointConfig}
+   * `sharedEndpointsId` property matching the id set here to utilize centralized endpoints.
+   *
+   * For additional information on this pattern, please refer to
+   * {@link https://github.com/awslabs/landing-zone-accelerator-on-aws/blob/main/FAQ.md#how-do-i-define-a-centralized-interface-endpoint-vpc | our FAQ}.
+   */
+  readonly sharedEndpointsId: string | undefined = undefined;
+
+  /**
    * (OPTIONAL) A list of Security Groups to deploy for this VPC
    *
    * @default undefined
@@ -5191,6 +5225,21 @@ export class VpcTemplatesConfig implements t.TypeOf<typeof NetworkConfigTypes.vp
    * `central` property set to `true` to utilize centralized endpoints.
    */
   readonly useCentralEndpoints: boolean | undefined = false;
+
+  /**
+   * (OPTIONAL) When set, this VPC will be configured to utilize centralized
+   * endpoints with the given identfier. This includes having the Route 53 Private
+   * Hosted Zone associated with this VPC. Centralized endpoints are configured per
+   * region, and can span to spoke accounts
+   *
+   * @remarks
+   * A VPC deployed in the same region as this VPC in network-config.yaml must be configured with {@link InterfaceEndpointConfig}
+   * `sharedEndpointsId` property matching the id set here to utilize centralized endpoints.
+   *
+   * For additional information on this pattern, please refer to
+   * {@link https://github.com/awslabs/landing-zone-accelerator-on-aws/blob/main/FAQ.md#how-do-i-define-a-centralized-interface-endpoint-vpc | our FAQ}.
+   */
+  readonly sharedEndpointsId: string | undefined = undefined;
 
   /**
    * (OPTIONAL) A list of Security Groups to deploy for this VPC
