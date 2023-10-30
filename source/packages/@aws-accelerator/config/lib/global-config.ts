@@ -2055,7 +2055,7 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    *   - key: ResourceOwner
    *     value: AcmeApp
    *   - key: CostCenter
-   *     value: 123
+   *     value: '123'
    * ```
    **/
   readonly tags: t.Tag[] = [];
