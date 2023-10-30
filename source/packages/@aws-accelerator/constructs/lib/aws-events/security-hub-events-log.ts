@@ -16,6 +16,10 @@ import * as path from 'path';
 
 export interface SecurityHubEventsLogProps {
   /**
+   * Accelerator Prefix
+   */
+  readonly acceleratorPrefix: string;
+  /**
    *
    * SNS Topic Arn that notification will be delivered to
    */
@@ -53,20 +57,24 @@ export class SecurityHubEventsLog extends Construct {
     });
 
     const securityHubEventsFunction = new cdk.aws_lambda.Function(this, 'SecurityHubEventsFunction', {
-      runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'security-hub-event-log/dist')),
       handler: 'index.handler',
       memorySize: 256,
       timeout: cdk.Duration.minutes(2),
       environmentEncryption: props.lambdaKey,
-      environment: { SNS_TOPIC_ARN: props.snsTopicArn ?? '', NOTIFICATION_LEVEL: props.notificationLevel ?? '' },
+      environment: {
+        SNS_TOPIC_ARN: props.snsTopicArn ?? '',
+        NOTIFICATION_LEVEL: props.notificationLevel ?? '',
+        ACCELERATOR_PREFIX: props.acceleratorPrefix,
+      },
       initialPolicy: [
         new cdk.aws_iam.PolicyStatement({
           actions: ['logs:CreateLogGroup', 'logs:CreateLogStream'],
           resources: [
             `arn:${cdk.Stack.of(this).partition}:logs:${cdk.Stack.of(this).region}:${
               cdk.Stack.of(this).account
-            }:log-group:/AWSAccelerator*`,
+            }:log-group:/${props.acceleratorPrefix}*`,
           ],
         }),
         // Describe call needs access to entire region and account
@@ -83,7 +91,7 @@ export class SecurityHubEventsLog extends Construct {
           resources: [
             `arn:${cdk.Stack.of(this).partition}:logs:${cdk.Stack.of(this).region}:${
               cdk.Stack.of(this).account
-            }:log-group:/AWSAccelerator*:log-stream:*`,
+            }:log-group:/${props.acceleratorPrefix}*:log-stream:*`,
           ],
         }),
       ],

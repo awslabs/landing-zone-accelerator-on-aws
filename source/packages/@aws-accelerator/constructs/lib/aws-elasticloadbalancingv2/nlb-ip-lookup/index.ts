@@ -24,10 +24,12 @@ AWS.config.logger = console;
  */
 
 export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent) {
+  const region: string = event.ResourceProperties['region'];
   const targets: (string | NlbTargetTypeConfig)[] = event.ResourceProperties['targets'];
   const assumeRoleName: string = event.ResourceProperties['assumeRoleName'];
   const partition: string = event.ResourceProperties['partition'];
-  const stsClient = new AWS.STS();
+  const solutionId = process.env['SOLUTION_ID'];
+  const stsClient = new AWS.STS({ customUserAgent: solutionId, region: region });
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
@@ -101,7 +103,7 @@ async function getEniIpAddresses(ec2ClientMap: Map<string, AWS.EC2>, targets: (s
           .promise();
         const ips =
           enis.NetworkInterfaces?.map(eni => {
-            return { Id: eni.PrivateIpAddress };
+            return { Id: eni.PrivateIpAddress, AvailabilityZone: 'all' };
           }) ?? [];
         ipAddresses.push(...ips);
       }

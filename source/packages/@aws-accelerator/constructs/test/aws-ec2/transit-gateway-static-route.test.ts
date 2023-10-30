@@ -27,6 +27,14 @@ new TransitGatewayStaticRoute(stack, 'TransitGatewayStaticRoute', {
   transitGatewayAttachmentId: 'tgw-123123',
 });
 
+new TransitGatewayStaticRoute(stack, 'TransitGatewayStaticRouteCustom', {
+  transitGatewayRouteTableId: '1234',
+  blackhole: false,
+  destinationCidrBlock: '10.0.0.0/16',
+  transitGatewayAttachmentId: 'tgw-123123',
+  customResourceHandler: cdk.aws_lambda.Function.fromFunctionName(stack, 'test', 'test'),
+});
+
 /**
  * TransitGatewayStaticRoute construct test
  */

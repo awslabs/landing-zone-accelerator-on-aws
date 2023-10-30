@@ -71,7 +71,7 @@ describe('NetworkConfig', () => {
 
     it('loads from string', () => {
       const buffer = fs.readFileSync(
-        path.join('../accelerator/test/configs/all-enabled', NetworkConfig.FILENAME),
+        path.join('../accelerator/test/configs/snapshot-only', NetworkConfig.FILENAME),
         'utf8',
       );
       const networkConfigFromString = NetworkConfig.loadFromString(buffer);
@@ -117,7 +117,7 @@ describe('NetworkConfig', () => {
       expect(nfwRuleGroupRuleConfig.ruleVariables).toEqual(undefined);
 
       const nfwRuleVariableConfig = new NfwRuleVariableConfig();
-      expect(nfwRuleVariableConfig.ipSets.name).toEqual('');
+      expect(nfwRuleVariableConfig.ipSets).toEqual([{ name: '', definition: [] }]);
 
       const nfwRuleVariableDefinitionConfig = new NfwRuleVariableDefinitionConfig();
       expect(nfwRuleVariableDefinitionConfig.name).toEqual('');

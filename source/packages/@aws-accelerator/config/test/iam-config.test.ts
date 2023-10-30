@@ -49,7 +49,7 @@ describe('IamConfig', () => {
       expect(groupConfig.name).toEqual('');
 
       const policiesConfig = new PoliciesConfig();
-      expect(policiesConfig.awsManaged).toEqual([]);
+      expect(policiesConfig.awsManaged).toEqual(undefined);
 
       const userSetConfig = new UserSetConfig();
       expect(userSetConfig.users).toEqual([]);
@@ -87,7 +87,7 @@ describe('IamConfig', () => {
   });
 
   it('loads from string', () => {
-    const buffer = fs.readFileSync(path.join('../accelerator/test/configs/all-enabled', IamConfig.FILENAME), 'utf8');
+    const buffer = fs.readFileSync(path.join('../accelerator/test/configs/snapshot-only', IamConfig.FILENAME), 'utf8');
     const iamConfigFromString = IamConfig.loadFromString(buffer);
     if (!iamConfigFromString) {
       throw new Error('iamConfigFromString is not defined');

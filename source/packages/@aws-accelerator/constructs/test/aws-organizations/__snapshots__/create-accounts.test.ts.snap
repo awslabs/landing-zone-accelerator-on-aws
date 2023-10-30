@@ -1,107 +1,116 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`ReportDefinition Construct(ConfigServiceTags):  Snapshot Test 1`] = `
-Object {
-  "Mappings": Object {
-    "ServiceprincipalMap": Object {
-      "af-south-1": Object {
+{
+  "Mappings": {
+    "ServiceprincipalMap": {
+      "af-south-1": {
         "states": "states.af-south-1.amazonaws.com",
       },
-      "ap-east-1": Object {
+      "ap-east-1": {
         "states": "states.ap-east-1.amazonaws.com",
       },
-      "ap-northeast-1": Object {
+      "ap-northeast-1": {
         "states": "states.ap-northeast-1.amazonaws.com",
       },
-      "ap-northeast-2": Object {
+      "ap-northeast-2": {
         "states": "states.ap-northeast-2.amazonaws.com",
       },
-      "ap-northeast-3": Object {
+      "ap-northeast-3": {
         "states": "states.ap-northeast-3.amazonaws.com",
       },
-      "ap-south-1": Object {
+      "ap-south-1": {
         "states": "states.ap-south-1.amazonaws.com",
       },
-      "ap-southeast-1": Object {
+      "ap-south-2": {
+        "states": "states.ap-south-2.amazonaws.com",
+      },
+      "ap-southeast-1": {
         "states": "states.ap-southeast-1.amazonaws.com",
       },
-      "ap-southeast-2": Object {
+      "ap-southeast-2": {
         "states": "states.ap-southeast-2.amazonaws.com",
       },
-      "ap-southeast-3": Object {
+      "ap-southeast-3": {
         "states": "states.ap-southeast-3.amazonaws.com",
       },
-      "ca-central-1": Object {
+      "ca-central-1": {
         "states": "states.ca-central-1.amazonaws.com",
       },
-      "cn-north-1": Object {
+      "cn-north-1": {
         "states": "states.cn-north-1.amazonaws.com",
       },
-      "cn-northwest-1": Object {
+      "cn-northwest-1": {
         "states": "states.cn-northwest-1.amazonaws.com",
       },
-      "eu-central-1": Object {
+      "eu-central-1": {
         "states": "states.eu-central-1.amazonaws.com",
       },
-      "eu-north-1": Object {
+      "eu-central-2": {
+        "states": "states.eu-central-2.amazonaws.com",
+      },
+      "eu-north-1": {
         "states": "states.eu-north-1.amazonaws.com",
       },
-      "eu-south-1": Object {
+      "eu-south-1": {
         "states": "states.eu-south-1.amazonaws.com",
       },
-      "eu-south-2": Object {
+      "eu-south-2": {
         "states": "states.eu-south-2.amazonaws.com",
       },
-      "eu-west-1": Object {
+      "eu-west-1": {
         "states": "states.eu-west-1.amazonaws.com",
       },
-      "eu-west-2": Object {
+      "eu-west-2": {
         "states": "states.eu-west-2.amazonaws.com",
       },
-      "eu-west-3": Object {
+      "eu-west-3": {
         "states": "states.eu-west-3.amazonaws.com",
       },
-      "me-south-1": Object {
+      "me-central-1": {
+        "states": "states.me-central-1.amazonaws.com",
+      },
+      "me-south-1": {
         "states": "states.me-south-1.amazonaws.com",
       },
-      "sa-east-1": Object {
+      "sa-east-1": {
         "states": "states.sa-east-1.amazonaws.com",
       },
-      "us-east-1": Object {
+      "us-east-1": {
         "states": "states.us-east-1.amazonaws.com",
       },
-      "us-east-2": Object {
+      "us-east-2": {
         "states": "states.us-east-2.amazonaws.com",
       },
-      "us-gov-east-1": Object {
+      "us-gov-east-1": {
         "states": "states.us-gov-east-1.amazonaws.com",
       },
-      "us-gov-west-1": Object {
+      "us-gov-west-1": {
         "states": "states.us-gov-west-1.amazonaws.com",
       },
-      "us-iso-east-1": Object {
+      "us-iso-east-1": {
         "states": "states.amazonaws.com",
       },
-      "us-iso-west-1": Object {
+      "us-iso-west-1": {
         "states": "states.amazonaws.com",
       },
-      "us-isob-east-1": Object {
+      "us-isob-east-1": {
         "states": "states.amazonaws.com",
       },
-      "us-west-1": Object {
+      "us-west-1": {
         "states": "states.us-west-1.amazonaws.com",
       },
-      "us-west-2": Object {
+      "us-west-2": {
         "states": "states.us-west-2.amazonaws.com",
       },
     },
   },
-  "Resources": Object {
-    "CreateOrganizationAccounts49A5350C": Object {
+  "Resources": {
+    "CreateOrganizationAccounts49A5350C": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonEvent96B71A5A",
             "Arn",
           ],
@@ -111,63 +120,63 @@ Object {
       "Type": "Custom::CreateOrganizationAccounts",
       "UpdateReplacePolicy": "Delete",
     },
-    "CreateOrganizationAccountsCreateOrganizationAccountStatusBBDEFDFE": Object {
-      "DependsOn": Array [
+    "CreateOrganizationAccountsCreateOrganizationAccountStatusBBDEFDFE": {
+      "DependsOn": [
         "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRoleDefaultPolicy217D2441",
         "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Create Organization Account isComplete handler",
-        "Environment": Object {
-          "Variables": Object {
+        "Environment": {
+          "Variables": {
             "AccountRoleName": "managementAccountAccessRole",
-            "GovCloudAccountMappingTableName": Object {
+            "GovCloudAccountMappingTableName": {
               "Ref": "govCloudAccountMapping0E3D2AD8",
             },
-            "NewOrgAccountsTableName": Object {
+            "NewOrgAccountsTableName": {
               "Ref": "NewOrgAccountsE5BA262F",
             },
           },
         },
         "Handler": "index.handler",
-        "KmsKeyArn": Object {
-          "Fn::GetAtt": Array [
+        "KmsKeyArn": {
+          "Fn::GetAtt": [
             "CustomKey1E6D0D07",
             "Arn",
           ],
         },
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 300,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40": Object {
+    "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "CustomKey1E6D0D07",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CreateOrganizationAccountsCreateOrganizationAccountStatusBBDEFDFE",
               },
             ],
@@ -178,27 +187,27 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
-            "Fn::Join": Array [
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "arn:",
-                Object {
+                {
                   "Ref": "AWS::Partition",
                 },
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
@@ -209,44 +218,44 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRoleDefaultPolicy217D2441": Object {
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
+    "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRoleDefaultPolicy217D2441": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
                 "dynamodb:Scan",
                 "dynamodb:GetItem",
                 "dynamodb:DeleteItem",
                 "dynamodb:PutItem",
               ],
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
+              "Resource": {
+                "Fn::GetAtt": [
                   "NewOrgAccountsE5BA262F",
                   "Arn",
                 ],
               },
               "Sid": "DynamoDb",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:Encrypt",
                 "kms:Decrypt",
                 "kms:GenerateDataKey*",
                 "kms:DescribeKey",
               ],
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
+              "Resource": {
+                "Fn::GetAtt": [
                   "TableKeyF581D96F",
                   "Arn",
                 ],
               },
               "Sid": "KMS",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "organizations:CreateAccount",
                 "organizations:CreateGovCloudAccount",
                 "organizations:DescribeCreateAccountStatus",
@@ -257,30 +266,30 @@ Object {
               "Resource": "*",
               "Sid": "Organizations",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "dynamodb:GetItem",
                 "dynamodb:PutItem",
               ],
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
+              "Resource": {
+                "Fn::GetAtt": [
                   "govCloudAccountMapping0E3D2AD8",
                   "Arn",
                 ],
               },
               "Sid": "MappingDynamoDb",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:Encrypt",
                 "kms:Decrypt",
                 "kms:GenerateDataKey*",
                 "kms:DescribeKey",
               ],
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
+              "Resource": {
+                "Fn::GetAtt": [
                   "GovCloudTableKeyE9635728",
                   "Arn",
                 ],
@@ -291,29 +300,29 @@ Object {
           "Version": "2012-10-17",
         },
         "PolicyName": "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRoleDefaultPolicy217D2441",
-        "Roles": Array [
-          Object {
+        "Roles": [
+          {
             "Ref": "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "CreateOrganizationAccountsCreateOrganizationAccountsLogGroup00D93B3C": Object {
+    "CreateOrganizationAccountsCreateOrganizationAccountsLogGroup00D93B3C": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "CustomKey1E6D0D07",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CreateOrganizationAccountsDDA8AFE1",
               },
             ],
@@ -324,29 +333,29 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkisComplete071270AC": Object {
-      "DependsOn": Array [
+    "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkisComplete071270AC": {
+      "DependsOn": [
         "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkisCompleteServiceRoleDefaultPolicy17A8199B",
         "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkisCompleteServiceRole19A96F30",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "AWS CDK resource provider framework - isComplete (Stack/CreateOrganizationAccounts/CreateOrganizationAccountsProvider)",
-        "Environment": Object {
-          "Variables": Object {
-            "USER_IS_COMPLETE_FUNCTION_ARN": Object {
-              "Fn::GetAtt": Array [
+        "Environment": {
+          "Variables": {
+            "USER_IS_COMPLETE_FUNCTION_ARN": {
+              "Fn::GetAtt": [
                 "CreateOrganizationAccountsCreateOrganizationAccountStatusBBDEFDFE",
                 "Arn",
               ],
             },
-            "USER_ON_EVENT_FUNCTION_ARN": Object {
-              "Fn::GetAtt": Array [
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
                 "CreateOrganizationAccountsDDA8AFE1",
                 "Arn",
               ],
@@ -354,38 +363,38 @@ Object {
           },
         },
         "Handler": "framework.isComplete",
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkisCompleteServiceRole19A96F30",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs18.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkisCompleteServiceRole19A96F30": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkisCompleteServiceRole19A96F30": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
-            "Fn::Join": Array [
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "arn:",
-                Object {
+                {
                   "Ref": "AWS::Partition",
                 },
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
@@ -396,26 +405,26 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkisCompleteServiceRoleDefaultPolicy17A8199B": Object {
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkisCompleteServiceRoleDefaultPolicy17A8199B": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
               "Action": "lambda:InvokeFunction",
               "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "CreateOrganizationAccountsDDA8AFE1",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "CreateOrganizationAccountsDDA8AFE1",
                           "Arn",
                         ],
@@ -426,22 +435,22 @@ Object {
                 },
               ],
             },
-            Object {
+            {
               "Action": "lambda:InvokeFunction",
               "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "CreateOrganizationAccountsCreateOrganizationAccountStatusBBDEFDFE",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "CreateOrganizationAccountsCreateOrganizationAccountStatusBBDEFDFE",
                           "Arn",
                         ],
@@ -456,79 +465,79 @@ Object {
           "Version": "2012-10-17",
         },
         "PolicyName": "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkisCompleteServiceRoleDefaultPolicy17A8199B",
-        "Roles": Array [
-          Object {
+        "Roles": [
+          {
             "Ref": "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkisCompleteServiceRole19A96F30",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonEvent96B71A5A": Object {
-      "DependsOn": Array [
+    "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonEvent96B71A5A": {
+      "DependsOn": [
         "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonEventServiceRoleDefaultPolicy5CD1CC20",
         "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonEventServiceRole66CD01EF",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "AWS CDK resource provider framework - onEvent (Stack/CreateOrganizationAccounts/CreateOrganizationAccountsProvider)",
-        "Environment": Object {
-          "Variables": Object {
-            "USER_IS_COMPLETE_FUNCTION_ARN": Object {
-              "Fn::GetAtt": Array [
+        "Environment": {
+          "Variables": {
+            "USER_IS_COMPLETE_FUNCTION_ARN": {
+              "Fn::GetAtt": [
                 "CreateOrganizationAccountsCreateOrganizationAccountStatusBBDEFDFE",
                 "Arn",
               ],
             },
-            "USER_ON_EVENT_FUNCTION_ARN": Object {
-              "Fn::GetAtt": Array [
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
                 "CreateOrganizationAccountsDDA8AFE1",
                 "Arn",
               ],
             },
-            "WAITER_STATE_MACHINE_ARN": Object {
+            "WAITER_STATE_MACHINE_ARN": {
               "Ref": "CreateOrganizationAccountsCreateOrganizationAccountsProviderwaiterstatemachineC299C25B",
             },
           },
         },
         "Handler": "framework.onEvent",
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonEventServiceRole66CD01EF",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs18.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonEventServiceRole66CD01EF": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonEventServiceRole66CD01EF": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
-            "Fn::Join": Array [
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "arn:",
-                Object {
+                {
                   "Ref": "AWS::Partition",
                 },
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
@@ -539,26 +548,26 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonEventServiceRoleDefaultPolicy5CD1CC20": Object {
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonEventServiceRoleDefaultPolicy5CD1CC20": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
               "Action": "lambda:InvokeFunction",
               "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "CreateOrganizationAccountsDDA8AFE1",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "CreateOrganizationAccountsDDA8AFE1",
                           "Arn",
                         ],
@@ -569,22 +578,22 @@ Object {
                 },
               ],
             },
-            Object {
+            {
               "Action": "lambda:InvokeFunction",
               "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "CreateOrganizationAccountsCreateOrganizationAccountStatusBBDEFDFE",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "CreateOrganizationAccountsCreateOrganizationAccountStatusBBDEFDFE",
                           "Arn",
                         ],
@@ -595,10 +604,10 @@ Object {
                 },
               ],
             },
-            Object {
+            {
               "Action": "states:StartExecution",
               "Effect": "Allow",
-              "Resource": Object {
+              "Resource": {
                 "Ref": "CreateOrganizationAccountsCreateOrganizationAccountsProviderwaiterstatemachineC299C25B",
               },
             },
@@ -606,37 +615,37 @@ Object {
           "Version": "2012-10-17",
         },
         "PolicyName": "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonEventServiceRoleDefaultPolicy5CD1CC20",
-        "Roles": Array [
-          Object {
+        "Roles": [
+          {
             "Ref": "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonEventServiceRole66CD01EF",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonTimeoutDD2DB516": Object {
-      "DependsOn": Array [
+    "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonTimeoutDD2DB516": {
+      "DependsOn": [
         "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonTimeoutServiceRoleDefaultPolicy7473AD40",
         "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonTimeoutServiceRoleA8ECA8F4",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "AWS CDK resource provider framework - onTimeout (Stack/CreateOrganizationAccounts/CreateOrganizationAccountsProvider)",
-        "Environment": Object {
-          "Variables": Object {
-            "USER_IS_COMPLETE_FUNCTION_ARN": Object {
-              "Fn::GetAtt": Array [
+        "Environment": {
+          "Variables": {
+            "USER_IS_COMPLETE_FUNCTION_ARN": {
+              "Fn::GetAtt": [
                 "CreateOrganizationAccountsCreateOrganizationAccountStatusBBDEFDFE",
                 "Arn",
               ],
             },
-            "USER_ON_EVENT_FUNCTION_ARN": Object {
-              "Fn::GetAtt": Array [
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
                 "CreateOrganizationAccountsDDA8AFE1",
                 "Arn",
               ],
@@ -644,38 +653,38 @@ Object {
           },
         },
         "Handler": "framework.onTimeout",
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonTimeoutServiceRoleA8ECA8F4",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs18.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonTimeoutServiceRoleA8ECA8F4": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonTimeoutServiceRoleA8ECA8F4": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
-            "Fn::Join": Array [
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "arn:",
-                Object {
+                {
                   "Ref": "AWS::Partition",
                 },
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
@@ -686,26 +695,26 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonTimeoutServiceRoleDefaultPolicy7473AD40": Object {
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonTimeoutServiceRoleDefaultPolicy7473AD40": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
               "Action": "lambda:InvokeFunction",
               "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "CreateOrganizationAccountsDDA8AFE1",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "CreateOrganizationAccountsDDA8AFE1",
                           "Arn",
                         ],
@@ -716,22 +725,22 @@ Object {
                 },
               ],
             },
-            Object {
+            {
               "Action": "lambda:InvokeFunction",
               "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "CreateOrganizationAccountsCreateOrganizationAccountStatusBBDEFDFE",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "CreateOrganizationAccountsCreateOrganizationAccountStatusBBDEFDFE",
                           "Arn",
                         ],
@@ -746,44 +755,44 @@ Object {
           "Version": "2012-10-17",
         },
         "PolicyName": "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonTimeoutServiceRoleDefaultPolicy7473AD40",
-        "Roles": Array [
-          Object {
+        "Roles": [
+          {
             "Ref": "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonTimeoutServiceRoleA8ECA8F4",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "CreateOrganizationAccountsCreateOrganizationAccountsProviderwaiterstatemachineC299C25B": Object {
-      "DependsOn": Array [
+    "CreateOrganizationAccountsCreateOrganizationAccountsProviderwaiterstatemachineC299C25B": {
+      "DependsOn": [
         "CreateOrganizationAccountsCreateOrganizationAccountsProviderwaiterstatemachineRoleDefaultPolicyA69022C3",
         "CreateOrganizationAccountsCreateOrganizationAccountsProviderwaiterstatemachineRole22D85F30",
       ],
-      "Properties": Object {
-        "DefinitionString": Object {
-          "Fn::Join": Array [
+      "Properties": {
+        "DefinitionString": {
+          "Fn::Join": [
             "",
-            Array [
-              "{\\"StartAt\\":\\"framework-isComplete-task\\",\\"States\\":{\\"framework-isComplete-task\\":{\\"End\\":true,\\"Retry\\":[{\\"ErrorEquals\\":[\\"States.ALL\\"],\\"IntervalSeconds\\":15,\\"MaxAttempts\\":480,\\"BackoffRate\\":1}],\\"Catch\\":[{\\"ErrorEquals\\":[\\"States.ALL\\"],\\"Next\\":\\"framework-onTimeout-task\\"}],\\"Type\\":\\"Task\\",\\"Resource\\":\\"",
-              Object {
-                "Fn::GetAtt": Array [
+            [
+              "{"StartAt":"framework-isComplete-task","States":{"framework-isComplete-task":{"End":true,"Retry":[{"ErrorEquals":["States.ALL"],"IntervalSeconds":15,"MaxAttempts":480,"BackoffRate":1}],"Catch":[{"ErrorEquals":["States.ALL"],"Next":"framework-onTimeout-task"}],"Type":"Task","Resource":"",
+              {
+                "Fn::GetAtt": [
                   "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkisComplete071270AC",
                   "Arn",
                 ],
               },
-              "\\"},\\"framework-onTimeout-task\\":{\\"End\\":true,\\"Type\\":\\"Task\\",\\"Resource\\":\\"",
-              Object {
-                "Fn::GetAtt": Array [
+              ""},"framework-onTimeout-task":{"End":true,"Type":"Task","Resource":"",
+              {
+                "Fn::GetAtt": [
                   "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonTimeoutDD2DB516",
                   "Arn",
                 ],
               },
-              "\\"}}}",
+              ""}}}",
             ],
           ],
         },
-        "RoleArn": Object {
-          "Fn::GetAtt": Array [
+        "RoleArn": {
+          "Fn::GetAtt": [
             "CreateOrganizationAccountsCreateOrganizationAccountsProviderwaiterstatemachineRole22D85F30",
             "Arn",
           ],
@@ -791,18 +800,18 @@ Object {
       },
       "Type": "AWS::StepFunctions::StateMachine",
     },
-    "CreateOrganizationAccountsCreateOrganizationAccountsProviderwaiterstatemachineRole22D85F30": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CreateOrganizationAccountsCreateOrganizationAccountsProviderwaiterstatemachineRole22D85F30": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
-                "Service": Object {
-                  "Fn::FindInMap": Array [
+              "Principal": {
+                "Service": {
+                  "Fn::FindInMap": [
                     "ServiceprincipalMap",
-                    Object {
+                    {
                       "Ref": "AWS::Region",
                     },
                     "states",
@@ -816,26 +825,26 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CreateOrganizationAccountsCreateOrganizationAccountsProviderwaiterstatemachineRoleDefaultPolicyA69022C3": Object {
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CreateOrganizationAccountsCreateOrganizationAccountsProviderwaiterstatemachineRoleDefaultPolicyA69022C3": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
               "Action": "lambda:InvokeFunction",
               "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkisComplete071270AC",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkisComplete071270AC",
                           "Arn",
                         ],
@@ -846,22 +855,22 @@ Object {
                 },
               ],
             },
-            Object {
+            {
               "Action": "lambda:InvokeFunction",
               "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonTimeoutDD2DB516",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonTimeoutDD2DB516",
                           "Arn",
                         ],
@@ -876,65 +885,65 @@ Object {
           "Version": "2012-10-17",
         },
         "PolicyName": "CreateOrganizationAccountsCreateOrganizationAccountsProviderwaiterstatemachineRoleDefaultPolicyA69022C3",
-        "Roles": Array [
-          Object {
+        "Roles": [
+          {
             "Ref": "CreateOrganizationAccountsCreateOrganizationAccountsProviderwaiterstatemachineRole22D85F30",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "CreateOrganizationAccountsDDA8AFE1": Object {
-      "DependsOn": Array [
+    "CreateOrganizationAccountsDDA8AFE1": {
+      "DependsOn": [
         "CreateOrganizationAccountsServiceRole99CB3720",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Create Organization Accounts OnEvent handler",
         "Handler": "index.handler",
-        "KmsKeyArn": Object {
-          "Fn::GetAtt": Array [
+        "KmsKeyArn": {
+          "Fn::GetAtt": [
             "CustomKey1E6D0D07",
             "Arn",
           ],
         },
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CreateOrganizationAccountsServiceRole99CB3720",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 30,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CreateOrganizationAccountsServiceRole99CB3720": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CreateOrganizationAccountsServiceRole99CB3720": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
-            "Fn::Join": Array [
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "arn:",
-                Object {
+                {
                   "Ref": "AWS::Partition",
                 },
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
@@ -945,25 +954,25 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CustomKey1E6D0D07": Object {
+    "CustomKey1E6D0D07": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -980,25 +989,25 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "GovCloudTableKeyE9635728": Object {
+    "GovCloudTableKeyE9635728": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -1015,28 +1024,28 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "NewOrgAccountsE5BA262F": Object {
+    "NewOrgAccountsE5BA262F": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "AttributeDefinitions": Array [
-          Object {
+      "Properties": {
+        "AttributeDefinitions": [
+          {
             "AttributeName": "accountEmail",
             "AttributeType": "S",
           },
         ],
         "BillingMode": "PAY_PER_REQUEST",
-        "KeySchema": Array [
-          Object {
+        "KeySchema": [
+          {
             "AttributeName": "accountEmail",
             "KeyType": "HASH",
           },
         ],
-        "PointInTimeRecoverySpecification": Object {
+        "PointInTimeRecoverySpecification": {
           "PointInTimeRecoveryEnabled": true,
         },
-        "SSESpecification": Object {
-          "KMSMasterKeyId": Object {
-            "Fn::GetAtt": Array [
+        "SSESpecification": {
+          "KMSMasterKeyId": {
+            "Fn::GetAtt": [
               "TableKeyF581D96F",
               "Arn",
             ],
@@ -1048,25 +1057,25 @@ Object {
       "Type": "AWS::DynamoDB::Table",
       "UpdateReplacePolicy": "Delete",
     },
-    "TableKeyF581D96F": Object {
+    "TableKeyF581D96F": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -1083,28 +1092,28 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "govCloudAccountMapping0E3D2AD8": Object {
+    "govCloudAccountMapping0E3D2AD8": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "AttributeDefinitions": Array [
-          Object {
+      "Properties": {
+        "AttributeDefinitions": [
+          {
             "AttributeName": "commercialAccountId",
             "AttributeType": "S",
           },
         ],
         "BillingMode": "PAY_PER_REQUEST",
-        "KeySchema": Array [
-          Object {
+        "KeySchema": [
+          {
             "AttributeName": "commercialAccountId",
             "KeyType": "HASH",
           },
         ],
-        "PointInTimeRecoverySpecification": Object {
+        "PointInTimeRecoverySpecification": {
           "PointInTimeRecoveryEnabled": true,
         },
-        "SSESpecification": Object {
-          "KMSMasterKeyId": Object {
-            "Fn::GetAtt": Array [
+        "SSESpecification": {
+          "KMSMasterKeyId": {
+            "Fn::GetAtt": [
               "GovCloudTableKeyE9635728",
               "Arn",
             ],

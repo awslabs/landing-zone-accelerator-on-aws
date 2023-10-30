@@ -1,27 +1,27 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`S3PublicAccessBlock Construct(S3PublicAccessBlock):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CustomKey1E6D0D07": Object {
+{
+  "Resources": {
+    "CustomKey1E6D0D07": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -38,45 +38,45 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomS3PutPublicAccessBlockCustomResourceProviderHandler978E227B": Object {
-      "DependsOn": Array [
+    "CustomS3PutPublicAccessBlockCustomResourceProviderHandler978E227B": {
+      "DependsOn": [
         "CustomS3PutPublicAccessBlockCustomResourceProviderRole656EB36E",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomS3PutPublicAccessBlockCustomResourceProviderRole656EB36E",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomS3PutPublicAccessBlockCustomResourceProviderLogGroup354123A8": Object {
+    "CustomS3PutPublicAccessBlockCustomResourceProviderLogGroup354123A8": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "CustomKey1E6D0D07",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomS3PutPublicAccessBlockCustomResourceProviderHandler978E227B",
               },
             ],
@@ -87,31 +87,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomS3PutPublicAccessBlockCustomResourceProviderRole656EB36E": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomS3PutPublicAccessBlockCustomResourceProviderRole656EB36E": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "s3:PutAccountPublicAccessBlock",
                   ],
                   "Effect": "Allow",
@@ -126,19 +126,19 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "S3PublicAccessBlock344F906B": Object {
+    "S3PublicAccessBlock344F906B": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomS3PutPublicAccessBlockCustomResourceProviderLogGroup354123A8",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomS3PutPublicAccessBlockCustomResourceProviderHandler978E227B",
             "Arn",
           ],
         },
-        "accountId": Object {
+        "accountId": {
           "Ref": "AWS::AccountId",
         },
         "blockPublicAcls": true,

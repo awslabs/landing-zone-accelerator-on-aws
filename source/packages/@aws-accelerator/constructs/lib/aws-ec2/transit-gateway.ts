@@ -16,6 +16,7 @@ import { Construct } from 'constructs';
 import { v4 as uuidv4 } from 'uuid';
 
 import { TransitGatewayAttachmentOptionsConfig } from '@aws-accelerator/config';
+import { LzaCustomResource } from '../lza-custom-resource';
 
 const path = require('path');
 
@@ -27,6 +28,22 @@ export interface ITransitGatewayRouteTableAssociation extends cdk.IResource {
 export interface TransitGatewayRouteTableAssociationProps {
   readonly transitGatewayAttachmentId: string;
   readonly transitGatewayRouteTableId: string;
+  /**
+   * Custom resource handler for cross-account TGW associations
+   */
+  readonly customResourceHandler?: cdk.aws_lambda.IFunction;
+  /**
+   * Owning account ID for cross-account TGW associations
+   */
+  readonly owningAccountId?: string;
+  /**
+   * Owning region for cross-account TGW associations
+   */
+  readonly owningRegion?: string;
+  /**
+   * Role name for cross-account TGW associations
+   */
+  readonly roleName?: string;
 }
 
 export class TransitGatewayRouteTableAssociation extends cdk.Resource implements ITransitGatewayRouteTableAssociation {
@@ -39,10 +56,29 @@ export class TransitGatewayRouteTableAssociation extends cdk.Resource implements
     this.transitGatewayAttachmentId = props.transitGatewayAttachmentId;
     this.transitGatewayRouteTableId = props.transitGatewayRouteTableId;
 
-    new cdk.aws_ec2.CfnTransitGatewayRouteTableAssociation(this, 'Resource', {
-      transitGatewayAttachmentId: props.transitGatewayAttachmentId,
-      transitGatewayRouteTableId: props.transitGatewayRouteTableId,
-    });
+    if (!props.customResourceHandler) {
+      new cdk.aws_ec2.CfnTransitGatewayRouteTableAssociation(this, 'Resource', {
+        transitGatewayAttachmentId: props.transitGatewayAttachmentId,
+        transitGatewayRouteTableId: props.transitGatewayRouteTableId,
+      });
+    } else {
+      new LzaCustomResource(this, 'CustomResource', {
+        resource: {
+          name: 'CustomResource',
+          parentId: id,
+          properties: [
+            {
+              transitGatewayAttachmentId: props.transitGatewayAttachmentId,
+              transitGatewayRouteTableId: props.transitGatewayRouteTableId,
+              owningAccountId: props.owningAccountId,
+              owningRegion: props.owningRegion,
+              roleName: props.roleName,
+            },
+          ],
+          onEventHandler: props.customResourceHandler,
+        },
+      });
+    }
   }
 }
 
@@ -54,6 +90,22 @@ export interface ITransitGatewayRouteTablePropagation extends cdk.IResource {
 export interface TransitGatewayRouteTablePropagationProps {
   readonly transitGatewayAttachmentId: string;
   readonly transitGatewayRouteTableId: string;
+  /**
+   * Custom resource handler for cross-account TGW propagations
+   */
+  readonly customResourceHandler?: cdk.aws_lambda.IFunction;
+  /**
+   * Owning account ID for cross-account TGW propagations
+   */
+  readonly owningAccountId?: string;
+  /**
+   * Owning region for cross-account TGW propagations
+   */
+  readonly owningRegion?: string;
+  /**
+   * Role name for cross-account TGW propagations
+   */
+  readonly roleName?: string;
 }
 
 export class TransitGatewayRouteTablePropagation extends cdk.Resource implements ITransitGatewayRouteTablePropagation {
@@ -66,16 +118,37 @@ export class TransitGatewayRouteTablePropagation extends cdk.Resource implements
     this.transitGatewayAttachmentId = props.transitGatewayAttachmentId;
     this.transitGatewayRouteTableId = props.transitGatewayRouteTableId;
 
-    new cdk.aws_ec2.CfnTransitGatewayRouteTablePropagation(this, 'Resource', {
-      transitGatewayAttachmentId: props.transitGatewayAttachmentId,
-      transitGatewayRouteTableId: props.transitGatewayRouteTableId,
-    });
+    if (!props.customResourceHandler) {
+      new cdk.aws_ec2.CfnTransitGatewayRouteTablePropagation(this, 'Resource', {
+        transitGatewayAttachmentId: props.transitGatewayAttachmentId,
+        transitGatewayRouteTableId: props.transitGatewayRouteTableId,
+      });
+    } else {
+      new LzaCustomResource(this, 'CustomResource', {
+        resource: {
+          name: 'CustomResource',
+          parentId: id,
+          properties: [
+            {
+              transitGatewayAttachmentId: props.transitGatewayAttachmentId,
+              transitGatewayRouteTableId: props.transitGatewayRouteTableId,
+              owningAccountId: props.owningAccountId,
+              owningRegion: props.owningRegion,
+              roleName: props.roleName,
+            },
+          ],
+          onEventHandler: props.customResourceHandler,
+        },
+      });
+    }
   }
 }
 
 export interface ITransitGatewayAttachment extends cdk.IResource {
   readonly transitGatewayAttachmentId: string;
   readonly transitGatewayAttachmentName: string;
+
+  addDependency: (dependent: Construct) => void;
 }
 
 export interface TransitGatewayAttachmentProps {
@@ -109,15 +182,46 @@ export interface TransitGatewayAttachmentLookupOptions {
    * Custom resource lambda log retention in days
    */
   readonly logRetentionInDays: number;
+  /**
+   * Cross-account lookup options
+   *
+   * @remarks
+   * These options should only be used for cross-account VPN attachment
+   * lookups. Currently the only use case is for dynamic EC2 firewall
+   * VPN connections
+   */
+  readonly crossAccountVpnOptions?: {
+    /**
+     * Owning account ID of the VPN attachment
+     */
+    readonly owningAccountId?: string;
+    /**
+     * Owning region of the VPN attachment
+     */
+    readonly owningRegion?: string;
+    /**
+     * Role name to assume
+     */
+    readonly roleName?: string;
+  };
 }
 
-export class TransitGatewayAttachment extends cdk.Resource implements ITransitGatewayAttachment {
+abstract class TransitGatewayAttachmentBase extends cdk.Resource implements ITransitGatewayAttachment {
+  public abstract readonly transitGatewayAttachmentId: string;
+  public abstract readonly transitGatewayAttachmentName: string;
+
+  addDependency(dependent: Construct) {
+    dependent.node.addDependency(this);
+  }
+}
+
+export class TransitGatewayAttachment extends TransitGatewayAttachmentBase {
   public static fromLookup(
     scope: Construct,
     id: string,
     options: TransitGatewayAttachmentLookupOptions,
   ): ITransitGatewayAttachment {
-    class Import extends cdk.Resource implements ITransitGatewayAttachment {
+    class Import extends TransitGatewayAttachmentBase {
       public readonly transitGatewayAttachmentId: string;
       public readonly transitGatewayAttachmentName = options.name;
 
@@ -128,7 +232,7 @@ export class TransitGatewayAttachment extends cdk.Resource implements ITransitGa
 
         const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, GET_TRANSIT_GATEWAY_ATTACHMENT, {
           codeDirectory: path.join(__dirname, 'get-transit-gateway-attachment/dist'),
-          runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+          runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
           policyStatements: [
             {
               Effect: 'Allow',
@@ -160,11 +264,13 @@ export class TransitGatewayAttachment extends cdk.Resource implements ITransitGa
           resourceType: GET_TRANSIT_GATEWAY_ATTACHMENT,
           serviceToken: provider.serviceToken,
           properties: {
+            region: cdk.Stack.of(this).region,
             name: options.name,
             transitGatewayId: options.transitGatewayId,
             type: options.type,
             roleArn,
             uuid: uuidv4(), // Generates a new UUID to force the resource to update
+            crossAccountVpnOptions: options.crossAccountVpnOptions,
           },
         });
 
@@ -189,6 +295,25 @@ export class TransitGatewayAttachment extends cdk.Resource implements ITransitGa
     return new Import(scope, id);
   }
 
+  public static fromTransitGatewayAttachmentId(
+    scope: Construct,
+    id: string,
+    options: {
+      attachmentId: string;
+      attachmentName: string;
+    },
+  ): ITransitGatewayAttachment {
+    class Import extends TransitGatewayAttachmentBase {
+      public readonly transitGatewayAttachmentId: string;
+      public readonly transitGatewayAttachmentName = options.attachmentName;
+      constructor(scope: Construct, id: string) {
+        super(scope, id);
+        this.transitGatewayAttachmentId = options.attachmentId;
+      }
+    }
+    return new Import(scope, id);
+  }
+
   public readonly transitGatewayAttachmentId: string;
   public readonly transitGatewayAttachmentName: string;
 
@@ -196,25 +321,41 @@ export class TransitGatewayAttachment extends cdk.Resource implements ITransitGa
     super(scope, id);
 
     let resource: cdk.aws_ec2.CfnTransitGatewayVpcAttachment | cdk.aws_ec2.CfnTransitGatewayAttachment;
-    if (props.partition === 'aws') {
-      resource = new cdk.aws_ec2.CfnTransitGatewayVpcAttachment(this, 'Resource', {
-        vpcId: props.vpcId,
-        transitGatewayId: props.transitGatewayId,
-        subnetIds: props.subnetIds,
-        options: {
-          ApplianceModeSupport: props.options?.applianceModeSupport ?? 'disable',
-          DnsSupport: props.options?.dnsSupport ?? 'enable',
-          Ipv6Support: props.options?.ipv6Support ?? 'disable',
-        },
-        tags: props.tags,
-      });
-    } else {
-      resource = new cdk.aws_ec2.CfnTransitGatewayAttachment(this, 'Resource', {
-        vpcId: props.vpcId,
-        transitGatewayId: props.transitGatewayId,
-        subnetIds: props.subnetIds,
-        tags: props.tags,
-      });
+    switch (props.partition) {
+      case 'aws':
+        resource = new cdk.aws_ec2.CfnTransitGatewayVpcAttachment(this, 'Resource', {
+          vpcId: props.vpcId,
+          transitGatewayId: props.transitGatewayId,
+          subnetIds: props.subnetIds,
+          options: {
+            ApplianceModeSupport: props.options?.applianceModeSupport ?? 'disable',
+            DnsSupport: props.options?.dnsSupport ?? 'enable',
+            Ipv6Support: props.options?.ipv6Support ?? 'disable',
+          },
+          tags: props.tags,
+        });
+        break;
+      case 'aws-us-gov':
+        resource = new cdk.aws_ec2.CfnTransitGatewayAttachment(this, 'Resource', {
+          vpcId: props.vpcId,
+          transitGatewayId: props.transitGatewayId,
+          subnetIds: props.subnetIds,
+          options: {
+            ApplianceModeSupport: props.options?.applianceModeSupport ?? 'disable',
+            DnsSupport: props.options?.dnsSupport ?? 'enable',
+            Ipv6Support: props.options?.ipv6Support ?? 'disable',
+          },
+          tags: props.tags,
+        });
+        break;
+      default:
+        resource = new cdk.aws_ec2.CfnTransitGatewayAttachment(this, 'Resource', {
+          vpcId: props.vpcId,
+          transitGatewayId: props.transitGatewayId,
+          subnetIds: props.subnetIds,
+          tags: props.tags,
+        });
+        break;
     }
     // Add name tag
     cdk.Tags.of(this).add('Name', props.name);
@@ -302,10 +443,50 @@ export interface TransitGatewayProps {
   readonly tags?: cdk.CfnTag[];
 }
 
+interface TransitGatewayAttributes {
+  /**
+   * The ID of the TransitGateway.
+   */
+  transitGatewayId: string;
+  /**
+   * The Name of the TransitGateway.
+   */
+  transitGatewayName: string;
+}
+
+abstract class TransitGatewayBase extends cdk.Resource implements ITransitGateway {
+  public abstract readonly transitGatewayId: string;
+  public abstract readonly transitGatewayName: string;
+  public abstract readonly transitGatewayArn: string;
+}
+
+export class ImportedTransitGateway extends TransitGatewayBase {
+  readonly transitGatewayId: string;
+
+  readonly transitGatewayName: string;
+
+  readonly transitGatewayArn: string;
+
+  constructor(scope: Construct, id: string, props: TransitGatewayAttributes) {
+    super(scope, id);
+
+    this.transitGatewayId = props.transitGatewayId;
+
+    this.transitGatewayName = props.transitGatewayName;
+
+    this.transitGatewayArn = cdk.Stack.of(this).formatArn({
+      service: 'ec2',
+      resource: 'transit-gateway',
+      arnFormat: cdk.ArnFormat.SLASH_RESOURCE_NAME,
+      resourceName: this.transitGatewayId,
+    });
+  }
+}
+
 /**
  * Creates a Transit Gateway
  */
-export class TransitGateway extends cdk.Resource implements ITransitGateway {
+export class TransitGateway extends TransitGatewayBase {
   readonly transitGatewayId: string;
 
   readonly transitGatewayName: string;
@@ -336,5 +517,9 @@ export class TransitGateway extends cdk.Resource implements ITransitGateway {
       arnFormat: cdk.ArnFormat.SLASH_RESOURCE_NAME,
       resourceName: this.transitGatewayId,
     });
+  }
+
+  static fromTransitGatewayAttributes(scope: Construct, id: string, attrs: TransitGatewayAttributes) {
+    return new ImportedTransitGateway(scope, id, attrs);
   }
 }

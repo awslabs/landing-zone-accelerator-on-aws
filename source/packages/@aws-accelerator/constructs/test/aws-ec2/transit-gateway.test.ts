@@ -12,21 +12,156 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { TransitGatewayRouteTableAssociation } from '../../lib/aws-ec2/transit-gateway';
+import {
+  TransitGatewayRouteTableAssociation,
+  TransitGatewayAttachment,
+  TransitGatewayRouteTablePropagation,
+  TransitGateway,
+  TransitGatewayAttachmentType,
+} from '../../lib/aws-ec2/transit-gateway';
 import { snapShotTest } from '../snapshot-test';
+import { describe, it } from '@jest/globals';
 
 const testNamePrefix = 'Construct(TransitGatewayRouteTableAssociation): ';
 
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
+const customResourceHandler = cdk.aws_lambda.Function.fromFunctionName(stack, 'test', 'test');
 
 new TransitGatewayRouteTableAssociation(stack, 'TransitGatewayRouteTableAssociation', {
   transitGatewayAttachmentId: 'transitGatewayAttachmentId',
   transitGatewayRouteTableId: 'transitGatewayRouteTableId',
+});
+new TransitGatewayRouteTableAssociation(stack, 'TransitGatewayRouteTableAssociationCustom', {
+  transitGatewayAttachmentId: 'transitGatewayAttachmentId',
+  transitGatewayRouteTableId: 'transitGatewayRouteTableId',
+  customResourceHandler,
 });
 /**
  * TransitGatewayRouteTableAssociation construct test
  */
 describe('TransitGatewayRouteTableAssociation', () => {
   snapShotTest(testNamePrefix, stack);
+});
+
+/**
+ * TransitGatewayAttachment construct test
+ */
+describe('TransitGatewayAttachment', () => {
+  it('default tgw attachment', () => {
+    new TransitGatewayAttachment(stack, 'TransitGatewayAttachment', {
+      name: 'name',
+      partition: 'partition',
+      transitGatewayId: 'transitGatewayId',
+      subnetIds: ['one', 'two', 'three'],
+      vpcId: 'vpcId',
+      options: {
+        applianceModeSupport: 'enable',
+        dnsSupport: 'enable',
+        ipv6Support: 'disable',
+      },
+    });
+  });
+
+  it('govcloud tgw attachment', () => {
+    new TransitGatewayAttachment(stack, 'TransitGatewayAttachmentGovCloud', {
+      name: 'name',
+      partition: 'aws-us-gov',
+      transitGatewayId: 'transitGatewayId',
+      subnetIds: ['one', 'two', 'three'],
+      vpcId: 'vpcId',
+      options: {
+        applianceModeSupport: 'enable',
+        dnsSupport: 'enable',
+        ipv6Support: 'disable',
+      },
+    });
+  });
+
+  it('tgw lookup', () => {
+    TransitGatewayAttachment.fromLookup(stack, 'TgwAttachLookup', {
+      transitGatewayId: 'transitGatewayId',
+      name: 'name',
+      owningAccountId: 'owningAccountId',
+      type: TransitGatewayAttachmentType.VPC,
+      roleName: 'roleName',
+      kmsKey: new cdk.aws_kms.Key(stack, 'TgwAttachLookupKms'),
+      logRetentionInDays: 7,
+    });
+  });
+  it('regular tgw attachment in aws partition', () => {
+    new TransitGatewayAttachment(stack, 'TransitGatewayAttachmentAwsPartition', {
+      name: 'name',
+      partition: 'aws',
+      transitGatewayId: 'transitGatewayId',
+      subnetIds: ['one', 'two', 'three'],
+      vpcId: 'vpcId',
+      options: {
+        applianceModeSupport: 'enable',
+        dnsSupport: 'disable',
+        ipv6Support: 'enable',
+      },
+    });
+  });
+  it('regular tgw attachment in aws partition options toggled', () => {
+    new TransitGatewayAttachment(stack, 'TransitGatewayAttachmentAwsPartitionOptions', {
+      name: 'name',
+      partition: 'aws',
+      transitGatewayId: 'transitGatewayId',
+      subnetIds: ['one', 'two', 'three'],
+      vpcId: 'vpcId',
+    });
+  });
+  it('tgw from id', () => {
+    TransitGatewayAttachment.fromTransitGatewayAttachmentId(stack, 'TgwAttachId', {
+      attachmentId: 'transitGatewayAttachmentId',
+      attachmentName: 'name',
+    });
+  });
+  snapShotTest('Construct(TransitGatewayAttachment): ', stack);
+});
+
+/**
+ * TransitGatewayRouteTablePropagation construct test
+ */
+describe('TransitGatewayRouteTablePropagation', () => {
+  new TransitGatewayRouteTablePropagation(stack, 'TransitGatewayRouteTablePropagation', {
+    transitGatewayAttachmentId: 'transitGatewayAttachmentId',
+    transitGatewayRouteTableId: 'transitGatewayRouteTableId',
+  });
+  new TransitGatewayRouteTablePropagation(stack, 'TransitGatewayRouteTablePropagationCustom', {
+    transitGatewayAttachmentId: 'transitGatewayAttachmentId',
+    transitGatewayRouteTableId: 'transitGatewayRouteTableId',
+    customResourceHandler,
+  });
+  snapShotTest('Construct(TransitGatewayRouteTablePropagation): ', stack);
+});
+
+/**
+ * TransitGateway construct test
+ */
+describe('TransitGateway', () => {
+  new TransitGateway(stack, 'TransitGateway', {
+    name: 'name',
+    amazonSideAsn: 1234,
+    autoAcceptSharedAttachments: 'enable',
+    defaultRouteTableAssociation: 'enable',
+    defaultRouteTablePropagation: 'enable',
+    description: 'description',
+    dnsSupport: 'enable',
+    multicastSupport: 'enable',
+    vpnEcmpSupport: 'enable',
+    tags: [{ key: 'key', value: 'value' }],
+  });
+  snapShotTest('Construct(TransitGateway): ', stack);
+});
+/**
+ * Import TransitGateway construct test
+ */
+describe('ImportTransitGateway', () => {
+  TransitGateway.fromTransitGatewayAttributes(stack, 'ImportTransitGateway', {
+    transitGatewayId: 'someTransitGatewayId',
+    transitGatewayName: 'someTransitGateway',
+  });
+  snapShotTest('Construct(ImportTransitGateway): ', stack);
 });

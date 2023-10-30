@@ -1,17 +1,17 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Network Firewall Rule Group Construct(NetworkFirewallPolicy):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "TestGroupAF88660E": Object {
-      "Properties": Object {
+{
+  "Resources": {
+    "TestGroupAF88660E": {
+      "Properties": {
         "Capacity": 100,
-        "RuleGroup": Object {
-          "RulesSource": Object {
-            "StatefulRules": Array [
-              Object {
+        "RuleGroup": {
+          "RulesSource": {
+            "StatefulRules": [
+              {
                 "Action": "PASS",
-                "Header": Object {
+                "Header": {
                   "Destination": "10.0.0.0/16",
                   "DestinationPort": "ANY",
                   "Direction": "FORWARD",
@@ -19,10 +19,10 @@ Object {
                   "Source": "10.1.0.0/16",
                   "SourcePort": "ANY",
                 },
-                "RuleOptions": Array [
-                  Object {
+                "RuleOptions": [
+                  {
                     "Keyword": "sid",
-                    "Settings": Array [
+                    "Settings": [
                       "100",
                     ],
                   },
@@ -30,18 +30,253 @@ Object {
               },
             ],
           },
-          "StatefulRuleOptions": Object {
+          "StatefulRuleOptions": {
             "RuleOrder": "STRICT_ORDER",
           },
         },
         "RuleGroupName": "TestGroup",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "TestGroup",
           },
         ],
         "Type": "STATEFUL",
+      },
+      "Type": "AWS::NetworkFirewall::RuleGroup",
+    },
+    "TestGroupStatelessB53F2424": {
+      "Properties": {
+        "Capacity": 100,
+        "RuleGroup": {
+          "RuleVariables": {
+            "IPSets": {
+              "HOME_NET": {
+                "Definition": [
+                  "10.0.0.0/16",
+                ],
+              },
+            },
+            "PortSets": {
+              "HOME_NET": {
+                "Definition": [
+                  "80",
+                  "443",
+                ],
+              },
+            },
+          },
+          "RulesSource": {
+            "StatelessRulesAndCustomActions": {
+              "CustomActions": [
+                {
+                  "ActionDefinition": {
+                    "PublishMetricAction": {
+                      "Dimensions": [
+                        {
+                          "Value": "CustomValue",
+                        },
+                      ],
+                    },
+                  },
+                  "ActionName": "CustomAction",
+                },
+              ],
+              "StatelessRules": [
+                {
+                  "Priority": 100,
+                  "RuleDefinition": {
+                    "Actions": [
+                      "aws:pass",
+                    ],
+                    "MatchAttributes": {
+                      "DestinationPorts": [
+                        {
+                          "FromPort": 22,
+                          "ToPort": 22,
+                        },
+                      ],
+                      "Destinations": [
+                        {
+                          "AddressDefinition": "10.0.0.0/16",
+                        },
+                      ],
+                      "Protocols": [],
+                      "SourcePorts": [
+                        {
+                          "FromPort": 1024,
+                          "ToPort": 65535,
+                        },
+                      ],
+                      "Sources": [
+                        {
+                          "AddressDefinition": "10.1.0.0/16",
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+            },
+          },
+          "StatefulRuleOptions": {
+            "RuleOrder": "STRICT_ORDER",
+          },
+        },
+        "RuleGroupName": "TestGroupStateless",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "TestGroupStateless",
+          },
+          {
+            "Key": "someKey",
+            "Value": "someValue",
+          },
+        ],
+        "Type": "STATELESS",
+      },
+      "Type": "AWS::NetworkFirewall::RuleGroup",
+    },
+  },
+}
+`;
+
+exports[`Network Firewall Rule Group Stateless Construct(NetworkFirewallPolicy):  Snapshot Test 1`] = `
+{
+  "Resources": {
+    "TestGroupAF88660E": {
+      "Properties": {
+        "Capacity": 100,
+        "RuleGroup": {
+          "RulesSource": {
+            "StatefulRules": [
+              {
+                "Action": "PASS",
+                "Header": {
+                  "Destination": "10.0.0.0/16",
+                  "DestinationPort": "ANY",
+                  "Direction": "FORWARD",
+                  "Protocol": "IP",
+                  "Source": "10.1.0.0/16",
+                  "SourcePort": "ANY",
+                },
+                "RuleOptions": [
+                  {
+                    "Keyword": "sid",
+                    "Settings": [
+                      "100",
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "StatefulRuleOptions": {
+            "RuleOrder": "STRICT_ORDER",
+          },
+        },
+        "RuleGroupName": "TestGroup",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "TestGroup",
+          },
+        ],
+        "Type": "STATEFUL",
+      },
+      "Type": "AWS::NetworkFirewall::RuleGroup",
+    },
+    "TestGroupStatelessB53F2424": {
+      "Properties": {
+        "Capacity": 100,
+        "RuleGroup": {
+          "RuleVariables": {
+            "IPSets": {
+              "HOME_NET": {
+                "Definition": [
+                  "10.0.0.0/16",
+                ],
+              },
+            },
+            "PortSets": {
+              "HOME_NET": {
+                "Definition": [
+                  "80",
+                  "443",
+                ],
+              },
+            },
+          },
+          "RulesSource": {
+            "StatelessRulesAndCustomActions": {
+              "CustomActions": [
+                {
+                  "ActionDefinition": {
+                    "PublishMetricAction": {
+                      "Dimensions": [
+                        {
+                          "Value": "CustomValue",
+                        },
+                      ],
+                    },
+                  },
+                  "ActionName": "CustomAction",
+                },
+              ],
+              "StatelessRules": [
+                {
+                  "Priority": 100,
+                  "RuleDefinition": {
+                    "Actions": [
+                      "aws:pass",
+                    ],
+                    "MatchAttributes": {
+                      "DestinationPorts": [
+                        {
+                          "FromPort": 22,
+                          "ToPort": 22,
+                        },
+                      ],
+                      "Destinations": [
+                        {
+                          "AddressDefinition": "10.0.0.0/16",
+                        },
+                      ],
+                      "Protocols": [],
+                      "SourcePorts": [
+                        {
+                          "FromPort": 1024,
+                          "ToPort": 65535,
+                        },
+                      ],
+                      "Sources": [
+                        {
+                          "AddressDefinition": "10.1.0.0/16",
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+            },
+          },
+          "StatefulRuleOptions": {
+            "RuleOrder": "STRICT_ORDER",
+          },
+        },
+        "RuleGroupName": "TestGroupStateless",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "TestGroupStateless",
+          },
+          {
+            "Key": "someKey",
+            "Value": "someValue",
+          },
+        ],
+        "Type": "STATELESS",
       },
       "Type": "AWS::NetworkFirewall::RuleGroup",
     },

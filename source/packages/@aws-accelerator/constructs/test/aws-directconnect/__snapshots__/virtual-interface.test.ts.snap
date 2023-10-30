@@ -1,47 +1,47 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`VirtualInterface Construct(VirtualInterface):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CustomDirectConnectVirtualInterfaceAllocationCustomResourceProviderHandler58CF9005": Object {
-      "DependsOn": Array [
+{
+  "Resources": {
+    "CustomDirectConnectVirtualInterfaceAllocationCustomResourceProviderHandler58CF9005": {
+      "DependsOn": [
         "CustomDirectConnectVirtualInterfaceAllocationCustomResourceProviderRoleBC904CA4",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomDirectConnectVirtualInterfaceAllocationCustomResourceProviderRoleBC904CA4",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomDirectConnectVirtualInterfaceAllocationCustomResourceProviderLogGroup29B00939": Object {
+    "CustomDirectConnectVirtualInterfaceAllocationCustomResourceProviderLogGroup29B00939": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "Key961B73FD",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomDirectConnectVirtualInterfaceAllocationCustomResourceProviderHandler58CF9005",
               },
             ],
@@ -52,31 +52,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomDirectConnectVirtualInterfaceAllocationCustomResourceProviderRoleBC904CA4": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomDirectConnectVirtualInterfaceAllocationCustomResourceProviderRoleBC904CA4": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "directconnect:AllocatePrivateVirtualInterface",
                     "directconnect:AllocateTransitVirtualInterface",
                     "directconnect:DeleteVirtualInterface",
@@ -96,45 +96,45 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CustomDirectConnectVirtualInterfaceCustomResourceProviderHandler147DBFD9": Object {
-      "DependsOn": Array [
+    "CustomDirectConnectVirtualInterfaceCustomResourceProviderHandler147DBFD9": {
+      "DependsOn": [
         "CustomDirectConnectVirtualInterfaceCustomResourceProviderRoleD8C9D582",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomDirectConnectVirtualInterfaceCustomResourceProviderRoleD8C9D582",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomDirectConnectVirtualInterfaceCustomResourceProviderLogGroup51E4607A": Object {
+    "CustomDirectConnectVirtualInterfaceCustomResourceProviderLogGroup51E4607A": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "Key961B73FD",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomDirectConnectVirtualInterfaceCustomResourceProviderHandler147DBFD9",
               },
             ],
@@ -145,31 +145,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomDirectConnectVirtualInterfaceCustomResourceProviderRoleD8C9D582": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomDirectConnectVirtualInterfaceCustomResourceProviderRoleD8C9D582": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "directconnect:CreatePrivateVirtualInterface",
                     "directconnect:CreateTransitVirtualInterface",
                     "directconnect:DeleteVirtualInterface",
@@ -182,25 +182,25 @@ Object {
                   "Resource": "*",
                   "Sid": "DxVirtualInterfaceCRUD",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "lambda:InvokeFunction",
                   ],
                   "Effect": "Allow",
-                  "Resource": Object {
-                    "Fn::Join": Array [
+                  "Resource": {
+                    "Fn::Join": [
                       "",
-                      Array [
+                      [
                         "arn:",
-                        Object {
+                        {
                           "Ref": "AWS::Partition",
                         },
                         ":lambda:",
-                        Object {
+                        {
                           "Ref": "AWS::Region",
                         },
                         ":",
-                        Object {
+                        {
                           "Ref": "AWS::AccountId",
                         },
                         ":function:AWSAccelerator-NetworkPre-CustomDirectConnect*",
@@ -218,25 +218,25 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "Key961B73FD": Object {
+    "Key961B73FD": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -253,14 +253,14 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "TestVif905D8106": Object {
+    "TestVif905D8106": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomDirectConnectVirtualInterfaceCustomResourceProviderLogGroup51E4607A",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomDirectConnectVirtualInterfaceCustomResourceProviderHandler147DBFD9",
             "Arn",
           ],
@@ -279,14 +279,14 @@ Object {
       "Type": "Custom::DirectConnectVirtualInterface",
       "UpdateReplacePolicy": "Delete",
     },
-    "TestVifAllocation5BE00E39": Object {
+    "TestVifAllocation5BE00E39": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomDirectConnectVirtualInterfaceAllocationCustomResourceProviderLogGroup29B00939",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomDirectConnectVirtualInterfaceAllocationCustomResourceProviderHandler58CF9005",
             "Arn",
           ],

@@ -1,0 +1,140 @@
+homeRegion: &HOME_REGION cn-north-1
+terminationProtection: true
+centralizeCdkBuckets:
+  enable: true
+enabledRegions:
+  - *HOME_REGION
+  - cn-northwest-1
+managementAccountAccessRole: OrganizationAccountAccessRole
+cloudwatchLogRetentionInDays: 365
+snsTopics:
+  deploymentTargets:
+    organizationalUnits:
+      - Root
+  topics:
+    - name: Security
+      emailAddresses:
+        - security-notifications@example.com
+controlTower:
+  # Must be false since control tower is not available in China region.
+  enable: false
+logging:
+  account: LogArchive
+  cloudtrail:
+    enable: true
+    # Must be false since Organization Trail is not available in China region.
+    organizationTrail: false
+    accountTrails:
+      - name: AccountTrail
+        regions:
+          - *HOME_REGION
+        deploymentTargets:
+          accounts: []
+          organizationalUnits:
+            - Root
+        settings:
+          multiRegionTrail: true
+          globalServiceEvents: true
+          managementEvents: true
+          s3DataEvents: true
+          lambdaDataEvents: true
+          sendToCloudWatchLogs: true
+          apiErrorRateInsight: false
+          apiCallRateInsight: false
+  sessionManager:
+    sendToCloudWatchLogs: true
+    sendToS3: true
+    excludeRegions: []
+    excludeAccounts: []
+    lifecycleRules:
+      - enabled: true
+        abortIncompleteMultipartUpload: 7
+        expiration: 730
+        noncurrentVersionExpiration: 730
+    attachPolicyToIamRoles:
+      - EC2-Default-SSM-AD-Role
+  cloudwatchLogs:
+    dynamicPartitioning: dynamic-partitioning/log-filters.json
+  accessLogBucket:
+    lifecycleRules:
+      - enabled: true
+        abortIncompleteMultipartUpload: 7
+        expiration: 730
+        noncurrentVersionExpiration: 730
+  centralLogBucket:
+    lifecycleRules:
+      - enabled: true
+        abortIncompleteMultipartUpload: 7
+        expiration: 730
+        noncurrentVersionExpiration: 730
+  elbLogBucket:
+    lifecycleRules:
+        - enabled: true
+          abortIncompleteMultipartUpload: 7
+          expiration: 730
+          noncurrentVersionExpiration: 730
+reports:
+  costAndUsageReport:
+    compression: Parquet
+    format: Parquet
+    reportName: accelerator-cur
+    s3Prefix: cur
+    timeUnit: DAILY
+    refreshClosedReports: true
+    reportVersioning: CREATE_NEW_REPORT
+    lifecycleRules:
+      - enabled: true
+        abortIncompleteMultipartUpload: 7
+        expiration: 730
+        noncurrentVersionExpiration: 730
+  budgets:
+    - deploymentTargets:
+        accounts:
+          - Management
+      name: accel-budget
+      timeUnit: MONTHLY
+      type: COST
+      amount: 2000
+      includeUpfront: true
+      includeTax: true
+      includeSupport: true
+      includeSubscription: true
+      includeRecurring: true
+      includeOtherSubscription: true
+      includeDiscount: true
+      includeCredit: false
+      includeRefund: false
+      useBlended: false
+      useAmortized: false
+      unit: CNY
+      notifications:
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 100
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: myemail+pa-budg@example.com
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 90
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: myemail+pa-budg@example.com
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 80
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: myemail+pa-budg@example.com
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 75
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: myemail+pa-budg@example.com
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 50
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: myemail+pa-budg@example.com

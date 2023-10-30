@@ -18,9 +18,15 @@ import { snapShotTest } from './snapshot-test';
 
 const testNamePrefix = 'Construct(AccountsStack): ';
 
-const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.ACCOUNTS, 'all-enabled', 'aws', 'us-east-1');
-const stack = acceleratorTestStacks.stacks.get(`Management-us-east-1`)!;
-
-describe('AccountsStack', () => {
+describe('AccountsStack us-east-1', () => {
+  const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.ACCOUNTS, 'aws', 'us-east-1');
+  const stack = acceleratorTestStacks.stacks.get(`Management-us-east-1`)!;
   snapShotTest(testNamePrefix, stack);
+});
+
+describe('AccountsStack us-west-2', () => {
+  const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.ACCOUNTS, 'aws', 'us-east-1');
+
+  const stack = acceleratorTestStacks.stacks.get(`Management-us-west-2`)!;
+  snapShotTest('Construct(AccountsStackUsWest2): ', stack);
 });

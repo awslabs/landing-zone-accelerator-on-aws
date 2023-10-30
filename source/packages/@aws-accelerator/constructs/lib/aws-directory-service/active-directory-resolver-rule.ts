@@ -49,7 +49,7 @@ export class ActiveDirectoryResolverRule extends Construct {
 
     const providerLambda = new cdk.aws_lambda.Function(this, 'UpdateResolverRuleFunction', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'update-resolver-role/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
       handler: 'index.handler',
       timeout: cdk.Duration.seconds(30),
       description: 'Update resolver group rule target ips',
@@ -70,7 +70,7 @@ export class ActiveDirectoryResolverRule extends Construct {
         sid: 'StsAssumeRole',
         effect: cdk.aws_iam.Effect.ALLOW,
         actions: ['sts:AssumeRole'],
-        resources: ['*'],
+        resources: [`arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.roleName}`],
       }),
     );
 
@@ -92,6 +92,7 @@ export class ActiveDirectoryResolverRule extends Construct {
       properties: {
         executingAccountId: cdk.Stack.of(this).account,
         partition: cdk.Stack.of(this).partition,
+        region: cdk.Stack.of(this).region,
         roleName: props.roleName,
         route53ResolverRuleName: props.route53ResolverRuleName,
         targetIps: props.targetIps,

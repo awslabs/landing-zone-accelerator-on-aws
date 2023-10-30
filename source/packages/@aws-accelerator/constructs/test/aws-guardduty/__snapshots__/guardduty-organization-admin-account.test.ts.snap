@@ -1,47 +1,47 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`GuardDutyOrganizationAdminAccount Construct(GuardDutyOrganizationAdminAccount):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CustomGuardDutyEnableOrganizationAdminAccountCustomResourceProviderHandler1EC01026": Object {
-      "DependsOn": Array [
+{
+  "Resources": {
+    "CustomGuardDutyEnableOrganizationAdminAccountCustomResourceProviderHandler1EC01026": {
+      "DependsOn": [
         "CustomGuardDutyEnableOrganizationAdminAccountCustomResourceProviderRole30371E09",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomGuardDutyEnableOrganizationAdminAccountCustomResourceProviderRole30371E09",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 180,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomGuardDutyEnableOrganizationAdminAccountCustomResourceProviderLogGroup9562A5A9": Object {
+    "CustomGuardDutyEnableOrganizationAdminAccountCustomResourceProviderLogGroup9562A5A9": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "CustomKey1E6D0D07",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomGuardDutyEnableOrganizationAdminAccountCustomResourceProviderHandler1EC01026",
               },
             ],
@@ -52,31 +52,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomGuardDutyEnableOrganizationAdminAccountCustomResourceProviderRole30371E09": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomGuardDutyEnableOrganizationAdminAccountCustomResourceProviderRole30371E09": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "organizations:DeregisterDelegatedAdministrator",
                     "organizations:DescribeOrganization",
                     "organizations:EnableAWSServiceAccess",
@@ -87,33 +87,33 @@ Object {
                     "organizations:ServicePrincipal",
                     "organizations:UpdateOrganizationConfiguration",
                   ],
-                  "Condition": Object {
-                    "StringLikeIfExists": Object {
-                      "organizations:DeregisterDelegatedAdministrator": Array [
+                  "Condition": {
+                    "StringLikeIfExists": {
+                      "organizations:DeregisterDelegatedAdministrator": [
                         "guardduty.amazonaws.com",
                       ],
-                      "organizations:DescribeOrganization": Array [
+                      "organizations:DescribeOrganization": [
                         "guardduty.amazonaws.com",
                       ],
-                      "organizations:EnableAWSServiceAccess": Array [
+                      "organizations:EnableAWSServiceAccess": [
                         "guardduty.amazonaws.com",
                       ],
-                      "organizations:ListAWSServiceAccessForOrganization": Array [
+                      "organizations:ListAWSServiceAccessForOrganization": [
                         "guardduty.amazonaws.com",
                       ],
-                      "organizations:ListAccounts": Array [
+                      "organizations:ListAccounts": [
                         "guardduty.amazonaws.com",
                       ],
-                      "organizations:ListDelegatedAdministrators": Array [
+                      "organizations:ListDelegatedAdministrators": [
                         "guardduty.amazonaws.com",
                       ],
-                      "organizations:RegisterDelegatedAdministrator": Array [
+                      "organizations:RegisterDelegatedAdministrator": [
                         "guardduty.amazonaws.com",
                       ],
-                      "organizations:ServicePrincipal": Array [
+                      "organizations:ServicePrincipal": [
                         "guardduty.amazonaws.com",
                       ],
-                      "organizations:UpdateOrganizationConfiguration": Array [
+                      "organizations:UpdateOrganizationConfiguration": [
                         "guardduty.amazonaws.com",
                       ],
                     },
@@ -122,8 +122,8 @@ Object {
                   "Resource": "*",
                   "Sid": "GuardDutyEnableOrganizationAdminAccountTaskOrganizationActions",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "GuardDuty:EnableOrganizationAdminAccount",
                     "GuardDuty:ListOrganizationAdminAccounts",
                     "guardduty:DisableOrganizationAdminAccount",
@@ -141,25 +141,25 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CustomKey1E6D0D07": Object {
+    "CustomKey1E6D0D07": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -176,22 +176,22 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "GuardDutyOrganizationAdminAccount457DB4F1": Object {
+    "GuardDutyOrganizationAdminAccount457DB4F1": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomGuardDutyEnableOrganizationAdminAccountCustomResourceProviderLogGroup9562A5A9",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomGuardDutyEnableOrganizationAdminAccountCustomResourceProviderHandler1EC01026",
             "Arn",
           ],
         },
-        "adminAccountId": Object {
+        "adminAccountId": {
           "Ref": "AWS::AccountId",
         },
-        "region": Object {
+        "region": {
           "Ref": "AWS::Region",
         },
       },

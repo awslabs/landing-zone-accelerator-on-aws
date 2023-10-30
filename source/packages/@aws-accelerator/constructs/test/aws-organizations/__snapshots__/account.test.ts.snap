@@ -1,26 +1,26 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Account Construct(Account):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "Account0D856946": Object {
+{
+  "Resources": {
+    "Account0D856946": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomInviteAccountsToOrganizationCustomResourceProviderLogGroup4B13FC0F",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomInviteAccountsToOrganizationCustomResourceProviderHandlerC9A5BAC1",
             "Arn",
           ],
         },
         "assumeRoleName": "AWSControlTowerExecution",
         "commitId": "abcd123456789",
-        "configTableName": Object {
+        "configTableName": {
           "Ref": "ConfigTable5CD72349",
         },
-        "partition": Object {
+        "partition": {
           "Ref": "AWS::Partition",
         },
         "uuid": "REPLACED-UUID",
@@ -28,22 +28,22 @@ Object {
       "Type": "Custom::InviteAccountsToOrganization",
       "UpdateReplacePolicy": "Delete",
     },
-    "ConfigTable5CD72349": Object {
+    "ConfigTable5CD72349": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "AttributeDefinitions": Array [
-          Object {
+      "Properties": {
+        "AttributeDefinitions": [
+          {
             "AttributeName": "dataType",
             "AttributeType": "S",
           },
         ],
-        "KeySchema": Array [
-          Object {
+        "KeySchema": [
+          {
             "AttributeName": "dataType",
             "KeyType": "HASH",
           },
         ],
-        "ProvisionedThroughput": Object {
+        "ProvisionedThroughput": {
           "ReadCapacityUnits": 5,
           "WriteCapacityUnits": 5,
         },
@@ -51,45 +51,45 @@ Object {
       "Type": "AWS::DynamoDB::Table",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomInviteAccountsToOrganizationCustomResourceProviderHandlerC9A5BAC1": Object {
-      "DependsOn": Array [
+    "CustomInviteAccountsToOrganizationCustomResourceProviderHandlerC9A5BAC1": {
+      "DependsOn": [
         "CustomInviteAccountsToOrganizationCustomResourceProviderRole88663193",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomInviteAccountsToOrganizationCustomResourceProviderRole88663193",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomInviteAccountsToOrganizationCustomResourceProviderLogGroup4B13FC0F": Object {
+    "CustomInviteAccountsToOrganizationCustomResourceProviderLogGroup4B13FC0F": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "CustomKey1E6D0D07",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomInviteAccountsToOrganizationCustomResourceProviderHandlerC9A5BAC1",
               },
             ],
@@ -100,31 +100,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomInviteAccountsToOrganizationCustomResourceProviderRole88663193": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomInviteAccountsToOrganizationCustomResourceProviderRole88663193": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "organizations:AcceptHandshake",
                     "organizations:ListAccounts",
                     "organizations:InviteAccountToOrganization",
@@ -134,32 +134,32 @@ Object {
                   "Effect": "Allow",
                   "Resource": "*",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "dynamodb:Query",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
-                    Object {
-                      "Fn::GetAtt": Array [
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
                         "ConfigTable5CD72349",
                         "Arn",
                       ],
                     },
                   ],
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "sts:AssumeRole",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
-                    Object {
-                      "Fn::Join": Array [
+                  "Resource": [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":iam::*:role/AWSControlTowerExecution",
@@ -177,25 +177,25 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CustomKey1E6D0D07": Object {
+    "CustomKey1E6D0D07": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",

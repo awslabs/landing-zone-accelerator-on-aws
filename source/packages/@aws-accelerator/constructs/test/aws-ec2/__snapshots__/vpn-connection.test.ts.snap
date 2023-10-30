@@ -1,69 +1,264 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`VpnConnection Construct(VpnConnection):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "TestVpnVpnConnection655CF32D": Object {
-      "Properties": Object {
+{
+  "Resources": {
+    "AdvancedVpnCustomResourceCustomResourceResource604EC204": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "AdvancedVpnCustomResourceframeworkonEventC96A1021",
+            "Arn",
+          ],
+        },
+        "amazonIpv4NetworkCidr": "10.0.0.0/16",
+        "customerGatewayId": "Test-Cgw",
+        "customerIpv4NetworkCidr": "192.168.0.0/16",
+        "enableVpnAcceleration": true,
+        "staticRoutesOnly": true,
+        "tags": [
+          {
+            "Key": "Test-Key",
+            "Value": "Test-Value",
+          },
+          {
+            "Key": "Name",
+            "Value": "Advanced-Vpn",
+          },
+        ],
+        "transitGatewayId": "Test-tgw",
+        "vpnTunnelOptions": [
+          {
+            "dpdTimeoutAction": "restart",
+            "dpdTimeoutSeconds": 60,
+            "ikeVersions": [
+              2,
+            ],
+            "logging": {
+              "enable": true,
+            },
+            "phase1": {
+              "dhGroups": [
+                14,
+                20,
+              ],
+              "encryptionAlgorithms": [
+                "AES256",
+              ],
+              "integrityAlgorithms": [
+                "SHA2-256",
+              ],
+            },
+            "phase2": {
+              "dhGroups": [
+                14,
+                20,
+              ],
+              "encryptionAlgorithms": [
+                "AES256",
+              ],
+              "integrityAlgorithms": [
+                "SHA2-256",
+              ],
+            },
+            "preSharedKey": "test-key-1",
+            "tunnelInsideCidr": "169.254.200.0/30",
+          },
+          {
+            "preSharedKey": "test-key-1",
+            "tunnelInsideCidr": "169.254.100.0/30",
+          },
+        ],
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AdvancedVpnCustomResourceframeworkonEventC96A1021": {
+      "DependsOn": [
+        "AdvancedVpnCustomResourceframeworkonEventServiceRoleDefaultPolicyC5BC0C38",
+        "AdvancedVpnCustomResourceframeworkonEventServiceRole2EBDA262",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/AdvancedVpn/CustomResource/Resource)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":lambda:",
+                  {
+                    "Ref": "AWS::Region",
+                  },
+                  ":",
+                  {
+                    "Ref": "AWS::AccountId",
+                  },
+                  ":function:TestFunction",
+                ],
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "AdvancedVpnCustomResourceframeworkonEventServiceRole2EBDA262",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "AdvancedVpnCustomResourceframeworkonEventServiceRole2EBDA262": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AdvancedVpnCustomResourceframeworkonEventServiceRoleDefaultPolicyC5BC0C38": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":lambda:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":function:TestFunction",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":lambda:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":function:TestFunction:*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "AdvancedVpnCustomResourceframeworkonEventServiceRoleDefaultPolicyC5BC0C38",
+        "Roles": [
+          {
+            "Ref": "AdvancedVpnCustomResourceframeworkonEventServiceRole2EBDA262",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "TestVpnVpnConnection655CF32D": {
+      "Properties": {
         "CustomerGatewayId": "Test-Cgw",
         "StaticRoutesOnly": true,
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "Test-Vpn",
           },
-          Object {
+          {
             "Key": "Test-Key",
             "Value": "Test-Value",
           },
         ],
         "TransitGatewayId": "Test-tgw",
         "Type": "ipsec.1",
-        "VpnTunnelOptionsSpecifications": Array [
-          Object {
-            "PreSharedKey": Object {
-              "Fn::Join": Array [
-                "",
-                Array [
-                  "{{resolve:secretsmanager:arn:",
-                  Object {
-                    "Ref": "AWS::Partition",
-                  },
-                  ":secretsmanager:",
-                  Object {
-                    "Ref": "AWS::Region",
-                  },
-                  ":",
-                  Object {
-                    "Ref": "AWS::AccountId",
-                  },
-                  ":secret:test-key-1:SecretString:::}}",
-                ],
-              ],
-            },
+        "VpnTunnelOptionsSpecifications": [
+          {
+            "PreSharedKey": "test-key-1",
             "TunnelInsideCidr": "169.254.200.0/30",
           },
-          Object {
-            "PreSharedKey": Object {
-              "Fn::Join": Array [
-                "",
-                Array [
-                  "{{resolve:secretsmanager:arn:",
-                  Object {
-                    "Ref": "AWS::Partition",
-                  },
-                  ":secretsmanager:",
-                  Object {
-                    "Ref": "AWS::Region",
-                  },
-                  ":",
-                  Object {
-                    "Ref": "AWS::AccountId",
-                  },
-                  ":secret:test-key-1:SecretString:::}}",
-                ],
-              ],
-            },
+          {
+            "PreSharedKey": "test-key-1",
             "TunnelInsideCidr": "169.254.100.0/30",
           },
         ],

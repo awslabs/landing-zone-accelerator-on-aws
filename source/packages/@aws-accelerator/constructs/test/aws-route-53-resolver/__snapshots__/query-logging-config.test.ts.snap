@@ -1,47 +1,47 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`QueryLoggingConfig Construct(QueryLoggingConfig):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CustomQueryLoggingConfigAssociationCustomResourceProviderHandlerFDE723DC": Object {
-      "DependsOn": Array [
+{
+  "Resources": {
+    "CustomQueryLoggingConfigAssociationCustomResourceProviderHandlerFDE723DC": {
+      "DependsOn": [
         "CustomQueryLoggingConfigAssociationCustomResourceProviderRole0317AB9A",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomQueryLoggingConfigAssociationCustomResourceProviderRole0317AB9A",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomQueryLoggingConfigAssociationCustomResourceProviderLogGroupD12EADAE": Object {
+    "CustomQueryLoggingConfigAssociationCustomResourceProviderLogGroupD12EADAE": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "Key961B73FD",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomQueryLoggingConfigAssociationCustomResourceProviderHandlerFDE723DC",
               },
             ],
@@ -52,31 +52,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomQueryLoggingConfigAssociationCustomResourceProviderRole0317AB9A": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomQueryLoggingConfigAssociationCustomResourceProviderRole0317AB9A": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "route53resolver:DisassociateResolverQueryLogConfig",
                     "route53resolver:AssociateResolverQueryLogConfig",
                     "route53resolver:ListResolverQueryLogConfigs",
@@ -87,13 +87,13 @@ Object {
                   "Effect": "Allow",
                   "Resource": "*",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "iam:CreateServiceLinkedRole",
                   ],
-                  "Condition": Object {
-                    "ForAnyValue:StringEquals": Object {
-                      "iam:AWSServiceName": Array [
+                  "Condition": {
+                    "ForAnyValue:StringEquals": {
+                      "iam:AWSServiceName": [
                         "route53resolver.amazonaws.com",
                       ],
                     },
@@ -110,10 +110,10 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CwlQueryLoggingTest70DD9614": Object {
-      "Properties": Object {
-        "DestinationArn": Object {
-          "Fn::GetAtt": Array [
+    "CwlQueryLoggingTest70DD9614": {
+      "Properties": {
+        "DestinationArn": {
+          "Fn::GetAtt": [
             "TestLogGroup4EEF7AD4",
             "Arn",
           ],
@@ -121,25 +121,25 @@ Object {
       },
       "Type": "AWS::Route53Resolver::ResolverQueryLoggingConfig",
     },
-    "Key961B73FD": Object {
+    "Key961B73FD": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -156,14 +156,14 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "S3QueryLoggingTestA05F494B": Object {
-      "Properties": Object {
-        "DestinationArn": Object {
-          "Fn::Join": Array [
+    "S3QueryLoggingTestA05F494B": {
+      "Properties": {
+        "DestinationArn": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "arn:",
-              Object {
+              {
                 "Ref": "AWS::Partition",
               },
               ":s3:::testbucket",
@@ -173,28 +173,28 @@ Object {
       },
       "Type": "AWS::Route53Resolver::ResolverQueryLoggingConfig",
     },
-    "TestLogGroup4EEF7AD4": Object {
+    "TestLogGroup4EEF7AD4": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
+      "Properties": {
         "RetentionInDays": 731,
       },
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Retain",
     },
-    "TestLogGroupPolicyResourcePolicyFDE53895": Object {
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Fn::Join": Array [
+    "TestLogGroupPolicyResourcePolicyFDE53895": {
+      "Properties": {
+        "PolicyDocument": {
+          "Fn::Join": [
             "",
-            Array [
-              "{\\"Statement\\":[{\\"Action\\":[\\"logs:CreateLogStream\\",\\"logs:PutLogEvents\\"],\\"Condition\\":{\\"StringEquals\\":{\\"aws:PrincipalOrgId\\":\\"o-123test\\"}},\\"Effect\\":\\"Allow\\",\\"Principal\\":{\\"Service\\":\\"delivery.logs.amazonaws.com\\"},\\"Resource\\":\\"",
-              Object {
-                "Fn::GetAtt": Array [
+            [
+              "{"Statement":[{"Action":["logs:CreateLogStream","logs:PutLogEvents"],"Condition":{"StringEquals":{"aws:PrincipalOrgId":"o-123test"}},"Effect":"Allow","Principal":{"Service":"delivery.logs.amazonaws.com"},"Resource":"",
+              {
+                "Fn::GetAtt": [
                   "TestLogGroup4EEF7AD4",
                   "Arn",
                 ],
               },
-              ":log-stream:*\\",\\"Sid\\":\\"Allow log delivery access\\"}],\\"Version\\":\\"2012-10-17\\"}",
+              ":log-stream:*","Sid":"Allow log delivery access"}],"Version":"2012-10-17"}",
             ],
           ],
         },
@@ -202,20 +202,20 @@ Object {
       },
       "Type": "AWS::Logs::ResourcePolicy",
     },
-    "TestQueryLoggingAssocQueryLoggingConfigAssociationE89E2286": Object {
+    "TestQueryLoggingAssocQueryLoggingConfigAssociationE89E2286": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomQueryLoggingConfigAssociationCustomResourceProviderLogGroupD12EADAE",
       ],
-      "Properties": Object {
-        "ResolverQueryLogConfigId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ResolverQueryLogConfigId": {
+          "Fn::GetAtt": [
             "S3QueryLoggingTestA05F494B",
             "Id",
           ],
         },
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomQueryLoggingConfigAssociationCustomResourceProviderHandlerFDE723DC",
             "Arn",
           ],
@@ -230,47 +230,47 @@ Object {
 `;
 
 exports[`QueryLoggingConfig Construct(QueryLoggingConfig):  Snapshot Test 2`] = `
-Object {
-  "Resources": Object {
-    "CustomLogResourcePolicyCustomResourceProviderHandlerB58C0C34": Object {
-      "DependsOn": Array [
+{
+  "Resources": {
+    "CustomLogResourcePolicyCustomResourceProviderHandlerB58C0C34": {
+      "DependsOn": [
         "CustomLogResourcePolicyCustomResourceProviderRole83D4C53E",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomLogResourcePolicyCustomResourceProviderRole83D4C53E",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomLogResourcePolicyCustomResourceProviderLogGroupB4DDD051": Object {
+    "CustomLogResourcePolicyCustomResourceProviderLogGroupB4DDD051": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "Key961B73FD",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomLogResourcePolicyCustomResourceProviderHandlerB58C0C34",
               },
             ],
@@ -281,31 +281,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomLogResourcePolicyCustomResourceProviderRole83D4C53E": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomLogResourcePolicyCustomResourceProviderRole83D4C53E": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "logs:PutResourcePolicy",
                     "logs:DeleteResourcePolicy",
                   ],
@@ -321,45 +321,45 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CustomQueryLoggingConfigAssociationCustomResourceProviderHandlerFDE723DC": Object {
-      "DependsOn": Array [
+    "CustomQueryLoggingConfigAssociationCustomResourceProviderHandlerFDE723DC": {
+      "DependsOn": [
         "CustomQueryLoggingConfigAssociationCustomResourceProviderRole0317AB9A",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomQueryLoggingConfigAssociationCustomResourceProviderRole0317AB9A",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomQueryLoggingConfigAssociationCustomResourceProviderLogGroupD12EADAE": Object {
+    "CustomQueryLoggingConfigAssociationCustomResourceProviderLogGroupD12EADAE": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "Key961B73FD",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomQueryLoggingConfigAssociationCustomResourceProviderHandlerFDE723DC",
               },
             ],
@@ -370,31 +370,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomQueryLoggingConfigAssociationCustomResourceProviderRole0317AB9A": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomQueryLoggingConfigAssociationCustomResourceProviderRole0317AB9A": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "route53resolver:DisassociateResolverQueryLogConfig",
                     "route53resolver:AssociateResolverQueryLogConfig",
                     "route53resolver:ListResolverQueryLogConfigs",
@@ -405,13 +405,13 @@ Object {
                   "Effect": "Allow",
                   "Resource": "*",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "iam:CreateServiceLinkedRole",
                   ],
-                  "Condition": Object {
-                    "ForAnyValue:StringEquals": Object {
-                      "iam:AWSServiceName": Array [
+                  "Condition": {
+                    "ForAnyValue:StringEquals": {
+                      "iam:AWSServiceName": [
                         "route53resolver.amazonaws.com",
                       ],
                     },
@@ -428,45 +428,45 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CustomQueryLoggingConfigCustomResourceProviderHandler2B99DCC6": Object {
-      "DependsOn": Array [
+    "CustomQueryLoggingConfigCustomResourceProviderHandler2B99DCC6": {
+      "DependsOn": [
         "CustomQueryLoggingConfigCustomResourceProviderRole70878758",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomQueryLoggingConfigCustomResourceProviderRole70878758",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomQueryLoggingConfigCustomResourceProviderLogGroup58425034": Object {
+    "CustomQueryLoggingConfigCustomResourceProviderLogGroup58425034": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "Key961B73FD",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomQueryLoggingConfigCustomResourceProviderHandler2B99DCC6",
               },
             ],
@@ -477,31 +477,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomQueryLoggingConfigCustomResourceProviderRole70878758": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomQueryLoggingConfigCustomResourceProviderRole70878758": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "route53resolver:ListResolverQueryLogConfigs",
                     "route53resolver:CreateResolverQueryLogConfig",
                     "route53resolver:DeleteResolverQueryLogConfig",
@@ -510,13 +510,13 @@ Object {
                   "Effect": "Allow",
                   "Resource": "*",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "iam:CreateServiceLinkedRole",
                   ],
-                  "Condition": Object {
-                    "ForAnyValue:StringEquals": Object {
-                      "iam:AWSServiceName": Array [
+                  "Condition": {
+                    "ForAnyValue:StringEquals": {
+                      "iam:AWSServiceName": [
                         "route53resolver.amazonaws.com",
                       ],
                     },
@@ -533,37 +533,37 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CwlQueryLoggingTestLogResourcePolicy9F3660E7": Object {
+    "CwlQueryLoggingTestLogResourcePolicy9F3660E7": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomLogResourcePolicyCustomResourceProviderLogGroupB4DDD051",
         "CwlQueryLoggingTestQueryLoggingConfig7F7EA5E9",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomLogResourcePolicyCustomResourceProviderHandlerB58C0C34",
             "Arn",
           ],
         },
         "policyName": "AllowLogDeliveryAccess",
-        "policyStatements": Array [
-          Object {
-            "Action": Array [
+        "policyStatements": [
+          {
+            "Action": [
               "logs:CreateLogStream",
               "logs:PutLogEvents",
             ],
             "Effect": "Allow",
-            "Principal": Object {
+            "Principal": {
               "Service": "delivery.logs.amazonaws.com",
             },
-            "Resource": Array [
-              Object {
-                "Fn::Join": Array [
+            "Resource": [
+              {
+                "Fn::Join": [
                   "",
-                  Array [
-                    Object {
-                      "Fn::GetAtt": Array [
+                  [
+                    {
+                      "Fn::GetAtt": [
                         "TestLogGroup4EEF7AD4",
                         "Arn",
                       ],
@@ -580,21 +580,21 @@ Object {
       "Type": "Custom::LogResourcePolicy",
       "UpdateReplacePolicy": "Delete",
     },
-    "CwlQueryLoggingTestQueryLoggingConfig7F7EA5E9": Object {
+    "CwlQueryLoggingTestQueryLoggingConfig7F7EA5E9": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomQueryLoggingConfigCustomResourceProviderLogGroup58425034",
       ],
-      "Properties": Object {
-        "DestinationArn": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "DestinationArn": {
+          "Fn::GetAtt": [
             "TestLogGroup4EEF7AD4",
             "Arn",
           ],
         },
         "Name": "CwlQueryLoggingTest",
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomQueryLoggingConfigCustomResourceProviderHandler2B99DCC6",
             "Arn",
           ],
@@ -603,25 +603,25 @@ Object {
       "Type": "Custom::QueryLoggingConfig",
       "UpdateReplacePolicy": "Delete",
     },
-    "Key961B73FD": Object {
+    "Key961B73FD": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -638,18 +638,18 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "S3QueryLoggingTestQueryLoggingConfig630BFF1D": Object {
+    "S3QueryLoggingTestQueryLoggingConfig630BFF1D": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomQueryLoggingConfigCustomResourceProviderLogGroup58425034",
       ],
-      "Properties": Object {
-        "DestinationArn": Object {
-          "Fn::Join": Array [
+      "Properties": {
+        "DestinationArn": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "arn:",
-              Object {
+              {
                 "Ref": "AWS::Partition",
               },
               ":s3:::testbucket",
@@ -657,8 +657,8 @@ Object {
           ],
         },
         "Name": "S3QueryLoggingTest",
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomQueryLoggingConfigCustomResourceProviderHandler2B99DCC6",
             "Arn",
           ],
@@ -667,28 +667,28 @@ Object {
       "Type": "Custom::QueryLoggingConfig",
       "UpdateReplacePolicy": "Delete",
     },
-    "TestLogGroup4EEF7AD4": Object {
+    "TestLogGroup4EEF7AD4": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
+      "Properties": {
         "RetentionInDays": 731,
       },
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Retain",
     },
-    "TestQueryLoggingAssocQueryLoggingConfigAssociationE89E2286": Object {
+    "TestQueryLoggingAssocQueryLoggingConfigAssociationE89E2286": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomQueryLoggingConfigAssociationCustomResourceProviderLogGroupD12EADAE",
       ],
-      "Properties": Object {
-        "ResolverQueryLogConfigId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ResolverQueryLogConfigId": {
+          "Fn::GetAtt": [
             "S3QueryLoggingTestQueryLoggingConfig630BFF1D",
             "attrId",
           ],
         },
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomQueryLoggingConfigAssociationCustomResourceProviderHandlerFDE723DC",
             "Arn",
           ],

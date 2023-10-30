@@ -264,15 +264,10 @@ echo "--------------------------------------------------------------------------
 
 do_cmd cd $source_dir
 
-# Install the global lerna package
-# Note: do not install using global (-g) option. This makes build-s3-dist.sh difficult
-# for customers and developers to use, as it globally changes their environment.
-do_cmd yarn add lerna@6.0.0 -W
-
 # Add local install to PATH
 export PATH=$(yarn bin):$PATH
 
-do_cmd yarn lerna bootstrap
+do_cmd yarn install
 do_cmd yarn build          # build javascript from typescript to validate the code
                            # cdk synth doesn't always detect issues in the typescript
                            # and may succeed using old build files. This ensures we

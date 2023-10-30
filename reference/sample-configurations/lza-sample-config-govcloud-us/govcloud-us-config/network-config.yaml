@@ -1,0 +1,283 @@
+################################################################################################################
+# For additional configurable services, features, and property descriptions,                                   #
+# please review class NetworkConfig reference in our TypeDoc:                                                  #
+# https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.NetworkConfig.html #
+################################################################################################################
+
+homeRegion: &HOME_REGION us-gov-west-1
+#####################################
+# Delete default VPCs-- use this    #
+# object to delete default VPCs in  #
+# any non-excluded accounts         #
+#####################################
+defaultVpc:
+  delete: true
+  excludeAccounts: []
+
+# Transit Gateway Configurations
+transitGateways:
+  - name: Network-Main
+    account: Network
+    region: *HOME_REGION
+    shareTargets:
+      organizationalUnits:
+        - Infrastructure
+    asn: 65521
+    dnsSupport: enable
+    vpnEcmpSupport: enable
+    defaultRouteTableAssociation: disable
+    defaultRouteTablePropagation: disable
+    autoAcceptSharingAttachments: enable
+    # Adding transit gateway route tables
+    routeTables:
+      - name: Network-Main-Internal
+        routes: []
+      - name: Network-Main-Network-Boundary
+        routes: []
+      - name: Network-Main-SharedServices-Main
+        routes: []
+
+#####################################
+# Endpoint policies -- use this     #
+# object to define standard policies #
+# for VPC endpoints                 #
+#####################################
+endpointPolicies: []
+
+#####################################
+# VPCs-- use this object to deploy  #
+# a VPC in a single account and     #
+# region.                           #
+#####################################
+vpcs:
+  #RFC 1918 Range
+  # 10.0.0.0 - 10.255.255.255 (10/8 prefix)
+  # 172.16.0.0 - 172.31.255.255 (172.16/12 prefix)
+  # 192.168.0.0 - 192.168.255.255 (192.168/16 prefix)
+  # Replace the vpc and subnet cidr ranges based on the requirements
+
+  # Network Account
+  # Deploys the Network-Boundary VPC
+  # Creates 4 subnets in each AZs
+  # Subnets includes untrust, trust, management and tgw attach
+  # This vpc host firewall appliances
+  - name: Network-Boundary
+    account: Network
+    region: *HOME_REGION
+    cidrs:
+      - 10.0.0.0/19
+    internetGateway: true
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Network-Boundary-Untrust-Rt-A
+        routes:
+          - name: TgwRoute
+            destination: 10.0.0.0/8
+            type: transitGateway
+            target: Network-Main
+          - name: IgwRoute
+            destination: 0.0.0.0/0
+            type: internetGateway
+            target: IGW
+      - name: Network-Boundary-Untrust-Rt-B
+        routes:
+          - name: TgwRoute
+            destination: 10.0.0.0/8
+            type: transitGateway
+            target: Network-Main
+          - name: IgwRoute
+            destination: 0.0.0.0/0
+            type: internetGateway
+            target: IGW
+      - name: Network-Boundary-Trust-Rt-A
+      - name: Network-Boundary-Trust-Rt-B
+      - name: Network-Boundary-Management-Rt-A
+        routes:
+          - name: IgwRoute
+            destination: 0.0.0.0/0
+            type: internetGateway
+            target: IGW
+      - name: Network-Boundary-Management-Rt-B
+        routes:
+          - name: IgwRoute
+            destination: 0.0.0.0/0
+            type: internetGateway
+            target: IGW
+      - name: Network-Boundary-TgwAttach-Rt-A
+        routes:
+          - name: NatRoute
+            destination: 0.0.0.0/0
+            type: natGateway
+            target: Network-Boundary-NatGw-A
+      - name: Network-Boundary-TgwAttach-Rt-B
+        routes:
+          - name: NatRoute
+            destination: 0.0.0.0/0
+            type: natGateway
+            target: Network-Boundary-NatGw-B
+    subnets:
+      - name: Network-Boundary-Untrust-A
+        availabilityZone: a
+        routeTable: Network-Boundary-Untrust-Rt-A
+        ipv4CidrBlock: 10.0.0.0/22
+      - name: Network-Boundary-Untrust-B
+        availabilityZone: b
+        routeTable: Network-Boundary-Untrust-Rt-B
+        ipv4CidrBlock: 10.0.4.0/22
+      - name: Network-Boundary-Trust-A
+        availabilityZone: a
+        routeTable: Network-Boundary-Trust-Rt-A
+        ipv4CidrBlock: 10.0.12.0/22
+      - name: Network-Boundary-Trust-B
+        availabilityZone: b
+        routeTable: Network-Boundary-Trust-Rt-B
+        ipv4CidrBlock: 10.0.16.0/22
+      - name: Network-Boundary-Management-A
+        availabilityZone: a
+        routeTable: Network-Boundary-Management-Rt-A
+        ipv4CidrBlock: 10.0.24.0/27
+      - name: Network-Boundary-Management-B
+        availabilityZone: b
+        routeTable: Network-Boundary-Management-Rt-B
+        ipv4CidrBlock: 10.0.24.32/27
+      - name: Network-Boundary-TgwAttach-A
+        availabilityZone: a
+        routeTable: Network-Boundary-TgwAttach-Rt-A
+        ipv4CidrBlock: 10.0.31.208/28
+      - name: Network-Boundary-TgwAttach-B
+        availabilityZone: b
+        routeTable: Network-Boundary-TgwAttach-Rt-B
+        ipv4CidrBlock: 10.0.31.224/28
+    natGateways:
+      - name: Network-Boundary-NatGw-A
+        subnet: Network-Boundary-Untrust-A
+      - name: Network-Boundary-NatGw-B
+        subnet: Network-Boundary-Untrust-B
+    transitGatewayAttachments:
+      - name: Network-Boundary
+        transitGateway:
+          name: Network-Main
+          account: Network
+        routeTableAssociations:
+          - Network-Main-Network-Boundary
+        routeTablePropagations:
+          - Network-Main-Internal
+          - Network-Main-SharedServices-Main
+        subnets:
+          - Network-Boundary-TgwAttach-A
+          - Network-Boundary-TgwAttach-B
+
+  # Shared Services Account
+  # SharedServices-Main VPC
+  # This vpc creates 3 subnets in each AZs
+  # Subnets includes app, data and tgw attach.
+  ### This vpc host sharedsevices applications.
+  - name: SharedServices-Main
+    account: SharedServices
+    region: *HOME_REGION
+    cidrs:
+      - 10.1.0.0/20
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: SharedServices-Main-App-Rt-A
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+      - name: SharedServices-Main-App-Rt-B
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+      - name: SharedServices-Main-Database-Rt-A
+      - name: SharedServices-Main-Database-Rt-B
+      - name: SharedServices-Main-TgwAttach-Rt-A
+      - name: SharedServices-Main-TgwAttach-Rt-B
+    subnets:
+      - name: SharedServices-Main-App-A
+        availabilityZone: a
+        routeTable: SharedServices-Main-App-Rt-A
+        ipv4CidrBlock: 10.1.0.0/22
+      - name: SharedServices-Main-App-B
+        availabilityZone: b
+        routeTable: SharedServices-Main-App-Rt-B
+        ipv4CidrBlock: 10.1.4.0/22
+      - name: SharedServices-Main-Database-A
+        availabilityZone: a
+        routeTable: SharedServices-Main-Database-Rt-A
+        ipv4CidrBlock: 10.1.12.0/24
+      - name: SharedServices-Main-Database-B
+        availabilityZone: b
+        routeTable: SharedServices-Main-Database-Rt-B
+        ipv4CidrBlock: 10.1.13.0/24
+      - name: SharedServices-Main-TgwAttach-A
+        availabilityZone: a
+        routeTable: SharedServices-Main-TgwAttach-Rt-A
+        ipv4CidrBlock: 10.1.15.208/28
+      - name: SharedServices-Main-TgwAttach-B
+        availabilityZone: b
+        routeTable: SharedServices-Main-TgwAttach-Rt-B
+        ipv4CidrBlock: 10.1.15.224/28
+    transitGatewayAttachments:
+      - name: SharedServices-Main
+        transitGateway:
+          name: Network-Main
+          account: Network
+        routeTableAssociations:
+          - Network-Main-SharedServices-Main
+        routeTablePropagations:
+          - Network-Main-Internal
+          - Network-Main-Network-Boundary
+        subnets:
+          - SharedServices-Main-TgwAttach-A
+          - SharedServices-Main-TgwAttach-B
+
+##############################################################
+# Global configuration for VPC flow logs                     #
+# Where there is no flow log configuration defined with VPC  #
+# this configuration will be used for flow log configuration #
+##############################################################
+vpcFlowLogs:
+  trafficType: ALL
+  maxAggregationInterval: 600
+  destinations:
+    - cloud-watch-logs
+  destinationsConfig:
+    cloudWatchLogs:
+      retentionInDays: 30
+  defaultFormat: false
+  customFields:
+    - version
+    - account-id
+    - interface-id
+    - srcaddr
+    - dstaddr
+    - srcport
+    - dstport
+    - protocol
+    - packets
+    - bytes
+    - start
+    - end
+    - action
+    - log-status
+    - vpc-id
+    - subnet-id
+    - instance-id
+    - tcp-flags
+    - type
+    - pkt-srcaddr
+    - pkt-dstaddr
+    - region
+    - az-id
+    - pkt-src-aws-service
+    - pkt-dst-aws-service
+    - flow-direction
+    - traffic-path

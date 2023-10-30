@@ -1,16 +1,16 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`GetPortfolioId Construct(GetPortfolioId):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "AssociateHostedZonesF0E2F0DA": Object {
+{
+  "Resources": {
+    "AssociateHostedZonesF0E2F0DA": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomGetPortfolioIdCustomResourceProviderLogGroupA4D50C6A",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomGetPortfolioIdCustomResourceProviderHandlerB6C78D44",
             "Arn",
           ],
@@ -22,45 +22,45 @@ Object {
       "Type": "Custom::GetPortfolioId",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomGetPortfolioIdCustomResourceProviderHandlerB6C78D44": Object {
-      "DependsOn": Array [
+    "CustomGetPortfolioIdCustomResourceProviderHandlerB6C78D44": {
+      "DependsOn": [
         "CustomGetPortfolioIdCustomResourceProviderRole698D24D6",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomGetPortfolioIdCustomResourceProviderRole698D24D6",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomGetPortfolioIdCustomResourceProviderLogGroupA4D50C6A": Object {
+    "CustomGetPortfolioIdCustomResourceProviderLogGroupA4D50C6A": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "Key961B73FD",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomGetPortfolioIdCustomResourceProviderHandlerB6C78D44",
               },
             ],
@@ -71,31 +71,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomGetPortfolioIdCustomResourceProviderRole698D24D6": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomGetPortfolioIdCustomResourceProviderRole698D24D6": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "servicecatalog:ListPortfolios",
                   ],
                   "Effect": "Allow",
@@ -111,25 +111,25 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "Key961B73FD": Object {
+    "Key961B73FD": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",

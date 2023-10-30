@@ -22,6 +22,8 @@ export interface IVpcEndpoint extends cdk.IResource {
   readonly vpcId: string;
   readonly dnsName?: string;
   readonly hostedZoneId?: string;
+
+  createEndpointRoute: (id: string, destination: string, routeTableId: string) => void;
 }
 
 export enum VpcEndpointType {
@@ -43,12 +45,48 @@ export interface VpcEndpointProps {
   readonly serviceName?: string;
 }
 
-export class VpcEndpoint extends cdk.Resource implements IVpcEndpoint {
+abstract class VpcEndpointBase extends cdk.Resource implements IVpcEndpoint {
+  public abstract readonly vpcEndpointId: string;
+  public abstract readonly vpcId: string;
+  public abstract readonly service: string;
+  public abstract readonly dnsName?: string;
+  public abstract readonly hostedZoneId?: string;
+
+  public createEndpointRoute(id: string, destination: string, routeTableId: string): void {
+    new cdk.aws_ec2.CfnRoute(this, id, {
+      destinationCidrBlock: destination,
+      routeTableId,
+      vpcEndpointId: this.vpcEndpointId,
+    });
+  }
+}
+
+interface VpcEndpointAttributes {
+  vpcId: string;
+  vpcEndpointId: string;
+  service: string;
+}
+
+export class VpcEndpoint extends VpcEndpointBase {
   public readonly vpcEndpointId: string;
   public readonly vpcId: string;
   public readonly service: string;
   public readonly dnsName?: string;
   public readonly hostedZoneId?: string;
+
+  static fromAttributes(scope: Construct, id: string, attrs: VpcEndpointAttributes): IVpcEndpoint {
+    class Import extends VpcEndpointBase {
+      public readonly vpcEndpointId = attrs.vpcEndpointId;
+      public readonly vpcId = attrs.vpcId;
+      public readonly service = attrs.service;
+      public readonly dnsName?: string;
+      public readonly hostedZoneId?: string;
+      constructor(scope: Construct, id: string) {
+        super(scope, id);
+      }
+    }
+    return new Import(scope, id);
+  }
 
   constructor(scope: Construct, id: string, props: VpcEndpointProps) {
     super(scope, id);
@@ -65,7 +103,7 @@ export class VpcEndpoint extends cdk.Resource implements IVpcEndpoint {
         serviceName = `aws.sagemaker.${cdk.Stack.of(this).region}.${props.service}`;
       }
       if (this.service === 's3-global.accesspoint') {
-        serviceName = `com.aws.${props.service}`;
+        serviceName = `com.amazonaws.${props.service}`;
       }
       // Add the ability against China region to override serviceName due to the prefix of
       // serviceName is inconsistent (com.amazonaws vs cn.com.amazonaws) for VPC interface
@@ -92,20 +130,20 @@ export class VpcEndpoint extends cdk.Resource implements IVpcEndpoint {
       this.dnsName = cdk.Fn.select(1, cdk.Fn.split(':', cdk.Fn.select(dnsEntriesIndex, resource.attrDnsEntries)));
       this.hostedZoneId = cdk.Fn.select(0, cdk.Fn.split(':', cdk.Fn.select(dnsEntriesIndex, resource.attrDnsEntries)));
       return;
-    }
-
-    if (props.vpcEndpointType === VpcEndpointType.GATEWAY) {
+    } else if (props.vpcEndpointType === VpcEndpointType.GATEWAY) {
+      let serviceName = new cdk.aws_ec2.GatewayVpcEndpointAwsService(props.service).name;
+      if (props.serviceName) {
+        serviceName = props.serviceName;
+      }
       const resource = new cdk.aws_ec2.CfnVPCEndpoint(this, 'Resource', {
-        serviceName: new cdk.aws_ec2.GatewayVpcEndpointAwsService(props.service).name,
+        serviceName,
         vpcId: this.vpcId,
         routeTableIds: props.routeTables,
         policyDocument: props.policyDocument,
       });
       this.vpcEndpointId = resource.ref;
       return;
-    }
-
-    if (props.vpcEndpointType === VpcEndpointType.GWLB) {
+    } else {
       const servicePrefix = props.partition === 'aws-cn' ? 'cn.com.amazonaws' : 'com.amazonaws';
       const serviceName = `${servicePrefix}.vpce.${cdk.Stack.of(this).region}.${props.service}`;
 
@@ -118,15 +156,5 @@ export class VpcEndpoint extends cdk.Resource implements IVpcEndpoint {
       this.vpcEndpointId = resource.ref;
       return;
     }
-
-    throw new Error('Invalid vpcEndpointType specified');
-  }
-
-  public createEndpointRoute(id: string, destination: string, routeTableId: string): void {
-    new cdk.aws_ec2.CfnRoute(this, id, {
-      destinationCidrBlock: destination,
-      routeTableId,
-      vpcEndpointId: this.vpcEndpointId,
-    });
   }
 }

@@ -37,6 +37,25 @@ const stack = new PipelineStack(app, 'PipelineStack', {
   auditAccountEmail: 'accelerator-audit@example.com',
   controlTowerEnabled: 'Yes',
   partition: 'aws',
+  env: {
+    account: '000000000000',
+    region: 'us-east-1',
+  },
+  useExistingConfigRepo: false,
+  configRepositoryName: 'aws-accelerator-config',
+  configRepositoryBranchName: 'main',
+  prefixes: {
+    accelerator: 'AWSAccelerator',
+    kmsAlias: 'alias/accelerator',
+    bucketName: 'aws-accelerator',
+    ssmParamName: '/accelerator',
+    snsTopicName: 'accelerator',
+    repoName: 'aws-accelerator',
+    secretName: '/accelerator',
+    trailLogName: 'aws-accelerator',
+    databaseName: 'aws-accelerator',
+  },
+  enableSingleAccountMode: false,
 });
 
 describe('PipelineStack', () => {

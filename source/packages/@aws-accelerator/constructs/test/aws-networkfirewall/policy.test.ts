@@ -14,33 +14,82 @@
 import * as cdk from 'aws-cdk-lib';
 import { FirewallPolicyProperty, NetworkFirewallPolicy } from '../../lib/aws-networkfirewall/policy';
 import { snapShotTest } from '../snapshot-test';
+import { describe, it } from '@jest/globals';
 
 const testNamePrefix = 'Construct(NetworkFirewallPolicy): ';
 
+const importedFirewallPolicyArn = 'arn:aws:network-firewall:us-east-1:222222222222:firewall-policy/TestImportedPolicy';
+
 //Initialize stack for resource configuration test
 const stack = new cdk.Stack();
-
-const firewallPolicy: FirewallPolicyProperty = {
-  statelessDefaultActions: ['aws:forward_to_sfe'],
-  statelessFragmentDefaultActions: ['aws:forward_to_sfe'],
-  statefulEngineOptions: 'STRICT_ORDER',
-  statefulRuleGroupReferences: [
-    {
-      priority: 123,
-      resourceArn: 'arn:aws:network-firewall:us-east-1:222222222222:stateful-rulegroup/TestGroup',
-    },
-  ],
-};
-
-new NetworkFirewallPolicy(stack, 'TestPolicy', {
-  firewallPolicy: firewallPolicy,
-  name: 'TestFirewallPolicy',
-  tags: [],
-});
 
 /**
  * Network Firewall construct test
  */
 describe('Network Firewall Policy', () => {
+  it('test stateful engine', () => {
+    const firewallPolicy: FirewallPolicyProperty = {
+      statelessDefaultActions: ['aws:forward_to_sfe'],
+      statelessFragmentDefaultActions: ['aws:forward_to_sfe'],
+      statefulEngineOptions: 'STRICT_ORDER',
+      statefulRuleGroupReferences: [
+        {
+          priority: 123,
+          resourceArn: 'arn:aws:network-firewall:us-east-1:222222222222:stateful-rulegroup/TestGroup',
+        },
+      ],
+    };
+
+    new NetworkFirewallPolicy(stack, 'TestPolicy', {
+      firewallPolicy: firewallPolicy,
+      name: 'TestFirewallPolicy',
+      tags: [],
+    });
+  });
+
+  it('test custom action', () => {
+    const testFirewallPolicy: FirewallPolicyProperty = {
+      statelessDefaultActions: ['statelessDefaultActions'],
+      statelessFragmentDefaultActions: ['statelessFragmentDefaultActions'],
+
+      statefulDefaultActions: ['statefulDefaultActions'],
+      statefulEngineOptions: 'statefulEngineOptions',
+      statefulRuleGroupReferences: [
+        {
+          resourceArn: 'resourceArn',
+          priority: 123,
+        },
+      ],
+      statelessCustomActions: [
+        {
+          actionDefinition: {
+            publishMetricAction: {
+              dimensions: ['CustomValue'],
+            },
+          },
+          actionName: 'actionName',
+        },
+      ],
+      statelessRuleGroupReferences: [
+        {
+          priority: 123,
+          resourceArn: 'resourceArn',
+        },
+      ],
+    };
+    new NetworkFirewallPolicy(stack, 'TestPolicy1', {
+      firewallPolicy: testFirewallPolicy,
+      name: 'TestFirewallPolicy1',
+      tags: [],
+    });
+  });
+
+  it('test import policy', () => {
+    NetworkFirewallPolicy.fromAttributes(stack, 'TestImportPolicy', {
+      policyName: importedFirewallPolicyArn,
+      policyArn: 'importedPolicyArn',
+    });
+  });
+
   snapShotTest(testNamePrefix, stack);
 });

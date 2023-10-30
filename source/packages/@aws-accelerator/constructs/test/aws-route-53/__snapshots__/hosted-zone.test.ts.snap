@@ -1,15 +1,315 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`HostedZone Construct(HostedZone):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "TestHostedZone68F306E4": Object {
-      "Properties": Object {
-        "Name": "s3-global.accesspoint.aws.com",
-        "VPCs": Array [
-          Object {
+{
+  "Resources": {
+    "AppstreamApiHostedZoneEC555793": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "appstream2.",
+              {
+                "Ref": "AWS::Region",
+              },
+              ".amazonaws.com",
+            ],
+          ],
+        },
+        "VPCs": [
+          {
             "VPCId": "Test",
-            "VPCRegion": Object {
+            "VPCRegion": {
+              "Ref": "AWS::Region",
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Route53::HostedZone",
+    },
+    "DeviceAdvisorIotHostedZoneC6F4CC0C": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "deviceadvisor.iot.",
+              {
+                "Ref": "AWS::Region",
+              },
+              ".amazonaws.com",
+            ],
+          ],
+        },
+        "VPCs": [
+          {
+            "VPCId": "Test",
+            "VPCRegion": {
+              "Ref": "AWS::Region",
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Route53::HostedZone",
+    },
+    "EcrApiHostedZoneD58C89CF": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "api.ecr.",
+              {
+                "Ref": "AWS::Region",
+              },
+              ".amazonaws.com.",
+            ],
+          ],
+        },
+        "VPCs": [
+          {
+            "VPCId": "Test",
+            "VPCRegion": {
+              "Ref": "AWS::Region",
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Route53::HostedZone",
+    },
+    "EcsAgentHostedZone078A81E8": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "ecs-a.",
+              {
+                "Ref": "AWS::Region",
+              },
+              ".amazonaws.com",
+            ],
+          ],
+        },
+        "VPCs": [
+          {
+            "VPCId": "Test",
+            "VPCRegion": {
+              "Ref": "AWS::Region",
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Route53::HostedZone",
+    },
+    "EcsTelemetryHostedZone654D1D44": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "ecs-t.",
+              {
+                "Ref": "AWS::Region",
+              },
+              ".amazonaws.com",
+            ],
+          ],
+        },
+        "VPCs": [
+          {
+            "VPCId": "Test",
+            "VPCRegion": {
+              "Ref": "AWS::Region",
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Route53::HostedZone",
+    },
+    "PintpointSmsVoiceV2HostedZone9DE1AD33": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "sms-voice.",
+              {
+                "Ref": "AWS::Region",
+              },
+              ".amazonaws.com",
+            ],
+          ],
+        },
+        "VPCs": [
+          {
+            "VPCId": "Test",
+            "VPCRegion": {
+              "Ref": "AWS::Region",
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Route53::HostedZone",
+    },
+    "RumDataplaneHostedZone1346DE6C": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "dataplane.rum.",
+              {
+                "Ref": "AWS::Region",
+              },
+              ".amazonaws.com",
+            ],
+          ],
+        },
+        "VPCs": [
+          {
+            "VPCId": "Test",
+            "VPCRegion": {
+              "Ref": "AWS::Region",
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Route53::HostedZone",
+    },
+    "SageMakerNoteBookHostedZone355C458F": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "notebook.",
+              {
+                "Ref": "AWS::Region",
+              },
+              ".sagemaker.aws",
+            ],
+          ],
+        },
+        "VPCs": [
+          {
+            "VPCId": "Test",
+            "VPCRegion": {
+              "Ref": "AWS::Region",
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Route53::HostedZone",
+    },
+    "SageMakerStudioHostedZone98963296": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "studio.",
+              {
+                "Ref": "AWS::Region",
+              },
+              ".sagemaker.aws",
+            ],
+          ],
+        },
+        "VPCs": [
+          {
+            "VPCId": "Test",
+            "VPCRegion": {
+              "Ref": "AWS::Region",
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Route53::HostedZone",
+    },
+    "TestHostedZone68F306E4": {
+      "Properties": {
+        "Name": "s3-global.accesspoint.amazonaws.com",
+        "VPCs": [
+          {
+            "VPCId": "Test",
+            "VPCRegion": {
+              "Ref": "AWS::Region",
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Route53::HostedZone",
+    },
+    "codeArtifactApiHostedZoneD0D526E8": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "codeartifact.",
+              {
+                "Ref": "AWS::Region",
+              },
+              ".amazonaws.com",
+            ],
+          ],
+        },
+        "VPCs": [
+          {
+            "VPCId": "Test",
+            "VPCRegion": {
+              "Ref": "AWS::Region",
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Route53::HostedZone",
+    },
+    "codeArtifactRepositoriesHostedZoneF088B188": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "d.codeartifact.",
+              {
+                "Ref": "AWS::Region",
+              },
+              ".amazonaws.com",
+            ],
+          ],
+        },
+        "VPCs": [
+          {
+            "VPCId": "Test",
+            "VPCRegion": {
+              "Ref": "AWS::Region",
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Route53::HostedZone",
+    },
+    "s3HostedHostedZoneC29BF087": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "s3.",
+              {
+                "Ref": "AWS::Region",
+              },
+              ".amazonaws.com",
+            ],
+          ],
+        },
+        "VPCs": [
+          {
+            "VPCId": "Test",
+            "VPCRegion": {
               "Ref": "AWS::Region",
             },
           },

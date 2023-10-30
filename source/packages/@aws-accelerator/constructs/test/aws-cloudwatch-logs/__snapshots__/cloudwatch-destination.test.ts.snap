@@ -1,21 +1,21 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`CloudWatchDestination Construct(CloudWatchDestination):  Snapshot Test 1`] = `
-Object {
-  "Conditions": Object {
-    "AwsCdkKinesisEncryptedStreamsUnsupportedRegions": Object {
-      "Fn::Or": Array [
-        Object {
-          "Fn::Equals": Array [
-            Object {
+{
+  "Conditions": {
+    "AwsCdkKinesisEncryptedStreamsUnsupportedRegions": {
+      "Fn::Or": [
+        {
+          "Fn::Equals": [
+            {
               "Ref": "AWS::Region",
             },
             "cn-north-1",
           ],
         },
-        Object {
-          "Fn::Equals": Array [
-            Object {
+        {
+          "Fn::Equals": [
+            {
               "Ref": "AWS::Region",
             },
             "cn-northwest-1",
@@ -24,38 +24,38 @@ Object {
       ],
     },
   },
-  "Resources": Object {
-    "CloudWatchDestination47668810": Object {
-      "Properties": Object {
+  "Resources": {
+    "CloudWatchDestination47668810": {
+      "Properties": {
         "DestinationName": "AWSAcceleratorCloudWatchToS3",
-        "DestinationPolicy": Object {
-          "Fn::Join": Array [
+        "DestinationPolicy": {
+          "Fn::Join": [
             "",
-            Array [
-              "{\\"Version\\":\\"2012-10-17\\",\\"Statement\\":[{\\"Effect\\":\\"Allow\\",\\"Principal\\":{\\"AWS\\":[\\"*\\"]},\\"Action\\":\\"logs:PutSubscriptionFilter\\",\\"Resource\\":\\"arn:",
-              Object {
+            [
+              "{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":"logs:PutSubscriptionFilter","Resource":"arn:",
+              {
                 "Ref": "AWS::Partition",
               },
               ":logs:",
-              Object {
+              {
                 "Ref": "AWS::Region",
               },
               ":",
-              Object {
+              {
                 "Ref": "AWS::AccountId",
               },
-              ":destination:AWSAcceleratorCloudWatchToS3\\",\\"Condition\\":{\\"StringEquals\\":{\\"aws:PrincipalOrgID\\":\\"o-some-org-id\\"}}}]}",
+              ":destination:AWSAcceleratorCloudWatchToS3","Condition":{"StringEquals":{"aws:PrincipalOrgID":"o-some-org-id"}}}]}",
             ],
           ],
         },
-        "RoleArn": Object {
-          "Fn::GetAtt": Array [
+        "RoleArn": {
+          "Fn::GetAtt": [
             "CloudWatchDestinationLogsKinesisRole54686795",
             "Arn",
           ],
         },
-        "TargetArn": Object {
-          "Fn::GetAtt": Array [
+        "TargetArn": {
+          "Fn::GetAtt": [
             "CustomStreamE8E9158E",
             "Arn",
           ],
@@ -63,24 +63,75 @@ Object {
       },
       "Type": "AWS::Logs::Destination",
     },
-    "CloudWatchDestinationLogsKinesisRole54686795": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CloudWatchDestinationExistingIamE1F9FD4A": {
+      "Properties": {
+        "DestinationName": "AWSAcceleratorCloudWatchToS3",
+        "DestinationPolicy": {
+          "Fn::Join": [
+            "",
+            [
+              "{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":"logs:PutSubscriptionFilter","Resource":"arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":logs:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":destination:AWSAcceleratorCloudWatchToS3","Condition":{"StringEquals":{"aws:PrincipalOrgID":"o-some-org-id"}}}]}",
+            ],
+          ],
+        },
+        "RoleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":role/AWSAcceleratorLogReplicationRole-",
+              {
+                "Ref": "AWS::Region",
+              },
+            ],
+          ],
+        },
+        "TargetArn": {
+          "Fn::GetAtt": [
+            "CustomStreamExistingIamFE5F8092",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::Logs::Destination",
+    },
+    "CloudWatchDestinationLogsKinesisRole54686795": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
-                "Service": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "Service": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "logs.",
-                      Object {
+                      {
                         "Ref": "AWS::Region",
                       },
                       ".",
-                      Object {
+                      {
                         "Ref": "AWS::URLSuffix",
                       },
                     ],
@@ -91,19 +142,19 @@ Object {
           ],
           "Version": "2012-10-17",
         },
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "kinesis:ListShards",
                     "kinesis:PutRecord",
                     "kinesis:PutRecords",
                   ],
                   "Effect": "Allow",
-                  "Resource": Object {
-                    "Fn::GetAtt": Array [
+                  "Resource": {
+                    "Fn::GetAtt": [
                       "CustomStreamE8E9158E",
                       "Arn",
                     ],
@@ -114,11 +165,11 @@ Object {
             },
             "PolicyName": "KinesisAccess",
           },
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "kms:Decrypt",
                     "kms:Encrypt",
                     "kms:GenerateDataKey",
@@ -129,8 +180,8 @@ Object {
                     "kms:ReEncryptFrom",
                   ],
                   "Effect": "Allow",
-                  "Resource": Object {
-                    "Fn::GetAtt": Array [
+                  "Resource": {
+                    "Fn::GetAtt": [
                       "CustomKey1E6D0D07",
                       "Arn",
                     ],
@@ -145,25 +196,25 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CustomKey1E6D0D07": Object {
+    "CustomKey1E6D0D07": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -180,24 +231,75 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomStreamE8E9158E": Object {
-      "Properties": Object {
+    "CustomKeyExistingIam1584FEB7": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomStreamE8E9158E": {
+      "Properties": {
         "RetentionPeriodHours": 24,
         "ShardCount": 1,
-        "StreamEncryption": Object {
-          "Fn::If": Array [
+        "StreamEncryption": {
+          "Fn::If": [
             "AwsCdkKinesisEncryptedStreamsUnsupportedRegions",
-            Object {
+            {
               "Ref": "AWS::NoValue",
             },
-            Object {
+            {
               "EncryptionType": "KMS",
               "KeyId": "alias/aws/kinesis",
             },
           ],
         },
-        "StreamModeDetails": Object {
-          "StreamMode": "PROVISIONED",
+      },
+      "Type": "AWS::Kinesis::Stream",
+    },
+    "CustomStreamExistingIamFE5F8092": {
+      "Properties": {
+        "RetentionPeriodHours": 24,
+        "ShardCount": 1,
+        "StreamEncryption": {
+          "Fn::If": [
+            "AwsCdkKinesisEncryptedStreamsUnsupportedRegions",
+            {
+              "Ref": "AWS::NoValue",
+            },
+            {
+              "EncryptionType": "KMS",
+              "KeyId": "alias/aws/kinesis",
+            },
+          ],
         },
       },
       "Type": "AWS::Kinesis::Stream",
@@ -207,21 +309,21 @@ Object {
 `;
 
 exports[`CloudWatchDestination Construct(CloudWatchDestination):  Snapshot Test 2`] = `
-Object {
-  "Conditions": Object {
-    "AwsCdkKinesisEncryptedStreamsUnsupportedRegions": Object {
-      "Fn::Or": Array [
-        Object {
-          "Fn::Equals": Array [
-            Object {
+{
+  "Conditions": {
+    "AwsCdkKinesisEncryptedStreamsUnsupportedRegions": {
+      "Fn::Or": [
+        {
+          "Fn::Equals": [
+            {
               "Ref": "AWS::Region",
             },
             "cn-north-1",
           ],
         },
-        Object {
-          "Fn::Equals": Array [
-            Object {
+        {
+          "Fn::Equals": [
+            {
               "Ref": "AWS::Region",
             },
             "cn-northwest-1",
@@ -230,38 +332,38 @@ Object {
       ],
     },
   },
-  "Resources": Object {
-    "CloudWatchDestination47668810": Object {
-      "Properties": Object {
+  "Resources": {
+    "CloudWatchDestination47668810": {
+      "Properties": {
         "DestinationName": "AWSAcceleratorCloudWatchToS3",
-        "DestinationPolicy": Object {
-          "Fn::Join": Array [
+        "DestinationPolicy": {
+          "Fn::Join": [
             "",
-            Array [
-              "{\\"Version\\":\\"2012-10-17\\",\\"Statement\\":[{\\"Effect\\":\\"Allow\\",\\"Principal\\":{\\"AWS\\":[\\"111111111111\\",\\"222222222222\\"]},\\"Action\\":\\"logs:PutSubscriptionFilter\\",\\"Resource\\":\\"arn:",
-              Object {
+            [
+              "{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["111111111111","222222222222"]},"Action":"logs:PutSubscriptionFilter","Resource":"arn:",
+              {
                 "Ref": "AWS::Partition",
               },
               ":logs:",
-              Object {
+              {
                 "Ref": "AWS::Region",
               },
               ":",
-              Object {
+              {
                 "Ref": "AWS::AccountId",
               },
-              ":destination:AWSAcceleratorCloudWatchToS3\\"}]}",
+              ":destination:AWSAcceleratorCloudWatchToS3"}]}",
             ],
           ],
         },
-        "RoleArn": Object {
-          "Fn::GetAtt": Array [
+        "RoleArn": {
+          "Fn::GetAtt": [
             "CloudWatchDestinationLogsKinesisRole54686795",
             "Arn",
           ],
         },
-        "TargetArn": Object {
-          "Fn::GetAtt": Array [
+        "TargetArn": {
+          "Fn::GetAtt": [
             "CustomStreamE8E9158E",
             "Arn",
           ],
@@ -269,24 +371,24 @@ Object {
       },
       "Type": "AWS::Logs::Destination",
     },
-    "CloudWatchDestinationLogsKinesisRole54686795": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CloudWatchDestinationLogsKinesisRole54686795": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
-                "Service": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "Service": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "logs.",
-                      Object {
+                      {
                         "Ref": "AWS::Region",
                       },
                       ".",
-                      Object {
+                      {
                         "Ref": "AWS::URLSuffix",
                       },
                     ],
@@ -297,19 +399,19 @@ Object {
           ],
           "Version": "2012-10-17",
         },
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "kinesis:ListShards",
                     "kinesis:PutRecord",
                     "kinesis:PutRecords",
                   ],
                   "Effect": "Allow",
-                  "Resource": Object {
-                    "Fn::GetAtt": Array [
+                  "Resource": {
+                    "Fn::GetAtt": [
                       "CustomStreamE8E9158E",
                       "Arn",
                     ],
@@ -320,11 +422,11 @@ Object {
             },
             "PolicyName": "KinesisAccess",
           },
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "kms:Decrypt",
                     "kms:Encrypt",
                     "kms:GenerateDataKey",
@@ -335,8 +437,8 @@ Object {
                     "kms:ReEncryptFrom",
                   ],
                   "Effect": "Allow",
-                  "Resource": Object {
-                    "Fn::GetAtt": Array [
+                  "Resource": {
+                    "Fn::GetAtt": [
                       "CustomKey1E6D0D07",
                       "Arn",
                     ],
@@ -351,25 +453,25 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CustomKey1E6D0D07": Object {
+    "CustomKey1E6D0D07": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -386,24 +488,21 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomStreamE8E9158E": Object {
-      "Properties": Object {
+    "CustomStreamE8E9158E": {
+      "Properties": {
         "RetentionPeriodHours": 24,
         "ShardCount": 1,
-        "StreamEncryption": Object {
-          "Fn::If": Array [
+        "StreamEncryption": {
+          "Fn::If": [
             "AwsCdkKinesisEncryptedStreamsUnsupportedRegions",
-            Object {
+            {
               "Ref": "AWS::NoValue",
             },
-            Object {
+            {
               "EncryptionType": "KMS",
               "KeyId": "alias/aws/kinesis",
             },
           ],
-        },
-        "StreamModeDetails": Object {
-          "StreamMode": "PROVISIONED",
         },
       },
       "Type": "AWS::Kinesis::Stream",

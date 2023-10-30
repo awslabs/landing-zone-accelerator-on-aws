@@ -1,18 +1,108 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`VpcPeering Construct(VpcPeering):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "TestPeeringF63C5812": Object {
-      "Properties": Object {
+{
+  "Resources": {
+    "CustomPrefixListRouteCustomResourceProviderHandler5B28D077": {
+      "DependsOn": [
+        "CustomPrefixListRouteCustomResourceProviderRoleD08268B5",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomPrefixListRouteCustomResourceProviderRoleD08268B5",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomPrefixListRouteCustomResourceProviderLogGroup68DB81A5": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "kmsKey2EF55D91A",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomPrefixListRouteCustomResourceProviderHandler5B28D077",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 10,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomPrefixListRouteCustomResourceProviderRoleD08268B5": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ec2:CreateRoute",
+                    "ec2:DeleteRoute",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "AllowModifyRoutes",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TestPeeringF63C5812": {
+      "Properties": {
         "PeerOwnerId": "111111111111",
         "PeerRegion": "us-east-1",
-        "PeerRoleArn": Object {
-          "Fn::Join": Array [
+        "PeerRoleArn": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "arn:",
-              Object {
+              {
                 "Ref": "AWS::Partition",
               },
               ":iam::111111111111:role/TestRole",
@@ -20,8 +110,12 @@ Object {
           ],
         },
         "PeerVpcId": "AccepterVpc",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
+            "Key": "key",
+            "Value": "value",
+          },
+          {
             "Key": "Name",
             "Value": "Test",
           },
@@ -30,34 +124,34 @@ Object {
       },
       "Type": "AWS::EC2::VPCPeeringConnection",
     },
-    "TestPeeringcrossAccountPeerRouteA647E009": Object {
+    "TestPeeringcrossAccountPeerRouteA647E009": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "myProviderframeworkonEventAB595BBA",
             "Arn",
           ],
         },
-        "region": Object {
+        "region": {
           "Ref": "AWS::Region",
         },
-        "roleArn": Object {
-          "Fn::Join": Array [
+        "roleArn": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "arn:",
-              Object {
+              {
                 "Ref": "AWS::Partition",
               },
               ":iam::111111111111:role/role",
             ],
           ],
         },
-        "routeDefinition": Object {
+        "routeDefinition": {
           "DestinationCidrBlock": "10.0.0.6/32",
           "RouteTableId": "rt-3456",
-          "VpcPeeringConnectionId": Object {
+          "VpcPeeringConnectionId": {
             "Ref": "TestPeeringF63C5812",
           },
         },
@@ -65,35 +159,58 @@ Object {
       "Type": "Custom::CrossAccountRoute",
       "UpdateReplacePolicy": "Delete",
     },
-    "TestPeeringvpcPeeringRoute112B3732": Object {
-      "Properties": Object {
+    "TestPeeringvpcPeeringRoute112B3732": {
+      "Properties": {
         "DestinationCidrBlock": "10.0.0.5/32",
         "RouteTableId": "rt-12345",
-        "VpcPeeringConnectionId": Object {
+        "VpcPeeringConnectionId": {
           "Ref": "TestPeeringF63C5812",
         },
       },
       "Type": "AWS::EC2::Route",
     },
-    "kmsKey3BB021CC": Object {
+    "TestPeeringvpcPeeringRoute313B0AACD": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomPrefixListRouteCustomResourceProviderLogGroup68DB81A5",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomPrefixListRouteCustomResourceProviderHandler5B28D077",
+            "Arn",
+          ],
+        },
+        "routeDefinition": {
+          "DestinationPrefixListId": "destinationRoute",
+          "RouteTableId": "rt-12345",
+          "VpcPeeringConnectionId": {
+            "Ref": "TestPeeringF63C5812",
+          },
+        },
+      },
+      "Type": "Custom::PrefixListRoute",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "kmsKey1A3FA0EFA": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -110,23 +227,128 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "myProviderframeworkonEventAB595BBA": Object {
-      "DependsOn": Array [
+    "kmsKey2EF55D91A": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "kmsKey3992EC0B2": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "kmsKey3BB021CC": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "myProviderframeworkonEventAB595BBA": {
+      "DependsOn": [
         "myProviderframeworkonEventServiceRoleDefaultPolicy4EAC636C",
         "myProviderframeworkonEventServiceRole94BD41C2",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "AWS CDK resource provider framework - onEvent (Default/myProvider)",
-        "Environment": Object {
-          "Variables": Object {
-            "USER_ON_EVENT_FUNCTION_ARN": Object {
-              "Fn::GetAtt": Array [
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
                 "testAF53AC38",
                 "Arn",
               ],
@@ -134,38 +356,38 @@ Object {
           },
         },
         "Handler": "framework.onEvent",
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "myProviderframeworkonEventServiceRole94BD41C2",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs18.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "myProviderframeworkonEventServiceRole94BD41C2": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "myProviderframeworkonEventServiceRole94BD41C2": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
-            "Fn::Join": Array [
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "arn:",
-                Object {
+                {
                   "Ref": "AWS::Partition",
                 },
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
@@ -176,26 +398,26 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "myProviderframeworkonEventServiceRoleDefaultPolicy4EAC636C": Object {
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "myProviderframeworkonEventServiceRoleDefaultPolicy4EAC636C": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
               "Action": "lambda:InvokeFunction",
               "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "testAF53AC38",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "testAF53AC38",
                           "Arn",
                         ],
@@ -210,54 +432,54 @@ Object {
           "Version": "2012-10-17",
         },
         "PolicyName": "myProviderframeworkonEventServiceRoleDefaultPolicy4EAC636C",
-        "Roles": Array [
-          Object {
+        "Roles": [
+          {
             "Ref": "myProviderframeworkonEventServiceRole94BD41C2",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "testAF53AC38": Object {
-      "DependsOn": Array [
+    "testAF53AC38": {
+      "DependsOn": [
         "testServiceRole78466FFF",
       ],
-      "Properties": Object {
-        "Code": Object {
+      "Properties": {
+        "Code": {
           "ZipFile": "foo",
         },
         "Handler": "handler",
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "testServiceRole78466FFF",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
       },
       "Type": "AWS::Lambda::Function",
     },
-    "testServiceRole78466FFF": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "testServiceRole78466FFF": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
-            "Fn::Join": Array [
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "arn:",
-                Object {
+                {
                   "Ref": "AWS::Partition",
                 },
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",

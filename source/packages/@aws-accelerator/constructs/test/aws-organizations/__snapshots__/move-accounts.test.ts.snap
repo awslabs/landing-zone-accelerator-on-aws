@@ -1,27 +1,27 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`MoveAccounts Construct(MoveAccounts):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CustomCWLKey7119CF89": Object {
+{
+  "Resources": {
+    "CustomCWLKey7119CF89": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -38,25 +38,25 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomLambdaKey2287F5A9": Object {
+    "CustomLambdaKey2287F5A9": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -73,22 +73,22 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomTable90F1C476": Object {
+    "CustomTable90F1C476": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "AttributeDefinitions": Array [
-          Object {
+      "Properties": {
+        "AttributeDefinitions": [
+          {
             "AttributeName": "dataType",
             "AttributeType": "S",
           },
         ],
-        "KeySchema": Array [
-          Object {
+        "KeySchema": [
+          {
             "AttributeName": "dataType",
             "KeyType": "HASH",
           },
         ],
-        "ProvisionedThroughput": Object {
+        "ProvisionedThroughput": {
           "ReadCapacityUnits": 5,
           "WriteCapacityUnits": 5,
         },
@@ -96,17 +96,17 @@ Object {
       "Type": "AWS::DynamoDB::Table",
       "UpdateReplacePolicy": "Retain",
     },
-    "MoveAccounts99C70985": Object {
+    "MoveAccounts99C70985": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "MoveAccountsMoveAccountsProviderframeworkonEvent5D4E26AA",
             "Arn",
           ],
         },
         "commitId": "sample-commit-id",
-        "configTableName": Object {
+        "configTableName": {
           "Ref": "CustomTable90F1C476",
         },
         "globalRegion": "us-west-2",
@@ -116,52 +116,52 @@ Object {
       "Type": "Custom::MoveAccounts",
       "UpdateReplacePolicy": "Delete",
     },
-    "MoveAccountsMoveAccountsFunctionD31A3773": Object {
-      "DependsOn": Array [
+    "MoveAccountsMoveAccountsFunctionD31A3773": {
+      "DependsOn": [
         "MoveAccountsMoveAccountsFunctionServiceRoleDefaultPolicyB573AE3E",
         "MoveAccountsMoveAccountsFunctionServiceRoleADDE3D6B",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Moves accounts to conform account config",
         "Handler": "index.handler",
-        "KmsKeyArn": Object {
-          "Fn::GetAtt": Array [
+        "KmsKeyArn": {
+          "Fn::GetAtt": [
             "CustomLambdaKey2287F5A9",
             "Arn",
           ],
         },
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "MoveAccountsMoveAccountsFunctionServiceRoleADDE3D6B",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 150,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "MoveAccountsMoveAccountsFunctionLogGroupFAEDB078": Object {
+    "MoveAccountsMoveAccountsFunctionLogGroupFAEDB078": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "CustomCWLKey7119CF89",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "MoveAccountsMoveAccountsFunctionD31A3773",
               },
             ],
@@ -172,27 +172,27 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "MoveAccountsMoveAccountsFunctionServiceRoleADDE3D6B": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "MoveAccountsMoveAccountsFunctionServiceRoleADDE3D6B": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
-            "Fn::Join": Array [
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "arn:",
-                Object {
+                {
                   "Ref": "AWS::Partition",
                 },
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
@@ -203,12 +203,12 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "MoveAccountsMoveAccountsFunctionServiceRoleDefaultPolicyB573AE3E": Object {
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
+    "MoveAccountsMoveAccountsFunctionServiceRoleDefaultPolicyB573AE3E": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
                 "organizations:ListAccountsForParent",
                 "organizations:ListRoots",
                 "organizations:ListOrganizationalUnitsForParent",
@@ -218,34 +218,34 @@ Object {
               "Resource": "*",
               "Sid": "OrganizationsAccess",
             },
-            Object {
+            {
               "Action": "dynamodb:Query",
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
+              "Resource": {
+                "Fn::GetAtt": [
                   "CustomTable90F1C476",
                   "Arn",
                 ],
               },
               "Sid": "DynamodbTableAccess",
             },
-            Object {
+            {
               "Action": "cloudformation:DescribeStacks",
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::Join": Array [
+              "Resource": {
+                "Fn::Join": [
                   "",
-                  Array [
+                  [
                     "arn:",
-                    Object {
+                    {
                       "Ref": "AWS::Partition",
                     },
                     ":cloudformation:",
-                    Object {
+                    {
                       "Ref": "AWS::Region",
                     },
                     ":",
-                    Object {
+                    {
                       "Ref": "AWS::AccountId",
                     },
                     ":stack/Default*",
@@ -258,31 +258,31 @@ Object {
           "Version": "2012-10-17",
         },
         "PolicyName": "MoveAccountsMoveAccountsFunctionServiceRoleDefaultPolicyB573AE3E",
-        "Roles": Array [
-          Object {
+        "Roles": [
+          {
             "Ref": "MoveAccountsMoveAccountsFunctionServiceRoleADDE3D6B",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "MoveAccountsMoveAccountsProviderframeworkonEvent5D4E26AA": Object {
-      "DependsOn": Array [
+    "MoveAccountsMoveAccountsProviderframeworkonEvent5D4E26AA": {
+      "DependsOn": [
         "MoveAccountsMoveAccountsProviderframeworkonEventServiceRoleDefaultPolicy04895FAA",
         "MoveAccountsMoveAccountsProviderframeworkonEventServiceRoleB3998377",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "AWS CDK resource provider framework - onEvent (Default/MoveAccounts/MoveAccountsProvider)",
-        "Environment": Object {
-          "Variables": Object {
-            "USER_ON_EVENT_FUNCTION_ARN": Object {
-              "Fn::GetAtt": Array [
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
                 "MoveAccountsMoveAccountsFunctionD31A3773",
                 "Arn",
               ],
@@ -290,38 +290,38 @@ Object {
           },
         },
         "Handler": "framework.onEvent",
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "MoveAccountsMoveAccountsProviderframeworkonEventServiceRoleB3998377",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs18.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "MoveAccountsMoveAccountsProviderframeworkonEventServiceRoleB3998377": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "MoveAccountsMoveAccountsProviderframeworkonEventServiceRoleB3998377": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
-            "Fn::Join": Array [
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "arn:",
-                Object {
+                {
                   "Ref": "AWS::Partition",
                 },
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
@@ -332,26 +332,26 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "MoveAccountsMoveAccountsProviderframeworkonEventServiceRoleDefaultPolicy04895FAA": Object {
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "MoveAccountsMoveAccountsProviderframeworkonEventServiceRoleDefaultPolicy04895FAA": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
               "Action": "lambda:InvokeFunction",
               "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "MoveAccountsMoveAccountsFunctionD31A3773",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "MoveAccountsMoveAccountsFunctionD31A3773",
                           "Arn",
                         ],
@@ -366,8 +366,8 @@ Object {
           "Version": "2012-10-17",
         },
         "PolicyName": "MoveAccountsMoveAccountsProviderframeworkonEventServiceRoleDefaultPolicy04895FAA",
-        "Roles": Array [
-          Object {
+        "Roles": [
+          {
             "Ref": "MoveAccountsMoveAccountsProviderframeworkonEventServiceRoleB3998377",
           },
         ],

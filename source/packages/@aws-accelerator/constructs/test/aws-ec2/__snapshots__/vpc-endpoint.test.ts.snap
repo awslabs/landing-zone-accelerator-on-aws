@@ -1,14 +1,14 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`VpcEndpoint Construct(VpcEndpoint):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "TestSecurityGroupDA4B5F83": Object {
-      "Properties": Object {
+{
+  "Resources": {
+    "TestSecurityGroupDA4B5F83": {
+      "Properties": {
         "GroupDescription": "AWS Private Endpoint Zone",
         "GroupName": "TestSecurityGroup",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "TestSecurityGroup",
           },
@@ -17,21 +17,21 @@ Object {
       },
       "Type": "AWS::EC2::SecurityGroup",
     },
-    "VpcEndpoint80208C18": Object {
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "VpcEndpoint80208C18": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
               "Action": "*",
-              "Condition": Object {
-                "StringEquals": Object {
-                  "aws:PrincipalOrgID": Array [
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalOrgID": [
                     "organizationId",
                   ],
                 },
               },
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "AWS": "*",
               },
               "Resource": "*",
@@ -40,16 +40,16 @@ Object {
           ],
           "Version": "2012-10-17",
         },
-        "RouteTableIds": Array [
+        "RouteTableIds": [
           "Test1",
           "Test2",
         ],
-        "ServiceName": Object {
-          "Fn::Join": Array [
+        "ServiceName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "com.amazonaws.",
-              Object {
+              {
                 "Ref": "AWS::Region",
               },
               ".service",
@@ -59,6 +59,167 @@ Object {
         "VpcId": "Test",
       },
       "Type": "AWS::EC2::VPCEndpoint",
+    },
+    "VpcEndpointInterfaceEc21C025642": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "*",
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalOrgID": [
+                    "organizationId",
+                  ],
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "AccessToTrustedPrincipalsAndResources",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PrivateDnsEnabled": true,
+        "SecurityGroupIds": [
+          {
+            "Ref": "TestSecurityGroupDA4B5F83",
+          },
+        ],
+        "ServiceName": "ec2",
+        "SubnetIds": [
+          "Test1",
+          "Test2",
+        ],
+        "VpcEndpointType": "Interface",
+        "VpcId": "Test",
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
+    },
+    "VpcEndpointInterfaceGwlb3F654CE2": {
+      "Properties": {
+        "ServiceName": {
+          "Fn::Join": [
+            "",
+            [
+              "com.amazonaws.vpce.",
+              {
+                "Ref": "AWS::Region",
+              },
+              ".ec2",
+            ],
+          ],
+        },
+        "SubnetIds": [
+          "Test1",
+          "Test2",
+        ],
+        "VpcEndpointType": "GatewayLoadBalancer",
+        "VpcId": "Test",
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
+    },
+    "VpcEndpointInterfaceS343EF5B95": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "*",
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalOrgID": [
+                    "organizationId",
+                  ],
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "AccessToTrustedPrincipalsAndResources",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PrivateDnsEnabled": true,
+        "SecurityGroupIds": [
+          {
+            "Ref": "TestSecurityGroupDA4B5F83",
+          },
+        ],
+        "ServiceName": "com.amazonaws.s3-global.accesspoint",
+        "SubnetIds": [
+          "Test1",
+          "Test2",
+        ],
+        "VpcEndpointType": "Interface",
+        "VpcId": "Test",
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
+    },
+    "VpcEndpointInterfaceSagemaker70CE2242": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "*",
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalOrgID": [
+                    "organizationId",
+                  ],
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "AccessToTrustedPrincipalsAndResources",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PrivateDnsEnabled": true,
+        "SecurityGroupIds": [
+          {
+            "Ref": "TestSecurityGroupDA4B5F83",
+          },
+        ],
+        "ServiceName": {
+          "Fn::Join": [
+            "",
+            [
+              "aws.sagemaker.",
+              {
+                "Ref": "AWS::Region",
+              },
+              ".notebook",
+            ],
+          ],
+        },
+        "SubnetIds": [
+          "Test1",
+          "Test2",
+        ],
+        "VpcEndpointType": "Interface",
+        "VpcId": "Test",
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
+    },
+    "VpcEndpointid71FBEB7E": {
+      "Properties": {
+        "DestinationCidrBlock": "10.100.0.0/16",
+        "RouteTableId": "routeTableId",
+        "VpcEndpointId": {
+          "Ref": "VpcEndpoint80208C18",
+        },
+      },
+      "Type": "AWS::EC2::Route",
     },
   },
 }

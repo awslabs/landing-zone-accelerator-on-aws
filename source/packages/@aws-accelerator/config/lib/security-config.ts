@@ -15,10 +15,12 @@ import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
 
-import { AccountsConfig } from './accounts-config';
+import { createLogger } from '@aws-accelerator/utils';
+
 import * as t from './common-types';
-import { OrganizationConfig } from './organization-config';
-import { GlobalConfig } from './global-config';
+import { ReplacementsConfig } from './replacements-config';
+
+const logger = createLogger(['security-config']);
 
 /**
  * AWS Accelerator SecurityConfig Types
@@ -177,6 +179,10 @@ export class SecurityConfigTypes {
      * Possible values FIFTEEN_MINUTES, ONE_HOUR, or SIX_HOURS
      */
     exportFrequency: t.enums('ExportFrequencyType', ['FIFTEEN_MINUTES', 'ONE_HOUR', 'SIX_HOURS']),
+    /**
+     * Boolean to determine whether or not to remove GuardDuty Prefix for logging.
+     */
+    overrideGuardDutyPrefix: t.optional(t.prefixConfig),
   });
 
   /**
@@ -204,7 +210,7 @@ export class SecurityConfigTypes {
      */
     exportConfiguration: this.guardDutyExportFindingsConfig,
     /**
-     * Declaration of a (S3 Bucket) Life cycle rule.
+     * Declaration of a S3 Lifecycle rule.
      */
     lifecycleRules: t.optional(t.array(t.lifecycleRuleConfig)),
   });
@@ -240,7 +246,7 @@ export class SecurityConfigTypes {
      */
     defaultReportsConfiguration: this.auditManagerDefaultReportsDestinationConfig,
     /**
-     * Declaration of a (S3 Bucket) Life cycle rule for default audit report destination.
+     * Declaration of a S3 Lifecycle rule for default audit report destination.
      */
     lifecycleRules: t.optional(t.array(t.lifecycleRuleConfig)),
   });
@@ -260,30 +266,45 @@ export class SecurityConfigTypes {
   });
 
   /**
-   * AWS SecurityHub standards configuration
+   * AWS Security Hub standards configuration
    */
   static readonly securityHubStandardConfig = t.interface({
     /**
-     * An enum value that specifies one of three security standards supported by SecurityHub
+     * An enum value that specifies one of three security standards supported by Security Hub
      * Possible values are 'AWS Foundational Security Best Practices v1.0.0',
      * 'CIS AWS Foundations Benchmark v1.2.0',
      * 'CIS AWS Foundations Benchmark v1.4.0',
+     * 'NIST Special Publication 800-53 Revision 5',
      * and 'PCI DSS v3.2.1'
      */
     name: t.enums('ExportFrequencyType', [
       'AWS Foundational Security Best Practices v1.0.0',
       'CIS AWS Foundations Benchmark v1.2.0',
       'CIS AWS Foundations Benchmark v1.4.0',
+      'NIST Special Publication 800-53 Revision 5',
       'PCI DSS v3.2.1',
     ]),
     /**
-     * Indicates whether given AWS SecurityHub standard enabled.
+     * When defined, security standards will be enabled in the specified deployment targets.
+     * If omitted, security standards will be deployed in all govern accounts.
+     */
+    deploymentTargets: t.optional(t.deploymentTargets),
+    /**
+     * Indicates whether given AWS Security Hub standard enabled.
      */
     enable: t.boolean,
     /**
-     * An array of control names to be enabled for the given security standards
+     * An array of control names to be disabled for the given security standards
      */
     controlsToDisable: t.optional(t.array(t.nonEmptyString)),
+  });
+
+  static readonly securityHubLoggingCloudwatchConfig = t.interface({
+    enable: t.boolean,
+  });
+
+  static readonly securityHubLoggingConfig = t.interface({
+    cloudWatch: t.optional(this.securityHubLoggingCloudwatchConfig),
   });
 
   static readonly securityHubConfig = t.interface({
@@ -293,6 +314,7 @@ export class SecurityConfigTypes {
     notificationLevel: t.optional(t.string),
     excludeRegions: t.optional(t.array(t.region)),
     standards: t.array(this.securityHubStandardConfig),
+    logging: t.optional(this.securityHubLoggingConfig),
   });
 
   static readonly ebsDefaultVolumeEncryptionConfig = t.interface({
@@ -438,6 +460,11 @@ export class SecurityConfigTypes {
      */
     // parameters: t.optional(t.dictionary(t.nonEmptyString, t.nonEmptyString)),
     parameters: t.optional(t.array(SecurityConfigTypes.remediationParametersConfigType)),
+
+    /**
+     * List of AWS Region names to be excluded from applying remediation
+     */
+    excludeRegions: t.optional(t.array(t.region)),
   });
 
   static readonly configRule = t.interface({
@@ -457,9 +484,17 @@ export class SecurityConfigTypes {
     rules: t.array(this.configRule),
   });
 
+  static readonly awsConfigAggregation = t.interface({
+    enable: t.boolean,
+    delegatedAdminAccount: t.optional(t.nonEmptyString),
+  });
+
   static readonly awsConfig = t.interface({
     enableConfigurationRecorder: t.boolean,
-    enableDeliveryChannel: t.boolean,
+    // enableDeliveryChannel deprecated
+    enableDeliveryChannel: t.optional(t.boolean),
+    overrideExisting: t.optional(t.boolean),
+    aggregation: t.optional(this.awsConfigAggregation),
     ruleSets: t.array(this.awsConfigRuleSet),
   });
 
@@ -499,9 +534,24 @@ export class SecurityConfigTypes {
     alarms: t.array(this.alarmConfig),
   });
 
+  static readonly encryptionConfig = t.interface({
+    kmsKeyName: t.optional(t.nonEmptyString),
+    kmsKeyArn: t.optional(t.nonEmptyString),
+    useLzaManagedKey: t.optional(t.boolean),
+  });
+
+  static readonly logGroupsConfig = t.interface({
+    logGroupName: t.nonEmptyString,
+    logRetentionInDays: t.number,
+    terminationProtected: t.optional(t.boolean),
+    encryption: t.optional(this.encryptionConfig),
+    deploymentTargets: t.deploymentTargets,
+  });
+
   static readonly cloudWatchConfig = t.interface({
     metricSets: t.array(this.metricSetConfig),
     alarmSets: t.array(this.alarmSetConfig),
+    logGroups: t.optional(t.array(this.logGroupsConfig)),
   });
 
   static readonly securityConfig = t.interface({
@@ -517,7 +567,12 @@ export class SecurityConfigTypes {
 /**
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link S3PublicAccessBlockConfig}*
  *
- * AWS S3 block public access configuration
+ * {@link https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html} | AWS S3 block public access configuration.
+ * This will create the Public Access Block configuration for the AWS account.
+ *
+ * @remarks:
+ * If the `PublicAccessBlock` configurations are different between the bucket and the account, Amazon S3 will align with
+ * the most restrictive combination between the bucket-level and account-level settings.
  *
  * @example
  * ```
@@ -528,11 +583,11 @@ export class SecurityConfigTypes {
  */
 export class S3PublicAccessBlockConfig implements t.TypeOf<typeof SecurityConfigTypes.s3PublicAccessBlockConfig> {
   /**
-   * Indicates whether AWS S3 block public access enabled.
+   * Indicates whether AWS S3 block public access is enabled.
    */
   readonly enable = false;
   /**
-   * List of AWS Region names to be excluded from configuring block S3 public access
+   * (OPTIONAL) List of AWS Region names to be excluded from configuring S3 Block Public Access
    */
   readonly excludeAccounts: string[] = [];
 }
@@ -555,7 +610,7 @@ export class ScpRevertChangesConfig implements t.TypeOf<typeof SecurityConfigTyp
    */
   readonly enable = false;
   /**
-   * The name of the SNS Topic to send alerts to when scps are changed manually
+   * (OPTIONAL) The name of the SNS Topic to send alerts to when SCPs are changed manually
    */
   readonly snsTopicName = undefined;
 }
@@ -563,7 +618,9 @@ export class ScpRevertChangesConfig implements t.TypeOf<typeof SecurityConfigTyp
 /**
  * *{@link SecurityConfig} / {@link KeyManagementServiceConfig} / {@link KeyConfig}*
  *
- * AWS KMS Key configuration
+ * {@link https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#key-mgmt} | AWS KMS Key configuration.
+ * Use this configuration to define your customer managed key (CMK) and where it's deployed to along with
+ * it's management properties.
  *
  * @example
  * ```
@@ -585,34 +642,38 @@ export class KeyConfig implements t.TypeOf<typeof SecurityConfigTypes.keyConfig>
    */
   readonly name = '';
   /**
-   * Initial alias to add to the key
+   * (OPTIONAL) Initial alias to add to the key
+   *
+   * @remarks
+   *
+   * Note: If changing this value, a new CMK with the new alias will be created.
    */
   readonly alias = '';
   /**
-   * Key policy file path. This file must be available in accelerator config repository.
+   * (OPTIONAL)Key policy file path. This file must be available in accelerator config repository.
    */
   readonly policy = '';
   /**
-   * A description of the key.
+   * (OPTIONAL) A description of the key.
    */
   readonly description = '';
   /**
-   * Indicates whether AWS KMS rotates the key.
+   * (OPTIONAL) Indicates whether AWS KMS rotates the key.
    * @default true
    */
   readonly enableKeyRotation = true;
   /**
-   * Indicates whether the key is available for use.
+   * (OPTIONAL) Indicates whether the key is available for use.
    * @default - Key is enabled.
    */
   readonly enabled = true;
   /**
-   * Whether the encryption key should be retained when it is removed from the Stack.
+   * (OPTIONAL) Whether the encryption key should be retained when it is removed from the Stack.
    * @default retain
    */
   readonly removalPolicy = 'retain';
   /**
-   * KMS key deployment target.
+   * This configuration determines which accounts and/or OUs the CMK is deployed to.
    *
    * To deploy KMS key into Root and Infrastructure organizational units, you need to provide below value for this parameter.
    *
@@ -655,6 +716,7 @@ export class KeyManagementServiceConfig implements t.TypeOf<typeof SecurityConfi
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link MacieConfig}*
  *
  * Amazon Macie Configuration
+ * Use this configuration to enable Amazon Macie within your AWS Organization along with it's reporting configuration.
  *
  * @example
  * ```
@@ -675,7 +737,7 @@ export class MacieConfig implements t.TypeOf<typeof SecurityConfigTypes.macieCon
    */
   readonly excludeRegions: t.Region[] = [];
   /**
-   * Specifies how often to publish updates to policy findings for the account. This includes publishing updates to Security Hub and Amazon EventBridge (formerly called Amazon CloudWatch Events).
+   * (OPTIONAL) Specifies how often to publish updates to policy findings for the account. This includes publishing updates to Security Hub and Amazon EventBridge (formerly called Amazon CloudWatch Events).
    * An enum value that specifies how frequently findings are published
    * Possible values FIFTEEN_MINUTES, ONE_HOUR, or SIX_HOURS
    */
@@ -685,7 +747,7 @@ export class MacieConfig implements t.TypeOf<typeof SecurityConfigTypes.macieCon
    */
   readonly publishSensitiveDataFindings = true;
   /**
-   * Declaration of a (S3 Bucket) Life cycle rule.
+   * (OPTIONAL) Declaration of a S3 Lifecycle rule.
    */
   readonly lifecycleRules: t.LifeCycleRule[] | undefined = undefined;
 }
@@ -693,7 +755,9 @@ export class MacieConfig implements t.TypeOf<typeof SecurityConfigTypes.macieCon
 /**
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link GuardDutyConfig} / {@link GuardDutyS3ProtectionConfig}*
  *
- * AWS GuardDuty S3 Protection configuration.
+ * {@link https://docs.aws.amazon.com/guardduty/latest/ug/s3-protection.html} | AWS GuardDuty S3 Protection configuration.
+ * Use this configuration to enable S3 Protection with Amazon GuardDuty to monitor object-level API operations for potential
+ * security risks for data within Amazon S3 buckets.
  *
  * @example
  * ```
@@ -707,7 +771,7 @@ export class GuardDutyS3ProtectionConfig implements t.TypeOf<typeof SecurityConf
    */
   readonly enable = false;
   /**
-   * List of AWS Region names to be excluded from configuring Amazon GuardDuty S3 Protection
+   * (OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty S3 Protection
    */
   readonly excludeRegions: t.Region[] = [];
 }
@@ -715,7 +779,9 @@ export class GuardDutyS3ProtectionConfig implements t.TypeOf<typeof SecurityConf
 /**
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link GuardDutyConfig} / {@link GuardDutyEksProtectionConfig}*
  *
- * AWS GuardDuty EKS Protection configuration.
+ * {@link https://docs.aws.amazon.com/guardduty/latest/ug/kubernetes-protection.html} | AWS GuardDuty EKS Protection configuration.
+ * Use this configuration to enable EKS Protection with Amazon GuardDuty to provide threat detection coverage to help protect Amazon
+ * EKS clusters within an AWS environment. This includes EKS Audit Log Monitoring and EKS Runtime Monitoring.
  *
  * @example
  * ```
@@ -729,7 +795,7 @@ export class GuardDutyEksProtectionConfig implements t.TypeOf<typeof SecurityCon
    */
   readonly enable = false;
   /**
-   * List of AWS Region names to be excluded from configuring Amazon GuardDuty EKS Protection
+   * (OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty EKS Protection
    */
   readonly excludeRegions: t.Region[] = [];
 }
@@ -737,7 +803,8 @@ export class GuardDutyEksProtectionConfig implements t.TypeOf<typeof SecurityCon
 /**
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link GuardDutyConfig} / {@link GuardDutyExportFindingsConfig}*
  *
- * AWS GuardDuty Export Findings configuration.
+ * {@link https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_exportfindings.html} | AWS GuardDuty Export Findings configuration.
+ * Use this configuration to export Amazon GuardDuty findings to Amazon CloudWatch Events, and, optionally, to an Amazon S3 bucket.
  *
  * @example
  * ```
@@ -755,7 +822,7 @@ export class GuardDutyExportFindingsConfig
    */
   readonly enable = false;
   /**
-   * Indicates whether AWS GuardDuty Export Findings can be overwritten.
+   * (OPTIONAL) Indicates whether AWS GuardDuty Export Findings can be overwritten.
    */
   readonly overrideExisting = false;
   /**
@@ -767,12 +834,19 @@ export class GuardDutyExportFindingsConfig
    * Possible values FIFTEEN_MINUTES, ONE_HOUR, or SIX_HOURS
    */
   readonly exportFrequency = 'FIFTEEN_MINUTES';
+  /**
+   * (OPTIONAL) AWS GuardDuty Prefix for centralized logging path.
+   */
+  readonly overrideGuardDutyPrefix: t.PrefixConfig | undefined = undefined;
 }
 
 /**
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link GuardDutyConfig}*
  *
  * AWS GuardDuty configuration
+ * Use this configuration to enable Amazon GuardDuty for an AWS Organization, as well as other modular
+ * feature protections.
+ *
  *
  * @example
  * ```
@@ -799,7 +873,7 @@ export class GuardDutyConfig implements t.TypeOf<typeof SecurityConfigTypes.guar
    */
   readonly enable = false;
   /**
-   * List of AWS Region names to be excluded from configuring Amazon GuardDuty
+   * (OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty
    */
   readonly excludeRegions: t.Region[] = [];
   /**
@@ -808,7 +882,7 @@ export class GuardDutyConfig implements t.TypeOf<typeof SecurityConfigTypes.guar
    */
   readonly s3Protection: GuardDutyS3ProtectionConfig = new GuardDutyS3ProtectionConfig();
   /**
-   * AWS GuardDuty EKS Protection configuration.
+   * (OPTIONAL) AWS GuardDuty EKS Protection configuration.
    * @type object
    */
   readonly eksProtection: GuardDutyEksProtectionConfig | undefined = undefined;
@@ -818,7 +892,7 @@ export class GuardDutyConfig implements t.TypeOf<typeof SecurityConfigTypes.guar
    */
   readonly exportConfiguration: GuardDutyExportFindingsConfig = new GuardDutyExportFindingsConfig();
   /**
-   * Declaration of a (S3 Bucket) Life cycle rule.
+   * (OPTIONAL) Declaration of a S3 Lifecycle rule.
    */
   readonly lifecycleRules: t.LifeCycleRule[] | undefined = undefined;
 }
@@ -827,6 +901,7 @@ export class GuardDutyConfig implements t.TypeOf<typeof SecurityConfigTypes.guar
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link AuditManagerConfig} / {@link AuditManagerDefaultReportsDestinationConfig}*
  *
  * AWS Audit Manager Default Reports Destination configuration.
+ * Use this configuration to enable a destination for reports generated by AWS Audit Manager.
  *
  * @example
  * ```
@@ -850,7 +925,8 @@ export class AuditManagerDefaultReportsDestinationConfig
 /**
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link AuditManagerConfig}*
  *
- * AWS Audit Manager configuration
+ * {@link https://docs.aws.amazon.com/audit-manager/latest/userguide/what-is.html } | AWS Audit Manager configuration
+ * Use this configuration to enable AWS Audit Manager for an AWS Organization.
  *
  * @example
  * ```
@@ -869,7 +945,7 @@ export class AuditManagerConfig implements t.TypeOf<typeof SecurityConfigTypes.a
    */
   readonly enable = false;
   /**
-   * List of AWS Region names to be excluded from configuring AWS Audit Manager
+   * (OPTIONAL) List of AWS Region names to be excluded from configuring AWS Audit Manager. Please ensure any regions enabled in the global configuration that do not support Audit Manager are added to the excluded regions list. {@link https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/ | Supported services by region}.
    */
   readonly excludeRegions: t.Region[] = [];
   /**
@@ -879,7 +955,7 @@ export class AuditManagerConfig implements t.TypeOf<typeof SecurityConfigTypes.a
   readonly defaultReportsConfiguration: AuditManagerDefaultReportsDestinationConfig =
     new AuditManagerDefaultReportsDestinationConfig();
   /**
-   * Declaration of a (S3 Bucket) Life cycle rule.
+   * (OPTIONAL) Declaration of a S3 Lifecycle rule.
    */
   readonly lifecycleRules: t.LifeCycleRule[] | undefined = undefined;
 }
@@ -887,7 +963,9 @@ export class AuditManagerConfig implements t.TypeOf<typeof SecurityConfigTypes.a
 /**
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link DetectiveConfig}*
  *
- * Amazon Detective configuration
+ * {@link https://docs.aws.amazon.com/detective/latest/adminguide/what-is-detective.html} | Amazon Detective configuration
+ * Use this configuration to enable Amazon Detective for an AWS Organization that allows users to analyze, investigate, and
+ * quickly identify the root cause of security findings or suspicious activities.
  *
  * @example
  * ```
@@ -902,7 +980,7 @@ export class DetectiveConfig implements t.TypeOf<typeof SecurityConfigTypes.dete
    */
   readonly enable = false;
   /**
-   * List of AWS Region names to be excluded from configuring Amazon Detective
+   * (OPTIONAL) List of AWS Region names to be excluded from configuring Amazon Detective. Please ensure any regions enabled in the global configuration that do not support Amazon Detective are added to the excluded regions list. {@link https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/ | Supported services by region}.
    */
   readonly excludeRegions: t.Region[] = [];
 }
@@ -910,83 +988,152 @@ export class DetectiveConfig implements t.TypeOf<typeof SecurityConfigTypes.dete
 /**
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SecurityHubConfig} / {@link SecurityHubStandardConfig}*
  *
- * AWS SecurityHub standards configuration
+ * {@link https://docs.aws.amazon.com/securityhub/latest/userguide/standards-reference.html} | AWS Security Hub standards configuration.
+ * Use this configuration to define the security standard(s) that are enabled through Amazon Security Hub and which accounts and/or
+ * organization units that the controls are deployed to.
  *
  * @example
  * ```
  * - name: PCI DSS v3.2.1
+ *   deploymentTargets:
+ *    organizationalUnits:
+ *     -  Root
  *   enable: true
- *   controlsToDisable: []
+ *   controlsToDisable:
+ *     # Refer to the document for the controls
+ *     # https://docs.aws.amazon.com/securityhub/latest/userguide/pci-standard.html
+ *     - Control1
+ *     - Control2
  * ```
  */
 export class SecurityHubStandardConfig implements t.TypeOf<typeof SecurityConfigTypes.securityHubStandardConfig> {
   /**
-   * An enum value that specifies one of three security standards supported by SecurityHub
+   * An enum value that specifies one of three security standards supported by Security Hub
    * Possible values are 'AWS Foundational Security Best Practices v1.0.0',
    * 'CIS AWS Foundations Benchmark v1.2.0',
-   * 'CIS AWS Foundations Benchmark v1.4.0'
+   * 'CIS AWS Foundations Benchmark v1.4.0',
+   * 'NIST Special Publication 800-53 Revision 5,
    * and 'PCI DSS v3.2.1'
    */
   readonly name = '';
   /**
-   * Indicates whether given AWS SecurityHub standard enabled.
+   * (OPTIONAL) Deployment targets for AWS Security Hub standard.
+   */
+  readonly deploymentTargets: t.DeploymentTargets | undefined = undefined;
+  /**
+   * Indicates whether given AWS Security Hub standard enabled.
    */
   readonly enable = true;
   /**
-   * An array of control names to be enabled for the given security standards
+   * (OPTIONAL) An array of control names to be enabled for the given security standards
    */
   readonly controlsToDisable: string[] = [];
+}
+/**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SecurityHubConfig} / {@link SecurityHubLoggingConfig} / {@link SecurityHubLoggingCloudwatchConfig}*
+ *
+ * @example
+ * ```
+ * enable: true
+ * ```
+ */
+export class SecurityHubLoggingCloudwatchConfig
+  implements t.TypeOf<typeof SecurityConfigTypes.securityHubLoggingCloudwatchConfig>
+{
+  /**
+   * Security hub to cloudwatch logging is enabled by default.
+   */
+  readonly enable = true;
+}
+
+/**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SecurityHubConfig} / {@link SecurityHubLoggingConfig}*
+ *
+ * @example
+ * ```
+ * logging:
+ *   cloudWatch:
+ *     enable: true
+ * ```
+ */
+export class SecurityHubLoggingConfig implements t.TypeOf<typeof SecurityConfigTypes.securityHubLoggingConfig> {
+  /**
+   * Data store to ship the Security Hub logs to.
+   */
+  readonly cloudWatch: SecurityHubLoggingCloudwatchConfig | undefined = undefined;
 }
 
 /**
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SecurityHubConfig}*
  *
- * AWS SecurityHub configuration
+ * {@link https://docs.aws.amazon.com/securityhub/latest/userguide/what-is-securityhub.html} | AWS Security Hub configuration
+ * Use this configuration to enable Amazon Security Hub for an AWS Organization along with it's auditing configuration.
  *
  * @example
  * ```
  * securityHub:
- *     enable: true
- *     regionAggregation: true
- *     excludeRegions: []
- *     standards:
- *       - name: AWS Foundational Security Best Practices v1.0.0
- *         enable: true
- *         controlsToDisable:
- *           - IAM.1
- *           - EC2.10
+ *   enable: true
+ *   regionAggregation: true
+ *   excludeRegions: []
+ *   standards:
+ *     - name: AWS Foundational Security Best Practices v1.0.0
+ *       deploymentTargets:
+ *       organizationalUnits:
+ *         -  Root
+ *       enable: true
+ *       controlsToDisable:
+ *         # Refer to the document for the controls
+ *         # https://docs.aws.amazon.com/securityhub/latest/userguide/fsbp-standard.html
+ *         - Control1
+ *         - Control2
+ *   logging:
+ *     cloudWatch:
+ *       enable: true
  * ```
  */
 export class SecurityHubConfig implements t.TypeOf<typeof SecurityConfigTypes.securityHubConfig> {
   /**
-   * Indicates whether AWS SecurityHub enabled.
+   * Indicates whether AWS Security Hub enabled.
    */
   readonly enable = false;
   /**
-   * Indicates whether SecurityHub results are aggregated in the Home Region
+   * (OPTIONAL) Indicates whether Security Hub results are aggregated in the Home Region.
    */
   readonly regionAggregation = false;
   /**
-   * SNS Topic for Security Hub notifications
-   * Topic must exist in the global config
+   * (OPTIONAL) SNS Topic for Security Hub notifications.
+   *
+   * @remarks
+   * Note: Topic must exist in the global config
    */
   readonly snsTopicName = undefined;
   /**
-   * SecurityHub notification level
-   * Values accepted CRITICAL, HIGH, MEDIUM, LOW, INFORMATIONAL
+   * (OPTIONAL) Security Hub notification level
+   *
+   * @remarks
+   * Note: Values accepted are CRITICAL, HIGH, MEDIUM, LOW, INFORMATIONAL
+   *
    * Notifications will be sent for events at the Level provided and above
-   * Example, if you specifiy the HIGH level notifications will
+   * Example, if you specify the HIGH level notifications will
    * be sent for HIGH and CRITICAL
    */
   readonly notificationLevel = undefined;
   /**
-   * List of AWS Region names to be excluded from configuring SecurityHub
+   * (OPTIONAL) List of AWS Region names to be excluded from configuring Security Hub
    */
   readonly excludeRegions: t.Region[] = [];
   /**
-   * SecurityHub standards configuration
+   * Security Hub standards configuration
    */
   readonly standards: SecurityHubStandardConfig[] = [];
+  /**
+   * (OPTIONAL) Security Hub logs are sent to CloudWatch logs by default. This option can enable or disable the logging.
+   *
+   * @remarks
+   * By default, if nothing is given `true` is taken. In order to stop logging, set this parameter to `false`.
+   * Please note, this option can be toggled but log group with `/${acceleratorPrefix}-SecurityHub` will remain in the account for every enabled region and will need to be manually deleted. This is designed to ensure no accidental loss of data occurs.
+   */
+  readonly logging: SecurityHubLoggingConfig | undefined = undefined;
 }
 
 /**
@@ -1021,7 +1168,8 @@ export class SnsSubscriptionConfig implements t.TypeOf<typeof SecurityConfigType
 /**
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link EbsDefaultVolumeEncryptionConfig}*
  *
- * AWS EBS default encryption configuration
+ * {@link https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html#encryption-by-default} | AWS EBS default encryption configuration
+ * Use this configuration to enable enforced encryption of new EBS volumes and snapshots created in an AWS environment.
  *
  * @example
  * ```
@@ -1039,11 +1187,14 @@ export class EbsDefaultVolumeEncryptionConfig
    */
   readonly enable = false;
   /**
-   * KMS key to encrypt EBS volume. When no value provided LZ Accelerator will create the KMS key.
+   * (OPTIONAL) KMS key to encrypt EBS volume.
+   *
+   * @remarks
+   * Note: When no value is provided Landing Zone Accelerator will create the KMS key.
    */
   readonly kmsKey: undefined | string = undefined;
   /**
-   * List of AWS Region names to be excluded from configuring AWS EBS volume default encryption
+   * (OPTIONAL) List of AWS Region names to be excluded from configuring AWS EBS volume default encryption
    */
   readonly excludeRegions: t.Region[] = [];
 }
@@ -1051,7 +1202,9 @@ export class EbsDefaultVolumeEncryptionConfig
 /**
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SsmAutomationConfig} / {@link DocumentSetConfig} / {@link DocumentConfig}*
  *
- * AWS Systems Manager document configuration
+ * {@link https://docs.aws.amazon.com/systems-manager/latest/userguide/documents.html} | AWS Systems Manager document configuration
+ * Use this configuration to define AWS System Manager documents (SSM documents) that can be used on managed instances in an
+ * environment.
  *
  * @example
  * ```
@@ -1117,7 +1270,7 @@ export class DocumentSetConfig implements t.TypeOf<typeof SecurityConfigTypes.do
  */
 export class SsmAutomationConfig implements t.TypeOf<typeof SecurityConfigTypes.ssmAutomationConfig> {
   /**
-   * List of AWS Region names to be excluded from configuring block S3 public access
+   * (OPTIONAL) List of AWS Region names to be excluded from configuring block S3 public access
    */
   readonly excludeRegions: t.Region[] = [];
   /**
@@ -1173,7 +1326,29 @@ export class SsmAutomationConfig implements t.TypeOf<typeof SecurityConfigTypes.
  *     standards:
  *       - name: AWS Foundational Security Best Practices v1.0.0
  *         enable: true
- *         controlsToDisable: []
+ *       - name: PCI DSS v3.2.1
+ *         enable: true
+ *         controlsToDisable:
+ *           # Refer to the document for the controls
+ *           # https://docs.aws.amazon.com/securityhub/latest/userguide/pci-standard.html
+ *           - Control1
+ *           - Control2
+ *       - name: CIS AWS Foundations Benchmark v1.2.0
+ *         enable: true
+ *       - name: CIS AWS Foundations Benchmark v1.4.0
+ *         enable: true
+ *         controlsToDisable:
+ *           # Refer to the document for the controls
+ *           # https://docs.aws.amazon.com/securityhub/latest/userguide/cis-aws-foundations-benchmark.html#cis1v4-standard
+ *           - Control1
+ *           - Control2
+ *       - name: NIST Special Publication 800-53 Revision 5
+ *         enable: true
+ *         controlsToDisable:
+ *           # Refer to the document for the controls
+ *           # https://docs.aws.amazon.com/securityhub/latest/userguide/nist-standard.html
+ *           - Control1
+ *           - Control2
  *   ssmAutomation:
  *     documentSets: []
  *```
@@ -1185,7 +1360,7 @@ export class CentralSecurityServicesConfig
    * Designated administrator account name for accelerator security services.
    * AWS organizations designate a member account as a delegated administrator for the
    * organization users and roles from that account can perform administrative actions for security services like
-   * Macie, GuardDuty, Detective and SecurityHub. Without designated administrator account administrative tasks for
+   * Macie, GuardDuty, Detective and Security Hub. Without designated administrator account administrative tasks for
    * security services are performed only by users or roles in the organization's management account.
    * This helps you to separate management of the organization from management of these security services.
    * Accelerator use Audit account as designated administrator account.
@@ -1231,7 +1406,7 @@ export class CentralSecurityServicesConfig
    */
   readonly s3PublicAccessBlock: S3PublicAccessBlockConfig = new S3PublicAccessBlockConfig();
   /**
-   * AWS Service Control Policies Revert Manual Changes configuration
+   * (OPTIONAL) AWS Service Control Policies Revert Manual Changes configuration
    *
    * @example
    * ```
@@ -1288,20 +1463,20 @@ export class CentralSecurityServicesConfig
    */
   readonly guardduty: GuardDutyConfig = new GuardDutyConfig();
   /**
-   * Amazon Audit Manager Configuration
+   * (OPTIONAL) Amazon Audit Manager Configuration
    */
   readonly auditManager: AuditManagerConfig | undefined = undefined;
   /**
-   * Amazon Detective Configuration
+   * (OPTIONAL) Amazon Detective Configuration
    */
   readonly detective: DetectiveConfig | undefined = undefined;
   /**
-   * AWS SecurityHub configuration
+   * AWS Security Hub configuration
    *
-   * Accelerator use this parameter to define AWS SecurityHub configuration.
+   * Accelerator use this parameter to define AWS Security Hub configuration.
    *
-   * To enable AWS SecurityHub for all regions and
-   * enable "AWS Foundational Security Best Practices v1.0.0" security standard for IAM.1 & EC2.10 controls
+   * To enable AWS Security Hub for all regions and
+   * enable "AWS Foundational Security Best Practices v1.0.0" security standard, deployment targets and disable controls
    * you need provide below value for this parameter.
    *
    * @example
@@ -1314,10 +1489,15 @@ export class CentralSecurityServicesConfig
    *     excludeRegions: []
    *     standards:
    *       - name: AWS Foundational Security Best Practices v1.0.0
+   *         deploymentTargets:
+   *          organizationalUnits:
+   *            - Root
    *         enable: true
    *         controlsToDisable:
-   *           - IAM.1
-   *           - EC2.10
+   *           # Refer to the document for the control ID
+   *           # https://docs.aws.amazon.com/securityhub/latest/userguide/fsbp-standard.html
+   *           - Control1
+   *           - Control2
    * ```
    */
   readonly securityHub: SecurityHubConfig = new SecurityHubConfig();
@@ -1365,7 +1545,8 @@ export class AccessAnalyzerConfig implements t.TypeOf<typeof SecurityConfigTypes
   /**
    * Indicates whether AWS AccessAnalyzer enabled in your organization.
    *
-   * Once enabled, IAM Access Analyzer analyzes policies and reports a list of findings for resources that grant public or cross-account access from outside your AWS Organizations in the IAM console and through APIs.
+   * @remarks
+   * Note: Once enabled, IAM Access Analyzer examines policies and reports a list of findings for resources that grant public or cross-account access from outside your AWS Organizations in the IAM console and through APIs.
    */
   readonly enable = false;
 }
@@ -1406,7 +1587,7 @@ export class IamPasswordPolicyConfig implements t.TypeOf<typeof SecurityConfigTy
   /**
    * Specifies whether IAM user passwords must contain at least one uppercase character from the ISO basic Latin alphabet (A to Z).
    *
-   * If you do not specify a value for this parameter, then the operation uses the default value of false. The result is that passwords do not require at least one uppercase character.
+   * Note: If you do not specify a value for this parameter, then the operation uses the default value of false. The result is that passwords do not require at least one uppercase character.
    *
    * @default true
    */
@@ -1414,7 +1595,7 @@ export class IamPasswordPolicyConfig implements t.TypeOf<typeof SecurityConfigTy
   /**
    * Specifies whether IAM user passwords must contain at least one lowercase character from the ISO basic Latin alphabet (a to z).
    *
-   * If you do not specify a value for this parameter, then the operation uses the default value of false. The result is that passwords do not require at least one lowercase character.
+   * Note: If you do not specify a value for this parameter, then the operation uses the default value of false. The result is that passwords do not require at least one lowercase character.
    *
    * @default true
    */
@@ -1424,7 +1605,7 @@ export class IamPasswordPolicyConfig implements t.TypeOf<typeof SecurityConfigTy
    *
    * ! @ # $ % ^ & * ( ) _ + - = [ ] { } | '
    *
-   * If you do not specify a value for this parameter, then the operation uses the default value of false. The result is that passwords do not require at least one symbol character.
+   * Note: If you do not specify a value for this parameter, then the operation uses the default value of false. The result is that passwords do not require at least one symbol character.
    *
    * @default true
    */
@@ -1432,7 +1613,7 @@ export class IamPasswordPolicyConfig implements t.TypeOf<typeof SecurityConfigTy
   /**
    * Specifies whether IAM user passwords must contain at least one numeric character (0 to 9).
    *
-   * If you do not specify a value for this parameter, then the operation uses the default value of false. The result is that passwords do not require at least one numeric character.
+   * Note: If you do not specify a value for this parameter, then the operation uses the default value of false. The result is that passwords do not require at least one numeric character.
    *
    * @default true
    */
@@ -1440,7 +1621,7 @@ export class IamPasswordPolicyConfig implements t.TypeOf<typeof SecurityConfigTy
   /**
    * The minimum number of characters allowed in an IAM user password.
    *
-   * If you do not specify a value for this parameter, then the operation uses the default value of 6.
+   * Note: If you do not specify a value for this parameter, then the operation uses the default value of 6.
    *
    * @default 14
    */
@@ -1448,7 +1629,7 @@ export class IamPasswordPolicyConfig implements t.TypeOf<typeof SecurityConfigTy
   /**
    * Specifies the number of previous passwords that IAM users are prevented from reusing.
    *
-   * If you do not specify a value for this parameter, then the operation uses the default value of 0.
+   * Note: If you do not specify a value for this parameter, then the operation uses the default value of 0.
    * The result is that IAM users are not prevented from reusing previous passwords.
    *
    * @default 24
@@ -1457,13 +1638,147 @@ export class IamPasswordPolicyConfig implements t.TypeOf<typeof SecurityConfigTy
   /**
    * The number of days that an IAM user password is valid.
    *
-   * If you do not specify a value for this parameter, then the operation uses the default value of 0. The result is that IAM user passwords never expire.
+   * Note: If you do not specify a value for this parameter, then the operation uses the default value of 0. The result is that IAM user passwords never expire.
    *
    * @default 90
    */
   readonly maxPasswordAge = 90;
 }
 
+/**
+ * *{@link SecurityConfig} / {@link AwsConfig} / {@link AwsConfigAggregation}*
+ *
+ * AWS Config Aggregation Configuration
+ * Not used in Control Tower environment
+ * Aggregation will be configured in all enabled regions
+ * unless specifically excluded
+ * If the delegatedAdmin account is not provided
+ * config will be aggregated to the management account
+ *
+ * @example
+ * AWS Config Aggregation with a delegated admin account:
+ * ```
+ * aggregation:
+ *   enable: true
+ *   delegatedAdminAccount: LogArchive
+ * ```
+ * AWS Config Aggregation in the management account:
+ * ```
+ * configAggregation:
+ *   enable: true
+ * ```
+ */
+export class AwsConfigAggregation implements t.TypeOf<typeof SecurityConfigTypes.awsConfigAggregation> {
+  readonly enable = true;
+  readonly delegatedAdminAccount: string | undefined = undefined;
+}
+
+/**
+ * *{@link SecurityConfig} / {@link AwsConfig} / {@link AwsConfigRuleSet} / {@link ConfigRule} / {@link ConfigRuleRemediation}*
+ *
+ * A remediation for the config rule, auto remediation to automatically remediate noncompliant resources.
+ *
+ * @example
+ *
+ * Managed Config rule with remediation:
+ * ```
+ * - name: accelerator-s3-bucket-server-side-encryption-enabled
+ *   identifier: S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED
+ *   complianceResourceTypes:
+ *     - AWS::S3::Bucket
+ *   remediation:
+ *     rolePolicyFile: path/to/policy.json
+ *     automatic: true
+ *     targetId: Put-S3-Encryption
+ *     retryAttemptSeconds: 60
+ *     maximumAutomaticAttempts: 5
+ *     parameters:
+ *       - name: BucketName
+ *         value: RESOURCE_ID
+ *         type: String
+ *       - name: KMSMasterKey
+ *         value: ${ACCEL_LOOKUP::KMS}
+ *         type: StringList
+ * ```
+ */
+export class ConfigRuleRemediation implements t.TypeOf<typeof SecurityConfigTypes.configRuleRemediationType> {
+  /**
+   * Remediation assume role policy definition json file. This file must be present in config repository.
+   *
+   * Create your own custom remediation actions using AWS Systems Manager Automation documents.
+   * When a role needed to be created to perform custom remediation actions, role permission needs to be defined in this file.
+   */
+  readonly rolePolicyFile = '';
+  /**
+   * The remediation is triggered automatically.
+   */
+  readonly automatic = true;
+  /**
+   * Target ID is the name of the public document.
+   *
+   * The name of the AWS SSM document to perform custom remediation actions.
+   */
+  readonly targetId = '';
+  /**
+   * Name of the account owning the public document to perform custom remediation actions.
+   * Accelerator creates these documents in Audit account and shared with other accounts.
+   */
+  readonly targetAccountName = '';
+  /**
+   * Version of the target. For example, version of the SSM document.
+   *
+   * If you make backward incompatible changes to the SSM document, you must call PutRemediationConfiguration API again to ensure the remediations can run.
+   */
+  readonly targetVersion = '';
+  /**
+   * Target SSM document remediation lambda function
+   */
+  readonly targetDocumentLambda = {
+    /**
+     * The source code file path of your Lambda function. This is a zip file containing lambda function, this file must be available in config repository.
+     */
+    sourceFilePath: '',
+    /**
+     * The name of the method within your code that Lambda calls to execute your function. The format includes the file name. It can also include namespaces and other qualifiers, depending on the runtime.
+     * For more information, see https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-features.html#gettingstarted-features-programmingmodel.
+     */
+    handler: '',
+    /**
+     * The runtime environment for the Lambda function that you are uploading. For valid values, see the Runtime property in the AWS Lambda Developer Guide.
+     */
+    runtime: '',
+    /**
+     * Lambda execution role policy definition file
+     */
+    rolePolicyFile: '',
+    /**
+     * Lambda function execution timeout in seconds
+     */
+    timeout: 3,
+  };
+  /**
+   * Maximum time in seconds that AWS Config runs auto-remediation. If you do not select a number, the default is 60 seconds.
+   *
+   * For example, if you specify RetryAttemptSeconds as 50 seconds and MaximumAutomaticAttempts as 5, AWS Config will run auto-remediations 5 times within 50 seconds before throwing an exception.
+   */
+  readonly retryAttemptSeconds = 0;
+  /**
+   * The maximum number of failed attempts for auto-remediation. If you do not select a number, the default is 5.
+   *
+   * For example, if you specify MaximumAutomaticAttempts as 5 with RetryAttemptSeconds as 50 seconds, AWS Config will put a RemediationException on your behalf for the failing resource after the 5th failed attempt within 50 seconds.
+   */
+  readonly maximumAutomaticAttempts = 0;
+  /**
+   * List of remediation parameters
+   *
+   */
+  readonly parameters = [];
+
+  /**
+   * List of AWS Region names to be excluded from applying remediation
+   */
+  readonly excludeRegions: t.Region[] = [];
+}
 /**
  * *{@link SecurityConfig} / {@link AwsConfig} / {@link AwsConfigRuleSet} / {@link ConfigRule}*
  *
@@ -1487,7 +1802,7 @@ export class IamPasswordPolicyConfig implements t.TypeOf<typeof SecurityConfigTy
  *       lambda:
  *         sourceFilePath: path/to/function.zip
  *         handler: index.handler
- *         runtime: nodejs14.x
+ *         runtime: nodejsXX.x
  *         rolePolicyFile: path/to/policy.json
  *       periodic: true
  *       maximumExecutionFrequency: Six_Hours
@@ -1522,34 +1837,38 @@ export class IamPasswordPolicyConfig implements t.TypeOf<typeof SecurityConfigTy
 export class ConfigRule implements t.TypeOf<typeof SecurityConfigTypes.configRule> {
   /**
    * A name for the AWS Config rule.
+   *
+   * @remarks
+   * Note: Changing this value of an AWS Config Rule will trigger a new resource creation.
    */
   readonly name = '';
   /**
-   * A description about this AWS Config rule.
+   * (OPTIONAL) A description about this AWS Config rule.
+   *
    */
   readonly description = '';
   /**
-   * The identifier of the AWS managed rule.
+   * (OPTIONAL) The identifier of the AWS managed rule.
    */
   readonly identifier = '';
   /**
-   * Input parameter values that are passed to the AWS Config rule.
+   * (OPTIONAL) Input parameter values that are passed to the AWS Config rule.
    */
   readonly inputParameters = {};
   /**
-   * Defines which resources trigger an evaluation for an AWS Config rule.
+   * (OPTIONAL) Defines which resources trigger an evaluation for an AWS Config rule.
    */
   readonly complianceResourceTypes: string[] = [];
   /**
-   * Config rule type Managed or Custom. For custom config rule, this parameter value is Custom, when creating managed config rule this parameter value can be undefined or empty string
+   * (OPTIONAL) Config rule type Managed or Custom. For custom config rule, this parameter value is Custom, when creating managed config rule this parameter value can be undefined or empty string
    */
   readonly type = '';
   /**
-   * Tags for the config rule
+   * (OPTIONAL) Tags for the config rule
    */
   readonly tags = [];
   /**
-   * A custom config rule is backed by AWS Lambda function. This is required when creating custom config rule.
+   * (OPTIONAL) A custom config rule is backed by AWS Lambda function. This is required when creating custom config rule.
    */
   readonly customRule = {
     /**
@@ -1622,79 +1941,7 @@ export class ConfigRule implements t.TypeOf<typeof SecurityConfigTypes.configRul
   /**
    * A remediation for the config rule, auto remediation to automatically remediate noncompliant resources.
    */
-  readonly remediation = {
-    /**
-     * Remediation assume role policy definition json file. This file must be present in config repository.
-     *
-     * Create your own custom remediation actions using AWS Systems Manager Automation documents.
-     * When a role needed to be created to perform custom remediation actions, role permission needs to be defined in this file.
-     */
-    rolePolicyFile: '',
-    /**
-     * The remediation is triggered automatically.
-     */
-    automatic: true,
-    /**
-     * Target ID is the name of the public document.
-     *
-     * The name of the AWS SSM document to perform custom remediation actions.
-     */
-    targetId: '',
-    /**
-     * Name of the account owning the public document to perform custom remediation actions.
-     * Accelerator creates these documents in Audit account and shared with other accounts.
-     */
-    targetAccountName: '',
-    /**
-     * Version of the target. For example, version of the SSM document.
-     *
-     * If you make backward incompatible changes to the SSM document, you must call PutRemediationConfiguration API again to ensure the remediations can run.
-     */
-    targetVersion: '',
-    /**
-     * Target SSM document remediation lambda function
-     */
-    targetDocumentLambda: {
-      /**
-       * The source code file path of your Lambda function. This is a zip file containing lambda function, this file must be available in config repository.
-       */
-      sourceFilePath: '',
-      /**
-       * The name of the method within your code that Lambda calls to execute your function. The format includes the file name. It can also include namespaces and other qualifiers, depending on the runtime.
-       * For more information, see https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-features.html#gettingstarted-features-programmingmodel.
-       */
-      handler: '',
-      /**
-       * The runtime environment for the Lambda function that you are uploading. For valid values, see the Runtime property in the AWS Lambda Developer Guide.
-       */
-      runtime: '',
-      /**
-       * Lambda execution role policy definition file
-       */
-      rolePolicyFile: '',
-      /**
-       * Lambda function execution timeout in seconds
-       */
-      timeout: 3,
-    },
-    /**
-     * Maximum time in seconds that AWS Config runs auto-remediation. If you do not select a number, the default is 60 seconds.
-     *
-     * For example, if you specify RetryAttemptSeconds as 50 seconds and MaximumAutomaticAttempts as 5, AWS Config will run auto-remediations 5 times within 50 seconds before throwing an exception.
-     */
-    retryAttemptSeconds: 0,
-    /**
-     * The maximum number of failed attempts for auto-remediation. If you do not select a number, the default is 5.
-     *
-     * For example, if you specify MaximumAutomaticAttempts as 5 with RetryAttemptSeconds as 50 seconds, AWS Config will put a RemediationException on your behalf for the failing resource after the 5th failed attempt within 50 seconds.
-     */
-    maximumAutomaticAttempts: 0,
-    /**
-     * List of remediation parameters
-     *
-     */
-    parameters: [],
-  };
+  readonly remediation: ConfigRuleRemediation = new ConfigRuleRemediation();
 }
 
 /**
@@ -1746,7 +1993,7 @@ export class AwsConfigRuleSet implements t.TypeOf<typeof SecurityConfigTypes.aws
    *             lambda:
    *               sourceFilePath: custom-config-rules/attach-ec2-instance-profile.zip
    *               handler: index.handler
-   *               runtime: nodejs14.x
+   *               runtime: nodejsXX.x
    *               timeout: 3
    *             periodic: true
    *             maximumExecutionFrequency: Six_Hours
@@ -1768,13 +2015,18 @@ export class AwsConfigRuleSet implements t.TypeOf<typeof SecurityConfigTypes.aws
 /**
  * *{@link SecurityConfig} / {@link AwsConfig}*
  *
- * AWS Config rule
+ * AWS Config Recorder and Rules
  *
  * @example
  * ```
  * awsConfig:
- *   enableConfigurationRecorder: true
+ *   enableConfigurationRecorder: false
+ *   ** enableDeliveryChannel DEPRECATED
  *   enableDeliveryChannel: true
+ *   overrideExisting: false
+ *   aggregation:
+ *     enable: true
+ *     delegatedAdminAccount: LogArchive
  *   ruleSets:
  *     - deploymentTargets:
  *         organizationalUnits:
@@ -1790,17 +2042,37 @@ export class AwsConfig implements t.TypeOf<typeof SecurityConfigTypes.awsConfig>
   /**
    * Indicates whether AWS Config recorder enabled.
    *
-   * To enable AWS Config, you must create a configuration recorder and a delivery channel.
+   * To enable AWS Config, you must create a configuration recorder
    *
    * ConfigurationRecorder resource describes the AWS resource types for which AWS Config records configuration changes. The configuration recorder stores the configurations of the supported resources in your account as configuration items.
    */
-  readonly enableConfigurationRecorder = true;
+  readonly enableConfigurationRecorder = false;
   /**
    * Indicates whether delivery channel enabled.
    *
-   * AWS Config uses the delivery channel to deliver the configuration changes to your Amazon S3 bucket or Amazon SNS topic.
+   * AWS Config uses the delivery channel to deliver the configuration changes to your Amazon S3 bucket.
+   * DEPRECATED
    */
-  readonly enableDeliveryChannel = true;
+  readonly enableDeliveryChannel: boolean | undefined;
+  /**
+   * Indicates whether or not to override existing config recorder settings
+   * Must be enabled if any account and region combination has an
+   * existing config recorder, even if config recording is turned off
+   * The Landing Zone Accelerator will override the settings in all configured
+   * accounts and regions
+   * ** Do not enable this setting if you have deployed LZA
+   * ** successfully with enableConfigurationRecorder set to true
+   * ** and overrideExisting either unset or set to false
+   * ** Doing so will cause a resource conflict
+   * When the overrideExisting property is enabled
+   * ensure that any scp's are not blocking the passRole
+   * iam permission for the iam role name {acceleratorPrefix}Config
+   */
+  readonly overrideExisting: boolean | undefined;
+  /**
+   * Config Recorder Aggregation configuration
+   */
+  readonly aggregation: AwsConfigAggregation | undefined;
   /**
    * AWS Config rule sets
    */
@@ -1849,8 +2121,8 @@ export class MetricConfig implements t.TypeOf<typeof SecurityConfigTypes.metricC
    *
    * Can either be a literal number (typically “1”), or the name of a field in the structure to take the value from the matched event. If you are using a field value, the field value must have been matched using the pattern.
    *
-   * If you want to specify a field from a matched JSON structure, use '$.fieldName', and make sure the field is in the pattern (if only as '$.fieldName = *').
-   *
+   * @remarks
+   * Note: If you want to specify a field from a matched JSON structure, use '$.fieldName', and make sure the field is in the pattern (if only as '$.fieldName = *').
    * If you want to specify a field from a matched space-delimited structure, use '$fieldName'.
    */
   readonly metricValue: string = '';
@@ -1884,7 +2156,7 @@ export class MetricConfig implements t.TypeOf<typeof SecurityConfigTypes.metricC
  */
 export class MetricSetConfig implements t.TypeOf<typeof SecurityConfigTypes.metricSetConfig> {
   /**
-   * AWS region names to configure CloudWatch Metrics
+   * (OPTIONAL) AWS region names to configure CloudWatch Metrics
    */
   readonly regions: string[] | undefined = undefined;
   /**
@@ -1946,7 +2218,7 @@ export class AlarmConfig implements t.TypeOf<typeof SecurityConfigTypes.alarmCon
    */
   readonly snsAlertLevel: string = '';
   /**
-   * SNS Topic Name
+   * (OPTIONAL) SNS Topic Name
    * SNS Topic Name from global config
    */
   readonly snsTopicName: string = '';
@@ -2054,6 +2326,169 @@ export class AlarmSetConfig implements t.TypeOf<typeof SecurityConfigTypes.alarm
 }
 
 /**
+ * *{@link SecurityConfig} / {@link CloudWatchConfig} / {@link LogGroupsConfig} / {@link EncryptionConfig}*
+ *
+ * {@link https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/encrypt-log-data-kms.html | CloudWatch log group encryption} configuration.
+ * Use this configuration to enable encryption for a log group.
+ *
+ * @example
+ * Key name reference example:
+ * ```
+ * kmsKeyName: key1
+ * ```
+ * Solution-managed KMS key example:
+ * ```
+ * useLzaManagedKey: true
+ * ```
+ * Existing KMS key reference:
+ * ```
+ * kmsKeyArn: arn:aws:kms:us-east-1:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab
+ * ```
+ *
+ */
+export class EncryptionConfig implements t.TypeOf<typeof SecurityConfigTypes.encryptionConfig> {
+  /**
+   * (OPTIONAL) Use this property to reference a
+   * KMS Key Name that is created by Landing Zone Accelerator.
+   *
+   * @remarks
+   * CAUTION: When importing an existing AWS CloudWatch Logs Group that has encryption enabled. If specifying the
+   * encryption configuration with any KMS parameter under the encryption configuration, Landing Zone Accelerator
+   * on AWS will associate a new key with the log group. It is recommend to verify if any processes or applications are using the previous key,
+   * and has access to the new key before updating.
+   *
+   * This is the logical `name` property of the key as defined in security-config.yaml.
+   *
+   * @see {@link KeyConfig}
+   */
+  readonly kmsKeyName: string | undefined = undefined;
+
+  /**
+   * (OPTIONAL) Reference the KMS Key Arn that is used to encrypt the AWS CloudWatch Logs Group. This should be a
+   * KMS Key that is not managed by Landing Zone Accelerator.
+   *
+   * @remarks
+   * CAUTION: When importing an existing AWS CloudWatch Logs Group that has encryption enabled. If specifying the
+   * encryption configuration with any KMS parameter under the encryption configuration, Landing Zone Accelerator
+   * on AWS will associate a new key with the log group. It is recommend to verify if any processes or applications are using the previous key,
+   * and has access to the new key before updating.
+   *
+   * Note: If using the `kmsKeyArn` parameter to encrypt your AWS CloudWatch Logs Groups. It's important that the logs
+   * service is provided the necessary cryptographic API calls to the CMK. For more information on how to manage the
+   * CMK for logs service access, please review the documentation.
+   *
+   * @see {@link https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/encrypt-log-data-kms.html}
+   *
+   */
+  readonly kmsKeyArn: string | undefined = undefined;
+
+  /**
+   * (OPTIONAL) Set this property to `true` if you would like to use the
+   * default CloudWatch Logs KMS CMK that is deployed by Landing Zone Accelerator.
+   *
+   * @remarks
+   * CAUTION: When importing an existing AWS CloudWatch Logs Group that has encryption enabled. If specifying the
+   * encryption configuration with any KMS parameter under the encryption configuration, Landing Zone Accelerator
+   * on AWS will associate a new key with the log group. It is recommend to verify if any processes or applications are using the previous key,
+   * and has access to the new key before updating.
+   *
+   * This key is deployed to all accounts managed by the solution by default.
+   *
+   */
+  readonly useLzaManagedKey: boolean | undefined = undefined;
+}
+
+/**
+ * *{@link SecurityConfig} / {@link CloudWatchConfig} / {@link LogGroupsConfig}*
+ *
+ * {@link https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CloudWatchLogsConcepts.html | CloudWatch log group} configuration.
+ * Use this configuration to deploy CloudWatch log groups to your environment.
+ * You can also import existing log groups into your accelerator configuration.
+ * Log groups define groups of log streams that share the same retention, monitoring, and access control settings.
+ *
+ * @example
+ * CloudWatch Log Group that is using a CMK that is being managed by Landing Zone Accelerator on AWS.
+ * ```
+ * - logGroupName: Log1
+ *   logRetentionInDays: 365
+ *   terminationProtected: true
+ *   encryption:
+ *     kmsKeyName: key1
+ *   deploymentTargets:
+ *     accounts:
+ *       - Production
+ * ```
+ * CloudWatch Log Group that uses the Landing Zone Accelerator on AWS CMK for CloudWatch Logs Groups.
+ * ```
+ * - logGroupName: Log1
+ *   logRetentionInDays: 365
+ *   terminationProtected: true
+ *   encryption:
+ *     useLzaManagedKey: true
+ *   deploymentTargets:
+ *     organizationalUnits:
+ *       - Infrastructure
+ * ```
+ * CloudWatch Log Group that uses an existing KMS Key that's not managed by Landing Zone Accelerator on AWS.
+ * ```
+ * - logGroupName: Log1
+ *   logRetentionInDays: 365
+ *   terminationProtected: true
+ *   encryption:
+ *     kmsKeyArn: arn:aws:kms:us-east-1:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab
+ *   deploymentTargets:
+ *     accounts:
+ *       - Production
+ * ```
+ */
+export class LogGroupsConfig implements t.TypeOf<typeof SecurityConfigTypes.logGroupsConfig> {
+  /**
+   * Deployment targets for CloudWatch Logs
+   *
+   * @see {@link DeploymentTargets}
+   */
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
+
+  /**
+   * (OPTIONAL) The encryption configuration of the AWS CloudWatch Logs Group.
+   *
+   * @remarks
+   * CAUTION: If importing an existing AWS CloudWatch Logs Group that has encryption enabled. If specifying the
+   * encryption configuration with any KMS parameter under the encryption configuration, Landing Zone Accelerator
+   * on AWS will associate a new key with the log group. The same situation is applied for a log group that is
+   * created by Landing Zone Accelerator on AWS where specifying a new KMS parameter will update the KMS key used
+   * to encrypt the log group. It is recommend to verify if any processes or applications are using the previous key,
+   * and has access to the new key before updating.
+   */
+  readonly encryption: EncryptionConfig | undefined = undefined;
+  /**
+   * Name of the CloudWatch log group
+   *
+   * @remarks
+   * If importing an existing log group, this must be the name of the
+   * group as it exists in your account.
+   */
+  readonly logGroupName: string = '';
+
+  /**
+   * (OPTIONAL) How long, in days, the log contents will be retained.
+   *
+   * To retain all logs, set this value to undefined.
+   *
+   * @default undefined
+   */
+  readonly logRetentionInDays = 3653;
+
+  /**
+   * (OPTIONAL) Set this property to `false` if you would like the log group
+   * to be deleted if it is removed from the solution configuration file.
+   *
+   * @default true
+   */
+  readonly terminationProtected: boolean | undefined = undefined;
+}
+
+/**
  * *{@link SecurityConfig} / {@link CloudWatchConfig}*
  *
  * AWS CloudWatch configuration
@@ -2093,6 +2528,19 @@ export class AlarmSetConfig implements t.TypeOf<typeof SecurityConfigTypes.alarm
  *           statistic: Sum
  *           threshold: 1
  *           treatMissingData: notBreaching
+ *   logGroups:
+ *     - name: Log1
+ *       terminationProtected: true
+ *       encryption:
+ *          kmsKeyName: key1
+ *       deploymentTargets:
+ *         accounts:
+ *           - Production
+ *     - name: Log2
+ *       terminationProtected: false
+ *       deploymentTargets:
+ *         organizationalUnits:
+ *           - Infrastructure
  * ```
  */
 export class CloudWatchConfig implements t.TypeOf<typeof SecurityConfigTypes.cloudWatchConfig> {
@@ -2138,6 +2586,28 @@ export class CloudWatchConfig implements t.TypeOf<typeof SecurityConfigTypes.clo
    * ```
    */
   readonly alarmSets: AlarmSetConfig[] = [];
+
+  /**
+   * (OPTIONAL) List CloudWatch Logs configuration
+   *
+   * The Following is an example of deploying CloudWatch Logs to multiple regions
+   *
+   * @example
+   * ```
+   *   logGroups:
+   *     - logGroupName: Log1
+   *       terminationProtected: true
+   *       encryption:
+   *         useLzaManagedKey: true
+   *       deploymentTarget:
+   *         account: Production
+   *     - logGroupName: Log2
+   *       terminationProtected: false
+   *       deploymentTarget:
+   *         organization: Infrastructure
+   * ```
+   */
+  readonly logGroups: LogGroupsConfig[] | undefined = undefined;
 }
 
 /**
@@ -2165,567 +2635,12 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
    * @param configDir
    * @param validateConfig
    */
-  constructor(
-    values?: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
-    configDir?: string,
-    validateConfig?: boolean,
-  ) {
-    const errors: string[] = [];
-    const ssmDocuments: { name: string; template: string }[] = [];
-    const ouIdNames: string[] = ['Root'];
-    const accountNames: string[] = [];
-
+  constructor(values?: t.TypeOf<typeof SecurityConfigTypes.securityConfig>) {
     if (values) {
       Object.assign(this, values);
-
-      if (configDir && validateConfig) {
-        //
-        // SSM Document validations
-        this.getSsmDocuments(values, ssmDocuments);
-        //
-        // Get list of OU ID names from organization config file
-        this.getOuIdNames(configDir, ouIdNames);
-
-        //
-        // Get list of Account names from account config file
-        this.getAccountNames(configDir, accountNames);
-
-        // Validate presence of SSM document files
-        this.validateSsmDocumentFiles(configDir, ssmDocuments, errors);
-
-        // Validate KMS key policy files
-        this.validateKeyPolicyFiles(configDir, errors);
-
-        //
-        // Create list of custom CMKs, any services to be validated against key list from keyManagementService
-        const keyNames: string[] = [this.centralSecurityServices.ebsDefaultVolumeEncryption.kmsKey!];
-
-        // Validate custom CMK names
-        this.validateCustomKeyName(keyNames, errors);
-
-        //
-        // Validate deployment targets against organization config file
-        // validate deployment target OUs for security services
-        this.validateDeploymentTargetOUs(values, ouIdNames, errors);
-        this.validateDeploymentTargetAccountNames(values, accountNames, errors);
-
-        // Validate expiration for Macie and GuardDuty Lifecycle Rules
-        this.macieLifecycleRules(values, errors);
-        this.guarddutyLifecycleRules(values, errors);
-
-        //
-        // Validate Config rule assets
-        for (const ruleSet of values.awsConfig.ruleSets ?? []) {
-          this.validateConfigRuleAssets(configDir, ruleSet, errors);
-          this.validateConfigRuleRemediationAssumeRoleFile(configDir, ruleSet, errors);
-          this.validateConfigRuleRemediationTargetAssets(configDir, ruleSet, ssmDocuments, errors);
-        }
-
-        //
-        // Validate SNS Topics for CloudWatch Alarms
-        const snsTopicNames = this.getSnsTopicNames(configDir);
-        for (const alarm of values.cloudWatch.alarmSets ?? []) {
-          this.validateSnsTopics(configDir, alarm, snsTopicNames, errors);
-        }
-
-        this.validateSecurityHubNotifications(
-          snsTopicNames,
-          this.centralSecurityServices.securityHub.snsTopicName ?? undefined,
-          this.centralSecurityServices.securityHub.notificationLevel ?? undefined,
-          errors,
-        );
-      }
-
-      if (errors.length) {
-        throw new Error(`${SecurityConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
-      }
     }
   }
 
-  /**
-   * Prepare list of OU ids from organization config file
-   * @param configDir
-   */
-  private getOuIdNames(configDir: string, ouIdNames: string[]) {
-    for (const organizationalUnit of OrganizationConfig.load(configDir).organizationalUnits) {
-      ouIdNames.push(organizationalUnit.name);
-    }
-  }
-
-  /**
-   * Prepare list of Account names from account config file
-   * @param configDir
-   */
-  private getAccountNames(configDir: string, accountNames: string[]) {
-    for (const accountItem of [
-      ...AccountsConfig.load(configDir).mandatoryAccounts,
-      ...AccountsConfig.load(configDir).workloadAccounts,
-    ]) {
-      accountNames.push(accountItem.name);
-    }
-  }
-
-  /**
-   * Prepare list of SNS Topic names from the global config file
-   * @param configDir
-   */
-  private getSnsTopicNames(configDir: string) {
-    const globalConfig = GlobalConfig.load(configDir);
-    return globalConfig.getSnsTopicNames();
-  }
-
-  /**
-   * Validate S3 lifecycle expiration to be smaller than noncurrentVersionExpiration
-   */
-  private macieLifecycleRules(values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>, errors: string[]) {
-    for (const lifecycleRule of values.centralSecurityServices?.macie?.lifecycleRules ?? []) {
-      if (lifecycleRule.expiration && !lifecycleRule.noncurrentVersionExpiration) {
-        errors.push('You must supply a value for noncurrentVersionExpiration. Macie.');
-      }
-      if (!lifecycleRule.abortIncompleteMultipartUpload) {
-        errors.push('You must supply a value for abortIncompleteMultipartUpload. Macie');
-      }
-      if (lifecycleRule.expiration && lifecycleRule.expiredObjectDeleteMarker) {
-        errors.push('You may not configure expiredObjectDeleteMarker with expiration. Macie');
-      }
-    }
-  }
-
-  /**
-   * Validate S3 lifecycle expiration to be smaller than noncurrentVersionExpiration
-   */
-  private guarddutyLifecycleRules(values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>, errors: string[]) {
-    for (const lifecycleRule of values.centralSecurityServices?.guardduty?.lifecycleRules ?? []) {
-      if (lifecycleRule.expiration && !lifecycleRule.noncurrentVersionExpiration) {
-        errors.push('You must supply a value for noncurrentVersionExpiration. GuardDuty');
-      }
-      if (!lifecycleRule.abortIncompleteMultipartUpload) {
-        errors.push('You must supply a value for abortIncompleteMultipartUpload. GuardDuty');
-      }
-      if (lifecycleRule.expiration && lifecycleRule.expiredObjectDeleteMarker) {
-        errors.push('You may not configure expiredObjectDeleteMarker with expiration. GuardDuty');
-      }
-    }
-  }
-
-  /**
-   * Function to get SSM document names
-   * @param values
-   */
-  private getSsmDocuments(
-    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
-    ssmDocuments: { name: string; template: string }[],
-  ) {
-    // SSM Document validations
-    for (const documentSet of values.centralSecurityServices.ssmAutomation.documentSets) {
-      for (const document of documentSet.documents ?? []) {
-        ssmDocuments.push(document);
-      }
-    }
-  }
-
-  /**
-   * Function to validate SSM document files existence
-   * @param configDir
-   */
-  private validateSsmDocumentFiles(
-    configDir: string,
-    ssmDocuments: { name: string; template: string }[],
-    errors: string[],
-  ) {
-    // Validate presence of SSM document files
-    for (const ssmDocument of ssmDocuments) {
-      if (!fs.existsSync(path.join(configDir, ssmDocument.template))) {
-        errors.push(`SSM document ${ssmDocument.name} template file ${ssmDocument.template} not found !!!`);
-      }
-    }
-  }
-
-  /**
-   * Function to validate KMS key policy files existence
-   * @param configDir
-   */
-  private validateKeyPolicyFiles(configDir: string, errors: string[]) {
-    // Validate presence of KMS policy files
-    if (!this.keyManagementService) {
-      return;
-    }
-    for (const key of this.keyManagementService.keySets) {
-      if (key.policy) {
-        if (!fs.existsSync(path.join(configDir, key.policy))) {
-          errors.push(`KMS Key ${key.name} policy file ${key.policy} not found !!!`);
-        }
-      }
-    }
-  }
-
-  /**
-   * Function to validate custom key existence in key list of keyManagementService
-   */
-  private validateCustomKeyName(keyNames: string[], errors: string[]) {
-    // Validate presence of KMS policy files
-    for (const keyName of keyNames) {
-      if (keyName) {
-        if (!this.keyManagementService) {
-          errors.push(`Custom CMK object keyManagementService not defined, CMK ${keyName} can not be used !!!`);
-          return;
-        }
-        if (!this.keyManagementService.keySets.find(item => item.name === keyName)) {
-          errors.push(
-            `Custom CMK  ${keyName} is not part of keyManagementService key list [${
-              this.keyManagementService.keySets.flatMap(item => item.name) ?? []
-            }] !!!`,
-          );
-        }
-      }
-    }
-  }
-
-  /**
-   * Function to validate existence of custom config rule deployment target Accounts
-   * Make sure deployment target Accounts are part of account config file
-   * @param values
-   */
-  private validateConfigRuleDeploymentTargetAccounts(
-    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
-    accountNames: string[],
-    errors: string[],
-  ) {
-    for (const ruleSet of values.awsConfig.ruleSets ?? []) {
-      for (const account of ruleSet.deploymentTargets.accounts ?? []) {
-        if (accountNames.indexOf(account) === -1) {
-          errors.push(
-            `Deployment target account ${account} for AWS Config rules does not exists in accounts-config.yaml file.`,
-          );
-        }
-      }
-    }
-  }
-
-  /**
-   * Function to validate existence of CloudWatch Metrics deployment target Accounts
-   * Make sure deployment target Accounts are part of account config file
-   * @param values
-   */
-  private validateCloudWatchMetricsDeploymentTargetAccounts(
-    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
-    accountNames: string[],
-    errors: string[],
-  ) {
-    for (const metricSet of values.cloudWatch.metricSets ?? []) {
-      for (const account of metricSet.deploymentTargets.accounts ?? []) {
-        if (accountNames.indexOf(account) === -1) {
-          errors.push(
-            `Deployment target account ${account} for CloudWatch Metrics does not exists in accounts-config.yaml file.`,
-          );
-        }
-      }
-    }
-  }
-
-  /**
-   * Function to validate existence of CloudWatch Alarms deployment target Accounts
-   * Make sure deployment target Accounts are part of account config file
-   * @param values
-   */
-  private validateCloudWatchAlarmsDeploymentTargetAccounts(
-    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
-    accountNames: string[],
-    errors: string[],
-  ) {
-    for (const alarmSet of values.cloudWatch.alarmSets ?? []) {
-      for (const account of alarmSet.deploymentTargets.accounts ?? []) {
-        if (accountNames.indexOf(account) === -1) {
-          errors.push(
-            `Deployment target account ${account} for CloudWatch Alarms does not exists in accounts-config.yaml file.`,
-          );
-        }
-      }
-    }
-  }
-
-  /**
-   * Function to validate existence of SSM documents deployment target Accounts
-   * Make sure deployment target Accounts are part of account config file
-   * @param values
-   */
-  private validateSsmDocumentsDeploymentTargetAccounts(
-    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
-    accountNames: string[],
-    errors: string[],
-  ) {
-    for (const documentSet of values.centralSecurityServices.ssmAutomation.documentSets ?? []) {
-      for (const account of documentSet.shareTargets.accounts ?? []) {
-        if (accountNames.indexOf(account) === -1) {
-          errors.push(
-            `Deployment target account ${account} for SSM automation does not exists in accounts-config.yaml file.`,
-          );
-        }
-      }
-    }
-  }
-
-  /**
-   * Function to validate Deployment targets account name for security services
-   * @param values
-   */
-  private validateDeploymentTargetAccountNames(
-    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
-    accountNames: string[],
-    errors: string[],
-  ) {
-    this.validateConfigRuleDeploymentTargetAccounts(values, accountNames, errors);
-    this.validateCloudWatchMetricsDeploymentTargetAccounts(values, accountNames, errors);
-    this.validateCloudWatchAlarmsDeploymentTargetAccounts(values, accountNames, errors);
-    this.validateSsmDocumentsDeploymentTargetAccounts(values, accountNames, errors);
-  }
-
-  /**
-   * Function to validate existence of custom config rule deployment target OUs
-   * Make sure deployment target OUs are part of Organization config file
-   * @param values
-   */
-  private validateConfigRuleDeploymentTargetOUs(
-    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
-    ouIdNames: string[],
-    errors: string[],
-  ) {
-    for (const ruleSet of values.awsConfig.ruleSets ?? []) {
-      for (const ou of ruleSet.deploymentTargets.organizationalUnits ?? []) {
-        if (ouIdNames.indexOf(ou) === -1) {
-          errors.push(
-            `Deployment target OU ${ou} for AWS Config rules does not exists in organization-config.yaml file.`,
-          );
-        }
-      }
-    }
-  }
-
-  /**
-   * Function to validate existence of CloudWatch Metrics deployment target OUs
-   * Make sure deployment target OUs are part of Organization config file
-   * @param values
-   */
-  private validateCloudWatchMetricsDeploymentTargetOUs(
-    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
-    ouIdNames: string[],
-    errors: string[],
-  ) {
-    for (const metricSet of values.cloudWatch.metricSets ?? []) {
-      for (const ou of metricSet.deploymentTargets.organizationalUnits ?? []) {
-        if (ouIdNames.indexOf(ou) === -1) {
-          errors.push(
-            `Deployment target OU ${ou} for CloudWatch metrics does not exists in organization-config.yaml file.`,
-          );
-        }
-      }
-    }
-  }
-
-  /**
-   * Function to validate existence of CloudWatch Alarms deployment target OUs
-   * Make sure deployment target OUs are part of Organization config file
-   * @param values
-   */
-  private validateCloudWatchAlarmsDeploymentTargetOUs(
-    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
-    ouIdNames: string[],
-    errors: string[],
-  ) {
-    for (const alarmSet of values.cloudWatch.alarmSets ?? []) {
-      for (const ou of alarmSet.deploymentTargets.organizationalUnits ?? []) {
-        if (ouIdNames.indexOf(ou) === -1) {
-          errors.push(
-            `Deployment target OU ${ou} for CloudWatch alarms does not exists in organization-config.yaml file.`,
-          );
-        }
-      }
-    }
-  }
-
-  /**
-   * Function to validate existence of SSM document deployment target OUs
-   * Make sure deployment target OUs are part of Organization config file
-   * @param values
-   */
-  private validateSsmDocumentDeploymentTargetOUs(
-    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
-    ouIdNames: string[],
-    errors: string[],
-  ) {
-    for (const documentSet of values.centralSecurityServices.ssmAutomation.documentSets ?? []) {
-      for (const ou of documentSet.shareTargets.organizationalUnits ?? []) {
-        if (ouIdNames.indexOf(ou) === -1) {
-          errors.push(`Deployment target OU ${ou} for SSM documents does not exists in organization-config.yaml file.`);
-        }
-      }
-    }
-  }
-
-  /**
-   * Function to validate Deployment targets OU name for security services
-   * @param values
-   */
-  private validateDeploymentTargetOUs(
-    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
-    ouIdNames: string[],
-    errors: string[],
-  ) {
-    this.validateSsmDocumentDeploymentTargetOUs(values, ouIdNames, errors);
-    this.validateCloudWatchAlarmsDeploymentTargetOUs(values, ouIdNames, errors);
-    this.validateCloudWatchMetricsDeploymentTargetOUs(values, ouIdNames, errors);
-    this.validateConfigRuleDeploymentTargetOUs(values, ouIdNames, errors);
-  }
-
-  /**
-   * Function to validate existence of custom config rule assets such as lambda zip file and role policy file
-   * @param configDir
-   * @param ruleSet
-   */
-  private validateConfigRuleAssets(
-    configDir: string,
-    ruleSet: t.TypeOf<typeof SecurityConfigTypes.awsConfigRuleSet>,
-    errors: string[],
-  ) {
-    for (const rule of ruleSet.rules) {
-      if (rule.type === 'Custom' && rule.customRule) {
-        // Validate presence of custom rule lambda function zip file
-        if (!fs.existsSync(path.join(configDir, rule.customRule.lambda.sourceFilePath))) {
-          errors.push(
-            `Custom rule: ${rule.name} lambda function file ${rule.customRule.lambda.sourceFilePath} not found`,
-          );
-        }
-        // Validate presence of custom rule lambda function role policy file
-        if (!fs.existsSync(path.join(configDir, rule.customRule.lambda.rolePolicyFile))) {
-          errors.push(
-            `Custom rule: ${rule.name} lambda function role policy file ${rule.customRule.lambda.rolePolicyFile} not found`,
-          );
-        }
-      }
-    }
-  }
-
-  /**
-   * Function to validate existence of config rule remediation assume role definition file
-   * @param configDir
-   * @param ruleSet
-   */
-  private validateConfigRuleRemediationAssumeRoleFile(
-    configDir: string,
-    ruleSet: t.TypeOf<typeof SecurityConfigTypes.awsConfigRuleSet>,
-    errors: string[],
-  ) {
-    for (const rule of ruleSet.rules) {
-      if (rule.remediation) {
-        // Validate presence of rule remediation assume role definition file
-        if (!fs.existsSync(path.join(configDir, rule.remediation.rolePolicyFile))) {
-          errors.push(
-            `Rule: ${rule.name}, remediation assume role definition file ${rule.remediation.rolePolicyFile} not found`,
-          );
-        }
-      }
-    }
-  }
-
-  /**
-   * Function to validate existence of config rule remediation target assets such as SSM document and lambda zip file
-   * @param configDir
-   * @param ruleSet
-   */
-  private validateConfigRuleRemediationTargetAssets(
-    configDir: string,
-    ruleSet: t.TypeOf<typeof SecurityConfigTypes.awsConfigRuleSet>,
-    ssmDocuments: { name: string; template: string }[],
-    errors: string[],
-  ) {
-    for (const rule of ruleSet.rules) {
-      if (rule.remediation) {
-        // Validate presence of SSM document before used as remediation target
-        if (!ssmDocuments.find(item => item.name === rule.remediation?.targetId)) {
-          errors.push(
-            `Rule: ${rule.name}, remediation target SSM document ${rule.remediation?.targetId} not found in ssm automation document lists`,
-          );
-          // Validate presence of custom rule's remediation SSM document invoke lambda function zip file
-          if (rule.remediation.targetDocumentLambda) {
-            if (!fs.existsSync(path.join(configDir, rule.remediation.targetDocumentLambda.sourceFilePath))) {
-              errors.push(
-                `Rule: ${rule.name}, remediation target SSM document lambda function file ${rule.remediation.targetDocumentLambda.sourceFilePath} not found`,
-              );
-            }
-          }
-        }
-      }
-    }
-  }
-
-  /**
-   * Function to validate that sns topic references are correct
-   * @param alarmSet
-   * @param snsTopicNames
-   * @param errors
-   */
-  private validateSnsTopics(
-    configDir: string,
-    alarmSet: t.TypeOf<typeof SecurityConfigTypes.alarmSetConfig>,
-    snsTopicNames: string[],
-    errors: string[],
-  ) {
-    const globalConfig = GlobalConfig.load(configDir);
-    for (const alarm of alarmSet.alarms) {
-      if (alarm.snsTopicName && alarm.snsAlertLevel) {
-        errors.push(`Alarm: ${alarm.alarmName} is configured for both snsAlertLevel (Deprecated) and snsTopicName`);
-      }
-
-      if (globalConfig.snsTopics && !alarm.snsTopicName) {
-        errors.push(
-          `Alarm: ${alarm.alarmName} does not have the property snsTopicName set and global config has snsTopics configured.`,
-        );
-      }
-      if (alarm.snsTopicName && !snsTopicNames.find(item => item === alarm.snsTopicName)) {
-        errors.push(
-          `Alarm: ${alarm.alarmName} is configured to use snsTopicName ${alarm.snsTopicName} and the topic is not configured in the global config.`,
-        );
-      }
-    }
-  }
-
-  private validateSecurityHubNotifications(
-    snsTopicNames: string[],
-    snsTopicName: string | undefined,
-    notificationLevel: string | undefined,
-    errors: string[],
-  ) {
-    if (snsTopicName && !notificationLevel) {
-      errors.push(`SecurityHub is configured with a snsTopicName and does not have a notificationLevel`);
-    }
-    if (!snsTopicName && notificationLevel) {
-      errors.push(`SecurityHub is configured with a notificationLevel and does not have a snsTopicName`);
-    }
-    if (notificationLevel) {
-      switch (notificationLevel) {
-        case 'CRITICAL':
-          break;
-        case 'HIGH':
-          break;
-        case 'MEDIUM':
-          break;
-        case 'LOW':
-          break;
-        case 'INFORMATIONAL':
-          break;
-        default:
-          errors.push(
-            `SecurityHub has been configured with a notificationLevel of ${notificationLevel}. This is not a valid value.`,
-          );
-      }
-    }
-    // validate topic exists in global config
-    if (snsTopicName && !snsTopicNames.find(item => item === snsTopicName)) {
-      errors.push(
-        `SecurityHub is configured to use snsTopicName ${snsTopicName} and the topic is not configured in the global config.`,
-      );
-    }
-  }
   /**
    * Return delegated-admin-account name
    */
@@ -2736,13 +2651,16 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
   /**
    *
    * @param dir
-   * @param validateConfig
+   * @param replacementsConfig
    * @returns
    */
-  static load(dir: string, validateConfig?: boolean): SecurityConfig {
-    const buffer = fs.readFileSync(path.join(dir, SecurityConfig.FILENAME), 'utf8');
+
+  static load(dir: string, replacementsConfig?: ReplacementsConfig): SecurityConfig {
+    const initialBuffer = fs.readFileSync(path.join(dir, SecurityConfig.FILENAME), 'utf8');
+    const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
+
     const values = t.parse(SecurityConfigTypes.securityConfig, yaml.load(buffer));
-    return new SecurityConfig(values, dir, validateConfig);
+    return new SecurityConfig(values);
   }
 
   /**
@@ -2754,9 +2672,9 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
       const values = t.parse(SecurityConfigTypes.securityConfig, yaml.load(content));
       return new SecurityConfig(values);
     } catch (e) {
-      console.log('[security-config] Error parsing input, global config undefined');
-      console.log(`${e}`);
-      return undefined;
+      logger.error('Error parsing input, global config undefined');
+      logger.error(`${e}`);
+      throw new Error('could not load configuration');
     }
   }
 }

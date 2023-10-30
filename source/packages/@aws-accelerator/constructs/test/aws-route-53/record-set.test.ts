@@ -12,8 +12,12 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { HostedZone, RecordSet, SecurityGroup, VpcEndpoint } from '../../index';
+import { RecordSet } from '../../lib/aws-route-53/record-set';
+import { HostedZone } from '../../lib/aws-route-53/hosted-zone';
+import { VpcEndpoint } from '../../lib/aws-ec2/vpc-endpoint';
+import { SecurityGroup } from '../../lib/aws-ec2/vpc';
 import { snapShotTest } from '../snapshot-test';
+import { describe, expect, it } from '@jest/globals';
 
 const testNamePrefix = 'Construct(RecordSet): ';
 
@@ -59,17 +63,29 @@ const endpoint = new VpcEndpoint(stack, `TestVpcEndpoint`, {
   }),
 });
 
-new RecordSet(stack, `TestRecordSet`, {
-  type: 'A',
-  name: hostedZoneName,
-  hostedZone: hostedZone,
-  dnsName: endpoint.dnsName,
-  hostedZoneId: endpoint.hostedZoneId,
-});
-
 /**
  * RecordSet construct test
  */
 describe('RecordSet', () => {
+  it('test with hostedZone and dns', () => {
+    new RecordSet(stack, `TestRecordSet`, {
+      type: 'A',
+      name: hostedZoneName,
+      hostedZone: hostedZone,
+      dnsName: endpoint.dnsName,
+      hostedZoneId: endpoint.hostedZoneId,
+    });
+  });
+  it('test without hostedZone and dns', () => {
+    new RecordSet(stack, `TestRecordSet1`, {
+      type: 'A',
+      name: hostedZoneName,
+      hostedZone: hostedZone,
+    });
+  });
   snapShotTest(testNamePrefix, stack);
+  const sagemakerHostedZone = RecordSet.getHostedZoneNameFromService('notebook', 'us-east-1');
+  expect(sagemakerHostedZone).toBe('notebook.us-east-1.sagemaker.aws');
+  const s3GlobalEndpoint = RecordSet.getHostedZoneNameFromService('s3-global.accesspoint', 'us-east-1');
+  expect(s3GlobalEndpoint).toBe('s3-global.accesspoint.aws.com');
 });

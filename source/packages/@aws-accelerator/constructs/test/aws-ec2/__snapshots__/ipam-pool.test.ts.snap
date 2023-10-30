@@ -1,24 +1,24 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`IpamPool Construct(IpamPool):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "TestIpamPool2D962DC3": Object {
-      "Properties": Object {
+{
+  "Resources": {
+    "TestIpamPool2D962DC3": {
+      "Properties": {
         "AddressFamily": "ipv4",
         "Description": "Test IPAM pool",
         "IpamScopeId": "test-scope",
         "Locale": "us-east-1",
-        "ProvisionedCidrs": Array [
-          Object {
+        "ProvisionedCidrs": [
+          {
             "Cidr": "10.0.0.0/8",
           },
-          Object {
+          {
             "Cidr": "192.168.0.0/16",
           },
         ],
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "Test",
           },

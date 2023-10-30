@@ -1,0 +1,169 @@
+homeRegion: &HOME_REGION us-east-1
+enabledRegions:
+  - *HOME_REGION
+managementAccountAccessRole: AWSControlTowerExecution
+cloudwatchLogRetentionInDays: 3653
+terminationProtection: true
+cdkOptions:
+  centralizeBuckets: true
+  useManagementAccessRole: true
+snsTopics:
+  deploymentTargets:
+    organizationalUnits:
+      - Root
+  topics:
+    - name: Security
+      emailAddresses:
+        - <security-notifications>@example.com  <----- UPDATE EMAIL ADDRESS
+controlTower:
+  enable: true
+logging:
+  account: LogArchive
+  cloudtrail:
+    enable: false
+    organizationTrail: false
+    organizationTrailSettings:
+      multiRegionTrail: true
+      globalServiceEvents: true
+      managementEvents: true
+      s3DataEvents: true
+      lambdaDataEvents: true
+      sendToCloudWatchLogs: true
+      apiErrorRateInsight: false
+      apiCallRateInsight: false
+    accountTrails:
+      - name: AccountTrail
+        regions:
+          - *HOME_REGION
+        deploymentTargets:
+          accounts: []
+          organizationalUnits:
+            - Root
+        settings:
+          multiRegionTrail: true
+          globalServiceEvents: true
+          managementEvents: true
+          s3DataEvents: true
+          lambdaDataEvents: true
+          sendToCloudWatchLogs: true
+          apiErrorRateInsight: false
+          apiCallRateInsight: false
+  sessionManager:
+    sendToCloudWatchLogs: false
+    sendToS3: true
+    lifecycleRules:
+      - enabled: true
+        abortIncompleteMultipartUpload: 7
+        expiration: 730
+        noncurrentVersionExpiration: 730
+    attachPolicyToIamRoles:
+      - EC2-Default-SSM-AD-Role
+  cloudwatchLogs:
+    dynamicPartitioning: dynamic-partitioning/log-filters.json
+  accessLogBucket:
+    lifecycleRules:
+      - enabled: true
+        abortIncompleteMultipartUpload: 7
+        expiration: 1000
+        noncurrentVersionExpiration: 1000
+        transitions:
+          - storageClass: GLACIER_IR
+            transitionAfter: 365
+        noncurrentVersionTransitions:
+          - storageClass: GLACIER_IR
+            transitionAfter: 365
+  centralLogBucket:
+    lifecycleRules:
+      - enabled: true
+        abortIncompleteMultipartUpload: 7
+        expiration: 1000
+        noncurrentVersionExpiration: 1000
+        transitions:
+          - storageClass: GLACIER_IR
+            transitionAfter: 365
+        noncurrentVersionTransitions:
+          - storageClass: GLACIER_IR
+            transitionAfter: 365
+  elbLogBucket:
+    lifecycleRules:
+      - enabled: true
+        abortIncompleteMultipartUpload: 7
+        expiration: 1000
+        noncurrentVersionExpiration: 1000
+        transitions:
+          - storageClass: GLACIER_IR
+            transitionAfter: 365
+        noncurrentVersionTransitions:
+          - storageClass: GLACIER_IR
+            transitionAfter: 365
+reports:
+  costAndUsageReport:
+    compression: Parquet
+    format: Parquet
+    reportName: accelerator-cur
+    s3Prefix: cur
+    timeUnit: DAILY
+    refreshClosedReports: true
+    reportVersioning: CREATE_NEW_REPORT
+    lifecycleRules:
+      - enabled: true
+        abortIncompleteMultipartUpload: 7
+        expiration: 730
+        noncurrentVersionExpiration: 730
+  budgets:
+    - deploymentTargets:
+        accounts:
+          - Management
+      name: accel-budget
+      timeUnit: MONTHLY
+      type: COST
+      amount: 2000
+      includeUpfront: true
+      includeTax: true
+      includeSupport: true
+      includeSubscription: true
+      includeRecurring: true
+      includeOtherSubscription: true
+      includeDiscount: true
+      includeCredit: false
+      includeRefund: false
+      useBlended: false
+      useAmortized: false
+      unit: USD
+      notifications:
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 100
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: <budget-notifications>@example.com  <----- UPDATE EMAIL ADDRESS
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 90
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: <budget-notifications>@example.com  <----- UPDATE EMAIL ADDRESS
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 80
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: <budget-notifications>@example.com  <----- UPDATE EMAIL ADDRESS
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 75
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: <budget-notifications>@example.com  <----- UPDATE EMAIL ADDRESS
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 50
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: <budget-notifications>@example.com  <----- UPDATE EMAIL ADDRESS
+backup:
+  vaults:
+    - name: BackupVault
+      deploymentTargets:
+        organizationalUnits:
+          - Root

@@ -21,6 +21,8 @@ import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
 
 import { version } from '../../../../package.json';
 import { SolutionHelper } from './solutions-helper';
+import { ResourceNamePrefixes } from './resource-name-prefixes';
+import { Validate } from './validate';
 
 export enum RepositorySources {
   GITHUB = 'github',
@@ -41,6 +43,10 @@ export interface InstallerStackProps extends cdk.StackProps {
    * Management Cross account role name
    */
   readonly managementCrossAccountRoleName?: string;
+  /**
+   * Single account deployment enable flag
+   */
+  readonly enableSingleAccountMode: boolean;
 }
 
 export class InstallerStack extends cdk.Stack {
@@ -112,6 +118,52 @@ export class InstallerStack extends cdk.Stack {
     default: 'Yes',
   });
 
+  private readonly acceleratorPrefix = new cdk.CfnParameter(this, 'AcceleratorPrefix', {
+    type: 'String',
+    description:
+      'The prefix value for accelerator deployed resources. Leave the default value if using solution defined resource name prefix, the solution will use AWSAccelerator as resource name prefix. Note: Updating this value after initial installation will cause stack failure. Non-default value can not start with keyword "aws" or "ssm". Trailing dash (-) in non-default value will be ignored.',
+    default: 'AWSAccelerator',
+    allowedPattern: '[A-Za-z0-9-]+',
+    maxLength: 15,
+  });
+
+  /**
+   * Use existing configuration repository name flag
+   * @private
+   */
+  private readonly useExistingConfigRepo = new cdk.CfnParameter(this, 'UseExistingConfigRepo', {
+    type: 'String',
+    allowedValues: ['Yes', 'No'],
+    default: 'No',
+    description:
+      'Select Yes if deploying the solution with an existing CodeCommit configuration repository. Leave the default value if using the solution-deployed repository. If the AcceleratorPrefix parameter is set to the default value, the solution will deploy a repository named "aws-accelerator-config." Otherwise, the solution-deployed repository will be named "AcceleratorPrefix-config." Note: Updating this value after initial installation may cause adverse affects.',
+  });
+
+  /**
+   * Existing LZ Accelerator configuration repository name
+   * @private
+   */
+  private readonly existingConfigRepositoryName = new cdk.CfnParameter(this, 'ExistingConfigRepositoryName', {
+    type: 'String',
+    description: 'The name of an existing CodeCommit repository hosting the accelerator configuration.',
+    default: '',
+  });
+
+  /**
+   * Existing LZ Accelerator configuration repository branch name
+   * @private
+   */
+  private readonly existingConfigRepositoryBranchName = new cdk.CfnParameter(
+    this,
+    'ExistingConfigRepositoryBranchName',
+    {
+      type: 'String',
+      description:
+        'Specify the branch name of existing CodeCommit repository to pull the accelerator configuration from.',
+      default: '',
+    },
+  );
+
   /**
    * Management Account ID Parameter
    * @private
@@ -181,7 +233,13 @@ export class InstallerStack extends cdk.Stack {
       },
       {
         Label: { default: 'Environment Configuration' },
-        Parameters: [this.controlTowerEnabled.logicalId],
+        Parameters: [
+          this.controlTowerEnabled.logicalId,
+          this.acceleratorPrefix.logicalId,
+          this.useExistingConfigRepo.logicalId,
+          this.existingConfigRepositoryName.logicalId,
+          this.existingConfigRepositoryBranchName.logicalId,
+        ],
       },
     ];
 
@@ -190,33 +248,20 @@ export class InstallerStack extends cdk.Stack {
       [this.repositoryOwner.logicalId]: { default: 'Repository Owner' },
       [this.repositoryName.logicalId]: { default: 'Repository Name' },
       [this.repositoryBranchName.logicalId]: { default: 'Branch Name' },
+      [this.useExistingConfigRepo.logicalId]: { default: 'Use Existing Config Repository' },
+      [this.existingConfigRepositoryName.logicalId]: { default: 'Existing Config Repository Name' },
+      [this.existingConfigRepositoryBranchName.logicalId]: { default: 'Existing Config Repository Branch Name' },
       [this.enableApprovalStage.logicalId]: { default: 'Enable Approval Stage' },
       [this.approvalStageNotifyEmailList.logicalId]: { default: 'Manual Approval Stage notification email list' },
       [this.managementAccountEmail.logicalId]: { default: 'Management Account Email' },
       [this.logArchiveAccountEmail.logicalId]: { default: 'Log Archive Account Email' },
       [this.auditAccountEmail.logicalId]: { default: 'Audit Account Email' },
       [this.controlTowerEnabled.logicalId]: { default: 'Control Tower Environment' },
+      [this.acceleratorPrefix.logicalId]: { default: 'Accelerator Resource name prefix' },
     };
 
     let targetAcceleratorParameterLabels: { [p: string]: { default: string } } = {};
-    let targetAcceleratorEnvVariables: { [p: string]: cdk.aws_codebuild.BuildEnvironmentVariable } | undefined;
-
-    //
-    // Variables to be changed based on qualifier parameter
-    let stackIdSsmParameterName = `/accelerator/${cdk.Stack.of(this).stackName}/stack-id`;
-    let acceleratorVersionSsmParameterName = `/accelerator/${cdk.Stack.of(this).stackName}/version`;
-    let installerKeySsmParameterName = 'alias/accelerator/installer/kms/key';
-    let acceleratorManagementKmsArnSsmParameterName = '/accelerator/installer/kms/key-arn';
-    let installerAccessLogsBucketName = `aws-accelerator-s3-logs-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
-    let installerAccessLogsBucketNameSsmParameterName = `/accelerator/installer-access-logs-bucket-name`;
-    let secureBucketName = `aws-accelerator-installer-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
-    let acceleratorPipelineName = 'AWSAccelerator-Pipeline';
-    let installerProjectName = 'AWSAccelerator-InstallerProject';
-    let installerPipelineName = 'AWSAccelerator-Installer';
-
-    let acceleratorPrincipalArn = `arn:${cdk.Stack.of(this).partition}:iam::${
-      cdk.Stack.of(this).account
-    }:role/AWSAccelerator-*`;
+    let targetAcceleratorEnvVariables: { [p: string]: cdk.aws_codebuild.BuildEnvironmentVariable } = {};
 
     if (props.useExternalPipelineAccount) {
       this.acceleratorQualifier = new cdk.CfnParameter(this, 'AcceleratorQualifier', {
@@ -264,26 +309,91 @@ export class InstallerStack extends cdk.Stack {
           value: this.acceleratorQualifier.valueAsString,
         },
       };
+    }
 
+    // Validate Installer Parameters
+
+    const validatorFunction = new Validate(this, 'ValidateInstaller', {
+      useExistingConfigRepo: this.useExistingConfigRepo.valueAsString,
+      existingConfigRepositoryName: this.existingConfigRepositoryName.valueAsString,
+      existingConfigRepositoryBranchName: this.existingConfigRepositoryBranchName.valueAsString,
+    });
+    // cfn-nag suppression
+    const validatorFunctionResource = validatorFunction.node.findChild('ValidationFunction').node
+      .defaultChild as cdk.CfnResource;
+    this.addLambdaNagMetadata(validatorFunctionResource);
+
+    const resourceNamePrefixes = new ResourceNamePrefixes(this, 'ResourceNamePrefixes', {
+      acceleratorPrefix: this.acceleratorPrefix.valueAsString,
+      acceleratorQualifier: this.acceleratorQualifier?.valueAsString,
+    });
+    // cfn-nag suppression
+    const resourceNameFunctionResource = resourceNamePrefixes.node.findChild('ResourceNamePrefixesFunction').node
+      .defaultChild as cdk.CfnResource;
+    this.addLambdaNagMetadata(resourceNameFunctionResource);
+
+    const oneWordPrefix = resourceNamePrefixes.oneWordPrefix.endsWith('-')
+      ? resourceNamePrefixes.oneWordPrefix.slice(0, -1)
+      : resourceNamePrefixes.oneWordPrefix;
+
+    const lowerCasePrefix = resourceNamePrefixes.lowerCasePrefix.endsWith('-')
+      ? resourceNamePrefixes.lowerCasePrefix.slice(0, -1)
+      : resourceNamePrefixes.lowerCasePrefix;
+
+    const acceleratorPrefix = resourceNamePrefixes.acceleratorPrefix.endsWith('-')
+      ? resourceNamePrefixes.acceleratorPrefix.slice(0, -1)
+      : resourceNamePrefixes.acceleratorPrefix;
+
+    let stackIdSsmParameterName = `/${oneWordPrefix}/${cdk.Stack.of(this).stackName}/stack-id`;
+    let acceleratorVersionSsmParameterName = `/${oneWordPrefix}/${cdk.Stack.of(this).stackName}/version`;
+    let installerKeyAliasName = `alias/${oneWordPrefix}/installer/kms/key`;
+    let acceleratorManagementKmsArnSsmParameterName = `/${oneWordPrefix}/installer/kms/key-arn`;
+    let installerAccessLogsBucketName = `${lowerCasePrefix}-s3-logs-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
+    let installerAccessLogsBucketNameSsmParameterName = `/${oneWordPrefix}/installer-access-logs-bucket-name`;
+    let secureBucketName = `${lowerCasePrefix}-installer-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
+    let acceleratorPipelineName = `${acceleratorPrefix}-Pipeline`;
+    let installerProjectName = `${acceleratorPrefix}-InstallerProject`;
+    let installerPipelineName = `${acceleratorPrefix}-Installer`;
+
+    let acceleratorPrincipalArn = `arn:${cdk.Stack.of(this).partition}:iam::${
+      cdk.Stack.of(this).account
+    }:role/${acceleratorPrefix}-*`;
+
+    if (props.useExternalPipelineAccount) {
       //
       // Change the variable to use qualifier
-      stackIdSsmParameterName = `/accelerator/${this.acceleratorQualifier.valueAsString}/${
+      stackIdSsmParameterName = `/accelerator/${this.acceleratorQualifier!.valueAsString}/${
         cdk.Stack.of(this).stackName
       }/stack-id`;
-      acceleratorVersionSsmParameterName = `/accelerator/${this.acceleratorQualifier.valueAsString}/${
+      acceleratorVersionSsmParameterName = `/accelerator/${this.acceleratorQualifier!.valueAsString}/${
         cdk.Stack.of(this).stackName
       }/version`;
-      installerKeySsmParameterName = `alias/accelerator/${this.acceleratorQualifier.valueAsString}/installer/kms/key`;
-      acceleratorManagementKmsArnSsmParameterName = `/accelerator/${this.acceleratorQualifier.valueAsString}/installer/kms/key-arn`;
-      installerAccessLogsBucketName = `${this.acceleratorQualifier.valueAsString}-s3-logs-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
-      installerAccessLogsBucketNameSsmParameterName = `/accelerator/${this.acceleratorQualifier.valueAsString}/installer-access-logs-bucket-name`;
-      secureBucketName = `${this.acceleratorQualifier.valueAsString}-installer-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
-      acceleratorPipelineName = `${this.acceleratorQualifier.valueAsString}-pipeline`;
-      installerProjectName = `${this.acceleratorQualifier.valueAsString}-installer-project`;
-      installerPipelineName = `${this.acceleratorQualifier.valueAsString}-installer`;
+      installerKeyAliasName = `alias/accelerator/${this.acceleratorQualifier!.valueAsString}/installer/kms/key`;
+      acceleratorManagementKmsArnSsmParameterName = `/accelerator/${
+        this.acceleratorQualifier!.valueAsString
+      }/installer/kms/key-arn`;
+      installerAccessLogsBucketName = `${this.acceleratorQualifier!.valueAsString}-s3-logs-${cdk.Aws.ACCOUNT_ID}-${
+        cdk.Aws.REGION
+      }`;
+      installerAccessLogsBucketNameSsmParameterName = `/accelerator/${
+        this.acceleratorQualifier!.valueAsString
+      }/installer-access-logs-bucket-name`;
+      secureBucketName = `${this.acceleratorQualifier!.valueAsString}-installer-${cdk.Aws.ACCOUNT_ID}-${
+        cdk.Aws.REGION
+      }`;
+      acceleratorPipelineName = `${this.acceleratorQualifier!.valueAsString}-pipeline`;
+      installerProjectName = `${this.acceleratorQualifier!.valueAsString}-installer-project`;
+      installerPipelineName = `${this.acceleratorQualifier!.valueAsString}-installer`;
       acceleratorPrincipalArn = `arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:role/${
-        this.acceleratorQualifier.valueAsString
+        this.acceleratorQualifier!.valueAsString
       }-*`;
+    }
+
+    if (props.enableSingleAccountMode) {
+      targetAcceleratorEnvVariables['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE'] = {
+        type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+        value: true,
+      };
     }
 
     let targetAcceleratorTestEnvVariables: { [p: string]: cdk.aws_codebuild.BuildEnvironmentVariable } | undefined;
@@ -335,7 +445,7 @@ export class InstallerStack extends cdk.Stack {
 
     // Create Accelerator Installer KMS Key
     const installerKey = new cdk.aws_kms.Key(this, 'InstallerKey', {
-      alias: installerKeySsmParameterName,
+      alias: installerKeyAliasName,
       description: 'AWS Accelerator Management Account Kms Key',
       enableKeyRotation: true,
       policy: undefined,
@@ -381,10 +491,17 @@ export class InstallerStack extends cdk.Stack {
           Sid: 'Allow Cloudwatch Logs service to use the encryption key',
           Effect: 'Allow',
           Principal: {
-            Service: 'logs.amazonaws.com',
+            Service: `logs.${cdk.Stack.of(this).region}.${cdk.Stack.of(this).urlSuffix}`,
           },
           Action: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
           Resource: '*',
+          Condition: {
+            ArnLike: {
+              'kms:EncryptionContext:aws:logs:arn': `arn:${cdk.Stack.of(this).partition}:logs:${
+                cdk.Stack.of(this).region
+              }:${cdk.Stack.of(this).account}:log-group:*`,
+            },
+          },
         },
         cdk.Fn.conditionIf(
           isCommercialCondition.logicalId,
@@ -487,7 +604,7 @@ export class InstallerStack extends cdk.Stack {
         phases: {
           install: {
             'runtime-versions': {
-              nodejs: 14,
+              nodejs: 16,
             },
           },
           pre_build: {
@@ -496,10 +613,10 @@ export class InstallerStack extends cdk.Stack {
               'if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ' +
                 'ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; ' +
                 'fi',
-              `if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ${cdk.Aws.REGION}; then ` +
+              `if ! aws cloudformation describe-stacks --stack-name ${acceleratorPrefix}-CDKToolkit --region ${cdk.Aws.REGION}; then ` +
                 'BOOTSTRAPPED_HOME="no"; ' +
                 'fi',
-              `if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ${globalRegion}; then ` +
+              `if ! aws cloudformation describe-stacks --stack-name ${acceleratorPrefix}-CDKToolkit --region ${globalRegion}; then ` +
                 'BOOTSTRAPPED_GLOBAL="no"; ' +
                 'fi',
             ],
@@ -512,28 +629,36 @@ export class InstallerStack extends cdk.Stack {
                   yarn config set registry https://registry.npmmirror.com
                fi`,
               'yarn install',
-              'yarn lerna link',
               'yarn build',
               'cd packages/@aws-accelerator/installer',
-              `if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://${cdk.Aws.ACCOUNT_ID}/${cdk.Aws.REGION} --qualifier accel; fi`,
-              `if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://${cdk.Aws.ACCOUNT_ID}/${globalRegion} --qualifier accel; fi`,
+              `if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ${acceleratorPrefix}-CDKToolkit aws://${cdk.Aws.ACCOUNT_ID}/${cdk.Aws.REGION} --qualifier accel; fi`,
+              `if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ${acceleratorPrefix}-CDKToolkit aws://${cdk.Aws.ACCOUNT_ID}/${globalRegion} --qualifier accel; fi`,
               `if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                   export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:${
                     cdk.Stack.of(this).partition
                   }:iam::"$MANAGEMENT_ACCOUNT_ID":role/"$MANAGEMENT_ACCOUNT_ROLE_NAME" --role-session-name acceleratorAssumeRoleSession --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" --output text));
-                  if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ${
-                    cdk.Aws.REGION
-                  }; then MGMT_BOOTSTRAPPED_HOME="no"; fi;
-                  if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ${globalRegion}; then MGMT_BOOTSTRAPPED_GLOBAL="no"; fi;
-                  if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/${
-                    cdk.Aws.REGION
-                  } --qualifier accel; fi;
-                  if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/${globalRegion} --qualifier accel; fi;
+                  if ! aws cloudformation describe-stacks --stack-name ${acceleratorPrefix}-CDKToolkit --region ${
+                cdk.Aws.REGION
+              }; then MGMT_BOOTSTRAPPED_HOME="no"; fi;
+                  if ! aws cloudformation describe-stacks --stack-name ${acceleratorPrefix}-CDKToolkit --region ${globalRegion}; then MGMT_BOOTSTRAPPED_GLOBAL="no"; fi;
+                  if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ${acceleratorPrefix}-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/${
+                cdk.Aws.REGION
+              } --qualifier accel; fi;
+                  if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ${acceleratorPrefix}-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/${globalRegion} --qualifier accel; fi;
                   unset AWS_ACCESS_KEY_ID;
                   unset AWS_SECRET_ACCESS_KEY;
                   unset AWS_SESSION_TOKEN;
                fi`,
               'cd ../accelerator',
+              `aws ssm get-parameter --name /accelerator/migration --query "Parameter.Value" 2> /dev/null
+                  status=$?
+                  if [ $status -ne 0 ]; then
+                    echo "No SSM Parameter found, setting ENABLE_ASEA_MIGRATION to false";
+                    export ENABLE_ASEA_MIGRATION=false
+                  else
+                    echo "SSM Parameter Found, setting ENABLE_ASEA_MIGRATION to true"
+                    export ENABLE_ASEA_MIGRATION=true
+                  fi;`,
               `yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION} --partition ${cdk.Aws.PARTITION}`,
               `if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION}; fi`,
             ],
@@ -549,8 +674,8 @@ export class InstallerStack extends cdk.Stack {
         },
       }),
       environment: {
-        buildImage: cdk.aws_codebuild.LinuxBuildImage.STANDARD_5_0,
-        privileged: true, // Allow access to the Docker daemon
+        buildImage: cdk.aws_codebuild.LinuxBuildImage.STANDARD_6_0,
+        privileged: false, // Allow access to the Docker daemon
         computeType: cdk.aws_codebuild.ComputeType.MEDIUM,
         environmentVariables: {
           NODE_OPTIONS: {
@@ -577,6 +702,18 @@ export class InstallerStack extends cdk.Stack {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: this.repositoryBranchName.valueAsString,
           },
+          USE_EXISTING_CONFIG_REPO: {
+            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: this.useExistingConfigRepo.valueAsString,
+          },
+          EXISTING_CONFIG_REPOSITORY_NAME: {
+            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: this.existingConfigRepositoryName.valueAsString,
+          },
+          EXISTING_CONFIG_REPOSITORY_BRANCH_NAME: {
+            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: this.existingConfigRepositoryBranchName.valueAsString,
+          },
           ACCELERATOR_ENABLE_APPROVAL_STAGE: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: this.enableApprovalStage.valueAsString,
@@ -600,6 +737,10 @@ export class InstallerStack extends cdk.Stack {
           CONTROL_TOWER_ENABLED: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: this.controlTowerEnabled.valueAsString,
+          },
+          ACCELERATOR_PREFIX: {
+            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: acceleratorPrefix,
           },
           ...targetAcceleratorEnvVariables,
           ...targetAcceleratorTestEnvVariables,
@@ -783,7 +924,7 @@ export class InstallerStack extends cdk.Stack {
 
     const updatePipelineGithubTokenFunction = new cdk.aws_lambda.Function(this, 'UpdatePipelineGithubTokenFunction', {
       code: new cdk.aws_lambda.InlineCode(fileContents.toString()),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
       handler: 'index.handler',
       description: 'Lambda function to update CodePipeline OAuth Token',
       timeout: cdk.Duration.minutes(1),
@@ -881,26 +1022,8 @@ export class InstallerStack extends cdk.Stack {
     };
     cfnLambdaFunctionPolicy.cfnOptions.condition = useGitHubCondition;
 
-    const cfnLambdaFunction = updatePipelineGithubTokenFunction.node.defaultChild as cdk.aws_lambda.CfnFunction;
-    cfnLambdaFunction.cfnOptions.metadata = {
-      cfn_nag: {
-        rules_to_suppress: [
-          {
-            id: 'W58',
-            reason: 'CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole',
-          },
-          {
-            id: 'W89',
-            reason: 'This function supports infrastructure deployment and is not deployed inside a VPC.',
-          },
-          {
-            id: 'W92',
-            reason:
-              'This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.',
-          },
-        ],
-      },
-    };
+    const cfnLambdaFunction = updatePipelineGithubTokenFunction.node.defaultChild as cdk.CfnResource;
+    this.addLambdaNagMetadata(cfnLambdaFunction);
 
     cfnLambdaFunction.cfnOptions.condition = useGitHubCondition;
 
@@ -946,5 +1069,28 @@ export class InstallerStack extends cdk.Stack {
         },
       ]);
     }
+  }
+
+  /**
+   * Adds required metadata to Lambda functions for AWS Solutions security scans
+   * @param resource
+   */
+  private addLambdaNagMetadata(resource: cdk.CfnResource): void {
+    resource.addMetadata('cfn_nag', {
+      rules_to_suppress: [
+        {
+          id: 'W58',
+          reason: `CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole`,
+        },
+        {
+          id: 'W89',
+          reason: `This function supports infrastructure deployment and is not deployed inside a VPC.`,
+        },
+        {
+          id: 'W92',
+          reason: `This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.`,
+        },
+      ],
+    });
   }
 }

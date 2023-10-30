@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Document } from '../../lib/aws-ssm/document';
 import { snapShotTest } from '../snapshot-test';
+import { describe } from '@jest/globals';
 
 const testNamePrefix = 'Construct(Document): ';
 
@@ -24,7 +25,7 @@ new Document(stack, 'Document', {
   name: 'DocumentName',
   content: JSON.parse('{}'),
   documentType: 'Automation',
-  sharedWithAccountIds: [],
+  sharedWithAccountIds: ['accountA'],
   logRetentionInDays: 3653,
   kmsKey: new cdk.aws_kms.Key(stack, 'Key', {}),
 });

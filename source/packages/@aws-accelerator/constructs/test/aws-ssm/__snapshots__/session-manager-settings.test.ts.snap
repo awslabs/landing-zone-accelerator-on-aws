@@ -1,47 +1,47 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`SsmSessionManagerSettings Construct(SsmSessionManagerSettings):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CustomSessionManagerLoggingCustomResourceProviderHandler4FE51699": Object {
-      "DependsOn": Array [
+{
+  "Resources": {
+    "CustomSessionManagerLoggingCustomResourceProviderHandler4FE51699": {
+      "DependsOn": [
         "CustomSessionManagerLoggingCustomResourceProviderRole1D8EE686",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomSessionManagerLoggingCustomResourceProviderRole1D8EE686",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomSessionManagerLoggingCustomResourceProviderLogGroupF4E32979": Object {
+    "CustomSessionManagerLoggingCustomResourceProviderLogGroupF4E32979": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "Key961B73FD",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomSessionManagerLoggingCustomResourceProviderHandler4FE51699",
               },
             ],
@@ -52,31 +52,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomSessionManagerLoggingCustomResourceProviderRole1D8EE686": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomSessionManagerLoggingCustomResourceProviderRole1D8EE686": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "ssm:DescribeDocument",
                     "ssm:CreateDocument",
                     "ssm:UpdateDocument",
@@ -93,25 +93,25 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CwKeyC5A32F94": Object {
+    "CwKeyC5A32F94": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -128,25 +128,25 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "Key961B73FD": Object {
+    "Key961B73FD": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -163,23 +163,23 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "SsmSessionManagerSettings24721AC9": Object {
+    "SsmSessionManagerSettings24721AC9": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomSessionManagerLoggingCustomResourceProviderLogGroupF4E32979",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomSessionManagerLoggingCustomResourceProviderHandler4FE51699",
             "Arn",
           ],
         },
         "cloudWatchEncryptionEnabled": true,
-        "cloudWatchLogGroupName": Object {
+        "cloudWatchLogGroupName": {
           "Ref": "SsmSessionManagerSettingsSessionManagerCloudWatchLogGroup15AB5AE0",
         },
-        "kmsKeyId": Object {
+        "kmsKeyId": {
           "Ref": "SsmSessionManagerSettingsSessionManagerSessionKey23B7175C",
         },
         "s3BucketName": "bucketName",
@@ -189,11 +189,11 @@ Object {
       "Type": "Custom::SsmSessionManagerSettings",
       "UpdateReplacePolicy": "Delete",
     },
-    "SsmSessionManagerSettingsSessionManagerCloudWatchLogGroup15AB5AE0": Object {
+    "SsmSessionManagerSettingsSessionManagerCloudWatchLogGroup15AB5AE0": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "CwKeyC5A32F94",
             "Arn",
           ],
@@ -204,26 +204,26 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Retain",
     },
-    "SsmSessionManagerSettingsSessionManagerEC2InstanceProfile36B87210": Object {
-      "Properties": Object {
+    "SsmSessionManagerSettingsSessionManagerEC2InstanceProfile36B87210": {
+      "Properties": {
         "InstanceProfileName": "AWSAccelerator-SessionManagerEc2Role-us-east-1",
-        "Roles": Array [
-          Object {
+        "Roles": [
+          {
             "Ref": "SsmSessionManagerSettingsSessionManagerEC2Role83702F06",
           },
         ],
       },
       "Type": "AWS::IAM::InstanceProfile",
     },
-    "SsmSessionManagerSettingsSessionManagerEC2Policy8ED295CA": Object {
-      "Properties": Object {
+    "SsmSessionManagerSettingsSessionManagerEC2Policy8ED295CA": {
+      "Properties": {
         "Description": "",
         "ManagedPolicyName": "AWSAccelerator-SessionManagerLogging-us-east-1",
         "Path": "/",
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
                 "ssmmessages:CreateControlChannel",
                 "ssmmessages:CreateDataChannel",
                 "ssmmessages:OpenControlChannel",
@@ -233,19 +233,19 @@ Object {
               "Effect": "Allow",
               "Resource": "*",
             },
-            Object {
+            {
               "Action": "logs:DescribeLogGroups",
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::Join": Array [
+              "Resource": {
+                "Fn::Join": [
                   "",
-                  Array [
+                  [
                     "arn:",
-                    Object {
+                    {
                       "Ref": "AWS::Partition",
                     },
                     ":logs:us-east-1:",
-                    Object {
+                    {
                       "Ref": "AWS::AccountId",
                     },
                     ":log-group:*",
@@ -254,24 +254,24 @@ Object {
               },
               "Sid": "CloudWatchDescribe",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "logs:CreateLogStream",
                 "logs:PutLogEvents",
                 "logs:DescribeLogStreams",
                 "logs:DescribeLogGroups",
               ],
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::Join": Array [
+              "Resource": {
+                "Fn::Join": [
                   "",
-                  Array [
+                  [
                     "arn:",
-                    Object {
+                    {
                       "Ref": "AWS::Partition",
                     },
                     ":logs:us-east-1:",
-                    Object {
+                    {
                       "Ref": "AWS::AccountId",
                     },
                     ":log-group:aws-accelerator-sessionmanager-logs:*",
@@ -280,18 +280,18 @@ Object {
               },
               "Sid": "CloudWatchLogs",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "s3:PutObject",
                 "s3:PutObjectAcl",
               ],
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::Join": Array [
+              "Resource": {
+                "Fn::Join": [
                   "",
-                  Array [
+                  [
                     "arn:",
-                    Object {
+                    {
                       "Ref": "AWS::Partition",
                     },
                     ":s3:::bucketName/prefix/*",
@@ -300,15 +300,15 @@ Object {
               },
               "Sid": "S3CentralLogs",
             },
-            Object {
+            {
               "Action": "s3:GetEncryptionConfiguration",
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::Join": Array [
+              "Resource": {
+                "Fn::Join": [
                   "",
-                  Array [
+                  [
                     "arn:",
-                    Object {
+                    {
                       "Ref": "AWS::Partition",
                     },
                     ":s3:::bucketName",
@@ -317,8 +317,8 @@ Object {
               },
               "Sid": "S3CentralLogsEncryptionConfig",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:Decrypt",
                 "kms:GenerateDataKey",
               ],
@@ -326,11 +326,11 @@ Object {
               "Resource": "arn",
               "Sid": "S3CentralLogsEncryption",
             },
-            Object {
+            {
               "Action": "kms:Decrypt",
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
+              "Resource": {
+                "Fn::GetAtt": [
                   "SsmSessionManagerSettingsSessionManagerSessionKey23B7175C",
                   "Arn",
                 ],
@@ -342,20 +342,20 @@ Object {
       },
       "Type": "AWS::IAM::ManagedPolicy",
     },
-    "SsmSessionManagerSettingsSessionManagerEC2Role83702F06": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "SsmSessionManagerSettingsSessionManagerEC2Role83702F06": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
-                "Service": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "Service": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "ec2.",
-                      Object {
+                      {
                         "Ref": "AWS::URLSuffix",
                       },
                     ],
@@ -367,8 +367,8 @@ Object {
           "Version": "2012-10-17",
         },
         "Description": "IAM Role for an EC2 configured for Session Manager Logging",
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Ref": "SsmSessionManagerSettingsSessionManagerEC2Policy8ED295CA",
           },
         ],
@@ -376,27 +376,27 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "SsmSessionManagerSettingsSessionManagerSessionKey23B7175C": Object {
+    "SsmSessionManagerSettingsSessionManagerSessionKey23B7175C": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
+      "Properties": {
         "Description": "AWS Accelerator Session Manager Session Encryption",
         "EnableKeyRotation": true,
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -413,11 +413,11 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "SsmSessionManagerSettingsSessionManagerSessionKeyAlias59E0224E": Object {
-      "Properties": Object {
+    "SsmSessionManagerSettingsSessionManagerSessionKeyAlias59E0224E": {
+      "Properties": {
         "AliasName": "alias/accelerator/sessionmanager-logs/session",
-        "TargetKeyId": Object {
-          "Fn::GetAtt": Array [
+        "TargetKeyId": {
+          "Fn::GetAtt": [
             "SsmSessionManagerSettingsSessionManagerSessionKey23B7175C",
             "Arn",
           ],
@@ -425,21 +425,21 @@ Object {
       },
       "Type": "AWS::KMS::Alias",
     },
-    "SsmSessionManagerSettingsSessionManagerUserKMSPolicyFB96BB42": Object {
-      "Properties": Object {
+    "SsmSessionManagerSettingsSessionManagerUserKMSPolicyFB96BB42": {
+      "Properties": {
         "Description": "",
         "ManagedPolicyName": "AWSAccelerator-SessionManagerUserKMS-us-east-1",
         "Path": "/",
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
                 "kms:Decrypt",
                 "kms:GenerateDataKey",
               ],
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
+              "Resource": {
+                "Fn::GetAtt": [
                   "SsmSessionManagerSettingsSessionManagerSessionKey23B7175C",
                   "Arn",
                 ],

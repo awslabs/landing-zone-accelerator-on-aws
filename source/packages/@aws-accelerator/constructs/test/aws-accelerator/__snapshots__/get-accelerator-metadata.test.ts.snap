@@ -1,0 +1,268 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AcceleratorMetadata Construct(AcceleratorMetadata):  Snapshot Test 1`] = `
+{
+  "Resources": {
+    "AWSAcceleratormetadatacollectionLogGroup76F89C67": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "CustomKey1E6D0D07",
+            "Arn",
+          ],
+        },
+        "LogGroupName": "/aws/lambda/AWSAccelerator-metadata-collection",
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AcceleratorMetadataAWSAcceleratormetadatacollectionEBD85CF6": {
+      "DependsOn": [
+        "AcceleratorMetadataMetadataLambdaDefaultPolicy03C222B6",
+        "AcceleratorMetadataMetadataLambdaC27FFAF6",
+        "AWSAcceleratormetadatacollectionLogGroup76F89C67",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "ACCELERATOR_PREFIX": "AWSAccelerator",
+            "ACCELERATOR_VERSION_SSM_PATH": "/accelerator/AWSAccelerator-InstallerStack/version",
+            "CENTRAL_LOG_BUCKET": "centralLogBucketTest",
+            "CONFIG_REPOSITORY_NAME": "aws-config-test",
+            "CROSS_ACCOUNT_ROLE": "testRole",
+            "ELB_LOGGING_BUCKET": "elbLogBucketNameTest",
+            "GLOBAL_REGION": "us-east-1",
+            "LOG_ACCOUNT_ID": "111111111111",
+            "METADATA_BUCKET": "testMetadataLogBucket",
+            "ORGANIZATION_ID": "ou-test123",
+            "PARTITION": {
+              "Ref": "AWS::Partition",
+            },
+          },
+        },
+        "FunctionName": "AWSAccelerator-metadata-collection",
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "AcceleratorMetadataMetadataLambdaC27FFAF6",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 600,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "AcceleratorMetadataAwsAcceleratorMetadataCollectionRule1FFE12D2": {
+      "Properties": {
+        "Name": "AWSAccelerator-metadata-collection-rule",
+        "ScheduleExpression": "rate(1 day)",
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Fn::GetAtt": [
+                "AcceleratorMetadataAWSAcceleratormetadatacollectionEBD85CF6",
+                "Arn",
+              ],
+            },
+            "Id": "Target0",
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "AcceleratorMetadataAwsAcceleratorMetadataCollectionRuleAllowEventRuleAcceleratorMetadataAWSAcceleratormetadatacollection511598FFB2D995AE": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AcceleratorMetadataAWSAcceleratormetadatacollectionEBD85CF6",
+            "Arn",
+          ],
+        },
+        "Principal": "events.amazonaws.com",
+        "SourceArn": {
+          "Fn::GetAtt": [
+            "AcceleratorMetadataAwsAcceleratorMetadataCollectionRule1FFE12D2",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AcceleratorMetadataMetadataLambdaC27FFAF6": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "RoleName": {
+          "Fn::Join": [
+            "",
+            [
+              "AWSAccelerator-",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              "-",
+              {
+                "Ref": "AWS::Region",
+              },
+              "-metadata-lambda-role",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AcceleratorMetadataMetadataLambdaDefaultPolicy03C222B6": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "accelerator metadata collection custom resource",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "codepipeline:GetPipelineExecution",
+                "codepipeline:ListPipelineExecutions",
+                "codecommit:GetFolder",
+                "codecommit:GetFile",
+                "kms:DescribeKey",
+                "kms:Decrypt",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:ListAliases",
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "organizations:DescribeOrganizationalUnit",
+                "organizations:DescribeAccount",
+                "organizations:ListAccounts",
+                "organizations:ListChildren",
+                "organizations:ListOrganizationalUnitsForParent",
+                "organizations:ListParents",
+                "organizations:ListRoots",
+                "ssm:GetParameter",
+                "sts:AssumeRole",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObjectAcl",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::testMetadataLogBucket",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::testMetadataLogBucket/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "AcceleratorMetadataMetadataLambdaDefaultPolicy03C222B6",
+        "Roles": [
+          {
+            "Ref": "AcceleratorMetadataMetadataLambdaC27FFAF6",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "CustomKey1E6D0D07": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+  },
+}
+`;

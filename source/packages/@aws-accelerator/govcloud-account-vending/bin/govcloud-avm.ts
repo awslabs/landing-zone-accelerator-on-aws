@@ -18,10 +18,14 @@ import { version } from '../../../../package.json';
 import * as cdk from 'aws-cdk-lib';
 import { GovCloudAccountVendingStack } from '../lib/govcloud-avm-stack';
 
+// Set accelerator prefix environment variable
+const acceleratorPrefix = process.env['ACCELERATOR_PREFIX'] ?? 'AWSAccelerator';
+
 const app = new cdk.App();
-new GovCloudAccountVendingStack(app, 'AWSAccelerator-GovCloudAccountVending', {
+new GovCloudAccountVendingStack(app, `${acceleratorPrefix}-GovCloudAccountVending`, {
   description: `(SO0199-govcloudavm) Landing Zone Accelerator on AWS. Version ${version}.`,
   synthesizer: new cdk.DefaultStackSynthesizer({
     generateBootstrapVersionRule: false,
   }),
+  acceleratorPrefix: acceleratorPrefix,
 });

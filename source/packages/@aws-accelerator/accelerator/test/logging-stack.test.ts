@@ -18,9 +18,28 @@ import { snapShotTest } from './snapshot-test';
 
 const testNamePrefix = 'Construct(LoggingStack): ';
 
-const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.LOGGING, 'all-enabled', 'aws', 'us-east-1');
+const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.LOGGING, 'aws', 'us-east-1');
 const stack = acceleratorTestStacks.stacks.get(`LogArchive-us-east-1`)!;
 
 describe('LoggingStack', () => {
   snapShotTest(testNamePrefix, stack);
+});
+
+const acceleratorTestStacksOuTargets = new AcceleratorSynthStacks(
+  AcceleratorStage.LOGGING,
+  'aws',
+  'us-east-1',
+  'all-enabled-ou-targets',
+);
+const stackOuTargets = acceleratorTestStacksOuTargets.stacks.get(`LogArchive-us-east-1`)!;
+
+describe('LoggingStackOuTargets', () => {
+  snapShotTest('Construct(LoggingStackOuTargets): ', stackOuTargets);
+});
+
+const centralizedRegionTestStacks = new AcceleratorSynthStacks(AcceleratorStage.LOGGING, 'aws', 'us-west-2');
+const centralizedRegionTestStack = centralizedRegionTestStacks.stacks.get(`LogArchive-us-west-2`)!;
+
+describe('LoggingStack', () => {
+  snapShotTest(testNamePrefix, centralizedRegionTestStack);
 });

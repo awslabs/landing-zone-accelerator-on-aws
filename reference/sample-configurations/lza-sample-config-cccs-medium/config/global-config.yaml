@@ -1,0 +1,337 @@
+homeRegion: &HOME_REGION ca-central-1
+enabledRegions:
+  - *HOME_REGION
+  # - "ap-northeast-1"
+  # - "ap-northeast-2"
+  # - "ap-northeast-3"
+  # - "ap-south-1"
+  # - "ap-southeast-1"
+  # - "ap-southeast-2"
+  # - "eu-central-1"
+  # - "eu-north-1"
+  # - "eu-west-1"
+  # - "eu-west-2"
+  # - "eu-west-3"
+  # - "sa-east-1"
+  # - "us-east-1"
+  # - "us-east-2"
+  # - "us-west-1"
+  # - "us-west-2"
+managementAccountAccessRole: OrganizationAccountAccessRole # UPDATE: If using Control Tower, set to AWSControlTowerExecution
+cloudwatchLogRetentionInDays: 731
+terminationProtection: true
+cdkOptions:
+  centralizeBuckets: true
+  useManagementAccessRole: false
+snsTopics:
+  deploymentTargets:
+    organizationalUnits:
+      - Root
+  topics:
+    - name: SecurityHigh
+      emailAddresses:
+        - <notify-high>@example.com # <----- UPDATE EMAIL ADDRESS
+    - name: SecurityMedium
+      emailAddresses:
+        - <notify-medium>@example.com # <----- UPDATE EMAIL ADDRESS
+    - name: SecurityLow
+      emailAddresses:
+        - <notify-low>@example.com # <----- UPDATE EMAIL ADDRESS
+    - name: SecurityIgnore
+      emailAddresses:
+        - <notify-ignore>@example.com # <----- UPDATE EMAIL ADDRESS
+controlTower:
+  enable: false # UPDATE if using Control Tower, set to true
+logging:
+  account: LogArchive
+  cloudtrail:
+    enable: true
+    organizationTrail: true
+    organizationTrailSettings:
+      multiRegionTrail: true
+      globalServiceEvents: true
+      managementEvents: true
+      s3DataEvents: true
+      lambdaDataEvents: false
+      sendToCloudWatchLogs: true
+      apiErrorRateInsight: false
+      apiCallRateInsight: true
+    accountTrails:
+      - name: AccountTrail
+        regions:
+          - *HOME_REGION
+        deploymentTargets:
+          accounts: []
+          organizationalUnits: []
+        settings:
+          multiRegionTrail: true
+          globalServiceEvents: true
+          managementEvents: true
+          s3DataEvents: true
+          lambdaDataEvents: true
+          sendToCloudWatchLogs: true
+          apiErrorRateInsight: false
+          apiCallRateInsight: false
+  sessionManager:
+    sendToCloudWatchLogs: true
+    sendToS3: true
+    lifecycleRules:
+      - enabled: true
+        abortIncompleteMultipartUpload: 7
+        expiration: 730
+        noncurrentVersionExpiration: 730
+    attachPolicyToIamRoles:
+      - EC2-Default-SSM-AD-Role
+      - AWSAccelerator-RDGW-Role
+  cloudwatchLogs:
+    dynamicPartitioning: dynamic-partitioning/log-filters.json
+  accessLogBucket:
+    lifecycleRules:
+      - enabled: true
+        abortIncompleteMultipartUpload: 7
+        expiration: 730
+        noncurrentVersionExpiration: 730
+  centralLogBucket:
+    lifecycleRules:
+      - enabled: true
+        abortIncompleteMultipartUpload: 7
+        expiration: 730
+        noncurrentVersionExpiration: 730
+  elbLogBucket:
+    lifecycleRules:
+        - enabled: true
+          abortIncompleteMultipartUpload: 7
+          expiration: 730
+          noncurrentVersionExpiration: 730
+ssmInventory:
+  enable: true
+  deploymentTargets:
+    organizationalUnits:
+      - Infrastructure
+      - Security
+      - Central
+      - Dev
+      - Test
+      - Prod
+      - UnClass
+      - Sandbox
+reports:
+  costAndUsageReport:
+    compression: Parquet
+    format: Parquet
+    reportName: Cost-and-Usage-Report
+    s3Prefix: cur
+    timeUnit: HOURLY
+    refreshClosedReports: true
+    reportVersioning: OVERWRITE_REPORT
+    additionalArtifacts:
+      - ATHENA
+    additionalSchemaElements:
+      - RESOURCES
+    lifecycleRules:
+      - enabled: true
+        abortIncompleteMultipartUpload: 7
+        expiration: 730
+        noncurrentVersionExpiration: 730
+  budgets:
+    - deploymentTargets:
+        accounts:
+          - Network
+      name: accel-budget
+      timeUnit: MONTHLY
+      type: COST
+      amount: 2000
+      includeUpfront: true
+      includeTax: true
+      includeSupport: true
+      includeSubscription: true
+      includeRecurring: true
+      includeOtherSubscription: true
+      includeDiscount: true
+      includeCredit: false
+      includeRefund: false
+      useBlended: false
+      useAmortized: false
+      unit: USD
+      notifications:
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 100
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 90
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 75
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 50
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+    - deploymentTargets:
+        accounts:
+          - Perimeter
+      name: accel-budget
+      timeUnit: MONTHLY
+      type: COST
+      amount: 2000
+      includeUpfront: true
+      includeTax: true
+      includeSupport: true
+      includeSubscription: true
+      includeRecurring: true
+      includeOtherSubscription: true
+      includeDiscount: true
+      includeCredit: false
+      includeRefund: false
+      useBlended: false
+      useAmortized: false
+      unit: USD
+      notifications:
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 100
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 90
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 80
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 75
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 50
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+    - deploymentTargets:
+        accounts:
+          - Management
+      name: accel-budget
+      timeUnit: MONTHLY
+      type: COST
+      amount: 10000
+      includeUpfront: true
+      includeTax: true
+      includeSupport: true
+      includeSubscription: true
+      includeRecurring: true
+      includeOtherSubscription: true
+      includeDiscount: true
+      includeCredit: false
+      includeRefund: false
+      useBlended: false
+      useAmortized: false
+      unit: USD
+      notifications:
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 100
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 90
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 80
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 75
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 50
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+    - deploymentTargets:
+        organizationalUnits:
+          - Security
+          - Infrastructure
+          - Central
+          - Dev
+          - Test
+          - Prod
+          - UnClass
+          - Sandbox
+      name: default-accel-budget
+      timeUnit: MONTHLY
+      type: COST
+      amount: 1000
+      includeUpfront: true
+      includeTax: true
+      includeSupport: true
+      includeSubscription: true
+      includeRecurring: true
+      includeOtherSubscription: true
+      includeDiscount: true
+      includeCredit: false
+      includeRefund: false
+      useBlended: false
+      useAmortized: false
+      unit: USD
+      notifications:
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 100
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 90
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 80
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 75
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 50
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS

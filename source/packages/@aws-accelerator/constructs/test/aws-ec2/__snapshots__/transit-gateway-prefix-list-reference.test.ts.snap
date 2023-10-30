@@ -1,47 +1,47 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`TransitGatewayPrefixListReference Construct(TransitGatewayPrefixListReference):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CustomTransitGatewayPrefixListReferenceCustomResourceProviderHandler9BAD63E3": Object {
-      "DependsOn": Array [
+{
+  "Resources": {
+    "CustomTransitGatewayPrefixListReferenceCustomResourceProviderHandler9BAD63E3": {
+      "DependsOn": [
         "CustomTransitGatewayPrefixListReferenceCustomResourceProviderRoleC5D4C080",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomTransitGatewayPrefixListReferenceCustomResourceProviderRoleC5D4C080",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomTransitGatewayPrefixListReferenceCustomResourceProviderLogGroupBC9F3669": Object {
+    "CustomTransitGatewayPrefixListReferenceCustomResourceProviderLogGroupBC9F3669": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "TestKms67078DF1",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomTransitGatewayPrefixListReferenceCustomResourceProviderHandler9BAD63E3",
               },
             ],
@@ -52,31 +52,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomTransitGatewayPrefixListReferenceCustomResourceProviderRoleC5D4C080": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomTransitGatewayPrefixListReferenceCustomResourceProviderRoleC5D4C080": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "ec2:CreateTransitGatewayPrefixListReference",
                     "ec2:ModifyTransitGatewayPrefixListReference",
                     "ec2:DeleteTransitGatewayPrefixListReference",
@@ -94,25 +94,25 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "TestKms67078DF1": Object {
+    "TestKms67078DF1": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -129,19 +129,19 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "TestTransitGatewayPrefixListReference11CAF048": Object {
+    "TestTransitGatewayPrefixListReference11CAF048": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomTransitGatewayPrefixListReferenceCustomResourceProviderLogGroupBC9F3669",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomTransitGatewayPrefixListReferenceCustomResourceProviderHandler9BAD63E3",
             "Arn",
           ],
         },
-        "prefixListReference": Object {
+        "prefixListReference": {
           "PrefixListId": "pl-test",
           "TransitGatewayAttachmentId": "tgw-attach-test",
           "TransitGatewayRouteTableId": "Test",

@@ -41,4 +41,6 @@ export enum AcceleratorStage {
   NETWORK_ASSOCIATIONS_GWLB = 'network-associations-gwlb',
   SECURITY_AUDIT = 'security-audit',
   FINALIZE = 'finalize',
+  IMPORT_ASEA_RESOURCES = 'import-asea-resources',
+  POST_IMPORT_ASEA_RESOURCES = 'post-import-asea-resources',
 }

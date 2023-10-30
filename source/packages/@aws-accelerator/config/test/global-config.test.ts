@@ -13,11 +13,27 @@
 
 import {
   GlobalConfig,
-  AccessLogBucketConfig,
-  CentralLogBucketConfig,
   CostAndUsageReportConfig,
   BudgetReportConfig,
   ServiceQuotaLimitsConfig,
+  SsmParameterConfig,
+  SsmParametersConfig,
+  SsmInventoryConfig,
+  AcceleratorSettingsConfig,
+  AcceleratorMetadataConfig,
+  SnsConfig,
+  SnsTopicConfig,
+  BackupConfig,
+  VaultConfig,
+  ReportConfig,
+  externalLandingZoneResourcesConfig,
+  centralizeCdkBucketsConfig,
+  AccountCloudTrailConfig,
+  AccessLogBucketConfig,
+  CentralLogBucketConfig,
+  ElbLogBucketConfig,
+  CloudWatchLogsExclusionConfig,
+  CloudWatchLogsConfig,
 } from '../lib/global-config';
 import { describe, it, expect } from '@jest/globals';
 import * as path from 'path';
@@ -25,25 +41,30 @@ import * as fs from 'fs';
 
 describe('GlobalConfig', () => {
   describe('Test config', () => {
-    // it('has loaded successfully', () => {
-    //   const globalConfig = new GlobalConfig({
-    //     homeRegion: 'us-east-1',
-    //   });
-    //   const globalConfigFromFile = GlobalConfig.load(path.resolve('../accelerator/test/configs/all-enabled'), true);
+    it('has loaded successfully', () => {
+      // const globalConfig = new GlobalConfig({
+      //   homeRegion: 'us-east-1',
+      // });
+      const globalConfigFromFile = GlobalConfig.load(path.resolve('../accelerator/test/configs/snapshot-only'));
 
-    //   expect(globalConfig.accountNames).toStrictEqual([]);
-    //   expect(globalConfigFromFile.accountNames).toStrictEqual([
-    //     'Management',
-    //     'LogArchive',
-    //     'Audit',
-    //     'SharedServices',
-    //     'Network',
-    //   ]);
-    // });
+      expect(globalConfigFromFile.ssmParameters?.length).toBe(1);
+      expect(globalConfigFromFile.ssmParameters?.at(0)?.parameters?.at(0)?.name).toBe('parameterTest');
+      expect(globalConfigFromFile.ssmParameters?.at(0)?.parameters?.at(0)?.path).toBe('/my/parameter/structure');
+      expect(globalConfigFromFile.ssmParameters?.at(0)?.parameters?.at(0)?.value).toBe('parameterTestValue');
+
+      //   expect(globalConfig.accountNames).toStrictEqual([]);
+      //   expect(globalConfigFromFile.accountNames).toStrictEqual([
+      //     'Management',
+      //     'LogArchive',
+      //     'Audit',
+      //     'SharedServices',
+      //     'Network',
+      //   ]);
+    });
 
     it('loads from string', () => {
       const buffer = fs.readFileSync(
-        path.join('../accelerator/test/configs/all-enabled', GlobalConfig.FILENAME),
+        path.join('../accelerator/test/configs/snapshot-only', GlobalConfig.FILENAME),
         'utf8',
       );
       const globalConfigFromString = GlobalConfig.loadFromString(buffer);
@@ -53,14 +74,6 @@ describe('GlobalConfig', () => {
       // expect(globalConfigFromString.accountNames).toStrictEqual([]);
 
       //expect(GlobalConfig.loadFromString('corrupt str')).toBe(undefined);
-    });
-
-    it('has an empty list of lifecycle rules', () => {
-      const accessLogBucketConfig = new AccessLogBucketConfig();
-      expect(accessLogBucketConfig.lifecycleRules).toStrictEqual([]);
-
-      const centralLogBucketConfig = new CentralLogBucketConfig();
-      expect(centralLogBucketConfig.lifecycleRules).toStrictEqual([]);
     });
 
     it('tests CostAndUsageReportConfig', () => {
@@ -108,6 +121,29 @@ describe('GlobalConfig', () => {
         excludedRegions: [],
         organizationalUnits: [],
       });
+    });
+    it('test static types', () => {
+      expect(new AccessLogBucketConfig().lifecycleRules).toEqual(undefined);
+      expect(new CentralLogBucketConfig().lifecycleRules).toEqual(undefined);
+      expect(new ElbLogBucketConfig().lifecycleRules).toEqual(undefined);
+      expect(new CloudWatchLogsExclusionConfig().regions).toEqual(undefined);
+      expect(new CloudWatchLogsConfig().enable).toEqual(undefined);
+
+      expect(new centralizeCdkBucketsConfig().enable).toEqual(true);
+      expect(new AccountCloudTrailConfig().regions).toEqual([]);
+      expect(new externalLandingZoneResourcesConfig().mappingFileBucket).toEqual('');
+      expect(new ReportConfig().budgets).toEqual([]);
+      expect(new VaultConfig().policy).toEqual('');
+      expect(new SsmParameterConfig().name).toEqual('');
+      expect(new SsmParametersConfig().parameters).toEqual([]);
+      expect(new SsmInventoryConfig().enable).toBeFalsy;
+
+      expect(new AcceleratorSettingsConfig().maxConcurrentStacks).toBeUndefined;
+
+      expect(new AcceleratorMetadataConfig().enable).toBeFalsy;
+      expect(new SnsConfig().topics).toEqual([]);
+      expect(new SnsTopicConfig().emailAddresses).toEqual([]);
+      expect(new BackupConfig().vaults).toEqual([]);
     });
   });
 });

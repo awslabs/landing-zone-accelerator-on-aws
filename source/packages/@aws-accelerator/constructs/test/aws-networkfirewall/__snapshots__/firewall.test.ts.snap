@@ -1,22 +1,223 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Network Firewall Construct(NetworkFirewall):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "TestFirewallE26FCA5C": Object {
-      "Properties": Object {
+{
+  "Resources": {
+    "CloudWatchKey9B181885": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomGetNetworkFirewallEndpointCustomResourceProviderHandler2EF030A1": {
+      "DependsOn": [
+        "CustomGetNetworkFirewallEndpointCustomResourceProviderRole540B9917",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomGetNetworkFirewallEndpointCustomResourceProviderRole540B9917",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomGetNetworkFirewallEndpointCustomResourceProviderLogGroup98AC3B14": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "CloudWatchKey9B181885",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomGetNetworkFirewallEndpointCustomResourceProviderHandler2EF030A1",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 365,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomGetNetworkFirewallEndpointCustomResourceProviderRole540B9917": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ec2:DescribeAvailabilityZones",
+                    "network-firewall:DescribeFirewall",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TestFirewallE26FCA5C": {
+      "Properties": {
         "FirewallName": "TestFirewall",
         "FirewallPolicyArn": "arn:aws:network-firewall:us-east-1:222222222222:firewall-policy/TestPolicy",
-        "SubnetMappings": Array [
-          Object {
+        "SubnetMappings": [
+          {
             "SubnetId": "Test-Subnet-1",
           },
-          Object {
+          {
             "SubnetId": "Test-Subnet-2",
           },
         ],
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "TestFirewall",
+          },
+        ],
+        "VpcId": "TestVpc",
+      },
+      "Type": "AWS::NetworkFirewall::Firewall",
+    },
+    "TestImportFirewallLoggingConfigB02138AE": {
+      "Properties": {
+        "FirewallArn": "arn:aws:network-firewall:us-east-1:222222222222:firewall/TestImportedFirewall",
+        "LoggingConfiguration": {
+          "LogDestinationConfigs": [
+            {
+              "LogDestination": {
+                "logGroup": "firewallAlertLogGroupArn",
+              },
+              "LogDestinationType": "CloudWatchLogs",
+              "LogType": "ALERT",
+            },
+          ],
+        },
+      },
+      "Type": "AWS::NetworkFirewall::LoggingConfiguration",
+    },
+    "TestImportFirewallendpointRouteId4582BF89": {
+      "Properties": {
+        "DestinationCidrBlock": "10.0.0.6/32",
+        "RouteTableId": "routeTableId",
+        "VpcEndpointId": {
+          "Ref": "TestImportFirewallendpointRouteIdEndpoint3D0FC334",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "TestImportFirewallendpointRouteIdEndpoint3D0FC334": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomGetNetworkFirewallEndpointCustomResourceProviderLogGroup98AC3B14",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomGetNetworkFirewallEndpointCustomResourceProviderHandler2EF030A1",
+            "Arn",
+          ],
+        },
+        "endpointAz": "1",
+        "firewallArn": "arn:aws:network-firewall:us-east-1:222222222222:firewall/TestImportedFirewall",
+        "region": {
+          "Ref": "AWS::Region",
+        },
+      },
+      "Type": "Custom::GetNetworkFirewallEndpoint",
+      "UpdateReplacePolicy": "Delete",
+    },
+  },
+}
+`;
+
+exports[`Network Firewall Construct(NetworkFirewall):  Snapshot Test 2`] = `
+{
+  "Resources": {
+    "firewallLogicalId": {
+      "Properties": {
+        "FirewallName": "TestFirewall",
+        "FirewallPolicyArn": "arn:aws:network-firewall:us-east-1:222222222222:firewall-policy/TestPolicy",
+        "SubnetMappings": [
+          {
+            "SubnetId": "Test-Subnet-1",
+          },
+          {
+            "SubnetId": "Test-Subnet-2",
+          },
+        ],
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "TestFirewall",
           },

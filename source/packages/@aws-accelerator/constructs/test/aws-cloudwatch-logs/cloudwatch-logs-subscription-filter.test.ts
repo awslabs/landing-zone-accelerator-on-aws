@@ -23,10 +23,22 @@ const stack = new cdk.Stack();
 
 new CloudWatchLogsSubscriptionFilter(stack, 'CloudWatchLogsSubscriptionFilter', {
   logsKmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
+  logDestinationArn: `arn:${stack.partition}:logs:${stack.region}:111111111111:destination:AWSAcceleratorCloudWatchToS3`,
+  logsRetentionInDays: '731',
+  subscriptionFilterRoleArn: `arn:${stack.partition}:iam::111111111111:role/AWSAccelerator-LoggingSta-SubscriptionFilterRole`,
+  logArchiveAccountId: 'some-acc-id',
+  replaceLogDestinationArn: `arn:${stack.partition}:logs:${stack.region}:111111111111:destination:ReplaceDestination`,
+  acceleratorPrefix: 'AWSAccelerator',
+  useExistingRoles: false,
+});
+new CloudWatchLogsSubscriptionFilter(stack, 'CloudWatchLogsSubscriptionFilterExistingIam', {
+  logsKmsKey: new cdk.aws_kms.Key(stack, 'CustomKeyExistingIam', {}),
   logDestinationArn: 'LogRetentionArn',
-  logsRetentionInDaysValue: '731',
+  logsRetentionInDays: '731',
   subscriptionFilterRoleArn: 'testString',
   logArchiveAccountId: 'some-acc-id',
+  acceleratorPrefix: 'AWSAccelerator',
+  useExistingRoles: true,
 });
 
 /**

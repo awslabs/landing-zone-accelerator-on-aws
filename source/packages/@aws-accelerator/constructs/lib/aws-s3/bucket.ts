@@ -17,27 +17,10 @@ import * as kms from 'aws-cdk-lib/aws-kms';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { StorageClass } from '@aws-accelerator/config/lib/common-types/types';
 import { BucketReplication, BucketReplicationProps } from './bucket-replication';
+import { BucketPrefix, BucketPrefixProps } from './bucket-prefix';
 import { Construct } from 'constructs';
 import { pascalCase } from 'change-case';
-
-export enum BucketAccessType {
-  /**
-   * When service need read only access to bucket and CMK
-   */
-  READONLY = 'readonly',
-  /**
-   * When service need write only access to bucket and CMK
-   */
-  WRITEONLY = 'writeonly',
-  /**
-   * When service need read write access to bucket and CMK
-   */
-  READWRITE = 'readwrite',
-  /**
-   * When service need no access like SessionManager, but the service name required for other logical changes in bucket or CMK policy
-   */
-  NO_ACCESS = 'no_access',
-}
+import { BucketAccessType } from '@aws-accelerator/utils';
 
 export enum BucketEncryptionType {
   SSE_S3 = 'sse-s3',
@@ -52,12 +35,13 @@ interface Transition {
 export interface S3LifeCycleRule {
   abortIncompleteMultipartUploadAfter: number;
   enabled: boolean;
-  expiration: number;
+  expiration?: number;
   expiredObjectDeleteMarker: boolean;
   id: string;
   noncurrentVersionExpiration: number;
   transitions: Transition[];
   noncurrentVersionTransitions: Transition[];
+  prefix?: string;
 }
 
 /**
@@ -133,6 +117,15 @@ export interface BucketProps {
    * Optional bucket replication property
    */
   replicationProps?: BucketReplicationProps;
+
+  /**
+   * Optional bucket prefix property
+   */
+  bucketPrefixProps?: BucketPrefixProps;
+  /**
+   * Prefix for nag suppression
+   */
+  readonly nagSuppressionPrefix?: string;
 }
 
 /**
@@ -244,6 +237,22 @@ export class Bucket extends Construct {
         },
         kmsKey: props.replicationProps.kmsKey,
         logRetentionInDays: props.replicationProps.logRetentionInDays,
+        useExistingRoles: props.replicationProps.useExistingRoles,
+        acceleratorPrefix: props.replicationProps.acceleratorPrefix,
+      });
+    }
+
+    // Configure prefix creation
+    if (props.bucketPrefixProps) {
+      new BucketPrefix(this, id + 'Prefix', {
+        source: { bucket: this.bucket },
+        bucketPrefixes: props.bucketPrefixProps.bucketPrefixes,
+        customResourceLambdaEnvironmentEncryptionKmsKey:
+          props.bucketPrefixProps.customResourceLambdaEnvironmentEncryptionKmsKey,
+        customResourceLambdaCloudWatchLogKmsKey: props.bucketPrefixProps.customResourceLambdaCloudWatchLogKmsKey,
+        customResourceLambdaLogRetentionInDays: props.bucketPrefixProps.customResourceLambdaLogRetentionInDays,
+        nagSuppressionPrefix:
+          props.nagSuppressionPrefix !== undefined ? `${props.nagSuppressionPrefix}/${id}Prefix` : undefined,
       });
     }
   }
@@ -284,8 +293,6 @@ export class Bucket extends Construct {
       this.encryptionType = s3.BucketEncryption.KMS;
     } else if (this.props.encryptionType == BucketEncryptionType.SSE_S3) {
       this.encryptionType = s3.BucketEncryption.S3_MANAGED;
-    } else {
-      throw new Error(`encryptionType ${this.props.encryptionType} is not valid.`);
     }
   }
 
@@ -341,12 +348,16 @@ export class Bucket extends Construct {
             lifecycleRuleConfig.abortIncompleteMultipartUploadAfter,
           ),
           enabled: lifecycleRuleConfig.enabled,
-          expiration: cdk.Duration.days(lifecycleRuleConfig.expiration),
+          expiration:
+            lifecycleRuleConfig.expiration !== undefined
+              ? cdk.Duration.days(lifecycleRuleConfig.expiration)
+              : undefined,
           transitions,
           noncurrentVersionTransitions,
           noncurrentVersionExpiration: cdk.Duration.days(lifecycleRuleConfig.noncurrentVersionExpiration),
           expiredObjectDeleteMarker: lifecycleRuleConfig.expiredObjectDeleteMarker,
-          id: `LifecycleRule${this.props.s3BucketName}`,
+          id: `LifecycleRule${this.props.s3BucketName}${lifecycleRuleConfig.id}`,
+          prefix: lifecycleRuleConfig.prefix,
         });
       }
     } else {

@@ -14,14 +14,22 @@ import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import * as path from 'path';
-import { Logger } from '../logger';
-import { NagSuppressions } from 'cdk-nag';
-import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import {
+  AcceleratorStack,
+  AcceleratorStackProps,
+  AcceleratorKeyType,
+  NagSuppressionRuleIds,
+} from './accelerator-stack';
 import {
   AppConfigItem,
   VpcConfig,
   VpcTemplatesConfig,
   ApplicationLoadBalancerListenerConfig,
+  TargetGroupItemConfig,
+  LaunchTemplateConfig,
+  AutoScalingConfig,
+  NetworkLoadBalancerConfig,
+  ApplicationLoadBalancerConfig,
 } from '@aws-accelerator/config';
 import {
   TargetGroup,
@@ -30,6 +38,7 @@ import {
   LaunchTemplate,
   AutoscalingGroup,
 } from '@aws-accelerator/constructs';
+import { SsmResourceType } from '@aws-accelerator/utils';
 
 export type PrivateIpAddressConfig = {
   primary: boolean | undefined;
@@ -112,18 +121,37 @@ export class ApplicationsStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: ApplicationStackProps) {
     super(scope, id, props);
     this.props = props;
+    const allVpcItems = [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? [];
+    const allAppConfigs: AppConfigItem[] = props.customizationsConfig.applications ?? [];
+    const elbLogsBucketName = this.getElbLogsBucketName();
 
     // Set initial private properties
-    [this.securityGroupMap, this.subnetMap, this.vpcMap] = this.setInitialMaps(props);
+    [this.securityGroupMap, this.subnetMap, this.vpcMap] = this.setInitialMaps(allVpcItems, allAppConfigs);
+
+    const lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY) as cdk.aws_kms.Key;
+
+    const cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY) as cdk.aws_kms.Key;
 
     //Create application config resources
-    this.createApplicationConfigResources(props, props.appConfigItem);
+    this.createApplicationConfigResources(
+      props.appConfigItem,
+      { securityGroupMap: this.securityGroupMap, subnetMap: this.subnetMap, vpcMap: this.vpcMap },
+      props.configDirPath,
+      allVpcItems,
+      elbLogsBucketName,
+      lambdaKey,
+      { key: cloudwatchKey, logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays },
+    );
 
     // Create SSM parameters
     this.createSsmParameters();
 
-    Logger.debug(`[customizations-application-stack] Region: ${cdk.Stack.of(this).region}`);
-    Logger.info('[customizations-application-stack] Completed stack synthesis');
+    //
+    // Create NagSuppressions
+    //
+    this.addResourceSuppressionsByPath();
+
+    this.logger.info('Completed stack synthesis');
   }
 
   /**
@@ -131,13 +159,13 @@ export class ApplicationsStack extends AcceleratorStack {
    * @param props ApplicationStackProps
    * @returns Map of security group, subnet and VPC
    */
-  private setInitialMaps(props: ApplicationStackProps): Map<string, string>[] {
+  private setInitialMaps(
+    allVpcItems: (VpcConfig | VpcTemplatesConfig)[],
+    allAppConfigs: AppConfigItem[],
+  ): Map<string, string>[] {
     let securityGroupMap = new Map<string, string>();
     let subnetMap = new Map<string, string>();
     let vpcMap = new Map<string, string>();
-
-    const allVpcItems = [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? [];
-    const allAppConfigs: AppConfigItem[] = props.customizationsConfig.applications ?? [];
 
     for (const appConfigItem of allAppConfigs) {
       [vpcMap, subnetMap, securityGroupMap] = this.setInitialMapProcessApp(
@@ -183,14 +211,14 @@ export class ApplicationsStack extends AcceleratorStack {
       // Set VPC ID
       const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
         this,
-        `/accelerator/network/vpc/${vpcItem.name}/id`,
+        this.getSsmPath(SsmResourceType.VPC, [vpcItem.name]),
       );
       vpcMap.set(vpcItem.name, vpcId);
       // Set subnet IDs
       for (const subnetItem of vpcItem.subnets ?? []) {
         const subnetId = cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,
-          `/accelerator/network/vpc/${vpcItem.name}/subnet/${subnetItem.name}/id`,
+          this.getSsmPath(SsmResourceType.SUBNET, [vpcItem.name, subnetItem.name]),
         );
         subnetMap.set(`${vpcItem.name}_${subnetItem.name}`, subnetId);
       }
@@ -198,7 +226,7 @@ export class ApplicationsStack extends AcceleratorStack {
       for (const securityGroupItem of vpcItem.securityGroups ?? []) {
         const securityGroupId = cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,
-          `/accelerator/network/vpc/${vpcItem.name}/securityGroup/${securityGroupItem.name}/id`,
+          this.getSsmPath(SsmResourceType.SECURITY_GROUP, [vpcItem.name, securityGroupItem.name]),
         );
         securityGroupMap.set(`${vpcItem.name}_${securityGroupItem.name}`, securityGroupId);
       }
@@ -206,51 +234,113 @@ export class ApplicationsStack extends AcceleratorStack {
     return [vpcMap, subnetMap, securityGroupMap];
   }
 
-  private createApplicationConfigResources(props: ApplicationStackProps, appConfigItem: AppConfigItem) {
-    const allVpcItems = [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? [];
-
+  private createApplicationConfigResources(
+    appConfigItem: AppConfigItem,
+    maps: { securityGroupMap: Map<string, string>; subnetMap: Map<string, string>; vpcMap: Map<string, string> },
+    configDirPath: string,
+    allVpcItems: (VpcConfig | VpcTemplatesConfig)[],
+    accessLogsBucket: string,
+    lambdaKey: cdk.aws_kms.IKey,
+    cloudwatch: { key: cdk.aws_kms.IKey; logRetentionInDays: number },
+  ) {
     for (const vpcItem of allVpcItems) {
       if (vpcItem.name === appConfigItem.vpc) {
         // Get account IDs
         const vpcAccountIds = this.getVpcAccountIds(vpcItem);
-
         if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
           // Create target group resource
-          const targetGroups = this.createTargetGroup(appConfigItem);
+          const targetGroups = this.createTargetGroup(
+            appConfigItem.targetGroups ?? undefined,
+            maps.vpcMap,
+            appConfigItem.vpc,
+            appConfigItem.name,
+          )!;
+
           // Create network load balancer resource
-          this.createNetworkLoadBalancer(appConfigItem, targetGroups);
+          this.createNetworkLoadBalancer(
+            appConfigItem.networkLoadBalancer ?? undefined,
+            appConfigItem.name,
+            appConfigItem.vpc,
+            targetGroups,
+            maps.subnetMap,
+            accessLogsBucket,
+          );
+
           // Create application load balancer resource
-          this.createApplicationLoadBalancer(appConfigItem, targetGroups);
+          this.createApplicationLoadBalancer(
+            appConfigItem.applicationLoadBalancer ?? undefined,
+            appConfigItem.vpc,
+            appConfigItem.name,
+            targetGroups,
+            maps.securityGroupMap,
+            maps.subnetMap,
+            accessLogsBucket,
+          );
+
           // create launch template resource
-          const lt = this.createLaunchTemplate(appConfigItem);
-          // create autoscaling group resource
-          this.createAutoScalingGroup(appConfigItem, targetGroups, lt);
+          const lt = this.createLaunchTemplate(
+            appConfigItem.launchTemplate,
+            appConfigItem.vpc,
+            appConfigItem.name,
+            maps.securityGroupMap,
+            maps.subnetMap,
+            configDirPath,
+          );
+          // create autoscaling group resource only if launch template and autoscaling are defined
+
+          if (lt && appConfigItem.autoscaling) {
+            this.createAutoScalingGroup(
+              {
+                autoscaling: appConfigItem.autoscaling,
+                vpcName: appConfigItem.vpc,
+                name: appConfigItem.name,
+              },
+              targetGroups,
+              lt,
+              maps.subnetMap,
+              lambdaKey,
+              { key: cloudwatch.key, logRetentionInDays: cloudwatch.logRetentionInDays },
+            );
+          }
         }
       }
     }
   }
-  private createApplicationLoadBalancer(appConfigItem: AppConfigItem, targetGroups: TargetGroupItem[] | undefined) {
-    if (appConfigItem.applicationLoadBalancer) {
-      const subnets = this.getSubnets(appConfigItem.applicationLoadBalancer.subnets ?? [], appConfigItem.vpc);
-      const getSecurityGroups = this.getSecurityGroups(
-        appConfigItem.applicationLoadBalancer.securityGroups ?? [],
-        appConfigItem.vpc,
-      );
 
-      new ApplicationLoadBalancer(this, `ApplicationLoadBalancer_${appConfigItem.name}`, {
-        name: appConfigItem.applicationLoadBalancer.name,
+  private createApplicationLoadBalancer(
+    applicationLoadBalancer: ApplicationLoadBalancerConfig | undefined,
+    vpcName: string,
+    appName: string,
+    targetGroups: TargetGroupItem[] | undefined,
+    securityGroupMap: Map<string, string>,
+    subnetMap: Map<string, string>,
+    accessLogsBucket: string,
+  ) {
+    if (applicationLoadBalancer) {
+      const subnets = this.getSubnets(applicationLoadBalancer.subnets ?? [], vpcName, subnetMap)!;
+      const getSecurityGroups = this.getSecurityGroups(
+        applicationLoadBalancer.securityGroups ?? [],
+        vpcName,
+        securityGroupMap,
+      );
+      // alb needs atleast 2 subnets
+      if (subnets.length < 2) {
+        throw new Error(
+          `[customizations-application-stack] Found ${applicationLoadBalancer.subnets.length} ALB subnets: ${applicationLoadBalancer.subnets}. Minium 2 subnets in 2 AZs are required`,
+        );
+      }
+      return new ApplicationLoadBalancer(this, `ApplicationLoadBalancer_${appName}`, {
+        name: applicationLoadBalancer.name,
+        ssmPrefix: this.props.prefixes.ssmParamName,
         subnets,
         securityGroups: getSecurityGroups!,
-        scheme: appConfigItem.applicationLoadBalancer.scheme! ?? 'internal',
-        accessLogsBucket: `aws-accelerator-elb-access-logs-${this.props.accountsConfig.getLogArchiveAccountId()}-${
-          cdk.Stack.of(this).region
-        }`,
-        attributes: appConfigItem.applicationLoadBalancer.attributes ?? undefined,
-        listeners: this.getAlbListenerTargetGroupArn(
-          appConfigItem.applicationLoadBalancer?.listeners ?? undefined,
-          targetGroups,
-        ),
+        scheme: applicationLoadBalancer.scheme! ?? 'internal',
+        accessLogsBucket,
+        attributes: applicationLoadBalancer.attributes ?? undefined,
+        listeners: this.getAlbListenerTargetGroupArn(applicationLoadBalancer?.listeners ?? undefined, targetGroups),
       });
+    } else {
+      return undefined;
     }
   }
   private getAlbListenerTargetGroupArn(
@@ -258,16 +348,18 @@ export class ApplicationsStack extends AcceleratorStack {
     targetGroups: TargetGroupItem[] | undefined,
   ) {
     const output = [];
-    if (listeners) {
+    // if listener is provided look up target group arn
+    // if no target group is provided return undefined
+    if (listeners && targetGroups) {
       for (const listener of listeners) {
-        const targetGroupValues = targetGroups! ?? [];
+        const targetGroupValues = targetGroups ?? [];
+
         const filteredTargetGroup = targetGroupValues.find(element => {
           return element.name === listener.targetGroup;
         });
         if (!filteredTargetGroup) {
-          throw new Error(
-            `[customizations-application-stack] ALB Listener ${listener.name} does not have a valid target group ${listener.targetGroup}`,
-          );
+          this.logger.error(`ALB Listener ${listener.name} does not have a valid target group ${listener.targetGroup}`);
+          throw new Error(`Configuration validation failed at runtime.`);
         }
         listener.targetGroup = filteredTargetGroup.targetGroup.targetGroupArn;
         output.push(listener as ApplicationLoadBalancerListenerConfig);
@@ -275,188 +367,274 @@ export class ApplicationsStack extends AcceleratorStack {
     } else {
       return undefined;
     }
-    if (output.length > 0) {
-      return output;
-    } else {
-      return undefined;
-    }
+
+    return output;
   }
 
-  private createLaunchTemplate(appConfigItem: AppConfigItem) {
-    if (appConfigItem.launchTemplate) {
-      const getSecurityGroups = this.getSecurityGroups(
-        appConfigItem.launchTemplate.securityGroups ?? [],
-        appConfigItem.vpc,
+  private createLaunchTemplate(
+    launchTemplate: LaunchTemplateConfig | undefined,
+    vpcName: string,
+    appName: string,
+    securityGroupMap: Map<string, string>,
+    subnetMap: Map<string, string>,
+    configDirPath: string,
+  ) {
+    let userDataPath: string | undefined;
+    if (launchTemplate?.userData) {
+      userDataPath = path.join(configDirPath, launchTemplate.userData);
+    } else {
+      userDataPath = undefined;
+    }
+    if (launchTemplate) {
+      const getSecurityGroups = this.getSecurityGroups(launchTemplate.securityGroups ?? [], vpcName, securityGroupMap);
+      const blockDeviceMappingsValue = this.processBlockDeviceReplacements(
+        launchTemplate.blockDeviceMappings ?? [],
+        appName,
       );
-      return new LaunchTemplate(
-        this,
-        `LaunchTemplate-${pascalCase(appConfigItem.name)}-${pascalCase(appConfigItem.launchTemplate.name)}`,
-        {
-          name: appConfigItem.launchTemplate.name,
-          appName: appConfigItem.name,
-          vpc: appConfigItem.vpc,
-          blockDeviceMappings: this.processBlockDeviceReplacements(
-            appConfigItem.launchTemplate.blockDeviceMappings ?? [],
-            appConfigItem.name,
-          ),
-          userData: path.join(this.props.configDirPath, appConfigItem.launchTemplate.userData!) ?? undefined,
-          securityGroups: getSecurityGroups ?? undefined,
-          networkInterfaces:
-            this.replaceNetworkInterfaceValues(
-              appConfigItem.launchTemplate.networkInterfaces ?? [],
-              appConfigItem.vpc,
-            ) ?? undefined,
-          instanceType: appConfigItem.launchTemplate.instanceType,
-          keyPair: appConfigItem.launchTemplate.keyPair ?? undefined,
-          iamInstanceProfile: appConfigItem.launchTemplate.iamInstanceProfile ?? undefined,
-          imageId: this.replaceImageId(appConfigItem.launchTemplate.imageId ?? ''),
-          enforceImdsv2: appConfigItem.launchTemplate.enforceImdsv2 ?? true,
-        },
+      const networkInterfacesValue = this.replaceNetworkInterfaceValues(
+        launchTemplate.networkInterfaces ?? [],
+        vpcName,
+        securityGroupMap,
+        subnetMap,
       );
+      const imageIdValue = this.replaceImageId(launchTemplate.imageId ?? '');
+      return new LaunchTemplate(this, `LaunchTemplate-${pascalCase(appName)}-${pascalCase(launchTemplate.name)}`, {
+        name: launchTemplate.name,
+        appName: appName,
+        vpc: vpcName,
+        blockDeviceMappings: blockDeviceMappingsValue,
+        userData: userDataPath,
+        securityGroups: getSecurityGroups ?? undefined,
+        networkInterfaces: networkInterfacesValue ?? undefined,
+        instanceType: launchTemplate.instanceType,
+        keyPair: launchTemplate.keyPair ?? undefined,
+        iamInstanceProfile: launchTemplate.iamInstanceProfile ?? undefined,
+        imageId: imageIdValue,
+        enforceImdsv2: launchTemplate.enforceImdsv2 ?? true,
+      });
     } else {
       return undefined;
     }
   }
-  private replaceNetworkInterfaceValues(networkInterfaces: NetworkInterfaceItemConfig[], vpc: string) {
+  private replaceNetworkInterfaceValues(
+    networkInterfaces: NetworkInterfaceItemConfig[],
+    vpc: string,
+    securityGroupMap: Map<string, string>,
+    subnetMap: Map<string, string>,
+  ) {
     for (const networkInterface of networkInterfaces) {
-      const securityGroups: string[] | undefined = this.getSecurityGroups(networkInterface.groups! ?? [], vpc);
+      const securityGroups: string[] | undefined = this.getSecurityGroups(
+        networkInterface.groups! ?? [],
+        vpc,
+        securityGroupMap,
+      );
       if (securityGroups) {
         networkInterface.groups = securityGroups;
       }
       if (networkInterface.subnetId) {
-        const subnetIdValue = this.subnetMap.get(`${vpc}_${networkInterface.subnetId}`);
+        const subnetIdValue = subnetMap.get(`${vpc}_${networkInterface.subnetId}`);
         if (!subnetIdValue) {
-          throw new Error(
-            `[customizations-application-stack] Network Interfaces: subnet ${networkInterface.subnetId} not found in VPC ${vpc}`,
-          );
+          this.logger.error(`Network Interfaces: subnet ${networkInterface.subnetId} not found in VPC ${vpc}`);
+          throw new Error(`Configuration validation failed at runtime.`);
         }
+        networkInterface.subnetId = subnetIdValue;
       }
     }
-    if (networkInterfaces.length === 0) {
-      return undefined;
-    } else {
-      return networkInterfaces;
-    }
+
+    return networkInterfaces;
   }
 
   private createAutoScalingGroup(
-    appConfigItem: AppConfigItem,
+    appConfigItem: { autoscaling: AutoScalingConfig; vpcName: string; name: string },
     targetGroupsInput: TargetGroupItem[] | undefined,
-    lt: LaunchTemplate | undefined,
+    lt: LaunchTemplate,
+    subnetMap: Map<string, string>,
+    lambdaKey: cdk.aws_kms.IKey,
+    cloudwatch: { key: cdk.aws_kms.IKey; logRetentionInDays: number },
   ) {
-    if (appConfigItem.autoscaling) {
-      const targetGroupValues = targetGroupsInput!.map(obj => {
+    let finalTargetGroupArns: string[] = [];
+    // if input array is provided filter out targetGroup based on name
+    if (targetGroupsInput) {
+      const filteredTargetGroups = targetGroupsInput.filter(obj => {
+        if (appConfigItem.autoscaling.targetGroups?.includes(obj.name)) {
+          return obj;
+        } else {
+          return undefined;
+        }
+      });
+      // get TargetGroup arn
+      const filteredTargetGroupArns = filteredTargetGroups.map(obj => {
         return obj.targetGroup.targetGroupArn;
       });
-      let targetGroups: string[] | undefined;
-      if (targetGroupValues.length === 0) {
-        targetGroups = undefined;
-      } else {
-        targetGroups = targetGroupValues;
-      }
-      const subnets: string[] = [];
-      for (const subnet of appConfigItem.autoscaling.subnets ?? []) {
-        const subnetId = this.subnetMap.get(`${appConfigItem.vpc}_${subnet}`);
-        if (!subnetId) {
-          throw new Error(
-            `[customizations-application-stack] Create Autoscaling Groups: subnet ${subnet} not found in VPC ${appConfigItem.vpc}`,
-          );
-        }
-        subnets.push(subnetId);
-      }
-
-      if (lt === undefined) {
-        throw new Error(`[customizations-application-stack] Launch template is undefined for ${appConfigItem.name}`);
-      }
-
-      new AutoscalingGroup(
-        this,
-        `AutoScalingGroup${pascalCase(appConfigItem.name)}${pascalCase(appConfigItem.autoscaling.name)}`,
-        {
-          name: appConfigItem.autoscaling.name,
-          minSize: appConfigItem.autoscaling.minSize,
-          maxSize: appConfigItem.autoscaling.maxSize,
-          desiredSize: appConfigItem.autoscaling.desiredSize,
-          launchTemplateVersion: lt.version,
-          launchTemplateId: lt.launchTemplateId,
-          healthCheckGracePeriod: appConfigItem.autoscaling.healthCheckGracePeriod ?? undefined,
-          healthCheckType: appConfigItem.autoscaling.healthCheckType ?? undefined,
-          targetGroups,
-          subnets,
-        },
-      );
+      // merge targetGroup arns into array
+      finalTargetGroupArns = [...filteredTargetGroupArns, ...finalTargetGroupArns];
     }
 
-    NagSuppressions.addResourceSuppressionsByPath(
+    // if array is empty returned undefined an input of [] is passed to api
+    let finalTargetGroups: string[] | undefined;
+    if (finalTargetGroupArns.length === 0) {
+      finalTargetGroups = undefined;
+    } else {
+      finalTargetGroups = finalTargetGroupArns;
+    }
+
+    const subnets: string[] = [];
+    for (const subnet of appConfigItem.autoscaling.subnets ?? []) {
+      const subnetId = subnetMap.get(`${appConfigItem.vpcName}_${subnet}`);
+      if (!subnetId) {
+        throw new Error(
+          `[customizations-application-stack] Create Autoscaling Groups: subnet ${subnet} not found in VPC ${appConfigItem.vpcName}`,
+        );
+      }
+      subnets.push(subnetId);
+    }
+    const cloudWatchLogKmsKey = cloudwatch.key;
+    const cloudWatchLogRetentionInDays = cloudwatch.logRetentionInDays;
+    const asg = new AutoscalingGroup(
       this,
-      `${this.stackName}/AutoScalingGroup${pascalCase(appConfigItem.name)}${pascalCase(
-        appConfigItem.autoscaling!.name,
-      )}/Resource`,
-      [
+      `AutoScalingGroup${pascalCase(appConfigItem.name)}${pascalCase(appConfigItem.autoscaling.name)}`,
+      {
+        name: appConfigItem.autoscaling.name,
+        minSize: appConfigItem.autoscaling.minSize,
+        maxSize: appConfigItem.autoscaling.maxSize,
+        desiredSize: appConfigItem.autoscaling.desiredSize,
+        launchTemplateVersion: lt.version,
+        launchTemplateId: lt.launchTemplateId,
+        healthCheckGracePeriod: appConfigItem.autoscaling.healthCheckGracePeriod ?? undefined,
+        healthCheckType: appConfigItem.autoscaling.healthCheckType ?? undefined,
+        targetGroups: finalTargetGroups,
+        subnets,
+        lambdaKey,
+        cloudWatchLogKmsKey,
+        cloudWatchLogRetentionInDays,
+      },
+    );
+
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.AS3,
+      details: [
         {
-          id: 'AwsSolutions-AS3',
+          path: `${this.stackName}/AutoScalingGroup${pascalCase(appConfigItem.name)}${pascalCase(
+            appConfigItem.autoscaling.name,
+          )}/Resource`,
           reason: 'Scaling policies are not offered as a part of this solution',
         },
       ],
-    );
+    });
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM4,
+      details: [
+        {
+          path: `${this.stackName}/AutoScalingGroup${pascalCase(appConfigItem.name)}${pascalCase(
+            appConfigItem.autoscaling.name,
+          )}/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/Resource`,
+          reason: 'Custom resource Lambda role policy.',
+        },
+      ],
+    });
+
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM5,
+      details: [
+        {
+          path: `${this.stackName}/AutoScalingGroup${pascalCase(appConfigItem.name)}${pascalCase(
+            appConfigItem.autoscaling.name,
+          )}/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/DefaultPolicy/Resource`,
+          reason: 'Custom resource Lambda role policy.',
+        },
+      ],
+    });
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM4,
+      details: [
+        {
+          path: `${this.stackName}/AutoScalingGroup${pascalCase(appConfigItem.name)}${pascalCase(
+            appConfigItem.autoscaling.name,
+          )}/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/Resource`,
+          reason: 'Custom resource Lambda role policy.',
+        },
+      ],
+    });
+
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM5,
+      details: [
+        {
+          path: `${this.stackName}/AutoScalingGroup${pascalCase(appConfigItem.name)}${pascalCase(
+            appConfigItem.autoscaling.name,
+          )}/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
+          reason: 'Custom resource Lambda role policy.',
+        },
+      ],
+    });
+
+    return asg;
   }
 
-  private createNetworkLoadBalancer(appConfigItem: AppConfigItem, targetGroups: TargetGroupItem[] | undefined) {
-    if (appConfigItem.networkLoadBalancer) {
-      const subnets = this.getSubnets(appConfigItem.networkLoadBalancer.subnets ?? [], appConfigItem.vpc);
-      const nlb = new NetworkLoadBalancer(
-        this,
-        pascalCase(`AppNlb${appConfigItem.name}${appConfigItem.networkLoadBalancer?.name}`),
-        {
-          name: appConfigItem.networkLoadBalancer?.name,
-          appName: appConfigItem.name,
-          vpcName: appConfigItem.vpc,
-          subnets: subnets,
-          scheme: appConfigItem.networkLoadBalancer?.scheme ?? undefined,
-          deletionProtection: appConfigItem.networkLoadBalancer.deletionProtection ?? undefined,
-          crossZoneLoadBalancing: appConfigItem.networkLoadBalancer.crossZoneLoadBalancing ?? undefined,
-          accessLogsBucket: `aws-accelerator-elb-access-logs-${this.props.accountsConfig.getLogArchiveAccountId()}-${
-            cdk.Stack.of(this).region
-          }`,
-        },
-      );
+  private createNetworkLoadBalancer(
+    networkLoadBalancer: NetworkLoadBalancerConfig | undefined,
+    appName: string,
+    vpcName: string,
+    targetGroups: TargetGroupItem[] | undefined,
+    subnetMap: Map<string, string>,
+    accessLogsBucket: string,
+  ) {
+    if (networkLoadBalancer) {
+      const subnets = this.getSubnets(networkLoadBalancer.subnets ?? [], vpcName, subnetMap)!;
+      // if empty array is passed for subnets throw error that there are no subnets
+      // if subnets are not found which happens error is thrown in getSubnets function
+      if (!subnets) {
+        throw new Error(
+          `[customizations-application-stack] NLB subnets: ${networkLoadBalancer.subnets} not found in vpc ${vpcName}`,
+        );
+      }
+      const nlb = new NetworkLoadBalancer(this, pascalCase(`AppNlb${appName}${networkLoadBalancer.name}`), {
+        name: networkLoadBalancer.name,
+        ssmPrefix: this.props.prefixes.ssmParamName,
+        appName: appName,
+        vpcName: vpcName,
+        subnets: subnets,
+        scheme: networkLoadBalancer?.scheme ?? undefined,
+        deletionProtection: networkLoadBalancer.deletionProtection ?? undefined,
+        crossZoneLoadBalancing: networkLoadBalancer.crossZoneLoadBalancing ?? undefined,
+        accessLogsBucket,
+      });
 
-      for (const listener of appConfigItem.networkLoadBalancer.listeners ?? []) {
+      for (const listener of networkLoadBalancer.listeners ?? []) {
         const targetGroupValues = targetGroups! ?? [];
         const filteredTargetGroup = targetGroupValues.find(element => {
           return element.name === listener.targetGroup;
         });
         if (!filteredTargetGroup) {
-          throw new Error(
-            `[customizations-application-stack] NLB Listener ${listener.name} does not have a valid target group ${listener.targetGroup}`,
-          );
+          this.logger.error(`NLB Listener ${listener.name} does not have a valid target group ${listener.targetGroup}`);
+          throw new Error(`Configuration validation failed at runtime.`);
         }
-        new cdk.aws_elasticloadbalancingv2.CfnListener(
-          this,
-          pascalCase(`Listener${appConfigItem.name}${listener.name}`),
-          {
-            defaultActions: [
-              {
-                type: 'forward',
-                forwardConfig: {
-                  targetGroups: [
-                    {
-                      targetGroupArn: filteredTargetGroup.targetGroup.targetGroupArn,
-                    },
-                  ],
-                },
-                targetGroupArn: filteredTargetGroup.targetGroup.targetGroupArn,
+        const getCertificateValue = this.getCertificate(listener.certificate);
+        new cdk.aws_elasticloadbalancingv2.CfnListener(this, pascalCase(`Listener${appName}${listener.name}`), {
+          defaultActions: [
+            {
+              type: 'forward',
+              forwardConfig: {
+                targetGroups: [
+                  {
+                    targetGroupArn: filteredTargetGroup.targetGroup.targetGroupArn,
+                  },
+                ],
               },
-            ],
-            loadBalancerArn: nlb.networkLoadBalancerArn,
-            alpnPolicy: [listener.alpnPolicy!],
-            certificates: [{ certificateArn: this.getCertificate(listener.certificate) }],
-            port: listener.port!,
-            protocol: listener.protocol!,
-            sslPolicy: listener.sslPolicy!,
-          },
-        );
+              targetGroupArn: filteredTargetGroup.targetGroup.targetGroupArn,
+            },
+          ],
+          loadBalancerArn: nlb.networkLoadBalancerArn,
+          alpnPolicy: [listener.alpnPolicy!],
+          certificates: [{ certificateArn: getCertificateValue }],
+          port: listener.port!,
+          protocol: listener.protocol!,
+          sslPolicy: listener.sslPolicy!,
+        });
       }
+      return nlb;
+    } else {
+      return undefined;
     }
   }
 
@@ -466,28 +644,37 @@ export class ApplicationsStack extends AcceleratorStack {
       if (certificate.match('\\arn:*')) {
         return certificate;
       } else {
-        return cdk.aws_ssm.StringParameter.valueForStringParameter(this, `/accelerator/acm/${certificate}/arn`);
+        return cdk.aws_ssm.StringParameter.valueForStringParameter(
+          this,
+          this.getSsmPath(SsmResourceType.ACM_CERT, [certificate]),
+        );
       }
     }
     return undefined;
   }
-  private getSubnets(subnets: string[], vpc: string) {
+  private getSubnets(subnets: string[], vpc: string, subnetMap: Map<string, string>) {
     const output: string[] = [];
     for (const subnet of subnets ?? []) {
-      const subnetId = this.subnetMap.get(`${vpc}_${subnet}`);
+      const subnetId = subnetMap.get(`${vpc}_${subnet}`);
       if (!subnetId) {
-        throw new Error(`[customizations-application-stack] Subnet ${subnet} not found in VPC ${vpc}`);
+        this.logger.error(`Subnet ${subnet} not found in VPC ${vpc}`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
       output.push(subnetId);
     }
-    return output;
+    if (output.length === 0) {
+      return undefined;
+    } else {
+      return output;
+    }
   }
-  private getSecurityGroups(securityGroups: string[], vpc: string) {
+  private getSecurityGroups(securityGroups: string[], vpc: string, securityGroupMap: Map<string, string>) {
     const output: string[] = [];
     for (const sg of securityGroups ?? []) {
-      const sgId = this.securityGroupMap.get(`${vpc}_${sg}`);
+      const sgId = securityGroupMap.get(`${vpc}_${sg}`);
       if (!sgId) {
-        throw new Error(`[customization-stack] Security group ${sg} does not exist in VPC ${vpc}`);
+        this.logger.error(`Security group ${sg} does not exist in VPC ${vpc}`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
       output.push(sgId);
     }
@@ -498,15 +685,21 @@ export class ApplicationsStack extends AcceleratorStack {
     }
   }
 
-  private createTargetGroup(appConfigItem: AppConfigItem) {
+  private createTargetGroup(
+    targetGroupsInput: TargetGroupItemConfig[] | undefined,
+    vpcMap: Map<string, string>,
+    vpcName: string,
+    appName: string,
+  ) {
     const output = [];
-    const vpcId = this.vpcMap.get(appConfigItem.vpc);
+    const vpcId = vpcMap.get(vpcName);
     if (!vpcId) {
-      throw new Error(`[customizations-application-stack] Unable to locate VPC ${appConfigItem.vpc}`);
+      this.logger.error(`Unable to locate VPC ${vpcName}`);
+      throw new Error(`Configuration validation failed at runtime.`);
     }
-    if (appConfigItem.targetGroups) {
-      for (const targetGroup of appConfigItem.targetGroups!) {
-        const tg = new TargetGroup(this, pascalCase(`AppTargetGroup${appConfigItem.name}${targetGroup.name}`), {
+    if (targetGroupsInput) {
+      for (const targetGroup of targetGroupsInput) {
+        const tg = new TargetGroup(this, pascalCase(`AppTargetGroup${appName}${targetGroup.name}`), {
           name: targetGroup.name,
           port: targetGroup.port,
           protocol: targetGroup.protocol,
@@ -522,8 +715,8 @@ export class ApplicationsStack extends AcceleratorStack {
         output.push(outputItem);
 
         this.ssmParameters.push({
-          logicalId: pascalCase(`SsmTg${appConfigItem.name}${appConfigItem.vpc}${targetGroup.name}Arn`),
-          parameterName: `/accelerator/application/targetGroup/${appConfigItem.name}/${appConfigItem.vpc}/${targetGroup.name}/arn`,
+          logicalId: pascalCase(`SsmTg${appName}${vpcName}${targetGroup.name}Arn`),
+          parameterName: this.getSsmPath(SsmResourceType.TARGET_GROUP, [appName, vpcName, targetGroup.name]),
           stringValue: tg.targetGroupArn,
         });
       }

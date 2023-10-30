@@ -1,45 +1,45 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`ReportDefinition Construct(EbsDefaultEncryption):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CustomEbsDefaultVolumeEncryptionCustomResourceProviderHandler6551B35B": Object {
-      "DependsOn": Array [
+{
+  "Resources": {
+    "CustomEbsDefaultVolumeEncryptionCustomResourceProviderHandler6551B35B": {
+      "DependsOn": [
         "CustomEbsDefaultVolumeEncryptionCustomResourceProviderRole7A4FA6A8",
       ],
-      "Properties": Object {
-        "Code": Object {
+      "Properties": {
+        "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomEbsDefaultVolumeEncryptionCustomResourceProviderRole7A4FA6A8",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomEbsDefaultVolumeEncryptionCustomResourceProviderLogGroupB7212213": Object {
+    "CustomEbsDefaultVolumeEncryptionCustomResourceProviderLogGroupB7212213": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "CustomKey1E6D0D07",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomEbsDefaultVolumeEncryptionCustomResourceProviderHandler6551B35B",
               },
             ],
@@ -50,31 +50,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomEbsDefaultVolumeEncryptionCustomResourceProviderRole7A4FA6A8": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomEbsDefaultVolumeEncryptionCustomResourceProviderRole7A4FA6A8": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "ec2:DisableEbsEncryptionByDefault",
                     "ec2:EnableEbsEncryptionByDefault",
                     "ec2:ModifyEbsDefaultKmsKeyId",
@@ -84,13 +84,13 @@ Object {
                   "Resource": "*",
                   "Sid": "EC2",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "kms:DescribeKey",
                   ],
                   "Effect": "Allow",
-                  "Resource": Object {
-                    "Fn::GetAtt": Array [
+                  "Resource": {
+                    "Fn::GetAtt": [
                       "EbsEncryptionKmsKeyFD1E785E",
                       "Arn",
                     ],
@@ -106,21 +106,21 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CustomKey1E6D0D07": Object {
+    "CustomKey1E6D0D07": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::333333333333:root",
@@ -137,40 +137,40 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "EbsDefaultVolumeEncryption55012F7A": Object {
+    "EbsDefaultVolumeEncryption55012F7A": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomEbsDefaultVolumeEncryptionCustomResourceProviderLogGroupB7212213",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomEbsDefaultVolumeEncryptionCustomResourceProviderHandler6551B35B",
             "Arn",
           ],
         },
-        "kmsKeyId": Object {
+        "kmsKeyId": {
           "Ref": "EbsEncryptionKmsKeyFD1E785E",
         },
       },
       "Type": "Custom::EbsDefaultVolumeEncryption",
       "UpdateReplacePolicy": "Delete",
     },
-    "EbsEncryptionKmsKeyFD1E785E": Object {
+    "EbsEncryptionKmsKeyFD1E785E": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::333333333333:root",

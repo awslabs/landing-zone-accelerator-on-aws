@@ -1,0 +1,630 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`UsersGroupsMetadata Construct(IdentityCenterGetInstanceId):  Snapshot Test 1`] = `
+{
+  "Resources": {
+    "CloudWatchKey9B181885": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "LambdaKey984A39D9": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunction13963D86": {
+      "DependsOn": [
+        "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunctionServiceRoleDefaultPolicy1288DCD7",
+        "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunctionServiceRole7A2BFF02",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Accelerator deployed UsersGroupsMetadata_111111111111Assignment1GroupLzaAcceleratorGroup custom resource lambda function.",
+        "Handler": "index.handler",
+        "KmsKeyArn": {
+          "Fn::GetAtt": [
+            "LambdaKey984A39D9",
+            "Arn",
+          ],
+        },
+        "MemorySize": 256,
+        "Role": {
+          "Fn::GetAtt": [
+            "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunctionServiceRole7A2BFF02",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 300,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunctionResourceLogGroup322901B0": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "CloudWatchKey9B181885",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunction13963D86",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 365,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunctionServiceRole7A2BFF02": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Lambda needs Managed policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunctionServiceRoleDefaultPolicy1288DCD7": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "AWS Lambda needs Managed policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "identitystore:ListGroups",
+                "identitystore:ListUsers",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunctionServiceRoleDefaultPolicy1288DCD7",
+        "Roles": [
+          {
+            "Ref": "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunctionServiceRole7A2BFF02",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupResource16AEE266": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupframeworkonEventCE25C94C",
+            "Arn",
+          ],
+        },
+        "identityStoreId": "d-906751796e",
+        "principalName": "lza-accelerator-group",
+        "principalType": "GROUP",
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupframeworkonEventCE25C94C": {
+      "DependsOn": [
+        "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupframeworkonEventServiceRoleDefaultPolicyA7B1C743",
+        "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupframeworkonEventServiceRoleC87E6079",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/UsersGroupsMetadata/UsersGroupsMetadata_111111111111Assignment1GroupLzaAcceleratorGroup/Resource)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunction13963D86",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupframeworkonEventServiceRoleC87E6079",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupframeworkonEventServiceRoleC87E6079": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupframeworkonEventServiceRoleDefaultPolicyA7B1C743": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunction13963D86",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupFunction13963D86",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "GroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupframeworkonEventServiceRoleDefaultPolicyA7B1C743",
+        "Roles": [
+          {
+            "Ref": "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1GroupLzaAcceleratorGroupframeworkonEventServiceRoleC87E6079",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunction6045F329": {
+      "DependsOn": [
+        "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunctionServiceRoleDefaultPolicyF58E7B84",
+        "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunctionServiceRole7C5198B5",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Accelerator deployed UsersGroupsMetadata_111111111111Assignment1UserLzaAcceleratorUser custom resource lambda function.",
+        "Handler": "index.handler",
+        "KmsKeyArn": {
+          "Fn::GetAtt": [
+            "LambdaKey984A39D9",
+            "Arn",
+          ],
+        },
+        "MemorySize": 256,
+        "Role": {
+          "Fn::GetAtt": [
+            "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunctionServiceRole7C5198B5",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 300,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunctionResourceLogGroupEE1D2883": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "CloudWatchKey9B181885",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunction6045F329",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 365,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunctionServiceRole7C5198B5": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Lambda needs Managed policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunctionServiceRoleDefaultPolicyF58E7B84": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "AWS Lambda needs Managed policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "identitystore:ListGroups",
+                "identitystore:ListUsers",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunctionServiceRoleDefaultPolicyF58E7B84",
+        "Roles": [
+          {
+            "Ref": "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunctionServiceRole7C5198B5",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserResource62876E34": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserframeworkonEvent05459268",
+            "Arn",
+          ],
+        },
+        "identityStoreId": "d-906751796e",
+        "principalName": "lza-accelerator-user",
+        "principalType": "USER",
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserframeworkonEvent05459268": {
+      "DependsOn": [
+        "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserframeworkonEventServiceRoleDefaultPolicyF910E0E5",
+        "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserframeworkonEventServiceRoleB0A3C655",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/UsersGroupsMetadata/UsersGroupsMetadata_111111111111Assignment1UserLzaAcceleratorUser/Resource)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunction6045F329",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserframeworkonEventServiceRoleB0A3C655",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserframeworkonEventServiceRoleB0A3C655": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserframeworkonEventServiceRoleDefaultPolicyF910E0E5": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunction6045F329",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserFunction6045F329",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "rsGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserframeworkonEventServiceRoleDefaultPolicyF910E0E5",
+        "Roles": [
+          {
+            "Ref": "UsersGroupsMetadataUsersGroupsMetadata111111111111Assignment1UserLzaAcceleratorUserframeworkonEventServiceRoleB0A3C655",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+  },
+}
+`;

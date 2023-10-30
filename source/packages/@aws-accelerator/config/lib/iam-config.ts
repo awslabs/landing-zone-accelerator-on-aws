@@ -14,14 +14,27 @@
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
-import { AccountsConfig } from './accounts-config';
 
+import { createLogger } from '@aws-accelerator/utils';
+
+import { AccountsConfig } from './accounts-config';
+import { ReplacementsConfig } from './replacements-config';
 import * as t from './common-types';
+
+const logger = createLogger(['iam-config']);
 
 /**
  * IAM Configuration items.
  */
 export class IamConfigTypes {
+  /**
+   * IAM policy configuration
+   */
+  static readonly policyConfig = t.interface({
+    name: t.nonEmptyString,
+    policy: t.nonEmptyString,
+  });
+
   /**
    * SAML provider configuration
    */
@@ -45,6 +58,42 @@ export class IamConfigTypes {
   static readonly userSetConfig = t.interface({
     deploymentTargets: t.deploymentTargets,
     users: t.array(this.userConfig),
+  });
+
+  /**
+   * Customer Managed Policy Reference Config
+   */
+  static readonly customerManagedPolicyReferenceConfig = t.interface({
+    name: t.nonEmptyString,
+    path: t.optional(t.nonEmptyString),
+  });
+
+  /**
+   * Identity Center Permission Boundary Config
+   */
+  static readonly permissionsBoundaryConfig = t.interface({
+    awsManagedPolicyName: t.optional(t.nonEmptyString),
+    customerManagedPolicy: t.optional(this.customerManagedPolicyReferenceConfig),
+  });
+
+  /**
+   * Identity Center IAM policies config
+   */
+  static readonly identityCenterPoliciesConfig = t.interface({
+    awsManaged: t.optional(t.array(t.nonEmptyString)),
+    customerManaged: t.optional(t.array(t.nonEmptyString)),
+    acceleratorManaged: t.optional(t.array(t.nonEmptyString)),
+    inlinePolicy: t.optional(t.nonEmptyString),
+    permissionsBoundary: t.optional(this.permissionsBoundaryConfig),
+  });
+
+  /**
+   * Identity Center Permission Set configuration
+   */
+  static readonly identityCenterPermissionSetConfig = t.interface({
+    name: t.nonEmptyString,
+    policies: t.optional(this.identityCenterPoliciesConfig),
+    sessionDuration: t.optional(t.number),
   });
 
   /**
@@ -79,7 +128,7 @@ export class IamConfigTypes {
   static readonly assumedByTypeEnum = t.enums('AssumedByConfigType', ['service', 'account', 'provider']);
 
   /**
-   * Assumedby configuration
+   * AssumedBy configuration
    */
   static readonly assumedByConfig = t.interface({
     /**
@@ -89,7 +138,43 @@ export class IamConfigTypes {
     /**
      * IAM principal of either service, account or provider type.
      *
-     * IAM principal of sns service type (i.e. new ServicePrincipal('sns.amazonaws.com')), which can assume this role.
+     * Service principals are defined by the service and follow the pattern service.domain for example:
+     *
+     * ```
+     * sns.amazonaws.com
+     * ```
+     * or
+     * ```
+     * sns.amazonaws.com.cn
+     * ```
+     *
+     * Account principals can be defined using either the account ID (with quotes), the account arn or the name assigned to the account in the accounts-config.yaml.
+     *
+     *
+     * @example
+     * ```
+     * assumedBy:
+     *   - type: account
+     *     principal: '111111111111'
+     * ```
+     * @example
+     * ```
+     * assumedBy:
+     *   - type: account
+     *     principal: Audit
+     * ```
+     * @example
+     * ```
+     * assumedBy:
+     *   - type: account
+     *     principal: 'arn:aws:iam::111111111111:root'
+     * ```
+     * @example
+     * ```
+     * assumedBy:
+     *   - type: service
+     *     principal: 'ssm.amazonaws.com'
+     * ```
      */
     principal: t.optional(t.nonEmptyString),
   });
@@ -140,36 +225,25 @@ export class IamConfigTypes {
   });
 
   /**
-   * IAM policy configuration
-   */
-  static readonly policyConfig = t.interface({
-    name: t.nonEmptyString,
-    policy: t.nonEmptyString,
-  });
-
-  /**
-   * Identity Center Permission Set configuration
-   */
-  static readonly identityCenterPermissionSetConfig = t.interface({
-    name: t.nonEmptyString,
-    policies: t.optional(this.policiesConfig),
-    sessionDuration: t.optional(t.number),
-  });
-
-  /**
    * An enum for assume by configuration
    *
    * Possible values user or group
    */
   static readonly principalTypeEnum = t.enums('PrincipalType', ['USER', 'GROUP']);
 
+  static readonly identityCenterAssignmentPrincipalConfig = t.interface({
+    type: t.nonEmptyString,
+    name: t.nonEmptyString,
+  });
+
   /**
    * Identity Center Assignment configuration
    */
   static readonly identityCenterAssignmentConfig = t.interface({
     permissionSetName: t.nonEmptyString,
-    principalId: t.nonEmptyString,
-    principalType: this.principalTypeEnum,
+    principalId: t.optional(t.nonEmptyString),
+    principalType: t.optional(this.principalTypeEnum),
+    principals: t.optional(t.array(this.identityCenterAssignmentPrincipalConfig)),
     deploymentTargets: t.deploymentTargets,
     name: t.nonEmptyString,
   });
@@ -179,6 +253,7 @@ export class IamConfigTypes {
    */
   static readonly identityCenterConfig = t.interface({
     name: t.nonEmptyString,
+    delegatedAdminAccount: t.optional(t.nonEmptyString),
     identityCenterPermissionSets: t.optional(t.array(this.identityCenterPermissionSetConfig)),
     identityCenterAssignments: t.optional(t.array(this.identityCenterAssignmentConfig)),
   });
@@ -188,6 +263,7 @@ export class IamConfigTypes {
    */
   static readonly policySetConfig = t.interface({
     deploymentTargets: t.deploymentTargets,
+    identityCenterDependency: t.optional(t.boolean),
     policies: t.array(this.policyConfig),
   });
 
@@ -232,6 +308,7 @@ export class IamConfigTypes {
     imagePath: t.nonEmptyString,
     securityGroupInboundSources: t.array(t.nonEmptyString),
     instanceRole: t.nonEmptyString,
+    enableTerminationProtection: t.optional(t.boolean),
     subnetName: t.nonEmptyString,
     userDataScripts: t.array(this.activeDirectoryConfigurationInstanceUserDataConfig),
     adGroups: t.array(t.nonEmptyString),
@@ -277,7 +354,7 @@ export class IamConfigTypes {
     description: t.optional(t.nonEmptyString),
     edition: t.enums('DirectorySize', ['Standard', 'Enterprise']),
     vpcSettings: IamConfigTypes.managedActiveDirectoryVpcSettingsConfig,
-    resolverRuleName: t.nonEmptyString,
+    resolverRuleName: t.optional(t.nonEmptyString),
     secretConfig: t.optional(this.managedActiveDirectorySecretConfig),
     sharedOrganizationalUnits: t.optional(this.managedActiveDirectorySharedOuConfig),
     sharedAccounts: t.optional(t.array(t.nonEmptyString)),
@@ -339,17 +416,17 @@ export class ManagedActiveDirectorySecretConfig
   implements t.TypeOf<typeof IamConfigTypes.managedActiveDirectorySecretConfig>
 {
   /**
-   * Active directory admin user secret name. LZA will prefix /accelerator/ad-user/<DirectoryName>/ for the secret name
+   * Active directory admin user secret name. Accelerator will prefix /accelerator/ad-user/<DirectoryName>/ for the secret name
    * For example when secret name value was given as admin-secret and directory name is AcceleratorManagedActiveDirectory
-   * LZA will create secret name as /accelerator/ad-user/AcceleratorManagedActiveDirectory/admin-secret
+   * Accelerator will create secret name as /accelerator/ad-user/AcceleratorManagedActiveDirectory/admin-secret
    */
   readonly adminSecretName: string | undefined = undefined;
   /**
-   * Active directory admin user secret account name. When no account name provided LZA will create the secret into the account MAD exists
+   * Active directory admin user secret account name. When no account name provided Accelerator will create the secret into the account MAD exists
    */
   readonly account: string | undefined = undefined;
   /**
-   * Active directory admin user secret region name. When no region name provided LZA will create the secret into the region MAD exists
+   * Active directory admin user secret region name. When no region name provided Accelerator will create the secret into the region MAD exists
    */
   readonly region: t.Region = 'us-east-1';
 }
@@ -359,7 +436,7 @@ export class ManagedActiveDirectorySecretConfig
  *
  * User data scripts to create users, groups, password policy.
  *
- * LZA can be provision users, groups when following user data scripts are provided, these scripts are part of LZA best practices
+ * Accelerator can provision users, groups when following user data scripts are provided, these scripts are part of Accelerator sample configuration
  *  @example
  * ```
  *      userDataScripts:
@@ -440,7 +517,7 @@ export class ActiveDirectoryUserConfig implements t.TypeOf<typeof IamConfigTypes
  * *{@link IamConfig} / {@link ManagedActiveDirectoryConfig} / {@link ActiveDirectoryConfigurationInstanceConfig}*
  *
  * Active directory configuration instance configuration. The machine will be used to configure and manage active directory configuration.
- * LZA can create user, groups when following configuration provided
+ * Accelerator can create user, groups when following configuration provided
  *
  * @example
  *
@@ -453,6 +530,7 @@ export class ActiveDirectoryUserConfig implements t.TypeOf<typeof IamConfigTypes
  *      securityGroupInboundSources:
  *        - 10.0.0.0/16
  *      instanceRole: EC2-Default-SSM-AD-Role
+ *      enableTerminationProtection: false
  *      userDataScripts:
  *        - scriptName: JoinDomain
  *          scriptFilePath: ad-config-scripts/Join-Domain.ps1
@@ -539,6 +617,11 @@ export class ActiveDirectoryConfigurationInstanceConfig
    */
   readonly instanceRole = '';
   /**
+   * Flag for Ec2 instance enable api termination protection
+   * @default false
+   */
+  readonly enableTerminationProtection: boolean | undefined = undefined;
+  /**
    * Ec2 instance subnet name
    */
   readonly subnetName = '';
@@ -583,7 +666,7 @@ export class ManagedActiveDirectoryLogConfig
   /**
    * Active directory log group name,  that will be used to receive the security logs from your domain controllers. We recommend pre-pending the name with /aws/directoryservice/, but that is not required.
    *
-   * @default undefined, LZA will create log group name as /aws/directoryservice/DirectoryServiceName
+   * @default undefined, Accelerator will create log group name as /aws/directoryservice/DirectoryServiceName
    */
   readonly groupName = '';
   /**
@@ -636,18 +719,23 @@ export class ManagedActiveDirectoryVpcSettingsConfig
  *    netBiosDomainName: example
  *    description: Example managed active directory
  *    edition: Enterprise
+ *    resolverRuleName: example-com-rule
+ *    vpcSettings:
+ *      vpcName: ManagedAdVpc
+ *      subnets:
+ *        - subnet1
+ *        - subnet2
  *    secretConfig:
  *      account: Audit
  *      region: us-east-1
  *      adminSecretName: admin
- *    resolverRuleName: example-com-rule
- *    vpcSettings:
- *      vpcName: MyVpc
- *      subnets:
- *        - subnet1
- *        - subnet2
+ *    sharedOrganizationalUnits:
+ *      organizationalUnits:
+ *        - Root
+ *      excludedAccounts:
+ *        - Management
  *    logs:
- *      logGroupName: /aws/directoryservice/AcceleratorManagedActiveDirectory
+ *      groupName: /aws/directoryservice/AcceleratorManagedActiveDirectory
  *      retentionInDays: 30
  * ```
  */
@@ -695,35 +783,40 @@ export class ManagedActiveDirectoryConfig implements t.TypeOf<typeof IamConfigTy
    */
   readonly vpcSettings: ManagedActiveDirectoryVpcSettingsConfig = new ManagedActiveDirectoryVpcSettingsConfig();
   /**
-   * Active directory route 53 resolver rule name
+   * (OPTIONAL) Active directory route 53 resolver rule name
+   *
+   * @remarks
+   * This is the `name` property of a Route 53 resolver rule as defined in
+   * network-config.yaml {@link ResolverRuleConfig}. When this property is defined,
+   * the configured resolver rule will be updated with the IP addresses of the Managed AD instances.
    */
-  readonly resolverRuleName = '';
+  readonly resolverRuleName: string | undefined = undefined;
   /**
-   * Active directory admin user secret configuration.
+   * (OPTIONAL) Active directory admin user secret configuration.
    *
    * *{@link IamConfig} / {@link ManagedActiveDirectoryConfig} / {@link ManagedActiveDirectorySecretConfig}
    */
   readonly secretConfig: ManagedActiveDirectorySecretConfig | undefined = undefined;
   /**
-   * Active directory shared ou configuration.
+   * (OPTIONAL) Active directory shared ou configuration.
    *
    * *{@link IamConfig} / {@link ManagedActiveDirectoryConfig} / {@link ManagedActiveDirectorySharedOuConfig}
    */
   readonly sharedOrganizationalUnits: ManagedActiveDirectorySharedOuConfig | undefined = undefined;
   /**
-   * Active directory shared account name list.
+   * (OPTIONAL) Active directory shared account name list.
    */
   readonly sharedAccounts: string[] | undefined = undefined;
   /**
    * *{@link IamConfig} / {@link ManagedActiveDirectoryConfig} / {@link ManagedActiveDirectoryLogConfig}
    *
-   * Active directory logs configuration
+   * (OPTIONAL) Active directory logs configuration
    */
   readonly logs: ManagedActiveDirectoryLogConfig | undefined = undefined;
   /**
    * *{@link IamConfig} / {@link ManagedActiveDirectoryConfig} / {@link ActiveDirectoryConfigurationInstanceConfig}*
    *
-   * Active directory instance to configure active directory
+   * (OPTIONAL) Active directory instance to configure active directory
    */
   readonly activeDirectoryConfigurationInstance: ActiveDirectoryConfigurationInstanceConfig | undefined = undefined;
 }
@@ -834,13 +927,13 @@ export class UserSetConfig implements t.TypeOf<typeof IamConfigTypes.userSetConf
  */
 export class PoliciesConfig implements t.TypeOf<typeof IamConfigTypes.policiesConfig> {
   /**
-   * List of AWS managed policies
+   * List of AWS managed policies. Values can be policy arn or policy name
    */
-  readonly awsManaged: string[] = [];
+  readonly awsManaged: string[] | undefined = undefined;
   /**
    * List of Customer managed policies
    */
-  readonly customerManaged: string[] = [];
+  readonly customerManaged: string[] | undefined = undefined;
 }
 
 /**
@@ -903,13 +996,36 @@ export class GroupSetConfig implements t.TypeOf<typeof IamConfigTypes.groupSetCo
 /**
  * *{@link IamConfig} / {@link RoleSetConfig} / {@link RoleConfig} / {@link AssumedByConfig}*
  *
- * Assumedby configuration
+ * AssumedBy configuration
  *
+ * Service principal:
  * @example
  * ```
  * - principal: ec2.amazonaws.com
  *   type: service
  * ```
+ *
+ * Account principals can be defined using either the account ID (with quotes), the account arn or the name assigned to the account in the accounts-config.yaml.
+ *
+ *
+ * @example
+ * ```
+ * assumedBy:
+ *   - type: account
+ *     principal: '111111111111'
+ * ```
+ * @example
+ * ```
+ * assumedBy:
+ *   - type: account
+ *     principal: Audit
+ * ```
+ * @example
+ * ```
+ * assumedBy:
+ *   - type: account
+ *     principal: 'arn:aws:iam::111111111111:root'
+ * ``
  */
 export class AssumedByConfig implements t.TypeOf<typeof IamConfigTypes.assumedByConfig> {
   /**
@@ -974,25 +1090,38 @@ export class RoleConfig implements t.TypeOf<typeof IamConfigTypes.roleConfig> {
  *
  * @example
  * ```
-identityCenter:
-  name: identityCenter1
-  identityCenterPermissionSets:
-    - name: PermissionSet1
-      policies:
-        awsManaged:
-          - arn:aws:iam::aws:policy/AdministratorAccess
-        customerManaged:
-          - ResourceConfigurationCollectorPolicy
-      sessionDuration: 60
-
-  identityCenterAssignments:
-    - name: Assignment1
-      permissionSetName: PermissionSet1
-      principalId: "a4e81468-1001-70f0-9c12-56a6aa967ca4"
-      principalType: USER
-      deploymentTargets:
-        accounts:
-          - LogArchive
+ * identityCenter:
+ *  name: identityCenter1
+ *  delegatedAdminAccount: Audit
+ * identityCenterPermissionSets:
+ *   - name: PermissionSet1
+ *     policies:
+ *       awsManaged:
+ *         - arn:aws:iam::aws:policy/AdministratorAccess
+ *         - PowerUserAccess
+ *       customerManaged:
+ *         - ResourceConfigurationCollectorPolicy
+ *       acceleratorManaged:
+ *         - AcceleratorManagedPolicy01
+ *         - AcceleratorManagedPolicy02
+ *       inlinePolicy: iam-policies/sso-permissionSet1-inline-policy.json
+ *       permissionsBoundary:
+ *         customerManagedPolicy:
+ *           name: AcceleratorManagedPolicy
+ *           path: /
+ *         awsManagedPolicyName: PowerUserAccess
+ *     sessionDuration: 60
+ *  identityCenterAssignments:
+ *   - name: Assignment1
+ *     permissionSetName: PermissionSet1
+ *     principals:
+ *       - type: USER
+ *         name: accelerator
+ *       - type: GROUP
+ *         name: admin
+ *     deploymentTargets:
+ *       accounts:
+ *         - LogArchive
  * ```
  */
 
@@ -1003,34 +1132,212 @@ export class IdentityCenterConfig implements t.TypeOf<typeof IamConfigTypes.iden
   readonly name: string = '';
 
   /**
-   * List of PermissionSets
+   * Override for Delegated Admin Account
+   *
+   *  @remarks All Accelerator managed Identity Center Permission Sets and Assignments must be removed before changing the service's delegated administrator. To change this property:
+   *
+   *  Remove or comment out the existing PermissionSets and Assignments from identityCenter configuration from iam-config.yaml.
+   *  Important: You must leave identityCenter, name, and delegatedAdminAccount.
+   *  Run the pipeline to remove the resources.
+   *  Add or uncomment the desired identityCenter configuration to iam-config.yaml.
+   *  Set the delegatedAdminAccount property to the desired new delegated administrator account.
+   *  Run the pipeline to update the delegated admin and create Identity Center resources.
    */
-  readonly identityCenterPermissionSets: IdentityCenterPermissionSetConfig[] = [];
+  readonly delegatedAdminAccount: string | undefined = undefined;
 
   /**
+   * *{@link IamConfig} / {@link IdentityCenterConfig} / {@link IdentityCenterPermissionSetConfig}*
+   *
+   * List of PermissionSets
+   */
+  readonly identityCenterPermissionSets: IdentityCenterPermissionSetConfig[] | undefined = undefined;
+
+  /**
+   * *{@link IamConfig} / {@link IdentityCenterConfig} / {@link IdentityCenterAssignmentConfig}*
+   *
    * List of Assignments
    */
-  readonly identityCenterAssignments: IdentityCenterAssignmentConfig[] = [];
+  readonly identityCenterAssignments: IdentityCenterAssignmentConfig[] | undefined = undefined;
 }
 
 /**
- * *{@link IamConfig} / {@link IdentityCenterPermissionSetConfig}*
+ * *{@link IamConfig} / {@link PolicySetConfig} / {@link PolicyConfig}*
+ * Use this configuration to define accelerator managed IAM managed policies.
+ *
+ * @remarks Initial set of permissions to add to this policy document are read from the input file provided in policy JSON file.
+ *
+ * @example
+ * ```
+ * - name: Default-Boundary-Policy
+ *   policy: path/to/policy.json
+ * ```
+ */
+export class PolicyConfig implements t.TypeOf<typeof IamConfigTypes.policyConfig> {
+  /**
+   * The name of the managed policy.
+   */
+  readonly name: string = '';
+  /**
+   * A JSON file containing policy boundary definition.
+   */
+  readonly policy: string = '';
+}
+
+/**
+ * *{@link IamConfig} / {@link IdentityCenterConfig} / {@link PermissionsBoundaryConfig} / {@link CustomerManagedPolicyReferenceConfig}*
+ * 
+ * @example
+ * ```
+ * permissionsBoundary:
+      customerManagedPolicy:
+        name: AcceleratorManagedPolicy
+        path: /
+ * ```
+ */
+export class CustomerManagedPolicyReferenceConfig
+  implements t.TypeOf<typeof IamConfigTypes.customerManagedPolicyReferenceConfig>
+{
+  /**
+   * Identity Center PermissionSet permissions boundary customer managed policy name.
+   *
+   * @remarks The name of the IAM policy that you have configured in each account where you want to deploy your permission set.
+   * If you want use accelerator deployed customer managed policy, specify the name from policySets object of iam-config.yaml file.
+   *
+   * {@link http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-sso-permissionset-customermanagedpolicyreference.html#cfn-sso-permissionset-customermanagedpolicyreference-name | CustomerManagedPolicyReference} name.
+   */
+  readonly name: string = '';
+  /**
+   * The path to the IAM policy that you have configured in each account where you want to deploy your permission set.
+   *
+   * @remarks The default is `/` . For more information, see [Friendly names and paths](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-friendly-names) in the *IAM User Guide* .
+   */
+  readonly path: string | undefined = undefined;
+}
+
+/**
+ * *{@link IamConfig} / {@link IdentityCenterConfig} / {@link PermissionsBoundaryConfig}*
+ *
+ * Specify either customerManagedPolicy to use the name and path of a customer managed policy, or managedPolicy to use the ARN of an AWS managed policy.
+ *
+ * @example
+ * ```
+ *  permissionsBoundary:
+ *    customerManagedPolicy:
+ *      name: AcceleratorManagedPolicy
+ *      path: /
+ *      awsManagedPolicyName: PowerUserAccess
+ * ```
+ */
+export class PermissionsBoundaryConfig implements t.TypeOf<typeof IamConfigTypes.permissionsBoundaryConfig> {
+  /**
+   * The AWS managed policy name that you want to attach to a permission set as a permissions boundary.
+   *
+   * @remarks You must have an IAM policy that matches the name and path in each AWS account where you want to deploy your permission set.
+   *
+   */
+  readonly awsManagedPolicyName: string | undefined = undefined;
+  /**
+   * Specifies the name and path of a customer managed policy.
+   *
+   * @remarks You must have an IAM policy that matches the name and path in each AWS account where you want to deploy your permission set.
+   *
+   * {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-sso-permissionset-permissionsboundary.html#cfn-sso-permissionset-permissionsboundary-customermanagedpolicyreference | CustomerManagedPolicyReference}
+   *
+   * @see {@link IamConfig} / {@link IdentityCenterConfig} / {@link PermissionsBoundaryConfig} / {@link CustomerManagedPolicyReferenceConfig}
+   */
+  readonly customerManagedPolicy: CustomerManagedPolicyReferenceConfig | undefined = undefined;
+}
+
+/**
+ * *{@link IamConfig} / {@link IdentityCenterConfig} / {@link IdentityCenterPoliciesConfig}*
+ *
+ * Identity Center Permission Set Policy Configuration
+ *
+ * @example
+ * ```
+ *     policies:
+ *       awsManaged:
+ *         - arn:aws:iam::aws:policy/AdministratorAccess
+ *         - PowerUserAccess
+ *       customerManaged:
+ *         - ResourceConfigurationCollectorPolicy
+ *       acceleratorManaged:
+ *         - AcceleratorManagedPolicy01
+ *         - AcceleratorManagedPolicy02
+ *       inlinePolicy: iam-policies/sso-permissionSet1-inline-policy.json
+ *       permissionsBoundary:
+ *         customerManagedPolicy:
+ *           name: AcceleratorManagedPolicy
+ *           path: /
+ *         awsManagedPolicyName: PowerUserAccess
+ * ```
+ */
+export class IdentityCenterPoliciesConfig implements t.TypeOf<typeof IamConfigTypes.identityCenterPoliciesConfig> {
+  /**
+   * List of AWS managed policies that would be attached to permission set.
+   *
+   * @remarks This list can contain policy name or policy arn
+   */
+  readonly awsManaged: string[] | undefined = undefined;
+  /**
+   * List of the names and paths of the customer managed policies that would be attached to permission set.
+   *
+   * @remarks This list can contain only existing customer managed policy names, Accelerator expect these policies would be present prior deployment.
+   */
+  readonly customerManaged: string[] | undefined = undefined;
+  /**
+   * List of the names customer managed policies that would be attached to permission set.
+   *
+   * @remarks Specify the names of policies created by Accelerator solution. Solution will create these policies before attaching to permission set.
+   * To create policies through Accelerator and attach to permission set, you need to specify policies in policySets object of iam-config.yaml file with identityCenterDependency flag on.
+   * Accelerator managed policy name must be part of policySets object of iam-config.yaml file.
+   */
+  readonly acceleratorManaged: string[] | undefined = undefined;
+  /**
+   * The inline policy that is attached to the permission set.
+   *
+   * {@link http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-sso-permissionset.html#cfn-sso-permissionset-inlinepolicy | InlinePolicy} reference
+   */
+  readonly inlinePolicy: string | undefined = undefined;
+  /**
+   *
+   * Specifies the configuration of the AWS managed or customer managed policy that you want to set as a permissions boundary.
+   *
+   * @remarks Specify either customerManagedPolicy to use the name and path of a customer managed policy, or managedPolicy name to use the ARN of an AWS managed policy.
+   *
+   * @see {@link IamConfig} / {@link IdentityCenterConfig} / {@link PermissionsBoundaryConfig}
+   */
+  readonly permissionsBoundary: PermissionsBoundaryConfig | undefined = undefined;
+}
+
+/**
+ * *{@link IamConfig} / {@link IdentityCenterConfig} / {@link IdentityCenterPermissionSetConfig}*
  *
  * Identity Center Permission Set Configuration
  *
  * @example
  * ```
-name: identityCenter1
-identityCenterPermissionSets:
-  - name: PermissionSet1
-    policies:
-      awsManaged:
-        - arn:aws:iam::aws:policy/AdministratorAccess
-      customerManaged:
-        - ResourceConfigurationCollectorPolicy
-    sessionDuration: 60
-  * ```
-  */
+ * name: identityCenter1
+ * identityCenterPermissionSets:
+ *   - name: PermissionSet1
+ *     policies:
+ *       awsManaged:
+ *         - arn:aws:iam::aws:policy/AdministratorAccess
+ *         - PowerUserAccess
+ *       customerManaged:
+ *         - ResourceConfigurationCollectorPolicy
+ *       acceleratorManaged:
+ *         - AcceleratorManagedPolicy01
+ *         - AcceleratorManagedPolicy02
+ *       inlinePolicy: iam-policies/sso-permissionSet1-inline-policy.json
+ *       permissionsBoundary:
+ *         customerManagedPolicy:
+ *           name: AcceleratorManagedPolicy
+ *           path: /
+ *         awsManagedPolicyName: PowerUserAccess
+ *     sessionDuration: 60
+ * ```
+ */
 export class IdentityCenterPermissionSetConfig
   implements t.TypeOf<typeof IamConfigTypes.identityCenterPermissionSetConfig>
 {
@@ -1041,62 +1348,138 @@ export class IdentityCenterPermissionSetConfig
 
   /**
    * Policy Configuration for Customer Managed Permissions and AWS Managed Permissions
+   *
+   * @see {@link IamConfig} / {@link IdentityCenterConfig} / {@link IdentityCenterPoliciesConfig}
    */
-  readonly policies: PoliciesConfig | undefined = undefined;
+  readonly policies: IdentityCenterPoliciesConfig | undefined = undefined;
 
   /**
-   * A number value (in minutes) for length of SSO session Duration association with Permissions Set (Defaults to 60).
+   * A number value (in minutes). The length of time that the application user sessions are valid for in the ISO-8601 standard.
+   * @default undefined
    */
-  readonly sessionDuration: number = 60;
+  readonly sessionDuration: number | undefined = undefined;
 }
 
 /**
- * *{@link IamConfig} / {@link IdentityCenterAssignmentConfig}*
+ * *{@link IamConfig} / {@link IdentityCenterConfig} / {@link IdentityCenterAssignmentPrincipalConfig}*
  *
- * Identity Center Assignment Configuration
+ * Identity Center Permission Set Assignment Principal Configuration
+ *
+ * @remarks Use this configuration to provide principals of USER or GROUP type for assignment.
  *
  * @example
  * ```
-identityCenterAssignments:
-  - name: Assignment1
-    permissionSetName: PermissionSet1
-    principalId: "a4e81468-1001-70f0-9c12-56a6aa967ca4"
-    principalType: USER
-    deploymentTargets:
-      accounts:
-        - LogArchive
-  - name: Assignment2
-    permissionSetName: PermissionSet2
-    principalId: "a4e81468-1001-70f0-9c12-56a6aa967ca4"
-    principalType: GROUP
-    deploymentTargets:
-      organizationalUnits:
-        - Security
-  * ```
-  */
+ * principals:
+ *   - type: USER
+ *     name: accelerator
+ *   - type: GROUP
+ *     name: admin
+ * ```
+ */
+export class IdentityCenterAssignmentPrincipalConfig
+  implements t.TypeOf<typeof IamConfigTypes.identityCenterAssignmentPrincipalConfig>
+{
+  /**
+   * Assignment principal type
+   *
+   * @remarks Possible value for this property can be USER or GROUP
+   */
+  readonly type: string = '';
+  /**
+   * Name of the principal
+   *
+   * @remarks Identity Center user or group name
+   */
+  readonly name: string = '';
+}
+
+/**
+ * *{@link IamConfig} / {@link IdentityCenterConfig} / {@link IdentityCenterAssignmentConfig}*
+ *
+ * Identity Center Assignment Configuration
+ *
+ * @remarks You cannot deploy Identity Center assignments to the Management account with a delegated administrator enabled. For more information, see https://docs.aws.amazon.com/singlesignon/latest/userguide/delegated-admin.html
+ *
+ * @example
+ * ```
+ * identityCenterAssignments:
+ *   - name: Assignment1
+ *     permissionSetName: PermissionSet1
+ *     principals:
+ *       - type: USER
+ *         name: accelerator
+ *       - type: GROUP
+ *         name: admin
+ *     principalId: "a4e81468-1001-70f0-9c12-56a6aa967ca4"
+ *     principalType: USER
+ *     deploymentTargets:
+ *       accounts:
+ *         - LogArchive
+ *   - name: Assignment2
+ *     permissionSetName: PermissionSet2
+ *     principals:
+ *       - type: USER
+ *         name: accelerator
+ *       - type: GROUP
+ *         name: admin
+ *     principalId: "a4e81468-1001-70f0-9c12-56a6aa967ca4"
+ *     principalType: GROUP
+ *     deploymentTargets:
+ *       organizationalUnits:
+ *         - Security
+ * ```
+ */
 export class IdentityCenterAssignmentConfig implements t.TypeOf<typeof IamConfigTypes.identityCenterAssignmentConfig> {
   /**
-   * The Name for the Assignment
+   * The Name for the Assignment.
    */
   readonly name: string = '';
 
   /**
-   * Arn of the Permission Set that will be used for the Assignment
+   * Permission Set name that will be used for the Assignment.
    */
   readonly permissionSetName: string = '';
 
   /**
    * PrincipalId that will be used for the Assignment
+   *
+   * @deprecated
+   * This is a temporary property and it has been deprecated.
+   * Please use principals property to specify principal name for assignment.
    */
-  readonly principalId: string = '';
+  readonly principalId: string | undefined = undefined;
 
   /**
-   * PrinipalType that will be used for the Assignment
+   * PrincipalType that will be used for the Assignment
+   *
+   * @deprecated
+   * This is a temporary property and it has been deprecated.
+   * Please use principals property to specify principal type for assignment.
    */
-  readonly principalType: t.TypeOf<typeof IamConfigTypes.principalTypeEnum> = 'USER';
+  readonly principalType: t.TypeOf<typeof IamConfigTypes.principalTypeEnum> | undefined = undefined;
 
   /**
-   * Role set deployment targets
+   * Assignment principal configuration list.
+   *
+   * @remarks
+   * Assignment principal's type can be either USER or GROUP.
+   * Every principal in the list needs type and the name of principal.
+   *
+   * @example
+   * ```
+   * principal:
+   *   - type: USER
+   *     name: accelerator
+   *   - type: GROUP
+   *     name: admin
+   * ```
+   *
+   * @see {@link IamConfig} / {@link IdentityCenterConfig} / {@link IdentityCenterAssignmentPrincipalConfig}
+   */
+  readonly principals: IdentityCenterAssignmentPrincipalConfig[] | undefined = undefined;
+
+  /**
+   * Identity Center assignment deployment targets
    */
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
 }
@@ -1142,28 +1525,6 @@ export class RoleSetConfig implements t.TypeOf<typeof IamConfigTypes.roleSetConf
 }
 
 /**
- * *{@link IamConfig} / {@link PolicySetConfig} / {@link PolicyConfig}*
- *
- * IAM policy configuration
- *
- * @example
- * ```
- * - name: Default-Boundary-Policy
- *   policy: path/to/policy.json
- * ```
- */
-export class PolicyConfig implements t.TypeOf<typeof IamConfigTypes.policyConfig> {
-  /**
-   * A name for the policy
-   */
-  readonly name: string = '';
-  /**
-   * A JSON file containing policy boundary definition
-   */
-  readonly policy: string = '';
-}
-
-/**
  * *{@link IamConfig} / {@link PolicySetConfig}*
  *
  * Policy set configuration
@@ -1174,6 +1535,7 @@ export class PolicyConfig implements t.TypeOf<typeof IamConfigTypes.policyConfig
  *   - deploymentTargets:
  *       organizationalUnits:
  *         - Root
+ *     identityCenterDependency: false
  *     policies:
  *       - name: Default-Boundary-Policy
  *         policy: path/to/policy.json
@@ -1184,6 +1546,20 @@ export class PolicySetConfig implements t.TypeOf<typeof IamConfigTypes.policySet
    * Policy set deployment targets
    */
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
+  /**
+   * Flag indicates if the policy is used in Identity Center PermissionSet assignments.
+   *
+   * @remarks When the policy is used in Identity Center PermissionSet assignments, policy must be present in each deployment target accounts of identityCenterAssignments.
+   * When this flag is set to true policy is created in dependency stack.
+   */
+  readonly identityCenterDependency: boolean | undefined = undefined;
+  /**
+   * List of Policies
+   *
+   * @remarks Use this configuration to define accelerator managed IAM managed policies.
+   *
+   * @see {@link IamConfig} / {@link PolicySetConfig} / {@link PolicyConfig}
+   */
   readonly policies: PolicyConfig[] = [];
 }
 
@@ -1208,6 +1584,9 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
    * providers:
    *  - name: <PROVIDER_NAME>
    *    metadataDocument: <METADATA_DOCUMENT_FILE>
+   * ```
+   *
+   * @see {@link IamConfig} / {@link SamlProviderConfig}
    */
   readonly providers: SamlProviderConfig[] = [];
 
@@ -1222,17 +1601,20 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
    *   - deploymentTargets:
    *       organizationalUnits:
    *         - Root
+   *     identityCenterDependency: false
    *     policies:
    *       - name: Default-Boundary-Policy
    *         policy: iam-policies/boundary-policy.json
    * ```
+   *
+   * @see {@link IamConfig} / {@link PolicySetConfig}
    */
   readonly policySets: PolicySetConfig[] = [];
 
   /**
    * Role sets configuration
    *
-   * To configure EC2-Default-SSM-AD-Role role to be assumed by ec2 service into Root and Infrastructure organizational units,
+   * @remarks To configure EC2-Default-SSM-AD-Role role to be assumed by ec2 service into Root and Infrastructure organizational units,
    * you need to provide following values for this parameter. This role will have AmazonSSMManagedInstanceCore, AmazonSSMDirectoryServiceAccess and CloudWatchAgentServerPolicy policy
    * with permission boundary defined by Default-Boundary-Policy
    *
@@ -1254,13 +1636,15 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
    *             - CloudWatchAgentServerPolicy
    *         boundaryPolicy: Default-Boundary-Policy
    * ```
+   *
+   * @see {@link IamConfig} / {@link RoleSetConfig}
    */
   readonly roleSets: RoleSetConfig[] = [];
 
   /**
    * Group set configuration
    *
-   * To configure IAM group named Administrators into Root and Infrastructure organizational units, you need to provide following values for this parameter.
+   * @remarks To configure IAM group named Administrators into Root and Infrastructure organizational units, you need to provide following values for this parameter.
    *
    * @example
    * ```
@@ -1274,13 +1658,15 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
    *           awsManaged:
    *             - AdministratorAccess
    * ```
+   *
+   * @see {@link IamConfig} / {@link GroupSetConfig}
    */
   readonly groupSets: GroupSetConfig[] = [];
 
   /**
    * User set configuration
    *
-   * To configure breakGlassUser01 user into Administrators in Management account, you need to provide following values for this parameter.
+   * @remarks To configure breakGlassUser01 user into Administrators in Management account, you need to provide following values for this parameter.
    *
    * @example
    * ```
@@ -1294,26 +1680,54 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
    *         boundaryPolicy: Default-Boundary-Policy
    * ```
    *
+   * @see {@link IamConfig} / {@link UserSetConfig}
+   *
    */
   readonly userSets: UserSetConfig[] = [];
 
   /**
+   *
    * Identity Center configuration
    *
-   * To configure Identity Center, you need to provide following values for this parameter.
+   * @remarks To configure Identity Center, you need to provide following values for this parameter.
    *
    * @example
    * ```
-   * idetityCenterPermissionSets:
-   *   - deploymentTargets:
-   *       organizationalUnits:
-   *         - Root
-   *     groups:
-   *       - name: Administrators
-   *         policies:
-   *           awsManaged:
-   *             - AdministratorAccess
+   * identityCenter:
+   *  name: identityCenter1
+   *  delegatedAdminAccount: Audit
+   *  identityCenterPermissionSets:
+   *    - name: PermissionSet1
+   *      policies:
+   *        awsManaged:
+   *          - arn:aws:iam::aws:policy/AdministratorAccess
+   *          - PowerUserAccess
+   *        customerManaged:
+   *          - ResourceConfigurationCollectorPolicy
+   *        acceleratorManaged:
+   *          - AcceleratorManagedPolicy01
+   *          - AcceleratorManagedPolicy02
+   *        inlinePolicy: iam-policies/sso-permissionSet1-inline-policy.json
+   *        permissionsBoundary:
+   *          customerManagedPolicy:
+   *            name: AcceleratorManagedPolicy
+   *            path: /
+   *          awsManagedPolicyName: PowerUserAccess
+   *      sessionDuration: 60
+   *   identityCenterAssignments:
+   *     - name: Assignment1
+   *       permissionSetName: PermissionSet1
+   *       principals:
+   *         - type: USER
+   *           name: accelerator
+   *         - type: GROUP
+   *           name: admin
+   *       deploymentTargets:
+   *         accounts:
+   *           - LogArchive
    * ```
+   *
+   * @see {@link IamConfig} / {@link IdentityCenterConfig}
    */
 
   readonly identityCenter: IdentityCenterConfig | undefined = undefined;
@@ -1321,7 +1735,7 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
   /**
    * Managed active directory configuration
    *
-   * To configure AWS Microsoft managed active directory of enterprise edition, along with LZA provisioned EC2 instance to pre configure directory users. group,
+   * @remarks To configure AWS Microsoft managed active directory of enterprise edition, along with accelerator provisioned EC2 instance to pre configure directory users. group,
    * you need to provide following values for this parameter.
    *
    * @example
@@ -1335,18 +1749,23 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
    *    netBiosDomainName: example
    *    description: Example managed active directory
    *    edition: Enterprise
-   *    adminSecret:
-   *      name: admin-secret
-   *      account: Audit
-   *      region: us-east-1
    *    resolverRuleName: example-com-rule
    *    vpcSettings:
-   *      vpcName: MyVpc
+   *      vpcName: ManagedAdVpc
    *      subnets:
    *        - subnet1
    *        - subnet2
+   *    secretConfig:
+   *      account: Audit
+   *      region: us-east-1
+   *      adminSecretName: admin
+   *    sharedOrganizationalUnits:
+   *      organizationalUnits:
+   *        - Root
+   *      excludedAccounts:
+   *        - Management
    *    logs:
-   *      logGroupName: /aws/directoryservice/AcceleratorManagedActiveDirectory
+   *      groupName: /aws/directoryservice/AcceleratorManagedActiveDirectory
    *      retentionInDays: 30
    *    activeDirectoryConfigurationInstance:
    *      instanceType: t3.large
@@ -1356,6 +1775,7 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
    *      securityGroupInboundSources:
    *        - 10.0.0.0/16
    *      instanceRole: EC2-Default-SSM-AD-Role
+   *      enableTerminationProtection: false
    *      userDataScripts:
    *        - scriptName: JoinDomain
    *          scriptFilePath: ad-config-scripts/Join-Domain.ps1
@@ -1416,6 +1836,8 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
    *            - aws-Provisioning
    *            - "*-View"
    * ```
+   *
+   * @see {@link IamConfig} / {@link ManagedActiveDirectoryConfig}
    */
   readonly managedActiveDirectories: ManagedActiveDirectoryConfig[] | undefined = undefined;
 
@@ -1430,10 +1852,13 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
   /**
    * Load from config file content
    * @param dir
+   * @param replacementsConfig
    * @returns
    */
-  static load(dir: string): IamConfig {
-    const buffer = fs.readFileSync(path.join(dir, IamConfig.FILENAME), 'utf8');
+
+  static load(dir: string, replacementsConfig?: ReplacementsConfig): IamConfig {
+    const initialBuffer = fs.readFileSync(path.join(dir, IamConfig.FILENAME), 'utf8');
+    const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
     const values = t.parse(IamConfigTypes.iamConfig, yaml.load(buffer));
     return new IamConfig(values);
   }
@@ -1447,9 +1872,9 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
       const values = t.parse(IamConfigTypes.iamConfig, yaml.load(content));
       return new IamConfig(values);
     } catch (e) {
-      console.log('[iam-config] Error parsing input, iam config undefined');
-      console.log(`${e}`);
-      return undefined;
+      logger.error('Error parsing input, iam config undefined');
+      logger.error(`${e}`);
+      throw new Error('Could not load iam configuration');
     }
   }
 
@@ -1468,9 +1893,8 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
     if (directoryFound) {
       return 'admin';
     }
-    throw new Error(
-      `[iam-config][getManageActiveDirectoryAdminSecretName] - Directory ${directoryName} not found in iam-config file`,
-    );
+    logger.error(`getManageActiveDirectoryAdminSecretName Directory ${directoryName} not found in iam-config file`);
+    throw new Error('configuration validation failed.');
   }
 
   public getManageActiveDirectorySecretAccountName(directoryName: string): string {
@@ -1492,9 +1916,8 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
     if (directoryFound) {
       return directoryAccount;
     }
-    throw new Error(
-      `[iam-config][getManageActiveDirectoryAdminSecretName] - Directory ${directoryName} not found in iam-config file`,
-    );
+    logger.error(`getManageActiveDirectoryAdminSecretName Directory ${directoryName} not found in iam-config file`);
+    throw new Error('configuration validation failed.');
   }
 
   public getManageActiveDirectorySecretRegion(directoryName: string): string {
@@ -1517,9 +1940,8 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
     if (directoryFound) {
       return directoryRegion;
     }
-    throw new Error(
-      `[iam-config][getManageActiveDirectoryAdminSecretName] - Directory ${directoryName} not found in iam-config file`,
-    );
+    logger.error(`getManageActiveDirectoryAdminSecretName Directory ${directoryName} not found in iam-config file`);
+    throw new Error('configuration validation failed.');
   }
 
   public getManageActiveDirectorySharedAccountNames(directoryName: string, configDir: string): string[] {
@@ -1565,8 +1987,7 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
       // mad account can't be part of shared account
       return sharedAccounts.filter(item => item !== directoryAccount!);
     }
-    throw new Error(
-      `[iam-config][getManageActiveDirectorySharedAccountNames] - Directory ${directoryName} not found in iam-config file`,
-    );
+    logger.error(`getManageActiveDirectoryAdminSecretName Directory ${directoryName} not found in iam-config file`);
+    throw new Error('configuration validation failed.');
   }
 }

@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { VpcPeering } from '../../lib/aws-ec2/vpc-peering';
 import { snapShotTest } from '../snapshot-test';
+import { describe, it, expect } from '@jest/globals';
 
 const testNamePrefix = 'Construct(VpcPeering): ';
 
@@ -27,7 +28,7 @@ const vpcPeer = new VpcPeering(stack, 'TestPeering', {
   peerVpcId: 'AccepterVpc',
   vpcId: 'RequesterVpc',
   peerRoleName: 'TestRole',
-  tags: [],
+  tags: [{ key: 'key', value: 'value' }],
 });
 
 vpcPeer.addPeeringRoute(
@@ -42,7 +43,7 @@ vpcPeer.addPeeringRoute(
 const crLambda = new cdk.aws_lambda.Function(stack, 'test', {
   code: new cdk.aws_lambda.InlineCode('foo'),
   handler: 'handler',
-  runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
+  runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
 });
 const crProvider = new cdk.custom_resources.Provider(stack, 'myProvider', { onEventHandler: crLambda });
 
@@ -60,5 +61,49 @@ vpcPeer.addCrossAcctPeeringRoute({
  * VPC peering construct test
  */
 describe('VpcPeering', () => {
+  it('destinationPrefix list without kms throws error', () => {
+    function noKmsKey() {
+      vpcPeer.addPeeringRoute('vpcPeeringRoute1', 'rt-12345', '10.0.0.5/32', 'destinationRoute', undefined, 10);
+    }
+    expect(noKmsKey).toThrow(new Error('Attempting to add prefix list route without specifying log group KMS key'));
+  });
+  it('destinationPrefix list without logRetention throws error', () => {
+    function noLogRetention() {
+      vpcPeer.addPeeringRoute(
+        'vpcPeeringRoute2',
+        'rt-12345',
+        '10.0.0.5/32',
+        'destinationRoute',
+        new cdk.aws_kms.Key(stack, 'kmsKey1'),
+        undefined,
+      );
+    }
+    expect(noLogRetention).toThrow(
+      new Error('Attempting to add prefix list route without specifying log group retention period'),
+    );
+  });
+  it('destinationPrefix list test', () => {
+    vpcPeer.addPeeringRoute(
+      'vpcPeeringRoute3',
+      'rt-12345',
+      '10.0.0.5/32',
+      'destinationRoute',
+      new cdk.aws_kms.Key(stack, 'kmsKey2'),
+      10,
+    );
+  });
+  it('no destination throws error', () => {
+    function noDest() {
+      vpcPeer.addPeeringRoute(
+        'vpcPeeringRoute4',
+        'rt-12345',
+        undefined,
+        undefined,
+        new cdk.aws_kms.Key(stack, 'kmsKey3'),
+        10,
+      );
+    }
+    expect(noDest).toThrow(new Error('Attempting to add CIDR route without specifying destination'));
+  });
   snapShotTest(testNamePrefix, stack);
 });

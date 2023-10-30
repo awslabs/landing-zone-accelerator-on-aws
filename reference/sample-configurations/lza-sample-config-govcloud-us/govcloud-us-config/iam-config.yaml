@@ -1,0 +1,83 @@
+############################################################################################################
+# For additional configurable services, features, and property descriptions,                               #
+# please review class IamConfig reference in our TypeDoc:                                                  #
+# https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.IamConfig.html #
+############################################################################################################
+
+policySets: []
+roleSets:
+  - deploymentTargets:
+      organizationalUnits:
+        - Root
+    roles:
+      - name: EC2-Default-SSM-AD-Role
+        instanceProfile: true
+        assumedBy:
+          - type: service
+            principal: ec2.amazonaws.com
+        policies:
+          awsManaged:
+            - AmazonSSMManagedInstanceCore
+            - AmazonSSMDirectoryServiceAccess
+            - CloudWatchAgentServerPolicy
+groupSets: []
+userSets: []
+
+#######################################################################################################################
+# AWS IAM Identity Center configuration                                                                               #
+# For AWS Control Tower based installation, AWS Identity Center is enabled automatically                              #
+# Tasks that be performed in the delegated administrator account                                                      #
+# https://docs.aws.amazon.com/singlesignon/latest/userguide/delegated-admin.html#delegated-admin-tasks-member-account #
+#######################################################################################################################
+identityCenter:
+  name: IdentityCenter
+  # Assigning delegated administration as Audit account
+  # Preview review AWS Security Reference Architecture for assigning other account as delegated administrator
+  # https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/shared-services.html
+  delegatedAdminAccount: Audit
+  # Predefined permission sets
+  # https://docs.aws.amazon.com/singlesignon/latest/userguide/permissionsetpredefined.html
+  identityCenterPermissionSets:
+    # Creating permission sets
+    - name: AWSAccelerator-Billing
+    # Attaching policy
+      policies:
+        awsManaged:
+          - arn:aws-us-gov:iam::aws:policy/job-function/Billing
+      # Setting session duration
+      sessionDuration: 60
+    - name: AWSAccelerator-DatabaseAdmin
+      policies:
+        awsManaged:
+          - arn:aws-us-gov:iam::aws:policy/job-function/DatabaseAdministrator
+      sessionDuration: 60
+    - name: AWSAccelerator-DataScientist
+      policies:
+        awsManaged:
+          - arn:aws-us-gov:iam::aws:policy/job-function/DataScientist
+      sessionDuration: 60
+    - name: AWSAccelerator-NetworkAdmin
+      policies:
+        awsManaged:
+          - arn:aws-us-gov:iam::aws:policy/job-function/NetworkAdministrator
+      sessionDuration: 60
+    - name: AWSAccelerator-ReadOnlyAccess
+      policies:
+        awsManaged:
+          - arn:aws-us-gov:iam::aws:policy/ReadOnlyAccess
+      sessionDuration: 60
+    - name: AWSAccelerator-SecurityAudit
+      policies:
+        awsManaged:
+          - arn:aws-us-gov:iam::aws:policy/SecurityAudit
+      sessionDuration: 60
+    - name: AWSAccelerator-SupportUser
+      policies:
+        awsManaged:
+          - arn:aws-us-gov:iam::aws:policy/job-function/SupportUser
+      sessionDuration: 60
+    - name: AWSAccelerator-SystemAdmin
+      policies:
+        awsManaged:
+          - arn:aws-us-gov:iam::aws:policy/job-function/SystemAdministrator
+      sessionDuration: 60

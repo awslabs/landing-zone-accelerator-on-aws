@@ -33,6 +33,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const newFMSAdminAccount = event.ResourceProperties['adminAccountId'];
   const assumeRoleName = event.ResourceProperties['assumeRoleName'];
   const partition = event.ResourceProperties['partition'];
+  const region = event.ResourceProperties['region'];
+
+  const solutionId = process.env['SOLUTION_ID'];
 
   console.log(`Current FMS Account: ${currentFMSAdminAccount?.AdminAccount || 'No account found'}`);
   console.log(`New FMS Account: ${newFMSAdminAccount}`);
@@ -91,7 +94,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 
     case 'Delete':
       const adminAccountId = currentFMSAdminAccount?.AdminAccount;
-      const stsClient = new AWS.STS();
+      const stsClient = new AWS.STS({ customUserAgent: solutionId, region: region });
       if (adminAccountId) {
         const assumeRoleCredentials = await assumeRole(stsClient, assumeRoleName, adminAccountId, partition);
         console.log('Deregistering Admin Account');

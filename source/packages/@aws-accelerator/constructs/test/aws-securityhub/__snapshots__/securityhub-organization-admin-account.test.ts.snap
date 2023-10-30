@@ -1,27 +1,27 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`SecurityHubOrganizationAdminAccount Construct(SecurityHubOrganizationAdminAccount):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CustomKey1E6D0D07": Object {
+{
+  "Resources": {
+    "CustomKey1E6D0D07": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -38,45 +38,45 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomSecurityHubEnableOrganizationAdminAccountCustomResourceProviderHandler194C30B9": Object {
-      "DependsOn": Array [
+    "CustomSecurityHubEnableOrganizationAdminAccountCustomResourceProviderHandler194C30B9": {
+      "DependsOn": [
         "CustomSecurityHubEnableOrganizationAdminAccountCustomResourceProviderRole1CBC866F",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomSecurityHubEnableOrganizationAdminAccountCustomResourceProviderRole1CBC866F",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 180,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomSecurityHubEnableOrganizationAdminAccountCustomResourceProviderLogGroupDB7DE8A3": Object {
+    "CustomSecurityHubEnableOrganizationAdminAccountCustomResourceProviderLogGroupDB7DE8A3": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "CustomKey1E6D0D07",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomSecurityHubEnableOrganizationAdminAccountCustomResourceProviderHandler194C30B9",
               },
             ],
@@ -87,31 +87,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomSecurityHubEnableOrganizationAdminAccountCustomResourceProviderRole1CBC866F": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomSecurityHubEnableOrganizationAdminAccountCustomResourceProviderRole1CBC866F": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "organizations:DescribeOrganization",
                     "organizations:ListAccounts",
                     "organizations:ListDelegatedAdministrators",
@@ -120,33 +120,33 @@ Object {
                   "Resource": "*",
                   "Sid": "SecurityHubEnableOrganizationAdminAccountTaskOrganizationActions",
                 },
-                Object {
+                {
                   "Action": "organizations:EnableAWSServiceAccess",
-                  "Condition": Object {
-                    "StringEquals": Object {
+                  "Condition": {
+                    "StringEquals": {
                       "organizations:ServicePrincipal": "securityhub.amazonaws.com",
                     },
                   },
                   "Effect": "Allow",
                   "Resource": "*",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "organizations:RegisterDelegatedAdministrator",
                     "organizations:DeregisterDelegatedAdministrator",
                   ],
-                  "Condition": Object {
-                    "StringEquals": Object {
+                  "Condition": {
+                    "StringEquals": {
                       "organizations:ServicePrincipal": "securityhub.amazonaws.com",
                     },
                   },
                   "Effect": "Allow",
-                  "Resource": Object {
-                    "Fn::Join": Array [
+                  "Resource": {
+                    "Fn::Join": [
                       "",
-                      Array [
+                      [
                         "arn:",
-                        Object {
+                        {
                           "Ref": "AWS::Partition",
                         },
                         ":organizations::*:account/o-*/*",
@@ -154,13 +154,13 @@ Object {
                     ],
                   },
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "iam:CreateServiceLinkedRole",
                   ],
-                  "Condition": Object {
-                    "StringLike": Object {
-                      "iam:AWSServiceName": Array [
+                  "Condition": {
+                    "StringLike": {
+                      "iam:AWSServiceName": [
                         "securityhub.amazonaws.com",
                       ],
                     },
@@ -169,8 +169,8 @@ Object {
                   "Resource": "*",
                   "Sid": "SecurityHubCreateMembersTaskIamAction",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "securityhub:DisableOrganizationAdminAccount",
                     "securityhub:EnableOrganizationAdminAccount",
                     "securityhub:EnableSecurityHub",
@@ -189,25 +189,25 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "SecurityHubOrganizationAdminAccount71D5E029": Object {
+    "SecurityHubOrganizationAdminAccount71D5E029": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomSecurityHubEnableOrganizationAdminAccountCustomResourceProviderLogGroupDB7DE8A3",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomSecurityHubEnableOrganizationAdminAccountCustomResourceProviderHandler194C30B9",
             "Arn",
           ],
         },
-        "adminAccountId": Object {
+        "adminAccountId": {
           "Ref": "AWS::AccountId",
         },
-        "partition": Object {
+        "partition": {
           "Ref": "AWS::Partition",
         },
-        "region": Object {
+        "region": {
           "Ref": "AWS::Region",
         },
       },

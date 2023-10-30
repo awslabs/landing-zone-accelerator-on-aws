@@ -1,47 +1,47 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`DirectConnectGatewayAssociation Construct(DirectConnectGateway):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CustomDirectConnectGatewayAssociationCustomResourceProviderHandler3BC99D92": Object {
-      "DependsOn": Array [
+{
+  "Resources": {
+    "CustomDirectConnectGatewayAssociationCustomResourceProviderHandler3BC99D92": {
+      "DependsOn": [
         "CustomDirectConnectGatewayAssociationCustomResourceProviderRole7D012188",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomDirectConnectGatewayAssociationCustomResourceProviderRole7D012188",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomDirectConnectGatewayAssociationCustomResourceProviderLogGroup966224A3": Object {
+    "CustomDirectConnectGatewayAssociationCustomResourceProviderLogGroup966224A3": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "Key961B73FD",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomDirectConnectGatewayAssociationCustomResourceProviderHandler3BC99D92",
               },
             ],
@@ -52,31 +52,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomDirectConnectGatewayAssociationCustomResourceProviderRole7D012188": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomDirectConnectGatewayAssociationCustomResourceProviderRole7D012188": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "directconnect:CreateDirectConnectGatewayAssociation",
                     "directconnect:DeleteDirectConnectGatewayAssociation",
                     "directconnect:DescribeDirectConnectGatewayAssociations",
@@ -87,25 +87,25 @@ Object {
                   "Resource": "*",
                   "Sid": "DirectConnectGatewayCRUD",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "lambda:InvokeFunction",
                   ],
                   "Effect": "Allow",
-                  "Resource": Object {
-                    "Fn::Join": Array [
+                  "Resource": {
+                    "Fn::Join": [
                       "",
-                      Array [
+                      [
                         "arn:",
-                        Object {
+                        {
                           "Ref": "AWS::Partition",
                         },
                         ":lambda:",
-                        Object {
+                        {
                           "Ref": "AWS::Region",
                         },
                         ":",
-                        Object {
+                        {
                           "Ref": "AWS::AccountId",
                         },
                         ":function:AWSAccelerator-NetworkAss-CustomDirectConnect*",
@@ -123,45 +123,45 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CustomDirectConnectGatewayAssociationProposalCustomResourceProviderHandlerD4E4D07C": Object {
-      "DependsOn": Array [
+    "CustomDirectConnectGatewayAssociationProposalCustomResourceProviderHandlerD4E4D07C": {
+      "DependsOn": [
         "CustomDirectConnectGatewayAssociationProposalCustomResourceProviderRole70304A6E",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomDirectConnectGatewayAssociationProposalCustomResourceProviderRole70304A6E",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomDirectConnectGatewayAssociationProposalCustomResourceProviderLogGroupAB723DE4": Object {
+    "CustomDirectConnectGatewayAssociationProposalCustomResourceProviderLogGroupAB723DE4": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "Key961B73FD",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomDirectConnectGatewayAssociationProposalCustomResourceProviderHandlerD4E4D07C",
               },
             ],
@@ -172,31 +172,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomDirectConnectGatewayAssociationProposalCustomResourceProviderRole70304A6E": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomDirectConnectGatewayAssociationProposalCustomResourceProviderRole70304A6E": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "directconnect:CreateDirectConnectGatewayAssociationProposal",
                     "directconnect:DeleteDirectConnectGatewayAssociationProposal",
                   ],
@@ -213,25 +213,25 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "Key961B73FD": Object {
+    "Key961B73FD": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -248,19 +248,19 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "TestDxGatewayAssociaionProposal7B0D5FAD": Object {
+    "TestDxGatewayAssociaionProposal7B0D5FAD": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomDirectConnectGatewayAssociationProposalCustomResourceProviderLogGroupAB723DE4",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomDirectConnectGatewayAssociationProposalCustomResourceProviderHandlerD4E4D07C",
             "Arn",
           ],
         },
-        "allowedPrefixes": Array [
+        "allowedPrefixes": [
           "0.0.0.0/0",
         ],
         "directConnectGatewayId": "test-dxgw-id",
@@ -270,19 +270,19 @@ Object {
       "Type": "Custom::DirectConnectGatewayAssociationProposal",
       "UpdateReplacePolicy": "Delete",
     },
-    "TestDxGatewayAssociationBCCCDE09": Object {
+    "TestDxGatewayAssociationBCCCDE09": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomDirectConnectGatewayAssociationCustomResourceProviderLogGroup966224A3",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomDirectConnectGatewayAssociationCustomResourceProviderHandler3BC99D92",
             "Arn",
           ],
         },
-        "allowedPrefixes": Array [
+        "allowedPrefixes": [
           "0.0.0.0/0",
         ],
         "directConnectGatewayId": "test-dxgw-id",

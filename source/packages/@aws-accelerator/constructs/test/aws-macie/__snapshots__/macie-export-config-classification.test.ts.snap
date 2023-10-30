@@ -1,54 +1,54 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`MacieExportConfigClassification Construct(MacieExportConfigClassification):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "AwsMacieUpdateExportConfigClassification832781E3": Object {
+{
+  "Resources": {
+    "AwsMacieUpdateExportConfigClassification832781E3": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomMaciePutClassificationExportConfigurationCustomResourceProviderLogGroup727354F4",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomMaciePutClassificationExportConfigurationCustomResourceProviderHandlerC53E2FCC",
             "Arn",
           ],
         },
         "bucketName": "bucketName",
         "keyPrefix": "111111111111-aws-macie-export-config",
-        "kmsKeyArn": Object {
-          "Fn::GetAtt": Array [
+        "kmsKeyArn": {
+          "Fn::GetAtt": [
             "BucketKey7092080A",
             "Arn",
           ],
         },
-        "region": Object {
+        "region": {
           "Ref": "AWS::Region",
         },
       },
       "Type": "Custom::MaciePutClassificationExportConfiguration",
       "UpdateReplacePolicy": "Delete",
     },
-    "BucketKey7092080A": Object {
+    "BucketKey7092080A": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -65,45 +65,45 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomMaciePutClassificationExportConfigurationCustomResourceProviderHandlerC53E2FCC": Object {
-      "DependsOn": Array [
+    "CustomMaciePutClassificationExportConfigurationCustomResourceProviderHandlerC53E2FCC": {
+      "DependsOn": [
         "CustomMaciePutClassificationExportConfigurationCustomResourceProviderRoleEB42D531",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomMaciePutClassificationExportConfigurationCustomResourceProviderRoleEB42D531",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomMaciePutClassificationExportConfigurationCustomResourceProviderLogGroup727354F4": Object {
+    "CustomMaciePutClassificationExportConfigurationCustomResourceProviderLogGroup727354F4": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "LogKeyE83D0C1B",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomMaciePutClassificationExportConfigurationCustomResourceProviderHandlerC53E2FCC",
               },
             ],
@@ -114,31 +114,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomMaciePutClassificationExportConfigurationCustomResourceProviderRoleEB42D531": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomMaciePutClassificationExportConfigurationCustomResourceProviderRoleEB42D531": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "macie2:EnableMacie",
                     "macie2:GetClassificationExportConfiguration",
                     "macie2:GetMacieSession",
@@ -157,25 +157,25 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "LogKeyE83D0C1B": Object {
+    "LogKeyE83D0C1B": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",

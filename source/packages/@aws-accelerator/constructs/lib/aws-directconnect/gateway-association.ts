@@ -50,6 +50,10 @@ export interface DirectConnectGatewayAssociationProps {
    * The owner account ID of the Direct Connect Gateway
    */
   readonly directConnectGatewayOwnerAccount?: string;
+  /**
+   * Accelerator Prefix
+   */
+  readonly acceleratorPrefix: string;
 }
 
 export class DirectConnectGatewayAssociation extends cdk.Resource implements IDirectConnectGatewayAssociation {
@@ -97,14 +101,14 @@ export class DirectConnectGatewayAssociation extends cdk.Resource implements IDi
           Sid: 'InvokeSelf',
           Effect: 'Allow',
           Action: ['lambda:InvokeFunction'],
-          Resource: `arn:${cdk.Aws.PARTITION}:lambda:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:function:AWSAccelerator-NetworkAss-CustomDirectConnect*`,
+          Resource: `arn:${cdk.Aws.PARTITION}:lambda:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:function:${props.acceleratorPrefix}-NetworkAss-CustomDirectConnect*`,
         },
       ];
     }
 
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
       codeDirectory,
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
       policyStatements,
       timeout: cdk.Duration.minutes(15),
     });

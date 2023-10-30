@@ -1,0 +1,41 @@
+homeRegion: us-east-1
+enabledRegions:
+  - us-east-1
+managementAccountAccessRole: AWSControlTowerExecution
+cloudwatchLogRetentionInDays: 3653
+centralizeCdkBuckets:
+  enable: true
+terminationProtection: true
+snsTopics:
+  deploymentTargets:
+    organizationalUnits:
+      - Root
+  topics:
+    - name: Security
+      emailAddresses:
+        - <security-notifications>@example.com  <----- UPDATE EMAIL ADDRESS
+controlTower:
+  enable: true
+logging:
+  account: LogArchive
+  cloudtrail:
+    enable: true
+    organizationTrail: true
+    organizationTrailSettings:
+      multiRegionTrail: true
+      globalServiceEvents: true
+      managementEvents: true
+      s3DataEvents: true
+      lambdaDataEvents: true
+      sendToCloudWatchLogs: true
+      apiErrorRateInsight: false
+      apiCallRateInsight: false
+    accountTrails: []
+    lifecycleRules: []
+  sessionManager:
+    sendToCloudWatchLogs: false
+    sendToS3: false
+    excludeRegions: []
+    excludeAccounts: []
+    lifecycleRules: []
+    attachPolicyToIamRoles: []

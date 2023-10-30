@@ -98,6 +98,10 @@ export interface VirtualInterfaceProps {
    * An array of tags for the virtual interface
    */
   readonly tags?: cdk.CfnTag[];
+  /**
+   * Accelerator Prefix
+   */
+  readonly acceleratorPrefix: string;
 }
 
 export class VirtualInterface extends cdk.Resource implements IVirtualInterface {
@@ -152,14 +156,14 @@ export class VirtualInterface extends cdk.Resource implements IVirtualInterface 
           Sid: 'InvokeSelf',
           Effect: 'Allow',
           Action: ['lambda:InvokeFunction'],
-          Resource: `arn:${cdk.Aws.PARTITION}:lambda:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:function:AWSAccelerator-NetworkPre-CustomDirectConnect*`,
+          Resource: `arn:${cdk.Aws.PARTITION}:lambda:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:function:${props.acceleratorPrefix}-NetworkPre-CustomDirectConnect*`,
         },
       ];
     }
 
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
       codeDirectory,
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
       policyStatements,
       timeout: cdk.Duration.minutes(15),
     });

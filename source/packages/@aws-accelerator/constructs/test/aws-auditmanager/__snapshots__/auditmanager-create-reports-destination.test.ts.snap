@@ -1,68 +1,68 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`AuditManagerDefaultReportsDestination Construct(AuditManagerDefaultReportsDestination):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "AuditManagerDefaultReportsDestinationAFD20D60": Object {
+{
+  "Resources": {
+    "AuditManagerDefaultReportsDestinationAFD20D60": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomAuditManagerCreateDefaultReportsDestinationCustomResourceProviderLogGroupF5AC3566",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomAuditManagerCreateDefaultReportsDestinationCustomResourceProviderHandler6BCBC433",
             "Arn",
           ],
         },
-        "bucket": Object {
-          "Fn::Join": Array [
+        "bucket": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "s3//aws-accelerator-auditmgr-",
-              Object {
+              {
                 "Ref": "AWS::AccountId",
               },
               "-",
-              Object {
+              {
                 "Ref": "AWS::Region",
               },
             ],
           ],
         },
         "defaultReportsDestinationType": "S3",
-        "kmsKeyArn": Object {
-          "Fn::GetAtt": Array [
+        "kmsKeyArn": {
+          "Fn::GetAtt": [
             "BucketKey7092080A",
             "Arn",
           ],
         },
-        "region": Object {
+        "region": {
           "Ref": "AWS::Region",
         },
       },
       "Type": "Custom::AuditManagerCreateDefaultReportsDestination",
       "UpdateReplacePolicy": "Delete",
     },
-    "BucketKey7092080A": Object {
+    "BucketKey7092080A": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -79,45 +79,45 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomAuditManagerCreateDefaultReportsDestinationCustomResourceProviderHandler6BCBC433": Object {
-      "DependsOn": Array [
+    "CustomAuditManagerCreateDefaultReportsDestinationCustomResourceProviderHandler6BCBC433": {
+      "DependsOn": [
         "CustomAuditManagerCreateDefaultReportsDestinationCustomResourceProviderRoleAEE72AE5",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomAuditManagerCreateDefaultReportsDestinationCustomResourceProviderRoleAEE72AE5",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomAuditManagerCreateDefaultReportsDestinationCustomResourceProviderLogGroupF5AC3566": Object {
+    "CustomAuditManagerCreateDefaultReportsDestinationCustomResourceProviderLogGroupF5AC3566": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "CustomKey1E6D0D07",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomAuditManagerCreateDefaultReportsDestinationCustomResourceProviderHandler6BCBC433",
               },
             ],
@@ -128,31 +128,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomAuditManagerCreateDefaultReportsDestinationCustomResourceProviderRoleAEE72AE5": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomAuditManagerCreateDefaultReportsDestinationCustomResourceProviderRoleAEE72AE5": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "auditmanager:UpdateSettings",
                   ],
                   "Effect": "Allow",
@@ -168,25 +168,25 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CustomKey1E6D0D07": Object {
+    "CustomKey1E6D0D07": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",

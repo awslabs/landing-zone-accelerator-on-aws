@@ -1,0 +1,250 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "TAG1",
+      "Effect": "Deny",
+      "Action": [
+        "ec2:DeleteSecurityGroup",
+        "ec2:RevokeSecurityGroup*",
+        "ec2:AuthorizeSecurityGroup*",
+        "ec2:CreateSecurityGroup"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "ec2:ResourceTag/Accel-P": "AWSAccelerator"
+        },
+        "ArnNotLike": {
+          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/cdk-accel-*"]
+        }
+      }
+    },
+    {
+      "Sid": "TAG2",
+      "Effect": "Deny",
+      "NotAction": [
+        "sts:AssumeRole",
+        "iam:PassRole",
+        "iam:GetRole",
+        "iam:GetRolePolicy",
+        "iam:ListAttachedRolePolicies",
+        "iam:ListInstanceProfilesForRole",
+        "iam:ListRolePolicies",
+        "iam:ListRoles",
+        "iam:GetInstanceProfile",
+        "iam:GetLoginProfile",
+        "iam:ListInstanceProfiles"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "iam:ResourceTag/Accelerator": "AWSAccelerator"
+        },
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "S3",
+      "Effect": "Deny",
+      "Action": [
+        "s3:Delete*",
+        "s3:PutBucketVersioning",
+        "s3:PutEncryptionConfig*",
+        "s3:PutLifecycleConfig*",
+        "s3:PutReplicationConfig*",
+        "s3:PutBucketLogging",
+        "s3:PutBucketPolicy",
+        "s3:ReplicateDelete",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging"
+      ],
+      "Resource": ["arn:${PARTITION}:s3:::aws-accelerator-*", "arn:${PARTITION}:s3:::cdk-accel-*"],
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/AWSA*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"]
+        }
+      }
+    },
+    {
+      "Sid": "CFN",
+      "Effect": "Deny",
+      "Action": ["cloudformation:*"],
+      "Resource": ["arn:${PARTITION}:cloudformation:*:*:stack/AWSA*"],
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "ALM",
+      "Effect": "Deny",
+      "Action": [
+        "cloudwatch:DeleteAlarms",
+        "cloudwatch:DisableAlarmActions",
+        "cloudwatch:DeleteDashboards",
+        "cloudwatch:PutDashboard",
+        "cloudwatch:PutMetricAlarm",
+        "cloudwatch:SetAlarmState"
+      ],
+      "Resource": ["arn:${PARTITION}:cloudwatch:*:*:alarm:AWSA*"],
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/cdk-accel-*"]
+        }
+      }
+    },
+    {
+      "Sid": "ROL",
+      "Effect": "Deny",
+      "Action": ["iam:*"],
+      "Resource": ["arn:${PARTITION}:iam::*:role/AWSA*", "arn:${PARTITION}:iam::*:role/cdk-accel-*","arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"],
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:${PARTITION}:iam::*:role/cdk-accel-*",
+            "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:${PARTITION}:iam::*:role/AWSServiceRoleForConfig"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "SSM",
+      "Effect": "Deny",
+      "Action": [
+        "ssm:DeleteParam*",
+        "ssm:PutParameter",
+        "ssm:DeleteDoc*",
+        "ssm:UpdateDoc*",
+        "ssm:CreateDoc*",
+        "ssm:DeleteResourceDataSync"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:ssm:*:*:parameter/accelerator/*",
+        "arn:${PARTITION}:ssm:*:*:document/AWSA*",
+        "arn:${PARTITION}:ssm:*:*:document/SSM-SessionManagerRunShell",
+        "arn:${PARTITION}:ssm:*:*:resource-data-sync/AWSA*"
+      ],
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/AWSA*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"]
+        }
+      }
+    },
+    {
+      "Sid": "LOG",
+      "Effect": "Deny",
+      "Action": [
+        "ec2:DeleteFlowLogs",
+        "logs:Delete*",
+        "logs:PutRetentionPolicy",
+        "logs:PutSubscriptionFilter"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/AWSA*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"]
+        }
+      }
+    },
+    {
+      "Sid": "LOG2",
+      "Effect": "Deny",
+      "Action": ["logs:AssociateKmsKey", "logs:DisassociateKmsKey", "logs:PutDestination", "logs:PutDestinationPolicy"],
+      "Resource": "arn:${PARTITION}:logs:::log-group:*AWSAccelerator*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/cdk-accel-*"]
+        }
+      }
+    },
+    {
+      "Sid": "LAM",
+      "Effect": "Deny",
+      "Action": [
+        "lambda:AddPermission",
+        "lambda:CreateEventSourceMapping",
+        "lambda:CreateFunction",
+        "lambda:CreateFunctionUrlConfig",
+        "lambda:DeleteEventSourceMapping",
+        "lambda:DeleteFunction",
+        "lambda:DeleteFunctionConcurrency",
+        "lambda:PutFunctionConcurrency",
+        "lambda:RemovePermission",
+        "lambda:UpdateEventSourceMapping",
+        "lambda:UpdateFunctionCode",
+        "lambda:UpdateFunctionConfiguration",
+        "lambda:UpdateFunctionUrlConfig"
+      ],
+      "Resource": ["arn:${PARTITION}:lambda:*:*:function:AWSA*"],
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/cdk-accel-*"]
+        }
+      }
+    },
+    {
+      "Sid": "NET1",
+      "Effect": "Deny",
+      "Action": [
+        "ec2:DeleteNatGateway",
+        "ec2:DeleteTransitGatewayRoute",
+        "ec2:DeleteTransitGatewayRouteTable",
+        "ec2:DeleteTransitGatewayVpcAttachment",
+        "ec2:DeleteVpc",
+        "ec2:DeleteVpcEndpoints",
+        "ec2:DeleteVpcPeeringConnection",
+        "ec2:DeleteVpnConnection",
+        "ec2:DeleteVpnGateway",
+        "ec2:DetachVpnGateway",
+        "ec2:DeleteCustomerGateway",
+        "ec2:DeleteDhcpOptions",
+        "ec2:DeleteInternetGateway",
+        "ec2:DeleteRouteTable",
+        "ec2:DeleteSubnet",
+        "ec2:DeleteRoute",
+        "ec2:DetachInternetGateway",
+        "ec2:DisassociateRouteTable"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "ec2:ResourceTag/Accelerator": "AWSAccelerator"
+        },
+        "ArnNotLike": {
+          "aws:PrincipalArn": [
+            "arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/AWSAOps-*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "NFW",
+      "Effect": "Deny",
+      "Action": [
+        "network-firewall:AssociateSub*",
+        "network-firewall:DisassociateSub*",
+        "network-firewall:Create*",
+        "network-firewall:Delete*",
+        "network-firewall:Update*"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:network-firewall:*:*:firewal*/AWSA*",
+        "arn:${PARTITION}:network-firewall:*:*:state*/AWSA*"
+      ],
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/cdk-accel-*"]
+        }
+      }
+    }
+  ]
+}

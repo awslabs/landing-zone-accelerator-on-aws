@@ -18,8 +18,7 @@ import * as path from 'path';
 describe('OrganizationConfig', () => {
   describe('Test config', () => {
     const organizationConfigFromFile = OrganizationConfig.load(
-      path.resolve('../accelerator/test/configs/all-enabled'),
-      true,
+      path.resolve('../accelerator/test/configs/snapshot-only'),
     );
     const organizationConfig = new OrganizationConfig();
     it('has loaded successfully', () => {

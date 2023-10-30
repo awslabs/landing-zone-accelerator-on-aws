@@ -24,6 +24,7 @@ async function main() {
     'Usage: app.ts --context account=ACCOUNT --context region=REGION --context management-cross-account-role-name=MANAGEMENT_CROSS_ACCOUNT_ROLE_NAME --context config-dir=CONFIG_DIRECTORY [--context qualifier=QUALIFIER] [--context management-account-id=MANAGEMENT_ACCOUNT_ID] [--context management-account-role-name=MANAGEMENT_ACCOUNT_ROLE_NAME]';
   const app = new cdk.App();
 
+  const acceleratorPrefix = app.node.tryGetContext('acceleratorPrefix');
   const account = app.node.tryGetContext('account');
   const region = app.node.tryGetContext('region');
   const qualifier = app.node.tryGetContext('qualifier');
@@ -36,7 +37,7 @@ async function main() {
   }
 
   if (region === undefined) {
-    console.warn(`[tester-app] Invalid --account ${region}`);
+    console.warn(`[tester-app] Invalid --region ${region}`);
     throw new Error(usage);
   }
 
@@ -60,7 +61,7 @@ async function main() {
   new TesterStack(
     app,
     qualifier === undefined
-      ? `AWSAccelerator-TesterStack-${account}-${region}`
+      ? `${acceleratorPrefix}-TesterStack-${account}-${region}`
       : `${qualifier}-tester-stack-${account}-${region}`,
     {
       synthesizer: new cdk.DefaultStackSynthesizer({

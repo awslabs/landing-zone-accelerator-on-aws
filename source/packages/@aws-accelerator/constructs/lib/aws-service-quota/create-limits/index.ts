@@ -36,6 +36,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       const serviceCode = event.ResourceProperties['serviceCode'];
       const quotaCode = event.ResourceProperties['quotaCode'];
       const desiredValue = Number(event.ResourceProperties['desiredValue']);
+      const region = process.env['AWS_REGION'];
+      const accountId = event.StackId.split(':')[4];
 
       const serviceQuotaParams = {
         ServiceCode: serviceCode /* required */,
@@ -53,13 +55,13 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
           const quotaIncreaseResponse = await servicequotas.requestServiceQuotaIncrease(increaseLimitParams).promise();
           console.log(quotaIncreaseResponse.RequestedQuota);
         } else {
-          console.log(`Service Quota ${serviceCode}-${quotaCode} is not adjustable`);
+          console.log(`Service Quota ${serviceCode}-${quotaCode} is not adjustable, skipping`);
         }
       } catch (error) {
-        console.log(
-          '[service-quota-limits-config] Error parsing input, the quota code or service code utilized is throwing an error',
+        console.error(
+          `[service-quota-limits-config] Error increasing service quota ${quotaCode} for service ${serviceCode} in account ${accountId} region ${region}`,
         );
-        console.log(`${error}`);
+        console.error(`${error}`);
       }
 
       return {

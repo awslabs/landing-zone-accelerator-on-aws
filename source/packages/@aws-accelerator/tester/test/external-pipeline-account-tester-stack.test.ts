@@ -108,7 +108,7 @@ describe('ExternalPipelineAccount-TesterStack', () => {
         awsacceleratorvalidatemaintransitgatewayCustomRuleB70A49C4: {
           Type: 'AWS::Config::ConfigRule',
           DependsOn: [
-            'awsacceleratorvalidatemaintransitgatewayFunctionPermissionD97964A9',
+            'awsacceleratorvalidatemaintransitgatewayFunctionCustomRulePermissionbM1jVaicvRO9SDCiAbsQcYrOlESEtMwrrF9ZQQRvd5QD9F10DC6',
             'awsacceleratorvalidatemaintransitgatewayFunction5DC44F8F',
             'awsacceleratorvalidatemaintransitgatewayFunctionServiceRoleDefaultPolicy21AEB3E1',
             'awsacceleratorvalidatemaintransitgatewayFunctionServiceRoleB1766D38',
@@ -191,7 +191,7 @@ describe('ExternalPipelineAccount-TesterStack', () => {
             Role: {
               'Fn::GetAtt': ['awsacceleratorvalidatemaintransitgatewayFunctionServiceRoleB1766D38', 'Arn'],
             },
-            Runtime: 'nodejs14.x',
+            Runtime: 'nodejs16.x',
           },
         },
       },
@@ -204,19 +204,20 @@ describe('ExternalPipelineAccount-TesterStack', () => {
   test(`${testNamePrefix} Lambda permission awsacceleratorvalidatemaintransitgatewayFunctionPermission resource configuration test`, () => {
     cdk.assertions.Template.fromStack(stack).templateMatches({
       Resources: {
-        awsacceleratorvalidatemaintransitgatewayFunctionPermissionD97964A9: {
-          Type: 'AWS::Lambda::Permission',
-          Properties: {
-            Action: 'lambda:InvokeFunction',
-            FunctionName: {
-              'Fn::GetAtt': ['awsacceleratorvalidatemaintransitgatewayFunction5DC44F8F', 'Arn'],
-            },
-            Principal: 'config.amazonaws.com',
-            SourceAccount: {
-              Ref: 'AWS::AccountId',
+        awsacceleratorvalidatemaintransitgatewayFunctionCustomRulePermissionbM1jVaicvRO9SDCiAbsQcYrOlESEtMwrrF9ZQQRvd5QD9F10DC6:
+          {
+            Type: 'AWS::Lambda::Permission',
+            Properties: {
+              Action: 'lambda:InvokeFunction',
+              FunctionName: {
+                'Fn::GetAtt': ['awsacceleratorvalidatemaintransitgatewayFunction5DC44F8F', 'Arn'],
+              },
+              Principal: 'config.amazonaws.com',
+              SourceAccount: {
+                Ref: 'AWS::AccountId',
+              },
             },
           },
-        },
       },
     });
   });

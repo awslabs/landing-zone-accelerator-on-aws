@@ -32,6 +32,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const requesterAccountId = event.ResourceProperties['requesterAccountId'];
   const requesterRegion = event.ResourceProperties['requesterRegion'];
   const requesterTransitGatewayRouteTableId = event.ResourceProperties['requesterTransitGatewayRouteTableId'];
+  const requesterTransitGatewayId = event.ResourceProperties['requesterTransitGatewayId'];
 
   const accepterAccountId = event.ResourceProperties['accepterAccountId'];
   const accepterRegion = event.ResourceProperties['accepterRegion'];
@@ -43,9 +44,15 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 
   const requesterTransitGatewayAttachmentId = event.ResourceProperties['requesterTransitGatewayAttachmentId'];
 
+  const solutionId = process.env['SOLUTION_ID'];
+
   const requesterEc2Client = new AWS.EC2({ region: requesterRegion });
 
-  const accepterEc2Client = await getAccepterEc2Client(accepterRegion, event.ResourceProperties['accepterRoleArn']);
+  const accepterEc2Client = await getAccepterEc2Client(
+    accepterRegion,
+    event.ResourceProperties['accepterRoleArn'],
+    solutionId,
+  );
 
   switch (event.RequestType) {
     case 'Create':
@@ -54,6 +61,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         accepterEc2Client,
         accepterTransitGatewayId,
         accepterAccountId,
+        requesterTransitGatewayId,
         requesterTransitGatewayAttachmentId,
       );
 
@@ -303,6 +311,7 @@ async function reAssociateRouteTable(
  * @param ec2Client
  * @param accepterTransitGatewayId
  * @param accepterAccountId
+ * @param requesterTransitGatewayId
  * @param requesterTransitGatewayAttachmentId
  * @returns
  */
@@ -310,6 +319,7 @@ async function getAccepterTransitGatewayAttachmentID(
   ec2Client: AWS.EC2,
   accepterTransitGatewayId: string,
   accepterAccountId: string,
+  requesterTransitGatewayId: string,
   requesterTransitGatewayAttachmentId: string,
 ): Promise<string | undefined> {
   const response = await throttlingBackOff(() =>
@@ -318,6 +328,7 @@ async function getAccepterTransitGatewayAttachmentID(
         Filters: [
           { Name: 'resource-type', Values: ['peering'] },
           { Name: 'transit-gateway-id', Values: [accepterTransitGatewayId] },
+          { Name: 'resource-id', Values: [requesterTransitGatewayId] },
           {
             Name: 'state',
             Values: ['pendingAcceptance', 'pending', 'initiatingRequest', 'initiating', 'modifying', 'available'],
@@ -486,8 +497,12 @@ async function createAccepterAttachmentTags(
  * @param accepterRoleArn
  * @returns
  */
-async function getAccepterEc2Client(accepterRegion: string, accepterRoleArn: string): Promise<AWS.EC2> {
-  const stsClient = new AWS.STS({ region: accepterRegion });
+async function getAccepterEc2Client(
+  accepterRegion: string,
+  accepterRoleArn: string,
+  solutionId?: string,
+): Promise<AWS.EC2> {
+  const stsClient = new AWS.STS({ customUserAgent: solutionId, region: accepterRegion });
 
   const assumeRoleResponse = await throttlingBackOff(() =>
     stsClient

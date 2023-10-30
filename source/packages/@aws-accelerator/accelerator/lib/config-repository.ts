@@ -37,6 +37,7 @@ export interface ConfigRepositoryProps {
   readonly logArchiveAccountEmail: string;
   readonly auditAccountEmail: string;
   readonly controlTowerEnabled: string;
+  readonly enableSingleAccountMode: boolean;
 }
 
 /**
@@ -84,7 +85,33 @@ export class ConfigRepository extends Construct {
     );
     fs.writeFileSync(path.join(tempDirPath, IamConfig.FILENAME), yaml.dump(new IamConfig()), 'utf8');
     fs.writeFileSync(path.join(tempDirPath, NetworkConfig.FILENAME), yaml.dump(new NetworkConfig()), 'utf8');
-    fs.writeFileSync(path.join(tempDirPath, OrganizationConfig.FILENAME), yaml.dump(new OrganizationConfig()), 'utf8');
+    if (props.enableSingleAccountMode) {
+      const orgConfig = new OrganizationConfig({
+        enable: false,
+        organizationalUnits: [
+          {
+            name: 'Security',
+            ignore: undefined,
+          },
+          {
+            name: 'LogArchive',
+            ignore: undefined,
+          },
+        ],
+        organizationalUnitIds: [],
+        serviceControlPolicies: [],
+        taggingPolicies: [],
+        backupPolicies: [],
+      });
+      fs.writeFileSync(path.join(tempDirPath, OrganizationConfig.FILENAME), yaml.dump(orgConfig), 'utf8');
+    } else {
+      fs.writeFileSync(
+        path.join(tempDirPath, OrganizationConfig.FILENAME),
+        yaml.dump(new OrganizationConfig()),
+        'utf8',
+      );
+    }
+
     fs.writeFileSync(path.join(tempDirPath, SecurityConfig.FILENAME), yaml.dump(new SecurityConfig()), 'utf8');
 
     const configurationDefaultsAssets = new s3_assets.Asset(this, 'ConfigurationDefaultsAssets', {

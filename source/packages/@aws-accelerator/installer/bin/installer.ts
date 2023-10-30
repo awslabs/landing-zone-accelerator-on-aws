@@ -18,27 +18,43 @@ import { AwsSolutionsChecks } from 'cdk-nag';
 import 'source-map-support/register';
 import { version } from '../../../../package.json';
 import * as installer from '../lib/installer-stack';
+import { createLogger } from '@aws-accelerator/utils';
 
-const app = new cdk.App();
-cdk.Aspects.of(app).add(new AwsSolutionsChecks());
+const logger = createLogger(['installer']);
 
-const useExternalPipelineAccount = app.node.tryGetContext('use-external-pipeline-account') === 'true';
-const enableTester = app.node.tryGetContext('enable-tester') === 'true';
-const managementCrossAccountRoleName = app.node.tryGetContext('management-cross-account-role-name');
+async function main() {
+  const app = new cdk.App();
+  cdk.Aspects.of(app).add(new AwsSolutionsChecks());
 
-if (enableTester && managementCrossAccountRoleName === undefined) {
-  console.log(`Invalid --management-cross-account-role-name ${managementCrossAccountRoleName}`);
-  throw new Error(
-    'Usage: app.ts [--context use-external-pipeline-account=BOOLEAN] [--context enable-tester=BOOLEAN] [--context management-cross-account-role-name=MANAGEMENT_CROSS_ACCOUNT_ROLE_NAME]',
-  );
+  const useExternalPipelineAccount = app.node.tryGetContext('use-external-pipeline-account') === 'true';
+  const enableTester = app.node.tryGetContext('enable-tester') === 'true';
+  const managementCrossAccountRoleName = app.node.tryGetContext('management-cross-account-role-name');
+  const enableSingleAccountMode = app.node.tryGetContext('enable-single-account-mode') === 'true';
+
+  if (enableTester && managementCrossAccountRoleName === undefined) {
+    console.log(`Invalid --management-cross-account-role-name ${managementCrossAccountRoleName}`);
+    throw new Error(
+      'Usage: app.ts [--context use-external-pipeline-account=BOOLEAN] [--context enable-tester=BOOLEAN] [--context management-cross-account-role-name=MANAGEMENT_CROSS_ACCOUNT_ROLE_NAME]',
+    );
+  }
+
+  new installer.InstallerStack(app, 'AWSAccelerator-InstallerStack', {
+    description: `(SO0199) Landing Zone Accelerator on AWS. Version ${version}.`,
+    synthesizer: new cdk.DefaultStackSynthesizer({
+      generateBootstrapVersionRule: false,
+    }),
+    useExternalPipelineAccount: useExternalPipelineAccount,
+    enableTester: enableTester,
+    managementCrossAccountRoleName: managementCrossAccountRoleName,
+    enableSingleAccountMode,
+  });
 }
 
-new installer.InstallerStack(app, 'AWSAccelerator-InstallerStack', {
-  description: `(SO0199) Landing Zone Accelerator on AWS. Version ${version}.`,
-  synthesizer: new cdk.DefaultStackSynthesizer({
-    generateBootstrapVersionRule: false,
-  }),
-  useExternalPipelineAccount: useExternalPipelineAccount,
-  enableTester: enableTester,
-  managementCrossAccountRoleName: managementCrossAccountRoleName,
-});
+(async () => {
+  try {
+    await main();
+  } catch (err) {
+    logger.error(err);
+    throw new Error(`${err}`);
+  }
+})();

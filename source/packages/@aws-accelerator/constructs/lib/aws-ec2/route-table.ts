@@ -15,6 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
 import { PrefixListRoute } from './prefix-list-route';
+import { ITransitGatewayAttachment } from './transit-gateway';
 import { Vpc } from './vpc';
 
 export interface IRouteTable extends cdk.IResource {
@@ -39,34 +40,23 @@ export interface RouteTableProps {
   readonly tags?: cdk.CfnTag[];
 }
 
-export class RouteTable extends cdk.Resource implements IRouteTable {
-  public readonly routeTableId: string;
+export interface ImportRouteTableProps extends Omit<RouteTableProps, 'tags' | 'name'> {
+  routeTableId: string;
+}
 
-  public readonly vpc: Vpc;
-
-  constructor(scope: Construct, id: string, props: RouteTableProps) {
-    super(scope, id);
-
-    this.vpc = props.vpc;
-
-    const resource = new cdk.aws_ec2.CfnRouteTable(this, 'Resource', {
-      vpcId: props.vpc.vpcId,
-      tags: props.tags,
-    });
-    cdk.Tags.of(this).add('Name', props.name);
-
-    this.routeTableId = resource.ref;
-  }
+export abstract class RouteTableBase extends cdk.Resource implements IRouteTable {
+  public abstract readonly routeTableId: string;
+  public abstract readonly vpc: Vpc;
 
   public addTransitGatewayRoute(
     id: string,
     transitGatewayId: string,
-    transitGatewayAttachment: cdk.CfnResource,
+    transitGatewayAttachment: ITransitGatewayAttachment,
     destination?: string,
     destinationPrefixListId?: string,
     logGroupKmsKey?: cdk.aws_kms.Key,
     logRetentionInDays?: number,
-  ): void {
+  ): cdk.aws_ec2.CfnRoute | PrefixListRoute {
     let route: cdk.aws_ec2.CfnRoute | PrefixListRoute;
 
     if (destinationPrefixListId) {
@@ -96,7 +86,8 @@ export class RouteTable extends cdk.Resource implements IRouteTable {
       });
     }
 
-    route.node.addDependency(transitGatewayAttachment);
+    transitGatewayAttachment.addDependency(route);
+    return route;
   }
 
   public addNatGatewayRoute(
@@ -106,7 +97,9 @@ export class RouteTable extends cdk.Resource implements IRouteTable {
     destinationPrefixListId?: string,
     logGroupKmsKey?: cdk.aws_kms.Key,
     logRetentionInDays?: number,
-  ): void {
+  ): cdk.aws_ec2.CfnRoute | PrefixListRoute {
+    let route: cdk.aws_ec2.CfnRoute | PrefixListRoute;
+
     if (destinationPrefixListId) {
       if (!logGroupKmsKey) {
         throw new Error('Attempting to add prefix list route without specifying log group KMS key');
@@ -115,7 +108,7 @@ export class RouteTable extends cdk.Resource implements IRouteTable {
         throw new Error('Attempting to add prefix list route without specifying log group retention period');
       }
 
-      new PrefixListRoute(this, id, {
+      route = new PrefixListRoute(this, id, {
         routeTableId: this.routeTableId,
         destinationPrefixListId,
         logGroupKmsKey,
@@ -127,12 +120,52 @@ export class RouteTable extends cdk.Resource implements IRouteTable {
         throw new Error('Attempting to add CIDR route without specifying destination');
       }
 
-      new cdk.aws_ec2.CfnRoute(this, id, {
+      route = new cdk.aws_ec2.CfnRoute(this, id, {
         routeTableId: this.routeTableId,
         destinationCidrBlock: destination,
         natGatewayId: natGatewayId,
       });
     }
+    return route;
+  }
+
+  public addLocalGatewayRoute(
+    id: string,
+    localGatewayId: string,
+    destination?: string,
+    destinationPrefixListId?: string,
+    logGroupKmsKey?: cdk.aws_kms.Key,
+    logRetentionInDays?: number,
+  ): cdk.aws_ec2.CfnRoute | PrefixListRoute {
+    let route: cdk.aws_ec2.CfnRoute | PrefixListRoute;
+
+    if (destinationPrefixListId) {
+      if (!logGroupKmsKey) {
+        throw new Error('Attempting to add prefix list route without specifying log group KMS key');
+      }
+      if (!logRetentionInDays) {
+        throw new Error('Attempting to add prefix list route without specifying log group retention period');
+      }
+
+      route = new PrefixListRoute(this, id, {
+        routeTableId: this.routeTableId,
+        destinationPrefixListId,
+        logGroupKmsKey,
+        logRetentionInDays,
+        localGatewayId,
+      });
+    } else {
+      if (!destination) {
+        throw new Error('Attempting to add CIDR route without specifying destination');
+      }
+
+      route = new cdk.aws_ec2.CfnRoute(this, id, {
+        routeTableId: this.routeTableId,
+        destinationCidrBlock: destination,
+        localGatewayId: localGatewayId,
+      });
+    }
+    return route;
   }
 
   public addInternetGatewayRoute(
@@ -141,13 +174,9 @@ export class RouteTable extends cdk.Resource implements IRouteTable {
     destinationPrefixListId?: string,
     logGroupKmsKey?: cdk.aws_kms.Key,
     logRetentionInDays?: number,
-  ): void {
-    if (!this.vpc.internetGateway) {
+  ): cdk.aws_ec2.CfnRoute | PrefixListRoute {
+    if (!this.vpc.internetGatewayId) {
       throw new Error('Attempting to add Internet Gateway route without an IGW defined.');
-    }
-
-    if (!this.vpc.internetGatewayAttachment) {
-      throw new Error('Attempting to add Internet Gateway route without an IGW attached.');
     }
 
     let route: cdk.aws_ec2.CfnRoute | PrefixListRoute;
@@ -165,7 +194,7 @@ export class RouteTable extends cdk.Resource implements IRouteTable {
         destinationPrefixListId,
         logGroupKmsKey,
         logRetentionInDays,
-        gatewayId: this.vpc.internetGateway.ref,
+        gatewayId: this.vpc.internetGatewayId,
       });
     } else {
       if (!destination) {
@@ -175,13 +204,15 @@ export class RouteTable extends cdk.Resource implements IRouteTable {
       route = new cdk.aws_ec2.CfnRoute(this, id, {
         routeTableId: this.routeTableId,
         destinationCidrBlock: destination,
-        gatewayId: this.vpc.internetGateway.ref,
+        gatewayId: this.vpc.internetGatewayId,
       });
     }
 
     // Need to add depends on for the attachment, as IGW needs to be part of
     // the network (vpc)
-    route.node.addDependency(this.vpc.internetGatewayAttachment);
+    // To avoid explicit dependency setting, create addInternetGatewayRoute in VPC similar to how CDK implements
+    this.vpc.addInternetGatewayDependent(route);
+    return route;
   }
 
   public addVirtualPrivateGatewayRoute(
@@ -190,8 +221,8 @@ export class RouteTable extends cdk.Resource implements IRouteTable {
     destinationPrefixListId?: string,
     logGroupKmsKey?: cdk.aws_kms.Key,
     logRetentionInDays?: number,
-  ): void {
-    if (!this.vpc.virtualPrivateGateway) {
+  ): cdk.aws_ec2.CfnRoute | PrefixListRoute {
+    if (!this.vpc.virtualPrivateGatewayId) {
       throw new Error('Attempting to add Virtual Private Gateway route without an VGW defined.');
     }
     let route: cdk.aws_ec2.CfnRoute | PrefixListRoute;
@@ -208,7 +239,7 @@ export class RouteTable extends cdk.Resource implements IRouteTable {
         destinationPrefixListId,
         logGroupKmsKey,
         logRetentionInDays,
-        gatewayId: this.vpc.virtualPrivateGateway.gatewayId,
+        gatewayId: this.vpc.virtualPrivateGatewayId,
       });
     } else {
       if (!destination) {
@@ -218,30 +249,66 @@ export class RouteTable extends cdk.Resource implements IRouteTable {
       route = new cdk.aws_ec2.CfnRoute(this, id, {
         routeTableId: this.routeTableId,
         destinationCidrBlock: destination,
-        gatewayId: this.vpc.virtualPrivateGateway.gatewayId,
+        gatewayId: this.vpc.virtualPrivateGatewayId,
       });
     }
 
     // Need to add depends on for the attachment, as VGW needs to be part of
     // the network (vpc)
-    route.node.addDependency(this.vpc.virtualPrivateGatewayAttachment!);
+    // To avoid explicit dependency setting, create addVirtualPrivateGatewayRoute in VPC similar to how CDK implements
+    this.vpc.addVirtualPrivateGatewayDependent(route);
+    return route;
   }
 
   public addGatewayAssociation(type: string): void {
     if (type === 'internetGateway') {
       const association = new cdk.aws_ec2.CfnGatewayRouteTableAssociation(this, 'GatewayAssociation', {
         routeTableId: this.routeTableId,
-        gatewayId: this.vpc.internetGateway!.ref,
+        gatewayId: this.vpc.internetGatewayId!,
       });
-      association.node.addDependency(this.vpc.internetGatewayAttachment!);
+      this.vpc.addInternetGatewayDependent(association);
     }
 
     if (type === 'virtualPrivateGateway') {
       const association = new cdk.aws_ec2.CfnGatewayRouteTableAssociation(this, 'VirtualPrivateGatewayAssociation', {
         routeTableId: this.routeTableId,
-        gatewayId: this.vpc.virtualPrivateGateway!.gatewayId,
+        gatewayId: this.vpc.virtualPrivateGatewayId!,
       });
-      association.node.addDependency(this.vpc.virtualPrivateGatewayAttachment!);
+      this.vpc.addVirtualPrivateGatewayDependent(association);
     }
+  }
+}
+
+export class ImportedRouteTable extends RouteTableBase {
+  public readonly routeTableId: string;
+  public readonly vpc: Vpc;
+
+  constructor(scope: Construct, id: string, props: ImportRouteTableProps) {
+    super(scope, id);
+    this.routeTableId = props.routeTableId;
+    this.vpc = props.vpc;
+  }
+}
+
+export class RouteTable extends RouteTableBase {
+  public readonly routeTableId: string;
+  public readonly vpc: Vpc;
+
+  constructor(scope: Construct, id: string, props: RouteTableProps) {
+    super(scope, id);
+
+    this.vpc = props.vpc;
+
+    const resource = new cdk.aws_ec2.CfnRouteTable(this, 'Resource', {
+      vpcId: props.vpc.vpcId,
+      tags: props.tags,
+    });
+    cdk.Tags.of(this).add('Name', props.name);
+
+    this.routeTableId = resource.ref;
+  }
+
+  static fromRouteTableAttributes(scope: Construct, id: string, props: ImportRouteTableProps) {
+    return new ImportedRouteTable(scope, id, props);
   }
 }

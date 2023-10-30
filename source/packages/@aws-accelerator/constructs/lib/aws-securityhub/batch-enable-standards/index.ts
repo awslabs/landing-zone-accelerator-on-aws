@@ -65,7 +65,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 
       // When there are standards to be enable
       if (standardsModificationList.toEnableStandardRequests.length > 0) {
-        console.log('to enable');
+        console.log('To enable:');
         console.log(standardsModificationList.toEnableStandardRequests);
         await throttlingBackOff(() =>
           securityHubClient
@@ -78,8 +78,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 
       // When there are standards to be disable
       if (standardsModificationList.toDisableStandardArns!.length > 0) {
-        console.log('to disable');
-        console.log(standardsModificationList.toEnableStandardRequests);
+        console.log(`Disabling standard ${standardsModificationList.toDisableStandardArns!}`);
         await throttlingBackOff(() =>
           securityHubClient
             .batchDisableStandards({
@@ -191,7 +190,7 @@ async function getExistingEnabledStandards(
  */
 async function getControlArnsToModify(
   securityHubClient: AWS.SecurityHub,
-  inputStandards: { name: string; enable: boolean; controlsToDisable: string[] | undefined }[],
+  inputStandards: { name: string; enable: string; controlsToDisable: string[] | undefined }[],
   awsSecurityHubStandards: { [name: string]: string }[],
 ): Promise<{ disableStandardControlArns: string[]; enableStandardControlArns: string[] }> {
   const existingEnabledStandards = await getExistingEnabledStandards(securityHubClient);
@@ -200,9 +199,11 @@ async function getControlArnsToModify(
 
   let nextToken: string | undefined = undefined;
   for (const inputStandard of inputStandards) {
-    if (inputStandard.enable) {
+    console.log(`inputStandard: ${JSON.stringify(inputStandard)}`);
+    if (inputStandard.enable === 'true') {
       for (const awsSecurityHubStandard of awsSecurityHubStandards) {
         if (awsSecurityHubStandard[inputStandard.name]) {
+          console.log(`Standard Name: ${awsSecurityHubStandard[inputStandard.name]}`);
           const existingEnabledStandard = existingEnabledStandards.find(
             item => item.StandardsArn === awsSecurityHubStandard[inputStandard.name],
           );
@@ -249,7 +250,6 @@ async function getControlArnsToModify(
             for (const control of standardsControl) {
               if (inputStandard.controlsToDisable?.includes(control.ControlId!)) {
                 console.log(control.ControlId!);
-                console.log(inputStandard.name);
                 disableStandardControls.push(control.StandardsControlArn!);
               } else {
                 if (control.ControlStatus == 'DISABLED') {

@@ -23,6 +23,7 @@ const stack = new cdk.Stack();
 
 new ApplicationLoadBalancer(stack, 'Test', {
   name: 'Test',
+  ssmPrefix: '/accelerator',
   subnets: ['subnet-test123', 'subnet-test456'],
   securityGroups: ['sg-test123', 'sg-test456'],
   scheme: 'internal',

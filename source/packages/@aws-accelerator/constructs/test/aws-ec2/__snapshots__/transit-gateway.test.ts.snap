@@ -1,14 +1,2992 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`TransitGatewayRouteTableAssociation Construct(TransitGatewayRouteTableAssociation):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "TransitGatewayRouteTableAssociation19E386E4": Object {
-      "Properties": Object {
+exports[`ImportTransitGateway Construct(ImportTransitGateway):  Snapshot Test 1`] = `
+{
+  "Resources": {
+    "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354": {
+      "DependsOn": [
+        "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "TgwAttachLookupKms4975C754",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 7,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "sts:AssumeRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+                {
+                  "Action": [
+                    "ec2:DescribeTransitGatewayAttachments",
+                    "ec2:DescribeVpnConnections",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TgwAttachLookupC88D0DA8": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
+            "Arn",
+          ],
+        },
+        "name": "name",
+        "region": {
+          "Ref": "AWS::Region",
+        },
+        "roleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::owningAccountId:role/roleName",
+            ],
+          ],
+        },
+        "transitGatewayId": "transitGatewayId",
+        "type": "vpc",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::GetTransitGatewayAttachment",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TgwAttachLookupKms4975C754": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "TransitGateway888C3350": {
+      "Properties": {
+        "AmazonSideAsn": 1234,
+        "AutoAcceptSharedAttachments": "enable",
+        "DefaultRouteTableAssociation": "enable",
+        "DefaultRouteTablePropagation": "enable",
+        "DnsSupport": "enable",
+        "Tags": [
+          {
+            "Key": "key",
+            "Value": "value",
+          },
+          {
+            "Key": "Name",
+            "Value": "name",
+          },
+        ],
+        "VpnEcmpSupport": "enable",
+      },
+      "Type": "AWS::EC2::TransitGateway",
+    },
+    "TransitGatewayAttachment610A3027": {
+      "Properties": {
+        "SubnetIds": [
+          "one",
+          "two",
+          "three",
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "name",
+          },
+        ],
+        "TransitGatewayId": "transitGatewayId",
+        "VpcId": "vpcId",
+      },
+      "Type": "AWS::EC2::TransitGatewayAttachment",
+    },
+    "TransitGatewayAttachmentAwsPartition24B0B378": {
+      "Properties": {
+        "Options": {
+          "ApplianceModeSupport": "enable",
+          "DnsSupport": "disable",
+          "Ipv6Support": "enable",
+        },
+        "SubnetIds": [
+          "one",
+          "two",
+          "three",
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "name",
+          },
+        ],
+        "TransitGatewayId": "transitGatewayId",
+        "VpcId": "vpcId",
+      },
+      "Type": "AWS::EC2::TransitGatewayVpcAttachment",
+    },
+    "TransitGatewayAttachmentAwsPartitionOptions0EBDAD23": {
+      "Properties": {
+        "Options": {
+          "ApplianceModeSupport": "disable",
+          "DnsSupport": "enable",
+          "Ipv6Support": "disable",
+        },
+        "SubnetIds": [
+          "one",
+          "two",
+          "three",
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "name",
+          },
+        ],
+        "TransitGatewayId": "transitGatewayId",
+        "VpcId": "vpcId",
+      },
+      "Type": "AWS::EC2::TransitGatewayVpcAttachment",
+    },
+    "TransitGatewayAttachmentGovCloud09E6C5F1": {
+      "Properties": {
+        "Options": {
+          "ApplianceModeSupport": "enable",
+          "DnsSupport": "enable",
+          "Ipv6Support": "disable",
+        },
+        "SubnetIds": [
+          "one",
+          "two",
+          "three",
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "name",
+          },
+        ],
+        "TransitGatewayId": "transitGatewayId",
+        "VpcId": "vpcId",
+      },
+      "Type": "AWS::EC2::TransitGatewayAttachment",
+    },
+    "TransitGatewayRouteTableAssociation19E386E4": {
+      "Properties": {
         "TransitGatewayAttachmentId": "transitGatewayAttachmentId",
         "TransitGatewayRouteTableId": "transitGatewayRouteTableId",
       },
       "Type": "AWS::EC2::TransitGatewayRouteTableAssociation",
+    },
+    "TransitGatewayRouteTableAssociationCustomCustomResourceCustomResourceResource083447EF": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEvent82B9C281",
+            "Arn",
+          ],
+        },
+        "transitGatewayAttachmentId": "transitGatewayAttachmentId",
+        "transitGatewayRouteTableId": "transitGatewayRouteTableId",
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEvent82B9C281": {
+      "DependsOn": [
+        "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleDefaultPolicy89E4DC84",
+        "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleF3DD7C87",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayRouteTableAssociationCustom/CustomResource/Resource)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":lambda:",
+                  {
+                    "Ref": "AWS::Region",
+                  },
+                  ":",
+                  {
+                    "Ref": "AWS::AccountId",
+                  },
+                  ":function:test",
+                ],
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleF3DD7C87",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleDefaultPolicy89E4DC84": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":lambda:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":function:test",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":lambda:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":function:test:*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleDefaultPolicy89E4DC84",
+        "Roles": [
+          {
+            "Ref": "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleF3DD7C87",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleF3DD7C87": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TransitGatewayRouteTablePropagationBC0F0909": {
+      "Properties": {
+        "TransitGatewayAttachmentId": "transitGatewayAttachmentId",
+        "TransitGatewayRouteTableId": "transitGatewayRouteTableId",
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
+    },
+    "TransitGatewayRouteTablePropagationCustomCustomResourceCustomResourceResourceF6D0C8C8": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventC125880A",
+            "Arn",
+          ],
+        },
+        "transitGatewayAttachmentId": "transitGatewayAttachmentId",
+        "transitGatewayRouteTableId": "transitGatewayRouteTableId",
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventC125880A": {
+      "DependsOn": [
+        "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRoleDefaultPolicy48F54E60",
+        "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRole483D3ED1",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayRouteTablePropagationCustom/CustomResource/Resource)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":lambda:",
+                  {
+                    "Ref": "AWS::Region",
+                  },
+                  ":",
+                  {
+                    "Ref": "AWS::AccountId",
+                  },
+                  ":function:test",
+                ],
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRole483D3ED1",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRole483D3ED1": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRoleDefaultPolicy48F54E60": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":lambda:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":function:test",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":lambda:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":function:test:*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRoleDefaultPolicy48F54E60",
+        "Roles": [
+          {
+            "Ref": "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRole483D3ED1",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+  },
+}
+`;
+
+exports[`TransitGateway Construct(TransitGateway):  Snapshot Test 1`] = `
+{
+  "Resources": {
+    "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354": {
+      "DependsOn": [
+        "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "TgwAttachLookupKms4975C754",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 7,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "sts:AssumeRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+                {
+                  "Action": [
+                    "ec2:DescribeTransitGatewayAttachments",
+                    "ec2:DescribeVpnConnections",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TgwAttachLookupC88D0DA8": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
+            "Arn",
+          ],
+        },
+        "name": "name",
+        "region": {
+          "Ref": "AWS::Region",
+        },
+        "roleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::owningAccountId:role/roleName",
+            ],
+          ],
+        },
+        "transitGatewayId": "transitGatewayId",
+        "type": "vpc",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::GetTransitGatewayAttachment",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TgwAttachLookupKms4975C754": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "TransitGateway888C3350": {
+      "Properties": {
+        "AmazonSideAsn": 1234,
+        "AutoAcceptSharedAttachments": "enable",
+        "DefaultRouteTableAssociation": "enable",
+        "DefaultRouteTablePropagation": "enable",
+        "DnsSupport": "enable",
+        "Tags": [
+          {
+            "Key": "key",
+            "Value": "value",
+          },
+          {
+            "Key": "Name",
+            "Value": "name",
+          },
+        ],
+        "VpnEcmpSupport": "enable",
+      },
+      "Type": "AWS::EC2::TransitGateway",
+    },
+    "TransitGatewayAttachment610A3027": {
+      "Properties": {
+        "SubnetIds": [
+          "one",
+          "two",
+          "three",
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "name",
+          },
+        ],
+        "TransitGatewayId": "transitGatewayId",
+        "VpcId": "vpcId",
+      },
+      "Type": "AWS::EC2::TransitGatewayAttachment",
+    },
+    "TransitGatewayAttachmentAwsPartition24B0B378": {
+      "Properties": {
+        "Options": {
+          "ApplianceModeSupport": "enable",
+          "DnsSupport": "disable",
+          "Ipv6Support": "enable",
+        },
+        "SubnetIds": [
+          "one",
+          "two",
+          "three",
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "name",
+          },
+        ],
+        "TransitGatewayId": "transitGatewayId",
+        "VpcId": "vpcId",
+      },
+      "Type": "AWS::EC2::TransitGatewayVpcAttachment",
+    },
+    "TransitGatewayAttachmentAwsPartitionOptions0EBDAD23": {
+      "Properties": {
+        "Options": {
+          "ApplianceModeSupport": "disable",
+          "DnsSupport": "enable",
+          "Ipv6Support": "disable",
+        },
+        "SubnetIds": [
+          "one",
+          "two",
+          "three",
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "name",
+          },
+        ],
+        "TransitGatewayId": "transitGatewayId",
+        "VpcId": "vpcId",
+      },
+      "Type": "AWS::EC2::TransitGatewayVpcAttachment",
+    },
+    "TransitGatewayAttachmentGovCloud09E6C5F1": {
+      "Properties": {
+        "Options": {
+          "ApplianceModeSupport": "enable",
+          "DnsSupport": "enable",
+          "Ipv6Support": "disable",
+        },
+        "SubnetIds": [
+          "one",
+          "two",
+          "three",
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "name",
+          },
+        ],
+        "TransitGatewayId": "transitGatewayId",
+        "VpcId": "vpcId",
+      },
+      "Type": "AWS::EC2::TransitGatewayAttachment",
+    },
+    "TransitGatewayRouteTableAssociation19E386E4": {
+      "Properties": {
+        "TransitGatewayAttachmentId": "transitGatewayAttachmentId",
+        "TransitGatewayRouteTableId": "transitGatewayRouteTableId",
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTableAssociation",
+    },
+    "TransitGatewayRouteTableAssociationCustomCustomResourceCustomResourceResource083447EF": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEvent82B9C281",
+            "Arn",
+          ],
+        },
+        "transitGatewayAttachmentId": "transitGatewayAttachmentId",
+        "transitGatewayRouteTableId": "transitGatewayRouteTableId",
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEvent82B9C281": {
+      "DependsOn": [
+        "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleDefaultPolicy89E4DC84",
+        "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleF3DD7C87",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayRouteTableAssociationCustom/CustomResource/Resource)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":lambda:",
+                  {
+                    "Ref": "AWS::Region",
+                  },
+                  ":",
+                  {
+                    "Ref": "AWS::AccountId",
+                  },
+                  ":function:test",
+                ],
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleF3DD7C87",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleDefaultPolicy89E4DC84": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":lambda:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":function:test",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":lambda:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":function:test:*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleDefaultPolicy89E4DC84",
+        "Roles": [
+          {
+            "Ref": "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleF3DD7C87",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleF3DD7C87": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TransitGatewayRouteTablePropagationBC0F0909": {
+      "Properties": {
+        "TransitGatewayAttachmentId": "transitGatewayAttachmentId",
+        "TransitGatewayRouteTableId": "transitGatewayRouteTableId",
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
+    },
+    "TransitGatewayRouteTablePropagationCustomCustomResourceCustomResourceResourceF6D0C8C8": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventC125880A",
+            "Arn",
+          ],
+        },
+        "transitGatewayAttachmentId": "transitGatewayAttachmentId",
+        "transitGatewayRouteTableId": "transitGatewayRouteTableId",
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventC125880A": {
+      "DependsOn": [
+        "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRoleDefaultPolicy48F54E60",
+        "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRole483D3ED1",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayRouteTablePropagationCustom/CustomResource/Resource)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":lambda:",
+                  {
+                    "Ref": "AWS::Region",
+                  },
+                  ":",
+                  {
+                    "Ref": "AWS::AccountId",
+                  },
+                  ":function:test",
+                ],
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRole483D3ED1",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRole483D3ED1": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRoleDefaultPolicy48F54E60": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":lambda:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":function:test",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":lambda:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":function:test:*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRoleDefaultPolicy48F54E60",
+        "Roles": [
+          {
+            "Ref": "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRole483D3ED1",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+  },
+}
+`;
+
+exports[`TransitGatewayAttachment Construct(TransitGatewayAttachment):  Snapshot Test 1`] = `
+{
+  "Resources": {
+    "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354": {
+      "DependsOn": [
+        "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "TgwAttachLookupKms4975C754",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 7,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "sts:AssumeRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+                {
+                  "Action": [
+                    "ec2:DescribeTransitGatewayAttachments",
+                    "ec2:DescribeVpnConnections",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TgwAttachLookupC88D0DA8": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
+            "Arn",
+          ],
+        },
+        "name": "name",
+        "region": {
+          "Ref": "AWS::Region",
+        },
+        "roleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::owningAccountId:role/roleName",
+            ],
+          ],
+        },
+        "transitGatewayId": "transitGatewayId",
+        "type": "vpc",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::GetTransitGatewayAttachment",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TgwAttachLookupKms4975C754": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "TransitGateway888C3350": {
+      "Properties": {
+        "AmazonSideAsn": 1234,
+        "AutoAcceptSharedAttachments": "enable",
+        "DefaultRouteTableAssociation": "enable",
+        "DefaultRouteTablePropagation": "enable",
+        "DnsSupport": "enable",
+        "Tags": [
+          {
+            "Key": "key",
+            "Value": "value",
+          },
+          {
+            "Key": "Name",
+            "Value": "name",
+          },
+        ],
+        "VpnEcmpSupport": "enable",
+      },
+      "Type": "AWS::EC2::TransitGateway",
+    },
+    "TransitGatewayAttachment610A3027": {
+      "Properties": {
+        "SubnetIds": [
+          "one",
+          "two",
+          "three",
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "name",
+          },
+        ],
+        "TransitGatewayId": "transitGatewayId",
+        "VpcId": "vpcId",
+      },
+      "Type": "AWS::EC2::TransitGatewayAttachment",
+    },
+    "TransitGatewayAttachmentAwsPartition24B0B378": {
+      "Properties": {
+        "Options": {
+          "ApplianceModeSupport": "enable",
+          "DnsSupport": "disable",
+          "Ipv6Support": "enable",
+        },
+        "SubnetIds": [
+          "one",
+          "two",
+          "three",
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "name",
+          },
+        ],
+        "TransitGatewayId": "transitGatewayId",
+        "VpcId": "vpcId",
+      },
+      "Type": "AWS::EC2::TransitGatewayVpcAttachment",
+    },
+    "TransitGatewayAttachmentAwsPartitionOptions0EBDAD23": {
+      "Properties": {
+        "Options": {
+          "ApplianceModeSupport": "disable",
+          "DnsSupport": "enable",
+          "Ipv6Support": "disable",
+        },
+        "SubnetIds": [
+          "one",
+          "two",
+          "three",
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "name",
+          },
+        ],
+        "TransitGatewayId": "transitGatewayId",
+        "VpcId": "vpcId",
+      },
+      "Type": "AWS::EC2::TransitGatewayVpcAttachment",
+    },
+    "TransitGatewayAttachmentGovCloud09E6C5F1": {
+      "Properties": {
+        "Options": {
+          "ApplianceModeSupport": "enable",
+          "DnsSupport": "enable",
+          "Ipv6Support": "disable",
+        },
+        "SubnetIds": [
+          "one",
+          "two",
+          "three",
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "name",
+          },
+        ],
+        "TransitGatewayId": "transitGatewayId",
+        "VpcId": "vpcId",
+      },
+      "Type": "AWS::EC2::TransitGatewayAttachment",
+    },
+    "TransitGatewayRouteTableAssociation19E386E4": {
+      "Properties": {
+        "TransitGatewayAttachmentId": "transitGatewayAttachmentId",
+        "TransitGatewayRouteTableId": "transitGatewayRouteTableId",
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTableAssociation",
+    },
+    "TransitGatewayRouteTableAssociationCustomCustomResourceCustomResourceResource083447EF": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEvent82B9C281",
+            "Arn",
+          ],
+        },
+        "transitGatewayAttachmentId": "transitGatewayAttachmentId",
+        "transitGatewayRouteTableId": "transitGatewayRouteTableId",
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEvent82B9C281": {
+      "DependsOn": [
+        "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleDefaultPolicy89E4DC84",
+        "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleF3DD7C87",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayRouteTableAssociationCustom/CustomResource/Resource)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":lambda:",
+                  {
+                    "Ref": "AWS::Region",
+                  },
+                  ":",
+                  {
+                    "Ref": "AWS::AccountId",
+                  },
+                  ":function:test",
+                ],
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleF3DD7C87",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleDefaultPolicy89E4DC84": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":lambda:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":function:test",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":lambda:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":function:test:*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleDefaultPolicy89E4DC84",
+        "Roles": [
+          {
+            "Ref": "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleF3DD7C87",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleF3DD7C87": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TransitGatewayRouteTablePropagationBC0F0909": {
+      "Properties": {
+        "TransitGatewayAttachmentId": "transitGatewayAttachmentId",
+        "TransitGatewayRouteTableId": "transitGatewayRouteTableId",
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
+    },
+    "TransitGatewayRouteTablePropagationCustomCustomResourceCustomResourceResourceF6D0C8C8": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventC125880A",
+            "Arn",
+          ],
+        },
+        "transitGatewayAttachmentId": "transitGatewayAttachmentId",
+        "transitGatewayRouteTableId": "transitGatewayRouteTableId",
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventC125880A": {
+      "DependsOn": [
+        "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRoleDefaultPolicy48F54E60",
+        "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRole483D3ED1",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayRouteTablePropagationCustom/CustomResource/Resource)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":lambda:",
+                  {
+                    "Ref": "AWS::Region",
+                  },
+                  ":",
+                  {
+                    "Ref": "AWS::AccountId",
+                  },
+                  ":function:test",
+                ],
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRole483D3ED1",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRole483D3ED1": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRoleDefaultPolicy48F54E60": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":lambda:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":function:test",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":lambda:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":function:test:*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRoleDefaultPolicy48F54E60",
+        "Roles": [
+          {
+            "Ref": "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRole483D3ED1",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+  },
+}
+`;
+
+exports[`TransitGatewayRouteTableAssociation Construct(TransitGatewayRouteTableAssociation):  Snapshot Test 1`] = `
+{
+  "Resources": {
+    "TransitGateway888C3350": {
+      "Properties": {
+        "AmazonSideAsn": 1234,
+        "AutoAcceptSharedAttachments": "enable",
+        "DefaultRouteTableAssociation": "enable",
+        "DefaultRouteTablePropagation": "enable",
+        "DnsSupport": "enable",
+        "Tags": [
+          {
+            "Key": "key",
+            "Value": "value",
+          },
+          {
+            "Key": "Name",
+            "Value": "name",
+          },
+        ],
+        "VpnEcmpSupport": "enable",
+      },
+      "Type": "AWS::EC2::TransitGateway",
+    },
+    "TransitGatewayRouteTableAssociation19E386E4": {
+      "Properties": {
+        "TransitGatewayAttachmentId": "transitGatewayAttachmentId",
+        "TransitGatewayRouteTableId": "transitGatewayRouteTableId",
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTableAssociation",
+    },
+    "TransitGatewayRouteTableAssociationCustomCustomResourceCustomResourceResource083447EF": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEvent82B9C281",
+            "Arn",
+          ],
+        },
+        "transitGatewayAttachmentId": "transitGatewayAttachmentId",
+        "transitGatewayRouteTableId": "transitGatewayRouteTableId",
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEvent82B9C281": {
+      "DependsOn": [
+        "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleDefaultPolicy89E4DC84",
+        "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleF3DD7C87",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayRouteTableAssociationCustom/CustomResource/Resource)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":lambda:",
+                  {
+                    "Ref": "AWS::Region",
+                  },
+                  ":",
+                  {
+                    "Ref": "AWS::AccountId",
+                  },
+                  ":function:test",
+                ],
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleF3DD7C87",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleDefaultPolicy89E4DC84": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":lambda:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":function:test",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":lambda:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":function:test:*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleDefaultPolicy89E4DC84",
+        "Roles": [
+          {
+            "Ref": "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleF3DD7C87",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleF3DD7C87": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TransitGatewayRouteTablePropagationBC0F0909": {
+      "Properties": {
+        "TransitGatewayAttachmentId": "transitGatewayAttachmentId",
+        "TransitGatewayRouteTableId": "transitGatewayRouteTableId",
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
+    },
+    "TransitGatewayRouteTablePropagationCustomCustomResourceCustomResourceResourceF6D0C8C8": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventC125880A",
+            "Arn",
+          ],
+        },
+        "transitGatewayAttachmentId": "transitGatewayAttachmentId",
+        "transitGatewayRouteTableId": "transitGatewayRouteTableId",
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventC125880A": {
+      "DependsOn": [
+        "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRoleDefaultPolicy48F54E60",
+        "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRole483D3ED1",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayRouteTablePropagationCustom/CustomResource/Resource)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":lambda:",
+                  {
+                    "Ref": "AWS::Region",
+                  },
+                  ":",
+                  {
+                    "Ref": "AWS::AccountId",
+                  },
+                  ":function:test",
+                ],
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRole483D3ED1",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRole483D3ED1": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRoleDefaultPolicy48F54E60": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":lambda:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":function:test",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":lambda:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":function:test:*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRoleDefaultPolicy48F54E60",
+        "Roles": [
+          {
+            "Ref": "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRole483D3ED1",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+  },
+}
+`;
+
+exports[`TransitGatewayRouteTablePropagation Construct(TransitGatewayRouteTablePropagation):  Snapshot Test 1`] = `
+{
+  "Resources": {
+    "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354": {
+      "DependsOn": [
+        "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "TgwAttachLookupKms4975C754",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 7,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "sts:AssumeRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+                {
+                  "Action": [
+                    "ec2:DescribeTransitGatewayAttachments",
+                    "ec2:DescribeVpnConnections",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TgwAttachLookupC88D0DA8": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
+            "Arn",
+          ],
+        },
+        "name": "name",
+        "region": {
+          "Ref": "AWS::Region",
+        },
+        "roleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::owningAccountId:role/roleName",
+            ],
+          ],
+        },
+        "transitGatewayId": "transitGatewayId",
+        "type": "vpc",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::GetTransitGatewayAttachment",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TgwAttachLookupKms4975C754": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "TransitGateway888C3350": {
+      "Properties": {
+        "AmazonSideAsn": 1234,
+        "AutoAcceptSharedAttachments": "enable",
+        "DefaultRouteTableAssociation": "enable",
+        "DefaultRouteTablePropagation": "enable",
+        "DnsSupport": "enable",
+        "Tags": [
+          {
+            "Key": "key",
+            "Value": "value",
+          },
+          {
+            "Key": "Name",
+            "Value": "name",
+          },
+        ],
+        "VpnEcmpSupport": "enable",
+      },
+      "Type": "AWS::EC2::TransitGateway",
+    },
+    "TransitGatewayAttachment610A3027": {
+      "Properties": {
+        "SubnetIds": [
+          "one",
+          "two",
+          "three",
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "name",
+          },
+        ],
+        "TransitGatewayId": "transitGatewayId",
+        "VpcId": "vpcId",
+      },
+      "Type": "AWS::EC2::TransitGatewayAttachment",
+    },
+    "TransitGatewayAttachmentAwsPartition24B0B378": {
+      "Properties": {
+        "Options": {
+          "ApplianceModeSupport": "enable",
+          "DnsSupport": "disable",
+          "Ipv6Support": "enable",
+        },
+        "SubnetIds": [
+          "one",
+          "two",
+          "three",
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "name",
+          },
+        ],
+        "TransitGatewayId": "transitGatewayId",
+        "VpcId": "vpcId",
+      },
+      "Type": "AWS::EC2::TransitGatewayVpcAttachment",
+    },
+    "TransitGatewayAttachmentAwsPartitionOptions0EBDAD23": {
+      "Properties": {
+        "Options": {
+          "ApplianceModeSupport": "disable",
+          "DnsSupport": "enable",
+          "Ipv6Support": "disable",
+        },
+        "SubnetIds": [
+          "one",
+          "two",
+          "three",
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "name",
+          },
+        ],
+        "TransitGatewayId": "transitGatewayId",
+        "VpcId": "vpcId",
+      },
+      "Type": "AWS::EC2::TransitGatewayVpcAttachment",
+    },
+    "TransitGatewayAttachmentGovCloud09E6C5F1": {
+      "Properties": {
+        "Options": {
+          "ApplianceModeSupport": "enable",
+          "DnsSupport": "enable",
+          "Ipv6Support": "disable",
+        },
+        "SubnetIds": [
+          "one",
+          "two",
+          "three",
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "name",
+          },
+        ],
+        "TransitGatewayId": "transitGatewayId",
+        "VpcId": "vpcId",
+      },
+      "Type": "AWS::EC2::TransitGatewayAttachment",
+    },
+    "TransitGatewayRouteTableAssociation19E386E4": {
+      "Properties": {
+        "TransitGatewayAttachmentId": "transitGatewayAttachmentId",
+        "TransitGatewayRouteTableId": "transitGatewayRouteTableId",
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTableAssociation",
+    },
+    "TransitGatewayRouteTableAssociationCustomCustomResourceCustomResourceResource083447EF": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEvent82B9C281",
+            "Arn",
+          ],
+        },
+        "transitGatewayAttachmentId": "transitGatewayAttachmentId",
+        "transitGatewayRouteTableId": "transitGatewayRouteTableId",
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEvent82B9C281": {
+      "DependsOn": [
+        "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleDefaultPolicy89E4DC84",
+        "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleF3DD7C87",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayRouteTableAssociationCustom/CustomResource/Resource)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":lambda:",
+                  {
+                    "Ref": "AWS::Region",
+                  },
+                  ":",
+                  {
+                    "Ref": "AWS::AccountId",
+                  },
+                  ":function:test",
+                ],
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleF3DD7C87",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleDefaultPolicy89E4DC84": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":lambda:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":function:test",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":lambda:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":function:test:*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleDefaultPolicy89E4DC84",
+        "Roles": [
+          {
+            "Ref": "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleF3DD7C87",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleF3DD7C87": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TransitGatewayRouteTablePropagationBC0F0909": {
+      "Properties": {
+        "TransitGatewayAttachmentId": "transitGatewayAttachmentId",
+        "TransitGatewayRouteTableId": "transitGatewayRouteTableId",
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
+    },
+    "TransitGatewayRouteTablePropagationCustomCustomResourceCustomResourceResourceF6D0C8C8": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventC125880A",
+            "Arn",
+          ],
+        },
+        "transitGatewayAttachmentId": "transitGatewayAttachmentId",
+        "transitGatewayRouteTableId": "transitGatewayRouteTableId",
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventC125880A": {
+      "DependsOn": [
+        "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRoleDefaultPolicy48F54E60",
+        "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRole483D3ED1",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayRouteTablePropagationCustom/CustomResource/Resource)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":lambda:",
+                  {
+                    "Ref": "AWS::Region",
+                  },
+                  ":",
+                  {
+                    "Ref": "AWS::AccountId",
+                  },
+                  ":function:test",
+                ],
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRole483D3ED1",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRole483D3ED1": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRoleDefaultPolicy48F54E60": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":lambda:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":function:test",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":lambda:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":function:test:*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRoleDefaultPolicy48F54E60",
+        "Roles": [
+          {
+            "Ref": "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRole483D3ED1",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
   },
 }

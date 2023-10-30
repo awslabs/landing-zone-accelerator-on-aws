@@ -1,0 +1,266 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`IdentityCenterOrganizationAdminAccount Construct(IdentityCenterOrganizationAdminAccount):  Snapshot Test 1`] = `
+{
+  "Resources": {
+    "IdentityCenterOrganizationAdminAccountIdentityCenterOrganizationAdminAccountProviderLambdaB22B900C": {
+      "DependsOn": [
+        "IdentityCenterOrganizationAdminAccountIdentityCenterOrganizationAdminAccountProviderLambdaServiceRoleDefaultPolicy302EC61B",
+        "IdentityCenterOrganizationAdminAccountIdentityCenterOrganizationAdminAccountProviderLambdaServiceRole22209E8A",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "IdentityCenterOrganizationAdminAccountIdentityCenterOrganizationAdminAccountProviderLambdaServiceRole22209E8A",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 160,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "IdentityCenterOrganizationAdminAccountIdentityCenterOrganizationAdminAccountProviderLambdaServiceRole22209E8A": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "IdentityCenterOrganizationAdminAccountIdentityCenterOrganizationAdminAccountProviderLambdaServiceRoleDefaultPolicy302EC61B": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "organizations:ListDelegatedAdministrators",
+                "organizations:RegisterDelegatedAdministrator",
+                "organizations:DeregisterDelegatedAdministrator",
+                "organizations:EnableAwsServiceAccess",
+                "organizations:DisableAWSServiceAccess",
+                "organizations:DescribeAccount",
+                "organizations:DescribeOrganization",
+                "organizations:DescribeOrganizationalUnit",
+                "organizations:ListAccounts",
+                "organizations:ListAWSServiceAccessForOrganization",
+                "sso:ListInstances",
+                "sso:ListPermissionSets",
+                "sso:ListAccountAssignments",
+                "sso:DescribePermissionSet",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "IdentityCenterOrganizationAdminAccountIdentityCenterOrganizationAdminAccountProviderLambdaServiceRoleDefaultPolicy302EC61B",
+        "Roles": [
+          {
+            "Ref": "IdentityCenterOrganizationAdminAccountIdentityCenterOrganizationAdminAccountProviderLambdaServiceRole22209E8A",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "IdentityCenterOrganizationAdminAccountframeworkonEventEC3480A7": {
+      "DependsOn": [
+        "IdentityCenterOrganizationAdminAccountframeworkonEventServiceRoleDefaultPolicy23D13EB2",
+        "IdentityCenterOrganizationAdminAccountframeworkonEventServiceRole3C202AD2",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/IdentityCenterOrganizationAdminAccount/Resource)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "IdentityCenterOrganizationAdminAccountIdentityCenterOrganizationAdminAccountProviderLambdaB22B900C",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "IdentityCenterOrganizationAdminAccountframeworkonEventServiceRole3C202AD2",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "IdentityCenterOrganizationAdminAccountframeworkonEventServiceRole3C202AD2": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "IdentityCenterOrganizationAdminAccountframeworkonEventServiceRoleDefaultPolicy23D13EB2": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "IdentityCenterOrganizationAdminAccountIdentityCenterOrganizationAdminAccountProviderLambdaB22B900C",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "IdentityCenterOrganizationAdminAccountIdentityCenterOrganizationAdminAccountProviderLambdaB22B900C",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "IdentityCenterOrganizationAdminAccountframeworkonEventServiceRoleDefaultPolicy23D13EB2",
+        "Roles": [
+          {
+            "Ref": "IdentityCenterOrganizationAdminAccountframeworkonEventServiceRole3C202AD2",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "IdentityCenterOrganizationAdminAccountidentityCenterAdmin14AEDC37": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "IdentityCenterOrganizationAdminAccountframeworkonEventEC3480A7",
+            "Arn",
+          ],
+        },
+        "adminAccountId": "adminAccountId",
+        "lzaManagedAssignments": [],
+        "lzaManagedPermissionSets": [],
+        "partition": {
+          "Ref": "AWS::Partition",
+        },
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+  },
+}
+`;

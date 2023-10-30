@@ -11,14 +11,17 @@
  *  and limitations under the License.
  */
 
-import * as AWS from 'aws-sdk';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
 
-import { throttlingBackOff } from '@aws-accelerator/utils';
+import { createLogger, loadOrganizationalUnits } from '@aws-accelerator/utils';
 
 import * as t from './common-types';
+import { ReplacementsConfig } from './replacements-config';
+import { AccountsConfig } from './accounts-config';
+
+const logger = createLogger(['organization-config']);
 
 /**
  * AWS Organizations configuration items.
@@ -45,6 +48,7 @@ export abstract class OrganizationConfigTypes {
     description: t.nonEmptyString,
     policy: t.nonEmptyString,
     type: t.enums('Type', ['awsManaged', 'customerManaged'], 'Value should be a Service Control Policy Type'),
+    strategy: t.optional(t.enums('Type', ['deny-list', 'allow-list'], 'Defines SCP strategy. Default: deny-list')),
     deploymentTargets: t.deploymentTargets,
   });
 
@@ -177,6 +181,7 @@ export abstract class QuarantineNewAccountsConfig
  * ```
  * serviceControlPolicies:
  *   - name: QuarantineAccounts
+ *     description: Quarantine accounts
  *     policy: path/to/policy.json
  *     type: customerManaged
  *     deploymentTargets:
@@ -192,7 +197,7 @@ export abstract class ServiceControlPolicyConfig
    */
   readonly name: string = '';
   /**
-   * An optional description to assign to the policy.
+   * A description to assign to the policy.
    */
   readonly description: string = '';
   /**
@@ -207,6 +212,11 @@ export abstract class ServiceControlPolicyConfig
    * Service control policy deployment targets
    */
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
+  /**
+   * Service control policy strategy.
+   * https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps_strategies.html
+   */
+  readonly strategy: string = 'deny-list';
 }
 
 /**
@@ -235,7 +245,7 @@ export abstract class TaggingPolicyConfig implements t.TypeOf<typeof Organizatio
    */
   readonly name: string = '';
   /**
-   * An optional description to assign to the policy.
+   * A description to assign to the policy.
    */
   readonly description: string = '';
   /**
@@ -273,9 +283,12 @@ export abstract class BackupPolicyConfig implements t.TypeOf<typeof Organization
    * The regex pattern that is used to validate this parameter is a string of any of the characters in the ASCII character range.
    */
   readonly name: string = '';
+  /**
+   * A description to assign to the policy.
+   */
   readonly description: string = '';
   /**
-   * An optional description to assign to the policy.
+   * Backup policy definition json file. This file must be present in config repository
    */
   readonly policy: string = '';
   /**
@@ -361,6 +374,7 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
    *       groups or log streams.
    *     policy: service-control-policies/deny-delete-vpc-flow-logs.json
    *     type: customerManaged
+   *     strategy: deny-list # defines SCP strategy - deny-list or allow-list. See https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps_strategies.html
    *     deploymentTargets:
    *       organizationalUnits:
    *         - Security
@@ -414,123 +428,9 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
    * @param configDir
    * @param validateConfig
    */
-  constructor(
-    values?: t.TypeOf<typeof OrganizationConfigTypes.organizationConfig>,
-    configDir?: string,
-    validateConfig?: boolean,
-  ) {
-    const errors: string[] = [];
-
+  constructor(values?: t.TypeOf<typeof OrganizationConfigTypes.organizationConfig>) {
     if (values) {
-      if (configDir && validateConfig) {
-        // Validate presence of service control policy file
-        this.validateServiceControlPolicyFile(configDir, values, errors);
-
-        // Validate presence of tagging policy file
-        this.validateTaggingPolicyFile(configDir, values, errors);
-
-        // Validate presence of backup policy file
-        this.validateBackupPolicyFile(configDir, values, errors);
-      }
-
-      if (errors.length) {
-        throw new Error(`${OrganizationConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
-      }
       Object.assign(this, values);
-    }
-  }
-
-  /**
-   * Function to validate service control policy file existence
-   * @param configDir
-   * @param values
-   */
-  private validateServiceControlPolicyFile(
-    configDir: string,
-    values: t.TypeOf<typeof OrganizationConfigTypes.organizationConfig>,
-    errors: string[],
-  ) {
-    type validateScpItem = {
-      orgEntity: string;
-      orgEntityType: string;
-      appliedScpName: string[];
-    };
-    const validateScpCountForOrg: validateScpItem[] = [];
-    for (const serviceControlPolicy of values.serviceControlPolicies ?? []) {
-      if (!fs.existsSync(path.join(configDir, serviceControlPolicy.policy))) {
-        errors.push(
-          `Invalid policy file ${serviceControlPolicy.policy} for service control policy ${serviceControlPolicy.name} !!!`,
-        );
-      }
-
-      for (const orgUnitScp of serviceControlPolicy.deploymentTargets.organizationalUnits ?? []) {
-        //check in array to see if OU is already there
-        const index = validateScpCountForOrg.map(object => object.orgEntity).indexOf(orgUnitScp);
-        if (index > -1) {
-          validateScpCountForOrg[index].appliedScpName.push(serviceControlPolicy.name);
-        } else {
-          validateScpCountForOrg.push({
-            orgEntity: orgUnitScp,
-            orgEntityType: 'Organization Unit',
-            appliedScpName: [serviceControlPolicy.name],
-          });
-        }
-      }
-      for (const accUnitScp of serviceControlPolicy.deploymentTargets.accounts ?? []) {
-        //check in array to see if account is already there
-        const index = validateScpCountForOrg.map(object => object.orgEntity).indexOf(accUnitScp);
-        if (index > -1) {
-          validateScpCountForOrg[index].appliedScpName.push(serviceControlPolicy.name);
-        } else {
-          validateScpCountForOrg.push({
-            orgEntity: accUnitScp,
-            orgEntityType: 'Account',
-            appliedScpName: [serviceControlPolicy.name],
-          });
-        }
-      }
-    }
-    for (const validateOrgEntity of validateScpCountForOrg) {
-      if (validateOrgEntity.appliedScpName.length > 5) {
-        errors.push(
-          `${validateOrgEntity.orgEntityType} - ${validateOrgEntity.orgEntity} has ${validateOrgEntity.appliedScpName.length} out of 5 allowed scps`,
-        );
-      }
-    }
-  }
-
-  /**
-   * Function to validate tagging policy file existence
-   * @param configDir
-   * @param values
-   */
-  private validateTaggingPolicyFile(
-    configDir: string,
-    values: t.TypeOf<typeof OrganizationConfigTypes.organizationConfig>,
-    errors: string[],
-  ) {
-    for (const taggingPolicy of values.taggingPolicies ?? []) {
-      if (!fs.existsSync(path.join(configDir, taggingPolicy.policy))) {
-        errors.push(`Invalid policy file ${taggingPolicy.policy} for tagging policy ${taggingPolicy.name} !!!`);
-      }
-    }
-  }
-
-  /**
-   * Function to validate presence of backup policy file existence
-   * @param configDir
-   * @param values
-   */
-  private validateBackupPolicyFile(
-    configDir: string,
-    values: t.TypeOf<typeof OrganizationConfigTypes.organizationConfig>,
-    errors: string[],
-  ) {
-    // Validate presence of backup policy file
-    for (const backupPolicy of values.backupPolicies ?? []) {
-      if (!fs.existsSync(path.join(configDir, backupPolicy.policy))) {
-        errors.push(`Invalid policy file ${backupPolicy.policy} for backup policy ${backupPolicy.name} !!!`);
-      }
     }
   }
 
@@ -540,10 +440,51 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
    * @param validateConfig
    * @returns
    */
-  static load(dir: string, validateConfig?: boolean): OrganizationConfig {
-    const buffer = fs.readFileSync(path.join(dir, OrganizationConfig.FILENAME), 'utf8');
+  static load(dir: string, replacementsConfig?: ReplacementsConfig): OrganizationConfig {
+    const initialBuffer = fs.readFileSync(path.join(dir, OrganizationConfig.FILENAME), 'utf8');
+    const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
     const values = t.parse(OrganizationConfigTypes.organizationConfig, yaml.load(buffer));
-    return new OrganizationConfig(values, dir, validateConfig);
+    return new OrganizationConfig(values);
+  }
+
+  /**
+   * Loads the file raw with default replacements placeholders to determine if organizations is enabled.
+   */
+  static loadRawOrganizationsConfig(dir: string): OrganizationConfig {
+    const accountsConfig = AccountsConfig.load(dir);
+    let replacementsConfig: ReplacementsConfig;
+
+    if (fs.existsSync(path.join(dir, ReplacementsConfig.FILENAME))) {
+      replacementsConfig = ReplacementsConfig.load(dir, accountsConfig, true);
+    } else {
+      replacementsConfig = new ReplacementsConfig();
+    }
+
+    replacementsConfig.loadReplacementValues({});
+    return OrganizationConfig.load(dir, replacementsConfig);
+  }
+
+  /**
+   * Load from string
+   * @param initialBuffer
+   * @param replacementsConfig
+   * @returns
+   */
+  static loadFromString(initialBuffer: string, replacementsConfig?: ReplacementsConfig): OrganizationConfig {
+    const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
+    const values = t.parse(OrganizationConfigTypes.organizationConfig, yaml.load(buffer));
+    return new OrganizationConfig(values);
+  }
+
+  /**
+   * Load from buffer
+   * @param dir
+   * @param replacementsConfig
+   * @returns
+   */
+  static loadBuffer(dir: string, replacementsConfig?: ReplacementsConfig): string {
+    const initialBuffer = fs.readFileSync(path.join(dir, OrganizationConfig.FILENAME), 'utf8');
+    return replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
   }
 
   /**
@@ -553,78 +494,30 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
   public async loadOrganizationalUnitIds(partition: string): Promise<void> {
     if (!this.enable) {
       // do nothing
+      return;
     } else {
       this.organizationalUnitIds = [];
     }
     if (this.organizationalUnitIds?.length == 0) {
-      let organizationsClient: AWS.Organizations;
-      if (partition === 'aws-us-gov') {
-        organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1' });
-      } else if (partition === 'aws-cn') {
-        organizationsClient = new AWS.Organizations({ region: 'cn-northwest-1' });
-      } else {
-        organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
-      }
+      this.organizationalUnitIds = await loadOrganizationalUnits(partition, this.organizationalUnits);
+    }
+  }
 
-      let rootId = '';
-
-      let listRootsNextToken: string | undefined = undefined;
-      do {
-        const page = await throttlingBackOff(() =>
-          organizationsClient.listRoots({ NextToken: listRootsNextToken }).promise(),
-        );
-        for (const root of page.Roots ?? []) {
-          if (root.Name === 'Root' && root.Id && root.Arn) {
-            this.organizationalUnitIds?.push({ name: root.Name, id: root.Id, arn: root.Arn });
-            rootId = root.Id;
-          }
-        }
-        listRootsNextToken = page.NextToken;
-      } while (listRootsNextToken);
-
-      for (const item of this.organizationalUnits) {
-        let parentId = rootId;
-        let parentName = '';
-
-        const parentPath = this.getPath(item.name);
-        for (const parent of parentPath.split('/')) {
-          if (parent) {
-            let ouForParentnextToken: string | undefined = undefined;
-            do {
-              const page = await throttlingBackOff(() =>
-                organizationsClient
-                  .listOrganizationalUnitsForParent({ ParentId: parentId, NextToken: ouForParentnextToken })
-                  .promise(),
-              );
-              for (const ou of page.OrganizationalUnits ?? []) {
-                if (ou.Name === parent && ou.Id) {
-                  parentId = ou.Id;
-                  parentName = ou.Name;
-                }
-              }
-              ouForParentnextToken = page.NextToken;
-            } while (ouForParentnextToken);
-          }
-        }
-
-        let nextToken: string | undefined = undefined;
-        do {
-          const page = await throttlingBackOff(() =>
-            organizationsClient
-              .listOrganizationalUnitsForParent({ ParentId: parentId, NextToken: nextToken })
-              .promise(),
-          );
-          for (const ou of page.OrganizationalUnits ?? []) {
-            const ouName = this.getOuName(item.name);
-            const ouParent = this.getParentOuName(item.name);
-            if (ou.Name === ouName && ouParent === parentName && ou.Id && ou.Arn) {
-              this.organizationalUnitIds?.push({ name: item.name, id: ou.Id, arn: ou.Arn });
-            }
-          }
-          nextToken = page.NextToken;
-        } while (nextToken);
+  public getOrganizationId(): string | undefined {
+    if (!this.enable) {
+      return undefined;
+    } else {
+      // We can get the AWS Organization Id without an API call here
+      // because we already retrieved OU ARNs which contain the Organization Id.
+      // We know every organization has at least one OU so we
+      // can get the Organization Id from parsing the first OU ARN.
+      const orgId = this.organizationalUnitIds![0].arn.split('/')[1];
+      if (orgId) {
+        return orgId;
       }
     }
+    logger.error('Organizations not enabled or error getting Organization Id');
+    throw new Error('configuration validation failed.');
   }
 
   public getOrganizationalUnitId(name: string): string {
@@ -636,7 +529,8 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
         return ou.id;
       }
     }
-    throw new Error("Organizations not enabled or OU doesn't exist");
+    logger.error(`Could not get Organization ID for name: ${name}. Organizations not enabled or OU doesn't exist`);
+    throw new Error('configuration validation failed.');
   }
 
   public getOrganizationalUnitArn(name: string): string {
@@ -648,10 +542,14 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
         return ou.arn;
       }
     }
-    throw new Error("Organizations not enabled or OU doesn't exist");
+    logger.error(`Could not get Organization Arn for name: ${name}. Organizations not enabled or OU doesn't exist`);
+    throw new Error('configuration validation failed.');
   }
 
   public isIgnored(name: string): boolean {
+    if (!this.enable) {
+      return false;
+    }
     const ou = this.organizationalUnits?.find(item => item.name === name);
     if (ou?.ignore) {
       return true;

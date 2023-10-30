@@ -26,6 +26,7 @@ new SsmParameterLookup(stack, 'SsmParameter', {
   parameterRegion: 'us-east-1',
   roleName: 'TestRole',
   logRetentionInDays: 3653,
+  acceleratorPrefix: 'AWSAccelerator',
 });
 
 /**

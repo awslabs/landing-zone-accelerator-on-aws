@@ -67,7 +67,11 @@ export interface TransitGatewayPeeringProps {
      */
     readonly accountName: string;
     /**
-     * Requester Transit Gateway name.
+     * Requester Transit Gateway ID.
+     */
+    readonly transitGatewayId: string;
+    /**
+     * Requester Transit Gateway Name.
      */
     readonly transitGatewayName: string;
     /**
@@ -104,10 +108,7 @@ export class TransitGatewayPeering extends Construct {
         peerAccountId: props.accepter.accountId,
         peerRegion: props.accepter.region,
         peerTransitGatewayId: props.accepter.transitGatewayId,
-        transitGatewayId: cdk.aws_ssm.StringParameter.valueForStringParameter(
-          this,
-          `/accelerator/network/transitGateways/${props.requester.transitGatewayName}/id`,
-        ),
+        transitGatewayId: props.requester.transitGatewayId,
         tags: props.requester.tags,
       },
     );
@@ -118,13 +119,15 @@ export class TransitGatewayPeering extends Construct {
 
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
       codeDirectory: path.join(__dirname, 'accept-transit-gateway-peering-attachment/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
       policyStatements: [
         {
           Sid: 'AllowAssumeRole',
           Effect: 'Allow',
           Action: ['sts:AssumeRole'],
-          Resource: `arn:aws:iam::${props.accepter.accountId}:role/${props.accepter.accountAccessRoleName}`,
+          Resource: `arn:${cdk.Stack.of(this).partition}:iam::${props.accepter.accountId}:role/${
+            props.accepter.accountAccessRoleName
+          }`,
         },
         {
           Sid: 'AllowModifyPeeringReferences',
@@ -164,6 +167,7 @@ export class TransitGatewayPeering extends Construct {
         requesterRegion: cdk.Stack.of(this).region,
         requesterTransitGatewayRouteTableId: props.requester.transitGatewayRouteTableId,
         requesterTransitGatewayAttachmentId: this.peeringAttachmentId,
+        requesterTransitGatewayId: props.requester.transitGatewayId,
 
         autoAccept: props.accepter.autoAccept,
         peeringTags: tags.length === 0 ? undefined : tags,

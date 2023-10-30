@@ -59,7 +59,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
           targetRoute53Client = new AWS.Route53({ customUserAgent: solutionId });
         } else {
           console.log('Not running in hosted zone account, assume role to create clients');
-          const stsClient = new AWS.STS({ customUserAgent: solutionId });
+          const stsClient = new AWS.STS({ customUserAgent: solutionId, region: region });
           const assumeRoleResponse = await throttlingBackOff(() =>
             stsClient
               .assumeRole({

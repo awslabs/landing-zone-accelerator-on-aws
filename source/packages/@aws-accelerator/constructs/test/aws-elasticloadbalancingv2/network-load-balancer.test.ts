@@ -23,6 +23,7 @@ const stack = new cdk.Stack();
 
 new NetworkLoadBalancer(stack, 'Test', {
   name: 'Test',
+  ssmPrefix: '/accelerator',
   appName: 'appA',
   vpcName: 'vpcA',
   subnets: ['subnet-test123', 'subnet-test456'],

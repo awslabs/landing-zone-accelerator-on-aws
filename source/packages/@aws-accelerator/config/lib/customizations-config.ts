@@ -15,6 +15,7 @@ import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
 import * as t from './common-types';
+import { ReplacementsConfig } from './replacements-config';
 
 /**
  * Customization configuration items.
@@ -101,6 +102,7 @@ export class CustomizationsConfigTypes {
     targets: t.optional(t.array(t.union([t.nonEmptyString, this.nlbTargetType]))),
     threshold: t.optional(this.targetGroupThresholdType),
     matcher: t.optional(this.targetGroupMatcherType),
+    shareTargets: t.optional(t.shareTargets),
   });
 
   static readonly nlbProtocolEnum = t.enums('NlbProtocolEnum', ['TCP', 'UDP', 'TLS', 'TCP_UDP']);
@@ -195,7 +197,7 @@ export class CustomizationsConfigTypes {
   static readonly launchTemplateConfig = t.interface({
     name: t.nonEmptyString,
     blockDeviceMappings: t.optional(t.array(this.blockDeviceMappingItem)),
-    securityGroups: t.array(t.nonEmptyString),
+    securityGroups: t.optional(t.array(t.nonEmptyString)),
     keyPair: t.optional(t.nonEmptyString),
     iamInstanceProfile: t.optional(t.nonEmptyString),
     imageId: t.nonEmptyString,
@@ -311,6 +313,7 @@ export class CustomizationsConfigTypes {
     scheme: t.optional(this.albSchemeEnum),
     attributes: t.optional(this.albAttributesConfig),
     listeners: t.optional(t.array(this.albListenerConfig)),
+    shareTargets: t.optional(t.shareTargets),
   });
 
   static readonly appConfigItem = t.interface({
@@ -337,6 +340,7 @@ export class CustomizationsConfigTypes {
     regions: t.array(t.region),
     runOrder: t.number,
     template: t.nonEmptyString,
+    parameters: t.optional(t.array(t.cfnParameter)),
     terminationProtection: t.boolean,
   });
 
@@ -347,18 +351,122 @@ export class CustomizationsConfigTypes {
     name: t.nonEmptyString,
     regions: t.array(t.region),
     template: t.nonEmptyString,
+    parameters: t.optional(t.array(t.cfnParameter)),
+  });
+
+  /**
+   * Portfolio association type
+   */
+  static readonly portfolioAssociationType = t.enums('PortfolioAssociationType', [
+    'User',
+    'Group',
+    'Role',
+    'PermissionSet',
+  ]);
+
+  /**
+   * Portfolio Association configuration
+   */
+  static readonly portfolioAssociationConfig = t.interface({
+    type: this.portfolioAssociationType,
+    name: t.nonEmptyString,
+    propagateAssociation: t.optional(t.boolean),
+  });
+
+  /**
+   * Product Version Configuration
+   */
+  static readonly productVersionConfig = t.interface({
+    name: t.nonEmptyString,
+    template: t.nonEmptyString,
+    description: t.optional(t.nonEmptyString),
+  });
+
+  /**
+   * Product Support configuration
+   */
+  static readonly productSupportConfig = t.interface({
+    email: t.optional(t.nonEmptyString),
+    url: t.optional(t.nonEmptyString),
+    description: t.optional(t.nonEmptyString),
+  });
+
+  /**
+   * Service Catalog TagOptions configuration
+   */
+  static readonly tagOptionsConfig = t.interface({
+    key: t.nonEmptyString,
+    values: t.array(t.nonEmptyString),
+  });
+
+  /**
+   * Service Catalog Launch Constraint type
+   */
+  static readonly productLaunchConstraintType = t.enums('ProductLaunchConstraintType', ['Role', 'LocalRole']);
+
+  /**
+   * Service Catalog Launch Constraint configuration
+   */
+  static readonly productLaunchConstraintConfig = t.interface({
+    type: this.productLaunchConstraintType,
+    role: t.nonEmptyString,
+  });
+
+  /**
+   * Notification Constraint, Topics - Max of 5 topics can be provided.
+   */
+  static readonly productConstraintConfig = t.interface({
+    launch: t.optional(this.productLaunchConstraintConfig),
+    tagUpdate: t.optional(t.boolean),
+    notifications: t.optional(t.array(t.nonEmptyString)),
+  });
+
+  /**
+   * Service Catalog Products configuration
+   */
+  static readonly productConfig = t.interface({
+    name: t.nonEmptyString,
+    owner: t.nonEmptyString,
+    versions: t.array(this.productVersionConfig),
+    description: t.optional(t.nonEmptyString),
+    distributor: t.optional(t.nonEmptyString),
+    support: t.optional(this.productSupportConfig),
+    tagOptions: t.optional(t.array(this.tagOptionsConfig)),
+    constraints: t.optional(this.productConstraintConfig),
+  });
+
+  /**
+   * Service Catalog Portfolios configuration
+   */
+  static readonly portfolioConfig = t.interface({
+    name: t.nonEmptyString,
+    account: t.nonEmptyString,
+    regions: t.array(t.region),
+    provider: t.nonEmptyString,
+    portfolioAssociations: t.optional(t.array(this.portfolioAssociationConfig)),
+    products: t.optional(t.array(this.productConfig)),
+    shareTargets: t.optional(t.shareTargets),
+    shareTagOptions: t.optional(t.boolean),
+    tagOptions: t.optional(t.array(this.tagOptionsConfig)),
+  });
+
+  static readonly serviceCatalogConfig = t.interface({
+    portfolios: t.array(this.portfolioConfig),
   });
 
   static readonly customizationConfig = t.interface({
     cloudFormationStacks: t.optional(t.array(this.cloudFormationStack)),
     cloudFormationStackSets: t.optional(t.array(this.cloudFormationStackSet)),
+    serviceCatalogPortfolios: t.optional(t.array(this.portfolioConfig)),
   });
 
   static readonly ec2FirewallInstanceConfig = t.interface({
     name: t.nonEmptyString,
     launchTemplate: this.launchTemplateConfig,
     vpc: t.nonEmptyString,
+    configFile: t.optional(t.nonEmptyString),
     detailedMonitoring: t.optional(t.boolean),
+    licenseFile: t.optional(t.nonEmptyString),
     terminationProtection: t.optional(t.boolean),
     tags: t.optional(t.array(t.tag)),
   });
@@ -368,6 +476,8 @@ export class CustomizationsConfigTypes {
     autoscaling: this.autoscalingConfig,
     launchTemplate: this.launchTemplateConfig,
     vpc: t.nonEmptyString,
+    configFile: t.optional(t.nonEmptyString),
+    licenseFile: t.optional(t.nonEmptyString),
     tags: t.optional(t.array(t.tag)),
   });
 
@@ -428,10 +538,18 @@ export class CustomizationsConfigTypes {
 export class Ec2FirewallInstanceConfig implements t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallInstanceConfig> {
   /**
    * The friendly name of the firewall instance
+   *
+   * @remarks
+   * **CAUTION**: Changing values under this property after initial deployment will cause an instance replacement.
+   * Please be aware that any downstream dependencies may cause this property update to fail.
    */
   readonly name: string = '';
   /**
    * The launch template for the firewall instance
+   *
+   * @remarks
+   * **CAUTION**: Changing values under this property after initial deployment will cause an instance replacement.
+   * Please be aware that any downstream dependencies may cause this property update to fail.
    */
   readonly launchTemplate: LaunchTemplateConfig = new LaunchTemplateConfig();
   /**
@@ -442,17 +560,118 @@ export class Ec2FirewallInstanceConfig implements t.TypeOf<typeof Customizations
    */
   readonly vpc: string = '';
   /**
-   * Specify true to enable detailed monitoring. Otherwise, basic monitoring is enabled.
+   * (OPTIONAL) Specify a relative S3 object path to pull a firewall configuration file from.
+   *
+   * For example, if your S3 object path is `s3://path/to/config.txt`, specify `path/to/config.txt` for this property.
+   *
+   * **NOTE:** The custom resource backing this feature does not force update on every core pipeline run. To update the resource,
+   * update the name of the configuration file.
+   *
+   * @remarks
+   * Setting this property allows you to make use of firewall configuration replacements. This allows you to
+   * configure your firewall instance dynamically using values determined at CDK runtime.
+   *
+   * **NOTE**: The configuration file must be uploaded to the accelerator-created assets bucket in the home region of
+   * your Management account. This is the `${AcceleratorPrefix}-assets` bucket, not the `cdk-accel-assets` bucket.
+   *
+   * The transformed configuration file will be uploaded to `${AcceleratorPrefix}-firewall-config` bucket in the account and region your firewall instance
+   * is deployed to. This config file can be consumed by third-party firewall vendors that support pulling a configuration file from S3.
+   *
+   * Supported replacements:
+   * * Hostname replacement - look up the name of the firewall instance
+   *   * Format: `${ACCEL_LOOKUP::EC2:INSTANCE:HOSTNAME}` -- translates to the logical name of the instance as configured in customizations-config.yaml.
+   * * VPC replacements - look up metadata about the VPC the firewall is deployed to:
+   *   * Format: `${ACCEL_LOOKUP::EC2:VPC:<METADATA_TYPE>_<INDEX>}`, where `<METADATA_TYPE>` is a type listed below,
+   * and `<INDEX>` is the index of the VPC CIDR range.
+   *   * Metadata types:
+   *     * CIDR - the VPC CIDR range in CIDR notation (i.e. 10.0.0.0/16)
+   *     * NETMASK - the network mask of the VPC CIDR (i.e. 255.255.0.0)
+   *     * NETWORKIP - the network address of the VPC CIDR (i.e. 10.0.0.0)
+   *     * ROUTERIP - the VPC router address of the VPC CIDR (i.e. 10.0.0.1)
+   *   * Index numbering is zero-based, so the primary VPC CIDR is index `0`.
+   *   * Example usage: `${ACCEL_LOOKUP::EC2:VPC:CIDR_0}` - translates to the primary CIDR range of the VPC
+   * * Subnet replacements - look up metadata about subnets in the VPC the firewall is deployed to:
+   *   * Format: `${ACCEL_LOOKUP::EC2:SUBNET:<METADATA_TYPE>:<SUBNET_NAME>}`, where `<METADATA_TYPE>` is a type listed
+   * below, and `<SUBNET_NAME>` is the logical name of the subnet as defined in `network-config.yaml`.
+   *   * Metadata types:
+   *     * CIDR - the subnet CIDR range in CIDR notation (i.e. 10.0.0.0/16)
+   *     * NETMASK - the network mask of the subnet (i.e. 255.255.0.0)
+   *     * NETWORKIP - the network address of the subnet (i.e. 10.0.0.0)
+   *     * ROUTERIP - the VPC router address of the subnet (i.e. 10.0.0.1)
+   *   * Example usage: `${ACCEL_LOOKUP::EC2:SUBNET:CIDR:firewall-data-subnet-a}` - translates to the CIDR range of a subnet named `firewall-data-subnet-a`
+   * * Network interface IP replacements - look up public and private IP addresses assigned to firewall network interfaces:
+   *   * Format: `${ACCEL_LOOKUP::EC2:ENI_<ENI_INDEX>:<IP_TYPE>_<IP_INDEX>}`, where `<ENI_INDEX>` is the device index
+   * of the network interface as defined in the firewall launch template, `<IP_TYPE>` is either a public or private IP of the interface,
+   * and `<IP_INDEX>` is the index of the interface IP address.
+   *   * IP types:
+   *     * PRIVATEIP - a private IP associated with the interface
+   *     * PUBLICIP - a public IP associated with the interface
+   *   * Index numbering is zero-based, so the primary interface of the instance is `0` and its primary IP address is also `0`.
+   *   * Example usage: `${ACCEL_LOOKUP::EC2:ENI_0:PRIVATEIP_0}` - translates to the primary private IP address of the primary network interface
+   * * Network interface subnet replacements - look up metadata about the subnet a network interface is deployed to:
+   *   * Format: `${ACCEL_LOOKUP::EC2:ENI_<ENI_INDEX>:SUBNET_<METADATA_TYPE>}`, where `<ENI_INDEX>` is the device index
+   * of the network interface as defined in the firewall launch template and `<METADATA_TYPE>` is a type listed below.
+   *   * Metadata types:
+   *     * CIDR - the subnet CIDR range in CIDR notation (i.e. 10.0.0.0/16)
+   *     * NETMASK - the network mask of the subnet (i.e. 255.255.0.0)
+   *     * NETWORKIP - the network address of the subnet (i.e. 10.0.0.0)
+   *     * ROUTERIP - the VPC router address of the subnet (i.e. 10.0.0.1)
+   *   * Index numbering is zero-based, so the primary interface of the instance is `0`.
+   *   * Example usage: `${ACCEL_LOOKUP::EC2:ENI_0:SUBNET_CIDR}` - translates to the subnet CIDR range of the primary network interface
+   * * VPN replacements - look up metadata about VPNs that are directly connected to the EC2 firewall instance. NOTE: these replacements are
+   * only supported for EC2 firewalls that are referenced in a {@link CustomerGatewayConfig} in network-config.yaml.
+   *   * Format: `${ACCEL_LOOKUP::EC2:VPN:<METADATA_TYPE>:<VPN_NAME>}`, where `<METADATA_TYPE>` is a type listed
+   * below, and `<VPN_NAME>` is the logical name of the VPN connection as defined in `network-config.yaml`.
+   *   * Metadata types:
+   *     * AWS_BGPASN - the BGP autonomous system number (ASN) of the AWS gateway device
+   *     * CGW_BGPASN - the BGP autonomous system number (ASN) of the customer gateway device
+   *     * CGW_OUTSIDEIP - the outside (public) IP address of the customer gateway device
+   *     * AWS_INSIDEIP_<TUNNEL_INDEX> - the inside (link-local) IP address of the AWS gateway device, where <TUNNEL_INDEX> is the index number of the VPN tunnel
+   *     * CGW_INSIDEIP_<TUNNEL_INDEX> - the inside (link-local) IP address of the customer gateway device, where <TUNNEL_INDEX> is the index number of the VPN tunnel
+   *     * AWS_OUTSIDEIP_<TUNNEL_INDEX> - the outside (public) IP address of the AWS gateway device, where <TUNNEL_INDEX> is the index number of the VPN tunnel
+   *     * INSIDE_CIDR_<TUNNEL_INDEX> - the inside (link-local) CIDR range of the tunnel, where <TUNNEL_INDEX> is the index number of the VPN tunnel
+   *     * INSIDE_NETMASK_<TUNNEL_INDEX> - the inside (link-local) subnet mask of the tunnel, where <TUNNEL_INDEX> is the index number of the VPN tunnel
+   *     * PSK_<TUNNEL_INDEX> - the pre-shared key of the tunnel, where <TUNNEL_INDEX> is the index number of the VPN tunnel
+   *   * Index numbering is zero-based, so the primary VPN tunnel is `0`.
+   *   * Example usage: `${ACCEL_LOOKUP::EC2:VPN:AWS_OUTSIDEIP_0:accelerator-vpn}` - translates to the AWS-side public IP of the primary VPN tunnel for a VPN named `accelerator-vpn`
+   *
+   * * For replacements that are supported in firewall userdata, see {@link LaunchTemplateConfig.userData}.
+   */
+  readonly configFile: string | undefined = undefined;
+  /**
+   * (OPTIONAL) Specify true to enable detailed monitoring. Otherwise, basic monitoring is enabled.
    */
   readonly detailedMonitoring: boolean | undefined = undefined;
   /**
-   * If you set this parameter to true , you can't terminate the instance using the Amazon EC2 console, CLI, or API.
-   * To change this attribute after launch, use ModifyInstanceAttribute . Alternatively, if you set
-   * InstanceInitiatedShutdownBehavior to terminate , you can terminate the instance by running the shutdown command from the instance.
+   * (OPTIONAL) Specify a relative S3 object path to pull a firewall license file from.
+   *
+   * For example, if your S3 object path is `s3://path/to/license.lic`, specify `path/to/license.lic` for this property.
+   *
+   * **NOTE:** The custom resource backing this feature does not force update on every core pipeline run. To update the resource,
+   * update the name of the license file.
+   *
+   * @remarks
+   * The license file must be uploaded to the accelerator-created assets bucket in the home region of
+   * your Management account. This is the `${AcceleratorPrefix}-assets` bucket, not the `cdk-accel-assets` bucket.
+   *
+   * The license file will be uploaded to `${AcceleratorPrefix}-firewall-config` bucket in the account and region your firewall instance
+   * is deployed to. This license file can be consumed by third-party firewall vendors that support pulling a license file from S3.
+   *
+   * * For replacements that are supported in firewall userdata, see {@link LaunchTemplateConfig.userData}.
+   */
+  readonly licenseFile: string | undefined = undefined;
+  /**
+   * (OPTIONAL) If you set this parameter to true , you can't terminate the instance using the Amazon EC2 console, CLI, or API.
+   *
+   * More information: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingDisableAPITermination
+   *
+   * @remarks
+   * When finished configuring your firewall instance, it is highly recommended to enable this property in order to prevent
+   * accidental instance replacement or termination.
    */
   readonly terminationProtection: boolean | undefined = undefined;
   /**
-   * An optional array of tags
+   * (OPTIONAL) An array of tags
    */
   readonly tags: t.Tag[] | undefined = undefined;
 }
@@ -511,6 +730,10 @@ export class Ec2FirewallAutoScalingGroupConfig
 {
   /**
    * The friendly name of the firewall instance
+   *
+   * @remarks
+   * **CAUTION**: Changing values under this property after initial deployment will cause an autoscaling group replacement.
+   * Please be aware that any downstream dependencies may cause this property update to fail.
    */
   readonly name: string = '';
   /**
@@ -519,6 +742,11 @@ export class Ec2FirewallAutoScalingGroupConfig
   readonly autoscaling = new AutoScalingConfig();
   /**
    * The launch template for the firewall instance
+   *
+   * @remarks
+   * **CAUTION**: Changing values under this property after initial deployment will cause instance replacements
+   * in your autoscaling group. This will not impact downstream dependencies, but may impact your network connectivity
+   * and/or throughput.
    */
   readonly launchTemplate = new LaunchTemplateConfig();
   /**
@@ -529,7 +757,68 @@ export class Ec2FirewallAutoScalingGroupConfig
    */
   readonly vpc: string = '';
   /**
-   * An optional array of tags
+   * (OPTIONAL) Specify a relative S3 object path to pull a firewall configuration file from.
+   *
+   * For example, if your S3 object path is `s3://path/to/config.txt`, specify `path/to/config.txt` for this property.
+   *
+   * **NOTE:** The custom resource backing this feature does not force update on every core pipeline run. To update the resource,
+   * update the name of the configuration file.
+   *
+   * @remarks
+   * Setting this property allows you to make use of firewall configuration replacements. This allows you to
+   * configure your firewall instance dynamically using values determined at CDK runtime.
+   *
+   * **NOTE**: The configuration file must be uploaded to the accelerator-created assets bucket in the home region of
+   * your Management account. This is the `${AcceleratorPrefix}-assets` bucket, not the `cdk-accel-assets` bucket.
+   *
+   * The transformed configuration file will be uploaded to `${AcceleratorPrefix}-firewall-config` bucket in the account and region your firewall instance
+   * is deployed to. This config file can be consumed by third-party firewall vendors that support pulling a configuration file from S3.
+   *
+   * Supported replacements:
+   * * VPC replacements - look up metadata about the VPC the firewall is deployed to:
+   *   * Format: `${ACCEL_LOOKUP::EC2:VPC:<METADATA_TYPE>_<INDEX>}`, where `<METADATA_TYPE>` is a type listed below,
+   * and `<INDEX>` is the index of the VPC CIDR range.
+   *   * Metadata types:
+   *     * CIDR - the VPC CIDR range in CIDR notation (i.e. 10.0.0.0/16)
+   *     * NETMASK - the network mask of the VPC CIDR (i.e. 255.255.0.0)
+   *     * NETWORKIP - the network address of the VPC CIDR (i.e. 10.0.0.0)
+   *     * ROUTERIP - the VPC router address of the VPC CIDR (i.e. 10.0.0.1)
+   *   * Index numbering is zero-based, so the primary VPC CIDR is index `0`.
+   *   * Example usage: `${ACCEL_LOOKUP::EC2:VPC:CIDR_0}` - translates to the primary CIDR range of the VPC
+   * * Subnet replacements - look up metadata about subnets in the VPC the firewall is deployed to:
+   *   * Format: `${ACCEL_LOOKUP::EC2:SUBNET:<METADATA_TYPE>:<SUBNET_NAME>}`, where `<METADATA_TYPE>` is a type listed
+   * below, and `<SUBNET_NAME>` is the logical name of the subnet as defined in `network-config.yaml`.
+   *   * Metadata types:
+   *     * CIDR - the subnet CIDR range in CIDR notation (i.e. 10.0.0.0/16)
+   *     * NETMASK - the network mask of the subnet (i.e. 255.255.0.0)
+   *     * NETWORKIP - the network address of the subnet (i.e. 10.0.0.0)
+   *     * ROUTERIP - the VPC router address of the subnet (i.e. 10.0.0.1)
+   *   * Example usage: `${ACCEL_LOOKUP::EC2:SUBNET:CIDR:firewall-data-subnet-a}` - translates to the CIDR range of a subnet named `firewall-data-subnet-a`
+   * * Hostname, network interface, and VPN replacements are NOT supported for firewall AutoScaling groups.
+   *
+   * For replacements that are supported in firewall userdata, see {@link LaunchTemplateConfig.userData}.
+   */
+  readonly configFile: string | undefined = undefined;
+  /**
+   * (OPTIONAL) Specify a relative S3 object path to pull a firewall license file from.
+   *
+   * For example, if your S3 object path is `s3://path/to/license.lic`, specify `path/to/license.lic` for this property.
+   *
+   * **NOTE:** The custom resource backing this feature does not force update on every core pipeline run. To update the resource,
+   * update the name of the license file.
+   *
+   * @remarks
+   * The license file must be uploaded to the accelerator-created assets bucket in the home region of
+   * your Management account. This is the `${AcceleratorPrefix}-assets` bucket, not the `cdk-accel-assets` bucket.
+   *
+   * The license file will be uploaded to `${AcceleratorPrefix}-firewall-config` bucket in the account and region your firewall instance
+   * is deployed to. This license file can be consumed by third-party firewall vendors that support pulling a license file from S3.
+   *
+   * * For replacements that are supported in firewall userdata, see {@link LaunchTemplateConfig.userData}.
+   */
+  readonly licenseFile: string | undefined = undefined;
+  /**
+   * (OPTIONAL) An array of tags
    */
   readonly tags: t.Tag[] | undefined = undefined;
 }
@@ -683,6 +972,11 @@ export class Ec2FirewallConfig implements t.TypeOf<typeof CustomizationsConfigTy
  *       - us-east-1
  *       runOrder: 2
  *       template: cloudformation/InfraStack.yaml
+ *       parameters:
+ *        - name: Parameter1
+ *          value: Value1
+ *       - name: Parameter2
+ *         value: Value2
  *       terminationProtection: true
  *     - deploymentTargets:
  *         accounts:
@@ -729,6 +1023,10 @@ export class CloudFormationStackConfig implements t.TypeOf<typeof Customizations
    * This determines whether to enable termination protection for the stack.
    */
   readonly terminationProtection: boolean = false;
+  /**
+   * The parameters to pass to the stack.
+   */
+  readonly parameters: t.CfnParameter[] | undefined = undefined;
 }
 
 /**
@@ -789,6 +1087,10 @@ export class CloudFormationStackSetConfig implements t.TypeOf<typeof Customizati
    * The file path to the template file used for deployment.
    */
   readonly template: string = '';
+  /**
+   * The parameters to be passed to the stackset.
+   */
+  readonly parameters: t.CfnParameter[] | undefined = undefined;
 }
 
 /**
@@ -1120,6 +1422,13 @@ export class ApplicationLoadBalancerConfig
    * Listeners for Application Load Balancer.
    */
   readonly listeners: ApplicationLoadBalancerListenerConfig[] | undefined = undefined;
+  /**
+   * The location where the Application Load Balancer(s) will be deployed to.
+   * * @remarks
+   * The accounts/OUs provided should contain the subnets specified that are distributed by Resource Access Manager by the `shareTargets` property
+   * for the respective subnets.
+   */
+  readonly shareTargets: t.ShareTargets | undefined = undefined;
 }
 
 /**
@@ -1373,9 +1682,6 @@ export class NlbTargetTypeConfig implements t.TypeOf<typeof CustomizationsConfig
  *   port: 80
  *   protocol: TCP
  *   type: instance
- *   connectionTermination: true
- *   preserveClientIp: true
- *   proxyProtocolV2: true
  *   healthCheck:
  *    enabled: true
  *    port: 80
@@ -1384,9 +1690,6 @@ export class NlbTargetTypeConfig implements t.TypeOf<typeof CustomizationsConfig
  *   port: 80
  *   protocol: HTTP
  *   type: instance
- *   connectionTermination: true
- *   preserveClientIp: true
- *   proxyProtocolV2: true
  *   healthCheck:
  *    enabled: true
  *    port: 80
@@ -1455,6 +1758,10 @@ export class TargetGroupItemConfig implements t.TypeOf<typeof CustomizationsConf
    * @see {@link CustomizationsConfigTypes.targetGroupMatcherType}
    */
   readonly matcher: TargetGroupMatcherConfig | undefined = undefined;
+  /**
+   * The accounts/OUs location where the Target Group will be deployed to.
+   */
+  readonly shareTargets: t.ShareTargets | undefined = undefined;
 }
 
 /**
@@ -1824,7 +2131,7 @@ export class LaunchTemplateConfig implements t.TypeOf<typeof CustomizationsConfi
   /**
    * One or more security group names. These should be created under the VPC in network-config.yaml
    */
-  readonly securityGroups: string[] = [];
+  readonly securityGroups: string[] | undefined = undefined;
   /**
    * The name of the key pair. LZA does not create keypair. This should exist in the account/region or else deployment will fail.
    */
@@ -1857,6 +2164,14 @@ export class LaunchTemplateConfig implements t.TypeOf<typeof CustomizationsConfi
    * Path to user data.
    * The path is relative to the config repository and the content should be in regular text.
    * It is encoded in base64 before passing in to Launch Template
+   *
+   * @remarks
+   * If defining user data for an EC2 firewall instance or AutoScaling group, you may use the variable
+   * `${ACCEL_LOOKUP::S3:BUCKET:firewall-config}` in order to dynamically resolve the name of the S3 bucket
+   * where S3 firewall configurations are stored by the accelerator. This bucket is used when the `configFile` or
+   * `licenseFile` properties are defined for a firewall.
+   *
+   * @see {@link Ec2FirewallAutoScalingGroupConfig} | {@link Ec2FirewallInstanceConfig}
    */
   readonly userData: string | undefined = undefined;
 }
@@ -2087,6 +2402,327 @@ export class AppConfigItem implements t.TypeOf<typeof CustomizationsConfigTypes.
 }
 
 /**
+ * *{@link CustomizationsConfig} / {@link CustomizationConfig} / {@link PortfolioConfig} / {@link PortfolioAssociationConfig}*
+ *
+ * Portfolio Associations configuration
+ *
+ * @example
+ * ```
+ * - type: Group
+ *   name: Administrators
+ * - type: Role
+ *   name: EC2-Default-SSM-AD-Role
+ *   propagateAssociation: true
+ * - type: User
+ *   name: breakGlassUser01
+ * - type: PermissionSet
+ *   name: AWSPowerUserAccess
+ * ```
+ */
+export class PortfolioAssociationConfig
+  implements t.TypeOf<typeof CustomizationsConfigTypes.portfolioAssociationConfig>
+{
+  /**
+   * Indicates the type of portfolio association, valid values are: Group, User, and Role.
+   */
+  readonly type: t.TypeOf<typeof CustomizationsConfigTypes.portfolioAssociationType> = 'Role';
+  /**
+   * Indicates the name of the principal to associate the portfolio with.
+   */
+  readonly name: string = '';
+  /**
+   * Indicates whether the principal association should be created in accounts the portfolio is shared with. Verify the IAM principal exists in all accounts the portfolio is shared with before enabling.
+   *
+   * @remarks
+   * When you propagate a principal association, a potential privilege escalation path may occur. For a user in a recipient account who is not a Service Catalog Admin, but still has the ability to create Principals (Users/Roles), that user could create an IAM Principal that matches a principal name association for the portfolio. Although this user may not know which principal names are associated through Service Catalog, they may be able to guess the user. If this potential escalation path is a concern, then LZA recommends disabling propagation.
+   */
+  readonly propagateAssociation: boolean = false;
+}
+
+/**
+ * *{@link CustomizationsConfig} / {@link CustomizationConfig} / {@link PortfolioConfig} / {@link ProductConfig} / {@link ProductVersionConfig}*
+ *
+ * Product Versions configuration
+ *
+ * @example
+ * ```
+ * - name: v1
+ *   description: Product version 1
+ *   template: path/to/template.json
+ * ```
+ */
+export class ProductVersionConfig implements t.TypeOf<typeof CustomizationsConfigTypes.productVersionConfig> {
+  /**
+   * Name of the version of the product
+   */
+  readonly name: string = '';
+  /**
+   * The version description
+   */
+  readonly description: string = '';
+  /**
+   * The product template.
+   */
+  readonly template: string = '';
+}
+
+/**
+ * *{@link CustomizationsConfig} / {@link CustomizationConfig} / {@link PortfolioConfig} / {@link ProductConfig} / {@link ProductSupportConfig}*
+ *
+ * Product Support configuration
+ *
+ * @example
+ * ```
+ * description: Product support details
+ * email: support@example.com
+ * url: support.example.com
+ * ```
+ */
+export class ProductSupportConfig implements t.TypeOf<typeof CustomizationsConfigTypes.productSupportConfig> {
+  /**
+   * The email address to report issues with the product
+   */
+  readonly email: string | undefined = undefined;
+  /**
+   * The url to the site where users can find support information or file tickets.
+   */
+  readonly url: string | undefined = undefined;
+  /**
+   * Support description of how users should use email contact and support link.
+   */
+  readonly description: string | undefined = undefined;
+}
+
+/**
+ * *{@link CustomizationsConfig} / {@link CustomizationConfig} / {@link PortfolioConfig} | {@link ProductConfig} / {@link TagOptionsConfig}*
+ *
+ * Service Catalog TagOptions configuration.
+ *
+ * @example
+ * ```
+ * - key: Environment
+ *   values: [Dev, Test, Prod]
+ * ```
+ */
+export class TagOptionsConfig implements t.TypeOf<typeof CustomizationsConfigTypes.tagOptionsConfig> {
+  /**
+   * The tag key
+   */
+  readonly key: string = '';
+  /**
+   * An array of values that can be used for the tag key
+   */
+  readonly values: string[] = [];
+}
+
+/**
+ * *{@link CustomizationsConfig} / {@link CustomizationConfig} / {@link PortfolioConfig} | {@link ProductConfig} / {@link ProductConstraintConfig} / {@link ProductLaunchConstraintConfig}*
+ *
+ * Service Catalog Product Constraint configuration. For more information see https://docs.aws.amazon.com/servicecatalog/latest/adminguide/constraints.html
+ *
+ * @example
+ * ```
+ * constraints:
+ *   launch:
+ *    type: localRole | Role
+ *    role: string
+ *   tagUpdate: true | false
+ *   notifications:
+ *     - topicName
+ * ```
+ */
+export class ProductLaunchConstraintConfig
+  implements t.TypeOf<typeof CustomizationsConfigTypes.productLaunchConstraintConfig>
+{
+  /**
+   * The type of launch constraint, either Role or LocalRole. For more information, see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-servicecatalog-launchroleconstraint.html
+   */
+  readonly type: t.TypeOf<typeof CustomizationsConfigTypes.productLaunchConstraintType> = 'Role';
+  /**
+   * The name of the IAM Role.
+   */
+  readonly role: string = '';
+}
+
+/**
+ * *{@link CustomizationsConfig} / {@link CustomizationConfig} / {@link PortfolioConfig} | {@link ProductConfig} / {@link ProductConstraintConfig}*
+ *
+ * Service Catalog Product Constraint configuration. For more information see https://docs.aws.amazon.com/servicecatalog/latest/adminguide/constraints.html
+ *
+ * @example
+ * ```
+ * constraints:
+ *   launch:
+ *    type: localRole | Role
+ *    role: string
+ *   tagUpdate: true | false
+ *   notifications:
+ *     - topicName
+ * ```
+ */
+export class ProductConstraintConfig implements t.TypeOf<typeof CustomizationsConfigTypes.productConstraintConfig> {
+  /**
+   * Launch constraint role name and type, supports LocalRole or Role.
+   */
+  launch: ProductLaunchConstraintConfig | undefined;
+  /**
+   * Determines if Service Catalog Tag Update constraint is enabled
+   */
+  tagUpdate: boolean | undefined;
+  /**
+   * A list of SNS topic names to stream product notifications to
+   *
+   * @remarks
+   * The SNS Topic must exist in the same account and region. SNS Topic names are not validated, please ensure the SNS Topic exists in the account.
+   */
+  notifications: string[] | undefined;
+}
+
+/**
+ * *{@link CustomizationsConfig} / {@link CustomizationConfig} / {@link PortfolioConfig} / {@link ProductConfig}*
+ *
+ * Service Catalog Products configuration
+ *
+ * @example
+ * ```
+ * - name: Product01
+ *   description: Example product
+ *   owner: Product-Owner
+ *   versions:
+ *     - name: v1
+ *       description: Product version 1
+ *       template: path/to/template.json
+ *   constraints:
+ *     launch:
+ *       type: localRole | Role
+ *       role: string
+ *     tagUpdate: true | false
+ *     notifications:
+ *       - topicName
+ * ```
+ */
+export class ProductConfig implements t.TypeOf<typeof CustomizationsConfigTypes.productConfig> {
+  /**
+   * The name of the product
+   */
+  readonly name: string = '';
+  /**
+   * The owner of the product
+   */
+  readonly owner: string = '';
+  /**
+   * Product version configuration
+   */
+  readonly versions: ProductVersionConfig[] = [];
+  /**
+   * Product description
+   */
+  readonly description: string | undefined = undefined;
+  /**
+   * The name of the product's publisher.
+   */
+  readonly distributor: string | undefined = undefined;
+  /**
+   * Product support details.
+   */
+  readonly support: ProductSupportConfig | undefined = undefined;
+  /**
+   * Product TagOptions configuration
+   */
+  readonly tagOptions: TagOptionsConfig[] | undefined = undefined;
+  /**
+   * Product Constraint configuration
+   */
+  readonly constraints: ProductConstraintConfig | undefined = undefined;
+}
+
+/**
+ * *{@link CustomizationsConfig} / {@link CustomizationConfig} / {@link PortfolioConfig}*
+ *
+ * Service Catalog Portfolios configuration
+ *
+ * @example
+ * ```
+ * - name: accelerator-portfolio
+ *   provider: landing-zone-accelerator
+ *   account: Management
+ *   regions:
+ *     - us-east-1
+ *   shareTargets:
+ *     organizationalUnits:
+ *       - Root
+ *   shareTagOptions: true
+ *   portfolioAssociations:
+ *     - type: Group
+ *       name: Administrators
+ *   products:
+ *     - name: Product01
+ *       description: Example product
+ *       owner: Product-Owner
+ *       constraints:
+ *         launch:
+ *          type: localRole | Role
+ *          role: roleName
+ *         tagUpdate: true | false
+ *         notifications:
+ *           - topicName
+ *       versions:
+ *         - name: v1
+ *           description: Product version 1
+ *           template: path/to/template.json
+ *   tagOptions:
+ *     - key: Environment
+ *       values: [Dev, Test, Prod]
+ * ```
+ *
+ */
+export class PortfolioConfig implements t.TypeOf<typeof CustomizationsConfigTypes.portfolioConfig> {
+  /**
+   * The name of the portfolio
+   */
+  readonly name: string = '';
+  /**
+   * The provider of the portfolio
+   */
+  readonly provider: string = '';
+  /**
+   * The name of the account to deploy the portfolio.
+   */
+  readonly account: string = '';
+  /**
+   * The region names to deploy the portfolio.
+   */
+  readonly regions: t.Region[] = [];
+  /**
+   * Configuration of portfolio associations to give access to IAM principals.
+   */
+  readonly portfolioAssociations: PortfolioAssociationConfig[] = [];
+  /**
+   * Product Configuration
+   */
+  readonly products: ProductConfig[] = [];
+  /**
+   * Portfolio share target. Sharing portfolios to Organizational Units is only supported for portfolios in the Management account.
+   *
+   * @remarks
+   * Valid values are the friendly names of organizational unit(s) and/or account(s).
+   *
+   */
+  readonly shareTargets: t.ShareTargets | undefined = undefined;
+  /**
+   * Whether or not to share TagOptions with other account(s)/OU(s)
+   *
+   * @remarks
+   * This property is only applicable if the `shareTargets` property is defined
+   */
+  readonly shareTagOptions: boolean | undefined = undefined;
+  /**
+   * Portfolio TagOptions configuration
+   */
+  readonly tagOptions: TagOptionsConfig[] | undefined = undefined;
+}
+
+/**
  * *{@link CustomizationsConfig} / {@link CustomizationConfig}*
  *
  * Defines CloudFormation Stacks and StackSets to be deployed to the environment.
@@ -2098,6 +2734,7 @@ export class AppConfigItem implements t.TypeOf<typeof CustomizationsConfigTypes.
 export class CustomizationConfig implements t.TypeOf<typeof CustomizationsConfigTypes.customizationConfig> {
   readonly cloudFormationStacks: CloudFormationStackConfig[] = [];
   readonly cloudFormationStackSets: CloudFormationStackSetConfig[] = [];
+  readonly serviceCatalogPortfolios: PortfolioConfig[] = [];
 }
 
 /**
@@ -2131,11 +2768,12 @@ export class CustomizationsConfig implements t.TypeOf<typeof CustomizationsConfi
   /**
    * Load from config file content
    * @param dir
-   * @param validateConfig
+   * @param replacementsConfig
    * @returns
    */
-  static load(dir: string): CustomizationsConfig {
-    const buffer = fs.readFileSync(path.join(dir, CustomizationsConfig.FILENAME), 'utf8');
+  static load(dir: string, replacementsConfig?: ReplacementsConfig): CustomizationsConfig {
+    const initialBuffer = fs.readFileSync(path.join(dir, CustomizationsConfig.FILENAME), 'utf8');
+    const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
     const values = t.parse(CustomizationsConfigTypes.customizationsConfig, yaml.load(buffer));
     return new CustomizationsConfig(values);
   }

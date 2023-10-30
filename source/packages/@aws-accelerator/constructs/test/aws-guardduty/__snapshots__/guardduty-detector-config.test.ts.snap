@@ -1,47 +1,47 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`GuardDutyDetectorConfig Construct(GuardDutyDetectorConfig):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CustomGuardDutyUpdateDetectorCustomResourceProviderHandler78DF0FF9": Object {
-      "DependsOn": Array [
+{
+  "Resources": {
+    "CustomGuardDutyUpdateDetectorCustomResourceProviderHandler78DF0FF9": {
+      "DependsOn": [
         "CustomGuardDutyUpdateDetectorCustomResourceProviderRole3014073E",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
             "CustomGuardDutyUpdateDetectorCustomResourceProviderRole3014073E",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomGuardDutyUpdateDetectorCustomResourceProviderLogGroup0E4B1900": Object {
+    "CustomGuardDutyUpdateDetectorCustomResourceProviderLogGroup0E4B1900": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "CustomKey1E6D0D07",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomGuardDutyUpdateDetectorCustomResourceProviderHandler78DF0FF9",
               },
             ],
@@ -52,31 +52,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomGuardDutyUpdateDetectorCustomResourceProviderRole3014073E": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomGuardDutyUpdateDetectorCustomResourceProviderRole3014073E": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "guardduty:ListDetectors",
                     "guardduty:ListMembers",
                     "guardduty:UpdateDetector",
@@ -95,25 +95,25 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CustomKey1E6D0D07": Object {
+    "CustomKey1E6D0D07": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -130,14 +130,14 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "GuardDutyDetectorConfigDD64B103": Object {
+    "GuardDutyDetectorConfigDD64B103": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomGuardDutyUpdateDetectorCustomResourceProviderLogGroup0E4B1900",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomGuardDutyUpdateDetectorCustomResourceProviderHandler78DF0FF9",
             "Arn",
           ],
@@ -145,7 +145,7 @@ Object {
         "enableEksProtection": true,
         "enableS3Protection": true,
         "exportFrequency": "FIFTEEN_MINUTES",
-        "region": Object {
+        "region": {
           "Ref": "AWS::Region",
         },
       },

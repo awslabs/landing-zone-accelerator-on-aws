@@ -1,13 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Initialized CodeCommit Repository Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "SnapshotTest4B1F0CC8": Object {
-      "Properties": Object {
-        "Code": Object {
+{
+  "Resources": {
+    "SnapshotTest4B1F0CC8": {
+      "Properties": {
+        "Code": {
           "BranchName": "main",
-          "S3": Object {
+          "S3": {
             "Bucket": "Testbucket",
             "Key": "testkey",
           },

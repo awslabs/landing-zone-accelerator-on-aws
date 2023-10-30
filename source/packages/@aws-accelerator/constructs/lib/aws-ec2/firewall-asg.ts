@@ -11,10 +11,11 @@
  *  and limitations under the License.
  */
 
-import { Construct } from 'constructs';
-import { FirewallProps, IFirewall, Firewall } from './firewall';
+import * as cdk from 'aws-cdk-lib';
 import { AutoScalingConfig } from '@aws-accelerator/config';
+import { Construct } from 'constructs';
 import { AutoscalingGroup } from '../aws-autoscaling/create-autoscaling-group';
+import { Firewall, FirewallProps, IFirewall } from './firewall';
 
 export interface IFirewallAutoScalingGroup extends IFirewall {
   /**
@@ -28,6 +29,18 @@ interface FirewallAutoScalingGroupProps extends FirewallProps {
    * The Autoscaling Group configuration
    */
   readonly autoscaling: AutoScalingConfig;
+  /**
+   * Custom resource lambda environment encryption key
+   */
+  readonly lambdaKey: cdk.aws_kms.IKey;
+  /**
+   * Custom resource lambda log group encryption key
+   */
+  readonly cloudWatchLogKmsKey: cdk.aws_kms.IKey;
+  /**
+   * Custom resource lambda log retention in days
+   */
+  readonly cloudWatchLogRetentionInDays: number;
 }
 
 export class FirewallAutoScalingGroup extends Firewall implements IFirewallAutoScalingGroup {
@@ -50,6 +63,10 @@ export class FirewallAutoScalingGroup extends Firewall implements IFirewallAutoS
       targetGroups: props.autoscaling.targetGroups,
       subnets: props.autoscaling.subnets,
       tags,
+      lambdaKey: props.lambdaKey,
+      cloudWatchLogKmsKey: props.cloudWatchLogKmsKey,
+      cloudWatchLogRetentionInDays: props.cloudWatchLogRetentionInDays,
+      nagSuppressionPrefix: `${id}/Resource`,
     });
 
     this.groupName = asg.autoscalingGroupName;

@@ -1,0 +1,486 @@
+homeRegion: &HOME_REGION cn-north-1
+defaultVpc:
+  delete: true
+  excludeAccounts: []
+transitGateways: []
+#   - name: Network-Main
+#     account: Network
+#     region: *HOME_REGION
+#     shareTargets:
+#       organizationalUnits:
+#         - Infrastructure
+#     asn: 65521
+#     dnsSupport: enable
+#     vpnEcmpSupport: enable
+#     defaultRouteTableAssociation: disable
+#     defaultRouteTablePropagation: disable
+#     autoAcceptSharingAttachments: enable
+#     routeTables:
+#       - name: Network-Main-Shared
+#         routes:
+#         - destinationCidrBlock: 0.0.0.0/0
+#           attachment:
+#             vpcName: Network-Inspection
+#             account: Network
+#       - name: Network-Main-Inspection
+#         routes: []
+# centralNetworkServices:
+#   delegatedAdminAccount: Network
+#   gatewayLoadBalancers:
+#     - name: Accelerator-GWLB
+#       subnets:
+#         - Network-Inspection-A
+#         - Network-Inspection-B
+#       vpc: Network-Inspection
+#       deletionProtection: true
+#       endpoints:
+#         - name: Endpoint-A
+#           account: Network
+#           subnet: Network-Inspection-A
+#           vpc: Network-Inspection
+#         - name: Endpoint-B
+#           account: Network
+#           subnet: Network-Inspection-B
+#           vpc: Network-Inspection
+#   route53Resolver:
+#     rules:
+#       - name: aws-services-rule
+#         domainName: amazonaws.com.cn
+#         ruleType: SYSTEM
+#         shareTargets:
+#           organizationalUnits:
+#             - Infrastructure
+#       - name: phz-rule
+#         domainName: awscloud.example
+#         ruleType: SYSTEM
+#         shareTargets:
+#           organizationalUnits:
+#             - Infrastructure
+#     endpoints:
+#       - name: accelerator-inbound
+#         type: INBOUND
+#         vpc: Network-Endpoints
+#         subnets:
+#           - Network-Endpoints-A
+#           - Network-Endpoints-B
+#       - name: accelerator-outbound
+#         type: OUTBOUND
+#         vpc: Network-Endpoints
+#         subnets:
+#           - Network-Endpoints-A
+#           - Network-Endpoints-B
+#         rules:
+#           - name: default-forward-rule
+#             domainName: .
+#             targetIps:
+#               - ip: 1.1.1.1
+#                 port: '5353' # only include if targeting a non-standard DNS port
+#               - ip: 2.2.2.2
+#             shareTargets:
+#               organizationalUnits:
+#                 - Infrastructure
+#     queryLogs:
+#       name: accelerator-query-logs
+#       destinations:
+#         - s3
+#         - cloud-watch-logs
+#       shareTargets:
+#         organizationalUnits:
+#           - Infrastructure
+#     firewallRuleGroups:
+#       - name: accelerator-block-group
+#         regions:
+#           - *HOME_REGION
+#         rules:
+#           - name: nxdomain-block-rule
+#             action: BLOCK
+#             customDomainList: dns-firewall-domain-lists/domain-list-1.txt
+#             priority: 100
+#             blockResponse: NXDOMAIN
+#           - name: override-block-rule
+#             action: BLOCK
+#             customDomainList: dns-firewall-domain-lists/domain-list-2.txt
+#             priority: 200
+#             blockResponse: OVERRIDE
+#             blockOverrideDomain: amazon.com
+#             blockOverrideTtl: 3600
+#           - name: managed-rule
+#             action: BLOCK
+#             managedDomainList: AWSManagedDomainsBotnetCommandandControl
+#             priority: 300
+#             blockResponse: NODATA
+#         shareTargets:
+#           organizationalUnits:
+#             - Infrastructure
+endpointPolicies:
+  - name: Default
+    document: vpc-endpoint-policies/default.json
+  - name: Ec2
+    document: vpc-endpoint-policies/ec2.json
+
+vpcs: []
+#   - name: Network-Endpoints
+#     account: Network
+#     region: *HOME_REGION
+#     cidrs:
+#       - 10.1.0.0/22
+#     internetGateway: false
+#     enableDnsHostnames: true
+#     enableDnsSupport: true
+#     instanceTenancy: default
+#     queryLogs:
+#       - accelerator-query-logs
+#     resolverRules:
+#       - default-forward-rule
+#       - phz-rule
+#       - aws-services-rule
+#     routeTables:
+#       - name: Network-Endpoints-Tgw-A
+#         routes: []
+#       - name: Network-Endpoints-Tgw-B
+#         routes: []
+#       - name: Network-Endpoints-A
+#         routes:
+#           - name: TgwRoute
+#             destination: 0.0.0.0/0
+#             type: transitGateway
+#             target: Network-Main
+#           - name: S3Gateway
+#             type: gatewayEndpoint
+#             target: s3
+#           - name: DynamoDBGateway
+#             type: gatewayEndpoint
+#             target: dynamodb
+#       - name: Network-Endpoints-B
+#         routes:
+#           - name: TgwRoute
+#             destination: 0.0.0.0/0
+#             type: transitGateway
+#             target: Network-Main
+#           - name: S3Gateway
+#             type: gatewayEndpoint
+#             target: s3
+#           - name: DynamoDBGateway
+#             type: gatewayEndpoint
+#             target: dynamodb
+#     subnets:
+#       - name: Network-Endpoints-A
+#         availabilityZone: a
+#         routeTable: Network-Endpoints-A
+#         ipv4CidrBlock: 10.1.0.0/24
+#       - name: Network-Endpoints-B
+#         availabilityZone: b
+#         routeTable: Network-Endpoints-B
+#         ipv4CidrBlock: 10.1.1.0/24
+#       - name: Network-EndpointsTgwAttach-A
+#         availabilityZone: a
+#         routeTable: Network-Endpoints-Tgw-A
+#         ipv4CidrBlock: 10.1.3.208/28
+#       - name: Network-EndpointsTgwAttach-B
+#         availabilityZone: b
+#         routeTable: Network-Endpoints-Tgw-B
+#         ipv4CidrBlock: 10.1.3.224/28
+#     transitGatewayAttachments:
+#       - name: Network-Endpoints
+#         transitGateway:
+#           name: Network-Main
+#           account: Network
+#         routeTableAssociations:
+#           - Network-Main-Shared
+#         routeTablePropagations:
+#           - Network-Main-Inspection
+#         subnets:
+#           - Network-EndpointsTgwAttach-A
+#           - Network-EndpointsTgwAttach-B
+#     gatewayEndpoints:
+#       defaultPolicy: Default
+#       endpoints:
+#         - service: s3
+#         - service: dynamodb
+#     interfaceEndpoints:
+#       central: true
+#       defaultPolicy: Default
+#       subnets:
+#         - Network-Endpoints-A
+#         - Network-Endpoints-B
+#       endpoints:
+#         - service: ec2
+#           serviceName: cn.com.amazonaws.cn-north-1.ec2
+#         - service: ec2messages
+#         - service: ssm
+#         - service: ssmmessages
+#         - service: kms
+#         - service: logs
+#         # - service: secretsmanager
+#         # - service: cloudformation
+#         #   serviceName: cn.com.amazonaws.cn-north-1.cloudformation
+#         # - service: application-autoscaling
+#         #   serviceName: cn.com.amazonaws.cn-north-1.application-autoscaling
+#         # - service: appmesh-envoy-management
+#         #   serviceName: cn.com.amazonaws.cn-north-1.appmesh-envoy-management
+#         # - service: athena
+#         #   serviceName: cn.com.amazonaws.cn-north-1.athena
+#         # - service: autoscaling
+#         #   serviceName: cn.com.amazonaws.cn-north-1.autoscaling
+#         # - service: codebuild
+#         # - service: codecommit
+#         # - service: ecr.dkr
+#         #   serviceName: cn.com.amazonaws.cn-north-1.ecr.dkr
+#         # - service: ecs
+#         # - service: ecs-agent
+#         # - service: ecs-telemetry
+#         # - service: elasticfilesystem
+#         #   serviceName: cn.com.amazonaws.cn-north-1.elasticfilesystem
+#         # - service: elasticloadbalancing
+#         # - service: elasticmapreduce
+#         # - service: execute-api
+#         #   serviceName: cn.com.amazonaws.cn-north-1.execute-api
+#         # - service: git-codecommit
+#         # - service: kinesis-streams
+#         #   serviceName: cn.com.amazonaws.cn-north-1.kinesis-streams
+#         # - service: monitoring
+#         #   serviceName: cn.com.amazonaws.cn-north-1.monitoring
+#         # - service: sagemaker.api
+#         #   serviceName: cn.com.amazonaws.cn-north-1.sagemaker.api
+#         # - service: sagemaker.runtime
+#         #   serviceName: cn.com.amazonaws.cn-north-1.sagemaker.runtime
+#         # - service: servicecatalog
+#         #   serviceName: cn.com.amazonaws.cn-north-1.servicecatalog
+#         # - service: sms
+#         #   serviceName: cn.com.amazonaws.cn-north-1.sms
+#         # - service: sns
+#         # - service: sqs
+#         #   serviceName: cn.com.amazonaws.cn-north-1.sqs
+#         # - service: storagegateway
+#         # - service: sts
+#         #   serviceName: cn.com.amazonaws.cn-north-1.sts
+#         # - service: transfer
+#         #   serviceName: cn.com.amazonaws.cn-north-1.transfer
+#         # - service: awsconnector
+#         #   serviceName: cn.com.amazonaws.cn-north-1.awsconnector
+#         # - service: ecr.api
+#         #   serviceName: cn.com.amazonaws.cn-north-1.ecr.api
+#         # - service: kinesis-firehose
+#         # - service: states
+#         #   serviceName: cn.com.amazonaws.cn-north-1.states
+#         # - service: cassandra
+#         #   serviceName: cn.com.amazonaws.cn-north-1.cassandra
+#         # - service: ebs
+#         #   serviceName: cn.com.amazonaws.cn-north-1.ebs
+#         # - service: elasticbeanstalk
+#         #   serviceName: cn.com.amazonaws.cn-north-1.elasticbeanstalk
+#         # - service: elasticbeanstalk-health
+#         # - service: notebook
+#         # - service: studio
+#         # - service: synthetics
+#         #   serviceName: cn.com.amazonaws.cn-north-1.synthetics
+#   - name: Network-Inspection
+#     account: Network
+#     region: *HOME_REGION
+#     internetGateway: false
+#     enableDnsHostnames: true
+#     enableDnsSupport: true
+#     instanceTenancy: default
+#     queryLogs:
+#       - accelerator-query-logs
+#     resolverRules:
+#       - default-forward-rule
+#       - phz-rule
+#       - aws-services-rule
+#     cidrs:
+#       - 10.2.0.0/22
+#     routeTables:
+#       - name: Network-Inspection-A
+#         routes:
+#           - name: TgwRoute
+#             destination: 0.0.0.0/0
+#             type: transitGateway
+#             target: Network-Main
+#           - name: S3Gateway
+#             type: gatewayEndpoint
+#             target: s3
+#           - name: DynamoDBGateway
+#             type: gatewayEndpoint
+#             target: dynamodb
+#       - name: Network-Inspection-B
+#         routes:
+#           - name: TgwRoute
+#             destination: 0.0.0.0/0
+#             type: transitGateway
+#             target: Network-Main
+#           - name: S3Gateway
+#             type: gatewayEndpoint
+#             target: s3
+#           - name: DynamoDBGateway
+#             type: gatewayEndpoint
+#             target: dynamodb
+#       - name: Network-Inspection-Tgw-A
+#         routes:
+#          - name: GwlbRoute
+#            destination: 0.0.0.0/0
+#            type: gatewayLoadBalancerEndpoint
+#            target: Endpoint-A
+#       - name: Network-Inspection-Tgw-B
+#         routes:
+#          - name: GwlbRoute
+#            destination: 0.0.0.0/0
+#            type: gatewayLoadBalancerEndpoint
+#            target: Endpoint-B
+#     subnets:
+#       - name: Network-Inspection-A
+#         availabilityZone: a
+#         routeTable: Network-Inspection-A
+#         ipv4CidrBlock: 10.2.0.0/24
+#       - name: Network-Inspection-B
+#         availabilityZone: b
+#         routeTable: Network-Inspection-B
+#         ipv4CidrBlock: 10.2.1.0/24
+#       - name: Network-InspectionTgwAttach-A
+#         availabilityZone: a
+#         routeTable: Network-Inspection-Tgw-A
+#         ipv4CidrBlock: 10.2.3.208/28
+#       - name: Network-InspectionTgwAttach-B
+#         availabilityZone: b
+#         routeTable: Network-Inspection-Tgw-B
+#         ipv4CidrBlock: 10.2.3.224/28
+#     transitGatewayAttachments:
+#       - name: Network-Inspection
+#         transitGateway:
+#           name: Network-Main
+#           account: Network
+#         options:
+#           applianceModeSupport: enable
+#         routeTableAssociations:
+#           - Network-Main-Inspection
+#         routeTablePropagations: []
+#         subnets:
+#           - Network-InspectionTgwAttach-A
+#           - Network-InspectionTgwAttach-B
+#     gatewayEndpoints:
+#       defaultPolicy: Default
+#       endpoints:
+#         - service: s3
+#         - service: dynamodb
+#     useCentralEndpoints: true
+#   - name: SharedServices-Main
+#     account: Network
+#     region: *HOME_REGION
+#     internetGateway: false
+#     enableDnsHostnames: true
+#     enableDnsSupport: true
+#     instanceTenancy: default
+#     queryLogs:
+#       - accelerator-query-logs
+#     resolverRules:
+#       - default-forward-rule
+#       - phz-rule
+#       - aws-services-rule
+#     cidrs:
+#       - 10.4.0.0/16
+#     routeTables:
+#       - name: SharedServices-Tgw-A
+#         routes: []
+#       - name: SharedServices-Tgw-B
+#         routes: []
+#       - name: SharedServices-App-A
+#         routes:
+#           - name: TgwRoute
+#             destination: 0.0.0.0/0
+#             type: transitGateway
+#             target: Network-Main
+#           - name: S3Gateway
+#             type: gatewayEndpoint
+#             target: s3
+#           - name: DynamoDBGateway
+#             type: gatewayEndpoint
+#             target: dynamodb
+#       - name: SharedServices-App-B
+#         routes:
+#           - name: TgwRoute
+#             destination: 0.0.0.0/0
+#             type: transitGateway
+#             target: Network-Main
+#           - name: S3Gateway
+#             type: gatewayEndpoint
+#             target: s3
+#           - name: DynamoDBGateway
+#             type: gatewayEndpoint
+#             target: dynamodb
+#     subnets:
+#       - name: SharedServices-App-A
+#         availabilityZone: a
+#         routeTable: SharedServices-App-A
+#         ipv4CidrBlock: 10.4.0.0/24
+#         shareTargets:
+#           accounts:
+#             - SharedServices
+#       - name: SharedServices-App-B
+#         availabilityZone: b
+#         routeTable: SharedServices-App-B
+#         ipv4CidrBlock: 10.4.1.0/24
+#         shareTargets:
+#           accounts:
+#             - SharedServices
+#       - name: SharedServices-MainTgwAttach-A
+#         availabilityZone: a
+#         routeTable: SharedServices-Tgw-A
+#         ipv4CidrBlock: 10.4.255.208/28
+#       - name: SharedServices-MainTgwAttach-B
+#         availabilityZone: b
+#         routeTable: SharedServices-Tgw-B
+#         ipv4CidrBlock: 10.4.255.224/28
+#     transitGatewayAttachments:
+#       - name: SharedServices-Main
+#         transitGateway:
+#           name: Network-Main
+#           account: Network
+#         routeTableAssociations:
+#           - Network-Main-Shared
+#         routeTablePropagations:
+#           - Network-Main-Inspection
+#         subnets:
+#           - SharedServices-MainTgwAttach-A
+#           - SharedServices-MainTgwAttach-B
+#     gatewayEndpoints:
+#       defaultPolicy: Default
+#       endpoints:
+#         - service: s3
+#         - service: dynamodb
+#     useCentralEndpoints: true
+vpcFlowLogs:
+  trafficType: ALL
+  maxAggregationInterval: 600
+  destinations:
+    - cloud-watch-logs
+  destinationsConfig:
+    cloudWatchLogs:
+      retentionInDays: 30
+  defaultFormat: false
+  customFields:
+    - version
+    - account-id
+    - interface-id
+    - srcaddr
+    - dstaddr
+    - srcport
+    - dstport
+    - protocol
+    - packets
+    - bytes
+    - start
+    - end
+    - action
+    - log-status
+    - vpc-id
+    - subnet-id
+    - instance-id
+    - tcp-flags
+    - type
+    - pkt-srcaddr
+    - pkt-dstaddr
+    - region
+    - az-id
+    - pkt-src-aws-service
+    - pkt-dst-aws-service
+    - flow-direction
+    - traffic-path

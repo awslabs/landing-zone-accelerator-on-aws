@@ -30,21 +30,23 @@ new ActiveDirectoryConfiguration(stack, 'ActiveDirectoryConfiguration', {
   netBiosDomainName: 'example',
   adminPwdSecretArn: 'adminPwdSecretArn',
   secretKeyArn: 'secretKeyArn',
+  secretPrefix: '/accelerator',
   subnetId: 'subnetId',
   securityGroupId: 'securityGroupId',
   instanceRoleName: 'instanceRoleName',
+  enableTerminationProtection: false,
   userDataScripts: [
     {
       name: 'JoinDomain',
-      path: `${__dirname}/../../../accelerator/test/configs/all-enabled/ad-config-scripts/Join-Domain.ps1`,
+      path: `${__dirname}/../../../accelerator/test/configs/snapshot-only/ad-config-scripts/Join-Domain.ps1`,
     },
     {
       name: 'AWSQuickStart',
-      path: `${__dirname}/../../../accelerator/test/configs/all-enabled/ad-config-scripts/AWSQuickStart.psm1`,
+      path: `${__dirname}/../../../accelerator/test/configs/snapshot-only/ad-config-scripts/AWSQuickStart.psm1`,
     },
     {
       name: 'ADGroupSetup',
-      path: `${__dirname}/../../../accelerator/test/configs/all-enabled/ad-config-scripts/AD-group-setup.ps1`,
+      path: `${__dirname}/../../../accelerator/test/configs/snapshot-only/ad-config-scripts/AD-group-setup.ps1`,
     },
   ],
   adGroups: ['aws-Provisioning', 'aws-Billing'],

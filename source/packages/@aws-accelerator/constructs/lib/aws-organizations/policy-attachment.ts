@@ -25,6 +25,9 @@ export interface PolicyAttachmentProps {
   readonly policyId: string;
   readonly targetId?: string;
   readonly type: PolicyType;
+  readonly strategy?: string;
+  readonly configPolicyNames: string[];
+  readonly acceleratorPrefix: string;
   /**
    * Custom resource lambda log group encryption key
    */
@@ -43,6 +46,7 @@ export class PolicyAttachment extends Construct {
   public readonly policyId: string;
   public readonly targetId: string | undefined;
   public readonly type: PolicyType;
+  public readonly strategy?: string;
 
   constructor(scope: Construct, id: string, props: PolicyAttachmentProps) {
     super(scope, id);
@@ -50,17 +54,23 @@ export class PolicyAttachment extends Construct {
     this.policyId = props.policyId;
     this.targetId = props.targetId;
     this.type = props.type;
+    this.strategy = props.strategy;
 
     //
     // Function definition for the custom resource
     //
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::OrganizationsAttachPolicy', {
       codeDirectory: path.join(__dirname, 'attach-policy/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
       policyStatements: [
         {
           Effect: 'Allow',
-          Action: ['organizations:AttachPolicy', 'organizations:DetachPolicy', 'organizations:ListPoliciesForTarget'],
+          Action: [
+            'organizations:AttachPolicy',
+            'organizations:DetachPolicy',
+            'organizations:ListPoliciesForTarget',
+            'organizations:ListTagsForResource',
+          ],
           Resource: '*',
         },
       ],
@@ -80,6 +90,9 @@ export class PolicyAttachment extends Construct {
         policyId: props.policyId,
         targetId: props.targetId,
         type: props.type,
+        strategy: props.strategy,
+        configPolicyNames: props.configPolicyNames,
+        policyTagKey: `${props.acceleratorPrefix}Managed`,
       },
     });
 

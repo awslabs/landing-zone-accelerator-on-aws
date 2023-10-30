@@ -1,0 +1,200 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SharePortfolioWithOrg Construct(SharePortfolioWithOrg):  Snapshot Test 1`] = `
+{
+  "Resources": {
+    "CustomSharePortfolioWithOrgCustomResourceProviderHandler4644676D": {
+      "DependsOn": [
+        "CustomSharePortfolioWithOrgCustomResourceProviderRoleD968FEC7",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomSharePortfolioWithOrgCustomResourceProviderRoleD968FEC7",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomSharePortfolioWithOrgCustomResourceProviderLogGroup3D78DA1D": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "Key961B73FD",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomSharePortfolioWithOrgCustomResourceProviderHandler4644676D",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomSharePortfolioWithOrgCustomResourceProviderRoleD968FEC7": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "servicecatalog:CreatePortfolioShare",
+                    "servicecatalog:UpdatePortfolioShare",
+                    "servicecatalog:DeletePortfolioShare",
+                    "servicecatalog:DescribePortfolioShareStatus",
+                    "organizations:DescribeOrganization",
+                    "organizations:ListParents",
+                    "organizations:ListChildren",
+                    "organizations:ListAccountsForParent",
+                    "organizations:ListAccounts",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "ServiceCatalog",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "Key961B73FD": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "SharePortfolioWithOrgPortfolioShareRoot6FBF67ED": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomSharePortfolioWithOrgCustomResourceProviderLogGroup3D78DA1D",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomSharePortfolioWithOrgCustomResourceProviderHandler4644676D",
+            "Arn",
+          ],
+        },
+        "organizationId": "organizationId",
+        "organizationalUnitId": "",
+        "portfolioId": "portfolioId",
+        "tagShareOptions": true,
+      },
+      "Type": "Custom::SharePortfolioWithOrg",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SharePortfolioWithOrgPortfolioShareorg10340D408": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomSharePortfolioWithOrgCustomResourceProviderLogGroup3D78DA1D",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomSharePortfolioWithOrgCustomResourceProviderHandler4644676D",
+            "Arn",
+          ],
+        },
+        "organizationId": "",
+        "organizationalUnitId": "org1",
+        "portfolioId": "portfolioId",
+        "tagShareOptions": true,
+      },
+      "Type": "Custom::SharePortfolioWithOrg",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SharePortfolioWithOrgPortfolioShareorg285669DB9": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomSharePortfolioWithOrgCustomResourceProviderLogGroup3D78DA1D",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomSharePortfolioWithOrgCustomResourceProviderHandler4644676D",
+            "Arn",
+          ],
+        },
+        "organizationId": "",
+        "organizationalUnitId": "org2",
+        "portfolioId": "portfolioId",
+        "tagShareOptions": true,
+      },
+      "Type": "Custom::SharePortfolioWithOrg",
+      "UpdateReplacePolicy": "Delete",
+    },
+  },
+}
+`;

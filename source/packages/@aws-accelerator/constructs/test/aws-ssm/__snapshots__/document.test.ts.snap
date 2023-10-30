@@ -1,35 +1,167 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Document Construct(Document):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "Document7E43FA9A": Object {
-      "Properties": Object {
-        "Content": Object {},
+{
+  "Resources": {
+    "CustomSSMShareDocumentCustomResourceProviderHandler02D98C87": {
+      "DependsOn": [
+        "CustomSSMShareDocumentCustomResourceProviderRole53A2A3EC",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomSSMShareDocumentCustomResourceProviderRole53A2A3EC",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomSSMShareDocumentCustomResourceProviderLogGroup11AEA42B": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "Key961B73FD",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomSSMShareDocumentCustomResourceProviderHandler02D98C87",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomSSMShareDocumentCustomResourceProviderRole53A2A3EC": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ssm:DescribeDocumentPermission",
+                    "ssm:ModifyDocumentPermission",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":ssm:",
+                        {
+                          "Ref": "AWS::Region",
+                        },
+                        ":",
+                        {
+                          "Ref": "AWS::AccountId",
+                        },
+                        ":document/*",
+                      ],
+                    ],
+                  },
+                  "Sid": "ShareDocumentActions",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "Document7E43FA9A": {
+      "Properties": {
+        "Content": {},
         "DocumentType": "Automation",
         "Name": "DocumentName",
+        "UpdateMethod": "NewVersion",
       },
       "Type": "AWS::SSM::Document",
     },
-    "Key961B73FD": Object {
+    "DocumentShareDocument572E9653": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomSSMShareDocumentCustomResourceProviderLogGroup11AEA42B",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomSSMShareDocumentCustomResourceProviderHandler02D98C87",
+            "Arn",
+          ],
+        },
+        "accountIds": [
+          "accountA",
+        ],
+        "name": {
+          "Ref": "Document7E43FA9A",
+        },
+      },
+      "Type": "Custom::SSMShareDocument",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "Key961B73FD": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",

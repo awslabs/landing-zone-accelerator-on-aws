@@ -1,0 +1,67 @@
+# If using AWS Control Tower, ensure that all the specified Organizational Units (OU)
+# have been created and enrolled as the accelerator will verify that the OU layout
+# matches before continuing to execute the deployment pipeline.
+
+enable: true
+organizationalUnits:
+  - name: Security
+  - name: Infrastructure
+  - name: Tax
+quarantineNewAccounts:
+  enable: false
+  scpPolicyName: Quarantine
+serviceControlPolicies:
+  - name: AcceleratorGuardrails1
+    description: >
+      Accelerator GuardRails 1
+    policy: service-control-policies/guardrails-1.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+  - name: AcceleratorGuardrails2
+    description: >
+      Accelerator GuardRails 2
+    policy: service-control-policies/guardrails-2.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+  - name: SCP-base-root
+    description: >
+      baseline SCP for Tax customers
+    policy: service-control-policies/scp-base-root.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - Root
+  # Example SCP that can be used to block regions you do not want.  Modify and implement as needed.
+  - name: SCP-us-regions-only
+    description: >
+      This SCP denies access to any operations outside of the specified US Regions.
+    policy: service-control-policies/scp-only-us-regions.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits: []
+  - name: Quarantine
+    description: >
+      This SCP is used to prevent changes to new accounts until the Accelerator
+      has been executed successfully.
+      This policy will be applied upon account creation if enabled.
+    policy: service-control-policies/quarantine.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits: []
+ # https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_tag-policies.html
+taggingPolicies: 
+  - name: fti-tag-policy
+    description: Organization Tagging Policy
+    policy: tagging-policies/tax-org-tag-policy.json
+    deploymentTargets:
+      organizationalUnits:
+        - Tax
+# https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_backup.html
+# backup policies contain a `delete_after_days` value of 1095 days, or 3 years.  Before
+# enabling this policy, ensure that `delete_after_days` meets your organization's records retention
+# policies.  Similarly, ensure that `move_to_cold_storage_after_days` meets business requirements.
+backupPolicies: []

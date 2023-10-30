@@ -1,0 +1,211 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "PMP",
+      "Effect": "Deny",
+      "Action": [
+        "aws-marketplace:CreatePrivate*",
+        "aws-marketplace:AssociateProductsWithPrivate*",
+        "aws-marketplace:DescribePrivate*",
+        "aws-marketplace:DisassociateProducts*",
+        "aws-marketplace:ListPrivate*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ROOT",
+      "Effect": "Deny",
+      "NotAction": [
+        "iam:CreateVirtualMFADevice",
+        "iam:EnableMFADevice",
+        "iam:GetUser",
+        "iam:ListMFADevices",
+        "iam:ListVirtualMFADevices",
+        "iam:ResyncMFADevice",
+        "sts:GetSessionToken",
+        "iam:DeleteVirtualMFADevice",
+        "trustedadvisor:*",
+        "support:*",
+        "account:*"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnLike": {
+          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:root"]
+        }
+      }
+    },
+    {
+      "Sid": "EBS1",
+      "Effect": "Deny",
+      "Action": "ec2:RunInstances",
+      "Resource": "arn:${PARTITION}:ec2:*:*:volume/*",
+      "Condition": {
+        "Bool": {
+          "ec2:Encrypted": "false"
+        }
+      }
+    },
+    {
+      "Sid": "EBS2",
+      "Effect": "Deny",
+      "Action": "ec2:CreateVolume",
+      "Resource": "*",
+      "Condition": {
+        "Bool": {
+          "ec2:Encrypted": "false"
+        }
+      }
+    },
+    {
+      "Sid": "EFS",
+      "Effect": "Deny",
+      "Action": "elasticfilesystem:CreateFileSystem",
+      "Resource": "*",
+      "Condition": {
+        "Bool": {
+          "elasticfilesystem:Encrypted": "false"
+        }
+      }
+    },
+    {
+      "Sid": "RDS",
+      "Effect": "Deny",
+      "Action": "rds:CreateDBInstance",
+      "Resource": "arn:${PARTITION}:rds:*:*:db:*",
+      "Condition": {
+        "StringNotLike": {
+          "rds:DatabaseEngine": ["aurora*", "docdb*", "neptune"]
+        },
+        "Bool": {
+          "rds:StorageEncrypted": "false"
+        }
+      }
+    },
+    {
+      "Sid": "AUR",
+      "Effect": "Deny",
+      "Action": "rds:CreateDBCluster",
+      "Resource": "*",
+      "Condition": {
+        "StringLike": {
+          "rds:DatabaseEngine": ["aurora*", "docdb*", "neptune"]
+        },
+        "Bool": {
+          "rds:StorageEncrypted": "false"
+        }
+      }
+    },
+    {
+      "Sid": "OTHS",
+      "Effect": "Deny",
+      "Action": [
+        "organizations:LeaveOrg*",
+        "organizations:CloseAccount",
+        "ds:AcceptSharedDir*",
+        "ds:ShareDir*",
+        "ds:EnableSso",
+        "ds:DisableSso",
+        "ram:AcceptResourceShareInv*",
+        "ram:AssociateResourceShare",
+        "ram:CreateResourceShare",
+        "ram:EnableSharingWithAwsOrg*",
+        "lightsail:*",
+        "gamelift:*",
+        "appflow:*",
+        "iq:*",
+        "account:P*",
+        "account:GetAl*",
+        "account:GetC*",
+        "account:GetR*",
+        "account:C*",
+        "account:D*",
+        "account:E*",
+        "account:L*"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": ["arn:${PARTITION}:iam::*:role/cdk-accel-*", "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"]
+        }
+      }
+    },
+    {
+      "Sid": "GBL1",
+      "Effect": "Deny",
+      "NotAction": [
+        "a4b:*",
+        "access-analyzer:*",
+        "aws-marketplace-management:*",
+        "aws-marketplace:*",
+        "budgets:*",
+        "ce:*",
+        "chime:*",
+        "cloudfront:*",
+        "config:*",
+        "cur:*",
+        "directconnect:*",
+        "ec2:DescribeRegions",
+        "ec2:DescribeTransitGateways",
+        "ec2:DescribeVpnGateways",
+        "fms:*",
+        "globalaccelerator:*",
+        "health:*",
+        "iam:*",
+        "networkmanager:*",
+        "organizations:*",
+        "pricing:*",
+        "route53:*",
+        "route53domains:*",
+        "s3:GetAccountPublic*",
+        "s3:GetBucketLocation",
+        "s3:ListAllMyBuckets",
+        "shield:*",
+        "sts:*",
+        "support:*",
+        "trustedadvisor:*",
+        "waf-regional:*",
+        "waf:*",
+        "wafv2:*",
+        "route53-recovery-readiness:*",
+        "route53-recovery-control-config:*",
+        "s3:GetStorageLens*",
+        "s3:ListStorageLens*",
+        "s3:CreateMultiR*",
+        "s3:DeleteMultiR*",
+        "s3:DescribeMultiR*",
+        "s3:GetMultiR*",
+        "s3:ListMultiR*",
+        "s3:PutMultiR*",
+        "billing:*",
+        "freetier:*",
+        "account:*",
+        "invoicing:*",
+        "payments:GetPaymentStatus",
+        "payments:ListPaymentPreferences",
+        "tax:ListTaxRegistrations",
+        "sustainability:*"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringNotEquals": {
+          "aws:RequestedRegion": [
+            "${HOME_REGION}",
+            "us-east-1",
+            "us-east-2",
+            "us-west-1",
+            "us-west-2"
+          ]
+        },
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:${PARTITION}:iam::*:role/cdk-accel-*",
+            "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:${PARTITION}:iam::*:role/AWSServiceRoleFor*"
+          ]
+        }
+      }
+    }
+  ]
+}

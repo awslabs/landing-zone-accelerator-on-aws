@@ -1,45 +1,45 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CustomConfigServiceTagsCustomResourceProviderHandler159E7D96": Object {
-      "DependsOn": Array [
+{
+  "Resources": {
+    "CustomConfigServiceTagsCustomResourceProviderHandler159E7D96": {
+      "DependsOn": [
         "CustomConfigServiceTagsCustomResourceProviderRoleDC1C2A56",
       ],
-      "Properties": Object {
-        "Code": Object {
+      "Properties": {
+        "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomConfigServiceTagsCustomResourceProviderRoleDC1C2A56",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomConfigServiceTagsCustomResourceProviderLogGroupF7260892": Object {
+    "CustomConfigServiceTagsCustomResourceProviderLogGroupF7260892": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "CustomKey1E6D0D07",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomConfigServiceTagsCustomResourceProviderHandler159E7D96",
               },
             ],
@@ -50,31 +50,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomConfigServiceTagsCustomResourceProviderRoleDC1C2A56": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomConfigServiceTagsCustomResourceProviderRoleDC1C2A56": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "config:TagResource",
                     "config:UntagResource",
                   ],
@@ -90,21 +90,21 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CustomKey1E6D0D07": Object {
+    "CustomKey1E6D0D07": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::333333333333:root",
@@ -121,37 +121,37 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "TestConfigRule7F50797E": Object {
-      "Properties": Object {
+    "TestConfigRule7F50797E": {
+      "Properties": {
         "ConfigRuleName": "test-rule-name",
         "Description": "test-description",
-        "Source": Object {
+        "Source": {
           "Owner": "AWS",
           "SourceIdentifier": "test-identifier",
         },
       },
       "Type": "AWS::Config::ConfigRule",
     },
-    "TestConfigServiceTagsCB5621EB": Object {
+    "TestConfigServiceTagsCB5621EB": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomConfigServiceTagsCustomResourceProviderLogGroupF7260892",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomConfigServiceTagsCustomResourceProviderHandler159E7D96",
             "Arn",
           ],
         },
-        "resourceArn": Object {
-          "Fn::GetAtt": Array [
+        "resourceArn": {
+          "Fn::GetAtt": [
             "TestConfigRule7F50797E",
             "Arn",
           ],
         },
-        "tags": Array [
-          Object {
+        "tags": [
+          {
             "Key": "key",
             "Value": "value",
           },

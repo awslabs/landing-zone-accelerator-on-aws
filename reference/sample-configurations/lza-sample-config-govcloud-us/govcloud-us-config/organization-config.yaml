@@ -1,0 +1,59 @@
+####################################################################################################################
+# For additional configurable services, features, and property descriptions,                                        #
+# please review class NetworkConfig reference in our TypeDoc:                                                       #
+# https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.OrganizationConfig.html #
+#####################################################################################################################
+
+# If using AWS Control Tower, ensure that all the specified Organizational Units (OU)
+# have been created and enrolled as the accelerator will verify that the OU layout
+# matches before continuing to execute the deployment pipeline.
+
+###################################################################
+# AWS Organizations and Organizational Units (OUs) Configurations #
+###################################################################
+enable: true
+# Creating OUs
+organizationalUnits:
+  - name: Security
+  - name: Infrastructure
+# Enabling the quarantine service control policies (SCPs)
+quarantineNewAccounts:
+  enable: true
+  scpPolicyName: Quarantine
+# Implementing service control policies
+serviceControlPolicies:
+  # Creating an SCP
+  - name: AcceleratorGuardrails1
+    description: >
+      Accelerator GuardRails 1
+    # Path to policy
+    policy: service-control-policies/guardrails-1.json
+    type: customerManaged
+    # Attaching service control policy to accounts through OUs
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+        - Security
+  - name: AcceleratorGuardrails2
+    description: >
+      Accelerator GuardRails 2
+    policy: service-control-policies/guardrails-2.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+        - Security
+  - name: Quarantine
+    description: >
+      This SCP is used to prevent changes to new accounts until the Accelerator
+      has been executed successfully.
+      This policy will be applied upon account creation if enabled.
+    policy: service-control-policies/quarantine.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits: []
+
+# https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_tag-policies.html
+taggingPolicies: []
+# https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_backup.html
+backupPolicies: []

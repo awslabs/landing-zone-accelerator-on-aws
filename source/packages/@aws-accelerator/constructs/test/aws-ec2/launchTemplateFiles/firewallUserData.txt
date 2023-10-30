@@ -1,0 +1,1 @@
+S3 bucket name: ${ACCEL_LOOKUP::S3:BUCKET:firewall-config}

@@ -1,47 +1,47 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`IpamOrganizationAdminAccount Construct(IpamOrganizationAdminAccount):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CustomEnableIpamOrganizationAdminAccountCustomResourceProviderHandlerA3CAFE25": Object {
-      "DependsOn": Array [
+{
+  "Resources": {
+    "CustomEnableIpamOrganizationAdminAccountCustomResourceProviderHandlerA3CAFE25": {
+      "DependsOn": [
         "CustomEnableIpamOrganizationAdminAccountCustomResourceProviderRoleC4A018D1",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomEnableIpamOrganizationAdminAccountCustomResourceProviderRoleC4A018D1",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomEnableIpamOrganizationAdminAccountCustomResourceProviderLogGroupB1C24203": Object {
+    "CustomEnableIpamOrganizationAdminAccountCustomResourceProviderLogGroupB1C24203": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "Key961B73FD",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomEnableIpamOrganizationAdminAccountCustomResourceProviderHandlerA3CAFE25",
               },
             ],
@@ -52,47 +52,47 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomEnableIpamOrganizationAdminAccountCustomResourceProviderRoleC4A018D1": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomEnableIpamOrganizationAdminAccountCustomResourceProviderRoleC4A018D1": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "ec2:DisableIpamOrganizationAdminAccount",
                     "ec2:EnableIpamOrganizationAdminAccount",
                   ],
                   "Effect": "Allow",
                   "Resource": "*",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "organizations:DisableAwsServiceAccess",
                     "organizations:EnableAwsServiceAccess",
                     "organizations:DeregisterDelegatedAdministrator",
                     "organizations:RegisterDelegatedAdministrator",
                   ],
-                  "Condition": Object {
-                    "StringLikeIfExists": Object {
-                      "organizations:ServicePrincipal": Array [
+                  "Condition": {
+                    "StringLikeIfExists": {
+                      "organizations:ServicePrincipal": [
                         "ipam.amazonaws.com",
                       ],
                     },
@@ -100,14 +100,14 @@ Object {
                   "Effect": "Allow",
                   "Resource": "*",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "iam:CreateServiceLinkedRole",
                     "iam:DeleteServiceLinkedRole",
                   ],
-                  "Condition": Object {
-                    "StringLikeIfExists": Object {
-                      "iam:AWSServiceName": Array [
+                  "Condition": {
+                    "StringLikeIfExists": {
+                      "iam:AWSServiceName": [
                         "ipam.amazonaws.com",
                       ],
                     },
@@ -124,25 +124,25 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "Key961B73FD": Object {
+    "Key961B73FD": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -159,20 +159,20 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "TestIpamOrgAdminDAAE6833": Object {
+    "TestIpamOrgAdminDAAE6833": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomEnableIpamOrganizationAdminAccountCustomResourceProviderLogGroupB1C24203",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomEnableIpamOrganizationAdminAccountCustomResourceProviderHandlerA3CAFE25",
             "Arn",
           ],
         },
         "accountId": "TestAccountId",
-        "region": Object {
+        "region": {
           "Ref": "AWS::Region",
         },
       },

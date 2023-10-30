@@ -1,27 +1,27 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`VpcIdLookup Construct(VpcIdLookup):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CWKeyF87F989A": Object {
+{
+  "Resources": {
+    "CWKeyF87F989A": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -38,25 +38,25 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "LambdaKey984A39D9": Object {
+    "LambdaKey984A39D9": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -73,11 +73,11 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "VpcIdLookupD915DEA4": Object {
+    "VpcIdLookupD915DEA4": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "VpcIdLookupVpcIdLookupProviderframeworkonEventA6FF7933",
             "Arn",
           ],
@@ -87,52 +87,52 @@ Object {
       "Type": "Custom::VpcIdLookup",
       "UpdateReplacePolicy": "Delete",
     },
-    "VpcIdLookupVpcIdLookupFunctionCE747608": Object {
-      "DependsOn": Array [
+    "VpcIdLookupVpcIdLookupFunctionCE747608": {
+      "DependsOn": [
         "VpcIdLookupVpcIdLookupFunctionServiceRoleDefaultPolicyE4E2B3D6",
         "VpcIdLookupVpcIdLookupFunctionServiceRoleB001E74A",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Lookup vpc id from account",
         "Handler": "index.handler",
-        "KmsKeyArn": Object {
-          "Fn::GetAtt": Array [
+        "KmsKeyArn": {
+          "Fn::GetAtt": [
             "LambdaKey984A39D9",
             "Arn",
           ],
         },
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "VpcIdLookupVpcIdLookupFunctionServiceRoleB001E74A",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "VpcIdLookupVpcIdLookupFunctionLogGroup394AB6B3": Object {
+    "VpcIdLookupVpcIdLookupFunctionLogGroup394AB6B3": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "CWKeyF87F989A",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "VpcIdLookupVpcIdLookupFunctionCE747608",
               },
             ],
@@ -143,27 +143,27 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "VpcIdLookupVpcIdLookupFunctionServiceRoleB001E74A": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "VpcIdLookupVpcIdLookupFunctionServiceRoleB001E74A": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
-            "Fn::Join": Array [
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "arn:",
-                Object {
+                {
                   "Ref": "AWS::Partition",
                 },
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
@@ -174,11 +174,11 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "VpcIdLookupVpcIdLookupFunctionServiceRoleDefaultPolicyE4E2B3D6": Object {
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "VpcIdLookupVpcIdLookupFunctionServiceRoleDefaultPolicyE4E2B3D6": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
               "Action": "ec2:DescribeVpcs",
               "Effect": "Allow",
               "Resource": "*",
@@ -188,31 +188,31 @@ Object {
           "Version": "2012-10-17",
         },
         "PolicyName": "VpcIdLookupVpcIdLookupFunctionServiceRoleDefaultPolicyE4E2B3D6",
-        "Roles": Array [
-          Object {
+        "Roles": [
+          {
             "Ref": "VpcIdLookupVpcIdLookupFunctionServiceRoleB001E74A",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "VpcIdLookupVpcIdLookupProviderframeworkonEventA6FF7933": Object {
-      "DependsOn": Array [
+    "VpcIdLookupVpcIdLookupProviderframeworkonEventA6FF7933": {
+      "DependsOn": [
         "VpcIdLookupVpcIdLookupProviderframeworkonEventServiceRoleDefaultPolicyF53A1EC3",
         "VpcIdLookupVpcIdLookupProviderframeworkonEventServiceRole5452CF47",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "AWS CDK resource provider framework - onEvent (Default/VpcIdLookup/VpcIdLookupProvider)",
-        "Environment": Object {
-          "Variables": Object {
-            "USER_ON_EVENT_FUNCTION_ARN": Object {
-              "Fn::GetAtt": Array [
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
                 "VpcIdLookupVpcIdLookupFunctionCE747608",
                 "Arn",
               ],
@@ -220,38 +220,38 @@ Object {
           },
         },
         "Handler": "framework.onEvent",
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "VpcIdLookupVpcIdLookupProviderframeworkonEventServiceRole5452CF47",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs18.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "VpcIdLookupVpcIdLookupProviderframeworkonEventServiceRole5452CF47": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "VpcIdLookupVpcIdLookupProviderframeworkonEventServiceRole5452CF47": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
-            "Fn::Join": Array [
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "arn:",
-                Object {
+                {
                   "Ref": "AWS::Partition",
                 },
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
@@ -262,26 +262,26 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "VpcIdLookupVpcIdLookupProviderframeworkonEventServiceRoleDefaultPolicyF53A1EC3": Object {
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "VpcIdLookupVpcIdLookupProviderframeworkonEventServiceRoleDefaultPolicyF53A1EC3": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
               "Action": "lambda:InvokeFunction",
               "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "VpcIdLookupVpcIdLookupFunctionCE747608",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "VpcIdLookupVpcIdLookupFunctionCE747608",
                           "Arn",
                         ],
@@ -296,8 +296,8 @@ Object {
           "Version": "2012-10-17",
         },
         "PolicyName": "VpcIdLookupVpcIdLookupProviderframeworkonEventServiceRoleDefaultPolicyF53A1EC3",
-        "Roles": Array [
-          Object {
+        "Roles": [
+          {
             "Ref": "VpcIdLookupVpcIdLookupProviderframeworkonEventServiceRole5452CF47",
           },
         ],

@@ -1,0 +1,357 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`KmsEncryption Construct(KmsEncryption):  Snapshot Test 1`] = `
+{
+  "Resources": {
+    "CloudWatchKeyKmsEncryptionEFBC1FE2": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "KeyLookupKmsEncryptionFunction076D1396": {
+      "DependsOn": [
+        "KeyLookupKmsEncryptionFunctionServiceRoleDefaultPolicy45F17070",
+        "KeyLookupKmsEncryptionFunctionServiceRole3CBF5633",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Accelerator deployed KmsEncryption custom resource lambda function.",
+        "Handler": "index.handler",
+        "KmsKeyArn": {
+          "Fn::GetAtt": [
+            "LambdaKeyKmsEncryption8BC9FA8C",
+            "Arn",
+          ],
+        },
+        "MemorySize": 256,
+        "Role": {
+          "Fn::GetAtt": [
+            "KeyLookupKmsEncryptionFunctionServiceRole3CBF5633",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 300,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "KeyLookupKmsEncryptionFunctionResourceLogGroupDFD04BBA": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "CloudWatchKeyKmsEncryptionEFBC1FE2",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "KeyLookupKmsEncryptionFunction076D1396",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 365,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "KeyLookupKmsEncryptionFunctionServiceRole3CBF5633": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Lambda needs Managed policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "KeyLookupKmsEncryptionFunctionServiceRoleDefaultPolicy45F17070": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "AWS Lambda needs Managed policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "kms:PutKeyPolicy",
+              "Effect": "Allow",
+              "Resource": "111111111111",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "KeyLookupKmsEncryptionFunctionServiceRoleDefaultPolicy45F17070",
+        "Roles": [
+          {
+            "Ref": "KeyLookupKmsEncryptionFunctionServiceRole3CBF5633",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "KeyLookupKmsEncryptionKmsEncryptionResourceB1BDD1D0": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "KeyLookupKmsEncryptionframeworkonEvent7F3FE155",
+            "Arn",
+          ],
+        },
+        "kmsArn": "111111111111",
+        "organizationId": "organizationId",
+        "policyFilePaths": [
+          "kms-policy/full-central-logs-bucket-key-policy.json",
+        ],
+        "sourceAccount": {
+          "Ref": "AWS::AccountId",
+        },
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "KeyLookupKmsEncryptionframeworkonEvent7F3FE155": {
+      "DependsOn": [
+        "KeyLookupKmsEncryptionframeworkonEventServiceRoleDefaultPolicy6D455222",
+        "KeyLookupKmsEncryptionframeworkonEventServiceRole61BA4F8D",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/KeyLookup/KmsEncryption/Resource)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "KeyLookupKmsEncryptionFunction076D1396",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "KeyLookupKmsEncryptionframeworkonEventServiceRole61BA4F8D",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "KeyLookupKmsEncryptionframeworkonEventServiceRole61BA4F8D": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "KeyLookupKmsEncryptionframeworkonEventServiceRoleDefaultPolicy6D455222": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "KeyLookupKmsEncryptionFunction076D1396",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "KeyLookupKmsEncryptionFunction076D1396",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "KeyLookupKmsEncryptionframeworkonEventServiceRoleDefaultPolicy6D455222",
+        "Roles": [
+          {
+            "Ref": "KeyLookupKmsEncryptionframeworkonEventServiceRole61BA4F8D",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "LambdaKeyKmsEncryption8BC9FA8C": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+  },
+}
+`;

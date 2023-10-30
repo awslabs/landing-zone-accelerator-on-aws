@@ -1,0 +1,72 @@
+enable: true
+organizationalUnits:
+  - name: Security
+  - name: Infrastructure
+  - name: Infrastructure/Infra-Dev
+  - name: Infrastructure/Infra-Prod
+  - name: HIS
+  - name: EIS
+  - name: HIS/HIS-Non-Prod
+  - name: HIS/HIS-Prod
+serviceControlPolicies:
+  - name: AcceleratorGuardrails1
+    description: >
+      Accelerator GuardRails 1
+    policy: service-control-policies/guardrails-1.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+        - Security
+  - name: AcceleratorGuardrails2
+    description: >
+      Accelerator GuardRails 2
+    policy: service-control-policies/guardrails-2.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+        - Security
+  - name: Quarantine
+    description: >
+      This SCP is used to prevent changes to new accounts until the Accelerator
+      has been executed successfully.
+      This policy will be applied upon account creation if enabled.
+    policy: service-control-policies/quarantine.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits: []
+  - name: HLC-SCP-base-root
+    description: >
+      This SCP is used to prevent healthcare accounts from leaving the organization
+    policy: service-control-policies/scp-hlc-base-root.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits: []
+  - name: HLC-SCP-hipaa-service
+    description: >
+      This SCP is used to ensure only HIPAA eligible services can be used in a specific OU or account
+    policy: service-control-policies/scp-hlc-hipaa-service.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits: []     
+taggingPolicies:
+  - name: general-tag-policy
+    description: Organization Tagging Policy
+    policy: tagging-policies/org-tag-policy.json
+    deploymentTargets:
+      organizationalUnits:
+        - Root
+  - name: phi-tag-policy
+    description: Healthcare Organization Tagging Policy
+    policy: tagging-policies/healthcare-org-tag-policy.json
+    deploymentTargets:
+      organizationalUnits:
+        - HIS        
+backupPolicies:
+  - name: BackupPolicy
+    description: Organization Backup Policy
+    policy: backup-policies/backup-plan.json
+    deploymentTargets:
+      organizationalUnits:
+        - Root

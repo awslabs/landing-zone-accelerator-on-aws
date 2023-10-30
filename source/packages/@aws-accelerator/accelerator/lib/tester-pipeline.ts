@@ -37,6 +37,33 @@ export interface TesterPipelineProps {
   readonly qualifier?: string;
   readonly managementAccountId?: string;
   readonly managementAccountRoleName?: string;
+  /**
+   * Accelerator resource name prefixes
+   */
+  readonly prefixes: {
+    /**
+     * Use this prefix value to name resources like -
+     AWS IAM Role names, AWS Lambda Function names, AWS Cloudwatch log groups names, AWS CloudFormation stack names, AWS CodePipeline names, AWS CodeBuild project names
+     *
+     */
+    readonly accelerator: string;
+    /**
+     * Use this prefix value to name AWS CodeCommit repository
+     */
+    readonly repoName: string;
+    /**
+     * Use this prefix value to name AWS S3 bucket
+     */
+    readonly bucketName: string;
+    /**
+     * Use this prefix value to name AWS SSM parameter
+     */
+    readonly ssmParamName: string;
+    /**
+     * Use this prefix value to name AWS KMS alias
+     */
+    readonly kmsAlias: string;
+  };
 }
 
 /**
@@ -61,7 +88,7 @@ export class TesterPipeline extends Construct {
     });
 
     const configRepository = new cdk_extensions.Repository(this, 'ConfigRepository', {
-      repositoryName: `${props.qualifier ?? 'aws-accelerator'}-test-config`,
+      repositoryName: `${props.qualifier ?? props.prefixes.repoName}-test-config`,
       repositoryBranchName: 'main',
       s3BucketName: configurationDefaultAssets.bucket.bucketName,
       s3key: configurationDefaultAssets.s3ObjectKey,
@@ -91,22 +118,22 @@ export class TesterPipeline extends Construct {
       cdk.aws_ssm.StringParameter.valueForStringParameter(
         this,
         props.qualifier
-          ? `/accelerator/${props.qualifier}/installer/kms/key-arn`
-          : '/accelerator/installer/kms/key-arn',
+          ? `${props.prefixes.ssmParamName}/${props.qualifier}/installer/kms/key-arn`
+          : `${props.prefixes.ssmParamName}/installer/kms/key-arn`,
       ),
     ) as cdk.aws_kms.Key;
 
     const bucket = new Bucket(this, 'SecureBucket', {
       encryptionType: BucketEncryptionType.SSE_KMS,
-      s3BucketName: `${props.qualifier ?? 'aws-accelerator'}-tester-${cdk.Stack.of(this).account}-${
+      s3BucketName: `${props.qualifier ?? props.prefixes.bucketName}-tester-${cdk.Stack.of(this).account}-${
         cdk.Stack.of(this).region
       }`,
       kmsKey: installerKey,
       serverAccessLogsBucketName: cdk.aws_ssm.StringParameter.valueForStringParameter(
         this,
         props.qualifier
-          ? `/accelerator/${props.qualifier}/installer-access-logs-bucket-name`
-          : '/accelerator/installer-access-logs-bucket-name',
+          ? `${props.prefixes.ssmParamName}/${props.qualifier}/installer-access-logs-bucket-name`
+          : `${props.prefixes.ssmParamName}/installer-access-logs-bucket-name`,
       ),
     });
 
@@ -121,7 +148,9 @@ export class TesterPipeline extends Construct {
      * Functional test pipeline
      */
     const pipeline = new codepipeline.Pipeline(this, 'Resource', {
-      pipelineName: props.qualifier ? `${props.qualifier}-tester-pipeline` : 'AWSAccelerator-TesterPipeline',
+      pipelineName: props.qualifier
+        ? `${props.qualifier}-tester-pipeline`
+        : `${props.prefixes.accelerator}-TesterPipeline`,
       artifactBucket: bucket.getS3Bucket(),
       role: this.pipelineRole,
     });
@@ -158,7 +187,9 @@ export class TesterPipeline extends Construct {
     });
 
     const testerProject = new codebuild.PipelineProject(this, 'TesterProject', {
-      projectName: props.qualifier ? `${props.qualifier}-tester-project` : 'AWSAccelerator-TesterProject',
+      projectName: props.qualifier
+        ? `${props.qualifier}-tester-project`
+        : `${props.prefixes.accelerator}-TesterProject`,
       encryptionKey: installerKey,
       role: deployRole,
       buildSpec: codebuild.BuildSpec.fromObjectToYaml({
@@ -166,24 +197,23 @@ export class TesterPipeline extends Construct {
         phases: {
           install: {
             'runtime-versions': {
-              nodejs: 14,
+              nodejs: 16,
             },
           },
           build: {
             commands: [
               'cd source',
               'yarn install',
-              'yarn lerna link',
               'yarn build',
               'cd packages/@aws-accelerator/tester',
               'env',
-              `if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then yarn run cdk deploy --require-approval never --context account=${cdk.Aws.ACCOUNT_ID} --context region=${cdk.Aws.REGION} --context management-cross-account-role-name=${props.managementCrossAccountRoleName} --context qualifier=${props.qualifier} --context config-dir=$CODEBUILD_SRC_DIR_Config --context management-account-id=${props.managementAccountId} --context management-account-role-name=${props.managementAccountRoleName}; else yarn run cdk deploy --require-approval never --context account=${cdk.Aws.ACCOUNT_ID} --context region=${cdk.Aws.REGION} --context management-cross-account-role-name=${props.managementCrossAccountRoleName} --context config-dir=$CODEBUILD_SRC_DIR_Config; fi`,
+              `if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then yarn run cdk deploy --require-approval never --context acceleratorPrefix=${props.prefixes.accelerator} --context account=${cdk.Aws.ACCOUNT_ID} --context region=${cdk.Aws.REGION} --context management-cross-account-role-name=${props.managementCrossAccountRoleName} --context qualifier=${props.qualifier} --context config-dir=$CODEBUILD_SRC_DIR_Config --context management-account-id=${props.managementAccountId} --context management-account-role-name=${props.managementAccountRoleName}; else yarn run cdk deploy --require-approval never --context acceleratorPrefix=${props.prefixes.accelerator} --context account=${cdk.Aws.ACCOUNT_ID} --context region=${cdk.Aws.REGION} --context management-cross-account-role-name=${props.managementCrossAccountRoleName} --context config-dir=$CODEBUILD_SRC_DIR_Config; fi`,
             ],
           },
         },
       }),
       environment: {
-        buildImage: codebuild.LinuxBuildImage.STANDARD_5_0,
+        buildImage: codebuild.LinuxBuildImage.STANDARD_6_0,
         privileged: true, // Allow access to the Docker daemon
         computeType: codebuild.ComputeType.MEDIUM,
         environmentVariables: {
@@ -198,6 +228,26 @@ export class TesterPipeline extends Construct {
           ACCELERATOR_REPOSITORY_BRANCH_NAME: {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: props.sourceBranchName,
+          },
+          ACCELERATOR_PREFIX: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: props.prefixes.accelerator,
+          },
+          ACCELERATOR_REPO_NAME_PREFIX: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: props.prefixes.repoName,
+          },
+          ACCELERATOR_BUCKET_NAME_PREFIX: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: props.prefixes.bucketName,
+          },
+          ACCELERATOR_KMS_ALIAS_PREFIX: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: props.prefixes.kmsAlias,
+          },
+          ACCELERATOR_SSM_PARAM_NAME_PREFIX: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: props.prefixes.ssmParamName,
           },
           ...targetAcceleratorEnvVariables,
         },

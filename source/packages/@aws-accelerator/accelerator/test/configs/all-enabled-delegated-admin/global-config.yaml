@@ -4,6 +4,11 @@ enabledRegions:
   - us-west-2
 managementAccountAccessRole: AWSControlTowerExecution
 cloudwatchLogRetentionInDays: 3653
+acceleratorMetadata:
+  enable: true
+  account: LogArchive
+  readOnlyAccessRoleArns:
+    - arn:aws:iam::111111111111:role/test-access-role
 snsTopics:
   deploymentTargets:
     organizationalUnits:
@@ -15,8 +20,9 @@ snsTopics:
 terminationProtection: true
 controlTower:
   enable: true
-centralizeCdkBuckets:
-  enable: true
+cdkOptions:
+  centralizeBuckets: true
+  useManagementAccessRole: true
 logging:
   account: LogArchive
   centralizedLoggingRegion: us-west-2
@@ -57,8 +63,8 @@ reports:
     reportVersioning: CREATE_NEW_REPORT
   budgets:
     - deploymentTargets:
-        organizationalUnits:
-          - Root
+        accounts:
+          - Management
       name: accel-budget
       timeUnit: MONTHLY
       type: COST

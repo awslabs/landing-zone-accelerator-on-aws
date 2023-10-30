@@ -1,47 +1,137 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A": Object {
-      "DependsOn": Array [
-        "CustomIpamSubnetCustomResourceProviderRoleA2FF4E6D",
+{
+  "Resources": {
+    "CustomDeleteDefaultSecurityGroupRulesCustomResourceProviderHandler0579558F": {
+      "DependsOn": [
+        "CustomDeleteDefaultSecurityGroupRulesCustomResourceProviderRole7BAE247B",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
-            "CustomIpamSubnetCustomResourceProviderRoleA2FF4E6D",
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomDeleteDefaultSecurityGroupRulesCustomResourceProviderRole7BAE247B",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050": Object {
+    "CustomDeleteDefaultSecurityGroupRulesCustomResourceProviderLogGroup36ABE46B": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "testKmsTestDeleteDefaultSgRules7B9FDE55",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomDeleteDefaultSecurityGroupRulesCustomResourceProviderHandler0579558F",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 7,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomDeleteDefaultSecurityGroupRulesCustomResourceProviderRole7BAE247B": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ec2:DescribeSecurityGroups",
+                    "ec2:RevokeSecurityGroupIngress",
+                    "ec2:RevokeSecurityGroupEgress",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A": {
+      "DependsOn": [
+        "CustomIpamSubnetCustomResourceProviderRoleA2FF4E6D",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomIpamSubnetCustomResourceProviderRoleA2FF4E6D",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "testKms8D3EA89B",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
               },
             ],
@@ -52,50 +142,51 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomIpamSubnetCustomResourceProviderRoleA2FF4E6D": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomIpamSubnetCustomResourceProviderRoleA2FF4E6D": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "ec2:CreateTags",
                     "ec2:DeleteSubnet",
+                    "ec2:DeleteTags",
                     "ec2:ModifySubnetAttribute",
                   ],
                   "Effect": "Allow",
-                  "Resource": Object {
-                    "Fn::Join": Array [
+                  "Resource": {
+                    "Fn::Join": [
                       "",
-                      Array [
+                      [
                         "arn:",
-                        Object {
+                        {
                           "Ref": "AWS::Partition",
                         },
                         ":ec2:",
-                        Object {
+                        {
                           "Ref": "AWS::Region",
                         },
                         ":",
-                        Object {
+                        {
                           "Ref": "AWS::AccountId",
                         },
                         ":subnet/*",
@@ -103,46 +194,46 @@ Object {
                     ],
                   },
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "ec2:CreateSubnet",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
-                    Object {
-                      "Fn::Join": Array [
+                  "Resource": [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":ec2:",
-                          Object {
+                          {
                             "Ref": "AWS::Region",
                           },
                           ":",
-                          Object {
+                          {
                             "Ref": "AWS::AccountId",
                           },
                           ":subnet/*",
                         ],
                       ],
                     },
-                    Object {
-                      "Fn::Join": Array [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":ec2:",
-                          Object {
+                          {
                             "Ref": "AWS::Region",
                           },
                           ":",
-                          Object {
+                          {
                             "Ref": "AWS::AccountId",
                           },
                           ":vpc/*",
@@ -151,8 +242,8 @@ Object {
                     },
                   ],
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "ec2:DescribeVpcs",
                     "ec2:DescribeSubnets",
                   ],
@@ -168,28 +259,46 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "TestVpcCloudWatchFlowLogD5309822": Object {
-      "Properties": Object {
-        "DeliverLogsPermissionArn": Object {
-          "Fn::GetAtt": Array [
+    "TestDeleteDefaultSgRules8A6777C7": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomDeleteDefaultSecurityGroupRulesCustomResourceProviderLogGroup36ABE46B",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomDeleteDefaultSecurityGroupRulesCustomResourceProviderHandler0579558F",
+            "Arn",
+          ],
+        },
+        "uuid": "REPLACED-UUID",
+        "vpcId": "someVpcId",
+      },
+      "Type": "Custom::DeleteDefaultSecurityGroupRules",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TestVpcCloudWatchFlowLogD5309822": {
+      "Properties": {
+        "DeliverLogsPermissionArn": {
+          "Fn::GetAtt": [
             "TestVpcFlowLogsRole35E8FB64",
             "Arn",
           ],
         },
-        "LogDestination": Object {
-          "Fn::GetAtt": Array [
+        "LogDestination": {
+          "Fn::GetAtt": [
             "TestVpcFlowLogsGroup63B469E8",
             "Arn",
           ],
         },
         "LogDestinationType": "cloud-watch-logs",
         "MaxAggregationInterval": 60,
-        "ResourceId": Object {
+        "ResourceId": {
           "Ref": "TestVpcE77CE678",
         },
         "ResourceType": "VPC",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "Main",
           },
@@ -198,27 +307,27 @@ Object {
       },
       "Type": "AWS::EC2::FlowLog",
     },
-    "TestVpcDhcpOptionsAssociationDB23B751": Object {
-      "Properties": Object {
+    "TestVpcDhcpOptionsAssociationDB23B751": {
+      "Properties": {
         "DhcpOptionsId": "Test-Options",
-        "VpcId": Object {
+        "VpcId": {
           "Ref": "TestVpcE77CE678",
         },
       },
       "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
     },
-    "TestVpcE77CE678": Object {
-      "Properties": Object {
+    "TestVpcE77CE678": {
+      "Properties": {
         "CidrBlock": "10.0.0.0/16",
         "EnableDnsHostnames": false,
         "EnableDnsSupport": true,
         "InstanceTenancy": "default",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "Main",
           },
-          Object {
+          {
             "Key": "Test-Key",
             "Value": "Test-Value",
           },
@@ -226,18 +335,86 @@ Object {
       },
       "Type": "AWS::EC2::VPC",
     },
-    "TestVpcFlowLogsGroup63B469E8": Object {
+    "TestVpcExistingIamB9508C93": {
+      "Properties": {
+        "CidrBlock": "10.0.0.0/16",
+        "EnableDnsHostnames": false,
+        "EnableDnsSupport": true,
+        "InstanceTenancy": "default",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Main",
+          },
+          {
+            "Key": "Test-Key",
+            "Value": "Test-Value",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::VPC",
+    },
+    "TestVpcExistingIamCloudWatchFlowLog976A715F": {
+      "Properties": {
+        "DeliverLogsPermissionArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":role/AWSAcceleratorVpcFlowLogsRole",
+            ],
+          ],
+        },
+        "LogDestination": {
+          "Fn::GetAtt": [
+            "TestVpcExistingIamFlowLogsGroupD35F5586",
+            "Arn",
+          ],
+        },
+        "LogDestinationType": "cloud-watch-logs",
+        "MaxAggregationInterval": 60,
+        "ResourceId": {
+          "Ref": "TestVpcExistingIamB9508C93",
+        },
+        "ResourceType": "VPC",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Main",
+          },
+        ],
+        "TrafficType": "ALL",
+      },
+      "Type": "AWS::EC2::FlowLog",
+    },
+    "TestVpcExistingIamDhcpOptionsAssociation92EB66FD": {
+      "Properties": {
+        "DhcpOptionsId": "Test-Options",
+        "VpcId": {
+          "Ref": "TestVpcExistingIamB9508C93",
+        },
+      },
+      "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
+    },
+    "TestVpcExistingIamFlowLogsGroupD35F5586": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
-            "testkey2C81DE6D4",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "testKey2ExistingIam0E728F30",
             "Arn",
           ],
         },
         "RetentionInDays": 10,
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "Main",
           },
@@ -246,22 +423,107 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Retain",
     },
-    "TestVpcFlowLogsRole35E8FB64": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "TestVpcExistingIamInternetGateway812AACEB": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Main",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::InternetGateway",
+    },
+    "TestVpcExistingIamInternetGatewayAttachment2ABE52DD": {
+      "Properties": {
+        "InternetGatewayId": {
+          "Ref": "TestVpcExistingIamInternetGateway812AACEB",
+        },
+        "VpcId": {
+          "Ref": "TestVpcExistingIamB9508C93",
+        },
+      },
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+    },
+    "TestVpcExistingIamS3FlowLog15E7512D": {
+      "Properties": {
+        "LogDestination": "arn:aws:s3:::aws-accelerator-test-111111111111-us-east-1/vpc-flow-logs/",
+        "LogDestinationType": "s3",
+        "MaxAggregationInterval": 60,
+        "ResourceId": {
+          "Ref": "TestVpcExistingIamB9508C93",
+        },
+        "ResourceType": "VPC",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Main",
+          },
+        ],
+        "TrafficType": "ALL",
+      },
+      "Type": "AWS::EC2::FlowLog",
+    },
+    "TestVpcExistingIamVirtualPrivateGateway4A00A9BC": {
+      "Properties": {
+        "AmazonSideAsn": 65000,
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Main",
+          },
+        ],
+        "Type": "ipsec.1",
+      },
+      "Type": "AWS::EC2::VPNGateway",
+    },
+    "TestVpcExistingIamVirtualPrivateGatewayAttachmentE053A5C5": {
+      "Properties": {
+        "VpcId": {
+          "Ref": "TestVpcExistingIamB9508C93",
+        },
+        "VpnGatewayId": {
+          "Ref": "TestVpcExistingIamVirtualPrivateGateway4A00A9BC",
+        },
+      },
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+    },
+    "TestVpcFlowLogsGroup63B469E8": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "testkey2C81DE6D4",
+            "Arn",
+          ],
+        },
+        "RetentionInDays": 10,
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Main",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "TestVpcFlowLogsRole35E8FB64": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "vpc-flow-logs.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "Main",
           },
@@ -269,12 +531,12 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "TestVpcFlowLogsRoleDefaultPolicyA03A358B": Object {
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
+    "TestVpcFlowLogsRoleDefaultPolicyA03A358B": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
                 "logs:CreateLogDelivery",
                 "logs:CreateLogGroup",
                 "logs:CreateLogStream",
@@ -284,8 +546,8 @@ Object {
                 "logs:PutLogEvents",
               ],
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
+              "Resource": {
+                "Fn::GetAtt": [
                   "TestVpcFlowLogsGroup63B469E8",
                   "Arn",
                 ],
@@ -295,18 +557,18 @@ Object {
           "Version": "2012-10-17",
         },
         "PolicyName": "TestVpcFlowLogsRoleDefaultPolicyA03A358B",
-        "Roles": Array [
-          Object {
+        "Roles": [
+          {
             "Ref": "TestVpcFlowLogsRole35E8FB64",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "TestVpcInternetGateway01360C82": Object {
-      "Properties": Object {
-        "Tags": Array [
-          Object {
+    "TestVpcInternetGateway01360C82": {
+      "Properties": {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "Main",
           },
@@ -314,28 +576,28 @@ Object {
       },
       "Type": "AWS::EC2::InternetGateway",
     },
-    "TestVpcInternetGatewayAttachment60E451D5": Object {
-      "Properties": Object {
-        "InternetGatewayId": Object {
+    "TestVpcInternetGatewayAttachment60E451D5": {
+      "Properties": {
+        "InternetGatewayId": {
           "Ref": "TestVpcInternetGateway01360C82",
         },
-        "VpcId": Object {
+        "VpcId": {
           "Ref": "TestVpcE77CE678",
         },
       },
       "Type": "AWS::EC2::VPCGatewayAttachment",
     },
-    "TestVpcS3FlowLog86FD93A4": Object {
-      "Properties": Object {
+    "TestVpcS3FlowLog86FD93A4": {
+      "Properties": {
         "LogDestination": "arn:aws:s3:::aws-accelerator-test-111111111111-us-east-1/vpc-flow-logs/",
         "LogDestinationType": "s3",
         "MaxAggregationInterval": 60,
-        "ResourceId": Object {
+        "ResourceId": {
           "Ref": "TestVpcE77CE678",
         },
         "ResourceType": "VPC",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "Main",
           },
@@ -344,11 +606,11 @@ Object {
       },
       "Type": "AWS::EC2::FlowLog",
     },
-    "TestVpcVirtualPrivateGateway56B5C340": Object {
-      "Properties": Object {
+    "TestVpcVirtualPrivateGateway56B5C340": {
+      "Properties": {
         "AmazonSideAsn": 65000,
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "Main",
           },
@@ -357,49 +619,49 @@ Object {
       },
       "Type": "AWS::EC2::VPNGateway",
     },
-    "TestVpcVirtualPrivateGatewayAttachment5D655F8D": Object {
-      "Properties": Object {
-        "VpcId": Object {
+    "TestVpcVirtualPrivateGatewayAttachment5D655F8D": {
+      "Properties": {
+        "VpcId": {
           "Ref": "TestVpcE77CE678",
         },
-        "VpnGatewayId": Object {
+        "VpnGatewayId": {
           "Ref": "TestVpcVirtualPrivateGateway56B5C340",
         },
       },
       "Type": "AWS::EC2::VPCGatewayAttachment",
     },
-    "TestVpcVpcCidrBlock8C35CE6C": Object {
-      "Properties": Object {
+    "TestVpcVpcCidrBlock8C35CE6C": {
+      "Properties": {
         "CidrBlock": "10.2.0.0/16",
-        "VpcId": Object {
+        "VpcId": {
           "Ref": "TestVpcE77CE678",
         },
       },
       "Type": "AWS::EC2::VPCCidrBlock",
     },
-    "naclTest75916313": Object {
-      "Properties": Object {
-        "Tags": Array [
-          Object {
+    "naclTest75916313": {
+      "Properties": {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "naclTest",
           },
-          Object {
+          {
             "Key": "test",
             "Value": "test2",
           },
         ],
-        "VpcId": Object {
+        "VpcId": {
           "Ref": "TestVpcE77CE678",
         },
       },
       "Type": "AWS::EC2::NetworkAcl",
     },
-    "naclTestnaclEntryF5491A57": Object {
-      "Properties": Object {
+    "naclTestnaclEntryF5491A57": {
+      "Properties": {
         "CidrBlock": "10.0.0.14/32",
         "Egress": true,
-        "NetworkAclId": Object {
+        "NetworkAclId": {
           "Ref": "naclTest75916313",
         },
         "Protocol": 443,
@@ -408,34 +670,34 @@ Object {
       },
       "Type": "AWS::EC2::NetworkAclEntry",
     },
-    "naclTestnaclSubnetAssociation5D7C6E54": Object {
-      "Properties": Object {
-        "NetworkAclId": Object {
+    "naclTestnaclSubnetAssociation5D7C6E54": {
+      "Properties": {
+        "NetworkAclId": {
           "Ref": "naclTest75916313",
         },
-        "SubnetId": Object {
+        "SubnetId": {
           "Ref": "testAF53AC38",
         },
       },
       "Type": "AWS::EC2::SubnetNetworkAclAssociation",
     },
-    "natGw090A9EE3": Object {
-      "Properties": Object {
-        "AllocationId": Object {
-          "Fn::GetAtt": Array [
+    "natGw090A9EE3": {
+      "Properties": {
+        "AllocationId": {
+          "Fn::GetAtt": [
             "natGwEip8079CDCC",
             "AllocationId",
           ],
         },
-        "SubnetId": Object {
+        "SubnetId": {
           "Ref": "testAF53AC38",
         },
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "ngw",
           },
-          Object {
+          {
             "Key": "test",
             "Value": "test2",
           },
@@ -443,11 +705,11 @@ Object {
       },
       "Type": "AWS::EC2::NatGateway",
     },
-    "natGwEip8079CDCC": Object {
-      "Properties": Object {
+    "natGwEip8079CDCC": {
+      "Properties": {
         "Domain": "vpc",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "ngw",
           },
@@ -455,42 +717,42 @@ Object {
       },
       "Type": "AWS::EC2::EIP",
     },
-    "testAF53AC38": Object {
-      "Properties": Object {
+    "testAF53AC38": {
+      "Properties": {
         "AvailabilityZone": "a",
         "CidrBlock": "10.0.1.0/24",
         "OutpostArn": "",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "testSubnetOutpost",
           },
         ],
-        "VpcId": Object {
+        "VpcId": {
           "Ref": "TestVpcE77CE678",
         },
       },
       "Type": "AWS::EC2::Subnet",
     },
-    "testKms8D3EA89B": Object {
+    "testKey2ExistingIam0E728F30": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -507,76 +769,296 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "testRouteTableAssociation93A5191C": Object {
-      "Properties": Object {
-        "RouteTableId": Object {
+    "testKms1A8429BFF": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "testKms25B759B9A": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "testKms8D3EA89B": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "testKmsTestDeleteDefaultSgRules7B9FDE55": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "testRouteTableAssociation93A5191C": {
+      "Properties": {
+        "RouteTableId": {
           "Ref": "testrtEA36A15F",
         },
-        "SubnetId": Object {
+        "SubnetId": {
           "Ref": "testAF53AC38",
         },
       },
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
     },
-    "testSubnetIpamB3252329": Object {
+    "testSubnetIpamB3252329": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
             "Arn",
           ],
         },
-        "availabilityZone": "a",
-        "basePool": Array [
+        "availabilityZone": "b",
+        "basePool": [
           "myBasePool",
         ],
-        "ipamAllocation": Object {
+        "ipamAllocation": {
           "ipamPoolName": "test",
           "netmaskLength": 24,
         },
         "name": "testSubnet",
-        "tags": Array [],
-        "vpcId": Object {
+        "tags": [],
+        "vpcId": {
           "Ref": "TestVpcE77CE678",
         },
       },
       "Type": "Custom::IpamSubnet",
       "UpdateReplacePolicy": "Delete",
     },
-    "testSubnetIpamRouteTableAssociation3C411F29": Object {
-      "Properties": Object {
-        "RouteTableId": Object {
+    "testSubnetIpamPhysicalAz1F5518C4E": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
+            "Arn",
+          ],
+        },
+        "availabilityZoneId": "1",
+        "basePool": [
+          "myBasePool",
+        ],
+        "ipamAllocation": {
+          "ipamPoolName": "test",
+          "netmaskLength": 24,
+        },
+        "name": "testSubnetPhysicalAz1",
+        "tags": [],
+        "vpcId": {
+          "Ref": "TestVpcE77CE678",
+        },
+      },
+      "Type": "Custom::IpamSubnet",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "testSubnetIpamPhysicalAz1RouteTableAssociationFEC58856": {
+      "Properties": {
+        "RouteTableId": {
           "Ref": "testrtEA36A15F",
         },
-        "SubnetId": Object {
+        "SubnetId": {
+          "Ref": "testSubnetIpamPhysicalAz1F5518C4E",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "testSubnetIpamRouteTableAssociation3C411F29": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "testrtEA36A15F",
+        },
+        "SubnetId": {
           "Ref": "testSubnetIpamB3252329",
         },
       },
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
     },
-    "testkey2C81DE6D4": Object {
+    "testSubnetPhysicalAz2E088113B": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
+            "Arn",
+          ],
+        },
+        "availabilityZoneId": "2",
+        "basePool": [
+          "myBasePool",
+        ],
+        "ipamAllocation": {
+          "ipamPoolName": "test",
+          "netmaskLength": 24,
+        },
+        "name": "testSubnetPhysicalAz2",
+        "tags": [],
+        "vpcId": {
+          "Ref": "TestVpcE77CE678",
+        },
+      },
+      "Type": "Custom::IpamSubnet",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "testSubnetPhysicalAz2RouteTableAssociation3FE5D9C7": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "testrtEA36A15F",
+        },
+        "SubnetId": {
+          "Ref": "testSubnetPhysicalAz2E088113B",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "testkey2C81DE6D4": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -593,46 +1075,46 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "testrtEA36A15F": Object {
-      "Properties": Object {
-        "Tags": Array [
-          Object {
+    "testrtEA36A15F": {
+      "Properties": {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "test-rt",
           },
         ],
-        "VpcId": Object {
+        "VpcId": {
           "Ref": "TestVpcE77CE678",
         },
       },
       "Type": "AWS::EC2::RouteTable",
     },
-    "tetSgC7E79636": Object {
-      "Properties": Object {
+    "tetSgC7E79636": {
+      "Properties": {
         "GroupDescription": "test",
         "GroupName": "test",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "test",
           },
-          Object {
+          {
             "Key": "test",
             "Value": "test2",
           },
         ],
-        "VpcId": Object {
+        "VpcId": {
           "Ref": "TestVpcE77CE678",
         },
       },
       "Type": "AWS::EC2::SecurityGroup",
     },
-    "tetSgegressTest4FBFADC1": Object {
-      "Properties": Object {
+    "tetSgegressTest4FBFADC1": {
+      "Properties": {
         "CidrIp": "10.0.0.7/32",
         "Description": "test description",
         "FromPort": 80,
-        "GroupId": Object {
+        "GroupId": {
           "Ref": "tetSgC7E79636",
         },
         "IpProtocol": "ipv4",
@@ -640,12 +1122,12 @@ Object {
       },
       "Type": "AWS::EC2::SecurityGroupEgress",
     },
-    "tetSgingressTestFBF41BB4": Object {
-      "Properties": Object {
+    "tetSgingressTestFBF41BB4": {
+      "Properties": {
         "CidrIp": "10.0.0.7/32",
         "Description": "test description",
         "FromPort": 80,
-        "GroupId": Object {
+        "GroupId": {
           "Ref": "tetSgC7E79636",
         },
         "IpProtocol": "ipv4",

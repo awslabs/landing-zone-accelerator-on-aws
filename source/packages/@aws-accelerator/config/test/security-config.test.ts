@@ -12,25 +12,95 @@
  */
 
 import { describe, expect, it } from '@jest/globals';
+import * as fs from 'fs';
 import * as path from 'path';
-import { SecurityConfig } from '../lib/security-config';
+import {
+  SecurityConfig,
+  KeyConfig,
+  GuardDutyEksProtectionConfig,
+  AuditManagerDefaultReportsDestinationConfig,
+  AuditManagerConfig,
+  DetectiveConfig,
+  SecurityHubStandardConfig,
+  SecurityHubLoggingCloudwatchConfig,
+  SecurityHubLoggingConfig,
+  SnsSubscriptionConfig,
+  DocumentConfig,
+  DocumentSetConfig,
+  AwsConfigAggregation,
+  ConfigRule,
+  AwsConfigRuleSet,
+  MetricConfig,
+  MetricSetConfig,
+  AlarmConfig,
+  AlarmSetConfig,
+  EncryptionConfig,
+  LogGroupsConfig,
+} from '../lib/security-config';
 
 describe('SecurityConfig', () => {
   describe('Test config', () => {
-    const securityConfigFromFile = SecurityConfig.load(path.resolve('../accelerator/test/configs/all-enabled'), true);
-    // const securityConfig = new SecurityConfig();
-
+    const securityConfigFromFile = SecurityConfig.load(path.resolve('../accelerator/test/configs/snapshot-only'));
     it('has loaded successfully', () => {
-      // expect(securityConfig.).toEqual([]);
-      //   expect(securityConfigFromFile.accountNames).toStrictEqual([
-      //     'Management',
-      //     'LogArchive',
-      //     'Audit',
-      //     'SharedServices',
-      //     'Network',
-      //   ]);
-
       expect(securityConfigFromFile.getDelegatedAccountName()).toBe('Audit');
     });
+
+    expect(new KeyConfig().name).toEqual('');
+
+    expect(new GuardDutyEksProtectionConfig().enable).toBe(false);
+
+    expect(new AuditManagerDefaultReportsDestinationConfig().enable).toBe(false);
+
+    expect(new AuditManagerConfig().enable).toBe(false);
+
+    expect(new DetectiveConfig().enable).toBe(false);
+
+    expect(new SecurityHubStandardConfig().enable).toBe(true);
+
+    expect(new SecurityHubLoggingCloudwatchConfig().enable).toBe(true);
+
+    expect(new SecurityHubLoggingConfig().cloudWatch).toBe(undefined);
+
+    expect(new SnsSubscriptionConfig().email).toBe('');
+
+    expect(new DocumentConfig().name).toBe('');
+
+    expect(new DocumentSetConfig().documents).toStrictEqual([]);
+
+    expect(new AwsConfigAggregation().enable).toBe(true);
+
+    expect(new ConfigRule().name).toBe('');
+
+    expect(new AwsConfigRuleSet().rules).toStrictEqual([]);
+
+    expect(new MetricConfig().filterName).toBe('');
+
+    expect(new MetricSetConfig().regions).toBeUndefined;
+
+    expect(new AlarmConfig().alarmName).toBe('');
+
+    expect(new AlarmSetConfig().regions).toBeUndefined;
+
+    expect(new EncryptionConfig().kmsKeyName).toBeUndefined;
+
+    expect(new LogGroupsConfig().encryption).toBeUndefined;
   });
+});
+
+describe('should throw an exception for wrong config', () => {
+  function loadError() {
+    SecurityConfig.loadFromString('some random string');
+  }
+
+  const errMsg = 'could not load configuration';
+  expect(loadError).toThrow(new Error(errMsg));
+});
+
+describe('should return right values for correct config', () => {
+  const buffer = fs.readFileSync(
+    path.join(path.resolve('../accelerator/test/configs/snapshot-only'), SecurityConfig.FILENAME),
+    'utf8',
+  );
+  const securityConfigFromString = SecurityConfig.loadFromString(buffer);
+  expect(securityConfigFromString?.awsConfig.enableConfigurationRecorder).toBe(true);
 });

@@ -1,47 +1,47 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`DetectiveMembers Construct(DetectiveMembers):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CustomDetectiveCreateMembersCustomResourceProviderHandler0A0D060D": Object {
-      "DependsOn": Array [
+{
+  "Resources": {
+    "CustomDetectiveCreateMembersCustomResourceProviderHandler0A0D060D": {
+      "DependsOn": [
         "CustomDetectiveCreateMembersCustomResourceProviderRole90BCDD0D",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomDetectiveCreateMembersCustomResourceProviderRole90BCDD0D",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomDetectiveCreateMembersCustomResourceProviderLogGroup8A5563BD": Object {
+    "CustomDetectiveCreateMembersCustomResourceProviderLogGroup8A5563BD": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "CustomKey1E6D0D07",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomDetectiveCreateMembersCustomResourceProviderHandler0A0D060D",
               },
             ],
@@ -52,31 +52,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomDetectiveCreateMembersCustomResourceProviderRole90BCDD0D": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomDetectiveCreateMembersCustomResourceProviderRole90BCDD0D": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "detective:ListOrganizationAdminAccounts",
                     "detective:UpdateOrganizationConfiguration",
                     "detective:CreateMembers",
@@ -89,22 +89,22 @@ Object {
                   "Resource": "*",
                   "Sid": "DetectiveCreateMembersTaskDetectiveActions",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "iam:CreateServiceLinkedRole",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
+                  "Resource": [
                     "*",
                   ],
                   "Sid": "ServiceLinkedRoleDetective",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "organizations:ListAccounts",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
+                  "Resource": [
                     "*",
                   ],
                   "Sid": "OrganisationsListDetective",
@@ -118,25 +118,25 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CustomKey1E6D0D07": Object {
+    "CustomKey1E6D0D07": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -153,22 +153,22 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "DetectiveMembers42A16137": Object {
+    "DetectiveMembers42A16137": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomDetectiveCreateMembersCustomResourceProviderLogGroup8A5563BD",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomDetectiveCreateMembersCustomResourceProviderHandler0A0D060D",
             "Arn",
           ],
         },
-        "partition": Object {
+        "partition": {
           "Ref": "AWS::Partition",
         },
-        "region": Object {
+        "region": {
           "Ref": "AWS::Region",
         },
       },

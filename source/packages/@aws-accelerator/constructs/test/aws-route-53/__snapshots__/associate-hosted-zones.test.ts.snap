@@ -1,36 +1,36 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`AssociateHostedZones Construct(AssociateHostedZones):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "AssociateHostedZonesF0E2F0DA": Object {
+{
+  "Resources": {
+    "AssociateHostedZonesF0E2F0DA": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomRoute53AssociateHostedZonesCustomResourceProviderLogGroupDEA7760D",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomRoute53AssociateHostedZonesCustomResourceProviderHandler1296DB71",
             "Arn",
           ],
         },
-        "accountIds": Array [],
+        "accountIds": [],
         "hostedZoneAccountId": "111111111111",
-        "hostedZoneIds": Array [],
-        "partition": Object {
+        "hostedZoneIds": [],
+        "partition": {
           "Ref": "AWS::Partition",
         },
-        "region": Object {
+        "region": {
           "Ref": "AWS::Region",
         },
         "roleName": "AWSAccelerator-EnableCentralEndpointsRole-us-east-1",
-        "tagFilters": Array [
-          Object {
+        "tagFilters": [
+          {
             "key": "accelerator:use-central-endpoints",
             "value": "true",
           },
-          Object {
+          {
             "key": "accelerator:central-endpoints-account-id",
             "value": "222222222222",
           },
@@ -40,45 +40,45 @@ Object {
       "Type": "Custom::Route53AssociateHostedZones",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomRoute53AssociateHostedZonesCustomResourceProviderHandler1296DB71": Object {
-      "DependsOn": Array [
+    "CustomRoute53AssociateHostedZonesCustomResourceProviderHandler1296DB71": {
+      "DependsOn": [
         "CustomRoute53AssociateHostedZonesCustomResourceProviderRole17C82AD6",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomRoute53AssociateHostedZonesCustomResourceProviderRole17C82AD6",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomRoute53AssociateHostedZonesCustomResourceProviderLogGroupDEA7760D": Object {
+    "CustomRoute53AssociateHostedZonesCustomResourceProviderLogGroupDEA7760D": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "Key961B73FD",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomRoute53AssociateHostedZonesCustomResourceProviderHandler1296DB71",
               },
             ],
@@ -89,31 +89,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomRoute53AssociateHostedZonesCustomResourceProviderRole17C82AD6": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomRoute53AssociateHostedZonesCustomResourceProviderRole17C82AD6": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "ec2:DescribeVpcs",
                     "route53:AssociateVPCWithHostedZone",
                     "route53:CreateVPCAssociationAuthorization",
@@ -134,25 +134,25 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "Key961B73FD": Object {
+    "Key961B73FD": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",

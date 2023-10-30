@@ -15,6 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
 import { NfwRuleGroupRuleConfig } from '@aws-accelerator/config';
+import { transformRuleGroup } from './utils';
 
 interface INetworkFirewallRuleGroup extends cdk.IResource {
   /**
@@ -69,11 +70,52 @@ export class NetworkFirewallRuleGroup extends cdk.Resource implements INetworkFi
   public readonly groupArn: string;
   public readonly groupId: string;
   public readonly groupName: string;
-  private ruleGroup?: cdk.aws_networkfirewall.CfnRuleGroup.RuleGroupProperty;
-  private statelessRules?: cdk.aws_networkfirewall.CfnRuleGroup.StatelessRuleProperty[];
-  private customActions?: cdk.aws_networkfirewall.CfnRuleGroup.CustomActionProperty[];
-  private ruleVariables?: cdk.aws_networkfirewall.CfnRuleGroup.RuleVariablesProperty;
-  private ruleOptions?: cdk.aws_networkfirewall.CfnRuleGroup.StatefulRuleOptionsProperty;
+
+  /**
+   * Returns CfnRuleGroup by applying updates to included resource
+   * @param scope Stack in which included RuleGroup is created/managed
+   * @param id logicalId of RuleGroup
+   * @param attrs
+   */
+  static includedCfnResource(
+    scope: cdk.cloudformation_include.CfnInclude,
+    id: string,
+    props: NetworkFirewallRuleGroupProps,
+  ) {
+    const resource = scope.getResource(id) as cdk.aws_networkfirewall.CfnRuleGroup;
+    // Transform properties as necessary
+    if (props.ruleGroup) {
+      // Set rule group property
+      resource.ruleGroup = transformRuleGroup(props.ruleGroup);
+    } else {
+      // Remove existing rule group property
+      resource.ruleGroup = undefined;
+    }
+    // Updating capacity requires replacement
+    resource.capacity = props.capacity;
+    // Updating type requires replacement
+    resource.type = props.type;
+    resource.description = props.description;
+    return resource;
+  }
+
+  static fromAttributes(
+    scope: Construct,
+    id: string,
+    attrs: { groupArn: string; groupName: string },
+  ): INetworkFirewallRuleGroup {
+    class Import extends cdk.Resource implements INetworkFirewallRuleGroup {
+      public readonly groupArn = attrs.groupArn;
+      public readonly groupId = attrs.groupName;
+      // groupId is not used anywhere. Need to store in SSM if needed
+      public readonly groupName = '';
+
+      constructor(scope: Construct, id: string) {
+        super(scope, id);
+      }
+    }
+    return new Import(scope, id);
+  }
 
   constructor(scope: Construct, id: string, props: NetworkFirewallRuleGroupProps) {
     super(scope, id);
@@ -81,34 +123,11 @@ export class NetworkFirewallRuleGroup extends cdk.Resource implements INetworkFi
     // Set initial properties
     this.groupName = props.name;
 
+    let ruleGroup: cdk.aws_networkfirewall.CfnRuleGroup.RuleGroupProperty | undefined;
     // Transform properties as necessary
     if (props.ruleGroup) {
-      let statelessAndCustom = undefined;
-      if (props.ruleGroup.rulesSource.statelessRulesAndCustomActions) {
-        this.transformStatelessCustom(props.ruleGroup);
-        statelessAndCustom = {
-          statelessRules: this.statelessRules!,
-          customActions: this.customActions,
-        };
-      }
-      if (props.ruleGroup.ruleVariables) {
-        this.transformRuleVariables(props.ruleGroup);
-      }
-      if (props.ruleGroup.statefulRuleOptions) {
-        this.transformRuleOptions(props.ruleGroup);
-      }
-
       // Set rule group property
-      this.ruleGroup = {
-        rulesSource: {
-          rulesSourceList: props.ruleGroup.rulesSource.rulesSourceList,
-          rulesString: props.ruleGroup.rulesSource.rulesString,
-          statefulRules: props.ruleGroup.rulesSource.statefulRules,
-          statelessRulesAndCustomActions: statelessAndCustom,
-        },
-        ruleVariables: this.ruleVariables,
-        statefulRuleOptions: this.ruleOptions,
-      };
+      ruleGroup = transformRuleGroup(props.ruleGroup);
     }
 
     // Set name tag
@@ -119,100 +138,11 @@ export class NetworkFirewallRuleGroup extends cdk.Resource implements INetworkFi
       ruleGroupName: this.groupName,
       type: props.type,
       description: props.description,
-      ruleGroup: this.ruleGroup,
+      ruleGroup,
       tags: props.tags,
     });
 
     this.groupArn = resource.ref;
     this.groupId = resource.attrRuleGroupId;
-  }
-
-  /**
-   * Transform stateless and custom rule group policies to conform with L1 construct.
-   *
-   * @param props
-   */
-  private transformStatelessCustom(props: NfwRuleGroupRuleConfig) {
-    const property = props.rulesSource.statelessRulesAndCustomActions;
-    this.statelessRules = [];
-    this.customActions = [];
-
-    // Push stateless rules
-    for (const rule of property?.statelessRules ?? []) {
-      this.statelessRules.push({
-        priority: rule.priority,
-        ruleDefinition: {
-          actions: rule.ruleDefinition.actions,
-          matchAttributes: {
-            destinationPorts: rule.ruleDefinition.matchAttributes?.destinationPorts ?? [],
-            destinations:
-              rule.ruleDefinition.matchAttributes?.destinations?.map(item => {
-                return { addressDefinition: item };
-              }) ?? [],
-            protocols: rule.ruleDefinition.matchAttributes?.protocols ?? [],
-            sourcePorts: rule.ruleDefinition.matchAttributes?.sourcePorts ?? [],
-            sources:
-              rule.ruleDefinition.matchAttributes?.sources?.map(item => {
-                return { addressDefinition: item };
-              }) ?? [],
-            tcpFlags: rule.ruleDefinition.matchAttributes?.tcpFlags,
-          },
-        },
-      });
-    }
-
-    // Push custom actions
-    for (const action of property?.customActions ?? []) {
-      this.customActions.push({
-        actionDefinition: {
-          publishMetricAction: {
-            dimensions: action.actionDefinition.publishMetricAction.dimensions.map(item => {
-              return { value: item };
-            }),
-          },
-        },
-        actionName: action.actionName,
-      });
-    }
-  }
-
-  /**
-   * Transform rule variables to conform with L1 construct.
-   *
-   * @param props
-   */
-  private transformRuleVariables(props: NfwRuleGroupRuleConfig) {
-    const property = props.ruleVariables;
-
-    if (property) {
-      // Create ipset object
-      const ipSet: { [key: string]: { definition: string[] } } = {};
-      const ipSetKey = property.ipSets.name;
-      ipSet[ipSetKey] = { definition: property.ipSets.definition };
-
-      // Create portset object
-      const portSet: { [key: string]: { definition: string[] } } = {};
-      const portSetKey = property.portSets.name;
-      portSet[portSetKey] = { definition: property.portSets.definition };
-
-      // Instantiate ruleVariables object
-      this.ruleVariables = {
-        ipSets: ipSet,
-        portSets: portSet,
-      };
-    }
-  }
-
-  /**
-   * Transform rule options to conform with L1 construct.
-   *
-   * @param props
-   */
-  private transformRuleOptions(props: NfwRuleGroupRuleConfig) {
-    const property = props.statefulRuleOptions;
-
-    if (property) {
-      this.ruleOptions = { ruleOrder: property };
-    }
   }
 }

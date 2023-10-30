@@ -24,6 +24,7 @@ const stack = new cdk.Stack();
 const provider = new CrossAccountRouteFramework(stack, 'Framework', {
   logGroupKmsKey: new cdk.aws_kms.Key(stack, 'Key'),
   logRetentionInDays: 3653,
+  acceleratorPrefix: 'AWSAccelerator',
 }).provider;
 
 new CrossAccountRoute(stack, 'Resource', {

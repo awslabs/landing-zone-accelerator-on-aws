@@ -15,6 +15,9 @@ import * as cdk from 'aws-cdk-lib';
 
 import { VirtualInterface } from '../../lib/aws-directconnect/virtual-interface';
 import { snapShotTest } from '../snapshot-test';
+import { describe, expect } from '@jest/globals';
+import { VirtualInterfaceAttributes } from '../../lib/aws-directconnect/virtual-interface/attributes';
+import { VirtualInterfaceAllocationAttributes } from '../../lib/aws-directconnect/virtual-interface-allocation/attributes';
 
 const testNamePrefix = 'Construct(VirtualInterface): ';
 
@@ -33,6 +36,7 @@ new VirtualInterface(stack, 'TestVif', {
   directConnectGatewayId: 'test-dxgw-id',
   kmsKey: key,
   logRetentionInDays: 3653,
+  acceleratorPrefix: 'AWSAccelerator',
 });
 
 // Test virtual interface allocation
@@ -46,6 +50,7 @@ new VirtualInterface(stack, 'TestVifAllocation', {
   vlan: 300,
   kmsKey: key,
   logRetentionInDays: 3653,
+  acceleratorPrefix: 'AWSAccelerator',
 });
 
 /**
@@ -53,4 +58,97 @@ new VirtualInterface(stack, 'TestVifAllocation', {
  */
 describe('VirtualInterface', () => {
   snapShotTest(testNamePrefix, stack);
+});
+
+/**
+ * VirtualInterface attribute test
+ */
+describe('VirtualInterfaceAttributes', () => {
+  const privAttribute = new VirtualInterfaceAttributes({
+    addressFamily: 'addressFamily',
+    asn: 1234,
+    connectionId: 'connectionId',
+    directConnectGatewayId: 'directConnectGatewayId',
+    jumboFrames: true,
+    siteLink: true,
+    virtualInterfaceName: 'virtualInterfaceName',
+    virtualInterfaceType: 'private',
+    vlan: 123,
+    amazonAddress: 'earth',
+    customerAddress: 'earth',
+  });
+  expect(privAttribute.mtu).toEqual(9001);
+  const transitAttribute = new VirtualInterfaceAttributes({
+    addressFamily: 'addressFamily',
+    asn: 1234,
+    connectionId: 'connectionId',
+    directConnectGatewayId: 'directConnectGatewayId',
+    jumboFrames: true,
+    siteLink: true,
+    virtualInterfaceName: 'virtualInterfaceName',
+    virtualInterfaceType: 'transit',
+    vlan: 123,
+    amazonAddress: 'earth',
+    customerAddress: 'earth',
+  });
+  expect(transitAttribute.mtu).toEqual(8500);
+  const noJumboAttribute = new VirtualInterfaceAttributes({
+    addressFamily: 'addressFamily',
+    asn: 1234,
+    connectionId: 'connectionId',
+    directConnectGatewayId: 'directConnectGatewayId',
+    jumboFrames: false,
+    siteLink: true,
+    virtualInterfaceName: 'virtualInterfaceName',
+    virtualInterfaceType: 'transit',
+    vlan: 123,
+    amazonAddress: 'earth',
+    customerAddress: 'earth',
+  });
+  expect(noJumboAttribute.mtu).toEqual(1500);
+});
+
+describe('VirtualInterfaceAllocationAttributes', () => {
+  const privAttribute = new VirtualInterfaceAllocationAttributes({
+    addressFamily: 'addressFamily',
+    asn: 1234,
+    connectionId: 'connectionId',
+    jumboFrames: true,
+    ownerAccount: 'ownerAccount',
+    siteLink: true,
+    virtualInterfaceName: 'virtualInterfaceName',
+    virtualInterfaceType: 'private',
+    vlan: 123,
+    amazonAddress: 'earth',
+    customerAddress: 'earth',
+  });
+  expect(privAttribute.mtu).toEqual(9001);
+  const transitAttribute = new VirtualInterfaceAllocationAttributes({
+    addressFamily: 'addressFamily',
+    asn: 1234,
+    connectionId: 'connectionId',
+    ownerAccount: 'ownerAccount',
+    jumboFrames: true,
+    siteLink: true,
+    virtualInterfaceName: 'virtualInterfaceName',
+    virtualInterfaceType: 'transit',
+    vlan: 123,
+    amazonAddress: 'earth',
+    customerAddress: 'earth',
+  });
+  expect(transitAttribute.mtu).toEqual(8500);
+  const noJumboAttribute = new VirtualInterfaceAllocationAttributes({
+    addressFamily: 'addressFamily',
+    asn: 1234,
+    connectionId: 'connectionId',
+    ownerAccount: 'ownerAccount',
+    jumboFrames: false,
+    siteLink: true,
+    virtualInterfaceName: 'virtualInterfaceName',
+    virtualInterfaceType: 'transit',
+    vlan: 123,
+    amazonAddress: 'earth',
+    customerAddress: 'earth',
+  });
+  expect(noJumboAttribute.mtu).toEqual(1500);
 });

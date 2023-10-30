@@ -24,15 +24,19 @@ const stack = new cdk.Stack();
 new CentralLogsBucket(stack, 'CentralLogsBucket', {
   s3BucketName: `aws-accelerator-central-logs-${stack.account}-${stack.region}`,
   serverAccessLogsBucket: new Bucket(stack, 'AccessLogsBucket', {
-    encryptionType: BucketEncryptionType.SSE_KMS,
+    encryptionType: BucketEncryptionType.SSE_S3,
     s3BucketName: `aws-accelerator-s3-access-logs-${stack.account}-${stack.region}`,
     kmsAliasName: 'alias/accelerator/s3-access-logs/s3',
     kmsDescription: 'AWS Accelerator S3 Access Logs Bucket CMK',
-  }),
+  }).getS3Bucket(),
   kmsAliasName: 'alias/accelerator/central-logs/s3',
   kmsDescription: 'AWS Accelerator Central Logs Bucket CMK',
   principalOrgIdCondition: { 'aws:PrincipalOrgID': organizationId },
   orgPrincipals: new cdk.aws_iam.OrganizationPrincipal(organizationId),
+  acceleratorPrefix: 'AWSAccelerator',
+  crossAccountAccessRoleName: 'AWSAccelerator-CentralBucket-KeyArnParam-Role',
+  cmkArnSsmParameterName: '/accelerator/logging/central-bucket/kms/arn',
+  managementAccountAccessRole: 'AWSControlTowerExecution',
 });
 
 /**

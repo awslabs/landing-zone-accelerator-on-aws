@@ -1,47 +1,47 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`ResolverFirewallDomainList Construct(ResolverFirewallDomainList):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CustomResolverManagedDomainListCustomResourceProviderHandler9F7C9581": Object {
-      "DependsOn": Array [
+{
+  "Resources": {
+    "CustomResolverManagedDomainListCustomResourceProviderHandler9F7C9581": {
+      "DependsOn": [
         "CustomResolverManagedDomainListCustomResourceProviderRole33DECC65",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomResolverManagedDomainListCustomResourceProviderRole33DECC65",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomResolverManagedDomainListCustomResourceProviderLogGroupAA48B1A0": Object {
+    "CustomResolverManagedDomainListCustomResourceProviderLogGroupAA48B1A0": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "TestManagedDomainListKeyCB86CE9D",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomResolverManagedDomainListCustomResourceProviderHandler9F7C9581",
               },
             ],
@@ -52,31 +52,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomResolverManagedDomainListCustomResourceProviderRole33DECC65": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomResolverManagedDomainListCustomResourceProviderRole33DECC65": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "route53resolver:ListFirewallDomainLists",
                   ],
                   "Effect": "Allow",
@@ -91,13 +91,13 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "TestDomainList9DC6C806": Object {
-      "Properties": Object {
-        "DomainFileUrl": Object {
+    "TestDomainList9DC6C806": {
+      "Properties": {
+        "DomainFileUrl": {
           "Fn::Sub": "REPLACED-GENERATED-NAME.zip",
         },
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "TestDomainList",
           },
@@ -105,25 +105,25 @@ Object {
       },
       "Type": "AWS::Route53Resolver::FirewallDomainList",
     },
-    "TestDomainListKey95870FD5": Object {
+    "TestDomainListKey95870FD5": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -140,45 +140,45 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "TestManagedDomainListE1CDFDDE": Object {
+    "TestManagedDomainListE1CDFDDE": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomResolverManagedDomainListCustomResourceProviderLogGroupAA48B1A0",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomResolverManagedDomainListCustomResourceProviderHandler9F7C9581",
             "Arn",
           ],
         },
         "listName": "TestManagedDomainList",
-        "region": Object {
+        "region": {
           "Ref": "AWS::Region",
         },
       },
       "Type": "Custom::ResolverManagedDomainList",
       "UpdateReplacePolicy": "Delete",
     },
-    "TestManagedDomainListKeyCB86CE9D": Object {
+    "TestManagedDomainListKeyCB86CE9D": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",

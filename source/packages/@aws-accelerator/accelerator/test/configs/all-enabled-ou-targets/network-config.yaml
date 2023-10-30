@@ -194,6 +194,19 @@ centralNetworkServices:
         shareTargets:
           organizationalUnits:
             - Infrastructure
+      - name: accelerator-strict-policy
+        regions:
+          - *HOME_REGION
+        firewallPolicy:
+          statelessDefaultActions: ['aws:forward_to_sfe']
+          statelessFragmentDefaultActions: ['aws:forward_to_sfe']
+          statefulEngineOptions: STRICT_ORDER
+          statefulRuleGroups:
+            - name: accelerator-strict-rule-group
+              priority: 100
+        shareTargets:
+          organizationalUnits:
+            - Infrastructure
     rules:
       - name: accelerator-suricata-rule-group
         regions:
@@ -214,6 +227,26 @@ centralNetworkServices:
               definition:
                 - '80'
                 - '443'
+      - name: accelerator-strict-rule-group
+        regions:
+          - *HOME_REGION
+        capacity: 100
+        type: STATEFUL
+        ruleGroup:
+          statefulRuleOptions: STRICT_ORDER
+          rulesSource:
+            rulesFile: firewall-rules/rules.txt
+          ruleVariables:
+            ipSets:
+              - name: HOME_NET
+                definition:
+                  - 10.0.0.0/16
+                  - 10.1.0.0/16
+            portSets:
+              - name: HOME_NET
+                definition:
+                  - '80'
+                  - '443'
       - name: accelerator-rule-group
         regions:
           - *HOME_REGION
@@ -1049,3 +1082,5 @@ vpcFlowLogs:
     - pkt-dst-aws-service
     - flow-direction
     - traffic-path
+firewallManagerService:
+  delegatedAdminAccount: Audit

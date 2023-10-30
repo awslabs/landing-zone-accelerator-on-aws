@@ -22,17 +22,19 @@ const testNamePrefix = 'Construct(SsmParameter): ';
 const stack = new cdk.Stack();
 
 new PutSsmParameter(stack, 'SsmParameter', {
+  accountIds: ['111111111111', '222222222222'],
   region: 'us-east-1',
-  partition: 'aws',
-  parameter: {
-    name: `/accelerator/network/vpcPeering/name/id`,
-    accountId: '111111111111',
-    roleName: `AWSAccelerator-VpcPeeringRole-222222222222`,
-    value: 'vp-123123123',
-  },
+  roleName: `AWSAccelerator-VpcPeeringRole-222222222222`,
+  parameters: [
+    {
+      name: `/accelerator/network/vpcPeering/name/id`,
+      value: 'vp-123123123',
+    },
+  ],
   kmsKey: new cdk.aws_kms.Key(stack, 'key'),
   logRetentionInDays: 3653,
-  invokingAccountID: '333333333333',
+  invokingAccountId: '333333333333',
+  acceleratorPrefix: 'AWSAccelerator',
 });
 
 /**

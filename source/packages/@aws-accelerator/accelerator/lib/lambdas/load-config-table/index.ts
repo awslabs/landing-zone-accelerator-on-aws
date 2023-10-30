@@ -23,16 +23,13 @@ import {
   AccountsConfigTypes,
   OrganizationalUnitConfig,
   OrganizationConfig,
-  OrganizationConfigTypes,
+  ReplacementsConfig,
+  ReplacementsConfigTypes,
 } from '@aws-accelerator/config';
 import * as t from '@aws-accelerator/config/';
 import { Readable } from 'stream';
 
 export {};
-declare global {
-  type File = unknown;
-  type ReadableStream = unknown;
-}
 
 let dynamodbClient: DynamoDBClient;
 let documentClient: DynamoDBDocumentClient;
@@ -61,10 +58,12 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const configS3Bucket: string = event.ResourceProperties['configS3Bucket'];
   const organizationsConfigS3Key: string = event.ResourceProperties['organizationsConfigS3Key'];
   const accountConfigS3Key: string = event.ResourceProperties['accountConfigS3Key'];
+  const replacementsConfigS3Key: string = event.ResourceProperties['replacementsConfigS3Key'];
   const commitId: string = event.ResourceProperties['commitId'] ?? '';
   const partition: string = event.ResourceProperties['partition'];
   const stackName: string = event.ResourceProperties['stackName'];
   const solutionId = process.env['SOLUTION_ID'];
+  const isOrgsEnabled: boolean = event.ResourceProperties['isOrgsEnabled'] === 'true';
 
   console.log(`Configuration Table Name: ${configTableName}`);
   console.log(`Configuration Repository Name: ${configRepositoryName}`);
@@ -95,12 +94,13 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         partition,
         configTableName,
         commitId,
-        { name: configS3Bucket, organizationsConfigS3Key, accountConfigS3Key },
+        { name: configS3Bucket, organizationsConfigS3Key, accountConfigS3Key, replacementsConfigS3Key },
         {
           managementAccount: managementAccountEmail,
           auditAccount: auditAccountEmail,
           logArchiveAccount: logArchiveAccountEmail,
         },
+        isOrgsEnabled,
       );
 
     case 'Delete':
@@ -243,23 +243,22 @@ async function onCreateUpdateFunction(
   partition: string,
   configTableName: string,
   commitId: string,
-  bucket: { name: string; organizationsConfigS3Key: string; accountConfigS3Key: string },
+  bucket: {
+    name: string;
+    organizationsConfigS3Key: string;
+    accountConfigS3Key: string;
+    replacementsConfigS3Key: string;
+  },
   emails: {
     managementAccount: string;
     auditAccount: string;
     logArchiveAccount: string;
   },
+  isOrgsEnabled: boolean,
 ): Promise<{
   PhysicalResourceId: string | undefined;
   Status: string;
 }> {
-  const organizationConfigContent = await getConfigFileContents(bucket.name, bucket.organizationsConfigS3Key);
-  const organizationValues = t.parse(OrganizationConfigTypes.organizationConfig, yaml.load(organizationConfigContent));
-  const organizationConfig = new OrganizationConfig(organizationValues);
-  await organizationConfig.loadOrganizationalUnitIds(partition);
-
-  await putAllOrganizationConfigInTable(organizationConfig, configTableName, commitId);
-
   const accountsConfigContent = await getConfigFileContents(bucket.name, bucket.accountConfigS3Key);
   const accountsValues = t.parse(AccountsConfigTypes.accountsConfig, yaml.load(accountsConfigContent));
   const accountsConfig = new AccountsConfig(
@@ -270,7 +269,33 @@ async function onCreateUpdateFunction(
     },
     accountsValues,
   );
-  await accountsConfig.loadAccountIds(partition);
+
+  let replacementsConfig = undefined;
+  if (bucket.replacementsConfigS3Key) {
+    const replacementsConfigContent = await getConfigFileContents(bucket.name, bucket.replacementsConfigS3Key);
+    const replacementsValues = t.parse(
+      ReplacementsConfigTypes.replacementsConfig,
+      yaml.load(replacementsConfigContent),
+    );
+
+    // edge-case: loading without looking up SSM replacements
+    replacementsConfig = new ReplacementsConfig(replacementsValues, accountsConfig, true);
+    replacementsConfig.loadReplacementValues({});
+  }
+
+  const organizationConfigContent = await getConfigFileContents(bucket.name, bucket.organizationsConfigS3Key);
+  const organizationConfig = OrganizationConfig.loadFromString(organizationConfigContent, replacementsConfig);
+  await organizationConfig.loadOrganizationalUnitIds(partition);
+
+  await putAllOrganizationConfigInTable(organizationConfig, configTableName, commitId);
+
+  // Boolean to set single account deployment mode
+  const enableSingleAccountMode = process.env['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE']
+    ? process.env['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE'] === 'true'
+    : false;
+
+  await accountsConfig.loadAccountIds(partition, enableSingleAccountMode, isOrgsEnabled, accountsConfig);
+
   for (const account of accountsConfig.mandatoryAccounts) {
     switch (account.name) {
       case 'Management':
@@ -347,7 +372,7 @@ async function putAllOrganizationConfigInTable(
       if (error instanceof Error) message = error.message;
       else message = String(error);
 
-      if (message.startsWith('Organizations not enabled or')) awsKey = '';
+      if (message.startsWith('configuration validation failed')) awsKey = '';
       else throw error;
     }
     await putOrganizationConfigInTable(organizationalUnit, configTableName, awsKey, commitId);

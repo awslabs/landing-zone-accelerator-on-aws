@@ -121,17 +121,20 @@ run_cdk_project_test() {
     echo "------------------------------------------------------------------------------"
     cd $component_path
 
+    # Clean up cache prior to install
+    yarn cache clean
+
     # install and build for unit testing
-    yarn lerna bootstrap
+    yarn install
     yarn build
 
     ## Option to suppress the Override Warning messages while synthesizing using CDK
     # export overrideWarningsEnabled=false
 
     # run unit tests
-    yarn run test
+    yarn test
 
-    # # prepare coverage reports
+    # prepare coverage reports
     # prepare_jest_coverage_report $component_name
 }
 
@@ -141,10 +144,6 @@ echo "Running unit tests"
 # Get reference for source folder
 source_dir="$(cd $PWD/../source; pwd -P)"
 coverage_reports_top_path=$source_dir/test/coverage-reports
-
-# Install lerna
-echo "Install lerna"
-yarn add lerna@6.0.0 -W
 
 # Test the CDK project
 run_cdk_project_test $source_dir

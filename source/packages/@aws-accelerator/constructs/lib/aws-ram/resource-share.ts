@@ -104,12 +104,11 @@ export abstract class ResourceShareItem extends cdk.Resource implements IResourc
       constructor(scope: Construct, id: string) {
         super(scope, id);
 
-        console.log(options.resourceShare.resourceShareId);
         const GET_RESOURCE_SHARE_ITEM = 'Custom::GetResourceShareItem';
 
         const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, GET_RESOURCE_SHARE_ITEM, {
           codeDirectory: path.join(__dirname, 'get-resource-share-item/dist'),
-          runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+          runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
           policyStatements: [
             {
               Effect: 'Allow',
@@ -173,7 +172,7 @@ export class ResourceShare extends cdk.Resource implements IResourceShare {
         //
         const cr = cdk.CustomResourceProvider.getOrCreateProvider(this, GET_RESOURCE_SHARE, {
           codeDirectory: path.join(__dirname, 'get-resource-share/dist'),
-          runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+          runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
           policyStatements: [
             {
               Effect: 'Allow',

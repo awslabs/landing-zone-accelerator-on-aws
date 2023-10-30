@@ -1,0 +1,891 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Certificate Construct(Certificate):  Snapshot Test 1`] = `
+{
+  "Resources": {
+    "ImportCertificate94B1FDBC": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "ImportCertificateCustomCreateAcmCertsframeworkonEvent5B216036",
+            "Arn",
+          ],
+        },
+        "assetBucketName": "aws-accelerator-assets",
+        "cert": "cert/cert.crt",
+        "chain": "cert/chain.csr",
+        "homeRegion": "us-east-1",
+        "parameterName": "/accelerator/acm/importCert/arn",
+        "privKey": "cert/privKey.pem",
+        "type": "import",
+      },
+      "Type": "Custom::CreateAcmCerts",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ImportCertificateCloudWatchKey4B69D07C": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "ImportCertificateCustomCreateAcmCertsframeworkonEvent5B216036": {
+      "DependsOn": [
+        "ImportCertificateCustomCreateAcmCertsframeworkonEventServiceRoleDefaultPolicyB532806A",
+        "ImportCertificateCustomCreateAcmCertsframeworkonEventServiceRole87CE2981",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/ImportCertificate/Custom::CreateAcmCerts)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "ImportCertificateFunction55F21D86",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "ImportCertificateCustomCreateAcmCertsframeworkonEventServiceRole87CE2981",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ImportCertificateCustomCreateAcmCertsframeworkonEventServiceRole87CE2981": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ImportCertificateCustomCreateAcmCertsframeworkonEventServiceRoleDefaultPolicyB532806A": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "ImportCertificateFunction55F21D86",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "ImportCertificateFunction55F21D86",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ImportCertificateCustomCreateAcmCertsframeworkonEventServiceRoleDefaultPolicyB532806A",
+        "Roles": [
+          {
+            "Ref": "ImportCertificateCustomCreateAcmCertsframeworkonEventServiceRole87CE2981",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ImportCertificateFunction55F21D86": {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Create ACM certificates handler",
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":role/AWSAccelerator-AssetsAccessRole",
+            ],
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ImportCertificateFunctionLogGroup3FFC3061": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "ImportCertificateCloudWatchKey4B69D07C",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "ImportCertificateFunction55F21D86",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 365,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "RequestCertificate5D48D3DE": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "RequestCertificateCustomCreateAcmCertsframeworkonEvent15AC29F8",
+            "Arn",
+          ],
+        },
+        "assetBucketName": "aws-accelerator-assets",
+        "domain": "*.example.com",
+        "homeRegion": "us-east-1",
+        "parameterName": "/accelerator/acm/requestCert/arn",
+        "san": "e.co,*.example.net",
+        "type": "request",
+        "validation": "DNS",
+      },
+      "Type": "Custom::CreateAcmCerts",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "RequestCertificateCloudWatchKeyDAA2C481": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "RequestCertificateCustomCreateAcmCertsframeworkonEvent15AC29F8": {
+      "DependsOn": [
+        "RequestCertificateCustomCreateAcmCertsframeworkonEventServiceRoleDefaultPolicy8F0B16E1",
+        "RequestCertificateCustomCreateAcmCertsframeworkonEventServiceRoleFFCDD9BD",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/RequestCertificate/Custom::CreateAcmCerts)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "RequestCertificateFunction3B1055B9",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "RequestCertificateCustomCreateAcmCertsframeworkonEventServiceRoleFFCDD9BD",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "RequestCertificateCustomCreateAcmCertsframeworkonEventServiceRoleDefaultPolicy8F0B16E1": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "RequestCertificateFunction3B1055B9",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "RequestCertificateFunction3B1055B9",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "RequestCertificateCustomCreateAcmCertsframeworkonEventServiceRoleDefaultPolicy8F0B16E1",
+        "Roles": [
+          {
+            "Ref": "RequestCertificateCustomCreateAcmCertsframeworkonEventServiceRoleFFCDD9BD",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "RequestCertificateCustomCreateAcmCertsframeworkonEventServiceRoleFFCDD9BD": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "RequestCertificateFunction3B1055B9": {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Create ACM certificates handler",
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":role/AWSAccelerator-AssetsAccessRole",
+            ],
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "RequestCertificateFunctionLogGroup1921673C": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "RequestCertificateCloudWatchKeyDAA2C481",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "RequestCertificateFunction3B1055B9",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 365,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+  },
+}
+`;
+
+exports[`ImportCertificate Construct(Certificate):  Snapshot Test 1`] = `
+{
+  "Resources": {
+    "ImportCertificate94B1FDBC": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "ImportCertificateCustomCreateAcmCertsframeworkonEvent5B216036",
+            "Arn",
+          ],
+        },
+        "assetBucketName": "aws-accelerator-assets",
+        "cert": "cert/cert.crt",
+        "chain": "cert/chain.csr",
+        "homeRegion": "us-east-1",
+        "parameterName": "/accelerator/acm/importCert/arn",
+        "privKey": "cert/privKey.pem",
+        "type": "import",
+      },
+      "Type": "Custom::CreateAcmCerts",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ImportCertificateCloudWatchKey4B69D07C": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "ImportCertificateCustomCreateAcmCertsframeworkonEvent5B216036": {
+      "DependsOn": [
+        "ImportCertificateCustomCreateAcmCertsframeworkonEventServiceRoleDefaultPolicyB532806A",
+        "ImportCertificateCustomCreateAcmCertsframeworkonEventServiceRole87CE2981",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/ImportCertificate/Custom::CreateAcmCerts)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "ImportCertificateFunction55F21D86",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "ImportCertificateCustomCreateAcmCertsframeworkonEventServiceRole87CE2981",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ImportCertificateCustomCreateAcmCertsframeworkonEventServiceRole87CE2981": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ImportCertificateCustomCreateAcmCertsframeworkonEventServiceRoleDefaultPolicyB532806A": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "ImportCertificateFunction55F21D86",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "ImportCertificateFunction55F21D86",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ImportCertificateCustomCreateAcmCertsframeworkonEventServiceRoleDefaultPolicyB532806A",
+        "Roles": [
+          {
+            "Ref": "ImportCertificateCustomCreateAcmCertsframeworkonEventServiceRole87CE2981",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ImportCertificateFunction55F21D86": {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Create ACM certificates handler",
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":role/AWSAccelerator-AssetsAccessRole",
+            ],
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ImportCertificateFunctionLogGroup3FFC3061": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "ImportCertificateCloudWatchKey4B69D07C",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "ImportCertificateFunction55F21D86",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 365,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "RequestCertificate5D48D3DE": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "RequestCertificateCustomCreateAcmCertsframeworkonEvent15AC29F8",
+            "Arn",
+          ],
+        },
+        "assetBucketName": "aws-accelerator-assets",
+        "domain": "*.example.com",
+        "homeRegion": "us-east-1",
+        "parameterName": "/accelerator/acm/requestCert/arn",
+        "san": "e.co,*.example.net",
+        "type": "request",
+        "validation": "DNS",
+      },
+      "Type": "Custom::CreateAcmCerts",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "RequestCertificateCloudWatchKeyDAA2C481": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "RequestCertificateCustomCreateAcmCertsframeworkonEvent15AC29F8": {
+      "DependsOn": [
+        "RequestCertificateCustomCreateAcmCertsframeworkonEventServiceRoleDefaultPolicy8F0B16E1",
+        "RequestCertificateCustomCreateAcmCertsframeworkonEventServiceRoleFFCDD9BD",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/RequestCertificate/Custom::CreateAcmCerts)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "RequestCertificateFunction3B1055B9",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "RequestCertificateCustomCreateAcmCertsframeworkonEventServiceRoleFFCDD9BD",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "RequestCertificateCustomCreateAcmCertsframeworkonEventServiceRoleDefaultPolicy8F0B16E1": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "RequestCertificateFunction3B1055B9",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "RequestCertificateFunction3B1055B9",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "RequestCertificateCustomCreateAcmCertsframeworkonEventServiceRoleDefaultPolicy8F0B16E1",
+        "Roles": [
+          {
+            "Ref": "RequestCertificateCustomCreateAcmCertsframeworkonEventServiceRoleFFCDD9BD",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "RequestCertificateCustomCreateAcmCertsframeworkonEventServiceRoleFFCDD9BD": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "RequestCertificateFunction3B1055B9": {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Create ACM certificates handler",
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":role/AWSAccelerator-AssetsAccessRole",
+            ],
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "RequestCertificateFunctionLogGroup1921673C": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "RequestCertificateCloudWatchKeyDAA2C481",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "RequestCertificateFunction3B1055B9",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 365,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+  },
+}
+`;

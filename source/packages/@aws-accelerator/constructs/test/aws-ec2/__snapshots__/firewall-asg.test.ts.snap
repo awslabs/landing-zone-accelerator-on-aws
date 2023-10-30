@@ -1,26 +1,326 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`LaunchTemplate Construct(FirewallAutoScalingGroup):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "TestFirewallAutoScalingServiceLinkedRoleD2FFF275": Object {
-      "Properties": Object {
-        "AWSServiceName": "autoscaling.amazonaws.com",
-        "Description": "Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling",
+{
+  "Resources": {
+    "CustomKey1E6D0D07": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
       },
-      "Type": "AWS::IAM::ServiceLinkedRole",
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
     },
-    "TestFirewallF12A004C": Object {
-      "Properties": Object {
+    "CustomKeyCloudWatchFB91CD4E": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction4263CA84": {
+      "DependsOn": [
+        "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy1510F19B",
+        "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRole82A4BC5E",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Custom resource provider to create service linked role",
+        "Handler": "index.handler",
+        "KmsKeyArn": {
+          "Fn::GetAtt": [
+            "CustomKey1E6D0D07",
+            "Arn",
+          ],
+        },
+        "MemorySize": 256,
+        "Role": {
+          "Fn::GetAtt": [
+            "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRole82A4BC5E",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionLogGroupB0B4539B": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "CustomKeyCloudWatchFB91CD4E",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction4263CA84",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRole82A4BC5E": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy1510F19B": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "iam:CreateServiceLinkedRole",
+                "iam:GetRole",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy1510F19B",
+        "Roles": [
+          {
+            "Ref": "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRole82A4BC5E",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEvent7CB941E7": {
+      "DependsOn": [
+        "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy607127A2",
+        "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleADF19690",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/TestFirewall/Resource/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleProvider)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction4263CA84",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleADF19690",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleADF19690": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy607127A2": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction4263CA84",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction4263CA84",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicy607127A2",
+        "Roles": [
+          {
+            "Ref": "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleADF19690",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleResource1EB49BEA": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEvent7CB941E7",
+            "Arn",
+          ],
+        },
+        "description": "Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling",
+        "roleName": "AWSServiceRoleForAutoScaling",
+        "serviceName": "autoscaling.amazonaws.com",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::CreateServiceLinkedRole",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TestFirewallF12A004C": {
+      "Properties": {
         "DesiredCapacity": "2",
         "HealthCheckGracePeriod": 300,
         "HealthCheckType": "ELB",
-        "LaunchTemplate": Object {
-          "LaunchTemplateId": Object {
+        "LaunchTemplate": {
+          "LaunchTemplateId": {
             "Ref": "TestFirewallLaunchTemplateFF1988AF",
           },
-          "Version": Object {
-            "Fn::GetAtt": Array [
+          "Version": {
+            "Fn::GetAtt": [
               "TestFirewallLaunchTemplateFF1988AF",
               "LatestVersionNumber",
             ],
@@ -28,48 +328,51 @@ Object {
         },
         "MaxSize": "4",
         "MinSize": "1",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "PropagateAtLaunch": true,
             "Value": "Test",
           },
         ],
-        "TargetGroupARNs": Array [],
-        "VPCZoneIdentifier": Array [
+        "TargetGroupARNs": [],
+        "VPCZoneIdentifier": [
           "subnet-123xyz",
           "subnet-456abc",
         ],
       },
       "Type": "AWS::AutoScaling::AutoScalingGroup",
     },
-    "TestFirewallLaunchTemplateFF1988AF": Object {
-      "Properties": Object {
-        "LaunchTemplateData": Object {
-          "BlockDeviceMappings": Array [
-            Object {
+    "TestFirewallLaunchTemplateFF1988AF": {
+      "Properties": {
+        "LaunchTemplateData": {
+          "BlockDeviceMappings": [
+            {
               "DeviceName": "dev/xvda",
-              "Ebs": Object {
+              "Ebs": {
                 "Encrypted": true,
               },
             },
           ],
-          "IamInstanceProfile": Object {},
+          "IamInstanceProfile": {},
           "ImageId": "ami-123xyz",
           "InstanceType": "t3.large",
-          "MetadataOptions": Object {
+          "MetadataOptions": {
             "HttpTokens": "required",
           },
-          "NetworkInterfaces": Array [
-            Object {
+          "NetworkInterfaces": [
+            {
               "DeviceIndex": 0,
-              "Groups": Array [
+              "Groups": [
                 "Test",
               ],
               "SubnetId": "subnet-123xyz",
             },
           ],
-          "SecurityGroupIds": Array [],
+          "SecurityGroupIds": [],
+          "UserData": {
+            "Fn::Base64": "S3 bucket name: test-bucket",
+          },
         },
         "LaunchTemplateName": "test-firewall",
       },

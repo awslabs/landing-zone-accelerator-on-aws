@@ -1,52 +1,137 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`CloudWatchLogsSubscriptionFilter Construct(CloudWatchLogsSubscriptionFilter):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CloudWatchLogsSubscriptionFilter90533F2E": Object {
+{
+  "Resources": {
+    "CloudWatchLogsSubscriptionFilter90533F2E": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomUpdateSubscriptionFilterCustomResourceProviderLogGroup0738E05B",
       ],
-      "Properties": Object {
-        "LogDestination": "LogRetentionArn",
-        "LogKmsKeyArn": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomUpdateSubscriptionFilterCustomResourceProviderHandler1BAA7608",
+            "Arn",
+          ],
+        },
+        "acceleratorCreatedLogDestinationArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":logs:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":111111111111:destination:AWSAcceleratorCloudWatchToS3",
+            ],
+          ],
+        },
+        "acceleratorLogKmsKeyArn": {
+          "Fn::GetAtt": [
             "CustomKey1E6D0D07",
             "Arn",
           ],
         },
-        "LogRetention": "731",
-        "LogSubscriptionRole": "testString",
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
-            "CustomUpdateSubscriptionFilterCustomResourceProviderHandler1BAA7608",
-            "Arn",
+        "acceleratorLogRetentionInDays": "731",
+        "acceleratorLogSubscriptionRoleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::111111111111:role/AWSAccelerator-LoggingSta-SubscriptionFilterRole",
+            ],
+          ],
+        },
+        "replaceLogDestinationArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":logs:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":111111111111:destination:ReplaceDestination",
+            ],
           ],
         },
       },
       "Type": "Custom::UpdateSubscriptionFilter",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomKey1E6D0D07": Object {
+    "CloudWatchLogsSubscriptionFilterExistingIam9E6C2804": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomUpdateSubscriptionFilterCustomResourceProviderLogGroup0738E05B",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomUpdateSubscriptionFilterCustomResourceProviderHandler1BAA7608",
+            "Arn",
+          ],
+        },
+        "acceleratorCreatedLogDestinationArn": "LogRetentionArn",
+        "acceleratorLogKmsKeyArn": {
+          "Fn::GetAtt": [
+            "CustomKeyExistingIam1584FEB7",
+            "Arn",
+          ],
+        },
+        "acceleratorLogRetentionInDays": "731",
+        "acceleratorLogSubscriptionRoleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":role/AWSAcceleratorLogReplicationRole-",
+              {
+                "Ref": "AWS::Region",
+              },
+            ],
+          ],
+        },
+      },
+      "Type": "Custom::UpdateSubscriptionFilter",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomKey1E6D0D07": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -63,45 +148,80 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomUpdateSubscriptionFilterCustomResourceProviderHandler1BAA7608": Object {
-      "DependsOn": Array [
+    "CustomKeyExistingIam1584FEB7": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomUpdateSubscriptionFilterCustomResourceProviderHandler1BAA7608": {
+      "DependsOn": [
         "CustomUpdateSubscriptionFilterCustomResourceProviderRole81A1751E",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomUpdateSubscriptionFilterCustomResourceProviderRole81A1751E",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomUpdateSubscriptionFilterCustomResourceProviderLogGroup0738E05B": Object {
+    "CustomUpdateSubscriptionFilterCustomResourceProviderLogGroup0738E05B": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "CustomKey1E6D0D07",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomUpdateSubscriptionFilterCustomResourceProviderHandler1BAA7608",
               },
             ],
@@ -112,52 +232,52 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomUpdateSubscriptionFilterCustomResourceProviderRole81A1751E": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomUpdateSubscriptionFilterCustomResourceProviderRole81A1751E": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "logs:PutRetentionPolicy",
                     "logs:AssociateKmsKey",
                     "logs:DescribeLogGroups",
                     "logs:DescribeSubscriptionFilters",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
-                    Object {
-                      "Fn::Join": Array [
+                  "Resource": [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":logs:",
-                          Object {
+                          {
                             "Ref": "AWS::Region",
                           },
                           ":",
-                          Object {
+                          {
                             "Ref": "AWS::AccountId",
                           },
                           ":log-group:*",
@@ -166,43 +286,43 @@ Object {
                     },
                   ],
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "logs:PutSubscriptionFilter",
                     "logs:DeleteSubscriptionFilter",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
-                    Object {
-                      "Fn::Join": Array [
+                  "Resource": [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":logs:",
-                          Object {
+                          {
                             "Ref": "AWS::Region",
                           },
                           ":",
-                          Object {
+                          {
                             "Ref": "AWS::AccountId",
                           },
                           ":log-group:*",
                         ],
                       ],
                     },
-                    Object {
-                      "Fn::Join": Array [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":logs:",
-                          Object {
+                          {
                             "Ref": "AWS::Region",
                           },
                           ":some-acc-id:destination:*",

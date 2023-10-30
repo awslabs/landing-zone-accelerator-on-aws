@@ -37,12 +37,12 @@ transitGateways:
       - name: Network-Main-Segregated
         routes: []
       - name: Network-Main-Shared
-        routes: 
+        routes:
           - destinationCidrBlock: 10.200.0.0/16
             attachment:
               transitGatewayPeeringName: Network-Main-And-SharedServices-Main-Peering
       - name: Network-Main-Standalone
-        routes: []        
+        routes: []
   - name: SharedServices-Main
     account: SharedServices
     region: *HOME_REGION
@@ -61,7 +61,7 @@ transitGateways:
       - name: SharedServices-Main-Segregated
         routes: []
       - name: SharedServices-Main-Shared
-        routes: 
+        routes:
           - destinationCidrBlock: 10.100.0.0/16
             attachment:
               transitGatewayPeeringName: Network-Main-And-SharedServices-Main-Peering
@@ -74,17 +74,17 @@ transitGatewayPeering:
       account: SharedServices
       region: *HOME_REGION
       routeTableAssociations: SharedServices-Main-Shared
-      tags: 
-      - key: Name
-        value: Network-Main-And-SharedServices-Main-Peering
-      - key: CostCenter
-        value: TSD-LZA
-      - key: Company
-        value: AWS
-      - key: Organization
-        value: WWPS
-      - key: Team
-        value: Development
+      tags:
+        - key: Name
+          value: Network-Main-And-SharedServices-Main-Peering
+        - key: CostCenter
+          value: TSD-LZA
+        - key: Company
+          value: AWS
+        - key: Organization
+          value: WWPS
+        - key: Team
+          value: Development
     accepter:
       transitGatewayName: Network-Main
       account: Network
@@ -194,6 +194,19 @@ centralNetworkServices:
         shareTargets:
           organizationalUnits:
             - Infrastructure
+      - name: accelerator-strict-policy
+        regions:
+          - *HOME_REGION
+        firewallPolicy:
+          statelessDefaultActions: ['aws:forward_to_sfe']
+          statelessFragmentDefaultActions: ['aws:forward_to_sfe']
+          statefulEngineOptions: STRICT_ORDER
+          statefulRuleGroups:
+            - name: accelerator-strict-rule-group
+              priority: 100
+        shareTargets:
+          organizationalUnits:
+            - Infrastructure
     rules:
       - name: accelerator-suricata-rule-group
         regions:
@@ -214,6 +227,26 @@ centralNetworkServices:
               definition:
                 - '80'
                 - '443'
+      - name: accelerator-strict-rule-group
+        regions:
+          - *HOME_REGION
+        capacity: 100
+        type: STATEFUL
+        ruleGroup:
+          statefulRuleOptions: STRICT_ORDER
+          rulesSource:
+            rulesFile: firewall-rules/rules.txt
+          ruleVariables:
+            ipSets:
+              - name: HOME_NET
+                definition:
+                  - 10.0.0.0/16
+                  - 10.1.0.0/16
+            portSets:
+              - name: HOME_NET
+                definition:
+                  - '80'
+                  - '443'
       - name: accelerator-rule-group
         regions:
           - *HOME_REGION
@@ -1052,4 +1085,5 @@ certificates:
     deploymentTargets:
       OU:
         - Infrastructure
-
+firewallManagerService:
+  delegatedAdminAccount: Audit

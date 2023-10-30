@@ -1,47 +1,47 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`MacieMembers Construct(MacieMembers):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CustomMacieCreateMemberCustomResourceProviderHandler913F75DB": Object {
-      "DependsOn": Array [
+{
+  "Resources": {
+    "CustomMacieCreateMemberCustomResourceProviderHandler913F75DB": {
+      "DependsOn": [
         "CustomMacieCreateMemberCustomResourceProviderRole3E8977EE",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomMacieCreateMemberCustomResourceProviderRole3E8977EE",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomMacieCreateMemberCustomResourceProviderLogGroupB2DBC335": Object {
+    "CustomMacieCreateMemberCustomResourceProviderLogGroupB2DBC335": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "Key961B73FD",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomMacieCreateMemberCustomResourceProviderHandler913F75DB",
               },
             ],
@@ -52,36 +52,36 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomMacieCreateMemberCustomResourceProviderRole3E8977EE": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomMacieCreateMemberCustomResourceProviderRole3E8977EE": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "organizations:ListAccounts",
                   ],
-                  "Condition": Object {
-                    "StringLikeIfExists": Object {
-                      "organizations:ListAccounts": Array [
+                  "Condition": {
+                    "StringLikeIfExists": {
+                      "organizations:ListAccounts": [
                         "macie.amazonaws.com",
                       ],
                     },
@@ -90,8 +90,8 @@ Object {
                   "Resource": "*",
                   "Sid": "MacieCreateMemberTaskOrganizationAction",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "macie2:CreateMember",
                     "macie2:DeleteMember",
                     "macie2:DescribeOrganizationConfiguration",
@@ -114,25 +114,25 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "Key961B73FD": Object {
+    "Key961B73FD": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -149,25 +149,25 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "MacieMembers1B6840B4": Object {
+    "MacieMembers1B6840B4": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomMacieCreateMemberCustomResourceProviderLogGroupB2DBC335",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomMacieCreateMemberCustomResourceProviderHandler913F75DB",
             "Arn",
           ],
         },
-        "adminAccountId": Object {
+        "adminAccountId": {
           "Ref": "AWS::AccountId",
         },
-        "partition": Object {
+        "partition": {
           "Ref": "AWS::Partition",
         },
-        "region": Object {
+        "region": {
           "Ref": "AWS::Region",
         },
       },

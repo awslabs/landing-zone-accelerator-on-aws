@@ -1,27 +1,27 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`NewCloudWatchLogEvent Construct(NewCloudWatchLogEvent):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CustomKey1E6D0D07": Object {
+{
+  "Resources": {
+    "CustomKey1E6D0D07": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -38,25 +38,25 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomLambdaKey2287F5A9": Object {
+    "CustomKeyExistingIam1584FEB7": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -73,54 +73,124 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "NewCloudWatchLogEventNewLogGroupCreatedRuleAllowEventRuleNewCloudWatchLogEventSetLogRetentionSubscriptionFunctionDC0DB4146E3585DE": Object {
-      "Properties": Object {
+    "CustomLambdaKey2287F5A9": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomLambdaKeyExistingIamC416D475": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "NewCloudWatchLogEventExistingIamNewLogGroupCreatedRuleAllowEventRuleNewCloudWatchLogEventExistingIamSetLogRetentionSubscriptionFunction19D4F3A241B61069": {
+      "Properties": {
         "Action": "lambda:InvokeFunction",
-        "FunctionName": Object {
-          "Fn::GetAtt": Array [
-            "NewCloudWatchLogEventSetLogRetentionSubscriptionFunction0F748D41",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "NewCloudWatchLogEventExistingIamSetLogRetentionSubscriptionFunctionA6186161",
             "Arn",
           ],
         },
         "Principal": "events.amazonaws.com",
-        "SourceArn": Object {
-          "Fn::GetAtt": Array [
-            "NewCloudWatchLogEventNewLogGroupCreatedRuleB25856AE",
+        "SourceArn": {
+          "Fn::GetAtt": [
+            "NewCloudWatchLogEventExistingIamNewLogGroupCreatedRuleED930315",
             "Arn",
           ],
         },
       },
       "Type": "AWS::Lambda::Permission",
     },
-    "NewCloudWatchLogEventNewLogGroupCreatedRuleB25856AE": Object {
-      "Properties": Object {
-        "EventPattern": Object {
-          "detail": Object {
-            "eventName": Array [
+    "NewCloudWatchLogEventExistingIamNewLogGroupCreatedRuleED930315": {
+      "Properties": {
+        "EventPattern": {
+          "detail": {
+            "eventName": [
               "CreateLogGroup",
             ],
-            "eventSource": Array [
+            "eventSource": [
               "logs.amazonaws.com",
             ],
           },
-          "detail-type": Array [
+          "detail-type": [
             "AWS API Call via CloudTrail",
           ],
-          "source": Array [
+          "source": [
             "aws.logs",
           ],
         },
         "State": "ENABLED",
-        "Targets": Array [
-          Object {
-            "Arn": Object {
-              "Fn::GetAtt": Array [
-                "NewCloudWatchLogEventSetLogRetentionSubscriptionFunction0F748D41",
+        "Targets": [
+          {
+            "Arn": {
+              "Fn::GetAtt": [
+                "NewCloudWatchLogEventExistingIamSetLogRetentionSubscriptionFunctionA6186161",
                 "Arn",
               ],
             },
             "Id": "Target0",
-            "RetryPolicy": Object {
+            "RetryPolicy": {
               "MaximumRetryAttempts": 5,
             },
           },
@@ -128,70 +198,178 @@ Object {
       },
       "Type": "AWS::Events::Rule",
     },
-    "NewCloudWatchLogEventSetLogRetentionSubscriptionFunction0F748D41": Object {
-      "DependsOn": Array [
-        "NewCloudWatchLogEventSetLogRetentionSubscriptionFunctionServiceRoleDefaultPolicy99B4E143",
-        "NewCloudWatchLogEventSetLogRetentionSubscriptionFunctionServiceRole3A975055",
+    "NewCloudWatchLogEventExistingIamSetLogRetentionSubscriptionFunctionA6186161": {
+      "DependsOn": [
+        "NewCloudWatchLogEventExistingIamSetLogRetentionSubscriptionFunctionServiceRoleDefaultPolicy9013F7C6",
+        "NewCloudWatchLogEventExistingIamSetLogRetentionSubscriptionFunctionServiceRoleF75C2E9E",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Environment": Object {
-          "Variables": Object {
+        "Environment": {
+          "Variables": {
             "LogDestination": "LogRetentionArn",
-            "LogKmsKeyArn": Object {
-              "Fn::GetAtt": Array [
-                "CustomKey1E6D0D07",
+            "LogKmsKeyArn": {
+              "Fn::GetAtt": [
+                "CustomKeyExistingIam1584FEB7",
                 "Arn",
               ],
             },
             "LogRetention": "731",
-            "LogSubscriptionRole": "testString",
+            "LogSubscriptionRole": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":iam::",
+                  {
+                    "Ref": "AWS::AccountId",
+                  },
+                  ":role/AWSAcceleratorLogReplicationRole-",
+                  {
+                    "Ref": "AWS::Region",
+                  },
+                ],
+              ],
+            },
           },
         },
         "Handler": "index.handler",
-        "KmsKeyArn": Object {
-          "Fn::GetAtt": Array [
-            "CustomLambdaKey2287F5A9",
+        "KmsKeyArn": {
+          "Fn::GetAtt": [
+            "CustomLambdaKeyExistingIamC416D475",
             "Arn",
           ],
         },
-        "Role": Object {
-          "Fn::GetAtt": Array [
-            "NewCloudWatchLogEventSetLogRetentionSubscriptionFunctionServiceRole3A975055",
+        "Role": {
+          "Fn::GetAtt": [
+            "NewCloudWatchLogEventExistingIamSetLogRetentionSubscriptionFunctionServiceRoleF75C2E9E",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "NewCloudWatchLogEventSetLogRetentionSubscriptionFunctionServiceRole3A975055": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "NewCloudWatchLogEventExistingIamSetLogRetentionSubscriptionFunctionServiceRoleDefaultPolicy9013F7C6": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "logs:PutRetentionPolicy",
+                "logs:AssociateKmsKey",
+                "logs:DescribeLogGroups",
+                "logs:DescribeSubscriptionFilters",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":logs:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":log-group:*",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "logs:PutSubscriptionFilter",
+                "logs:DeleteSubscriptionFilter",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":logs:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":log-group:*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":logs:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":some-account-id:destination:*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "NewCloudWatchLogEventExistingIamSetLogRetentionSubscriptionFunctionServiceRoleDefaultPolicy9013F7C6",
+        "Roles": [
+          {
+            "Ref": "NewCloudWatchLogEventExistingIamSetLogRetentionSubscriptionFunctionServiceRoleF75C2E9E",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "NewCloudWatchLogEventExistingIamSetLogRetentionSubscriptionFunctionServiceRoleF75C2E9E": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
-            "Fn::Join": Array [
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "arn:",
-                Object {
+                {
                   "Ref": "AWS::Partition",
                 },
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
@@ -202,32 +380,161 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "NewCloudWatchLogEventSetLogRetentionSubscriptionFunctionServiceRoleDefaultPolicy99B4E143": Object {
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
+    "NewCloudWatchLogEventNewLogGroupCreatedRuleAllowEventRuleNewCloudWatchLogEventSetLogRetentionSubscriptionFunctionDC0DB4146E3585DE": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "NewCloudWatchLogEventSetLogRetentionSubscriptionFunction0F748D41",
+            "Arn",
+          ],
+        },
+        "Principal": "events.amazonaws.com",
+        "SourceArn": {
+          "Fn::GetAtt": [
+            "NewCloudWatchLogEventNewLogGroupCreatedRuleB25856AE",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "NewCloudWatchLogEventNewLogGroupCreatedRuleB25856AE": {
+      "Properties": {
+        "EventPattern": {
+          "detail": {
+            "eventName": [
+              "CreateLogGroup",
+            ],
+            "eventSource": [
+              "logs.amazonaws.com",
+            ],
+          },
+          "detail-type": [
+            "AWS API Call via CloudTrail",
+          ],
+          "source": [
+            "aws.logs",
+          ],
+        },
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Fn::GetAtt": [
+                "NewCloudWatchLogEventSetLogRetentionSubscriptionFunction0F748D41",
+                "Arn",
+              ],
+            },
+            "Id": "Target0",
+            "RetryPolicy": {
+              "MaximumRetryAttempts": 5,
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "NewCloudWatchLogEventSetLogRetentionSubscriptionFunction0F748D41": {
+      "DependsOn": [
+        "NewCloudWatchLogEventSetLogRetentionSubscriptionFunctionServiceRoleDefaultPolicy99B4E143",
+        "NewCloudWatchLogEventSetLogRetentionSubscriptionFunctionServiceRole3A975055",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "LogDestination": "LogRetentionArn",
+            "LogKmsKeyArn": {
+              "Fn::GetAtt": [
+                "CustomKey1E6D0D07",
+                "Arn",
+              ],
+            },
+            "LogRetention": "731",
+            "LogSubscriptionRole": "testString",
+          },
+        },
+        "Handler": "index.handler",
+        "KmsKeyArn": {
+          "Fn::GetAtt": [
+            "CustomLambdaKey2287F5A9",
+            "Arn",
+          ],
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "NewCloudWatchLogEventSetLogRetentionSubscriptionFunctionServiceRole3A975055",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "NewCloudWatchLogEventSetLogRetentionSubscriptionFunctionServiceRole3A975055": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "NewCloudWatchLogEventSetLogRetentionSubscriptionFunctionServiceRoleDefaultPolicy99B4E143": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
                 "logs:PutRetentionPolicy",
                 "logs:AssociateKmsKey",
                 "logs:DescribeLogGroups",
                 "logs:DescribeSubscriptionFilters",
               ],
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::Join": Array [
+              "Resource": {
+                "Fn::Join": [
                   "",
-                  Array [
+                  [
                     "arn:",
-                    Object {
+                    {
                       "Ref": "AWS::Partition",
                     },
                     ":logs:",
-                    Object {
+                    {
                       "Ref": "AWS::Region",
                     },
                     ":",
-                    Object {
+                    {
                       "Ref": "AWS::AccountId",
                     },
                     ":log-group:*",
@@ -235,43 +542,43 @@ Object {
                 ],
               },
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "logs:PutSubscriptionFilter",
                 "logs:DeleteSubscriptionFilter",
               ],
               "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::Join": Array [
+              "Resource": [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":logs:",
-                      Object {
+                      {
                         "Ref": "AWS::Region",
                       },
                       ":",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":log-group:*",
                     ],
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":logs:",
-                      Object {
+                      {
                         "Ref": "AWS::Region",
                       },
                       ":some-account-id:destination:*",
@@ -284,8 +591,8 @@ Object {
           "Version": "2012-10-17",
         },
         "PolicyName": "NewCloudWatchLogEventSetLogRetentionSubscriptionFunctionServiceRoleDefaultPolicy99B4E143",
-        "Roles": Array [
-          Object {
+        "Roles": [
+          {
             "Ref": "NewCloudWatchLogEventSetLogRetentionSubscriptionFunctionServiceRole3A975055",
           },
         ],

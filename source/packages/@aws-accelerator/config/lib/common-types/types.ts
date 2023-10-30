@@ -48,6 +48,20 @@ export {
   UnknownType,
 } from 'io-ts';
 
+export type Json = boolean | number | string | null | JsonArray | JsonRecord;
+
+export interface JsonRecord {
+  readonly [key: string]: Json;
+}
+
+export type JsonArray = ReadonlyArray<Json>;
+
+export const JsonArray: t.Type<JsonArray> = t.recursion('JsonArray', () => t.readonlyArray(Json));
+
+export const JsonRecord: t.Type<JsonRecord> = t.recursion('JsonRecord', () => t.record(t.string, Json));
+
+export const Json: t.Type<Json> = t.union([t.boolean, t.number, t.string, t.null, JsonArray, JsonRecord], 'Json');
+
 export class CidrType extends t.Type<IPv4CidrRange, string, unknown> {
   constructor(name?: string) {
     super(
@@ -149,7 +163,7 @@ export interface EnumTypeProps {
 }
 
 export class EnumType<T extends string | number> extends t.Type<T> {
-  readonly _tag: 'EnumType' = 'EnumType';
+  readonly _tag = 'EnumType' as const;
 
   constructor(readonly values: ReadonlyArray<T>, props: EnumTypeProps) {
     super(
@@ -220,18 +234,24 @@ export const region = enums(
     'ap-northeast-2',
     'ap-northeast-3',
     'ap-south-1',
+    'ap-south-2',
     'ap-southeast-1',
     'ap-southeast-2',
+    'ap-southeast-3',
+    'ap-southeast-4',
     'ca-central-1',
     'cn-north-1',
     'cn-northwest-1',
     'eu-central-1',
+    'eu-central-2',
     'eu-north-1',
     'eu-south-1',
+    'eu-south-2',
     'eu-west-1',
     'eu-west-2',
     'eu-west-3',
     'me-south-1',
+    'me-central-1',
     'sa-east-1',
     'us-east-1',
     'us-east-2',
@@ -253,11 +273,200 @@ export const deploymentTargets = t.interface({
   excludedRegions: optional(t.array(nonEmptyString)),
   excludedAccounts: optional(t.array(nonEmptyString)),
 });
+
+/**
+ * Deployment targets configuration.
+ * Deployment targets is an accelerator-specific
+ * configuration object that can be used for
+ * resources provisioned by the accelerator.
+ * Deployment targets allow you to specify
+ * multiple accounts and/or organizational units (OUs)
+ * as targets for resource deployment.
+ *
+ * The following example would deploy a resource
+ * to all accounts in the organization except the
+ * Management account:
+ * @example
+ * ```
+ * deploymentTargets:
+ *   organizationalUnits:
+ *     - Root
+ *   excludedAccounts:
+ *     - Management
+ * ```
+ */
 export class DeploymentTargets implements t.TypeOf<typeof deploymentTargets> {
+  /**
+   * Use this property to define one or more organizational units (OUs)
+   * as a deployment target. Resources are provisioned in each account
+   * contained within the OU.
+   *
+   * @remarks
+   * Any nested OUs that you would like to deploy resources to must be explicitly
+   * defined in this property. Deployment targets will not automatically deploy to
+   * nested OUs.
+   */
   readonly organizationalUnits: string[] = [];
+  /**
+   * Use this property to define one or more accounts as a deployment target.
+   */
   readonly accounts: string[] = [];
+  /**
+   * Use this property to explicitly define one or more regions to exclude from deployment.
+   *
+   * @remarks
+   * By default, all regions defined in the `enabledRegions` property of {@link GlobalConfig} are
+   * included in `deploymentTargets`.
+   */
   readonly excludedRegions: Region[] = [];
+  /**
+   * Use this property to explicitly define one or more accounts to exclude from deployment.
+   */
   readonly excludedAccounts: string[] = [];
+}
+
+/**
+ * Imported Bucket configuration with S3 managed key encryption.
+ */
+export const importedS3ManagedEncryptionKeyBucketConfig = t.interface({
+  name: nonEmptyString,
+  applyAcceleratorManagedBucketPolicy: optional(t.boolean),
+});
+
+/**
+ * Imported Bucket configuration withS3 managed key encryption.
+ *
+ * @remarks Use this configuration to use existing bucket, a bucket not created by accelerator solution.
+ */
+export class ImportedS3ManagedEncryptionKeyBucketConfig
+  implements t.TypeOf<typeof importedS3ManagedEncryptionKeyBucketConfig>
+{
+  /**
+   * Imported bucket name
+   */
+  readonly name: string = '';
+  /**
+   * Flag indicating Accelerator to apply solution generated policy to imported bucket.
+   *
+   * @remarks
+   * Accelerator solution creates bucket resource policy based on various security services enabled by the solution.
+   * Example when macie is enabled, macie service will need access to the bucket,
+   * accelerator solution dynamically generate policy statements based on various services require access to the bucket.
+   *
+   * Default value is false, accelerator managed policy will NOT be applied to bucket resource policy.
+   * When external policy files are provided through s3ResourcePolicyAttachments policy files,
+   * solution will add policies from the files to the imported bucket resource policy.
+   * If no external policy files are provided and value for this parameter is left to false, solution will not make changes to bucket resource policy.
+   * When value is set to true, accelerator solution will replace bucket resource policy with accelerator managed policies along with policies from external policy files if provided.
+   *
+   */
+  readonly applyAcceleratorManagedBucketPolicy: boolean | undefined = undefined;
+}
+
+/**
+ * Imported Bucket configuration with CMK enabled.
+ */
+export const importedCustomerManagedEncryptionKeyBucketConfig = t.interface({
+  name: nonEmptyString,
+  applyAcceleratorManagedBucketPolicy: optional(t.boolean),
+  createAcceleratorManagedKey: optional(t.boolean),
+});
+
+/**
+ * Imported Bucket configuration with CMK enabled.
+ *
+ * @remarks Use this configuration to use existing bucket, a bucket not created by accelerator solution.
+ */
+export class ImportedCustomerManagedEncryptionKeyBucketConfig
+  implements t.TypeOf<typeof importedCustomerManagedEncryptionKeyBucketConfig>
+{
+  /**
+   * Imported bucket name
+   */
+  readonly name: string = '';
+  /**
+   * Flag indicating Accelerator to apply solution generated policy to imported bucket.
+   *
+   * @remarks
+   * Accelerator solution creates bucket resource policy based on various security services enabled by the solution.
+   * Example when macie is enabled, macie service will need access to the bucket,
+   * accelerator solution dynamically generate policy statements based on various services require access to the bucket.
+   *
+   * Default value is false, accelerator managed policy will NOT be applied to bucket resource policy.
+   * When external policy files are provided through s3ResourcePolicyAttachments policy files,
+   * solution will add policies from the files to the imported bucket resource policy.
+   * If no external policy files are provided and value for this parameter is left to false, solution will not make changes to bucket resource policy.
+   * When value is set to true, accelerator solution will replace bucket resource policy with accelerator managed policies along with policies from external policy files if provided.
+   *
+   */
+  readonly applyAcceleratorManagedBucketPolicy: boolean | undefined = undefined;
+  /**
+   * Flag indicating solution should create CMK and apply to imported bucket.
+   *
+   * @remarks
+   * When the value is false, solution will not create KSM key, instead existing bucket encryption will be used and modified based on other parameters.
+   * When the value is true, solution will create KMS key and apply solution managed policy to the key.
+   * Once Accelerator pipeline executed with the value set to true, changing the value back to false, will case stack failure.
+   * Set this value to true when this will no longer be changed to false.
+   *
+   * @default
+   * false
+   */
+  readonly createAcceleratorManagedKey: boolean | undefined = undefined;
+}
+
+/**
+ * Custom policy overrides configuration for S3 resource
+ */
+export const customS3ResourcePolicyOverridesConfig = t.interface({
+  policy: optional(nonEmptyString),
+});
+
+/**
+ * Custom policy overrides configuration for S3 resource policy
+ *
+ * @remarks Use this configuration to use provide files with JSON string to override bucket resource policy.
+ */
+export class CustomS3ResourcePolicyOverridesConfig implements t.TypeOf<typeof customS3ResourcePolicyOverridesConfig> {
+  /**
+   * S3 resource policy file
+   *
+   * @remarks
+   * S3 resource policy file containing JSON string with policy statements. Solution will overwrite bucket resource policy with the context of the file.
+   */
+  readonly policy: string | undefined = undefined;
+}
+
+/**
+ * Custom policy overrides configuration for S3 resource and KMS
+ */
+export const customS3ResourceAndKmsPolicyOverridesConfig = t.interface({
+  s3Policy: optional(nonEmptyString),
+  kmsPolicy: optional(nonEmptyString),
+});
+
+/**
+ * Custom policy overrides configuration  for S3 resource and KMS
+ *
+ * @remarks Use this configuration to use provide files with JSON string to override bucket and KSM key policy.
+ */
+export class CustomS3ResourceAndKmsPolicyOverridesConfig
+  implements t.TypeOf<typeof customS3ResourceAndKmsPolicyOverridesConfig>
+{
+  /**
+   * S3 resource policy file
+   *
+   * @remarks
+   * S3 resource policy file containing JSON string with policy statements. Solution will overwrite bucket resource policy with the context of the file.
+   */
+  readonly s3Policy: string | undefined = undefined;
+  /**
+   * KSM policy file
+   *
+   * @remarks
+   * S3 bucket encryption policy file containing JSON string with policy statements. Solution will overwrite bucket encryption key policy with the context of the file.
+   */
+  readonly kmsPolicy: string | undefined = undefined;
 }
 
 export const storageClass = enums('storageClass', [
@@ -287,6 +496,7 @@ export const lifecycleRuleConfig = t.interface({
   noncurrentVersionExpiration: optional(t.number),
   noncurrentVersionTransitions: optional(t.array(transition)),
   transitions: optional(t.array(transition)),
+  prefix: optional(nonEmptyString),
 });
 
 export const resourcePolicyStatement = t.interface({
@@ -295,23 +505,119 @@ export const resourcePolicyStatement = t.interface({
 
 export type ResourcePolicyStatement = t.TypeOf<typeof resourcePolicyStatement>;
 
+/**
+ * S3 bucket life cycle rules object.
+ *
+ * @example
+ * ```
+ *   lifecycleRules:
+ *     - enabled: true
+ *       id: ElbLifecycle-01
+ *       abortIncompleteMultipartUpload: 14
+ *       expiration: 3563
+ *       expiredObjectDeleteMarker: false
+ *       noncurrentVersionExpiration: 3653
+ *       noncurrentVersionTransitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       transitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       prefix: PREFIX
+ *     - enabled: true
+ *       id: ElbLifecycle-02
+ *       abortIncompleteMultipartUpload: 14
+ *       expiredObjectDeleteMarker: true
+ *       noncurrentVersionExpiration: 3653
+ *       noncurrentVersionTransitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       transitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       prefix: PREFIX
+ * ```
+ */
 export class LifeCycleRule implements t.TypeOf<typeof lifecycleRuleConfig> {
+  /**
+   * Specifies a lifecycle rule that aborts incomplete multipart uploads to an Amazon S3 bucket.
+   */
   readonly abortIncompleteMultipartUpload: number = 1;
+  /**
+   * Whether this rule is enabled.
+   */
   readonly enabled: boolean = true;
-  readonly expiration: number = 1825;
+  /**
+   * Indicates the number of days after creation when objects are deleted from Amazon S3 and Amazon Glacier.
+   */
+  readonly expiration: number | undefined = undefined;
+  /**
+   * Indicates whether Amazon S3 will remove a delete marker with no noncurrent versions.
+   * If set to true, the delete marker will be expired.
+   */
   readonly expiredObjectDeleteMarker: boolean = false;
+  /**
+   * Friendly name for the rule. Rule name must be unique.
+   */
   readonly id: string = '';
+  /**
+   * Time between when a new version of the object is uploaded to the bucket and when old versions of the object expire.
+   */
   readonly noncurrentVersionExpiration: number = 366;
+  /**
+   * One or more transition rules that specify when non-current objects transition to a specified storage class.
+   */
   readonly noncurrentVersionTransitions: Transition[] = [];
+  /**
+   * One or more transition rules that specify when an object transitions to a specified storage class.
+   */
   readonly transitions: Transition[] = [];
+  /**
+   * Object key prefix that identifies one or more objects to which this rule applies.
+   * @default - Rule applies to all objects
+   */
+  readonly prefix: string | undefined = undefined;
 }
 
 export const shareTargets = t.interface({
   organizationalUnits: optional(t.array(nonEmptyString)),
   accounts: optional(t.array(nonEmptyString)),
 });
+
+/**
+ * {@link https://docs.aws.amazon.com/ram/latest/userguide/what-is.html | Resource Access Manager (RAM)} share targets configuration.
+ * Share targets is an accelerator-specific
+ * configuration object that can be used for
+ * resources provisioned by the accelerator.
+ * Share targets allow you to specify
+ * multiple accounts and/or organizational units (OUs)
+ * as targets for RAM shares. RAM allows you to securely share
+ * resources between accounts and OUs within your organization.
+ *
+ * The following example would share a resource
+ * to all accounts in the organization:
+ * @example
+ * ```
+ * shareTargets:
+ *   organizationalUnits:
+ *     - Root
+ * ```
+ */
 export class ShareTargets implements t.TypeOf<typeof shareTargets> {
+  /**
+   * Use this property to define one or more organizational units (OUs)
+   * as a share target. Resources can be consumed each account
+   * contained within the OU.
+   *
+   * @remarks
+   * Any nested OUs that you would like to share resources to must be explicitly
+   * defined in this property. Share targets will not automatically share to
+   * nested OUs.
+   */
   readonly organizationalUnits: string[] = [];
+  /**
+   * Use this property to define one or more accounts as a share target.
+   */
   readonly accounts: string[] = [];
 }
 
@@ -333,6 +639,16 @@ export class Tag implements t.TypeOf<typeof tag> {
   readonly value: string = '';
 }
 
+export const cfnParameter = t.interface({
+  name: t.string,
+  value: t.string,
+});
+
+export class CfnParameter implements t.TypeOf<typeof cfnParameter> {
+  readonly name: string = '';
+  readonly value: string = '';
+}
+
 const trafficTypeEnum = enums(
   'Flow LogTrafficType',
   ['ALL', 'ACCEPT', 'REJECT'],
@@ -347,6 +663,7 @@ export const logDestinationTypeEnum = enums(
 
 const vpcFlowLogsS3BucketConfig = t.interface({
   lifecycleRules: optional(t.array(lifecycleRuleConfig)),
+  overrideS3LogPath: optional(nonEmptyString),
 });
 
 const vpcFlowLogsCloudWatchLogsConfig = t.interface({
@@ -368,8 +685,38 @@ export const vpcFlowLogsConfig = t.interface({
   customFields: optional(t.array(nonEmptyString)),
 });
 
+export const prefixConfig = t.interface({
+  /**
+   * Indicates whether or not to add a custom prefix to LZA Default Centralized Logging location.
+   * If useCustomPrefix is set to true, logs will be stored in the Centralized Logging Bucket prefix.
+   */
+  useCustomPrefix: t.boolean,
+  /**
+   * (Optional) Prefix to be used for Centralized Logging Path
+   */
+  customOverride: optional(nonEmptyString),
+});
+
+/**
+ * (Optional) Central Log Bucket Path configuration.
+ */
+export class PrefixConfig implements t.TypeOf<typeof prefixConfig> {
+  /**
+   *  Indicates whether or not to add a custom prefix to LZA Default Centralized Logging location.
+   *  If useCustomPrefix is set to false, logs will be stored in the default LZA Centralized Logging Bucket prefix.
+   */
+  readonly useCustomPrefix: boolean = false;
+
+  /**
+   * @optional
+   * (Optional) Prefix to be used for Centralized Logging Path
+   */
+  readonly customOverride = undefined;
+}
+
 /**
  * VPC flow logs S3 destination bucket configuration.
+ *
  */
 class VpcFlowLogsS3BucketConfig implements t.TypeOf<typeof vpcFlowLogsS3BucketConfig> {
   /**
@@ -377,6 +724,15 @@ class VpcFlowLogsS3BucketConfig implements t.TypeOf<typeof vpcFlowLogsS3BucketCo
    * Flow log destination S3 bucket life cycle rules
    */
   readonly lifecycleRules: LifeCycleRule[] = [];
+
+  /**
+   * @optional
+   * Flow log destination S3 path. This allows customization of where VPC Flow Logs will be stored in S3.
+   * This value currently supports replacements for:
+   * ${ACCEL_LOOKUP::VPC_NAME}'
+   * ${ACCEL_LOOKUP::ACCOUNT_ID}'
+   */
+  readonly overrideS3LogPath: string = '';
 }
 
 /**
@@ -408,6 +764,7 @@ class VpcFlowLogsDestinationConfig implements t.TypeOf<typeof vpcFlowLogsDestina
    *     s3:
    *       enable: true
    *       lifecycleRules: []
+   *       s3LogPath: ''
    * ```
    */
   readonly s3: VpcFlowLogsS3BucketConfig = new VpcFlowLogsS3BucketConfig();
@@ -426,8 +783,50 @@ class VpcFlowLogsDestinationConfig implements t.TypeOf<typeof vpcFlowLogsDestina
 }
 
 /**
- * VPC flow logs configuration.
- * Used to customize VPC flow log output.
+ * {@link https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs.html | Virtual Private Cloud (VPC) flow logs} configuration.
+ * Use this configuration to customize VPC flow log output.
+ * VPC Flow Logs is a feature that enables you to capture information
+ * about the IP traffic going to and from network interfaces in your VPC.
+ * Flow log data can be published to the following locations: Amazon CloudWatch Logs, Amazon S3.
+ *
+ * @example
+ * ```
+ * vpcFlowLogs:
+ *   trafficType: ALL
+ *   maxAggregationInterval: 600
+ *   destinations:
+ *     - s3
+ *     - cloud-watch-logs
+ *   defaultFormat: false
+ *   customFields:
+ *     - version
+ *     - account-id
+ *     - interface-id
+ *     - srcaddr
+ *     - dstaddr
+ *     - srcport
+ *     - dstport
+ *     - protocol
+ *     - packets
+ *     - bytes
+ *     - start
+ *     - end
+ *     - action
+ *     - log-status
+ *     - vpc-id
+ *     - subnet-id
+ *     - instance-id
+ *     - tcp-flags
+ *     - type
+ *     - pkt-srcaddr
+ *     - pkt-dstaddr
+ *     - region
+ *     - az-id
+ *     - pkt-src-aws-service
+ *     - pkt-dst-aws-service
+ *     - flow-direction
+ *     - traffic-path
+ * ```
  */
 export class VpcFlowLogsConfig implements t.TypeOf<typeof vpcFlowLogsConfig> {
   /**
@@ -437,7 +836,7 @@ export class VpcFlowLogsConfig implements t.TypeOf<typeof vpcFlowLogsConfig> {
    */
   readonly trafficType = 'ALL';
   /**
-   * The maximum log aggregation interval in days.
+   * The maximum log aggregation interval in seconds.
    */
   readonly maxAggregationInterval: number = 600;
   /**
@@ -488,4 +887,85 @@ export class VpcFlowLogsConfig implements t.TypeOf<typeof vpcFlowLogsConfig> {
     'flow-direction',
     'traffic-path',
   ];
+}
+
+export type CfnResourceType = {
+  /**
+   * LogicalId of a resource in Amazon CloudFormation Stack
+   * Unique within the template
+   */
+  logicalResourceId: string;
+  /**
+   * PhysicalId of a resource in Amazon CloudFormation Stack
+   * Use the physical IDs to identify resources outside of AWS CloudFormation templates
+   */
+  physicalResourceId: string;
+  /**
+   * The resource type identifies the type of resource that you are declaring
+   */
+  resourceType: string;
+  /**
+   * The resourceMetadata holds all resources and properties
+   */
+  resourceMetadata: { [key: string]: any };
+};
+
+export type AseaStackInfo = {
+  accountId: string;
+  accountKey: string;
+  region: string;
+  phase: number;
+  stackName: string;
+  templatePath: string;
+  resources: CfnResourceType[];
+  nestedStack?: boolean;
+};
+
+/**
+ * ASEA ResourceTypes used in Resource Mapping
+ */
+export enum AseaResourceType {
+  IAM_POLICY = 'IAM_POLICY',
+  IAM_ROLE = 'IAM_ROLE',
+  IAM_GROUP = 'IAM_GROUP',
+  IAM_USER = 'IAM_USER',
+  EC2_VPC = 'EC2_VPC',
+  EC2_VPC_CIDR = 'EC2_VPC_CIDR',
+  EC2_SUBNET = 'EC2_SUBNET',
+  EC2_IGW = 'EC2_VPC_IGW',
+  EC2_VPN_GW = 'EC2_VPC_VPN_GW',
+  EC2_SECURITY_GROUP = 'EC2_SECURITY_GROUP',
+  EC2_SECURITY_GROUP_INGRESS = 'EC2_SECURITY_GROUP_INGRESS',
+  EC2_SECURITY_GROUP_EGRESS = 'EC2_SECURITY_GROUP_EGRESS',
+  EC2_VPC_PEERING = 'EC2_VPC_PEERING_CONNECTION',
+  ROUTE_TABLE = 'ROUTE_TABLE',
+  TRANSIT_GATEWAY = 'TRANSIT_GATEWAY',
+  TRANSIT_GATEWAY_ROUTE_TABLE = 'TRANSIT_GATEWAY_ROUTE_TABLE',
+  TRANSIT_GATEWAY_ROUTE = 'TRANSIT_GATEWAY_ROUTE',
+  TRANSIT_GATEWAY_ATTACHMENT = 'TRANSIT_GATEWAY_ATTACHMENT',
+  TRANSIT_GATEWAY_PROPAGATION = 'TRANSIT_GATEWAY_PROPAGATION',
+  TRANSIT_GATEWAY_ASSOCIATION = 'TRANSIT_GATEWAY_ASSOCIATION',
+  NAT_GATEWAY = 'NAT_GATEWAY',
+  NFW = 'NETWORK_FIREWALL',
+  NFW_POLICY = 'NETWORK_FIREWALL_POLICY',
+  NFW_RULE_GROUP = 'NETWORK_FIREWALL_RULE_GROUP',
+  VPC_ENDPOINT = 'VPC_ENDPOINT',
+  ROUTE_53_PHZ_ID = 'ROUTE_53_PHZ',
+}
+
+/**
+ * Consolidated type for ASEA Resource mapping
+ */
+export type AseaResourceMapping = {
+  accountId: string;
+  region: string;
+  resourceType: string;
+  resourceIdentifier: string;
+};
+
+export enum AseaResourceTypePaths {
+  IAM = '/iam/',
+  VPC = '/network/vpc/',
+  VPC_PEERING = '/network/vpcPeering/',
+  TRANSIT_GATEWAY = '/network/transitGateways/',
 }

@@ -33,7 +33,12 @@ describe('CloudWatchToS3Firehose', () => {
     bucket: new cdk.aws_s3.Bucket(stack, 'CustomBucket', {}),
     dynamicPartitioningValue: 'dynamic-partitioning/log-filters.json',
     homeRegion: 'someregion',
-    configDir: `${__dirname}/../../../accelerator/test/configs/all-enabled`,
+    configDir: `${__dirname}/../../../accelerator/test/configs/snapshot-only`,
+    acceleratorPrefix: 'AWSAccelerator',
+    useExistingRoles: false,
+    firehoseRecordsProcessorFunctionName: 'test',
+    logsKmsKey: new cdk.aws_kms.Key(stack, 'CustomLogsKey', {}),
+    logsRetentionInDaysValue: '7',
   });
   snapShotTest(testNamePrefix, stack);
 });
@@ -47,7 +52,12 @@ describe('CloudWatchToS3FirehoseBucketName', () => {
     bucketName: 'somebucket',
     dynamicPartitioningValue: 'dynamic-partitioning/log-filters.json',
     homeRegion: 'someregion',
-    configDir: `${__dirname}/../../../accelerator/test/configs/all-enabled`,
+    configDir: `${__dirname}/../../../accelerator/test/configs/snapshot-only`,
+    acceleratorPrefix: 'AWSAccelerator',
+    useExistingRoles: false,
+    firehoseRecordsProcessorFunctionName: 'test',
+    logsKmsKey: new cdk.aws_kms.Key(stack, 'CustomLogsKeyBucketName', {}),
+    logsRetentionInDaysValue: '7',
   });
   snapShotTest(testNamePrefix, stack);
 });
@@ -63,11 +73,35 @@ test('should throw an exception for bucket name and bucket are present', () => {
       bucket: new cdk.aws_s3.Bucket(stack, 'CustomBucketError', {}),
       dynamicPartitioningValue: 'dynamic-partitioning/log-filters.json',
       homeRegion: 'someregion',
-      configDir: `${__dirname}/../../../accelerator/test/configs/all-enabled`,
+      configDir: `${__dirname}/../../../accelerator/test/configs/snapshot-only`,
+      acceleratorPrefix: 'AWSAccelerator',
+      useExistingRoles: false,
+      firehoseRecordsProcessorFunctionName: 'test',
+      logsKmsKey: new cdk.aws_kms.Key(stack, 'CustomLogsKeyBucketErrorName', {}),
+      logsRetentionInDaysValue: '7',
     });
   }
 
   const errMsg =
     'Either source bucket or source bucketName property must be defined. Only one property must be defined.';
   expect(s3BucketError).toThrow(new Error(errMsg));
+});
+
+describe('CloudWatchToS3FirehoseExistingIam', () => {
+  new CloudWatchToS3Firehose(stack, 'CloudWatchToS3FirehoseExistingIam', {
+    firehoseKmsKey: new cdk.aws_kms.Key(stack, 'CustomKeyExistingIam', {}),
+    lambdaKey: new cdk.aws_kms.Key(stack, 'CustomLambdaKeyExistingIam', {}),
+    kinesisStream: new cdk.aws_kinesis.Stream(stack, 'CustomStreamExistingIam', {}),
+    kinesisKmsKey: new cdk.aws_kms.Key(stack, 'CustomKinesisKeyExistingIam', {}),
+    bucketName: 'somebucket',
+    dynamicPartitioningValue: 'dynamic-partitioning/log-filters.json',
+    homeRegion: 'someregion',
+    configDir: `${__dirname}/../../../accelerator/test/configs/snapshot-only`,
+    acceleratorPrefix: 'AWSAccelerator',
+    useExistingRoles: true,
+    firehoseRecordsProcessorFunctionName: 'test',
+    logsKmsKey: new cdk.aws_kms.Key(stack, 'CustomLogsKeyExistingIam', {}),
+    logsRetentionInDaysValue: '7',
+  });
+  snapShotTest(testNamePrefix, stack);
 });

@@ -26,6 +26,19 @@ export interface TesterPipelineStackProps extends cdk.StackProps {
   readonly qualifier?: string;
   readonly managementAccountId?: string;
   readonly managementAccountRoleName?: string;
+  /**
+   * Accelerator resource name prefixes
+   */
+  readonly prefixes: {
+    /**
+     * Accelerator prefix - used for resource name prefix for resources which do not have explicit prefix
+     */
+    readonly accelerator: string;
+    readonly repoName: string;
+    readonly bucketName: string;
+    readonly ssmParamName: string;
+    readonly kmsAlias: string;
+  };
 }
 
 /**
@@ -42,6 +55,7 @@ export class TesterPipelineStack extends cdk.Stack {
       qualifier: props.qualifier,
       managementAccountId: props.managementAccountId,
       managementAccountRoleName: props.managementAccountRoleName,
+      prefixes: props.prefixes,
     });
 
     // cdk-nag suppressions

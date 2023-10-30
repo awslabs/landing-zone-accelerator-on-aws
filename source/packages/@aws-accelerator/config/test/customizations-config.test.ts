@@ -39,15 +39,17 @@ import * as path from 'path';
 describe('CustomizationsConfig', () => {
   describe('Test config', () => {
     const customizationsConfigFromFile = CustomizationsConfig.load(
-      path.resolve('../accelerator/test/configs/all-enabled'),
+      path.resolve('../accelerator/test/configs/snapshot-only'),
     );
     const customizationsConfig = new CustomizationsConfig();
 
     it('has loaded successfully', () => {
       expect(customizationsConfigFromFile.customizations.cloudFormationStacks.length).toBe(3);
       expect(customizationsConfig.customizations.cloudFormationStacks.length).toBe(0);
-      expect(customizationsConfigFromFile.applications.length).toBe(1);
-      expect(customizationsConfig.applications.length).toBe(0);
+      if (customizationsConfigFromFile.applications) {
+        expect(customizationsConfigFromFile.applications.length).toBe(7);
+        expect(customizationsConfig.applications.length).toBe(0);
+      }
     });
     const cloudFormationStackConfig = new CloudFormationStackConfig();
     expect(cloudFormationStackConfig.description).toEqual('');

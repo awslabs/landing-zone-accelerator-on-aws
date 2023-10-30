@@ -13,6 +13,8 @@
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
 import * as AWS from 'aws-sdk';
+import { PermissionSet } from 'aws-sdk/clients/ssoadmin';
+import { IdentityCenterPermissionSetConfig } from '@aws-accelerator/config/lib/iam-config';
 AWS.config.logger = console;
 
 /**
@@ -25,11 +27,13 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   | {
       Status: string | undefined;
       StatusCode: number | undefined;
+      Reason?: string | undefined;
     }
   | undefined
 > {
   console.log(JSON.stringify(event, null, 4));
-  let organizationsClient = new AWS.Organizations();
+  let organizationsClient = new AWS.Organizations({ customUserAgent: process.env['SOLUTION_ID'] });
+  const identityCenterClient = new AWS.SSOAdmin({ customUserAgent: process.env['SOLUTION_ID'] });
   const identityCenterServicePrincipal = 'sso.amazonaws.com';
   const partition = event.ResourceProperties['partition'];
   if (partition === 'aws-us-gov') {
@@ -41,6 +45,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   }
 
   const newIdentityCenterDelegatedAdminAccount = event.ResourceProperties['adminAccountId'];
+  const lzaManagedPermissionSets = event.ResourceProperties['lzaManagedPermissionSets'];
+  const lzaManagedAssignments = event.ResourceProperties['lzaManagedAssignments'];
 
   const currentIdentityCenterDelegatedAdmin = await getCurrentDelegatedAdminAccount(
     organizationsClient,
@@ -59,7 +65,6 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         return { Status: 'Success', StatusCode: 200 };
       }
 
-      console.log('No Identity Center Admin account detected. Registering new Admin Account');
       console.log('Checking if Identity Center is enabled in Organizations');
       const identityCenterEnabled = await isOrganizationServiceEnabled(
         organizationsClient,
@@ -72,36 +77,40 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         );
       }
 
+      let isDelegatedAdminDeregistered = true;
       if (
         currentIdentityCenterDelegatedAdmin &&
         currentIdentityCenterDelegatedAdmin != newIdentityCenterDelegatedAdminAccount
       ) {
-        console.log(`Deregistering delegatedAdmins for ${identityCenterServicePrincipal}`);
-        await deregisterDelegatedAdministrators(
+        console.log(`Deregistering Delegated Administrator for ${identityCenterServicePrincipal}`);
+        isDelegatedAdminDeregistered = await deregisterDelegatedAdministrators(
           organizationsClient,
+          identityCenterClient,
           identityCenterServicePrincipal,
           currentIdentityCenterDelegatedAdmin,
+          lzaManagedPermissionSets,
+          lzaManagedAssignments,
         );
-        console.log('Waiting 5 seconds to allow DelegatedAdmin account to de-register');
-        await delay(5000);
       }
 
-      console.log('Setting delegated administrator for Organizations');
-      await throttlingBackOff(() =>
-        organizationsClient
-          .registerDelegatedAdministrator({
-            AccountId: newIdentityCenterDelegatedAdminAccount,
-            ServicePrincipal: identityCenterServicePrincipal,
-          })
-          .promise(),
-      );
+      if (isDelegatedAdminDeregistered) {
+        console.log('Registering Delegated Administrator for Identity Center');
+        await throttlingBackOff(() =>
+          organizationsClient
+            .registerDelegatedAdministrator({
+              AccountId: newIdentityCenterDelegatedAdminAccount,
+              ServicePrincipal: identityCenterServicePrincipal,
+            })
+            .promise(),
+        );
+      }
 
       return { Status: 'Success', StatusCode: 200 };
 
     case 'Delete':
       const adminAccountId = await getCurrentDelegatedAdminAccount(organizationsClient, identityCenterServicePrincipal);
       if (adminAccountId) {
-        console.log('Deregistering Admin Account');
+        console.log('Deregistering Delegated Admin Account');
         console.log(adminAccountId);
         await throttlingBackOff(() =>
           organizationsClient
@@ -143,7 +152,7 @@ async function getCurrentDelegatedAdminAccount(
   organizationsClient: AWS.Organizations,
   identityCenterServicePrincipal: string,
 ) {
-  console.log('Getting delegated Administrator for SSO');
+  console.log('Getting Delegated Administrator for Identity Center');
   const delegatedAdmins = await throttlingBackOff(() =>
     organizationsClient.listDelegatedAdministrators({ ServicePrincipal: identityCenterServicePrincipal }).promise(),
   );
@@ -154,11 +163,10 @@ async function getCurrentDelegatedAdminAccount(
       return delegatedAdmin.Id!;
     });
   }
-  console.log(delegatedAdminAccounts);
   let delegatedAdmin = '';
   if (delegatedAdminAccounts?.length > 0) {
     delegatedAdmin = delegatedAdminAccounts[0];
-    console.log(`Current Delegated Admins for ${identityCenterServicePrincipal} is account: ${delegatedAdmin}`);
+    console.log(`Current Delegated Admins for Identity Center is account: ${delegatedAdmin}`);
   }
 
   return delegatedAdmin;
@@ -170,16 +178,195 @@ function delay(ms: number) {
 
 async function deregisterDelegatedAdministrators(
   organizationsClient: AWS.Organizations,
+  identityCenterClient: AWS.SSOAdmin,
   servicePrincipal: string,
   delegatedAdmin: string,
-): Promise<void> {
-  console.log(`Deregistering delegated Admin Account ${delegatedAdmin}`);
-  await throttlingBackOff(() =>
-    organizationsClient
-      .deregisterDelegatedAdministrator({
-        AccountId: delegatedAdmin,
-        ServicePrincipal: servicePrincipal,
+  permissionSetsFromConfig: IdentityCenterPermissionSetConfig[],
+  assignmentsFromConfig: Map<string, string[]>,
+): Promise<boolean> {
+  const ssoInstanceId = await getSsoInstanceId(identityCenterClient);
+  if (ssoInstanceId) {
+    console.log(`Identity Center Instance ID is: ${ssoInstanceId}`);
+    const isIdentityCenterDeregisterable = await verifyIdentityCenterResourcesBeforeDeletion(
+      identityCenterClient,
+      ssoInstanceId,
+      permissionSetsFromConfig,
+      assignmentsFromConfig,
+    );
+
+    // Only Deregister Account if No Permission Sets or Assignments are present in the account.
+    if (isIdentityCenterDeregisterable) {
+      console.log(`Deregistering Delegated Admin Account ${delegatedAdmin}`);
+      await throttlingBackOff(() =>
+        organizationsClient
+          .deregisterDelegatedAdministrator({
+            AccountId: delegatedAdmin,
+            ServicePrincipal: servicePrincipal,
+          })
+          .promise(),
+      );
+      console.log('Waiting 5 seconds to allow DelegatedAdmin account to de-register');
+      await delay(5000);
+      return true;
+    }
+  }
+  return false;
+}
+
+async function verifyIdentityCenterResourcesBeforeDeletion(
+  identityCenterClient: AWS.SSOAdmin,
+  ssoInstanceId: string,
+  permissionSetsFromConfig: IdentityCenterPermissionSetConfig[],
+  assignmentsFromConfig: Map<string, string[]>,
+): Promise<boolean> {
+  const permissionSetList = await getPermissionSetList(identityCenterClient, ssoInstanceId);
+  const filteredPermissionSetList = await filterPermissionSetList(permissionSetList, permissionSetsFromConfig);
+  const assignmentList = await getAssignmentsList(
+    identityCenterClient,
+    ssoInstanceId,
+    assignmentsFromConfig,
+    permissionSetList,
+  );
+
+  if (
+    (filteredPermissionSetList && filteredPermissionSetList.length > 0) ||
+    (assignmentList && assignmentList.length > 0)
+  ) {
+    throw new Error(
+      `Delegated Admin Identity Center cannot be updated due to existing Permission Sets or Assignments. Remove existing Permission Sets and Assignments from iam-config.yaml and re-run the pipeline. For more error log details, please check the custom resource Lambda logs.`,
+    );
+  }
+  return true;
+}
+
+async function getPermissionSetList(
+  identityCenterClient: AWS.SSOAdmin,
+  ssoInstanceId: string,
+): Promise<PermissionSet[]> {
+  let permissionSetArnList: string[] = [];
+  let permissionSetList: PermissionSet[] = [];
+  const listPermissionsResponse = await throttlingBackOff(() =>
+    identityCenterClient
+      .listPermissionSets({
+        InstanceArn: ssoInstanceId,
       })
       .promise(),
   );
+  permissionSetArnList = listPermissionsResponse.PermissionSets!;
+  permissionSetList = await getPermissionSetObject(identityCenterClient, ssoInstanceId, permissionSetArnList);
+
+  return permissionSetList!;
+}
+
+async function filterPermissionSetList(
+  permissionSetList: PermissionSet[],
+  permissionSetsFromConfig: IdentityCenterPermissionSetConfig[],
+): Promise<IdentityCenterPermissionSetConfig[]> {
+  const permissionSetListNames: string[] = [];
+
+  //Filter down permission set object to list of permission set names.
+  permissionSetList.filter(permissionSet => {
+    if (permissionSet.Name) {
+      permissionSetListNames.push(permissionSet.Name);
+    }
+  });
+
+  //Check to see if existing permission sets are in SSO Permission Set Config
+  const filteredConfigPermissionSetList = permissionSetsFromConfig.filter(permissionSet =>
+    permissionSetListNames.includes(permissionSet.name),
+  );
+
+  if (filteredConfigPermissionSetList && filteredConfigPermissionSetList.length > 0) {
+    console.log(
+      `Delegated Admin Identity Center cannot be updated due to existing LZA-Managed Permission Sets. Please remove all Permission Sets from the iam-config.yaml file before changing the delegated administrator.`,
+    );
+    console.log(filteredConfigPermissionSetList);
+  }
+  return filteredConfigPermissionSetList;
+}
+
+async function getPermissionSetObject(
+  identityCenterClient: AWS.SSOAdmin,
+  ssoInstanceId: string,
+  permissionSetArnList: string[],
+): Promise<PermissionSet[]> {
+  const permissionSetList: PermissionSet[] = [];
+  for (const permissionSetArn of permissionSetArnList) {
+    const describePermissionSetResponse = await throttlingBackOff(() =>
+      identityCenterClient
+        .describePermissionSet({
+          InstanceArn: ssoInstanceId,
+          PermissionSetArn: permissionSetArn,
+        })
+        .promise(),
+    );
+    if (describePermissionSetResponse.PermissionSet) {
+      permissionSetList.push(describePermissionSetResponse.PermissionSet);
+    }
+  }
+  return permissionSetList;
+}
+
+async function getAssignmentsList(
+  identityCenterClient: AWS.SSOAdmin,
+  ssoInstanceId: string,
+  assignmentsFromConfig: Map<string, string[]>,
+  permissionSetList: PermissionSet[],
+): Promise<string[]> {
+  const accountAssignmentList: string[] = [];
+  //Iterate through each assignment
+  for (const assignment of assignmentsFromConfig) {
+    //Since object is Map<string, string[]>, we need to extract permissionSet and deploymentTarget Account
+    Object.entries(assignment).forEach(async (key: [string, string | string[]]) => {
+      const permissionSetName = key[0];
+      const permissionSet = permissionSetList.filter(permissionSet => {
+        if (permissionSet.Name === permissionSetName) {
+          return permissionSet;
+        }
+        return undefined;
+      })[0];
+      const deploymentTargetAccounts = key[1];
+      //Then we have to call listAccountAssignments on each individual deploymentTargetAccount
+      if (permissionSet && permissionSet.PermissionSetArn) {
+        for (const deploymentTargetAccount of deploymentTargetAccounts) {
+          const listAccountAssignmentsResponse = await throttlingBackOff(() =>
+            identityCenterClient
+              .listAccountAssignments({
+                InstanceArn: ssoInstanceId!,
+                AccountId: deploymentTargetAccount!,
+                PermissionSetArn: permissionSet.PermissionSetArn!,
+              })
+              .promise(),
+          );
+          if (
+            listAccountAssignmentsResponse.AccountAssignments &&
+            listAccountAssignmentsResponse.AccountAssignments.length > 0
+          ) {
+            accountAssignmentList.push(JSON.stringify(listAccountAssignmentsResponse.AccountAssignments!));
+          }
+        }
+      }
+    });
+  }
+  if (accountAssignmentList && accountAssignmentList.length > 0) {
+    console.log(
+      `Delegated Admin Identity Center cannot be updated due to existing LZA-Managed Assignments. Please remove all Assignments from the iam-config.yaml file before changing the delegated administrator.`,
+    );
+    console.log(JSON.stringify(accountAssignmentList));
+  }
+
+  return accountAssignmentList!;
+}
+
+async function getSsoInstanceId(identityCenterClient: AWS.SSOAdmin): Promise<string | undefined> {
+  console.log('Checking for Identity Center Instance Id...');
+  const listInstanceResponse = await throttlingBackOff(() => identityCenterClient.listInstances().promise());
+  const identityCenterInstanceIdList = listInstanceResponse.Instances;
+  let identityCenterInstance;
+  if (identityCenterInstanceIdList) {
+    for (const identityCenterInstanceId of identityCenterInstanceIdList) {
+      identityCenterInstance = identityCenterInstanceId.InstanceArn;
+    }
+  }
+  return identityCenterInstance;
 }

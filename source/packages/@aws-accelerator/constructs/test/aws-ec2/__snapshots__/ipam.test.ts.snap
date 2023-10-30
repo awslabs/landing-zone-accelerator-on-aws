@@ -1,21 +1,21 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Ipam Construct(Ipam):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "TestIpamD7083AA5": Object {
-      "Properties": Object {
+{
+  "Resources": {
+    "TestIpamD7083AA5": {
+      "Properties": {
         "Description": "Test IPAM",
-        "OperatingRegions": Array [
-          Object {
+        "OperatingRegions": [
+          {
             "RegionName": "us-east-1",
           },
-          Object {
+          {
             "RegionName": "us-west-2",
           },
         ],
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "Test",
           },

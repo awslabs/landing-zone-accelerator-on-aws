@@ -15,6 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { NagSuppressions } from 'cdk-nag';
 import * as path from 'path';
+import { IdentityCenterPermissionSetConfig } from '@aws-accelerator/config';
 
 /**
  * Initialized IdentityCenterOrganizationalAdminAccountProps properties
@@ -24,6 +25,14 @@ export interface IdentityCenterOrganizationalAdminAccountProps {
    * Delegated Admin Account Id
    */
   readonly adminAccountId: string;
+  /**
+   * List of LZA Managed Permission Sets from IAM Config
+   */
+  readonly lzaManagedPermissionSets: IdentityCenterPermissionSetConfig[];
+  /**
+   * List of LZA Managed Assignments from IAM Config
+   */
+  readonly lzaManagedAssignments: { [x: string]: string[] }[];
 }
 
 /**
@@ -37,7 +46,7 @@ export class IdentityCenterOrganizationAdminAccount extends Construct {
     const functionId = `${id}ProviderLambda`;
     const providerLambda = new cdk.aws_lambda.Function(this, functionId, {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'enable-organization-admin-account/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
       timeout: cdk.Duration.seconds(160),
       initialPolicy: [
         new cdk.aws_iam.PolicyStatement({
@@ -53,6 +62,10 @@ export class IdentityCenterOrganizationAdminAccount extends Construct {
             'organizations:DescribeOrganizationalUnit',
             'organizations:ListAccounts',
             'organizations:ListAWSServiceAccessForOrganization',
+            'sso:ListInstances',
+            'sso:ListPermissionSets',
+            'sso:ListAccountAssignments',
+            'sso:DescribePermissionSet',
           ],
           resources: ['*'],
         }),
@@ -64,11 +77,14 @@ export class IdentityCenterOrganizationAdminAccount extends Construct {
       onEventHandler: providerLambda,
     });
 
+    // Adding UUID, we need to force this to run every time in case there is problems with Deregistering.
     this.resource = new cdk.CustomResource(this, `identityCenterAdmin`, {
       serviceToken: this.provider.serviceToken,
       properties: {
         adminAccountId: props.adminAccountId,
         partition: cdk.Stack.of(scope).partition,
+        lzaManagedPermissionSets: props.lzaManagedPermissionSets,
+        lzaManagedAssignments: props.lzaManagedAssignments,
       },
     });
 

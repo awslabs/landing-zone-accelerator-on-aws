@@ -1,0 +1,47 @@
+############################################################################################################
+# For additional configurable services, features, and property descriptions,                               #
+# please review class AccountsConfig reference in our TypeDoc:                                             #
+# https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.AccountsConfig #
+############################################################################################################
+
+mandatoryAccounts:
+  # We recommend you do not change mandatory account names. These are used within Landing Zone Accelerator to reference the accounts from other config files.
+  # The "name" value does not currently support spaces
+  # The "name" value DOES NOT need to match the account name
+  - name: Management
+    description: The management (primary) account. Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
+    email: <landing-zone-management-email@example.com> <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: Root
+  - name: LogArchive
+    description: The log archive account. Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
+    email: <govCloud-log-archive-email@example.com> <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: Security
+  - name: Audit
+    description: The security audit account (also referred to as the audit account). Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
+    email: <govCloud-audit-email@example.com> <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: Security
+workloadAccounts:
+  # The "name" will be used to set the AWS Account name
+  # The "name" value does not currently support spaces
+  # The "name" value DOES NOT need to match the account name
+  - name: SharedServices
+    description: Shared services account for GovCloud.
+    email: <govCloud-shared-services-email@example.com> <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: Infrastructure
+  - name: Network
+    description: Network account for GovCloud.
+    email: <govCloud-network-email@example.com> <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: Infrastructure
+
+# This section enables LZA to invite the accounts into the Organizations
+accountIds:
+  - email: <landing-zone-management-email@example.com> <----- UPDATE EMAIL ADDRESS
+    accountId: "000000000000 <----- UPDATE GOVCLOUD ACCOUNT ID from Commercial GovCloud mapping table"
+  - email: <govCloud-log-archive-email@example.com> <----- UPDATE EMAIL ADDRESS
+    accountId: "111111111111 <----- UPDATE GOVCLOUD ACCOUNT ID from Commercial GovCloud mapping table"
+  - email: <govCloud-audit-email@example.com> <----- UPDATE EMAIL ADDRESS
+    accountId: "222222222222 <----- UPDATE GOVCLOUD ACCOUNT ID from Commercial GovCloud mapping table"
+  - email: <govCloud-shared-services-email@example.com> <----- UPDATE EMAIL ADDRESS
+    accountId: "333333333333 <----- UPDATE GOVCLOUD ACCOUNT ID from Commercial GovCloud mapping table"
+  - email: <govCloud-network-email@example.com> <----- UPDATE EMAIL ADDRESS
+    accountId: "444444444444 <----- UPDATE GOVCLOUD ACCOUNT ID from Commercial GovCloud mapping table"

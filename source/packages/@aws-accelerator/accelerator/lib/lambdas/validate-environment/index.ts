@@ -26,6 +26,19 @@ import { CloudFormationClient, DescribeStacksCommand } from '@aws-sdk/client-clo
 import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
 import { throttlingBackOff } from '@aws-accelerator/utils';
 
+type scpTargetType = 'ou' | 'account';
+
+type serviceControlPolicyType = {
+  name: string;
+  targetType: scpTargetType;
+  targets: { name: string; id: string }[];
+};
+
+type provisionedProductStatus = {
+  status: string;
+  statusMessage: string;
+};
+
 const marshallOptions = {
   convertEmptyValues: false,
   //overriding default value of false
@@ -101,10 +114,13 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const newCTAccountsTableName = event.ResourceProperties['newCTAccountsTableName'];
   const controlTowerEnabled = event.ResourceProperties['controlTowerEnabled'];
   const organizationsEnabled = event.ResourceProperties['organizationsEnabled'];
+  const policyTagKey = event.ResourceProperties['policyTagKey'];
   const commitId = event.ResourceProperties['commitId'];
   const stackName = event.ResourceProperties['stackName'];
+  const serviceControlPolicies: serviceControlPolicyType[] = event.ResourceProperties['serviceControlPolicies'];
   driftDetectionParameterName = event.ResourceProperties['driftDetectionParameterName'];
   driftDetectionMessageParameterName = event.ResourceProperties['driftDetectionMessageParameterName'];
+
   const solutionId = process.env['SOLUTION_ID'];
 
   if (partition === 'aws-us-gov') {
@@ -125,7 +141,6 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     pageSize: 100,
   };
 
-  console.log(stackName);
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
@@ -277,6 +292,11 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         }
       }
 
+      //
+      // Validate SCP count
+      //
+      await validateServiceControlPolicyCount(organizationsClient, serviceControlPolicies, policyTagKey);
+
       console.log(`validationErrors: ${JSON.stringify(validationErrors)}`);
 
       if (validationErrors.length > 0) {
@@ -293,6 +313,190 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         Status: 'SUCCESS',
       };
   }
+}
+
+/**
+ * Function to validate number of SCPs attached to ou and account is not more than 5
+ * @param organizationsClient
+ * @param serviceControlPolicies
+ */
+async function validateServiceControlPolicyCount(
+  organizationsClient: AWS.Organizations,
+  serviceControlPolicies: serviceControlPolicyType[],
+
+  policyTagKey: string,
+) {
+  const processedTargets: string[] = [];
+  for (const scpItem of serviceControlPolicies) {
+    for (const target of scpItem.targets ?? []) {
+      const existingAttachedScps: string[] = [];
+      if (processedTargets.indexOf(target.name) === -1) {
+        const response = await throttlingBackOff(() =>
+          organizationsClient
+            .listPoliciesForTarget({
+              Filter: 'SERVICE_CONTROL_POLICY',
+              TargetId: target.id,
+              MaxResults: 10,
+            })
+            .promise(),
+        );
+
+        if (response.Policies && response.Policies.length > 0) {
+          response.Policies.forEach(item => existingAttachedScps.push(item.Name!));
+        }
+
+        const totalScps = await getTotalScps(
+          target.name,
+          scpItem.targetType,
+          existingAttachedScps,
+          serviceControlPolicies,
+          policyTagKey,
+        );
+
+        const totalScpCount = totalScps.length;
+
+        console.log(`Scp count validation started for target ${target.name}, target type is ${scpItem.targetType}`);
+        console.log(`${target.name} ${scpItem.targetType} existing attached scps are - ${existingAttachedScps}`);
+        console.log(`${target.name} ${scpItem.targetType} updated list of scps for attachment - ${totalScps}`);
+        console.log(`${target.name} ${scpItem.targetType} total scp count is ${totalScpCount}`);
+
+        if (totalScpCount > 5) {
+          console.log(
+            `${target.name} ${scpItem.targetType} scp count validation failed, total scp count is ${totalScpCount}`,
+          );
+          validationErrors.push(
+            `Max Allowed SCPs for ${scpItem.targetType} "${target.name}" is 5, found total ${totalScps.length} scps in updated list to attach. Updated list of scps for attachment is ${totalScps}`,
+          );
+        } else {
+          console.log(
+            `${target.name} ${scpItem.targetType} scp count validation successful, total scp count is ${totalScpCount}`,
+          );
+        }
+
+        processedTargets.push(target.name);
+      }
+    }
+  }
+}
+
+/**
+ * Function to get total scps to be attached to the target
+ * @param targetName
+ * @param targetType
+ * @param existingScps
+ * @param serviceControlPolicies
+ * @returns
+ */
+async function getTotalScps(
+  targetName: string,
+  targetType: scpTargetType,
+  existingScps: string[],
+  serviceControlPolicies: serviceControlPolicyType[],
+  policyTagKey: string,
+): Promise<string[]> {
+  const totalScps: string[] = getNewScps(targetName, targetType, existingScps, serviceControlPolicies);
+
+  for (const existingScp of existingScps) {
+    // check for control tower drift
+    let nextToken: string | undefined = undefined;
+    do {
+      const page = await throttlingBackOff(() =>
+        organizationsClient
+          .listPolicies({
+            Filter: 'SERVICE_CONTROL_POLICY',
+            NextToken: nextToken,
+          })
+          .promise(),
+      );
+      for (const policy of page.Policies ?? []) {
+        if (policy.Name === existingScp) {
+          const configScp = serviceControlPolicies.find(item => item.name === existingScp);
+          const isAwsManaged = policy.AwsManaged ?? false;
+          const isLzaManaged = isAwsManaged ? false : await isLzaManagedPolicy(policy.Id!, policyTagKey);
+
+          // When attached policy is AWS managed, add to list of policies
+          if (isAwsManaged) {
+            totalScps.push(existingScp);
+            break;
+          }
+
+          // When attached policy is NOT AWS managed and NOT LZA managed, add to list of policies, policies attached by other sources
+          if (!isLzaManaged) {
+            totalScps.push(existingScp);
+            break;
+          }
+
+          // When attached policy is LZA managed, check if this is still present in config before adding to list of policies
+          if (isLzaManaged) {
+            if (
+              configScp &&
+              configScp.targetType === targetType &&
+              configScp.targets.find(item => item.name === targetName)
+            ) {
+              totalScps.push(existingScp);
+              break;
+            }
+          }
+        }
+      }
+      nextToken = page.NextToken;
+    } while (nextToken);
+  }
+
+  return totalScps;
+}
+
+/**
+ * Function to check if policy is managed by LZA, this is by checking lzaManaged tag with Yes value
+ * @param policyId
+ * @returns
+ */
+async function isLzaManagedPolicy(policyId: string, policyTagKey: string): Promise<boolean> {
+  let nextToken: string | undefined = undefined;
+  do {
+    const page = await throttlingBackOff(() =>
+      organizationsClient
+        .listTagsForResource({
+          ResourceId: policyId,
+          NextToken: nextToken,
+        })
+        .promise(),
+    );
+    for (const tag of page.Tags ?? []) {
+      if (tag.Key === policyTagKey && tag.Value === 'Yes') {
+        return true;
+      }
+    }
+    nextToken = page.NextToken;
+  } while (nextToken);
+
+  return false;
+}
+
+/**
+ * Function to get list of new scps to be attached from organization config file
+ * @param targetName
+ * @param targetType
+ * @param existingScps
+ * @param serviceControlPolicies
+ * @returns
+ */
+function getNewScps(
+  targetName: string,
+  targetType: scpTargetType,
+  existingScps: string[],
+  serviceControlPolicies: serviceControlPolicyType[],
+): string[] {
+  const configScps: string[] = [];
+
+  for (const scpItem of serviceControlPolicies) {
+    for (const target of scpItem.targets ?? []) {
+      if (scpItem.targetType === targetType && target.name === targetName) {
+        configScps.push(scpItem.name);
+      }
+    }
+  }
+  return configScps.filter(x => existingScps.indexOf(x) === -1);
 }
 
 async function validateControlTower() {
@@ -332,56 +536,42 @@ async function validateControlTower() {
     validationErrors.push(driftDetectedMessage.Parameter?.Value ?? '');
   }
 
-  // retrieve all of the accounts provisioned in control tower
-  const provisionedControlTowerAccounts = await getControlTowerProvisionedAccounts();
-  // confirm workload accounts exist in control tower without errors
   if (workloadAccounts) {
     for (const workloadAccount of workloadAccounts) {
       const accountConfig = JSON.parse(workloadAccount['dataBag']);
       const accountName = accountConfig['name'];
-      const provisionedControlTowerAccount = provisionedControlTowerAccounts.find(pcta => pcta.Name == accountName);
-      if (provisionedControlTowerAccount) {
-        switch (provisionedControlTowerAccount['Status']) {
-          case 'AVAILABLE':
-            break;
-          case 'TAINTED':
-            validationErrors.push(
-              `AWS Account ${workloadAccount['acceleratorKey']} is TAINTED state. Message: ${provisionedControlTowerAccount.StatusMessage}. Check Service Catalog`,
-            );
-            break;
-          case 'ERROR':
-            validationErrors.push(
-              `AWS Account ${workloadAccount['acceleratorKey']} is in ERROR state. Message: ${provisionedControlTowerAccount.StatusMessage}. Check Service Catalog`,
-            );
-            break;
-          case 'UNDER_CHANGE':
-            break;
-          case 'PLAN_IN_PROGRESS':
-            break;
-        }
-      } else {
-        // confirm account doesn't exist in control tower with a different name
-        // if enrolled directly in console the name in service catalog won't match
-        // look up by physical id if it exists
-        const checkAccountId = organizationAccounts.find(oa => oa.Email == workloadAccount['acceleratorKey']);
-        if (checkAccountId) {
-          const provisionedControlTowerOrgAccount = provisionedControlTowerAccounts.find(
-            pcta => pcta.PhysicalId === checkAccountId.Id,
+      const account = organizationAccounts.find(oa => oa.Email == workloadAccount['acceleratorKey']);
+
+      if (!account) {
+        console.log(`push to ctAccountsToAdd does not exist ${accountName}`);
+        ctAccountsToAdd.push(workloadAccount);
+        continue;
+      }
+
+      const provisionedProductStatus = await getControlTowerProvisionedProductStatus(account.Id!);
+      if (!provisionedProductStatus) {
+        console.log(`push to ctAccountsToAdd not enrolled in CT ${accountName}`);
+        ctAccountsToAdd.push(workloadAccount);
+        continue;
+      }
+      console.log(`Found provisioned account ${accountName}`);
+      switch (provisionedProductStatus.status) {
+        case 'AVAILABLE':
+          break;
+        case 'TAINTED':
+          validationErrors.push(
+            `AWS Account ${workloadAccount['acceleratorKey']} is TAINTED state. Message: ${provisionedProductStatus.statusMessage}. Check Service Catalog`,
           );
-          if (
-            provisionedControlTowerOrgAccount?.Status === 'TAINTED' ||
-            provisionedControlTowerOrgAccount?.Status === 'ERROR'
-          ) {
-            validationErrors.push(
-              `AWS Account ${workloadAccount['acceleratorKey']} is in ERROR state. Message: ${provisionedControlTowerOrgAccount.StatusMessage}. Check Service Catalog`,
-            );
-          }
-          if (!provisionedControlTowerOrgAccount) {
-            ctAccountsToAdd.push(workloadAccount);
-          }
-        } else {
-          ctAccountsToAdd.push(workloadAccount);
-        }
+          break;
+        case 'ERROR':
+          validationErrors.push(
+            `AWS Account ${workloadAccount['acceleratorKey']} is in ERROR state. Message: ${provisionedProductStatus.statusMessage}. Check Service Catalog`,
+          );
+          break;
+        case 'UNDER_CHANGE':
+          break;
+        case 'PLAN_IN_PROGRESS':
+          break;
       }
     }
   }
@@ -395,32 +585,34 @@ async function getOuName(name: string): Promise<string> {
   return result;
 }
 
-async function getControlTowerProvisionedAccounts(): Promise<AWS.ServiceCatalog.ProvisionedProductAttribute[]> {
-  const provisionedProducts: AWS.ServiceCatalog.ProvisionedProductAttribute[] = [];
-  let nextToken: string | undefined = undefined;
-  do {
-    const page = await throttlingBackOff(() =>
-      serviceCatalogClient
-        .searchProvisionedProducts({
-          Filters: {
-            SearchQuery: ['type: CONTROL_TOWER_ACCOUNT'],
-          },
-          AccessLevelFilter: {
-            Key: 'Account',
-            Value: 'self',
-          },
-          PageToken: nextToken,
-        })
-        .promise(),
-    );
+async function getControlTowerProvisionedProductStatus(
+  accountId: string,
+): Promise<provisionedProductStatus | undefined> {
+  const provisionedProduct = await throttlingBackOff(() =>
+    serviceCatalogClient
+      .searchProvisionedProducts({
+        Filters: {
+          SearchQuery: [`physicalId: ${accountId}`],
+        },
+        AccessLevelFilter: {
+          Key: 'Account',
+          Value: 'self',
+        },
+      })
+      .promise(),
+  );
 
-    for (const product of page.ProvisionedProducts ?? []) {
-      provisionedProducts.push(product);
+  if (provisionedProduct === undefined || provisionedProduct.ProvisionedProducts === undefined) {
+    return undefined;
+  }
+
+  for (const product of provisionedProduct.ProvisionedProducts) {
+    if (product.Type === 'CONTROL_TOWER_ACCOUNT') {
+      return { status: product.Status, statusMessage: product.StatusMessage } as provisionedProductStatus;
     }
-    nextToken = page.NextPageToken;
-  } while (nextToken);
+  }
 
-  return provisionedProducts;
+  return undefined;
 }
 
 async function getOrganizationAccounts(

@@ -39,6 +39,16 @@ export interface TransitGatewayRouteTableProps {
 export class TransitGatewayRouteTable extends Construct {
   public readonly id: string;
 
+  static fromRouteTableId(scope: Construct, id: string, routeTableId: string) {
+    class Import extends Construct {
+      public readonly id = routeTableId;
+      constructor(scope: Construct, id: string) {
+        super(scope, id);
+      }
+    }
+    return new Import(scope, id);
+  }
+
   constructor(scope: Construct, id: string, props: TransitGatewayRouteTableProps) {
     super(scope, id);
 

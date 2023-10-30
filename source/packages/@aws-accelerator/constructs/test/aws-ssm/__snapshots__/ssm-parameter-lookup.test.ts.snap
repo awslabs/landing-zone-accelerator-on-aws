@@ -1,41 +1,41 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`SsmParameterLookup Construct(SsmParameterLookup):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE": Object {
-      "DependsOn": Array [
+{
+  "Resources": {
+    "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE": {
+      "DependsOn": [
         "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D": Object {
+    "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
               },
             ],
@@ -46,53 +46,53 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "ssm:GetParameters",
                     "ssm:GetParameter",
                     "ssm:DescribeParameters",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
+                  "Resource": [
                     "*",
                   ],
                   "Sid": "SsmGetParameterActions",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "sts:AssumeRole",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
-                    Object {
-                      "Fn::Join": Array [
+                  "Resource": [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":iam::*:role/AWSAccelerator*",
@@ -111,34 +111,34 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "SsmParameter39B3125C": Object {
+    "SsmParameter39B3125C": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
             "Arn",
           ],
         },
-        "assumeRoleArn": Object {
-          "Fn::Join": Array [
+        "assumeRoleArn": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "arn:",
-              Object {
+              {
                 "Ref": "AWS::Partition",
               },
               ":iam::111111111111:role/TestRole",
             ],
           ],
         },
-        "invokingAccountID": Object {
+        "invokingAccountID": {
           "Ref": "AWS::AccountId",
         },
-        "invokingRegion": Object {
+        "invokingRegion": {
           "Ref": "AWS::Region",
         },
         "parameterAccountID": "111111111111",

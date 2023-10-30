@@ -11,10 +11,20 @@
  *  and limitations under the License.
  */
 
-import { throttlingBackOff } from '@aws-accelerator/utils';
-import * as AWS from 'aws-sdk';
-import { GuardDuty } from 'aws-sdk';
-AWS.config.logger = console;
+import { throttlingBackOff, chunkArray } from '@aws-accelerator/utils';
+import {
+  GuardDutyClient,
+  AccountDetail,
+  UpdateOrganizationConfigurationCommand,
+  CreateMembersCommand,
+  ListMembersCommand,
+  DisassociateMembersCommand,
+  DeleteMembersCommand,
+  ListDetectorsCommand,
+  OrganizationFeatureConfiguration,
+  BadRequestException,
+} from '@aws-sdk/client-guardduty';
+import { OrganizationsClient, ListAccountsCommand } from '@aws-sdk/client-organizations';
 
 /**
  * enable-guardduty - lambda handler
@@ -34,17 +44,18 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const enableS3Protection: boolean = event.ResourceProperties['enableS3Protection'] === 'true';
   const enableEksProtection: boolean = event.ResourceProperties['enableEksProtection'] === 'true';
   const solutionId = process.env['SOLUTION_ID'];
+  const chunkSize = process.env['CHUNK_SIZE'] ? parseInt(process.env['CHUNK_SIZE']) : 50;
 
-  let organizationsClient: AWS.Organizations;
+  let organizationsClient: OrganizationsClient;
   if (partition === 'aws-us-gov') {
-    organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1', customUserAgent: solutionId });
+    organizationsClient = new OrganizationsClient({ region: 'us-gov-west-1', customUserAgent: solutionId });
   } else if (partition === 'aws-cn') {
-    organizationsClient = new AWS.Organizations({ region: 'cn-northwest-1', customUserAgent: solutionId });
+    organizationsClient = new OrganizationsClient({ region: 'cn-northwest-1', customUserAgent: solutionId });
   } else {
-    organizationsClient = new AWS.Organizations({ region: 'us-east-1', customUserAgent: solutionId });
+    organizationsClient = new OrganizationsClient({ region: 'us-east-1', customUserAgent: solutionId });
   }
 
-  const guardDutyClient = new AWS.GuardDuty({ region: region, customUserAgent: solutionId });
+  const guardDutyClient = new GuardDutyClient({ region: region, customUserAgent: solutionId });
 
   const detectorId = await getDetectorId(guardDutyClient);
 
@@ -57,11 +68,11 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     case 'Create':
     case 'Update':
       console.log('starting - CreateMembersCommand');
-      const allAccounts: AWS.GuardDuty.AccountDetail[] = [];
+      const allAccounts: AccountDetail[] = [];
 
       do {
         const page = await throttlingBackOff(() =>
-          organizationsClient.listAccounts({ NextToken: nextToken }).promise(),
+          organizationsClient.send(new ListAccountsCommand({ NextToken: nextToken })),
         );
         for (const account of page.Accounts ?? []) {
           allAccounts.push({ AccountId: account.Id!, Email: account.Email! });
@@ -69,33 +80,42 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         nextToken = page.NextToken;
       } while (nextToken);
 
-      await throttlingBackOff(() =>
-        guardDutyClient.createMembers({ DetectorId: detectorId!, AccountDetails: allAccounts }).promise(),
-      );
+      const chunkedAccountsForCreate = chunkArray(allAccounts, chunkSize);
 
-      const dataSources: GuardDuty.OrganizationDataSourceConfigurations = {};
-      dataSources.S3Logs = { AutoEnable: enableS3Protection };
-      dataSources.Kubernetes = { AuditLogs: { AutoEnable: enableEksProtection } };
+      for (const accounts of chunkedAccountsForCreate) {
+        console.log(`Initiating createMembers request for ${accounts.length} accounts`);
+        await throttlingBackOff(() =>
+          guardDutyClient.send(new CreateMembersCommand({ DetectorId: detectorId!, AccountDetails: accounts })),
+        );
+      }
+
+      const features = getOrganizationFeaturesEnabled(enableS3Protection, enableEksProtection);
 
       console.log('starting - UpdateOrganizationConfiguration');
-      await throttlingBackOff(() =>
-        guardDutyClient
-          .updateOrganizationConfiguration({
-            AutoEnable: true,
-            DetectorId: detectorId!,
-            DataSources: dataSources,
-          })
-          .promise(),
-      );
+      try {
+        await updateOrganizationConfiguration(guardDutyClient, detectorId!, features, 'ALL');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (e: any) {
+        return { Status: 'Failure', StatusCode: e.statusCode };
+      }
 
+      console.log('Returning Success');
       return { Status: 'Success', StatusCode: 200 };
 
     case 'Delete':
+      const disabledFeatures = getOrganizationFeaturesEnabled(false, false);
+      try {
+        await updateOrganizationConfiguration(guardDutyClient, detectorId!, disabledFeatures, 'NONE');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (e: any) {
+        return { Status: 'Failure', StatusCode: e.statusCode };
+      }
+
       const existingMemberAccountIds: string[] = [];
       nextToken = undefined;
       do {
         const page = await throttlingBackOff(() =>
-          guardDutyClient.listMembers({ DetectorId: detectorId!, NextToken: nextToken }).promise(),
+          guardDutyClient.send(new ListMembersCommand({ DetectorId: detectorId!, NextToken: nextToken })),
         );
         for (const member of page.Members ?? []) {
           existingMemberAccountIds.push(member.AccountId!);
@@ -104,23 +124,87 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       } while (nextToken);
 
       if (existingMemberAccountIds.length > 0) {
-        await throttlingBackOff(() =>
-          guardDutyClient
-            .disassociateMembers({ AccountIds: existingMemberAccountIds, DetectorId: detectorId! })
-            .promise(),
-        );
+        const chunkedAccountsForDelete = chunkArray(existingMemberAccountIds, chunkSize);
 
-        await throttlingBackOff(() =>
-          guardDutyClient.deleteMembers({ AccountIds: existingMemberAccountIds, DetectorId: detectorId! }).promise(),
-        );
+        for (const existingMemberAccountIdBatch of chunkedAccountsForDelete) {
+          console.log(`Initiating disassociateMembers request for ${existingMemberAccountIdBatch.length} accounts`);
+          await throttlingBackOff(() =>
+            guardDutyClient.send(
+              new DisassociateMembersCommand({ AccountIds: existingMemberAccountIdBatch, DetectorId: detectorId! }),
+            ),
+          );
+
+          console.log(`Initiating deleteMembers request for ${existingMemberAccountIdBatch.length} accounts`);
+          await throttlingBackOff(() =>
+            guardDutyClient.send(
+              new DeleteMembersCommand({ AccountIds: existingMemberAccountIdBatch, DetectorId: detectorId! }),
+            ),
+          );
+        }
       }
 
       return { Status: 'Success', StatusCode: 200 };
   }
 }
 
-async function getDetectorId(guardDutyClient: AWS.GuardDuty): Promise<string | undefined> {
-  const response = await throttlingBackOff(() => guardDutyClient.listDetectors({}).promise());
+function convertBooleanToGuardDutyFormat(flag: boolean) {
+  if (flag) {
+    return 'NEW';
+  } else {
+    return 'NONE';
+  }
+}
+
+function getOrganizationFeaturesEnabled(s3DataEvents: boolean, eksAuditLogs: boolean) {
+  const featureList: OrganizationFeatureConfiguration[] = [];
+
+  featureList.push({
+    AutoEnable: convertBooleanToGuardDutyFormat(s3DataEvents),
+    Name: 'S3_DATA_EVENTS',
+  });
+
+  featureList.push({
+    AutoEnable: convertBooleanToGuardDutyFormat(eksAuditLogs),
+    Name: 'EKS_AUDIT_LOGS',
+  });
+  return featureList;
+}
+
+async function getDetectorId(guardDutyClient: GuardDutyClient): Promise<string | undefined> {
+  const response = await throttlingBackOff(() => guardDutyClient.send(new ListDetectorsCommand({})));
   console.log(response);
   return response.DetectorIds!.length === 1 ? response.DetectorIds![0] : undefined;
+}
+
+async function updateOrganizationConfiguration(
+  guardDutyClient: GuardDutyClient,
+  detectorId: string,
+  featureList: OrganizationFeatureConfiguration[],
+  autoEnableOrgMembers: 'ALL' | 'NEW' | 'NONE',
+) {
+  try {
+    await guardDutyClient.send(
+      new UpdateOrganizationConfigurationCommand({
+        AutoEnableOrganizationMembers: autoEnableOrgMembers,
+        DetectorId: detectorId!,
+        Features: featureList,
+      }),
+    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (e: any) {
+    if (e instanceof BadRequestException) {
+      console.log('Retrying with only S3 protection');
+      const featureListS3Only = featureList.filter(feat => feat.Name === 'S3_DATA_EVENTS');
+      await guardDutyClient.send(
+        new UpdateOrganizationConfigurationCommand({
+          AutoEnableOrganizationMembers: autoEnableOrgMembers,
+          DetectorId: detectorId!,
+          Features: featureListS3Only,
+        }),
+      );
+    } else {
+      console.log(`Error: ${JSON.stringify(e)}`);
+      throw new Error('Failed to update GuardDuty Organization Configuration, check logs for details');
+    }
+  }
 }

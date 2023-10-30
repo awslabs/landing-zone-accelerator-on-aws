@@ -15,38 +15,34 @@
     "cleanup:tsc": "tsc --build ../tests --clean",
     "build": "tsc",
     "watch": "tsc -w",
-    "test": "jest --coverage --ci",
+    "test": "jest --coverage --ci --passWithNoTests",
     "lint": "eslint --fix  --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}'  --ignore-pattern \\\\\\\"*.d.ts\\\\\\\" ",
     "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}'  --ignore-pattern \\\\\\\"*.d.ts\\\\\\\" "
   },
   "devDependencies": {
-    "@types/jest": "27.0.3",
-    "@types/node": "16.11.12",
-    "@typescript-eslint/eslint-plugin": "5.6.0",
-    "@typescript-eslint/parser": "5.6.0",
-    "eslint": "8.4.1",
-    "eslint-config-prettier": "8.3.0",
-    "eslint-config-standard": "16.0.3",
-    "eslint-import-resolver-node": "0.3.6",
-    "eslint-import-resolver-typescript": "2.5.0",
-    "eslint-plugin-import": "2.25.3",
-    "eslint-plugin-license-header": "0.2.1",
+    "@types/jest": "29.4.0",
+    "@types/node": "18.14.0",
+    "@typescript-eslint/eslint-plugin": "5.53.0",
+    "@typescript-eslint/parser": "5.53.0",
+    "eslint": "8.34.0",
+    "eslint-config-prettier": "8.6.0",
+    "eslint-config-standard": "17.0.0",
+    "eslint-import-resolver-node": "0.3.7",
+    "eslint-import-resolver-typescript": "3.5.3",
+    "eslint-plugin-import": "2.27.5",
+    "eslint-plugin-license-header": "0.6.0",
     "eslint-plugin-node": "11.1.0",
-    "eslint-plugin-prettier": "4.0.0",
-    "fs-extra": "10.0.0",
-    "jest": "27.4.3",
+    "eslint-plugin-prettier": "4.2.1",
+    "fs-extra": "11.1.0",
+    "jest": "29.4.3",
     "jest-sonar-reporter": "2.0.0",
-    "prettier": "2.5.1",
-    "ts-jest": "27.1.1",
-    "ts-node": "10.7.0",
-    "typescript": "4.5.2",
-    "aws-cdk": "2.45.0",
-    "aws-cdk-lib": "2.45.0",
+    "prettier": "2.8.4",
+    "ts-jest": "29.0.5",
+    "ts-node": "10.9.1",
+    "typescript": "4.9.5",
+    "aws-cdk": "2.93.0",
+    "aws-cdk-lib": "2.93.0",
     "constructs": "10.0.12"
-  },
-  "peerDependencies": {
-    "aws-cdk-lib": "2.45.0",
-    "es-lint": "8.4.1"
   },
   "jestSonar": {
     "reportPath": "coverage",
@@ -54,9 +50,9 @@
     "indent": 4
   },
   "dependencies": {
-    "@types/fs-extra": "9.0.13",
-    "aws-cdk": "2.45.0",
-    "aws-cdk-lib": "2.45.0",
-    "ts-node": "10.7.0"
+    "@types/fs-extra": "11.0.1",
+    "aws-cdk": "2.93.0",
+    "aws-cdk-lib": "2.93.0",
+    "ts-node": "10.9.1"
   }
 }

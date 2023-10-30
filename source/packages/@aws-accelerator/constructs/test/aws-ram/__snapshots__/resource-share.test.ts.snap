@@ -1,57 +1,188 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`ResourceShare Construct(ResourceShare):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "ResourceShareTestResourceShareResourceShare8D7B67C7": Object {
-      "Properties": Object {
+{
+  "Resources": {
+    "CustomKey1E6D0D07": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "ResourceShareTestResourceShareResourceShare8D7B67C7": {
+      "Properties": {
         "AllowExternalPrincipals": true,
         "Name": "TestResourceShare",
-        "PermissionArns": Array [
-          Object {
-            "Fn::Join": Array [
+        "PermissionArns": [
+          {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "arn:",
-                Object {
+                {
                   "Ref": "AWS::Partition",
                 },
                 ":s3:::test-bucket-1-",
-                Object {
+                {
                   "Ref": "AWS::AccountId",
                 },
                 "-",
-                Object {
+                {
                   "Ref": "AWS::Region",
                 },
               ],
             ],
           },
-          Object {
-            "Fn::Join": Array [
+          {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "arn:",
-                Object {
+                {
                   "Ref": "AWS::Partition",
                 },
                 ":s3:::test-bucket-2-",
-                Object {
+                {
                   "Ref": "AWS::AccountId",
                 },
                 "-",
-                Object {
+                {
                   "Ref": "AWS::Region",
                 },
               ],
             ],
           },
         ],
-        "Principals": Array [
+        "Principals": [
           "accountID",
           "organizationUnitId",
         ],
-        "ResourceArns": Array [
+        "ResourceArns": [
+          "ec2:TransitGateway",
+        ],
+      },
+      "Type": "AWS::RAM::ResourceShare",
+    },
+  },
+}
+`;
+
+exports[`ResourceShareItem Construct(ResourceShare):  Snapshot Test 1`] = `
+{
+  "Resources": {
+    "CustomKey1E6D0D07": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "ResourceShareTestResourceShareResourceShare8D7B67C7": {
+      "Properties": {
+        "AllowExternalPrincipals": true,
+        "Name": "TestResourceShare",
+        "PermissionArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":s3:::test-bucket-1-",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                "-",
+                {
+                  "Ref": "AWS::Region",
+                },
+              ],
+            ],
+          },
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":s3:::test-bucket-2-",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                "-",
+                {
+                  "Ref": "AWS::Region",
+                },
+              ],
+            ],
+          },
+        ],
+        "Principals": [
+          "accountID",
+          "organizationUnitId",
+        ],
+        "ResourceArns": [
           "ec2:TransitGateway",
         ],
       },

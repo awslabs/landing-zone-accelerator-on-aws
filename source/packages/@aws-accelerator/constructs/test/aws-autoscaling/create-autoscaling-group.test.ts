@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { AutoscalingGroup } from '../../lib/aws-autoscaling/create-autoscaling-group';
 import { snapShotTest } from '../snapshot-test';
+import { describe } from '@jest/globals';
 
 const testNamePrefix = 'Construct(AutoscalingGroup): ';
 
@@ -31,6 +32,10 @@ new AutoscalingGroup(stack, 'Test', {
   healthCheckType: 'ELB',
   targetGroups: ['string'],
   subnets: ['string'],
+  lambdaKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
+  cloudWatchLogKmsKey: new cdk.aws_kms.Key(stack, 'CustomKeyCloudWatch', {}),
+  cloudWatchLogRetentionInDays: 3653,
+  tags: [{ key: 'key', value: 'value' }],
 });
 
 /**

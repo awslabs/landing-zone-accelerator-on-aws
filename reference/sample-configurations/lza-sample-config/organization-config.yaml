@@ -1,0 +1,58 @@
+# If using AWS Control Tower, ensure that all the specified Organizational Units (OU)
+# have been created and enrolled as the accelerator will verify that the OU layout
+# matches before continuing to execute the deployment pipeline.
+
+enable: true
+organizationalUnits:
+  - name: Security
+  - name: Infrastructure
+quarantineNewAccounts:
+  enable: true
+  scpPolicyName: Quarantine
+serviceControlPolicies:
+  - name: AcceleratorGuardrails1
+    description: >
+      Accelerator GuardRails 1
+    policy: service-control-policies/guardrails-1.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+        - Security
+  - name: AcceleratorGuardrails2
+    description: >
+      Accelerator GuardRails 2
+    policy: service-control-policies/guardrails-2.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+        - Security
+  - name: Quarantine
+    description: >
+      This SCP is used to prevent changes to new accounts until the Accelerator
+      has been executed successfully.
+      This policy will be applied upon account creation if enabled.
+    policy: service-control-policies/quarantine.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits: []
+# https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_tag-policies.html
+taggingPolicies:
+  - name: TagPolicy
+    description: Organization Tagging Policy
+    policy: tagging-policies/org-tag-policy.json
+    deploymentTargets:
+      organizationalUnits:
+        - Root
+# https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_backup.html
+# backup policies contain a `delete_after_days` value of 1095 days, or 3 years.  Before
+# enabling this policy, ensure that `delete_after_days` meets your organization's records retention
+# policies.  Similarly, ensure that `move_to_cold_storage_after_days` meets business requirements.
+backupPolicies:
+  - name: BackupPolicy
+    description: Organization Backup Policy
+    policy: backup-policies/backup-plan.json
+    deploymentTargets:
+      organizationalUnits:
+        - Root

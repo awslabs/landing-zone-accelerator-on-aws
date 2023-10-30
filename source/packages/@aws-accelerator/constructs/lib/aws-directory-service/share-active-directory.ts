@@ -57,7 +57,7 @@ export class ShareActiveDirectory extends Construct {
 
     const providerLambda = new cdk.aws_lambda.Function(this, 'ShareManageActiveDirectoryFunction', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'share-directory/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(15),
       description: 'Share Manage active directory handler',
@@ -78,7 +78,7 @@ export class ShareActiveDirectory extends Construct {
         sid: 'StsAssumeRoleActions',
         effect: cdk.aws_iam.Effect.ALLOW,
         actions: ['sts:AssumeRole'],
-        resources: [`arn:aws:iam::*:role/${props.accountAccessRoleName}`],
+        resources: [`arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.accountAccessRoleName}`],
       }),
     );
 
@@ -98,6 +98,7 @@ export class ShareActiveDirectory extends Construct {
       resourceType: 'Custom::ShareActiveDirectory',
       serviceToken: provider.serviceToken,
       properties: {
+        partition: cdk.Stack.of(this).partition,
         region: cdk.Stack.of(this).region,
         madAccountId: cdk.Stack.of(this).account,
         directoryId: props.directoryId,

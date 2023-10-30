@@ -1,0 +1,220 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`DependenciesStack Construct(DependenciesStack):  Snapshot Test 1`] = `
+{
+  "Resources": {
+    "LzaManagedPolicy01FDAB5303": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Policies definition are derived from accelerator iam-config boundary-policy file",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Description": "",
+        "ManagedPolicyName": "lzaManagedPolicy01",
+        "Path": "/",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:CreateBucket",
+                "s3:PutBucketPolicy",
+              ],
+              "Effect": "Allow",
+              "Resource": "arn:aws:s3:::rcc-bucket-trustedservice-do-not-delete-*",
+            },
+            {
+              "Action": "s3:ListAllMyBuckets",
+              "Effect": "Allow",
+              "Resource": "arn:aws:s3:::*",
+            },
+            {
+              "Action": [
+                "config:DescribeConfigurationRecorders",
+                "config:DescribeConfigurationRecorderStatus",
+                "config:PutConfigurationRecorder",
+                "config:StartConfigurationRecorder",
+                "config:DescribeDeliveryChannels",
+                "config:DescribeDeliveryChannelStatus",
+                "config:PutDeliveryChannel",
+                "config:DescribeAggregationAuthorizations",
+                "config:PutAggregationAuthorization",
+                "config:ListDiscoveredResources",
+                "config:BatchGetResourceConfig",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            {
+              "Action": [
+                "iam:GetRole",
+                "iam:PassRole",
+                "iam:CreateServiceLinkedRole",
+                "iam:DeleteServiceLinkedRole",
+                "iam:GetServiceLinkedRoleDeletionStatus",
+              ],
+              "Effect": "Allow",
+              "Resource": "arn:aws:iam::*:role/aws-service-role/config.amazonaws.com/*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::ManagedPolicy",
+    },
+    "LzaManagedPolicy027214A961": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Policies definition are derived from accelerator iam-config boundary-policy file",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Description": "",
+        "ManagedPolicyName": "lzaManagedPolicy02",
+        "Path": "/",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:CreateBucket",
+                "s3:PutBucketPolicy",
+              ],
+              "Effect": "Allow",
+              "Resource": "arn:aws:s3:::rcc-bucket-trustedservice-do-not-delete-*",
+            },
+            {
+              "Action": "s3:ListAllMyBuckets",
+              "Effect": "Allow",
+              "Resource": "arn:aws:s3:::*",
+            },
+            {
+              "Action": [
+                "config:DescribeConfigurationRecorders",
+                "config:DescribeConfigurationRecorderStatus",
+                "config:PutConfigurationRecorder",
+                "config:StartConfigurationRecorder",
+                "config:DescribeDeliveryChannels",
+                "config:DescribeDeliveryChannelStatus",
+                "config:PutDeliveryChannel",
+                "config:DescribeAggregationAuthorizations",
+                "config:PutAggregationAuthorization",
+                "config:ListDiscoveredResources",
+                "config:BatchGetResourceConfig",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            {
+              "Action": [
+                "iam:GetRole",
+                "iam:PassRole",
+                "iam:CreateServiceLinkedRole",
+                "iam:DeleteServiceLinkedRole",
+                "iam:GetServiceLinkedRoleDeletionStatus",
+              ],
+              "Effect": "Allow",
+              "Resource": "arn:aws:iam::*:role/aws-service-role/config.amazonaws.com/*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::ManagedPolicy",
+    },
+    "PutSsmParameterRoleEF99BE78": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "This role is required to give permissions to put/delete SSM parameters across accounts and regions",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Condition": {
+                "ArnLike": {
+                  "aws:PrincipalArn": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":iam::*:role/AWSAccelerator*",
+                      ],
+                    ],
+                  },
+                },
+                "StringEquals": {
+                  "aws:PrincipalOrgID": "o-asdf123456",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ssm:PutParameter",
+                    "ssm:DeleteParameter",
+                    "ssm:GetParameter",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "arn:aws:ssm:*:*:parameter/accelerator*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "default",
+          },
+        ],
+        "RoleName": "AWSAccelerator-CrossAccountSsmParameterShare",
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "SsmParamAcceleratorVersionFF83282D": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-DependenciesStack-111111111111-us-east-1/version",
+        "Type": "String",
+        "Value": "1.5.1",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamStackId521A78D3": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-DependenciesStack-111111111111-us-east-1/stack-id",
+        "Type": "String",
+        "Value": {
+          "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+  },
+}
+`;

@@ -66,6 +66,14 @@ export interface PolicyProps {
    */
   readonly type: PolicyType;
   /**
+   * The SCP strategy - "allow-list" or "deny-list"The type of policy to create
+   */
+  readonly strategy?: string;
+  /**
+   * Accelerator prefix
+   */
+  readonly acceleratorPrefix: string;
+  /**
    * An optional description of the policy
    */
   readonly description?: string;
@@ -84,6 +92,7 @@ export class Policy extends Construct {
   public readonly name: string;
   public readonly description?: string;
   public readonly type: PolicyType;
+  public readonly strategy?: string;
   public readonly tags?: Tag[];
 
   constructor(scope: Construct, id: string, props: PolicyProps) {
@@ -93,6 +102,7 @@ export class Policy extends Construct {
     this.name = props.name;
     this.description = props.description || '';
     this.type = props.type;
+    this.strategy = props.strategy;
     this.tags = props.tags || [];
 
     //
@@ -107,12 +117,20 @@ export class Policy extends Construct {
     //
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::OrganizationsCreatePolicy', {
       codeDirectory: path.join(__dirname, 'create-policy/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
       description: 'Organizations create policy',
       policyStatements: [
         {
           Effect: 'Allow',
-          Action: ['organizations:CreatePolicy', 'organizations:ListPolicies', 'organizations:UpdatePolicy'],
+          Action: [
+            'organizations:CreatePolicy',
+            'organizations:DeletePolicy',
+            'organizations:DetachPolicy',
+            'organizations:ListPolicies',
+            'organizations:ListTargetsForPolicy',
+            'organizations:UpdatePolicy',
+            'organizations:TagResource',
+          ],
           Resource: '*',
         },
         {
@@ -142,10 +160,12 @@ export class Policy extends Construct {
         bucket: asset.s3BucketName,
         key: asset.s3ObjectKey,
         partition: props.partition,
+        policyTagKey: `${props.acceleratorPrefix}Managed`,
         uuid: uuidv4(),
         name: props.name,
         description: props.description,
         type: props.type,
+        strategy: props.strategy,
         tags: props.tags,
       },
     });

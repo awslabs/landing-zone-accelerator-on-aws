@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { NagSuppressions } from 'cdk-nag';
 import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 import * as codecommit from 'aws-cdk-lib/aws-codecommit';
 import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
@@ -19,17 +20,19 @@ import * as codepipeline_actions from 'aws-cdk-lib/aws-codepipeline-actions';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 
-import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
+import { Bucket, BucketEncryptionType, ServiceLinkedRole } from '@aws-accelerator/constructs';
 
 import { AcceleratorStage } from './accelerator-stage';
 import * as config_repository from './config-repository';
 import { AcceleratorToolkitCommand } from './toolkit';
+import { Repository } from '@aws-cdk-extensions/cdk-extensions';
 
 /**
  *
  */
 export interface AcceleratorPipelineProps {
   readonly toolkitRole: cdk.aws_iam.Role;
+  readonly awsCodeStarSupportedRegions: string[];
   readonly sourceRepository: string;
   readonly sourceRepositoryOwner: string;
   readonly sourceRepositoryName: string;
@@ -48,6 +51,65 @@ export interface AcceleratorPipelineProps {
    */
   readonly approvalStageNotifyEmailList?: string;
   readonly partition: string;
+  /**
+   * Flag indicating installer using existing CodeCommit repository
+   */
+  readonly useExistingConfigRepo: boolean;
+  /**
+   * User defined pre-existing config repository name
+   */
+  readonly configRepositoryName: string;
+  /**
+   * User defined pre-existing config repository branch name
+   */
+  readonly configRepositoryBranchName: string;
+  /**
+   * Accelerator resource name prefixes
+   */
+  readonly prefixes: {
+    /**
+     * Use this prefix value to name resources like -
+     AWS IAM Role names, AWS Lambda Function names, AWS Cloudwatch log groups names, AWS CloudFormation stack names, AWS CodePipeline names, AWS CodeBuild project names
+     *
+     */
+    readonly accelerator: string;
+    /**
+     * Use this prefix value to name AWS CodeCommit repository
+     */
+    readonly repoName: string;
+    /**
+     * Use this prefix value to name AWS S3 bucket
+     */
+    readonly bucketName: string;
+    /**
+     * Use this prefix value to name AWS SSM parameter
+     */
+    readonly ssmParamName: string;
+    /**
+     * Use this prefix value to name AWS KMS alias
+     */
+    readonly kmsAlias: string;
+    /**
+     * Use this prefix value to name AWS SNS topic
+     */
+    readonly snsTopicName: string;
+    /**
+     * Use this prefix value to name AWS Secrets
+     */
+    readonly secretName: string;
+    /**
+     * Use this prefix value to name AWS CloudTrail CloudWatch log group
+     */
+    readonly trailLogName: string;
+    /**
+     * Use this prefix value to name AWS Glue database
+     */
+    readonly databaseName: string;
+  };
+  /**
+   * Boolean for single account mode (i.e. AWS Jam or Workshop)
+   */
+  readonly enableSingleAccountMode: boolean;
 }
 
 /**
@@ -71,21 +133,21 @@ export class AcceleratorPipeline extends Construct {
 
     //
     // Fields can be changed based on qualifier property
-    let acceleratorKeyArnSsmParameterName = '/accelerator/installer/kms/key-arn';
-    let secureBucketName = `aws-accelerator-pipeline-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`;
-    let serverAccessLogsBucketName = '/accelerator/installer-access-logs-bucket-name';
-    let configRepositoryName = 'aws-accelerator-config';
-    let pipelineName = 'AWSAccelerator-Pipeline';
-    let buildProjectName = 'AWSAccelerator-BuildProject';
-    let toolkitProjectName = 'AWSAccelerator-ToolkitProject';
+    let acceleratorKeyArnSsmParameterName = `${props.prefixes.ssmParamName}/installer/kms/key-arn`;
+    let secureBucketName = `${props.prefixes.bucketName}-pipeline-${cdk.Stack.of(this).account}-${
+      cdk.Stack.of(this).region
+    }`;
+    let serverAccessLogsBucketNameSsmParam = `${props.prefixes.ssmParamName}/installer-access-logs-bucket-name`;
+    let pipelineName = `${props.prefixes.accelerator}-Pipeline`;
+    let buildProjectName = `${props.prefixes.accelerator}-BuildProject`;
+    let toolkitProjectName = `${props.prefixes.accelerator}-ToolkitProject`;
 
     //
     // Change the fields when qualifier is present
     if (this.props.qualifier) {
-      acceleratorKeyArnSsmParameterName = `/accelerator/${this.props.qualifier}/installer/kms/key-arn`;
+      acceleratorKeyArnSsmParameterName = `${props.prefixes.ssmParamName}/${this.props.qualifier}/installer/kms/key-arn`;
       secureBucketName = `${this.props.qualifier}-pipeline-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`;
-      serverAccessLogsBucketName = `/accelerator/${this.props.qualifier}/installer-access-logs-bucket-name`;
-      configRepositoryName = `${this.props.qualifier}-config`;
+      serverAccessLogsBucketNameSsmParam = `${props.prefixes.ssmParamName}/${this.props.qualifier}/installer-access-logs-bucket-name`;
       pipelineName = `${this.props.qualifier}-pipeline`;
       buildProjectName = `${this.props.qualifier}-build-project`;
       toolkitProjectName = `${this.props.qualifier}-toolkit-project`;
@@ -106,6 +168,18 @@ export class AcceleratorPipeline extends Construct {
       };
     }
 
+    let enableSingleAccountModeEnvVariables: { [p: string]: codebuild.BuildEnvironmentVariable } | undefined;
+    if (props.enableSingleAccountMode) {
+      enableSingleAccountModeEnvVariables = {
+        ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE: {
+          type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+          value: true,
+        },
+      };
+    }
+
+    const enableAseaMigration = process.env['ENABLE_ASEA_MIGRATION']?.toLowerCase?.() === 'true';
+
     // Get installer key
     this.installerKey = cdk.aws_kms.Key.fromKeyArn(
       this,
@@ -117,19 +191,39 @@ export class AcceleratorPipeline extends Construct {
       encryptionType: BucketEncryptionType.SSE_KMS,
       s3BucketName: secureBucketName,
       kmsKey: this.installerKey,
-      serverAccessLogsBucketName: cdk.aws_ssm.StringParameter.valueForStringParameter(this, serverAccessLogsBucketName),
+      serverAccessLogsBucketName: cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        serverAccessLogsBucketNameSsmParam,
+      ),
     });
 
-    const configRepository = new config_repository.ConfigRepository(this, 'ConfigRepository', {
-      repositoryName: configRepositoryName,
-      repositoryBranchName: 'main',
-      description:
-        'AWS Accelerator configuration repository, created and initialized with default config file by pipeline',
-      managementAccountEmail: this.props.managementAccountEmail,
-      logArchiveAccountEmail: this.props.logArchiveAccountEmail,
-      auditAccountEmail: this.props.auditAccountEmail,
-      controlTowerEnabled: this.props.controlTowerEnabled,
-    });
+    // When non default config repository name provided
+    let configRepository: cdk.aws_codecommit.IRepository | Repository;
+    let configRepositoryBranchName = 'main';
+
+    if (props.useExistingConfigRepo) {
+      configRepository = cdk.aws_codecommit.Repository.fromRepositoryName(
+        this,
+        'ConfigRepository',
+        props.configRepositoryName,
+      );
+      configRepositoryBranchName = props.configRepositoryBranchName ?? 'main';
+    } else {
+      configRepository = new config_repository.ConfigRepository(this, 'ConfigRepository', {
+        repositoryName: props.configRepositoryName,
+        repositoryBranchName: configRepositoryBranchName,
+        description:
+          'AWS Accelerator configuration repository, created and initialized with default config file by pipeline',
+        managementAccountEmail: this.props.managementAccountEmail,
+        logArchiveAccountEmail: this.props.logArchiveAccountEmail,
+        auditAccountEmail: this.props.auditAccountEmail,
+        controlTowerEnabled: this.props.controlTowerEnabled,
+        enableSingleAccountMode: this.props.enableSingleAccountMode,
+      }).getRepository();
+
+      const cfnRepository = configRepository.node.defaultChild as codecommit.CfnRepository;
+      cfnRepository.applyRemovalPolicy(cdk.RemovalPolicy.RETAIN, { applyToUpdateReplacePolicy: true });
+    }
 
     /**
      * Pipeline
@@ -177,8 +271,8 @@ export class AcceleratorPipeline extends Construct {
         sourceAction,
         new codepipeline_actions.CodeCommitSourceAction({
           actionName: 'Configuration',
-          repository: configRepository.getRepository(),
-          branch: 'main',
+          repository: configRepository,
+          branch: configRepositoryBranchName,
           output: this.configRepoArtifact,
           trigger: codepipeline_actions.CodeCommitTrigger.NONE,
           variablesNamespace: 'Config-Vars',
@@ -193,6 +287,56 @@ export class AcceleratorPipeline extends Construct {
       assumedBy: new iam.ServicePrincipal('codebuild.amazonaws.com'),
     });
 
+    const validateConfigPolicyDocument = new cdk.aws_iam.PolicyDocument({
+      statements: [
+        new cdk.aws_iam.PolicyStatement({
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['organizations:ListAccounts', 'ssm:GetParameter'],
+          resources: ['*'],
+        }),
+      ],
+    });
+
+    const validateConfigPolicy = new cdk.aws_iam.ManagedPolicy(this, 'ValidateConfigPolicyDocument', {
+      document: validateConfigPolicyDocument,
+    });
+    buildRole.addManagedPolicy(validateConfigPolicy);
+
+    if (this.props.managementAccountId && this.props.managementAccountRoleName) {
+      const assumeExternalDeploymentRolePolicyDocument = new cdk.aws_iam.PolicyDocument({
+        statements: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ['sts:AssumeRole'],
+            resources: [
+              `arn:${this.props.partition}:iam::${this.props.managementAccountId}:role/${this.props.managementAccountRoleName}`,
+            ],
+          }),
+        ],
+      });
+
+      /**
+       * Create an IAM Policy for the build role to be able to lookup replacement parameters in the external deployment
+       * target account
+       */
+      const assumeExternalDeploymentRolePolicy = new cdk.aws_iam.ManagedPolicy(this, 'AssumeExternalDeploymentPolicy', {
+        document: assumeExternalDeploymentRolePolicyDocument,
+      });
+      buildRole.addManagedPolicy(assumeExternalDeploymentRolePolicy);
+    }
+
+    // Pipeline/BuildRole/Resource AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies.
+    NagSuppressions.addResourceSuppressionsByPath(
+      cdk.Stack.of(this),
+      `${cdk.Stack.of(this).stackName}/Pipeline/BuildRole/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'AWS Managed policy for External Pipeline Deployment Lookups attached.',
+        },
+      ],
+    );
+
     const buildProject = new codebuild.PipelineProject(this, 'BuildProject', {
       projectName: buildProjectName,
       encryptionKey: this.installerKey,
@@ -202,7 +346,7 @@ export class AcceleratorPipeline extends Construct {
         phases: {
           install: {
             'runtime-versions': {
-              nodejs: 14,
+              nodejs: 16,
             },
           },
           build: {
@@ -214,7 +358,6 @@ export class AcceleratorPipeline extends Construct {
                   yarn config set registry https://registry.npmmirror.com
                fi`,
               'yarn install',
-              'yarn lerna link',
               'yarn build',
               'yarn validate-config $CODEBUILD_SRC_DIR_Config',
             ],
@@ -226,14 +369,16 @@ export class AcceleratorPipeline extends Construct {
         },
       }),
       environment: {
-        buildImage: codebuild.LinuxBuildImage.STANDARD_5_0,
-        privileged: true, // Allow access to the Docker daemon
+        buildImage: codebuild.LinuxBuildImage.STANDARD_6_0,
+        privileged: false, // Allow access to the Docker daemon
         computeType: codebuild.ComputeType.MEDIUM,
         environmentVariables: {
           NODE_OPTIONS: {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: '--max_old_space_size=8192',
           },
+          ...enableSingleAccountModeEnvVariables,
+          ...pipelineAccountEnvVariables,
         },
       },
       cache: codebuild.Cache.local(codebuild.LocalCacheMode.SOURCE),
@@ -263,13 +408,13 @@ export class AcceleratorPipeline extends Construct {
       projectName: toolkitProjectName,
       encryptionKey: this.installerKey,
       role: this.props.toolkitRole,
-      timeout: cdk.Duration.hours(5),
+      timeout: cdk.Duration.hours(8),
       buildSpec: codebuild.BuildSpec.fromObject({
         version: '0.2',
         phases: {
           install: {
             'runtime-versions': {
-              nodejs: 14,
+              nodejs: 16,
             },
           },
           build: {
@@ -277,21 +422,26 @@ export class AcceleratorPipeline extends Construct {
               'env',
               'cd source',
               'cd packages/@aws-accelerator/accelerator',
-              `if [ -z "\${ACCELERATOR_STAGE}" ]; then yarn run ts-node --transpile-only cdk.ts synth --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION}; fi`,
+              `if [ -z "\${ACCELERATOR_STAGE}" ]; then for STAGE in "key" "logging" "organizations" "security-audit" "network-prep" "security" "operations" "network-vpc" "security-resources" "network-associations" "customizations" "finalize" "bootstrap"; do yarn run ts-node --transpile-only cdk.ts synth --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION} --stage $STAGE; done; fi`,
               `if [ ! -z "\${ACCELERATOR_STAGE}" ]; then yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION}; fi`,
-              `yarn run ts-node --transpile-only cdk.ts --require-approval never $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION} --app cdk.out`,
+              `if [ "diff" != "\${CDK_OPTIONS}" ]; then yarn run ts-node --transpile-only cdk.ts --require-approval never $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION} --app cdk.out; fi`,
+              `if [ "diff" = "\${CDK_OPTIONS}" ]; then for STAGE in "key" "logging" "organizations" "security-audit" "network-prep" "security" "operations" "network-vpc" "security-resources" "network-associations" "customizations" "finalize" "bootstrap"; do yarn run ts-node --transpile-only cdk.ts --require-approval never $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION} --app cdk.out --stage $STAGE; done; find ./cdk.out -type f -name "*.diff" -exec cat "{}" \\;;  fi`,
             ],
           },
         },
       }),
       environment: {
-        buildImage: codebuild.LinuxBuildImage.STANDARD_5_0,
-        privileged: true, // Allow access to the Docker daemon
+        buildImage: codebuild.LinuxBuildImage.STANDARD_6_0,
+        privileged: false, // Allow access to the Docker daemon
         computeType: codebuild.ComputeType.LARGE,
         environmentVariables: {
+          LOG_LEVEL: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: 'error',
+          },
           NODE_OPTIONS: {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: '--max_old_space_size=8192',
+            value: '--max_old_space_size=12288',
           },
           CDK_METHOD: {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
@@ -305,6 +455,43 @@ export class AcceleratorPipeline extends Construct {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: this.props.qualifier ? this.props.qualifier : 'aws-accelerator',
           },
+          ACCELERATOR_PREFIX: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: props.prefixes.accelerator,
+          },
+          ACCELERATOR_REPO_NAME_PREFIX: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: props.prefixes.repoName,
+          },
+          ACCELERATOR_BUCKET_NAME_PREFIX: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: props.prefixes.bucketName,
+          },
+          ACCELERATOR_KMS_ALIAS_PREFIX: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: props.prefixes.kmsAlias,
+          },
+          ACCELERATOR_SSM_PARAM_NAME_PREFIX: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: props.prefixes.ssmParamName,
+          },
+          ACCELERATOR_SNS_TOPIC_NAME_PREFIX: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: props.prefixes.snsTopicName,
+          },
+          ACCELERATOR_SECRET_NAME_PREFIX: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: props.prefixes.secretName,
+          },
+          ACCELERATOR_TRAIL_LOG_NAME_PREFIX: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: props.prefixes.trailLogName,
+          },
+          ACCELERATOR_DATABASE_NAME_PREFIX: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: props.prefixes.databaseName,
+          },
+          ...enableSingleAccountModeEnvVariables,
           ...pipelineAccountEnvVariables,
         },
       },
@@ -358,6 +545,20 @@ export class AcceleratorPipeline extends Construct {
         }),
       ],
     });
+
+    // Adds ASEA Import Resources stage
+    if (enableAseaMigration) {
+      this.pipeline.addStage({
+        stageName: 'ImportAseaResources',
+        actions: [
+          this.createToolkitStage({
+            actionName: 'Import_Asea_Resources',
+            command: `deploy`,
+            stage: AcceleratorStage.IMPORT_ASEA_RESOURCES,
+          }),
+        ],
+      });
+    }
 
     this.pipeline.addStage({
       stageName: 'Organization',
@@ -435,6 +636,20 @@ export class AcceleratorPipeline extends Construct {
       ],
     });
 
+    // Add ASEA Import Resources
+    if (enableAseaMigration) {
+      this.pipeline.addStage({
+        stageName: 'PostImportAseaResources',
+        actions: [
+          this.createToolkitStage({
+            actionName: 'Post_Import_Asea_Resources',
+            command: `deploy`,
+            stage: AcceleratorStage.POST_IMPORT_ASEA_RESOURCES,
+          }),
+        ],
+      });
+    }
+
     // Enable pipeline notification for commercial partition
     this.enablePipelineNotification();
   }
@@ -445,8 +660,10 @@ export class AcceleratorPipeline extends Construct {
   private addReviewStage() {
     if (this.props.enableApprovalStage) {
       const notificationTopic = new cdk.aws_sns.Topic(this, 'ManualApprovalActionTopic', {
-        topicName: (this.props.qualifier ? this.props.qualifier : 'aws-accelerator') + '-pipeline-review-topic',
-        displayName: (this.props.qualifier ? this.props.qualifier : 'aws-accelerator') + '-pipeline-review-topic',
+        topicName:
+          (this.props.qualifier ? this.props.qualifier : this.props.prefixes.snsTopicName) + '-pipeline-review-topic',
+        displayName:
+          (this.props.qualifier ? this.props.qualifier : this.props.prefixes.snsTopicName) + '-pipeline-review-topic',
         masterKey: this.installerKey,
       });
 
@@ -525,39 +742,29 @@ export class AcceleratorPipeline extends Construct {
    * Enable pipeline notification for commercial partition and supported regions
    */
   private enablePipelineNotification() {
-    // List of regions with AWS CodeStar being supported. For details, see documentation:
-    // https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/
-    const awsCodeStarSupportedRegions = [
-      'us-east-1',
-      'us-east-2',
-      'us-west-1',
-      'us-west-2',
-      'ap-northeast-2',
-      'ap-southeast-1',
-      'ap-southeast-2',
-      'ap-northeast-1',
-      'ca-central-1',
-      'eu-central-1',
-      'eu-west-1',
-      'eu-west-2',
-      'eu-north-1',
-    ];
+    if (this.props.enableSingleAccountMode) {
+      return;
+    }
 
     // We can Enable pipeline notification only for regions with AWS CodeStar being available
-    if (awsCodeStarSupportedRegions.includes(cdk.Stack.of(this).region)) {
-      const codeStarNotificationsRole = new cdk.aws_iam.CfnServiceLinkedRole(
-        this,
-        'AWSServiceRoleForCodeStarNotifications',
-        {
-          awsServiceName: 'codestar-notifications.amazonaws.com',
-          description: 'Allows AWS CodeStar Notifications to access Amazon CloudWatch Events on your behalf',
-        },
-      );
+    if (this.props.awsCodeStarSupportedRegions.includes(cdk.Stack.of(this).region)) {
+      const codeStarNotificationsRole = new ServiceLinkedRole(this, 'AWSServiceRoleForCodeStarNotifications', {
+        environmentEncryptionKmsKey: this.installerKey,
+        cloudWatchLogKmsKey: this.installerKey,
+        // specifying this as it will be overwritten with global retention in logging stack
+        cloudWatchLogRetentionInDays: 7,
+        awsServiceName: 'codestar-notifications.amazonaws.com',
+        description: 'Allows AWS CodeStar Notifications to access Amazon CloudWatch Events on your behalf',
+        roleName: 'AWSServiceRoleForCodeStarNotifications',
+      });
+
       this.pipeline.node.addDependency(codeStarNotificationsRole);
 
       const acceleratorStatusTopic = new cdk.aws_sns.Topic(this, 'AcceleratorStatusTopic', {
-        topicName: (this.props.qualifier ? this.props.qualifier : 'aws-accelerator') + '-pipeline-status-topic',
-        displayName: (this.props.qualifier ? this.props.qualifier : 'aws-accelerator') + '-pipeline-status-topic',
+        topicName:
+          (this.props.qualifier ? this.props.qualifier : this.props.prefixes.snsTopicName) + '-pipeline-status-topic',
+        displayName:
+          (this.props.qualifier ? this.props.qualifier : this.props.prefixes.snsTopicName) + '-pipeline-status-topic',
         masterKey: this.installerKey,
       });
 
@@ -579,9 +786,12 @@ export class AcceleratorPipeline extends Construct {
 
       // Pipeline failure status topic and alarm
       const acceleratorFailedStatusTopic = new cdk.aws_sns.Topic(this, 'AcceleratorFailedStatusTopic', {
-        topicName: (this.props.qualifier ? this.props.qualifier : 'aws-accelerator') + '-pipeline-failed-status-topic',
+        topicName:
+          (this.props.qualifier ? this.props.qualifier : this.props.prefixes.snsTopicName) +
+          '-pipeline-failed-status-topic',
         displayName:
-          (this.props.qualifier ? this.props.qualifier : 'aws-accelerator') + '-pipeline-failed-status-topic',
+          (this.props.qualifier ? this.props.qualifier : this.props.prefixes.snsTopicName) +
+          '-pipeline-failed-status-topic',
         masterKey: this.installerKey,
       });
 
@@ -600,7 +810,7 @@ export class AcceleratorPipeline extends Construct {
           treatMissingData: cdk.aws_cloudwatch.TreatMissingData.NOT_BREACHING,
           alarmName: this.props.qualifier
             ? this.props.qualifier + '-pipeline-failed-alarm'
-            : 'AwsAcceleratorFailedAlarm',
+            : `${this.props.prefixes.accelerator}FailedAlarm`,
           alarmDescription: 'AWS Accelerator pipeline failure alarm, created by accelerator',
         });
     }

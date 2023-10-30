@@ -1,27 +1,27 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`RegisterDelegatedAdministrator Construct(RegisterDelegatedAdministrator):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CustomKey1E6D0D07": Object {
+{
+  "Resources": {
+    "CustomKey1E6D0D07": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -38,45 +38,45 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomOrganizationsRegisterDelegatedAdministratorCustomResourceProviderHandlerFAEA655C": Object {
-      "DependsOn": Array [
+    "CustomOrganizationsRegisterDelegatedAdministratorCustomResourceProviderHandlerFAEA655C": {
+      "DependsOn": [
         "CustomOrganizationsRegisterDelegatedAdministratorCustomResourceProviderRole4B3EAD1B",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomOrganizationsRegisterDelegatedAdministratorCustomResourceProviderRole4B3EAD1B",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomOrganizationsRegisterDelegatedAdministratorCustomResourceProviderLogGroupE715E766": Object {
+    "CustomOrganizationsRegisterDelegatedAdministratorCustomResourceProviderLogGroupE715E766": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "CustomKey1E6D0D07",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomOrganizationsRegisterDelegatedAdministratorCustomResourceProviderHandlerFAEA655C",
               },
             ],
@@ -87,31 +87,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomOrganizationsRegisterDelegatedAdministratorCustomResourceProviderRole4B3EAD1B": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomOrganizationsRegisterDelegatedAdministratorCustomResourceProviderRole4B3EAD1B": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "organizations:DeregisterDelegatedAdministrator",
                     "organizations:RegisterDelegatedAdministrator",
                   ],
@@ -127,22 +127,22 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "RegisterDelegatedAdministratorF9498A1E": Object {
+    "RegisterDelegatedAdministratorF9498A1E": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomOrganizationsRegisterDelegatedAdministratorCustomResourceProviderLogGroupE715E766",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomOrganizationsRegisterDelegatedAdministratorCustomResourceProviderHandlerFAEA655C",
             "Arn",
           ],
         },
-        "accountId": Object {
+        "accountId": {
           "Ref": "AWS::AccountId",
         },
-        "partition": Object {
+        "partition": {
           "Ref": "AWS::Partition",
         },
         "servicePrincipal": "macie.amazonaws.com",

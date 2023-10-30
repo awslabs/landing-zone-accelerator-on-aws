@@ -1,47 +1,143 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`IpamSubnet Construct(IpamSubnet):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A": Object {
-      "DependsOn": Array [
-        "CustomIpamSubnetCustomResourceProviderRoleA2FF4E6D",
+{
+  "Resources": {
+    "CustomGetIpamSubnetCidrCustomResourceProviderHandler8C11DBB5": {
+      "DependsOn": [
+        "CustomGetIpamSubnetCidrCustomResourceProviderRoleADF93CF4",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
-            "CustomIpamSubnetCustomResourceProviderRoleA2FF4E6D",
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomGetIpamSubnetCidrCustomResourceProviderRoleADF93CF4",
             "Arn",
           ],
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs16.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050": Object {
+    "CustomGetIpamSubnetCidrCustomResourceProviderLogGroup655A9FB7": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "KeyForLookup43C142E7",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomGetIpamSubnetCidrCustomResourceProviderHandler8C11DBB5",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomGetIpamSubnetCidrCustomResourceProviderRoleADF93CF4": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "sts:AssumeRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+                {
+                  "Action": [
+                    "ec2:DescribeSubnets",
+                    "ssm:GetParameter",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A": {
+      "DependsOn": [
+        "CustomIpamSubnetCustomResourceProviderRoleA2FF4E6D",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomIpamSubnetCustomResourceProviderRoleA2FF4E6D",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "Key961B73FD",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
               },
             ],
@@ -52,50 +148,51 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomIpamSubnetCustomResourceProviderRoleA2FF4E6D": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomIpamSubnetCustomResourceProviderRoleA2FF4E6D": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "ec2:CreateTags",
                     "ec2:DeleteSubnet",
+                    "ec2:DeleteTags",
                     "ec2:ModifySubnetAttribute",
                   ],
                   "Effect": "Allow",
-                  "Resource": Object {
-                    "Fn::Join": Array [
+                  "Resource": {
+                    "Fn::Join": [
                       "",
-                      Array [
+                      [
                         "arn:",
-                        Object {
+                        {
                           "Ref": "AWS::Partition",
                         },
                         ":ec2:",
-                        Object {
+                        {
                           "Ref": "AWS::Region",
                         },
                         ":",
-                        Object {
+                        {
                           "Ref": "AWS::AccountId",
                         },
                         ":subnet/*",
@@ -103,46 +200,46 @@ Object {
                     ],
                   },
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "ec2:CreateSubnet",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
-                    Object {
-                      "Fn::Join": Array [
+                  "Resource": [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":ec2:",
-                          Object {
+                          {
                             "Ref": "AWS::Region",
                           },
                           ":",
-                          Object {
+                          {
                             "Ref": "AWS::AccountId",
                           },
                           ":subnet/*",
                         ],
                       ],
                     },
-                    Object {
-                      "Fn::Join": Array [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":ec2:",
-                          Object {
+                          {
                             "Ref": "AWS::Region",
                           },
                           ":",
-                          Object {
+                          {
                             "Ref": "AWS::AccountId",
                           },
                           ":vpc/*",
@@ -151,8 +248,8 @@ Object {
                     },
                   ],
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "ec2:DescribeVpcs",
                     "ec2:DescribeSubnets",
                   ],
@@ -168,25 +265,25 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "Key961B73FD": Object {
+    "Key2071601C6": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -203,31 +300,169 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "TestIpamSubnet05D29B1E": Object {
+    "Key961B73FD": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "KeyForLookup43C142E7": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "TestIpamSubnet05D29B1E": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
             "Arn",
           ],
         },
         "availabilityZone": "us-east-1a",
-        "basePool": Array [
+        "basePool": [
           "10.0.0.0/8",
         ],
-        "ipamAllocation": Object {
+        "ipamAllocation": {
           "ipamPoolName": "test-pool",
           "netmaskLength": 24,
         },
         "name": "Test",
-        "tags": Array [],
+        "tags": [
+          {
+            "Key": "key",
+            "Value": "value",
+          },
+        ],
         "vpcId": "vpc-test",
       },
       "Type": "Custom::IpamSubnet",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TestIpamSubnet22B82F212": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
+            "Arn",
+          ],
+        },
+        "availabilityZoneId": "use1-az2",
+        "basePool": [
+          "10.0.0.0/8",
+        ],
+        "ipamAllocation": {
+          "ipamPoolName": "test-pool",
+          "netmaskLength": 24,
+        },
+        "name": "Test2",
+        "tags": [
+          {
+            "Key": "key",
+            "Value": "value",
+          },
+        ],
+        "vpcId": "vpc-test",
+      },
+      "Type": "Custom::IpamSubnet",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TestIpamSubnetFromLookup8A88C539": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomGetIpamSubnetCidrCustomResourceProviderLogGroup655A9FB7",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomGetIpamSubnetCidrCustomResourceProviderHandler8C11DBB5",
+            "Arn",
+          ],
+        },
+        "region": "us-east-1",
+        "roleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::11111111111:role/testRole",
+            ],
+          ],
+        },
+        "ssmSubnetIdPath": "/path/to/ipam/subnet",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::GetIpamSubnetCidr",
       "UpdateReplacePolicy": "Delete",
     },
   },

@@ -47,6 +47,67 @@ customizations:
         - us-east-1
       runOrder: 1
       template: cloudformation-templates/custom-s3-bucket.yaml
+  serviceCatalogPortfolios:
+    - name: My-Portfolio
+      provider: LZA
+      account: Management
+      regions:
+        - us-east-1
+        - us-west-2
+      shareTargets:
+        organizationalUnits:
+          - Security
+      shareTagOptions: true
+      portfolioAssociations:
+        - type: Group
+          name: Administrators
+          propagateAssociation: true
+        - type: Role
+          name: EC2-Default-SSM-AD-Role
+        - type: User
+          name: breakGlassUser01
+      products:
+        - name: My-Product
+          description: Sample product by lZA.
+          owner: LZA
+          distributor: LZA
+          versions:
+            - name: v1
+              description: product version is v1
+              template: cloudformation-templates/custom-s3-bucket.yaml
+              deprecated: false
+          support:
+            description: Please include account ID and provisioned product ID.
+            email: support@example.com
+            url: https://support.amazon.com
+    - name: Portfolio-2
+      provider: LZA
+      account: SharedServices
+      regions:
+        - us-east-1
+      shareTargets:
+        accounts:
+          - Audit
+      portfolioAssociations:
+        - type: Role
+          name: EC2-Default-SSM-AD-Role
+          propagateAssociation: true
+        - type: PermissionSet
+          name: PermissionSet1
+      products:
+        - name: Product2
+          description: Sample product by lZA.
+          owner: LZA
+          distributor: LZA
+          versions:
+            - name: v1
+              description: product version is v1
+              template: cloudformation-templates/custom-s3-bucket.yaml
+              deprecated: false
+          support:
+            description: Please include account ID and provisioned product ID.
+            email: support@example.com
+            url: https://support.amazon.com
 
 applications:
   - name: appA

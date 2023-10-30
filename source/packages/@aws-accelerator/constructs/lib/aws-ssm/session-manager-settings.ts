@@ -28,6 +28,7 @@ export interface SsmSessionManagerSettingsProps {
   readonly attachPolicyToIamRoles?: string[];
   readonly cloudWatchEncryptionKey: cdk.aws_kms.IKey;
   readonly region: string;
+  readonly rolesInAccounts?: { account: string; region: string; parametersByPath: { [key: string]: string } }[];
   /**
    * Custom resource lambda log group encryption key
    */
@@ -36,6 +37,10 @@ export interface SsmSessionManagerSettingsProps {
    * Custom resource lambda log retention in days
    */
   readonly logRetentionInDays: number;
+  /**
+   * Accelerator Prefix
+   */
+  readonly acceleratorPrefix: string;
 }
 
 export class SsmSessionManagerSettings extends Construct {
@@ -218,18 +223,20 @@ export class SsmSessionManagerSettings extends Construct {
 
     const sessionManagerRegionalEC2ManagedPolicy = new cdk.aws_iam.ManagedPolicy(this, 'SessionManagerEC2Policy', {
       document: sessionManagerRegionalEC2PolicyDocument,
-      managedPolicyName: `AWSAccelerator-SessionManagerLogging-${props.region}`,
+      managedPolicyName: `${props.acceleratorPrefix}-SessionManagerLogging-${props.region}`,
     });
 
     // Attach policies to configured roles
     for (const iamRoleName of props.attachPolicyToIamRoles ?? []) {
-      const role = cdk.aws_iam.Role.fromRoleArn(
-        this,
-        `AcceleratorSessionManager-${iamRoleName}`,
-        `arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:role/${iamRoleName}`,
-        { defaultPolicyName: `Region${props.region}` },
-      );
-      role.attachInlinePolicy(sessionManagerRegionEC2Policy);
+      if (this.isRoleInAccount(iamRoleName, cdk.Stack.of(this).account, props.rolesInAccounts)) {
+        const role = cdk.aws_iam.Role.fromRoleArn(
+          this,
+          `AcceleratorSessionManager-${iamRoleName}`,
+          `arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:role/${iamRoleName}`,
+          { defaultPolicyName: `Region${props.region}` },
+        );
+        role.attachInlinePolicy(sessionManagerRegionEC2Policy);
+      }
     }
 
     // Create an EC2 role that can be used for Session Manager
@@ -237,13 +244,13 @@ export class SsmSessionManagerSettings extends Construct {
       assumedBy: new cdk.aws_iam.ServicePrincipal(`ec2.${cdk.Stack.of(this).urlSuffix}`),
       description: 'IAM Role for an EC2 configured for Session Manager Logging',
       managedPolicies: [sessionManagerRegionalEC2ManagedPolicy],
-      roleName: `AWSAccelerator-SessionManagerEC2Role-${props.region}`,
+      roleName: `${props.acceleratorPrefix}-SessionManagerEC2Role-${props.region}`,
     });
 
     // Create an EC2 instance profile
     new cdk.aws_iam.CfnInstanceProfile(this, 'SessionManagerEC2InstanceProfile', {
       roles: [sessionManagerEC2Role.roleName],
-      instanceProfileName: `AWSAccelerator-SessionManagerEc2Role-${props.region}`,
+      instanceProfileName: `${props.acceleratorPrefix}-SessionManagerEc2Role-${props.region}`,
     });
 
     const sessionManagerUserPolicyDocument = new cdk.aws_iam.PolicyDocument({
@@ -259,7 +266,7 @@ export class SsmSessionManagerSettings extends Construct {
     // Create an IAM Policy for users to be able to use Session Manager with KMS encryption
     new cdk.aws_iam.ManagedPolicy(this, 'SessionManagerUserKMSPolicy', {
       document: sessionManagerUserPolicyDocument,
-      managedPolicyName: `AWSAccelerator-SessionManagerUserKMS-${props.region}`,
+      managedPolicyName: `${props.acceleratorPrefix}-SessionManagerUserKMS-${props.region}`,
     });
 
     //
@@ -267,7 +274,7 @@ export class SsmSessionManagerSettings extends Construct {
     //
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::SessionManagerLogging', {
       codeDirectory: path.join(__dirname, 'session-manager-settings/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
       policyStatements: [
         {
           Effect: 'Allow',
@@ -306,5 +313,24 @@ export class SsmSessionManagerSettings extends Construct {
     resource.node.addDependency(logGroup);
 
     this.id = resource.ref;
+  }
+
+  isRoleInAccount(
+    roleName: string,
+    account: string,
+    rolesInAccount?: { account: string; region: string; parametersByPath: { [key: string]: string } }[],
+  ) {
+    if (!rolesInAccount || rolesInAccount.length === 0) {
+      return true;
+    }
+    for (const ssmAccount of rolesInAccount) {
+      if (account === ssmAccount.account) {
+        const roleExists = Object.keys(ssmAccount.parametersByPath).filter(parameter => parameter.includes(roleName));
+        if (roleExists.length > 0) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 }

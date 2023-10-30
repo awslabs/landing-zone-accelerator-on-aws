@@ -26,6 +26,7 @@ describe('accounts-config', () => {
     logArchiveAccountEmail: 'example2@example.com',
     auditAccountEmail: 'example3@example.com',
     controlTowerEnabled: 'yes',
+    enableSingleAccountMode: false,
   });
 
   const configRepository2 = new ConfigRepository(stack, 'ConfigRepository2', {
@@ -36,6 +37,7 @@ describe('accounts-config', () => {
     logArchiveAccountEmail: 'example2@example.com',
     auditAccountEmail: 'example3@example.com',
     controlTowerEnabled: 'no',
+    enableSingleAccountMode: false,
   });
 
   describe('AccountIdConfig', () => {

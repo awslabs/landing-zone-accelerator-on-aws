@@ -6,6 +6,10 @@ enable: true
 organizationalUnits:
   - name: Security
   - name: Infrastructure
+  - name: GovCloud
+  - name: SecureWorkloads
+  - name: Suspended
+    ignore: true
 quarantineNewAccounts:
   enable: true
   scpPolicyName: Quarantine
@@ -18,6 +22,7 @@ serviceControlPolicies:
     deploymentTargets:
       organizationalUnits:
         - Infrastructure
+        - Security
   - name: AcceleratorGuardrails2
     description: >
       Accelerator GuardRails 2
@@ -26,6 +31,7 @@ serviceControlPolicies:
     deploymentTargets:
       organizationalUnits:
         - Infrastructure
+        - Security
   - name: Quarantine
     description: >
       This SCP is used to prevent changes to new accounts until the Accelerator
@@ -35,6 +41,15 @@ serviceControlPolicies:
     type: customerManaged
     deploymentTargets:
       organizationalUnits: []
+  - name: AllowList
+    description: >
+      This SCP uses "allow-list" strategy.
+    strategy: allow-list
+    policy: service-control-policies/allow-ec2-only.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - SecureWorkloads
 taggingPolicies:
   - name: TagPolicy
     description: Organization Tagging Policy
@@ -59,3 +74,6 @@ organizationalUnitIds:
   - name: Infrastructure
     id: ou-asdf-22222222
     arn: arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-22222222
+  - name: SecureWorkloads
+    id: ou-asdf-33333333
+    arn: arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-33333333

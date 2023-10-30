@@ -1,0 +1,156 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PropagatePortfolioAssociations Construct(PropagatePortfolioAssociations):  Snapshot Test 1`] = `
+{
+  "Resources": {
+    "CustomPropagatePortfolioAssociationsCustomResourceProviderHandler282C1D38": {
+      "DependsOn": [
+        "CustomPropagatePortfolioAssociationsCustomResourceProviderRole4C66847F",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomPropagatePortfolioAssociationsCustomResourceProviderRole4C66847F",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomPropagatePortfolioAssociationsCustomResourceProviderLogGroup44DE568D": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "Key961B73FD",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomPropagatePortfolioAssociationsCustomResourceProviderHandler282C1D38",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomPropagatePortfolioAssociationsCustomResourceProviderRole4C66847F": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "sts:AssumeRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "ServiceCatalog",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "Key961B73FD": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "PropagatePortfolioAssociationsPropagateAssociationsB8799497": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomPropagatePortfolioAssociationsCustomResourceProviderLogGroup44DE568D",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomPropagatePortfolioAssociationsCustomResourceProviderHandler282C1D38",
+            "Arn",
+          ],
+        },
+        "crossAccountRole": "AWSAccelerator-CrossAccount-ServiceCatalog-Role",
+        "partition": {
+          "Ref": "AWS::Partition",
+        },
+        "portfolioDefinition": "{"name":"","provider":"","account":"","regions":[],"portfolioAssociations":[],"products":[]}",
+        "portfolioId": "portfolioId",
+        "shareAccountIds": "222222222222,333333333333",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::PropagatePortfolioAssociations",
+      "UpdateReplacePolicy": "Delete",
+    },
+  },
+}
+`;

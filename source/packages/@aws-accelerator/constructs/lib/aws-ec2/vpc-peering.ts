@@ -66,34 +66,20 @@ export interface VpcPeeringProps {
   readonly tags?: cdk.CfnTag[];
 }
 
-export class VpcPeering extends cdk.Resource implements IVpcPeering {
-  public readonly name: string;
-  public readonly peeringId: string;
-  private roleArn?: string;
+export interface PeeringAttributes {
+  /**
+   * VPC Peering Connection ID
+   */
+  peeringId: string;
+  /**
+   * VPC Peering Connection Name
+   */
+  name: string;
+}
 
-  constructor(scope: Construct, id: string, props: VpcPeeringProps) {
-    super(scope, id);
-
-    // Set name tag
-    this.name = props.name;
-    props.tags?.push({ key: 'Name', value: this.name });
-
-    // Set role ARN
-    if (props.peerRoleName) {
-      this.roleArn = `arn:${cdk.Stack.of(this).partition}:iam::${props.peerOwnerId}:role/${props.peerRoleName}`;
-    }
-
-    const resource = new cdk.aws_ec2.CfnVPCPeeringConnection(this, 'Resource', {
-      peerOwnerId: props.peerOwnerId,
-      peerRegion: props.peerRegion,
-      peerVpcId: props.peerVpcId,
-      vpcId: props.vpcId,
-      peerRoleArn: this.roleArn,
-      tags: props.tags,
-    });
-
-    this.peeringId = resource.ref;
-  }
+abstract class VpcPeeringBase extends cdk.Resource implements IVpcPeering {
+  public abstract readonly name: string;
+  public abstract readonly peeringId: string;
 
   public addPeeringRoute(
     id: string,
@@ -153,5 +139,45 @@ export class VpcPeering extends cdk.Resource implements IVpcPeering {
       destinationPrefixListId: props.destinationPrefixListId,
       vpcPeeringConnectionId: this.peeringId,
     });
+  }
+}
+
+export class ImportedVpcPeering extends VpcPeeringBase {
+  public readonly name: string;
+  public readonly peeringId: string;
+  constructor(scope: Construct, id: string, attrs: PeeringAttributes) {
+    super(scope, id);
+    this.name = attrs.name;
+    this.peeringId = attrs.peeringId;
+  }
+}
+
+export class VpcPeering extends VpcPeeringBase {
+  public readonly name: string;
+  public readonly peeringId: string;
+
+  constructor(scope: Construct, id: string, props: VpcPeeringProps) {
+    super(scope, id);
+    // Set name tag
+    this.name = props.name;
+    props.tags?.push({ key: 'Name', value: this.name });
+
+    const peerRoleArn =
+      props.peerRoleName && `arn:${cdk.Stack.of(this).partition}:iam::${props.peerOwnerId}:role/${props.peerRoleName}`;
+
+    const resource = new cdk.aws_ec2.CfnVPCPeeringConnection(this, 'Resource', {
+      peerOwnerId: props.peerOwnerId,
+      peerRegion: props.peerRegion,
+      peerVpcId: props.peerVpcId,
+      vpcId: props.vpcId,
+      peerRoleArn,
+      tags: props.tags,
+    });
+
+    this.peeringId = resource.ref;
+  }
+
+  public static fromPeeringAttributes(scope: Construct, id: string, attrs: PeeringAttributes) {
+    return new ImportedVpcPeering(scope, id, attrs);
   }
 }

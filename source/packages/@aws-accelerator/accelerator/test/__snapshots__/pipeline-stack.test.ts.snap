@@ -1,49 +1,49 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
-Object {
-  "Parameters": Object {
-    "SsmParameterValueacceleratorawsacceleratorinstalleraccesslogsbucketnameC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+{
+  "Parameters": {
+    "SsmParameterValueacceleratorawsacceleratorinstalleraccesslogsbucketnameC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/aws-accelerator/installer-access-logs-bucket-name",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/aws-accelerator/installer/kms/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
   },
-  "Resources": Object {
-    "AdminCdkToolkitRole292E163A": Object {
-      "Metadata": Object {
-        "cdk_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
+  "Resources": {
+    "AdminCdkToolkitRole292E163A": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
               "id": "AwsSolutions-IAM4",
               "reason": "Managed policies required for IAM role.",
             },
           ],
         },
       },
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "codebuild.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
-            "Fn::Join": Array [
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "arn:",
-                Object {
+                {
                   "Ref": "AWS::Partition",
                 },
                 ":iam::aws:policy/AdministratorAccess",
@@ -51,72 +51,57 @@ Object {
             ],
           },
         ],
+        "MaxSessionDuration": 14400,
       },
       "Type": "AWS::IAM::Role",
     },
-    "AdminCdkToolkitRoleDefaultPolicy2A6A4DB7": Object {
-      "Metadata": Object {
-        "cdk_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
+    "AdminCdkToolkitRoleDefaultPolicy2A6A4DB7": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
               "id": "AwsSolutions-IAM5",
               "reason": "IAM role requires wildcard permissions.",
             },
           ],
         },
       },
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
                 "logs:CreateLogGroup",
                 "logs:CreateLogStream",
                 "logs:PutLogEvents",
               ],
               "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::Join": Array [
+              "Resource": [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
-                      ":logs:",
-                      Object {
-                        "Ref": "AWS::Region",
-                      },
-                      ":",
-                      Object {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":log-group:/aws/codebuild/",
-                      Object {
+                      ":logs:us-east-1:000000000000:log-group:/aws/codebuild/",
+                      {
                         "Ref": "PipelineToolkitProjectBCBD6910",
                       },
                     ],
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
-                      ":logs:",
-                      Object {
-                        "Ref": "AWS::Region",
-                      },
-                      ":",
-                      Object {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":log-group:/aws/codebuild/",
-                      Object {
+                      ":logs:us-east-1:000000000000:log-group:/aws/codebuild/",
+                      {
                         "Ref": "PipelineToolkitProjectBCBD6910",
                       },
                       ":*",
@@ -125,8 +110,8 @@ Object {
                 },
               ],
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "codebuild:CreateReportGroup",
                 "codebuild:CreateReport",
                 "codebuild:UpdateReport",
@@ -134,24 +119,16 @@ Object {
                 "codebuild:BatchPutCodeCoverages",
               ],
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::Join": Array [
+              "Resource": {
+                "Fn::Join": [
                   "",
-                  Array [
+                  [
                     "arn:",
-                    Object {
+                    {
                       "Ref": "AWS::Partition",
                     },
-                    ":codebuild:",
-                    Object {
-                      "Ref": "AWS::Region",
-                    },
-                    ":",
-                    Object {
-                      "Ref": "AWS::AccountId",
-                    },
-                    ":report-group/",
-                    Object {
+                    ":codebuild:us-east-1:000000000000:report-group/",
+                    {
                       "Ref": "PipelineToolkitProjectBCBD6910",
                     },
                     "-*",
@@ -159,38 +136,38 @@ Object {
                 ],
               },
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:Decrypt",
                 "kms:Encrypt",
                 "kms:ReEncrypt*",
                 "kms:GenerateDataKey*",
               ],
               "Effect": "Allow",
-              "Resource": Object {
+              "Resource": {
                 "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
               },
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "s3:GetObject*",
                 "s3:GetBucket*",
                 "s3:List*",
               ],
               "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "PipelineSecureBucketB3EEB324",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "PipelineSecureBucketB3EEB324",
                           "Arn",
                         ],
@@ -201,13 +178,13 @@ Object {
                 },
               ],
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:Decrypt",
                 "kms:DescribeKey",
               ],
               "Effect": "Allow",
-              "Resource": Object {
+              "Resource": {
                 "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
               },
             },
@@ -215,80 +192,88 @@ Object {
           "Version": "2012-10-17",
         },
         "PolicyName": "AdminCdkToolkitRoleDefaultPolicy2A6A4DB7",
-        "Roles": Array [
-          Object {
+        "Roles": [
+          {
             "Ref": "AdminCdkToolkitRole292E163A",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "Pipeline8E4BFAC9": Object {
-      "DependsOn": Array [
+    "Pipeline8E4BFAC9": {
+      "DependsOn": [
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
         "PipelinePipelineRoleDefaultPolicy7D262A22",
         "PipelinePipelineRole6D983AD5",
       ],
-      "Properties": Object {
-        "ArtifactStore": Object {
-          "EncryptionKey": Object {
-            "Id": Object {
+      "Properties": {
+        "ArtifactStore": {
+          "EncryptionKey": {
+            "Id": {
               "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
             },
             "Type": "KMS",
           },
-          "Location": Object {
+          "Location": {
             "Ref": "PipelineSecureBucketB3EEB324",
           },
           "Type": "S3",
         },
         "Name": "aws-accelerator-pipeline",
-        "RoleArn": Object {
-          "Fn::GetAtt": Array [
+        "RoleArn": {
+          "Fn::GetAtt": [
             "PipelinePipelineRole6D983AD5",
             "Arn",
           ],
         },
-        "Stages": Array [
-          Object {
-            "Actions": Array [
-              Object {
-                "ActionTypeId": Object {
+        "Stages": [
+          {
+            "Actions": [
+              {
+                "ActionTypeId": {
                   "Category": "Source",
                   "Owner": "AWS",
                   "Provider": "CodeCommit",
                   "Version": "1",
                 },
-                "Configuration": Object {
+                "Configuration": {
                   "BranchName": "main",
                   "PollForSourceChanges": false,
                   "RepositoryName": "accelerator-source",
                 },
                 "Name": "Source",
-                "OutputArtifacts": Array [
-                  Object {
+                "OutputArtifacts": [
+                  {
                     "Name": "Source",
                   },
                 ],
-                "RoleArn": Object {
-                  "Fn::GetAtt": Array [
+                "RoleArn": {
+                  "Fn::GetAtt": [
                     "PipelineSourceCodePipelineActionRoleBBC58FD5",
                     "Arn",
                   ],
                 },
                 "RunOrder": 1,
               },
-              Object {
-                "ActionTypeId": Object {
+              {
+                "ActionTypeId": {
                   "Category": "Source",
                   "Owner": "AWS",
                   "Provider": "CodeCommit",
                   "Version": "1",
                 },
-                "Configuration": Object {
+                "Configuration": {
                   "BranchName": "main",
                   "PollForSourceChanges": false,
-                  "RepositoryName": Object {
-                    "Fn::GetAtt": Array [
+                  "RepositoryName": {
+                    "Fn::GetAtt": [
                       "PipelineConfigRepositoryE5225086",
                       "Name",
                     ],
@@ -296,13 +281,13 @@ Object {
                 },
                 "Name": "Configuration",
                 "Namespace": "Config-Vars",
-                "OutputArtifacts": Array [
-                  Object {
+                "OutputArtifacts": [
+                  {
                     "Name": "Config",
                   },
                 ],
-                "RoleArn": Object {
-                  "Fn::GetAtt": Array [
+                "RoleArn": {
+                  "Fn::GetAtt": [
                     "PipelineSourceConfigurationCodePipelineActionRoleA2807B19",
                     "Arn",
                   ],
@@ -312,37 +297,37 @@ Object {
             ],
             "Name": "Source",
           },
-          Object {
-            "Actions": Array [
-              Object {
-                "ActionTypeId": Object {
+          {
+            "Actions": [
+              {
+                "ActionTypeId": {
                   "Category": "Build",
                   "Owner": "AWS",
                   "Provider": "CodeBuild",
                   "Version": "1",
                 },
-                "Configuration": Object {
+                "Configuration": {
                   "PrimarySource": "Source",
-                  "ProjectName": Object {
+                  "ProjectName": {
                     "Ref": "PipelineBuildProject9D447FA8",
                   },
                 },
-                "InputArtifacts": Array [
-                  Object {
+                "InputArtifacts": [
+                  {
                     "Name": "Source",
                   },
-                  Object {
+                  {
                     "Name": "Config",
                   },
                 ],
                 "Name": "Build",
-                "OutputArtifacts": Array [
-                  Object {
+                "OutputArtifacts": [
+                  {
                     "Name": "Build",
                   },
                 ],
-                "RoleArn": Object {
-                  "Fn::GetAtt": Array [
+                "RoleArn": {
+                  "Fn::GetAtt": [
                     "PipelinePipelineRole6D983AD5",
                     "Arn",
                   ],
@@ -352,33 +337,33 @@ Object {
             ],
             "Name": "Build",
           },
-          Object {
-            "Actions": Array [
-              Object {
-                "ActionTypeId": Object {
+          {
+            "Actions": [
+              {
+                "ActionTypeId": {
                   "Category": "Build",
                   "Owner": "AWS",
                   "Provider": "CodeBuild",
                   "Version": "1",
                 },
-                "Configuration": Object {
-                  "EnvironmentVariables": "[{\\"name\\":\\"CDK_OPTIONS\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"deploy --stage prepare\\"},{\\"name\\":\\"CONFIG_COMMIT_ID\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"#{Config-Vars.CommitId}\\"},{\\"name\\":\\"ACCELERATOR_STAGE\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"prepare\\"}]",
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage prepare"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"prepare"}]",
                   "PrimarySource": "Build",
-                  "ProjectName": Object {
+                  "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
                   },
                 },
-                "InputArtifacts": Array [
-                  Object {
+                "InputArtifacts": [
+                  {
                     "Name": "Build",
                   },
-                  Object {
+                  {
                     "Name": "Config",
                   },
                 ],
                 "Name": "Prepare",
-                "RoleArn": Object {
-                  "Fn::GetAtt": Array [
+                "RoleArn": {
+                  "Fn::GetAtt": [
                     "PipelinePipelineRole6D983AD5",
                     "Arn",
                   ],
@@ -388,33 +373,33 @@ Object {
             ],
             "Name": "Prepare",
           },
-          Object {
-            "Actions": Array [
-              Object {
-                "ActionTypeId": Object {
+          {
+            "Actions": [
+              {
+                "ActionTypeId": {
                   "Category": "Build",
                   "Owner": "AWS",
                   "Provider": "CodeBuild",
                   "Version": "1",
                 },
-                "Configuration": Object {
-                  "EnvironmentVariables": "[{\\"name\\":\\"CDK_OPTIONS\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"deploy --stage accounts\\"},{\\"name\\":\\"CONFIG_COMMIT_ID\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"#{Config-Vars.CommitId}\\"},{\\"name\\":\\"ACCELERATOR_STAGE\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"accounts\\"}]",
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage accounts"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"accounts"}]",
                   "PrimarySource": "Build",
-                  "ProjectName": Object {
+                  "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
                   },
                 },
-                "InputArtifacts": Array [
-                  Object {
+                "InputArtifacts": [
+                  {
                     "Name": "Build",
                   },
-                  Object {
+                  {
                     "Name": "Config",
                   },
                 ],
                 "Name": "Accounts",
-                "RoleArn": Object {
-                  "Fn::GetAtt": Array [
+                "RoleArn": {
+                  "Fn::GetAtt": [
                     "PipelinePipelineRole6D983AD5",
                     "Arn",
                   ],
@@ -424,33 +409,33 @@ Object {
             ],
             "Name": "Accounts",
           },
-          Object {
-            "Actions": Array [
-              Object {
-                "ActionTypeId": Object {
+          {
+            "Actions": [
+              {
+                "ActionTypeId": {
                   "Category": "Build",
                   "Owner": "AWS",
                   "Provider": "CodeBuild",
                   "Version": "1",
                 },
-                "Configuration": Object {
-                  "EnvironmentVariables": "[{\\"name\\":\\"CDK_OPTIONS\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"bootstrap\\"},{\\"name\\":\\"CONFIG_COMMIT_ID\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"#{Config-Vars.CommitId}\\"}]",
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"bootstrap"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"}]",
                   "PrimarySource": "Build",
-                  "ProjectName": Object {
+                  "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
                   },
                 },
-                "InputArtifacts": Array [
-                  Object {
+                "InputArtifacts": [
+                  {
                     "Name": "Build",
                   },
-                  Object {
+                  {
                     "Name": "Config",
                   },
                 ],
                 "Name": "Bootstrap",
-                "RoleArn": Object {
-                  "Fn::GetAtt": Array [
+                "RoleArn": {
+                  "Fn::GetAtt": [
                     "PipelinePipelineRole6D983AD5",
                     "Arn",
                   ],
@@ -460,55 +445,55 @@ Object {
             ],
             "Name": "Bootstrap",
           },
-          Object {
-            "Actions": Array [
-              Object {
-                "ActionTypeId": Object {
+          {
+            "Actions": [
+              {
+                "ActionTypeId": {
                   "Category": "Build",
                   "Owner": "AWS",
                   "Provider": "CodeBuild",
                   "Version": "1",
                 },
-                "Configuration": Object {
-                  "EnvironmentVariables": "[{\\"name\\":\\"CDK_OPTIONS\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"diff\\"},{\\"name\\":\\"CONFIG_COMMIT_ID\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"#{Config-Vars.CommitId}\\"}]",
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"diff"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"}]",
                   "PrimarySource": "Build",
-                  "ProjectName": Object {
+                  "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
                   },
                 },
-                "InputArtifacts": Array [
-                  Object {
+                "InputArtifacts": [
+                  {
                     "Name": "Build",
                   },
-                  Object {
+                  {
                     "Name": "Config",
                   },
                 ],
                 "Name": "Diff",
-                "RoleArn": Object {
-                  "Fn::GetAtt": Array [
+                "RoleArn": {
+                  "Fn::GetAtt": [
                     "PipelinePipelineRole6D983AD5",
                     "Arn",
                   ],
                 },
                 "RunOrder": 1,
               },
-              Object {
-                "ActionTypeId": Object {
+              {
+                "ActionTypeId": {
                   "Category": "Approval",
                   "Owner": "AWS",
                   "Provider": "Manual",
                   "Version": "1",
                 },
-                "Configuration": Object {
+                "Configuration": {
                   "CustomData": "See previous stage (Diff) for changes.",
-                  "NotificationArn": Object {
+                  "NotificationArn": {
                     "Ref": "PipelineManualApprovalActionTopicB55612D2",
                   },
                 },
                 "Name": "Approve",
-                "RoleArn": Object {
-                  "Fn::GetAtt": Array [
+                "RoleArn": {
+                  "Fn::GetAtt": [
                     "PipelineReviewApproveCodePipelineActionRole3122ED42",
                     "Arn",
                   ],
@@ -518,64 +503,64 @@ Object {
             ],
             "Name": "Review",
           },
-          Object {
-            "Actions": Array [
-              Object {
-                "ActionTypeId": Object {
+          {
+            "Actions": [
+              {
+                "ActionTypeId": {
                   "Category": "Build",
                   "Owner": "AWS",
                   "Provider": "CodeBuild",
                   "Version": "1",
                 },
-                "Configuration": Object {
-                  "EnvironmentVariables": "[{\\"name\\":\\"CDK_OPTIONS\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"deploy --stage key\\"},{\\"name\\":\\"CONFIG_COMMIT_ID\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"#{Config-Vars.CommitId}\\"},{\\"name\\":\\"ACCELERATOR_STAGE\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"key\\"}]",
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage key"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"key"}]",
                   "PrimarySource": "Build",
-                  "ProjectName": Object {
+                  "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
                   },
                 },
-                "InputArtifacts": Array [
-                  Object {
+                "InputArtifacts": [
+                  {
                     "Name": "Build",
                   },
-                  Object {
+                  {
                     "Name": "Config",
                   },
                 ],
                 "Name": "Key",
-                "RoleArn": Object {
-                  "Fn::GetAtt": Array [
+                "RoleArn": {
+                  "Fn::GetAtt": [
                     "PipelinePipelineRole6D983AD5",
                     "Arn",
                   ],
                 },
                 "RunOrder": 1,
               },
-              Object {
-                "ActionTypeId": Object {
+              {
+                "ActionTypeId": {
                   "Category": "Build",
                   "Owner": "AWS",
                   "Provider": "CodeBuild",
                   "Version": "1",
                 },
-                "Configuration": Object {
-                  "EnvironmentVariables": "[{\\"name\\":\\"CDK_OPTIONS\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"deploy --stage logging\\"},{\\"name\\":\\"CONFIG_COMMIT_ID\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"#{Config-Vars.CommitId}\\"},{\\"name\\":\\"ACCELERATOR_STAGE\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"logging\\"}]",
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage logging"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"logging"}]",
                   "PrimarySource": "Build",
-                  "ProjectName": Object {
+                  "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
                   },
                 },
-                "InputArtifacts": Array [
-                  Object {
+                "InputArtifacts": [
+                  {
                     "Name": "Build",
                   },
-                  Object {
+                  {
                     "Name": "Config",
                   },
                 ],
                 "Name": "Logging",
-                "RoleArn": Object {
-                  "Fn::GetAtt": Array [
+                "RoleArn": {
+                  "Fn::GetAtt": [
                     "PipelinePipelineRole6D983AD5",
                     "Arn",
                   ],
@@ -585,33 +570,33 @@ Object {
             ],
             "Name": "Logging",
           },
-          Object {
-            "Actions": Array [
-              Object {
-                "ActionTypeId": Object {
+          {
+            "Actions": [
+              {
+                "ActionTypeId": {
                   "Category": "Build",
                   "Owner": "AWS",
                   "Provider": "CodeBuild",
                   "Version": "1",
                 },
-                "Configuration": Object {
-                  "EnvironmentVariables": "[{\\"name\\":\\"CDK_OPTIONS\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"deploy --stage organizations\\"},{\\"name\\":\\"CONFIG_COMMIT_ID\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"#{Config-Vars.CommitId}\\"},{\\"name\\":\\"ACCELERATOR_STAGE\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"organizations\\"}]",
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage organizations"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"organizations"}]",
                   "PrimarySource": "Build",
-                  "ProjectName": Object {
+                  "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
                   },
                 },
-                "InputArtifacts": Array [
-                  Object {
+                "InputArtifacts": [
+                  {
                     "Name": "Build",
                   },
-                  Object {
+                  {
                     "Name": "Config",
                   },
                 ],
                 "Name": "Organizations",
-                "RoleArn": Object {
-                  "Fn::GetAtt": Array [
+                "RoleArn": {
+                  "Fn::GetAtt": [
                     "PipelinePipelineRole6D983AD5",
                     "Arn",
                   ],
@@ -621,33 +606,33 @@ Object {
             ],
             "Name": "Organization",
           },
-          Object {
-            "Actions": Array [
-              Object {
-                "ActionTypeId": Object {
+          {
+            "Actions": [
+              {
+                "ActionTypeId": {
                   "Category": "Build",
                   "Owner": "AWS",
                   "Provider": "CodeBuild",
                   "Version": "1",
                 },
-                "Configuration": Object {
-                  "EnvironmentVariables": "[{\\"name\\":\\"CDK_OPTIONS\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"deploy --stage security-audit\\"},{\\"name\\":\\"CONFIG_COMMIT_ID\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"#{Config-Vars.CommitId}\\"},{\\"name\\":\\"ACCELERATOR_STAGE\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"security-audit\\"}]",
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage security-audit"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"security-audit"}]",
                   "PrimarySource": "Build",
-                  "ProjectName": Object {
+                  "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
                   },
                 },
-                "InputArtifacts": Array [
-                  Object {
+                "InputArtifacts": [
+                  {
                     "Name": "Build",
                   },
-                  Object {
+                  {
                     "Name": "Config",
                   },
                 ],
                 "Name": "SecurityAudit",
-                "RoleArn": Object {
-                  "Fn::GetAtt": Array [
+                "RoleArn": {
+                  "Fn::GetAtt": [
                     "PipelinePipelineRole6D983AD5",
                     "Arn",
                   ],
@@ -657,250 +642,250 @@ Object {
             ],
             "Name": "SecurityAudit",
           },
-          Object {
-            "Actions": Array [
-              Object {
-                "ActionTypeId": Object {
+          {
+            "Actions": [
+              {
+                "ActionTypeId": {
                   "Category": "Build",
                   "Owner": "AWS",
                   "Provider": "CodeBuild",
                   "Version": "1",
                 },
-                "Configuration": Object {
-                  "EnvironmentVariables": "[{\\"name\\":\\"CDK_OPTIONS\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"deploy --stage network-prep\\"},{\\"name\\":\\"CONFIG_COMMIT_ID\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"#{Config-Vars.CommitId}\\"},{\\"name\\":\\"ACCELERATOR_STAGE\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"network-prep\\"}]",
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage network-prep"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"network-prep"}]",
                   "PrimarySource": "Build",
-                  "ProjectName": Object {
+                  "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
                   },
                 },
-                "InputArtifacts": Array [
-                  Object {
+                "InputArtifacts": [
+                  {
                     "Name": "Build",
                   },
-                  Object {
+                  {
                     "Name": "Config",
                   },
                 ],
                 "Name": "Network_Prepare",
-                "RoleArn": Object {
-                  "Fn::GetAtt": Array [
+                "RoleArn": {
+                  "Fn::GetAtt": [
                     "PipelinePipelineRole6D983AD5",
                     "Arn",
                   ],
                 },
                 "RunOrder": 1,
               },
-              Object {
-                "ActionTypeId": Object {
+              {
+                "ActionTypeId": {
                   "Category": "Build",
                   "Owner": "AWS",
                   "Provider": "CodeBuild",
                   "Version": "1",
                 },
-                "Configuration": Object {
-                  "EnvironmentVariables": "[{\\"name\\":\\"CDK_OPTIONS\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"deploy --stage security\\"},{\\"name\\":\\"CONFIG_COMMIT_ID\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"#{Config-Vars.CommitId}\\"},{\\"name\\":\\"ACCELERATOR_STAGE\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"security\\"}]",
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage security"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"security"}]",
                   "PrimarySource": "Build",
-                  "ProjectName": Object {
+                  "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
                   },
                 },
-                "InputArtifacts": Array [
-                  Object {
+                "InputArtifacts": [
+                  {
                     "Name": "Build",
                   },
-                  Object {
+                  {
                     "Name": "Config",
                   },
                 ],
                 "Name": "Security",
-                "RoleArn": Object {
-                  "Fn::GetAtt": Array [
+                "RoleArn": {
+                  "Fn::GetAtt": [
                     "PipelinePipelineRole6D983AD5",
                     "Arn",
                   ],
                 },
                 "RunOrder": 1,
               },
-              Object {
-                "ActionTypeId": Object {
+              {
+                "ActionTypeId": {
                   "Category": "Build",
                   "Owner": "AWS",
                   "Provider": "CodeBuild",
                   "Version": "1",
                 },
-                "Configuration": Object {
-                  "EnvironmentVariables": "[{\\"name\\":\\"CDK_OPTIONS\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"deploy --stage operations\\"},{\\"name\\":\\"CONFIG_COMMIT_ID\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"#{Config-Vars.CommitId}\\"},{\\"name\\":\\"ACCELERATOR_STAGE\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"operations\\"}]",
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage operations"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"operations"}]",
                   "PrimarySource": "Build",
-                  "ProjectName": Object {
+                  "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
                   },
                 },
-                "InputArtifacts": Array [
-                  Object {
+                "InputArtifacts": [
+                  {
                     "Name": "Build",
                   },
-                  Object {
+                  {
                     "Name": "Config",
                   },
                 ],
                 "Name": "Operations",
-                "RoleArn": Object {
-                  "Fn::GetAtt": Array [
+                "RoleArn": {
+                  "Fn::GetAtt": [
                     "PipelinePipelineRole6D983AD5",
                     "Arn",
                   ],
                 },
                 "RunOrder": 1,
               },
-              Object {
-                "ActionTypeId": Object {
+              {
+                "ActionTypeId": {
                   "Category": "Build",
                   "Owner": "AWS",
                   "Provider": "CodeBuild",
                   "Version": "1",
                 },
-                "Configuration": Object {
-                  "EnvironmentVariables": "[{\\"name\\":\\"CDK_OPTIONS\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"deploy --stage network-vpc\\"},{\\"name\\":\\"CONFIG_COMMIT_ID\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"#{Config-Vars.CommitId}\\"},{\\"name\\":\\"ACCELERATOR_STAGE\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"network-vpc\\"}]",
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage network-vpc"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"network-vpc"}]",
                   "PrimarySource": "Build",
-                  "ProjectName": Object {
+                  "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
                   },
                 },
-                "InputArtifacts": Array [
-                  Object {
+                "InputArtifacts": [
+                  {
                     "Name": "Build",
                   },
-                  Object {
+                  {
                     "Name": "Config",
                   },
                 ],
                 "Name": "Network_VPCs",
-                "RoleArn": Object {
-                  "Fn::GetAtt": Array [
+                "RoleArn": {
+                  "Fn::GetAtt": [
                     "PipelinePipelineRole6D983AD5",
                     "Arn",
                   ],
                 },
                 "RunOrder": 2,
               },
-              Object {
-                "ActionTypeId": Object {
+              {
+                "ActionTypeId": {
                   "Category": "Build",
                   "Owner": "AWS",
                   "Provider": "CodeBuild",
                   "Version": "1",
                 },
-                "Configuration": Object {
-                  "EnvironmentVariables": "[{\\"name\\":\\"CDK_OPTIONS\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"deploy --stage security-resources\\"},{\\"name\\":\\"CONFIG_COMMIT_ID\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"#{Config-Vars.CommitId}\\"},{\\"name\\":\\"ACCELERATOR_STAGE\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"security-resources\\"}]",
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage security-resources"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"security-resources"}]",
                   "PrimarySource": "Build",
-                  "ProjectName": Object {
+                  "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
                   },
                 },
-                "InputArtifacts": Array [
-                  Object {
+                "InputArtifacts": [
+                  {
                     "Name": "Build",
                   },
-                  Object {
+                  {
                     "Name": "Config",
                   },
                 ],
                 "Name": "Security_Resources",
-                "RoleArn": Object {
-                  "Fn::GetAtt": Array [
+                "RoleArn": {
+                  "Fn::GetAtt": [
                     "PipelinePipelineRole6D983AD5",
                     "Arn",
                   ],
                 },
                 "RunOrder": 2,
               },
-              Object {
-                "ActionTypeId": Object {
+              {
+                "ActionTypeId": {
                   "Category": "Build",
                   "Owner": "AWS",
                   "Provider": "CodeBuild",
                   "Version": "1",
                 },
-                "Configuration": Object {
-                  "EnvironmentVariables": "[{\\"name\\":\\"CDK_OPTIONS\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"deploy --stage network-associations\\"},{\\"name\\":\\"CONFIG_COMMIT_ID\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"#{Config-Vars.CommitId}\\"},{\\"name\\":\\"ACCELERATOR_STAGE\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"network-associations\\"}]",
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage network-associations"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"network-associations"}]",
                   "PrimarySource": "Build",
-                  "ProjectName": Object {
+                  "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
                   },
                 },
-                "InputArtifacts": Array [
-                  Object {
+                "InputArtifacts": [
+                  {
                     "Name": "Build",
                   },
-                  Object {
+                  {
                     "Name": "Config",
                   },
                 ],
                 "Name": "Network_Associations",
-                "RoleArn": Object {
-                  "Fn::GetAtt": Array [
+                "RoleArn": {
+                  "Fn::GetAtt": [
                     "PipelinePipelineRole6D983AD5",
                     "Arn",
                   ],
                 },
                 "RunOrder": 3,
               },
-              Object {
-                "ActionTypeId": Object {
+              {
+                "ActionTypeId": {
                   "Category": "Build",
                   "Owner": "AWS",
                   "Provider": "CodeBuild",
                   "Version": "1",
                 },
-                "Configuration": Object {
-                  "EnvironmentVariables": "[{\\"name\\":\\"CDK_OPTIONS\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"deploy --stage customizations\\"},{\\"name\\":\\"CONFIG_COMMIT_ID\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"#{Config-Vars.CommitId}\\"},{\\"name\\":\\"ACCELERATOR_STAGE\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"customizations\\"}]",
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage customizations"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"customizations"}]",
                   "PrimarySource": "Build",
-                  "ProjectName": Object {
+                  "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
                   },
                 },
-                "InputArtifacts": Array [
-                  Object {
+                "InputArtifacts": [
+                  {
                     "Name": "Build",
                   },
-                  Object {
+                  {
                     "Name": "Config",
                   },
                 ],
                 "Name": "Customizations",
-                "RoleArn": Object {
-                  "Fn::GetAtt": Array [
+                "RoleArn": {
+                  "Fn::GetAtt": [
                     "PipelinePipelineRole6D983AD5",
                     "Arn",
                   ],
                 },
                 "RunOrder": 4,
               },
-              Object {
-                "ActionTypeId": Object {
+              {
+                "ActionTypeId": {
                   "Category": "Build",
                   "Owner": "AWS",
                   "Provider": "CodeBuild",
                   "Version": "1",
                 },
-                "Configuration": Object {
-                  "EnvironmentVariables": "[{\\"name\\":\\"CDK_OPTIONS\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"deploy --stage finalize\\"},{\\"name\\":\\"CONFIG_COMMIT_ID\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"#{Config-Vars.CommitId}\\"},{\\"name\\":\\"ACCELERATOR_STAGE\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"finalize\\"}]",
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage finalize"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"finalize"}]",
                   "PrimarySource": "Build",
-                  "ProjectName": Object {
+                  "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
                   },
                 },
-                "InputArtifacts": Array [
-                  Object {
+                "InputArtifacts": [
+                  {
                     "Name": "Build",
                   },
-                  Object {
+                  {
                     "Name": "Config",
                   },
                 ],
                 "Name": "Finalize",
-                "RoleArn": Object {
-                  "Fn::GetAtt": Array [
+                "RoleArn": {
+                  "Fn::GetAtt": [
                     "PipelinePipelineRole6D983AD5",
                     "Arn",
                   ],
@@ -914,85 +899,524 @@ Object {
       },
       "Type": "AWS::CodePipeline::Pipeline",
     },
-    "PipelineBuildProject9D447FA8": Object {
-      "Metadata": Object {
-        "cdk_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
+    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974": {
+      "DependsOn": [
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-000000000000-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Custom resource provider to create service linked role",
+        "Handler": "index.handler",
+        "KmsKeyArn": {
+          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "MemorySize": 256,
+        "Role": {
+          "Fn::GetAtt": [
+            "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 7,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "CodeStar Notification SLR needs managed policies.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "iam:CreateServiceLinkedRole",
+                "iam:GetRole",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
+        "Roles": [
+          {
+            "Ref": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0": {
+      "DependsOn": [
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-000000000000-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (PipelineStack/Pipeline/AWSServiceRoleForCodeStarNotifications/CreateServiceLinkedRoleProvider)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "CodeStar Notification SLR needs managed policies.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
+        "Roles": [
+          {
+            "Ref": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
+            "Arn",
+          ],
+        },
+        "description": "Allows AWS CodeStar Notifications to access Amazon CloudWatch Events on your behalf",
+        "roleName": "AWSServiceRoleForCodeStarNotifications",
+        "serviceName": "codestar-notifications.amazonaws.com",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::CreateServiceLinkedRole",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "PipelineAcceleratorFailedStatusTopic614002B3": {
+      "Properties": {
+        "DisplayName": "aws-accelerator-pipeline-failed-status-topic",
+        "KmsMasterKeyId": {
+          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TopicName": "aws-accelerator-pipeline-failed-status-topic",
+      },
+      "Type": "AWS::SNS::Topic",
+    },
+    "PipelineAcceleratorFailedStatusTopicPolicy903B57F7": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "codestar-notifications.amazonaws.com",
+              },
+              "Resource": {
+                "Ref": "PipelineAcceleratorFailedStatusTopic614002B3",
+              },
+              "Sid": "0",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Topics": [
+          {
+            "Ref": "PipelineAcceleratorFailedStatusTopic614002B3",
+          },
+        ],
+      },
+      "Type": "AWS::SNS::TopicPolicy",
+    },
+    "PipelineAcceleratorPipelineFailureAlarm479BDCEA": {
+      "Properties": {
+        "AlarmDescription": "AWS Accelerator pipeline failure alarm, created by accelerator",
+        "AlarmName": "aws-accelerator-pipeline-failed-alarm",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "DatapointsToAlarm": 1,
+        "Dimensions": [
+          {
+            "Name": "TopicName",
+            "Value": {
+              "Fn::GetAtt": [
+                "PipelineAcceleratorFailedStatusTopic614002B3",
+                "TopicName",
+              ],
+            },
+          },
+        ],
+        "EvaluationPeriods": 1,
+        "MetricName": "NumberOfMessagesPublished",
+        "Namespace": "AWS/SNS",
+        "Period": 300,
+        "Statistic": "Sum",
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "PipelineAcceleratorPipelineFailureNotification5BE0EB21": {
+      "DependsOn": [
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
+      ],
+      "Properties": {
+        "DetailType": "FULL",
+        "EventTypeIds": [
+          "codepipeline-pipeline-pipeline-execution-failed",
+        ],
+        "Name": "elineStackPipelineAcceleratorPipelineFailureNotificationDB4C2A96",
+        "Resource": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":codepipeline:us-east-1:000000000000:",
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+          ],
+        },
+        "Targets": [
+          {
+            "TargetAddress": {
+              "Ref": "PipelineAcceleratorFailedStatusTopic614002B3",
+            },
+            "TargetType": "SNS",
+          },
+        ],
+      },
+      "Type": "AWS::CodeStarNotifications::NotificationRule",
+    },
+    "PipelineAcceleratorPipelineStatusNotification0FCF4387": {
+      "DependsOn": [
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
+      ],
+      "Properties": {
+        "DetailType": "FULL",
+        "EventTypeIds": [
+          "codepipeline-pipeline-manual-approval-failed",
+          "codepipeline-pipeline-manual-approval-needed",
+          "codepipeline-pipeline-manual-approval-succeeded",
+          "codepipeline-pipeline-pipeline-execution-canceled",
+          "codepipeline-pipeline-pipeline-execution-failed",
+          "codepipeline-pipeline-pipeline-execution-resumed",
+          "codepipeline-pipeline-pipeline-execution-started",
+          "codepipeline-pipeline-pipeline-execution-succeeded",
+          "codepipeline-pipeline-pipeline-execution-superseded",
+        ],
+        "Name": "pelineStackPipelineAcceleratorPipelineStatusNotification753A71B4",
+        "Resource": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":codepipeline:us-east-1:000000000000:",
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+          ],
+        },
+        "Targets": [
+          {
+            "TargetAddress": {
+              "Ref": "PipelineAcceleratorStatusTopic2BD5793F",
+            },
+            "TargetType": "SNS",
+          },
+        ],
+      },
+      "Type": "AWS::CodeStarNotifications::NotificationRule",
+    },
+    "PipelineAcceleratorStatusTopic2BD5793F": {
+      "Properties": {
+        "DisplayName": "aws-accelerator-pipeline-status-topic",
+        "KmsMasterKeyId": {
+          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TopicName": "aws-accelerator-pipeline-status-topic",
+      },
+      "Type": "AWS::SNS::Topic",
+    },
+    "PipelineAcceleratorStatusTopicPolicy30BCED97": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "codestar-notifications.amazonaws.com",
+              },
+              "Resource": {
+                "Ref": "PipelineAcceleratorStatusTopic2BD5793F",
+              },
+              "Sid": "0",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Topics": [
+          {
+            "Ref": "PipelineAcceleratorStatusTopic2BD5793F",
+          },
+        ],
+      },
+      "Type": "AWS::SNS::TopicPolicy",
+    },
+    "PipelineBuildProject9D447FA8": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
               "id": "AwsSolutions-CB3",
               "reason": "Project requires access to the Docker daemon.",
             },
           ],
         },
       },
-      "Properties": Object {
-        "Artifacts": Object {
+      "Properties": {
+        "Artifacts": {
           "Type": "CODEPIPELINE",
         },
-        "Cache": Object {
-          "Modes": Array [
+        "Cache": {
+          "Modes": [
             "LOCAL_SOURCE_CACHE",
           ],
           "Type": "LOCAL",
         },
-        "EncryptionKey": Object {
+        "EncryptionKey": {
           "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
-        "Environment": Object {
+        "Environment": {
           "ComputeType": "BUILD_GENERAL1_MEDIUM",
-          "EnvironmentVariables": Array [
-            Object {
+          "EnvironmentVariables": [
+            {
               "Name": "NODE_OPTIONS",
               "Type": "PLAINTEXT",
               "Value": "--max_old_space_size=8192",
             },
           ],
-          "Image": "aws/codebuild/standard:5.0",
+          "Image": "aws/codebuild/standard:6.0",
           "ImagePullCredentialsType": "CODEBUILD",
-          "PrivilegedMode": true,
+          "PrivilegedMode": false,
           "Type": "LINUX_CONTAINER",
         },
         "Name": "aws-accelerator-build-project",
-        "ServiceRole": Object {
-          "Fn::GetAtt": Array [
+        "ServiceRole": {
+          "Fn::GetAtt": [
             "PipelineBuildRoleDC686070",
             "Arn",
           ],
         },
-        "Source": Object {
-          "BuildSpec": Object {
-            "Fn::Join": Array [
+        "Source": {
+          "BuildSpec": {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "{
-  \\"version\\": \\"0.2\\",
-  \\"phases\\": {
-    \\"install\\": {
-      \\"runtime-versions\\": {
-        \\"nodejs\\": 14
+  "version": "0.2",
+  "phases": {
+    "install": {
+      "runtime-versions": {
+        "nodejs": 16
       }
     },
-    \\"build\\": {
-      \\"commands\\": [
-        \\"env\\",
-        \\"cd source\\",
-        \\"if [ \\\\\\"",
-                Object {
+    "build": {
+      "commands": [
+        "env",
+        "cd source",
+        "if [ \\"",
+                {
                   "Ref": "AWS::Partition",
                 },
-                "\\\\\\" = \\\\\\"aws-cn\\\\\\" ]; then\\\\n                  sed -i \\\\\\"s#registry.yarnpkg.com#registry.npmmirror.com#g\\\\\\" yarn.lock;\\\\n                  yarn config set registry https://registry.npmmirror.com\\\\n               fi\\",
-        \\"yarn install\\",
-        \\"yarn lerna link\\",
-        \\"yarn build\\",
-        \\"yarn validate-config $CODEBUILD_SRC_DIR_Config\\"
+                "\\" = \\"aws-cn\\" ]; then\\n                  sed -i \\"s#registry.yarnpkg.com#registry.npmmirror.com#g\\" yarn.lock;\\n                  yarn config set registry https://registry.npmmirror.com\\n               fi",
+        "yarn install",
+        "yarn build",
+        "yarn validate-config $CODEBUILD_SRC_DIR_Config"
       ]
     }
   },
-  \\"artifacts\\": {
-    \\"files\\": [
-      \\"**/*\\"
+  "artifacts": {
+    "files": [
+      "**/*"
     ],
-    \\"enable-symlinks\\": \\"yes\\"
+    "enable-symlinks": "yes"
   }
 }",
               ],
@@ -1003,86 +1427,85 @@ Object {
       },
       "Type": "AWS::CodeBuild::Project",
     },
-    "PipelineBuildRoleDC686070": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "PipelineBuildRoleDC686070": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Managed policy for External Pipeline Deployment Lookups attached.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "codebuild.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
+        "ManagedPolicyArns": [
+          {
+            "Ref": "PipelineValidateConfigPolicyDocument5A45073D",
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
-    "PipelineBuildRoleDefaultPolicy3DAB973E": Object {
-      "Metadata": Object {
-        "cdk_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
+    "PipelineBuildRoleDefaultPolicy3DAB973E": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
               "id": "AwsSolutions-IAM5",
               "reason": "IAM role requires wildcard permissions.",
             },
           ],
         },
       },
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
                 "logs:CreateLogGroup",
                 "logs:CreateLogStream",
                 "logs:PutLogEvents",
               ],
               "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::Join": Array [
+              "Resource": [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
-                      ":logs:",
-                      Object {
-                        "Ref": "AWS::Region",
-                      },
-                      ":",
-                      Object {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":log-group:/aws/codebuild/",
-                      Object {
+                      ":logs:us-east-1:000000000000:log-group:/aws/codebuild/",
+                      {
                         "Ref": "PipelineBuildProject9D447FA8",
                       },
                     ],
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
-                      ":logs:",
-                      Object {
-                        "Ref": "AWS::Region",
-                      },
-                      ":",
-                      Object {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":log-group:/aws/codebuild/",
-                      Object {
+                      ":logs:us-east-1:000000000000:log-group:/aws/codebuild/",
+                      {
                         "Ref": "PipelineBuildProject9D447FA8",
                       },
                       ":*",
@@ -1091,8 +1514,8 @@ Object {
                 },
               ],
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "codebuild:CreateReportGroup",
                 "codebuild:CreateReport",
                 "codebuild:UpdateReport",
@@ -1100,24 +1523,16 @@ Object {
                 "codebuild:BatchPutCodeCoverages",
               ],
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::Join": Array [
+              "Resource": {
+                "Fn::Join": [
                   "",
-                  Array [
+                  [
                     "arn:",
-                    Object {
+                    {
                       "Ref": "AWS::Partition",
                     },
-                    ":codebuild:",
-                    Object {
-                      "Ref": "AWS::Region",
-                    },
-                    ":",
-                    Object {
-                      "Ref": "AWS::AccountId",
-                    },
-                    ":report-group/",
-                    Object {
+                    ":codebuild:us-east-1:000000000000:report-group/",
+                    {
                       "Ref": "PipelineBuildProject9D447FA8",
                     },
                     "-*",
@@ -1125,20 +1540,20 @@ Object {
                 ],
               },
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:Decrypt",
                 "kms:Encrypt",
                 "kms:ReEncrypt*",
                 "kms:GenerateDataKey*",
               ],
               "Effect": "Allow",
-              "Resource": Object {
+              "Resource": {
                 "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
               },
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "s3:GetObject*",
                 "s3:GetBucket*",
                 "s3:List*",
@@ -1151,19 +1566,19 @@ Object {
                 "s3:Abort*",
               ],
               "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "PipelineSecureBucketB3EEB324",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "PipelineSecureBucketB3EEB324",
                           "Arn",
                         ],
@@ -1174,8 +1589,8 @@ Object {
                 },
               ],
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:Decrypt",
                 "kms:DescribeKey",
                 "kms:Encrypt",
@@ -1183,7 +1598,7 @@ Object {
                 "kms:GenerateDataKey*",
               ],
               "Effect": "Allow",
-              "Resource": Object {
+              "Resource": {
                 "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
               },
             },
@@ -1191,47 +1606,47 @@ Object {
           "Version": "2012-10-17",
         },
         "PolicyName": "PipelineBuildRoleDefaultPolicy3DAB973E",
-        "Roles": Array [
-          Object {
+        "Roles": [
+          {
             "Ref": "PipelineBuildRoleDC686070",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "PipelineConfigRepositoryE5225086": Object {
-      "Properties": Object {
-        "Code": Object {
+    "PipelineConfigRepositoryE5225086": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "Code": {
           "BranchName": "main",
-          "S3": Object {
-            "Bucket": Object {
-              "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
-            },
+          "S3": {
+            "Bucket": "cdk-hnb659fds-assets-000000000000-us-east-1",
             "Key": "REPLACED-GENERATED-NAME.zip",
           },
         },
         "RepositoryName": "aws-accelerator-config",
       },
       "Type": "AWS::CodeCommit::Repository",
+      "UpdateReplacePolicy": "Retain",
     },
-    "PipelineManualApprovalActionTopicB55612D2": Object {
-      "Properties": Object {
+    "PipelineManualApprovalActionTopicB55612D2": {
+      "Properties": {
         "DisplayName": "aws-accelerator-pipeline-review-topic",
-        "KmsMasterKeyId": Object {
+        "KmsMasterKeyId": {
           "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "TopicName": "aws-accelerator-pipeline-review-topic",
       },
       "Type": "AWS::SNS::Topic",
     },
-    "PipelinePipelineRole6D983AD5": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "PipelinePipelineRole6D983AD5": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "codepipeline.amazonaws.com",
               },
             },
@@ -1241,22 +1656,22 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "PipelinePipelineRoleDefaultPolicy7D262A22": Object {
-      "Metadata": Object {
-        "cdk_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
+    "PipelinePipelineRoleDefaultPolicy7D262A22": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
               "id": "AwsSolutions-IAM5",
               "reason": "IAM role requires wildcard permissions.",
             },
           ],
         },
       },
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
                 "s3:GetObject*",
                 "s3:GetBucket*",
                 "s3:List*",
@@ -1269,19 +1684,19 @@ Object {
                 "s3:Abort*",
               ],
               "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "PipelineSecureBucketB3EEB324",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "PipelineSecureBucketB3EEB324",
                           "Arn",
                         ],
@@ -1292,8 +1707,8 @@ Object {
                 },
               ],
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:Decrypt",
                 "kms:DescribeKey",
                 "kms:Encrypt",
@@ -1301,111 +1716,131 @@ Object {
                 "kms:GenerateDataKey*",
               ],
               "Effect": "Allow",
-              "Resource": Object {
+              "Resource": {
                 "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
               },
             },
-            Object {
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
+              "Resource": {
+                "Fn::GetAtt": [
                   "PipelineSourceCodePipelineActionRoleBBC58FD5",
                   "Arn",
                 ],
               },
             },
-            Object {
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
+              "Resource": {
+                "Fn::GetAtt": [
                   "PipelineSourceConfigurationCodePipelineActionRoleA2807B19",
                   "Arn",
                 ],
               },
             },
-            Object {
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
+              "Resource": {
+                "Fn::GetAtt": [
                   "PipelinePipelineRole6D983AD5",
                   "Arn",
                 ],
               },
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "codebuild:BatchGetBuilds",
                 "codebuild:StartBuild",
                 "codebuild:StopBuild",
               ],
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
+              "Resource": {
+                "Fn::GetAtt": [
                   "PipelineBuildProject9D447FA8",
                   "Arn",
                 ],
               },
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "codebuild:BatchGetBuilds",
                 "codebuild:StartBuild",
                 "codebuild:StopBuild",
               ],
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
+              "Resource": {
+                "Fn::GetAtt": [
                   "PipelineToolkitProjectBCBD6910",
                   "Arn",
                 ],
               },
             },
-            Object {
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
+              "Resource": {
+                "Fn::GetAtt": [
                   "PipelineReviewApproveCodePipelineActionRole3122ED42",
                   "Arn",
                 ],
+              },
+            },
+            {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "PipelineAcceleratorStatusTopic2BD5793F",
+              },
+            },
+            {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "PipelineAcceleratorFailedStatusTopic614002B3",
               },
             },
           ],
           "Version": "2012-10-17",
         },
         "PolicyName": "PipelinePipelineRoleDefaultPolicy7D262A22",
-        "Roles": Array [
-          Object {
+        "Roles": [
+          {
             "Ref": "PipelinePipelineRole6D983AD5",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "PipelineReviewApproveCodePipelineActionRole3122ED42": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "PipelineReviewApproveCodePipelineActionRole3122ED42": {
+      "DependsOn": [
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
+      ],
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
-                      ":iam::",
-                      Object {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":root",
+                      ":iam::000000000000:root",
                     ],
                   ],
                 },
@@ -1417,14 +1852,24 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "PipelineReviewApproveCodePipelineActionRoleDefaultPolicyD445B059": Object {
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "PipelineReviewApproveCodePipelineActionRoleDefaultPolicyD445B059": {
+      "DependsOn": [
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
+      ],
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
               "Action": "sns:Publish",
               "Effect": "Allow",
-              "Resource": Object {
+              "Resource": {
                 "Ref": "PipelineManualApprovalActionTopicB55612D2",
               },
             },
@@ -1432,22 +1877,22 @@ Object {
           "Version": "2012-10-17",
         },
         "PolicyName": "PipelineReviewApproveCodePipelineActionRoleDefaultPolicyD445B059",
-        "Roles": Array [
-          Object {
+        "Roles": [
+          {
             "Ref": "PipelineReviewApproveCodePipelineActionRole3122ED42",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "PipelineSecureBucketB3EEB324": Object {
+    "PipelineSecureBucketB3EEB324": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "BucketEncryption": Object {
-          "ServerSideEncryptionConfiguration": Array [
-            Object {
-              "ServerSideEncryptionByDefault": Object {
-                "KMSMasterKeyID": Object {
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "KMSMasterKeyID": {
                   "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
                 },
                 "SSEAlgorithm": "aws:kms",
@@ -1455,56 +1900,28 @@ Object {
             },
           ],
         },
-        "BucketName": Object {
-          "Fn::Join": Array [
-            "",
-            Array [
-              "aws-accelerator-pipeline-",
-              Object {
-                "Ref": "AWS::AccountId",
-              },
-              "-",
-              Object {
-                "Ref": "AWS::Region",
-              },
-            ],
-          ],
-        },
-        "LifecycleConfiguration": Object {
-          "Rules": Array [
-            Object {
-              "AbortIncompleteMultipartUpload": Object {
+        "BucketName": "aws-accelerator-pipeline-000000000000-us-east-1",
+        "LifecycleConfiguration": {
+          "Rules": [
+            {
+              "AbortIncompleteMultipartUpload": {
                 "DaysAfterInitiation": 1,
               },
               "ExpirationInDays": 1825,
               "ExpiredObjectDeleteMarker": false,
-              "Id": Object {
-                "Fn::Join": Array [
-                  "",
-                  Array [
-                    "LifecycleRuleaws-accelerator-pipeline-",
-                    Object {
-                      "Ref": "AWS::AccountId",
-                    },
-                    "-",
-                    Object {
-                      "Ref": "AWS::Region",
-                    },
-                  ],
-                ],
-              },
-              "NoncurrentVersionExpiration": Object {
+              "Id": "LifecycleRuleaws-accelerator-pipeline-000000000000-us-east-1",
+              "NoncurrentVersionExpiration": {
                 "NoncurrentDays": 1825,
               },
-              "NoncurrentVersionTransitions": Array [
-                Object {
+              "NoncurrentVersionTransitions": [
+                {
                   "StorageClass": "DEEP_ARCHIVE",
                   "TransitionInDays": 366,
                 },
               ],
               "Status": "Enabled",
-              "Transitions": Array [
-                Object {
+              "Transitions": [
+                {
                   "StorageClass": "DEEP_ARCHIVE",
                   "TransitionInDays": 365,
                 },
@@ -1512,62 +1929,62 @@ Object {
             },
           ],
         },
-        "LoggingConfiguration": Object {
-          "DestinationBucketName": Object {
+        "LoggingConfiguration": {
+          "DestinationBucketName": {
             "Ref": "SsmParameterValueacceleratorawsacceleratorinstalleraccesslogsbucketnameC96584B6F00A464EAD1953AFF4B05118Parameter",
           },
         },
-        "OwnershipControls": Object {
-          "Rules": Array [
-            Object {
+        "OwnershipControls": {
+          "Rules": [
+            {
               "ObjectOwnership": "BucketOwnerPreferred",
             },
           ],
         },
-        "PublicAccessBlockConfiguration": Object {
+        "PublicAccessBlockConfiguration": {
           "BlockPublicAcls": true,
           "BlockPublicPolicy": true,
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
-        "VersioningConfiguration": Object {
+        "VersioningConfiguration": {
           "Status": "Enabled",
         },
       },
       "Type": "AWS::S3::Bucket",
       "UpdateReplacePolicy": "Retain",
     },
-    "PipelineSecureBucketPolicy1BD98DDB": Object {
-      "Properties": Object {
-        "Bucket": Object {
+    "PipelineSecureBucketPolicy1BD98DDB": {
+      "Properties": {
+        "Bucket": {
           "Ref": "PipelineSecureBucketB3EEB324",
         },
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
+        "PolicyDocument": {
+          "Statement": [
+            {
               "Action": "s3:*",
-              "Condition": Object {
-                "Bool": Object {
+              "Condition": {
+                "Bool": {
                   "aws:SecureTransport": "false",
                 },
               },
               "Effect": "Deny",
-              "Principal": Object {
+              "Principal": {
                 "AWS": "*",
               },
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "PipelineSecureBucketB3EEB324",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "PipelineSecureBucketB3EEB324",
                           "Arn",
                         ],
@@ -1585,27 +2002,33 @@ Object {
       },
       "Type": "AWS::S3::BucketPolicy",
     },
-    "PipelineSourceCodePipelineActionRoleBBC58FD5": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "PipelineSourceCodePipelineActionRoleBBC58FD5": {
+      "DependsOn": [
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
+      ],
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
-                      ":iam::",
-                      Object {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":root",
+                      ":iam::000000000000:root",
                     ],
                   ],
                 },
@@ -1617,22 +2040,32 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "PipelineSourceCodePipelineActionRoleDefaultPolicy5FD830BF": Object {
-      "Metadata": Object {
-        "cdk_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
+    "PipelineSourceCodePipelineActionRoleDefaultPolicy5FD830BF": {
+      "DependsOn": [
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
+      ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
               "id": "AwsSolutions-IAM5",
               "reason": "IAM role requires wildcard permissions.",
             },
           ],
         },
       },
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
                 "s3:GetObject*",
                 "s3:GetBucket*",
                 "s3:List*",
@@ -1645,19 +2078,19 @@ Object {
                 "s3:Abort*",
               ],
               "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "PipelineSecureBucketB3EEB324",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "PipelineSecureBucketB3EEB324",
                           "Arn",
                         ],
@@ -1668,8 +2101,8 @@ Object {
                 },
               ],
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:Decrypt",
                 "kms:DescribeKey",
                 "kms:Encrypt",
@@ -1677,12 +2110,12 @@ Object {
                 "kms:GenerateDataKey*",
               ],
               "Effect": "Allow",
-              "Resource": Object {
+              "Resource": {
                 "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
               },
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "codecommit:GetBranch",
                 "codecommit:GetCommit",
                 "codecommit:UploadArchive",
@@ -1690,23 +2123,15 @@ Object {
                 "codecommit:CancelUploadArchive",
               ],
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::Join": Array [
+              "Resource": {
+                "Fn::Join": [
                   "",
-                  Array [
+                  [
                     "arn:",
-                    Object {
+                    {
                       "Ref": "AWS::Partition",
                     },
-                    ":codecommit:",
-                    Object {
-                      "Ref": "AWS::Region",
-                    },
-                    ":",
-                    Object {
-                      "Ref": "AWS::AccountId",
-                    },
-                    ":accelerator-source",
+                    ":codecommit:us-east-1:000000000000:accelerator-source",
                   ],
                 ],
               },
@@ -1715,35 +2140,41 @@ Object {
           "Version": "2012-10-17",
         },
         "PolicyName": "PipelineSourceCodePipelineActionRoleDefaultPolicy5FD830BF",
-        "Roles": Array [
-          Object {
+        "Roles": [
+          {
             "Ref": "PipelineSourceCodePipelineActionRoleBBC58FD5",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "PipelineSourceConfigurationCodePipelineActionRoleA2807B19": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "PipelineSourceConfigurationCodePipelineActionRoleA2807B19": {
+      "DependsOn": [
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
+      ],
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
-                      ":iam::",
-                      Object {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":root",
+                      ":iam::000000000000:root",
                     ],
                   ],
                 },
@@ -1755,22 +2186,32 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "PipelineSourceConfigurationCodePipelineActionRoleDefaultPolicy5FE1A228": Object {
-      "Metadata": Object {
-        "cdk_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
+    "PipelineSourceConfigurationCodePipelineActionRoleDefaultPolicy5FE1A228": {
+      "DependsOn": [
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
+      ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
               "id": "AwsSolutions-IAM5",
               "reason": "IAM role requires wildcard permissions.",
             },
           ],
         },
       },
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
                 "s3:GetObject*",
                 "s3:GetBucket*",
                 "s3:List*",
@@ -1783,19 +2224,19 @@ Object {
                 "s3:Abort*",
               ],
               "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "PipelineSecureBucketB3EEB324",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "PipelineSecureBucketB3EEB324",
                           "Arn",
                         ],
@@ -1806,8 +2247,8 @@ Object {
                 },
               ],
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:Decrypt",
                 "kms:DescribeKey",
                 "kms:Encrypt",
@@ -1815,12 +2256,12 @@ Object {
                 "kms:GenerateDataKey*",
               ],
               "Effect": "Allow",
-              "Resource": Object {
+              "Resource": {
                 "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
               },
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "codecommit:GetBranch",
                 "codecommit:GetCommit",
                 "codecommit:UploadArchive",
@@ -1828,8 +2269,8 @@ Object {
                 "codecommit:CancelUploadArchive",
               ],
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
+              "Resource": {
+                "Fn::GetAtt": [
                   "PipelineConfigRepositoryE5225086",
                   "Arn",
                 ],
@@ -1839,107 +2280,162 @@ Object {
           "Version": "2012-10-17",
         },
         "PolicyName": "PipelineSourceConfigurationCodePipelineActionRoleDefaultPolicy5FE1A228",
-        "Roles": Array [
-          Object {
+        "Roles": [
+          {
             "Ref": "PipelineSourceConfigurationCodePipelineActionRoleA2807B19",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "PipelineToolkitProjectBCBD6910": Object {
-      "Metadata": Object {
-        "cdk_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
+    "PipelineToolkitProjectBCBD6910": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
               "id": "AwsSolutions-CB3",
               "reason": "Project requires access to the Docker daemon.",
             },
           ],
         },
       },
-      "Properties": Object {
-        "Artifacts": Object {
+      "Properties": {
+        "Artifacts": {
           "Type": "CODEPIPELINE",
         },
-        "Cache": Object {
-          "Modes": Array [
+        "Cache": {
+          "Modes": [
             "LOCAL_SOURCE_CACHE",
           ],
           "Type": "LOCAL",
         },
-        "EncryptionKey": Object {
+        "EncryptionKey": {
           "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
-        "Environment": Object {
+        "Environment": {
           "ComputeType": "BUILD_GENERAL1_LARGE",
-          "EnvironmentVariables": Array [
-            Object {
+          "EnvironmentVariables": [
+            {
+              "Name": "LOG_LEVEL",
+              "Type": "PLAINTEXT",
+              "Value": "error",
+            },
+            {
               "Name": "NODE_OPTIONS",
               "Type": "PLAINTEXT",
-              "Value": "--max_old_space_size=8192",
+              "Value": "--max_old_space_size=12288",
             },
-            Object {
+            {
               "Name": "CDK_METHOD",
               "Type": "PLAINTEXT",
               "Value": "direct",
             },
-            Object {
+            {
               "Name": "CDK_NEW_BOOTSTRAP",
               "Type": "PLAINTEXT",
               "Value": "1",
             },
-            Object {
+            {
               "Name": "ACCELERATOR_QUALIFIER",
               "Type": "PLAINTEXT",
               "Value": "aws-accelerator",
             },
+            {
+              "Name": "ACCELERATOR_PREFIX",
+              "Type": "PLAINTEXT",
+              "Value": "AWSAccelerator",
+            },
+            {
+              "Name": "ACCELERATOR_REPO_NAME_PREFIX",
+              "Type": "PLAINTEXT",
+              "Value": "aws-accelerator",
+            },
+            {
+              "Name": "ACCELERATOR_BUCKET_NAME_PREFIX",
+              "Type": "PLAINTEXT",
+              "Value": "aws-accelerator",
+            },
+            {
+              "Name": "ACCELERATOR_KMS_ALIAS_PREFIX",
+              "Type": "PLAINTEXT",
+              "Value": "alias/accelerator",
+            },
+            {
+              "Name": "ACCELERATOR_SSM_PARAM_NAME_PREFIX",
+              "Type": "PLAINTEXT",
+              "Value": "/accelerator",
+            },
+            {
+              "Name": "ACCELERATOR_SNS_TOPIC_NAME_PREFIX",
+              "Type": "PLAINTEXT",
+              "Value": "accelerator",
+            },
+            {
+              "Name": "ACCELERATOR_SECRET_NAME_PREFIX",
+              "Type": "PLAINTEXT",
+              "Value": "/accelerator",
+            },
+            {
+              "Name": "ACCELERATOR_TRAIL_LOG_NAME_PREFIX",
+              "Type": "PLAINTEXT",
+              "Value": "aws-accelerator",
+            },
+            {
+              "Name": "ACCELERATOR_DATABASE_NAME_PREFIX",
+              "Type": "PLAINTEXT",
+              "Value": "aws-accelerator",
+            },
           ],
-          "Image": "aws/codebuild/standard:5.0",
+          "Image": "aws/codebuild/standard:6.0",
           "ImagePullCredentialsType": "CODEBUILD",
-          "PrivilegedMode": true,
+          "PrivilegedMode": false,
           "Type": "LINUX_CONTAINER",
         },
         "Name": "aws-accelerator-toolkit-project",
-        "ServiceRole": Object {
-          "Fn::GetAtt": Array [
+        "ServiceRole": {
+          "Fn::GetAtt": [
             "AdminCdkToolkitRole292E163A",
             "Arn",
           ],
         },
-        "Source": Object {
-          "BuildSpec": Object {
-            "Fn::Join": Array [
+        "Source": {
+          "BuildSpec": {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "{
-  \\"version\\": \\"0.2\\",
-  \\"phases\\": {
-    \\"install\\": {
-      \\"runtime-versions\\": {
-        \\"nodejs\\": 14
+  "version": "0.2",
+  "phases": {
+    "install": {
+      "runtime-versions": {
+        "nodejs": 16
       }
     },
-    \\"build\\": {
-      \\"commands\\": [
-        \\"env\\",
-        \\"cd source\\",
-        \\"cd packages/@aws-accelerator/accelerator\\",
-        \\"if [ -z \\\\\\"\${ACCELERATOR_STAGE}\\\\\\" ]; then yarn run ts-node --transpile-only cdk.ts synth --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
-                Object {
+    "build": {
+      "commands": [
+        "env",
+        "cd source",
+        "cd packages/@aws-accelerator/accelerator",
+        "if [ -z \\"\${ACCELERATOR_STAGE}\\" ]; then for STAGE in \\"key\\" \\"logging\\" \\"organizations\\" \\"security-audit\\" \\"network-prep\\" \\"security\\" \\"operations\\" \\"network-vpc\\" \\"security-resources\\" \\"network-associations\\" \\"customizations\\" \\"finalize\\" \\"bootstrap\\"; do yarn run ts-node --transpile-only cdk.ts synth --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                {
                   "Ref": "AWS::Partition",
                 },
-                "; fi\\",
-        \\"if [ ! -z \\\\\\"\${ACCELERATOR_STAGE}\\\\\\" ]; then yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
-                Object {
+                " --stage $STAGE; done; fi",
+        "if [ ! -z \\"\${ACCELERATOR_STAGE}\\" ]; then yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                {
                   "Ref": "AWS::Partition",
                 },
-                "; fi\\",
-        \\"yarn run ts-node --transpile-only cdk.ts --require-approval never $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
-                Object {
+                "; fi",
+        "if [ \\"diff\\" != \\"\${CDK_OPTIONS}\\" ]; then yarn run ts-node --transpile-only cdk.ts --require-approval never $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                {
                   "Ref": "AWS::Partition",
                 },
-                " --app cdk.out\\"
+                " --app cdk.out; fi",
+        "if [ \\"diff\\" = \\"\${CDK_OPTIONS}\\" ]; then for STAGE in \\"key\\" \\"logging\\" \\"organizations\\" \\"security-audit\\" \\"network-prep\\" \\"security\\" \\"operations\\" \\"network-vpc\\" \\"security-resources\\" \\"network-associations\\" \\"customizations\\" \\"finalize\\" \\"bootstrap\\"; do yarn run ts-node --transpile-only cdk.ts --require-approval never $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                " --app cdk.out --stage $STAGE; done; find ./cdk.out -type f -name \\"*.diff\\" -exec cat \\"{}\\" \\\\;;  fi"
       ]
     }
   }
@@ -1949,23 +2445,43 @@ Object {
           },
           "Type": "CODEPIPELINE",
         },
-        "TimeoutInMinutes": 300,
+        "TimeoutInMinutes": 480,
       },
       "Type": "AWS::CodeBuild::Project",
     },
-    "SsmParamAcceleratorVersionFF83282D": Object {
-      "Properties": Object {
+    "PipelineValidateConfigPolicyDocument5A45073D": {
+      "Properties": {
+        "Description": "",
+        "Path": "/",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "organizations:ListAccounts",
+                "ssm:GetParameter",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::ManagedPolicy",
+    },
+    "SsmParamAcceleratorVersionFF83282D": {
+      "Properties": {
         "Name": "/accelerator/PipelineStack/version",
         "Type": "String",
-        "Value": "1.3.0",
+        "Value": "1.5.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SsmParamStackId521A78D3": Object {
-      "Properties": Object {
+    "SsmParamStackId521A78D3": {
+      "Properties": {
         "Name": "/accelerator/PipelineStack/stack-id",
         "Type": "String",
-        "Value": Object {
+        "Value": {
           "Ref": "AWS::StackId",
         },
       },

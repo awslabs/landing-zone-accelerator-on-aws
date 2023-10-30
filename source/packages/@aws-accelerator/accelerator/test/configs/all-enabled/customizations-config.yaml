@@ -47,31 +47,101 @@ customizations:
         - us-east-1
       runOrder: 1
       template: cloudformation-templates/custom-s3-bucket.yaml
+  serviceCatalogPortfolios:
+    - name: My-Portfolio
+      provider: LZA
+      account: Management
+      regions:
+        - us-east-1
+        - us-west-2
+      shareTargets:
+        organizationalUnits:
+          - Security
+      shareTagOptions: true
+      portfolioAssociations:
+        - type: Group
+          name: Administrators
+          propagateAssociation: true
+        - type: Role
+          name: EC2-Default-SSM-AD-Role
+        - type: User
+          name: breakGlassUser01
+      products:
+        - name: My-Product
+          description: Sample product by lZA.
+          owner: LZA
+          distributor: LZA
+          versions:
+            - name: v1
+              description: product version is v1
+              template: cloudformation-templates/custom-s3-bucket.yaml
+              deprecated: false
+          constraints:
+            launch:
+              type: LocalRole
+              role: testRole
+            tagUpdate: false
+            notifications:
+              - AWSAccelerator-ControlTowerNotification
+          support:
+            description: Please include account ID and provisioned product ID.
+            email: support@example.com
+            url: https://support.amazon.com
+    # - name: Portfolio-2
+    #   provider: LZA
+    #   account: SharedServices
+    #   regions:
+    #     - us-east-1
+    #   shareTargets:
+    #     accounts:
+    #       - Audit
+    #   portfolioAssociations:
+    #     - type: Role
+    #       name: EC2-Default-SSM-AD-Role
+    #       propagateAssociation: true
+    #     - type: PermissionSet
+    #       name: PermissionSet1
+    #   products:
+    #     - name: Product2
+    #       description: Sample product by lZA.
+    #       owner: LZA
+    #       distributor: LZA
+    #       versions:
+    #         - name: v1
+    #           description: product version is v1
+    #           template: cloudformation-templates/custom-s3-bucket.yaml
+    #           deprecated: false
+    #       support:
+    #         description: Please include account ID and provisioned product ID.
+    #         email: support@example.com
+    #         url: https://support.amazon.com
 
 applications:
   - name: appA
     # vpc name is taken from network-config.yaml under vpcs
-    vpc: SharedServices-Main
+    vpc: SharedServices-appVpc
     deploymentTargets:
       accounts:
         - SharedServices
       excludedRegions:
         - us-west-2
+        - us-east-1
     autoscaling:
       name: appA-asg
-      maxSize: 4
-      minSize: 1
-      desiredSize: 2
+      maxSize: 2
+      minSize: 0
+      desiredSize: 1
       # Launch Template name should match name from launchTemplate section
       launchTemplate: appA-lt
       healthCheckGracePeriod: 300
+      # this is the only example with ELB so targetGroups are also specified
       healthCheckType: ELB # EC2|ELB
       # target group names should match the names from targetGroup section
       targetGroups:
         - appA-nlb-tg-1
       subnets:
-        - SharedServices-App-A
-        - SharedServices-App-B
+        - PrivateA
+        - PrivateB
 
     launchTemplate:
       name: appA-lt
@@ -81,32 +151,27 @@ applications:
             deleteOnTermination: true
             encrypted: true
             # this kms key is in security-config.yaml under keyManagementService
-            kmsKeyId: key1
+            kmsKeyId: appEbsKey
         - deviceName: /dev/xvdg
           ebs:
             deleteOnTermination: true
             encrypted: true
             volumeSize: 20
-      securityGroups:
-        # security group is from network-config.yaml under the same vpc
-        - SharedServices-Main-Rsyslog-sg
-      # Key pair should exist in that account and region
-      keyName: keyName
       # this instance profile is in iam-config.yaml under roleSets
       iamInstanceProfile: EC2-Default-SSM-AD-Role
       # Local or public SSM parameter store lookup for Image ID
       imageId: ${ACCEL_LOOKUP::ImageId:/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2}
-      instanceType: t3.xlarge
+      instanceType: t3.large
       networkInterfaces:
         - deleteOnTermination: true
           description: secondary network interface
-          deviceIndex: 1
+          deviceIndex: 0
           groups:
             # security group is from network-config.yaml under the same vpc
-            - SharedServices-Main-Rsyslog-sg
-          networkCardIndex: 1
+            - appSecurityGroup
+          networkCardIndex: 0
           # subnet is from network-config.yaml under the same vpc
-          subnetId: SharedServices-App-A
+          subnetId: PrivateA
       # this path is relative to the config repository and the content should be in regular text.
       # Its encoded in base64 before passing in to launch Template
       userData: appConfigs/appA/launchTemplate/userData.sh
@@ -114,19 +179,22 @@ applications:
     targetGroups:
       - name: appA-nlb-tg-1
         port: 80
-        protocol: HTTP
+        protocol: TCP
         type: instance
-        protocolVersion: HTTP1
-        connectionTermination: true
-        preserveClientIp: true
-        proxyProtocolV2: true
       - name: appA-alb-tg-1
         port: 80
         protocol: HTTP
         type: instance
-        connectionTermination: true
-        preserveClientIp: true
-        proxyProtocolV2: true
+        attributes:
+          deregistrationDelay: 1200
+          stickiness: true
+          # applies to application load balancer
+          stickinessType: app_cookie
+          algorithm: round_robin
+          slowStart: 120
+          appCookieName: chocolate-chip
+          appCookieDuration: 4800
+          lbCookieDuration: 4800
         healthCheck:
           enabled: true
           port: 80
@@ -134,11 +202,11 @@ applications:
     networkLoadBalancer:
       name: appA-nlb
       scheme: internal
-      deletionProtection: true
+      deletionProtection: false
       subnets:
         # subnets are from network-config.yaml under the same vpc
-        - SharedServices-App-A
-        - SharedServices-App-B
+        - PrivateA
+        - PrivateB
       crossZoneLoadBalancing: true
       listeners:
         - name: appA-listener-1
@@ -151,20 +219,356 @@ applications:
       name: appA-alb-01
       scheme: internet-facing
       subnets:
-        - SharedServices-App-A
-        - SharedServices-App-B
+        - PrivateA
+        - PrivateB
       securityGroups:
-        - SharedServices-Main-Rsyslog-sg
+        - appSecurityGroup
       listeners:
         - name: appA-listener-2
           port: 80
           protocol: HTTP
           targetGroup: appA-alb-tg-1
           type: forward
+  - name: appB
+    # vpc name is taken from network-config.yaml under vpcs
+    vpc: SharedServices-appVpc
+    deploymentTargets:
+      accounts:
+        - SharedServices
+      excludedRegions:
+        - us-west-2
+        - us-east-1
+    autoscaling:
+      name: testTgAsg-asg
+      maxSize: 2
+      minSize: 0
+      desiredSize: 1
+      # Launch Template name should match name from launchTemplate section
+      launchTemplate: testTgAsg-lt
+      healthCheckGracePeriod: 300
+      healthCheckType: EC2 # EC2|ELB
+      subnets:
+        - PrivateA
+        - PrivateB
+
+    launchTemplate:
+      name: testTgAsg-lt
+      blockDeviceMappings:
+        - deviceName: /dev/xvda
+          ebs:
+            deleteOnTermination: true
+            encrypted: true
+            # this kms key is in security-config.yaml under keyManagementService
+            kmsKeyId: appEbsKey
+        - deviceName: /dev/xvdg
+          ebs:
+            deleteOnTermination: true
+            encrypted: true
+            volumeSize: 20
+      securityGroups:
+        # security group is from network-config.yaml under the same vpc
+        - appSecurityGroup
+      # this instance profile is in iam-config.yaml under roleSets
+      iamInstanceProfile: EC2-Default-SSM-AD-Role
+      # Local or public SSM parameter store lookup for Image ID
+      imageId: ${ACCEL_LOOKUP::ImageId:/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2}
+      instanceType: t3.large
+
+    targetGroups:
+      - name: testTgAsg-nlb-tg-1
+        port: 80
+        protocol: TCP
+        type: instance
+        attributes:
+          protocolVersion: HTTP1
+          connectionTermination: true
+          preserveClientIp: true
+          proxyProtocolV2: true
+    networkLoadBalancer:
+      name: testTgAsg-nlb
+      scheme: internal
+      deletionProtection: false
+      subnets:
+        # subnets are from network-config.yaml under the same vpc
+        - PrivateA
+        - PrivateB
+      crossZoneLoadBalancing: true
+      listeners:
+        - name: testTgAsg-listener-1
+          port: 80
+          protocol: TCP
+          # target group names should match the names from targetGroup section
+          targetGroup: testTgAsg-nlb-tg-1
+  # minimum config for application target group in vpc created
+  - name: appC
+    # vpc name is taken from network-config.yaml under vpcs
+    vpc: SharedServices-appVpc
+    deploymentTargets:
+      accounts:
+        - SharedServices
+      excludedRegions:
+        - us-west-2
+        - us-east-1
+    targetGroups:
+      - name: appC-nlb-tg-1
+        port: 80
+        protocol: TCP
+        type: instance
+        attributes:
+          connectionTermination: true
+          preserveClientIp: true
+          proxyProtocolV2: true
+        healthCheck:
+          enabled: true
+          port: 80
+          protocol: TCP
+  # target group and launch template created
+  - name: appD
+    # vpc name is taken from network-config.yaml under vpcs
+    vpc: SharedServices-appVpc
+    deploymentTargets:
+      accounts:
+        - SharedServices
+      excludedRegions:
+        - us-west-2
+        - us-east-1
+    targetGroups:
+      - name: appD-nlb-tg-1
+        port: 80
+        protocol: TCP
+        type: instance
+        attributes:
+          connectionTermination: true
+          preserveClientIp: true
+          proxyProtocolV2: true
+        healthCheck:
+          enabled: true
+          port: 80
+          protocol: TCP
+    launchTemplate:
+      name: appDAsg-lt
+      blockDeviceMappings:
+        - deviceName: /dev/xvda
+          ebs:
+            deleteOnTermination: true
+            encrypted: true
+            # this kms key is in security-config.yaml under keyManagementService
+            kmsKeyId: appEbsKey
+        - deviceName: /dev/xvdg
+          ebs:
+            deleteOnTermination: true
+            encrypted: true
+            volumeSize: 20
+      securityGroups:
+        # security group is from network-config.yaml under the same vpc
+        - appSecurityGroup
+      # this instance profile is in iam-config.yaml under roleSets
+      iamInstanceProfile: EC2-Default-SSM-AD-Role
+      # Local or public SSM parameter store lookup for Image ID
+      imageId: ${ACCEL_LOOKUP::ImageId:/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2}
+      instanceType: t3.large
+  # target group, launch template and autoscaling created. Target group is not tied to AutoScaling
+  - name: appE
+    # vpc name is taken from network-config.yaml under vpcs
+    vpc: SharedServices-appVpc
+    deploymentTargets:
+      accounts:
+        - SharedServices
+      excludedRegions:
+        - us-west-2
+        - us-east-1
+    targetGroups:
+      - name: appE-nlb-tg-1
+        port: 80
+        protocol: TCP
+        type: instance
+        attributes:
+          connectionTermination: true
+          preserveClientIp: true
+          proxyProtocolV2: true
+        healthCheck:
+          enabled: true
+          port: 80
+          protocol: TCP
+    launchTemplate:
+      name: appEAsg-lt
+      blockDeviceMappings:
+        - deviceName: /dev/xvda
+          ebs:
+            deleteOnTermination: true
+            encrypted: true
+            # this kms key is in security-config.yaml under keyManagementService
+            kmsKeyId: appEbsKey
+        - deviceName: /dev/xvdg
+          ebs:
+            deleteOnTermination: true
+            encrypted: true
+            volumeSize: 20
+      securityGroups:
+        # security group is from network-config.yaml under the same vpc
+        - appSecurityGroup
+      # this instance profile is in iam-config.yaml under roleSets
+      iamInstanceProfile: EC2-Default-SSM-AD-Role
+      # Local or public SSM parameter store lookup for Image ID
+      imageId: ${ACCEL_LOOKUP::ImageId:/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2}
+      instanceType: t3.large
+    autoscaling:
+      name: appE-asg
+      maxSize: 2
+      minSize: 0
+      desiredSize: 1
+      # Launch Template name should match name from launchTemplate section
+      launchTemplate: testTgAsg-lt
+      healthCheckGracePeriod: 300
+      healthCheckType: EC2 # EC2|ELB
+      subnets:
+        - PrivateA
+        - PrivateB
+  # target group, launch template and autoscaling added. Target group is tied to Autoscaling
+  - name: appF
+    # vpc name is taken from network-config.yaml under vpcs
+    vpc: SharedServices-appVpc
+    deploymentTargets:
+      accounts:
+        - SharedServices
+      excludedRegions:
+        - us-west-2
+        - us-east-1
+    targetGroups:
+      - name: appF-nlb-tg-1
+        port: 80
+        protocol: TCP
+        type: instance
+        attributes:
+          connectionTermination: true
+          preserveClientIp: true
+          proxyProtocolV2: true
+        healthCheck:
+          enabled: true
+          port: 80
+          protocol: TCP
+    launchTemplate:
+      name: appFAsg-lt
+      blockDeviceMappings:
+        - deviceName: /dev/xvda
+          ebs:
+            deleteOnTermination: true
+            encrypted: true
+            # this kms key is in security-config.yaml under keyManagementService
+            kmsKeyId: appEbsKey
+        - deviceName: /dev/xvdg
+          ebs:
+            deleteOnTermination: true
+            encrypted: true
+            volumeSize: 20
+      securityGroups:
+        # security group is from network-config.yaml under the same vpc
+        - appSecurityGroup
+      # this instance profile is in iam-config.yaml under roleSets
+      iamInstanceProfile: EC2-Default-SSM-AD-Role
+      # Local or public SSM parameter store lookup for Image ID
+      imageId: ${ACCEL_LOOKUP::ImageId:/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2}
+      instanceType: t3.large
+
+  - name: appG
+    vpc: SharedServices-appVpc
+    deploymentTargets:
+      accounts:
+        - SharedServices
+      excludedRegions:
+        - us-west-2
+        - us-east-1
+    targetGroups:
+      - name: appG-nlb-tg-1
+        port: 80
+        protocol: TCP
+        type: instance
+        attributes:
+          connectionTermination: true
+          preserveClientIp: true
+          proxyProtocolV2: true
+        healthCheck:
+          enabled: true
+          port: 80
+          protocol: TCP
+      - name: appG-nlb-tg-2
+        port: 443
+        protocol: TLS
+        type: instance
+        attributes:
+          connectionTermination: true
+          preserveClientIp: true
+          proxyProtocolV2: true
+        healthCheck:
+          enabled: true
+          port: 443
+          protocol: TCP
+      - name: appG-alb-tg-1
+        port: 80
+        protocol: HTTP
+        type: instance
+        healthCheck:
+          enabled: true
+          port: 80
+          protocol: HTTP
+      - name: appG-alb-tg-2
+        port: 443
+        protocol: HTTPS
+        type: instance
+        algorithm: round_robin
+        attributes:
+          slowStart: 120
+        healthCheck:
+          enabled: true
+          port: 443
+          protocol: HTTPS
+    networkLoadBalancer:
+      name: appG-nlb-01
+      scheme: internal
+      deletionProtection: false
+      subnets:
+        - PrivateA
+        - PrivateB
+      listeners:
+        - name: appG-listener-1
+          port: 80
+          protocol: TCP
+          targetGroup: appG-nlb-tg-1
+        - name: appG-listener-2
+          port: 443
+          protocol: TLS
+          targetGroup: appG-nlb-tg-2
+          certificate: cert1
+          alpnPolicy: HTTP2Optional
+          sslPolicy: ELBSecurityPolicy-TLS13-1-2-2021-06
+    applicationLoadBalancer:
+      name: appG-alb-01
+      scheme: internet-facing
+      subnets:
+        - PrivateA
+        - PrivateB
+      securityGroups:
+        - appSecurityGroup
+      listeners:
+        - name: appG-listener-2
+          port: 80
+          protocol: HTTP
+          targetGroup: appG-alb-tg-1
+          type: forward
+        - name: appG-alb-listener-2
+          port: 443
+          protocol: HTTPS
+          targetGroup: appG-alb-tg-2
+          type: forward
+          certificate: cert1
+          sslPolicy: ELBSecurityPolicy-2016-08
+
 
 firewalls:
   instances:
     - name: accelerator-firewall
+      configFile: instance-config.txt
+      licenseFile: license.lic
       launchTemplate:
         name: firewall-lt
         blockDeviceMappings:
@@ -176,7 +580,8 @@ firewalls:
             ebs:
               encrypted: true
               volumeSize: 10
-        imageId: ${ACCEL_LOOKUP::ImageId:/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2}
+        iamInstanceProfile: EC2-Default-SSM-AD-Role
+        imageId: ami-0e1c5d8c23330dee3
         instanceType: t3.large
         networkInterfaces:
           - deviceIndex: 0
@@ -185,12 +590,37 @@ firewalls:
               - Data
             subnetId: Network-Inspection-A
           - deviceIndex: 1
+            associateElasticIp: true
             description: Secondary
             groups:
               - Data
             subnetId: Network-Inspection-A
         securityGroups: []
       vpc: Network-Inspection
+    - name: cross-account-firewall
+      launchTemplate:
+        name: firewall-lt
+        blockDeviceMappings:
+          - deviceName: /dev/xvda
+            ebs:
+              encrypted: true
+              volumeSize: 20
+          - deviceName: /dev/xvdb
+            ebs:
+              encrypted: true
+              volumeSize: 10
+        iamInstanceProfile: EC2-Default-SSM-AD-Role
+        imageId: ami-0e1c5d8c23330dee3
+        instanceType: t3.large
+        networkInterfaces:
+          - deviceIndex: 0
+            description: Primary interface
+            associateElasticIp: true
+            groups:
+              - SharedServices-Main-Rsyslog-sg
+            subnetId: SharedServices-App-A
+        securityGroups: []
+      vpc: SharedServices-Main
   autoscalingGroups:
     - name: test-asg
       autoscaling:
@@ -206,6 +636,8 @@ firewalls:
         subnets:
           - Network-Inspection-A
           - Network-Inspection-B
+      configFile: asg-config.txt
+      licenseFile: license.lic
       launchTemplate:
         name: asg
         blockDeviceMappings:
@@ -217,6 +649,7 @@ firewalls:
             ebs:
               encrypted: true
               volumeSize: 10
+        iamInstanceProfile: EC2-Default-SSM-AD-Role
         imageId: ${ACCEL_LOOKUP::ImageId:/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2}
         instanceType: t3.large
         networkInterfaces:

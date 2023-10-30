@@ -10,9 +10,10 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import { Logger } from '../accelerator/lib/logger';
 import yargs from 'yargs';
-import { hideBin } from 'yargs/helpers';
+
+import { createLogger } from '@aws-accelerator/utils';
+
 import { AcceleratorTool } from './lib/classes/accelerator-tool';
 
 /**
@@ -42,23 +43,36 @@ import { AcceleratorTool } from './lib/classes/accelerator-tool';
  * @example
  * ts-node uninstaller.ts --installer-stack-name <value> --partition <value> --full-destroy
  */
+
+const logger = createLogger(['uninstaller']);
 const scriptUsage =
   'Usage: yarn run ts-node --transpile-only uninstaller.ts --installer-stack-name <INSTALLER_STACK_NAME> --partition <PARTITION> [--debug] [--full-destroy] [--delete-accelerator] [--keep-pipeline] [--keep-data] [--keep-bootstraps] [--stage-name] <STAGE_NAME> [--action-name] <ACTION_NAME>';
 async function main(): Promise<string> {
   const usage = `** Script Usage ** ${scriptUsage}`;
 
-  const argv = yargs(hideBin(process.argv)).argv;
-  const installerStackName = argv['installerStackName'] as string;
+  const argv = yargs(process.argv.slice(2))
+    .options({
+      installerStackName: { type: 'string', default: 'AWSAccelerator-InstallerStack' },
+      partition: { type: 'string', default: 'aws' },
+      debug: { type: 'boolean', default: false },
+      fullDestroy: { type: 'boolean', default: false },
+      deleteAccelerator: { type: 'boolean', default: false },
+      stageName: { type: 'string', default: 'all' },
+      actionName: { type: 'string', default: 'all' },
+    })
+    .parseSync();
 
-  const partition = (argv['partition'] as string) ?? 'aws';
-  const debug = (argv['debug'] as boolean) ?? false;
+  const installerStackName = argv.installerStackName;
+
+  const partition = argv.partition;
+  const debug = argv.debug;
   const ignoreTerminationProtection = true;
 
-  const fullDestroy = (argv['fullDestroy'] as boolean) ?? false;
-  const deleteAccelerator = (argv['deleteAccelerator'] as boolean) ?? false;
+  const fullDestroy = argv.fullDestroy;
+  const deleteAccelerator = argv.deleteAccelerator;
 
-  let stageName = (argv['stageName'] as string) ?? 'all';
-  let actionName = (argv['actionName'] as string) ?? 'all';
+  let stageName = argv.stageName;
+  let actionName = argv.actionName;
 
   let keepPipelineAndConfig = false;
   let keepData = false;
@@ -150,11 +164,11 @@ async function main(): Promise<string> {
     );
   }
 
-  Logger.warn(`[uninstaller] Uninstaller didn't execute for unknown reason`);
+  logger.warn(`[uninstaller] Uninstaller didn't execute for unknown reason`);
   throw new Error(usage);
 }
 
-process.on('unhandledRejection', (reason, _) => {
+process.on('unhandledRejection', reason => {
   console.error(reason);
   // eslint-disable-next-line no-process-exit
   process.exit(1);
@@ -250,5 +264,5 @@ async function uninstaller(
  * Call Main function
  */
 main().then(data => {
-  Logger.info(data);
+  logger.info(data);
 });

@@ -10,32 +10,53 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-
 import * as cdk from 'aws-cdk-lib';
-import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import * as path from 'path';
 
-import { IdentityCenterAssignmentConfig, IdentityCenterPermissionSetConfig, RoleConfig } from '@aws-accelerator/config';
 import {
+  AseaResourceType,
+  Ec2FirewallAutoScalingGroupConfig,
+  Ec2FirewallConfig,
+  Ec2FirewallInstanceConfig,
+  IdentityCenterAssignmentConfig,
+  IdentityCenterConfig,
+  IdentityCenterPermissionSetConfig,
+  Region,
+  RoleConfig,
+  RoleSetConfig,
+  VaultConfig,
+  VpcConfig,
+  VpcTemplatesConfig,
+} from '@aws-accelerator/config';
+import { SsmResourceType } from '@aws-accelerator/utils';
+import {
+  Bucket,
+  BucketEncryptionType,
   BudgetDefinition,
-  IdentityCenterGetInstanceId,
   Inventory,
   KeyLookup,
   LimitsDefinition,
+  UsersGroupsMetadata,
+  WarmAccount,
 } from '@aws-accelerator/constructs';
-
-import { Logger } from '../logger';
-import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import {
+  AcceleratorKeyType,
+  AcceleratorStack,
+  AcceleratorStackProps,
+  NagSuppressionRuleIds,
+} from './accelerator-stack';
+import { getVpcConfig } from './network-stacks/utils/getter-utils';
 
 export interface OperationsStackProps extends AcceleratorStackProps {
-  configDirPath: string;
+  readonly accountWarming: boolean;
 }
 
 interface PermissionSetMapping {
   name: string;
   arn: string;
+  permissionSet: cdk.aws_sso.CfnPermissionSet;
 }
 
 export class OperationsStack extends AcceleratorStack {
@@ -47,18 +68,32 @@ export class OperationsStack extends AcceleratorStack {
   /**
    * List of all the defined IAM Policies
    */
-  private policies: { [name: string]: cdk.aws_iam.ManagedPolicy } = {};
+  private policies: { [name: string]: cdk.aws_iam.IManagedPolicy } = {};
 
   /**
    * List of all the defined IAM Roles
    */
-  private roles: { [name: string]: cdk.aws_iam.Role } = {};
+  private roles: { [name: string]: cdk.aws_iam.IRole } = {};
 
   /**
    * List of all the defined IAM Groups
    */
-  private groups: { [name: string]: cdk.aws_iam.Group } = {};
-  readonly cloudwatchKey!: cdk.aws_kms.Key;
+  private groups: { [name: string]: cdk.aws_iam.IGroup } = {};
+
+  /**
+   * List of all the defined IAM Users
+   */
+  private users: { [name: string]: cdk.aws_iam.IUser } = {};
+
+  /**
+   * KMS Key used to encrypt CloudWatch logs
+   */
+  private cloudwatchKey: cdk.aws_kms.Key;
+
+  /**
+   * KMS Key used to encrypt custom resource lambda environment variables
+   */
+  private lambdaKey: cdk.aws_kms.Key;
 
   /**
    * Constructor for OperationsStack
@@ -70,10 +105,19 @@ export class OperationsStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: OperationsStackProps) {
     super(scope, id, props);
 
+    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
+    this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
+
     // Security Services delegated admin account configuration
     // Global decoration for security services
     const securityAdminAccount = props.securityConfig.centralSecurityServices.delegatedAdminAccount;
     const securityAdminAccountId = props.accountsConfig.getAccountId(securityAdminAccount);
+
+    //
+    // Look up asset bucket KMS key
+    const vpcResources = [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])];
+    const firewallRoles = this.getFirewallRolesInScope(vpcResources, props.customizationsConfig.firewalls);
+    const assetBucketKmsKey = this.lookupAssetBucketKmsKey(props, firewallRoles);
 
     //
     // Only deploy IAM and CUR resources into the home region
@@ -93,14 +137,21 @@ export class OperationsStack extends AcceleratorStack {
       // Budgets
       //
       this.enableBudgetReports();
-      //
-      // Service Quota Limits
-      //
-      this.increaseLimits();
 
       // Create Accelerator Access Role in every region
-      this.createAssetAccessRole();
+      this.createAssetAccessRole(assetBucketKmsKey);
+
+      // Create Cross Account Service Catalog Role
+      this.createServiceCatalogPropagationRole();
+
+      // warm account here
+      this.warmAccount(props.accountWarming);
     }
+
+    //
+    // Service Quota Limits
+    //
+    this.increaseLimits();
 
     //
     // Backup Vaults
@@ -114,23 +165,69 @@ export class OperationsStack extends AcceleratorStack {
       this.enableInventory();
     }
 
-    Logger.info('[operations-stack] Completed stack synthesis');
+    //
+    // Add SSM Parameters
+    //
+    this.addSsmParameters();
+
+    //
+    // Create firewall configuration S3 bucket
+    //
+    this.createFirewallConfigBucket(props, firewallRoles, assetBucketKmsKey);
+
+    //
+    // Create SSM parameters
+    //
+    this.createSsmParameters();
+
+    //
+    // Create NagSuppressions
+    //
+    this.addResourceSuppressionsByPath();
+
+    this.logger.info('Completed stack synthesis');
   }
 
   /* Enable AWS Service Quota Limits
    *
    */
   private increaseLimits() {
+    const globalServices = ['account', 'cloudfront', 'iam', 'organizations', 'route53'];
+
     for (const limit of this.props.globalConfig.limits ?? []) {
       if (this.isIncluded(limit.deploymentTargets ?? [])) {
-        Logger.info(`[operations-stack] Updating limits for provided services.`);
-        new LimitsDefinition(this, `ServiceQuotaUpdates${limit.quotaCode}` + `${limit.desiredValue}`, {
-          serviceCode: limit.serviceCode,
-          quotaCode: limit.quotaCode,
-          desiredValue: limit.desiredValue,
-          kmsKey: this.cloudwatchKey,
-          logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-        });
+        if (globalServices.includes(limit.serviceCode) && this.props.globalRegion === cdk.Stack.of(this).region) {
+          this.logger.info(
+            `Creating service quota increase for global service ${limit.serviceCode} in ${this.props.globalRegion}`,
+          );
+          new LimitsDefinition(this, `ServiceQuotaUpdates${limit.quotaCode}` + `${limit.desiredValue}`, {
+            serviceCode: limit.serviceCode,
+            quotaCode: limit.quotaCode,
+            desiredValue: limit.desiredValue,
+            kmsKey: this.cloudwatchKey,
+            logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+          });
+        } else if (limit.regions && limit.regions.includes(cdk.Stack.of(this).region as Region)) {
+          this.logger.info(`Regions explicitly defined for service quota increase ${limit.quotaCode}`);
+          new LimitsDefinition(this, `ServiceQuotaUpdates${limit.quotaCode}` + `${limit.desiredValue}`, {
+            serviceCode: limit.serviceCode,
+            quotaCode: limit.quotaCode,
+            desiredValue: limit.desiredValue,
+            kmsKey: this.cloudwatchKey,
+            logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+          });
+        } else if (this.props.globalConfig.homeRegion === cdk.Stack.of(this).region) {
+          this.logger.info(
+            `Regions property not specified, creating service quota increase ${limit.quotaCode} in home region`,
+          );
+          new LimitsDefinition(this, `ServiceQuotaUpdates${limit.quotaCode}` + `${limit.desiredValue}`, {
+            serviceCode: limit.serviceCode,
+            quotaCode: limit.quotaCode,
+            desiredValue: limit.desiredValue,
+            kmsKey: this.cloudwatchKey,
+            logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+          });
+        }
       }
     }
   }
@@ -140,7 +237,7 @@ export class OperationsStack extends AcceleratorStack {
    */
   private addProviders() {
     for (const providerItem of this.props.iamConfig.providers ?? []) {
-      Logger.info(`[operations-stack] Add Provider ${providerItem.name}`);
+      this.logger.info(`Add Provider ${providerItem.name}`);
       this.providers[providerItem.name] = new cdk.aws_iam.SamlProvider(
         this,
         `${pascalCase(providerItem.name)}SamlProvider`,
@@ -159,17 +256,30 @@ export class OperationsStack extends AcceleratorStack {
    */
   private addManagedPolicies() {
     for (const policySetItem of this.props.iamConfig.policySets ?? []) {
-      if (!this.isIncluded(policySetItem.deploymentTargets)) {
-        Logger.info(`[operations-stack] Item excluded`);
+      if (!this.isIncluded(policySetItem.deploymentTargets) || policySetItem.identityCenterDependency) {
+        this.logger.info(`Item excluded`);
         continue;
       }
 
       for (const policyItem of policySetItem.policies) {
-        Logger.info(`[operations-stack] Add customer managed policy ${policyItem.name}`);
+        if (this.isManagedByAsea(AseaResourceType.IAM_POLICY, policyItem.name)) {
+          this.logger.info(`Customer managed policy ${policyItem.name} is managed by ASEA`);
+          this.policies[policyItem.name] = cdk.aws_iam.ManagedPolicy.fromManagedPolicyName(
+            this,
+            pascalCase(policyItem.name),
+            policyItem.name,
+          );
+          continue;
+        }
+        this.logger.info(`Add customer managed policy ${policyItem.name}`);
 
         // Read in the policy document which should be properly formatted json
         const policyDocument = JSON.parse(
-          this.generatePolicyReplacements(path.join(this.props.configDirPath, policyItem.policy), false),
+          this.generatePolicyReplacements(
+            path.join(this.props.configDirPath, policyItem.policy),
+            false,
+            this.organizationId,
+          ),
         );
 
         // Create a statements list using the PolicyStatement factory
@@ -183,19 +293,23 @@ export class OperationsStack extends AcceleratorStack {
           managedPolicyName: policyItem.name,
           statements,
         });
+        this.addSsmParameter({
+          logicalId: pascalCase(`SsmParam${pascalCase(policyItem.name)}PolicyArn`),
+          parameterName: this.getSsmPath(SsmResourceType.IAM_POLICY, [policyItem.name]),
+          stringValue: this.policies[policyItem.name].managedPolicyArn,
+        });
 
         // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
         // rule suppression with evidence for this permission.
-        NagSuppressions.addResourceSuppressionsByPath(
-          this,
-          `${this.stackName}/${pascalCase(policyItem.name)}/Resource`,
-          [
+        this.nagSuppressionInputs.push({
+          id: NagSuppressionRuleIds.IAM5,
+          details: [
             {
-              id: 'AwsSolutions-IAM5',
+              path: `${this.stackName}/${pascalCase(policyItem.name)}/Resource`,
               reason: 'Policies definition are derived from accelerator iam-config boundary-policy file',
             },
           ],
-        );
+        });
       }
     }
   }
@@ -210,35 +324,52 @@ export class OperationsStack extends AcceleratorStack {
     const principals: cdk.aws_iam.PrincipalBase[] = [];
 
     for (const assumedByItem of roleItem.assumedBy ?? []) {
-      Logger.info(
-        `[operations-stack] Role - assumed by type(${assumedByItem.type}) principal(${assumedByItem.principal})`,
-      );
+      this.logger.info(`Role - assumed by type(${assumedByItem.type}) principal(${assumedByItem.principal})`);
 
-      if (assumedByItem.type === 'service') {
-        principals.push(new cdk.aws_iam.ServicePrincipal(assumedByItem.principal));
-      }
+      switch (assumedByItem.type) {
+        case 'service':
+          principals.push(new cdk.aws_iam.ServicePrincipal(assumedByItem.principal));
+          break;
+        case 'account':
+          const partition = this.props.partition;
+          const accountIdRegex = /^\d{12}$/;
+          const accountArnRegex = new RegExp('^arn:' + partition + ':iam::(\\d{12}):root$');
 
-      if (assumedByItem.type === 'account') {
-        principals.push(new cdk.aws_iam.AccountPrincipal(assumedByItem.principal));
-      }
-
-      if (assumedByItem.type === 'provider') {
-        // workaround due to https://github.com/aws/aws-cdk/issues/22091
-        if (this.props.partition === 'aws-cn') {
-          principals.push(
-            new cdk.aws_iam.FederatedPrincipal(
-              this.providers[assumedByItem.principal].samlProviderArn,
-              {
-                StringEquals: {
-                  'SAML:aud': 'https://signin.amazonaws.cn/saml',
+          // test if principal length exceeds IAM Role length limit of 2048 characters.
+          // Ref: https://docs.aws.amazon.com/IAM/latest/APIReference/API_Role.html
+          // this will mitigate polynomial regular expression used on uncontrolled data
+          if (assumedByItem.principal!.length > 2048) {
+            throw new Error(`The principal defined in arn ${assumedByItem.principal} is too long`);
+          }
+          if (accountIdRegex.test(assumedByItem.principal)) {
+            principals.push(new cdk.aws_iam.AccountPrincipal(assumedByItem.principal));
+          } else if (accountArnRegex.test(assumedByItem.principal)) {
+            const accountId = accountArnRegex.exec(assumedByItem.principal);
+            principals.push(new cdk.aws_iam.AccountPrincipal(accountId![1]));
+          } else {
+            principals.push(
+              new cdk.aws_iam.AccountPrincipal(this.props.accountsConfig.getAccountId(assumedByItem.principal)),
+            );
+          }
+          break;
+        case 'provider':
+          // workaround due to https://github.com/aws/aws-cdk/issues/22091
+          if (this.props.partition === 'aws-cn') {
+            principals.push(
+              new cdk.aws_iam.FederatedPrincipal(
+                this.providers[assumedByItem.principal].samlProviderArn,
+                {
+                  StringEquals: {
+                    'SAML:aud': 'https://signin.amazonaws.cn/saml',
+                  },
                 },
-              },
-              'sts:AssumeRoleWithSAML',
-            ),
-          );
-        } else {
-          principals.push(new cdk.aws_iam.SamlConsolePrincipal(this.providers[assumedByItem.principal]));
-        }
+                'sts:AssumeRoleWithSAML',
+              ),
+            );
+          } else {
+            principals.push(new cdk.aws_iam.SamlConsolePrincipal(this.providers[assumedByItem.principal]));
+          }
+          break;
       }
     }
 
@@ -255,15 +386,60 @@ export class OperationsStack extends AcceleratorStack {
     const managedPolicies: cdk.aws_iam.IManagedPolicy[] = [];
 
     for (const policyItem of roleItem.policies?.awsManaged ?? []) {
-      Logger.info(`[operations-stack] Role - aws managed policy ${policyItem}`);
+      this.logger.info(`Role - aws managed policy ${policyItem}`);
       managedPolicies.push(cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName(policyItem));
     }
     for (const policyItem of roleItem.policies?.customerManaged ?? []) {
-      Logger.info(`[operations-stack] Role - customer managed policy ${policyItem}`);
+      this.logger.info(`Role - customer managed policy ${policyItem}`);
       managedPolicies.push(this.policies[policyItem]);
     }
 
     return managedPolicies;
+  }
+
+  /**
+   * Create IAM role
+   * @param roleItem {@link RoleConfig}
+   * @param roleSetItem {@link RoleSetConfig}
+   * @returns role {@link cdk.aws_iam.Role}
+   */
+  private createRole(roleItem: RoleConfig, roleSetItem: RoleSetConfig): cdk.aws_iam.Role {
+    const principals = this.getRolePrincipals(roleItem);
+    const managedPolicies = this.getManagedPolicies(roleItem);
+    let assumedBy: cdk.aws_iam.IPrincipal;
+    if (roleItem.assumedBy.find(item => item.type === 'provider')) {
+      // Since a SamlConsolePrincipal creates conditions, we can not
+      // use the CompositePrincipal. Verify that it is alone
+      if (principals.length > 1) {
+        this.logger.error('More than one principal found when adding provider');
+        throw new Error(`Configuration validation failed at runtime.`);
+      }
+      assumedBy = principals[0];
+    } else {
+      assumedBy = new cdk.aws_iam.CompositePrincipal(...principals);
+    }
+
+    const role = new cdk.aws_iam.Role(this, pascalCase(roleItem.name), {
+      roleName: roleItem.name,
+      assumedBy,
+      managedPolicies,
+      path: roleSetItem.path,
+      permissionsBoundary: this.policies[roleItem.boundaryPolicy],
+    });
+
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+    // rule suppression with evidence for this permission.
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM4,
+      details: [
+        {
+          path: `${this.stackName}/${pascalCase(roleItem.name)}/Resource`,
+          reason: 'IAM Role created as per accelerator iam-config needs AWS managed policy',
+        },
+      ],
+    });
+
+    return role;
   }
 
   /**
@@ -272,48 +448,24 @@ export class OperationsStack extends AcceleratorStack {
   private addRoles() {
     for (const roleSetItem of this.props.iamConfig.roleSets ?? []) {
       if (!this.isIncluded(roleSetItem.deploymentTargets)) {
-        Logger.info(`[operations-stack] Item excluded`);
+        this.logger.info(`Item excluded`);
         continue;
       }
 
       for (const roleItem of roleSetItem.roles) {
-        Logger.info(`[operations-stack] Add role ${roleItem.name}`);
-
-        const principals = this.getRolePrincipals(roleItem);
-        const managedPolicies = this.getManagedPolicies(roleItem);
-
-        let assumedBy: cdk.aws_iam.IPrincipal;
-        if (roleItem.assumedBy.find(item => item.type === 'provider')) {
-          // Since a SamlConsolePrincipal creates conditions, we can not
-          // use the CompositePrincipal. Verify that it is alone
-          if (principals.length > 1) {
-            throw new Error('More than one principal found when adding provider');
-          }
-          assumedBy = principals[0];
-        } else {
-          assumedBy = new cdk.aws_iam.CompositePrincipal(...principals);
+        if (this.isManagedByAsea(AseaResourceType.IAM_ROLE, roleItem.name)) {
+          this.logger.info(`IAM Role ${roleItem.name} is managed by ASEA`);
+          this.roles[roleItem.name] = cdk.aws_iam.Role.fromRoleName(this, pascalCase(roleItem.name), roleItem.name);
+          continue;
         }
+        this.logger.info(`Add role ${roleItem.name}`);
 
-        const role = new cdk.aws_iam.Role(this, pascalCase(roleItem.name), {
-          roleName: roleItem.name,
-          assumedBy,
-          managedPolicies,
-          path: roleSetItem.path,
-          permissionsBoundary: this.policies[roleItem.boundaryPolicy],
-        });
-
-        // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-        // rule suppression with evidence for this permission.
-        NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/${pascalCase(roleItem.name)}/Resource`, [
-          {
-            id: 'AwsSolutions-IAM4',
-            reason: 'IAM Role created as per accelerator iam-config needs AWS managed policy',
-          },
-        ]);
+        // Create IAM role
+        const role = this.createRole(roleItem, roleSetItem);
 
         // Create instance profile
         if (roleItem.instanceProfile) {
-          Logger.info(`[operations-stack] Role - creating instance profile for ${roleItem.name}`);
+          this.logger.info(`Role - creating instance profile for ${roleItem.name}`);
           new cdk.aws_iam.CfnInstanceProfile(this, `${pascalCase(roleItem.name)}InstanceProfile`, {
             // Use role object to force use of Ref
             instanceProfileName: role.roleName,
@@ -325,6 +477,11 @@ export class OperationsStack extends AcceleratorStack {
 
         // Add to roles list
         this.roles[roleItem.name] = role;
+        this.addSsmParameter({
+          logicalId: pascalCase(`SsmParam${pascalCase(roleItem.name)}RoleArn`),
+          parameterName: this.getSsmPath(SsmResourceType.IAM_ROLE, [roleItem.name]),
+          stringValue: role.roleArn,
+        });
       }
     }
   }
@@ -349,9 +506,13 @@ export class OperationsStack extends AcceleratorStack {
             managedActiveDirectory.name,
           );
 
-          const secretArn = `arn:aws:secretsmanager:${madAdminSecretRegion}:${madAdminSecretAccountId}:secret:/accelerator/ad-user/${managedActiveDirectory.name}/*`;
+          const secretArn = `arn:${
+            cdk.Stack.of(this).partition
+          }:secretsmanager:${madAdminSecretRegion}:${madAdminSecretAccountId}:secret:${
+            this.props.prefixes.secretName
+          }/ad-user/${managedActiveDirectory.name}/*`;
           // Attach MAD instance role access to MAD secrets
-          Logger.info(`[operations-stack] Granting mad secret access to ${roleName}`);
+          this.logger.info(`Granting mad secret access to ${roleName}`);
           role.attachInlinePolicy(
             new cdk.aws_iam.Policy(
               this,
@@ -369,16 +530,17 @@ export class OperationsStack extends AcceleratorStack {
           );
 
           // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
-          NagSuppressions.addResourceSuppressionsByPath(
-            this,
-            `${this.stackName}/${pascalCase(managedActiveDirectory.name)}${pascalCase(roleName)}SecretsAccess/Resource`,
-            [
+          this.nagSuppressionInputs.push({
+            id: NagSuppressionRuleIds.IAM5,
+            details: [
               {
-                id: 'AwsSolutions-IAM5',
+                path: `${this.stackName}/${pascalCase(managedActiveDirectory.name)}${pascalCase(
+                  roleName,
+                )}SecretsAccess/Resource`,
                 reason: 'MAD instance role need access to more than one mad user secrets',
               },
             ],
-          );
+          });
         }
       }
     }
@@ -390,20 +552,29 @@ export class OperationsStack extends AcceleratorStack {
   private addGroups() {
     for (const groupSetItem of this.props.iamConfig.groupSets ?? []) {
       if (!this.isIncluded(groupSetItem.deploymentTargets)) {
-        Logger.info(`[operations-stack] Item excluded`);
+        this.logger.info(`Item excluded`);
         continue;
       }
 
       for (const groupItem of groupSetItem.groups) {
-        Logger.info(`[operations-stack] Add group ${groupItem.name}`);
+        if (this.isManagedByAsea(AseaResourceType.IAM_GROUP, groupItem.name)) {
+          this.logger.info(`IAM Group ${groupItem.name} is managed by ASEA`);
+          this.groups[groupItem.name] = cdk.aws_iam.Group.fromGroupName(
+            this,
+            pascalCase(groupItem.name),
+            groupItem.name,
+          );
+          continue;
+        }
+        this.logger.info(`Add group ${groupItem.name}`);
 
         const managedPolicies: cdk.aws_iam.IManagedPolicy[] = [];
         for (const policyItem of groupItem.policies?.awsManaged ?? []) {
-          Logger.info(`[operations-stack] Group - aws managed policy ${policyItem}`);
+          this.logger.info(`Group - aws managed policy ${policyItem}`);
           managedPolicies.push(cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName(policyItem));
         }
         for (const policyItem of groupItem.policies?.customerManaged ?? []) {
-          Logger.info(`[operations-stack] Group - customer managed policy ${policyItem}`);
+          this.logger.info(`Group - customer managed policy ${policyItem}`);
           managedPolicies.push(this.policies[policyItem]);
         }
 
@@ -412,18 +583,23 @@ export class OperationsStack extends AcceleratorStack {
           managedPolicies,
         });
 
+        this.addSsmParameter({
+          logicalId: pascalCase(`SsmParam${pascalCase(groupItem.name)}GroupArn`),
+          parameterName: this.getSsmPath(SsmResourceType.IAM_GROUP, [groupItem.name]),
+          stringValue: this.groups[groupItem.name].groupArn,
+        });
+
         // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
         // rule suppression with evidence for this permission.
-        NagSuppressions.addResourceSuppressionsByPath(
-          this,
-          `${this.stackName}/${pascalCase(groupItem.name)}/Resource`,
-          [
+        this.nagSuppressionInputs.push({
+          id: NagSuppressionRuleIds.IAM4,
+          details: [
             {
-              id: 'AwsSolutions-IAM4',
+              path: `${this.stackName}/${pascalCase(groupItem.name)}/Resource`,
               reason: 'Groups created as per accelerator iam-config needs AWS managed policy',
             },
           ],
-        );
+        });
       }
     }
   }
@@ -434,42 +610,52 @@ export class OperationsStack extends AcceleratorStack {
   private addUsers() {
     for (const userSet of this.props.iamConfig.userSets ?? []) {
       if (!this.isIncluded(userSet.deploymentTargets)) {
-        Logger.info(`[operations-stack] Item excluded`);
+        this.logger.info(`Item excluded`);
         continue;
       }
 
       for (const user of userSet.users ?? []) {
-        Logger.info(`[operations-stack] Add user ${user.username}`);
+        if (this.isManagedByAsea(AseaResourceType.IAM_USER, user.username)) {
+          this.logger.info(`IAM User ${user.username} is managed by ASEA`);
+          this.users[user.username] = cdk.aws_iam.User.fromUserName(this, pascalCase(user.username), user.username);
+          continue;
+        }
+        this.logger.info(`Add user ${user.username}`);
 
         const secret = new cdk.aws_secretsmanager.Secret(this, pascalCase(`${user.username}Secret`), {
           generateSecretString: {
             secretStringTemplate: JSON.stringify({ username: user.username }),
             generateStringKey: 'password',
           },
-          secretName: `/accelerator/${user.username}`,
+          secretName: `${this.props.prefixes.secretName}/${user.username}`,
         });
 
         // AwsSolutions-SMG4: The secret does not have automatic rotation scheduled.
         // rule suppression with evidence for this permission.
-        NagSuppressions.addResourceSuppressionsByPath(
-          this,
-          `${this.stackName}/${pascalCase(user.username)}Secret/Resource`,
-          [
+        this.nagSuppressionInputs.push({
+          id: NagSuppressionRuleIds.SMG4,
+          details: [
             {
-              id: 'AwsSolutions-SMG4',
+              path: `${this.stackName}/${pascalCase(user.username)}Secret/Resource`,
               reason: 'Accelerator users created as per iam-config file, MFA usage is enforced with boundary policy',
             },
           ],
-        );
+        });
 
-        Logger.info(`[operations-stack] User - password stored to /accelerator/${user.username}`);
+        this.logger.info(`User - password stored to ${this.props.prefixes.secretName}/${user.username}`);
 
-        new cdk.aws_iam.User(this, pascalCase(user.username), {
+        this.users[user.username] = new cdk.aws_iam.User(this, pascalCase(user.username), {
           userName: user.username,
           password: secret.secretValueFromJson('password'),
           groups: [this.groups[user.group]],
           permissionsBoundary: this.policies[user.boundaryPolicy],
           passwordResetRequired: true,
+        });
+
+        this.addSsmParameter({
+          logicalId: pascalCase(`SsmParam${pascalCase(user.username)}UserArn`),
+          parameterName: this.getSsmPath(SsmResourceType.IAM_USER, [user.username]),
+          stringValue: this.users[user.username].userArn,
         });
       }
     }
@@ -479,11 +665,13 @@ export class OperationsStack extends AcceleratorStack {
    * Enables budget reports
    */
   private enableBudgetReports() {
-    if (this.props.globalConfig.reports?.budgets) {
+    if (this.props.globalConfig.reports?.budgets && this.props.partition != 'aws-us-gov') {
       for (const budget of this.props.globalConfig.reports.budgets ?? []) {
         if (this.isIncluded(budget.deploymentTargets ?? [])) {
-          Logger.info(`[operations-stack] Add budget ${budget.name}`);
+          this.logger.info(`Add budget ${budget.name}`);
           new BudgetDefinition(this, `${budget.name}BudgetDefinition`, {
+            kmsKey: this.cloudwatchKey,
+            logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
             amount: budget.amount,
             includeCredit: budget.includeCredit,
             includeDiscount: budget.includeDiscount,
@@ -518,14 +706,16 @@ export class OperationsStack extends AcceleratorStack {
         // Only create the key if a vault is defined for this account
         if (backupKey === undefined) {
           backupKey = new cdk.aws_kms.Key(this, 'BackupKey', {
-            alias: AcceleratorStack.ACCELERATOR_AWS_BACKUP_KEY_ALIAS,
-            description: AcceleratorStack.ACCELERATOR_AWS_BACKUP_KEY_DESCRIPTION,
+            alias: this.acceleratorResourceNames.customerManagedKeys.awsBackup.alias,
+            description: this.acceleratorResourceNames.customerManagedKeys.awsBackup.description,
             enableKeyRotation: true,
             removalPolicy: cdk.RemovalPolicy.RETAIN,
           });
         }
 
+        const vaultPolicy = this.getBackupVaultAccessPolicy(vault);
         new cdk.aws_backup.BackupVault(this, `BackupVault_${vault.name}`, {
+          accessPolicy: vaultPolicy,
           backupVaultName: vault.name,
           encryptionKey: backupKey,
         });
@@ -533,16 +723,34 @@ export class OperationsStack extends AcceleratorStack {
     }
   }
 
+  private getBackupVaultAccessPolicy(vault: VaultConfig) {
+    if (vault.policy) {
+      const policyDocument = JSON.parse(
+        this.generatePolicyReplacements(path.join(this.props.configDirPath, vault.policy), false, this.organizationId),
+      );
+
+      // Create a statements list using the PolicyStatement factory
+      const statements: cdk.aws_iam.PolicyStatement[] = [];
+      for (const statement of policyDocument.Statement) {
+        statements.push(cdk.aws_iam.PolicyStatement.fromJson(statement));
+      }
+
+      return new cdk.aws_iam.PolicyDocument({
+        statements: statements,
+      });
+    } else {
+      return undefined;
+    }
+  }
+
   private enableInventory() {
-    Logger.info('[operations-stack] Enabling SSM Inventory');
+    this.logger.info('Enabling SSM Inventory');
 
     new Inventory(this, 'AcceleratorSsmInventory', {
-      bucketName: `${
-        AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
-      }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`,
+      bucketName: this.centralLogsBucketName,
       bucketRegion: this.props.centralizedLoggingRegion,
       accountId: cdk.Stack.of(this).account,
-      prefix: 'aws-accelerator',
+      prefix: this.props.prefixes.bucketName,
     });
   }
 
@@ -561,7 +769,7 @@ export class OperationsStack extends AcceleratorStack {
   }
 
   private createStackSetAdminRole() {
-    Logger.info(`[operations-stack] Creating StackSet Administrator Role`);
+    this.logger.info(`Creating StackSet Administrator Role`);
     new cdk.aws_iam.Role(this, 'StackSetAdminRole', {
       roleName: 'AWSCloudFormationStackSetAdministrationRole',
       assumedBy: new cdk.aws_iam.ServicePrincipal('cloudformation.amazonaws.com'),
@@ -580,125 +788,307 @@ export class OperationsStack extends AcceleratorStack {
     });
   }
 
+  private createServiceCatalogPropagationRole() {
+    new cdk.aws_iam.Role(this, 'ServiceCatalogPropagationRole', {
+      roleName: this.acceleratorResourceNames.roles.crossAccountServiceCatalogPropagation,
+      assumedBy: this.getOrgPrincipals(this.organizationId),
+      inlinePolicies: {
+        default: new cdk.aws_iam.PolicyDocument({
+          statements: [
+            new cdk.aws_iam.PolicyStatement({
+              effect: cdk.aws_iam.Effect.ALLOW,
+              actions: [
+                'iam:GetGroup',
+                'iam:GetRole',
+                'iam:GetUser',
+                'iam:ListRoles',
+                'servicecatalog:AcceptPortfolioShare',
+                'servicecatalog:AssociatePrincipalWithPortfolio',
+                'servicecatalog:DisassociatePrincipalFromPortfolio',
+                'servicecatalog:ListAcceptedPortfolioShares',
+                'servicecatalog:ListPrincipalsForPortfolio',
+              ],
+              resources: ['*'],
+              conditions: {
+                ArnLike: {
+                  'aws:PrincipalARN': [
+                    `arn:${cdk.Stack.of(this).partition}:iam::*:role/${this.props.prefixes.accelerator}-*`,
+                  ],
+                },
+              },
+            }),
+          ],
+        }),
+      },
+    });
+
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
+    // rule suppression with evidence for this permission.
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM5,
+      details: [
+        {
+          path: `${this.stackName}/ServiceCatalogPropagationRole/Resource`,
+          reason: 'Policy must have access to all Service Catalog Portfolios and IAM Roles',
+        },
+      ],
+    });
+  }
+
   /**
-   * Custom resource to check if Identity Center Delegated Administrator
-   * needs to be updated.
+   * Function to create Identity Center Permission Sets
+   * @param identityCenterItem
+   * @param identityCenterInstanceArn
+   * @returns
    */
-  private addIdentityCenterPermissionSets(securityAdminAccountId: string, identityCenterInstanceId: string) {
+  private addIdentityCenterPermissionSets(
+    identityCenterItem: IdentityCenterConfig,
+    identityCenterInstanceArn: string,
+  ): PermissionSetMapping[] {
     const permissionSetMap: PermissionSetMapping[] = [];
-    if (cdk.Stack.of(this).account == securityAdminAccountId) {
-      const identityCenter = this.props.iamConfig.identityCenter;
-      if (identityCenter?.identityCenterPermissionSets) {
-        for (const identityCenterPermissionSet of identityCenter.identityCenterPermissionSets) {
-          const permissionSet = this.createPermissionsSet(identityCenterPermissionSet, identityCenterInstanceId);
-          permissionSetMap.push(permissionSet);
-        }
-      }
+
+    for (const identityCenterPermissionSet of identityCenterItem.identityCenterPermissionSets ?? []) {
+      const permissionSet = this.createPermissionsSet(
+        identityCenterPermissionSet,
+        identityCenterInstanceArn,
+        permissionSetMap,
+      );
+      permissionSetMap.push(permissionSet);
     }
+
     return permissionSetMap;
   }
 
-  private createPermissionsSet(
+  /**
+   * Function to get CustomerManaged Policy References List
+   * @param identityCenterPermissionSet {@link IdentityCenterPermissionSetConfig}
+   * @returns customerManagedPolicyReferencesList {@link cdk.aws_sso.CfnPermissionSet.CustomerManagedPolicyReferenceProperty}[]
+   */
+  private getCustomerManagedPolicyReferencesList(
     identityCenterPermissionSet: IdentityCenterPermissionSetConfig,
-    identityCenterInstanceId: string,
-  ): PermissionSetMapping {
-    let customerManagedPolicyReferencesList: cdk.aws_sso.CfnPermissionSet.CustomerManagedPolicyReferenceProperty[] = [];
-    const permissionSetPair: PermissionSetMapping = {
-      name: '',
-      arn: '',
-    };
-    Logger.info(`[operations-stack] Adding Identity Center Permission Set ${identityCenterPermissionSet.name}`);
-    if (identityCenterPermissionSet.policies?.customerManaged) {
-      customerManagedPolicyReferencesList = this.generateManagedPolicyReferences(
-        identityCenterPermissionSet.policies?.customerManaged,
-      );
-    }
+  ): cdk.aws_sso.CfnPermissionSet.CustomerManagedPolicyReferenceProperty[] {
+    const customerManagedPolicyReferencesList: cdk.aws_sso.CfnPermissionSet.CustomerManagedPolicyReferenceProperty[] =
+      [];
 
-    const convertedSessionDuration = this.convertMinutesToIso8601(identityCenterPermissionSet.sessionDuration);
+    if (identityCenterPermissionSet.policies) {
+      this.logger.info(`Adding Identity Center Permission Set ${identityCenterPermissionSet.name}`);
 
-    try {
-      //if check for managedpolicy or customer managed
-      const permissionSet = new cdk.aws_sso.CfnPermissionSet(
-        this,
-        `${pascalCase(identityCenterPermissionSet.name)}IdentityCenterPermissionSet`,
-        {
-          name: identityCenterPermissionSet.name,
-          instanceArn: identityCenterInstanceId,
-          managedPolicies: identityCenterPermissionSet?.policies?.awsManaged,
-          customerManagedPolicyReferences: customerManagedPolicyReferencesList,
-          sessionDuration: convertedSessionDuration ?? undefined,
-        },
-      );
-
-      permissionSetPair.name = permissionSet.name;
-      permissionSetPair.arn = permissionSet.attrPermissionSetArn;
-    } catch (e) {
-      Logger.error(e);
-      throw e;
-    }
-
-    return permissionSetPair;
-  }
-
-  private addIdentityCenterAssignments(
-    securityAdminAccountId: string,
-    permissionSetMap: PermissionSetMapping[],
-    identityCenterInstanceId: string,
-  ) {
-    if (cdk.Stack.of(this).account == securityAdminAccountId) {
-      const identityCenter = this.props.iamConfig.identityCenter;
-      if (identityCenter?.identityCenterAssignments) {
-        for (const assignment of identityCenter.identityCenterAssignments) {
-          this.createAssignment(assignment, permissionSetMap, identityCenterInstanceId);
-        }
+      // Add Customer managed and LZA managed policies
+      for (const policy of [
+        ...(identityCenterPermissionSet.policies.customerManaged ?? []),
+        ...(identityCenterPermissionSet.policies.acceleratorManaged ?? []),
+      ]) {
+        customerManagedPolicyReferencesList.push({ name: policy });
       }
     }
+
+    return customerManagedPolicyReferencesList;
   }
 
   /**
-   * Retrieve Identity Center Instance Id
+   * Function to get AWS Managed permissionsets
+   * @param identityCenterPermissionSet {@link IdentityCenterPermissionSetConfig}
+   * @returns awsManagedPolicies string[]
    */
-  private getIdentityCenterInstanceId(securityAdminAccountId: string) {
-    Logger.info(`[operations-stack] Retrieving Identity Center Instance Id`);
-    let identityCenterInstanceResponse;
-    let identityCenterInstanceId;
-    if (!securityAdminAccountId) {
-      securityAdminAccountId = this.props.accountsConfig.getManagementAccountId();
-    }
-    if (cdk.Stack.of(this).account == securityAdminAccountId) {
-      try {
-        identityCenterInstanceResponse = new IdentityCenterGetInstanceId(this, `IdentityCenterGetInstanceId`);
-        identityCenterInstanceId = identityCenterInstanceResponse.instanceId;
-      } catch (e) {
-        Logger.error(e);
-        throw e;
+  private getAwsManagedPolicies(identityCenterPermissionSet: IdentityCenterPermissionSetConfig): string[] {
+    const awsManagedPolicies: string[] = [];
+
+    for (const awsManagedPolicy of identityCenterPermissionSet?.policies?.awsManaged ?? []) {
+      if (awsManagedPolicy.startsWith('arn:')) {
+        awsManagedPolicies.push(awsManagedPolicy);
+      } else {
+        awsManagedPolicies.push(cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName(awsManagedPolicy).managedPolicyArn);
       }
     }
-    return identityCenterInstanceId;
+
+    return awsManagedPolicies;
+  }
+
+  /**
+   * Function to get permission boundary
+   * @param identityCenterPermissionSet {@link IdentityCenterPermissionSetConfig}
+   * @returns permissionsBoundary {@link cdk.aws_sso.CfnPermissionSet.PermissionsBoundaryProperty} | undefined
+   */
+  private getPermissionBoundary(
+    identityCenterPermissionSet: IdentityCenterPermissionSetConfig,
+  ): cdk.aws_sso.CfnPermissionSet.PermissionsBoundaryProperty | undefined {
+    let permissionsBoundary: cdk.aws_sso.CfnPermissionSet.PermissionsBoundaryProperty | undefined;
+
+    if (identityCenterPermissionSet.policies?.permissionsBoundary) {
+      if (identityCenterPermissionSet.policies.permissionsBoundary.customerManagedPolicy) {
+        permissionsBoundary = {
+          customerManagedPolicyReference: {
+            name: identityCenterPermissionSet.policies.permissionsBoundary.customerManagedPolicy.name,
+            path: identityCenterPermissionSet.policies.permissionsBoundary.customerManagedPolicy.path,
+          },
+        };
+      }
+      if (identityCenterPermissionSet.policies.permissionsBoundary.awsManagedPolicyName) {
+        permissionsBoundary = {
+          managedPolicyArn: cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName(
+            identityCenterPermissionSet.policies.permissionsBoundary.awsManagedPolicyName,
+          ).managedPolicyArn,
+        };
+      }
+    }
+
+    return permissionsBoundary;
+  }
+
+  /**
+   * Create Identity Center Permission sets
+   * @param identityCenterPermissionSet
+   * @param identityCenterInstanceArn
+   * @returns
+   */
+  private createPermissionsSet(
+    identityCenterPermissionSet: IdentityCenterPermissionSetConfig,
+    identityCenterInstanceArn: string,
+    permissionSetMap: PermissionSetMapping[],
+  ): PermissionSetMapping {
+    const customerManagedPolicyReferencesList =
+      this.getCustomerManagedPolicyReferencesList(identityCenterPermissionSet);
+
+    let convertedSessionDuration: string | undefined;
+
+    if (identityCenterPermissionSet.sessionDuration) {
+      convertedSessionDuration = this.convertMinutesToIso8601(identityCenterPermissionSet.sessionDuration);
+    }
+
+    const awsManagedPolicies = this.getAwsManagedPolicies(identityCenterPermissionSet);
+
+    const permissionsBoundary = this.getPermissionBoundary(identityCenterPermissionSet);
+
+    let permissionSetProps: cdk.aws_sso.CfnPermissionSetProps = {
+      name: identityCenterPermissionSet.name,
+      instanceArn: identityCenterInstanceArn,
+      managedPolicies: awsManagedPolicies.length > 0 ? awsManagedPolicies : undefined,
+      customerManagedPolicyReferences:
+        customerManagedPolicyReferencesList.length > 0 ? customerManagedPolicyReferencesList : undefined,
+      sessionDuration: convertedSessionDuration,
+      permissionsBoundary: permissionsBoundary,
+    };
+
+    if (identityCenterPermissionSet.policies?.inlinePolicy) {
+      // Read in the policy document which should be properly formatted json
+      const inlinePolicyDocument = JSON.parse(
+        this.generatePolicyReplacements(
+          path.join(this.props.configDirPath, identityCenterPermissionSet.policies?.inlinePolicy),
+          false,
+          this.organizationId,
+        ),
+      );
+      permissionSetProps = {
+        name: identityCenterPermissionSet.name,
+        instanceArn: identityCenterInstanceArn,
+        managedPolicies: awsManagedPolicies.length > 0 ? awsManagedPolicies : undefined,
+        customerManagedPolicyReferences:
+          customerManagedPolicyReferencesList.length > 0 ? customerManagedPolicyReferencesList : undefined,
+        sessionDuration: convertedSessionDuration ?? undefined,
+        inlinePolicy: inlinePolicyDocument,
+        permissionsBoundary: permissionsBoundary,
+      };
+    }
+
+    const permissionSet = new cdk.aws_sso.CfnPermissionSet(
+      this,
+      `${pascalCase(identityCenterPermissionSet.name)}IdentityCenterPermissionSet`,
+      permissionSetProps,
+    );
+
+    // Create dependency for CfnPermissionSet
+    for (const item of permissionSetMap) {
+      permissionSet.node.addDependency(item.permissionSet);
+    }
+
+    return { name: permissionSet.name, arn: permissionSet.attrPermissionSetArn, permissionSet: permissionSet };
+  }
+
+  private addIdentityCenterAssignments(
+    identityCenterItem: IdentityCenterConfig,
+    identityCenterInstanceArn: string,
+    permissionSetMap: PermissionSetMapping[],
+  ) {
+    for (const assignment of identityCenterItem.identityCenterAssignments ?? []) {
+      this.createAssignment(assignment, permissionSetMap, identityCenterInstanceArn);
+    }
+  }
+
+  private getAssignmentPrincipals(
+    assignment: IdentityCenterAssignmentConfig,
+    targetAccountId: string,
+  ): { type: string; name: string; id: string }[] {
+    if (!assignment.principals || assignment.principals.length === 0) {
+      return [];
+    }
+
+    const identityStoreId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+      this,
+      this.acceleratorResourceNames.parameters.identityStoreId,
+    );
+
+    const usersGroupsMetadata = new UsersGroupsMetadata(
+      this,
+      pascalCase(`UsersGroupsMetadata-${assignment.name}-${targetAccountId}`),
+      {
+        identityStoreId: identityStoreId,
+        principals: assignment.principals,
+        resourceUniqueIdentifier: `${targetAccountId}-${assignment.name}`,
+        customResourceLambdaEnvironmentEncryptionKmsKey: this.lambdaKey,
+        customResourceLambdaCloudWatchLogKmsKey: this.cloudwatchKey,
+        customResourceLambdaLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+      },
+    );
+
+    return usersGroupsMetadata.principalsMetadata;
   }
 
   private createAssignment(
     assignment: IdentityCenterAssignmentConfig,
     permissionSetMap: PermissionSetMapping[],
-    identityCenterInstanceId: string,
+    identityCenterInstanceArn: string,
   ) {
-    let listOfTargets = [];
-    listOfTargets = this.getAccountIdsFromDeploymentTarget(assignment.deploymentTargets);
+    const targetAccountIds = this.getAccountIdsFromDeploymentTarget(assignment.deploymentTargets);
     const permissionSetArnValue = this.getPermissionSetArn(permissionSetMap, assignment.permissionSetName);
-    for (const target of listOfTargets) {
-      Logger.info(`[operations-stack] Creating Identity Center Assignment ${assignment.name}-${target}`);
-      try {
-        new cdk.aws_sso.CfnAssignment(this, `${pascalCase(assignment.name)}-${target}`, {
-          instanceArn: identityCenterInstanceId,
+
+    for (const targetAccountId of targetAccountIds) {
+      // backward compatibility for principalId & principalType property
+      if (assignment.principalId && assignment.principalType) {
+        this.logger.info(`Creating Identity Center Assignment ${assignment.name}-${targetAccountId}`);
+        new cdk.aws_sso.CfnAssignment(this, `${pascalCase(assignment.name)}-${targetAccountId}`, {
+          instanceArn: identityCenterInstanceArn,
           permissionSetArn: permissionSetArnValue,
           principalId: assignment.principalId,
           principalType: assignment.principalType,
-          targetId: target,
+          targetId: targetAccountId,
           targetType: 'AWS_ACCOUNT',
         });
-      } catch (e) {
-        Logger.error(e);
-        throw e;
+      }
+
+      // New feature with list of principals in assignment
+      const cfnAssignments: cdk.aws_sso.CfnAssignment[] = [];
+
+      const assignmentPrincipals = this.getAssignmentPrincipals(assignment, targetAccountId);
+
+      for (const assignmentPrincipal of assignmentPrincipals) {
+        const cfnAssignment = new cdk.aws_sso.CfnAssignment(
+          this,
+          `${pascalCase(assignment.name)}-${targetAccountId}-${assignmentPrincipal.type}-${assignmentPrincipal.name}`,
+          {
+            instanceArn: identityCenterInstanceArn,
+            permissionSetArn: permissionSetArnValue,
+            principalId: assignmentPrincipal.id,
+            principalType: assignmentPrincipal.type,
+            targetId: targetAccountId,
+            targetType: 'AWS_ACCOUNT',
+          },
+        );
+
+        // To create dependency for CfnAssignment object
+        for (const dependency of cfnAssignments) {
+          cfnAssignment.addDependency(dependency);
+        }
+        cfnAssignments.push(cfnAssignment);
       }
     }
   }
@@ -713,26 +1103,38 @@ export class OperationsStack extends AcceleratorStack {
     return permissionSetArn;
   }
 
+  /**
+   * Function to add Identity Center Resources
+   * @param securityAdminAccountId
+   */
   private addIdentityCenterResources(securityAdminAccountId: string) {
     if (this.props.iamConfig.identityCenter) {
-      if (cdk.Stack.of(this).account == securityAdminAccountId) {
-        const identityCenterInstanceId = this.getIdentityCenterInstanceId(securityAdminAccountId);
-        if (!identityCenterInstanceId) {
-          throw new Error(
-            `[operations-stack] No Identity Center instance found. Please ensure that the Identity Service is enabled, and rerun the Code Pipeline`,
-          );
-        }
-        const permissionSetList = this.addIdentityCenterPermissionSets(
-          securityAdminAccountId,
-          identityCenterInstanceId,
+      const delegatedAdminAccountId = this.props.iamConfig.identityCenter.delegatedAdminAccount
+        ? this.props.accountsConfig.getAccountId(this.props.iamConfig.identityCenter.delegatedAdminAccount)
+        : securityAdminAccountId;
+
+      if (cdk.Stack.of(this).account === delegatedAdminAccountId) {
+        const identityCenterInstanceArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
+          this,
+          this.acceleratorResourceNames.parameters.identityCenterInstanceArn,
         );
-        this.addIdentityCenterAssignments(securityAdminAccountId, permissionSetList, identityCenterInstanceId);
+
+        const permissionSetList = this.addIdentityCenterPermissionSets(
+          this.props.iamConfig.identityCenter,
+          identityCenterInstanceArn,
+        );
+
+        this.addIdentityCenterAssignments(
+          this.props.iamConfig.identityCenter,
+          identityCenterInstanceArn,
+          permissionSetList,
+        );
       }
     }
   }
 
   private createStackSetExecutionRole(managementAccountId: string) {
-    Logger.info(`[operations-stack] Creating StackSet Execution Role`);
+    this.logger.info(`Creating StackSet Execution Role`);
     new cdk.aws_iam.Role(this, 'StackSetExecutionRole', {
       roleName: 'AWSCloudFormationStackSetExecutionRole',
       assumedBy: new cdk.aws_iam.AccountPrincipal(managementAccountId),
@@ -742,35 +1144,71 @@ export class OperationsStack extends AcceleratorStack {
 
     // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
     // rule suppression with evidence for this permission.
-    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/StackSetExecutionRole/Resource`, [
-      {
-        id: 'AwsSolutions-IAM4',
-        reason: 'IAM Role created as per accelerator iam-config needs AWS managed policy',
-      },
-    ]);
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM4,
+      details: [
+        {
+          path: `${this.stackName}/StackSetExecutionRole/Resource`,
+          reason: 'IAM Role created as per accelerator iam-config needs AWS managed policy',
+        },
+      ],
+    });
 
     // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
     // rule suppression with evidence for this permission.
-    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/StackSetAdminRole/Resource`, [
-      {
-        id: 'AwsSolutions-IAM5',
-        reason: 'Policies definition are derived from accelerator iam-config boundary-policy file',
-      },
-    ]);
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM5,
+      details: [
+        {
+          path: `${this.stackName}/StackSetAdminRole/Resource`,
+          reason: 'Policies definition are derived from accelerator iam-config boundary-policy file',
+        },
+      ],
+    });
   }
 
-  private createAssetAccessRole() {
-    const accessBucketArn = `arn:${
-      this.props.partition
-    }:s3:::aws-accelerator-assets-${this.props.accountsConfig.getManagementAccountId()}-${
-      this.props.globalConfig.homeRegion
-    }`;
+  /**
+   * Lookup asset bucket KMS key to use for ACM certificates and
+   * EC2 firewall configurations
+   * @param props {@link AcceleratorStackProps}
+   * @param firewallRoles string[]
+   * @returns cdk.aws_kms.Key | undefined
+   */
+  private lookupAssetBucketKmsKey(props: AcceleratorStackProps, firewallRoles: string[]): cdk.aws_kms.Key | undefined {
+    if (props.globalConfig.homeRegion === cdk.Stack.of(this).region || firewallRoles.length > 0) {
+      return new KeyLookup(this, 'AssetsBucketKms', {
+        accountId: this.props.accountsConfig.getManagementAccountId(),
+        keyRegion: this.props.globalConfig.homeRegion,
+        roleName: this.acceleratorResourceNames.roles.crossAccountAssetsBucketCmkArnSsmParameterAccess,
+        keyArnParameterName: this.acceleratorResourceNames.parameters.assetsBucketCmkArn,
+        kmsKey: this.cloudwatchKey,
+        logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+        acceleratorPrefix: this.props.prefixes.accelerator,
+      }).getKey();
+    }
+    return;
+  }
+
+  /**
+   * Create ACM certificate asset bucket access role
+   * @param assetBucketKmsKey
+   */
+  private createAssetAccessRole(assetBucketKmsKey?: cdk.aws_kms.Key) {
+    if (!assetBucketKmsKey) {
+      throw new Error(
+        `Asset bucket KMS key is undefined. KMS key must be defined so permissions can be added to the custom resource role.`,
+      );
+    }
+
+    const accessBucketArn = `arn:${this.props.partition}:s3:::${
+      this.acceleratorResourceNames.bucketPrefixes.assets
+    }-${this.props.accountsConfig.getManagementAccountId()}-${this.props.globalConfig.homeRegion}`;
 
     const accountId = cdk.Stack.of(this).account;
 
     const accessRoleResourceName = `AssetAccessRole${accountId}`;
     const assetsAccessRole = new cdk.aws_iam.Role(this, accessRoleResourceName, {
-      roleName: `AWSAccelerator-AssetsAccessRole`,
+      roleName: `${this.props.prefixes.accelerator}-AssetsAccessRole`,
       assumedBy: new cdk.aws_iam.ServicePrincipal('lambda.amazonaws.com'),
       description: 'AWS Accelerator assets access role in workload accounts deploy ACM imported certificates.',
     });
@@ -802,42 +1240,267 @@ export class OperationsStack extends AcceleratorStack {
       }),
     );
 
-    const assetsBucketKmsKey = new KeyLookup(this, 'AssetsBucketKms', {
-      accountId: this.props.accountsConfig.getManagementAccountId(),
-      keyRegion: this.props.globalConfig.homeRegion,
-      roleName: AcceleratorStack.ACCELERATOR_ASSETS_CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME,
-      keyArnParameterName: AcceleratorStack.ACCELERATOR_ASSETS_KEY_ARN_PARAMETER_NAME,
-      kmsKey: this.cloudwatchKey,
-      logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-    }).getKey();
-
     assetsAccessRole.addToPolicy(
       new cdk.aws_iam.PolicyStatement({
-        resources: [assetsBucketKmsKey.keyArn],
+        resources: [assetBucketKmsKey.keyArn],
         actions: ['kms:Decrypt'],
       }),
     );
 
     // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
     // rule suppression with evidence for this permission.
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `${this.stackName}/${accessRoleResourceName}/DefaultPolicy/Resource`,
-      [
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM5,
+      details: [
         {
-          id: 'AwsSolutions-IAM5',
+          path: `${this.stackName}/${accessRoleResourceName}/DefaultPolicy/Resource`,
           reason: 'Policy permissions are part of managed role and rest is to get access from s3 bucket',
         },
       ],
-    );
+    });
 
     // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
     // rule suppression with evidence for this permission.
-    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/${accessRoleResourceName}/Resource`, [
-      {
-        id: 'AwsSolutions-IAM4',
-        reason: 'IAM Role for lambda needs AWS managed policy',
-      },
-    ]);
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM4,
+      details: [
+        {
+          path: `${this.stackName}/${accessRoleResourceName}/Resource`,
+          reason: 'IAM Role for lambda needs AWS managed policy',
+        },
+      ],
+    });
+  }
+
+  private warmAccount(warm: boolean) {
+    if (!warm) {
+      return;
+    }
+    new WarmAccount(this, 'WarmAccount', {
+      cloudwatchKmsKey: this.cloudwatchKey,
+      logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+      ssmPrefix: this.props.prefixes.ssmParamName,
+    });
+  }
+
+  /**
+   * Creates a bucket for storing third-party firewall configuration and license files
+   * @param props {@link AcceleratorStackProps}
+   * @param firewallRoles string[]
+   * @param assetBucketKmsKey cdk.aws_kms.Key | undefined
+   * @returns Bucket | undefined
+   */
+  private createFirewallConfigBucket(
+    props: AcceleratorStackProps,
+    firewallRoles: string[],
+    assetBucketKmsKey?: cdk.aws_kms.Key,
+  ): Bucket | undefined {
+    if (firewallRoles.length > 0) {
+      // Create firewall config bucket
+      const firewallConfigBucket = new Bucket(this, 'FirewallConfigBucket', {
+        s3BucketName: `${this.acceleratorResourceNames.bucketPrefixes.firewallConfig}-${cdk.Stack.of(this).account}-${
+          cdk.Stack.of(this).region
+        }`,
+        encryptionType: BucketEncryptionType.SSE_KMS,
+        kmsKey: this.getAcceleratorKey(AcceleratorKeyType.S3_KEY),
+        serverAccessLogsBucketName: `${this.acceleratorResourceNames.bucketPrefixes.s3AccessLogs}-${
+          cdk.Stack.of(this).account
+        }-${cdk.Stack.of(this).region}`,
+      });
+
+      // Create IAM policy and role for config replacement custom resource
+      this.createFirewallConfigCustomResourceRole(props, firewallConfigBucket, assetBucketKmsKey);
+
+      // Grant read access to all firewall roles in scope
+      for (const role of firewallRoles) {
+        firewallConfigBucket.getS3Bucket().grantRead(this.roles[role]);
+        // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
+        // rule suppression with evidence for this permission.
+        this.nagSuppressionInputs.push({
+          id: NagSuppressionRuleIds.IAM5,
+          details: [
+            {
+              path: `${this.stackName}/${this.roles[role].node.id}/DefaultPolicy/Resource`,
+              reason: 'Access to read from the S3 bucket is required for this IAM instance profile',
+            },
+          ],
+        });
+      }
+      return firewallConfigBucket;
+    }
+    return;
+  }
+
+  /**
+   * Returns an array of IAM instance profile names that are in scope of the stack.
+   * @param vpcResources ({@link VpcConfig} | {@link VpcTemplatesConfig})[]
+   * @param firewallConfig {@link Ec2FirewallConfig}
+   * @returns string[]
+   */
+  private getFirewallRolesInScope(
+    vpcResources: (VpcConfig | VpcTemplatesConfig)[],
+    firewallConfig?: Ec2FirewallConfig,
+  ): string[] {
+    const firewalls = [...(firewallConfig?.autoscalingGroups ?? []), ...(firewallConfig?.instances ?? [])];
+    const firewallRoles: string[] = [];
+
+    for (const firewall of firewalls) {
+      if (
+        this.isFirewallVpcInScope(vpcResources, firewall) &&
+        firewall.launchTemplate.iamInstanceProfile &&
+        (firewall.configFile || firewall.licenseFile)
+      ) {
+        firewallRoles.push(firewall.launchTemplate.iamInstanceProfile);
+      }
+    }
+    return firewallRoles;
+  }
+
+  /**
+   * Returns true if the firewall is in scope of the stack.
+   * @param vpcResources ({@link VpcConfig} | {@link VpcTemplatesConfig})[]
+   * @param firewall {@link Ec2FirewallInstanceConfig} | {@link Ec2FirewallAutoScalingGroupConfig}
+   * @returns boolean
+   */
+  private isFirewallVpcInScope(
+    vpcResources: (VpcConfig | VpcTemplatesConfig)[],
+    firewall: Ec2FirewallInstanceConfig | Ec2FirewallAutoScalingGroupConfig,
+  ): boolean {
+    const vpc = getVpcConfig(vpcResources, firewall.vpc);
+    const vpcAccountIds = this.getVpcAccountIds(vpc);
+    return vpcAccountIds.includes(cdk.Stack.of(this).account) && vpc.region === cdk.Stack.of(this).region;
+  }
+
+  /**
+   * Create Lambda custom resource role for firewall config replacements
+   * @param props {@link AcceleratorStackProps}
+   * @param firewallConfigBucket {@link Bucket}
+   * @param assetBucketKmsKey cdk.aws_kms.Key | undefined
+   * @returns cdk.aws_iam.Role
+   */
+  private createFirewallConfigCustomResourceRole(
+    props: AcceleratorStackProps,
+    firewallConfigBucket: Bucket,
+    assetBucketKmsKey?: cdk.aws_kms.Key,
+  ): cdk.aws_iam.Role {
+    if (!assetBucketKmsKey) {
+      throw new Error(
+        `Asset bucket KMS key is undefined. KMS key must be defined so permissions can be added to the custom resource role.`,
+      );
+    }
+
+    const assetBucketArn = `arn:${props.partition}:s3:::${
+      this.acceleratorResourceNames.bucketPrefixes.assets
+    }-${props.accountsConfig.getManagementAccountId()}-${props.globalConfig.homeRegion}`;
+
+    const lambdaExecutionPolicy = cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName(
+      'service-role/AWSLambdaBasicExecutionRole',
+    );
+
+    const firewallConfigPolicy = new cdk.aws_iam.ManagedPolicy(this, 'FirewallConfigPolicy', {
+      statements: [
+        new cdk.aws_iam.PolicyStatement({
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['ec2:DescribeInstances', 'ec2:DescribeSubnets', 'ec2:DescribeVpcs', 'ec2:DescribeVpnConnections'],
+          resources: ['*'],
+        }),
+        new cdk.aws_iam.PolicyStatement({
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['s3:GetObject*', 's3:ListBucket'],
+          resources: [assetBucketArn, `${assetBucketArn}/*`],
+        }),
+        new cdk.aws_iam.PolicyStatement({
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['kms:Decrypt'],
+          resources: [assetBucketKmsKey.keyArn],
+        }),
+        new cdk.aws_iam.PolicyStatement({
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['sts:AssumeRole'],
+          resources: [
+            `arn:${this.partition}:iam::*:role/${this.acceleratorResourceNames.roles.crossAccountVpnRoleName}`,
+          ],
+        }),
+      ],
+    });
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
+    // rule suppression with evidence for this permission.
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM5,
+      details: [
+        {
+          path: `${this.stackName}/${firewallConfigPolicy.node.id}/Resource`,
+          reason: 'Policy permissions are part of managed role and rest is to get access from s3 bucket',
+        },
+      ],
+    });
+
+    const firewallConfigRole = new cdk.aws_iam.Role(this, 'FirewallConfigRole', {
+      assumedBy: new cdk.aws_iam.ServicePrincipal(`lambda.${this.urlSuffix}`),
+      description: 'Landing Zone Accelerator firewall configuration custom resource access role',
+      managedPolicies: [firewallConfigPolicy, lambdaExecutionPolicy],
+      roleName: this.acceleratorResourceNames.roles.firewallConfigFunctionRoleName,
+    });
+    firewallConfigBucket.getS3Bucket().grantPut(firewallConfigRole);
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
+    // rule suppression with evidence for this permission.
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM5,
+      details: [
+        {
+          path: `${this.stackName}/${firewallConfigRole.node.id}/DefaultPolicy/Resource`,
+          reason: 'Policy permissions are part of managed role and rest is to get access from s3 bucket',
+        },
+      ],
+    });
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+    // rule suppression with evidence for this permission.
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM4,
+      details: [
+        {
+          path: `${this.stackName}/${firewallConfigRole.node.id}/Resource`,
+          reason: 'IAM Role for lambda needs AWS managed policy',
+        },
+      ],
+    });
+
+    return firewallConfigRole;
+  }
+
+  /**
+   * Add SSM Parameters
+   */
+  private addSsmParameters() {
+    let index = 1;
+    const parameterMap = new Map<number, cdk.aws_ssm.StringParameter>();
+
+    for (const ssmParametersItem of this.props.globalConfig.ssmParameters ?? []) {
+      if (!this.isIncluded(ssmParametersItem.deploymentTargets)) {
+        continue;
+      }
+
+      for (const parameterItem of ssmParametersItem.parameters) {
+        this.logger.info(`[operations-stack] Add SSM Parameter ${parameterItem.path}`);
+        // Create parameter
+        const parameter = new cdk.aws_ssm.StringParameter(this, pascalCase(`SSMParameter-${parameterItem.name}`), {
+          parameterName: parameterItem.path,
+          stringValue: parameterItem.value,
+        });
+        parameterMap.set(index, parameter);
+
+        // Add a dependency for every 5 parameters
+        if (index > 5) {
+          const dependsOnParam = parameterMap.get(index - (index % 5));
+          if (!dependsOnParam) {
+            this.logger.error(`Error creating SSM parameter ${parameterItem.name}: previous SSM parameter undefined`);
+            throw new Error(`Configuration validation failed at runtime.`);
+          }
+          parameter.node.addDependency(dependsOnParam);
+        }
+        // Increment index
+        index += 1;
+      }
+    }
   }
 }

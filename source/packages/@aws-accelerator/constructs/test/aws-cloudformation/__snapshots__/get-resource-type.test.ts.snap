@@ -1,0 +1,345 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`GetCloudFormationResourceType Construct(GetCloudFormationResourceType):  Snapshot Test 1`] = `
+{
+  "Resources": {
+    "CustomKey1E6D0D07": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::333333333333:root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "TestGetCloudFormationResourceTypeGetCloudFormationResourceTypeFunctionA13B89C3": {
+      "DependsOn": [
+        "TestGetCloudFormationResourceTypeGetCloudFormationResourceTypeFunctionServiceRoleDefaultPolicy7A52BF9E",
+        "TestGetCloudFormationResourceTypeGetCloudFormationResourceTypeFunctionServiceRole450819BD",
+      ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Lambda managed policy",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Lambda managed policy",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Get CloudFormation Resources from Stack by LogicalResourceId",
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "TestGetCloudFormationResourceTypeGetCloudFormationResourceTypeFunctionServiceRole450819BD",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 180,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "TestGetCloudFormationResourceTypeGetCloudFormationResourceTypeFunctionLogGroup602C5B86": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "CustomKey1E6D0D07",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "TestGetCloudFormationResourceTypeGetCloudFormationResourceTypeFunctionA13B89C3",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TestGetCloudFormationResourceTypeGetCloudFormationResourceTypeFunctionServiceRole450819BD": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Lambda managed policy",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Lambda managed policy",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TestGetCloudFormationResourceTypeGetCloudFormationResourceTypeFunctionServiceRoleDefaultPolicy7A52BF9E": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Lambda managed policy",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Lambda managed policy",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "cloudformation:DescribeStackResource",
+              "Effect": "Allow",
+              "Resource": "arn:aws:cloudformation:*:333333333333",
+              "Sid": "cloudformation",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "TestGetCloudFormationResourceTypeGetCloudFormationResourceTypeFunctionServiceRoleDefaultPolicy7A52BF9E",
+        "Roles": [
+          {
+            "Ref": "TestGetCloudFormationResourceTypeGetCloudFormationResourceTypeFunctionServiceRole450819BD",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "TestGetCloudFormationResourceTypeGetCloudFormationResourceTypeProviderframeworkonEvent83E12901": {
+      "DependsOn": [
+        "TestGetCloudFormationResourceTypeGetCloudFormationResourceTypeProviderframeworkonEventServiceRoleDefaultPolicyB5AC412E",
+        "TestGetCloudFormationResourceTypeGetCloudFormationResourceTypeProviderframeworkonEventServiceRoleFB2D11F4",
+      ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "CDK generated provider",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "CDK generated provider",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Stack/TestGetCloudFormationResourceType/GetCloudFormationResourceTypeProvider)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "TestGetCloudFormationResourceTypeGetCloudFormationResourceTypeFunctionA13B89C3",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "TestGetCloudFormationResourceTypeGetCloudFormationResourceTypeProviderframeworkonEventServiceRoleFB2D11F4",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "TestGetCloudFormationResourceTypeGetCloudFormationResourceTypeProviderframeworkonEventServiceRoleDefaultPolicyB5AC412E": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "CDK generated provider",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "CDK generated provider",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "TestGetCloudFormationResourceTypeGetCloudFormationResourceTypeFunctionA13B89C3",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "TestGetCloudFormationResourceTypeGetCloudFormationResourceTypeFunctionA13B89C3",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "TestGetCloudFormationResourceTypeGetCloudFormationResourceTypeProviderframeworkonEventServiceRoleDefaultPolicyB5AC412E",
+        "Roles": [
+          {
+            "Ref": "TestGetCloudFormationResourceTypeGetCloudFormationResourceTypeProviderframeworkonEventServiceRoleFB2D11F4",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "TestGetCloudFormationResourceTypeGetCloudFormationResourceTypeProviderframeworkonEventServiceRoleFB2D11F4": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "CDK generated provider",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "CDK generated provider",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TestGetCloudFormationResourceTypeGetCloudFormationResourceTypeResource41628DFB": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "TestGetCloudFormationResourceTypeGetCloudFormationResourceTypeProviderframeworkonEvent83E12901",
+            "Arn",
+          ],
+        },
+        "logicalResourceId": "TestResource",
+        "stackName": "AWSAccelerator-TestStack-us-east-1",
+      },
+      "Type": "Custom::GetCloudFormationResourceType",
+      "UpdateReplacePolicy": "Delete",
+    },
+  },
+}
+`;

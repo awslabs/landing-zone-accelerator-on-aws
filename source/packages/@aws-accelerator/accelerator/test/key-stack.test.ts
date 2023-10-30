@@ -18,7 +18,7 @@ import { snapShotTest } from './snapshot-test';
 
 const testNamePrefix = 'Construct(KeyStack): ';
 
-const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.KEY, 'all-enabled', 'aws', 'us-east-1');
+const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.KEY, 'aws', 'us-east-1');
 const stack = acceleratorTestStacks.stacks.get(`Audit-us-east-1`)!;
 
 describe('KeyStack', () => {

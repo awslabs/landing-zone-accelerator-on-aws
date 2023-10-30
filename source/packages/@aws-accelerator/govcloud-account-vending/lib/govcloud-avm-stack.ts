@@ -16,9 +16,14 @@ import { Construct } from 'constructs';
 import * as path from 'path';
 import { GovCloudAccountVendingProductStack } from './govcloud-avm-product-stack';
 import * as fs from 'fs';
+import { version } from '../../../../package.json';
+
+export interface GovCloudAccountVendingStackProps extends cdk.StackProps {
+  readonly acceleratorPrefix: string;
+}
 
 export class GovCloudAccountVendingStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props: GovCloudAccountVendingStackProps) {
     super(scope, id, props);
 
     /** This stack creates service catalog product which can 
@@ -53,7 +58,10 @@ export class GovCloudAccountVendingStack extends cdk.Stack {
       productVersions: [
         {
           cloudFormationTemplate: cdk.aws_servicecatalog.CloudFormationTemplate.fromProductStack(
-            new GovCloudAccountVendingProductStack(this, 'GovCloudAccountVendingProductStack'),
+            new GovCloudAccountVendingProductStack(this, 'GovCloudAccountVendingProductStack', {
+              acceleratorPrefix: props.acceleratorPrefix,
+              description: `(SO0199-govcloudavmproduct) Landing Zone Accelerator on AWS. Version ${version}.`,
+            }),
           ),
           productVersionName: 'v1.0.0',
           description:
@@ -69,10 +77,10 @@ export class GovCloudAccountVendingStack extends cdk.Stack {
     // Lambda function to be used in Custom Resource
     const accountVendingFunction = new cdk.aws_lambda.Function(this, 'GovCloudAccountVendingFunction', {
       code: new cdk.aws_lambda.InlineCode(fileContents.toString()),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
       handler: 'index.handler',
       timeout: cdk.Duration.seconds(900),
-      functionName: 'AWSAccelerator-GovCloudAccountVending',
+      functionName: `${props.acceleratorPrefix}-GovCloudAccountVending`,
       description: 'Create AWS GovCloud (US) Accounts',
       initialPolicy: [
         new cdk.aws_iam.PolicyStatement({
