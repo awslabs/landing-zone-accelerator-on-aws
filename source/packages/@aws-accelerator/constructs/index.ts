@@ -137,6 +137,7 @@ export * from './lib/aws-servicecatalog/propagate-portfolio-associations';
 export * from './lib/aws-ssm/document';
 export * from './lib/aws-ssm/inventory';
 export * from './lib/aws-ssm/session-manager-settings';
+export * from './lib/aws-ssm/policy-attachment';
 export * from './lib/aws-ssm/put-ssm-parameter';
 export * from './lib/aws-ssm/ssm-parameter-lookup';
 export * from './lib/aws-events/security-hub-events-log';

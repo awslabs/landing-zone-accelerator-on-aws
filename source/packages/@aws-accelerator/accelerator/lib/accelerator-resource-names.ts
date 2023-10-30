@@ -81,6 +81,7 @@ interface CmkDetails {
   acceleratorKey: { alias: string; description: string };
   managementKey: { alias: string; description: string };
   assetsBucket: { alias: string; description: string };
+  ssmKey: { alias: string; description: string };
 }
 interface BucketPrefixes {
   assetsAccessLog: string;
@@ -156,6 +157,7 @@ export class AcceleratorResourceNames {
     acceleratorKey: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
     managementKey: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
     assetsBucket: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
+    ssmKey: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
   };
   public bucketPrefixes: BucketPrefixes = {
     assetsAccessLog: 'PLACE_HOLDER',
@@ -290,6 +292,10 @@ export class AcceleratorResourceNames {
       description: 'Key used to encrypt solution assets',
     };
 
+    this.customerManagedKeys.ssmKey = {
+      alias: props.prefixes.kmsAlias + '/sessionmanager-logs/session',
+      description: 'AWS Accelerator Session Manager Session Encryption',
+    };
     //
     // Bucket prefixes initialization
     this.bucketPrefixes.assetsAccessLog = props.prefixes.bucketName + '-assets-logs';

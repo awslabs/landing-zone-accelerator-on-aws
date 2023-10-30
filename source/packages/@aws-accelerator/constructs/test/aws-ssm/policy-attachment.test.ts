@@ -12,37 +12,44 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { SsmSessionManagerSettings } from '../../index';
+import { SsmSessionManagerPolicy } from '../../index';
 import { snapShotTest } from '../snapshot-test';
 
-//import { SynthUtils } from '@aws-cdk/assert';
-
-const testNamePrefix = 'Construct(SsmSessionManagerSettings): ';
+const testNamePrefix = 'Construct(SsmSessionManagerPolicy): ';
 
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
 
-new SsmSessionManagerSettings(stack, 'SsmSessionManagerSettings', {
+new SsmSessionManagerPolicy(stack, 'SsmSessionManagerPolicy', {
   s3BucketName: 'bucketName',
-  s3KeyPrefix: 'prefix',
   s3BucketKeyArn: 'arn',
   sendToS3: true,
   sendToCloudWatchLogs: true,
-  cloudWatchEncryptionEnabled: true,
-  cloudWatchEncryptionKey: new cdk.aws_kms.Key(stack, 'CwKey', {}),
-  constructLoggingKmsKey: new cdk.aws_kms.Key(stack, 'Key', {}),
-  logRetentionInDays: 3653,
+  attachPolicyToIamRoles: ['Test1', 'Test2'],
   region: 'us-east-1',
+  enabledRegions: ['us-east-1', 'us-west-2'],
   prefixes: { accelerator: 'AWSAccelerator', ssmLog: 'aws-accelerator' },
   ssmKeyDetails: {
     alias: 'accelerator/sessionmanager-logs/session',
     description: 'AWS Accelerator Session Manager Session Encryption',
   },
+  cloudWatchLogGroupList: [
+    'arn:aws:logs:us-east-1:111111111111:log-group:*',
+    'arn:aws:logs:us-west-2:111111111111:log-group:*',
+  ],
+  sessionManagerCloudWatchLogGroupList: [
+    'arn:aws:logs:us-east-1:111111111111:log-group:aws-accelerator-sessionmanager-logs:*',
+    'arn:aws:logs:us-west-2:111111111111:log-group:aws-accelerator-sessionmanager-logs:*',
+  ],
+  s3BucketList: [
+    'arn:aws:s3:::${this.centralLogsBucketName}/session/111111111111/us-east-1/*',
+    'arn:aws:s3:::${this.centralLogsBucketName}/session/111111111111/us-west-2/*',
+  ],
 });
 
 /**
- * SsmSessionManagerSettings construct test
+ * SsmSessionManagerPolicy construct test
  */
-describe('SsmSessionManagerSettings', () => {
+describe('SsmSessionManagerPolicy', () => {
   snapShotTest(testNamePrefix, stack);
 });

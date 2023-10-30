@@ -53,6 +53,7 @@ const prefixes: AcceleratorResourcePrefixes = {
   ssmParamName: 'aws-accelerator-ssm',
   importResourcesSsmParamName: 'aws-accelerator-import-resources-ssm',
   trailLogName: 'accelerator-trail-log',
+  ssmLogName: 'aws-accelerator',
 };
 
 describe('getContext ideally', () => {

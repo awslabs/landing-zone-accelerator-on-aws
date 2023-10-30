@@ -1354,6 +1354,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
     if (
       !this.isAccountExcluded(this.props.globalConfig.logging.sessionManager.excludeAccounts) &&
       !this.isRegionExcluded(this.props.globalConfig.logging.sessionManager.excludeRegions)
+      // remove region exclude, set to home region
     ) {
       if (
         this.props.globalConfig.logging.sessionManager.sendToCloudWatchLogs ||
@@ -1374,43 +1375,15 @@ export class SecurityResourcesStack extends AcceleratorStack {
           constructLoggingKmsKey: this.cloudwatchKey,
           logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
           region: cdk.Stack.of(this).region,
-          acceleratorPrefix: this.props.prefixes.accelerator,
           rolesInAccounts: this.props.globalConfig.iamRoleSsmParameters,
-        });
-
-        // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
-        // rule suppression with evidence for this permission.
-        this.nagSuppressionInputs.push({
-          id: NagSuppressionRuleIds.IAM5,
-          details: [
-            {
-              path: `${this.stackName}/SsmSessionManagerSettings/SessionManagerEC2Policy/Resource`,
-              reason:
-                'Policy needed access to all S3 objects for the account to put objects into the access log bucket',
-            },
-          ],
-        });
-
-        // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies.
-        // rule suppression with evidence for this permission.
-        this.nagSuppressionInputs.push({
-          id: NagSuppressionRuleIds.IAM4,
-          details: [
-            {
-              path: `${this.stackName}/SsmSessionManagerSettings/SessionManagerEC2Role/Resource`,
-              reason: 'Create an IAM managed Policy for users to be able to use Session Manager with KMS encryption',
-            },
-          ],
-        });
-
-        this.nagSuppressionInputs.push({
-          id: NagSuppressionRuleIds.IAM5,
-          details: [
-            {
-              path: `/${this.stackName}/SsmSessionManagerSettings/SessionPolicy${cdk.Stack.of(this).region}/Resource`,
-              reason: 'Allows only specific log group',
-            },
-          ],
+          prefixes: {
+            accelerator: this.props.prefixes.accelerator,
+            ssmLog: this.props.prefixes.ssmLogName,
+          },
+          ssmKeyDetails: {
+            alias: this.acceleratorResourceNames.customerManagedKeys.ssmKey.alias,
+            description: this.acceleratorResourceNames.customerManagedKeys.ssmKey.description,
+          },
         });
       }
     }

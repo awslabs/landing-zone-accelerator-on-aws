@@ -121,6 +121,7 @@ export class AcceleratorSynthStacks {
         secretName: '/accelerator',
         trailLogName: 'aws-accelerator',
         databaseName: 'aws-accelerator',
+        ssmLogName: 'aws-accelerator',
       },
       enableSingleAccountMode: false,
       useExistingRoles: false,
