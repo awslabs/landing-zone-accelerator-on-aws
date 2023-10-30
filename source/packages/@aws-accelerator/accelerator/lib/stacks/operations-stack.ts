@@ -38,6 +38,7 @@ import {
   Inventory,
   KeyLookup,
   LimitsDefinition,
+  SsmSessionManagerPolicy,
   UsersGroupsMetadata,
   WarmAccount,
 } from '@aws-accelerator/constructs';
@@ -96,6 +97,11 @@ export class OperationsStack extends AcceleratorStack {
   private lambdaKey: cdk.aws_kms.Key;
 
   /**
+   * KMS Key for central S3 Bucket
+   */
+  private centralLogsBucketKey: cdk.aws_kms.Key;
+
+  /**
    * Constructor for OperationsStack
    *
    * @param scope
@@ -107,6 +113,7 @@ export class OperationsStack extends AcceleratorStack {
 
     this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
     this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
+    this.centralLogsBucketKey = this.getCentralLogsBucketKey(this.cloudwatchKey);
 
     // Security Services delegated admin account configuration
     // Global decoration for security services
@@ -143,6 +150,14 @@ export class OperationsStack extends AcceleratorStack {
 
       // Create Cross Account Service Catalog Role
       this.createServiceCatalogPropagationRole();
+
+      // Create Session Manager IAM Policy
+      if (
+        this.props.globalConfig.logging.sessionManager.sendToCloudWatchLogs ||
+        this.props.globalConfig.logging.sessionManager.sendToS3
+      ) {
+        this.createSessionManagerPolicy();
+      }
 
       // warm account here
       this.warmAccount(props.accountWarming);
@@ -186,6 +201,72 @@ export class OperationsStack extends AcceleratorStack {
     this.addResourceSuppressionsByPath();
 
     this.logger.info('Completed stack synthesis');
+  }
+
+  /*
+   * Create Session Manager IAM Policy and Attach to IAM Role(s)
+   */
+  private createSessionManagerPolicy() {
+    const cloudWatchLogGroupList: string[] = this.cloudWatchLogGroupList();
+    const sessionManagerCloudWatchLogGroupList: string[] = this.sessionManagerCloudWatchLogGroupList();
+    const s3BucketList: string[] = this.s3BucketList();
+
+    // Set up Session Manager Logging
+    new SsmSessionManagerPolicy(this, 'SsmSessionManagerSettings', {
+      s3BucketName: this.centralLogsBucketName,
+      s3BucketKeyArn: this.centralLogsBucketKey.keyArn,
+      sendToCloudWatchLogs: this.props.globalConfig.logging.sessionManager.sendToCloudWatchLogs,
+      sendToS3: this.props.globalConfig.logging.sessionManager.sendToS3,
+      attachPolicyToIamRoles: this.props.globalConfig.logging.sessionManager.attachPolicyToIamRoles,
+      region: cdk.Stack.of(this).region,
+      enabledRegions: this.props.globalConfig.enabledRegions,
+      rolesInAccounts: this.props.globalConfig.iamRoleSsmParameters,
+      cloudWatchLogGroupList: cloudWatchLogGroupList ?? undefined,
+      sessionManagerCloudWatchLogGroupList: sessionManagerCloudWatchLogGroupList ?? undefined,
+      s3BucketList: s3BucketList ?? undefined,
+      prefixes: {
+        accelerator: this.props.prefixes.accelerator,
+        ssmLog: this.props.prefixes.ssmLogName,
+      },
+      ssmKeyDetails: {
+        alias: this.acceleratorResourceNames.customerManagedKeys.ssmKey.alias,
+        description: this.acceleratorResourceNames.customerManagedKeys.ssmKey.description,
+      },
+    });
+
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+    // rule suppression with evidence for this permission.
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM5,
+      details: [
+        {
+          path: `${this.stackName}/SsmSessionManagerSettings/SessionManagerEC2Policy/Resource`,
+          reason: 'Policy needed access to all S3 objects for the account to put objects into the access log bucket',
+        },
+      ],
+    });
+
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies.
+    // rule suppression with evidence for this permission.
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM4,
+      details: [
+        {
+          path: `${this.stackName}/SsmSessionManagerSettings/SessionManagerEC2Role/Resource`,
+          reason: 'Create an IAM managed Policy for users to be able to use Session Manager with KMS encryption',
+        },
+      ],
+    });
+
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM5,
+      details: [
+        {
+          path: `/${this.stackName}/SsmSessionManagerSettings/SessionManagerPolicy/Resource`,
+          reason: 'Allows only specific log group',
+        },
+      ],
+    });
   }
 
   /* Enable AWS Service Quota Limits
@@ -1506,5 +1587,81 @@ export class OperationsStack extends AcceleratorStack {
         index += 1;
       }
     }
+  }
+
+  /**
+   * Function returns a list of CloudWatch Log Group ARNs
+   */
+  private cloudWatchLogGroupList(): string[] {
+    const cloudWatchLogGroupListResources: string[] = [];
+    for (const regionItem of this.props.globalConfig.enabledRegions ?? []) {
+      const logGroupItem = `arn:${cdk.Stack.of(this).partition}:logs:${regionItem}:${
+        cdk.Stack.of(this).account
+      }:log-group:*`;
+      if (
+        this.props.globalConfig.logging.sessionManager.excludeRegions &&
+        !this.props.globalConfig.logging.sessionManager.excludeRegions.includes(regionItem as never)
+      ) {
+        if (!cloudWatchLogGroupListResources.includes(logGroupItem)) {
+          cloudWatchLogGroupListResources.push(logGroupItem);
+        }
+      } else {
+        if (!cloudWatchLogGroupListResources.includes(logGroupItem)) {
+          cloudWatchLogGroupListResources.push(logGroupItem);
+        }
+      }
+    }
+    return cloudWatchLogGroupListResources;
+  }
+
+  /**
+   * Function returns a list of CloudWatch Log Group Name ARNs
+   */
+  private sessionManagerCloudWatchLogGroupList(): string[] {
+    const logGroupName = `${this.props.prefixes.ssmLogName}-sessionmanager-logs`;
+    const cloudWatchLogGroupListResources: string[] = [];
+    for (const regionItem of this.props.globalConfig.enabledRegions ?? []) {
+      const logGroupItem = `arn:${cdk.Stack.of(this).partition}:logs:${regionItem}:${
+        cdk.Stack.of(this).account
+      }:log-group:${logGroupName}:*`;
+      if (
+        this.props.globalConfig.logging.sessionManager.excludeRegions &&
+        !this.props.globalConfig.logging.sessionManager.excludeRegions.includes(regionItem as never)
+      ) {
+        if (!cloudWatchLogGroupListResources.includes(logGroupItem)) {
+          cloudWatchLogGroupListResources.push(logGroupItem);
+        }
+      } else {
+        if (!cloudWatchLogGroupListResources.includes(logGroupItem)) {
+          cloudWatchLogGroupListResources.push(logGroupItem);
+        }
+      }
+    }
+    return cloudWatchLogGroupListResources;
+  }
+
+  /**
+   * Function returns a list of centralized S3 Bucket ARNs
+   */
+  private s3BucketList(): string[] {
+    const s3BucketResourcesList: string[] = [];
+    for (const regionItem of this.props.globalConfig.enabledRegions ?? []) {
+      const s3Item = `arn:${cdk.Stack.of(this).partition}:s3:::${this.centralLogsBucketName}/session/${
+        cdk.Stack.of(this).account
+      }/${regionItem}/*`;
+      if (
+        this.props.globalConfig.logging.sessionManager.excludeRegions &&
+        !this.props.globalConfig.logging.sessionManager.excludeRegions.includes(regionItem as never)
+      ) {
+        if (!s3BucketResourcesList.includes(s3Item)) {
+          s3BucketResourcesList.push(s3Item);
+        }
+      } else {
+        if (!s3BucketResourcesList.includes(s3Item)) {
+          s3BucketResourcesList.push(s3Item);
+        }
+      }
+    }
+    return s3BucketResourcesList;
   }
 }

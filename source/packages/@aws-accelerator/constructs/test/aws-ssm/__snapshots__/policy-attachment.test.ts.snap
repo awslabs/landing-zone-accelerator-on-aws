@@ -1,0 +1,288 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SsmSessionManagerPolicy Construct(SsmSessionManagerPolicy):  Snapshot Test 1`] = `
+{
+  "Resources": {
+    "SsmSessionManagerPolicyE2938AFD": {
+      "Properties": {
+        "Description": "",
+        "Path": "/",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "ssmmessages:CreateControlChannel",
+                "ssmmessages:CreateDataChannel",
+                "ssmmessages:OpenControlChannel",
+                "ssmmessages:OpenDataChannel",
+                "ssm:UpdateInstanceInformation",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            {
+              "Action": "logs:DescribeLogGroups",
+              "Effect": "Allow",
+              "Resource": [
+                "arn:aws:logs:us-east-1:111111111111:log-group:aws-accelerator-sessionmanager-logs:*",
+                "arn:aws:logs:us-west-2:111111111111:log-group:aws-accelerator-sessionmanager-logs:*",
+              ],
+              "Sid": "CloudWatchDescribe",
+            },
+            {
+              "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "logs:DescribeLogStreams",
+                "logs:DescribeLogGroups",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                "arn:aws:logs:us-east-1:111111111111:log-group:*",
+                "arn:aws:logs:us-west-2:111111111111:log-group:*",
+              ],
+              "Sid": "CloudWatchLogs",
+            },
+            {
+              "Action": [
+                "s3:PutObject",
+                "s3:PutObjectAcl",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                "arn:aws:s3:::\${this.centralLogsBucketName}/session/111111111111/us-east-1/*",
+                "arn:aws:s3:::\${this.centralLogsBucketName}/session/111111111111/us-west-2/*",
+              ],
+              "Sid": "S3CentralLogs",
+            },
+            {
+              "Action": "s3:GetEncryptionConfiguration",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":s3:::bucketName",
+                  ],
+                ],
+              },
+              "Sid": "S3CentralLogsEncryptionConfig",
+            },
+            {
+              "Action": [
+                "kms:Decrypt",
+                "kms:GenerateDataKey",
+              ],
+              "Effect": "Allow",
+              "Resource": "arn",
+              "Sid": "S3CentralLogsEncryption",
+            },
+            {
+              "Action": "kms:Decrypt",
+              "Condition": {
+                "ForAllValues:StringLike": {
+                  "kms:ResourceAliases": [
+                    "accelerator/sessionmanager-logs/session",
+                  ],
+                },
+              },
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":kms:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":key/*",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::ManagedPolicy",
+    },
+    "SsmSessionManagerPolicySessionManagerEC2InstanceProfile9A6E976B": {
+      "Properties": {
+        "InstanceProfileName": "AWSAccelerator-SessionManagerEc2Role",
+        "Roles": [
+          {
+            "Ref": "SsmSessionManagerPolicySessionManagerEC2RoleD20A8741",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::InstanceProfile",
+    },
+    "SsmSessionManagerPolicySessionManagerEC2PolicyDEE46013": {
+      "Properties": {
+        "Description": "",
+        "ManagedPolicyName": "AWSAccelerator-SessionManagerLogging",
+        "Path": "/",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "ssmmessages:CreateControlChannel",
+                "ssmmessages:CreateDataChannel",
+                "ssmmessages:OpenControlChannel",
+                "ssmmessages:OpenDataChannel",
+                "ssm:UpdateInstanceInformation",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            {
+              "Action": "logs:DescribeLogGroups",
+              "Effect": "Allow",
+              "Resource": [
+                "arn:aws:logs:us-east-1:111111111111:log-group:aws-accelerator-sessionmanager-logs:*",
+                "arn:aws:logs:us-west-2:111111111111:log-group:aws-accelerator-sessionmanager-logs:*",
+              ],
+              "Sid": "CloudWatchDescribe",
+            },
+            {
+              "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "logs:DescribeLogStreams",
+                "logs:DescribeLogGroups",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                "arn:aws:logs:us-east-1:111111111111:log-group:*",
+                "arn:aws:logs:us-west-2:111111111111:log-group:*",
+              ],
+              "Sid": "CloudWatchLogs",
+            },
+            {
+              "Action": [
+                "s3:PutObject",
+                "s3:PutObjectAcl",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                "arn:aws:s3:::\${this.centralLogsBucketName}/session/111111111111/us-east-1/*",
+                "arn:aws:s3:::\${this.centralLogsBucketName}/session/111111111111/us-west-2/*",
+              ],
+              "Sid": "S3CentralLogs",
+            },
+            {
+              "Action": "s3:GetEncryptionConfiguration",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":s3:::bucketName",
+                  ],
+                ],
+              },
+              "Sid": "S3CentralLogsEncryptionConfig",
+            },
+            {
+              "Action": [
+                "kms:Decrypt",
+                "kms:GenerateDataKey",
+              ],
+              "Effect": "Allow",
+              "Resource": "arn",
+              "Sid": "S3CentralLogsEncryption",
+            },
+            {
+              "Action": "kms:Decrypt",
+              "Condition": {
+                "ForAllValues:StringLike": {
+                  "kms:ResourceAliases": [
+                    "accelerator/sessionmanager-logs/session",
+                  ],
+                },
+              },
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":kms:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":key/*",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Roles": [
+          "Test1",
+          "Test2",
+        ],
+      },
+      "Type": "AWS::IAM::ManagedPolicy",
+    },
+    "SsmSessionManagerPolicySessionManagerEC2RoleD20A8741": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "ec2.",
+                      {
+                        "Ref": "AWS::URLSuffix",
+                      },
+                    ],
+                  ],
+                },
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Description": "IAM Role for an EC2 configured for Session Manager Logging",
+        "ManagedPolicyArns": [
+          {
+            "Ref": "SsmSessionManagerPolicySessionManagerEC2PolicyDEE46013",
+          },
+        ],
+        "RoleName": "AWSAccelerator-SessionManagerEC2Role",
+      },
+      "Type": "AWS::IAM::Role",
+    },
+  },
+}
+`;
