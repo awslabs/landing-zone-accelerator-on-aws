@@ -262,3 +262,9 @@ ssmParameters:
       - name: someOtherName
         path: /my/account/structure
         value: someOtherValue
+
+ssmInventory:
+  enable: true
+  deploymentTargets:
+    organizationalUnits:
+      - Root
