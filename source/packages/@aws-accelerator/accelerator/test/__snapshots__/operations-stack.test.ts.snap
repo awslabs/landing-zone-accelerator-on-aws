@@ -51,6 +51,33 @@ exports[`OperationsStack Construct(OperationsStack):  Snapshot Test 1`] = `
       "Type": "Custom::SsmGetParameterValue",
       "UpdateReplacePolicy": "Delete",
     },
+    "AcceleratorSsmInventoryGatherInventoryFA38251A": {
+      "Properties": {
+        "AssociationName": "aws-accelerator111111111111-InventoryCollection",
+        "Name": "AWS-GatherSoftwareInventory",
+        "ScheduleExpression": "rate(12 hours)",
+        "Targets": [
+          {
+            "Key": "InstanceIds",
+            "Values": [
+              "*",
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::SSM::Association",
+    },
+    "AcceleratorSsmInventoryResourceDataSyncA32D4B64": {
+      "Properties": {
+        "BucketName": "existing-central-log-bucket",
+        "BucketPrefix": "ssm-inventory",
+        "BucketRegion": "us-west-2",
+        "SyncFormat": "JsonSerDe",
+        "SyncName": "aws-accelerator111111111111-Inventory",
+        "SyncType": "SyncToDestination",
+      },
+      "Type": "AWS::SSM::ResourceDataSync",
+    },
     "AdministratorsA37EF73A": {
       "Metadata": {
         "cdk_nag": {

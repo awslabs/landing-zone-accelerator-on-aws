@@ -93,7 +93,7 @@ logging:
         transitions:
           - storageClass: GLACIER
             transitionAfter: 365
-        prefix: 'guardduty'
+        prefix: "guardduty"
       - enabled: true
         id: CentralLogsBucketLifecycleRule-03
         abortIncompleteMultipartUpload: 15
@@ -105,10 +105,10 @@ logging:
         transitions:
           - storageClass: GLACIER
             transitionAfter: 365
-        prefix: 'macie'
+        prefix: "macie"
 
   accessLogBucket:
-    importedBucket: 
+    importedBucket:
       name: existing-access-logs-bucket-${ACCOUNT_ID}-${REGION}
     customPolicyOverrides:
       policy: bucket-policies/full-access-log-bucket.json
@@ -116,7 +116,7 @@ logging:
     #   - policy: bucket-policies/access-logs-bucket.json
     lifecycleRules: []
   elbLogBucket:
-    importedBucket: 
+    importedBucket:
       name: existing-elb-logs-bucket-${ACCOUNT_ID}-${REGION}
       applyAcceleratorManagedBucketPolicy: true
     # customPolicyOverrides:
@@ -131,8 +131,8 @@ logging:
   cloudwatchLogs:
     enable: true
     dynamicPartitioning: dynamic-partitioning/log-filters.json
-    replaceLogDestinationArn: replaceLogDestinationArn  
-    
+    replaceLogDestinationArn: replaceLogDestinationArn
+
     exclusions:
       - organizationalUnits:
           - Infrastructure
@@ -165,7 +165,7 @@ limits:
     quotaCode: L-4019AD8B
     desiredValue: 15
     deploymentTargets:
-      accounts: 
+      accounts:
         - SharedServices
 reports:
   costAndUsageReport:
@@ -251,3 +251,8 @@ ssmParameters:
       - name: someOtherName
         path: /my/account/structure
         value: someOtherValue
+ssmInventory:
+  enable: true
+  deploymentTargets:
+    organizationalUnits:
+      - Root
