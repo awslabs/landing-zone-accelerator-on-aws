@@ -13,7 +13,7 @@
   "scripts": {
     "cleanup": "tsc --build ./ --clean && rm -rf node_modules && rm -rf yarn.lock && rm -rf dist && rm -rf cdk.out",
     "cleanup:tsc": "tsc --build ./ --clean",
-    "build": "esbuild --minify --bundle --outfile=./dist/index.js --platform=node --target=node16 --external:aws-sdk index.ts",
+    "build": "esbuild --minify --bundle --outfile=./dist/index.js --platform=node --target=node18 --external:aws-sdk index.ts",
     "test": "jest --coverage --ci --passWithNoTests",
     "testreport": "",
     "lint": "eslint --fix  --max-warnings 0 -c ../../../../../../.eslintrc.json '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
