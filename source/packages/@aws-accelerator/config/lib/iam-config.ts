@@ -94,6 +94,7 @@ export class IamConfigTypes {
     name: t.nonEmptyString,
     policies: t.optional(this.identityCenterPoliciesConfig),
     sessionDuration: t.optional(t.number),
+    description: t.optional(t.string),
   });
 
   /**
@@ -1111,6 +1112,7 @@ export class RoleConfig implements t.TypeOf<typeof IamConfigTypes.roleConfig> {
  *           path: /
  *         awsManagedPolicyName: PowerUserAccess
  *     sessionDuration: 60
+ *     description: A permission set to...
  *  identityCenterAssignments:
  *   - name: Assignment1
  *     permissionSetName: PermissionSet1
@@ -1336,6 +1338,7 @@ export class IdentityCenterPoliciesConfig implements t.TypeOf<typeof IamConfigTy
  *           path: /
  *         awsManagedPolicyName: PowerUserAccess
  *     sessionDuration: 60
+ *     description: A permission set to...
  * ```
  */
 export class IdentityCenterPermissionSetConfig
@@ -1358,6 +1361,12 @@ export class IdentityCenterPermissionSetConfig
    * @default undefined
    */
   readonly sessionDuration: number | undefined = undefined;
+
+  /**
+   * A description string for the Permission Set
+   * @default undefined
+   */
+  readonly description: string | undefined = undefined;
 }
 
 /**
@@ -1714,6 +1723,7 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
    *            path: /
    *          awsManagedPolicyName: PowerUserAccess
    *      sessionDuration: 60
+   *      description: A permission set to...
    *   identityCenterAssignments:
    *     - name: Assignment1
    *       permissionSetName: PermissionSet1

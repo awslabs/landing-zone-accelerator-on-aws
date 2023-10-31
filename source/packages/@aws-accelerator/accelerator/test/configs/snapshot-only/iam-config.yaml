@@ -89,6 +89,24 @@ identityCenter:
             path: /
           # awsManagedPolicyName: PowerUserAccess
       sessionDuration: 60
+    - name: PermissionSet3
+      policies:
+        awsManaged:
+          - PowerUserAccess
+          - ReadOnlyAccess
+        customerManaged:
+          - ResourceConfigurationCollectorPolicy
+        acceleratorManaged:
+          - lzaManagedPolicy01
+          # - lzaManagedPolicy02
+        inlinePolicy: iam-policies/sso-permissionSet1-inline-policy.json
+        permissionsBoundary: 
+          customerManagedPolicy:
+            name: lzaManagedPolicy01
+            path: /
+          # awsManagedPolicyName: PowerUserAccess
+      sessionDuration: 60
+      description: "This is a useful permission set description."
   identityCenterAssignments:
     - name: Assignment1
       permissionSetName: PermissionSet1

@@ -479,6 +479,11 @@ export class IamConfigValidator {
     // Validate PermissionSet permissions boundary
     //
     this.validateIdentityCenterPermissionSetPermissionsBoundary(iamConfig, errors);
+
+    //
+    // Validate PermissionSet descriptions
+    //
+    this.validateIdentityCenterPermissionSetPermissionsDescriptions(iamConfig, errors);
   }
 
   /**
@@ -611,6 +616,40 @@ export class IamConfigValidator {
           ) {
             errors.push(
               `Identity center ${iamConfig.identityCenter.name} permission set ${identityCenterPermissionSet.name} permissions boundary can either have customerManagedPolicy or managedPolicy, both the properties can't be defined.`,
+            );
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to validate Identity Center Permission set permissionsBoundary
+   * @param iamConfig
+   * @param errors
+   */
+  private validateIdentityCenterPermissionSetPermissionsDescriptions(
+    iamConfig: t.TypeOf<typeof IamConfigTypes.iamConfig>,
+    errors: string[],
+  ) {
+    if (iamConfig.identityCenter) {
+      const identityCenter = iamConfig.identityCenter;
+      for (const identityCenterPermissionSet of identityCenter.identityCenterPermissionSets ?? []) {
+        if (identityCenterPermissionSet.description) {
+          if (identityCenterPermissionSet.description.length > 700) {
+            errors.push(
+              `Identity center ${iamConfig.identityCenter.name} permission set ${identityCenterPermissionSet.name} description is too long.`,
+            );
+          }
+          /* eslint-disable no-control-regex */
+          /* Disabling no-control-regex because this is how it's defined at
+             https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-sso-permissionset.html#cfn-sso-permissionset-description
+          */
+          const descriptionRegex = /^[\u0009\u000A\u000D\u0020-\u007E\u00A1-\u00FF]*$/;
+          /* eslint-enable no-control-regex */
+          if (!descriptionRegex.test(identityCenterPermissionSet.description)) {
+            errors.push(
+              `Identity center ${iamConfig.identityCenter.name} permission set ${identityCenterPermissionSet.name} description has invalid characters.`,
             );
           }
         }
