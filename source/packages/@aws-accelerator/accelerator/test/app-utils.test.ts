@@ -11,6 +11,8 @@
  *  and limitations under the License.
  */
 
+import { AccountsConfig, OrganizationConfig } from '@aws-accelerator/config';
+import AWS from 'aws-sdk';
 import {
   AcceleratorResourcePrefixes,
   getContext,
@@ -18,9 +20,11 @@ import {
   isBeforeBootstrapStage,
   setAcceleratorEnvironment,
 } from '../utils/app-utils';
-import { describe, expect, test } from '@jest/globals';
+import { describe, expect, test, jest } from '@jest/globals';
 import * as cdk from 'aws-cdk-lib';
 import * as path from 'path';
+import { AcceleratorStage } from '../lib/accelerator-stage';
+import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
 
 function testAppUtils() {
   const app = new cdk.App({
@@ -34,11 +38,11 @@ function testAppUtils() {
 
   // Set accelerator environment variables
   const acceleratorEnv = setAcceleratorEnvironment(process.env, resourcePrefixes, context.stage);
-  return acceleratorEnv;
+  return { context, resourcePrefixes, acceleratorEnv };
 }
 
 test('AppUtilTest', () => {
-  const testAcceleratorEnv = testAppUtils();
+  const { acceleratorEnv: testAcceleratorEnv } = testAppUtils();
   expect(testAcceleratorEnv).toHaveProperty('auditAccountEmail');
 });
 
@@ -169,5 +173,113 @@ describe('test setAcceleratorEnvironment', () => {
         'Missing mandatory environment variables: AUDIT_ACCOUNT_EMAIL, CONTROL_TOWER_ENABLED, ACCELERATOR_REPOSITORY_BRANCH_NAME',
       ),
     );
+  });
+});
+
+describe('test setAcceleratorStackProps', () => {
+  function initializeMock() {
+    AccountsConfig.prototype.loadAccountIds = jest
+      .fn<
+        (
+          partition: string,
+          enableSingleAccountMode: boolean,
+          isOrgsEnabled: boolean,
+          accountConfig: AccountsConfig,
+        ) => Promise<void>
+      >()
+      .mockResolvedValue();
+    OrganizationConfig.prototype.loadOrganizationalUnitIds = jest
+      .fn<(partition: string) => Promise<void>>()
+      .mockResolvedValue();
+
+    // mock STS AssumeRole
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mockAssumeRole = jest.fn<() => { promise: any }>();
+    (AWS.STS.prototype.assumeRole as jest.Mock) = mockAssumeRole.mockReturnValue({
+      promise: jest
+        .fn<() => Promise<{ Credentials: { AccessKeyId: string; SecretAccessKey: string; SessionToken: string } }>>()
+        .mockResolvedValue({
+          Credentials: {
+            AccessKeyId: 'fake-cred',
+            SecretAccessKey: 'fake-cred',
+            SessionToken: 'fake-cred',
+          },
+        }),
+    });
+    // Mock EC2 describeVpcs method
+    const mockDescribeVpcs = jest.fn<() => { promise: unknown }>();
+    (AWS.EC2.prototype.describeVpcs as jest.Mock) = mockDescribeVpcs.mockReturnValue({
+      promise: jest
+        .fn<() => Promise<{ Vpcs: { VpcId: string }[] }>>()
+        .mockResolvedValueOnce({
+          Vpcs: [{ VpcId: 'fake-vpc-id-1' }],
+        })
+        .mockResolvedValueOnce({
+          Vpcs: [{ VpcId: 'fake-vpc-id-2' }],
+        })
+        .mockResolvedValueOnce({
+          Vpcs: [{ VpcId: 'fake-vpc-id-3' }],
+        })
+        .mockResolvedValueOnce({
+          Vpcs: [{ VpcId: 'fake-vpc-id-4' }],
+        }),
+    });
+
+    // Mock EC2 describeVpcEndpoints method
+    const mockDescribeVpcEndpoints = jest.fn<() => { promise: unknown }>();
+    (AWS.EC2.prototype.describeVpcEndpoints as jest.Mock) = mockDescribeVpcEndpoints.mockReturnValue({
+      promise: jest
+        .fn<() => Promise<{ VpcEndpoints: { VpcEndpointId: string }[] }>>()
+        .mockResolvedValueOnce({
+          VpcEndpoints: [{ VpcEndpointId: 'fake-vpce-id-1' }],
+        })
+        .mockResolvedValueOnce({ VpcEndpoints: [{ VpcEndpointId: 'fake-vpce-id-2' }] }),
+    });
+
+    const accelerator = require('../lib/accelerator.ts');
+    accelerator.getCentralLogBucketKmsKeyArn = jest.fn().mockReturnValue(Promise.resolve('fake-kms-arn'));
+  }
+
+  test('should load VPC IDs and VPCE IDs in network config for Finalize Stage', async () => {
+    initializeMock();
+    const { context, resourcePrefixes, acceleratorEnv } = testAppUtils();
+    const { setAcceleratorStackProps } = require('../utils/app-utils');
+
+    context.stage = AcceleratorStage.FINALIZE;
+    const { networkConfig } = (await setAcceleratorStackProps(
+      context,
+      acceleratorEnv,
+      resourcePrefixes,
+      'us-east-1',
+    )) as AcceleratorStackProps;
+
+    // ${ACCEL_LOOKUP::VPC_ID:OU:Infrastructure} and ${ACCEL_LOOKUP::VPCE_ID:ACCOUNT:Network} are used in
+    // snapshot-only/service-control-policies/data-perimeter.json
+    // Here are the expected VPC IDs from account under OU Infrastructure - Network and ShareService account
+    const expectedAccountVpcIds = {
+      '444444444444': ['fake-vpc-id-1', 'fake-vpc-id-2'],
+      '555555555555': ['fake-vpc-id-3', 'fake-vpc-id-4'],
+    };
+    const expectedAccountVpceIds = { '555555555555': ['fake-vpce-id-1', 'fake-vpce-id-2'] }; // expected VPCE ID from network account
+    expect(networkConfig.accountVpcIds).toEqual(expectedAccountVpcIds);
+    expect(networkConfig.accountVpcEndpointIds).toEqual(expectedAccountVpceIds);
+  });
+
+  test('should not load VPC IDs and VPCE IDs in network config for other Stages except for finalize and account stage', async () => {
+    initializeMock();
+    const { setAcceleratorStackProps } = require('../utils/app-utils');
+
+    const { context, resourcePrefixes, acceleratorEnv } = testAppUtils();
+
+    context.stage = AcceleratorStage.OPERATIONS;
+    const { networkConfig } = (await setAcceleratorStackProps(
+      context,
+      acceleratorEnv,
+      resourcePrefixes,
+      'us-east-1',
+    )) as AcceleratorStackProps;
+
+    expect(networkConfig.accountVpcIds).toEqual(undefined);
+    expect(networkConfig.accountVpcEndpointIds).toEqual(undefined);
   });
 });

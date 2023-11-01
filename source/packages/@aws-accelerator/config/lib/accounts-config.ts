@@ -383,6 +383,20 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
     throw new Error('configuration validation failed.');
   }
 
+  public getAccountNameById(accountId: string): string | undefined {
+    const email = this.accountIds?.find(item => item.accountId === accountId)?.email;
+    const accounts = this.getAccounts(false);
+    const accountName = accounts.find(account => account.email === email)?.name;
+
+    if (accountName) {
+      return accountName;
+    }
+    logger.error(
+      `Account Name not found for ${accountId}. Validate that the emails in the parameter ManagementAccountEmail of the AWSAccelerator-InstallerStack and account configs (accounts-config.yaml) match the correct account emails shown in AWS Organizations.`,
+    );
+    throw new Error('configuration validation failed.');
+  }
+
   public getAccountIds(): string[] {
     return this.accountIds?.flatMap(item => item.accountId) ?? [];
   }

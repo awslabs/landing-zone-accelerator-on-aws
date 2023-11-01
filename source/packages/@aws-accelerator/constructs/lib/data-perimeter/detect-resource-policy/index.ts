@@ -41,7 +41,7 @@ export async function handler(event: ConfigRuleEvent) {
   const configurationItem = invokingEvent.configurationItem!;
 
   const paramsReplacement = {
-    'ACCEL_LOOKUP::REPLACEMENTS:ATTACHED_RESOURCE_ARN': configurationItem.ARN,
+    'ACCEL_LOOKUP::CUSTOM:ATTACHED_RESOURCE_ARN': configurationItem.ARN,
   };
   const resourcePolicies = generatePolicyReplacements(resourcePolicyTemplates, paramsReplacement);
 

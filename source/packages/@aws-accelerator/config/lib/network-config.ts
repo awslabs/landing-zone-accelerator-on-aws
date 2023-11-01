@@ -1001,6 +1001,8 @@ export class NetworkConfigTypes {
     elbAccountIds: t.optional(t.array(this.elbAccountIdsConfig)),
     firewallManagerService: t.optional(this.firewallManagerServiceConfig),
     certificates: t.optional(t.array(this.certificateConfig)),
+    accountVpcIds: t.optional(t.dictionary(t.nonEmptyString, t.array(t.nonEmptyString))),
+    accountVpcEndpointIds: t.optional(t.dictionary(t.nonEmptyString, t.array(t.nonEmptyString))),
   });
 }
 
@@ -7627,6 +7629,23 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
    * Certificate manager configuration
    */
   readonly certificates: CertificateConfig[] | undefined = undefined;
+
+  /**
+   * A map between account Id and all the VPC IDs in the account.
+   *
+   * Currently, the dynamic values will only be loaded in FinalizeStack for SCP finalization.
+   * Only the account VPCs referred in SCPs by ACCEL_LOOKUP will be loaded.
+   */
+  public accountVpcIds: Record<string, string[]> | undefined = undefined;
+
+  /**
+   * A map between account Id and all the VPC Endpoint IDs in the account.
+   *
+   * Currently, the dynamic values will only be loaded in FinalizeStack for SCP finalization.
+   * Only the account VPC Endpoints referred by ACCEL_LOOKUP in SCPs will be loaded.
+   */
+  public accountVpcEndpointIds: Record<string, string[]> | undefined = undefined;
+
   /**
    *
    * @param values

@@ -199,7 +199,7 @@ function addAcceleratorTags(
  * @param props
  * @returns
  */
-function includeStage(
+export function includeStage(
   context: AcceleratorContext,
   props: { stage: string; account?: string; region?: string },
 ): boolean {

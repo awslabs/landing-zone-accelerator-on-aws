@@ -9,7 +9,9 @@
       "Condition": {
         "StringNotEqualsIfExists": {
           "aws:ResourceOrgID": "${ORG_ID}",
-          "aws:ResourceAccount": ${ACCEL_LOOKUP::CUSTOM:ALLOWED_EXTERNAL_ACCOUNTS}
+          "aws:ResourceAccount": ${ACCEL_LOOKUP::CUSTOM:ALLOWED_EXTERNAL_ACCOUNTS},
+          "aws:SourceVpc": [${ACCEL_LOOKUP::VPC_ID:OU:Infrastructure}],
+          "aws:sourceVpce": [${ACCEL_LOOKUP::VPCE_ID:ACCOUNT:Network}]
         },
         "ForAllValues:StringNotEquals": {
           "aws:CalledVia": [

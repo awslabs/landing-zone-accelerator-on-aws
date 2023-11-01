@@ -28,6 +28,13 @@ import { AcceleratorStage } from '../lib/accelerator-stage';
 import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
 import { getCentralLogBucketKmsKeyArn } from '../lib/accelerator';
 import { AcceleratorResourceNames } from '../lib/accelerator-resource-names';
+import {
+  throttlingBackOff,
+  POLICY_LOOKUP_TYPE,
+  POLICY_LOOKUP_SCOPE,
+  ACCEL_POLICY_LOOKUP_REGEX,
+} from '@aws-accelerator/utils';
+import AWS from 'aws-sdk';
 
 export interface AcceleratorContext {
   /**
@@ -433,15 +440,62 @@ export async function setAcceleratorStackProps(
     centralLogBucketCmkParameter,
   );
 
+  const networkConfig = NetworkConfig.load(context.configDirPath, replacementsConfig);
+  const securityConfig = SecurityConfig.load(context.configDirPath, replacementsConfig);
+  /**
+   * Load VPC/VPCE info for accounts, data perimeter and finalize stage only
+   */
+  if (
+    includeStage(context, {
+      stage: AcceleratorStage.FINALIZE,
+      account: accountsConfig.getManagementAccountId(),
+      region: globalRegion,
+    }) ||
+    includeStage(context, {
+      stage: AcceleratorStage.DATA_PERIMETER,
+      account: accountsConfig.getManagementAccountId(),
+      region: globalRegion,
+    }) ||
+    includeStage(context, {
+      stage: AcceleratorStage.ACCOUNTS,
+      account: accountsConfig.getManagementAccountId(),
+      region: globalRegion,
+    })
+  ) {
+    const lookupTypeAndAccountIdMap = getLookupTypeAndAccountIdMap(
+      organizationConfig,
+      securityConfig,
+      accountsConfig,
+      context.configDirPath,
+    );
+    const accountVpcIds = await loadVpcIds(
+      globalConfig,
+      accountsConfig,
+      networkConfig,
+      globalConfig.managementAccountAccessRole,
+      context.partition,
+      Array.from(lookupTypeAndAccountIdMap.get(POLICY_LOOKUP_TYPE.VPC_ID) || []),
+      securityConfig.dataPerimeter?.networkPerimeter?.managedVpcOnly || false,
+    );
+    const accountVpcEndpointIds = await loadVpcEndpointIds(
+      globalConfig.managementAccountAccessRole,
+      context.partition,
+      Array.from(lookupTypeAndAccountIdMap.get(POLICY_LOOKUP_TYPE.VPCE_ID) || []),
+      globalConfig.enabledRegions,
+    );
+    networkConfig.accountVpcIds = accountVpcIds;
+    networkConfig.accountVpcEndpointIds = accountVpcEndpointIds;
+  }
+
   return {
     configDirPath: context.configDirPath,
     accountsConfig: accountsConfig,
     customizationsConfig: getCustomizationsConfig(context.configDirPath, replacementsConfig),
     globalConfig,
     iamConfig: IamConfig.load(context.configDirPath, replacementsConfig),
-    networkConfig: NetworkConfig.load(context.configDirPath, replacementsConfig),
+    networkConfig,
     organizationConfig: organizationConfig,
-    securityConfig: SecurityConfig.load(context.configDirPath, replacementsConfig),
+    securityConfig,
     replacementsConfig: replacementsConfig,
     partition: context.partition,
     globalRegion,
@@ -511,4 +565,311 @@ export function getReplacementsConfig(configDirPath: string, accountsConfig: Acc
     replacementsConfig = new ReplacementsConfig();
   }
   return replacementsConfig;
+}
+
+/**
+ * Load all the VPC IDs under for accounts and regions
+ * @param managementAccountAccessRole
+ * @param partition
+ * @param accountIds
+ * @param managedVpcOnly
+ * @returns A map from account Id to VPC IDs in the account
+ */
+async function loadVpcIds(
+  globalConfig: GlobalConfig,
+  accountConfig: AccountsConfig,
+  networkConfig: NetworkConfig,
+  managementAccountAccessRole: string,
+  partition: string,
+  accountIds: string[],
+  managedVpcOnly: boolean,
+) {
+  const accountVpcIdMap: { [key: string]: string[] } = {};
+  const accountNameToVpcNameMap = getManagedVpcNamesByAccountNames(networkConfig);
+
+  for (const accountId of accountIds) {
+    const regions = globalConfig.enabledRegions;
+    const ec2Clients = await getEc2ClientsByAccountAndRegions(
+      partition,
+      accountId,
+      regions,
+      managementAccountAccessRole,
+    );
+
+    const accountName = accountConfig.getAccountNameById(accountId);
+    const managedVpcNames: Set<string> = accountName ? new Set(accountNameToVpcNameMap.get(accountName)) : new Set();
+
+    const vpcIds = await getVpcIdsByAccount(ec2Clients, managedVpcOnly, managedVpcNames);
+    accountVpcIdMap[accountId] = vpcIds;
+  }
+
+  return accountVpcIdMap;
+}
+
+/**
+ * Get all VPC IDs from all enabled regions regions
+ * @param ec2Clients
+ * @param managedVpcOnly
+ * @param managedVpcNames
+ * @returns
+ */
+async function getVpcIdsByAccount(
+  ec2Clients: AWS.EC2[],
+  managedVpcOnly?: boolean,
+  managedVpcNames?: Set<string>,
+): Promise<string[]> {
+  const vpcIds: string[] = [];
+
+  for (const ec2Client of ec2Clients) {
+    // Get all VPC IDs under the region bound to the client
+    let nextToken: string | undefined = undefined;
+    do {
+      const params: AWS.EC2.DescribeVpcsRequest = {};
+      if (nextToken) {
+        params.NextToken = nextToken;
+      }
+
+      const response = await throttlingBackOff(() => ec2Client.describeVpcs(params).promise());
+      if (response.Vpcs) {
+        let vpcList = response.Vpcs.filter(vpc => vpc.VpcId);
+        if (managedVpcOnly) {
+          vpcList = vpcList.filter(vpc => isLzaManagedVpc(vpc, managedVpcNames!));
+        }
+        vpcList.forEach(vpc => vpcIds.push(vpc.VpcId!));
+      }
+
+      nextToken = response.NextToken;
+    } while (nextToken);
+  }
+
+  return vpcIds;
+}
+
+/**
+ * Get all the VPC Endpoint IDs from the account in all enabled regions
+ * @param ec2Clients
+ * @param managedVpcOnly
+ * @param managedVpcNames
+ * @returns
+ */
+async function getVpcEndpointIdsByAccount(ec2Clients: AWS.EC2[]): Promise<string[]> {
+  const vpceIds: string[] = [];
+
+  for (const ec2Client of ec2Clients) {
+    // List all VPC Endpoint IDs
+    let nextToken: string | undefined = undefined;
+    do {
+      const params: AWS.EC2.DescribeVpcsRequest = {};
+      if (nextToken) {
+        params.NextToken = nextToken;
+      }
+
+      const response = await throttlingBackOff(() => ec2Client.describeVpcEndpoints(params).promise());
+      if (response.VpcEndpoints) {
+        response.VpcEndpoints.filter(vpce => vpce.VpcEndpointId).forEach(vpce => vpceIds.push(vpce.VpcEndpointId!));
+      }
+
+      nextToken = response.NextToken;
+    } while (nextToken);
+  }
+
+  return vpceIds;
+}
+
+/**
+ * Load all the VPC Endpoint IDs for accounts and regions
+ * @param managementAccountAccessRole
+ * @param partition
+ * @param accountIds
+ * @param regions
+ * @returns
+ */
+async function loadVpcEndpointIds(
+  managementAccountAccessRole: string,
+  partition: string,
+  accountIds: string[],
+  regions: string[],
+) {
+  const accountVpcEndpointIdMap: { [key: string]: string[] } = {};
+
+  for (const accountId of accountIds) {
+    const ec2Clients = await getEc2ClientsByAccountAndRegions(
+      partition,
+      accountId,
+      regions,
+      managementAccountAccessRole,
+    );
+
+    const vpcEndpointId = await getVpcEndpointIdsByAccount(ec2Clients);
+    accountVpcEndpointIdMap[accountId] = vpcEndpointId;
+  }
+
+  return accountVpcEndpointIdMap;
+}
+
+/**
+ * Retrieve the accounts ID for each lookup type by extracting and parsing ACCEL_LOOKUP placeholder from SCPs.
+ *
+ * @param organizationConfig
+ * @param accountsConfig
+ * @param configDirPath
+ * @returns A map from POLICY_LOOKUP_TYPE to accounts ID
+ */
+function getLookupTypeAndAccountIdMap(
+  organizationConfig: OrganizationConfig,
+  securityConfig: SecurityConfig,
+  accountsConfig: AccountsConfig,
+  configDirPath: string,
+) {
+  const map: Map<string, Set<string>> = new Map();
+  map.set(POLICY_LOOKUP_TYPE.VPC_ID, new Set());
+  map.set(POLICY_LOOKUP_TYPE.VPCE_ID, new Set());
+
+  // 1. Get path of all the service control policy and resource based policy templates
+  const policyPathSet = new Set<string>();
+  organizationConfig.serviceControlPolicies.forEach(scp => policyPathSet.add(scp.policy));
+  securityConfig.dataPerimeter?.resourcePolicies.forEach(rcp => policyPathSet.add(rcp.document));
+
+  // 2. Extra all the dynamic parameters from policy templates
+  const dynamicParams = new Set<string>();
+  for (const policyPath of policyPathSet) {
+    const policyContent: string = fs.readFileSync(path.join(configDirPath, policyPath), 'utf8');
+    const matches = policyContent.match(ACCEL_POLICY_LOOKUP_REGEX);
+    matches?.forEach(match => dynamicParams.add(match));
+  }
+
+  // 3. Get ID of accounts mentioned in dynamic parameters
+  for (const dynamicParam of dynamicParams) {
+    ACCEL_POLICY_LOOKUP_REGEX.lastIndex = 0;
+    const parameterReplacementNeeded = ACCEL_POLICY_LOOKUP_REGEX.exec(dynamicParam);
+    if (parameterReplacementNeeded) {
+      const replacementArray = parameterReplacementNeeded[1].split(':');
+      if (replacementArray.length < 2) {
+        throw new Error(`Invalid POLICY_LOOKUP_VALUE: ${parameterReplacementNeeded[1]}`);
+      }
+
+      const lookupType = replacementArray[0];
+      const lookupScope = replacementArray[1];
+      const accountIds = getAccountsByLookupScope(accountsConfig, replacementArray, lookupScope);
+
+      accountIds.forEach(id => map.get(lookupType)?.add(id));
+    }
+  }
+
+  return map;
+}
+
+/**
+ *
+ * @param replacementArray
+ * @param lookupScope
+ * @returns
+ */
+function getAccountsByLookupScope(
+  accountsConfig: AccountsConfig,
+  replacementArray: string[],
+  lookupScope: string,
+): string[] {
+  if (lookupScope === POLICY_LOOKUP_SCOPE.ORG) {
+    return accountsConfig.getAccountIds();
+  } else if (lookupScope === POLICY_LOOKUP_SCOPE.ACCOUNT) {
+    const accountName = replacementArray[2];
+    return [accountsConfig.getAccountId(accountName)];
+  } else if (lookupScope === POLICY_LOOKUP_SCOPE.OU) {
+    const organizationUnit = replacementArray[2];
+
+    const accounts = accountsConfig.getAccounts(false);
+    return accounts
+      .filter(account => account.organizationalUnit.startsWith(organizationUnit))
+      .map(account => accountsConfig.getAccountId(account.name));
+  }
+
+  return [];
+}
+
+function includeStage(
+  context: AcceleratorContext,
+  props: { stage: string; account?: string; region?: string },
+): boolean {
+  if (!context.stage) {
+    // Do not include PIPELINE or TESTER_PIPELINE in full synth/diff
+    if (['pipeline', 'tester-pipeline'].includes(props.stage)) {
+      return false;
+    }
+    return true; // No stage, return all other stacks
+  }
+  if (context.stage === props.stage) {
+    if (!context.account && !context.region) {
+      return true; // No account or region, return all stacks for synth/diff
+    }
+    if (props.account === context.account && props.region === context.region) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function getManagedVpcNamesByAccountNames(networkConfig: NetworkConfig) {
+  const map = new Map<string, string[]>();
+  for (const vpc of networkConfig.vpcs) {
+    const vpcNames = map.get(vpc.account) || [];
+    vpcNames.push(vpc.name);
+    map.set(vpc.account, vpcNames);
+  }
+
+  return map;
+}
+
+/**
+ * Check if a VPC is a LZA-managed VPC defined in accounts config
+ * @param vpc
+ * @param managedVpcNames
+ * @returns
+ */
+function isLzaManagedVpc(vpc: AWS.EC2.Vpc, managedVpcNames: Set<string>): boolean {
+  const tag = vpc.Tags?.find(tag => tag.Key === 'Name' && tag.Value && managedVpcNames.has(tag.Value));
+  return !!tag;
+}
+
+/**
+ * Get all ec2 clients for the account and regions
+ *
+ * @param partition
+ * @param accountId
+ * @param regions
+ * @param managementAccountAccessRole
+ * @param managedResourceOnly
+ * @returns
+ */
+async function getEc2ClientsByAccountAndRegions(
+  partition: string,
+  accountId: string,
+  regions: string[],
+  managementAccountAccessRole: string,
+) {
+  const stsClient = new AWS.STS({ region: process.env['AWS_REGION'] });
+  const cred = await throttlingBackOff(() =>
+    stsClient
+      .assumeRole({
+        RoleArn: `arn:${partition}:iam::${accountId}:role/${managementAccountAccessRole}`,
+        RoleSessionName: 'cdk-build-time',
+      })
+      .promise(),
+  );
+
+  const ec2Clients: AWS.EC2[] = [];
+  regions.forEach(region =>
+    ec2Clients.push(
+      new AWS.EC2({
+        region: region,
+        credentials: {
+          accessKeyId: cred.Credentials!.AccessKeyId,
+          secretAccessKey: cred.Credentials!.SecretAccessKey,
+          sessionToken: cred.Credentials!.SessionToken,
+        },
+      }),
+    ),
+  );
+
+  return ec2Clients;
 }

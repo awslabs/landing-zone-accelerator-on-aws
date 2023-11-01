@@ -7,6 +7,10 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
       "Default": "/accelerator/kms/cloudwatch/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/kms/lambda/key-arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratororganizationsscpQuarantineidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/organizations/scp/Quarantine/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -21,6 +25,208 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
         "Value": "e3cdaecaa6073ad9e4721344cd109eb6de351cfb",
       },
       "Type": "AWS::SSM::Parameter",
+    },
+    "AcceleratorGuardrails10AD44C7D": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomOrganizationsCreatePolicyCustomResourceProviderLogGroup019B74A9",
+        "enablePolicyTypeScpB4BC96BE",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomOrganizationsCreatePolicyCustomResourceProviderHandler7A188619",
+            "Arn",
+          ],
+        },
+        "bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+        "description": "Accelerator GuardRails 1
+",
+        "key": "REPLACED-JSON-PATH.json",
+        "name": "AcceleratorGuardrails1",
+        "partition": "aws",
+        "policyTagKey": "AWSAcceleratorManaged",
+        "type": "SERVICE_CONTROL_POLICY",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::CreatePolicy",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AcceleratorGuardrails26DF90F53": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomOrganizationsCreatePolicyCustomResourceProviderLogGroup019B74A9",
+        "enablePolicyTypeScpB4BC96BE",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomOrganizationsCreatePolicyCustomResourceProviderHandler7A188619",
+            "Arn",
+          ],
+        },
+        "bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+        "description": "Accelerator GuardRails 2
+",
+        "key": "REPLACED-JSON-PATH.json",
+        "name": "AcceleratorGuardrails2",
+        "partition": "aws",
+        "policyTagKey": "AWSAcceleratorManaged",
+        "type": "SERVICE_CONTROL_POLICY",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::CreatePolicy",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AllowList6FC5040C": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomOrganizationsCreatePolicyCustomResourceProviderLogGroup019B74A9",
+        "enablePolicyTypeScpB4BC96BE",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomOrganizationsCreatePolicyCustomResourceProviderHandler7A188619",
+            "Arn",
+          ],
+        },
+        "bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+        "description": "This SCP uses "allow-list" strategy.
+",
+        "key": "REPLACED-JSON-PATH.json",
+        "name": "AllowList",
+        "partition": "aws",
+        "policyTagKey": "AWSAcceleratorManaged",
+        "strategy": "allow-list",
+        "type": "SERVICE_CONTROL_POLICY",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::CreatePolicy",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AttachAcceleratorGuardrails1Infrastructure84C16E51": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "AcceleratorGuardrails10AD44C7D",
+        "CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomOrganizationsAttachPolicyCustomResourceProviderHandlerB3233202",
+            "Arn",
+          ],
+        },
+        "configPolicyNames": [
+          "AcceleratorGuardrails1",
+          "DataPerimeter",
+        ],
+        "partition": {
+          "Ref": "AWS::Partition",
+        },
+        "policyId": {
+          "Ref": "AcceleratorGuardrails10AD44C7D",
+        },
+        "policyTagKey": "AWSAcceleratorManaged",
+        "targetId": "ou-asdf-22222222",
+        "type": "SERVICE_CONTROL_POLICY",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::AttachPolicy",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AttachAcceleratorGuardrails2SharedServices7F9682DF": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "AcceleratorGuardrails26DF90F53",
+        "CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomOrganizationsAttachPolicyCustomResourceProviderHandlerB3233202",
+            "Arn",
+          ],
+        },
+        "configPolicyNames": [
+          "AcceleratorGuardrails2",
+        ],
+        "partition": {
+          "Ref": "AWS::Partition",
+        },
+        "policyId": {
+          "Ref": "AcceleratorGuardrails26DF90F53",
+        },
+        "policyTagKey": "AWSAcceleratorManaged",
+        "targetId": "444444444444",
+        "type": "SERVICE_CONTROL_POLICY",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::AttachPolicy",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AttachAllowListSecureWorkloadsA2619BAE": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "AllowList6FC5040C",
+        "CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomOrganizationsAttachPolicyCustomResourceProviderHandlerB3233202",
+            "Arn",
+          ],
+        },
+        "configPolicyNames": [
+          "AllowList",
+        ],
+        "partition": {
+          "Ref": "AWS::Partition",
+        },
+        "policyId": {
+          "Ref": "AllowList6FC5040C",
+        },
+        "policyTagKey": "AWSAcceleratorManaged",
+        "strategy": "allow-list",
+        "targetId": "ou-asdf-33333333",
+        "type": "SERVICE_CONTROL_POLICY",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::AttachPolicy",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AttachDataPerimeterInfrastructure774B8264": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039",
+        "DataPerimeter67F0B7E1",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomOrganizationsAttachPolicyCustomResourceProviderHandlerB3233202",
+            "Arn",
+          ],
+        },
+        "configPolicyNames": [
+          "AcceleratorGuardrails1",
+          "DataPerimeter",
+        ],
+        "partition": {
+          "Ref": "AWS::Partition",
+        },
+        "policyId": {
+          "Ref": "DataPerimeter67F0B7E1",
+        },
+        "policyTagKey": "AWSAcceleratorManaged",
+        "targetId": "ou-asdf-22222222",
+        "type": "SERVICE_CONTROL_POLICY",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::AttachPolicy",
+      "UpdateReplacePolicy": "Delete",
     },
     "CustomDetachQuarantineScpCustomResourceProviderHandlerA1F1C263": {
       "DependsOn": [
@@ -127,6 +333,333 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Role",
     },
+    "CustomEnablePolicyTypeCustomResourceProviderHandlerC244F9E1": {
+      "DependsOn": [
+        "CustomEnablePolicyTypeCustomResourceProviderRoleAE71B2CA",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomEnablePolicyTypeCustomResourceProviderRoleAE71B2CA",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomEnablePolicyTypeCustomResourceProviderLogGroup81BE8EF5": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomEnablePolicyTypeCustomResourceProviderHandlerC244F9E1",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomEnablePolicyTypeCustomResourceProviderRoleAE71B2CA": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "organizations:DescribeOrganization",
+                    "organizations:DisablePolicyType",
+                    "organizations:EnablePolicyType",
+                    "organizations:ListRoots",
+                    "organizations:ListPoliciesForTarget",
+                    "organizations:ListTargetsForPolicy",
+                    "organizations:DescribeEffectivePolicy",
+                    "organizations:DescribePolicy",
+                    "organizations:DisableAWSServiceAccess",
+                    "organizations:DetachPolicy",
+                    "organizations:DeletePolicy",
+                    "organizations:DescribeAccount",
+                    "organizations:ListAWSServiceAccessForOrganization",
+                    "organizations:ListPolicies",
+                    "organizations:ListAccountsForParent",
+                    "organizations:ListAccounts",
+                    "organizations:EnableAWSServiceAccess",
+                    "organizations:ListCreateAccountStatus",
+                    "organizations:UpdatePolicy",
+                    "organizations:DescribeOrganizationalUnit",
+                    "organizations:AttachPolicy",
+                    "organizations:ListParents",
+                    "organizations:ListOrganizationalUnitsForParent",
+                    "organizations:CreatePolicy",
+                    "organizations:DescribeCreateAccountStatus",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomOrganizationsAttachPolicyCustomResourceProviderHandlerB3233202": {
+      "DependsOn": [
+        "CustomOrganizationsAttachPolicyCustomResourceProviderRole051E00A6",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomOrganizationsAttachPolicyCustomResourceProviderRole051E00A6",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomOrganizationsAttachPolicyCustomResourceProviderHandlerB3233202",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomOrganizationsAttachPolicyCustomResourceProviderRole051E00A6": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "organizations:AttachPolicy",
+                    "organizations:DetachPolicy",
+                    "organizations:ListPoliciesForTarget",
+                    "organizations:ListTagsForResource",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomOrganizationsCreatePolicyCustomResourceProviderHandler7A188619": {
+      "DependsOn": [
+        "CustomOrganizationsCreatePolicyCustomResourceProviderRoleBA0ADB43",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Organizations create policy",
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomOrganizationsCreatePolicyCustomResourceProviderRoleBA0ADB43",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomOrganizationsCreatePolicyCustomResourceProviderLogGroup019B74A9": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomOrganizationsCreatePolicyCustomResourceProviderHandler7A188619",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomOrganizationsCreatePolicyCustomResourceProviderRoleBA0ADB43": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "organizations:CreatePolicy",
+                    "organizations:DeletePolicy",
+                    "organizations:DetachPolicy",
+                    "organizations:ListPolicies",
+                    "organizations:ListTargetsForPolicy",
+                    "organizations:UpdatePolicy",
+                    "organizations:TagResource",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+                {
+                  "Action": [
+                    "s3:GetObject",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":s3:::cdk-hnb659fds-assets-111111111111-us-east-1/*",
+                      ],
+                    ],
+                  },
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "DataPerimeter67F0B7E1": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomOrganizationsCreatePolicyCustomResourceProviderLogGroup019B74A9",
+        "enablePolicyTypeScpB4BC96BE",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomOrganizationsCreatePolicyCustomResourceProviderHandler7A188619",
+            "Arn",
+          ],
+        },
+        "bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+        "description": "Data Perimeter SCP
+",
+        "key": "REPLACED-JSON-PATH.json",
+        "name": "DataPerimeter",
+        "partition": "aws",
+        "policyTagKey": "AWSAcceleratorManaged",
+        "type": "SERVICE_CONTROL_POLICY",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::CreatePolicy",
+      "UpdateReplacePolicy": "Delete",
+    },
     "DetachQuarantineScpD09A8004": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
@@ -147,6 +680,272 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
       "Type": "Custom::DetachQuarantineScp",
       "UpdateReplacePolicy": "Delete",
     },
+    "Quarantine23FF09FE": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomOrganizationsCreatePolicyCustomResourceProviderLogGroup019B74A9",
+        "enablePolicyTypeScpB4BC96BE",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomOrganizationsCreatePolicyCustomResourceProviderHandler7A188619",
+            "Arn",
+          ],
+        },
+        "bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+        "description": "This SCP is used to prevent changes to new accounts until the Accelerator has been executed successfully. This policy will be applied upon account creation if enabled.
+",
+        "key": "REPLACED-JSON-PATH.json",
+        "name": "Quarantine",
+        "partition": "aws",
+        "policyTagKey": "AWSAcceleratorManaged",
+        "type": "SERVICE_CONTROL_POLICY",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::CreatePolicy",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "RevertScpChangesModifyScpRule4ECCD6B5": {
+      "Properties": {
+        "Description": "Rule to notify when an LZA-managed SCP is modified or detached.",
+        "EventPattern": {
+          "detail": {
+            "eventName": [
+              "AttachPolicy",
+              "DetachPolicy",
+              "UpdatePolicy",
+            ],
+            "eventSource": [
+              "organizations.amazonaws.com",
+            ],
+          },
+          "detail-type": [
+            "AWS API Call via CloudTrail",
+          ],
+          "source": [
+            "aws.organizations",
+          ],
+        },
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Fn::GetAtt": [
+                "RevertScpChangesRevertScpChangesFunction5EF82185",
+                "Arn",
+              ],
+            },
+            "Id": "Target0",
+            "RetryPolicy": {
+              "MaximumEventAgeInSeconds": 14400,
+              "MaximumRetryAttempts": 2,
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "RevertScpChangesModifyScpRuleAllowEventRuleAWSAcceleratorFinalizeStack111111111111useast1RevertScpChangesRevertScpChangesFunctionB38BE768D9301B84": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "RevertScpChangesRevertScpChangesFunction5EF82185",
+            "Arn",
+          ],
+        },
+        "Principal": "events.amazonaws.com",
+        "SourceArn": {
+          "Fn::GetAtt": [
+            "RevertScpChangesModifyScpRule4ECCD6B5",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "RevertScpChangesRevertScpChangesFunction5EF82185": {
+      "DependsOn": [
+        "RevertScpChangesRevertScpChangesFunctionServiceRoleDefaultPolicyF3C3ECD9",
+        "RevertScpChangesRevertScpChangesFunctionServiceRole4F571613",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Lambda function to revert changes made to LZA-controlled service control policies",
+        "Environment": {
+          "Variables": {
+            "ACCELERATOR_PREFIX": "AWSAccelerator",
+            "AWS_PARTITION": {
+              "Ref": "AWS::Partition",
+            },
+            "HOME_REGION": "us-east-1",
+            "SINGLE_ACCOUNT_MODE": "false",
+            "SNS_TOPIC_ARN": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":sns:us-east-1:111111111111:aws-accelerator-Security",
+                ],
+              ],
+            },
+          },
+        },
+        "Handler": "index.handler",
+        "KmsKeyArn": {
+          "Ref": "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "RevertScpChangesRevertScpChangesFunctionServiceRole4F571613",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 60,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "RevertScpChangesRevertScpChangesFunctionLogGroup92A9E8AA": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "RevertScpChangesRevertScpChangesFunction5EF82185",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "RevertScpChangesRevertScpChangesFunctionServiceRole4F571613": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "RevertScpChangesRevertScpChangesFunctionServiceRoleDefaultPolicyF3C3ECD9": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "kms:Encrypt",
+                "kms:GenerateDataKey",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "kmsEncryptMessage",
+            },
+            {
+              "Action": [
+                "organizations:AttachPolicy",
+                "organizations:DetachPolicy",
+                "organizations:DescribePolicy",
+                "organizations:ListAccounts",
+                "organizations:ListRoots",
+                "organizations:ListOrganizationalUnitsForParent",
+                "organizations:UpdatePolicy",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "OrgPolicyUpdate",
+            },
+            {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":sns:us-east-1:111111111111:aws-accelerator-Security",
+                  ],
+                ],
+              },
+              "Sid": "snsPublishMessage",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "RevertScpChangesRevertScpChangesFunctionServiceRoleDefaultPolicyF3C3ECD9",
+        "Roles": [
+          {
+            "Ref": "RevertScpChangesRevertScpChangesFunctionServiceRole4F571613",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
     "SsmParamAcceleratorVersionFF83282D": {
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-FinalizeStack-111111111111-us-east-1/version",
@@ -164,6 +963,26 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
         },
       },
       "Type": "AWS::SSM::Parameter",
+    },
+    "enablePolicyTypeScpB4BC96BE": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomEnablePolicyTypeCustomResourceProviderLogGroup81BE8EF5",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomEnablePolicyTypeCustomResourceProviderHandlerC244F9E1",
+            "Arn",
+          ],
+        },
+        "partition": {
+          "Ref": "AWS::Partition",
+        },
+        "policyType": "SERVICE_CONTROL_POLICY",
+      },
+      "Type": "Custom::EnablePolicyType",
+      "UpdateReplacePolicy": "Delete",
     },
   },
 }
