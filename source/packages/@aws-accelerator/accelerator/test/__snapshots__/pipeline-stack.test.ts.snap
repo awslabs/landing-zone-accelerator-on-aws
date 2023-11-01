@@ -2416,7 +2416,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
         "env",
         "cd source",
         "cd packages/@aws-accelerator/accelerator",
-        "if [ -z \\"\${ACCELERATOR_STAGE}\\" ]; then for STAGE in \\"key\\" \\"logging\\" \\"organizations\\" \\"security-audit\\" \\"network-prep\\" \\"security\\" \\"operations\\" \\"network-vpc\\" \\"security-resources\\" \\"network-associations\\" \\"customizations\\" \\"finalize\\" \\"bootstrap\\"; do yarn run ts-node --transpile-only cdk.ts synth --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+        "if [ -z \\"\${ACCELERATOR_STAGE}\\" ]; then for STAGE in \\"key\\" \\"logging\\" \\"organizations\\" \\"security-audit\\" \\"network-prep\\" \\"security\\" \\"operations\\" \\"network-vpc\\" \\"security-resources\\" \\"network-associations\\" \\"customizations\\" \\"finalize\\" \\"bootstrap\\"; do set -e && yarn run ts-node --transpile-only cdk.ts synth --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
@@ -2431,7 +2431,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   "Ref": "AWS::Partition",
                 },
                 " --app cdk.out; fi",
-        "if [ \\"diff\\" = \\"\${CDK_OPTIONS}\\" ]; then for STAGE in \\"key\\" \\"logging\\" \\"organizations\\" \\"security-audit\\" \\"network-prep\\" \\"security\\" \\"operations\\" \\"network-vpc\\" \\"security-resources\\" \\"network-associations\\" \\"customizations\\" \\"finalize\\" \\"bootstrap\\"; do yarn run ts-node --transpile-only cdk.ts --require-approval never $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+        "if [ \\"diff\\" = \\"\${CDK_OPTIONS}\\" ]; then for STAGE in \\"key\\" \\"logging\\" \\"organizations\\" \\"security-audit\\" \\"network-prep\\" \\"security\\" \\"operations\\" \\"network-vpc\\" \\"security-resources\\" \\"network-associations\\" \\"customizations\\" \\"finalize\\" \\"bootstrap\\"; do set -e && yarn run ts-node --transpile-only cdk.ts --require-approval never $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
