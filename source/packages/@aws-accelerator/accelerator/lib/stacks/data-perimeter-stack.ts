@@ -117,14 +117,18 @@ export class DataPerimeterStack extends AcceleratorStack {
       });
       configRule.node.addDependency(detectResourcePolicy.lambdaFunction);
 
-      const targetId = this.props.securityConfig.dataPerimeter!.ssmDocumentName;
+      let documentName =
+        this.props.securityConfig.dataPerimeter!.ssmDocumentName || DataPerimeterConfig.DEFAULT_SSM_DOCUMENT_NAME;
+      documentName = documentName.startsWith(this.props.prefixes.accelerator)
+        ? documentName
+        : `${this.props.prefixes.accelerator}-${documentName}`;
       const remediationConfig = this.props.securityConfig.dataPerimeter!.remediation;
 
       const remediationRole = this.createRemediationRole(
         ruleName,
         `arn:${cdk.Stack.of(this).partition}:ssm:${
           cdk.Stack.of(this).region
-        }:${this.props.accountsConfig.getAuditAccountId()}:document/${targetId}`,
+        }:${this.props.accountsConfig.getAuditAccountId()}:document/${documentName}`,
         true,
       );
 
@@ -151,7 +155,7 @@ export class DataPerimeterStack extends AcceleratorStack {
         configRuleName: ruleName,
         targetId: `arn:${cdk.Stack.of(this).partition}:ssm:${
           cdk.Stack.of(this).region
-        }:${this.props.accountsConfig.getAuditAccountId()}:document/${targetId}`,
+        }:${this.props.accountsConfig.getAuditAccountId()}:document/${documentName}`,
         targetType: 'SSM_DOCUMENT',
 
         automatic: remediationConfig.automatic,

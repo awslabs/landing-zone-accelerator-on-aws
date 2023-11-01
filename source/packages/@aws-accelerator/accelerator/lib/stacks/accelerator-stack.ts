@@ -881,7 +881,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * @param customResourceLambdaCloudWatchLogKmsKey {@link cdk.aws_kms.IKey}
    * @returns cdk.aws_kms.Key
    */
-  protected getAcceleratorKey(
+  public getAcceleratorKey(
     keyType: AcceleratorKeyType,
     customResourceLambdaCloudWatchLogKmsKey?: cdk.aws_kms.IKey,
   ): cdk.aws_kms.Key {
@@ -1368,7 +1368,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * @param targetType
    * @returns
    */
-  protected getScpNamesForTarget(targetName: string, targetType: 'ou' | 'account'): string[] {
+  public getScpNamesForTarget(targetName: string, targetType: 'ou' | 'account'): string[] {
     const scps: string[] = [];
 
     for (const serviceControlPolicy of this.props.organizationConfig.serviceControlPolicies) {
@@ -1498,8 +1498,11 @@ export abstract class AcceleratorStack extends cdk.Stack {
       partition: this.props.partition,
       additionalReplacements,
       acceleratorName: this.props.globalConfig.externalLandingZoneResources?.acceleratorName || 'lza',
+      networkConfig: this.props.networkConfig,
+      accountsConfig: this.props.accountsConfig,
     });
 
+    // Validate and remove all unnecessary spaces in JSON string
     policyContent = JSON.stringify(JSON.parse(policyContent));
     if (returnTempPath) {
       return this.createTempFile(policyContent, tempFileName);
@@ -1697,5 +1700,9 @@ export abstract class AcceleratorStack extends cdk.Stack {
   public getExternalResourceParameter(name: string) {
     if (!this.externalResourceParameters) throw new Error(`No ssm parameter "${name}" found in account and region`);
     return this.externalResourceParameters[name];
+  }
+
+  public addNagSuppression(nagSuppression: NagSuppressionDetailType) {
+    this.nagSuppressionInputs.push(nagSuppression);
   }
 }

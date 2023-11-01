@@ -385,6 +385,10 @@ export class SecurityConfigTypes {
     resourcePolicies: t.array(SecurityConfigTypes.resourcePolicyConfig),
   });
 
+  static readonly networkPerimeterConfig = t.interface({
+    managedVpcOnly: t.optional(t.boolean),
+  });
+
   /**
    * Data Perimeter configuration
    */
@@ -395,6 +399,7 @@ export class SecurityConfigTypes {
     resourcePolicies: t.array(SecurityConfigTypes.resourcePolicyConfig),
     remediation: SecurityConfigTypes.resourcePolicyRemediationType,
     policySets: t.array(SecurityConfigTypes.resourcePolicySetConfig),
+    networkPerimeter: t.optional(SecurityConfigTypes.networkPerimeterConfig),
   });
 
   static readonly accessAnalyzerConfig = t.interface({
@@ -767,6 +772,18 @@ export class ResourcePolicySetConfig implements t.TypeOf<typeof SecurityConfigTy
 }
 
 /**
+ * *{@link SecurityConfig} / {@link DataPerimeterConfig}/{@link NetworkPerimeterConfig}*
+ *
+ * Network Perimeter Config.
+ *
+ * If managedVpcOnly is true, all the VPCs in accounts will be included while parameter `ACCEL_LOOKUP:VPC|VPC_ID:XX` is used.
+ * If managedVpcOnly is false, only the VPC  created by LZA will be included while parameter `ACCEL_LOOKUP:VPC|VPC_ID:XX` is used.
+ */
+export class NetworkPerimeterConfig implements t.TypeOf<typeof SecurityConfigTypes.networkPerimeterConfig> {
+  readonly managedVpcOnly: boolean | undefined = true;
+}
+
+/**
  * *{@link SecurityConfig} / {@link DataPerimeterConfig}*
  *
  *  Data Perimeter Config. The data perimeter configuration allows you to deploy AWS Config rules to
@@ -816,6 +833,7 @@ export class DataPerimeterConfig implements t.TypeOf<typeof SecurityConfigTypes.
   readonly resourcePolicies: ResourcePolicyConfig[] = [];
   readonly remediation: ResourcePolicyRemediation = new ResourcePolicyRemediation();
   readonly policySets: ResourcePolicySetConfig[] = [];
+  readonly networkPerimeter: NetworkPerimeterConfig | undefined = undefined;
 }
 
 /**

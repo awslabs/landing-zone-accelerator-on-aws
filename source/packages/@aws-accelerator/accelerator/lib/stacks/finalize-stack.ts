@@ -13,8 +13,10 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { AcceleratorKeyType, AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { DetachQuarantineScp } from '../detach-quarantine-scp';
+import { ScpResource } from '../resources/scp-resource';
+import { KmsKeyResource } from '../resources/kms-key-resource';
 
 export class FinalizeStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
@@ -22,7 +24,19 @@ export class FinalizeStack extends AcceleratorStack {
 
     if (props.globalRegion === cdk.Stack.of(this).region) {
       this.logger.debug(`Retrieving CloudWatch kms key`);
-      const cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
+
+      const keyResource = new KmsKeyResource(this, props);
+      const scpResource = new ScpResource(this, keyResource.cloudwatchKey, keyResource.lambdaKey, props);
+
+      //
+      // Update SCP with dynamic parameters
+      //
+      scpResource.createAndAttachScps(props);
+
+      //
+      // Configure revert scp changes rule
+      //
+      scpResource.configureRevertScpChanges(props);
 
       if (process.env['CONFIG_COMMIT_ID']) {
         this.logger.debug(`Storing configuration commit id in SSM`);
@@ -44,10 +58,15 @@ export class FinalizeStack extends AcceleratorStack {
           scpPolicyId: policyId,
           managementAccountId: props.accountsConfig.getManagementAccountId(),
           partition: props.partition,
-          kmsKey: cloudwatchKey,
+          kmsKey: keyResource.cloudwatchKey,
           logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });
       }
+
+      //
+      // Create NagSuppressions
+      //
+      this.addResourceSuppressionsByPath();
     }
     this.logger.info('Completed stack synthesis');
   }
