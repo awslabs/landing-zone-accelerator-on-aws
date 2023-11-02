@@ -1130,6 +1130,12 @@ class FirewallValidator {
         );
       }
 
+      if (firewall.configDir && firewall.configFile) {
+        errors.push(
+          `[Firewall instance ${firewall.name}]: Either configDir or configFile property should be provided but not both in configuration`,
+        );
+      }
+
       // Validate launch template
       if (NetworkConfigTypes.vpcConfig.is(vpc) && firewall.launchTemplate.networkInterfaces) {
         this.validateLaunchTemplate(vpc, firewall, configDir, securityConfig, accountsConfig, helpers, errors);
@@ -1147,9 +1153,9 @@ class FirewallValidator {
     firewall: Ec2FirewallInstanceConfig | Ec2FirewallAutoScalingGroupConfig,
     errors: string[],
   ) {
-    if (firewall.staticReplacements && !firewall.configFile) {
+    if (firewall.staticReplacements && !(firewall.configFile || firewall.configDir)) {
       errors.push(
-        `[Firewall ${firewall.name}]: configFile property must be set when defining static firewall replacements configuration`,
+        `[Firewall ${firewall.name}]: configFile or configDir property must be set when defining static firewall replacements configuration`,
       );
     }
   }
@@ -1185,6 +1191,12 @@ class FirewallValidator {
             `[Firewall ASG ${group.name}]: cannot define sourceDestCheck property for ASG network interfaces`,
           );
         }
+      }
+
+      if (group.configDir && group.configFile) {
+        errors.push(
+          `[ASG ${group.name}]: Either configDir or configFile property should be provided but not both for ASG`,
+        );
       }
 
       // Validate launch template
@@ -1525,10 +1537,13 @@ class FirewallValidator {
     errors: string[],
   ) {
     //
-    // Validate IAM instance profile exists if configFile or licenseFile are defined
-    if ((firewall.configFile || firewall.licenseFile) && !firewall.launchTemplate.iamInstanceProfile) {
+    // Validate IAM instance profile exists if configFile, configDir or licenseFile are defined
+    if (
+      (firewall.configFile || firewall.licenseFile || firewall.configDir) &&
+      !firewall.launchTemplate.iamInstanceProfile
+    ) {
       errors.push(
-        `[Firewall ${firewall.name}]: IAM instance profile must be defined in the launch template when either configFile or licenseFile properties are defined`,
+        `[Firewall ${firewall.name}]: IAM instance profile must be defined in the launch template when either configFile, licenseFile or configDir properties are defined`,
       );
     }
     //

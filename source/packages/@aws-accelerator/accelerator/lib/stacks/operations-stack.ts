@@ -1429,7 +1429,7 @@ export class OperationsStack extends AcceleratorStack {
       if (
         this.isFirewallInScope(vpcResources, firewall) &&
         firewall.launchTemplate.iamInstanceProfile &&
-        (firewall.configFile || firewall.licenseFile)
+        (firewall.configFile || firewall.configDir || firewall.licenseFile)
       ) {
         firewallRoles.push(firewall.launchTemplate.iamInstanceProfile);
       }
@@ -1505,6 +1505,21 @@ export class OperationsStack extends AcceleratorStack {
           resources: [
             `arn:${this.partition}:iam::*:role/${this.acceleratorResourceNames.roles.crossAccountVpnRoleName}`,
           ],
+        }),
+        //
+        // secretsmanager:GetSecretValue and kms:Decrypt permissions to management account resources
+        // to apply replacements from management account
+        new cdk.aws_iam.PolicyStatement({
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['secretsmanager:GetSecretValue'],
+          resources: [
+            `arn:${this.partition}:secretsmanager:*:${this.props.accountsConfig.getManagementAccountId()}:secret:*`,
+          ],
+        }),
+        new cdk.aws_iam.PolicyStatement({
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['kms:Decrypt'],
+          resources: [`arn:${this.partition}:kms:*:${this.props.accountsConfig.getManagementAccountId()}:key/*`],
         }),
       ],
     });
