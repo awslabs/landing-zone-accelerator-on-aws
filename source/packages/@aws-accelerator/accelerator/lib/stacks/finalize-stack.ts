@@ -13,10 +13,9 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import { AcceleratorStack, AcceleratorStackProps, AcceleratorKeyType } from './accelerator-stack';
 import { DetachQuarantineScp } from '../detach-quarantine-scp';
 import { ScpResource } from '../resources/scp-resource';
-import { KmsKeyResource } from '../resources/kms-key-resource';
 
 export class FinalizeStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
@@ -25,8 +24,9 @@ export class FinalizeStack extends AcceleratorStack {
     if (props.globalRegion === cdk.Stack.of(this).region) {
       this.logger.debug(`Retrieving CloudWatch kms key`);
 
-      const keyResource = new KmsKeyResource(this, props);
-      const scpResource = new ScpResource(this, keyResource.cloudwatchKey, keyResource.lambdaKey, props);
+      const lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY) as cdk.aws_kms.Key;
+      const cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY) as cdk.aws_kms.Key;
+      const scpResource = new ScpResource(this, cloudwatchKey, lambdaKey, props);
 
       //
       // Update SCP with dynamic parameters
@@ -58,7 +58,7 @@ export class FinalizeStack extends AcceleratorStack {
           scpPolicyId: policyId,
           managementAccountId: props.accountsConfig.getManagementAccountId(),
           partition: props.partition,
-          kmsKey: keyResource.cloudwatchKey,
+          kmsKey: cloudwatchKey,
           logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });
       }
