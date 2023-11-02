@@ -212,7 +212,7 @@ export class OperationsStack extends AcceleratorStack {
     const s3BucketList: string[] = this.s3BucketList();
 
     // Set up Session Manager Logging
-    new SsmSessionManagerPolicy(this, 'SsmSessionManagerSettings', {
+    const ssmSessionManagerPolicy = new SsmSessionManagerPolicy(this, 'SsmSessionManagerSettings', {
       s3BucketName: this.centralLogsBucketName,
       s3BucketKeyArn: this.centralLogsBucketKey.keyArn,
       sendToCloudWatchLogs: this.props.globalConfig.logging.sessionManager.sendToCloudWatchLogs,
@@ -232,6 +232,13 @@ export class OperationsStack extends AcceleratorStack {
         alias: this.acceleratorResourceNames.customerManagedKeys.ssmKey.alias,
         description: this.acceleratorResourceNames.customerManagedKeys.ssmKey.description,
       },
+    });
+    const roleNames = this.props.globalConfig.logging.sessionManager.attachPolicyToIamRoles || [];
+    roleNames.forEach(roleName => {
+      const role = this.roles[roleName];
+      if (role) {
+        ssmSessionManagerPolicy.node.addDependency(role);
+      }
     });
 
     // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
