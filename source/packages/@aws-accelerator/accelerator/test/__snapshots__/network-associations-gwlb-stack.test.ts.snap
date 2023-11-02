@@ -727,6 +727,7 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
           "Ref": "NetworkInspectionacceleratorFirewallFirewall23AAB613",
         },
         "licenseFile": "license.lic",
+        "managementAccountId": "111111111111",
         "roleName": "AWSAccelerator-CrossAccount-SiteToSiteVpn-Role",
         "staticReplacements": [
           {
@@ -1335,6 +1336,7 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
         "configBucketName": "aws-accelerator-firewall-config-555555555555-us-east-1",
         "configFile": "asg-config.txt",
         "licenseFile": "license.lic",
+        "managementAccountId": "111111111111",
         "vpcId": {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },

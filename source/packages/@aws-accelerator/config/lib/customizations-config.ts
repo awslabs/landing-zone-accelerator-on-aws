@@ -471,6 +471,7 @@ export class CustomizationsConfigTypes {
     vpc: t.nonEmptyString,
     account: t.optional(t.nonEmptyString),
     configFile: t.optional(t.nonEmptyString),
+    configDir: t.optional(t.nonEmptyString),
     detailedMonitoring: t.optional(t.boolean),
     licenseFile: t.optional(t.nonEmptyString),
     staticReplacements: t.optional(t.array(this.firewallStaticReplacementsConfig)),
@@ -485,6 +486,7 @@ export class CustomizationsConfigTypes {
     vpc: t.nonEmptyString,
     account: t.optional(t.nonEmptyString),
     configFile: t.optional(t.nonEmptyString),
+    configDir: t.optional(t.nonEmptyString),
     licenseFile: t.optional(t.nonEmptyString),
     staticReplacements: t.optional(t.array(this.firewallStaticReplacementsConfig)),
     tags: t.optional(t.array(t.tag)),
@@ -675,6 +677,90 @@ export class Ec2FirewallInstanceConfig implements t.TypeOf<typeof Customizations
    * * For replacements that are supported in firewall userdata, see {@link LaunchTemplateConfig.userData}.
    */
   readonly configFile: string | undefined = undefined;
+
+  /**
+   * (OPTIONAL) Specify a relative S3 directory path to pull a firewall configuration directory.
+   *
+   * Either configFile or configDir can be set but not both.
+   *
+   * For example, if your S3 folder path is `s3://path/to/config`, specify `path/to/config` for this property.
+   *
+   * **NOTE:** The custom resource backing this feature does not force update on every core pipeline run. To update the resource,
+   * update the name of the configuration directory.
+   *
+   * @remarks
+   * Setting this property allows you to make use of firewall configuration replacements. This allows you to
+   * configure your firewall instance dynamically using values determined at CDK runtime.
+   *
+   * **NOTE**: The configuration directory must be uploaded to the accelerator-created assets bucket in the home region of
+   * your Management account. This is the `${AcceleratorPrefix}-assets` bucket, not the `cdk-accel-assets` bucket.
+   *
+   * The transformed configuration directory will be uploaded to `${AcceleratorPrefix}-firewall-config` bucket in the account and region your firewall instance
+   * is deployed to. This config directory can be consumed by third-party firewall vendors that support pulling a configuration directory from S3.
+   *
+   * Supported replacements:
+   * * Hostname replacement - look up the name of the firewall instance
+   *   * Format: `${ACCEL_LOOKUP::EC2:INSTANCE:HOSTNAME}` -- translates to the logical name of the instance as configured in customizations-config.yaml.
+   * * VPC replacements - look up metadata about the VPC the firewall is deployed to:
+   *   * Format: `${ACCEL_LOOKUP::EC2:VPC:<METADATA_TYPE>_<INDEX>}`, where `<METADATA_TYPE>` is a type listed below,
+   * and `<INDEX>` is the index of the VPC CIDR range.
+   *   * Metadata types:
+   *     * CIDR - the VPC CIDR range in CIDR notation (i.e. 10.0.0.0/16)
+   *     * NETMASK - the network mask of the VPC CIDR (i.e. 255.255.0.0)
+   *     * NETWORKIP - the network address of the VPC CIDR (i.e. 10.0.0.0)
+   *     * ROUTERIP - the VPC router address of the VPC CIDR (i.e. 10.0.0.1)
+   *   * Index numbering is zero-based, so the primary VPC CIDR is index `0`.
+   *   * Example usage: `${ACCEL_LOOKUP::EC2:VPC:CIDR_0}` - translates to the primary CIDR range of the VPC
+   * * Subnet replacements - look up metadata about subnets in the VPC the firewall is deployed to:
+   *   * Format: `${ACCEL_LOOKUP::EC2:SUBNET:<METADATA_TYPE>:<SUBNET_NAME>}`, where `<METADATA_TYPE>` is a type listed
+   * below, and `<SUBNET_NAME>` is the logical name of the subnet as defined in `network-config.yaml`.
+   *   * Metadata types:
+   *     * CIDR - the subnet CIDR range in CIDR notation (i.e. 10.0.0.0/16)
+   *     * NETMASK - the network mask of the subnet (i.e. 255.255.0.0)
+   *     * NETWORKIP - the network address of the subnet (i.e. 10.0.0.0)
+   *     * ROUTERIP - the VPC router address of the subnet (i.e. 10.0.0.1)
+   *   * Example usage: `${ACCEL_LOOKUP::EC2:SUBNET:CIDR:firewall-data-subnet-a}` - translates to the CIDR range of a subnet named `firewall-data-subnet-a`
+   * * Network interface IP replacements - look up public and private IP addresses assigned to firewall network interfaces:
+   *   * Format: `${ACCEL_LOOKUP::EC2:ENI_<ENI_INDEX>:<IP_TYPE>_<IP_INDEX>}`, where `<ENI_INDEX>` is the device index
+   * of the network interface as defined in the firewall launch template, `<IP_TYPE>` is either a public or private IP of the interface,
+   * and `<IP_INDEX>` is the index of the interface IP address.
+   *   * IP types:
+   *     * PRIVATEIP - a private IP associated with the interface
+   *     * PUBLICIP - a public IP associated with the interface
+   *   * Index numbering is zero-based, so the primary interface of the instance is `0` and its primary IP address is also `0`.
+   *   * Example usage: `${ACCEL_LOOKUP::EC2:ENI_0:PRIVATEIP_0}` - translates to the primary private IP address of the primary network interface
+   * * Network interface subnet replacements - look up metadata about the subnet a network interface is deployed to:
+   *   * Format: `${ACCEL_LOOKUP::EC2:ENI_<ENI_INDEX>:SUBNET_<METADATA_TYPE>}`, where `<ENI_INDEX>` is the device index
+   * of the network interface as defined in the firewall launch template and `<METADATA_TYPE>` is a type listed below.
+   *   * Metadata types:
+   *     * CIDR - the subnet CIDR range in CIDR notation (i.e. 10.0.0.0/16)
+   *     * NETMASK - the network mask of the subnet (i.e. 255.255.0.0)
+   *     * NETWORKIP - the network address of the subnet (i.e. 10.0.0.0)
+   *     * ROUTERIP - the VPC router address of the subnet (i.e. 10.0.0.1)
+   *   * Index numbering is zero-based, so the primary interface of the instance is `0`.
+   *   * Example usage: `${ACCEL_LOOKUP::EC2:ENI_0:SUBNET_CIDR}` - translates to the subnet CIDR range of the primary network interface
+   * * VPN replacements - look up metadata about VPNs that are directly connected to the EC2 firewall instance. NOTE: these replacements are
+   * only supported for EC2 firewalls that are referenced in a {@link CustomerGatewayConfig} in network-config.yaml.
+   *   * Format: `${ACCEL_LOOKUP::EC2:VPN:<METADATA_TYPE>:<VPN_NAME>}`, where `<METADATA_TYPE>` is a type listed
+   * below, and `<VPN_NAME>` is the logical name of the VPN connection as defined in `network-config.yaml`.
+   *   * Metadata types:
+   *     * AWS_BGPASN - the BGP autonomous system number (ASN) of the AWS gateway device
+   *     * CGW_BGPASN - the BGP autonomous system number (ASN) of the customer gateway device
+   *     * CGW_OUTSIDEIP - the outside (public) IP address of the customer gateway device
+   *     * AWS_INSIDEIP_<TUNNEL_INDEX> - the inside (link-local) IP address of the AWS gateway device, where <TUNNEL_INDEX> is the index number of the VPN tunnel
+   *     * CGW_INSIDEIP_<TUNNEL_INDEX> - the inside (link-local) IP address of the customer gateway device, where <TUNNEL_INDEX> is the index number of the VPN tunnel
+   *     * AWS_OUTSIDEIP_<TUNNEL_INDEX> - the outside (public) IP address of the AWS gateway device, where <TUNNEL_INDEX> is the index number of the VPN tunnel
+   *     * INSIDE_CIDR_<TUNNEL_INDEX> - the inside (link-local) CIDR range of the tunnel, where <TUNNEL_INDEX> is the index number of the VPN tunnel
+   *     * INSIDE_NETMASK_<TUNNEL_INDEX> - the inside (link-local) subnet mask of the tunnel, where <TUNNEL_INDEX> is the index number of the VPN tunnel
+   *     * PSK_<TUNNEL_INDEX> - the pre-shared key of the tunnel, where <TUNNEL_INDEX> is the index number of the VPN tunnel
+   *   * Index numbering is zero-based, so the primary VPN tunnel is `0`.
+   *   * Example usage: `${ACCEL_LOOKUP::EC2:VPN:AWS_OUTSIDEIP_0:accelerator-vpn}` - translates to the AWS-side public IP of the primary VPN tunnel for a VPN named `accelerator-vpn`
+   * * AWS Secrets Manager Secret replacements - look up the secret from AWS Secrets Manager secret in management account. The secret must be stored in the same region the firewall is deployed to.
+   *   * Format: `${ACCEL_LOOKUP::SECRETS_MANAGER:<SECRET_NAME>}` -- translates to the secure string from AWS Secrets Manager secret.
+   *
+   * * For replacements that are supported in firewall userdata, see {@link LaunchTemplateConfig.userData}.
+   */
+  readonly configDir: string | undefined = undefined;
   /**
    * (OPTIONAL) Specify true to enable detailed monitoring. Otherwise, basic monitoring is enabled.
    */
@@ -703,13 +789,14 @@ export class Ec2FirewallInstanceConfig implements t.TypeOf<typeof Customizations
    * @remarks
    * Use this property to define static key/value pairs that can be referenced as variables in firewall configuration files.
    *
-   * If setting this property, the `configFile` property MUST also be set.
+   * If setting this property, the `configFile` or `configDir` property MUST also be set.
    *
    * Replacement syntax:
    * * Format: `${ACCEL_LOOKUP::CUSTOM:<KEY>}`, where `<KEY>` is the key name for the replacement as defined in `customizations-config.yaml`.
    * * Example usage: `${ACCEL_LOOKUP::CUSTOM:CORP_CIDR_RANGE}` - translates to the static value entered for CORP_CIDR_RANGE.
    *
    * @see {@link Ec2FirewallInstanceConfig.configFile}
+   * @see {@link Ec2FirewallInstanceConfig.configDir}
    */
   readonly staticReplacements: FirewallStaticReplacementsConfig[] | undefined = undefined;
   /**
@@ -859,6 +946,89 @@ export class Ec2FirewallAutoScalingGroupConfig
    */
   readonly configFile: string | undefined = undefined;
   /**
+   * (OPTIONAL) Specify a relative S3 directory path to pull a firewall configuration directory.
+   *
+   * Either configFile or configDir can be set but not both.
+   *
+   * For example, if your S3 folder path is `s3://path/to/config`, specify `path/to/config` for this property.
+   *
+   * **NOTE:** The custom resource backing this feature does not force update on every core pipeline run. To update the resource,
+   * update the name of the configuration directory.
+   *
+   * @remarks
+   * Setting this property allows you to make use of firewall configuration replacements. This allows you to
+   * configure your firewall instance dynamically using values determined at CDK runtime.
+   *
+   * **NOTE**: The configuration directory must be uploaded to the accelerator-created assets bucket in the home region of
+   * your Management account. This is the `${AcceleratorPrefix}-assets` bucket, not the `cdk-accel-assets` bucket.
+   *
+   * The transformed configuration directory will be uploaded to `${AcceleratorPrefix}-firewall-config` bucket in the account and region your firewall instance
+   * is deployed to. This config directory can be consumed by third-party firewall vendors that support pulling a configuration directory from S3.
+   *
+   * Supported replacements:
+   * * Hostname replacement - look up the name of the firewall instance
+   *   * Format: `${ACCEL_LOOKUP::EC2:INSTANCE:HOSTNAME}` -- translates to the logical name of the instance as configured in customizations-config.yaml.
+   * * VPC replacements - look up metadata about the VPC the firewall is deployed to:
+   *   * Format: `${ACCEL_LOOKUP::EC2:VPC:<METADATA_TYPE>_<INDEX>}`, where `<METADATA_TYPE>` is a type listed below,
+   * and `<INDEX>` is the index of the VPC CIDR range.
+   *   * Metadata types:
+   *     * CIDR - the VPC CIDR range in CIDR notation (i.e. 10.0.0.0/16)
+   *     * NETMASK - the network mask of the VPC CIDR (i.e. 255.255.0.0)
+   *     * NETWORKIP - the network address of the VPC CIDR (i.e. 10.0.0.0)
+   *     * ROUTERIP - the VPC router address of the VPC CIDR (i.e. 10.0.0.1)
+   *   * Index numbering is zero-based, so the primary VPC CIDR is index `0`.
+   *   * Example usage: `${ACCEL_LOOKUP::EC2:VPC:CIDR_0}` - translates to the primary CIDR range of the VPC
+   * * Subnet replacements - look up metadata about subnets in the VPC the firewall is deployed to:
+   *   * Format: `${ACCEL_LOOKUP::EC2:SUBNET:<METADATA_TYPE>:<SUBNET_NAME>}`, where `<METADATA_TYPE>` is a type listed
+   * below, and `<SUBNET_NAME>` is the logical name of the subnet as defined in `network-config.yaml`.
+   *   * Metadata types:
+   *     * CIDR - the subnet CIDR range in CIDR notation (i.e. 10.0.0.0/16)
+   *     * NETMASK - the network mask of the subnet (i.e. 255.255.0.0)
+   *     * NETWORKIP - the network address of the subnet (i.e. 10.0.0.0)
+   *     * ROUTERIP - the VPC router address of the subnet (i.e. 10.0.0.1)
+   *   * Example usage: `${ACCEL_LOOKUP::EC2:SUBNET:CIDR:firewall-data-subnet-a}` - translates to the CIDR range of a subnet named `firewall-data-subnet-a`
+   * * Network interface IP replacements - look up public and private IP addresses assigned to firewall network interfaces:
+   *   * Format: `${ACCEL_LOOKUP::EC2:ENI_<ENI_INDEX>:<IP_TYPE>_<IP_INDEX>}`, where `<ENI_INDEX>` is the device index
+   * of the network interface as defined in the firewall launch template, `<IP_TYPE>` is either a public or private IP of the interface,
+   * and `<IP_INDEX>` is the index of the interface IP address.
+   *   * IP types:
+   *     * PRIVATEIP - a private IP associated with the interface
+   *     * PUBLICIP - a public IP associated with the interface
+   *   * Index numbering is zero-based, so the primary interface of the instance is `0` and its primary IP address is also `0`.
+   *   * Example usage: `${ACCEL_LOOKUP::EC2:ENI_0:PRIVATEIP_0}` - translates to the primary private IP address of the primary network interface
+   * * Network interface subnet replacements - look up metadata about the subnet a network interface is deployed to:
+   *   * Format: `${ACCEL_LOOKUP::EC2:ENI_<ENI_INDEX>:SUBNET_<METADATA_TYPE>}`, where `<ENI_INDEX>` is the device index
+   * of the network interface as defined in the firewall launch template and `<METADATA_TYPE>` is a type listed below.
+   *   * Metadata types:
+   *     * CIDR - the subnet CIDR range in CIDR notation (i.e. 10.0.0.0/16)
+   *     * NETMASK - the network mask of the subnet (i.e. 255.255.0.0)
+   *     * NETWORKIP - the network address of the subnet (i.e. 10.0.0.0)
+   *     * ROUTERIP - the VPC router address of the subnet (i.e. 10.0.0.1)
+   *   * Index numbering is zero-based, so the primary interface of the instance is `0`.
+   *   * Example usage: `${ACCEL_LOOKUP::EC2:ENI_0:SUBNET_CIDR}` - translates to the subnet CIDR range of the primary network interface
+   * * VPN replacements - look up metadata about VPNs that are directly connected to the EC2 firewall instance. NOTE: these replacements are
+   * only supported for EC2 firewalls that are referenced in a {@link CustomerGatewayConfig} in network-config.yaml.
+   *   * Format: `${ACCEL_LOOKUP::EC2:VPN:<METADATA_TYPE>:<VPN_NAME>}`, where `<METADATA_TYPE>` is a type listed
+   * below, and `<VPN_NAME>` is the logical name of the VPN connection as defined in `network-config.yaml`.
+   *   * Metadata types:
+   *     * AWS_BGPASN - the BGP autonomous system number (ASN) of the AWS gateway device
+   *     * CGW_BGPASN - the BGP autonomous system number (ASN) of the customer gateway device
+   *     * CGW_OUTSIDEIP - the outside (public) IP address of the customer gateway device
+   *     * AWS_INSIDEIP_<TUNNEL_INDEX> - the inside (link-local) IP address of the AWS gateway device, where <TUNNEL_INDEX> is the index number of the VPN tunnel
+   *     * CGW_INSIDEIP_<TUNNEL_INDEX> - the inside (link-local) IP address of the customer gateway device, where <TUNNEL_INDEX> is the index number of the VPN tunnel
+   *     * AWS_OUTSIDEIP_<TUNNEL_INDEX> - the outside (public) IP address of the AWS gateway device, where <TUNNEL_INDEX> is the index number of the VPN tunnel
+   *     * INSIDE_CIDR_<TUNNEL_INDEX> - the inside (link-local) CIDR range of the tunnel, where <TUNNEL_INDEX> is the index number of the VPN tunnel
+   *     * INSIDE_NETMASK_<TUNNEL_INDEX> - the inside (link-local) subnet mask of the tunnel, where <TUNNEL_INDEX> is the index number of the VPN tunnel
+   *     * PSK_<TUNNEL_INDEX> - the pre-shared key of the tunnel, where <TUNNEL_INDEX> is the index number of the VPN tunnel
+   *   * Index numbering is zero-based, so the primary VPN tunnel is `0`.
+   *   * Example usage: `${ACCEL_LOOKUP::EC2:VPN:AWS_OUTSIDEIP_0:accelerator-vpn}` - translates to the AWS-side public IP of the primary VPN tunnel for a VPN named `accelerator-vpn`
+   * * AWS Secrets Manager Secret replacements - look up the secret from AWS Secrets Manager secret in management account. The secret must be stored in the same region the firewall is deployed to.
+   *   * Format: `${ACCEL_LOOKUP::SECRETS_MANAGER:<SECRET_NAME>}` -- translates to the secure string from AWS Secrets Manager secret.
+   *
+   * * For replacements that are supported in firewall userdata, see {@link LaunchTemplateConfig.userData}.
+   */
+  readonly configDir: string | undefined = undefined;
+  /**
    * (OPTIONAL) Specify a relative S3 object path to pull a firewall license file from.
    *
    * For example, if your S3 object path is `s3://path/to/license.lic`, specify `path/to/license.lic` for this property.
@@ -882,13 +1052,14 @@ export class Ec2FirewallAutoScalingGroupConfig
    * @remarks
    * Use this property to define static key/value pairs that can be referenced as replacement variables in firewall configuration files.
    *
-   * If setting this property, the `configFile` property MUST also be set.
+   * If setting this property, the `configFile` or `configDir` property MUST also be set.
    *
    * Replacement syntax:
    * * Format: `${ACCEL_LOOKUP::CUSTOM:<KEY>}`, where `<KEY>` is the key name for the replacement as defined in `customizations-config.yaml`.
    * * Example usage: `${ACCEL_LOOKUP::CUSTOM:CORP_CIDR_RANGE}` - translates to the static value entered for CORP_CIDR_RANGE.
    *
    * @see {@link Ec2FirewallAutoScalingGroupConfig.configFile}
+   * @see {@link Ec2FirewallAutoScalingGroupConfig.configDir}
    */
   readonly staticReplacements: FirewallStaticReplacementsConfig[] | undefined = undefined;
   /**
@@ -2242,7 +2413,7 @@ export class LaunchTemplateConfig implements t.TypeOf<typeof CustomizationsConfi
    * @remarks
    * If defining user data for an EC2 firewall instance or AutoScaling group, you may use the variable
    * `${ACCEL_LOOKUP::S3:BUCKET:firewall-config}` in order to dynamically resolve the name of the S3 bucket
-   * where S3 firewall configurations are stored by the accelerator. This bucket is used when the `configFile` or
+   * where S3 firewall configurations are stored by the accelerator. This bucket is used when the `configFile`, `configDir` or
    * `licenseFile` properties are defined for a firewall.
    *
    * @see {@link Ec2FirewallAutoScalingGroupConfig} | {@link Ec2FirewallInstanceConfig}

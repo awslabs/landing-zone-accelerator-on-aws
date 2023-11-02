@@ -23,6 +23,7 @@ import {
   InstancePrivateIpAddress,
   TunnelOption,
 } from '@aws-sdk/client-ec2';
+import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
 import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
 import { IPv4CidrRange } from 'ip-num';
 import { FirewallReplacementOptions, IStaticReplacements } from './index';
@@ -391,6 +392,10 @@ interface IReplacementRegex {
    * @example ${ACCEL_LOOKUP::EC2:VPN:PSK_0:vpnName}
    */
   vpnPsk: RegExp;
+  /**
+   * Secrets Manager secret match regex
+   */
+  secretsManager: RegExp;
 }
 
 /**
@@ -612,6 +617,12 @@ enum FirewallReplacementType {
    * @example ${ACCEL_LOOKUP::EC2:VPN:PSK_0:vpnName}
    */
   VPN_PSK = '^\\${ACCEL_LOOKUP::EC2:VPN:PSK_\\d:.+}$',
+  /**
+   * Secrets Manager secret regex match
+   *
+   * @example ${ACCEL_LOOKUP::SECRETS_MANAGER:secretName}
+   */
+  SECRETS_MANAGER = '^\\${ACCEL_LOOKUP::SECRETS_MANAGER:.+}$',
 }
 
 /**
@@ -622,6 +633,9 @@ export class FirewallReplacements implements IFirewallReplacements {
   private networkInterfaces: NetworkInterface[] = [];
   private subnets: Subnet[] = [];
   private vpnConnections: VpnConnection[] = [];
+  private readonly partition: string;
+  private readonly secretsManagerClient: SecretsManagerClient;
+  private readonly managementAccountId?: string;
   public readonly replacementRegex: IReplacementRegex;
   public readonly vpcId: string;
   public readonly firewallName?: string;
@@ -632,12 +646,15 @@ export class FirewallReplacements implements IFirewallReplacements {
 
   constructor(options: FirewallReplacementOptions) {
     this.replacementRegex = this.setReplacementRegex();
+    this.partition = options.partition;
     this.vpcId = options.vpcId;
     this.firewallName = options.firewallName;
     this.instanceId = options.instanceId;
     this.roleName = options.roleName;
     this.staticReplacements = options.staticReplacements;
     this.vpnConnectionProps = options.vpnConnectionProps;
+    this.secretsManagerClient = new SecretsManagerClient({ customUserAgent: process.env['SOLUTION_ID'] });
+    this.managementAccountId = options.managementAccountId;
   }
 
   /**
@@ -675,6 +692,7 @@ export class FirewallReplacements implements IFirewallReplacements {
       vpnInsideCidr: new RegExp(FirewallReplacementType.VPN_INSIDE_CIDR, 'i'),
       vpnInsideNetmask: new RegExp(FirewallReplacementType.VPN_INSIDE_NETMASK, 'i'),
       vpnPsk: new RegExp(FirewallReplacementType.VPN_PSK, 'i'),
+      secretsManager: new RegExp(FirewallReplacementType.SECRETS_MANAGER, 'i'),
     };
   }
 
@@ -1020,11 +1038,11 @@ export class FirewallReplacements implements IFirewallReplacements {
    * @param variables string[]
    * @returns string[]
    */
-  public processReplacements(variables: string[]): string[] {
+  public async processReplacements(variables: string[]): Promise<string[]> {
     const replacements: string[] = [];
 
     for (const variable of variables) {
-      const replacement = this.processStaticReplacement(variable) ?? this.processDynamicReplacement(variable);
+      const replacement = this.processStaticReplacement(variable) ?? (await this.processDynamicReplacement(variable));
 
       if (!replacement) {
         throw new Error(
@@ -1070,7 +1088,7 @@ export class FirewallReplacements implements IFirewallReplacements {
    * @param variable string
    * @returns string | undefined
    */
-  private processDynamicReplacement(variable: string): string | undefined {
+  private async processDynamicReplacement(variable: string): Promise<string | undefined> {
     if (this.replacementRegex.vpc.test(variable)) {
       return this.processVpcReplacement(variable);
     } else if (this.replacementRegex.subnet.test(variable)) {
@@ -1079,8 +1097,23 @@ export class FirewallReplacements implements IFirewallReplacements {
       return this.processNetworkInterfaceReplacement(variable);
     } else if (this.replacementRegex.vpn.test(variable)) {
       return this.processVpnReplacement(variable);
+    } else if (this.replacementRegex.secretsManager.test(variable)) {
+      return this.processSecretsManagerReplacement(variable);
     } else {
       return;
+    }
+  }
+
+  private async processSecretsManagerReplacement(variable: string): Promise<string> {
+    try {
+      const secretVariable = variable.split(':')[3].replace('}', '');
+      const secretArn = this.managementAccountId
+        ? `arn:${this.partition}:secretsmanager:${process.env['AWS_REGION']}:${this.managementAccountId}:secret:${secretVariable}`
+        : secretVariable;
+      const secretResponse = await this.secretsManagerClient.send(new GetSecretValueCommand({ SecretId: secretArn }));
+      return secretResponse.SecretString!;
+    } catch (e) {
+      throw new Error(`Unable to process Secret replacement variable ${variable}. Error message: ${e}`);
     }
   }
 

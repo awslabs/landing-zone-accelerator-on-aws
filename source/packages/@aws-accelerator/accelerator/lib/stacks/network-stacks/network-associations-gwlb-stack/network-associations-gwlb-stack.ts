@@ -256,7 +256,7 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
     }
     //
     // Generate replacements
-    if (firewallInstance.configFile || firewallInstance.licenseFile) {
+    if (firewallInstance.configFile || firewallInstance.configDir || firewallInstance.licenseFile) {
       new FirewallConfigReplacements(
         this,
         pascalCase(`${firewallInstance.vpc}${firewallInstance.name}ConfigReplacements`),
@@ -268,6 +268,7 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
             { assetBucketName: this.firewallConfigDetails.assetBucketName },
             { configBucketName: this.firewallConfigDetails.configBucketName },
             { configFile: firewallInstance.configFile },
+            { configDir: firewallInstance.configDir },
             { firewallName: instance.name },
             { instanceId: instance.instanceId },
             { licenseFile: firewallInstance.licenseFile },
@@ -275,6 +276,7 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
             { vpcId: getVpc(this.vpcMap, firewallInstance.vpc) as string },
             { roleName: this.acceleratorResourceNames.roles.crossAccountVpnRoleName },
             { vpnConnections: instance.vpnConnections },
+            { managementAccountId: this.props.accountsConfig.getManagementAccountId() },
           ],
           role: this.firewallConfigDetails.customResourceRole,
         },
@@ -464,7 +466,7 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
 
     //
     // Generate replacements
-    if (group.configFile || group.licenseFile) {
+    if (group.configFile || group.configDir || group.licenseFile) {
       new FirewallConfigReplacements(this, pascalCase(`${group.vpc}${group.name}ConfigReplacements`), {
         cloudWatchLogKey: this.cloudwatchKey,
         cloudWatchLogRetentionInDays: this.logRetention,
@@ -473,9 +475,11 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
           { assetBucketName: this.firewallConfigDetails.assetBucketName },
           { configBucketName: this.firewallConfigDetails.configBucketName },
           { configFile: group.configFile },
+          { configDir: group.configDir },
           { licenseFile: group.licenseFile },
           { staticReplacements: group.staticReplacements },
           { vpcId: getVpc(this.vpcMap, group.vpc) as string },
+          { managementAccountId: this.props.accountsConfig.getManagementAccountId() },
         ],
         role: this.firewallConfigDetails.customResourceRole,
       });
