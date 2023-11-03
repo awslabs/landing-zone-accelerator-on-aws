@@ -20,11 +20,11 @@ import {
   VpcTemplatesConfig,
 } from '@aws-accelerator/config';
 import { PutSsmParameter, RouteTable, SsmParameterProps, Subnet, Vpc } from '@aws-accelerator/constructs';
-import { SsmResourceType } from '@aws-accelerator/utils';
+import { getAvailabilityZoneMap, SsmResourceType } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'pascal-case';
 import { LogLevel } from '../network-stack';
-import { getRouteTable, getSubnet, getVpc, getAvailabilityZoneMap } from '../utils/getter-utils';
+import { getRouteTable, getSubnet, getVpc } from '../utils/getter-utils';
 import { NetworkVpcStack } from './network-vpc-stack';
 
 export class SubnetResources {

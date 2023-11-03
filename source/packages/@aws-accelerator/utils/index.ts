@@ -20,3 +20,4 @@ export * from './lib/throttle';
 export * from './lib/load-organization-config';
 export * from './lib/get-template';
 export * from './lib/diff-stack';
+export * from './lib/regions';
