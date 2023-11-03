@@ -84,7 +84,7 @@ export class NetworkVpcStack extends NetworkStack {
       props,
     );
     //
-    // Create route table entires
+    // Create route table entries
     //
     new RouteEntryResources(
       this,

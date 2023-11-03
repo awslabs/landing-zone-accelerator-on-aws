@@ -41,7 +41,7 @@ import { SsmResourceType } from '@aws-accelerator/utils';
 
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import { NetworkStack } from '../network-stack';
-import { getVpc } from '../utils/getter-utils';
+import { getRouteTable, getVpc } from '../utils/getter-utils';
 import { setIpamSubnetRouteTableEntryArray } from '../utils/setter-utils';
 import { FirewallVpnResources } from './firewall-vpn-resources';
 
@@ -121,6 +121,10 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
     // Create Gateway Load Balancer resources
     //
     this.createGwlbResources();
+    //
+    // Create ENI Routes
+    //
+    this.createNetworkInterfaceRouteTableEntries();
     //
     // Add nag suppressions
     //
@@ -842,5 +846,87 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
       this.logger.info(`Adding Gateway Load Balancer endpoint Route Table Entry ${routeTableEntryItem.name}`);
       gwlbEndpoint.createEndpointRoute(endpointRouteId, destination, routeTableId);
     }
+  }
+
+  /**
+   * Create GWLB endpoint route table entries.
+   * @param vpcItem
+   * @param gwlbEndpointMap
+   */
+  private createNetworkInterfaceRouteTableEntries(): void {
+    for (const vpcItem of this.vpcsInScope) {
+      // validate VPC exists
+      getVpc(this.vpcMap, vpcItem.name);
+
+      for (const routeTableItem of vpcItem.routeTables ?? []) {
+        for (const routeTableEntryItem of routeTableItem.routes ?? []) {
+          if (routeTableEntryItem.type === 'networkInterface') {
+            this.createNetworkInterfaceRouteTableEntryItem(vpcItem.name, routeTableItem.name, routeTableEntryItem);
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Create Route Entries targeting Elastic Network Interfaces (ENIs)
+   */
+  private createNetworkInterfaceRouteTableEntryItem(
+    vpcName: string,
+    routeTableName: string,
+    routeTableEntryItem: RouteTableEntryConfig,
+  ): void {
+    const routeId =
+      pascalCase(`${vpcName}Vpc`) + pascalCase(`${routeTableName}RouteTable`) + pascalCase(routeTableEntryItem.name);
+
+    // Add route
+    this.logger.info(`Adding Network Interface Route Table Entry ${routeTableEntryItem.name}`);
+    const networkInterfaceId = this.getNetworkInterfaceId(routeTableEntryItem);
+    const routeTableId = getRouteTable(this.routeTableMap, vpcName, routeTableName) as string;
+
+    new cdk.aws_ec2.CfnRoute(this, routeId, {
+      destinationCidrBlock: routeTableEntryItem.destination,
+      networkInterfaceId: networkInterfaceId,
+      routeTableId,
+    });
+  }
+
+  /**
+   * Get Id of the network interface (ENI) to target.
+   * @param vpcItem
+   * @param gwlbEndpointMap
+   */
+  private getNetworkInterfaceId(routeTableEntry: RouteTableEntryConfig): string {
+    const routeTarget = routeTableEntry.target!;
+    if (routeTarget.startsWith('eni-')) {
+      return routeTarget;
+    } else if (routeTarget.match('\\${ACCEL_LOOKUP::EC2:ENI_([a-zA-Z0-9-/:]*)}')) {
+      const lookupComponents = routeTarget.split(':');
+      const eniIndex = lookupComponents[3].split('_').pop();
+      const firewallName = lookupComponents[4].replace(/\}$/, '');
+
+      return this.getNetworkInterfaceIdFromFirewall(eniIndex!, firewallName);
+    } else {
+      this.logger.error(`Unable to retrieve network interface id for route table entry ${routeTableEntry.name}`);
+      throw new Error(`Configuration validation failed at runtime.`);
+    }
+  }
+
+  /**
+   * Get Id of the network interface (ENI) associated with a firewall instance.
+   * @param vpcItem
+   * @param gwlbEndpointMap
+   */
+  private getNetworkInterfaceIdFromFirewall(deviceIndex: string, firewallName: string): string {
+    const firewall = this.instanceMap.get(firewallName);
+    const eni = firewall!.getNetworkInterface(parseInt(deviceIndex));
+
+    if (!eni.networkInterfaceId) {
+      this.logger.error(
+        `Could not retrieve network interface id for eni at index ${deviceIndex} from firewall ${firewallName}`,
+      );
+      throw new Error(`Configuration validation failed at runtime.`);
+    }
+    return eni.networkInterfaceId;
   }
 }
