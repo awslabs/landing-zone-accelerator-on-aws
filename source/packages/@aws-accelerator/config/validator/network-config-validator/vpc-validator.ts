@@ -11,7 +11,11 @@
  *  and limitations under the License.
  */
 import { ShareTargets } from '../../lib/common-types';
-import { ApplicationLoadBalancerConfig } from '../../lib/customizations-config';
+import {
+  ApplicationLoadBalancerConfig,
+  CustomizationsConfig,
+  Ec2FirewallInstanceConfig,
+} from '../../lib/customizations-config';
 import {
   NetworkConfig,
   NetworkConfigTypes,
@@ -34,7 +38,14 @@ import * as cdk from 'aws-cdk-lib';
  */
 export class VpcValidator {
   private centralEndpointVpcRegions: string[];
-  constructor(values: NetworkConfig, helpers: NetworkValidatorFunctions, errors: string[]) {
+  private customizationsConfig?: CustomizationsConfig;
+  constructor(
+    values: NetworkConfig,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+    customizationsConfig?: CustomizationsConfig,
+  ) {
+    this.customizationsConfig = customizationsConfig;
     //
     // Determine if there is a central endpoint VPC
     //
@@ -455,6 +466,11 @@ export class VpcValidator {
     // Validate network firewall route entry
     this.validateNfwRouteEntry(routeTableEntryItem, routeTableName, vpcItem, networkFirewalls, helpers, errors);
 
+    // Validate network interface route entry
+    if (routeTableEntryItem.type === 'networkInterface') {
+      this.validateNetworkInterfaceRouteEntry(routeTableEntryItem, routeTableName, vpcItem, helpers, errors);
+    }
+
     // Throw error if NAT gateway doesn't exist
     if (
       routeTableEntryItem.type === 'natGateway' &&
@@ -480,6 +496,123 @@ export class VpcValidator {
       errors.push(
         `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} target ${routeTableEntryItem.target} does not exist`,
       );
+    }
+  }
+
+  /**
+   * Validate network firewall route entry
+   * @param routeTableEntryItem
+   * @param routeTableName
+   * @param vpcItem
+   * @param helpers
+   * @param errors
+   */
+  private validateNetworkInterfaceRouteEntry(
+    routeTableEntryItem: RouteTableEntryConfig,
+    routeTableName: string,
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+  ) {
+    if (!routeTableEntryItem.target) {
+      errors.push(
+        `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} with type networkInterface requires the 'target' property`,
+      );
+    }
+
+    if (
+      !helpers.matchesRegex(routeTableEntryItem.target!, '\\${ACCEL_LOOKUP::EC2:ENI_([a-zA-Z0-9-/:]*)}') &&
+      !helpers.matchesRegex(routeTableEntryItem.target!, '^eni-(\\d|[a-f]){17}$')
+    ) {
+      errors.push(
+        `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} has invalid target. Target may be an ENI Id or accepted pattern: "^\\$\{ACCEL_LOOKUP::EC2:ENI_([a-zA-Z0-9-/:]*)}" Value entered: ${routeTableEntryItem.target} `,
+      );
+    }
+
+    if (helpers.matchesRegex(routeTableEntryItem.target!, '\\${ACCEL_LOOKUP::EC2:ENI_([a-zA-Z0-9-/:]*)}')) {
+      if (!this.isValidFirewallReference(routeTableEntryItem, errors)) {
+        errors.push(
+          `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} has invalid lookup target. Accepted pattern: "^\\$\{ACCEL_LOOKUP::EC2:ENI_([a-zA-Z0-9-/:]*)}" Value entered: ${routeTableEntryItem.target}`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Validates that the referenced firewall exists in customizations config
+   * @param routeTableEntryItem: RouteTableEntryConfig,
+   * @param errors string[]
+   * @returns boolean
+   */
+  private isValidFirewallReference(routeTableEntryItem: RouteTableEntryConfig, errors: string[]): boolean {
+    //
+    // Check that customizations config is defined
+    if (!this.customizationsConfig) {
+      errors.push(
+        `[Route Table entry: ${routeTableEntryItem.name}]: EC2 firewall reference variable entered but customizations-config.yaml is not defined.`,
+      );
+      return false;
+    } else {
+      // Check that firewall exists
+      const lookupComponents = routeTableEntryItem.target!.split(':');
+      const eniIndex = lookupComponents[3].split('_').pop();
+      const firewallName = lookupComponents[4].replace(/\}$/, '');
+      const firewall = this.customizationsConfig.firewalls?.instances?.find(instance => instance.name === firewallName);
+
+      if (!firewall) {
+        errors.push(
+          `[Route Table entry: ${routeTableEntryItem.name}]: EC2 firewall instance "${firewallName}" is not defined in customizations-config.yaml`,
+        );
+        return false;
+      }
+
+      if (!eniIndex) {
+        errors.push(
+          `[Route Table entry: ${routeTableEntryItem.name}]: Unable to parse ENI index of EC2 firewall instance "${firewallName}" from pattern ${routeTableEntryItem.target}`,
+        );
+        return false;
+      }
+      //
+      // Check device index
+      this.validateFirewallInterface(routeTableEntryItem.name, firewall, eniIndex, errors);
+    }
+    return true;
+  }
+
+  /**
+   * Validates that the referenced network interface has an elastic IP associated or sourceDestCheck set to false
+   * @param routeTableEntryName string
+   * @param firewall Ec2FirewallInstanceConfig
+   * @param eniIndex string
+   * @param errors string[]
+   */
+  private validateFirewallInterface(
+    routeTableEntryName: string,
+    firewall: Ec2FirewallInstanceConfig,
+    eniIndex: string,
+    errors: string[],
+  ) {
+    if (!firewall.launchTemplate.networkInterfaces) {
+      errors.push(
+        `[Route Table entry: ${routeTableEntryName}]: EC2 firewall instance "${firewall.name}" launch template does not have network interfaces defined in customizations-config.yaml`,
+      );
+    } else {
+      const deviceIndex = Number(eniIndex);
+      if (deviceIndex > firewall.launchTemplate.networkInterfaces.length - 1) {
+        errors.push(
+          `[Route Table entry: ${routeTableEntryName}]: EC2 firewall instance "${firewall.name}" device index ${deviceIndex} does not exist in customizations-config.yaml`,
+        );
+      } else {
+        const networkInterface = firewall.launchTemplate.networkInterfaces[deviceIndex];
+        if (
+          !networkInterface.associateElasticIp &&
+          (networkInterface.sourceDestCheck === undefined || networkInterface.sourceDestCheck === true)
+        ) {
+          errors.push(
+            `[Route Table entry: ${routeTableEntryName}]: EC2 firewall instance "${firewall.name}" device index ${deviceIndex} must have the associateElasticIp set to true or sourceDestCheck property set to false in customizations-config.yaml`,
+          );
+        }
+      }
     }
   }
 
@@ -521,9 +654,14 @@ export class VpcValidator {
         // Validate target exists
         if (
           entry.type &&
-          ['gatewayLoadBalancerEndpoint', 'natGateway', 'networkFirewall', 'transitGateway', 'vpcPeering'].includes(
-            entry.type,
-          )
+          [
+            'gatewayLoadBalancerEndpoint',
+            'natGateway',
+            'networkFirewall',
+            'networkInterface',
+            'transitGateway',
+            'vpcPeering',
+          ].includes(entry.type)
         ) {
           this.validateRouteEntryTarget(entry, routeTableItem.name, vpcItem, values, helpers, errors);
         }

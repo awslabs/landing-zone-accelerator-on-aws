@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { Firewall, FirewallProps, IFirewall } from './firewall';
+import { NetworkInterfaceItemConfig } from '@aws-accelerator/config';
 
 export interface IFirewallInstance extends IFirewall {
   /**
@@ -105,5 +106,18 @@ export class FirewallInstance extends Firewall implements IFirewallInstance {
       throw new Error(`No public IP address for firewall instance ${this.name} device index ${deviceIndex}`);
     }
     return ipAddress;
+  }
+
+  /**
+   * Public accessor method for retrieving the network interfaces of a firewall interface
+   * @param deviceIndex
+   * @returns
+   */
+  public getNetworkInterface(deviceIndex: number): NetworkInterfaceItemConfig {
+    const networkInterface = this.networkInterfaces.find(eni => eni.deviceIndex! === deviceIndex);
+    if (!networkInterface) {
+      throw new Error(`No network interface for firewall instance ${this.name} at device index ${deviceIndex}`);
+    }
+    return networkInterface;
   }
 }

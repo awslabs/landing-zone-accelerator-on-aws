@@ -659,6 +659,28 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
       },
       "Type": "AWS::EC2::Route",
     },
+    "NetworkInspectionVpcNetworkInspectionTgwARouteTableNetworkInterfaceDirectRoute": {
+      "Properties": {
+        "DestinationCidrBlock": "10.0.0.0/28",
+        "NetworkInterfaceId": "eni-0123456789abcdef",
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionTgwAidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "NetworkInspectionVpcNetworkInspectionTgwARouteTableNetworkInterfaceRoute": {
+      "Properties": {
+        "DestinationCidrBlock": "10.0.0.0/26",
+        "NetworkInterfaceId": {
+          "Ref": "NetworkInspectionacceleratorFirewallFirewallNetworkInterface13C23C566",
+        },
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionTgwAidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
     "NetworkInspectionacceleratorFirewallConfigReplacementsFunctionA38B05D1": {
       "Properties": {
         "Code": {

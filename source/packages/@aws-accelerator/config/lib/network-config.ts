@@ -196,6 +196,7 @@ export class NetworkConfigTypes {
       'gatewayEndpoint',
       'gatewayLoadBalancerEndpoint',
       'networkFirewall',
+      'networkInterface',
       'virtualPrivateGateway',
       'vpcPeering',
     ],
@@ -2189,6 +2190,23 @@ export class IpamConfig implements t.TypeOf<typeof NetworkConfigTypes.ipamConfig
  *   type: localGateway
  *   target: LocalGateway-A
  * ```
+ *
+ * Network Interface associated with a dynamic lookup:
+ * * **NOTE:** This lookup value is not supported for firewalls defined in {@link Ec2FirewallAutoScalingGroupConfig}. The interface must have the associateElasticIp property set to 'true' or the sourceDestCheck property set to 'false'
+ * ```
+ * - name: EniRoute
+ *   destination: 10.0.0.0/16
+ *   type: networkInterface
+ *   target: ${ACCEL_LOOKUP::EC2:ENI_0:accelerator-firewall:Id}
+ * ```
+ *
+ * Network Interface associated with an explicit ENI Id:
+ * ```
+ * - name: EniRoute
+ *   destination: 10.0.0.0/16
+ *   type: networkInterface
+ *   target: eni-0123456789abcdef
+ *
  */
 export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes.routeTableEntryConfig> {
   /**
@@ -2210,7 +2228,7 @@ export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes
    * @see {@link SubnetConfig} and {@link RouteTableConfig}.
    *
    * Either `destination` or `destinationPrefixList` must be specified for the following route entry types:
-   * `transitGateway`, `natGateway`, `internetGateway`, `vpcPeering`, `virtualPrivateGateway`.
+   * `transitGateway`, `natGateway`, `internetGateway`, `networkInterface`, `vpcPeering`, `virtualPrivateGateway`.
    *
    * `destination` MUST be specified for route entry type `networkFirewall` or `gatewayLoadBalancerEndpoint`.
    *
@@ -2224,7 +2242,7 @@ export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes
    * This is the logical `name` property of the prefix list as defined in network-config.yaml.
    *
    * Either `destination` or `destinationPrefixList` must be specified for the following route entry types:
-   * `transitGateway`, `natGateway`, `internetGateway`, `vpcPeering`, `virtualPrivateGateway`.
+   * `transitGateway`, `natGateway`, `internetGateway`, `networkInterface`, `vpcPeering`, `virtualPrivateGateway`.
    *
    * Cannot be specified for route entry type `networkFirewall` or `gatewayLoadBalancerEndpoint`. Use `destination` instead.
    *

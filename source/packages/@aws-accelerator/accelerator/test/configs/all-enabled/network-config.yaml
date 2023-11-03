@@ -1374,6 +1374,10 @@ vpcs:
             destination: 10.0.0.0/8
             type: gatewayLoadBalancerEndpoint
             target: Endpoint-A
+          - name: NetworkInterfaceRoute
+            destination: 10.0.0.0/26
+            type: networkInterface
+            target: ${ACCEL_LOOKUP::EC2:ENI_1:accelerator-firewall}
       - name: Network-Inspection-Tgw-B
         routes:
           - name: NfwRoute
