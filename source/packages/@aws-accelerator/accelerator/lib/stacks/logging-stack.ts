@@ -51,12 +51,13 @@ import {
 
 import {
   AcceleratorImportedBucketType,
+  AcceleratorElbRootAccounts,
   AwsPrincipalAccessesType,
   BucketAccessType,
+  OptInRegions,
   PrincipalOrgIdConditionType,
 } from '@aws-accelerator/utils';
 
-import { AcceleratorElbRootAccounts, OptInRegions } from '../accelerator';
 import {
   AcceleratorKeyType,
   AcceleratorStack,
@@ -291,8 +292,8 @@ export class LoggingStack extends AcceleratorStack {
    */
   private getElbAccountId() {
     let elbAccountId = undefined;
-    if (AcceleratorElbRootAccounts[cdk.Stack.of(this).region]) {
-      elbAccountId = AcceleratorElbRootAccounts[cdk.Stack.of(this).region];
+    if (AcceleratorElbRootAccounts.get(cdk.Stack.of(this).region)) {
+      elbAccountId = AcceleratorElbRootAccounts.get(cdk.Stack.of(this).region);
     }
     if (this.props.networkConfig.elbAccountIds?.find(item => item.region === cdk.Stack.of(this).region)) {
       elbAccountId = this.props.networkConfig.elbAccountIds?.find(

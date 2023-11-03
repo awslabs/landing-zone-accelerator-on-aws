@@ -38,11 +38,10 @@ import {
   VpcEndpoint,
   VpcEndpointType,
 } from '@aws-accelerator/constructs';
-import { SsmResourceType } from '@aws-accelerator/utils';
+import { getAvailabilityZoneMap, SsmResourceType } from '@aws-accelerator/utils';
 
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import { NetworkStack } from '../network-stack';
-import { getAvailabilityZoneMap } from '../utils/getter-utils';
 import { setIpamSubnetRouteTableEntryArray } from '../utils/setter-utils';
 
 export class NetworkVpcEndpointsStack extends NetworkStack {
