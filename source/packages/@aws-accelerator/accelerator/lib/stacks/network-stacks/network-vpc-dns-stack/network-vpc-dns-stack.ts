@@ -102,8 +102,11 @@ export class NetworkVpcDnsStack extends NetworkStack {
         this.logger.error(`Unable to locate VPC ${vpcItem.name}`);
         throw new Error(`Configuration validation failed at runtime.`);
       }
+
+      const hasSharedEndpointsId = !(vpcItem.interfaceEndpoints?.sharedEndpointsId === undefined);
+      const hasCentralEndpointsFlag = vpcItem.interfaceEndpoints?.central ?? false;
       // Create private hosted zones
-      if (vpcItem.interfaceEndpoints?.central) {
+      if (hasSharedEndpointsId || hasCentralEndpointsFlag) {
         this.createHostedZones(vpcItem, vpcId, maps.endpoint, maps.zone);
       }
 

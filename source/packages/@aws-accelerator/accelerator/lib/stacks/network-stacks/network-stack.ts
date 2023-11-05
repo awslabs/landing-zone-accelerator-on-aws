@@ -480,7 +480,9 @@ export abstract class NetworkStack extends AcceleratorStack {
     const zoneMap = new Map<string, string>();
 
     for (const vpcItem of vpcResources) {
-      if (vpcItem.interfaceEndpoints?.central) {
+      const hasSharedEndpointsId = !(vpcItem.interfaceEndpoints?.sharedEndpointsId === undefined);
+      const hasCentralEndpointsFlag = vpcItem.interfaceEndpoints?.central ?? false;
+      if (hasSharedEndpointsId || hasCentralEndpointsFlag) {
         // Set interface endpoint DNS names
         for (const endpointItem of vpcItem.interfaceEndpoints?.endpoints ?? []) {
           const endpointDns = cdk.aws_ssm.StringParameter.valueForStringParameter(
