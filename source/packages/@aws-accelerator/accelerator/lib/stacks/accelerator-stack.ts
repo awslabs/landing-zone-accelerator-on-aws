@@ -1202,30 +1202,74 @@ export abstract class AcceleratorStack extends cdk.Stack {
   }
 
   /**
+   * Function which takes an array of VPCConfig objects which have already been identified as having
+   * either the central flag set, or a sharedEndpointId value configured. Validates we only have one, and
+   * its in a supported region.
+   *
+   * @param vpcs
+   * @returns VpcConfig {@link VpcConfig}
+   */
+  private validateSingleEndpointVpc(vpcs: VpcConfig[]): VpcConfig {
+    let centralEndpointVpc = undefined;
+
+    if (this.props.partition !== 'aws' && this.props.partition !== 'aws-cn' && vpcs.length > 0) {
+      this.logger.error('Central Endpoint VPC is only possible in commercial regions');
+      throw new Error(`Configuration validation failed at runtime.`);
+    }
+
+    if (vpcs.length > 1) {
+      this.logger.error(`multiple (${vpcs.length}) central endpoint vpcs detected, should only be one`);
+      throw new Error(`Configuration validation failed at runtime.`);
+    }
+    centralEndpointVpc = vpcs[0];
+
+    return centralEndpointVpc;
+  }
+
+  /**
    * Function to get central endpoint vpc
    * @returns VpcConfig {@link VpcConfig}
    */
   protected getCentralEndpointVpc(): VpcConfig {
-    let centralEndpointVpc = undefined;
     const centralEndpointVpcs = this.props.networkConfig.vpcs.filter(
       item =>
         item.interfaceEndpoints?.central &&
         this.props.accountsConfig.getAccountId(item.account) === cdk.Stack.of(this).account &&
         item.region === cdk.Stack.of(this).region,
     );
+    return this.validateSingleEndpointVpc(centralEndpointVpcs);
+  }
 
-    if (this.props.partition !== 'aws' && this.props.partition !== 'aws-cn' && centralEndpointVpcs.length > 0) {
-      this.logger.error('Central Endpoint VPC is only possible in commercial regions');
-      throw new Error(`Configuration validation failed at runtime.`);
-    }
+  /**
+   * Function to get sharedEndpointId endpoint vpc for a given Id.
+   *
+   * @returns VpcConfig {@link VpcConfig}
+   */
+  protected getSharedEndpointVpc(sharedEndpointId: string): VpcConfig {
+    const centralEndpointVpcs = this.props.networkConfig.vpcs.filter(
+      item =>
+        item.interfaceEndpoints?.sharedEndpointsId == sharedEndpointId &&
+        this.props.accountsConfig.getAccountId(item.account) === cdk.Stack.of(this).account &&
+        item.region === cdk.Stack.of(this).region,
+    );
+    return this.validateSingleEndpointVpc(centralEndpointVpcs);
+  }
 
-    if (centralEndpointVpcs.length > 1) {
-      this.logger.error(`multiple (${centralEndpointVpcs.length}) central endpoint vpcs detected, should only be one`);
-      throw new Error(`Configuration validation failed at runtime.`);
-    }
-    centralEndpointVpc = centralEndpointVpcs[0];
-
-    return centralEndpointVpc;
+  /**
+   * Utility function to get all the sharedEndpointIds
+   *
+   * @returns
+   */
+  protected getSharedEndpointIds(): string[] {
+    let sharedEndpointIds = [];
+    const sharedEndpointVpcs = this.props.networkConfig.vpcs.filter(
+      item =>
+        item.interfaceEndpoints?.sharedEndpointsId !== undefined &&
+        this.props.accountsConfig.getAccountId(item.account) === cdk.Stack.of(this).account &&
+        item.region === cdk.Stack.of(this).region,
+    );
+    sharedEndpointIds = [...new Set(sharedEndpointVpcs.flatMap(vpc => vpc.interfaceEndpoints?.sharedEndpointsId))];
+    return sharedEndpointIds.filter((id): id is string => Boolean(id));
   }
 
   /**
