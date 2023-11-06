@@ -89,7 +89,6 @@ export class GuardDutyPublishingDestination extends Construct {
       resourceType: RESOURCE_TYPE,
       serviceToken: provider.serviceToken,
       properties: {
-        region: cdk.Stack.of(this).region,
         exportDestinationType: props.exportDestinationType,
         exportDestinationOverride: props.exportDestinationOverride,
         destinationArn: props.destinationArn,

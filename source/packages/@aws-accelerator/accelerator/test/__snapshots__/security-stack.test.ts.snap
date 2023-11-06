@@ -1134,7 +1134,6 @@ exports[`SecurityStack Construct(SecurityStack):  Snapshot Test 1`] = `
         "kmsKeyArn": {
           "Ref": "AcceleratorImportedCentralLogBucketKeyLookupCDD7B719",
         },
-        "region": "us-east-1",
       },
       "Type": "Custom::GuardDutyCreatePublishingDestinationCommand",
       "UpdateReplacePolicy": "Delete",
@@ -2189,7 +2188,6 @@ exports[`delegatedAdminStack Construct(SecurityStack):  Snapshot Test 1`] = `
         "kmsKeyArn": {
           "Ref": "AcceleratorCentralLogBucketKeyLookup26F8C418",
         },
-        "region": "us-east-1",
       },
       "Type": "Custom::GuardDutyCreatePublishingDestinationCommand",
       "UpdateReplacePolicy": "Delete",

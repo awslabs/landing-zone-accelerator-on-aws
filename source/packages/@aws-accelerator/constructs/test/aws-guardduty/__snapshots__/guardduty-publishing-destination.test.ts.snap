@@ -222,9 +222,6 @@ exports[`GuardDutyPublishingDestination Construct(GuardDutyPublishingDestination
             "Arn",
           ],
         },
-        "region": {
-          "Ref": "AWS::Region",
-        },
       },
       "Type": "Custom::GuardDutyCreatePublishingDestinationCommand",
       "UpdateReplacePolicy": "Delete",
