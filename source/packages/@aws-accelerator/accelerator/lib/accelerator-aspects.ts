@@ -26,7 +26,7 @@ class GovCloudOverrides implements cdk.IAspect {
     }
     if (node instanceof cdk.aws_iam.CfnRole) {
       const trustPolicyDoc = node.assumeRolePolicyDocument as cdk.aws_iam.SamlConsolePrincipal;
-      if (JSON.stringify(trustPolicyDoc.toJSON()).includes('signin.aws.amazon.com')) {
+      if (JSON.stringify(trustPolicyDoc).includes('signin.aws.amazon.com')) {
         node.addPropertyOverride(
           'AssumeRolePolicyDocument.Statement.0.Condition.StringEquals.SAML:aud',
           'https://signin.amazonaws-us-gov.com/saml',
@@ -67,7 +67,7 @@ class IsobOverrides implements cdk.IAspect {
     }
     if (node instanceof cdk.aws_iam.CfnRole) {
       const trustPolicyDoc = node.assumeRolePolicyDocument as cdk.aws_iam.SamlConsolePrincipal;
-      if (JSON.stringify(trustPolicyDoc.toJSON()).includes('signin.aws.amazon.com')) {
+      if (JSON.stringify(trustPolicyDoc).includes('signin.aws.amazon.com')) {
         node.addPropertyOverride(
           'AssumeRolePolicyDocument.Statement.0.Condition.StringEquals.SAML:aud',
           'https://signin.sc2shome.sgov.gov/saml',
@@ -109,7 +109,7 @@ class IsoOverrides implements cdk.IAspect {
 
     if (node instanceof cdk.aws_iam.CfnRole) {
       const trustPolicyDoc = node.assumeRolePolicyDocument as cdk.aws_iam.SamlConsolePrincipal;
-      if (JSON.stringify(trustPolicyDoc.toJSON()).includes('signin.aws.amazon.com')) {
+      if (JSON.stringify(trustPolicyDoc).includes('signin.aws.amazon.com')) {
         node.addPropertyOverride(
           'AssumeRolePolicyDocument.Statement.0.Condition.StringEquals.SAML:aud',
           'https://signin.c2shome.ic.gov/saml',
