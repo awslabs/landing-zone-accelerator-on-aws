@@ -28,10 +28,6 @@ export enum GuardDutyExportConfigDestinationTypes {
  */
 export interface GuardDutyDetectorConfigProps {
   /**
-   * FindingPublishingFrequency
-   */
-  readonly exportFrequency: string;
-  /**
    * S3 Protection
    */
   readonly enableS3Protection: boolean;
@@ -47,6 +43,10 @@ export interface GuardDutyDetectorConfigProps {
    * Custom resource lambda log retention in days
    */
   readonly logRetentionInDays: number;
+  /**
+   * FindingPublishingFrequency
+   */
+  readonly exportFrequency?: string;
 }
 
 /**
@@ -84,7 +84,6 @@ export class GuardDutyDetectorConfig extends Construct {
       resourceType: RESOURCE_TYPE,
       serviceToken: provider.serviceToken,
       properties: {
-        region: cdk.Stack.of(this).region,
         exportFrequency: props.exportFrequency,
         enableS3Protection: props.enableS3Protection,
         enableEksProtection: props.enableEksProtection,

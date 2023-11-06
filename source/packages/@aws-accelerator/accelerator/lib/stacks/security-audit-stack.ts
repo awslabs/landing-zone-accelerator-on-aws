@@ -18,7 +18,7 @@ import * as yaml from 'js-yaml';
 import { pascalCase } from 'pascal-case';
 import * as path from 'path';
 
-import { DataPerimeterConfig, Region } from '@aws-accelerator/config';
+import { DataPerimeterConfig, GuardDutyConfig, Region } from '@aws-accelerator/config';
 import {
   Bucket,
   BucketEncryptionType,
@@ -77,7 +77,7 @@ export class SecurityAuditStack extends AcceleratorStack {
     //
     // GuardDuty configuration
     //
-    this.configureGuardDuty();
+    this.configureGuardDuty(this.props.securityConfig.centralSecurityServices.guardduty);
 
     //
     // Audit Manager configuration
@@ -177,46 +177,64 @@ export class SecurityAuditStack extends AcceleratorStack {
 
   /**
    * Function to configure GuardDuty
+   * @param guardDutyConfig GuardDutyConfig
    */
-  private configureGuardDuty() {
-    this.logger.debug(
-      `centralSecurityServices.guardduty.enable: ${this.props.securityConfig.centralSecurityServices.guardduty.enable}`,
-    );
+  private configureGuardDuty(guardDutyConfig: GuardDutyConfig) {
+    this.logger.debug(`centralSecurityServices.guardduty.enable: ${guardDutyConfig.enable}`);
 
-    if (this.props.securityConfig.centralSecurityServices.guardduty.enable) {
-      if (
-        this.props.securityConfig.centralSecurityServices.guardduty.excludeRegions.indexOf(
-          cdk.Stack.of(this).region as Region,
-        ) === -1
-      ) {
-        this.logger.info('Enabling GuardDuty for all existing accounts');
+    if (guardDutyConfig.enable && guardDutyConfig.excludeRegions.indexOf(cdk.Stack.of(this).region as Region) === -1) {
+      this.logger.info('Enabling GuardDuty for all existing accounts');
 
-        const guardDutyMembers = new GuardDutyMembers(this, 'GuardDutyMembers', {
-          enableS3Protection: this.props.securityConfig.centralSecurityServices.guardduty.s3Protection.enable,
-          enableEksProtection:
-            this.props.securityConfig.centralSecurityServices.guardduty.eksProtection?.enable ?? false,
+      // Determine S3 and EKS protection
+      const [s3Protection, eksProtection] = this.processGuardDutyProtectionConfig(guardDutyConfig);
+      // Determine whether to update export frequency
+      const updateExportFrequency =
+        guardDutyConfig.exportConfiguration.enable && guardDutyConfig.exportConfiguration.overrideExisting;
+
+      const guardDutyMembers = new GuardDutyMembers(this, 'GuardDutyMembers', {
+        enableS3Protection: s3Protection,
+        enableEksProtection: eksProtection,
+        kmsKey: this.cloudwatchKey,
+        logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+      });
+
+      if (s3Protection || eksProtection || updateExportFrequency) {
+        new GuardDutyDetectorConfig(this, 'GuardDutyDetectorConfig', {
+          exportFrequency: updateExportFrequency ? guardDutyConfig.exportConfiguration.exportFrequency : undefined,
+          enableS3Protection: s3Protection,
+          enableEksProtection: eksProtection,
           kmsKey: this.cloudwatchKey,
           logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-        });
-
-        if (
-          this.props.securityConfig.centralSecurityServices.guardduty.s3Protection.excludeRegions.indexOf(
-            cdk.Stack.of(this).region as Region,
-          ) === -1
-        ) {
-          new GuardDutyDetectorConfig(this, 'GuardDutyDetectorConfig', {
-            exportFrequency:
-              this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.exportFrequency ??
-              'FIFTEEN_MINUTES',
-            enableS3Protection: this.props.securityConfig.centralSecurityServices.guardduty.s3Protection.enable,
-            enableEksProtection:
-              this.props.securityConfig.centralSecurityServices.guardduty.eksProtection?.enable ?? false,
-            kmsKey: this.cloudwatchKey,
-            logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-          }).node.addDependency(guardDutyMembers);
-        }
+        }).node.addDependency(guardDutyMembers);
       }
     }
+  }
+
+  /**
+   * Determine the GuardDuty protection settings based on configuration
+   * @param guardDutyConfig GuardDutyConfig
+   * @returns boolean[]
+   */
+  private processGuardDutyProtectionConfig(guardDutyConfig: GuardDutyConfig): boolean[] {
+    // Set default values if excludeRegions is not configured
+    let s3Protection = guardDutyConfig.s3Protection.enable;
+    let eksProtection = guardDutyConfig.eksProtection?.enable ?? false;
+    // Determine S3 protection exclusion for this region
+    if (guardDutyConfig.s3Protection?.excludeRegions) {
+      s3Protection =
+        guardDutyConfig.s3Protection.excludeRegions.indexOf(cdk.Stack.of(this).region as Region) === -1
+          ? guardDutyConfig.s3Protection.enable
+          : false;
+    }
+    // Determine EKS protection exclusion for this region
+    if (guardDutyConfig.eksProtection?.excludeRegions) {
+      eksProtection =
+        guardDutyConfig.eksProtection.excludeRegions.indexOf(cdk.Stack.of(this).region as Region) === -1
+          ? guardDutyConfig.eksProtection.enable
+          : false;
+    }
+
+    return [s3Protection, eksProtection];
   }
 
   /**

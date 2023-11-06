@@ -37,6 +37,6 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "aws-sdk": "2.1379.0"
+    "@aws-sdk/client-guardduty": "3.412.0"
   }
 }

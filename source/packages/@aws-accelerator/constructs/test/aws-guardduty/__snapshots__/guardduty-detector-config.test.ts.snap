@@ -145,9 +145,6 @@ exports[`GuardDutyDetectorConfig Construct(GuardDutyDetectorConfig):  Snapshot T
         "enableEksProtection": true,
         "enableS3Protection": true,
         "exportFrequency": "FIFTEEN_MINUTES",
-        "region": {
-          "Ref": "AWS::Region",
-        },
       },
       "Type": "Custom::GuardDutyUpdateDetector",
       "UpdateReplacePolicy": "Delete",
