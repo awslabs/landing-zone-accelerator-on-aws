@@ -23,7 +23,7 @@ import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
 import { AccountsStack } from '../lib/stacks/accounts-stack';
 import { ApplicationsStack } from '../lib/stacks/applications-stack';
 import { BootstrapStack } from '../lib/stacks/bootstrap-stack';
-import { CustomStack, customStackMapping, generateCustomStackMappings, isIncluded } from '../lib/stacks/custom-stack';
+import { CustomStack, generateCustomStackMappings, isIncluded } from '../lib/stacks/custom-stack';
 import { CustomizationsStack } from '../lib/stacks/customizations-stack';
 import { DependenciesStack } from '../lib/stacks/dependencies-stack/dependencies-stack';
 import { FinalizeStack } from '../lib/stacks/finalize-stack';
@@ -1209,27 +1209,6 @@ function createCustomStacks(
         ssmParamNamePrefix: props.prefixes.ssmParamName,
         ...props,
       });
-      // Create stack dependencies as needed
-      addCustomStackDependencies(stack, stack.stackObj, customStackList);
-    }
-  }
-}
-
-/**
- * Add dependencies to custom stack
- * @param stack
- * @param customStack
- * @param customStackList
- */
-function addCustomStackDependencies(
-  stack: customStackMapping,
-  customStack: cdk.Stack,
-  customStackList: customStackMapping[],
-) {
-  for (const stackName of stack.dependsOn ?? []) {
-    const previousStack = customStackList.find(a => a.stackConfig.name == stackName)?.stackObj;
-    if (previousStack) {
-      customStack.addDependency(previousStack);
     }
   }
 }
