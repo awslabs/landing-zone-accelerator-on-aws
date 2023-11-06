@@ -149,6 +149,58 @@ export class VpcResources {
           return role;
         }
       }
+    } else {
+      for (const vpc of this.stack.vpcsInScope.filter(v => v.sharedEndpointsId !== undefined)) {
+        const sharedEndpointId = vpc.sharedEndpointsId ?? '';
+        const sharedEndpointsVpc = this.getSharedEndpointVpc(props, sharedEndpointId);
+
+        if (!sharedEndpointsVpc) {
+          this.stack.addLogs(
+            LogLevel.ERROR,
+            `sharedEndpointsId set to true, but no central sharedEndpointsId VPC detected`,
+          );
+          throw new Error(`Configuration validation failed at runtime.`);
+        } else {
+          const centralEndpointVpcAccountId = props.accountsConfig.getAccountId(sharedEndpointsVpc.account);
+          if (centralEndpointVpcAccountId !== cdk.Stack.of(this.stack).account) {
+            this.stack.addLogs(
+              LogLevel.INFO,
+              'Shared endpoints VPC is in an external account, create a role to enable central endpoints',
+            );
+            const role = new cdk.aws_iam.Role(this.stack, `EnableSharedEndpointsRole-${sharedEndpointId}`, {
+              roleName: `${props.prefixes.accelerator}-EnableSharedEndpointsRole-${sharedEndpointId}-${
+                cdk.Stack.of(this.stack).region
+              }`,
+              assumedBy: new cdk.aws_iam.AccountPrincipal(centralEndpointVpcAccountId),
+              inlinePolicies: {
+                default: new cdk.aws_iam.PolicyDocument({
+                  statements: [
+                    new cdk.aws_iam.PolicyStatement({
+                      effect: cdk.aws_iam.Effect.ALLOW,
+                      actions: ['ec2:DescribeVpcs', 'route53:AssociateVPCWithHostedZone'],
+                      resources: ['*'],
+                    }),
+                  ],
+                }),
+              },
+            });
+
+            // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+            // rule suppression with evidence for this permission.
+            NagSuppressions.addResourceSuppressionsByPath(
+              this.stack,
+              `${this.stack.stackName}/EnableSharedEndpointsRole-${sharedEndpointId}/Resource/Resource`,
+              [
+                {
+                  id: 'AwsSolutions-IAM5',
+                  reason: `EnableSharedEndpointsRole-${sharedEndpointId} needs access to every describe every VPC in the account `,
+                },
+              ],
+            );
+            return role;
+          }
+        }
+      }
     }
     return undefined;
   }
@@ -183,6 +235,18 @@ export class VpcResources {
   private getCentralEndpointVpc(props: AcceleratorStackProps): VpcConfig | undefined {
     return props.networkConfig.vpcs.find(
       vpc => vpc.interfaceEndpoints?.central && vpc.region === cdk.Stack.of(this.stack).region,
+    );
+  }
+
+  /**
+   * Function to get sharedEndpointId endpoint vpc for a given Id.
+   *
+   * @returns VpcConfig {@link VpcConfig}
+   */
+  protected getSharedEndpointVpc(props: AcceleratorStackProps, sharedEndpointId: string): VpcConfig | undefined {
+    return props.networkConfig.vpcs.find(
+      vpc =>
+        vpc.interfaceEndpoints?.sharedEndpointsId == sharedEndpointId && vpc.region === cdk.Stack.of(this.stack).region,
     );
   }
 
@@ -506,6 +570,18 @@ export class VpcResources {
         throw new Error(`Configuration validation failed at runtime.`);
       }
       cdk.Tags.of(vpc).add('accelerator:use-central-endpoints', 'true');
+      cdk.Tags.of(vpc).add(
+        'accelerator:central-endpoints-account-id',
+        props.accountsConfig.getAccountId(centralEndpointVpc.account),
+      );
+      return true;
+    } else if (vpcItem.sharedEndpointsId != undefined) {
+      const centralEndpointVpc = this.getSharedEndpointVpc(props, vpcItem.sharedEndpointsId);
+      if (!centralEndpointVpc) {
+        this.stack.addLogs(LogLevel.INFO, 'Attempting to use central endpoints with no Central Endpoints defined');
+        throw new Error(`Configuration validation failed at runtime.`);
+      }
+      cdk.Tags.of(vpc).add('accelerator:shared-vpc-endpoint-id', vpcItem.sharedEndpointsId);
       cdk.Tags.of(vpc).add(
         'accelerator:central-endpoints-account-id',
         props.accountsConfig.getAccountId(centralEndpointVpc.account),

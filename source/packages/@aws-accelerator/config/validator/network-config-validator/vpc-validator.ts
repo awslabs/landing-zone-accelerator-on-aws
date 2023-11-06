@@ -98,6 +98,15 @@ export class VpcValidator {
         );
       }
 
+      if (
+        vpc.interfaceEndpoints?.sharedEndpointsId !== undefined &&
+        !helpers.matchesRegex(vpc.interfaceEndpoints.sharedEndpointsId, '^[a-z]{1,8}$')
+      ) {
+        errors.push(
+          `[VPC ${vpc.name}]: sharedEndpointId must be between 1-8 characters containing only lowercase letters`,
+        );
+      }
+
       if (vpc.interfaceEndpoints?.sharedEndpointsId !== undefined && NetworkConfigTypes.vpcConfig.is(vpc)) {
         let vpcconfigs = sharedEndpointsVpcs.get(vpc.interfaceEndpoints?.sharedEndpointsId);
         if (vpcconfigs === undefined) {

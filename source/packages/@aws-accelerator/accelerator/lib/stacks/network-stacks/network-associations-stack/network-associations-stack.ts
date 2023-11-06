@@ -1377,14 +1377,26 @@ export class NetworkAssociationsStack extends NetworkStack {
    * @remarks
    * Generate list of accounts with VPCs that needed to set up share.
    */
-  private createZoneAssociationAccountIdList(): string[] {
+  private createZoneAssociationAccountIdList(sharedEndpointId?: string): string[] {
     // Generate list of accounts with VPCs that needed to set up share
     const zoneAssociationAccountIds: string[] = [];
     for (const vpcItem of this.vpcResources) {
       // Get account IDs
       const vpcAccountIds = this.getVpcAccountIds(vpcItem);
 
-      if (vpcItem.region === cdk.Stack.of(this).region && vpcItem.useCentralEndpoints) {
+      if (sharedEndpointId !== undefined) {
+        if (
+          vpcItem.region === cdk.Stack.of(this).region &&
+          vpcItem.sharedEndpointsId !== undefined &&
+          vpcItem.sharedEndpointsId === sharedEndpointId
+        ) {
+          for (const accountId of vpcAccountIds) {
+            if (!zoneAssociationAccountIds.includes(accountId)) {
+              zoneAssociationAccountIds.push(accountId);
+            }
+          }
+        }
+      } else if (vpcItem.region === cdk.Stack.of(this).region && vpcItem.useCentralEndpoints) {
         for (const accountId of vpcAccountIds) {
           if (!zoneAssociationAccountIds.includes(accountId)) {
             zoneAssociationAccountIds.push(accountId);
@@ -1392,7 +1404,6 @@ export class NetworkAssociationsStack extends NetworkStack {
         }
       }
     }
-
     return zoneAssociationAccountIds;
   }
 
@@ -1450,6 +1461,41 @@ export class NetworkAssociationsStack extends NetworkStack {
         kmsKey: this.cloudwatchKey,
         logRetentionInDays: this.logRetention,
       });
+    }
+
+    for (const sharedEndpointId of this.getSharedEndpointIds()) {
+      const sharedEndpointVpc = this.getSharedEndpointVpc(sharedEndpointId);
+      if (sharedEndpointVpc !== undefined) {
+        this.logger.info('Shared endpoints VPC detected, share private hosted zone with member VPCs');
+
+        // Generate list of accounts with VPCs that needed to set up share
+        const zoneAssociationAccountIds = this.createZoneAssociationAccountIdList(sharedEndpointId);
+
+        // Create list of hosted zone ids from SSM Params
+        const hostedZoneIds = this.createHostedZoneIdList(sharedEndpointVpc);
+
+        // Custom resource to associate hosted zones
+        new AssociateHostedZones(this, 'AssociateHostedZones', {
+          accountIds: zoneAssociationAccountIds,
+          hostedZoneIds,
+          hostedZoneAccountId: cdk.Stack.of(this).account,
+          roleName: `${this.props.prefixes.accelerator}-EnableSharedEndpointsRole-${sharedEndpointId}-${
+            cdk.Stack.of(this).region
+          }`,
+          tagFilters: [
+            {
+              key: 'accelerator:shared-vpc-endpoint-id',
+              value: sharedEndpointId,
+            },
+            {
+              key: 'accelerator:central-endpoints-account-id',
+              value: this.props.accountsConfig.getAccountId(sharedEndpointVpc.account),
+            },
+          ],
+          kmsKey: this.cloudwatchKey,
+          logRetentionInDays: this.logRetention,
+        });
+      }
     }
   }
 
