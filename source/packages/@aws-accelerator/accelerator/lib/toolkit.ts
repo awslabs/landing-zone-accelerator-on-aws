@@ -62,6 +62,10 @@ interface Tag {
   readonly Key: string;
   readonly Value: string;
 }
+export type CustomizationStackRunOrder = {
+  stackName: string;
+  runOrder: number;
+};
 
 /**
  * Accelerator extended CDK toolkit properties
@@ -429,7 +433,7 @@ export class AcceleratorToolkit {
    * Function to get customizations stack names
    * @param stackNames string[]
    * @param options {@link AcceleratorToolkitProps}
-   * @returns
+   * @returns customizationStackNames string[]
    */
   private static async getCustomizationsStackNames(
     stackNames: string[],
@@ -482,6 +486,51 @@ export class AcceleratorToolkit {
   }
 
   /**
+   * Function to get the runOrder of custom stacks
+   * @param options {@link AcceleratorToolkitProps}
+   * @returns customizationsStackRunOrderData CustomizationStackRunOrder[]
+   */
+  private static async getCustomizationsStackRunOrder(
+    options: AcceleratorToolkitProps,
+  ): Promise<CustomizationStackRunOrder[]> {
+    const customizationsStackRunOrderData: CustomizationStackRunOrder[] = [];
+    const configDirPath = AcceleratorToolkit.validateAndGetConfigDirectory(options.configDirPath);
+
+    if (fs.existsSync(path.join(configDirPath, CustomizationsConfig.FILENAME))) {
+      await Accelerator.getManagementAccountCredentials(options.partition);
+      const accountsConfig = AccountsConfig.load(configDirPath);
+      const homeRegion = GlobalConfig.loadRawGlobalConfig(configDirPath).homeRegion;
+      const replacementsConfig = getReplacementsConfig(configDirPath, accountsConfig);
+      await replacementsConfig.loadReplacementValues({ region: homeRegion });
+      const organizationConfig = OrganizationConfig.load(configDirPath, replacementsConfig);
+      await accountsConfig.loadAccountIds(
+        options.partition,
+        options.enableSingleAccountMode,
+        organizationConfig.enable,
+        accountsConfig,
+      );
+
+      const customizationsConfig = CustomizationsConfig.load(configDirPath, replacementsConfig);
+      const customStacks = customizationsConfig.getCustomStacks();
+      for (const stack of customStacks) {
+        const deploymentAccts = accountsConfig.getAccountIdsFromDeploymentTarget(stack.deploymentTargets);
+        const deploymentRegions = stack.regions.map(a => a.toString());
+        if (deploymentRegions.includes(options.region!) && deploymentAccts.includes(options.accountId!)) {
+          customizationsStackRunOrderData.push({
+            stackName: `${stack.name}-${options.accountId}-${options.region}`,
+            runOrder: stack.runOrder,
+          });
+        }
+      }
+    }
+    logger.debug(
+      `Sorted customization stack: ${JSON.stringify(
+        customizationsStackRunOrderData.sort((a, b) => a.runOrder - b.runOrder),
+      )}`,
+    );
+    return customizationsStackRunOrderData.sort((a, b) => a.runOrder - b.runOrder);
+  }
+  /**
    * Function to deploy stacks
    * @param cli {@link CdkToolkit}
    * @param toolkitStackName string
@@ -499,9 +548,63 @@ export class AcceleratorToolkit {
         partition: options.partition,
       });
     }
+
+    if (
+      // stage is customizations
+      options.stage === AcceleratorStage.CUSTOMIZATIONS &&
+      // there are stacks in customizations which have runOrder
+      (await AcceleratorToolkit.getCustomizationsStackRunOrder(options)).length > 0
+    ) {
+      const getStackNameRunOrder = await AcceleratorToolkit.getCustomizationsStackRunOrder(options);
+      await AcceleratorToolkit.deployCustomizationStacksWithRunOrder(
+        getStackNameRunOrder,
+        context,
+        options,
+        toolkitStackName,
+        roleArn,
+      );
+    } else {
+      const deployPromises: Promise<void>[] = [];
+      for (const stack of stackName) {
+        deployPromises.push(AcceleratorToolkit.runDeployStackCli(context, options, stack, toolkitStackName, roleArn));
+      }
+      await Promise.all(deployPromises);
+    }
+  }
+
+  /**
+   * Function to deploy custom stacks with runOrder
+   * This function takes all the custom stacks for a particular account and region
+   * It finds the lowestRunOrder and deploys that first
+   * Repeats the above step recursively until no stacks are left to deploy
+   * @param stackData {@link CustomizationStackRunOrder[]}
+   * @param context string[]
+   * @param options {@link AcceleratorToolkitProps}
+   * @param toolkitStackName string
+   * @param roleArn string
+   * @returns Promise<void>
+   *
+   */
+  private static async deployCustomizationStacksWithRunOrder(
+    stackData: CustomizationStackRunOrder[],
+    context: string[],
+    options: AcceleratorToolkitProps,
+    toolkitStackName: string,
+    roleArn: string | undefined,
+  ) {
+    // set first run order index;
+    let runOrderIndex = stackData[0].runOrder;
     const deployPromises: Promise<void>[] = [];
-    for (const stack of stackName) {
-      deployPromises.push(AcceleratorToolkit.runDeployStackCli(context, options, stack, toolkitStackName, roleArn));
+    for (const stack of stackData) {
+      // If the run order has changed, deploy previous stacks.
+      if (runOrderIndex !== stack.runOrder) {
+        await Promise.all(deployPromises);
+        deployPromises.length = 0;
+        runOrderIndex = stack.runOrder;
+      }
+      deployPromises.push(
+        AcceleratorToolkit.runDeployStackCli(context, options, stack.stackName, toolkitStackName, roleArn),
+      );
     }
     await Promise.all(deployPromises);
   }
@@ -646,13 +749,15 @@ export class AcceleratorToolkit {
     const selector: StackSelector = {
       patterns: [stack],
     };
-    const changeSetName = `${stack}-change-set`;
     await cli
       .deploy({
         selector,
         toolkitStackName,
         requireApproval: options.requireApproval,
-        changeSetName: changeSetName,
+        deploymentMethod: {
+          method: 'change-set',
+          changeSetName: `${stack}-change-set`,
+        },
         hotswap: HotswapMode.FULL_DEPLOYMENT,
         tags: options.tags,
         roleArn: roleArn,
