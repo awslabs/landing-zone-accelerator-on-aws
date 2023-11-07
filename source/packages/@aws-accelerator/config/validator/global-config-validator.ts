@@ -19,6 +19,7 @@ import winston from 'winston';
 import { AccountsConfig } from '../lib/accounts-config';
 import { GlobalConfig } from '../lib/global-config';
 import { IamConfig } from '../lib/iam-config';
+import { SecurityConfig } from '../lib/security-config';
 import { OrganizationConfig } from '../lib/organization-config';
 
 export class GlobalConfigValidator {
@@ -27,6 +28,7 @@ export class GlobalConfigValidator {
     accountsConfig: AccountsConfig,
     iamConfig: IamConfig,
     organizationConfig: OrganizationConfig,
+    securityConfig: SecurityConfig,
     configDir: string,
   ) {
     const ouIdNames: string[] = ['Root'];
@@ -131,6 +133,14 @@ export class GlobalConfigValidator {
     //
     this.validateMaxConcurrency(values, errors);
 
+    //
+    // bucket policy validation
+    //
+    if (securityConfig.centralSecurityServices.s3PublicAccessBlock.enable) {
+      this.validateAccessLogsS3Policy(configDir, values, errors);
+      this.validateCentralLogsS3Policy(configDir, values, errors);
+      this.validateElbLogsS3Policy(configDir, values, errors);
+    }
     if (errors.length) {
       throw new Error(`${GlobalConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
     }
@@ -644,6 +654,78 @@ export class GlobalConfigValidator {
     for (const policy of values.logging.centralLogBucket?.kmsResourcePolicyAttachments ?? []) {
       if (!fs.existsSync(path.join(configDir, policy.policy))) {
         errors.push(`Policy definition file ${policy.policy} not found !!!`);
+      }
+    }
+  }
+
+  /**
+   * Validate Access Log S3 bucket policy for AWS Principal if block public access is enabled.
+   * @param configDir
+   * @param values
+   * @returns
+   */
+  private validateAccessLogsS3Policy(configDir: string, values: GlobalConfig, errors: string[]) {
+    for (const s3ResourcePolicyAttachment of values.logging.accessLogBucket?.s3ResourcePolicyAttachments ?? []) {
+      const principalValue = fs.readFileSync(path.join(configDir, s3ResourcePolicyAttachment.policy), 'utf-8');
+      const tempValue = JSON.parse(principalValue);
+      for (const item of tempValue.Statement ?? []) {
+        if (
+          item.Effect === 'Allow' &&
+          (item.Principal.AWS === '*' || item.Principal === '*') &&
+          !item.Condition.StringEquals?.['aws:PrincipalOrgID']
+        ) {
+          errors.push(
+            `Adding policy will make the Access Log S3 Bucket public and conflicts with the Block Public Access setting.`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Validate Central S3 bucket policy for AWS Principal if block public access is enabled.
+   * @param configDir
+   * @param values
+   * @returns
+   */
+  private validateCentralLogsS3Policy(configDir: string, values: GlobalConfig, errors: string[]) {
+    for (const s3ResourcePolicyAttachment of values.logging.centralLogBucket?.s3ResourcePolicyAttachments ?? []) {
+      const principalValue = fs.readFileSync(path.join(configDir, s3ResourcePolicyAttachment.policy), 'utf-8');
+      const tempValue = JSON.parse(principalValue);
+      for (const item of tempValue.Statement ?? []) {
+        if (
+          item.Effect === 'Allow' &&
+          (item.Principal.AWS === '*' || item.Principal === '*') &&
+          !item.Condition.StringEquals?.['aws:PrincipalOrgID']
+        ) {
+          errors.push(
+            `Adding policy will make the Central S3 Bucket public and conflicts with the Block Public Access setting.`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Validate ELB Log S3 bucket policy for AWS Principal if block public access is enabled.
+   * @param configDir
+   * @param values
+   * @returns
+   */
+  private validateElbLogsS3Policy(configDir: string, values: GlobalConfig, errors: string[]) {
+    for (const s3ResourcePolicyAttachment of values.logging.elbLogBucket?.s3ResourcePolicyAttachments ?? []) {
+      const principalValue = fs.readFileSync(path.join(configDir, s3ResourcePolicyAttachment.policy), 'utf-8');
+      const tempValue = JSON.parse(principalValue);
+      for (const item of tempValue.Statement ?? []) {
+        if (
+          item.Effect === 'Allow' &&
+          (item.Principal.AWS === '*' || item.Principal === '*') &&
+          !item.Condition.StringEquals?.['aws:PrincipalOrgID']
+        ) {
+          errors.push(
+            `Adding policy will make the ELB Log S3 Bucket public and conflicts with the Block Public Access setting.`,
+          );
+        }
       }
     }
   }
