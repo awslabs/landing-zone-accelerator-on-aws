@@ -42,7 +42,7 @@ export const handler = async (event: { ResourceId: string }) => {
   const configurationItem = await getResourceConfigurationItem(event.ResourceId, resourceType);
 
   const paramsReplacement = {
-    'ACCEL_LOOKUP::REPLACEMENTS:ATTACHED_RESOURCE_ARN': (configurationItem as { ARN: string }).ARN,
+    'ACCEL_LOOKUP::CUSTOM:ATTACHED_RESOURCE_ARN': (configurationItem as { ARN: string }).ARN,
   };
   const policyMap = generatePolicyReplacements(policyMapTemplate, paramsReplacement);
   await attachResourcePolicy(
