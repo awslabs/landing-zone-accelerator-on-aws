@@ -6,10 +6,7 @@
       "Principal": "*",
       "Effect": "Deny",
       "Action": "s3:GetObject",
-      "Resource": [
-        "${ACCEL_LOOKUP::REPLACEMENTS:ATTACHED_RESOURCE_ARN}",
-        "${ACCEL_LOOKUP::REPLACEMENTS:ATTACHED_RESOURCE_ARN}/*"
-      ],
+      "Resource": ["${ACCEL_LOOKUP::CUSTOM:ATTACHED_RESOURCE_ARN}", "${ACCEL_LOOKUP::CUSTOM:ATTACHED_RESOURCE_ARN}/*"],
       "Condition": {
         "StringNotEqualsIfExists": {
           "aws:PrincipalOrgID": "${ORG_ID}"
@@ -24,10 +21,7 @@
       "Effect": "Deny",
       "Principal": "*",
       "Action": "s3:GetObject",
-      "Resource": [
-        "${ACCEL_LOOKUP::REPLACEMENTS:ATTACHED_RESOURCE_ARN}",
-        "${ACCEL_LOOKUP::REPLACEMENTS:ATTACHED_RESOURCE_ARN}/*"
-      ],
+      "Resource": ["${ACCEL_LOOKUP::CUSTOM:ATTACHED_RESOURCE_ARN}", "${ACCEL_LOOKUP::CUSTOM:ATTACHED_RESOURCE_ARN}/*"],
       "Condition": {
         "BoolIfExists": {
           "aws:PrincipalIsAWSService": "false",
