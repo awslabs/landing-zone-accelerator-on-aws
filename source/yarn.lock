@@ -73,6 +73,20 @@
     "@aws-cdk/cloud-assembly-schema" "2.93.0"
     semver "^7.5.4"
 
+"@aws-cdk/integ-runner@2.93.0-alpha.0":
+  version "2.93.0-alpha.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/integ-runner/-/integ-runner-2.93.0-alpha.0.tgz#9c2070b0e4bda5976bbc5f30e11a583ca07e697a"
+  integrity sha512-myPYSLlNnOnSVn4eiUHr6uRpBQl5f0XIaMRHOlKE0PHL01EWrwrSxAAJOPmr2GEf6EtfSUpHY4hvuFFCCN/EZA==
+  dependencies:
+    aws-cdk "2.93.0"
+  optionalDependencies:
+    fsevents "2.3.2"
+
+"@aws-cdk/integ-tests-alpha@2.93.0-alpha.0":
+  version "2.93.0-alpha.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/integ-tests-alpha/-/integ-tests-alpha-2.93.0-alpha.0.tgz#9c27365a5ca62e66800b210645e4170c1817676b"
+  integrity sha512-EQFmCKhLHeXDne/3s3TQSOF86U+YAzSSDr13T+8sX8CY951vu6hERrz4c7FKMtMLkB6mZy8DJcDFalq4n07bKA==
+
 "@aws-cdk/region-info@2.93.0":
   version "2.93.0"
   resolved "https://registry.yarnpkg.com/@aws-cdk/region-info/-/region-info-2.93.0.tgz#6940b56ba6badb25decac067b418bca0718112b4"

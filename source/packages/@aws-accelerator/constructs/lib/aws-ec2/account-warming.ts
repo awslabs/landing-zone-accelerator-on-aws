@@ -58,6 +58,16 @@ export class WarmAccount extends Construct {
       actions: ['ec2:RunInstances'],
       resources: [
         `arn:${cdk.Stack.of(this).partition}:ec2:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:subnet/*`,
+        `arn:${cdk.Stack.of(this).partition}:ec2:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:instance/*`,
+        `arn:${cdk.Stack.of(this).partition}:ec2:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:volume/*`,
+        `arn:${cdk.Stack.of(this).partition}:ec2:${cdk.Stack.of(this).region}:${
+          cdk.Stack.of(this).account
+        }:security-group/*`,
+        `arn:${cdk.Stack.of(this).partition}:ec2:${cdk.Stack.of(this).region}::image/*`,
+        `arn:${cdk.Stack.of(this).partition}:ec2:${cdk.Stack.of(this).region}::snapshot/*`,
+        `arn:${cdk.Stack.of(this).partition}:ec2:${cdk.Stack.of(this).region}:${
+          cdk.Stack.of(this).account
+        }:network-interface/*`,
       ],
     });
 
