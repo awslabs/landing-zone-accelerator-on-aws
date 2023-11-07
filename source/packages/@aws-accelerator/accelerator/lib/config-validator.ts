@@ -263,9 +263,16 @@ function runValidators(
   }
 
   // Global config validator
-  if (accountsConfig && globalConfig && iamConfig && organizationConfig) {
+  if (accountsConfig && globalConfig && iamConfig && organizationConfig && securityConfig) {
     try {
-      new GlobalConfigValidator(globalConfig, accountsConfig, iamConfig, organizationConfig, configDirPath);
+      new GlobalConfigValidator(
+        globalConfig,
+        accountsConfig,
+        iamConfig,
+        organizationConfig,
+        securityConfig,
+        configDirPath,
+      );
     } catch (e) {
       configErrors.push(e);
     }

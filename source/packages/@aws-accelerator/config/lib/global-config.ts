@@ -733,6 +733,9 @@ export class AccessLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.
    * @remarks
    * Policy statements from these files will be added to the bucket resource policy.
    * This property can not be used when customPolicyOverrides.s3Policy property has value.
+   *
+   * Note: When Block Public Access is enabled for S3 on the AWS account, you can't specify a policy that would make
+   * the S3 Bucket public.
    */
   readonly s3ResourcePolicyAttachments: t.ResourcePolicyStatement[] | undefined = undefined;
   /**
@@ -829,6 +832,9 @@ export class CentralLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes
    * @remarks
    * Policy statements from these files will be added to the bucket resource policy.
    * This property can not be used when customPolicyOverrides.s3Policy property has value.
+   *
+   * Note: When Block Public Access is enabled for S3 on the AWS account, you can't specify a policy that would make
+   * the S3 Bucket public.
    */
   readonly s3ResourcePolicyAttachments: t.ResourcePolicyStatement[] | undefined = undefined;
   /**
@@ -936,6 +942,9 @@ export class ElbLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.elb
    * @remarks
    * Policy statements from these files will be added to the bucket resource policy.
    * This property can not be used when customPolicyOverrides.s3Policy property has value.
+   *
+   * Note: When Block Public Access is enabled for S3 on the AWS account, you can't specify a policy that would make
+   * the S3 Bucket public.
    */
   readonly s3ResourcePolicyAttachments: t.ResourcePolicyStatement[] | undefined = undefined;
   /**
