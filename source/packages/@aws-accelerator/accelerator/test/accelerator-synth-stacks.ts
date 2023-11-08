@@ -95,8 +95,9 @@ export class AcceleratorSynthStacks {
     }
 
     const accountsConfig = AccountsConfig.load(this.configDirPath);
+    const orgConfig = OrganizationConfig.load(this.configDirPath);
     const replacementsConfig = ReplacementsConfig.load(this.configDirPath, accountsConfig);
-    replacementsConfig.loadReplacementValues({});
+    replacementsConfig.loadReplacementValues({}, orgConfig.enable);
     this.props = {
       configDirPath: this.configDirPath,
       accountsConfig: accountsConfig,

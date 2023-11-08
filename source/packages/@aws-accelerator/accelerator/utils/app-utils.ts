@@ -33,9 +33,10 @@ import {
   POLICY_LOOKUP_TYPE,
   POLICY_LOOKUP_SCOPE,
   ACCEL_POLICY_LOOKUP_REGEX,
+  createLogger,
 } from '@aws-accelerator/utils';
 import AWS from 'aws-sdk';
-
+const logger = createLogger(['app-utils']);
 export interface AcceleratorContext {
   /**
    * The AWS partition
@@ -401,7 +402,7 @@ export async function setAcceleratorStackProps(
   );
 
   const replacementsConfig = getReplacementsConfig(context.configDirPath, accountsConfig);
-  await replacementsConfig.loadReplacementValues({ region: homeRegion });
+  await replacementsConfig.loadReplacementValues({ region: homeRegion }, orgsEnabled);
   const globalConfig = GlobalConfig.load(context.configDirPath, replacementsConfig);
   const organizationConfig = OrganizationConfig.load(context.configDirPath, replacementsConfig);
   await organizationConfig.loadOrganizationalUnitIds(context.partition);
@@ -410,7 +411,7 @@ export async function setAcceleratorStackProps(
     await globalConfig.loadExternalMapping(true);
     await globalConfig.loadLzaResources(context.partition, prefixes.ssmParamName);
   }
-  if (context.stage === AcceleratorStage.SECURITY_RESOURCES) {
+  if (context.stage === AcceleratorStage.SECURITY_RESOURCES && orgsEnabled) {
     const accountIds = accountsConfig.accountIds?.map(account => account.accountId) ?? [];
     await globalConfig.loadIAMRoleSSMParameters(
       globalConfig.homeRegion,
@@ -418,6 +419,7 @@ export async function setAcceleratorStackProps(
       prefixes.ssmParamName,
       accountIds,
       accountsConfig.getManagementAccountId(),
+      orgsEnabled,
     );
   }
   const centralizedLoggingRegion = globalConfig.logging.centralizedLoggingRegion ?? globalConfig.homeRegion;
@@ -438,7 +440,9 @@ export async function setAcceleratorStackProps(
     accountsConfig.getLogArchiveAccountId(),
     globalConfig.managementAccountAccessRole,
     centralLogBucketCmkParameter,
+    orgsEnabled,
   );
+  logger.debug(`Central logs bucket kms key arn: ${centralLogsBucketKmsKeyArn}`);
 
   const networkConfig = NetworkConfig.load(context.configDirPath, replacementsConfig);
   const securityConfig = SecurityConfig.load(context.configDirPath, replacementsConfig);

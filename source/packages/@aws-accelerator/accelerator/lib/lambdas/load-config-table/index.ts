@@ -280,7 +280,9 @@ async function onCreateUpdateFunction(
 
     // edge-case: loading without looking up SSM replacements
     replacementsConfig = new ReplacementsConfig(replacementsValues, accountsConfig, true);
-    replacementsConfig.loadReplacementValues({});
+    const orgConfigContent = await getConfigFileContents(bucket.name, bucket.organizationsConfigS3Key);
+    const isOrgsEnabled = OrganizationConfig.loadFromString(orgConfigContent, replacementsConfig).enable;
+    replacementsConfig.loadReplacementValues({}, isOrgsEnabled);
   }
 
   const organizationConfigContent = await getConfigFileContents(bucket.name, bucket.organizationsConfigS3Key);

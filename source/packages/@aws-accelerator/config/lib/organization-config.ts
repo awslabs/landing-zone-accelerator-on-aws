@@ -452,6 +452,7 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
    */
   static loadRawOrganizationsConfig(dir: string): OrganizationConfig {
     const accountsConfig = AccountsConfig.load(dir);
+    const orgConfig = OrganizationConfig.load(dir);
     let replacementsConfig: ReplacementsConfig;
 
     if (fs.existsSync(path.join(dir, ReplacementsConfig.FILENAME))) {
@@ -460,7 +461,7 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
       replacementsConfig = new ReplacementsConfig();
     }
 
-    replacementsConfig.loadReplacementValues({});
+    replacementsConfig.loadReplacementValues({}, orgConfig.enable);
     return OrganizationConfig.load(dir, replacementsConfig);
   }
 

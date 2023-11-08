@@ -204,10 +204,10 @@ export class ReplacementsConfig implements t.TypeOf<typeof ReplacementsConfigTyp
   /**
    * Loads replacement values by utilizing the systems manager client
    */
-  public async loadReplacementValues(props: ReplacementsConfigProps): Promise<void> {
+  public async loadReplacementValues(props: ReplacementsConfigProps, orgsEnabled: boolean): Promise<void> {
     const errors: string[] = [];
 
-    if (!this.validateOnly) {
+    if (!this.validateOnly && orgsEnabled) {
       logger.info('Loading replacements config substitution values');
       const ssmClient = new AWS.SSM({ region: props.region });
 
