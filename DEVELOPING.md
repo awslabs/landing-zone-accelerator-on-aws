@@ -65,10 +65,10 @@ Native toolkit commands and options can be found in the [AWS CDK Toolkit referen
 `--stage`          The pipeline stage to deploy. Stage names can be found in the [accelerator-stage.ts](https://github.com/awslabs/landing-zone-accelerator-on-aws/blob/main/source/packages/%40aws-accelerator/accelerator/lib/accelerator-stage.ts) file.
 
 **Example synth command:**
-`yarn run ts-node --transpile-only cdk.ts synth --stage operations --config-dir /path/to/aws-accelerator-config/ --partition aws --region us-east-1 --account <REDACTED>`
+`yarn run ts-node --transpile-only cdk.ts synth --stage network-vpc --require-approval any-change --config-dir /path/to/aws-accelerator-config/ --partition aws --region <region> --account <REDACTED>`
 
 **Example deploy command:**
-`yarn run ts-node --transpile-only cdk.ts deploy --stage network-vpc --require-approval any-change --config-dir /path/to/aws-accelerator-config/ --partition aws --region us-east-1 --account <REDACTED>`
+`yarn run ts-node --transpile-only cdk.ts deploy --stage network-vpc --require-approval any-change --config-dir /path/to/aws-accelerator-config/ --partition aws --region <region> --account <REDACTED> --app cdk.out`
 
 ## Configuration Validator
 
@@ -188,9 +188,9 @@ When developing a feature that modifies or creates new possible configurations, 
 
 The LZA currently utilizes [snapshot testing](https://jestjs.io/docs/snapshot-testing) to identify and mitigate unintended consequences of new features. Snapshot testing occurs at the stack level, the config level, and the construct level. 
 
-To update snapshot tests, run the following command from the appropriate directory (`accelerator`, `constructs`, or `config` within `source/packages/@aws-accelerator/`):
+To update snapshot tests, run the following command from the `source` directory:
 ```
-yarn test -u {test directory/name}
+yarn update-snapshots
 ```
 To execute all tests, change directory to `source` and run
 ```
