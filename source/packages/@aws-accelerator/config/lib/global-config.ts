@@ -24,6 +24,7 @@ import { createLogger, throttlingBackOff } from '@aws-accelerator/utils';
 import * as t from './common-types';
 import { AccountsConfig } from './accounts-config';
 import { ReplacementsConfig } from './replacements-config';
+import { OrganizationConfig } from './organization-config';
 
 const logger = createLogger(['global-config']);
 /**
@@ -2257,6 +2258,7 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    */
   static loadRawGlobalConfig(dir: string): GlobalConfig {
     const accountsConfig = AccountsConfig.load(dir);
+    const orgConfig = OrganizationConfig.load(dir);
     let replacementsConfig: ReplacementsConfig;
 
     if (fs.existsSync(path.join(dir, ReplacementsConfig.FILENAME))) {
@@ -2265,7 +2267,7 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
       replacementsConfig = new ReplacementsConfig();
     }
 
-    replacementsConfig.loadReplacementValues({});
+    replacementsConfig.loadReplacementValues({}, orgConfig.enable);
     return GlobalConfig.load(dir, replacementsConfig);
   }
 
@@ -2353,10 +2355,14 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
     prefix: string,
     accounts: string[],
     managementAccountId: string,
+    isOrgEnabled: boolean,
   ) {
     const ssmPath = `${prefix}/iam/role/`;
     const promises = [];
     const ssmParameters = [];
+    if (isOrgEnabled) {
+      return;
+    }
     for (const account of accounts) {
       promises.push(this.loadIAMRoleSSMParametersByEnv(ssmPath, account, region, partition, managementAccountId));
       if (promises.length > 800) {

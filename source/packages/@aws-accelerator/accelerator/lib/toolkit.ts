@@ -445,8 +445,9 @@ export class AcceleratorToolkit {
       await Accelerator.getManagementAccountCredentials(options.partition);
       const accountsConfig = AccountsConfig.load(configDirPath);
       const homeRegion = GlobalConfig.loadRawGlobalConfig(configDirPath).homeRegion;
+      const isOrgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(configDirPath).enable;
       const replacementsConfig = getReplacementsConfig(configDirPath, accountsConfig);
-      await replacementsConfig.loadReplacementValues({ region: homeRegion });
+      await replacementsConfig.loadReplacementValues({ region: homeRegion }, isOrgsEnabled);
       const organizationConfig = OrganizationConfig.load(configDirPath, replacementsConfig);
       await accountsConfig.loadAccountIds(
         options.partition,
@@ -500,8 +501,9 @@ export class AcceleratorToolkit {
       await Accelerator.getManagementAccountCredentials(options.partition);
       const accountsConfig = AccountsConfig.load(configDirPath);
       const homeRegion = GlobalConfig.loadRawGlobalConfig(configDirPath).homeRegion;
+      const isOrgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(configDirPath).enable;
       const replacementsConfig = getReplacementsConfig(configDirPath, accountsConfig);
-      await replacementsConfig.loadReplacementValues({ region: homeRegion });
+      await replacementsConfig.loadReplacementValues({ region: homeRegion }, isOrgsEnabled);
       const organizationConfig = OrganizationConfig.load(configDirPath, replacementsConfig);
       await accountsConfig.loadAccountIds(
         options.partition,

@@ -38,6 +38,7 @@ import { AssumeProfilePlugin } from '@aws-cdk-extensions/cdk-plugin-assume-role'
 import { isBeforeBootstrapStage } from '../utils/app-utils';
 import { AcceleratorStage } from './accelerator-stage';
 import { AcceleratorToolkit, AcceleratorToolkitProps } from './toolkit';
+import { v4 as uuidv4 } from 'uuid';
 
 const logger = createLogger(['accelerator']);
 
@@ -1177,7 +1178,11 @@ export async function getCentralLogBucketKmsKeyArn(
   accountId: string,
   managementAccountAccessRole: string,
   parameterName: string,
+  orgsEnabled: boolean,
 ): Promise<string> {
+  if (!orgsEnabled) {
+    return uuidv4();
+  }
   const crossAccountCredentials = await getCrossAccountCredentials(
     accountId,
     region,

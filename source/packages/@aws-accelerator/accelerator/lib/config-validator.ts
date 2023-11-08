@@ -132,7 +132,8 @@ async function validateConfig(props: {
   let replacementsConfig: ReplacementsConfig | undefined = undefined;
   try {
     replacementsConfig = getReplacementsConfig(configDirPath, accountsConfig!);
-    await replacementsConfig.loadReplacementValues({ region: homeRegion });
+    const isOrgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(configDirPath).enable;
+    await replacementsConfig.loadReplacementValues({ region: homeRegion }, isOrgsEnabled);
   } catch (e) {
     initErrors.push({ file: ReplacementsConfig.FILENAME, message: e });
   }
