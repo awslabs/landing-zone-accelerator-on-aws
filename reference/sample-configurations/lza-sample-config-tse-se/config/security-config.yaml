@@ -47,13 +47,11 @@ centralSecurityServices:
         controlsToDisable:
           - IAM.1
           - EC2.10
-          - Lambda.4
       - name: PCI DSS v3.2.1
         enable: true
         controlsToDisable:
           - PCI.IAM.3
           - PCI.S3.3
-          - PCI.EC2.3
           - PCI.Lambda.2
       - name: CIS AWS Foundations Benchmark v1.2.0
         enable: true
