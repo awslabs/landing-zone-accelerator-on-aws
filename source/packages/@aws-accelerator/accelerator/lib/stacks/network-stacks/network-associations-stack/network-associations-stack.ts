@@ -808,7 +808,7 @@ export class NetworkAssociationsStack extends NetworkStack {
                 name: this.getSsmPath(SsmResourceType.PREFIX_LIST, [routeTableEntry.destinationPrefixList]),
                 accountId: accepterAccountId,
                 parameterRegion: peering.accepter.region,
-                roleName: `${this.props.prefixes.accelerator}-CrossAccountRouteRole-${peering.accepter.region}`,
+                roleName: `${this.props.prefixes.accelerator}-VpcPeeringRole-${peering.accepter.region}`,
                 kmsKey: this.cloudwatchKey,
                 logRetentionInDays: this.logRetention,
                 acceleratorPrefix: this.props.prefixes.accelerator,
@@ -847,7 +847,7 @@ export class NetworkAssociationsStack extends NetworkStack {
               name: this.getSsmPath(SsmResourceType.ROUTE_TABLE, [peering.accepter.name, routeTable.name]),
               accountId: accepterAccountId,
               parameterRegion: peering.accepter.region,
-              roleName: `${this.props.prefixes.accelerator}-CrossAccountRouteRole-${peering.accepter.region}`,
+              roleName: `${this.props.prefixes.accelerator}-VpcPeeringRole-${peering.accepter.region}`,
               kmsKey: this.cloudwatchKey,
               logRetentionInDays: this.logRetention,
               acceleratorPrefix: this.props.prefixes.accelerator,
@@ -1692,13 +1692,13 @@ export class NetworkAssociationsStack extends NetworkStack {
           name: this.getSsmPath(SsmResourceType.VPC, [peering.accepter.name]),
           accountId: accepterAccountId,
           parameterRegion: peering.accepter.region,
-          roleName: `${this.props.prefixes.accelerator}-CrossAccountRouteRole-${peering.accepter.region}`,
+          roleName: `${this.props.prefixes.accelerator}-VpcPeeringRole-${peering.accepter.region}`,
           kmsKey: this.cloudwatchKey,
           logRetentionInDays: this.logRetention,
           acceleratorPrefix: this.props.prefixes.accelerator,
         }).value;
 
-        accepterRoleName = `${this.props.prefixes.accelerator}-CrossAccountRouteRole-${peering.accepter.region}`;
+        accepterRoleName = `${this.props.prefixes.accelerator}-VpcPeeringRole-${peering.accepter.region}`;
       } else {
         accepterVpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,
@@ -1929,7 +1929,7 @@ export class NetworkAssociationsStack extends NetworkStack {
         ownerRegion: accepterVpc.region,
         partition: this.props.partition,
         provider: this.crossAcctRouteProvider,
-        roleName: `${this.props.prefixes.accelerator}-CrossAccountRouteRole-${accepterVpc.region}`,
+        roleName: `${this.props.prefixes.accelerator}-VpcPeeringRole-${accepterVpc.region}`,
         routeTableId,
         destination,
         destinationPrefixListId,

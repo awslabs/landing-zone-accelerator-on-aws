@@ -2513,7 +2513,7 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
               {
                 "Ref": "AWS::Partition",
               },
-              ":iam::444444444444:role/AWSAccelerator-CrossAccountRouteRole-us-east-1",
+              ":iam::444444444444:role/AWSAccelerator-VpcPeeringRole-us-east-1",
             ],
           ],
         },
@@ -2720,7 +2720,7 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
               {
                 "Ref": "AWS::Partition",
               },
-              ":iam::444444444444:role/AWSAccelerator-CrossAccountRouteRole-us-east-1",
+              ":iam::444444444444:role/AWSAccelerator-VpcPeeringRole-us-east-1",
             ],
           ],
         },
