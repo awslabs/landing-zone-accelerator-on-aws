@@ -255,6 +255,23 @@ export function getVpcConfig(
 }
 
 /**
+ * Returns the name of the account owner of a VPC name from a given list of configurations if it exists
+ * @param vpcResources
+ * @param vpcName
+ * @returns
+ */
+export function getVpcOwnerAccountName(vpcResources: (VpcConfig | VpcTemplatesConfig)[], vpcName: string): string {
+  const vpcConfig = getVpcConfig(vpcResources, vpcName);
+
+  if (vpcConfig instanceof VpcTemplatesConfig) {
+    logger.error(`VPC Template ${vpcName} does not include 'account' property`);
+    throw new Error(`Configuration validation failed at runtime.`);
+  }
+
+  return (vpcConfig as VpcConfig).account;
+}
+
+/**
  * Returns a subnet configuration object from a given list of configurations if it exists
  * @param vpcItem
  * @param subnetName
@@ -322,4 +339,41 @@ export function getObjectKeys(obj: object): string[] {
     }
   }
   return keys;
+}
+
+/**
+ * Parse the details of an ENI lookup on a firewall instance
+ * @param lookupType
+ * @param routeTableEntryName
+ * @param routeTarget
+ */
+export function getNetworkInterfaceLookupDetails(
+  lookupType: 'ENI_INDEX' | 'FIREWALL_NAME',
+  routeTableEntryName: string,
+  routeTarget: string | undefined,
+): string {
+  if (!routeTarget) {
+    logger.error(`Unable to retrieve target ${routeTarget} for route table entry ${routeTableEntryName}`);
+    throw new Error(`Configuration validation failed at runtime.`);
+  }
+
+  const lookupComponents = routeTarget.split(':');
+  const eniIndex = lookupComponents[3].split('_').pop();
+  const firewallName = lookupComponents[4].replace(/\}$/, '');
+
+  if (!eniIndex) {
+    logger.error(
+      `Unable to retrieve deviceIndex from lookup ${routeTarget} for route table entry ${routeTableEntryName}`,
+    );
+    throw new Error(`Configuration validation failed at runtime.`);
+  }
+
+  if (lookupType === 'ENI_INDEX') {
+    return eniIndex;
+  } else if (lookupType === 'FIREWALL_NAME') {
+    return firewallName;
+  } else {
+    logger.error(`Invalid lookup type passed`);
+    throw new Error(`Configuration validation failed at runtime.`);
+  }
 }

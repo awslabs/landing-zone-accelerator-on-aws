@@ -1394,7 +1394,7 @@ vpcs:
           - name: NetworkInterfaceDirectRoute
             destination: 10.0.0.0/28
             type: networkInterface
-            target: eni-0123456789abcdef
+            target: eni-0123456789abcdeff
       - name: Network-Inspection-Tgw-B
         routes:
           - name: NfwRoute
@@ -1516,6 +1516,10 @@ vpcs:
             destination: 10.0.0.0/24
             type: vpcPeering
             target: CrossAccount
+          - name: CrossAcctNetworkInterfaceRoute
+            destination: 10.0.0.0/28
+            type: networkInterface
+            target: ${ACCEL_LOOKUP::EC2:ENI_0:firewall-with-shared-subnet}
       - name: SharedServices-App-B
         routes:
           - name: TgwRoute

@@ -1499,6 +1499,10 @@ vpcs:
             destination: 10.0.0.0/24
             type: vpcPeering
             target: CrossAccount
+          - name: CrossAcctNetworkInterfaceRoute
+            destination: 10.0.0.0/28
+            type: networkInterface
+            target: ${ACCEL_LOOKUP::EC2:ENI_0:firewall-with-shared-subnet}
       - name: SharedServices-App-B
         routes:
           - name: TgwRoute
