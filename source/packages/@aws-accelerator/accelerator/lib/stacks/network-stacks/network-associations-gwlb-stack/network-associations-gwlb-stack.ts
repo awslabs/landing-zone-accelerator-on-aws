@@ -30,9 +30,12 @@ import {
   VpcTemplatesConfig,
 } from '@aws-accelerator/config';
 import {
+  CrossAccountRoute,
+  CrossAccountRouteFramework,
   FirewallAutoScalingGroup,
   FirewallConfigReplacements,
   FirewallInstance,
+  SsmParameterLookup,
   TargetGroup,
   VpcEndpoint,
   VpcEndpointType,
@@ -41,7 +44,13 @@ import { SsmResourceType } from '@aws-accelerator/utils';
 
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import { NetworkStack } from '../network-stack';
-import { getRouteTable, getVpc } from '../utils/getter-utils';
+import {
+  getNetworkInterfaceLookupDetails,
+  getRouteTable,
+  getVpc,
+  getVpcConfig,
+  getVpcOwnerAccountName,
+} from '../utils/getter-utils';
 import { setIpamSubnetRouteTableEntryArray } from '../utils/setter-utils';
 import { FirewallVpnResources } from './firewall-vpn-resources';
 
@@ -60,6 +69,37 @@ interface FirewallConfigDetails {
   customResourceRole: cdk.aws_iam.IRole;
 }
 
+interface networkInterfaceRouteDetails {
+  /**
+   * Details of the route entry
+   */
+  routeEntry: RouteTableEntryConfig;
+  /**
+   * The name of the VPC route table
+   */
+  routeTableName: string;
+  /**
+   * The name of the VPC containing the route
+   */
+  vpcName: string;
+  /**
+   * True if the route's VPC is owned by the current account
+   */
+  vpcOwnedByAccount: boolean;
+  /**
+   * The index of the firewall ENI, if applicable
+   */
+  eniIndex?: number;
+  /**
+   * The name of the firewall target, if applicable
+   */
+  firewallName?: string;
+  /**
+   * True if the route's target firewall is owned by the current account
+   */
+  firewallOwnedByAccount?: boolean;
+}
+
 export class NetworkAssociationsGwlbStack extends NetworkStack {
   private firewallConfigDetails: FirewallConfigDetails;
   private gwlbMap: Map<string, string>;
@@ -74,6 +114,8 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
   private vpcMap: Map<string, string>;
   // Map to store only local vpcs which are created in account
   private vpcsInScopeMap: Map<string, string>;
+  private crossAcctRouteProvider?: cdk.custom_resources.Provider;
+  private networkInterfaceRouteArray: networkInterfaceRouteDetails[];
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
@@ -109,6 +151,14 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
     //
     this.instanceMap = this.createFirewallInstances();
     this.targetGroupMap = this.createFirewallTargetGroups(this.instanceMap);
+    //
+    // Set network interface route array
+    //
+    this.networkInterfaceRouteArray = this.setNetworkInterfaceRouteArray();
+    //
+    // Create cross-account route provider, if required
+    //
+    this.crossAcctRouteProvider = this.createCrossAcctRouteProvider();
     //
     // Crete firewall VPN resources
     //
@@ -165,6 +215,66 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
       }
     }
     return gwlbMap;
+  }
+
+  /**
+   * Returns a map of VPC routes targeting elastic network interfaces (ENIs)
+   * @param vpcItem
+   * @returns
+   */
+  private setNetworkInterfaceRouteArray(): networkInterfaceRouteDetails[] {
+    const eniRouteArray: networkInterfaceRouteDetails[] = [];
+    for (const vpcItem of this.vpcResources) {
+      // only look in VpcConfig, skip VpcTemplateConfig
+      if ('account' in vpcItem) {
+        for (const routeTableItem of vpcItem.routeTables ?? []) {
+          for (const routeTableEntryItem of routeTableItem.routes ?? []) {
+            if (routeTableEntryItem.type === 'networkInterface') {
+              const routeDetails = this.getNetworkInterfaceRouteDetails(
+                routeTableEntryItem,
+                routeTableItem.name,
+                vpcItem.name,
+              );
+              eniRouteArray.push(routeDetails);
+            }
+          }
+        }
+      }
+    }
+
+    return eniRouteArray;
+  }
+
+  /**
+   * Returns details of an ENI route and the target ENI
+   * @param routeEntry
+   * @param routeTableName
+   * @param vpcItem
+   * @returns
+   */
+  private getNetworkInterfaceRouteDetails(
+    routeEntry: RouteTableEntryConfig,
+    routeTableName: string,
+    vpcName: string,
+  ): networkInterfaceRouteDetails {
+    let firewallName: string | undefined;
+    let eniIndex: number | undefined;
+    let firewallOwnedByAccount: boolean | undefined;
+
+    if (this.isNetworkInterfaceTargetLookup(routeEntry.target, routeEntry.name)) {
+      firewallName = getNetworkInterfaceLookupDetails('FIREWALL_NAME', routeEntry.name, routeEntry.target);
+      eniIndex = parseInt(getNetworkInterfaceLookupDetails('ENI_INDEX', routeEntry.name, routeEntry.target));
+      firewallOwnedByAccount = this.instanceMap.has(firewallName);
+    }
+    return {
+      routeEntry,
+      routeTableName,
+      vpcName,
+      vpcOwnedByAccount: this.vpcsInScopeMap.has(vpcName),
+      firewallName,
+      eniIndex,
+      firewallOwnedByAccount,
+    };
   }
 
   /**
@@ -849,40 +959,127 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
   }
 
   /**
-   * Create GWLB endpoint route table entries.
-   * @param vpcItem
-   * @param gwlbEndpointMap
+   * Create network interface route table entries.
    */
   private createNetworkInterfaceRouteTableEntries(): void {
-    for (const vpcItem of this.vpcsInScope) {
-      // validate VPC exists
-      getVpc(this.vpcMap, vpcItem.name);
-
-      for (const routeTableItem of vpcItem.routeTables ?? []) {
-        for (const routeTableEntryItem of routeTableItem.routes ?? []) {
-          if (routeTableEntryItem.type === 'networkInterface') {
-            this.createNetworkInterfaceRouteTableEntryItem(vpcItem.name, routeTableItem.name, routeTableEntryItem);
-          }
-        }
+    for (const route of this.networkInterfaceRouteArray) {
+      if (route.vpcOwnedByAccount) {
+        this.createNetworkInterfaceRouteForOwnedVpc(route);
+      } else if (route.firewallOwnedByAccount) {
+        this.createNetworkInterfaceRouteForOwnedFirewall(route);
       }
     }
   }
 
   /**
-   * Create Route Entries targeting Elastic Network Interfaces (ENIs)
+   * Create network interface route table entries for entries in VPCs shared to this account.
    */
-  private createNetworkInterfaceRouteTableEntryItem(
+  private createNetworkInterfaceRouteForOwnedFirewall(routeDetails: networkInterfaceRouteDetails): void {
+    if (routeDetails.firewallName && routeDetails.eniIndex !== undefined) {
+      const networkInterfaceId = this.getNetworkInterfaceIdFromFirewall(
+        routeDetails.firewallName,
+        routeDetails.eniIndex!,
+      );
+      this.logger.info(
+        `Creating cross-account route targeting ENI of firewall ${routeDetails.firewallName} owned by this account in VPC ${routeDetails.vpcName}`,
+      );
+
+      this.createCrossAccountNetworkInterfaceRoute(
+        routeDetails.vpcName,
+        routeDetails.routeTableName,
+        routeDetails.routeEntry,
+        networkInterfaceId,
+      );
+    }
+  }
+
+  /**
+   * Create network interface route table entries for entries in VPCs owned by this account.
+   */
+  private createNetworkInterfaceRouteForOwnedVpc(routeDetails: networkInterfaceRouteDetails): void {
+    let networkInterfaceId: string;
+    if (routeDetails.firewallName && routeDetails.firewallOwnedByAccount) {
+      this.logger.info(
+        `Creating route targeting ENI of firewall ${routeDetails.firewallName} in VPC ${routeDetails.vpcName}`,
+      );
+      networkInterfaceId = this.getNetworkInterfaceIdFromFirewall(routeDetails.firewallName, routeDetails.eniIndex!);
+    } else if (routeDetails.firewallName && !routeDetails.firewallOwnedByAccount) {
+      this.logger.debug(
+        `Skipping route targeting ENI of firewall ${routeDetails.firewallName} owned by different account in VPC ${routeDetails.vpcName}`,
+      );
+      return;
+    } else {
+      this.logger.info(
+        `Creating route targeting explicit ENI ${routeDetails.routeEntry.target}} in VPC ${routeDetails.vpcName}`,
+      );
+      networkInterfaceId = routeDetails.routeEntry.target!;
+    }
+    this.createNetworkInterfaceRoute(
+      routeDetails.vpcName,
+      routeDetails.routeTableName,
+      routeDetails.routeEntry,
+      networkInterfaceId,
+    );
+  }
+
+  /**
+   * Create VPC Route Table route targeting Elastic Network Interface (ENI) in another account
+   */
+  private createCrossAccountNetworkInterfaceRoute(
     vpcName: string,
     routeTableName: string,
     routeTableEntryItem: RouteTableEntryConfig,
+    networkInterfaceId: string,
   ): void {
+    this.logger.info(`Adding cross-account Network Interface Route Table Entry ${routeTableEntryItem.name}`);
     const routeId =
       pascalCase(`${vpcName}Vpc`) + pascalCase(`${routeTableName}RouteTable`) + pascalCase(routeTableEntryItem.name);
 
-    // Add route
+    const vpcOwnerAccount = getVpcOwnerAccountName(this.props.networkConfig.vpcs, vpcName);
+    const vpcOwnerAccountId = this.props.accountsConfig.getAccountId(vpcOwnerAccount);
+
+    // get cross-account route table id
+    const routeTableId = new SsmParameterLookup(this, pascalCase(`SsmParamLookup${routeTableName}`), {
+      name: this.getSsmPath(SsmResourceType.ROUTE_TABLE, [vpcName, routeTableName]),
+      accountId: vpcOwnerAccountId,
+      parameterRegion: cdk.Stack.of(this).region,
+      roleName: `${this.props.prefixes.accelerator}-CrossAccountRouteRole-${cdk.Stack.of(this).region}`,
+      kmsKey: this.cloudwatchKey,
+      logRetentionInDays: this.logRetention,
+      acceleratorPrefix: this.props.prefixes.accelerator,
+    }).value;
+
+    if (!this.crossAcctRouteProvider) {
+      this.logger.error(
+        `Attempting to create cross-account route ${routeTableEntryItem.name} but cross-account route provider does not exist`,
+      );
+      throw new Error('No cross route provider');
+    }
+    new CrossAccountRoute(this, routeId, {
+      ownerAccount: vpcOwnerAccountId,
+      ownerRegion: cdk.Stack.of(this).region,
+      partition: cdk.Stack.of(this).partition,
+      provider: this.crossAcctRouteProvider,
+      roleName: `${this.props.prefixes.accelerator}-CrossAccountRouteRole-${cdk.Stack.of(this).region}`,
+      routeTableId: routeTableId,
+      destination: routeTableEntryItem.destination,
+      networkInterfaceId: networkInterfaceId,
+    });
+  }
+
+  /**
+   * Create VPC Route Table route targeting Elastic Network Interface (ENI)
+   */
+  private createNetworkInterfaceRoute(
+    vpcName: string,
+    routeTableName: string,
+    routeTableEntryItem: RouteTableEntryConfig,
+    networkInterfaceId: string,
+  ): void {
     this.logger.info(`Adding Network Interface Route Table Entry ${routeTableEntryItem.name}`);
-    const networkInterfaceId = this.getNetworkInterfaceId(routeTableEntryItem);
     const routeTableId = getRouteTable(this.routeTableMap, vpcName, routeTableName) as string;
+    const routeId =
+      pascalCase(`${vpcName}Vpc`) + pascalCase(`${routeTableName}RouteTable`) + pascalCase(routeTableEntryItem.name);
 
     new cdk.aws_ec2.CfnRoute(this, routeId, {
       destinationCidrBlock: routeTableEntryItem.destination,
@@ -892,41 +1089,116 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
   }
 
   /**
-   * Get Id of the network interface (ENI) to target.
+   * Returns true if the target of the networkInterface route is an EC2 firewall instance
    * @param vpcItem
    * @param gwlbEndpointMap
    */
-  private getNetworkInterfaceId(routeTableEntry: RouteTableEntryConfig): string {
-    const routeTarget = routeTableEntry.target!;
-    if (routeTarget.startsWith('eni-')) {
-      return routeTarget;
-    } else if (routeTarget.match('\\${ACCEL_LOOKUP::EC2:ENI_([a-zA-Z0-9-/:]*)}')) {
-      const lookupComponents = routeTarget.split(':');
-      const eniIndex = lookupComponents[3].split('_').pop();
-      const firewallName = lookupComponents[4].replace(/\}$/, '');
-
-      return this.getNetworkInterfaceIdFromFirewall(eniIndex!, firewallName);
+  private isNetworkInterfaceTargetLookup(routeTarget: string | undefined, routeTableEntryName: string): boolean {
+    if (routeTarget?.startsWith('eni-')) {
+      return false;
+    } else if (routeTarget?.match('\\${ACCEL_LOOKUP::EC2:ENI_([a-zA-Z0-9-/:]*)}')) {
+      return true;
     } else {
-      this.logger.error(`Unable to retrieve network interface id for route table entry ${routeTableEntry.name}`);
+      this.logger.error(`Unable to retrieve target ${routeTarget} for route table entry ${routeTableEntryName}`);
       throw new Error(`Configuration validation failed at runtime.`);
     }
   }
 
   /**
    * Get Id of the network interface (ENI) associated with a firewall instance.
-   * @param vpcItem
-   * @param gwlbEndpointMap
+   * @param firewallName
+   * @param deviceIndex
    */
-  private getNetworkInterfaceIdFromFirewall(deviceIndex: string, firewallName: string): string {
+  private getNetworkInterfaceIdFromFirewall(firewallName: string, deviceIndex: number): string {
     const firewall = this.instanceMap.get(firewallName);
-    const eni = firewall!.getNetworkInterface(parseInt(deviceIndex));
+    const eni = firewall!.getNetworkInterface(deviceIndex);
 
     if (!eni.networkInterfaceId) {
       this.logger.error(
-        `Could not retrieve network interface id for eni at index ${deviceIndex} from firewall ${firewallName}`,
+        `Could not retrieve network interface id for eni at index ${deviceIndex.toString()} from firewall ${firewallName}`,
       );
       throw new Error(`Configuration validation failed at runtime.`);
     }
     return eni.networkInterfaceId;
+  }
+
+  /**
+   * Function to check for cross-account route table entries
+   * @returns boolean
+   */
+  private isCrossAccountRouteFramework(): boolean {
+    const crossAccountVpcs: (VpcConfig | VpcTemplatesConfig)[] = this.getCrossAccountVpcsWithFirewalls();
+    if (crossAccountVpcs.length > 0) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Returns a list of VPC configs not owned by this account that host firewalls owned by this account
+   * @returns
+   */
+  private getCrossAccountVpcsWithFirewalls(): (VpcConfig | VpcTemplatesConfig)[] {
+    const crossAccountVpcs: (VpcConfig | VpcTemplatesConfig)[] = [];
+    if (this.instanceMap.size > 0) {
+      const firewallInstances = [
+        ...(this.props.customizationsConfig.firewalls?.instances ?? []),
+        ...(this.props.customizationsConfig.firewalls?.managerInstances ?? []),
+      ];
+      for (const firewallInstance of firewallInstances) {
+        if (
+          firewallInstance.account &&
+          this.props.accountsConfig.getAccountId(firewallInstance.account) === cdk.Stack.of(this).account
+        ) {
+          this.logger.info(
+            `Firewall ${firewallInstance.name} owned by this account ${firewallInstance.account} is deployed in VPC ${firewallInstance.vpc} owned by another account`,
+          );
+          const vpcConfig = getVpcConfig(this.vpcResources, firewallInstance.vpc);
+          crossAccountVpcs.push(vpcConfig);
+        }
+      }
+    }
+    return crossAccountVpcs;
+  }
+
+  /**
+   * Create a custom resource provider to handle cross-account VPC peering routes
+   * @returns
+   */
+  private createCrossAcctRouteProvider(): cdk.custom_resources.Provider | undefined {
+    if (this.isCrossAccountRouteFramework()) {
+      const provider = new CrossAccountRouteFramework(this, 'CrossAccountRouteFramework', {
+        acceleratorPrefix: this.props.prefixes.accelerator,
+        logGroupKmsKey: this.cloudwatchKey,
+        logRetentionInDays: this.logRetention,
+      }).provider;
+
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `${this.stackName}/CrossAccountRouteFramework/CrossAccountRouteFunction/ServiceRole/Resource`,
+        [{ id: 'AwsSolutions-IAM4', reason: 'Custom resource Lambda role policy.' }],
+      );
+
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `${this.stackName}/CrossAccountRouteFramework/CrossAccountRouteFunction/ServiceRole/DefaultPolicy/Resource`,
+        [{ id: 'AwsSolutions-IAM5', reason: 'Custom resource Lambda role policy.' }],
+      );
+
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `${this.stackName}/CrossAccountRouteFramework/CrossAccountRouteProvider/framework-onEvent/ServiceRole/Resource`,
+        [{ id: 'AwsSolutions-IAM4', reason: 'Custom resource Lambda role policy.' }],
+      );
+
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `${this.stackName}/CrossAccountRouteFramework/CrossAccountRouteProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
+        [{ id: 'AwsSolutions-IAM5', reason: 'Custom resource Lambda role policy.' }],
+      );
+
+      return provider;
+    }
+    return undefined;
   }
 }

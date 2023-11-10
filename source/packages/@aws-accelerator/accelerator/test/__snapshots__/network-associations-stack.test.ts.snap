@@ -628,7 +628,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
               {
                 "Ref": "AWS::Partition",
               },
-              ":iam::444444444444:role/AWSAccelerator-VpcPeeringRole-us-east-1",
+              ":iam::444444444444:role/AWSAccelerator-CrossAccountRouteRole-us-east-1",
             ],
           ],
         },
@@ -681,7 +681,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           ],
         },
         "region": "us-east-1",
-        "roleArn": "arn:aws:iam::444444444444:role/AWSAccelerator-VpcPeeringRole-us-east-1",
+        "roleArn": "arn:aws:iam::444444444444:role/AWSAccelerator-CrossAccountRouteRole-us-east-1",
         "routeDefinition": {
           "DestinationCidrBlock": "10.0.0.0/24",
           "RouteTableId": {
@@ -705,7 +705,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           ],
         },
         "region": "us-east-1",
-        "roleArn": "arn:aws:iam::444444444444:role/AWSAccelerator-VpcPeeringRole-us-east-1",
+        "roleArn": "arn:aws:iam::444444444444:role/AWSAccelerator-CrossAccountRouteRole-us-east-1",
         "routeDefinition": {
           "DestinationCidrBlock": "10.0.0.0/24",
           "RouteTableId": {
@@ -729,7 +729,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           ],
         },
         "region": "us-east-1",
-        "roleArn": "arn:aws:iam::444444444444:role/AWSAccelerator-VpcPeeringRole-us-east-1",
+        "roleArn": "arn:aws:iam::444444444444:role/AWSAccelerator-CrossAccountRouteRole-us-east-1",
         "routeDefinition": {
           "DestinationCidrBlock": "10.0.0.0/24",
           "RouteTableId": {
@@ -2817,7 +2817,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
               {
                 "Ref": "AWS::Partition",
               },
-              ":iam::444444444444:role/AWSAccelerator-VpcPeeringRole-us-east-1",
+              ":iam::444444444444:role/AWSAccelerator-CrossAccountRouteRole-us-east-1",
             ],
           ],
         },
@@ -2851,7 +2851,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
               {
                 "Ref": "AWS::Partition",
               },
-              ":iam::444444444444:role/AWSAccelerator-VpcPeeringRole-us-east-1",
+              ":iam::444444444444:role/AWSAccelerator-CrossAccountRouteRole-us-east-1",
             ],
           ],
         },
@@ -2885,7 +2885,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
               {
                 "Ref": "AWS::Partition",
               },
-              ":iam::444444444444:role/AWSAccelerator-VpcPeeringRole-us-east-1",
+              ":iam::444444444444:role/AWSAccelerator-CrossAccountRouteRole-us-east-1",
             ],
           ],
         },
@@ -2919,7 +2919,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
               {
                 "Ref": "AWS::Partition",
               },
-              ":iam::444444444444:role/AWSAccelerator-VpcPeeringRole-us-east-1",
+              ":iam::444444444444:role/AWSAccelerator-CrossAccountRouteRole-us-east-1",
             ],
           ],
         },

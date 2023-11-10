@@ -530,7 +530,7 @@ export class VpcValidator {
     }
 
     if (helpers.matchesRegex(routeTableEntryItem.target!, '\\${ACCEL_LOOKUP::EC2:ENI_([a-zA-Z0-9-/:]*)}')) {
-      if (!this.isValidFirewallReference(routeTableEntryItem, errors)) {
+      if (!this.isValidFirewallReference(routeTableEntryItem, vpcItem.name, errors)) {
         errors.push(
           `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} has invalid lookup target. Accepted pattern: "^\\$\{ACCEL_LOOKUP::EC2:ENI_([a-zA-Z0-9-/:]*)}" Value entered: ${routeTableEntryItem.target}`,
         );
@@ -544,7 +544,11 @@ export class VpcValidator {
    * @param errors string[]
    * @returns boolean
    */
-  private isValidFirewallReference(routeTableEntryItem: RouteTableEntryConfig, errors: string[]): boolean {
+  private isValidFirewallReference(
+    routeTableEntryItem: RouteTableEntryConfig,
+    vpcName: string,
+    errors: string[],
+  ): boolean {
     //
     // Check that customizations config is defined
     if (!this.customizationsConfig) {
@@ -569,6 +573,13 @@ export class VpcValidator {
       if (!eniIndex) {
         errors.push(
           `[Route Table entry: ${routeTableEntryItem.name}]: Unable to parse ENI index of EC2 firewall instance "${firewallName}" from pattern ${routeTableEntryItem.target}`,
+        );
+        return false;
+      }
+
+      if (vpcName !== firewall.vpc) {
+        errors.push(
+          `[Route Table entry: ${routeTableEntryItem.name}]: Firewall "${firewallName}" in route target ${routeTableEntryItem.target} must exist in the same VPC the route is created`,
         );
         return false;
       }
