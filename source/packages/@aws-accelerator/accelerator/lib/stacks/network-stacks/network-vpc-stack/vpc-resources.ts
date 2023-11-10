@@ -249,8 +249,8 @@ export class VpcResources {
         principals.push(new cdk.aws_iam.AccountPrincipal(accountId));
       }
 
-      const role = new cdk.aws_iam.Role(this.stack, 'CrossAccountRouteRole', {
-        roleName: `${props.prefixes.accelerator}-CrossAccountRouteRole-${cdk.Stack.of(this.stack).region}`,
+      const role = new cdk.aws_iam.Role(this.stack, 'VpcPeeringRole', {
+        roleName: `${props.prefixes.accelerator}-VpcPeeringRole-${cdk.Stack.of(this.stack).region}`,
         assumedBy: new cdk.aws_iam.CompositePrincipal(...principals),
         inlinePolicies: {
           default: new cdk.aws_iam.PolicyDocument({
@@ -261,16 +261,12 @@ export class VpcResources {
 
       // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
       // rule suppression with evidence for this permission.
-      NagSuppressions.addResourceSuppressionsByPath(
-        this.stack,
-        `${this.stack.stackName}/CrossAccountRouteRole/Resource`,
-        [
-          {
-            id: 'AwsSolutions-IAM5',
-            reason: 'CrossAccountRouteRole needs access to create routes for VPCs in the account',
-          },
-        ],
-      );
+      NagSuppressions.addResourceSuppressionsByPath(this.stack, `${this.stack.stackName}/VpcPeeringRole/Resource`, [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'VpcPeeringRole needs access to create routes for VPCs in the account',
+        },
+      ]);
       return role;
     }
     return undefined;
