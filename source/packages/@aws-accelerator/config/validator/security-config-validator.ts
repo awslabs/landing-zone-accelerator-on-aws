@@ -418,6 +418,26 @@ export class SecurityConfigValidator {
       }
     }
   }
+  /**
+   * Function to validate existence of KMS key deployment target Accounts
+   * Make sure deployment target Accounts are part of account config file
+   * @param values
+   */
+  private validateKmsKeyConfigDeploymentTargetAccounts(
+    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
+    accountNames: string[],
+    errors: string[],
+  ) {
+    for (const keySet of values.keyManagementService?.keySets ?? []) {
+      for (const account of keySet.deploymentTargets.accounts ?? []) {
+        if (accountNames.indexOf(account) === -1) {
+          errors.push(
+            `Deployment target account ${account} for KMS key ${keySet.name} does not exists in accounts-config.yaml file.`,
+          );
+        }
+      }
+    }
+  }
 
   /**
    * Function to validate Deployment targets account name for security services
@@ -433,6 +453,7 @@ export class SecurityConfigValidator {
     this.validateCloudWatchAlarmsDeploymentTargetAccounts(values, accountNames, errors);
     this.validateSsmDocumentsDeploymentTargetAccounts(values, accountNames, errors);
     this.validateCloudWatchLogGroupsDeploymentTargetAccounts(values, accountNames, errors);
+    this.validateKmsKeyConfigDeploymentTargetAccounts(values, accountNames, errors);
   }
 
   /**
@@ -518,6 +539,27 @@ export class SecurityConfigValidator {
   }
 
   /**
+   * Function to validate existence of Key Management Service Config deployment target OUs
+   * Make sure deployment target OUs are part of Organization config file
+   * @param values
+   */
+  private validateKmsKeyConfigDeploymentTargetOUs(
+    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
+    ouIdNames: string[],
+    errors: string[],
+  ) {
+    for (const keySet of values.keyManagementService?.keySets ?? []) {
+      for (const ou of keySet.deploymentTargets.organizationalUnits ?? []) {
+        if (ouIdNames.indexOf(ou) === -1) {
+          errors.push(
+            `Deployment target OU ${ou} for KMS key ${keySet.name} does not exists in organization-config.yaml file.`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
    * Function to validate Deployment targets OU name for security services
    * @param values
    */
@@ -526,6 +568,7 @@ export class SecurityConfigValidator {
     this.validateCloudWatchAlarmsDeploymentTargetOUs(values, ouIdNames, errors);
     this.validateCloudWatchMetricsDeploymentTargetOUs(values, ouIdNames, errors);
     this.validateConfigRuleDeploymentTargetOUs(values, ouIdNames, errors);
+    this.validateKmsKeyConfigDeploymentTargetOUs(values, ouIdNames, errors);
   }
 
   /**
