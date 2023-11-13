@@ -2354,6 +2354,10 @@ export class VpcValidator {
     this.validateAlbConfigForExistingSubnets(vpcItem, helpers, errors);
     // Validate that Application Load Balancer that is using shared targets is using subnets that are using shared target.
     this.validateSharedAlbSubnets(vpcItem, helpers, errors);
+    // Validate subnet share target ou names
+    this.validateVpcSubnetShareTargetOUs(vpcItem, helpers, errors);
+    // Validate subnet share target account names
+    this.validateVpcSubnetShareTargetAccounts(vpcItem, helpers, errors);
   }
 
   /**
@@ -2567,6 +2571,50 @@ export class VpcValidator {
         if (missingAccountIds.length > 0) {
           errors.push(
             `The Application Load Balancer ${albItem.name} is deployed to multiple accounts and using subnets that aren't available. Please make sure your sharedTargets configuration for your subnet makes the subnet available for the ALB.`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Validate Subnet share target OU names
+   * @param vpcItem
+   * @param helpers
+   * @param errors
+   */
+  private validateVpcSubnetShareTargetOUs(
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+  ) {
+    for (const subnetItem of vpcItem.subnets ?? []) {
+      for (const ou of subnetItem.shareTargets?.organizationalUnits ?? []) {
+        if (!helpers.ouExists(ou)) {
+          errors.push(
+            `[VPC ${vpcItem.name} subnet ${subnetItem.name}]: Shared Target OU ${ou} does not exist in organization-config.yaml file.`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Validate Subnet share target account names
+   * @param vpcItem
+   * @param helpers
+   * @param errors
+   */
+  private validateVpcSubnetShareTargetAccounts(
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+  ) {
+    for (const subnetItem of vpcItem.subnets ?? []) {
+      for (const account of subnetItem.shareTargets?.accounts ?? []) {
+        if (!helpers.accountExists(account)) {
+          errors.push(
+            `[VPC ${vpcItem.name} subnet ${subnetItem.name}]: Shared Target account ${account} does not exist in accounts-config.yaml file.`,
           );
         }
       }
