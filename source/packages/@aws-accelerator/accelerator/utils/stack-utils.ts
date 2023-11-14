@@ -165,6 +165,9 @@ function addAcceleratorTags(
   globalConfig: GlobalConfig,
   acceleratorPrefix: string,
 ): void {
+  if (partition === 'aws-iso' || partition === 'aws-iso-b') {
+    return;
+  }
   // Resource types that do not support tag updates
   const excludeResourceTypes = [
     'AWS::EC2::TransitGatewayRouteTable',
