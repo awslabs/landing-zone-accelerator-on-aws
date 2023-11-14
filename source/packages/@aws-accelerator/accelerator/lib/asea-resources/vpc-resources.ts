@@ -61,6 +61,17 @@ const enum RESOURCE_TYPE {
   TRANSIT_GATEWAY_ROUTE_TABLE = 'AWS::EC2::TransitGatewayRouteTable',
 }
 
+type SecurityGroupRuleInfo = {
+  protocol: string;
+  source: string;
+  sourceValue: string;
+  type?: string;
+  to?: number;
+  from?: number;
+  sourceType?: string;
+  description?: string;
+};
+
 const TCP_PROTOCOLS_PORT: { [key: string]: number } = {
   RDP: 3389,
   SSH: 22,
@@ -328,107 +339,6 @@ export class VpcResources extends AseaResource {
   ) {
     const securityGroupsMap = new Map<string, string>();
     const securityGroupPhysicalIdMap = new Map<string, string>();
-
-    type SecurityGroupRuleInfo = {
-      protocol: string;
-      source: string;
-      sourceValue: string;
-      type?: string;
-      to?: number;
-      from?: number;
-      sourceType?: string;
-      description?: string;
-    };
-    const processSecurityGroupSources = (
-      securityGroupRuleItem: SecurityGroupRuleConfig,
-      ruleProps: {
-        protocol: cdk.aws_ec2.Protocol;
-        type?: string;
-        from?: number;
-        to?: number;
-      },
-    ) => {
-      const securityGroupRules: SecurityGroupRuleInfo[] = [];
-      securityGroupRuleItem.sources.forEach(sourceItem => {
-        if (nonEmptyString.is(sourceItem))
-          securityGroupRules.push({
-            ...ruleProps,
-            source: sourceItem,
-            sourceValue: sourceItem,
-            description: securityGroupRuleItem.description,
-          });
-        if (NetworkConfigTypes.subnetSourceConfig.is(sourceItem)) {
-          const sourceVpcItem = getVpcConfig(this.scope.vpcsInScope, sourceItem.vpc);
-          sourceItem.subnets.forEach(subnet =>
-            securityGroupRules.push({
-              ...ruleProps,
-              source: `${sourceVpcItem.name}/${subnet}`,
-              sourceValue: getSubnetConfig(sourceVpcItem, subnet).ipv4CidrBlock!,
-              sourceType: 'subnet',
-              description: securityGroupRuleItem.description,
-            }),
-          );
-        }
-        if (NetworkConfigTypes.securityGroupSourceConfig.is(sourceItem)) {
-          sourceItem.securityGroups.forEach(securityGroup => {
-            if (!securityGroupsMap.get(securityGroup)) return;
-            securityGroupRules.push({
-              ...ruleProps,
-              source: securityGroup,
-              sourceValue: securityGroupsMap.get(securityGroup)!,
-              sourceType: 'sg',
-              description: securityGroupRuleItem.description,
-            });
-          });
-        }
-      });
-      return securityGroupRules;
-    };
-    const processTcpSources = (securityGroupRuleItem: SecurityGroupRuleConfig) => {
-      const securityGroupRules: SecurityGroupRuleInfo[] = [];
-      for (const tcpPort of securityGroupRuleItem.tcpPorts ?? []) {
-        const defaultRuleProps = {
-          protocol: cdk.aws_ec2.Protocol.TCP,
-          from: tcpPort,
-          to: tcpPort,
-        };
-        securityGroupRules.push(...processSecurityGroupSources(securityGroupRuleItem, defaultRuleProps));
-      }
-      return securityGroupRules;
-    };
-    const processUdpSources = (securityGroupRuleItem: SecurityGroupRuleConfig) => {
-      const securityGroupRules: SecurityGroupRuleInfo[] = [];
-      for (const tcpPort of securityGroupRuleItem.udpPorts ?? []) {
-        const defaultRuleProps = {
-          protocol: cdk.aws_ec2.Protocol.UDP,
-          from: tcpPort,
-          to: tcpPort,
-        };
-        securityGroupRules.push(...processSecurityGroupSources(securityGroupRuleItem, defaultRuleProps));
-      }
-      return securityGroupRules;
-    };
-    const processTypeSources = (securityGroupRuleItem: SecurityGroupRuleConfig) => {
-      const securityGroupRules: SecurityGroupRuleInfo[] = [];
-      for (const ruleType of securityGroupRuleItem.types ?? []) {
-        if (ruleType === 'ALL') {
-          const defaultRuleProps = {
-            protocol: cdk.aws_ec2.Protocol.ALL,
-            type: ruleType,
-          };
-          securityGroupRules.push(...processSecurityGroupSources(securityGroupRuleItem, defaultRuleProps));
-        } else {
-          const defaultRuleProps = {
-            protocol: cdk.aws_ec2.Protocol.TCP,
-            type: ruleType,
-            from: TCP_PROTOCOLS_PORT[ruleType],
-            to: TCP_PROTOCOLS_PORT[ruleType],
-          };
-          securityGroupRules.push(...processSecurityGroupSources(securityGroupRuleItem, defaultRuleProps));
-        }
-      }
-      return securityGroupRules;
-    };
     for (const securityGroupItem of vpcItem.securityGroups ?? []) {
       const existingSecurityGroup = this.findResourceByName(
         vpcStackInfo.resources,
@@ -454,210 +364,350 @@ export class VpcResources extends AseaResource {
     for (const securityGroupItem of vpcItem.securityGroups ?? []) {
       const logicalId = securityGroupsMap.get(securityGroupItem.name);
       if (!logicalId) continue;
-      const securityGroupIngressRules: SecurityGroupRuleInfo[] = [];
-      const securityGroupEgressRules: SecurityGroupRuleInfo[] = [];
-      const egressRules = this.filterResourcesByRef(
-        this.filterResourcesByType(vpcStackInfo.resources, RESOURCE_TYPE.SECURITY_GROUP_EGRESS),
-        'GroupId',
-        logicalId,
+      let securityGroupIngressRules: SecurityGroupRuleInfo[] = [];
+      let securityGroupEgressRules: SecurityGroupRuleInfo[] = [];
+      securityGroupIngressRules = this.processSecurityGroupIngressSources(
+        securityGroupItem.inboundRules,
+        securityGroupIngressRules,
+        securityGroupsMap,
       );
-      const ingressRules = this.filterResourcesByRef(
-        this.filterResourcesByType(vpcStackInfo.resources, RESOURCE_TYPE.SECURITY_GROUP_INGRESS),
-        'GroupId',
-        logicalId,
+      securityGroupEgressRules = this.processSecurityGroupEgressSources(
+        securityGroupItem.outboundRules,
+        securityGroupEgressRules,
+        securityGroupsMap,
       );
-      for (const ingressRuleItem of securityGroupItem.inboundRules) {
-        securityGroupIngressRules.push(
-          ...processTcpSources(ingressRuleItem),
-          ...processUdpSources(ingressRuleItem),
-          ...processTypeSources(ingressRuleItem),
+
+      const securityGroup = vpcStack.getResource(logicalId) as CfnSecurityGroup;
+      this.updateSecurityGroupIngressRules(securityGroupIngressRules, securityGroupPhysicalIdMap, securityGroup);
+      this.updateSecurityGroupEgressRules(securityGroupEgressRules, securityGroupPhysicalIdMap, securityGroup);
+    }
+  }
+
+  private processSecurityGroupSources = (
+    securityGroupRuleItem: SecurityGroupRuleConfig,
+    ruleProps: {
+      protocol: cdk.aws_ec2.Protocol;
+      type?: string;
+      from?: number;
+      to?: number;
+    },
+    securityGroupsMap: Map<string, string>,
+  ) => {
+    const securityGroupRules: SecurityGroupRuleInfo[] = [];
+    securityGroupRuleItem.sources.forEach(sourceItem => {
+      if (nonEmptyString.is(sourceItem)) {
+        securityGroupRules.push({
+          ...ruleProps,
+          source: sourceItem,
+          sourceValue: sourceItem,
+          description: securityGroupRuleItem.description,
+        });
+      }
+      if (NetworkConfigTypes.subnetSourceConfig.is(sourceItem)) {
+        const sourceVpcItem = getVpcConfig(this.scope.vpcsInScope, sourceItem.vpc);
+        sourceItem.subnets.forEach(subnet =>
+          securityGroupRules.push({
+            ...ruleProps,
+            source: `${sourceVpcItem.name}/${subnet}`,
+            sourceValue: getSubnetConfig(sourceVpcItem, subnet).ipv4CidrBlock!,
+            sourceType: 'subnet',
+            description: securityGroupRuleItem.description,
+          }),
         );
       }
-      for (const egressRuleItem of securityGroupItem.outboundRules) {
-        securityGroupEgressRules.push(
-          ...processTcpSources(egressRuleItem),
-          ...processUdpSources(egressRuleItem),
-          ...processTypeSources(egressRuleItem),
+      if (NetworkConfigTypes.securityGroupSourceConfig.is(sourceItem)) {
+        sourceItem.securityGroups.forEach(securityGroup => {
+          if (!securityGroupsMap.get(securityGroup)) return;
+          securityGroupRules.push({
+            ...ruleProps,
+            source: securityGroup,
+            sourceValue: securityGroupsMap.get(securityGroup)!,
+            sourceType: 'sg',
+            description: securityGroupRuleItem.description,
+          });
+        });
+      }
+    });
+    return securityGroupRules;
+  };
+
+  private processSecurityGroupIngressSources(
+    securityGroupRuleIngressItems: SecurityGroupRuleConfig[],
+    securityGroupIngressRules: SecurityGroupRuleInfo[],
+    securityGroupsMap: Map<string, string>,
+  ) {
+    for (const ingressRuleItem of securityGroupRuleIngressItems) {
+      securityGroupIngressRules.push(
+        ...this.processTcpSources(ingressRuleItem, securityGroupsMap),
+        ...this.processUdpSources(ingressRuleItem, securityGroupsMap),
+        ...this.processTypeSources(ingressRuleItem, securityGroupsMap),
+      );
+    }
+    return securityGroupIngressRules;
+  }
+
+  private processSecurityGroupEgressSources(
+    securityGroupRuleEgressItems: SecurityGroupRuleConfig[],
+    securityGroupEgressRules: SecurityGroupRuleInfo[],
+    securityGroupsMap: Map<string, string>,
+  ) {
+    for (const egressRuleItem of securityGroupRuleEgressItems) {
+      securityGroupEgressRules.push(
+        ...this.processTcpSources(egressRuleItem, securityGroupsMap),
+        ...this.processUdpSources(egressRuleItem, securityGroupsMap),
+        ...this.processTypeSources(egressRuleItem, securityGroupsMap),
+      );
+    }
+    return securityGroupEgressRules;
+  }
+
+  private processTypeSources = (
+    securityGroupRuleItem: SecurityGroupRuleConfig,
+    securityGroupsMap: Map<string, string>,
+  ) => {
+    const securityGroupRules: SecurityGroupRuleInfo[] = [];
+    for (const ruleType of securityGroupRuleItem.types ?? []) {
+      if (ruleType === 'ALL') {
+        const defaultRuleProps = {
+          protocol: cdk.aws_ec2.Protocol.ALL,
+          type: ruleType,
+        };
+        securityGroupRules.push(
+          ...this.processSecurityGroupSources(securityGroupRuleItem, defaultRuleProps, securityGroupsMap),
         );
-
-        const existingIngressRulesToBeUpdated: CfnSecurityGroup.IngressProperty[] = [];
-        securityGroupIngressRules.forEach(configIngressRule => {
-          let existingIngressRuleEntry = false;
-          for (const existingIngressRule of ingressRules) {
-            let ipProtocol = false;
-            let fromPort = false;
-            let toPort = false;
-            let cidrIp = false;
-            let sourceSecurityGroupId = false;
-            if (
-              existingIngressRule.resourceMetadata['Properties'].IpProtocol &&
-              existingIngressRule.resourceMetadata['Properties'].IpProtocol === configIngressRule.protocol
-            ) {
-              ipProtocol = true;
-            }
-            //IF LZA rule has type of ALL, there won't be to and from port
-            if (configIngressRule.type === 'ALL') {
-              if (existingIngressRule.resourceMetadata['Properties'].FromPort === configIngressRule.from) {
-                fromPort = true;
-              }
-              if (existingIngressRule.resourceMetadata['Properties'].ToPort === configIngressRule.to) {
-                toPort = true;
-              }
-            } else {
-              if (
-                existingIngressRule.resourceMetadata['Properties'].FromPort &&
-                existingIngressRule.resourceMetadata['Properties'].FromPort === configIngressRule.from
-              ) {
-                fromPort = true;
-              }
-              if (
-                existingIngressRule.resourceMetadata['Properties'].ToPort &&
-                existingIngressRule.resourceMetadata['Properties'].ToPort === configIngressRule.to
-              ) {
-                toPort = true;
-              }
-            }
-            if (
-              existingIngressRule.resourceMetadata['Properties'].CidrIp &&
-              existingIngressRule.resourceMetadata['Properties'].CidrIp === configIngressRule.sourceValue
-            ) {
-              cidrIp = true;
-            }
-            if (
-              existingIngressRule.resourceMetadata['Properties'].SourceSecurityGroupId &&
-              existingIngressRule.resourceMetadata['Properties'].SourceSecurityGroupId.Ref ===
-                configIngressRule.sourceValue
-            ) {
-              sourceSecurityGroupId = true;
-            }
-            if (ipProtocol && fromPort && toPort && (cidrIp || sourceSecurityGroupId)) {
-              existingIngressRuleEntry = true;
-              break;
-            }
-          }
-
-          // If Ingress Rule already Exists, add to ASEA resources file and continue
-          // The ASEA resource lookup for ingress rules is not currently utilized, and is handled below.
-          if (existingIngressRuleEntry) {
-            this.scope.addAseaResource(
-              AseaResourceType.EC2_SECURITY_GROUP_INGRESS,
-              `${vpcItem.name}/${securityGroupItem.name}/ingress/${configIngressRule.source}-${configIngressRule.from}-${configIngressRule.to}-${configIngressRule.protocol}`,
-            );
-          }
-          // Else it is a new rule so needs to be updated on existing sg
-          // LogicalId was already set as Security Group Logical Id above
-          else {
-            //Based off of the source, we need to identify if the source is prefix-list, cidrIpv4 cidrIpv6, or security-group
-            //This is an example object where source would come from.
-            /*
-              {
-                protocol: '-1',
-                type: 'ALL',
-                source: 'Mgmt_sg',
-                sourceValue: 'DevSecurityGroupsDevMgmtCCDE5A61'
-              }
-            */
-            // Tried If Ingress Rule doesn't already exist, take LZA attributes and cast them to IngressProperty object, then push. Have to create new object bc IngressProperty type is read only.
-            if (configIngressRule.type !== 'ALL') {
-              const existingIngressRuleToBeUpdated: CfnSecurityGroup.IngressProperty = {
-                ipProtocol: configIngressRule.protocol,
-                description: configIngressRule.description,
-                fromPort: configIngressRule.from,
-                toPort: configIngressRule.to,
-              };
-              existingIngressRulesToBeUpdated.push(existingIngressRuleToBeUpdated);
-            }
-            if (configIngressRule.sourceType === 'sg') {
-              const existingIngressRuleToBeUpdated: CfnSecurityGroup.IngressProperty = {
-                ipProtocol: configIngressRule.protocol,
-                description: configIngressRule.description,
-                sourceSecurityGroupId: securityGroupPhysicalIdMap.get(configIngressRule.source)!,
-              };
-              existingIngressRulesToBeUpdated.push(existingIngressRuleToBeUpdated);
-            }
-
-            if (configIngressRule.sourceType === 'pl') {
-              const existingIngressRuleToBeUpdated: CfnSecurityGroup.IngressProperty = {
-                ipProtocol: configIngressRule.protocol,
-                description: configIngressRule.description,
-                sourcePrefixListId: configIngressRule.source,
-              };
-              existingIngressRulesToBeUpdated.push(existingIngressRuleToBeUpdated);
-            }
-            if (configIngressRule.sourceType === 'subnet') {
-              const existingIngressRuleToBeUpdated: CfnSecurityGroup.IngressProperty = {
-                ipProtocol: configIngressRule.protocol,
-                description: configIngressRule.description,
-                cidrIp: configIngressRule.sourceValue,
-                fromPort: configIngressRule.from,
-                toPort: configIngressRule.to,
-              };
-              existingIngressRulesToBeUpdated.push(existingIngressRuleToBeUpdated);
-            }
-            const sourceCidrType = this.checkCidrFromSource(configIngressRule.source);
-
-            if (sourceCidrType === 'cidrIpv4') {
-              const existingIngressRuleToBeUpdated: CfnSecurityGroup.IngressProperty = {
-                ipProtocol: configIngressRule.protocol,
-                description: configIngressRule.description,
-                cidrIp: configIngressRule.source,
-                fromPort: configIngressRule.from,
-                toPort: configIngressRule.to,
-              };
-              existingIngressRulesToBeUpdated.push(existingIngressRuleToBeUpdated);
-            }
-
-            if (sourceCidrType === 'cidrIpv6') {
-              const existingIngressRuleToBeUpdated: CfnSecurityGroup.IngressProperty = {
-                ipProtocol: configIngressRule.protocol,
-                description: configIngressRule.description,
-                cidrIpv6: configIngressRule.source,
-                fromPort: configIngressRule.from,
-                toPort: configIngressRule.to,
-              };
-              existingIngressRulesToBeUpdated.push(existingIngressRuleToBeUpdated);
-            }
-          }
-        });
-
-        if (existingIngressRulesToBeUpdated && existingIngressRulesToBeUpdated.length > 0) {
-          const securityGroup = vpcStack.getResource(logicalId) as CfnSecurityGroup;
-          console.log('Updating Ingress rules on SG:', securityGroup.groupName);
-          console.log('Pushing on rule(s):', existingIngressRulesToBeUpdated);
-          if (securityGroup) {
-            securityGroup.securityGroupIngress = existingIngressRulesToBeUpdated;
-          }
-        }
-
-        securityGroupEgressRules.forEach(configEgressRule => {
-          const existingEgressRuleEntry = egressRules.find(
-            existingEgressRule =>
-              ((existingEgressRule.resourceMetadata['Properties'].IpProtocol &&
-                existingEgressRule.resourceMetadata['Properties'].IpProtocol === configEgressRule.protocol) ||
-                true) &&
-              ((existingEgressRule.resourceMetadata['Properties'].FromPort &&
-                existingEgressRule.resourceMetadata['Properties'].FromPort === configEgressRule.from) ||
-                true) &&
-              ((existingEgressRule.resourceMetadata['Properties'].ToPort &&
-                existingEgressRule.resourceMetadata['Properties'].ToPort === configEgressRule.to) ||
-                true) &&
-              ((existingEgressRule.resourceMetadata['Properties'].CidrIp &&
-                existingEgressRule.resourceMetadata['Properties'].CidrIp === configEgressRule.sourceValue) ||
-                true) &&
-              ((existingEgressRule.resourceMetadata['Properties'].SourceSecurityGroupId &&
-                existingEgressRule.resourceMetadata['Properties'].SourceSecurityGroupId.Ref ===
-                  configEgressRule.sourceValue) ||
-                true),
-          );
-          // Updated to existing egress is not handled here.
-          if (existingEgressRuleEntry)
-            this.scope.addAseaResource(
-              AseaResourceType.EC2_SECURITY_GROUP_EGRESS,
-              `${vpcItem.name}/${securityGroupItem.name}/egress/${configEgressRule.source}-${configEgressRule.from}-${configEgressRule.to}-${configEgressRule.protocol}`,
-            );
-        });
+      } else {
+        const defaultRuleProps = {
+          protocol: cdk.aws_ec2.Protocol.TCP,
+          type: ruleType,
+          from: TCP_PROTOCOLS_PORT[ruleType],
+          to: TCP_PROTOCOLS_PORT[ruleType],
+        };
+        securityGroupRules.push(
+          ...this.processSecurityGroupSources(securityGroupRuleItem, defaultRuleProps, securityGroupsMap),
+        );
       }
     }
+    return securityGroupRules;
+  };
+
+  private processUdpSources = (
+    securityGroupRuleItem: SecurityGroupRuleConfig,
+    securityGroupsMap: Map<string, string>,
+  ) => {
+    const securityGroupRules: SecurityGroupRuleInfo[] = [];
+    for (const tcpPort of securityGroupRuleItem.udpPorts ?? []) {
+      const defaultRuleProps = {
+        protocol: cdk.aws_ec2.Protocol.UDP,
+        from: tcpPort,
+        to: tcpPort,
+      };
+      securityGroupRules.push(
+        ...this.processSecurityGroupSources(securityGroupRuleItem, defaultRuleProps, securityGroupsMap),
+      );
+    }
+    return securityGroupRules;
+  };
+
+  private processTcpSources = (
+    securityGroupRuleItem: SecurityGroupRuleConfig,
+    securityGroupsMap: Map<string, string>,
+  ) => {
+    const securityGroupRules: SecurityGroupRuleInfo[] = [];
+    for (const tcpPort of securityGroupRuleItem.tcpPorts ?? []) {
+      const defaultRuleProps = {
+        protocol: cdk.aws_ec2.Protocol.TCP,
+        from: tcpPort,
+        to: tcpPort,
+      };
+      securityGroupRules.push(
+        ...this.processSecurityGroupSources(securityGroupRuleItem, defaultRuleProps, securityGroupsMap),
+      );
+    }
+    return securityGroupRules;
+  };
+
+  private updateSecurityGroupIngressRules(
+    securityGroupLzaConfigIngressRules: SecurityGroupRuleInfo[],
+    securityGroupPhysicalIdMap: Map<string, string>,
+    securityGroup: cdk.aws_ec2.CfnSecurityGroup,
+  ) {
+    let existingIngressRulesToBeUpdated: CfnSecurityGroup.IngressProperty[] = [];
+    existingIngressRulesToBeUpdated = this.mapConfigRulesToIngressProperties(
+      securityGroupLzaConfigIngressRules,
+      securityGroupPhysicalIdMap,
+    );
+
+    if (existingIngressRulesToBeUpdated && existingIngressRulesToBeUpdated.length > 0) {
+      console.log('Updating Ingress rules on SG:', securityGroup.groupName);
+      console.log('Pushing on rule(s):', existingIngressRulesToBeUpdated);
+      if (securityGroup) {
+        securityGroup.securityGroupIngress = existingIngressRulesToBeUpdated;
+      }
+    }
+    return securityGroup;
+  }
+
+  private updateSecurityGroupEgressRules(
+    securityGroupLzaConfigEgressRules: SecurityGroupRuleInfo[],
+    securityGroupPhysicalIdMap: Map<string, string>,
+    securityGroup: cdk.aws_ec2.CfnSecurityGroup,
+  ) {
+    let existingEgressRulesToBeUpdated: CfnSecurityGroup.EgressProperty[] = [];
+    existingEgressRulesToBeUpdated = this.mapConfigRulesToEgressProperties(
+      securityGroupLzaConfigEgressRules,
+      securityGroupPhysicalIdMap,
+    );
+
+    if (existingEgressRulesToBeUpdated && existingEgressRulesToBeUpdated.length > 0) {
+      console.log('Updating Egress rules on SG:', securityGroup.groupName);
+      console.log('Pushing on rule(s):', existingEgressRulesToBeUpdated);
+      if (securityGroup) {
+        securityGroup.securityGroupEgress = existingEgressRulesToBeUpdated;
+      }
+    }
+    return securityGroup;
+  }
+
+  private mapConfigRulesToEgressProperties(
+    securityGroupLzaConfigRules: SecurityGroupRuleInfo[],
+    securityGroupPhysicalIdMap: Map<string, string>,
+  ) {
+    const existingEgressRulesToBeUpdated: CfnSecurityGroup.IngressProperty[] = [];
+    securityGroupLzaConfigRules.forEach(configEgressRule => {
+      if (configEgressRule.type !== 'ALL') {
+        const existingEgressRuleToBeUpdated: CfnSecurityGroup.EgressProperty = {
+          ipProtocol: configEgressRule.protocol,
+          description: configEgressRule.description,
+          fromPort: configEgressRule.from,
+          toPort: configEgressRule.to,
+        };
+        existingEgressRulesToBeUpdated.push(existingEgressRuleToBeUpdated);
+      }
+      if (configEgressRule.sourceType === 'sg') {
+        const existingEgressRuleToBeUpdated: CfnSecurityGroup.EgressProperty = {
+          ipProtocol: configEgressRule.protocol,
+          description: configEgressRule.description,
+          destinationSecurityGroupId: securityGroupPhysicalIdMap.get(configEgressRule.source)!,
+          fromPort: configEgressRule.from,
+          toPort: configEgressRule.to,
+        };
+        existingEgressRulesToBeUpdated.push(existingEgressRuleToBeUpdated);
+      }
+
+      if (configEgressRule.sourceType === 'pl') {
+        const existingEgressRuleToBeUpdated: CfnSecurityGroup.EgressProperty = {
+          ipProtocol: configEgressRule.protocol,
+          description: configEgressRule.description,
+          destinationPrefixListId: configEgressRule.source,
+        };
+        existingEgressRulesToBeUpdated.push(existingEgressRuleToBeUpdated);
+      }
+      if (configEgressRule.sourceType === 'subnet') {
+        const existingEgressRuleToBeUpdated: CfnSecurityGroup.EgressProperty = {
+          ipProtocol: configEgressRule.protocol,
+          description: configEgressRule.description,
+          cidrIp: configEgressRule.sourceValue,
+          fromPort: configEgressRule.from,
+          toPort: configEgressRule.to,
+        };
+        existingEgressRulesToBeUpdated.push(existingEgressRuleToBeUpdated);
+      }
+      const sourceCidrType = this.checkCidrFromSource(configEgressRule.source);
+
+      if (sourceCidrType === 'cidrIpv4') {
+        const existingEgressRuleToBeUpdated: CfnSecurityGroup.EgressProperty = {
+          ipProtocol: configEgressRule.protocol,
+          description: configEgressRule.description,
+          cidrIp: configEgressRule.source,
+          fromPort: configEgressRule.from,
+          toPort: configEgressRule.to,
+        };
+        existingEgressRulesToBeUpdated.push(existingEgressRuleToBeUpdated);
+      }
+
+      if (sourceCidrType === 'cidrIpv6') {
+        const existingEgressRuleToBeUpdated: CfnSecurityGroup.EgressProperty = {
+          ipProtocol: configEgressRule.protocol,
+          description: configEgressRule.description,
+          cidrIpv6: configEgressRule.source,
+          fromPort: configEgressRule.from,
+          toPort: configEgressRule.to,
+        };
+        existingEgressRulesToBeUpdated.push(existingEgressRuleToBeUpdated);
+      }
+    });
+    return existingEgressRulesToBeUpdated;
+  }
+
+  private mapConfigRulesToIngressProperties(
+    securityGroupLzaConfigIngressRules: SecurityGroupRuleInfo[],
+    securityGroupPhysicalIdMap: Map<string, string>,
+  ) {
+    const existingIngressRulesToBeUpdated: CfnSecurityGroup.IngressProperty[] = [];
+    securityGroupLzaConfigIngressRules.forEach(configIngressRule => {
+      if (configIngressRule.type !== 'ALL') {
+        const existingIngressRuleToBeUpdated: CfnSecurityGroup.IngressProperty = {
+          ipProtocol: configIngressRule.protocol,
+          description: configIngressRule.description,
+          fromPort: configIngressRule.from,
+          toPort: configIngressRule.to,
+        };
+        existingIngressRulesToBeUpdated.push(existingIngressRuleToBeUpdated);
+      }
+      if (configIngressRule.sourceType === 'sg') {
+        const existingIngressRuleToBeUpdated: CfnSecurityGroup.IngressProperty = {
+          ipProtocol: configIngressRule.protocol,
+          description: configIngressRule.description,
+          sourceSecurityGroupId: securityGroupPhysicalIdMap.get(configIngressRule.source)!,
+          fromPort: configIngressRule.from,
+          toPort: configIngressRule.to,
+        };
+        existingIngressRulesToBeUpdated.push(existingIngressRuleToBeUpdated);
+      }
+
+      if (configIngressRule.sourceType === 'pl') {
+        const existingIngressRuleToBeUpdated: CfnSecurityGroup.IngressProperty = {
+          ipProtocol: configIngressRule.protocol,
+          description: configIngressRule.description,
+          sourcePrefixListId: configIngressRule.source,
+        };
+        existingIngressRulesToBeUpdated.push(existingIngressRuleToBeUpdated);
+      }
+      if (configIngressRule.sourceType === 'subnet') {
+        const existingIngressRuleToBeUpdated: CfnSecurityGroup.IngressProperty = {
+          ipProtocol: configIngressRule.protocol,
+          description: configIngressRule.description,
+          cidrIp: configIngressRule.sourceValue,
+          fromPort: configIngressRule.from,
+          toPort: configIngressRule.to,
+        };
+        existingIngressRulesToBeUpdated.push(existingIngressRuleToBeUpdated);
+      }
+      const sourceCidrType = this.checkCidrFromSource(configIngressRule.source);
+
+      if (sourceCidrType === 'cidrIpv4') {
+        const existingIngressRuleToBeUpdated: CfnSecurityGroup.IngressProperty = {
+          ipProtocol: configIngressRule.protocol,
+          description: configIngressRule.description,
+          cidrIp: configIngressRule.source,
+          fromPort: configIngressRule.from,
+          toPort: configIngressRule.to,
+        };
+        existingIngressRulesToBeUpdated.push(existingIngressRuleToBeUpdated);
+      }
+
+      if (sourceCidrType === 'cidrIpv6') {
+        const existingIngressRuleToBeUpdated: CfnSecurityGroup.IngressProperty = {
+          ipProtocol: configIngressRule.protocol,
+          description: configIngressRule.description,
+          cidrIpv6: configIngressRule.source,
+          fromPort: configIngressRule.from,
+          toPort: configIngressRule.to,
+        };
+        existingIngressRulesToBeUpdated.push(existingIngressRuleToBeUpdated);
+      }
+    });
+    return existingIngressRulesToBeUpdated;
   }
 
   private checkCidrFromSource(source: string) {
