@@ -89,17 +89,17 @@ export class OperationsStack extends AcceleratorStack {
   /**
    * KMS Key used to encrypt CloudWatch logs
    */
-  private cloudwatchKey: cdk.aws_kms.Key;
+  private cloudwatchKey: cdk.aws_kms.IKey;
 
   /**
-   * KMS Key used to encrypt custom resource lambda environment variables
+   * KMS Key used to encrypt custom resource lambda environment variables, when undefined default AWS managed key will be used
    */
-  private lambdaKey: cdk.aws_kms.Key;
+  private lambdaKey: cdk.aws_kms.IKey | undefined;
 
   /**
    * KMS Key for central S3 Bucket
    */
-  private centralLogsBucketKey: cdk.aws_kms.Key;
+  private centralLogsBucketKey: cdk.aws_kms.IKey;
 
   /**
    * Constructor for OperationsStack
@@ -111,7 +111,7 @@ export class OperationsStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: OperationsStackProps) {
     super(scope, id, props);
 
-    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
+    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY)!;
     this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
     this.centralLogsBucketKey = this.getCentralLogsBucketKey(this.cloudwatchKey);
 

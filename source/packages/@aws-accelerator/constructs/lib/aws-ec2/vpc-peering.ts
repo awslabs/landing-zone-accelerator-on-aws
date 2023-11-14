@@ -86,7 +86,7 @@ abstract class VpcPeeringBase extends cdk.Resource implements IVpcPeering {
     routeTableId: string,
     destination?: string,
     destinationPrefixListId?: string,
-    logGroupKmsKey?: cdk.aws_kms.Key,
+    logGroupKmsKey?: cdk.aws_kms.IKey,
     logRetentionInDays?: number,
   ): void {
     if (destinationPrefixListId) {

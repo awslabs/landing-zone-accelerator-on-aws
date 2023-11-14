@@ -56,7 +56,7 @@ export interface QueryLoggingConfigProps {
   /**
    * Custom resource lambda log group encryption key
    */
-  readonly kmsKey: cdk.aws_kms.Key;
+  readonly kmsKey: cdk.aws_kms.IKey;
   /**
    * Custom resource lambda log retention in days
    */
@@ -69,7 +69,7 @@ export class QueryLoggingConfig extends cdk.Resource implements IQueryLoggingCon
   public readonly name: string;
   private destinationArn: string;
   private logRetentionInDays: number;
-  private kmsKey: cdk.aws_kms.Key;
+  private kmsKey: cdk.aws_kms.IKey;
 
   constructor(scope: Construct, id: string, props: QueryLoggingConfigProps) {
     super(scope, id);
@@ -249,7 +249,7 @@ export interface QueryLoggingConfigAssociationProps {
   /**
    * Custom resource lambda log group encryption key
    */
-  readonly kmsKey: cdk.aws_kms.Key;
+  readonly kmsKey: cdk.aws_kms.IKey;
   /**
    * Custom resource lambda log retention in days
    */
@@ -260,7 +260,7 @@ export class QueryLoggingConfigAssociation extends cdk.Resource {
   private vpcId: string | undefined;
   private resolverQueryLogConfigId: string | undefined;
   private logRetentionInDays: number;
-  private kmsKey: cdk.aws_kms.Key;
+  private kmsKey: cdk.aws_kms.IKey;
 
   constructor(scope: Construct, id: string, props: QueryLoggingConfigAssociationProps) {
     super(scope, id);

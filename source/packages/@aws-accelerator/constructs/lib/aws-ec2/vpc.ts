@@ -70,7 +70,7 @@ export interface SubnetProps {
   readonly basePool?: string[];
   readonly ipamAllocation?: IpamAllocationConfig;
   readonly ipv4CidrBlock?: string;
-  readonly kmsKey?: cdk.aws_kms.Key;
+  readonly kmsKey?: cdk.aws_kms.IKey;
   readonly logRetentionInDays?: number;
   readonly tags?: cdk.CfnTag[];
   readonly outpost?: OutpostsConfig;
@@ -933,7 +933,7 @@ export interface DeleteDefaultSecurityGroupRulesProps {
   /**
    * Custom resource lambda log group encryption key
    */
-  readonly kmsKey: cdk.aws_kms.Key;
+  readonly kmsKey: cdk.aws_kms.IKey;
   /**
    * Custom resource lambda log retention in days
    */

@@ -252,6 +252,15 @@ export abstract class GlobalConfigTypes {
     maxConcurrentStacks: t.optional(t.number),
   });
 
+  static readonly serviceEncryptionConfig = t.type({
+    useCMK: t.boolean,
+    deploymentTargets: t.optional(t.deploymentTargets),
+  });
+
+  static readonly lambdaConfig = t.type({
+    encryption: this.serviceEncryptionConfig,
+  });
+
   static readonly globalConfig = t.interface({
     homeRegion: t.nonEmptyString,
     enabledRegions: t.array(t.region),
@@ -272,6 +281,7 @@ export abstract class GlobalConfigTypes {
     limits: t.optional(t.array(this.serviceQuotaLimitsConfig)),
     acceleratorMetadata: t.optional(GlobalConfigTypes.acceleratorMetadataConfig),
     acceleratorSettings: t.optional(GlobalConfigTypes.acceleratorSettingsConfig),
+    lambda: t.optional(GlobalConfigTypes.lambdaConfig),
   });
 }
 
@@ -351,6 +361,62 @@ export abstract class ControlTowerControlConfig
  *   importExternalLandingZoneResources: true
  * ```
  */
+
+/**
+ * *{@link GlobalConfig} / {@link ServiceEncryptionConfig}*
+ *
+ * AWS service encryption configuration settings
+ *
+ * @example
+ * ```
+ *  encryption:
+ *    useCMK: true
+ *    deploymentTargets:
+ *      organizationalUnits:
+ *        - Root
+ * ```
+ */
+export class ServiceEncryptionConfig implements t.TypeOf<typeof GlobalConfigTypes.serviceEncryptionConfig> {
+  /**
+   * Flag indicates whether Accelerator deployed AWS Service will use AWS KMS CMK for encryption or Service managed KMS.
+   *
+   * @remarks
+   * When set to `true`, the solution will create AWS KMS CMK which will be used by the service for encryption. Example, when flag set to `true` for AWS Lambda service, the solution will create AWS KMS CMK to encrypt lambda function environment variables, otherwise AWS managed key will be used for environment variables encryption.
+   *
+   * @default false
+   */
+  readonly useCMK: boolean = false;
+  /**
+   * To control target environments (AWS Account and Region) for the given `useCMK` setting, you may optionally specify deployment targets.
+   * Leaving `deploymentTargets` undefined will apply `useCMK` setting to all accounts and enabled regions.
+   */
+  readonly deploymentTargets: t.DeploymentTargets | undefined = undefined;
+}
+
+/**
+ * *{@link GlobalConfig} / {@link lambdaConfig}*
+ *
+ * Lambda Function configuration settings
+ *
+ * @example
+ * ```
+ *   encryption:
+ *    useCMK: true
+ *    deploymentTargets:
+ *      organizationalUnits:
+ *        - Root
+ * ```
+ */
+export class LambdaConfig implements t.TypeOf<typeof GlobalConfigTypes.lambdaConfig> {
+  /**
+   * Encryption setting for AWS Lambda environment variables.
+   *
+   * @remarks
+   *  For more information please refer {@link ServiceEncryptionConfig}
+   */
+  readonly encryption = new ServiceEncryptionConfig();
+}
+
 export class externalLandingZoneResourcesConfig
   implements t.TypeOf<typeof GlobalConfigTypes.externalLandingZoneResourcesConfig>
 {
@@ -2101,6 +2167,27 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    */
 
   iamRoleSsmParameters: { account: string; region: string; parametersByPath: { [key: string]: string } }[] = [];
+
+  /**
+   * AWS Lambda Function environment variables encryption configuration options.
+   *
+   * @remarks
+   * You can decide to use AWS KMS CMK or AWS managed key for Lambda function environment variables encryption. When this property is undefined, the solution will deploy AWS KMS CMK to encrypt function environment variables.
+   * You can use `deploymentTargets` to control target accounts and regions for the given `useCMK` configuration.
+   *
+   *  For more information please see [here](https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html#configuration-envvars-encryption)
+   *
+   * @example
+   * ```
+   * lambda:
+   *   encryption:
+   *    useCMK: true
+   *    deploymentTargets:
+   *      organizationalUnits:
+   *        - Root
+   * ```
+   */
+  readonly lambda: LambdaConfig | undefined = undefined;
 
   /**
    *

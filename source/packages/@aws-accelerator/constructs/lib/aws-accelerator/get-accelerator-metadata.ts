@@ -57,7 +57,7 @@ export interface AcceleratorMetadataProps {
   /**
    * Custom resource lambda log group encryption key
    */
-  readonly cloudwatchKmsKey: cdk.aws_kms.Key;
+  readonly cloudwatchKmsKey: cdk.aws_kms.IKey;
   /**
    * Custom resource lambda log retention in days
    */
@@ -203,7 +203,7 @@ export class AcceleratorMetadata extends Construct {
   private setCloudwatchLogGroup(
     stack: cdk.Stack,
     lambdaFunctionName: string,
-    kmsKey: cdk.aws_kms.Key,
+    kmsKey: cdk.aws_kms.IKey,
     retention: number,
   ) {
     return new cdk.aws_logs.LogGroup(stack, `${lambdaFunctionName}LogGroup`, {

@@ -108,7 +108,7 @@ export abstract class NetworkStack extends AcceleratorStack {
   /**
    * Cloudwatch KMS key
    */
-  public readonly cloudwatchKey: cdk.aws_kms.Key;
+  public readonly cloudwatchKey: cdk.aws_kms.IKey;
   /**
    * Flag to determine if there is an advanced VPN in scope of the current stack context
    */
@@ -118,9 +118,9 @@ export abstract class NetworkStack extends AcceleratorStack {
    */
   public readonly advancedVpnTypes: string[] = [];
   /**
-   * KMS Key used to encrypt custom resource lambda environment variables
+   * KMS Key used to encrypt custom resource lambda environment variables, when undefined default AWS managed key will be used
    */
-  public readonly lambdaKey: cdk.aws_kms.Key;
+  public readonly lambdaKey: cdk.aws_kms.IKey | undefined;
   /**
    * Global CloudWatch logs retention setting
    */
@@ -159,7 +159,7 @@ export abstract class NetworkStack extends AcceleratorStack {
     this.vpcsInScope = this.getVpcsInScope(this.vpcResources);
     this.tgwsInScope = this.getTgwsInScope(props.networkConfig.transitGateways);
 
-    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
+    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY)!;
     this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
   }
 
@@ -601,7 +601,7 @@ export abstract class NetworkStack extends AcceleratorStack {
     resourceShareName: string,
     itemType: string,
     owningAccountId: string,
-    kmsKey: cdk.aws_kms.Key,
+    kmsKey: cdk.aws_kms.IKey,
     vpcName?: string,
   ): IResourceShareItem {
     // Generate a logical ID

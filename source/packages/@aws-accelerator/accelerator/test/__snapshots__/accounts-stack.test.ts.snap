@@ -2065,64 +2065,6 @@ exports[`AccountsStack us-west-2 Construct(AccountsStackUsWest2):  Snapshot Test
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "AcceleratorLambdaKeyAlias4E15225B": {
-      "Properties": {
-        "AliasName": "alias/accelerator/kms/lambda/key",
-        "TargetKeyId": {
-          "Fn::GetAtt": [
-            "AcceleratorLambdaKeyD279839E",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::KMS::Alias",
-    },
-    "AcceleratorLambdaKeyD279839E": {
-      "DeletionPolicy": "Retain",
-      "Properties": {
-        "Description": "AWS Accelerator Lambda Kms Key",
-        "EnableKeyRotation": true,
-        "KeyPolicy": {
-          "Statement": [
-            {
-              "Action": "kms:*",
-              "Effect": "Allow",
-              "Principal": {
-                "AWS": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:",
-                      {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::111111111111:root",
-                    ],
-                  ],
-                },
-              },
-              "Resource": "*",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::KMS::Key",
-      "UpdateReplacePolicy": "Retain",
-    },
-    "AcceleratorLambdaKmsArnParameterFECEE80C": {
-      "Properties": {
-        "Name": "/accelerator/kms/lambda/key-arn",
-        "Type": "String",
-        "Value": {
-          "Fn::GetAtt": [
-            "AcceleratorLambdaKeyD279839E",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
     "SsmParamAcceleratorVersionFF83282D": {
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-AccountsStack-111111111111-us-west-2/version",

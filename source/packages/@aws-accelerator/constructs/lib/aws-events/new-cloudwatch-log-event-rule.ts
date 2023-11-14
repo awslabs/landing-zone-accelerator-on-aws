@@ -33,9 +33,9 @@ export interface NewCloudWatchLogsEventProps {
   logDestinationArn: string;
   /**
    *
-   * KMS key to encrypt the Lambda environment variables
+   * KMS key to encrypt the Lambda environment variables, when undefined default AWS managed key will be used
    */
-  lambdaEnvKey: cdk.aws_kms.IKey;
+  lambdaEnvKey?: cdk.aws_kms.IKey;
   /**
    *
    * KMS key to encrypt the Lambda environment variables

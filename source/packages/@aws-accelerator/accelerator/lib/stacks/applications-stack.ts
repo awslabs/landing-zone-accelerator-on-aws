@@ -128,9 +128,9 @@ export class ApplicationsStack extends AcceleratorStack {
     // Set initial private properties
     [this.securityGroupMap, this.subnetMap, this.vpcMap] = this.setInitialMaps(allVpcItems, allAppConfigs);
 
-    const lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY) as cdk.aws_kms.Key;
+    const lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
 
-    const cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY) as cdk.aws_kms.Key;
+    const cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY)!;
 
     //Create application config resources
     this.createApplicationConfigResources(
@@ -139,8 +139,8 @@ export class ApplicationsStack extends AcceleratorStack {
       props.configDirPath,
       allVpcItems,
       elbLogsBucketName,
-      lambdaKey,
       { key: cloudwatchKey, logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays },
+      lambdaKey,
     );
 
     // Create SSM parameters
@@ -240,8 +240,8 @@ export class ApplicationsStack extends AcceleratorStack {
     configDirPath: string,
     allVpcItems: (VpcConfig | VpcTemplatesConfig)[],
     accessLogsBucket: string,
-    lambdaKey: cdk.aws_kms.IKey,
     cloudwatch: { key: cdk.aws_kms.IKey; logRetentionInDays: number },
+    lambdaKey?: cdk.aws_kms.IKey,
   ) {
     for (const vpcItem of allVpcItems) {
       if (vpcItem.name === appConfigItem.vpc) {
@@ -298,8 +298,8 @@ export class ApplicationsStack extends AcceleratorStack {
               targetGroups,
               lt,
               maps.subnetMap,
-              lambdaKey,
               { key: cloudwatch.key, logRetentionInDays: cloudwatch.logRetentionInDays },
+              lambdaKey,
             );
           }
         }
@@ -449,8 +449,8 @@ export class ApplicationsStack extends AcceleratorStack {
     targetGroupsInput: TargetGroupItem[] | undefined,
     lt: LaunchTemplate,
     subnetMap: Map<string, string>,
-    lambdaKey: cdk.aws_kms.IKey,
     cloudwatch: { key: cdk.aws_kms.IKey; logRetentionInDays: number },
+    lambdaKey?: cdk.aws_kms.IKey,
   ) {
     let finalTargetGroupArns: string[] = [];
     // if input array is provided filter out targetGroup based on name

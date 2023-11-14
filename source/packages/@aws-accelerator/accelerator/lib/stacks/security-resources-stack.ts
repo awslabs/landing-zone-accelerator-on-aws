@@ -62,9 +62,9 @@ type CustomConfigRuleType = cdk.aws_config.ManagedRule | cdk.aws_config.CustomRu
  * Security Stack, configures local account security services
  */
 export class SecurityResourcesStack extends AcceleratorStack {
-  readonly centralLogsBucketKey: cdk.aws_kms.Key;
+  readonly centralLogsBucketKey: cdk.aws_kms.IKey;
   readonly cloudwatchKey: cdk.aws_kms.IKey;
-  readonly lambdaKey: cdk.aws_kms.IKey;
+  readonly lambdaKey: cdk.aws_kms.IKey | undefined;
   readonly auditAccountId: string;
   readonly logArchiveAccountId: string;
   readonly stackProperties: AcceleratorStackProps;
@@ -84,7 +84,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
     this.auditAccountId = props.accountsConfig.getAuditAccountId();
     this.logArchiveAccountId = props.accountsConfig.getLogArchiveAccountId();
 
-    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
+    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY)!;
     this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
     this.centralLogsBucketKey = this.getCentralLogsBucketKey(this.cloudwatchKey);
 

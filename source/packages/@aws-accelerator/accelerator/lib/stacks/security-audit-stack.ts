@@ -45,16 +45,16 @@ import {
 import { SnsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 
 export class SecurityAuditStack extends AcceleratorStack {
-  private readonly s3Key: cdk.aws_kms.Key;
-  private readonly cloudwatchKey: cdk.aws_kms.Key;
-  private readonly centralLogsBucketKey: cdk.aws_kms.Key;
+  private readonly s3Key: cdk.aws_kms.IKey;
+  private readonly cloudwatchKey: cdk.aws_kms.IKey;
+  private readonly centralLogsBucketKey: cdk.aws_kms.IKey;
   private readonly replicationProps: BucketReplicationProps;
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
-    this.s3Key = this.getAcceleratorKey(AcceleratorKeyType.S3_KEY);
-    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
+    this.s3Key = this.getAcceleratorKey(AcceleratorKeyType.S3_KEY)!;
+    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY)!;
     this.centralLogsBucketKey = this.getCentralLogsBucketKey(this.cloudwatchKey);
 
     this.replicationProps = {

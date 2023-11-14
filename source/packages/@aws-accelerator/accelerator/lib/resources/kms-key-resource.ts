@@ -16,8 +16,8 @@ export class KmsKeyResource {
   private stack: AcceleratorStack;
 
   readonly props: AcceleratorStackProps;
-  readonly cloudwatchKey: cdk.aws_kms.Key;
-  readonly lambdaKey: cdk.aws_kms.Key;
+  readonly cloudwatchKey: cdk.aws_kms.IKey;
+  readonly lambdaKey: cdk.aws_kms.IKey | undefined;
 
   constructor(stack: AcceleratorStack, props: AcceleratorStackProps) {
     this.stack = stack;
@@ -43,9 +43,9 @@ export class KmsKeyResource {
    * Use existing management account CloudWatch log key if in the home region otherwise create new kms key.
    * CloudWatch key was created in management account region by prepare stack.
    */
-  private createOrGetCloudWatchKey(props: AcceleratorStackProps): cdk.aws_kms.Key {
+  private createOrGetCloudWatchKey(props: AcceleratorStackProps): cdk.aws_kms.IKey {
     if (props.globalConfig.homeRegion == cdk.Stack.of(this.stack).region) {
-      return this.stack.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
+      return this.stack.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY)!;
     } else {
       const key = new cdk.aws_kms.Key(this.stack, 'AcceleratorCloudWatchKey', {
         alias: this.stack.acceleratorResourceNames.customerManagedKeys.cloudWatchLog.alias,
@@ -94,7 +94,10 @@ export class KmsKeyResource {
    * Use existing management account Lambda log key if in the home region otherwise create new kms key.
    * Lambda key was created in management account region by prepare stack.
    */
-  private createOrGetLambdaKey(props: AcceleratorStackProps): cdk.aws_kms.Key {
+  private createOrGetLambdaKey(props: AcceleratorStackProps): cdk.aws_kms.IKey | undefined {
+    if (!this.stack.isLambdaCMKEnabled) {
+      return undefined;
+    }
     if (props.globalConfig.homeRegion == cdk.Stack.of(this.stack).region) {
       return this.stack.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
     } else {

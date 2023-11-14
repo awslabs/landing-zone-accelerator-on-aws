@@ -67,7 +67,7 @@ export interface BucketProps {
   /**
    * The kms key for bucket encryption.
    */
-  kmsKey?: kms.Key;
+  kmsKey?: kms.IKey;
   /**
    * The name of the alias.
    */
@@ -139,7 +139,7 @@ export class Bucket extends Construct {
    * which will be determined later based on other properties
    */
   private encryptionType: s3.BucketEncryption = s3.BucketEncryption.KMS;
-  private cmk?: kms.Key;
+  private cmk?: kms.IKey;
   private serverAccessLogsPrefix: string | undefined;
   private serverAccessLogBucket: cdk.aws_s3.IBucket | undefined;
   private lifecycleRules: cdk.aws_s3.LifecycleRule[] = [];
@@ -261,7 +261,7 @@ export class Bucket extends Construct {
     return this.bucket;
   }
 
-  public getKey(): kms.Key {
+  public getKey(): kms.IKey {
     if (this.cmk) {
       return this.cmk;
     } else {

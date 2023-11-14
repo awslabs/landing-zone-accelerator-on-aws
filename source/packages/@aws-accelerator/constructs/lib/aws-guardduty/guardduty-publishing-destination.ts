@@ -35,11 +35,11 @@ export interface GuardDutyPublishingDestinationProps {
   /**
    * Publishing destination bucket encryption key
    */
-  readonly destinationKmsKey: cdk.aws_kms.Key;
+  readonly destinationKmsKey: cdk.aws_kms.IKey;
   /**
    * Custom resource lambda log group encryption key
    */
-  readonly logKmsKey: cdk.aws_kms.Key;
+  readonly logKmsKey: cdk.aws_kms.IKey;
   /**
    * Custom resource lambda log retention in days
    */

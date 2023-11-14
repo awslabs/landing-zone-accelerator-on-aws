@@ -4232,12 +4232,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         },
         "Description": "Custom resource provider to create service linked role",
         "Handler": "index.handler",
-        "KmsKeyArn": {
-          "Fn::GetAtt": [
-            "AcceleratorLambdaKeyD279839E",
-            "Arn",
-          ],
-        },
         "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
@@ -4764,64 +4758,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       },
       "Type": "AWS::KMS::Alias",
     },
-    "AcceleratorLambdaKeyAlias4E15225B": {
-      "Properties": {
-        "AliasName": "alias/accelerator/kms/lambda/key",
-        "TargetKeyId": {
-          "Fn::GetAtt": [
-            "AcceleratorLambdaKeyD279839E",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::KMS::Alias",
-    },
-    "AcceleratorLambdaKeyD279839E": {
-      "DeletionPolicy": "Retain",
-      "Properties": {
-        "Description": "AWS Accelerator Lambda Kms Key",
-        "EnableKeyRotation": true,
-        "KeyPolicy": {
-          "Statement": [
-            {
-              "Action": "kms:*",
-              "Effect": "Allow",
-              "Principal": {
-                "AWS": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:",
-                      {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::333333333333:root",
-                    ],
-                  ],
-                },
-              },
-              "Resource": "*",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::KMS::Key",
-      "UpdateReplacePolicy": "Retain",
-    },
-    "AcceleratorLambdaKmsArnParameterFECEE80C": {
-      "Properties": {
-        "Name": "/accelerator/kms/lambda/key-arn",
-        "Type": "String",
-        "Value": {
-          "Fn::GetAtt": [
-            "AcceleratorLambdaKeyD279839E",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
     "AcceleratorS3KmsArnParameter82C4C525": {
       "Properties": {
         "Name": "/accelerator/kms/s3/key-arn",
@@ -4960,12 +4896,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         },
         "Description": "Custom resource provider to create service linked role",
         "Handler": "index.handler",
-        "KmsKeyArn": {
-          "Fn::GetAtt": [
-            "AcceleratorLambdaKeyD279839E",
-            "Arn",
-          ],
-        },
         "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
@@ -5612,12 +5542,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         },
         "FunctionName": "AWSAccelerator-FirehoseRecordsProcessor",
         "Handler": "index.handler",
-        "KmsKeyArn": {
-          "Fn::GetAtt": [
-            "AcceleratorLambdaKeyD279839E",
-            "Arn",
-          ],
-        },
         "MemorySize": 2048,
         "Role": {
           "Fn::GetAtt": [
@@ -6015,12 +5939,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         },
         "Description": "Accelerator deployed S3CreateBucketPrefix custom resource lambda function.",
         "Handler": "index.handler",
-        "KmsKeyArn": {
-          "Fn::GetAtt": [
-            "AcceleratorLambdaKeyD279839E",
-            "Arn",
-          ],
-        },
         "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
@@ -6323,12 +6241,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         },
         "Description": "Accelerator deployed BucketPolicy custom resource lambda function.",
         "Handler": "index.handler",
-        "KmsKeyArn": {
-          "Fn::GetAtt": [
-            "AcceleratorLambdaKeyD279839E",
-            "Arn",
-          ],
-        },
         "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
@@ -6607,12 +6519,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         },
         "Description": "Accelerator deployed BucketEncryption custom resource lambda function.",
         "Handler": "index.handler",
-        "KmsKeyArn": {
-          "Fn::GetAtt": [
-            "AcceleratorLambdaKeyD279839E",
-            "Arn",
-          ],
-        },
         "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
@@ -7126,12 +7032,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         },
         "Description": "Accelerator deployed BucketPolicy custom resource lambda function.",
         "Handler": "index.handler",
-        "KmsKeyArn": {
-          "Fn::GetAtt": [
-            "AcceleratorLambdaKeyD279839E",
-            "Arn",
-          ],
-        },
         "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
@@ -7428,12 +7328,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         },
         "Description": "Accelerator deployed BucketPolicy custom resource lambda function.",
         "Handler": "index.handler",
-        "KmsKeyArn": {
-          "Fn::GetAtt": [
-            "AcceleratorLambdaKeyD279839E",
-            "Arn",
-          ],
-        },
         "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
@@ -7985,12 +7879,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
           },
         },
         "Handler": "index.handler",
-        "KmsKeyArn": {
-          "Fn::GetAtt": [
-            "AcceleratorLambdaKeyD279839E",
-            "Arn",
-          ],
-        },
         "Role": {
           "Fn::GetAtt": [
             "NewCloudWatchLogsCreateEventSetLogRetentionSubscriptionFunctionServiceRoleF408E8D2",
@@ -8322,12 +8210,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         },
         "Description": "Accelerator deployed ValidateBucket custom resource lambda function.",
         "Handler": "index.handler",
-        "KmsKeyArn": {
-          "Fn::GetAtt": [
-            "AcceleratorLambdaKeyD279839E",
-            "Arn",
-          ],
-        },
         "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
@@ -8605,12 +8487,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         },
         "Description": "Accelerator deployed ValidateBucket custom resource lambda function.",
         "Handler": "index.handler",
-        "KmsKeyArn": {
-          "Fn::GetAtt": [
-            "AcceleratorLambdaKeyD279839E",
-            "Arn",
-          ],
-        },
         "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
@@ -8888,12 +8764,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         },
         "Description": "Accelerator deployed ValidateBucket custom resource lambda function.",
         "Handler": "index.handler",
-        "KmsKeyArn": {
-          "Fn::GetAtt": [
-            "AcceleratorLambdaKeyD279839E",
-            "Arn",
-          ],
-        },
         "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [

@@ -38,11 +38,11 @@ import { pascalCase } from 'pascal-case';
  * Security Stack, configures local account security services
  */
 export class SecurityStack extends AcceleratorStack {
-  readonly cloudwatchKey: cdk.aws_kms.Key;
+  readonly cloudwatchKey: cdk.aws_kms.IKey;
   readonly auditAccountId: string;
   readonly logArchiveAccountId: string;
   readonly auditAccountName: string;
-  readonly centralLogsBucketKey: cdk.aws_kms.Key;
+  readonly centralLogsBucketKey: cdk.aws_kms.IKey;
   readonly configAggregationAccountId: string;
   readonly metadataRule: AcceleratorMetadata | undefined;
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
@@ -60,7 +60,7 @@ export class SecurityStack extends AcceleratorStack {
         props.securityConfig.awsConfig.aggregation.delegatedAdminAccount,
       );
     }
-    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
+    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY)!;
     this.centralLogsBucketKey = this.getCentralLogsBucketKey(this.cloudwatchKey);
 
     //
@@ -418,7 +418,7 @@ export class SecurityStack extends AcceleratorStack {
     acceleratorProps: AcceleratorStackProps,
     centralLogBucketName: string,
     elbLogBucketName: string,
-    cloudwatchKmsKey: cdk.aws_kms.Key,
+    cloudwatchKmsKey: cdk.aws_kms.IKey,
   ): AcceleratorMetadata | undefined {
     const isManagementAccountAndHomeRegion =
       cdk.Stack.of(this).account === acceleratorProps.accountsConfig.getManagementAccountId() &&

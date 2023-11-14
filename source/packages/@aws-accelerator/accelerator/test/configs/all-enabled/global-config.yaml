@@ -45,6 +45,17 @@ snsTopics:
       emailAddresses:
         - <notify-security>@example.com <----- UPDATE EMAIL ADDRESS
 terminationProtection: true
+lambda:
+  encryption:
+    useCMK: true
+    deploymentTargets:
+      accounts:
+        - Management
+        - Network
+      organizationalUnits:
+        - Security
+      excludedRegions:
+        - us-west-2
 controlTower:
   enable: true
   controls:

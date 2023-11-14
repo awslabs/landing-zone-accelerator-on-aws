@@ -37,9 +37,9 @@ export interface ConfigServiceRecorderProps {
    */
   readonly logRetentionInDays: number;
   /**
-   * Lambda environment encryption key
+   * Lambda environment encryption key, when undefined default AWS managed key will be used
    */
-  readonly lambdaKmsKey: cdk.aws_kms.IKey;
+  readonly lambdaKmsKey?: cdk.aws_kms.IKey;
   /**
    * Partition
    */

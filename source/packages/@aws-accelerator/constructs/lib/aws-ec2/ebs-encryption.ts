@@ -27,7 +27,7 @@ export interface EbsVolumeEncryptionProps {
   /**
    * Custom resource lambda log group encryption key
    */
-  readonly logGroupKmsKey: cdk.aws_kms.Key;
+  readonly logGroupKmsKey: cdk.aws_kms.IKey;
   /**
    * Custom resource lambda log retention in days
    */

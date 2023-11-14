@@ -63,14 +63,14 @@ export class ScpResource {
   protected logger: winston.Logger;
 
   readonly props: AcceleratorStackProps;
-  readonly cloudwatchKey: cdk.aws_kms.Key;
-  readonly lambdaKey: cdk.aws_kms.Key;
+  readonly cloudwatchKey: cdk.aws_kms.IKey;
+  readonly lambdaKey: cdk.aws_kms.IKey | undefined;
   readonly scpGeneratedFilePathList: scpGeneratedFilePath[] = [];
 
   constructor(
     stack: AcceleratorStack,
-    cloudwatchKey: cdk.aws_kms.Key,
-    lambdaKey: cdk.aws_kms.Key,
+    cloudwatchKey: cdk.aws_kms.IKey,
+    lambdaKey: cdk.aws_kms.IKey | undefined,
     props: AcceleratorStackProps,
   ) {
     this.stack = stack;

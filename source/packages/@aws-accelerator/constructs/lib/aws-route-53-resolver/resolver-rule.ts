@@ -74,7 +74,7 @@ export interface ResolverRuleProps {
   /**
    * Custom resource lambda log group encryption key
    */
-  readonly kmsKey?: cdk.aws_kms.Key;
+  readonly kmsKey?: cdk.aws_kms.IKey;
   /**
    * Custom resource lambda log retention in days
    */
@@ -118,7 +118,7 @@ export class ResolverRule extends cdk.Resource implements IResolverRule {
     this.ruleId = resource.attrResolverRuleId;
   }
 
-  private lookupInbound(endpointId: string, kmsKey: cdk.aws_kms.Key, logRetentionInDays: number): cdk.Reference {
+  private lookupInbound(endpointId: string, kmsKey: cdk.aws_kms.IKey, logRetentionInDays: number): cdk.Reference {
     const lookup = new EndpointAddresses(this, 'LookupInbound', {
       endpointId: endpointId,
       kmsKey,
