@@ -49,14 +49,14 @@ type rbpGeneratedFilePath = {
  */
 export class DataPerimeterStack extends AcceleratorStack {
   readonly cloudwatchKey: cdk.aws_kms.IKey;
-  readonly lambdaKey: cdk.aws_kms.IKey;
+  readonly lambdaKey: cdk.aws_kms.IKey | undefined;
   rbpGeneratedFilePathList: rbpGeneratedFilePath[] = [];
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
     this.logger.info('Begin stack synthesis');
-    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
+    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY)!;
     this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
 
     if (!props.securityConfig.dataPerimeter || !props.securityConfig.dataPerimeter.enable) return;

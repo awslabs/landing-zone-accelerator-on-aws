@@ -134,6 +134,12 @@ export class GlobalConfigValidator {
     this.validateMaxConcurrency(values, errors);
 
     //
+    // Validate deployment targets
+    //
+    this.validateDeploymentTargetAccountNames(values, accountNames, errors);
+    this.validateDeploymentTargetOUs(values, ouIdNames, errors);
+
+    //
     // bucket policy validation
     //
     if (securityConfig.centralSecurityServices.s3PublicAccessBlock.enable) {
@@ -861,6 +867,67 @@ export class GlobalConfigValidator {
         `Provided acceleratorSettings.maxConcurrentStacks: ${values.acceleratorSettings!
           .maxConcurrentStacks!} it cannot be greater than 250 `,
       );
+    }
+  }
+
+  /**
+   * Function to validate Deployment targets account name for security services
+   * @param values
+   */
+  private validateDeploymentTargetAccountNames(values: GlobalConfig, accountNames: string[], errors: string[]) {
+    this.validateLambdaEncryptionConfigDeploymentTargetAccounts(values, accountNames, errors);
+  }
+
+  /**
+   * Function to validate Deployment targets OU name for security services
+   * @param values
+   */
+  private validateDeploymentTargetOUs(values: GlobalConfig, ouIdNames: string[], errors: string[]) {
+    this.validateLambdaEncryptionConfigDeploymentTargetOUs(values, ouIdNames, errors);
+  }
+
+  /**
+   * Function to validate existence of Lambda encryption configuration deployment target OUs
+   * Make sure deployment target OUs are part of Organization config file
+   * @param values
+   */
+  private validateLambdaEncryptionConfigDeploymentTargetOUs(
+    values: GlobalConfig,
+    ouIdNames: string[],
+    errors: string[],
+  ) {
+    if (!values.lambda?.encryption) {
+      return;
+    }
+
+    for (const ou of values.lambda.encryption.deploymentTargets?.organizationalUnits ?? []) {
+      if (ouIdNames.indexOf(ou) === -1) {
+        errors.push(
+          `Deployment target OU ${ou} for lambda encryption configuration does not exists in organization-config.yaml file.`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Function to validate existence of Lambda encryption configuration deployment target Accounts
+   * Make sure deployment target Accounts are part of account config file
+   * @param values
+   */
+  private validateLambdaEncryptionConfigDeploymentTargetAccounts(
+    values: GlobalConfig,
+    accountNames: string[],
+    errors: string[],
+  ) {
+    if (!values.lambda?.encryption) {
+      return;
+    }
+    for (const account of values.lambda.encryption.deploymentTargets?.accounts ?? []) {
+      if (accountNames.indexOf(account) === -1) {
+        errors.push(
+          `Deployment target account ${account} for lambda encryption configuration does not exists in accounts-config.yaml file.`,
+        );
+      }
     }
   }
 }

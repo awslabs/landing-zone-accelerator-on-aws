@@ -85,7 +85,7 @@ type PolicyAttachmentsType = {
 
 export class LoggingStack extends AcceleratorStack {
   private cloudwatchKey: cdk.aws_kms.IKey;
-  private lambdaKey: cdk.aws_kms.IKey;
+  private lambdaKey: cdk.aws_kms.IKey | undefined;
   private centralLogsBucket: CentralLogsBucket | undefined;
   private centralLogBucketKey: cdk.aws_kms.IKey | undefined;
   private centralSnsKey: cdk.aws_kms.IKey | undefined;
@@ -122,16 +122,13 @@ export class LoggingStack extends AcceleratorStack {
     //
     const autoScalingSlr = this.createAutoScalingServiceLinkedRole(
       this.cloudwatchKey as cdk.aws_kms.Key,
-      this.lambdaKey as cdk.aws_kms.Key,
+      this.lambdaKey,
     );
 
     //
     // Create AWS Cloud9 service linked role
     //
-    const cloud9Slr = this.createAwsCloud9ServiceLinkedRole(
-      this.cloudwatchKey as cdk.aws_kms.Key,
-      this.lambdaKey as cdk.aws_kms.Key,
-    );
+    const cloud9Slr = this.createAwsCloud9ServiceLinkedRole(this.cloudwatchKey as cdk.aws_kms.Key, this.lambdaKey);
 
     //
     // Create KMS keys defined in config
@@ -508,13 +505,13 @@ export class LoggingStack extends AcceleratorStack {
       if (this.importedCentralLogBucket) {
         return this.importedCentralLogBucketKey!;
       } else {
-        return this.getAcceleratorKey(AcceleratorKeyType.IMPORTED_CENTRAL_LOG_BUCKET, this.cloudwatchKey);
+        return this.getAcceleratorKey(AcceleratorKeyType.IMPORTED_CENTRAL_LOG_BUCKET, this.cloudwatchKey)!;
       }
     } else {
       if (this.centralLogsBucket) {
         return this.centralLogsBucket.getS3Bucket().getKey();
       } else {
-        return this.getAcceleratorKey(AcceleratorKeyType.CENTRAL_LOG_BUCKET, this.cloudwatchKey);
+        return this.getAcceleratorKey(AcceleratorKeyType.CENTRAL_LOG_BUCKET, this.cloudwatchKey)!;
       }
     }
   }
@@ -572,7 +569,15 @@ export class LoggingStack extends AcceleratorStack {
    * @param props {@link AcceleratorStackProps}
    * @returns cdk.aws_kms.IKey
    */
-  private createLambdaKey(props: AcceleratorStackProps): cdk.aws_kms.IKey {
+  private createLambdaKey(props: AcceleratorStackProps): cdk.aws_kms.IKey | undefined {
+    if (!this.isLambdaCMKEnabled) {
+      this.logger.info(
+        `Lambda Encryption CMK disable for ${cdk.Stack.of(this).account} account in ${
+          cdk.Stack.of(this).region
+        } region, CMK creation excluded`,
+      );
+      return undefined;
+    }
     // Create kms key for Lambda environment encryption
     // the Lambda environment encryption key for the management account
     // in the home region is created in the prepare stack
@@ -581,7 +586,7 @@ export class LoggingStack extends AcceleratorStack {
       (cdk.Stack.of(this).region === this.props.globalConfig.homeRegion ||
         cdk.Stack.of(this).region === this.props.globalRegion)
     ) {
-      return this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY)!;
+      return this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
     } else {
       const key = new cdk.aws_kms.Key(this, 'AcceleratorLambdaKey', {
         alias: this.acceleratorResourceNames.customerManagedKeys.lambda.alias,
@@ -897,7 +902,7 @@ export class LoggingStack extends AcceleratorStack {
     }
   }
 
-  private cloudwatchLogReceivingAccount(centralLogsBucketName: string, lambdaKey: cdk.aws_kms.IKey) {
+  private cloudwatchLogReceivingAccount(centralLogsBucketName: string, lambdaKey?: cdk.aws_kms.IKey) {
     const logsReplicationKmsKey = new cdk.aws_kms.Key(this, 'LogsReplicationKey', {
       alias: this.acceleratorResourceNames.customerManagedKeys.cloudWatchLogReplication.alias,
       description: this.acceleratorResourceNames.customerManagedKeys.cloudWatchLogReplication.description,

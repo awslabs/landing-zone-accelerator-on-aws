@@ -30,9 +30,9 @@ interface FirewallAutoScalingGroupProps extends FirewallProps {
    */
   readonly autoscaling: AutoScalingConfig;
   /**
-   * Custom resource lambda environment encryption key
+   * Custom resource lambda environment encryption key, when undefined default AWS managed key will be used
    */
-  readonly lambdaKey: cdk.aws_kms.IKey;
+  readonly lambdaKey?: cdk.aws_kms.IKey;
   /**
    * Custom resource lambda log group encryption key
    */

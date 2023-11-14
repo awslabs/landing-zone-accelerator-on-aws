@@ -36,9 +36,9 @@ export interface AuditManagerDefaultReportsDestinationProps {
    */
   readonly bucket: string;
   /**
-   * Publishing destination kms arn
+   * Publishing destination bucket KMS key
    */
-  readonly bucketKmsKey: cdk.aws_kms.Key;
+  readonly bucketKmsKey: cdk.aws_kms.IKey;
   /**
    * Custom resource lambda log group encryption key
    */

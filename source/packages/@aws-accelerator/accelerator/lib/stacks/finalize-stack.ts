@@ -24,8 +24,8 @@ export class FinalizeStack extends AcceleratorStack {
     if (props.globalRegion === cdk.Stack.of(this).region) {
       this.logger.debug(`Retrieving CloudWatch kms key`);
 
-      const lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY) as cdk.aws_kms.Key;
-      const cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY) as cdk.aws_kms.Key;
+      const lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
+      const cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY)!;
       const scpResource = new ScpResource(this, cloudwatchKey, lambdaKey, props);
 
       //

@@ -50,9 +50,9 @@ export interface CloudWatchToS3FirehoseProps {
   firehoseKmsKey: cdk.aws_kms.IKey;
   /**
    *
-   * KMS key to encrypt the Lambda
+   * KMS key to encrypt the Lambda, when undefined default AWS managed key will be used
    */
-  lambdaKey: cdk.aws_kms.IKey;
+  lambdaKey?: cdk.aws_kms.IKey;
   /**
    *
    * Home region where the log archive bucket is located.

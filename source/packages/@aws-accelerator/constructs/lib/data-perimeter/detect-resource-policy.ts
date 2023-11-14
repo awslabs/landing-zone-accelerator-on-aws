@@ -42,9 +42,9 @@ export interface DetectResourcePolicyProps {
    */
   readonly kmsKeyCloudWatch: cdk.aws_kms.IKey;
   /**
-   * Lambda environment variable encryption key
+   * Lambda environment variable encryption key, when undefined default AWS managed key will be used
    */
-  readonly kmsKeyLambda: cdk.aws_kms.IKey;
+  readonly kmsKeyLambda?: cdk.aws_kms.IKey;
   /**
    * Lambda log retention in days
    */

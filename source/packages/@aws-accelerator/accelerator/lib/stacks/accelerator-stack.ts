@@ -39,6 +39,7 @@ import {
   Region,
   ReplacementsConfig,
   SecurityConfig,
+  ServiceEncryptionConfig,
   ShareTargets,
   VpcConfig,
   VpcTemplatesConfig,
@@ -217,6 +218,11 @@ export abstract class AcceleratorStack extends cdk.Stack {
   public stackParameters: Map<string, cdk.aws_ssm.StringParameter>;
 
   /**
+   * Flag indicating if AWS KMS CMK is enabled for Lambda environment encryption
+   */
+  public readonly isLambdaCMKEnabled: boolean;
+
+  /**
    * External resource SSM parameters
    * These parameters are loaded along with externalResourceMapping from SSM
    */
@@ -261,6 +267,11 @@ export abstract class AcceleratorStack extends cdk.Stack {
         stringValue: version,
       }),
     );
+
+    //
+    // Set if AWS KMS CMK is enabled for Lambda environment encryption
+    //
+    this.isLambdaCMKEnabled = this.isCmkEnabled(this.props.globalConfig.lambda?.encryption);
   }
 
   /**
@@ -317,14 +328,14 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * @remarks
    * If importedBucket used returns imported CentralLogs bucket cmk arn else return solution defined CentralLogs bucket cmk arn
    */
-  protected getCentralLogsBucketKey(customResourceLambdaCloudWatchLogKmsKey: cdk.aws_kms.IKey): cdk.aws_kms.Key {
+  protected getCentralLogsBucketKey(customResourceLambdaCloudWatchLogKmsKey: cdk.aws_kms.IKey): cdk.aws_kms.IKey {
     if (this.props.globalConfig.logging.centralLogBucket?.importedBucket?.name) {
       return this.getAcceleratorKey(
         AcceleratorKeyType.IMPORTED_CENTRAL_LOG_BUCKET,
         customResourceLambdaCloudWatchLogKmsKey,
-      );
+      )!;
     } else {
-      return this.getAcceleratorKey(AcceleratorKeyType.CENTRAL_LOG_BUCKET, customResourceLambdaCloudWatchLogKmsKey);
+      return this.getAcceleratorKey(AcceleratorKeyType.CENTRAL_LOG_BUCKET, customResourceLambdaCloudWatchLogKmsKey)!;
     }
   }
 
@@ -339,7 +350,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * @remarks
    * Access Analyzer Service linked role is created when organization is enabled and accessAnalyzer flag is ON.
    */
-  protected createAccessAnalyzerServiceLinkedRole(cloudwatchKey: cdk.aws_kms.Key, lambdaKey: cdk.aws_kms.Key) {
+  protected createAccessAnalyzerServiceLinkedRole(cloudwatchKey: cdk.aws_kms.IKey, lambdaKey?: cdk.aws_kms.IKey) {
     if (
       this.props.organizationConfig.enable &&
       this.props.securityConfig.accessAnalyzer.enable &&
@@ -395,7 +406,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * @remarks
    * GuardDuty Service linked role is created when organization is enabled and guardduty flag is ON.
    */
-  protected createGuardDutyServiceLinkedRole(cloudwatchKey: cdk.aws_kms.Key, lambdaKey: cdk.aws_kms.Key) {
+  protected createGuardDutyServiceLinkedRole(cloudwatchKey: cdk.aws_kms.IKey, lambdaKey?: cdk.aws_kms.IKey) {
     if (
       this.props.organizationConfig.enable &&
       this.props.securityConfig.centralSecurityServices.guardduty.enable &&
@@ -451,7 +462,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * @remarks
    * SecurityHub Service linked role is created when organization is enabled and securityHub flag is ON.
    */
-  protected createSecurityHubServiceLinkedRole(cloudwatchKey: cdk.aws_kms.Key, lambdaKey: cdk.aws_kms.Key) {
+  protected createSecurityHubServiceLinkedRole(cloudwatchKey: cdk.aws_kms.IKey, lambdaKey?: cdk.aws_kms.IKey) {
     if (
       this.props.organizationConfig.enable &&
       this.props.securityConfig.centralSecurityServices.securityHub.enable &&
@@ -507,7 +518,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * @remarks
    * Macie Service linked role is created when organization is enabled and macie flag is ON.
    */
-  protected createMacieServiceLinkedRole(cloudwatchKey: cdk.aws_kms.Key, lambdaKey: cdk.aws_kms.Key) {
+  protected createMacieServiceLinkedRole(cloudwatchKey: cdk.aws_kms.IKey, lambdaKey?: cdk.aws_kms.IKey) {
     if (
       this.props.organizationConfig.enable &&
       this.props.securityConfig.centralSecurityServices.macie.enable &&
@@ -565,7 +576,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
    */
   protected createAutoScalingServiceLinkedRole(
     cloudwatchKey: cdk.aws_kms.Key,
-    lambdaKey: cdk.aws_kms.Key,
+    lambdaKey?: cdk.aws_kms.IKey,
   ): ServiceLinkedRole | undefined {
     if (
       this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable &&
@@ -655,7 +666,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
    */
   protected createAwsCloud9ServiceLinkedRole(
     cloudwatchKey: cdk.aws_kms.Key,
-    lambdaKey: cdk.aws_kms.Key,
+    lambdaKey?: cdk.aws_kms.IKey,
   ): ServiceLinkedRole | undefined {
     if (
       this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable &&
@@ -719,8 +730,8 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * Since it is used for delegated admin organizations need to be enabled
    */
   protected createAwsFirewallManagerServiceLinkedRole(
-    cloudwatchKey: cdk.aws_kms.Key,
-    lambdaKey: cdk.aws_kms.Key,
+    cloudwatchKey: cdk.aws_kms.IKey,
+    lambdaKey?: cdk.aws_kms.IKey,
   ): ServiceLinkedRole {
     // create service linked roles only in the partitions that allow it
     const serviceLinkedRole = this.createServiceLinkedRole(ServiceLinkedRoleType.FMS, cloudwatchKey, lambdaKey);
@@ -774,8 +785,8 @@ export abstract class AcceleratorStack extends cdk.Stack {
    */
   private createServiceLinkedRole(
     roleType: string,
-    cloudwatchKey: cdk.aws_kms.Key,
-    lambdaKey: cdk.aws_kms.Key,
+    cloudwatchKey: cdk.aws_kms.IKey,
+    lambdaKey?: cdk.aws_kms.IKey,
   ): ServiceLinkedRole {
     let serviceLinkedRole: ServiceLinkedRole | undefined;
 
@@ -884,8 +895,8 @@ export abstract class AcceleratorStack extends cdk.Stack {
   public getAcceleratorKey(
     keyType: AcceleratorKeyType,
     customResourceLambdaCloudWatchLogKmsKey?: cdk.aws_kms.IKey,
-  ): cdk.aws_kms.Key {
-    let key: cdk.aws_kms.Key | undefined;
+  ): cdk.aws_kms.IKey | undefined {
+    let key: cdk.aws_kms.IKey | undefined;
     switch (keyType) {
       case AcceleratorKeyType.S3_KEY:
         key = cdk.aws_kms.Key.fromKeyArn(
@@ -905,14 +916,16 @@ export abstract class AcceleratorStack extends cdk.Stack {
         ) as cdk.aws_kms.Key;
         break;
       case AcceleratorKeyType.LAMBDA_KEY:
-        key = cdk.aws_kms.Key.fromKeyArn(
-          this,
-          'AcceleratorGetLambdaKey',
-          cdk.aws_ssm.StringParameter.valueForStringParameter(
-            this,
-            this.acceleratorResourceNames.parameters.lambdaCmkArn,
-          ),
-        ) as cdk.aws_kms.Key;
+        key = this.isLambdaCMKEnabled
+          ? (cdk.aws_kms.Key.fromKeyArn(
+              this,
+              'AcceleratorGetLambdaKey',
+              cdk.aws_ssm.StringParameter.valueForStringParameter(
+                this,
+                this.acceleratorResourceNames.parameters.lambdaCmkArn,
+              ),
+            ) as cdk.aws_kms.Key)
+          : undefined;
         break;
       case AcceleratorKeyType.CENTRAL_LOG_BUCKET:
         key = new KeyLookup(this, 'AcceleratorCentralLogBucketKeyLookup', {
@@ -999,6 +1012,37 @@ export abstract class AcceleratorStack extends cdk.Stack {
         ]);
       }
     }
+  }
+
+  /**
+   * Function to check if LZA deployed CMK is enabled for a given service
+   * @param encryptionConfig {@link ServiceEncryptionConfig}
+   * @returns boolean
+   */
+  protected isCmkEnabled(encryptionConfig?: ServiceEncryptionConfig): boolean {
+    if (!encryptionConfig) {
+      return true;
+    }
+    const useCMK = encryptionConfig.useCMK;
+    if (!encryptionConfig.deploymentTargets) {
+      return useCMK;
+    }
+
+    const deploymentTargets = encryptionConfig.deploymentTargets;
+    const targetAccountIds = this.props.accountsConfig.getAccountIdsFromDeploymentTarget(deploymentTargets);
+
+    const isRegionExcluded = this.isRegionExcluded(deploymentTargets.excludedRegions);
+    const isAccountIncluded = targetAccountIds.includes(cdk.Stack.of(this).account);
+
+    if (!isAccountIncluded || isRegionExcluded) {
+      return !useCMK;
+    }
+
+    if (isAccountIncluded && !isRegionExcluded) {
+      return useCMK;
+    }
+
+    return true;
   }
 
   public isIncluded(deploymentTargets: DeploymentTargets): boolean {

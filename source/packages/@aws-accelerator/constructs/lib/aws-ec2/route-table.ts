@@ -54,7 +54,7 @@ export abstract class RouteTableBase extends cdk.Resource implements IRouteTable
     transitGatewayAttachment: ITransitGatewayAttachment,
     destination?: string,
     destinationPrefixListId?: string,
-    logGroupKmsKey?: cdk.aws_kms.Key,
+    logGroupKmsKey?: cdk.aws_kms.IKey,
     logRetentionInDays?: number,
   ): cdk.aws_ec2.CfnRoute | PrefixListRoute {
     let route: cdk.aws_ec2.CfnRoute | PrefixListRoute;
@@ -95,7 +95,7 @@ export abstract class RouteTableBase extends cdk.Resource implements IRouteTable
     natGatewayId: string,
     destination?: string,
     destinationPrefixListId?: string,
-    logGroupKmsKey?: cdk.aws_kms.Key,
+    logGroupKmsKey?: cdk.aws_kms.IKey,
     logRetentionInDays?: number,
   ): cdk.aws_ec2.CfnRoute | PrefixListRoute {
     let route: cdk.aws_ec2.CfnRoute | PrefixListRoute;
@@ -134,7 +134,7 @@ export abstract class RouteTableBase extends cdk.Resource implements IRouteTable
     localGatewayId: string,
     destination?: string,
     destinationPrefixListId?: string,
-    logGroupKmsKey?: cdk.aws_kms.Key,
+    logGroupKmsKey?: cdk.aws_kms.IKey,
     logRetentionInDays?: number,
   ): cdk.aws_ec2.CfnRoute | PrefixListRoute {
     let route: cdk.aws_ec2.CfnRoute | PrefixListRoute;
@@ -172,7 +172,7 @@ export abstract class RouteTableBase extends cdk.Resource implements IRouteTable
     id: string,
     destination?: string,
     destinationPrefixListId?: string,
-    logGroupKmsKey?: cdk.aws_kms.Key,
+    logGroupKmsKey?: cdk.aws_kms.IKey,
     logRetentionInDays?: number,
   ): cdk.aws_ec2.CfnRoute | PrefixListRoute {
     if (!this.vpc.internetGatewayId) {
@@ -219,7 +219,7 @@ export abstract class RouteTableBase extends cdk.Resource implements IRouteTable
     id: string,
     destination?: string,
     destinationPrefixListId?: string,
-    logGroupKmsKey?: cdk.aws_kms.Key,
+    logGroupKmsKey?: cdk.aws_kms.IKey,
     logRetentionInDays?: number,
   ): cdk.aws_ec2.CfnRoute | PrefixListRoute {
     if (!this.vpc.virtualPrivateGatewayId) {

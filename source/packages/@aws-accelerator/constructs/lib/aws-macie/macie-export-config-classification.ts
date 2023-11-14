@@ -27,7 +27,7 @@ export interface MacieExportConfigClassificationProps {
   /**
    * Macie ExportConfigClassification repository bucket encryption key
    */
-  readonly bucketKmsKey: cdk.aws_kms.Key;
+  readonly bucketKmsKey: cdk.aws_kms.IKey;
   /**
    * Bucket key prefix
    */
@@ -35,7 +35,7 @@ export interface MacieExportConfigClassificationProps {
   /**
    * Custom resource lambda log group encryption key
    */
-  readonly logKmsKey: cdk.aws_kms.Key;
+  readonly logKmsKey: cdk.aws_kms.IKey;
   /**
    * Custom resource lambda log retention in days
    */

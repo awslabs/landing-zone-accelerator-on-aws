@@ -25,9 +25,9 @@ interface FirewallConfigReplacementProps {
    */
   readonly cloudWatchLogRetentionInDays: number;
   /**
-   * Custom resource environment encryption key
+   * Custom resource environment encryption key, when undefined default AWS managed key will be used
    */
-  readonly environmentEncryptionKey: cdk.aws_kms.IKey;
+  readonly environmentEncryptionKey?: cdk.aws_kms.IKey;
   /**
    * Custom resource properties
    */

@@ -29,9 +29,9 @@ export interface BucketEncryptionProps {
    */
   readonly kmsKey: cdk.aws_kms.IKey;
   /**
-   * Custom resource lambda environment encryption key
+   * Custom resource lambda environment encryption key, when undefined default AWS managed key will be used
    */
-  readonly customResourceLambdaEnvironmentEncryptionKmsKey: cdk.aws_kms.IKey;
+  readonly customResourceLambdaEnvironmentEncryptionKmsKey?: cdk.aws_kms.IKey;
   /**
    * Custom resource lambda log group encryption key
    */

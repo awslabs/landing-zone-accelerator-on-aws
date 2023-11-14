@@ -767,7 +767,11 @@ export class PrepareStack extends AcceleratorStack {
    * Create Management Account Lambda key
    * @returns lambdaKey {@link cdk.aws_kms.Key}
    */
-  private createManagementAccountLambdaKey(): cdk.aws_kms.Key {
+  private createManagementAccountLambdaKey(): cdk.aws_kms.IKey | undefined {
+    if (!this.isLambdaCMKEnabled) {
+      this.logger.info(`Lambda Encryption CMK disable for Management account home region, CMK creation excluded`);
+      return undefined;
+    }
     this.logger.info(`Lambda Encryption Key`);
     const lambdaKey = new cdk.aws_kms.Key(this, 'AcceleratorManagementLambdaKey', {
       alias: this.acceleratorResourceNames.customerManagedKeys.lambda.alias,

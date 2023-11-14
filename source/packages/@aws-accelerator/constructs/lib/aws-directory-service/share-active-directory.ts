@@ -34,9 +34,9 @@ export interface ShareActiveDirectoryProps {
    */
   readonly accountAccessRoleName: string;
   /**
-   * Custom resource lambda key
+   * Custom resource lambda key, when undefined default AWS managed key will be used
    */
-  readonly lambdaKey: cdk.aws_kms.IKey;
+  readonly lambdaKey?: cdk.aws_kms.IKey;
   /**
    * Custom resource CloudWatch log group encryption key
    */
