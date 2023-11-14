@@ -17,19 +17,19 @@ snsSubscriptionConfig:
 #           - Infrastructure
 keyManagementService:
   keySets:
-   - name: appEbsKey
-     alias: accelerator/custom-key/appEbsKey
-     policy: kms/applicationEbs.json
-     description: KMS Key for EBS volume encryption of applications
-     enableKeyRotation: true
-     enabled: true
-     removalPolicy: destroy
-     deploymentTargets:
-       accounts:
-         - SharedServices
-       # only deploy in region where application workloads are present
-       excludedRegions:
-         - us-west-2
+    - name: appEbsKey
+      alias: accelerator/custom-key/appEbsKey
+      policy: kms/applicationEbs.json
+      description: KMS Key for EBS volume encryption of applications
+      enableKeyRotation: true
+      enabled: true
+      removalPolicy: destroy
+      deploymentTargets:
+        accounts:
+          - SharedServices
+        # only deploy in region where application workloads are present
+        excludedRegions:
+          - us-west-2
 centralSecurityServices:
   delegatedAdminAccount: Audit
   ebsDefaultVolumeEncryption:
@@ -106,6 +106,11 @@ centralSecurityServices:
           - CIS.1.20
           - CIS.1.22
           - CIS.2.6
+      - name: CIS AWS Foundations Benchmark v1.4.0
+        enable: true
+        controlsToDisable:
+          - '1.17'
+          - '1.16'
   ssmAutomation:
     documentSets:
       - shareTargets:
@@ -972,9 +977,9 @@ dataPerimeter:
     - name: KMS
       document: resource-policies/kms.json
   remediation:
-      automatic: false
-      retryAttemptSeconds: 60
-      maximumAutomaticAttempts: 5
+    automatic: false
+    retryAttemptSeconds: 60
+    maximumAutomaticAttempts: 5
   policySets:
     - resourcePolicies:
         - name: IAM

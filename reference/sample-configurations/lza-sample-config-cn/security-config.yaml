@@ -55,8 +55,8 @@ centralSecurityServices:
       - name: CIS AWS Foundations Benchmark v1.4.0
         enable: true
         controlsToDisable:
-          - CIS.1.17
-          - CIS.1.16
+          - '1.17'
+          - '1.16'
   ssmAutomation:
     documentSets:
       - shareTargets:
