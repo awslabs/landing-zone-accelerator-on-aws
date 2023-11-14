@@ -28,7 +28,12 @@ import {
 import { S3Client, HeadBucketCommand } from '@aws-sdk/client-s3';
 import { IAMClient, GetRoleCommand, GetRoleCommandInput } from '@aws-sdk/client-iam';
 import { AccountsConfig, GlobalConfig, OrganizationConfig } from '@aws-accelerator/config';
-import { createLogger, throttlingBackOff, getCrossAccountCredentials } from '@aws-accelerator/utils';
+import {
+  createLogger,
+  throttlingBackOff,
+  getCrossAccountCredentials,
+  setStsTokenPreferences,
+} from '@aws-accelerator/utils';
 import { AssumeProfilePlugin } from '@aws-cdk-extensions/cdk-plugin-assume-role';
 import { isBeforeBootstrapStage } from '../utils/app-utils';
 import { AcceleratorStage } from './accelerator-stage';
@@ -230,6 +235,11 @@ export abstract class Accelerator {
         id: accountsConfig.getAuditAccountId(),
         name: accountsConfig.getAuditAccount().name,
       };
+      const regionDetails = {
+        homeRegion: globalConfig.homeRegion,
+        globalRegion: globalRegion,
+        enabledRegions: globalConfig.enabledRegions,
+      };
 
       //
       // Execute IMPORT_ASEA_RESOURCES Stage
@@ -267,7 +277,7 @@ export abstract class Accelerator {
         promises,
         accountsConfig,
         logArchiveAccountDetails,
-        globalConfig.enabledRegions,
+        regionDetails,
         maxStacks,
       );
       //
@@ -654,7 +664,7 @@ export abstract class Accelerator {
     promises: Promise<void>[],
     accountsConfig: AccountsConfig,
     logArchiveAccountDetails: { id: string; name: string; centralizedLoggingRegion: string },
-    enabledRegions: string[],
+    regionDetails: { homeRegion: string; globalRegion: string; enabledRegions: string[] },
     maxStacks: number,
   ) {
     if (toolkitProps.stage === AcceleratorStage.LOGGING) {
@@ -671,7 +681,11 @@ export abstract class Accelerator {
       });
 
       // Execute in all other regions in the LogArchive account
-      await this.executeLogArchiveNonCentralRegions(toolkitProps, logArchiveAccountDetails, enabledRegions);
+      await this.executeLogArchiveNonCentralRegions(
+        toolkitProps,
+        logArchiveAccountDetails,
+        regionDetails.enabledRegions,
+      );
 
       //
       // Execute in all other regions and accounts
@@ -680,9 +694,17 @@ export abstract class Accelerator {
         promises,
         accountsConfig,
         logArchiveAccountDetails,
-        enabledRegions,
+        regionDetails.enabledRegions,
         maxStacks,
       );
+
+      //
+      // Set STS token to version 2 in home region of every account
+      // STS token is vended in homeRegion and queried at globalRegion to ensure v1Token can be used
+      if (toolkitProps.region === regionDetails.homeRegion) {
+        logger.info(`Setting STS token preferences for ${toolkitProps.accountId} in region ${toolkitProps.region}`);
+        await setStsTokenPreferences(toolkitProps.accountId!, regionDetails.globalRegion);
+      }
     }
   }
 

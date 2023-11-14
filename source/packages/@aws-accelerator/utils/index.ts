@@ -21,3 +21,4 @@ export * from './lib/load-organization-config';
 export * from './lib/get-template';
 export * from './lib/diff-stack';
 export * from './lib/regions';
+export * from './lib/set-token-preferences';
