@@ -91,6 +91,11 @@ centralSecurityServices:
           - CIS.1.20
           - CIS.1.22
           - CIS.2.6
+      - name: CIS AWS Foundations Benchmark v1.4.0
+        enable: true
+        controlsToDisable:
+          - '1.17'
+          - '1.16'
   ssmAutomation:
     documentSets:
       - shareTargets:
@@ -955,9 +960,9 @@ dataPerimeter:
     - name: KMS
       document: resource-policies/kms.json
   remediation:
-      automatic: false
-      retryAttemptSeconds: 60
-      maximumAutomaticAttempts: 5
+    automatic: false
+    retryAttemptSeconds: 60
+    maximumAutomaticAttempts: 5
   policySets:
     - resourcePolicies:
         - name: IAM

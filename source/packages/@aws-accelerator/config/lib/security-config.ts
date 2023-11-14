@@ -1149,7 +1149,7 @@ export class SecurityHubStandardConfig implements t.TypeOf<typeof SecurityConfig
    */
   readonly enable = true;
   /**
-   * (OPTIONAL) An array of control names to be enabled for the given security standards
+   * (OPTIONAL) An array of control names to be disabled for the given security standards
    */
   readonly controlsToDisable: string[] = [];
 }
