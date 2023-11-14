@@ -5,9 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.2] - 2023-11-15
+
+### Fixed
+
+- fix(toolkit): enforce runOrder for custom stacks in customizations stage
+- fix(aspects): saml lookup for console login to non-standard partitions fails
+- fix(pipeline): exit pipeline upon synth failure
+- fix(pipeline): consolidate customizations into single app
+
+### Changed
+
+- chore: update libs per audit findings
+
+### Configuration Changes
+
+- chore: migrate cccs and tse-se configuration
+
 ## [1.5.1] - 2023-10-19
 
 ### Fixed
+
 - fix(iam): Security_Resource stack failure to assume role into suspended and un-enrolled account
 - fix(identity-center): operation stack AcceleratorLambdaKey construct already exists
 - fix(customizations): Could not load credentials from any providers
@@ -15,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.5.0] - 2023-10-05
 
 ### Added
+
 - feat(backup) add Backup vault policy
 - feat(config): allow users to set stack concurrency
 - feat(config) M2131 WAF logging enabled
@@ -35,11 +54,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(ssm): allow SSM replacements through replacements-config.yaml
 - feat(ssm): allow creation of custom SSM parameters
 - feat(tags): Support Customer Tags
+
 ### Changed
+
 - enhancement(docs): add script to generate versioned TypeDocs
 - enhancement(iam): make managed AD resolverRuleName property optional
 - enhancement(networking): add ability to define advanced VPN tunnel configuration parameters
-- enhancement(networking): add ability to dynamically reference same-VPC subnets as a route destination 
+- enhancement(networking): add ability to dynamically reference same-VPC subnets as a route destination
 - enhancement(networking): add ability to reference physical IDs for subnet availability zones and for Network Firewall endpoint lookups
 - enhancement(networking): add AWSManagedAggregateThreatList to supported DNS firewall managed domain lists
 - enhancement(pipeline): allow synth and deploy to write to stack specific directories
@@ -67,7 +88,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore: license file updates
 - chore: refactor engine to reduce complexity
 - chore: updated dependencies for aws-sdk
+
 ### Fixed
+
 - fix(accelerator-prefix): accelerator prefix remains hardcoded in some constructs
 - fix(accounts): allow Control Tower account enrollment in GovCloud
 - fix(acm): Duplicate certificate imported on CR update
@@ -134,7 +157,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(validation): Add config rule name validation
 - fix(validation): validate certificate deployment target
 - fix(validation): undefined Config remediation target account name causes false positive
+
 ### Configuration Changes
+
 - enhancement(aws-best-practices): Added README for Best Practices
 - enhancement(aws-best-practices): Update Macie Permissions
 - enhancement(aws-best-practices): apply SCPs to security OU
@@ -142,9 +167,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore(education): migrate EDU sample configuration directory to external repository
 - chore(elections): remove election sample directory
 - chore(config): cccs/tse Config updates
+
 ## [1.4.3] - 2023-07-19
 
 ### Fixed
+
 - fix(logging): cloudwatch logging, change log format in firehose to json
 - fix(organizations): large OU organizations fail to load during prepare stage
 - fix(networking): cannot provision new IPAM subnets when VPC has CIDRs from non-contiguous CIDR blocks
@@ -152,6 +179,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(validate-config): ValidateEnvironmentConfig improperly evaluates enrolled CT accounts as not enrolled
 
 ### Configuration Changes
+
 - chore(aws-best-practices-tse-se): include granular billing SCP permission updates
 - chore(aws-best-practices-cccs-medium): include granular billing SCP permission updates
 
@@ -165,6 +193,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(validation): TGW route validation fails when prefixList deployment targets do not have excluded regions
 - fix(validation): incorrectly configured security delegated admin account isn’t caught by validation
 - fix(docs): README indicates S3 server access logs are replicated to central logs bucket
+
 ## [1.4.1] - 2023-05-18
 
 ### Fixed

@@ -3199,7 +3199,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-OrganizationsStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.5.1",
+        "Value": "1.5.2",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -6963,7 +6963,7 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-OrganizationsStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.5.1",
+        "Value": "1.5.2",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -10691,7 +10691,7 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-OrganizationsStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.5.1",
+        "Value": "1.5.2",
       },
       "Type": "AWS::SSM::Parameter",
     },

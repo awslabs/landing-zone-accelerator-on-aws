@@ -2208,7 +2208,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkPrepStack-555555555555-us-east-1/version",
         "Type": "String",
-        "Value": "1.5.1",
+        "Value": "1.5.2",
       },
       "Type": "AWS::SSM::Parameter",
     },

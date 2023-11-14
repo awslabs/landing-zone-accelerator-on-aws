@@ -3850,7 +3850,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkVpcStack-555555555555-us-east-1/version",
         "Type": "String",
-        "Value": "1.5.1",
+        "Value": "1.5.2",
       },
       "Type": "AWS::SSM::Parameter",
     },
