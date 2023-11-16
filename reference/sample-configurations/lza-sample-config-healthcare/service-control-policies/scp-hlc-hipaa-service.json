@@ -142,6 +142,7 @@
                 "sns:*",
                 "sqs:*",
                 "ssm:*",
+                "ssmmessages:*"
                 "sso:*",
                 "sso-directory:*",
                 "states:*",
