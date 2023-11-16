@@ -209,6 +209,7 @@ These guardrails apply across the organization and protect the resources deploye
 | SnsStatement                           | Prevents creation, deletion and modification of a protected SNS topics                                      |
 | EbsEncryptionStatement                 | Prevents disabling of EBS Encryption                                                                        |
 | MacieServiceStatement                  | Prevents the deletion and modification to AWS security services Macie                                       |
+| PreventKMSKeyModification              | Prevents the deletion and modification of protected KMS keys                                                |
 
 ### 4.8.2 Quarantine
 
