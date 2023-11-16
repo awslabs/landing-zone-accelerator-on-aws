@@ -11,8 +11,15 @@
  *  and limitations under the License.
  */
 
-import { throttlingBackOff } from '@aws-accelerator/utils';
-import * as AWS from 'aws-sdk';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
+import {
+  SSMClient,
+  GetParameterCommand,
+  DeleteParameterCommand,
+  PutParameterCommand,
+  ParameterNotFound,
+} from '@aws-sdk/client-ssm';
 import {
   EC2Client,
   DescribeTagsCommand,
@@ -22,8 +29,13 @@ import {
   DeleteTagsCommandInput,
   TagDescription,
 } from '@aws-sdk/client-ec2';
+import { CloudFormationCustomResourceEvent } from '../../lza-custom-resource';
 
-let ec2Client: EC2Client;
+const solutionId = process.env['SOLUTION_ID'];
+
+const ec2Client = new EC2Client({ customUserAgent: solutionId, retryStrategy: setRetryStrategy() });
+const ssmClient = new SSMClient({ customUserAgent: solutionId, retryStrategy: setRetryStrategy() });
+
 interface Tag {
   readonly Key: string | undefined;
   readonly Value: string | undefined;
@@ -35,7 +47,7 @@ interface Tag {
  * @param event
  * @returns
  */
-export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
+export async function handler(event: CloudFormationCustomResourceEvent): Promise<
   | {
       PhysicalResourceId: string | undefined;
       Status: string;
@@ -50,10 +62,6 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const sharedSubnetName: string = event.ResourceProperties['sharedSubnetName'];
   const vpcName: string = event.ResourceProperties['vpcName'];
   const ssmParamNamePrefix = event.ResourceProperties['acceleratorSsmParamPrefix'];
-  const solutionId = process.env['SOLUTION_ID'];
-
-  ec2Client = new EC2Client({ customUserAgent: solutionId });
-  const ssmClient = new AWS.SSM({ customUserAgent: solutionId });
 
   switch (event.RequestType) {
     case 'Create':
@@ -86,29 +94,17 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   }
 }
 
-async function parameterExists(ssmClient: AWS.SSM, name: string): Promise<boolean> {
+async function parameterExists(ssmClient: SSMClient, name: string): Promise<boolean> {
   console.log(`Checking if parameter ${name} exists`);
   try {
-    await throttlingBackOff(() =>
-      ssmClient
-        .getParameter({
-          Name: name,
-        })
-        .promise(),
-    );
-
+    await throttlingBackOff(() => ssmClient.send(new GetParameterCommand({ Name: name })));
     console.log(`Parameter ${name} exists`);
     return true;
   } catch (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     e: any
   ) {
-    if (
-      // SDKv2 Error Structure
-      e.code === 'ParameterNotFound' ||
-      // SDKv3 Error Structure
-      e.name === 'ParameterNotFound'
-    ) {
+    if (e instanceof ParameterNotFound) {
       console.warn(e.name + ': ' + e.message);
       return false;
     } else {
@@ -117,32 +113,32 @@ async function parameterExists(ssmClient: AWS.SSM, name: string): Promise<boolea
   }
 }
 
-async function createParameter(ssmClient: AWS.SSM, name: string, description: string, value: string): Promise<void> {
+async function createParameter(ssmClient: SSMClient, name: string, description: string, value: string): Promise<void> {
   console.log(`Creating parameter ${name}`);
   if (!(await parameterExists(ssmClient, name))) {
     await throttlingBackOff(() =>
-      ssmClient
-        .putParameter({
+      ssmClient.send(
+        new PutParameterCommand({
           Name: name,
           Description: description,
           Value: value,
           Type: 'String',
           Overwrite: true,
-        })
-        .promise(),
+        }),
+      ),
     );
   }
 }
 
-async function deleteParameter(ssmClient: AWS.SSM, name: string): Promise<void> {
+async function deleteParameter(ssmClient: SSMClient, name: string): Promise<void> {
   console.log(`Deleting parameter ${name}`);
   if (!(await parameterExists(ssmClient, name))) {
     await throttlingBackOff(() =>
-      ssmClient
-        .deleteParameter({
+      ssmClient.send(
+        new DeleteParameterCommand({
           Name: name,
-        })
-        .promise(),
+        }),
+      ),
     );
   }
 }
@@ -171,7 +167,7 @@ async function updateSubnetTags(newSubnetTags: Tag[], subnetId: string) {
 async function updateVpcTags(
   newVpcTags: Tag[],
   subnetId: string,
-  ssmClient: AWS.SSM,
+  ssmClient: SSMClient,
   vpcName: string,
   ssmParamNamePrefix: string,
 ) {
@@ -243,12 +239,14 @@ function convertTags(tags: []): Tag[] {
 
 async function getResourceTags(resourceId: string): Promise<Tag[]> {
   const tags: Tag[] = [];
-  let nextToken;
+  let nextToken: string | undefined = undefined;
   do {
     const describeTagsResponse = await throttlingBackOff(() =>
-      ec2Client.send(new DescribeTagsCommand({ Filters: [{ Name: 'resource-id', Values: [resourceId] }] })),
+      ec2Client.send(
+        new DescribeTagsCommand({ Filters: [{ Name: 'resource-id', Values: [resourceId] }], NextToken: nextToken }),
+      ),
     );
-    nextToken = describeTagsResponse.NextToken;
+    console.log(describeTagsResponse);
     if (describeTagsResponse.Tags) {
       const tagKeyValueList = describeTagsResponse.Tags.map((tag: TagDescription) => {
         return {
@@ -258,6 +256,7 @@ async function getResourceTags(resourceId: string): Promise<Tag[]> {
       });
       tags.push(...tagKeyValueList);
     }
+    nextToken = describeTagsResponse.NextToken! ?? undefined;
   } while (nextToken);
   return tags;
 }
