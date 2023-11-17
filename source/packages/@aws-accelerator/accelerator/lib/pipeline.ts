@@ -622,12 +622,6 @@ export class AcceleratorPipeline extends Construct {
           runOrder: 3,
         }),
         this.createToolkitStage({
-          actionName: 'Data_Perimeter',
-          command: 'deploy',
-          stage: AcceleratorStage.DATA_PERIMETER,
-          runOrder: 4,
-        }),
-        this.createToolkitStage({
           actionName: 'Customizations',
           command: 'deploy',
           stage: AcceleratorStage.CUSTOMIZATIONS,

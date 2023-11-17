@@ -1,0 +1,893 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ResourcePolicyEnforcementStack Construct(ResourcePolicyEnforcementStack):  Snapshot Test 1`] = `
+{
+  "Parameters": {
+    "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/kms/cloudwatch/key-arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/kms/lambda/key-arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "AwsAcceleratorResourcePolicyComplianceCheck7EDAEEE0": {
+      "DependsOn": [
+        "DetectResourcePolicyDetectResourcePolicyFunctionCustomRulePermissionBjrlLxHBU2q1eflzaT436qiq4Iu5pKu7iRO6toNI1334F2B2",
+        "DetectResourcePolicyDetectResourcePolicyFunction3130D833",
+        "DetectResourcePolicyDetectResourcePolicyFunctionServiceRoleDefaultPolicy17595A0D",
+        "DetectResourcePolicyDetectResourcePolicyFunctionServiceRoleE9AC0FD8",
+      ],
+      "Properties": {
+        "ConfigRuleName": "AWSAccelerator-Resource-Policy-Compliance-Check",
+        "Description": "Config rule to detect non-compliant resource based policy",
+        "Scope": {
+          "ComplianceResourceTypes": [
+            "AWS::S3::Bucket",
+            "AWS::KMS::Key",
+            "AWS::IAM::Role",
+            "AWS::SecretsManager::Secret",
+            "AWS::ECR::Repository",
+            "AWS::OpenSearch::Domain",
+            "AWS::SNS::Topic",
+            "AWS::SQS::Queue",
+            "AWS::ApiGateway::RestApi",
+            "AWS::Lex::Bot",
+            "AWS::EFS::FileSystem",
+            "AWS::Events::EventBus",
+            "AWS::Backup::BackupVault",
+            "AWS::CodeArtifact::Repository",
+            "AWS::ACMPCA::CertificateAuthority",
+            "AWS::Lambda::Function",
+          ],
+        },
+        "Source": {
+          "Owner": "CUSTOM_LAMBDA",
+          "SourceDetails": [
+            {
+              "EventSource": "aws.config",
+              "MessageType": "ConfigurationItemChangeNotification",
+            },
+            {
+              "EventSource": "aws.config",
+              "MessageType": "OversizedConfigurationItemChangeNotification",
+            },
+            {
+              "EventSource": "aws.config",
+              "MessageType": "ScheduledNotification",
+            },
+          ],
+          "SourceIdentifier": {
+            "Fn::GetAtt": [
+              "DetectResourcePolicyDetectResourcePolicyFunction3130D833",
+              "Arn",
+            ],
+          },
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AwsAcceleratorResourcePolicyComplianceCheckRemediationRoleD89CACA2": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ssm.amazonaws.com",
+              },
+            },
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AwsAcceleratorResourcePolicyComplianceCheckRemediationRoleDefaultPolicy8ECF22F0": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "AWS Config rule remediation role, created by the permission provided in config repository",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "ssm:GetAutomationExecution",
+                "ssm:StartAutomationExecution",
+                "ssm:GetParameters",
+                "ssm:GetParameter",
+                "ssm:PutParameter",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":ssm:us-east-1:222222222222:document/AWSAccelerator-Attach-Resource-Based-Policy",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "RemediateResourcePolicyRemediateResourcePolicyFunction2736D3F4",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "AwsAcceleratorResourcePolicyComplianceCheckRemediationRoleDefaultPolicy8ECF22F0",
+        "Roles": [
+          {
+            "Ref": "AwsAcceleratorResourcePolicyComplianceCheckRemediationRoleD89CACA2",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "DetectResRemediation": {
+      "DependsOn": [
+        "AwsAcceleratorResourcePolicyComplianceCheck7EDAEEE0",
+      ],
+      "Properties": {
+        "Automatic": false,
+        "ConfigRuleName": "AWSAccelerator-Resource-Policy-Compliance-Check",
+        "MaximumAutomaticAttempts": 5,
+        "Parameters": {
+          "AutomationAssumeRole": {
+            "StaticValue": {
+              "Values": [
+                {
+                  "Fn::GetAtt": [
+                    "AwsAcceleratorResourcePolicyComplianceCheckRemediationRoleD89CACA2",
+                    "Arn",
+                  ],
+                },
+              ],
+            },
+          },
+          "ConfigRuleName": {
+            "StaticValue": {
+              "Values": [
+                "AWSAccelerator-Resource-Policy-Compliance-Check",
+              ],
+            },
+          },
+          "FunctionName": {
+            "StaticValue": {
+              "Values": [
+                {
+                  "Fn::GetAtt": [
+                    "RemediateResourcePolicyRemediateResourcePolicyFunction2736D3F4",
+                    "Arn",
+                  ],
+                },
+              ],
+            },
+          },
+          "ResourceId": {
+            "ResourceValue": {
+              "Value": "RESOURCE_ID",
+            },
+          },
+        },
+        "RetryAttemptSeconds": 60,
+        "TargetId": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":ssm:us-east-1:222222222222:document/AWSAccelerator-Attach-Resource-Based-Policy",
+            ],
+          ],
+        },
+        "TargetType": "SSM_DOCUMENT",
+      },
+      "Type": "AWS::Config::RemediationConfiguration",
+    },
+    "DetectResourcePolicyDetectResourcePolicyFunction3130D833": {
+      "DependsOn": [
+        "DetectResourcePolicyDetectResourcePolicyFunctionServiceRoleDefaultPolicy17595A0D",
+        "DetectResourcePolicyDetectResourcePolicyFunctionServiceRoleE9AC0FD8",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Lambda function to detect non-compliant resource policy",
+        "Environment": {
+          "Variables": {
+            "ACCELERATOR_PREFIX": "AWSAccelerator",
+            "ACCOUNT_ID": "111111111111",
+            "AWS_PARTITION": {
+              "Ref": "AWS::Partition",
+            },
+            "HOME_REGION": "us-east-1",
+            "ORG_ID": "o-asdf123456",
+            "SourceAccount": "{{ ALLOWED_EXTERNAL_ACCOUNTS }}",
+          },
+        },
+        "Handler": "detect-resource-policy.handler",
+        "KmsKeyArn": {
+          "Ref": "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "DetectResourcePolicyDetectResourcePolicyFunctionServiceRoleE9AC0FD8",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 60,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "DetectResourcePolicyDetectResourcePolicyFunctionCustomRulePermissionBjrlLxHBU2q1eflzaT436qiq4Iu5pKu7iRO6toNI1334F2B2": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "DetectResourcePolicyDetectResourcePolicyFunction3130D833",
+            "Arn",
+          ],
+        },
+        "Principal": "config.amazonaws.com",
+        "SourceAccount": "111111111111",
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "DetectResourcePolicyDetectResourcePolicyFunctionLogGroup68C3F428": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "DetectResourcePolicyDetectResourcePolicyFunction3130D833",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "DetectResourcePolicyDetectResourcePolicyFunctionServiceRoleDefaultPolicy17595A0D": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "secretsmanager:GetResourcePolicy",
+                "lex:DescribeResourcePolicy",
+                "apigateway:GET",
+                "lambda:GetPolicy",
+                "backup:GetBackupVaultAccessPolicy",
+                "codeartifact:GetRepositoryPermissionsPolicy",
+                "events:DescribeEventBus",
+                "acm-pca:GetPolicy",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":secretsmanager:us-east-1:111111111111:*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":lex:us-east-1:111111111111:*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":apigateway:us-east-1::*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":lambda:us-east-1:111111111111:*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":backup:us-east-1:111111111111:*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":codeartifact:us-east-1:111111111111:*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":events:us-east-1:111111111111:*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":acm-pca:us-east-1:111111111111:*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "DetectResourcePolicyDetectResourcePolicyFunctionServiceRoleDefaultPolicy17595A0D",
+        "Roles": [
+          {
+            "Ref": "DetectResourcePolicyDetectResourcePolicyFunctionServiceRoleE9AC0FD8",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "DetectResourcePolicyDetectResourcePolicyFunctionServiceRoleE9AC0FD8": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSConfigRulesExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "RemediateResourcePolicyRemediateResourcePolicyFunction2736D3F4": {
+      "DependsOn": [
+        "RemediateResourcePolicyRemediateResourcePolicyFunctionServiceRoleDefaultPolicyBB93B16A",
+        "RemediateResourcePolicyRemediateResourcePolicyFunctionServiceRole83F5E0A5",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Lambda function to remediate non-compliant resource based policy",
+        "Environment": {
+          "Variables": {
+            "ACCELERATOR_PREFIX": "AWSAccelerator",
+            "ACCOUNT_ID": "111111111111",
+            "AWS_PARTITION": {
+              "Ref": "AWS::Partition",
+            },
+            "HOME_REGION": "us-east-1",
+            "ORG_ID": "o-asdf123456",
+            "SourceAccount": "{{ ALLOWED_EXTERNAL_ACCOUNTS }}",
+          },
+        },
+        "Handler": "remediate-resource-policy.handler",
+        "KmsKeyArn": {
+          "Ref": "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "RemediateResourcePolicyRemediateResourcePolicyFunctionServiceRole83F5E0A5",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 60,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "RemediateResourcePolicyRemediateResourcePolicyFunctionLogGroupD8FEF036": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "RemediateResourcePolicyRemediateResourcePolicyFunction2736D3F4",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "RemediateResourcePolicyRemediateResourcePolicyFunctionServiceRole83F5E0A5": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "RemediateResourcePolicyRemediateResourcePolicyFunctionServiceRoleDefaultPolicyBB93B16A": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "iam:getRole",
+                "iam:updateAssumeRolePolicy",
+                "s3:GetBucketPolicy",
+                "s3:PutBucketPolicy",
+                "kms:GetKeyPolicy",
+                "kms:PutKeyPolicy",
+                "kms:DescribeKey",
+                "secretsmanager:GetResourcePolicy",
+                "secretsmanager:PutResourcePolicy",
+                "secretsmanager:ValidateResourcePolicy",
+                "lex:DescribeResourcePolicy",
+                "lex:UpdateResourcePolicy",
+                "lex:CreateResourcePolicy",
+                "apigateway:UpdateRestApiPolicy",
+                "apigateway:GET",
+                "apigateway:PATCH",
+                "ecr:GetRepositoryPolicy",
+                "ecr:SetRepositoryPolicy",
+                "es:ESHttpGet",
+                "es:ESHttpPut",
+                "es:DescribeDomainConfig",
+                "es:UpdateDomainConfig",
+                "sns:GetTopicAttributes",
+                "sns:SetTopicAttributes",
+                "sqs:GetQueueAttributes",
+                "sqs:SetQueueAttributes",
+                "elasticfilesystem:DescribeFileSystemPolicy",
+                "elasticfilesystem:PutFileSystemPolicy",
+                "codeartifact:GetDomainPermissionsPolicy",
+                "codeartifact:GetRepositoryPermissionsPolicy",
+                "codeartifact:PutDomainPermissionsPolicy",
+                "codeartifact:PutRepositoryPermissionsPolicy",
+                "events:DescribeEventBus",
+                "events:PutPermission",
+                "backup:GetBackupVaultAccessPolicy",
+                "backup:PutBackupVaultAccessPolicy",
+                "acm-pca:PutPolicy",
+                "acm-pca:GetPolicy",
+                "lambda:GetPolicy",
+                "lambda:AddPermission",
+                "lambda:RemovePermission",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::111111111111:*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":kms:us-east-1:111111111111:*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":secretsmanager:us-east-1:111111111111:*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":lex:us-east-1:111111111111:*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":apigateway:us-east-1::*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":ecr:us-east-1:111111111111:*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":es:us-east-1:111111111111:*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":sns:us-east-1:111111111111:*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":sqs:us-east-1:111111111111:*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":elasticfilesystem:us-east-1:111111111111:*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":codeartifact:us-east-1:111111111111:*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":lambda:us-east-1:111111111111:*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":backup:us-east-1:111111111111:*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":events:us-east-1:111111111111:*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":acm-pca:us-east-1:111111111111:*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "config:BatchGetResourceConfig",
+                "config:SelectResourceConfig",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "RemediateResourcePolicyRemediateResourcePolicyFunctionServiceRoleDefaultPolicyBB93B16A",
+        "Roles": [
+          {
+            "Ref": "RemediateResourcePolicyRemediateResourcePolicyFunctionServiceRole83F5E0A5",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "SsmParamAcceleratorVersionFF83282D": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-ResourcePolicyEnforcementStack-111111111111-us-east-1/version",
+        "Type": "String",
+        "Value": "1.5.1",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamStackId521A78D3": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-ResourcePolicyEnforcementStack-111111111111-us-east-1/stack-id",
+        "Type": "String",
+        "Value": {
+          "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+  },
+}
+`;

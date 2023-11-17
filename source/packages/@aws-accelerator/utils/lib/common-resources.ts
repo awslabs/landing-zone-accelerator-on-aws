@@ -116,3 +116,27 @@ export enum BucketAccessType {
    */
   NO_ACCESS = 'no_access',
 }
+
+/**
+ * Supported Resource Type for AWS Config Rule
+ */
+export enum ResourceType {
+  S3_BUCKET = 'AWS::S3::Bucket',
+  KMS_KEY = 'AWS::KMS::Key',
+  IAM_ROLE = 'AWS::IAM::Role',
+  SECRETS_MANAGER_SECRET = 'AWS::SecretsManager::Secret',
+  ECR_REPOSITORY = 'AWS::ECR::Repository',
+  OPENSEARCH_DOMAIN = 'AWS::OpenSearch::Domain',
+  SNS_TOPIC = 'AWS::SNS::Topic',
+  SQS_QUEUE = 'AWS::SQS::Queue',
+  APIGATEWAY_REST_API = 'AWS::ApiGateway::RestApi',
+  LEX_BOT = 'AWS::Lex::Bot',
+  EFS_FILE_SYSTEM = 'AWS::EFS::FileSystem',
+  EVENTBRIDGE_EVENTBUS = 'AWS::Events::EventBus',
+  BACKUP_VAULT = 'AWS::Backup::BackupVault',
+  CODEARTIFACT_REPOSITORY = 'AWS::CodeArtifact::Repository',
+  CERTIFICATE_AUTHORITY = 'AWS::ACMPCA::CertificateAuthority',
+  LAMBDA_FUNCTION = 'AWS::Lambda::Function',
+}
+
+export const RESOURCE_TYPE_WITH_ALLOW_ONLY_POLICY = [ResourceType.CERTIFICATE_AUTHORITY, ResourceType.LAMBDA_FUNCTION];

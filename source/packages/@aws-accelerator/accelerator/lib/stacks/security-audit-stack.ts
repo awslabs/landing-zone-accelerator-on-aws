@@ -18,7 +18,7 @@ import * as yaml from 'js-yaml';
 import { pascalCase } from 'pascal-case';
 import * as path from 'path';
 
-import { DataPerimeterConfig, GuardDutyConfig, Region } from '@aws-accelerator/config';
+import { ResourcePolicyEnforcementConfig, GuardDutyConfig, Region } from '@aws-accelerator/config';
 import {
   Bucket,
   BucketEncryptionType,
@@ -101,8 +101,8 @@ export class SecurityAuditStack extends AcceleratorStack {
     //
     // SSM Automation doc for Data Perimeter
     //
-    if (this.props.securityConfig.dataPerimeter?.enable) {
-      this.configureDataPerimeterSsmDocument();
+    if (this.props.securityConfig.resourcePolicyEnforcement?.enable) {
+      this.configureResourcePolicyEnforcementSsmDocument();
     }
 
     //
@@ -134,13 +134,9 @@ export class SecurityAuditStack extends AcceleratorStack {
     this.logger.info('Completed stack synthesis');
   }
 
-  private configureDataPerimeterSsmDocument() {
-    let documentName =
-      this.props.securityConfig.dataPerimeter!.ssmDocumentName || DataPerimeterConfig.DEFAULT_SSM_DOCUMENT_NAME;
-    documentName = documentName.startsWith(this.props.prefixes.accelerator)
-      ? documentName
-      : `${this.props.prefixes.accelerator}-${documentName}`;
-    new RemediationSsmDocument(this, 'DataPerimeterRemediationDocument', {
+  private configureResourcePolicyEnforcementSsmDocument() {
+    const documentName = `${this.props.prefixes.accelerator}-${ResourcePolicyEnforcementConfig.DEFAULT_SSM_DOCUMENT_NAME}`;
+    new RemediationSsmDocument(this, 'ResourcePolicyEnforcementRemediationDocument', {
       documentName,
       sharedAccountIds: this.props.accountsConfig.getAccountIds(),
       globalConfig: this.props.globalConfig,

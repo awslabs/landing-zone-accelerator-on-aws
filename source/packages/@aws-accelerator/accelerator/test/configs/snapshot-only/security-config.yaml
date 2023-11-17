@@ -950,27 +950,44 @@ cloudWatch:
           statistic: Sum
           threshold: 1
           treatMissingData: notBreaching
-dataPerimeter:
+resourcePolicyEnforcement:
   enable: true
-  resourcePolicies:
-    - name: IAM
-      document: resource-policies/iam.json
-    - name: S3
-      document: resource-policies/s3.json
-    - name: KMS
-      document: resource-policies/kms.json
   remediation:
     automatic: false
     retryAttemptSeconds: 60
     maximumAutomaticAttempts: 5
   policySets:
     - resourcePolicies:
-        - name: IAM
-          document: resource-policies/iam.json
-        - name: S3
-          document: resource-policies/s3.json
-        - name: KMS
-          document: resource-policies/kms.json
+      - resourceType: IAM_ROLE
+        document: resource-policies/iam.json
+      - resourceType: S3_BUCKET
+        document: resource-policies/s3.json
+      - resourceType: KMS_KEY
+        document: resource-policies/kms.json
+      - resourceType: SECRETS_MANAGER_SECRET
+        document: resource-policies/secrets-manager.json
+      - resourceType: ECR_REPOSITORY
+        document: resource-policies/ecr.json
+      - resourceType: OPENSEARCH_DOMAIN
+        document: resource-policies/opensearch.json
+      - resourceType: SNS_TOPIC
+        document: resource-policies/sns.json
+      - resourceType: SQS_QUEUE
+        document: resource-policies/sqs.json
+      - resourceType: APIGATEWAY_REST_API
+        document: resource-policies/apigateway.json
+      - resourceType: LEX_BOT
+        document: resource-policies/lex-bot.json
+      - resourceType: EFS_FILE_SYSTEM
+        document: resource-policies/efs-file-system.json
+      - resourceType: EVENTBRIDGE_EVENTBUS
+        document: resource-policies/eventbridge-eventbus.json
+      - resourceType: BACKUP_VAULT
+        document: resource-policies/backup-vault.json
+      - resourceType: CODEARTIFACT_REPOSITORY
+        document: resource-policies/codeartifact-repository.json
+      inputParameters:
+        SourceAccount: '{{ ALLOWED_EXTERNAL_ACCOUNTS }}'
       deploymentTargets:
-        accounts:
-          - Management
+        organizationalUnits:
+          - Root

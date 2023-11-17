@@ -53,6 +53,7 @@ import { PrepareStack } from '../lib/stacks/prepare-stack';
 import { SecurityAuditStack } from '../lib/stacks/security-audit-stack';
 import { SecurityResourcesStack } from '../lib/stacks/security-resources-stack';
 import { SecurityStack } from '../lib/stacks/security-stack';
+import { ResourcePolicyEnforcementStack } from '../lib/stacks/resource-policy-enforcement-stack';
 
 export class AcceleratorSynthStacks {
   private readonly configFolderName: string;
@@ -190,8 +191,8 @@ export class AcceleratorSynthStacks {
       case AcceleratorStage.SECURITY_RESOURCES:
         this.synthSecurityResourcesStacks();
         break;
-      case AcceleratorStage.DATA_PERIMETER:
-        this.synthDataPerimeterStacks();
+      case AcceleratorStage.RESOURCE_POLICY_ENFORCEMENT:
+        this.synthResourcePolicyEnforcementStacks();
         break;
       case AcceleratorStage.SECURITY:
         this.synthSecurityStacks();
@@ -655,9 +656,9 @@ export class AcceleratorSynthStacks {
     }
   }
   /**
-   * synth DataPerimeter stacks
+   * synth ResourcePolicyEnforcementStack
    */
-  private synthDataPerimeterStacks() {
+  private synthResourcePolicyEnforcementStacks() {
     for (const region of this.props.globalConfig.enabledRegions) {
       for (const account of [
         ...this.props.accountsConfig.mandatoryAccounts,
@@ -666,9 +667,9 @@ export class AcceleratorSynthStacks {
         const accountId = this.props.accountsConfig.getAccountId(account.name);
         this.stacks.set(
           `${account.name}-${region}`,
-          new SecurityResourcesStack(
+          new ResourcePolicyEnforcementStack(
             this.app,
-            `${AcceleratorStackNames[AcceleratorStage.DATA_PERIMETER]}-${accountId}-${region}`,
+            `${AcceleratorStackNames[AcceleratorStage.RESOURCE_POLICY_ENFORCEMENT]}-${accountId}-${region}`,
             {
               env: {
                 account: accountId,

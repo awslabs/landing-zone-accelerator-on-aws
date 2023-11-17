@@ -46,7 +46,7 @@ import { TesterPipelineStack } from '../lib/stacks/tester-pipeline-stack';
 import { AcceleratorContext, AcceleratorEnvironment, AcceleratorResourcePrefixes } from './app-utils';
 import { ImportAseaResourcesStack } from '../lib/stacks/import-asea-resources-stack';
 import { AcceleratorAspects } from '../lib/accelerator-aspects';
-import { DataPerimeterStack } from '../lib/stacks/data-perimeter-stack';
+import { ResourcePolicyEnforcementStack } from '../lib/stacks/resource-policy-enforcement-stack';
 
 const logger = createLogger(['stack-utils']);
 
@@ -971,51 +971,6 @@ export function createNetworkAssociationsStacks(
 }
 
 /**
- * Create Security Perimeter Stack
- * @param rootApp
- * @param context
- * @param props
- * @param env
- * @param accountId
- * @param enabledRegion
- */
-export function createDataPerimeterStack(
-  rootApp: cdk.App,
-  context: AcceleratorContext,
-  props: AcceleratorStackProps,
-  env: cdk.Environment,
-  accountId: string,
-  enabledRegion: string,
-) {
-  if (
-    includeStage(context, {
-      stage: AcceleratorStage.DATA_PERIMETER,
-      account: accountId,
-      region: enabledRegion,
-    })
-  ) {
-    checkRootApp(rootApp);
-    const securityResourcesStackName = `${
-      AcceleratorStackNames[AcceleratorStage.DATA_PERIMETER]
-    }-${accountId}-${enabledRegion}`;
-    const app = new cdk.App({
-      outdir: `cdk.out/${securityResourcesStackName}`,
-    });
-
-    const dataPerimeterStack = new DataPerimeterStack(app, `${securityResourcesStackName}`, {
-      env,
-      description: `(SO0199-dataperimeter) Landing Zone Accelerator on AWS. Version ${version}.`,
-      synthesizer: getStackSynthesizer(props, accountId, enabledRegion, context.stage),
-      terminationProtection: props.globalConfig.terminationProtection ?? true,
-      ...props,
-    });
-    addAcceleratorTags(dataPerimeterStack, context.partition, props.globalConfig, props.prefixes.accelerator);
-    cdk.Aspects.of(dataPerimeterStack).add(new AwsSolutionsChecks());
-    new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
-  }
-}
-
-/**
  * Create all Customizations stage stacks
  * @param rootApp
  * @param context
@@ -1058,6 +1013,30 @@ export function createCustomizationsStacks(
     createCustomStacks(app, props, env, accountId, enabledRegion);
 
     createApplicationsStacks(app, context, props, env, accountId, enabledRegion);
+    new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
+
+    const resourcePolicyEnforcementStackName = `${
+      AcceleratorStackNames[AcceleratorStage.RESOURCE_POLICY_ENFORCEMENT]
+    }-${accountId}-${enabledRegion}`;
+
+    const resourcePolicyEnforcementStack = new ResourcePolicyEnforcementStack(
+      app,
+      `${resourcePolicyEnforcementStackName}`,
+      {
+        env,
+        description: `(SO0199-resource-policy-enforcement) Landing Zone Accelerator on AWS. Version ${version}.`,
+        synthesizer: getStackSynthesizer(props, accountId, enabledRegion, context.stage),
+        terminationProtection: props.globalConfig.terminationProtection ?? true,
+        ...props,
+      },
+    );
+    addAcceleratorTags(
+      resourcePolicyEnforcementStack,
+      context.partition,
+      props.globalConfig,
+      props.prefixes.accelerator,
+    );
+    cdk.Aspects.of(resourcePolicyEnforcementStack).add(new AwsSolutionsChecks());
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }

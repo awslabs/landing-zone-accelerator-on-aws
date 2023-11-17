@@ -2013,74 +2013,6 @@ def script_handler(events, context):
       },
       "Type": "AWS::IAM::Role",
     },
-    "DataPerimeterRemediationDocumentAwsAcceleratorAttachResourceBasedPolicy7593330C": {
-      "Properties": {
-        "Content": {
-          "assumeRole": "{{ AutomationAssumeRole }}",
-          "description": "Resource-based Policy",
-          "mainSteps": [
-            {
-              "action": "aws:invokeLambdaFunction",
-              "inputs": {
-                "FunctionName": "{{ FunctionName }}",
-                "InputPayload": {
-                  "ConfigRuleName": "{{ ConfigRuleName }}",
-                  "ResourceId": "{{ ResourceId }}",
-                },
-                "InvocationType": "RequestResponse",
-              },
-              "name": "invokeLambdaFunction",
-            },
-          ],
-          "parameters": {
-            "AutomationAssumeRole": {
-              "type": "String",
-            },
-            "ConfigRuleName": {
-              "type": "String",
-            },
-            "FunctionName": {
-              "type": "String",
-            },
-            "ResourceId": {
-              "type": "String",
-            },
-          },
-          "schemaVersion": "0.3",
-        },
-        "DocumentType": "Automation",
-        "Name": "AWSAccelerator-Attach-Resource-Based-Policy",
-        "UpdateMethod": "NewVersion",
-      },
-      "Type": "AWS::SSM::Document",
-    },
-    "DataPerimeterRemediationDocumentAwsAcceleratorAttachResourceBasedPolicyShareDocument45A14D71": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomSSMShareDocumentCustomResourceProviderLogGroup11AEA42B",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomSSMShareDocumentCustomResourceProviderHandler02D98C87",
-            "Arn",
-          ],
-        },
-        "accountIds": [
-          "111111111111",
-          "222222222222",
-          "333333333333",
-          "444444444444",
-          "555555555555",
-          "666666666666",
-        ],
-        "name": {
-          "Ref": "DataPerimeterRemediationDocumentAwsAcceleratorAttachResourceBasedPolicy7593330C",
-        },
-      },
-      "Type": "Custom::SSMShareDocument",
-      "UpdateReplacePolicy": "Delete",
-    },
     "DetectiveGraphConfig248C4B9F": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
@@ -2542,6 +2474,74 @@ def script_handler(events, context):
         ],
         "name": {
           "Ref": "PutS3Encryption383DF0CE",
+        },
+      },
+      "Type": "Custom::SSMShareDocument",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ResourcePolicyEnforcementRemediationDocumentAwsAcceleratorAttachResourceBasedPolicy51D68FB6": {
+      "Properties": {
+        "Content": {
+          "assumeRole": "{{ AutomationAssumeRole }}",
+          "description": "Resource-based Policy",
+          "mainSteps": [
+            {
+              "action": "aws:invokeLambdaFunction",
+              "inputs": {
+                "FunctionName": "{{ FunctionName }}",
+                "InputPayload": {
+                  "ConfigRuleName": "{{ ConfigRuleName }}",
+                  "ResourceId": "{{ ResourceId }}",
+                },
+                "InvocationType": "RequestResponse",
+              },
+              "name": "invokeLambdaFunction",
+            },
+          ],
+          "parameters": {
+            "AutomationAssumeRole": {
+              "type": "String",
+            },
+            "ConfigRuleName": {
+              "type": "String",
+            },
+            "FunctionName": {
+              "type": "String",
+            },
+            "ResourceId": {
+              "type": "String",
+            },
+          },
+          "schemaVersion": "0.3",
+        },
+        "DocumentType": "Automation",
+        "Name": "AWSAccelerator-Attach-Resource-Based-Policy",
+        "UpdateMethod": "NewVersion",
+      },
+      "Type": "AWS::SSM::Document",
+    },
+    "ResourcePolicyEnforcementRemediationDocumentAwsAcceleratorAttachResourceBasedPolicyShareDocument7708A01C": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomSSMShareDocumentCustomResourceProviderLogGroup11AEA42B",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomSSMShareDocumentCustomResourceProviderHandler02D98C87",
+            "Arn",
+          ],
+        },
+        "accountIds": [
+          "111111111111",
+          "222222222222",
+          "333333333333",
+          "444444444444",
+          "555555555555",
+          "666666666666",
+        ],
+        "name": {
+          "Ref": "ResourcePolicyEnforcementRemediationDocumentAwsAcceleratorAttachResourceBasedPolicy51D68FB6",
         },
       },
       "Type": "Custom::SSMShareDocument",

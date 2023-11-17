@@ -98,7 +98,7 @@ export class SecurityConfigValidator {
 
     this.validateAwsCloudWatchLogGroups(values, errors);
     this.validateAwsCloudWatchLogGroupsRetention(values, errors);
-    this.validateDataPerimeterConfig(values, ouIdNames, accountNames, errors);
+    this.validateResourcePolicyEnforcementConfig(values, ouIdNames, accountNames, errors);
 
     if (errors.length) {
       throw new Error(`${SecurityConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
@@ -805,15 +805,15 @@ export class SecurityConfigValidator {
     }
   }
 
-  private validateDataPerimeterConfig(
+  private validateResourcePolicyEnforcementConfig(
     securityConfig: SecurityConfig,
     ouIdNames: string[],
     accountNames: string[],
     errors: string[],
   ) {
-    if (!securityConfig.dataPerimeter) return;
-    const dataPerimeterConfig = securityConfig.dataPerimeter;
-    for (const resourcePolicy of dataPerimeterConfig.policySets) {
+    if (!securityConfig.resourcePolicyEnforcement) return;
+    const resourcePolicyEnforcementConfig = securityConfig.resourcePolicyEnforcement;
+    for (const resourcePolicy of resourcePolicyEnforcementConfig.policySets) {
       for (const ou of resourcePolicy.deploymentTargets.organizationalUnits ?? []) {
         if (ouIdNames.indexOf(ou) === -1) {
           errors.push(
@@ -826,6 +826,16 @@ export class SecurityConfigValidator {
         if (accountNames.indexOf(account) === -1) {
           errors.push(
             `Deployment target account ${account} for Data Perimeter AWS Config rules does not exists in accounts-config.yaml file.`,
+          );
+        }
+      }
+
+      if (resourcePolicy.inputParameters?.['SourceAccount']) {
+        const sourceAccount = resourcePolicy.inputParameters['SourceAccount'];
+        const accountIdRegex = /^\d{12}$/;
+        if (sourceAccount !== 'ALL' && sourceAccount.split(',').find(accountId => !accountIdRegex.test(accountId))) {
+          errors.push(
+            `parameter 'SourceAccount' in data perimeter can only be 'ALL' or list of valid account ID (12 digits) separated by ','`,
           );
         }
       }
