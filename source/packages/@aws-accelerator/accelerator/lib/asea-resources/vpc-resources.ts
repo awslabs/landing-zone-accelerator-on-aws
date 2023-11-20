@@ -37,6 +37,7 @@ import { SsmResourceType } from '@aws-accelerator/utils';
 import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
 import { AseaResource, AseaResourceProps } from './resource';
 import { getSubnetConfig, getVpcConfig } from '../stacks/network-stacks/utils/getter-utils';
+import { AcceleratorStage } from '../accelerator-stage';
 
 const enum RESOURCE_TYPE {
   VPC = 'AWS::EC2::VPC',
@@ -339,6 +340,7 @@ export class VpcResources extends AseaResource {
   ) {
     const securityGroupsMap = new Map<string, string>();
     const securityGroupPhysicalIdMap = new Map<string, string>();
+    const securityGroupVpc = vpcItem.name;
     for (const securityGroupItem of vpcItem.securityGroups ?? []) {
       const existingSecurityGroup = this.findResourceByName(
         vpcStackInfo.resources,
@@ -370,16 +372,28 @@ export class VpcResources extends AseaResource {
         securityGroupItem.inboundRules,
         securityGroupIngressRules,
         securityGroupsMap,
+        securityGroupVpc,
       );
       securityGroupEgressRules = this.processSecurityGroupEgressSources(
         securityGroupItem.outboundRules,
         securityGroupEgressRules,
         securityGroupsMap,
+        securityGroupVpc,
       );
 
       const securityGroup = vpcStack.getResource(logicalId) as CfnSecurityGroup;
-      this.updateSecurityGroupIngressRules(securityGroupIngressRules, securityGroupPhysicalIdMap, securityGroup);
-      this.updateSecurityGroupEgressRules(securityGroupEgressRules, securityGroupPhysicalIdMap, securityGroup);
+      this.updateSecurityGroupIngressRules(
+        securityGroupIngressRules,
+        securityGroupPhysicalIdMap,
+        securityGroup,
+        securityGroupVpc,
+      );
+      this.updateSecurityGroupEgressRules(
+        securityGroupEgressRules,
+        securityGroupPhysicalIdMap,
+        securityGroup,
+        securityGroupVpc,
+      );
     }
   }
 
@@ -392,6 +406,7 @@ export class VpcResources extends AseaResource {
       to?: number;
     },
     securityGroupsMap: Map<string, string>,
+    securityGroupVpc: string,
   ) => {
     const securityGroupRules: SecurityGroupRuleInfo[] = [];
     securityGroupRuleItem.sources.forEach(sourceItem => {
@@ -417,11 +432,13 @@ export class VpcResources extends AseaResource {
       }
       if (NetworkConfigTypes.securityGroupSourceConfig.is(sourceItem)) {
         sourceItem.securityGroups.forEach(securityGroup => {
-          if (!securityGroupsMap.get(securityGroup)) return;
+          const securityGroupId = this.getSecurityGroupId(securityGroupsMap, securityGroup, securityGroupVpc);
+          if (!securityGroupId) return;
+          //We do not currently account for cross account or cross vpc sgs, this is not natively supported in LZA.
           securityGroupRules.push({
             ...ruleProps,
             source: securityGroup,
-            sourceValue: securityGroupsMap.get(securityGroup)!,
+            sourceValue: securityGroupsMap.get(securityGroup) ?? securityGroupId,
             sourceType: 'sg',
             description: securityGroupRuleItem.description,
           });
@@ -431,16 +448,41 @@ export class VpcResources extends AseaResource {
     return securityGroupRules;
   };
 
+  private getSecurityGroupId(securityGroupsMap: Map<string, string>, securityGroup: string, securityGroupVpc: string) {
+    let securityGroupId = undefined;
+    const securityGroupFromSSMParam = this.scope.getExternalResourceParameter(
+      this.scope.getSsmPath(SsmResourceType.SECURITY_GROUP, [securityGroupVpc, securityGroup]),
+    );
+    // This sets SG if securityGroup exists in ASEA SGs
+    if (securityGroupsMap.get(securityGroup)) {
+      securityGroupId = securityGroupsMap.get(securityGroup);
+    } else if (securityGroupFromSSMParam) {
+      // This sets SG equal to value if securityGroup exists as a security Group created by LZA
+      securityGroupId = securityGroupFromSSMParam;
+    } else {
+      if (!securityGroupId && this.props.stage === AcceleratorStage.POST_IMPORT_ASEA_RESOURCES) {
+        throw new Error(
+          `Security Group Source ${securityGroup} was not found in ASEA SecurityGroup Map or in SSM Parameter path for ${this.scope.getSsmPath(
+            SsmResourceType.SECURITY_GROUP,
+            [securityGroupVpc, securityGroup],
+          )}`,
+        );
+      }
+    }
+    return securityGroupId;
+  }
+
   private processSecurityGroupIngressSources(
     securityGroupRuleIngressItems: SecurityGroupRuleConfig[],
     securityGroupIngressRules: SecurityGroupRuleInfo[],
     securityGroupsMap: Map<string, string>,
+    securityGroupVpc: string,
   ) {
     for (const ingressRuleItem of securityGroupRuleIngressItems) {
       securityGroupIngressRules.push(
-        ...this.processTcpSources(ingressRuleItem, securityGroupsMap),
-        ...this.processUdpSources(ingressRuleItem, securityGroupsMap),
-        ...this.processTypeSources(ingressRuleItem, securityGroupsMap),
+        ...this.processTcpSources(ingressRuleItem, securityGroupsMap, securityGroupVpc),
+        ...this.processUdpSources(ingressRuleItem, securityGroupsMap, securityGroupVpc),
+        ...this.processTypeSources(ingressRuleItem, securityGroupsMap, securityGroupVpc),
       );
     }
     return securityGroupIngressRules;
@@ -450,12 +492,13 @@ export class VpcResources extends AseaResource {
     securityGroupRuleEgressItems: SecurityGroupRuleConfig[],
     securityGroupEgressRules: SecurityGroupRuleInfo[],
     securityGroupsMap: Map<string, string>,
+    securityGroupVpc: string,
   ) {
     for (const egressRuleItem of securityGroupRuleEgressItems) {
       securityGroupEgressRules.push(
-        ...this.processTcpSources(egressRuleItem, securityGroupsMap),
-        ...this.processUdpSources(egressRuleItem, securityGroupsMap),
-        ...this.processTypeSources(egressRuleItem, securityGroupsMap),
+        ...this.processTcpSources(egressRuleItem, securityGroupsMap, securityGroupVpc),
+        ...this.processUdpSources(egressRuleItem, securityGroupsMap, securityGroupVpc),
+        ...this.processTypeSources(egressRuleItem, securityGroupsMap, securityGroupVpc),
       );
     }
     return securityGroupEgressRules;
@@ -464,6 +507,7 @@ export class VpcResources extends AseaResource {
   private processTypeSources = (
     securityGroupRuleItem: SecurityGroupRuleConfig,
     securityGroupsMap: Map<string, string>,
+    securityGroupVpc: string,
   ) => {
     const securityGroupRules: SecurityGroupRuleInfo[] = [];
     for (const ruleType of securityGroupRuleItem.types ?? []) {
@@ -473,7 +517,12 @@ export class VpcResources extends AseaResource {
           type: ruleType,
         };
         securityGroupRules.push(
-          ...this.processSecurityGroupSources(securityGroupRuleItem, defaultRuleProps, securityGroupsMap),
+          ...this.processSecurityGroupSources(
+            securityGroupRuleItem,
+            defaultRuleProps,
+            securityGroupsMap,
+            securityGroupVpc,
+          ),
         );
       } else {
         const defaultRuleProps = {
@@ -483,7 +532,12 @@ export class VpcResources extends AseaResource {
           to: TCP_PROTOCOLS_PORT[ruleType],
         };
         securityGroupRules.push(
-          ...this.processSecurityGroupSources(securityGroupRuleItem, defaultRuleProps, securityGroupsMap),
+          ...this.processSecurityGroupSources(
+            securityGroupRuleItem,
+            defaultRuleProps,
+            securityGroupsMap,
+            securityGroupVpc,
+          ),
         );
       }
     }
@@ -493,6 +547,7 @@ export class VpcResources extends AseaResource {
   private processUdpSources = (
     securityGroupRuleItem: SecurityGroupRuleConfig,
     securityGroupsMap: Map<string, string>,
+    securityGroupVpc: string,
   ) => {
     const securityGroupRules: SecurityGroupRuleInfo[] = [];
     for (const tcpPort of securityGroupRuleItem.udpPorts ?? []) {
@@ -502,7 +557,12 @@ export class VpcResources extends AseaResource {
         to: tcpPort,
       };
       securityGroupRules.push(
-        ...this.processSecurityGroupSources(securityGroupRuleItem, defaultRuleProps, securityGroupsMap),
+        ...this.processSecurityGroupSources(
+          securityGroupRuleItem,
+          defaultRuleProps,
+          securityGroupsMap,
+          securityGroupVpc,
+        ),
       );
     }
     return securityGroupRules;
@@ -511,6 +571,7 @@ export class VpcResources extends AseaResource {
   private processTcpSources = (
     securityGroupRuleItem: SecurityGroupRuleConfig,
     securityGroupsMap: Map<string, string>,
+    securityGroupVpc: string,
   ) => {
     const securityGroupRules: SecurityGroupRuleInfo[] = [];
     for (const tcpPort of securityGroupRuleItem.tcpPorts ?? []) {
@@ -520,7 +581,12 @@ export class VpcResources extends AseaResource {
         to: tcpPort,
       };
       securityGroupRules.push(
-        ...this.processSecurityGroupSources(securityGroupRuleItem, defaultRuleProps, securityGroupsMap),
+        ...this.processSecurityGroupSources(
+          securityGroupRuleItem,
+          defaultRuleProps,
+          securityGroupsMap,
+          securityGroupVpc,
+        ),
       );
     }
     return securityGroupRules;
@@ -530,11 +596,13 @@ export class VpcResources extends AseaResource {
     securityGroupLzaConfigIngressRules: SecurityGroupRuleInfo[],
     securityGroupPhysicalIdMap: Map<string, string>,
     securityGroup: cdk.aws_ec2.CfnSecurityGroup,
+    securityGroupVpc: string,
   ) {
     let existingIngressRulesToBeUpdated: CfnSecurityGroup.IngressProperty[] = [];
     existingIngressRulesToBeUpdated = this.mapConfigRulesToIngressProperties(
       securityGroupLzaConfigIngressRules,
       securityGroupPhysicalIdMap,
+      securityGroupVpc,
     );
 
     if (existingIngressRulesToBeUpdated && existingIngressRulesToBeUpdated.length > 0) {
@@ -551,11 +619,13 @@ export class VpcResources extends AseaResource {
     securityGroupLzaConfigEgressRules: SecurityGroupRuleInfo[],
     securityGroupPhysicalIdMap: Map<string, string>,
     securityGroup: cdk.aws_ec2.CfnSecurityGroup,
+    securityGroupVpc: string,
   ) {
     let existingEgressRulesToBeUpdated: CfnSecurityGroup.EgressProperty[] = [];
     existingEgressRulesToBeUpdated = this.mapConfigRulesToEgressProperties(
       securityGroupLzaConfigEgressRules,
       securityGroupPhysicalIdMap,
+      securityGroupVpc,
     );
 
     if (existingEgressRulesToBeUpdated && existingEgressRulesToBeUpdated.length > 0) {
@@ -571,23 +641,20 @@ export class VpcResources extends AseaResource {
   private mapConfigRulesToEgressProperties(
     securityGroupLzaConfigRules: SecurityGroupRuleInfo[],
     securityGroupPhysicalIdMap: Map<string, string>,
+    securityGroupVpc: string,
   ) {
     const existingEgressRulesToBeUpdated: CfnSecurityGroup.IngressProperty[] = [];
     securityGroupLzaConfigRules.forEach(configEgressRule => {
-      if (configEgressRule.type !== 'ALL') {
-        const existingEgressRuleToBeUpdated: CfnSecurityGroup.EgressProperty = {
-          ipProtocol: configEgressRule.protocol,
-          description: configEgressRule.description,
-          fromPort: configEgressRule.from,
-          toPort: configEgressRule.to,
-        };
-        existingEgressRulesToBeUpdated.push(existingEgressRuleToBeUpdated);
-      }
       if (configEgressRule.sourceType === 'sg') {
+        const securityGroupId = this.getSecurityGroupId(
+          securityGroupPhysicalIdMap,
+          configEgressRule.source,
+          securityGroupVpc,
+        );
         const existingEgressRuleToBeUpdated: CfnSecurityGroup.EgressProperty = {
           ipProtocol: configEgressRule.protocol,
           description: configEgressRule.description,
-          destinationSecurityGroupId: securityGroupPhysicalIdMap.get(configEgressRule.source)!,
+          destinationSecurityGroupId: securityGroupId,
           fromPort: configEgressRule.from,
           toPort: configEgressRule.to,
         };
@@ -642,23 +709,20 @@ export class VpcResources extends AseaResource {
   private mapConfigRulesToIngressProperties(
     securityGroupLzaConfigIngressRules: SecurityGroupRuleInfo[],
     securityGroupPhysicalIdMap: Map<string, string>,
+    securityGroupVpc: string,
   ) {
     const existingIngressRulesToBeUpdated: CfnSecurityGroup.IngressProperty[] = [];
     securityGroupLzaConfigIngressRules.forEach(configIngressRule => {
-      if (configIngressRule.type !== 'ALL') {
-        const existingIngressRuleToBeUpdated: CfnSecurityGroup.IngressProperty = {
-          ipProtocol: configIngressRule.protocol,
-          description: configIngressRule.description,
-          fromPort: configIngressRule.from,
-          toPort: configIngressRule.to,
-        };
-        existingIngressRulesToBeUpdated.push(existingIngressRuleToBeUpdated);
-      }
       if (configIngressRule.sourceType === 'sg') {
+        const securityGroupId = this.getSecurityGroupId(
+          securityGroupPhysicalIdMap,
+          configIngressRule.source,
+          securityGroupVpc,
+        );
         const existingIngressRuleToBeUpdated: CfnSecurityGroup.IngressProperty = {
           ipProtocol: configIngressRule.protocol,
           description: configIngressRule.description,
-          sourceSecurityGroupId: securityGroupPhysicalIdMap.get(configIngressRule.source)!,
+          sourceSecurityGroupId: securityGroupId,
           fromPort: configIngressRule.from,
           toPort: configIngressRule.to,
         };
