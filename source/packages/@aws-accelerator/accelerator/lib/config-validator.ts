@@ -73,7 +73,9 @@ if (configDirPath) {
 }
 
 function areReplacementsPresent() {
-  const regex = new RegExp('{{.+}}');
+  // Matches lookup values excluding account lookups such as {{account Management}}
+  // Account lookups do not require existence of replacements-config.yaml file
+  const regex = new RegExp('{{(?!.*(account )).*}}');
   let replacementsPresent = false;
 
   for (const fileName of fileNameList) {
@@ -190,6 +192,7 @@ async function validateConfig(props: {
   //
   runValidators(
     configDirPath,
+    props.replacementsPresent,
     accountsConfig,
     customizationsConfig,
     globalConfig,
@@ -218,6 +221,7 @@ async function validateConfig(props: {
  */
 function runValidators(
   configDirPath: string,
+  replacementsPresent: boolean,
   accountsConfig?: AccountsConfig,
   customizationsConfig?: CustomizationsConfig,
   globalConfig?: GlobalConfig,
@@ -329,7 +333,7 @@ function runValidators(
     }
   }
 
-  if (replacementsConfig) {
+  if (replacementsPresent && replacementsConfig) {
     try {
       new ReplacementsConfigValidator(replacementsConfig);
     } catch (e) {

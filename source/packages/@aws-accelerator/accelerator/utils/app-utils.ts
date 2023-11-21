@@ -562,7 +562,7 @@ export function getReplacementsConfig(configDirPath: string, accountsConfig: Acc
   if (fs.existsSync(path.join(configDirPath, ReplacementsConfig.FILENAME))) {
     replacementsConfig = ReplacementsConfig.load(configDirPath, accountsConfig);
   } else {
-    replacementsConfig = new ReplacementsConfig();
+    replacementsConfig = new ReplacementsConfig(undefined, accountsConfig);
   }
   return replacementsConfig;
 }
