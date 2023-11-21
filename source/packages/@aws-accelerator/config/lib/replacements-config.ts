@@ -196,6 +196,7 @@ export class ReplacementsConfig implements t.TypeOf<typeof ReplacementsConfigTyp
     if (!fs.existsSync(path.join(dir, ReplacementsConfig.FILENAME))) return new ReplacementsConfig();
 
     const buffer = fs.readFileSync(path.join(dir, ReplacementsConfig.FILENAME), 'utf8');
+    if (!yaml.load(buffer)) return new ReplacementsConfig();
     const values = t.parse(ReplacementsConfigTypes.replacementsConfig, yaml.load(buffer));
     return new ReplacementsConfig(values, accountsConfig, validateOnly);
   }
