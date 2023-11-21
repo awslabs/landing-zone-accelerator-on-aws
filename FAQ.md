@@ -85,6 +85,10 @@ No, Landing Zone Accelerator resides within your Management account and is contr
 
 Customers are able use the [AWS Support console](https://support.console.aws.amazon.com/support/home) to file issues directly against Landing Zone Accelerator. Please use **_Service: Control Tower → Category: Landing Zone Accelerator_** when filing support tickets.
 
+### Where can I find a software bill of materials (SBOM) for the Landing Zone Accelerator?
+
+A software bill of materials can be generated from the Landing Zone Accelerator repository hosted on [GitHub](https://github.com/awslabs/landing-zone-accelerator-on-aws). For instructions on how to generate the SBOM, please see [Exporting a software bill of materials for your repository](https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/exporting-a-software-bill-of-materials-for-your-repository).
+
 ## Solution - Architecture
 
 ### What does the solution deploy?
