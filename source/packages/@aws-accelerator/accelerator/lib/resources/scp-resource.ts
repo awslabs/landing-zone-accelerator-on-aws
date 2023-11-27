@@ -246,6 +246,7 @@ export class ScpResource {
         snsTopicName: props.securityConfig.centralSecurityServices.scpRevertChangesConfig?.snsTopicName,
         scpFilePaths: this.scpGeneratedFilePathList,
         singleAccountMode: props.enableSingleAccountMode,
+        organizationEnabled: props.organizationConfig.enable,
       });
     }
   }

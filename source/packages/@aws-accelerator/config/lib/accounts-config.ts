@@ -364,9 +364,7 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
         // if orgs is disabled, the accountId is read from accounts config.
         //But less than 3 account Ids are provided then throw an error
       } else if (!isOrgsEnabled && (accountsConfig.accountIds ?? []).length < 3) {
-        throw new Error(
-          `Use existing roles is enabled, but the number of accounts in the accounts config is less than 2`,
-        );
+        throw new Error(`Organization is disabled, but the number of accounts in the accounts config is less than 3.`);
       }
     }
   }

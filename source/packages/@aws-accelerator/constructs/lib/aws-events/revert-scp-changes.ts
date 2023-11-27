@@ -66,6 +66,10 @@ export interface RevertScpChangesProps {
    * Single Account mode
    */
   readonly singleAccountMode: boolean;
+  /**
+   * Organization enabled
+   */
+  readonly organizationEnabled: boolean;
 }
 
 export class RevertScpChanges extends Construct {
@@ -128,6 +132,7 @@ export class RevertScpChanges extends Construct {
         HOME_REGION: props.homeRegion,
         SNS_TOPIC_ARN: snsTopicArn ?? '',
         SINGLE_ACCOUNT_MODE: `${props.singleAccountMode}`,
+        ORGANIZATIONS_ENABLED: `${props.organizationEnabled}`,
       },
       environmentEncryption: props.kmsKeyLambda,
       initialPolicy: revertScpChangesPolicyList,
