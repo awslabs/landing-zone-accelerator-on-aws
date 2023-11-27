@@ -423,6 +423,8 @@ export class ManagedActiveDirectorySecretConfig
   readonly adminSecretName: string | undefined = undefined;
   /**
    * Active directory admin user secret account name. When no account name provided Accelerator will create the secret into the account MAD exists
+   *
+   * Note: Please do not use the Management account for the admin user secret account name.
    */
   readonly account: string | undefined = undefined;
   /**
@@ -1921,24 +1923,16 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
   }
 
   public getManageActiveDirectorySecretRegion(directoryName: string): string {
-    let directoryFound = false;
-    let directoryRegion = '';
     for (const managedActiveDirectory of this.managedActiveDirectories ?? []) {
       if (managedActiveDirectory.name === directoryName) {
-        directoryFound = true;
-        directoryRegion = managedActiveDirectory.account;
         if (managedActiveDirectory.secretConfig) {
           if (managedActiveDirectory.secretConfig.region) {
             return managedActiveDirectory.secretConfig.region;
           } else {
-            managedActiveDirectory.region;
+            return managedActiveDirectory.region;
           }
         }
       }
-    }
-
-    if (directoryFound) {
-      return directoryRegion;
     }
     logger.error(`getManageActiveDirectoryAdminSecretName Directory ${directoryName} not found in iam-config file`);
     throw new Error('configuration validation failed.');

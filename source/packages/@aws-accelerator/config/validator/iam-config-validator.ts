@@ -1086,7 +1086,13 @@ class ManagedActiveDirectoryValidator {
 
     //
     // Validate MAD sharing configuration
+    //
     this.validateMadSharingConfig(values, ouIdNames, accountNames, errors);
+
+    //
+    // Validate MAD secret configuration
+    //
+    this.validateMadSecretConfig(values, errors);
   }
 
   /**
@@ -1282,6 +1288,33 @@ class ManagedActiveDirectoryValidator {
             }
           }
         }
+      }
+    }
+  }
+
+  /**
+   * Function to validate managed active directory secret configuration
+   * @param values
+   * @param ouIdNames
+   * @param accountNames
+   * @param errors
+   */
+  private validateMadSecretConfig(values: t.TypeOf<typeof IamConfigTypes.iamConfig>, errors: string[]) {
+    for (const managedActiveDirectory of values.managedActiveDirectories ?? []) {
+      if (managedActiveDirectory.account === 'Management') {
+        if (
+          managedActiveDirectory.secretConfig?.account === 'Management' ||
+          !managedActiveDirectory.secretConfig?.account
+        ) {
+          errors.push(
+            `[Managed Active Directory: ${managedActiveDirectory.name}]: secretConfig needs to specify an account that isn't the Management account.`,
+          );
+        }
+      }
+      if (managedActiveDirectory.secretConfig?.account === 'Management') {
+        errors.push(
+          `[Managed Active Directory: ${managedActiveDirectory.name}]: secretConfig needs to specify an account that isn't the Management account.`,
+        );
       }
     }
   }
