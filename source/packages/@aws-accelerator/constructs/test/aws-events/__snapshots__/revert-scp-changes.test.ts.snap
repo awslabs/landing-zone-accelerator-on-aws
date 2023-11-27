@@ -222,6 +222,7 @@ exports[`RevertScpChanges Construct(RevertScpChanges):  Snapshot Test 1`] = `
               "Ref": "AWS::Partition",
             },
             "HOME_REGION": "us-west-2",
+            "ORGANIZATIONS_ENABLED": "false",
             "SINGLE_ACCOUNT_MODE": "false",
             "SNS_TOPIC_ARN": {
               "Fn::Join": [
@@ -478,6 +479,7 @@ exports[`RevertScpChanges Construct(RevertScpChanges):  Snapshot Test 1`] = `
               "Ref": "AWS::Partition",
             },
             "HOME_REGION": "us-west-2",
+            "ORGANIZATIONS_ENABLED": "true",
             "SINGLE_ACCOUNT_MODE": "true",
             "SNS_TOPIC_ARN": {
               "Fn::Join": [

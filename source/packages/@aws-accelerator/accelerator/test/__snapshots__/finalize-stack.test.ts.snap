@@ -783,6 +783,7 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
               "Ref": "AWS::Partition",
             },
             "HOME_REGION": "us-east-1",
+            "ORGANIZATIONS_ENABLED": "true",
             "SINGLE_ACCOUNT_MODE": "false",
             "SNS_TOPIC_ARN": {
               "Fn::Join": [

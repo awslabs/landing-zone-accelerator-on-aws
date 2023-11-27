@@ -43,6 +43,7 @@ new RevertScpChanges(stack, 'RevertScpChanges', {
     },
   ],
   singleAccountMode: true,
+  organizationEnabled: true,
 });
 
 new RevertScpChanges(stack, 'RevertScpChanges2', {
@@ -67,6 +68,7 @@ new RevertScpChanges(stack, 'RevertScpChanges2', {
     },
   ],
   singleAccountMode: false,
+  organizationEnabled: false,
 });
 /**
  * RevertScpChanges construct test
