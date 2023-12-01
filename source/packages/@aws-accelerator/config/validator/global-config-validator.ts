@@ -862,7 +862,8 @@ export class GlobalConfigValidator {
    * validateMaxConcurrency
    */
   private validateMaxConcurrency(values: GlobalConfig, errors: string[]) {
-    if (values.acceleratorSettings?.maxConcurrentStacks ?? 250 > 250) {
+    const maxConcurrentStacks = values.acceleratorSettings?.maxConcurrentStacks ?? 250;
+    if (maxConcurrentStacks > 250) {
       errors.push(
         `Provided acceleratorSettings.maxConcurrentStacks: ${values.acceleratorSettings!
           .maxConcurrentStacks!} it cannot be greater than 250 `,
