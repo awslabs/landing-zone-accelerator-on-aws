@@ -49,7 +49,11 @@ export function policyReplacements(props: {
   let { content } = props;
 
   for (const [key, value] of Object.entries(additionalReplacements)) {
-    content = content.replace(new RegExp(key, 'g'), typeof value === 'string' ? value : JSON.stringify(value));
+    const normalizedValue = normalize(value);
+    content = content.replace(
+      new RegExp(key, 'g'),
+      typeof normalizedValue === 'string' ? normalizedValue : JSON.stringify(normalizedValue),
+    );
   }
   const replacements = {
     '\\${MANAGEMENT_ACCOUNT_ACCESS_ROLE}': managementAccountAccessRole,
@@ -231,4 +235,18 @@ function getScopeVpcEndpointIds(
   }
 
   return [];
+}
+
+/**
+ * When using some APIs to update resource policy, e.g. IAM:UpdateAssumeRolePolicy,
+ * an array with single string value will be automatically converted to string in the JSON policy.
+ * We explicitly do the conversion here to avoid policy mismatch while checking resource policy compliance.
+ *
+ * @param value
+ * @returns
+ */
+function normalize(value: string | string[]) {
+  if (typeof value === 'string') return value;
+  if (Array.isArray(value) && value.length === 1) return `"${value[0]}"`;
+  return value;
 }

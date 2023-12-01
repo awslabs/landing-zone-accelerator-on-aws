@@ -307,6 +307,7 @@ function runValidators(
         globalConfig,
         organizationConfig,
         securityConfig,
+        replacementsConfig,
         configDirPath,
         customizationsConfig,
       );
@@ -318,7 +319,7 @@ function runValidators(
   // Organization config validator
   if (organizationConfig) {
     try {
-      new OrganizationConfigValidator(organizationConfig, configDirPath);
+      new OrganizationConfigValidator(organizationConfig, replacementsConfig, configDirPath);
     } catch (e) {
       configErrors.push(e);
     }
@@ -327,7 +328,14 @@ function runValidators(
   // Security config validator
   if (accountsConfig && globalConfig && organizationConfig && securityConfig) {
     try {
-      new SecurityConfigValidator(securityConfig, accountsConfig, globalConfig, organizationConfig, configDirPath);
+      new SecurityConfigValidator(
+        securityConfig,
+        accountsConfig,
+        globalConfig,
+        organizationConfig,
+        replacementsConfig,
+        configDirPath,
+      );
     } catch (e) {
       configErrors.push(e);
     }

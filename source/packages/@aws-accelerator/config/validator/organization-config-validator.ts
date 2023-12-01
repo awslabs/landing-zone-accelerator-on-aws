@@ -14,9 +14,11 @@ import fs from 'fs';
 import path from 'path';
 import { OrganizationConfig } from '../lib/organization-config';
 import { createLogger } from '@aws-accelerator/utils';
+import { ReplacementsConfig } from '../lib/replacements-config';
+import { CommonValidatorFunctions } from './common/common-validator-functions';
 
 export class OrganizationConfigValidator {
-  constructor(values: OrganizationConfig, configDir: string) {
+  constructor(values: OrganizationConfig, replacementsConfig: ReplacementsConfig | undefined, configDir: string) {
     const errors: string[] = [];
 
     const logger = createLogger(['organization-config-validator']);
@@ -31,6 +33,9 @@ export class OrganizationConfigValidator {
 
     // Validate presence of backup policy file
     this.validateBackupPolicyFile(configDir, values, errors);
+
+    // Validate definition of static parameter in policy file
+    this.validateSCPParameters(configDir, values, replacementsConfig, errors);
 
     if (errors.length) {
       throw new Error(`${OrganizationConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
@@ -117,5 +122,22 @@ export class OrganizationConfigValidator {
         errors.push(`Invalid policy file ${backupPolicy.policy} for backup policy ${backupPolicy.name} !!!`);
       }
     }
+  }
+
+  /**
+   * Function to validate if static parameter in policy file is defined in replacements config
+   * @param configDir
+   * @param organizationConfig
+   * @param replacementConfig
+   * @param errors
+   */
+  private validateSCPParameters(
+    configDir: string,
+    organizationConfig: OrganizationConfig,
+    replacementConfig: ReplacementsConfig | undefined,
+    errors: string[],
+  ) {
+    const policyPaths = organizationConfig.serviceControlPolicies.map(scp => scp.policy);
+    CommonValidatorFunctions.validateStaticParameters(replacementConfig, configDir, policyPaths, new Set(), errors);
   }
 }

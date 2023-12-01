@@ -15,12 +15,20 @@ import path from 'path';
 import * as fs from 'fs';
 import { NetworkConfig } from '../../lib/network-config';
 import { NetworkValidatorFunctions } from './network-validator-functions';
+import { ReplacementsConfig } from '../../lib/replacements-config';
+import { CommonValidatorFunctions } from '../common/common-validator-functions';
 
 /**
  * Class to validate endpoint policies
  */
 export class EndpointPoliciesValidator {
-  constructor(values: NetworkConfig, configDir: string, helpers: NetworkValidatorFunctions, errors: string[]) {
+  constructor(
+    values: NetworkConfig,
+    replacementsConfig: ReplacementsConfig | undefined,
+    configDir: string,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+  ) {
     //
     // Validate endpoint policy names are unique
     //
@@ -29,6 +37,10 @@ export class EndpointPoliciesValidator {
     // Validate endpoint policy document exists
     //
     this.validateEndpointPolicyDocumentFile(values, configDir, errors);
+    //
+    // Validate parameters in vpc endpoint policy document
+    //
+    this.validateVpcEndpointParameters(configDir, values, replacementsConfig, errors);
   }
   /**
    * Method to validate endpoint policy names are unique
@@ -59,5 +71,22 @@ export class EndpointPoliciesValidator {
         errors.push(`Endpoint policy ${policyItem.name} document file ${policyItem.document} not found!`);
       }
     }
+  }
+
+  /**
+   * Function to validate if static parameter in vpc endpoint policy file is defined in replacements config
+   * @param configDir
+   * @param networkConfig
+   * @param replacementConfig
+   * @param errors
+   */
+  private validateVpcEndpointParameters(
+    configDir: string,
+    networkConfig: NetworkConfig,
+    replacementConfig: ReplacementsConfig | undefined,
+    errors: string[],
+  ) {
+    const policyPaths = networkConfig.endpointPolicies.map(policy => policy.document);
+    CommonValidatorFunctions.validateStaticParameters(replacementConfig, configDir, policyPaths, new Set(), errors);
   }
 }

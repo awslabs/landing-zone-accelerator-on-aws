@@ -10,14 +10,19 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
+import fs from 'fs';
+import path from 'path';
 import { AccountsConfig } from '../../lib/accounts-config';
 import * as t from '../../lib/common-types';
 import { GlobalConfig } from '../../lib/global-config';
+import { ReplacementsConfig } from '../../lib/replacements-config';
 
 /**
  * Class for common helper functions
  */
 export class CommonValidatorFunctions {
+  static ACCEL_POLICY_STATIC_PARAMETER_LOOKUP_REGEX = /\${ACCEL_LOOKUP::CUSTOM:([a-zA-Z0-9-_]*)}/g;
+
   /**
    * Get account names for a deployment target object
    * @param targets
@@ -169,5 +174,23 @@ export class CommonValidatorFunctions {
       match = true;
     }
     return { match, message };
+  }
+
+  public static validateStaticParameters(
+    replacementConfig: ReplacementsConfig | undefined,
+    configDir: string,
+    policyFilePaths: string[],
+    reservedParameters: Set<string>,
+    errors: string[],
+  ) {
+    for (const policyPath of policyFilePaths) {
+      const policyContent: string = fs.readFileSync(path.join(configDir, policyPath), 'utf8');
+      const matches = [...policyContent.matchAll(CommonValidatorFunctions.ACCEL_POLICY_STATIC_PARAMETER_LOOKUP_REGEX)];
+      new Set(matches.map(match => match[1])).forEach(parameterName => {
+        if (reservedParameters.has(parameterName)) return;
+        if (!replacementConfig?.placeholders[parameterName])
+          errors.push(`Missing values for static parameter ${parameterName} used in ${policyPath}.`);
+      });
+    }
   }
 }

@@ -30,6 +30,7 @@ import { NetworkValidatorFunctions } from './network-validator-functions';
 import { PrefixListValidator } from './prefix-list-validator';
 import { TransitGatewayValidator } from './transit-gateway-validator';
 import { VpcValidator } from './vpc-validator';
+import { ReplacementsConfig } from '../../lib/replacements-config';
 
 /**
  * Network Configuration validator.
@@ -42,6 +43,7 @@ export class NetworkConfigValidator {
     globalConfig: GlobalConfig,
     organizationConfig: OrganizationConfig,
     securityConfig: SecurityConfig,
+    replacementsConfig: ReplacementsConfig | undefined,
     configDir: string,
     customizationsConfig?: CustomizationsConfig,
   ) {
@@ -79,7 +81,7 @@ export class NetworkConfigValidator {
     new CentralNetworkValidator(values, configDir, helpers, errors, customizationsConfig);
     new TransitGatewayValidator(values, helpers, errors);
     new DhcpOptionsValidator(values, helpers, errors);
-    new EndpointPoliciesValidator(values, configDir, helpers, errors);
+    new EndpointPoliciesValidator(values, replacementsConfig, configDir, helpers, errors);
     new PrefixListValidator(values, helpers, errors);
     new VpcValidator(values, helpers, errors, customizationsConfig);
     new CustomerGatewaysValidator(values, helpers, errors, customizationsConfig);
