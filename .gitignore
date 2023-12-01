@@ -71,4 +71,5 @@ viperlight*.zip
 *.js.map
 
 ### Integ testing
-source/packages/@aws-accelerator/constructs/test/aws-ec2/integ-test-account-warming/integ.account-warming.ts.snapshot
+**/integ.*.ts.snapshot
+**/integ.*.ts.snapshot/
