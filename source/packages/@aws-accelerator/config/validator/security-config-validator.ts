@@ -20,6 +20,9 @@ import { GlobalConfig } from '../lib/global-config';
 import { OrganizationConfig } from '../lib/organization-config';
 import { AwsConfigRuleSet, SecurityConfig, SecurityConfigTypes } from '../lib/security-config';
 import { CommonValidatorFunctions } from './common/common-validator-functions';
+import { ReplacementsConfig } from '../lib/replacements-config';
+
+const RESERVED_STATIC_PARAMETER_FOR_RESOURCE_POLICY = 'ATTACHED_RESOURCE_ARN';
 
 export class SecurityConfigValidator {
   constructor(
@@ -27,6 +30,7 @@ export class SecurityConfigValidator {
     accountsConfig: AccountsConfig,
     globalConfig: GlobalConfig,
     organizationConfig: OrganizationConfig,
+    replacementsConfig: ReplacementsConfig | undefined,
     configDir: string,
   ) {
     const errors: string[] = [];
@@ -99,6 +103,7 @@ export class SecurityConfigValidator {
     this.validateAwsCloudWatchLogGroups(values, errors);
     this.validateAwsCloudWatchLogGroupsRetention(values, errors);
     this.validateResourcePolicyEnforcementConfig(values, ouIdNames, accountNames, errors);
+    this.validateResourcePolicyParameters(configDir, values, replacementsConfig, errors);
 
     if (errors.length) {
       throw new Error(`${SecurityConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
@@ -840,5 +845,31 @@ export class SecurityConfigValidator {
         }
       }
     }
+  }
+
+  /**
+   * Function to validate if static parameter in resource policy templates is defined in replacements config
+   * @param configDir
+   * @param securityConfig
+   * @param replacementConfig
+   * @param errors
+   */
+  private validateResourcePolicyParameters(
+    configDir: string,
+    securityConfig: SecurityConfig,
+    replacementConfig: ReplacementsConfig | undefined,
+    errors: string[],
+  ) {
+    const policyFilePaths = new Set<string>();
+    for (const policySet of securityConfig.resourcePolicyEnforcement?.policySets || []) {
+      policySet.resourcePolicies.map(rp => policyFilePaths.add(rp.document));
+    }
+    CommonValidatorFunctions.validateStaticParameters(
+      replacementConfig,
+      configDir,
+      [...policyFilePaths],
+      new Set([RESERVED_STATIC_PARAMETER_FOR_RESOURCE_POLICY]),
+      errors,
+    );
   }
 }
