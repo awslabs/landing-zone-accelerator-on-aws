@@ -76,6 +76,7 @@ export abstract class GlobalConfigTypes {
     useManagementAccessRole: t.optional(t.boolean),
     customDeploymentRole: t.optional(t.string),
     forceBootstrap: t.optional(t.boolean),
+    skipStaticValidation: t.optional(t.boolean),
   });
 
   static readonly externalLandingZoneResourcesConfig = t.interface({
@@ -506,11 +507,14 @@ export class cdkOptionsConfig implements t.TypeOf<typeof GlobalConfigTypes.cdkOp
    * Creates a deployment role in all accounts in the home region with the name specified in the parameter. This role is used by the LZA for all CDK deployment tasks.
    */
   readonly customDeploymentRole = undefined;
-
   /**
    * Forces the Accelerator to deploy the bootstrapping stack and circumvent the ssm parameter check. This option is needed when adding or removing a custom deployment role
    */
   readonly forceBootstrap = undefined;
+  /**
+   * Determines if the LZA pipeline will skip the static config validation step during the pipeline's Build phase. This can be helpful in cases where the config-validator incorrectly throws errors for a valid configuration.
+   */
+  readonly skipStaticValidation = undefined;
 }
 /**
  * *{@link GlobalConfig} / {@link LoggingConfig} / {@link CloudTrailConfig} / ({@link AccountCloudTrailConfig}) / {@link CloudTrailSettingsConfig}*

@@ -206,7 +206,7 @@ async function validateConfig(props: {
   //
   // Process errors
   //
-  processErrors(initErrors, configErrors);
+  processErrors(initErrors, configErrors, globalConfig?.cdkOptions?.skipStaticValidation ?? false);
 }
 
 /**
@@ -356,7 +356,7 @@ function runValidators(
  * @param configErrors
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function processErrors(initErrors: { file: string; message: any }[], configErrors: any[]) {
+function processErrors(initErrors: { file: string; message: any }[], configErrors: any[], skipValidation: boolean) {
   if (initErrors.length > 0 || configErrors.length > 0) {
     logger.warn(`Config file validation failed !!!`);
     // Process initial file load errors
@@ -368,7 +368,11 @@ function processErrors(initErrors: { file: string; message: any }[], configError
       logger.warn(configItem);
     });
     // Exit with error code
-    process.exit(1);
+    if (skipValidation) {
+      logger.warn(`Errors found in configuration but ignoring since skipStaticValidation is set to true`);
+    } else {
+      process.exit(1);
+    }
   } else {
     logger.info(`Config file validation successful.`);
   }
