@@ -879,7 +879,7 @@ export class OperationsStack extends AcceleratorStack {
   private createServiceCatalogPropagationRole() {
     new cdk.aws_iam.Role(this, 'ServiceCatalogPropagationRole', {
       roleName: this.acceleratorResourceNames.roles.crossAccountServiceCatalogPropagation,
-      assumedBy: this.getOrgPrincipals(this.organizationId),
+      assumedBy: this.getOrgPrincipals(this.organizationId, true),
       inlinePolicies: {
         default: new cdk.aws_iam.PolicyDocument({
           statements: [

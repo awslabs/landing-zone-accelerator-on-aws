@@ -302,7 +302,7 @@ export class IpamResources {
 
       const role = new cdk.aws_iam.Role(this.stack, `GetIpamSsmParamRole`, {
         roleName: this.stack.acceleratorResourceNames.roles.ipamSsmParameterAccess,
-        assumedBy: this.stack.getOrgPrincipals(orgId),
+        assumedBy: this.stack.getOrgPrincipals(orgId, true),
         inlinePolicies: {
           default: new cdk.aws_iam.PolicyDocument({
             statements: [
