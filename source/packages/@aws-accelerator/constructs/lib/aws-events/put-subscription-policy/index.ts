@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 import { throttlingBackOff } from '@aws-accelerator/utils';
+import { wildcardMatch } from '@aws-accelerator/utils/lib/common-functions';
 import * as AWS from 'aws-sdk';
 AWS.config.logger = console;
 
@@ -45,7 +46,7 @@ export async function handler(event: AWSLambda.ScheduledEvent) {
     );
     for (const logGroup of page.logGroups ?? []) {
       await updateRetentionPolicy(logRetention, logGroup);
-      await updateSubscriptionPolicy(logDestinationArn, logSubscriptionRoleArn, logGroup, logExclusionParse);
+      await updateSubscriptionPolicy(logGroup, logExclusionParse);
       await updateKmsKey(logGroup, logKmsKey);
     }
     nextToken = page.nextToken;
@@ -74,98 +75,89 @@ export async function updateRetentionPolicy(logRetentionValue: string, logGroupV
 }
 
 export async function updateSubscriptionPolicy(
-  logDestinationArnValue: string,
-  logSubscriptionRoleArnValue: string,
   logGroup: AWS.CloudWatchLogs.LogGroup,
   logExclusionSetting: cloudwatchExclusionProcessedItem | undefined,
 ) {
+  let isGroupExcluded = false;
+  if (logExclusionSetting) {
+    isGroupExcluded = await isLogGroupExcluded(logGroup.logGroupName!, logExclusionSetting);
+  }
+
+  const subscriptionFilters = await getExistingSubscriptionFilters(logGroup.logGroupName!);
+  const hasAcceleratorFilter = await hasAcceleratorSubscriptionFilter(subscriptionFilters, logGroup.logGroupName!);
+
+  if (isGroupExcluded && hasAcceleratorFilter) {
+    // delete accelerator filter if log group is excluded
+    await deleteSubscription(logGroup.logGroupName!);
+  } else if (!isGroupExcluded && !hasAcceleratorFilter) {
+    // create the accelerator subscription filter for this logGroup
+    await setupSubscription(logGroup.logGroupName!);
+  }
+}
+
+export async function hasAcceleratorSubscriptionFilter(
+  filters: AWS.CloudWatchLogs.SubscriptionFilter[],
+  logGroupName: string,
+) {
+  if (filters.length < 1) {
+    return false;
+  } else if (filters.some(filter => filter.filterName === logGroupName)) {
+    return true;
+  }
+  return false;
+}
+
+export async function getExistingSubscriptionFilters(logGroupName: string) {
+  const subscriptionFilters = [];
+
   // check subscription on existing logGroup.
   let nextToken: string | undefined = undefined;
   do {
     const page = await throttlingBackOff(() =>
-      logsClient.describeSubscriptionFilters({ logGroupName: logGroup.logGroupName!, nextToken }).promise(),
+      logsClient.describeSubscriptionFilters({ logGroupName: logGroupName, nextToken }).promise(),
     );
-
-    const page_length: number = page.subscriptionFilters?.length || 0;
-
-    if (logExclusionSetting) {
-      await processExclusion(page, logGroup.logGroupName!, logExclusionSetting);
-    } else {
-      if (page_length > 0) {
-        // there is a subscription filter for this log group. Check and set it if needed.
-        for (const subFilter of page.subscriptionFilters ?? []) {
-          // If destination exists, do nothing
-          if (subFilter.destinationArn === logDestinationArnValue) {
-            console.log('Log Group: ' + logGroup.logGroupName! + ' has destination set');
-          } else {
-            // If destination does not exist, set destination
-            await setupSubscription(logDestinationArnValue, logSubscriptionRoleArnValue, logGroup.logGroupName!);
-          }
-        }
-      } else {
-        // there are no subscription filters for this logGroup. Set one
-        await setupSubscription(logDestinationArn, logSubscriptionRoleArn, logGroup.logGroupName!);
-      }
+    for (const subFilter of page.subscriptionFilters ?? []) {
+      subscriptionFilters.push(subFilter);
     }
+
     nextToken = page.nextToken;
   } while (nextToken);
+  return subscriptionFilters;
 }
 
-export async function processExclusion(
-  page: AWS.CloudWatchLogs.DescribeSubscriptionFiltersResponse,
-  logGroupName: string,
-  logExclusionSetting: cloudwatchExclusionProcessedItem,
-) {
+export async function isLogGroupExcluded(logGroupName: string, logExclusionSetting: cloudwatchExclusionProcessedItem) {
   if (logExclusionSetting.excludeAll) {
-    const page_length: number = page.subscriptionFilters?.length || 0;
-    if (page_length > 0) {
-      // there is a subscription filter for this log group. Find and delete the one accelerator created.
-      for (const subFilter of page.subscriptionFilters ?? []) {
-        if (subFilter.filterName === logGroupName) {
-          await deleteSubscription(logGroupName);
-        }
+    return true;
+  } else if (logExclusionSetting?.logGroupNames && logExclusionSetting.logGroupNames!.length > 0) {
+    // check input string and if matched return true
+    for (const excludeLogs of logExclusionSetting.logGroupNames) {
+      if (wildcardMatch(logGroupName, excludeLogs)) {
+        return true;
       }
     }
-  } else if (!logExclusionSetting.excludeAll && (logExclusionSetting.logGroupNames ?? [])) {
-    // check to see if excludeAll is not provided and logGroupNames are provided
-    // logGroupNames can be empty so check length
-    if (logExclusionSetting.logGroupNames!.length > 0) {
-      // check input string and if matched delete subscription filter
-      await checkExclusionLogGroups(logExclusionSetting.logGroupNames!, logGroupName);
-    }
   }
-}
-
-export async function checkExclusionLogGroups(excludeLogsList: string[], logGroupName: string) {
-  // pick an item from exclude logs
-  for (const excludeLogs of excludeLogsList) {
-    if (excludeLogs.endsWith('*') && logGroupName.startsWith(excludeLogs.slice(0, -1))) {
-      await deleteSubscription(logGroupName);
-    } else if (logGroupName === excludeLogs) {
-      await deleteSubscription(logGroupName);
-    }
-  }
+  return false;
 }
 
 export async function deleteSubscription(logGroupName: string) {
   console.log(`Deleting subscription for log group ${logGroupName}`);
-  await throttlingBackOff(() =>
-    logsClient.deleteSubscriptionFilter({ logGroupName: logGroupName, filterName: logGroupName }).promise(),
-  );
+  try {
+    await throttlingBackOff(() =>
+      logsClient.deleteSubscriptionFilter({ logGroupName: logGroupName, filterName: logGroupName }).promise(),
+    );
+  } catch (e) {
+    console.warn(`Failed to delete subscription filter ${logGroupName} for log group ${logGroupName}`);
+  }
 }
 
-export async function setupSubscription(
-  logDestinationArnValue: string,
-  logSubscriptionRoleArnValue: string,
-  logGroupName: string,
-) {
-  console.log(`Setting destination ${logDestinationArnValue} for log group ${logGroupName}`);
+export async function setupSubscription(logGroupName: string) {
+  console.log(`Setting destination ${logDestinationArn} for log group ${logGroupName}`);
   await throttlingBackOff(() =>
     logsClient
       .putSubscriptionFilter({
-        destinationArn: logDestinationArnValue,
+        destinationArn: logDestinationArn,
         logGroupName: logGroupName,
-        roleArn: logSubscriptionRoleArnValue,
+        roleArn: logSubscriptionRoleArn,
         filterName: logGroupName,
         filterPattern: '',
       })

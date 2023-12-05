@@ -85,3 +85,12 @@ export function getStsEndpoint(partition: string, region: string): string {
   // both commercial and govCloud return this pattern
   return `https://sts.${region}.amazonaws.com`;
 }
+
+// Converts strings with wildcards (*) to regular expressions to determine if log group name matches exclusion pattern
+export function wildcardMatch(text: string, pattern: string): boolean {
+  const regexPattern = new RegExp('^' + pattern.replace(/\?/g, '.').replace(/\*/g, '.*') + '$');
+  logger.debug(`Converted wildcard pattern ${pattern} to regex pattern ${regexPattern}`);
+  const patternMatch = regexPattern.test(text);
+  logger.info(`Checking if input string ${text} matches pattern ${pattern} provided. Result: ${patternMatch}`);
+  return patternMatch;
+}
