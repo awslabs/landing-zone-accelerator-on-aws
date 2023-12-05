@@ -164,7 +164,7 @@ export class KeyStack extends AcceleratorStack {
       if (props.organizationConfig.enable) {
         role = new cdk.aws_iam.Role(this, 'CrossAccountAcceleratorSsmParamAccessRole', {
           roleName: this.acceleratorResourceNames.roles.crossAccountCmkArnSsmParameterAccess,
-          assumedBy: this.getOrgPrincipals(this.organizationId),
+          assumedBy: this.getOrgPrincipals(this.organizationId, true),
           inlinePolicies: {
             default: new cdk.aws_iam.PolicyDocument({
               statements: [

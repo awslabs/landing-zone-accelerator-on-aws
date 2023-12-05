@@ -43,7 +43,7 @@ export class IpamResources {
     if (cdk.Stack.of(this.stack).region === homeRegion && accountIds.includes(cdk.Stack.of(this.stack).account)) {
       const role = new cdk.aws_iam.Role(this.stack, `GetIpamCidrRole`, {
         roleName: this.stack.acceleratorResourceNames.roles.ipamSubnetLookup,
-        assumedBy: this.stack.getOrgPrincipals(orgId),
+        assumedBy: this.stack.getOrgPrincipals(orgId, true),
         inlinePolicies: {
           default: new cdk.aws_iam.PolicyDocument({
             statements: [

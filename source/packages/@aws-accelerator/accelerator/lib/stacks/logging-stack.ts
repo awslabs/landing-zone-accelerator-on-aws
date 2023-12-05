@@ -1307,7 +1307,7 @@ export class LoggingStack extends AcceleratorStack {
         // Create role to give access to Secret manager KSM arn parameter, this will be used by MAD account to give access to this KMS for MAD instance
         new cdk.aws_iam.Role(this, 'CrossAccountAcceleratorSecretsKmsArnSsmParamAccessRole', {
           roleName: this.acceleratorResourceNames.roles.crossAccountSecretsCmkParameterAccess,
-          assumedBy: this.getOrgPrincipals(this.organizationId),
+          assumedBy: this.getOrgPrincipals(this.organizationId, true),
           inlinePolicies: {
             default: new cdk.aws_iam.PolicyDocument({
               statements: [
@@ -2226,7 +2226,7 @@ export class LoggingStack extends AcceleratorStack {
       // SSM parameter access IAM Role for central sns topic key
       new cdk.aws_iam.Role(this, 'CrossAccountCentralSnsTopicKMSArnSsmParamAccessRole', {
         roleName: this.acceleratorResourceNames.roles.snsTopicCmkArnParameterAccess,
-        assumedBy: this.getOrgPrincipals(this.organizationId),
+        assumedBy: this.getOrgPrincipals(this.organizationId, true),
         inlinePolicies: {
           default: new cdk.aws_iam.PolicyDocument({
             statements: [
@@ -2623,7 +2623,7 @@ export class LoggingStack extends AcceleratorStack {
       // SSM parameter access IAM Role for
       new cdk.aws_iam.Role(this, 'CrossAccountAssetsBucketKMSArnSsmParamAccessRole', {
         roleName: this.acceleratorResourceNames.roles.crossAccountAssetsBucketCmkArnSsmParameterAccess,
-        assumedBy: this.getOrgPrincipals(this.organizationId),
+        assumedBy: this.getOrgPrincipals(this.organizationId, true),
         inlinePolicies: {
           default: new cdk.aws_iam.PolicyDocument({
             statements: [
