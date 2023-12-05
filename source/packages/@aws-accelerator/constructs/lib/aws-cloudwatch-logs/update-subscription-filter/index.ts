@@ -23,7 +23,7 @@ import {
   DeleteSubscriptionFilterCommand,
 } from '@aws-sdk/client-cloudwatch-logs';
 
-import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
+import { setRetryStrategy, wildcardMatch } from '@aws-accelerator/utils/lib/common-functions';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 
 import { CloudFormationCustomResourceEvent } from '../../lza-custom-resource';
@@ -304,11 +304,7 @@ function isLogGroupExcluded(logGroupName: string, logExclusionSetting?: cloudwat
     }
 
     for (const excludeLogGroupName of logExclusionSetting.logGroupNames ?? []) {
-      if (logGroupName === excludeLogGroupName) {
-        return true;
-      }
-
-      if (excludeLogGroupName.endsWith('*') && logGroupName.startsWith(excludeLogGroupName.slice(0, -1))) {
+      if (wildcardMatch(logGroupName, excludeLogGroupName)) {
         return true;
       }
     }
