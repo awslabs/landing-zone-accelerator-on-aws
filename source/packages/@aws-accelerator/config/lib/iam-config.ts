@@ -1939,49 +1939,35 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
   }
 
   public getManageActiveDirectorySharedAccountNames(directoryName: string, configDir: string): string[] {
-    const sharedAccounts: string[] = [];
-
-    let directoryFound = false;
-    let directoryAccount: string | undefined;
-    for (const managedActiveDirectory of this.managedActiveDirectories ?? []) {
-      if (managedActiveDirectory.name === directoryName) {
-        directoryFound = true;
-        directoryAccount = managedActiveDirectory.account;
-
-        if (managedActiveDirectory.sharedOrganizationalUnits) {
-          const accountsConfig = AccountsConfig.load(configDir);
-          const allAccountItems = [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts];
-          const allAccounts: string[] = [];
-          for (const account of allAccountItems ?? []) {
-            allAccounts.push(account.name);
-          }
-          const excludedAccounts = managedActiveDirectory.sharedOrganizationalUnits.excludedAccounts ?? [];
-          const includedAccounts = allAccounts.filter(item => !excludedAccounts.includes(item));
-
-          for (const ou of managedActiveDirectory.sharedOrganizationalUnits.organizationalUnits) {
-            if (ou === 'Root') {
-              sharedAccounts.push(...includedAccounts);
-            } else {
-              for (const account of allAccountItems ?? []) {
-                if (ou === account.organizationalUnit && includedAccounts.includes(account.name)) {
-                  sharedAccounts.push(account.name);
-                }
-              }
-            }
-          }
-        }
-
-        if (managedActiveDirectory.sharedAccounts) {
-          sharedAccounts.push(...managedActiveDirectory.sharedAccounts);
-        }
-      }
+    const activeDirectories = this.managedActiveDirectories ?? [];
+    const managedActiveDirectory = activeDirectories.find(
+      managedActiveDirectory => managedActiveDirectory.name === directoryName,
+    );
+    if (!managedActiveDirectory) {
+      logger.error(`getManageActiveDirectoryAdminSecretName Directory ${directoryName} not found in iam-config file`);
+      throw new Error('configuration validation failed.');
     }
+    const accountsConfig = AccountsConfig.load(configDir);
 
-    if (directoryFound) {
-      // mad account can't be part of shared account
-      return sharedAccounts.filter(item => item !== directoryAccount!);
+    const sharedOuAccounts =
+      managedActiveDirectory.sharedOrganizationalUnits?.organizationalUnits
+        .map(ou => this.getAccountsByOU(ou, accountsConfig))
+        .flat() ?? [];
+    const sharedAccounts = managedActiveDirectory.sharedAccounts ?? [];
+    const excludedAccounts = managedActiveDirectory.sharedOrganizationalUnits?.excludedAccounts ?? [];
+    const accounts = [...sharedAccounts, ...sharedOuAccounts];
+    const filteredAccounts = accounts.filter(account => !excludedAccounts.includes(account));
+    return [...new Set(filteredAccounts)];
+  }
+
+  private getAccountsByOU(ouName: string, accountsConfig: AccountsConfig) {
+    const allAccountItems = [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts];
+    const allAccounts = allAccountItems.map(accountItem => accountItem.name);
+    if (ouName === 'Root') {
+      return allAccounts;
     }
-    logger.error(`getManageActiveDirectoryAdminSecretName Directory ${directoryName} not found in iam-config file`);
-    throw new Error('configuration validation failed.');
+    return allAccountItems
+      .filter(accountItem => accountItem.organizationalUnit === ouName)
+      .map(accountItem => accountItem.name);
   }
 }
