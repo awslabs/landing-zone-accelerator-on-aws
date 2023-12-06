@@ -1253,15 +1253,6 @@ class ManagedActiveDirectoryValidator {
     errors: string[],
   ) {
     for (const managedActiveDirectory of values.managedActiveDirectories ?? []) {
-      if (
-        managedActiveDirectory.sharedAccounts &&
-        managedActiveDirectory.sharedOrganizationalUnits?.organizationalUnits
-      ) {
-        errors.push(
-          `Managed active directory ${managedActiveDirectory.name} sharing can have only one option from sharedOrganizationalUnits and sharedAccounts, both can't be defined`,
-        );
-      }
-
       if (managedActiveDirectory.sharedOrganizationalUnits) {
         if (managedActiveDirectory.sharedOrganizationalUnits.organizationalUnits.length === 0) {
           errors.push(`No shared target OU listed for managed active directory ${managedActiveDirectory.name}.`);
