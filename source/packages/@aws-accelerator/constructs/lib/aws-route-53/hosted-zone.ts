@@ -103,6 +103,12 @@ export class HostedZone extends cdk.Resource implements IHostedZone {
       case 'studio':
         hostedZoneName = `${service}.${region}.sagemaker.aws`;
         break;
+      case 'sagemaker.api':
+        hostedZoneName = `api.sagemaker.${region}.sagemaker.aws`;
+        break;
+      case 'sagemaker.runtime':
+        hostedZoneName = `runtime.sagemaker.${region}.sagemaker.aws`;
+        break;
     }
     return hostedZoneName;
   }
@@ -120,6 +126,8 @@ export class HostedZone extends cdk.Resource implements IHostedZone {
       'studio',
       'codeartifact.api',
       'codeartifact.repositories',
+      'sagemaker.api',
+      'sagemaker.runtime',
     ];
     return ignoreServicesArray.includes(service);
   }
