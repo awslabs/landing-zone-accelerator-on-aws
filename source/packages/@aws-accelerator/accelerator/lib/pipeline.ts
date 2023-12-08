@@ -441,7 +441,7 @@ export class AcceleratorPipeline extends Construct {
           },
           NODE_OPTIONS: {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: '--max_old_space_size=12288',
+            value: '--max_old_space_size=11520',
           },
           CDK_METHOD: {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
