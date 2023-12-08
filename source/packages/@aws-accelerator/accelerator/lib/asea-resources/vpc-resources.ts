@@ -123,8 +123,10 @@ export class VpcResources extends AseaResource {
       }
       const { stackInfo: vpcStackInfo, resource } = vpcResourceInfo;
       const nestedStack = this.stack.getNestedStack(vpcStackInfo.logicalResourceId);
+      const vpcPhysicalId = resource.physicalResourceId;
       // This is retrieved the specific VPC resource is loaded so we can modify attributes
       const vpc = nestedStack.includedTemplate.getResource(resource.logicalResourceId) as CfnVPC;
+      this.addTagsToSharedEndpointVpcs(vpc, vpcPhysicalId, props);
       this.setupInternetGateway(vpcStackInfo, nestedStack, vpcInScope);
       this.setupVpnGateway(vpcStackInfo, nestedStack, vpcInScope);
       // This modifies ASEA vpc attributes to match LZA config
@@ -229,6 +231,54 @@ export class VpcResources extends AseaResource {
       // Increment index
       index += 1;
     }
+  }
+
+  private getVPCId(vpcName: string) {
+    if (!this.props.globalConfig.externalLandingZoneResources?.templateMap) {
+      return;
+    }
+    const vpcStacksInfo = this.props.globalConfig.externalLandingZoneResources.templateMap.filter(
+      stack =>
+        stack.accountKey === this.stackInfo.accountKey &&
+        stack.phase === 1 &&
+        stack.region === this.stackInfo.region &&
+        stack.nestedStack,
+    );
+    let vpcId: string | undefined;
+    for (const vpcStackInfo of vpcStacksInfo) {
+      const vpcResource = this.findResourceByTypeAndTag(vpcStackInfo.resources, RESOURCE_TYPE.VPC, vpcName);
+      if (vpcResource) {
+        vpcId = vpcResource.physicalResourceId;
+        break;
+      }
+    }
+    return vpcId;
+  }
+
+  private addTagsToSharedEndpointVpcs(currentVpc: cdk.aws_ec2.CfnVPC, vpcPhysicalId: string, props: VpcResourcesProps) {
+    const vpcs = props.networkConfig.vpcs;
+    const centralEndpointAccount = this.getCentralEndpointAccount(vpcs);
+    const accountsConfig = props.accountsConfig;
+    for (const vpc of vpcs) {
+      const vpcTemplateId = this.getVPCId(vpc.name);
+      if (vpcPhysicalId === vpcTemplateId && vpc.useCentralEndpoints && centralEndpointAccount) {
+        cdk.Tags.of(currentVpc).add('accelerator:use-central-endpoints', 'true');
+        cdk.Tags.of(currentVpc).add(
+          'accelerator:central-endpoints-account-id',
+          accountsConfig.getAccountId(centralEndpointAccount!),
+        );
+      }
+    }
+  }
+
+  private getCentralEndpointAccount(vpcTemplates: VpcConfig[]) {
+    let centralEndpointAccount;
+    for (const vpcTemplate of vpcTemplates) {
+      if (vpcTemplate.interfaceEndpoints?.central && vpcTemplate.account) {
+        centralEndpointAccount = vpcTemplate.account!;
+      }
+    }
+    return centralEndpointAccount;
   }
 
   private setupInternetGateway(
