@@ -158,14 +158,24 @@ export abstract class Accelerator {
         command: props.command,
         managementAccountAccessRole: globalConfig?.managementAccountAccessRole,
       });
+      const accountsConfig = AccountsConfig.load(props.configDirPath);
+      const orgsConfig = OrganizationConfig.loadRawOrganizationsConfig(props.configDirPath);
+      await accountsConfig.loadAccountIds(
+        props.partition,
+        props.enableSingleAccountMode,
+        orgsConfig.enable,
+        accountsConfig,
+      );
 
-      await this.initializeAssumeRolePlugin({
-        region: props.region ?? globalRegion,
-        assumeRoleName,
-        partition: props.partition,
-        caBundlePath: props.caBundlePath,
-        credentials: managementAccountCredentials,
-      });
+      if (props.account !== accountsConfig.getManagementAccountId()) {
+        await this.initializeAssumeRolePlugin({
+          region: props.region ?? globalRegion,
+          assumeRoleName,
+          partition: props.partition,
+          caBundlePath: props.caBundlePath,
+          credentials: managementAccountCredentials,
+        });
+      }
     }
     //
     // Set toolkit props
