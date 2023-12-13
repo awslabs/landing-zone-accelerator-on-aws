@@ -35,8 +35,11 @@ centralSecurityServices:
   ebsDefaultVolumeEncryption:
     enable: true
     #kmsKey: key1
-    excludeRegions:
-      - us-west-2
+    deploymentTargets:
+      organizationalUnits:
+        - Root
+      excludedRegions:
+        - us-west-2
   s3PublicAccessBlock:
     enable: true
     excludeAccounts:

@@ -75,7 +75,7 @@ export class EbsDefaultEncryption extends Construct {
       resourceType: EBS_ENCRYPTION_TYPE,
       serviceToken: provider.serviceToken,
       properties: {
-        kmsKeyId: props.ebsEncryptionKmsKey?.keyId,
+        kmsKeyId: props.ebsEncryptionKmsKey.keyId,
       },
     });
 

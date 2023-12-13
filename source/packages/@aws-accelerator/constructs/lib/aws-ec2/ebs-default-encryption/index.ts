@@ -12,14 +12,19 @@
  */
 
 /**
- * aws-ec2-eanble-ebs-encryption - lambda handler
+ * aws-ec2-enable-ebs-encryption - lambda handler
  *
  * @param event
  * @returns
  */
 
-import * as AWS from 'aws-sdk';
-import { throttlingBackOff } from '@aws-accelerator/utils';
+import { setRetryStrategy, throttlingBackOff } from '@aws-accelerator/utils';
+import {
+  DisableEbsEncryptionByDefaultCommand,
+  EC2Client,
+  EnableEbsEncryptionByDefaultCommand,
+  ModifyEbsDefaultKmsKeyIdCommand,
+} from '@aws-sdk/client-ec2';
 
 export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
   | {
@@ -28,28 +33,28 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     }
   | undefined
 > {
-  const kmsKeyId = event.ResourceProperties['kmsKeyId'] || undefined;
+  const kmsKeyId = event.ResourceProperties['kmsKeyId'] as string;
   const solutionId = process.env['SOLUTION_ID'];
 
-  const ec2 = new AWS.EC2({ customUserAgent: solutionId });
+  const ec2Client = new EC2Client({ customUserAgent: solutionId, retryStrategy: setRetryStrategy() });
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      const enableResponse = await throttlingBackOff(() => ec2.enableEbsEncryptionByDefault({}).promise());
-      console.log(`Enable encryption response ${enableResponse}`);
+      const enableResponse = await throttlingBackOff(() => ec2Client.send(new EnableEbsEncryptionByDefaultCommand({})));
+      console.log(`Enable encryption response ${JSON.stringify(enableResponse)}`);
 
-      if (kmsKeyId) {
-        const response = await throttlingBackOff(() => ec2.modifyEbsDefaultKmsKeyId({ KmsKeyId: kmsKeyId }).promise());
-        console.log(`Modify KMS Key response ${response}`);
-      } else {
-        const response = await throttlingBackOff(() => ec2.resetEbsDefaultKmsKeyId({}).promise());
-        console.log(`Modify KMS Key response ${response}`);
-      }
+      const response = await throttlingBackOff(() =>
+        ec2Client.send(new ModifyEbsDefaultKmsKeyIdCommand({ KmsKeyId: kmsKeyId })),
+      );
+      console.log(`Modify KMS Key response ${JSON.stringify(response)}`);
+
       return { Status: 'Success', StatusCode: 200 };
 
     case 'Delete':
-      const disableResponse = await throttlingBackOff(() => ec2.disableEbsEncryptionByDefault({}).promise());
-      console.log(`Modify KMS Key response ${disableResponse}`);
+      const disableResponse = await throttlingBackOff(() =>
+        ec2Client.send(new DisableEbsEncryptionByDefaultCommand({})),
+      );
+      console.log(`Disable EBS encryption response ${JSON.stringify(disableResponse)}`);
       return { Status: 'Success', StatusCode: 200 };
   }
 }
