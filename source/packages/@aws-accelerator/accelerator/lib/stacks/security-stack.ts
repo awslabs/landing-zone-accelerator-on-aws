@@ -15,7 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 
-import { Region } from '@aws-accelerator/config';
+import { EbsDefaultVolumeEncryptionConfig, Region } from '@aws-accelerator/config';
 import {
   AcceleratorMetadata,
   EbsDefaultEncryption,
@@ -81,7 +81,7 @@ export class SecurityStack extends AcceleratorStack {
     //
     // Ebs Default Volume Encryption configuration
     //
-    this.configureDefaultEbsEncryption();
+    this.configureDefaultEbsEncryption(props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption);
 
     //
     // Update IAM Password Policy
@@ -246,42 +246,122 @@ export class SecurityStack extends AcceleratorStack {
 
   /**
    * Function to configure default EBS encryption
+   * @param ebsEncryptionConfig EbsDefaultVolumeEncryptionConfig
    */
-  private configureDefaultEbsEncryption() {
-    if (
-      this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable &&
-      this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.excludeRegions.indexOf(
-        cdk.Stack.of(this).region as Region,
-      ) === -1
-    ) {
-      let ebsEncryptionKey: cdk.aws_kms.Key;
+  private configureDefaultEbsEncryption(ebsEncryptionConfig: EbsDefaultVolumeEncryptionConfig) {
+    if (ebsEncryptionConfig.enable && this.deployEbsEncryption(ebsEncryptionConfig)) {
+      new EbsDefaultEncryption(this, 'EbsDefaultVolumeEncryption', {
+        ebsEncryptionKmsKey: this.getOrCreateEbsEncryptionKey(ebsEncryptionConfig),
+        logGroupKmsKey: this.cloudwatchKey,
+        logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+      });
+    }
+  }
 
-      if (this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.kmsKey) {
-        ebsEncryptionKey = cdk.aws_kms.Key.fromKeyArn(
+  /**
+   * Determines if EBS default volume encryption should be deployed to
+   * this stack's account/region
+   * @param ebsEncryptionConfig EbsDefaultVolumeEncryptionConfig
+   * @returns boolean
+   */
+  private deployEbsEncryption(ebsEncryptionConfig: EbsDefaultVolumeEncryptionConfig): boolean {
+    if (ebsEncryptionConfig.excludeRegions) {
+      return ebsEncryptionConfig.excludeRegions.indexOf(this.region) === -1;
+    } else {
+      return ebsEncryptionConfig.deploymentTargets ? this.isIncluded(ebsEncryptionConfig.deploymentTargets) : true;
+    }
+  }
+
+  /**
+   * Get custom key or create LZA-managed KMS key
+   * @param ebsEncryptionConfig EbsDefaultVolumeEncryptionConfig
+   * @returns cdk.aws_kms.Key
+   */
+  private getOrCreateEbsEncryptionKey(ebsEncryptionConfig: EbsDefaultVolumeEncryptionConfig): cdk.aws_kms.Key {
+    let ebsEncryptionKey: cdk.aws_kms.Key;
+
+    if (ebsEncryptionConfig.kmsKey) {
+      ebsEncryptionKey = cdk.aws_kms.Key.fromKeyArn(
+        this,
+        pascalCase(ebsEncryptionConfig.kmsKey) + `-KmsKey`,
+        cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,
-          pascalCase(this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.kmsKey) + `-KmsKey`,
-          cdk.aws_ssm.StringParameter.valueForStringParameter(
-            this,
-            `${this.props.prefixes.ssmParamName}/kms/${this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.kmsKey}/key-arn`,
-          ),
-        ) as cdk.aws_kms.Key;
-      } else {
-        ebsEncryptionKey = new cdk.aws_kms.Key(this, 'EbsEncryptionKey', {
-          alias: this.acceleratorResourceNames.customerManagedKeys.ebsDefault.alias,
-          description: this.acceleratorResourceNames.customerManagedKeys.ebsDefault.description,
-          removalPolicy: cdk.RemovalPolicy.RETAIN,
-          enableKeyRotation: true,
-        });
+          `${this.props.prefixes.ssmParamName}/kms/${ebsEncryptionConfig.kmsKey}/key-arn`,
+        ),
+      ) as cdk.aws_kms.Key;
+    } else {
+      ebsEncryptionKey = new cdk.aws_kms.Key(this, 'EbsEncryptionKey', {
+        alias: this.acceleratorResourceNames.customerManagedKeys.ebsDefault.alias,
+        description: this.acceleratorResourceNames.customerManagedKeys.ebsDefault.description,
+        removalPolicy: cdk.RemovalPolicy.RETAIN,
+        enableKeyRotation: true,
+      });
+      ebsEncryptionKey.addToResourcePolicy(
+        new iam.PolicyStatement({
+          sid: 'Allow service-linked role use',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['kms:Decrypt', 'kms:DescribeKey', 'kms:Encrypt', 'kms:GenerateDataKey*', 'kms:ReEncrypt*'],
+          principals: [
+            new cdk.aws_iam.ArnPrincipal(
+              `arn:${cdk.Stack.of(this).partition}:iam::${
+                cdk.Stack.of(this).account
+              }:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling`,
+            ),
+          ],
+          resources: ['*'],
+        }),
+      );
+      ebsEncryptionKey.addToResourcePolicy(
+        new iam.PolicyStatement({
+          sid: 'Allow Autoscaling to create grant',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['kms:CreateGrant'],
+          principals: [
+            new cdk.aws_iam.ArnPrincipal(
+              `arn:${cdk.Stack.of(this).partition}:iam::${
+                cdk.Stack.of(this).account
+              }:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling`,
+            ),
+          ],
+          resources: ['*'],
+          conditions: { Bool: { 'kms:GrantIsForAWSResource': 'true' } },
+        }),
+      );
+      ebsEncryptionKey.addToResourcePolicy(
+        new iam.PolicyStatement({
+          sid: 'Account Access',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          principals: [new cdk.aws_iam.AccountPrincipal(cdk.Stack.of(this).account)],
+          actions: ['kms:*'],
+          resources: ['*'],
+        }),
+      );
+      ebsEncryptionKey.addToResourcePolicy(
+        new iam.PolicyStatement({
+          sid: 'ec2',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          principals: [new cdk.aws_iam.AnyPrincipal()],
+          actions: ['kms:*'],
+          resources: ['*'],
+          conditions: {
+            StringEquals: {
+              'kms:CallerAccount': cdk.Stack.of(this).account,
+              'kms:ViaService': `ec2.${cdk.Stack.of(this).region}.${cdk.Aws.URL_SUFFIX}`,
+            },
+          },
+        }),
+      );
+      if (this.props.partition === 'aws') {
         ebsEncryptionKey.addToResourcePolicy(
           new iam.PolicyStatement({
-            sid: 'Allow service-linked role use',
+            sid: 'Allow cloud9 service-linked role use',
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: ['kms:Decrypt', 'kms:DescribeKey', 'kms:Encrypt', 'kms:GenerateDataKey*', 'kms:ReEncrypt*'],
             principals: [
               new cdk.aws_iam.ArnPrincipal(
                 `arn:${cdk.Stack.of(this).partition}:iam::${
                   cdk.Stack.of(this).account
-                }:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling`,
+                }:role/aws-service-role/cloud9.amazonaws.com/AWSServiceRoleForAWSCloud9`,
               ),
             ],
             resources: ['*'],
@@ -289,90 +369,29 @@ export class SecurityStack extends AcceleratorStack {
         );
         ebsEncryptionKey.addToResourcePolicy(
           new iam.PolicyStatement({
-            sid: 'Allow Autoscaling to create grant',
+            sid: 'Allow cloud9 attachment of persistent resources',
             effect: cdk.aws_iam.Effect.ALLOW,
-            actions: ['kms:CreateGrant'],
+            actions: ['kms:CreateGrant', 'kms:ListGrants', 'kms:RevokeGrant'],
             principals: [
               new cdk.aws_iam.ArnPrincipal(
                 `arn:${cdk.Stack.of(this).partition}:iam::${
                   cdk.Stack.of(this).account
-                }:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling`,
+                }:role/aws-service-role/cloud9.amazonaws.com/AWSServiceRoleForAWSCloud9`,
               ),
             ],
             resources: ['*'],
             conditions: { Bool: { 'kms:GrantIsForAWSResource': 'true' } },
           }),
         );
-        ebsEncryptionKey.addToResourcePolicy(
-          new iam.PolicyStatement({
-            sid: 'Account Access',
-            effect: cdk.aws_iam.Effect.ALLOW,
-            principals: [new cdk.aws_iam.AccountPrincipal(cdk.Stack.of(this).account)],
-            actions: ['kms:*'],
-            resources: ['*'],
-          }),
-        );
-        ebsEncryptionKey.addToResourcePolicy(
-          new iam.PolicyStatement({
-            sid: 'ec2',
-            effect: cdk.aws_iam.Effect.ALLOW,
-            principals: [new cdk.aws_iam.AnyPrincipal()],
-            actions: ['kms:*'],
-            resources: ['*'],
-            conditions: {
-              StringEquals: {
-                'kms:CallerAccount': cdk.Stack.of(this).account,
-                'kms:ViaService': `ec2.${cdk.Stack.of(this).region}.${cdk.Aws.URL_SUFFIX}`,
-              },
-            },
-          }),
-        );
-        if (this.props.partition === 'aws') {
-          ebsEncryptionKey.addToResourcePolicy(
-            new iam.PolicyStatement({
-              sid: 'Allow cloud9 service-linked role use',
-              effect: cdk.aws_iam.Effect.ALLOW,
-              actions: ['kms:Decrypt', 'kms:DescribeKey', 'kms:Encrypt', 'kms:GenerateDataKey*', 'kms:ReEncrypt*'],
-              principals: [
-                new cdk.aws_iam.ArnPrincipal(
-                  `arn:${cdk.Stack.of(this).partition}:iam::${
-                    cdk.Stack.of(this).account
-                  }:role/aws-service-role/cloud9.amazonaws.com/AWSServiceRoleForAWSCloud9`,
-                ),
-              ],
-              resources: ['*'],
-            }),
-          );
-          ebsEncryptionKey.addToResourcePolicy(
-            new iam.PolicyStatement({
-              sid: 'Allow cloud9 attachment of persistent resources',
-              effect: cdk.aws_iam.Effect.ALLOW,
-              actions: ['kms:CreateGrant', 'kms:ListGrants', 'kms:RevokeGrant'],
-              principals: [
-                new cdk.aws_iam.ArnPrincipal(
-                  `arn:${cdk.Stack.of(this).partition}:iam::${
-                    cdk.Stack.of(this).account
-                  }:role/aws-service-role/cloud9.amazonaws.com/AWSServiceRoleForAWSCloud9`,
-                ),
-              ],
-              resources: ['*'],
-              conditions: { Bool: { 'kms:GrantIsForAWSResource': 'true' } },
-            }),
-          );
-        }
       }
-      new EbsDefaultEncryption(this, 'EbsDefaultVolumeEncryption', {
-        ebsEncryptionKmsKey: ebsEncryptionKey,
-        logGroupKmsKey: this.cloudwatchKey,
-        logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-      });
-
-      this.ssmParameters.push({
-        logicalId: 'EbsDefaultVolumeEncryptionParameter',
-        parameterName: `${this.props.prefixes.ssmParamName}/security-stack/ebsDefaultVolumeEncryptionKeyArn`,
-        stringValue: ebsEncryptionKey.keyArn,
-      });
     }
+    this.ssmParameters.push({
+      logicalId: 'EbsDefaultVolumeEncryptionParameter',
+      parameterName: `${this.props.prefixes.ssmParamName}/security-stack/ebsDefaultVolumeEncryptionKeyArn`,
+      stringValue: ebsEncryptionKey.keyArn,
+    });
+
+    return ebsEncryptionKey;
   }
 
   /**

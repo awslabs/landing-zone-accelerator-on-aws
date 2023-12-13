@@ -320,6 +320,7 @@ export class SecurityConfigTypes {
   static readonly ebsDefaultVolumeEncryptionConfig = t.interface({
     enable: t.boolean,
     kmsKey: t.optional(t.nonEmptyString),
+    deploymentTargets: t.optional(t.deploymentTargets),
     excludeRegions: t.optional(t.array(t.region)),
   });
   static readonly documentConfig = t.interface({
@@ -1316,10 +1317,21 @@ export class SnsSubscriptionConfig implements t.TypeOf<typeof SecurityConfigType
 /**
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link EbsDefaultVolumeEncryptionConfig}*
  *
- * {@link https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html#encryption-by-default} | AWS EBS default encryption configuration
+ * {@link https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html#encryption-by-default | AWS EBS default encryption} configuration.
  * Use this configuration to enable enforced encryption of new EBS volumes and snapshots created in an AWS environment.
  *
  * @example
+ * Deployment targets:
+ * ```
+ * ebsDefaultVolumeEncryption:
+ *     enable: true
+ *     kmsKey: ExampleKey
+ *     deploymentTargets:
+ *       organizationalUnits:
+ *         - Workloads
+ * ```
+ *
+ * Excluded regions:
  * ```
  * ebsDefaultVolumeEncryption:
  *     enable: true
@@ -1342,7 +1354,22 @@ export class EbsDefaultVolumeEncryptionConfig
    */
   readonly kmsKey: undefined | string = undefined;
   /**
+   * (OPTIONAL) Deployment targets for EBS default volume encryption
+   *
+   * @remarks
+   * You can limit the OUs, accounts, and regions that EBS default volume encryption is deployed to. Please
+   * only specify one of the `deploymentTargets` or `excludeRegions` properties. `deploymentTargets` allows you
+   * to be more granular about where default EBS volume encryption is enabled across your environment.
+   *
+   * @see {@link DeploymentTargets}
+   */
+  readonly deploymentTargets: t.DeploymentTargets | undefined = undefined;
+  /**
    * (OPTIONAL) List of AWS Region names to be excluded from configuring AWS EBS volume default encryption
+   *
+   * @remarks
+   * Using this property limits deployment of default EBS volume encryption for an entire enabled region. For more
+   * granularity, please use the `deploymentTargets` property instead. Do not specify both `excludeRegions` and `deploymentTargets`.
    */
   readonly excludeRegions: t.Region[] = [];
 }

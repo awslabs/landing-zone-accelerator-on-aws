@@ -18,9 +18,14 @@ import { AccountsConfig } from '../lib/accounts-config';
 import * as t from '../lib/common-types';
 import { GlobalConfig } from '../lib/global-config';
 import { OrganizationConfig } from '../lib/organization-config';
-import { AwsConfigRuleSet, SecurityConfig, SecurityConfigTypes } from '../lib/security-config';
-import { CommonValidatorFunctions } from './common/common-validator-functions';
 import { ReplacementsConfig } from '../lib/replacements-config';
+import {
+  AwsConfigRuleSet,
+  EbsDefaultVolumeEncryptionConfig,
+  SecurityConfig,
+  SecurityConfigTypes,
+} from '../lib/security-config';
+import { CommonValidatorFunctions } from './common/common-validator-functions';
 
 const RESERVED_STATIC_PARAMETER_FOR_RESOURCE_POLICY = 'ATTACHED_RESOURCE_ARN';
 
@@ -62,6 +67,10 @@ export class SecurityConfigValidator {
 
     // Validate custom CMK names
     this.validateCustomKeyName(values, keyNames, errors);
+
+    //
+    // Validate EBS default encryption configuration
+    this.validateEbsEncryptionConfiguration(values.centralSecurityServices.ebsDefaultVolumeEncryption, errors);
 
     //
     // Validate delegated admin account
@@ -275,6 +284,19 @@ export class SecurityConfigValidator {
   }
 
   /**
+   * Validate EBS default volume encryption configuration
+   * @param ebsEncryptionConfig EbsDefaultVolumeEncryptionConfig
+   * @param errors string[]
+   */
+  private validateEbsEncryptionConfiguration(ebsEncryptionConfig: EbsDefaultVolumeEncryptionConfig, errors: string[]) {
+    if (ebsEncryptionConfig.excludeRegions && ebsEncryptionConfig.deploymentTargets) {
+      errors.push(
+        `EBS default volume configuration cannot include both deploymentTargets and excludeRegions properties. Please use only one.`,
+      );
+    }
+  }
+
+  /**
    * Function to validate AWS CloudWatch Log Groups configuration
    */
   private validateAwsCloudWatchLogGroups(values: SecurityConfig, errors: string[]) {
@@ -445,6 +467,26 @@ export class SecurityConfigValidator {
   }
 
   /**
+   * Validate deployment target accounts for EBS default volume encryption
+   * @param values SecurityConfig
+   * @param ouIdNames string[]
+   * @param errors string[]
+   */
+  private validateEbsEncryptionDeploymentTargetAccounts(
+    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
+    accountNames: string[],
+    errors: string[],
+  ) {
+    for (const account of values.centralSecurityServices.ebsDefaultVolumeEncryption.deploymentTargets?.accounts ?? []) {
+      if (accountNames.indexOf(account) === -1) {
+        errors.push(
+          `Deployment target account ${account} for EBS default volume encryption does not exist in accounts-config.yaml file.`,
+        );
+      }
+    }
+  }
+
+  /**
    * Function to validate Deployment targets account name for security services
    * @param values
    */
@@ -459,6 +501,7 @@ export class SecurityConfigValidator {
     this.validateSsmDocumentsDeploymentTargetAccounts(values, accountNames, errors);
     this.validateCloudWatchLogGroupsDeploymentTargetAccounts(values, accountNames, errors);
     this.validateKmsKeyConfigDeploymentTargetAccounts(values, accountNames, errors);
+    this.validateEbsEncryptionDeploymentTargetAccounts(values, accountNames, errors);
   }
 
   /**
@@ -565,6 +608,23 @@ export class SecurityConfigValidator {
   }
 
   /**
+   * Validate deployment target OUs for EBS default volume encryption
+   * @param values SecurityConfig
+   * @param ouIdNames string[]
+   * @param errors string[]
+   */
+  private validateEbsEncryptionDeploymentTargetOUs(values: SecurityConfig, ouIdNames: string[], errors: string[]) {
+    for (const ou of values.centralSecurityServices.ebsDefaultVolumeEncryption.deploymentTargets?.organizationalUnits ??
+      []) {
+      if (ouIdNames.indexOf(ou) === -1) {
+        errors.push(
+          `Deployment target OU ${ou} for EBS default volume encryption does not exist in organization-config.yaml file.`,
+        );
+      }
+    }
+  }
+
+  /**
    * Function to validate Deployment targets OU name for security services
    * @param values
    */
@@ -574,6 +634,7 @@ export class SecurityConfigValidator {
     this.validateCloudWatchMetricsDeploymentTargetOUs(values, ouIdNames, errors);
     this.validateConfigRuleDeploymentTargetOUs(values, ouIdNames, errors);
     this.validateKmsKeyConfigDeploymentTargetOUs(values, ouIdNames, errors);
+    this.validateEbsEncryptionDeploymentTargetOUs(values, ouIdNames, errors);
   }
 
   /**
