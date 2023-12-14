@@ -321,7 +321,7 @@ export class PrepareStack extends AcceleratorStack {
     driftMessageParameter: cdk.aws_ssm.StringParameter;
     moveAccounts: MoveAccounts;
     managementAccountKey: cdk.aws_kms.IKey;
-    cloudwatchKey: cdk.aws_kms.Key;
+    cloudwatchKey?: cdk.aws_kms.IKey;
   }) {
     this.logger.info(`Tables`);
     if (
@@ -654,9 +654,9 @@ export class PrepareStack extends AcceleratorStack {
   /**
    * Create Management Key
    * @param props
-   * @returns key {@link cdk.aws_kms.Key}
+   * @returns key {@link cdk.aws_kms.IKey}
    */
-  private createManagementKey(props: AcceleratorStackProps): cdk.aws_kms.Key {
+  private createManagementKey(props: AcceleratorStackProps): cdk.aws_kms.IKey {
     this.logger.info(`Creating Management Encryption Key`);
     const key = new cdk.aws_kms.Key(this, 'ManagementKey', {
       alias: this.acceleratorResourceNames.customerManagedKeys.managementKey.alias,
@@ -726,7 +726,11 @@ export class PrepareStack extends AcceleratorStack {
    * Create Management account CloudWatch key
    * @returns cloudwatchKey {@link cdk.aws_kms.Key}
    */
-  private createManagementAccountCloudWatchKey(): cdk.aws_kms.Key {
+  private createManagementAccountCloudWatchKey(): cdk.aws_kms.IKey | undefined {
+    if (!this.isCloudWatchLogsGroupCMKEnabled) {
+      this.logger.info(`CloudWatch Encryption CMK disable for Management account home region, CMK creation excluded`);
+      return undefined;
+    }
     this.logger.info(`CloudWatch Encryption Key`);
     const cloudwatchKey = new cdk.aws_kms.Key(this, 'AcceleratorManagementCloudWatchKey', {
       alias: this.acceleratorResourceNames.customerManagedKeys.cloudWatchLog.alias,

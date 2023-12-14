@@ -38,12 +38,12 @@ import { pascalCase } from 'pascal-case';
  * Security Stack, configures local account security services
  */
 export class SecurityStack extends AcceleratorStack {
-  readonly cloudwatchKey: cdk.aws_kms.IKey;
   readonly auditAccountId: string;
   readonly logArchiveAccountId: string;
   readonly auditAccountName: string;
   readonly centralLogsBucketKey: cdk.aws_kms.IKey;
   readonly configAggregationAccountId: string;
+  readonly cloudwatchKey?: cdk.aws_kms.IKey;
   readonly metadataRule: AcceleratorMetadata | undefined;
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
@@ -60,7 +60,7 @@ export class SecurityStack extends AcceleratorStack {
         props.securityConfig.awsConfig.aggregation.delegatedAdminAccount,
       );
     }
-    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY)!;
+    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
     this.centralLogsBucketKey = this.getCentralLogsBucketKey(this.cloudwatchKey);
 
     //
@@ -275,10 +275,10 @@ export class SecurityStack extends AcceleratorStack {
   /**
    * Get custom key or create LZA-managed KMS key
    * @param ebsEncryptionConfig EbsDefaultVolumeEncryptionConfig
-   * @returns cdk.aws_kms.Key
+   * @returns cdk.aws_kms.IKey
    */
-  private getOrCreateEbsEncryptionKey(ebsEncryptionConfig: EbsDefaultVolumeEncryptionConfig): cdk.aws_kms.Key {
-    let ebsEncryptionKey: cdk.aws_kms.Key;
+  private getOrCreateEbsEncryptionKey(ebsEncryptionConfig: EbsDefaultVolumeEncryptionConfig): cdk.aws_kms.IKey {
+    let ebsEncryptionKey: cdk.aws_kms.IKey;
 
     if (ebsEncryptionConfig.kmsKey) {
       ebsEncryptionKey = cdk.aws_kms.Key.fromKeyArn(
@@ -288,7 +288,7 @@ export class SecurityStack extends AcceleratorStack {
           this,
           `${this.props.prefixes.ssmParamName}/kms/${ebsEncryptionConfig.kmsKey}/key-arn`,
         ),
-      ) as cdk.aws_kms.Key;
+      );
     } else {
       ebsEncryptionKey = new cdk.aws_kms.Key(this, 'EbsEncryptionKey', {
         alias: this.acceleratorResourceNames.customerManagedKeys.ebsDefault.alias,
@@ -437,7 +437,7 @@ export class SecurityStack extends AcceleratorStack {
     acceleratorProps: AcceleratorStackProps,
     centralLogBucketName: string,
     elbLogBucketName: string,
-    cloudwatchKmsKey: cdk.aws_kms.IKey,
+    cloudwatchKmsKey?: cdk.aws_kms.IKey,
   ): AcceleratorMetadata | undefined {
     const isManagementAccountAndHomeRegion =
       cdk.Stack.of(this).account === acceleratorProps.accountsConfig.getManagementAccountId() &&

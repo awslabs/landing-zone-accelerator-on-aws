@@ -130,7 +130,7 @@ export class ApplicationsStack extends AcceleratorStack {
 
     const lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
 
-    const cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY)!;
+    const cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
 
     //Create application config resources
     this.createApplicationConfigResources(
@@ -240,7 +240,7 @@ export class ApplicationsStack extends AcceleratorStack {
     configDirPath: string,
     allVpcItems: (VpcConfig | VpcTemplatesConfig)[],
     accessLogsBucket: string,
-    cloudwatch: { key: cdk.aws_kms.IKey; logRetentionInDays: number },
+    cloudwatch: { key?: cdk.aws_kms.IKey; logRetentionInDays: number },
     lambdaKey?: cdk.aws_kms.IKey,
   ) {
     for (const vpcItem of allVpcItems) {
@@ -449,7 +449,7 @@ export class ApplicationsStack extends AcceleratorStack {
     targetGroupsInput: TargetGroupItem[] | undefined,
     lt: LaunchTemplate,
     subnetMap: Map<string, string>,
-    cloudwatch: { key: cdk.aws_kms.IKey; logRetentionInDays: number },
+    cloudwatch: { key?: cdk.aws_kms.IKey; logRetentionInDays: number },
     lambdaKey?: cdk.aws_kms.IKey,
   ) {
     let finalTargetGroupArns: string[] = [];

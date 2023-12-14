@@ -42,7 +42,7 @@ export class KeyStack extends AcceleratorStack {
    * Function to create Accelerator Key
    * @param props {@link AcceleratorStackProps}
    */
-  private createAcceleratorKey(props: AcceleratorStackProps): cdk.aws_kms.Key {
+  private createAcceleratorKey(props: AcceleratorStackProps): cdk.aws_kms.IKey {
     const key = new cdk.aws_kms.Key(this, 'AcceleratorKey', {
       alias: this.acceleratorResourceNames.customerManagedKeys.acceleratorKey.alias,
       description: this.acceleratorResourceNames.customerManagedKeys.acceleratorKey.description,

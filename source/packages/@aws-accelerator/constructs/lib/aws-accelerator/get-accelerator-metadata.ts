@@ -55,9 +55,9 @@ export interface AcceleratorMetadataProps {
    */
   readonly organizationId: string;
   /**
-   * Custom resource lambda log group encryption key
+   * Custom resource lambda log group encryption key, when undefined default AWS managed key will be used
    */
-  readonly cloudwatchKmsKey: cdk.aws_kms.IKey;
+  readonly cloudwatchKmsKey?: cdk.aws_kms.IKey;
   /**
    * Custom resource lambda log retention in days
    */
@@ -161,7 +161,7 @@ export class AcceleratorMetadata extends Construct {
     role: cdk.aws_iam.Role,
     props: AcceleratorMetadataProps,
   ) {
-    const logGroup = this.setCloudwatchLogGroup(stack, functionName, props.cloudwatchKmsKey, props.logRetentionInDays);
+    const logGroup = this.setCloudwatchLogGroup(stack, functionName, props.logRetentionInDays, props.cloudwatchKmsKey);
     const lambda = new cdk.aws_lambda.Function(this, functionName, {
       functionName,
       role,
@@ -203,8 +203,8 @@ export class AcceleratorMetadata extends Construct {
   private setCloudwatchLogGroup(
     stack: cdk.Stack,
     lambdaFunctionName: string,
-    kmsKey: cdk.aws_kms.IKey,
     retention: number,
+    kmsKey?: cdk.aws_kms.IKey,
   ) {
     return new cdk.aws_logs.LogGroup(stack, `${lambdaFunctionName}LogGroup`, {
       logGroupName: `/aws/lambda/${lambdaFunctionName}`,

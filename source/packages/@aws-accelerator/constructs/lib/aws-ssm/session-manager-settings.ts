@@ -26,13 +26,12 @@ export interface SsmSessionManagerSettingsProps {
   readonly sendToCloudWatchLogs: boolean;
   readonly cloudWatchEncryptionEnabled: boolean;
   readonly attachPolicyToIamRoles?: string[];
-  readonly cloudWatchEncryptionKey: cdk.aws_kms.IKey;
+  /**
+   * Custom resource lambda log group encryption key, when undefined default AWS managed key will be used
+   */
+  readonly cloudWatchEncryptionKey?: cdk.aws_kms.IKey;
   readonly region: string;
   readonly rolesInAccounts?: { account: string; region: string; parametersByPath: { [key: string]: string } }[];
-  /**
-   * Custom resource lambda log group encryption key
-   */
-  readonly constructLoggingKmsKey: cdk.aws_kms.IKey;
   /**
    * Custom resource lambda log retention in days
    */
@@ -125,7 +124,7 @@ export class SsmSessionManagerSettings extends Construct {
       new cdk.aws_logs.LogGroup(stack, `${provider.node.id}LogGroup`, {
         logGroupName: `/aws/lambda/${(provider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref}`,
         retention: props.logRetentionInDays,
-        encryptionKey: props.constructLoggingKmsKey,
+        encryptionKey: props.cloudWatchEncryptionKey,
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       });
     resource.node.addDependency(logGroup);

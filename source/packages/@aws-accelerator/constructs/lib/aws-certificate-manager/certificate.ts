@@ -66,9 +66,9 @@ export interface CertificateProps {
    */
   assetBucketName: string;
   /**
-   * Custom resource lambda log group encryption key
+   * Custom resource lambda log group encryption key, when undefined default AWS managed key will be used
    */
-  cloudWatchLogsKmsKey: cdk.aws_kms.IKey;
+  cloudWatchLogsKmsKey?: cdk.aws_kms.IKey;
   /**
    * Custom resource lambda log retention in days
    */

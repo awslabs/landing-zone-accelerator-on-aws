@@ -53,9 +53,9 @@ importedFirewall.addNetworkFirewallRoute(
   'endpointRouteId',
   '10.0.0.6/32',
   '1',
-  new cdk.aws_kms.Key(stack, 'CloudWatchKey', {}),
   365,
   'routeTableId',
+  new cdk.aws_kms.Key(stack, 'CloudWatchKey', {}),
 );
 
 const app = new cdk.App();

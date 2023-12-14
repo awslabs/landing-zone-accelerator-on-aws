@@ -82,9 +82,9 @@ export interface CloudWatchToS3FirehoseProps {
   firehoseRecordsProcessorFunctionName: string;
   /**
    *
-   * KMS key to encrypt the CloudWatch log group
+   * KMS key to encrypt the CloudWatch log group, when undefined default AWS managed key will be used
    */
-  logsKmsKey: cdk.aws_kms.IKey;
+  logsKmsKey?: cdk.aws_kms.IKey;
   /**
    *
    * CloudWatch Logs Retention in days from global config
@@ -304,7 +304,7 @@ export class CloudWatchToS3Firehose extends Construct {
     useExistingRoles: boolean,
     firehoseCloudwatchLogs: cdk.aws_logs.LogGroup,
     firehoseCloudwatchLogStream: string,
-    logsKmsKey: cdk.aws_kms.IKey,
+    logsKmsKey?: cdk.aws_kms.IKey,
   ) {
     if (useExistingRoles) {
       return `arn:${cdk.Stack.of(this).partition}:iam::${
@@ -313,44 +313,51 @@ export class CloudWatchToS3Firehose extends Construct {
     }
     // Access is based on least privileged apis
     // Ref: https://docs.aws.amazon.com/firehose/latest/dev/controlling-access.html#using-iam-s3
-    const firehoseAccessS3KmsLambda = new cdk.aws_iam.PolicyDocument({
-      statements: [
-        new cdk.aws_iam.PolicyStatement({
-          actions: ['kms:Decrypt', 'kms:GenerateDataKey'],
-          resources: [firehoseKmsKeyArn],
-          conditions: {
-            StringEquals: {
-              'kms:ViaService': `s3.${homeRegion}.amazonaws.com`,
-            },
-            StringLike: {
-              'kms:EncryptionContext:aws:s3:arn': `${logsStorageBucketArn}/*`,
-            },
+    const policyStatements: cdk.aws_iam.PolicyStatement[] = [
+      new cdk.aws_iam.PolicyStatement({
+        actions: ['kms:Decrypt', 'kms:GenerateDataKey'],
+        resources: [firehoseKmsKeyArn],
+        conditions: {
+          StringEquals: {
+            'kms:ViaService': `s3.${homeRegion}.amazonaws.com`,
           },
-        }),
-        new cdk.aws_iam.PolicyStatement({
-          actions: [
-            's3:AbortMultipartUpload',
-            's3:GetBucketLocation',
-            's3:GetObject',
-            's3:ListBucket',
-            's3:ListBucketMultipartUploads',
-            's3:PutObject',
-          ],
-          resources: [logsStorageBucketArn, `${logsStorageBucketArn}/*`],
-        }),
-        new cdk.aws_iam.PolicyStatement({
-          actions: ['lambda:InvokeFunction', 'lambda:GetFunctionConfiguration'],
-          resources: [`${processingLambdaArn}:*`, `${processingLambdaArn}`],
-        }),
-        new cdk.aws_iam.PolicyStatement({
-          actions: ['logs:PutLogEvents'],
-          resources: [`${firehoseCloudwatchLogs.logGroupArn}:logstream:${firehoseCloudwatchLogStream}`],
-        }),
+          StringLike: {
+            'kms:EncryptionContext:aws:s3:arn': `${logsStorageBucketArn}/*`,
+          },
+        },
+      }),
+      new cdk.aws_iam.PolicyStatement({
+        actions: [
+          's3:AbortMultipartUpload',
+          's3:GetBucketLocation',
+          's3:GetObject',
+          's3:ListBucket',
+          's3:ListBucketMultipartUploads',
+          's3:PutObject',
+        ],
+        resources: [logsStorageBucketArn, `${logsStorageBucketArn}/*`],
+      }),
+      new cdk.aws_iam.PolicyStatement({
+        actions: ['lambda:InvokeFunction', 'lambda:GetFunctionConfiguration'],
+        resources: [`${processingLambdaArn}:*`, `${processingLambdaArn}`],
+      }),
+      new cdk.aws_iam.PolicyStatement({
+        actions: ['logs:PutLogEvents'],
+        resources: [`${firehoseCloudwatchLogs.logGroupArn}:logstream:${firehoseCloudwatchLogStream}`],
+      }),
+    ];
+
+    if (logsKmsKey) {
+      policyStatements.push(
         new cdk.aws_iam.PolicyStatement({
           actions: ['kms:Encrypt*', 'kms:Describe*'],
           resources: [logsKmsKey.keyArn],
         }),
-      ],
+      );
+    }
+
+    const firehoseAccessS3KmsLambda = new cdk.aws_iam.PolicyDocument({
+      statements: policyStatements,
     });
 
     const firehoseServiceRole = new cdk.aws_iam.Role(this, 'FirehoseServiceRole', {

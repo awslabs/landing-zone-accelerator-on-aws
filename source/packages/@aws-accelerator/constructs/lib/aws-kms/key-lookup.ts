@@ -57,7 +57,7 @@ export interface KeyLookupProps {
  * Aws Key class
  */
 export class KeyLookup extends Construct {
-  public readonly key: cdk.aws_kms.Key;
+  public readonly key: cdk.aws_kms.IKey;
 
   constructor(scope: Construct, id: string, props: KeyLookupProps) {
     super(scope, id);
@@ -81,10 +81,10 @@ export class KeyLookup extends Construct {
     }
 
     // Accelerator Key
-    this.key = cdk.aws_kms.Key.fromKeyArn(this, 'Resource', keyArn) as cdk.aws_kms.Key;
+    this.key = cdk.aws_kms.Key.fromKeyArn(this, 'Resource', keyArn);
   }
 
-  public getKey(): cdk.aws_kms.Key {
+  public getKey(): cdk.aws_kms.IKey {
     return this.key;
   }
 }

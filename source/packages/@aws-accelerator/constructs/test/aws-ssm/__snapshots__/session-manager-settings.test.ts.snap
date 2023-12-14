@@ -32,7 +32,7 @@ exports[`SsmSessionManagerSettings Construct(SsmSessionManagerSettings):  Snapsh
       "Properties": {
         "KmsKeyId": {
           "Fn::GetAtt": [
-            "Key961B73FD",
+            "CwKeyC5A32F94",
             "Arn",
           ],
         },
@@ -94,41 +94,6 @@ exports[`SsmSessionManagerSettings Construct(SsmSessionManagerSettings):  Snapsh
       "Type": "AWS::IAM::Role",
     },
     "CwKeyC5A32F94": {
-      "DeletionPolicy": "Retain",
-      "Properties": {
-        "KeyPolicy": {
-          "Statement": [
-            {
-              "Action": "kms:*",
-              "Effect": "Allow",
-              "Principal": {
-                "AWS": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:",
-                      {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::",
-                      {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":root",
-                    ],
-                  ],
-                },
-              },
-              "Resource": "*",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::KMS::Key",
-      "UpdateReplacePolicy": "Retain",
-    },
-    "Key961B73FD": {
       "DeletionPolicy": "Retain",
       "Properties": {
         "KeyPolicy": {

@@ -35,7 +35,7 @@ export interface AutoscalingGroupProps {
   readonly subnets: string[];
   readonly tags?: cdk.CfnTag[];
   readonly lambdaKey?: cdk.aws_kms.IKey;
-  readonly cloudWatchLogKmsKey: cdk.aws_kms.IKey;
+  readonly cloudWatchLogKmsKey?: cdk.aws_kms.IKey;
   readonly cloudWatchLogRetentionInDays: number;
   /**
    * Prefix for nag suppression

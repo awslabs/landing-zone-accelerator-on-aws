@@ -4261,12 +4261,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
     "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunctionLogGroup3B94FCDE": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Fn::GetAtt": [
-            "AcceleratorCloudWatchKeyF93B6E17",
-            "Arn",
-          ],
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -4599,94 +4593,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "AcceleratorCloudWatchKeyAlias6842582C": {
-      "Properties": {
-        "AliasName": "alias/accelerator/kms/cloudwatch/key",
-        "TargetKeyId": {
-          "Fn::GetAtt": [
-            "AcceleratorCloudWatchKeyF93B6E17",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::KMS::Alias",
-    },
-    "AcceleratorCloudWatchKeyF93B6E17": {
-      "DeletionPolicy": "Retain",
-      "Properties": {
-        "Description": "AWS Accelerator CloudWatch Kms Key",
-        "EnableKeyRotation": true,
-        "KeyPolicy": {
-          "Statement": [
-            {
-              "Action": "kms:*",
-              "Effect": "Allow",
-              "Principal": {
-                "AWS": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:",
-                      {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::333333333333:root",
-                    ],
-                  ],
-                },
-              },
-              "Resource": "*",
-            },
-            {
-              "Action": [
-                "kms:Encrypt*",
-                "kms:Decrypt*",
-                "kms:ReEncrypt*",
-                "kms:GenerateDataKey*",
-                "kms:Describe*",
-              ],
-              "Condition": {
-                "ArnLike": {
-                  "kms:EncryptionContext:aws:logs:arn": "arn:aws:logs:us-west-2:*:log-group:*",
-                },
-              },
-              "Effect": "Allow",
-              "Principal": {
-                "Service": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "logs.us-west-2.",
-                      {
-                        "Ref": "AWS::URLSuffix",
-                      },
-                    ],
-                  ],
-                },
-              },
-              "Resource": "*",
-              "Sid": "Allow Cloudwatch logs to use the encryption key",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::KMS::Key",
-      "UpdateReplacePolicy": "Retain",
-    },
-    "AcceleratorCloudWatchKmsArnParameter9BAD6EA0": {
-      "Properties": {
-        "Name": "/accelerator/kms/cloudwatch/key-arn",
-        "Type": "String",
-        "Value": {
-          "Fn::GetAtt": [
-            "AcceleratorCloudWatchKeyF93B6E17",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
     "AcceleratorKmsArnParameterKey13EEB1676": {
       "Properties": {
         "Name": "/accelerator/kms/key1/key-arn",
@@ -4925,12 +4831,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
     "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionLogGroupAF98D208": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Fn::GetAtt": [
-            "AcceleratorCloudWatchKeyF93B6E17",
-            "Arn",
-          ],
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -5191,12 +5091,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
     "CustomSsmPutParameterValueCustomResourceProviderLogGroupB0109C68": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Fn::GetAtt": [
-            "AcceleratorCloudWatchKeyF93B6E17",
-            "Arn",
-          ],
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -5302,12 +5196,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
     "CustomUpdateSubscriptionFilterCustomResourceProviderLogGroup0738E05B": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Fn::GetAtt": [
-            "AcceleratorCloudWatchKeyF93B6E17",
-            "Arn",
-          ],
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -5426,12 +5314,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
     "FirehoseToS3SetupFirehoseCloudwatchLogs4286DAE2": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Fn::GetAtt": [
-            "AcceleratorCloudWatchKeyF93B6E17",
-            "Arn",
-          ],
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -5806,19 +5688,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
                     ],
                   },
                 },
-                {
-                  "Action": [
-                    "kms:Encrypt*",
-                    "kms:Describe*",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": {
-                    "Fn::GetAtt": [
-                      "AcceleratorCloudWatchKeyF93B6E17",
-                      "Arn",
-                    ],
-                  },
-                },
               ],
               "Version": "2012-10-17",
             },
@@ -5968,12 +5837,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
     "ImportedLogBucketPrefixS3CreateBucketPrefixFunctionResourceLogGroupDC741551": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Fn::GetAtt": [
-            "AcceleratorCloudWatchKeyF93B6E17",
-            "Arn",
-          ],
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -6270,12 +6133,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
     "ImportedaccessLogsBucketPolicyFunctionResourceLogGroup665D22B3": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Fn::GetAtt": [
-            "AcceleratorCloudWatchKeyF93B6E17",
-            "Arn",
-          ],
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -6548,12 +6405,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
     "ImportedcentralLogsBucketEncryptionFunctionResourceLogGroupE1CF6C47": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "KmsKeyId": {
-          "Fn::GetAtt": [
-            "AcceleratorCloudWatchKeyF93B6E17",
-            "Arn",
-          ],
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -7061,12 +6912,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
     "ImportedcentralLogsBucketPolicyFunctionResourceLogGroup2E16ACD3": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Fn::GetAtt": [
-            "AcceleratorCloudWatchKeyF93B6E17",
-            "Arn",
-          ],
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -7357,12 +7202,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
     "ImportedelbLogsBucketPolicyFunctionResourceLogGroupDF83CD38": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Fn::GetAtt": [
-            "AcceleratorCloudWatchKeyF93B6E17",
-            "Arn",
-          ],
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -7782,12 +7621,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
           ],
         },
         "acceleratorCreatedLogDestinationArn": "arn:aws:logs:us-west-2:333333333333:destination:AWSAcceleratorCloudWatchToS3",
-        "acceleratorLogKmsKeyArn": {
-          "Fn::GetAtt": [
-            "AcceleratorCloudWatchKeyF93B6E17",
-            "Arn",
-          ],
-        },
         "acceleratorLogRetentionInDays": "3653",
         "acceleratorLogSubscriptionRoleArn": {
           "Fn::GetAtt": [
@@ -7877,12 +7710,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
           "Variables": {
             "LogDestination": "arn:aws:logs:us-west-2:333333333333:destination:AWSAcceleratorCloudWatchToS3",
             "LogExclusion": "{"account":"333333333333","region":"us-west-2","logGroupNames":["test1/*","/aws/lambda/AWSAccelerator-FirehoseRecordsProcessor"]}",
-            "LogKmsKeyArn": {
-              "Fn::GetAtt": [
-                "AcceleratorCloudWatchKeyF93B6E17",
-                "Arn",
-              ],
-            },
             "LogRetention": "3653",
             "LogSubscriptionRole": {
               "Fn::GetAtt": [
@@ -8239,12 +8066,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
     "ValidateImportedaccessLogsBucketValidateBucketFunctionResourceLogGroupDA884B01": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Fn::GetAtt": [
-            "AcceleratorCloudWatchKeyF93B6E17",
-            "Arn",
-          ],
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -8516,12 +8337,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
     "ValidateImportedcentralLogsBucketValidateBucketFunctionResourceLogGroupC510852F": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Fn::GetAtt": [
-            "AcceleratorCloudWatchKeyF93B6E17",
-            "Arn",
-          ],
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -8793,12 +8608,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
     "ValidateImportedelbLogsBucketValidateBucketFunctionResourceLogGroup700806F5": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Fn::GetAtt": [
-            "AcceleratorCloudWatchKeyF93B6E17",
-            "Arn",
-          ],
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",

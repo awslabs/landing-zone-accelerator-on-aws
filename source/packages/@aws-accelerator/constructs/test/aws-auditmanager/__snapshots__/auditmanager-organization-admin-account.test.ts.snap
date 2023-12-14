@@ -155,6 +155,16 @@ exports[`AuditManagerOrganizationAdminAccount Construct(AuditManagerOrganization
                   "Sid": "AuditManagerEnableOrganizationAdminAccountTaskDetectiveActions",
                 },
                 {
+                  "Action": [
+                    "iam:CreateServiceLinkedRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    "*",
+                  ],
+                  "Sid": "ServiceLinkedRoleDetective",
+                },
+                {
                   "Action": "kms:CreateGrant",
                   "Condition": {
                     "Bool": {
@@ -172,16 +182,6 @@ exports[`AuditManagerOrganizationAdminAccount Construct(AuditManagerOrganization
                     ],
                   },
                   "Sid": "AuditManagerEnableKmsKeyGrants",
-                },
-                {
-                  "Action": [
-                    "iam:CreateServiceLinkedRole",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": [
-                    "*",
-                  ],
-                  "Sid": "ServiceLinkedRoleDetective",
                 },
               ],
               "Version": "2012-10-17",

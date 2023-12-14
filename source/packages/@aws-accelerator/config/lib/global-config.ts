@@ -42,6 +42,11 @@ export abstract class GlobalConfigTypes {
     controls: t.optional(t.array(this.controlTowerControlConfig)),
   });
 
+  static readonly serviceEncryptionConfig = t.type({
+    useCMK: t.boolean,
+    deploymentTargets: t.optional(t.deploymentTargets),
+  });
+
   static readonly cloudTrailSettingsConfig = t.interface({
     multiRegionTrail: t.boolean,
     globalServiceEvents: t.boolean,
@@ -129,6 +134,7 @@ export abstract class GlobalConfigTypes {
   static readonly cloudwatchLogsConfig = t.interface({
     dynamicPartitioning: t.optional(t.nonEmptyString),
     enable: t.optional(t.boolean),
+    encryption: t.optional(this.serviceEncryptionConfig),
     exclusions: t.optional(t.array(GlobalConfigTypes.cloudWatchLogsExclusionConfig)),
     replaceLogDestinationArn: t.optional(t.nonEmptyString),
   });
@@ -254,13 +260,8 @@ export abstract class GlobalConfigTypes {
     maxConcurrentStacks: t.optional(t.number),
   });
 
-  static readonly serviceEncryptionConfig = t.type({
-    useCMK: t.boolean,
-    deploymentTargets: t.optional(t.deploymentTargets),
-  });
-
   static readonly lambdaConfig = t.type({
-    encryption: this.serviceEncryptionConfig,
+    encryption: t.optional(this.serviceEncryptionConfig),
   });
 
   static readonly globalConfig = t.interface({
@@ -416,7 +417,7 @@ export class LambdaConfig implements t.TypeOf<typeof GlobalConfigTypes.lambdaCon
    * @remarks
    *  For more information please refer {@link ServiceEncryptionConfig}
    */
-  readonly encryption = new ServiceEncryptionConfig();
+  readonly encryption: ServiceEncryptionConfig | undefined = undefined;
 }
 
 export class externalLandingZoneResourcesConfig
@@ -1111,6 +1112,11 @@ export class CloudWatchLogsExclusionConfig implements t.TypeOf<typeof GlobalConf
  *
  * Accelerator global CloudWatch Logs logging configuration
  *
+ * @remarks
+ * You can decide to use AWS KMS CMK or server-side encryption for the log data at rest. When this `encryption` property is undefined, the solution will deploy AWS KMS CMK to encrypt AWS CloudWatch log data at rest.
+ * You can use `deploymentTargets` to control target accounts and regions for the given `useCMK` configuration.
+ * please see [here](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/data-protection.html) or [here](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/encrypt-log-data-kms.html) for more information.
+ *
  * @example
  * ```
  * cloudwatchLogs:
@@ -1118,6 +1124,11 @@ export class CloudWatchLogsExclusionConfig implements t.TypeOf<typeof GlobalConf
  *   # default is true, if undefined this is set to true
  *   # if set to false, no replication is performed which is useful in test or temporary environments
  *   enable: true
+ *   encryption:
+ *     useCMK: true
+ *     deploymentTargets:
+ *       organizationalUnits:
+ *         - Root
  *   replaceLogDestinationArn: arn:aws:logs:us-east-1:111111111111:destination:ReplaceDestination
  *   exclusions:
  *    # in these OUs do not do log replication
@@ -1178,6 +1189,13 @@ export class CloudWatchLogsConfig implements t.TypeOf<typeof GlobalConfigTypes.c
    * Enable or disable CloudWatch replication
    */
   readonly enable: boolean | undefined = undefined;
+  /**
+   * Encryption setting for AWS CloudWatch log group data.
+   *
+   * @remarks
+   *  For more information please refer {@link ServiceEncryptionConfig}
+   */
+  readonly encryption: ServiceEncryptionConfig | undefined = undefined;
   /**
    * Exclude Log Groups during replication
    */

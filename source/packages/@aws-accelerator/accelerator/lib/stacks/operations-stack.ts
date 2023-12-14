@@ -87,9 +87,9 @@ export class OperationsStack extends AcceleratorStack {
   private users: { [name: string]: cdk.aws_iam.IUser } = {};
 
   /**
-   * KMS Key used to encrypt CloudWatch logs
+   * KMS Key used to encrypt CloudWatch logs, when undefined default AWS managed key will be used
    */
-  private cloudwatchKey: cdk.aws_kms.IKey;
+  private cloudwatchKey: cdk.aws_kms.IKey | undefined;
 
   /**
    * KMS Key used to encrypt custom resource lambda environment variables, when undefined default AWS managed key will be used
@@ -111,7 +111,7 @@ export class OperationsStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: OperationsStackProps) {
     super(scope, id, props);
 
-    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY)!;
+    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
     this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
     this.centralLogsBucketKey = this.getCentralLogsBucketKey(this.cloudwatchKey);
 
@@ -788,7 +788,7 @@ export class OperationsStack extends AcceleratorStack {
    * be referenced in AWS Organizations Backup Policies
    */
   private addBackupVaults() {
-    let backupKey: cdk.aws_kms.Key | undefined = undefined;
+    let backupKey: cdk.aws_kms.IKey | undefined = undefined;
     for (const vault of this.props.globalConfig.backup?.vaults ?? []) {
       if (this.isIncluded(vault.deploymentTargets)) {
         // Only create the key if a vault is defined for this account
@@ -1262,7 +1262,7 @@ export class OperationsStack extends AcceleratorStack {
    * @param firewallRoles string[]
    * @returns cdk.aws_kms.Key | undefined
    */
-  private lookupAssetBucketKmsKey(props: AcceleratorStackProps, firewallRoles: string[]): cdk.aws_kms.Key | undefined {
+  private lookupAssetBucketKmsKey(props: AcceleratorStackProps, firewallRoles: string[]): cdk.aws_kms.IKey | undefined {
     if (props.globalConfig.homeRegion === cdk.Stack.of(this).region || firewallRoles.length > 0) {
       return new KeyLookup(this, 'AssetsBucketKms', {
         accountId: this.props.accountsConfig.getManagementAccountId(),
@@ -1281,7 +1281,7 @@ export class OperationsStack extends AcceleratorStack {
    * Create ACM certificate asset bucket access role
    * @param assetBucketKmsKey
    */
-  private createAssetAccessRole(assetBucketKmsKey?: cdk.aws_kms.Key) {
+  private createAssetAccessRole(assetBucketKmsKey?: cdk.aws_kms.IKey) {
     if (!assetBucketKmsKey) {
       throw new Error(
         `Asset bucket KMS key is undefined. KMS key must be defined so permissions can be added to the custom resource role.`,
@@ -1375,13 +1375,13 @@ export class OperationsStack extends AcceleratorStack {
    * Creates a bucket for storing third-party firewall configuration and license files
    * @param props {@link AcceleratorStackProps}
    * @param firewallRoles string[]
-   * @param assetBucketKmsKey cdk.aws_kms.Key | undefined
+   * @param assetBucketKmsKey cdk.aws_kms.IKey | undefined
    * @returns Bucket | undefined
    */
   private createFirewallConfigBucket(
     props: AcceleratorStackProps,
     firewallRoles: string[],
-    assetBucketKmsKey?: cdk.aws_kms.Key,
+    assetBucketKmsKey?: cdk.aws_kms.IKey,
   ): Bucket | undefined {
     if (firewallRoles.length > 0) {
       // Create firewall config bucket
@@ -1467,13 +1467,13 @@ export class OperationsStack extends AcceleratorStack {
    * Create Lambda custom resource role for firewall config replacements
    * @param props {@link AcceleratorStackProps}
    * @param firewallConfigBucket {@link Bucket}
-   * @param assetBucketKmsKey cdk.aws_kms.Key | undefined
+   * @param assetBucketKmsKey cdk.aws_kms.IKey | undefined
    * @returns cdk.aws_iam.Role
    */
   private createFirewallConfigCustomResourceRole(
     props: AcceleratorStackProps,
     firewallConfigBucket: Bucket,
-    assetBucketKmsKey?: cdk.aws_kms.Key,
+    assetBucketKmsKey?: cdk.aws_kms.IKey,
   ): cdk.aws_iam.Role {
     if (!assetBucketKmsKey) {
       throw new Error(

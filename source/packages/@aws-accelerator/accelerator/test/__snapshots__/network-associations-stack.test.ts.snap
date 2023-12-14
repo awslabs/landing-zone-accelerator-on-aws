@@ -3,10 +3,6 @@
 exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot Test 1`] = `
 {
   "Parameters": {
-    "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
-      "Default": "/accelerator/kms/cloudwatch/key-arn",
-      "Type": "AWS::SSM::Parameter::Value<String>",
-    },
     "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/kms/lambda/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -378,9 +374,6 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
     "CrossAccountRouteFrameworkCrossAccountRouteFunctionLogGroupCFE2C9BD": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -799,9 +792,6 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
     "CustomDirectConnectGatewayAssociationCustomResourceProviderLogGroup966224A3": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -914,9 +904,6 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
     "CustomGetIpamSubnetCidrCustomResourceProviderLogGroup655A9FB7": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -1068,9 +1055,6 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
     "CustomGetResourceShareItemCustomResourceProviderLogGroup6DB08FC0": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -1151,9 +1135,6 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
     "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -1242,9 +1223,6 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
     "CustomRoute53AssociateHostedZonesCustomResourceProviderLogGroupDEA7760D": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -1331,9 +1309,6 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
     "CustomShareSubnetTagsCustomResourceProviderLogGroupA1F3F80A": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -1466,9 +1441,6 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
     "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -1576,9 +1548,6 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
     "CustomSsmPutParameterValueCustomResourceProviderLogGroupB0109C68": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -1684,9 +1653,6 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
     "CustomTransitGatewayPrefixListReferenceCustomResourceProviderLogGroupBC9F3669": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -3013,9 +2979,6 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
     "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaLogGroup713C77F0": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",

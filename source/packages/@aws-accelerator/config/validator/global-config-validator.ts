@@ -877,6 +877,7 @@ export class GlobalConfigValidator {
    */
   private validateDeploymentTargetAccountNames(values: GlobalConfig, accountNames: string[], errors: string[]) {
     this.validateLambdaEncryptionConfigDeploymentTargetAccounts(values, accountNames, errors);
+    this.validateCloudWatchLogsEncryptionConfigDeploymentTargetAccounts(values, accountNames, errors);
   }
 
   /**
@@ -885,6 +886,7 @@ export class GlobalConfigValidator {
    */
   private validateDeploymentTargetOUs(values: GlobalConfig, ouIdNames: string[], errors: string[]) {
     this.validateLambdaEncryptionConfigDeploymentTargetOUs(values, ouIdNames, errors);
+    this.validateCloudWatchLogsEncryptionDeploymentTargetOUs(values, ouIdNames, errors);
   }
 
   /**
@@ -923,10 +925,54 @@ export class GlobalConfigValidator {
     if (!values.lambda?.encryption) {
       return;
     }
-    for (const account of values.lambda.encryption.deploymentTargets?.accounts ?? []) {
+    for (const account of values.lambda.encryption?.deploymentTargets?.accounts ?? []) {
       if (accountNames.indexOf(account) === -1) {
         errors.push(
-          `Deployment target account ${account} for lambda encryption configuration does not exists in accounts-config.yaml file.`,
+          `Deployment target account ${account} for Lambda encryption configuration does not exists in accounts-config.yaml file.`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Function to validate existence of CloudWatch log group encryption configuration deployment target Accounts
+   * Make sure deployment target Accounts are part of account config file
+   * @param values
+   */
+  private validateCloudWatchLogsEncryptionConfigDeploymentTargetAccounts(
+    values: GlobalConfig,
+    accountNames: string[],
+    errors: string[],
+  ) {
+    if (!values.logging.cloudwatchLogs?.encryption) {
+      return;
+    }
+    for (const account of values.logging.cloudwatchLogs.encryption.deploymentTargets?.accounts ?? []) {
+      if (accountNames.indexOf(account) === -1) {
+        errors.push(
+          `Deployment target account ${account} for CloudWatch logs encryption configuration does not exists in accounts-config.yaml file.`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Function to validate existence of CloudWatch encryption deployment target OUs
+   * Make sure deployment target OUs are part of Organization config file
+   * @param values
+   */
+  private validateCloudWatchLogsEncryptionDeploymentTargetOUs(
+    values: GlobalConfig,
+    ouIdNames: string[],
+    errors: string[],
+  ) {
+    if (!values.logging.cloudwatchLogs?.encryption) {
+      return;
+    }
+    for (const ou of values.logging.cloudwatchLogs.encryption.deploymentTargets?.organizationalUnits ?? []) {
+      if (ouIdNames.indexOf(ou) === -1) {
+        errors.push(
+          `Deployment target OU ${ou} for CloudWatch logs encryption does not exist in organization-config.yaml file.`,
         );
       }
     }

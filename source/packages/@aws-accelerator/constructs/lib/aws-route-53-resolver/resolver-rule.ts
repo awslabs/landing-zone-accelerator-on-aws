@@ -93,13 +93,10 @@ export class ResolverRule extends cdk.Resource implements IResolverRule {
     this.name = props.name;
 
     if (props.targetInbound) {
-      if (!props.kmsKey) {
-        throw new Error(`kmsKey property must be included if targetInbound property is defined.`);
-      }
       if (!props.logRetentionInDays) {
         throw new Error(`logRetentionInDays property must be included if targetInbound property is defined.`);
       }
-      this.targetIps = this.lookupInbound(props.targetInbound, props.kmsKey, props.logRetentionInDays);
+      this.targetIps = this.lookupInbound(props.targetInbound, props.logRetentionInDays, props.kmsKey);
     } else {
       this.targetIps = props.targetIps;
     }
@@ -118,7 +115,7 @@ export class ResolverRule extends cdk.Resource implements IResolverRule {
     this.ruleId = resource.attrResolverRuleId;
   }
 
-  private lookupInbound(endpointId: string, kmsKey: cdk.aws_kms.IKey, logRetentionInDays: number): cdk.Reference {
+  private lookupInbound(endpointId: string, logRetentionInDays: number, kmsKey?: cdk.aws_kms.IKey): cdk.Reference {
     const lookup = new EndpointAddresses(this, 'LookupInbound', {
       endpointId: endpointId,
       kmsKey,

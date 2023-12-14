@@ -25,9 +25,9 @@ export interface AuditManagerOrganizationalAdminAccountProps {
    */
   readonly adminAccountId: string;
   /**
-   * Custom resource lambda log group encryption key
+   * Custom resource lambda log group encryption key, when undefined default AWS managed key will be used
    */
-  readonly kmsKey: cdk.aws_kms.IKey;
+  readonly kmsKey?: cdk.aws_kms.IKey;
   /**
    * Custom resource lambda log retention in days
    */
@@ -45,68 +45,74 @@ export class AuditManagerOrganizationAdminAccount extends Construct {
 
     const RESOURCE_TYPE = 'Custom::AuditManagerEnableOrganizationAdminAccount';
 
+    const commonPolicyStatements = [
+      {
+        Sid: 'AuditManagerEnableOrganizationAdminAccountTaskOrganizationActions',
+        Effect: 'Allow',
+        Action: [
+          'organizations:DeregisterDelegatedAdministrator',
+          'organizations:DescribeOrganization',
+          'organizations:EnableAWSServiceAccess',
+          'organizations:ListAWSServiceAccessForOrganization',
+          'organizations:ListAccounts',
+          'organizations:ListDelegatedAdministrators',
+          'organizations:RegisterDelegatedAdministrator',
+        ],
+        Resource: '*',
+        Condition: {
+          StringLikeIfExists: {
+            'organizations:DeregisterDelegatedAdministrator': ['auditmanager.amazonaws.com'],
+            'organizations:DescribeOrganization': ['auditmanager.amazonaws.com'],
+            'organizations:EnableAWSServiceAccess': ['auditmanager.amazonaws.com'],
+            'organizations:ListAWSServiceAccessForOrganization': ['auditmanager.amazonaws.com'],
+            'organizations:ListAccounts': ['auditmanager.amazonaws.com'],
+            'organizations:ListDelegatedAdministrators': ['auditmanager.amazonaws.com'],
+            'organizations:RegisterDelegatedAdministrator': ['auditmanager.amazonaws.com'],
+          },
+        },
+      },
+      {
+        Sid: 'AuditManagerEnableOrganizationAdminAccountTaskDetectiveActions',
+        Effect: 'Allow',
+        Action: [
+          'auditmanager:RegisterAccount',
+          'auditmanager:DeregisterAccount',
+          'auditmanager:RegisterOrganizationAdminAccount',
+          'auditmanager:DeregisterOrganizationAdminAccount',
+          'auditmanager:getOrganizationAdminAccount',
+        ],
+        Resource: '*',
+      },
+      {
+        Sid: 'ServiceLinkedRoleDetective',
+        Effect: 'Allow',
+        Action: ['iam:CreateServiceLinkedRole'],
+        Resource: ['*'],
+      },
+    ];
+
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
       codeDirectory: path.join(__dirname, 'enable-organization-admin-account/dist'),
       runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
-      policyStatements: [
-        {
-          Sid: 'AuditManagerEnableOrganizationAdminAccountTaskOrganizationActions',
-          Effect: 'Allow',
-          Action: [
-            'organizations:DeregisterDelegatedAdministrator',
-            'organizations:DescribeOrganization',
-            'organizations:EnableAWSServiceAccess',
-            'organizations:ListAWSServiceAccessForOrganization',
-            'organizations:ListAccounts',
-            'organizations:ListDelegatedAdministrators',
-            'organizations:RegisterDelegatedAdministrator',
-          ],
-          Resource: '*',
-          Condition: {
-            StringLikeIfExists: {
-              'organizations:DeregisterDelegatedAdministrator': ['auditmanager.amazonaws.com'],
-              'organizations:DescribeOrganization': ['auditmanager.amazonaws.com'],
-              'organizations:EnableAWSServiceAccess': ['auditmanager.amazonaws.com'],
-              'organizations:ListAWSServiceAccessForOrganization': ['auditmanager.amazonaws.com'],
-              'organizations:ListAccounts': ['auditmanager.amazonaws.com'],
-              'organizations:ListDelegatedAdministrators': ['auditmanager.amazonaws.com'],
-              'organizations:RegisterDelegatedAdministrator': ['auditmanager.amazonaws.com'],
+      policyStatements: props.kmsKey
+        ? [
+            ...commonPolicyStatements,
+            {
+              Sid: 'AuditManagerEnableKmsKeyGrants',
+              Effect: 'Allow',
+              Action: 'kms:CreateGrant',
+              Resource: props.kmsKey.keyArn,
+              Condition: {
+                StringLike: {
+                  'kms:ViaService': 'auditmanager.*.amazonaws.com',
+                },
+                Bool: {
+                  'kms:GrantIsForAWSResource': 'true',
+                },
+              },
             },
-          },
-        },
-        {
-          Sid: 'AuditManagerEnableOrganizationAdminAccountTaskDetectiveActions',
-          Effect: 'Allow',
-          Action: [
-            'auditmanager:RegisterAccount',
-            'auditmanager:DeregisterAccount',
-            'auditmanager:RegisterOrganizationAdminAccount',
-            'auditmanager:DeregisterOrganizationAdminAccount',
-            'auditmanager:getOrganizationAdminAccount',
-          ],
-          Resource: '*',
-        },
-        {
-          Sid: 'AuditManagerEnableKmsKeyGrants',
-          Effect: 'Allow',
-          Action: 'kms:CreateGrant',
-          Resource: props.kmsKey.keyArn,
-          Condition: {
-            StringLike: {
-              'kms:ViaService': 'auditmanager.*.amazonaws.com',
-            },
-            Bool: {
-              'kms:GrantIsForAWSResource': 'true',
-            },
-          },
-        },
-        {
-          Sid: 'ServiceLinkedRoleDetective',
-          Effect: 'Allow',
-          Action: ['iam:CreateServiceLinkedRole'],
-          Resource: ['*'],
-        },
-      ],
+          ]
+        : [...commonPolicyStatements],
     });
 
     const resource = new cdk.CustomResource(this, 'Resource', {
@@ -115,7 +121,7 @@ export class AuditManagerOrganizationAdminAccount extends Construct {
       properties: {
         region: cdk.Stack.of(this).region,
         adminAccountId: props.adminAccountId,
-        kmsKeyArn: props.kmsKey.keyArn,
+        kmsKeyArn: props.kmsKey ? props.kmsKey.keyArn : undefined,
       },
     });
 

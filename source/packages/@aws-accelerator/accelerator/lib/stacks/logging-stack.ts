@@ -84,7 +84,7 @@ type PolicyAttachmentsType = {
 };
 
 export class LoggingStack extends AcceleratorStack {
-  private cloudwatchKey: cdk.aws_kms.IKey;
+  private cloudwatchKey: cdk.aws_kms.IKey | undefined;
   private lambdaKey: cdk.aws_kms.IKey | undefined;
   private centralLogsBucket: CentralLogsBucket | undefined;
   private centralLogBucketKey: cdk.aws_kms.IKey | undefined;
@@ -120,15 +120,15 @@ export class LoggingStack extends AcceleratorStack {
     //
     // Create Auto scaling service linked role
     //
-    const autoScalingSlr = this.createAutoScalingServiceLinkedRole(
-      this.cloudwatchKey as cdk.aws_kms.Key,
-      this.lambdaKey,
-    );
+    const autoScalingSlr = this.createAutoScalingServiceLinkedRole({
+      cloudwatch: this.cloudwatchKey,
+      lambda: this.lambdaKey,
+    });
 
     //
     // Create AWS Cloud9 service linked role
     //
-    const cloud9Slr = this.createAwsCloud9ServiceLinkedRole(this.cloudwatchKey as cdk.aws_kms.Key, this.lambdaKey);
+    const cloud9Slr = this.createAwsCloud9ServiceLinkedRole({ cloudwatch: this.cloudwatchKey, lambda: this.lambdaKey });
 
     //
     // Create KMS keys defined in config
@@ -520,14 +520,22 @@ export class LoggingStack extends AcceleratorStack {
    * @param props {@link AcceleratorStackProps}
    * @returns cdk.aws_kms.IKey
    */
-  private createCloudWatchKey(props: AcceleratorStackProps): cdk.aws_kms.IKey {
+  private createCloudWatchKey(props: AcceleratorStackProps): cdk.aws_kms.IKey | undefined {
+    if (!this.isCloudWatchLogsGroupCMKEnabled) {
+      this.logger.info(
+        `CloudWatch Encryption CMK disable for ${cdk.Stack.of(this).account} account in ${
+          cdk.Stack.of(this).region
+        } region, CMK creation excluded`,
+      );
+      return undefined;
+    }
     // Create kms key for CloudWatch logs the CloudWatch key. Management account home region this key was created in prepare stack
     if (
       cdk.Stack.of(this).account === props.accountsConfig.getManagementAccountId() &&
       (cdk.Stack.of(this).region === this.props.globalConfig.homeRegion ||
         cdk.Stack.of(this).region === this.props.globalRegion)
     ) {
-      return this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY)!;
+      return this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
     } else {
       const cloudwatchKey = new cdk.aws_kms.Key(this, 'AcceleratorCloudWatchKey', {
         alias: this.acceleratorResourceNames.customerManagedKeys.cloudWatchLog.alias,
@@ -669,7 +677,7 @@ export class LoggingStack extends AcceleratorStack {
   /**
    * Function to create S3 Key
    */
-  private createS3Key() {
+  private createS3Key(): cdk.aws_kms.IKey {
     //
     // Crete S3 key in every account except audit account,
     // this is required for SSM automation to get right KMS key to encrypt unencrypted bucket
@@ -731,7 +739,7 @@ export class LoggingStack extends AcceleratorStack {
   /**
    * Function to create Audit account S3 bucket
    */
-  private createAuditAccountS3Key(): cdk.aws_kms.Key {
+  private createAuditAccountS3Key(): cdk.aws_kms.IKey {
     this.logger.debug(`Create S3 Key`);
     const s3Key = new cdk.aws_kms.Key(this, 'AcceleratorAuditS3Key', {
       alias: this.acceleratorResourceNames.customerManagedKeys.s3.alias,
@@ -838,12 +846,12 @@ export class LoggingStack extends AcceleratorStack {
    * Function to create VPC FlowLogs bucket.
    * This bucket depends on Central Logs bucket and Server access logs bucket.
    * This bucket also depends on local S3 key.
-   * @param s3Key {@link cdk.aws_kms.Key}
+   * @param s3Key {@link cdk.aws_kms.IKey}
    * @param serverAccessLogsBucket {@link cdk.aws_s3.IBucket}
    * @param replicationProps {@link BucketReplicationProps}
    */
   private createVpcFlowLogsBucket(
-    s3Key: cdk.aws_kms.Key,
+    s3Key: cdk.aws_kms.IKey,
     serverAccessLogsBucket: cdk.aws_s3.IBucket,
     replicationProps: BucketReplicationProps,
   ) {
@@ -2281,7 +2289,7 @@ export class LoggingStack extends AcceleratorStack {
     });
   }
 
-  private createSnsKey() {
+  private createSnsKey(): cdk.aws_kms.IKey {
     const snsKey = new cdk.aws_kms.Key(this, 'AcceleratorSnsTopicKey', {
       alias: this.acceleratorResourceNames.customerManagedKeys.snsTopic.alias,
       description: this.acceleratorResourceNames.customerManagedKeys.snsTopic.description,

@@ -73,7 +73,7 @@ const SUPPORTED_RESOURCE_TYPE = [
  * Security Perimeter Stack, configures resources to enforce resource policy (Config Rule and SSM)
  */
 export class ResourcePolicyEnforcementStack extends AcceleratorStack {
-  readonly cloudwatchKey: cdk.aws_kms.IKey;
+  readonly cloudwatchKey: cdk.aws_kms.IKey | undefined;
   readonly lambdaKey: cdk.aws_kms.IKey | undefined;
   rbpGeneratedFilePathList: rbpGeneratedFilePath[] = [];
 
@@ -81,7 +81,7 @@ export class ResourcePolicyEnforcementStack extends AcceleratorStack {
     super(scope, id, props);
 
     this.logger.info('Begin stack synthesis');
-    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY)!;
+    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
     this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
 
     if (!props.securityConfig.resourcePolicyEnforcement || !props.securityConfig.resourcePolicyEnforcement.enable)

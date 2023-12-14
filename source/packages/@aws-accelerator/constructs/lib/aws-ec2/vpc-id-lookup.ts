@@ -29,9 +29,9 @@ export interface VpcIdLookupProps {
    */
   readonly lambdaKey?: cdk.aws_kms.IKey;
   /**
-   * Custom resource CloudWatch log group encryption key
+   * Custom resource CloudWatch log group encryption key, when undefined default AWS managed key will be used
    */
-  readonly cloudwatchKey: cdk.aws_kms.IKey;
+  readonly cloudwatchKey?: cdk.aws_kms.IKey;
   /**
    * Custom resource CloudWatch log retention in days
    */

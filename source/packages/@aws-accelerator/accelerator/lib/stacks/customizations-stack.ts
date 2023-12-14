@@ -36,9 +36,9 @@ export class CustomizationsStack extends AcceleratorStack {
   private stackSetAdministratorAccount: string;
 
   /**
-   * KMS Key used to encrypt CloudWatch logs
+   * KMS Key used to encrypt CloudWatch logs, when undefined default AWS managed key will be used
    */
-  private cloudwatchKey: cdk.aws_kms.IKey;
+  private cloudwatchKey: cdk.aws_kms.IKey | undefined;
 
   /**
    * Constructor for CustomizationsStack
@@ -51,7 +51,7 @@ export class CustomizationsStack extends AcceleratorStack {
     super(scope, id, props);
     this.props = props;
     this.stackSetAdministratorAccount = props.accountsConfig.getManagementAccountId();
-    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY)!;
+    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
 
     // Create CloudFormation StackSets
     if (props.customizationsConfig?.customizations?.cloudFormationStackSets) {

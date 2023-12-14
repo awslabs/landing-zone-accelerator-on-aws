@@ -63,7 +63,7 @@ type CustomConfigRuleType = cdk.aws_config.ManagedRule | cdk.aws_config.CustomRu
  */
 export class SecurityResourcesStack extends AcceleratorStack {
   readonly centralLogsBucketKey: cdk.aws_kms.IKey;
-  readonly cloudwatchKey: cdk.aws_kms.IKey;
+  readonly cloudwatchKey: cdk.aws_kms.IKey | undefined;
   readonly lambdaKey: cdk.aws_kms.IKey | undefined;
   readonly auditAccountId: string;
   readonly logArchiveAccountId: string;
@@ -84,7 +84,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
     this.auditAccountId = props.accountsConfig.getAuditAccountId();
     this.logArchiveAccountId = props.accountsConfig.getLogArchiveAccountId();
 
-    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY)!;
+    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
     this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
     this.centralLogsBucketKey = this.getCentralLogsBucketKey(this.cloudwatchKey);
 
@@ -434,7 +434,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
             this,
             `${this.props.prefixes.ssmParamName}/kms/${logGroupItem.encryption?.kmsKeyName}/key-arn`,
           ).toString();
-        } else if (logGroupItem.encryption?.useLzaManagedKey) {
+        } else if (logGroupItem.encryption?.useLzaManagedKey && this.cloudwatchKey) {
           keyArn = this.cloudwatchKey.keyArn;
         } else if (logGroupItem.encryption?.kmsKeyArn) {
           keyArn = logGroupItem.encryption?.kmsKeyArn;
@@ -1372,7 +1372,6 @@ export class SecurityResourcesStack extends AcceleratorStack {
             this.props.globalConfig.logging.sessionManager.sendToCloudWatchLogs,
           attachPolicyToIamRoles: this.props.globalConfig.logging.sessionManager.attachPolicyToIamRoles,
           cloudWatchEncryptionKey: this.cloudwatchKey,
-          constructLoggingKmsKey: this.cloudwatchKey,
           logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
           region: cdk.Stack.of(this).region,
           rolesInAccounts: this.props.globalConfig.iamRoleSsmParameters,

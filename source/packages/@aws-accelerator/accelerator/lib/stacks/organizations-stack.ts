@@ -49,6 +49,7 @@ import {
   AcceleratorStackProps,
   NagSuppressionRuleIds,
 } from './accelerator-stack';
+
 export interface OrganizationsStackProps extends AcceleratorStackProps {
   configDirPath: string;
 }
@@ -58,14 +59,17 @@ export interface OrganizationsStackProps extends AcceleratorStackProps {
  * Organizations Management (Root) account
  */
 export class OrganizationsStack extends AcceleratorStack {
-  private cloudwatchKey: cdk.aws_kms.IKey;
+  /**
+   * KMS Key used to encrypt custom resource CloudWatch environment variables, when undefined default AWS managed key will be used
+   */
+  private cloudwatchKey: cdk.aws_kms.IKey | undefined;
   private centralLogsBucketKey: cdk.aws_kms.IKey;
   private bucketReplicationProps: BucketReplicationProps;
   private logRetention: number;
   private stackProperties: AcceleratorStackProps;
 
   /**
-   * KMS Key used to encrypt custom resource lambda environment variables, when undefined default AWS managed key will be used
+   * KMS Key used to encrypt custom resource Lambda environment variables, when undefined default AWS managed key will be used
    */
   private lambdaKey: cdk.aws_kms.IKey | undefined;
 
@@ -75,7 +79,7 @@ export class OrganizationsStack extends AcceleratorStack {
     // Set private properties
     this.stackProperties = props;
     this.logRetention = this.stackProperties.globalConfig.cloudwatchLogRetentionInDays;
-    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY)!;
+    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
     this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
     this.centralLogsBucketKey = this.getCentralLogsBucketKey(this.cloudwatchKey);
     this.bucketReplicationProps = {
@@ -144,7 +148,7 @@ export class OrganizationsStack extends AcceleratorStack {
       //
       // Enable FMS Delegated Admin Account
       //
-      this.enableFMSDelegatedAdminAccount(this.cloudwatchKey, this.lambdaKey);
+      this.enableFMSDelegatedAdminAccount({ cloudwatch: this.cloudwatchKey, lambda: this.lambdaKey });
 
       //IdentityCenter Config
       this.enableIdentityCenterDelegatedAdminAccount(securityAdminAccountId);
@@ -401,7 +405,7 @@ export class OrganizationsStack extends AcceleratorStack {
   /**
    * Function to enable FMS delegated admin account
    */
-  private enableFMSDelegatedAdminAccount(cloudwatchKey: cdk.aws_kms.IKey, lambdaKey?: cdk.aws_kms.IKey) {
+  private enableFMSDelegatedAdminAccount(key: { cloudwatch?: cdk.aws_kms.IKey; lambda?: cdk.aws_kms.IKey }) {
     const fmsConfig = this.stackProperties.networkConfig.firewallManagerService;
     if (
       fmsConfig &&
@@ -409,7 +413,10 @@ export class OrganizationsStack extends AcceleratorStack {
       this.props.organizationConfig.enable &&
       (this.props.partition === 'aws' || this.props.partition === 'aws-us-gov' || this.props.partition === 'aws-cn')
     ) {
-      const fmsServiceLinkedRole = this.createAwsFirewallManagerServiceLinkedRole(cloudwatchKey, lambdaKey);
+      const fmsServiceLinkedRole = this.createAwsFirewallManagerServiceLinkedRole({
+        cloudwatch: key.cloudwatch,
+        lambda: key.lambda,
+      });
 
       if (fmsServiceLinkedRole) {
         const adminAccountName = fmsConfig.delegatedAdminAccount;

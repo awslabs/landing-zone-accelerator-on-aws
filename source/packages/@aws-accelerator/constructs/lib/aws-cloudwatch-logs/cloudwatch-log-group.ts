@@ -45,9 +45,9 @@ export type LogGroupRetention =
 
 export interface CloudWatchLogGroupsProps {
   /**
-   * Custom resource lambda log group encryption key
+   * Custom resource lambda log group encryption key, when undefined default AWS managed key will be used
    */
-  readonly customLambdaLogKmsKey: cdk.aws_kms.IKey;
+  readonly customLambdaLogKmsKey?: cdk.aws_kms.IKey;
   /**
    * How long, in days, the log contents for the Lambda function
    * will be retained.
