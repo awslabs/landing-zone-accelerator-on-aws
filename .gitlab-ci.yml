@@ -151,10 +151,61 @@ pages:
     - "cd source"
     - "yarn install"
     - "yarn build"
-    - "yarn docs"
-    - "cp -R docs/ ../public/"
+    - "mkdir -p mkdocs/docs/typedocs/latest"
+    - "yarn docs --out ./mkdocs/docs/typedocs/latest"
+    - "export SITE_URL=https://landing-zone-accelerator.pages.aws.dev/landing-zone-accelerator-on-aws"
+    - "cd mkdocs"
+    - "pip install -r requirements.txt"
+    - "mkdocs build"
+    - "cp -R site/ ../../public/"
   artifacts:
     paths:
       - public
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
+
+release-docs:
+  stage: build-test
+  tags:
+    - arch:amd64
+    - size:xlarge
+  variables: 
+    AWS_DEFAULT_REGION: us-east-1
+    BUILD_S3_PATH: s3://${BUCKET_NAME}/build-release/typedocs.zip
+    VERSIONED_S3_PATH: s3://${BUCKET_NAME}/${CI_COMMIT_TAG}/typedocs.zip
+  before_script:
+    # Install dependencies
+    - "rm -rf /var/lib/apt/lists/*"
+    - "apt-get update"
+    - "apt-cache gencaches"
+    - "apt-get install -y zip"
+    - "wget --progress=dot:mega -O /tmp/awscliv2.zip https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+    - "unzip -q /tmp/awscliv2.zip -d /tmp"
+    - "/tmp/aws/install"
+  script:
+    # Copy and unzip typedocs archive
+    - "aws s3 cp ${BUILD_S3_PATH} /tmp"
+    - "unzip -q /tmp/typedocs.zip -d ./source/typedocs"
+    # Build LZA
+    - "export NODE_OPTIONS=--max_old_space_size=16384"
+    - "cd source"
+    - "yarn install"
+    - "yarn build"
+    # Remove symlink for previous version
+    - "cd ./typedocs"
+    - 'if [ -L "latest" ]; then rm latest; fi'
+    # Generate latest typedocs
+    - "yarn docs --out ./typedocs/${CI_COMMIT_TAG}"
+    - "ln -s ${CI_COMMIT_TAG} latest"
+    # Archive and upload to S3
+    - "zip -rqy typedocs.zip *"
+    - "aws s3 cp ./typedocs.zip ${VERSIONED_S3_PATH}"
+    - "aws s3 cp ./typedocs.zip ${BUILD_S3_PATH}"
+    - "cp ./typedocs.zip ${CI_PROJECT_DIR}/typedocs.zip"
+  artifacts:
+    name: TypeDocs
+    when: on_success
+    paths:
+      - typedocs.zip
+  rules:
+    - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.){2}\d/

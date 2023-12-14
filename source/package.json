@@ -16,8 +16,8 @@
     "minimatch": "9.0.0"
   },
   "devDependencies": {
-    "@aws-cdk/integ-tests-alpha": "2.93.0-alpha.0",
     "@aws-cdk/integ-runner": "2.93.0-alpha.0",
+    "@aws-cdk/integ-tests-alpha": "2.93.0-alpha.0",
     "@types/jest": "29.4.0",
     "@types/node": "18.14.0",
     "@typescript-eslint/eslint-plugin": "5.53.0",
@@ -49,7 +49,7 @@
     "validate-config": "ts-node ./packages/@aws-accelerator/accelerator/lib/config-validator.ts",
     "test": "lerna run test --stream",
     "test:clean": "rm -f ./test-reports/*.xml",
-    "docs": "yarn run typedoc --entryPointStrategy packages './packages/@aws-accelerator/*' './packages/@aws-cdk-extensions/*' --name 'Landing Zone Accelerator on AWS' --includeVersion --disableSources --logLevel Verbose",
+    "docs": "yarn run typedoc --entryPointStrategy packages './packages/@aws-accelerator/*' './packages/@aws-cdk-extensions/*' --name 'Landing Zone Accelerator on AWS' --includeVersion --disableSources --logLevel Verbose --basePath typedocs",
     "generate-all-docs": "../deployment/build-docs.sh",
     "viper-scan": "cd .. && aws s3 cp s3://viperlight-scanner/latest/viperlight.zip . && unzip -qo viperlight.zip -d ../viperlight && rm -r ./viperlight.zip && ../viperlight/bin/viperlight scan",
     "prepare": "cd ../ && husky install source/.husky",

@@ -1,0 +1,41 @@
+# AWS Control Tower and Customizations for Control Tower (CfCT) FAQ
+
+## How does this solution relate to AWS Control Tower?
+
+When used in coordination with AWS Control Tower (CT), Landing Zone Accelerator will utilize the functionality provided by CT directly, such as using the CT Account Factory to generate and enroll new accounts. Landing Zone Accelerator fully intends to utilize AWS Control Tower APIs, when made available, to orchestrate additional features that CT provides, specifically 1/ OU creation and management, 2/ SCP creation and management, and 3/ CT control management. In the interim, Landing Zone Accelerator will not automate any actions that can potentially cause significant drift with CT, such as OU creation. The Landing Zone Accelerator team will work closely with the AWS Control Tower team to look around corners and avoid any one-way doors in design, implementation or deployment.
+
+## Is Landing Zone Accelerator compatible with AWS Control Tower?
+
+Yes, Landing Zone Accelerator is designed to coordinate directly with AWS Control Tower. AWS strongly recommends that you deploy AWS Control Tower as the foundation for the Landing Zone Accelerator. Landing Zone Accelerator extends the functionality of AWS Control Tower by adding additional orchestration of networking and security services within AWS. The Landing Zone Accelerator can be used to enable and orchestrate additional AWS services and features beyond the current functionality of AWS Control Tower through a simplified set of configuration files.
+
+AWS Control Tower provides the easiest way to set up and govern a secure, multi-account AWS environment, also known as a landing zone. AWS Control Tower creates customers’ landing zone using AWS Organizations, bringing ongoing account management and governance as well as implementation best practices based on AWS’s experience working with thousands of customers as they move to the cloud.
+
+By using the default [Landing Zone Accelerator on AWS sample configurations](https://github.com/awslabs/landing-zone-accelerator-on-aws/blob/main/reference/sample-configurations), you are able to quickly implement technical security controls and infrastructure foundations on AWS, in alignment with AWS best practices and in conformance with multiple, global compliance frameworks. If necessary, Landing Zone Accelerator can be deployed independently of AWS Control Tower to support regions and partitions that are currently not yet supported by AWS Control Tower. Learn more about AWS Control Tower Commercial Region availability [here](https://docs.aws.amazon.com/controltower/latest/userguide/region-how.html). Learn more about AWS Control Tower GovCloud (US) support [here](https://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-controltower.html).
+
+## AWS Control Tower just added new features that now overlap with Landing Zone Accelerator, what should I do?
+
+A key design principle of Landing Zone Accelerator is to evolve over time as new AWS services and features become available. Where possible, Landing Zone Accelerator will defer to native AWS services to deliver functionality and over time will deprecate code/functionality in Landing Zone Accelerator if it can be replaced by a native AWS service such as AWS Control Tower.
+
+## Can I create AWS GovCloud (US) accounts using Landing Zone Accelerator? What happens to the commercial account if I’m using AWS Control Tower?
+
+Yes. You can specify the creation of an AWS GovCloud (US) account through the Landing Zone Accelerator configuration files. This requires that your Management Root account meets the requirements for creating an AWS GovCloud (US) account. After adding the new account information to the Landing Zone Accelerator configuration and releasing the pipeline, Landing Zone Accelerator will automate the creation of a new GovCloud account through the Organizations service. Since the creation of a GovCloud account also creates a commercial pair, the Landing Zone Accelerator will then automate the enrollment of the commercial account using the AWS Control Tower Account Factory Service Catalog product.
+
+## If I deploy Landing Zone Accelerator now, can I enroll my environment into AWS Control Tower when the service becomes available in my region, such as AWS GovCloud (US) ADCs?
+
+Yes. Landing Zone Accelerator is designed to align directly with the landing zone structure that AWS Control Tower provides. Landing Zone Accelerator requires the 3 mandatory accounts that are configured when you enable AWS Control Tower, 1/Management Root, 2/Logging, 3/Audit. When AWS Control Tower becomes available in your region, you will be able to configure your AWS Control Tower landing zone to reuse these same accounts for their specified functions. Additionally, per guidance from the AWS Control Tower service team, where possible, Landing Zone Accelerator will also deploy the same mandatory controls defined by the AWS Control Tower into your environment.
+
+## How does Landing Zone Accelerator relate to CfCT?
+
+CfCT allows customers to easily add customizations to their AWS Control Tower landing zone using AWS CloudFormation templates and service control policies (SCPs). Customers are able to configure their environment by updating and adding additional functionality to their CloudFormation templates. Customers that want to dive deeper into the foundational AWS resources and building blocks that are provided with CloudFormation, and/or have developmental experience with Infrastructure as Code (IaC), can utilize CfCT to add their customizations. CfCT handles the deployment of CloudFormation templates using StackSets which allows the deployment of up to 2000 stack instances at a time. Customers have the flexibility to define the dependencies and order that their CloudFormation templates should be deployed though the CfCT configuration.
+
+Landing Zone Accelerator provides customers with a no-code solution for configuring an enterprise-ready and accreditation-ready environment on AWS. Customers with limited experience with IaC are able to interact with Landing Zone Accelerator through a simplified set of configuration files. Leveraging the AWS Cloud Development Kit (CDK) allows the Landing Zone Accelerator to deploy parallel stacks that go beyond the current instance limits of StackSets. Landing Zone Accelerator handles the dependencies and ordering of the CloudFormation templates and resource deployments; customers simply define what features they want enabled by Landing Zone Accelerator through their configuration files, and Landing Zone Accelerator handles where in the orchestration pipeline to enable the related resources and their dependencies.
+
+## How do I choose between using Landing Zone Accelerator or CfCT?
+
+Customers should use CfCT if they want to develop and maintain their own CloudFormation templates and also want the ability to define the dependencies and order that they should be deployed through the CfCT configuration across their multi-account environment.
+
+Customers should use Landing Zone Accelerator if they want a no-code solution with a simplified set of configuration files that handles the deployment of resources across 35 services and their dependencies across their multi-account environment. Customers should also use Landing Zone Accelerator if they need a solution that can work in all regions and partitions, such as AWS GovCloud (US) and the US Secret and Top Secret regions.
+
+## Can I use both Landing Zone Accelerator and CfCT? Are there any one-way doors?
+
+You can use both Landing Zone Accelerator and CfCT to deploy additional customizations to your CT landing zone. Both Landing Zone Accelerator and CfCT support event driven architectures and post an SNS topic at the completion of their respective pipelines. Subscriptions can be set up against these SNS topics to initiate additional pipelines or custom IaC deployments. This includes having CfCT called after the completion of a Landing Zone Accelerator pipeline and vice versa. For customers that want a hybrid approach of a no-code solution to handle the orchestration and deployment of AWS security and networking services through Landing Zone Accelerator, can then use CfCT to add additional customizations directly with custom-developed CloudFormation templates
