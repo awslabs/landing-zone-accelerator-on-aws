@@ -33,9 +33,9 @@ export interface CloudWatchLogsCreateProps {
   readonly logDestinationArn: string;
   /**
    *
-   * KMS key to encrypt the Lambda environment variables
+   * KMS key to encrypt the Lambda environment variables, when undefined default AWS managed key will be used
    */
-  readonly logsKmsKey: cdk.aws_kms.IKey;
+  readonly logsKmsKey?: cdk.aws_kms.IKey;
   /**
    *
    * CloudWatch Retention in days from global config
@@ -131,7 +131,7 @@ export class CloudWatchLogsSubscriptionFilter extends Construct {
         acceleratorLogRetentionInDays: props.logsRetentionInDays,
         acceleratorCreatedLogDestinationArn: props.logDestinationArn,
         acceleratorLogSubscriptionRoleArn,
-        acceleratorLogKmsKeyArn: props.logsKmsKey.keyArn,
+        acceleratorLogKmsKeyArn: props.logsKmsKey ? props.logsKmsKey.keyArn : undefined,
         logExclusionOption: props.logExclusionOption
           ? JSON.stringify(props.logExclusionOption)
           : props.logExclusionOption,

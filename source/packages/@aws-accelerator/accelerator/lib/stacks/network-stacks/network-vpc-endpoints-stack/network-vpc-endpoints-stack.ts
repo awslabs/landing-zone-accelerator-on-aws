@@ -236,9 +236,9 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
         endpointRouteId,
         destination,
         endpointAz,
-        this.cloudwatchKey,
         this.logRetention,
         routeTableId,
+        this.cloudwatchKey,
       );
     }
   }

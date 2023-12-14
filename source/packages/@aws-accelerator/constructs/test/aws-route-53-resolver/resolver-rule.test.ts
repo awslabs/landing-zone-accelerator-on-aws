@@ -57,23 +57,6 @@ new ResolverRuleAssociation(systemRuleStack, 'TestResolverRuleAssoc', {
 describe('ResolverRule', () => {
   snapShotTest(testNamePrefix, forwardRuleStack);
   snapShotTest(testNamePrefix, systemRuleStack);
-  it('throw error when targetInbound is specified without kmsKey', () => {
-    function targetInboundKmsKeyError() {
-      new ResolverRule(systemRuleStack, 'TargetInboundKmsKeyError', {
-        domainName: 'test.com',
-        name: 'TestResolverRule',
-        resolverEndpointId: 'TestEndpoint',
-        targetIps: ipAddresses,
-        tags: [],
-        targetInbound: 'targetInbound',
-        logRetentionInDays: 3653,
-        ruleType: 'SYSTEM',
-      });
-    }
-    expect(targetInboundKmsKeyError).toThrow(
-      new Error('kmsKey property must be included if targetInbound property is defined.'),
-    );
-  });
   it('throw error when targetInbound is specified without logRetention', () => {
     function targetInboundLogRetentionError() {
       new ResolverRule(systemRuleStack, 'TargetInboundLogRetentionError', {

@@ -676,12 +676,6 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] 
 
 exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 2`] = `
 {
-  "Parameters": {
-    "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
-      "Default": "/accelerator/kms/cloudwatch/key-arn",
-      "Type": "AWS::SSM::Parameter::Value<String>",
-    },
-  },
   "Resources": {
     "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambda303083B3": {
       "DependsOn": [
@@ -928,9 +922,6 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 2`] 
     "CustomPropagatePortfolioAssociationsCustomResourceProviderLogGroup44DE568D": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",

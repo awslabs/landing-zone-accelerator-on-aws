@@ -25,7 +25,7 @@ export type cloudwatchExclusionProcessedItem = {
 const logSubscriptionRoleArn = process.env['LogSubscriptionRole']!;
 const logDestinationArn = process.env['LogDestination']!;
 const logRetention = process.env['LogRetention']!;
-const logKmsKey = process.env['LogKmsKeyArn']!;
+const logKmsKeyArn = process.env['LogKmsKeyArn'];
 const logExclusionSetting = process.env['LogExclusion']!;
 const solutionId = process.env['SOLUTION_ID'];
 
@@ -47,7 +47,7 @@ export async function handler(event: AWSLambda.ScheduledEvent) {
     for (const logGroup of page.logGroups ?? []) {
       await updateRetentionPolicy(logRetention, logGroup);
       await updateSubscriptionPolicy(logGroup, logExclusionParse);
-      await updateKmsKey(logGroup, logKmsKey);
+      await updateKmsKey(logGroup, logKmsKeyArn);
     }
     nextToken = page.nextToken;
   } while (nextToken);
@@ -165,21 +165,28 @@ export async function setupSubscription(logGroupName: string) {
   );
 }
 
-export async function updateKmsKey(logGroupValue: AWS.CloudWatchLogs.LogGroup, logKmsKeyValue: string) {
+export async function updateKmsKey(logGroupValue: AWS.CloudWatchLogs.LogGroup, logKmsKeyArn?: string) {
   // check kmsKey on existing logGroup.
   if (logGroupValue.kmsKeyId) {
     // if there is a KMS do nothing
     console.log('Log Group: ' + logGroupValue.logGroupName! + ' has kms set');
-  } else {
-    // there is no KMS set one
-    console.log(`Setting KMS for log group ${logGroupValue.logGroupName}`);
-    await throttlingBackOff(() =>
-      logsClient
-        .associateKmsKey({
-          logGroupName: logGroupValue.logGroupName!,
-          kmsKeyId: logKmsKeyValue,
-        })
-        .promise(),
-    );
+    return;
   }
+  if (!logKmsKeyArn) {
+    // when no Kms Key arn provided
+    console.log(
+      `Accelerator KMK key ${logKmsKeyArn} not provided for Log Group ${logGroupValue.logGroupName!}, log group encryption not performed`,
+    );
+    return;
+  }
+  // there is no KMS set one
+  console.log(`Setting KMS for log group ${logGroupValue.logGroupName}`);
+  await throttlingBackOff(() =>
+    logsClient
+      .associateKmsKey({
+        logGroupName: logGroupValue.logGroupName!,
+        kmsKeyId: logKmsKeyArn,
+      })
+      .promise(),
+  );
 }

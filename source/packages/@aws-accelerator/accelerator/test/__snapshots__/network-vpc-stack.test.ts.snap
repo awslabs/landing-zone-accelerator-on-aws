@@ -3,10 +3,6 @@
 exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
 {
   "Parameters": {
-    "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
-      "Default": "/accelerator/kms/cloudwatch/key-arn",
-      "Type": "AWS::SSM::Parameter::Value<String>",
-    },
     "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/kms/lambda/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -381,9 +377,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     "CustomDeleteDefaultSecurityGroupRulesCustomResourceProviderLogGroup36ABE46B": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -466,9 +459,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     "CustomDeleteDefaultVpcCustomResourceProviderLogGroup4113DA48": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -561,9 +551,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -722,9 +709,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     "CustomPrefixListRouteCustomResourceProviderLogGroup68DB81A5": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -808,9 +792,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     "CustomSsmPutParameterValueCustomResourceProviderLogGroupB0109C68": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -1169,9 +1150,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     "NetworkEndpointsVpcFlowLogsGroupB21A3331": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
         "RetentionInDays": 3653,
         "Tags": [
           {
@@ -2474,9 +2452,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     "NetworkInspectionVpcFlowLogsGroupAF8DE105": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
         "RetentionInDays": 3653,
         "Tags": [
           {
@@ -3000,9 +2975,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     "NetworkSecondaryVpcFlowLogsGroup3069B74B": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
         "RetentionInDays": 3653,
         "Tags": [
           {

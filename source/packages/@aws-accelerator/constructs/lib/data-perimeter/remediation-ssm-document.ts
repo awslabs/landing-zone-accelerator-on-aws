@@ -31,7 +31,7 @@ export interface RemediationSsmDocumentProps {
   documentName: string;
   sharedAccountIds: string[];
   globalConfig: GlobalConfig;
-  cloudwatchKey: cdk.aws_kms.IKey;
+  cloudwatchKey?: cdk.aws_kms.IKey;
 }
 
 export class RemediationSsmDocument extends Construct {

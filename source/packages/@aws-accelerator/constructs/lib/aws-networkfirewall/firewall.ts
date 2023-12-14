@@ -42,9 +42,9 @@ export interface INetworkFirewall extends cdk.IResource {
     id: string,
     destination: string,
     endpointAz: string,
-    logGroupKmsKey: cdk.aws_kms.IKey,
     logRetentionInDays: number,
     routeTableId: string,
+    logGroupKmsKey?: cdk.aws_kms.IKey,
   ) => void;
 }
 
@@ -113,9 +113,9 @@ abstract class NetworkFirewallBase extends cdk.Resource implements INetworkFirew
     id: string,
     destination: string,
     endpointAz: string,
-    logGroupKmsKey: cdk.aws_kms.IKey,
     logRetentionInDays: number,
     routeTableId: string,
+    logGroupKmsKey?: cdk.aws_kms.IKey,
   ): void {
     // Get endpoint ID from custom resource
     const vpcEndpointId = new GetNetworkFirewallEndpoint(this, `${id}Endpoint`, {

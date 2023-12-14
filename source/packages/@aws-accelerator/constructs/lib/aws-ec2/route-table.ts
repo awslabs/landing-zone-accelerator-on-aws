@@ -60,9 +60,6 @@ export abstract class RouteTableBase extends cdk.Resource implements IRouteTable
     let route: cdk.aws_ec2.CfnRoute | PrefixListRoute;
 
     if (destinationPrefixListId) {
-      if (!logGroupKmsKey) {
-        throw new Error('Attempting to add prefix list route without specifying log group KMS key');
-      }
       if (!logRetentionInDays) {
         throw new Error('Attempting to add prefix list route without specifying log group retention period');
       }

@@ -55,7 +55,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const acceleratorLogSubscriptionRoleArn: string = event.ResourceProperties['acceleratorLogSubscriptionRoleArn'];
   const acceleratorCreatedLogDestinationArn: string = event.ResourceProperties['acceleratorCreatedLogDestinationArn'];
   const acceleratorLogRetentionInDays: string = event.ResourceProperties['acceleratorLogRetentionInDays'];
-  const acceleratorLogKmsKeyArn: string = event.ResourceProperties['acceleratorLogKmsKeyArn'];
+  const acceleratorLogKmsKeyArn: string | undefined = event.ResourceProperties['acceleratorLogKmsKeyArn'] ?? undefined;
 
   const logExclusionOption: string | undefined = event.ResourceProperties['logExclusionOption'];
   const replaceLogDestinationArn: string | undefined = event.ResourceProperties['replaceLogDestinationArn'];
@@ -354,8 +354,8 @@ async function deleteSubscription(logGroupName: string, acceleratorCreatedLogDes
  * @param logGroup string
  * @param acceleratorLogKmsKeyArn string
  */
-async function updateLogGroupEncryption(logGroup: LogGroup, acceleratorLogKmsKeyArn: string) {
-  if (!logGroup.kmsKeyId) {
+async function updateLogGroupEncryption(logGroup: LogGroup, acceleratorLogKmsKeyArn?: string) {
+  if (!logGroup.kmsKeyId && acceleratorLogKmsKeyArn) {
     await throttlingBackOff(() =>
       logsClient.send(
         new AssociateKmsKeyCommand({

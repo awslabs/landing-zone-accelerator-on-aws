@@ -30,7 +30,6 @@ new SsmSessionManagerSettings(stack, 'SsmSessionManagerSettings', {
   sendToCloudWatchLogs: true,
   cloudWatchEncryptionEnabled: true,
   cloudWatchEncryptionKey: new cdk.aws_kms.Key(stack, 'CwKey', {}),
-  constructLoggingKmsKey: new cdk.aws_kms.Key(stack, 'Key', {}),
   logRetentionInDays: 3653,
   region: 'us-east-1',
   prefixes: { accelerator: 'AWSAccelerator', ssmLog: 'aws-accelerator' },

@@ -84,9 +84,9 @@ export interface TransitGatewayPeeringProps {
     readonly tags?: cdk.CfnTag[];
   };
   /**
-   * Custom resource lambda log group encryption key
+   * Custom resource lambda log group encryption key, when undefined default AWS managed key will be used
    */
-  readonly customLambdaLogKmsKey: cdk.aws_kms.IKey;
+  readonly customLambdaLogKmsKey?: cdk.aws_kms.IKey;
   /**
    * Custom resource lambda log retention in days
    */

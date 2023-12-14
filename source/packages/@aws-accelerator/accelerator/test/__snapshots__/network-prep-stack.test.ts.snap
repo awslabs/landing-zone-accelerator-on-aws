@@ -3,10 +3,6 @@
 exports[`NetworkPrepStack Construct(NetworkPrepStack):  Snapshot Test 1`] = `
 {
   "Parameters": {
-    "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
-      "Default": "/accelerator/kms/cloudwatch/key-arn",
-      "Type": "AWS::SSM::Parameter::Value<String>",
-    },
     "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/kms/lambda/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -976,9 +972,6 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     "CustomDirectConnectGatewayCustomResourceProviderLogGroup242F4324": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -1062,9 +1055,6 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     "CustomDirectConnectVirtualInterfaceCustomResourceProviderLogGroup51E4607A": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -1179,9 +1169,6 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     "CustomResolverManagedDomainListCustomResourceProviderLogGroupAA48B1A0": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -1263,9 +1250,6 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     "CustomSsmPutParameterValueCustomResourceProviderLogGroupB0109C68": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",
@@ -1407,9 +1391,6 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     "EnhancedVpnTunnel0LogGroup9B6D89BD": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
         "RetentionInDays": 3653,
       },
       "Type": "AWS::Logs::LogGroup",
@@ -1418,9 +1399,6 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     "EnhancedVpnTunnel1LogGroup3967C793": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
         "RetentionInDays": 3653,
       },
       "Type": "AWS::Logs::LogGroup",
@@ -2189,9 +2167,6 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     "QueryLogsLogGroup9D69754D": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
         "RetentionInDays": 3653,
       },
       "Type": "AWS::Logs::LogGroup",
@@ -2793,9 +2768,6 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     "VpnOnEventHandlerResourceLogGroupBD9BBFBB": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
         "LogGroupName": {
           "Fn::Join": [
             "",

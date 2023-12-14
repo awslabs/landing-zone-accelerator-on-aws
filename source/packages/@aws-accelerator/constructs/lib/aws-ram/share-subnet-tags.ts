@@ -30,9 +30,9 @@ export interface ShareSubnetTagsProps {
    */
   readonly subnetName: string;
   /**
-   * Custom resource lambda log group encryption key
+   * Custom resource lambda log group encryption key, when undefined default AWS managed key will be used
    */
-  readonly resourceLoggingKmsKey: cdk.aws_kms.IKey;
+  readonly resourceLoggingKmsKey?: cdk.aws_kms.IKey;
   /**
    * Custom resource lambda log retention in days
    */

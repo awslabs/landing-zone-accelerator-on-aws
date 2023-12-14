@@ -26,9 +26,9 @@ export interface GetCloudFormationResourceTypeProps {
   readonly logicalResourceId: string;
   readonly partition: string;
   /**
-   * Custom resource lambda log group encryption key
+   * Custom resource lambda log group encryption key, when undefined default AWS managed key will be used
    */
-  readonly cloudwatchKmsKey: cdk.aws_kms.Key;
+  readonly cloudwatchKmsKey?: cdk.aws_kms.IKey;
   /**
    * Custom resource lambda log retention in days
    */

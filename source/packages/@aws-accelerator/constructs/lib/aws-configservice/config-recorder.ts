@@ -29,9 +29,9 @@ export interface ConfigServiceRecorderProps {
    */
   configRecorderRoleArn: string;
   /**
-   * Custom resource lambda log group encryption key
+   * Custom resource lambda log group encryption key, when undefined default AWS managed key will be used
    */
-  readonly cloudwatchKmsKey: cdk.aws_kms.IKey;
+  readonly cloudwatchKmsKey?: cdk.aws_kms.IKey;
   /**
    * Custom resource lambda log retention in days
    */

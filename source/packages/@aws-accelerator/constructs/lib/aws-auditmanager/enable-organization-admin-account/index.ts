@@ -30,7 +30,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 > {
   const region = event.ResourceProperties['region'];
   const adminAccountId = event.ResourceProperties['adminAccountId'];
-  const kmsKeyArn = event.ResourceProperties['kmsKeyArn'];
+  const kmsKeyArn: string | undefined = event.ResourceProperties['kmsKeyArn'] ?? undefined;
   const solutionId = event.ResourceProperties['solutionId'];
 
   const auditManagerClient = new AWS.AuditManager({ region: region, customUserAgent: solutionId });

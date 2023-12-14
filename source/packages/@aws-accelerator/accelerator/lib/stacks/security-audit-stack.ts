@@ -46,7 +46,7 @@ import { SnsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 
 export class SecurityAuditStack extends AcceleratorStack {
   private readonly s3Key: cdk.aws_kms.IKey;
-  private readonly cloudwatchKey: cdk.aws_kms.IKey;
+  private readonly cloudwatchKey: cdk.aws_kms.IKey | undefined;
   private readonly centralLogsBucketKey: cdk.aws_kms.IKey;
   private readonly replicationProps: BucketReplicationProps;
 
@@ -54,7 +54,7 @@ export class SecurityAuditStack extends AcceleratorStack {
     super(scope, id, props);
 
     this.s3Key = this.getAcceleratorKey(AcceleratorKeyType.S3_KEY)!;
-    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY)!;
+    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
     this.centralLogsBucketKey = this.getCentralLogsBucketKey(this.cloudwatchKey);
 
     this.replicationProps = {
@@ -467,7 +467,7 @@ export class SecurityAuditStack extends AcceleratorStack {
 
     //
     // Create KMS Key for SNS topic when there are SNS topics are to be created
-    let snsKey: cdk.aws_kms.Key | undefined;
+    let snsKey: cdk.aws_kms.IKey | undefined;
     if (this.props.securityConfig.centralSecurityServices.snsSubscriptions ?? [].length > 0) {
       snsKey = new cdk.aws_kms.Key(this, 'AcceleratorSnsKey', {
         alias: this.acceleratorResourceNames.customerManagedKeys.sns.alias,

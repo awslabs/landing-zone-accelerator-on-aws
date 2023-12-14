@@ -37,9 +37,9 @@ export interface RemediateResourcePolicyProps {
    */
   readonly homeRegion: string;
   /**
-   * Lambda log group encryption key
+   * Lambda log group encryption key, when undefined default AWS managed key will be used
    */
-  readonly kmsKeyCloudWatch: cdk.aws_kms.IKey;
+  readonly kmsKeyCloudWatch?: cdk.aws_kms.IKey;
   /**
    * Lambda environment variable encryption key, when undefined default AWS managed key will be used
    */

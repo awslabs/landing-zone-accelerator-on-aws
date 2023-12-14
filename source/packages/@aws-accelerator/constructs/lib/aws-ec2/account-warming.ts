@@ -17,7 +17,7 @@ import { Construct } from 'constructs';
 import path = require('path');
 
 export interface WarmAccountProps {
-  readonly cloudwatchKmsKey: cdk.aws_kms.IKey;
+  readonly cloudwatchKmsKey?: cdk.aws_kms.IKey;
   readonly logRetentionInDays: number;
   readonly ssmPrefix: string;
 }

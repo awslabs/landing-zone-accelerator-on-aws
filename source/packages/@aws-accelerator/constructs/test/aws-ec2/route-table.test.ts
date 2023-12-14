@@ -74,12 +74,6 @@ rt.addGatewayAssociation('virtualPrivateGateway');
  * RouteTable construct test
  */
 describe('RouteTable', () => {
-  it('addTransitGatewayRoute destinationPrefix list without kms throws error', () => {
-    function noKmsKey() {
-      rt.addTransitGatewayRoute('testRoute1', 'tgw-1234', tgwAttachment, undefined, 'pl-1234', undefined, 10);
-    }
-    expect(noKmsKey).toThrow(new Error('Attempting to add prefix list route without specifying log group KMS key'));
-  });
   it('addTransitGatewayRoute destinationPrefix list without logRetention throws error', () => {
     function noLogRetention() {
       rt.addTransitGatewayRoute('testRoute2', 'tgw-1234', tgwAttachment, undefined, 'pl-1234', key, undefined);

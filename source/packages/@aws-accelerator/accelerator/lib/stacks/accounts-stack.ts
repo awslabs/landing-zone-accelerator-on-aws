@@ -48,22 +48,34 @@ export class AccountsStack extends AcceleratorStack {
       //
       // Create Access Analyzer Service Linked Role
       //
-      this.createAccessAnalyzerServiceLinkedRole(this.keyResource.cloudwatchKey, this.keyResource.lambdaKey);
+      this.createAccessAnalyzerServiceLinkedRole({
+        cloudwatch: this.keyResource.cloudwatchKey,
+        lambda: this.keyResource.lambdaKey,
+      });
 
       //
       // Create Access GuardDuty Service Linked Role
       //
-      this.createGuardDutyServiceLinkedRole(this.keyResource.cloudwatchKey, this.keyResource.lambdaKey);
+      this.createGuardDutyServiceLinkedRole({
+        cloudwatch: this.keyResource.cloudwatchKey,
+        lambda: this.keyResource.lambdaKey,
+      });
 
       //
       // Create Access SecurityHub Service Linked Role
       //
-      this.createSecurityHubServiceLinkedRole(this.keyResource.cloudwatchKey, this.keyResource.lambdaKey);
+      this.createSecurityHubServiceLinkedRole({
+        cloudwatch: this.keyResource.cloudwatchKey,
+        lambda: this.keyResource.lambdaKey,
+      });
 
       //
       // Create Access Macie Service Linked Role
       //
-      this.createMacieServiceLinkedRole(this.keyResource.cloudwatchKey, this.keyResource.lambdaKey);
+      this.createMacieServiceLinkedRole({
+        cloudwatch: this.keyResource.cloudwatchKey,
+        lambda: this.keyResource.lambdaKey,
+      });
 
       //
       // Configure and attach quarantine scp

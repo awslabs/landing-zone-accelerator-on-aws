@@ -17,9 +17,9 @@ import { LzaCustomResource } from '../lza-custom-resource';
 
 interface FirewallConfigReplacementProps {
   /**
-   * Custom resource CloudWatch Log encryption key
+   * Custom resource CloudWatch Log encryption key, when undefined default AWS managed key will be used
    */
-  readonly cloudWatchLogKey: cdk.aws_kms.IKey;
+  readonly cloudWatchLogKey?: cdk.aws_kms.IKey;
   /**
    * Custom resource CloudWatch Log retention
    */

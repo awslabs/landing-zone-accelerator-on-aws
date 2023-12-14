@@ -39,9 +39,9 @@ export interface MoveAccountsProps {
    */
   readonly lambdaKmsKey?: cdk.aws_kms.IKey;
   /**
-   * Custom resource lambda log group encryption key
+   * Custom resource lambda log group encryption key, when undefined default AWS managed key will be used
    */
-  readonly cloudWatchLogsKmsKey: cdk.aws_kms.IKey;
+  readonly cloudWatchLogsKmsKey?: cdk.aws_kms.IKey;
   /**
    * Custom resource lambda log retention in days
    */

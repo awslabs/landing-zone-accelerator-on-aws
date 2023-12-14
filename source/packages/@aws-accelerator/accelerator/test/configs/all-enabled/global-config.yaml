@@ -167,6 +167,15 @@ logging:
     sendToCloudWatchLogs: false
     sendToS3: true
   cloudwatchLogs:
+    encryption:
+      useCMK: true
+      deploymentTargets:
+        accounts:
+          - Management
+        organizationalUnits:
+          - Security
+        excludedRegions:
+          - us-west-2
     enable: true
     dynamicPartitioning: dynamic-partitioning/log-filters.json
     replaceLogDestinationArn: replaceLogDestinationArn

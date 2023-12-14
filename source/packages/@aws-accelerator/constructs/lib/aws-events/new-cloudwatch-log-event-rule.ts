@@ -38,9 +38,9 @@ export interface NewCloudWatchLogsEventProps {
   lambdaEnvKey?: cdk.aws_kms.IKey;
   /**
    *
-   * KMS key to encrypt the Lambda environment variables
+   * KMS key to encrypt the Lambda environment variables, when undefined default AWS managed key will be used
    */
-  logsKmsKey: cdk.aws_kms.IKey;
+  logsKmsKey?: cdk.aws_kms.IKey;
   /**
    *
    * CloudWatch Retention in days from global config
@@ -97,6 +97,32 @@ export class NewCloudWatchLogEvent extends Construct {
     });
 
     // Lambda function that sets expiration and puts subscription filter on
+    const lambdaEnvironmentList:
+      | {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          [key: string]: any;
+        }[] = [
+      { LogRetention: props.logsRetentionInDaysValue },
+      { LogDestination: props.logDestinationArn },
+      { LogSubscriptionRole: LogSubscriptionRole },
+      { LogExclusion: JSON.stringify(props.exclusionSetting!) },
+    ];
+
+    if (props.logsKmsKey) {
+      lambdaEnvironmentList.push({ LogKmsKeyArn: props.logsKmsKey.keyArn });
+    }
+
+    const lambdaEnvironment: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      [key: string]: any;
+    } = {};
+
+    for (const environmentVariable of lambdaEnvironmentList) {
+      for (const [key, value] of Object.entries(environmentVariable)) {
+        lambdaEnvironment[key] = value;
+      }
+    }
+
     const setLogRetentionSubscriptionFunction = new cdk.aws_lambda.Function(
       this,
       'SetLogRetentionSubscriptionFunction',
@@ -106,13 +132,7 @@ export class NewCloudWatchLogEvent extends Construct {
         handler: 'index.handler',
         code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'put-subscription-policy/dist')),
         environmentEncryption: props.lambdaEnvKey,
-        environment: {
-          LogRetention: props.logsRetentionInDaysValue,
-          LogDestination: props.logDestinationArn,
-          LogSubscriptionRole,
-          LogKmsKeyArn: props.logsKmsKey.keyArn,
-          LogExclusion: JSON.stringify(props.exclusionSetting!),
-        },
+        environment: lambdaEnvironment,
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
             actions: [

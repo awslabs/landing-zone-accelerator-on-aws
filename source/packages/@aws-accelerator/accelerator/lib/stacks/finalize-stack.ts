@@ -25,7 +25,7 @@ export class FinalizeStack extends AcceleratorStack {
       this.logger.debug(`Retrieving CloudWatch kms key`);
 
       const lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
-      const cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY)!;
+      const cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
       const scpResource = new ScpResource(this, cloudwatchKey, lambdaKey, props);
 
       //
