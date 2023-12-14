@@ -207,9 +207,9 @@ export class OperationsStack extends AcceleratorStack {
    * Create Session Manager IAM Policy and Attach to IAM Role(s)
    */
   private createSessionManagerPolicy() {
-    const cloudWatchLogGroupList: string[] = this.cloudWatchLogGroupList();
-    const sessionManagerCloudWatchLogGroupList: string[] = this.sessionManagerCloudWatchLogGroupList();
-    const s3BucketList: string[] = this.s3BucketList();
+    const cloudWatchLogGroupList: string[] = this.getCloudWatchLogGroupList();
+    const sessionManagerCloudWatchLogGroupList: string[] = this.getSessionManagerCloudWatchLogGroupList();
+    const s3BucketList: string[] = this.getS3BucketList();
 
     // Set up Session Manager Logging
     const ssmSessionManagerPolicy = new SsmSessionManagerPolicy(this, 'SsmSessionManagerSettings', {
@@ -1614,23 +1614,23 @@ export class OperationsStack extends AcceleratorStack {
   /**
    * Function returns a list of CloudWatch Log Group ARNs
    */
-  private cloudWatchLogGroupList(): string[] {
+  private getCloudWatchLogGroupList(): string[] {
     const cloudWatchLogGroupListResources: string[] = [];
     for (const regionItem of this.props.globalConfig.enabledRegions ?? []) {
       const logGroupItem = `arn:${cdk.Stack.of(this).partition}:logs:${regionItem}:${
         cdk.Stack.of(this).account
       }:log-group:*`;
+      if (cloudWatchLogGroupListResources.includes(logGroupItem)) {
+        continue;
+      }
+
       if (
         this.props.globalConfig.logging.sessionManager.excludeRegions &&
-        !this.props.globalConfig.logging.sessionManager.excludeRegions.includes(regionItem as never)
+        !this.props.globalConfig.logging.sessionManager.excludeRegions.includes(regionItem)
       ) {
-        if (!cloudWatchLogGroupListResources.includes(logGroupItem)) {
-          cloudWatchLogGroupListResources.push(logGroupItem);
-        }
+        cloudWatchLogGroupListResources.push(logGroupItem);
       } else {
-        if (!cloudWatchLogGroupListResources.includes(logGroupItem)) {
-          cloudWatchLogGroupListResources.push(logGroupItem);
-        }
+        cloudWatchLogGroupListResources.push(logGroupItem);
       }
     }
     return cloudWatchLogGroupListResources;
@@ -1639,24 +1639,24 @@ export class OperationsStack extends AcceleratorStack {
   /**
    * Function returns a list of CloudWatch Log Group Name ARNs
    */
-  private sessionManagerCloudWatchLogGroupList(): string[] {
+  private getSessionManagerCloudWatchLogGroupList(): string[] {
     const logGroupName = `${this.props.prefixes.ssmLogName}-sessionmanager-logs`;
     const cloudWatchLogGroupListResources: string[] = [];
     for (const regionItem of this.props.globalConfig.enabledRegions ?? []) {
       const logGroupItem = `arn:${cdk.Stack.of(this).partition}:logs:${regionItem}:${
         cdk.Stack.of(this).account
       }:log-group:${logGroupName}:*`;
+      if (cloudWatchLogGroupListResources.includes(logGroupItem)) {
+        continue;
+      }
+
       if (
         this.props.globalConfig.logging.sessionManager.excludeRegions &&
-        !this.props.globalConfig.logging.sessionManager.excludeRegions.includes(regionItem as never)
+        !this.props.globalConfig.logging.sessionManager.excludeRegions.includes(regionItem)
       ) {
-        if (!cloudWatchLogGroupListResources.includes(logGroupItem)) {
-          cloudWatchLogGroupListResources.push(logGroupItem);
-        }
+        cloudWatchLogGroupListResources.push(logGroupItem);
       } else {
-        if (!cloudWatchLogGroupListResources.includes(logGroupItem)) {
-          cloudWatchLogGroupListResources.push(logGroupItem);
-        }
+        cloudWatchLogGroupListResources.push(logGroupItem);
       }
     }
     return cloudWatchLogGroupListResources;
@@ -1665,23 +1665,23 @@ export class OperationsStack extends AcceleratorStack {
   /**
    * Function returns a list of centralized S3 Bucket ARNs
    */
-  private s3BucketList(): string[] {
+  private getS3BucketList(): string[] {
     const s3BucketResourcesList: string[] = [];
     for (const regionItem of this.props.globalConfig.enabledRegions ?? []) {
       const s3Item = `arn:${cdk.Stack.of(this).partition}:s3:::${this.centralLogsBucketName}/session/${
         cdk.Stack.of(this).account
       }/${regionItem}/*`;
+      if (s3BucketResourcesList.includes(s3Item)) {
+        continue;
+      }
+
       if (
         this.props.globalConfig.logging.sessionManager.excludeRegions &&
-        !this.props.globalConfig.logging.sessionManager.excludeRegions.includes(regionItem as never)
+        !this.props.globalConfig.logging.sessionManager.excludeRegions.includes(regionItem)
       ) {
-        if (!s3BucketResourcesList.includes(s3Item)) {
-          s3BucketResourcesList.push(s3Item);
-        }
+        s3BucketResourcesList.push(s3Item);
       } else {
-        if (!s3BucketResourcesList.includes(s3Item)) {
-          s3BucketResourcesList.push(s3Item);
-        }
+        s3BucketResourcesList.push(s3Item);
       }
     }
     return s3BucketResourcesList;

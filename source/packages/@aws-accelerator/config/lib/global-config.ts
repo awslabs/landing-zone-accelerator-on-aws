@@ -736,11 +736,11 @@ export class SessionManagerConfig implements t.TypeOf<typeof GlobalConfigTypes.s
   /**
    * List of AWS Region names to be excluded from configuring SessionManager configuration
    */
-  readonly excludeRegions = [];
+  readonly excludeRegions: t.Region[] = [];
   /**
    * List of AWS Account names to be excluded from configuring SessionManager configuration
    */
-  readonly excludeAccounts = [];
+  readonly excludeAccounts: string[] = [];
   /**
    * S3 Lifecycle rule for log storage
    */
