@@ -12,10 +12,6 @@
 <!-- Describe how customers will benefit from this feature. -->
 <!-- Provide a high level description of the implementation. Explain as you would to an intern who is familiar with the AWS Services. -->
 
-## Do any IAM policies include wildcards? If yes, why is this required?
-<!-- Ensure all identity policies, resource policies, and trust policies are as strict as possible. -->
-<!-- All code additions should adhere to the [AWS Security Reference Architecture](https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/welcome.html) -->
-
 ## What automated tests have been added?
 <!-- If you have not added unit and/or integration tests, how have you tested this manually? -->
 <!-- Why can't this code be tested automatically? -->
