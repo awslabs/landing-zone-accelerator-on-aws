@@ -1,0 +1,22 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "Allow Organization principals to put session manager logs",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "s3:PutObject",
+      "Resource": "arn:${PARTITION}:s3:::${ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME}/*",
+      "Condition": {
+        "StringEquals": {
+          "aws:PrincipalOrgID": "${ORG_ID}"
+        },
+        "ArnLike": {
+          "aws:PrincipalARN": "arn:${PARTITION}:iam::*:role/EC2-Default-SSM-AD-Role"
+        }
+      }
+    }
+  ]
+}

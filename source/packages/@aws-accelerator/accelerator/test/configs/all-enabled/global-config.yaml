@@ -2,7 +2,7 @@ homeRegion: &HOME_REGION us-east-1
 enabledRegions:
   - *HOME_REGION
   - us-west-2
-  # - ap-south-1  
+  # - ap-south-1
   # - eu-central-1
   # - us-west-1
   # - eu-north-1
@@ -20,13 +20,13 @@ enabledRegions:
   # Opt-in regions commented now, once test pipeline account configured for opt-in regions will use those
   # - ap-south-2
   # - eu-south-1
-  # - eu-south-2  
+  # - eu-south-2
   # - me-central-1
   # - il-central-1
   # - eu-central-2
-  # - af-south-1  
+  # - af-south-1
   # - me-south-1
-  # - ap-east-1  
+  # - ap-east-1
   # - ap-southeast-3
 
 managementAccountAccessRole: AWSControlTowerExecution
@@ -144,9 +144,11 @@ logging:
           - storageClass: GLACIER
             transitionAfter: 365
         prefix: 'macie'
+    s3ResourcePolicyAttachments:
+      - policy: bucket-policies/central-log-bucket.json
 
   accessLogBucket:
-    importedBucket: 
+    importedBucket:
       name: existing-access-logs-bucket-${ACCOUNT_ID}-${REGION}
     customPolicyOverrides:
       policy: bucket-policies/full-access-log-bucket.json
@@ -154,7 +156,7 @@ logging:
     #   - policy: bucket-policies/access-logs-bucket.json
     lifecycleRules: []
   elbLogBucket:
-    importedBucket: 
+    importedBucket:
       name: existing-elb-logs-bucket-${ACCOUNT_ID}-${REGION}
       applyAcceleratorManagedBucketPolicy: true
     # customPolicyOverrides:
@@ -178,8 +180,8 @@ logging:
           - us-west-2
     enable: true
     dynamicPartitioning: dynamic-partitioning/log-filters.json
-    replaceLogDestinationArn: replaceLogDestinationArn  
-    
+    replaceLogDestinationArn: replaceLogDestinationArn
+
     exclusions:
       - organizationalUnits:
           - Infrastructure
@@ -212,7 +214,7 @@ limits:
     quotaCode: L-4019AD8B
     desiredValue: 15
     deploymentTargets:
-      accounts: 
+      accounts:
         - SharedServices
 reports:
   costAndUsageReport:

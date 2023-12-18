@@ -1534,6 +1534,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
       '\\${ACCELERATOR_PREFIX_ND}': acceleratorPrefixNoDash,
       '\\${ACCELERATOR_PREFIX_LND}': acceleratorPrefixNoDash.toLowerCase(),
       '\\${ACCELERATOR_SSM_PREFIX}': this.props.prefixes.ssmParamName,
+      '\\${ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME}': this.centralLogsBucketName,
       '\\${ACCOUNT_ID}': cdk.Stack.of(this).account,
       '\\${AUDIT_ACCOUNT_ID}': this.props.accountsConfig.getAuditAccountId(),
       '\\${HOME_REGION}': this.props.globalConfig.homeRegion,
