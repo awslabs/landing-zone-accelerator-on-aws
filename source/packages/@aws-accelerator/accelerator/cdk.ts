@@ -74,7 +74,11 @@ import { AcceleratorToolkit } from './lib/toolkit';
   //
   // Validate args: verify config directory
   //
-  if (stage !== AcceleratorStage.PIPELINE && stage !== AcceleratorStage.TESTER_PIPELINE) {
+  if (
+    stage !== AcceleratorStage.PIPELINE &&
+    stage !== AcceleratorStage.TESTER_PIPELINE &&
+    stage !== AcceleratorStage.DIAGNOSTICS_PACK
+  ) {
     if (config === undefined || !fs.existsSync(configDirPath)) {
       console.log(`Invalid --config-dir ${configDirPath}`);
       throw new Error(usage);

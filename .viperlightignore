@@ -94,17 +94,10 @@ source/packages/@aws-accelerator/utils/lib/regions.ts:62
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:345
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:346
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1137
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1138
-
-# Accelerator specific assume role declaration
-
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1106
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1107
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1149
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1150
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:347
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1144
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1145
 
 # Accelerator specific assume role declaration
 
@@ -133,43 +126,43 @@ source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1274
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1275
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1279
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1280
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1283
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1284
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1288
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1289
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1293
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1294
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1298
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1299
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1302
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1303
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1307
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1308
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1311
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1312
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1316
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1317
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1320
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1321
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1325
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1326
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1958
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1959
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1963
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1964
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:2041
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:2042
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:2046
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:2047
 
 # Sample configuration READMEs
 
@@ -213,3 +206,9 @@ source/packages/@aws-accelerator/constructs/test/aws-iam/password-policy.test.ts
 
 source/packages/@aws-accelerator/utils/lib/get-template.ts:63
 source/packages/@aws-accelerator/utils/lib/get-template.ts:64
+
+# Masked email address
+
+source/packages/@aws-accelerator/accelerator/lib/lambdas/diagnostic-pack/resources/functions.ts:91
+source/packages/@aws-accelerator/accelerator/lib/lambdas/diagnostic-pack/resources/functions.ts:272
+source/packages/@aws-accelerator/accelerator/lib/lambdas/diagnostic-pack/resources/functions.ts:597

@@ -59,6 +59,7 @@ const stackPrefix = process.env['ACCELERATOR_PREFIX'] ?? 'AWSAccelerator';
  */
 export const AcceleratorStackNames: Record<string, string> = {
   [AcceleratorStage.PREPARE]: `${stackPrefix}-PrepareStack`,
+  [AcceleratorStage.DIAGNOSTICS_PACK]: `${stackPrefix}-DiagnosticsPackStack`,
   [AcceleratorStage.PIPELINE]: `${stackPrefix}-PipelineStack`,
   [AcceleratorStage.TESTER_PIPELINE]: `${stackPrefix}-TesterPipelineStack`,
   [AcceleratorStage.ORGANIZATIONS]: `${stackPrefix}-OrganizationsStack`,
@@ -99,6 +100,7 @@ export interface AcceleratorProps {
   readonly proxyAddress?: string;
   readonly enableSingleAccountMode: boolean;
   readonly useExistingRoles: boolean;
+  readonly qualifier?: string;
 }
 let maxStacks = Number(process.env['MAX_CONCURRENT_STACKS'] ?? 250);
 
@@ -131,12 +133,11 @@ export abstract class Accelerator {
     // If not pipeline stage, load global config, management account credentials,
     // and assume role plugin
     //
-    const managementAccountCredentials = !this.isPipelineStage(props.stage)
+    const configDependentStage = this.isConfigDependentStage(props.stage);
+    const managementAccountCredentials = configDependentStage
       ? await this.getManagementAccountCredentials(props.partition)
       : undefined;
-    const globalConfig = !this.isPipelineStage(props.stage)
-      ? GlobalConfig.loadRawGlobalConfig(props.configDirPath)
-      : undefined;
+    const globalConfig = configDependentStage ? GlobalConfig.loadRawGlobalConfig(props.configDirPath) : undefined;
     if (globalConfig?.externalLandingZoneResources?.importExternalLandingZoneResources) {
       logger.info('Loading ASEA mapping for stacks list');
       await globalConfig.loadExternalMapping(true);
@@ -152,7 +153,7 @@ export abstract class Accelerator {
         ? globalConfig?.acceleratorSettings?.maxConcurrentStacks
         : Number(process.env['MAX_CONCURRENT_STACKS'] ?? 250);
     }
-    if (!this.isPipelineStage(props.stage)) {
+    if (this.isConfigDependentStage(props.stage)) {
       const assumeRoleName = setAssumeRoleName({
         stage: props.stage,
         customDeploymentRole: globalConfig?.cdkOptions?.customDeploymentRole,
@@ -373,15 +374,22 @@ export abstract class Accelerator {
   }
 
   /**
-   * Returns true if the stage is pipeline or tester pipeline
+   * Returns true if the stage is dependent on config directory, except pipeline, tester-pipeline and diagnostic-pack all stages are config dependent
    * @param stage
    * @returns
    */
-  private static isPipelineStage(stage?: string): boolean {
+  private static isConfigDependentStage(stage?: string): boolean {
     if (!stage) {
+      return true;
+    }
+    if (
+      stage === AcceleratorStage.PIPELINE ||
+      stage === AcceleratorStage.TESTER_PIPELINE ||
+      stage === AcceleratorStage.DIAGNOSTICS_PACK
+    ) {
       return false;
     }
-    return stage === AcceleratorStage.PIPELINE || stage === AcceleratorStage.TESTER_PIPELINE;
+    return true;
   }
 
   private static isSingleStackAction(props: AcceleratorProps) {
@@ -412,7 +420,6 @@ export abstract class Accelerator {
         throw new Error(`CLI command validation failed at runtime.`);
       }
     }
-
     return AcceleratorToolkit.execute({
       accountId: props.account,
       region: props.region,

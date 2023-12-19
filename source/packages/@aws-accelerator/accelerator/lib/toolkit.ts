@@ -161,6 +161,10 @@ export interface AcceleratorToolkitProps {
    * - security stack for macie and guard duty
    */
   centralLogsBucketKmsKeyArn?: string;
+  /**
+   * Accelerator qualifier used for external deployment
+   */
+  qualifier?: string;
 }
 
 /**
@@ -402,14 +406,21 @@ export class AcceleratorToolkit {
   }
 
   /**
-   * Function to initialize PIPELINE and TESTER PIPELINE stack name
+   * Function to initialize stack name which are not dependent on config, such as  PIPELINE, TESTER PIPELINE and DIAGNOSTICS_PACK stack name
+   * @param stageName {@link AcceleratorStage}
    * @param props
    * @returns
    */
-  private static getPipelineAndTesterPipelineStackName(
+  public static getNonConfigDependentStackName(
     stageName: AcceleratorStage,
     props: { stage: string; accountId?: string; region?: string },
   ) {
+    if (AcceleratorStage.DIAGNOSTICS_PACK) {
+      return process.env['ACCELERATOR_QUALIFIER']
+        ? `${process.env['ACCELERATOR_QUALIFIER']}-DiagnosticsPackStack-${props.accountId}-${props.region}`
+        : `${AcceleratorStackNames[props.stage]}-${props.accountId}-${props.region}`;
+    }
+
     return process.env['ACCELERATOR_QUALIFIER']
       ? `${process.env['ACCELERATOR_QUALIFIER']}-${stageName}-stack-${props.accountId}-${props.region}`
       : `${AcceleratorStackNames[props.stage]}-${props.accountId}-${props.region}`;
@@ -540,7 +551,6 @@ export class AcceleratorToolkit {
    */
   private static async deployStacks(context: string[], toolkitStackName: string, options: AcceleratorToolkitProps) {
     const stackName = await AcceleratorToolkit.getStackNames(options);
-
     let roleArn;
     if (!isBeforeBootstrapStage(options.command, options.stage)) {
       roleArn = getDeploymentRoleArn({
@@ -636,7 +646,7 @@ export class AcceleratorToolkit {
     switch (options.stage) {
       case AcceleratorStage.PIPELINE:
         stackName = [
-          AcceleratorToolkit.getPipelineAndTesterPipelineStackName(AcceleratorStage.PIPELINE, {
+          AcceleratorToolkit.getNonConfigDependentStackName(AcceleratorStage.PIPELINE, {
             stage: options.stage,
             accountId: options.accountId,
             region: options.region,
@@ -645,7 +655,16 @@ export class AcceleratorToolkit {
         break;
       case AcceleratorStage.TESTER_PIPELINE:
         stackName = [
-          AcceleratorToolkit.getPipelineAndTesterPipelineStackName(AcceleratorStage.TESTER_PIPELINE, {
+          AcceleratorToolkit.getNonConfigDependentStackName(AcceleratorStage.TESTER_PIPELINE, {
+            stage: options.stage,
+            accountId: options.accountId,
+            region: options.region,
+          }),
+        ];
+        break;
+      case AcceleratorStage.DIAGNOSTICS_PACK:
+        stackName = [
+          AcceleratorToolkit.getNonConfigDependentStackName(AcceleratorStage.DIAGNOSTICS_PACK, {
             stage: options.stage,
             accountId: options.accountId,
             region: options.region,
@@ -798,6 +817,8 @@ export class AcceleratorToolkit {
   ): Promise<string | undefined> {
     if (
       options.stage === AcceleratorStage.PIPELINE ||
+      options.stage === AcceleratorStage.TESTER_PIPELINE ||
+      options.stage === AcceleratorStage.DIAGNOSTICS_PACK ||
       options.stage === AcceleratorStage.IMPORT_ASEA_RESOURCES ||
       options.stage === AcceleratorStage.POST_IMPORT_ASEA_RESOURCES
     ) {

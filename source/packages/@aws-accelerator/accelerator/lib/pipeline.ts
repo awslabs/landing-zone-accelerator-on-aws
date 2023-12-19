@@ -110,6 +110,10 @@ export interface AcceleratorPipelineProps {
    * Boolean for single account mode (i.e. AWS Jam or Workshop)
    */
   readonly enableSingleAccountMode: boolean;
+  /**
+   * Accelerator pipeline account id, for external deployment it will be pipeline account otherwise management account
+   */
+  pipelineAccountId: string;
 }
 
 /**
@@ -490,6 +494,10 @@ export class AcceleratorPipeline extends Construct {
           ACCELERATOR_DATABASE_NAME_PREFIX: {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: props.prefixes.databaseName,
+          },
+          PIPELINE_ACCOUNT_ID: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: props.pipelineAccountId,
           },
           ...enableSingleAccountModeEnvVariables,
           ...pipelineAccountEnvVariables,

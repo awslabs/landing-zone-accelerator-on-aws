@@ -2385,6 +2385,11 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
               "Type": "PLAINTEXT",
               "Value": "aws-accelerator",
             },
+            {
+              "Name": "PIPELINE_ACCOUNT_ID",
+              "Type": "PLAINTEXT",
+              "Value": "000000000000",
+            },
           ],
           "Image": "aws/codebuild/standard:6.0",
           "ImagePullCredentialsType": "CODEBUILD",

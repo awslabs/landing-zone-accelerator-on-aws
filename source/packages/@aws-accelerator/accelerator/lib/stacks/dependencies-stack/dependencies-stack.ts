@@ -16,6 +16,7 @@ import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { AcceleratorStack, AcceleratorStackProps } from '../accelerator-stack';
 import { IdentityCenter } from './identity-center';
+import { DiagnosticsPack } from './diagnostics-pack';
 
 /**
  * Enum for log level
@@ -36,8 +37,17 @@ export class DependenciesStack extends AcceleratorStack {
       this.createPutSsmParameterRole(props.prefixes.ssmParamName, props.partition, this.organizationId);
     }
 
+    //
     // Create Identity Center dependent resources
+    //
     new IdentityCenter(this, props);
+
+    //
+    // Create the diagnostics pack dependent resources. The Diagnostics pack will be deployed for multi-account environments without utilizing existing roles for deployment.
+    //
+    if (!props.enableSingleAccountMode && !props.useExistingRoles) {
+      new DiagnosticsPack(this, props);
+    }
   }
 
   /**

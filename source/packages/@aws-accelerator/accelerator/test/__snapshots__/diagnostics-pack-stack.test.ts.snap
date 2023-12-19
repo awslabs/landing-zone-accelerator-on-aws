@@ -1,0 +1,511 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`DiagnosticsPackStack Construct(DiagnosticsPackStack):  Snapshot Test 1`] = `
+{
+  "Parameters": {
+    "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/aws-accelerator/installer/kms/key-arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "DiagnosticsFunctionF6482E72": {
+      "DependsOn": [
+        "DiagnosticsPackLambdaRoleDefaultPolicy93B3F548",
+        "DiagnosticsPackLambdaRole5CC68755",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-000000000000-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Accelerator diagnostics report lambda function.",
+        "Environment": {
+          "Variables": {
+            "CONFIG_REPO_NAME": "aws-accelerator-config",
+            "DAYS_PIPELINE_IN_FAILED_STATUS": "1",
+            "HOME_REGION": "us-east-1",
+            "INSTALLER_STACK_NAME": "AWSAccelerator-InstallerStack",
+            "MANAGEMENT_ACCOUNT_ROLE_NAME": "AWSAccelerator-DiagnosticsPackAccessRole",
+            "PARTITION": {
+              "Ref": "AWS::Partition",
+            },
+            "PIPELINE_ACCOUNT_ID": "000000000000",
+            "REPORT_BUCKET_NAME": "aws-accelerator-installer-000000000000-us-east-1",
+          },
+        },
+        "Handler": "index.handler",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
+            "DiagnosticsPackLambdaRole5CC68755",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "DiagnosticsFunctionLogGroup65B6B182": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "DiagnosticsFunctionF6482E72",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 30,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "DiagnosticsPackLambdaRole5CC68755": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Custom resource Lambda role policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "lambda.",
+                      {
+                        "Ref": "AWS::URLSuffix",
+                      },
+                    ],
+                  ],
+                },
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+        "RoleName": "aws-accelerator-DiagnosticsPackLambdaRole",
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "DiagnosticsPackLambdaRoleDefaultPolicy93B3F548": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Custom resource Lambda role policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":iam::*:role/AWSAccelerator-DiagnosticsPackAccessRole",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": "sts:GetCallerIdentity",
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "AllowStsCallerIdentityActions",
+            },
+            {
+              "Action": [
+                "cloudformation:DescribeStackEvents",
+                "cloudformation:DescribeStacks",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":cloudformation:us-east-1:000000000000:stack/aws-accelerator*",
+                  ],
+                ],
+              },
+              "Sid": "CloudformationAccess",
+            },
+            {
+              "Action": "codecommit:GetFile",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":codecommit:us-east-1:000000000000:aws-accelerator-config",
+                  ],
+                ],
+              },
+              "Sid": "CodecommitAccess",
+            },
+            {
+              "Action": "codepipeline:GetPipelineState",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":codepipeline:us-east-1:000000000000:aws-accelerator*",
+                  ],
+                ],
+              },
+              "Sid": "CodepipelineAccess",
+            },
+            {
+              "Action": "logs:FilterLogEvents",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":logs:us-east-1:000000000000:log-group:/aws/codebuild/aws-accelerator*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":logs:us-east-1:000000000000:log-group:/aws/lambda/aws-accelerator*",
+                    ],
+                  ],
+                },
+              ],
+              "Sid": "CloudwatchLogsAccess",
+            },
+            {
+              "Action": [
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:AbortMultipartUpload",
+                "s3:ListBucket",
+                "s3:DeleteObject",
+                "s3:GetObjectVersion",
+                "s3:ListMultipartUploadParts",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::aws-accelerator-installer-000000000000-us-east-1",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::aws-accelerator-installer-000000000000-us-east-1/*",
+                    ],
+                  ],
+                },
+              ],
+              "Sid": "DiagnosticsBucketWriteAccess",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "DiagnosticsPackLambdaRoleDefaultPolicy93B3F548",
+        "Roles": [
+          {
+            "Ref": "DiagnosticsPackLambdaRole5CC68755",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "DiagnosticsProject5D286B2E": {
+      "Properties": {
+        "Artifacts": {
+          "Type": "NO_ARTIFACTS",
+        },
+        "Cache": {
+          "Type": "NO_CACHE",
+        },
+        "Description": "Accelerator diagnostic project. You can execute this project to generate an error report and store it into the aws-accelerator-installer-000000000000-us-east-1 bucket.",
+        "EncryptionKey": {
+          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "Environment": {
+          "ComputeType": "BUILD_GENERAL1_SMALL",
+          "EnvironmentVariables": [
+            {
+              "Name": "DAYS_PIPELINE_IN_FAILED_STATUS",
+              "Type": "PLAINTEXT",
+              "Value": "1",
+            },
+          ],
+          "Image": "aws/codebuild/standard:6.0",
+          "ImagePullCredentialsType": "CODEBUILD",
+          "PrivilegedMode": false,
+          "Type": "LINUX_CONTAINER",
+        },
+        "Name": "aws-accelerator-DiagnosticProject",
+        "ServiceRole": {
+          "Fn::GetAtt": [
+            "DiagnosticsProjectRole29C23DD8",
+            "Arn",
+          ],
+        },
+        "Source": {
+          "BuildSpec": {
+            "Fn::Join": [
+              "",
+              [
+                "version: "0.2"
+phases:
+  build:
+    commands:
+      - set -e
+      - aws lambda update-function-configuration --function-name  ",
+                {
+                  "Fn::GetAtt": [
+                    "DiagnosticsFunctionF6482E72",
+                    "Arn",
+                  ],
+                },
+                "  --region us-east-1 --environment Variables="{INSTALLER_STACK_NAME=AWSAccelerator-InstallerStack,HOME_REGION=us-east-1,PIPELINE_ACCOUNT_ID=000000000000,PARTITION=",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ",DAYS_PIPELINE_IN_FAILED_STATUS=$DAYS_PIPELINE_IN_FAILED_STATUS,REPORT_BUCKET_NAME=aws-accelerator-installer-000000000000-us-east-1,CONFIG_REPO_NAME=aws-accelerator-config,MANAGEMENT_ACCOUNT_ROLE_NAME=AWSAccelerator-DiagnosticsPackAccessRole}" --output text
+      - aws lambda wait function-updated --function-name ",
+                {
+                  "Fn::GetAtt": [
+                    "DiagnosticsFunctionF6482E72",
+                    "Arn",
+                  ],
+                },
+                " --region us-east-1
+      - aws lambda invoke --function-name ",
+                {
+                  "Fn::GetAtt": [
+                    "DiagnosticsFunctionF6482E72",
+                    "Arn",
+                  ],
+                },
+                "REPLACED-JSON-PATH.json",
+              ],
+            ],
+          },
+          "Type": "NO_SOURCE",
+        },
+      },
+      "Type": "AWS::CodeBuild::Project",
+    },
+    "DiagnosticsProjectRole29C23DD8": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "codebuild.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "DiagnosticsProjectRoleDefaultPolicyEA9CD8D1": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Diagnostic CodeBuild project role.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":logs:us-east-1:000000000000:log-group:/aws/codebuild/",
+                      {
+                        "Ref": "DiagnosticsProject5D286B2E",
+                      },
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":logs:us-east-1:000000000000:log-group:/aws/codebuild/",
+                      {
+                        "Ref": "DiagnosticsProject5D286B2E",
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "codebuild:CreateReportGroup",
+                "codebuild:CreateReport",
+                "codebuild:UpdateReport",
+                "codebuild:BatchPutTestCases",
+                "codebuild:BatchPutCodeCoverages",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":codebuild:us-east-1:000000000000:report-group/",
+                    {
+                      "Ref": "DiagnosticsProject5D286B2E",
+                    },
+                    "-*",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "kms:Decrypt",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+              },
+            },
+            {
+              "Action": [
+                "lambda:InvokeFunction",
+                "lambda:UpdateFunctionConfiguration",
+                "lambda:GetFunctionConfiguration",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "DiagnosticsFunctionF6482E72",
+                  "Arn",
+                ],
+              },
+              "Sid": "AllowLambdaAccess",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "DiagnosticsProjectRoleDefaultPolicyEA9CD8D1",
+        "Roles": [
+          {
+            "Ref": "DiagnosticsProjectRole29C23DD8",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+  },
+}
+`;

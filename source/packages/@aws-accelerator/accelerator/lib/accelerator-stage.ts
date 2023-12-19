@@ -20,6 +20,10 @@ export enum AcceleratorStage {
    * Prepare Stage - Verify the configuration files, environment and create accounts
    */
   PREPARE = 'prepare',
+  /**
+   * DiagnosticsPack Stage - Creates Diagnostics pack resources
+   */
+  DIAGNOSTICS_PACK = 'diagnostics-pack',
   ORGANIZATIONS = 'organizations',
   KEY = 'key',
   LOGGING = 'logging',

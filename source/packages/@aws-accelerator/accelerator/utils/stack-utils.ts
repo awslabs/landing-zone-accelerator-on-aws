@@ -47,6 +47,8 @@ import { AcceleratorContext, AcceleratorEnvironment, AcceleratorResourcePrefixes
 import { ImportAseaResourcesStack } from '../lib/stacks/import-asea-resources-stack';
 import { AcceleratorAspects } from '../lib/accelerator-aspects';
 import { ResourcePolicyEnforcementStack } from '../lib/stacks/resource-policy-enforcement-stack';
+import { DiagnosticsPackStack } from '../lib/stacks/diagnostics-pack-stack';
+import { AcceleratorToolkit } from '../lib/toolkit';
 
 const logger = createLogger(['stack-utils']);
 
@@ -238,9 +240,11 @@ export function createPipelineStack(
   resourcePrefixes: AcceleratorResourcePrefixes,
 ) {
   if (includeStage(context, { stage: AcceleratorStage.PIPELINE, account: context.account, region: context.region })) {
-    const pipelineStackName = acceleratorEnv.qualifier
-      ? `${acceleratorEnv.qualifier}-${AcceleratorStage.PIPELINE}-stack-${context.account}-${context.region}`
-      : `${AcceleratorStackNames[AcceleratorStage.PIPELINE]}-${context.account}-${context.region}`;
+    const pipelineStackName = AcceleratorToolkit.getNonConfigDependentStackName(AcceleratorStage.PIPELINE, {
+      stage: context.stage!,
+      accountId: context.account!,
+      region: context.region!,
+    });
     const pipelineStack = new PipelineStack(app, pipelineStackName, {
       env: { account: context.account, region: context.region },
       description: `(SO0199-pipeline) Landing Zone Accelerator on AWS. Version ${version}.`,
@@ -278,9 +282,14 @@ export function createTesterStack(
   ) {
     if (acceleratorEnv.managementCrossAccountRoleName) {
       checkRootApp(rootApp);
-      const testerPipelineStackName = acceleratorEnv.qualifier
-        ? `${acceleratorEnv.qualifier}-${AcceleratorStage.TESTER_PIPELINE}-stack-${context.account}-${context.region}`
-        : `${AcceleratorStackNames[AcceleratorStage.TESTER_PIPELINE]}-${context.account}-${context.region}`;
+      const testerPipelineStackName = AcceleratorToolkit.getNonConfigDependentStackName(
+        AcceleratorStage.TESTER_PIPELINE,
+        {
+          stage: context.stage!,
+          accountId: context.account!,
+          region: context.region!,
+        },
+      );
       const app = new cdk.App({
         outdir: `cdk.out/${testerPipelineStackName}`,
       });
@@ -295,6 +304,50 @@ export function createTesterStack(
       cdk.Aspects.of(testerPipelineStack).add(new AwsSolutionsChecks());
       new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
     }
+  }
+}
+
+/**
+ * Create Diagnostics Pack Stack
+ * @param rootApp
+ * @param context
+ * @param props
+ * @param accountId
+ * @param homeRegion
+ */
+export function createDiagnosticsPackStack(
+  app: cdk.App,
+  context: AcceleratorContext,
+  acceleratorEnv: AcceleratorEnvironment,
+  resourcePrefixes: AcceleratorResourcePrefixes,
+) {
+  if (
+    includeStage(context, {
+      stage: AcceleratorStage.DIAGNOSTICS_PACK,
+      account: context.account,
+      region: context.region,
+    })
+  ) {
+    const diagnosticsPackStackName = AcceleratorToolkit.getNonConfigDependentStackName(
+      AcceleratorStage.DIAGNOSTICS_PACK,
+      {
+        stage: context.stage!,
+        accountId: context.account!,
+        region: context.region!,
+      },
+    );
+    const diagnosticsPackStack = new DiagnosticsPackStack(app, diagnosticsPackStackName, {
+      env: { account: context.account, region: context.region },
+      description: `(SO0199-pipeline) Landing Zone Accelerator on AWS. Version ${version}.`,
+      terminationProtection: true,
+      acceleratorPrefix: resourcePrefixes.accelerator,
+      ssmParamPrefix: resourcePrefixes.ssmParamName,
+      bucketNamePrefix: resourcePrefixes.bucketName,
+      installerStackName: acceleratorEnv.installerStackName,
+      configRepositoryName: acceleratorEnv.configRepositoryName,
+      qualifier: acceleratorEnv.qualifier,
+    });
+    cdk.Aspects.of(diagnosticsPackStack).add(new AwsSolutionsChecks());
   }
 }
 

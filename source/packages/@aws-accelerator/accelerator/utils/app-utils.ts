@@ -115,6 +115,14 @@ export interface AcceleratorResourcePrefixes {
 
 export interface AcceleratorEnvironment {
   /**
+   * Accelerator installer stack name
+   */
+  installerStackName: string;
+  /**
+   * Flag indicating diagnostic pack enabled
+   */
+  isDiagnosticsPackEnabled: string;
+  /**
    * Audit (Security-Tooling) account email address
    */
   auditAccountEmail: string;
@@ -200,6 +208,10 @@ export interface AcceleratorEnvironment {
    * Accelerator qualifier
    */
   qualifier?: string;
+  /**
+   * Accelerator pipeline account id, for external deployment it will be pipeline account otherwise management account
+   */
+  pipelineAccountId: string;
 }
 
 /**
@@ -299,6 +311,7 @@ function setConfigRepoName(
  * Set accelerator environment variables
  * @param env
  * @param resourcePrefixes
+ * @param stage
  * @returns
  */
 export function setAcceleratorEnvironment(
@@ -319,6 +332,9 @@ export function setAcceleratorEnvironment(
   );
 
   return {
+    installerStackName: env['INSTALLER_STACK_NAME'] ?? '',
+    pipelineAccountId: env['PIPELINE_ACCOUNT_ID'] ?? '',
+    isDiagnosticsPackEnabled: env['ENABLE_DIAGNOSTICS_PACK'] ?? 'Yes',
     auditAccountEmail: env['AUDIT_ACCOUNT_EMAIL'] ?? '',
     configRepositoryName,
     configRepositoryBranchName: env['EXISTING_CONFIG_REPOSITORY_BRANCH_NAME'] ?? 'main',

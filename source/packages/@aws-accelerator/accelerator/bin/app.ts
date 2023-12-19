@@ -34,6 +34,7 @@ import {
   createAccountsStack,
   createBootstrapStack,
   createCustomizationsStacks,
+  createDiagnosticsPackStack,
   createFinalizeStack,
   createKeyDependencyStacks,
   createLoggingStack,
@@ -201,7 +202,8 @@ async function main() {
   const context = getContext(app);
   //
   // Set aspects and global region
-  const aspects = new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
+  const useExistingRoles = context.useExistingRoles ?? false;
+  const aspects = new AcceleratorAspects(app, context.partition, useExistingRoles);
   const globalRegion = aspects.globalRegion;
   //
   // Set various resource name prefixes used in code base
@@ -209,6 +211,14 @@ async function main() {
   //
   // Set accelerator environment variables
   const acceleratorEnv = setAcceleratorEnvironment(process.env, resourcePrefixes, context.stage);
+
+  //
+  // Create the diagnostics pack resources. The Diagnostics pack stack will be deployed for multi-account environments without utilizing existing roles for deployment.
+  //
+  if (!useExistingRoles && !acceleratorEnv.enableSingleAccountMode) {
+    createDiagnosticsPackStack(app, context, acceleratorEnv, resourcePrefixes);
+  }
+
   //
   // PIPELINE and TESTER Stacks
   createPipelineStacks(app, context, acceleratorEnv, resourcePrefixes);
@@ -221,6 +231,7 @@ async function main() {
     const homeRegion = props.globalConfig.homeRegion;
     const managementAccountId = props.accountsConfig.getManagementAccountId();
     const auditAccountId = props.accountsConfig.getAuditAccountId();
+
     //
     // PREPARE, ACCOUNTS, and FINALIZE Stacks
     createManagementAccountStacks(app, context, props, managementAccountId, homeRegion, globalRegion);
