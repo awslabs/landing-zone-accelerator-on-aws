@@ -2170,6 +2170,77 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       },
       "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
     },
+    "NetworkInspectiondeployedtg2898BDF56": {
+      "Properties": {
+        "HealthCheckEnabled": true,
+        "Matcher": {},
+        "Name": "deployed-tg-2",
+        "Port": 443,
+        "Protocol": "HTTPS",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "deployed-tg-2",
+          },
+        ],
+        "TargetType": "instance",
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+    },
+    "NetworkInspectiontgwithouttargetip9ED227FD": {
+      "Properties": {
+        "HealthCheckEnabled": true,
+        "HealthCheckPort": "80",
+        "HealthCheckProtocol": "HTTP",
+        "Matcher": {},
+        "Name": "tg-without-target-ip",
+        "Port": 80,
+        "Protocol": "HTTP",
+        "ProtocolVersion": "HTTP1",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "tg-without-target-ip",
+          },
+        ],
+        "TargetType": "ip",
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+    },
+    "NetworkInspectiontgwithtargetipB51306E1": {
+      "Properties": {
+        "HealthCheckEnabled": true,
+        "HealthCheckPort": "80",
+        "HealthCheckProtocol": "HTTP",
+        "Matcher": {},
+        "Name": "tg-with-target-ip",
+        "Port": 80,
+        "Protocol": "HTTP",
+        "ProtocolVersion": "HTTP1",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "tg-with-target-ip",
+          },
+        ],
+        "TargetType": "ip",
+        "Targets": [
+          {
+            "Id": "10.3.100.20",
+          },
+        ],
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+    },
     "NetworkMain2Core101000016NetworkEndpointsNetworkStaticRouteE97CED2D": {
       "Properties": {
         "DestinationCidrBlock": "10.100.0.0/16",

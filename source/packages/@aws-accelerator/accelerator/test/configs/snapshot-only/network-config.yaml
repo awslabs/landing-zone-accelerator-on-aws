@@ -1459,6 +1459,34 @@ vpcs:
               - ALL
             sources:
               - 0.0.0.0/0
+    targetGroups:
+      - name: deployed-tg-2
+        port: 443
+        protocol: HTTPS
+        type: instance
+        shareTargets:
+          organizationalUnits:
+            - Infrastructure
+      - name: tg-with-target-ip
+        port: 80
+        protocol: HTTP
+        protocolVersion: HTTP1
+        type: ip
+        healthCheck:
+          enabled: true
+          port: 80
+          protocol: HTTP
+        targets:
+          - '10.3.100.20'
+      - name: tg-without-target-ip
+        port: 80
+        protocol: HTTP
+        protocolVersion: HTTP1
+        type: ip
+        healthCheck:
+          enabled: true
+          port: 80
+          protocol: HTTP
     transitGatewayAttachments:
       - name: Network-Inspection
         transitGateway:

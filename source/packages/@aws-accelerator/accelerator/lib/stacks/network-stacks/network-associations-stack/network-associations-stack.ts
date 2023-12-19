@@ -520,68 +520,85 @@ export class NetworkAssociationsStack extends NetworkStack {
     vpcItem: VpcConfig | VpcTemplatesConfig,
     vpcId: string,
   ) {
-    try {
-      //Get NLB Targets in Ip Targets for lookup
-      const nlbTargets = targetGroupItem.targets?.filter(target => {
-        return typeof target !== 'string';
-      }) as NlbTargetTypeConfig[];
-      //Set AccountIds for lookup Custom Resource
-      const nlbTargetsWithAccountIds =
-        (nlbTargets.map(nlbTarget => {
-          const accountId = this.props.accountsConfig.getAccountId(nlbTarget.account);
-          return {
-            account: accountId,
-            region: nlbTarget.region,
-            nlbName: nlbTarget.nlbName,
-          };
-        }) as NlbTargetTypeConfig[]) ?? [];
+    // Create IP Target Group if no Targets are specified, otherwise, evaluate NLB/static IP targets
+    if (!targetGroupItem.targets) {
+      return new TargetGroup(this, `${vpcItem.name}-${targetGroupItem.name}`, {
+        name: targetGroupItem.name,
+        port: targetGroupItem.port,
+        protocol: targetGroupItem.protocol,
+        protocolVersion: targetGroupItem.protocolVersion,
+        type: targetGroupItem.type,
+        attributes: targetGroupItem.attributes,
+        healthCheck: targetGroupItem.healthCheck,
+        threshold: targetGroupItem.threshold,
+        matcher: targetGroupItem.matcher,
+        vpc: vpcId,
+      });
+    } else {
+      try {
+        //Get NLB Targets in Ip Targets for lookup
+        const nlbTargets = targetGroupItem.targets?.filter(target => {
+          return typeof target !== 'string';
+        }) as NlbTargetTypeConfig[];
 
-      //Get targets containing an IP Address only
-      const staticIpTargets: (NlbTargetTypeConfig | string)[] =
-        (targetGroupItem.targets?.filter(target => typeof target === 'string') as string[]) ?? [];
-      // If NLB targets exist, send both static ips and NLB targets to custom resource to create one entry for the target group
-      if (nlbTargetsWithAccountIds && nlbTargetsWithAccountIds.length > 0) {
-        const nlbAddresses = new NLBAddresses(this, `${targetGroupItem.name}-ipLookup`, {
-          targets: [...nlbTargetsWithAccountIds, ...staticIpTargets],
-          assumeRoleName: `${this.props.prefixes.accelerator}-GetNLBIPAddressLookup`,
-          partition: cdk.Stack.of(this).partition,
-          kmsKey: this.cloudwatchKey,
-          logRetentionInDays: this.logRetention,
-        });
-        return new TargetGroup(this, `${vpcItem.name}-${targetGroupItem.name}`, {
-          name: targetGroupItem.name,
-          port: targetGroupItem.port,
-          protocol: targetGroupItem.protocol,
-          protocolVersion: targetGroupItem.protocolVersion,
-          type: targetGroupItem.type,
-          attributes: targetGroupItem.attributes,
-          healthCheck: targetGroupItem.healthCheck,
-          threshold: targetGroupItem.threshold,
-          matcher: targetGroupItem.matcher,
-          targets: nlbAddresses.ipAddresses,
-          vpc: vpcId,
-        });
-      } else {
-        // If only IP addresses exist, skip CR Lookup and make the target group directly
-        return new TargetGroup(this, `${vpcItem.name}-${targetGroupItem.name}`, {
-          name: targetGroupItem.name,
-          port: targetGroupItem.port,
-          protocol: targetGroupItem.protocol,
-          protocolVersion: targetGroupItem.protocolVersion,
-          type: targetGroupItem.type,
-          attributes: targetGroupItem.attributes,
-          healthCheck: targetGroupItem.healthCheck,
-          threshold: targetGroupItem.threshold,
-          matcher: targetGroupItem.matcher,
-          targets: staticIpTargets as string[],
-          vpc: vpcId,
-        });
+        //Set AccountIds for lookup Custom Resource
+        const nlbTargetsWithAccountIds =
+          (nlbTargets.map(nlbTarget => {
+            const accountId = this.props.accountsConfig.getAccountId(nlbTarget.account);
+            return {
+              account: accountId,
+              region: nlbTarget.region,
+              nlbName: nlbTarget.nlbName,
+            };
+          }) as NlbTargetTypeConfig[]) ?? [];
+
+        //Get targets containing an IP Address only
+        const staticIpTargets: (NlbTargetTypeConfig | string)[] =
+          (targetGroupItem.targets?.filter(target => typeof target === 'string') as string[]) ?? [];
+        // If NLB targets exist, send both static ips and NLB targets to custom resource to create one entry for the target group
+        if (nlbTargetsWithAccountIds && nlbTargetsWithAccountIds.length > 0) {
+          const nlbAddresses = new NLBAddresses(this, `${targetGroupItem.name}-ipLookup`, {
+            targets: [...nlbTargetsWithAccountIds, ...staticIpTargets],
+            assumeRoleName: `${this.props.prefixes.accelerator}-GetNLBIPAddressLookup`,
+            partition: cdk.Stack.of(this).partition,
+            kmsKey: this.cloudwatchKey,
+            logRetentionInDays: this.logRetention,
+          });
+          return new TargetGroup(this, `${vpcItem.name}-${targetGroupItem.name}`, {
+            name: targetGroupItem.name,
+            port: targetGroupItem.port,
+            protocol: targetGroupItem.protocol,
+            protocolVersion: targetGroupItem.protocolVersion,
+            type: targetGroupItem.type,
+            attributes: targetGroupItem.attributes,
+            healthCheck: targetGroupItem.healthCheck,
+            threshold: targetGroupItem.threshold,
+            matcher: targetGroupItem.matcher,
+            targets: nlbAddresses.ipAddresses,
+            vpc: vpcId,
+          });
+        } else {
+          // If only IP addresses exist, skip CR Lookup and make the target group directly
+          return new TargetGroup(this, `${vpcItem.name}-${targetGroupItem.name}`, {
+            name: targetGroupItem.name,
+            port: targetGroupItem.port,
+            protocol: targetGroupItem.protocol,
+            protocolVersion: targetGroupItem.protocolVersion,
+            type: targetGroupItem.type,
+            attributes: targetGroupItem.attributes,
+            healthCheck: targetGroupItem.healthCheck,
+            threshold: targetGroupItem.threshold,
+            matcher: targetGroupItem.matcher,
+            targets: staticIpTargets as string[],
+            vpc: vpcId,
+          });
+        }
+      } catch (err) {
+        this.logger.error(
+          `Could not create target group for ${targetGroupItem.name} in vpc ${vpcItem.name}. Please review the target group configuration`,
+        );
+        throw new Error(`Configuration validation failed at runtime.`);
       }
-    } catch (err) {
-      this.logger.error(
-        `Could not create target group for ${targetGroupItem.name} in vpc ${vpcItem.name}. Please review the target group configuration`,
-      );
-      throw new Error(`Configuration validation failed at runtime.`);
     }
   }
 
