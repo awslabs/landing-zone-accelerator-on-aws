@@ -378,6 +378,7 @@ export class AcceleratorTool {
     // Accelerator tester configuration
     let testerPipelineStackNamePrefix = `${acceleratorPrefix}-TesterPipelineStack`;
     let testerStackNamePrefix = `${acceleratorPrefix}-TesterStack`;
+    let diagnosticsPackStackNamePrefix = `${acceleratorPrefix}-DiagnosticsPackStack`;
 
     // Name resources based on qualifier
     if (isQualifierUsed) {
@@ -385,6 +386,7 @@ export class AcceleratorTool {
       acceleratorPipelineName = `${acceleratorQualifier}-pipeline`;
       testerStackNamePrefix = `${acceleratorQualifier}-tester-stack`;
       testerPipelineStackNamePrefix = `${acceleratorQualifier}-tester-pipeline-stack`;
+      diagnosticsPackStackNamePrefix = `${acceleratorQualifier}-DiagnosticsPackStack`;
       testerPipelineConfigRepositoryName = `${acceleratorQualifier}-test-config`;
     }
 
@@ -397,7 +399,10 @@ export class AcceleratorTool {
       AcceleratorTool.resetCredentialEnvironment();
 
       // Delete tester stack
-      await this.deleteTesterStack(testerStackNamePrefix);
+      await this.deletePipelineAccountStack(testerStackNamePrefix);
+
+      // Delete Diagnostics pack stack
+      await this.deletePipelineAccountStack(diagnosticsPackStackNamePrefix);
 
       // Delete tester pipeline stack when keepPipelineAndConfig not used
       if (!this.acceleratorToolProps.keepPipelineAndConfig) {
@@ -1431,11 +1436,11 @@ export class AcceleratorTool {
   }
 
   /**
-   * Function to delete accelerator tester stack
+   * Function to delete stacks in pipeline account accelerator tester stack
    * @param stackNamePrefix
    * @private
    */
-  private async deleteTesterStack(stackNamePrefix: string): Promise<void> {
+  private async deletePipelineAccountStack(stackNamePrefix: string): Promise<void> {
     const cloudFormationClient = new CloudFormationClient({});
     const testerStackName = `${stackNamePrefix}-${
       this.externalPipelineAccount.isUsed

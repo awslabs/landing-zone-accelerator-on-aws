@@ -107,6 +107,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
             "UseExistingConfigRepo",
             "ExistingConfigRepositoryName",
             "ExistingConfigRepositoryBranchName",
+            "EnableDiagnosticsPack",
           ],
         },
       ],
@@ -125,6 +126,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
         },
         "EnableApprovalStage": {
           "default": "Enable Approval Stage",
+        },
+        "EnableDiagnosticsPack": {
+          "default": "Enable Diagnostics Pack",
         },
         "ExistingConfigRepositoryBranchName": {
           "default": "Existing Config Repository Branch Name",
@@ -190,6 +194,15 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
       ],
       "Default": "Yes",
       "Description": "Select yes to add a Manual Approval stage to accelerator pipeline",
+      "Type": "String",
+    },
+    "EnableDiagnosticsPack": {
+      "AllowedValues": [
+        "Yes",
+        "No",
+      ],
+      "Default": "Yes",
+      "Description": "Select Yes if deploying the solution with diagnostics pack enabled. Diagnostics pack enables you to generate root cause reports to potentially diagnose pipeline failures.",
       "Type": "String",
     },
     "ExistingConfigRepositoryBranchName": {
@@ -1679,6 +1692,25 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
               },
             },
             {
+              "Name": "INSTALLER_STACK_NAME",
+              "Type": "PLAINTEXT",
+              "Value": "AWSAccelerator-Test-InstallerStack",
+            },
+            {
+              "Name": "ENABLE_DIAGNOSTICS_PACK",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "EnableDiagnosticsPack",
+              },
+            },
+            {
+              "Name": "PIPELINE_ACCOUNT_ID",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "AWS::AccountId",
+              },
+            },
+            {
               "Name": "ENABLE_TESTER",
               "Type": "PLAINTEXT",
               "Value": "true",
@@ -1758,6 +1790,11 @@ phases:
                   ],
                 },
                 "; then BOOTSTRAPPED_GLOBAL="no"; fi
+      - ENABLE_DIAGNOSTICS_PACK=",
+                {
+                  "Ref": "EnableDiagnosticsPack",
+                },
+                "
   build:
     commands:
       - cd source
@@ -1893,6 +1930,22 @@ phases:
                             echo "SSM Parameter Found, setting ENABLE_ASEA_MIGRATION to true"
                             export ENABLE_ASEA_MIGRATION=true
                           fi;
+      - |-
+        if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
+                        yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage diagnostics-pack --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+                      fi
       - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
@@ -3481,6 +3534,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
             "UseExistingConfigRepo",
             "ExistingConfigRepositoryName",
             "ExistingConfigRepositoryBranchName",
+            "EnableDiagnosticsPack",
           ],
         },
       ],
@@ -3499,6 +3553,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
         },
         "EnableApprovalStage": {
           "default": "Enable Approval Stage",
+        },
+        "EnableDiagnosticsPack": {
+          "default": "Enable Diagnostics Pack",
         },
         "ExistingConfigRepositoryBranchName": {
           "default": "Existing Config Repository Branch Name",
@@ -3564,6 +3621,15 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
       ],
       "Default": "Yes",
       "Description": "Select yes to add a Manual Approval stage to accelerator pipeline",
+      "Type": "String",
+    },
+    "EnableDiagnosticsPack": {
+      "AllowedValues": [
+        "Yes",
+        "No",
+      ],
+      "Default": "Yes",
+      "Description": "Select Yes if deploying the solution with diagnostics pack enabled. Diagnostics pack enables you to generate root cause reports to potentially diagnose pipeline failures.",
       "Type": "String",
     },
     "ExistingConfigRepositoryBranchName": {
@@ -5052,6 +5118,25 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
                 ],
               },
             },
+            {
+              "Name": "INSTALLER_STACK_NAME",
+              "Type": "PLAINTEXT",
+              "Value": "AWSAccelerator-Test-InstallerStack",
+            },
+            {
+              "Name": "ENABLE_DIAGNOSTICS_PACK",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "EnableDiagnosticsPack",
+              },
+            },
+            {
+              "Name": "PIPELINE_ACCOUNT_ID",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "AWS::AccountId",
+              },
+            },
           ],
           "Image": "aws/codebuild/standard:6.0",
           "ImagePullCredentialsType": "CODEBUILD",
@@ -5122,6 +5207,11 @@ phases:
                   ],
                 },
                 "; then BOOTSTRAPPED_GLOBAL="no"; fi
+      - ENABLE_DIAGNOSTICS_PACK=",
+                {
+                  "Ref": "EnableDiagnosticsPack",
+                },
+                "
   build:
     commands:
       - cd source
@@ -5257,6 +5347,22 @@ phases:
                             echo "SSM Parameter Found, setting ENABLE_ASEA_MIGRATION to true"
                             export ENABLE_ASEA_MIGRATION=true
                           fi;
+      - |-
+        if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
+                        yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage diagnostics-pack --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+                      fi
       - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
@@ -6845,6 +6951,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
             "UseExistingConfigRepo",
             "ExistingConfigRepositoryName",
             "ExistingConfigRepositoryBranchName",
+            "EnableDiagnosticsPack",
           ],
         },
         {
@@ -6876,6 +6983,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
         },
         "EnableApprovalStage": {
           "default": "Enable Approval Stage",
+        },
+        "EnableDiagnosticsPack": {
+          "default": "Enable Diagnostics Pack",
         },
         "ExistingConfigRepositoryBranchName": {
           "default": "Existing Config Repository Branch Name",
@@ -6952,6 +7062,15 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
       ],
       "Default": "Yes",
       "Description": "Select yes to add a Manual Approval stage to accelerator pipeline",
+      "Type": "String",
+    },
+    "EnableDiagnosticsPack": {
+      "AllowedValues": [
+        "Yes",
+        "No",
+      ],
+      "Default": "Yes",
+      "Description": "Select Yes if deploying the solution with diagnostics pack enabled. Diagnostics pack enables you to generate root cause reports to potentially diagnose pipeline failures.",
       "Type": "String",
     },
     "ExistingConfigRepositoryBranchName": {
@@ -8425,6 +8544,25 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
               },
             },
             {
+              "Name": "INSTALLER_STACK_NAME",
+              "Type": "PLAINTEXT",
+              "Value": "AWSAccelerator-Test-InstallerStack",
+            },
+            {
+              "Name": "ENABLE_DIAGNOSTICS_PACK",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "EnableDiagnosticsPack",
+              },
+            },
+            {
+              "Name": "PIPELINE_ACCOUNT_ID",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "AWS::AccountId",
+              },
+            },
+            {
               "Name": "MANAGEMENT_ACCOUNT_ID",
               "Type": "PLAINTEXT",
               "Value": {
@@ -8522,6 +8660,11 @@ phases:
                   ],
                 },
                 "; then BOOTSTRAPPED_GLOBAL="no"; fi
+      - ENABLE_DIAGNOSTICS_PACK=",
+                {
+                  "Ref": "EnableDiagnosticsPack",
+                },
+                "
   build:
     commands:
       - cd source
@@ -8657,6 +8800,22 @@ phases:
                             echo "SSM Parameter Found, setting ENABLE_ASEA_MIGRATION to true"
                             export ENABLE_ASEA_MIGRATION=true
                           fi;
+      - |-
+        if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
+                        yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage diagnostics-pack --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+                      fi
       - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
@@ -10232,6 +10391,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
             "UseExistingConfigRepo",
             "ExistingConfigRepositoryName",
             "ExistingConfigRepositoryBranchName",
+            "EnableDiagnosticsPack",
           ],
         },
         {
@@ -10263,6 +10423,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
         },
         "EnableApprovalStage": {
           "default": "Enable Approval Stage",
+        },
+        "EnableDiagnosticsPack": {
+          "default": "Enable Diagnostics Pack",
         },
         "ExistingConfigRepositoryBranchName": {
           "default": "Existing Config Repository Branch Name",
@@ -10339,6 +10502,15 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
       ],
       "Default": "Yes",
       "Description": "Select yes to add a Manual Approval stage to accelerator pipeline",
+      "Type": "String",
+    },
+    "EnableDiagnosticsPack": {
+      "AllowedValues": [
+        "Yes",
+        "No",
+      ],
+      "Default": "Yes",
+      "Description": "Select Yes if deploying the solution with diagnostics pack enabled. Diagnostics pack enables you to generate root cause reports to potentially diagnose pipeline failures.",
       "Type": "String",
     },
     "ExistingConfigRepositoryBranchName": {
@@ -11812,6 +11984,25 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
               },
             },
             {
+              "Name": "INSTALLER_STACK_NAME",
+              "Type": "PLAINTEXT",
+              "Value": "AWSAccelerator-Test-InstallerStack",
+            },
+            {
+              "Name": "ENABLE_DIAGNOSTICS_PACK",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "EnableDiagnosticsPack",
+              },
+            },
+            {
+              "Name": "PIPELINE_ACCOUNT_ID",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "AWS::AccountId",
+              },
+            },
+            {
               "Name": "MANAGEMENT_ACCOUNT_ID",
               "Type": "PLAINTEXT",
               "Value": {
@@ -11899,6 +12090,11 @@ phases:
                   ],
                 },
                 "; then BOOTSTRAPPED_GLOBAL="no"; fi
+      - ENABLE_DIAGNOSTICS_PACK=",
+                {
+                  "Ref": "EnableDiagnosticsPack",
+                },
+                "
   build:
     commands:
       - cd source
@@ -12034,6 +12230,22 @@ phases:
                             echo "SSM Parameter Found, setting ENABLE_ASEA_MIGRATION to true"
                             export ENABLE_ASEA_MIGRATION=true
                           fi;
+      - |-
+        if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
+                        yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage diagnostics-pack --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+                      fi
       - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
@@ -13609,6 +13821,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
             "UseExistingConfigRepo",
             "ExistingConfigRepositoryName",
             "ExistingConfigRepositoryBranchName",
+            "EnableDiagnosticsPack",
           ],
         },
         {
@@ -13640,6 +13853,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
         },
         "EnableApprovalStage": {
           "default": "Enable Approval Stage",
+        },
+        "EnableDiagnosticsPack": {
+          "default": "Enable Diagnostics Pack",
         },
         "ExistingConfigRepositoryBranchName": {
           "default": "Existing Config Repository Branch Name",
@@ -13716,6 +13932,15 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
       ],
       "Default": "Yes",
       "Description": "Select yes to add a Manual Approval stage to accelerator pipeline",
+      "Type": "String",
+    },
+    "EnableDiagnosticsPack": {
+      "AllowedValues": [
+        "Yes",
+        "No",
+      ],
+      "Default": "Yes",
+      "Description": "Select Yes if deploying the solution with diagnostics pack enabled. Diagnostics pack enables you to generate root cause reports to potentially diagnose pipeline failures.",
       "Type": "String",
     },
     "ExistingConfigRepositoryBranchName": {
@@ -15189,6 +15414,25 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
               },
             },
             {
+              "Name": "INSTALLER_STACK_NAME",
+              "Type": "PLAINTEXT",
+              "Value": "AWSAccelerator-Test-InstallerStack",
+            },
+            {
+              "Name": "ENABLE_DIAGNOSTICS_PACK",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "EnableDiagnosticsPack",
+              },
+            },
+            {
+              "Name": "PIPELINE_ACCOUNT_ID",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "AWS::AccountId",
+              },
+            },
+            {
               "Name": "MANAGEMENT_ACCOUNT_ID",
               "Type": "PLAINTEXT",
               "Value": {
@@ -15281,6 +15525,11 @@ phases:
                   ],
                 },
                 "; then BOOTSTRAPPED_GLOBAL="no"; fi
+      - ENABLE_DIAGNOSTICS_PACK=",
+                {
+                  "Ref": "EnableDiagnosticsPack",
+                },
+                "
   build:
     commands:
       - cd source
@@ -15416,6 +15665,22 @@ phases:
                             echo "SSM Parameter Found, setting ENABLE_ASEA_MIGRATION to true"
                             export ENABLE_ASEA_MIGRATION=true
                           fi;
+      - |-
+        if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
+                        yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage diagnostics-pack --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+                      fi
       - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",

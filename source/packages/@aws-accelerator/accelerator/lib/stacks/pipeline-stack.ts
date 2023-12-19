@@ -66,7 +66,14 @@ export interface PipelineStackProps extends cdk.StackProps {
     readonly trailLogName: string;
     readonly databaseName: string;
   };
+  /**
+   * Boolean for single account mode (i.e. AWS Jam or Workshop)
+   */
   readonly enableSingleAccountMode: boolean;
+  /**
+   * Accelerator pipeline account id, for external deployment it will be pipeline account otherwise management account
+   */
+  pipelineAccountId: string;
 }
 
 export class PipelineStack extends cdk.Stack {

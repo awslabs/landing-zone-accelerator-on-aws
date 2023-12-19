@@ -186,6 +186,14 @@ export interface AcceleratorStackProps extends cdk.StackProps {
    * - security stack for macie and guard duty
    */
   centralLogsBucketKmsKeyArn?: string;
+  /**
+   * Flag indicating diagnostic pack enabled
+   */
+  isDiagnosticsPackEnabled: string;
+  /**
+   * Accelerator pipeline account id, for external deployment it will be pipeline account otherwise management account
+   */
+  pipelineAccountId: string;
 }
 
 process.on('uncaughtException', err => {
@@ -212,6 +220,11 @@ export abstract class AcceleratorStack extends cdk.Stack {
   protected centralLogsBucketName: string;
 
   public readonly organizationId: string | undefined;
+
+  /**
+   * Flag indicating external deployment
+   */
+  public readonly isExternalDeployment: boolean;
 
   public acceleratorResourceNames: AcceleratorResourceNames;
 
@@ -240,6 +253,8 @@ export abstract class AcceleratorStack extends cdk.Stack {
     this.props = props;
     this.ssmParameters = [];
     this.organizationId = props.organizationConfig.getOrganizationId();
+    this.isExternalDeployment =
+      props.pipelineAccountId !== props.accountsConfig.getManagementAccountId() ? true : false;
     //
     // Initialize resource names
     this.acceleratorResourceNames = new AcceleratorResourceNames({

@@ -106,7 +106,7 @@ export class CloudWatchDestination extends Construct {
     useExistingRoles: boolean,
     acceleratorPrefix: string,
   ) {
-    if (useExistingRoles === true) {
+    if (useExistingRoles) {
       return `arn:${cdk.Stack.of(this).partition}:iam::${
         cdk.Stack.of(this).account
       }:role/${acceleratorPrefix}LogReplicationRole-${cdk.Stack.of(this).region}`;
