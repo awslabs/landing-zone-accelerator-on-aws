@@ -1597,6 +1597,26 @@ vpcs:
         shareTargets:
           organizationalUnits:
             - Infrastructure
+      - name: tg-with-target-ip
+        port: 80
+        protocol: HTTP
+        protocolVersion: HTTP1
+        type: ip
+        healthCheck:
+          enabled: true
+          port: 80
+          protocol: HTTP
+        targets:
+          - '10.4.100.20'
+      - name: tg-without-target-ip
+        port: 80
+        protocol: HTTP
+        protocolVersion: HTTP1
+        type: ip
+        healthCheck:
+          enabled: true
+          port: 80
+          protocol: HTTP
     transitGatewayAttachments:
       - name: SharedServices-Main
         transitGateway:
