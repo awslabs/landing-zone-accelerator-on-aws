@@ -1607,7 +1607,7 @@ vpcs:
           port: 80
           protocol: HTTP
         targets:
-          - '10.4.100.20'
+          - '10.4.0.20'
       - name: tg-without-target-ip
         port: 80
         protocol: HTTP
