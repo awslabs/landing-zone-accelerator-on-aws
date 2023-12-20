@@ -57,6 +57,16 @@ cdkOptions:
   useManagementAccessRole: true
   customDeploymentRole: AWSA-Deployment
   forceBootstrap: true
+s3:
+  encryption:
+    createCMK: true
+    deploymentTargets:
+      accounts:
+        - Management
+      organizationalUnits:
+        - Security
+      excludedRegions:
+        - us-west-2    
 logging:
   account: LogArchive
   centralizedLoggingRegion: us-west-2
@@ -112,6 +122,14 @@ logging:
             transitionAfter: 365
         prefix: 'macie'
   accessLogBucket:
+    enable: true
+    deploymentTargets:
+      accounts:
+        - Management
+      organizationalUnits:
+        - Security
+      excludedRegions:
+        - us-west-2
     importedBucket: 
       name: existing-access-logs-bucket-${ACCOUNT_ID}-${REGION}
     customPolicyOverrides:

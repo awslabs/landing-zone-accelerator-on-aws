@@ -154,7 +154,7 @@ export class LoggingStack extends AcceleratorStack {
 
     //
     // Create or get existing central log bucket
-    this.createOrGetCentralLogsBucket(serverAccessLogsBucket, principalOrgIdCondition);
+    this.createOrGetCentralLogsBucket(serverAccessLogsBucket!, principalOrgIdCondition);
 
     //
     // Get central log bucket encryption key
@@ -175,7 +175,7 @@ export class LoggingStack extends AcceleratorStack {
 
     //
     // Create VPC Flow logs destination bucket
-    this.createVpcFlowLogsBucket(s3Key, serverAccessLogsBucket, replicationProps);
+    this.createVpcFlowLogsBucket(replicationProps, s3Key, serverAccessLogsBucket);
 
     //
     // Create or get ELB access logs bucket
@@ -317,7 +317,7 @@ export class LoggingStack extends AcceleratorStack {
     elbAccountId?: string,
   ): cdk.aws_s3.IBucket | undefined {
     const elbAccessLogsBucket = new Bucket(this, 'ElbAccessLogsBucket', {
-      encryptionType: BucketEncryptionType.SSE_S3, // Server access logging does not support SSE-KMS
+      encryptionType: BucketEncryptionType.SSE_S3, // ELB Access Logs bucket does not support SSE-KMS
       s3BucketName: this.getElbLogsBucketName(),
       replicationProps,
       s3LifeCycleRules: this.getS3LifeCycleRules(this.props.globalConfig.logging.elbLogBucket?.lifecycleRules),
@@ -423,9 +423,9 @@ export class LoggingStack extends AcceleratorStack {
 
   /**
    * Function to get or create server access log bucket
-   * @returns bucket {@link cdk.aws_s3.IBucket}
+   * @returns bucket {@link cdk.aws_s3.IBucket} | undefined
    */
-  private createOrGetServerAccessLogBucket(): cdk.aws_s3.IBucket {
+  private createOrGetServerAccessLogBucket(): cdk.aws_s3.IBucket | undefined {
     if (this.props.globalConfig.logging.accessLogBucket?.importedBucket) {
       const bucket = this.getImportedBucket(
         this.props.globalConfig.logging.accessLogBucket.importedBucket.name,
@@ -442,9 +442,18 @@ export class LoggingStack extends AcceleratorStack {
       });
 
       return bucket;
-    } else {
-      return this.createServerAccessLogBucket();
     }
+
+    if (!this.isAccessLogsBucketEnabled) {
+      this.logger.info(
+        `AWS S3 access log bucket disable for ${cdk.Stack.of(this).account} account in ${
+          cdk.Stack.of(this).region
+        } region, server access logs bucket creation excluded`,
+      );
+      return undefined;
+    }
+
+    return this.createServerAccessLogBucket();
   }
 
   /**
@@ -676,8 +685,17 @@ export class LoggingStack extends AcceleratorStack {
 
   /**
    * Function to create S3 Key
+   * @returns cdk.aws_kms.IKey | undefined
    */
-  private createS3Key(): cdk.aws_kms.IKey {
+  private createS3Key(): cdk.aws_kms.IKey | undefined {
+    if (!this.isS3CMKEnabled) {
+      this.logger.info(
+        `AWS S3 Encryption CMK disable for ${cdk.Stack.of(this).account} account in ${
+          cdk.Stack.of(this).region
+        } region, CMK creation excluded`,
+      );
+      return undefined;
+    }
     //
     // Crete S3 key in every account except audit account,
     // this is required for SSM automation to get right KMS key to encrypt unencrypted bucket
@@ -737,9 +755,18 @@ export class LoggingStack extends AcceleratorStack {
   }
 
   /**
-   * Function to create Audit account S3 bucket
+   * Function to create Audit account S3 bucket encryption Key
+   * @returns cdk.aws_kms.IKey | undefined
    */
-  private createAuditAccountS3Key(): cdk.aws_kms.IKey {
+  private createAuditAccountS3Key(): cdk.aws_kms.IKey | undefined {
+    if (!this.isS3CMKEnabled) {
+      this.logger.info(
+        `AWS S3 Encryption CMK disable for ${cdk.Stack.of(this).account} account in ${
+          cdk.Stack.of(this).region
+        } region, CMK creation excluded`,
+      );
+      return undefined;
+    }
     this.logger.debug(`Create S3 Key`);
     const s3Key = new cdk.aws_kms.Key(this, 'AcceleratorAuditS3Key', {
       alias: this.acceleratorResourceNames.customerManagedKeys.s3.alias,
@@ -846,29 +873,42 @@ export class LoggingStack extends AcceleratorStack {
    * Function to create VPC FlowLogs bucket.
    * This bucket depends on Central Logs bucket and Server access logs bucket.
    * This bucket also depends on local S3 key.
-   * @param s3Key {@link cdk.aws_kms.IKey}
-   * @param serverAccessLogsBucket {@link cdk.aws_s3.IBucket}
    * @param replicationProps {@link BucketReplicationProps}
+   * @param s3Key {@link cdk.aws_kms.IKey} | undefined
+   * @param serverAccessLogsBucket {@link cdk.aws_s3.IBucket} | undefined
    */
   private createVpcFlowLogsBucket(
-    s3Key: cdk.aws_kms.IKey,
-    serverAccessLogsBucket: cdk.aws_s3.IBucket,
     replicationProps: BucketReplicationProps,
+    s3Key?: cdk.aws_kms.IKey,
+    serverAccessLogsBucket?: cdk.aws_s3.IBucket,
   ) {
     const vpcFlowLogsConfig = this.getS3FlowLogsDestinationConfig();
     if (vpcFlowLogsConfig) {
       this.logger.info(`Create S3 bucket for VPC flow logs destination`);
 
       const vpcFlowLogsBucket = new Bucket(this, 'AcceleratorVpcFlowLogsBucket', {
-        encryptionType: BucketEncryptionType.SSE_KMS,
+        encryptionType: this.isS3CMKEnabled ? BucketEncryptionType.SSE_KMS : BucketEncryptionType.SSE_S3,
         s3BucketName: `${this.acceleratorResourceNames.bucketPrefixes.vpcFlowLogs}-${cdk.Stack.of(this).account}-${
           cdk.Stack.of(this).region
         }`,
         kmsKey: s3Key,
-        serverAccessLogsBucket: serverAccessLogsBucket,
+        serverAccessLogsBucket,
         s3LifeCycleRules: this.getS3LifeCycleRules(vpcFlowLogsConfig.destinationsConfig?.s3?.lifecycleRules),
         replicationProps: replicationProps,
       });
+
+      if (!serverAccessLogsBucket) {
+        // AwsSolutions-S1: The S3 Bucket has server access logs disabled
+        this.nagSuppressionInputs.push({
+          id: NagSuppressionRuleIds.S1,
+          details: [
+            {
+              path: `/${this.stackName}/AcceleratorVpcFlowLogsBucket/Resource/Resource`,
+              reason: 'Due to configuration settings, server access logs have been disabled.',
+            },
+          ],
+        });
+      }
 
       vpcFlowLogsBucket.getS3Bucket().addToResourcePolicy(
         new cdk.aws_iam.PolicyStatement({
@@ -1959,7 +1999,7 @@ export class LoggingStack extends AcceleratorStack {
 
   /**
    * Function to create CentralLogs bucket in LogArchive account home region only.
-   * @param serverAccessLogsBucket {@link Bucket}
+   * @param serverAccessLogsBucket cdk.aws_s3.IBucket | undefined
    *
    * @remarks
    * When existing central log bucket not used then create Central Logs Bucket - This is done only in the home region of the log-archive account.
@@ -2504,68 +2544,116 @@ export class LoggingStack extends AcceleratorStack {
       cdk.Stack.of(this).account === props.accountsConfig.getManagementAccountId() &&
       cdk.Stack.of(this).region === props.globalConfig.homeRegion
     ) {
-      const assetsKmsKey = new cdk.aws_kms.Key(this, 'AssetsKmsKey', {
-        alias: this.acceleratorResourceNames.customerManagedKeys.assetsBucket.alias,
-        description: this.acceleratorResourceNames.customerManagedKeys.assetsBucket.description,
-        enableKeyRotation: true,
-        removalPolicy: cdk.RemovalPolicy.RETAIN,
-      });
-      // Allow management account access
-      assetsKmsKey.addToResourcePolicy(
-        new cdk.aws_iam.PolicyStatement({
-          sid: 'Management Actions',
-          principals: [new cdk.aws_iam.AccountPrincipal(cdk.Stack.of(this).account)],
-          actions: [
-            'kms:Create*',
-            'kms:Describe*',
-            'kms:Enable*',
-            'kms:List*',
-            'kms:Put*',
-            'kms:Update*',
-            'kms:Revoke*',
-            'kms:Disable*',
-            'kms:Get*',
-            'kms:Delete*',
-            'kms:ScheduleKeyDeletion',
-            'kms:CancelKeyDeletion',
-            'kms:GenerateDataKey',
-          ],
-          resources: ['*'],
-        }),
-      );
+      let assetsKmsKey: cdk.aws_kms.Key | undefined;
+      if (this.isS3CMKEnabled) {
+        assetsKmsKey = new cdk.aws_kms.Key(this, 'AssetsKmsKey', {
+          alias: this.acceleratorResourceNames.customerManagedKeys.assetsBucket.alias,
+          description: this.acceleratorResourceNames.customerManagedKeys.assetsBucket.description,
+          enableKeyRotation: true,
+          removalPolicy: cdk.RemovalPolicy.RETAIN,
+        });
+        // Allow management account access
+        assetsKmsKey.addToResourcePolicy(
+          new cdk.aws_iam.PolicyStatement({
+            sid: 'Management Actions',
+            principals: [new cdk.aws_iam.AccountPrincipal(cdk.Stack.of(this).account)],
+            actions: [
+              'kms:Create*',
+              'kms:Describe*',
+              'kms:Enable*',
+              'kms:List*',
+              'kms:Put*',
+              'kms:Update*',
+              'kms:Revoke*',
+              'kms:Disable*',
+              'kms:Get*',
+              'kms:Delete*',
+              'kms:ScheduleKeyDeletion',
+              'kms:CancelKeyDeletion',
+              'kms:GenerateDataKey',
+            ],
+            resources: ['*'],
+          }),
+        );
 
-      //grant s3 service access
-      assetsKmsKey.addToResourcePolicy(
-        new cdk.aws_iam.PolicyStatement({
-          sid: `Allow S3 to use the encryption key`,
-          principals: [new cdk.aws_iam.AnyPrincipal()],
-          actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey', 'kms:Describe*'],
-          resources: ['*'],
-          conditions: {
-            StringEquals: {
-              'kms:ViaService': `s3.${cdk.Stack.of(this).region}.amazonaws.com`,
-              ...this.getPrincipalOrgIdCondition(this.organizationId),
+        //grant s3 service access
+        assetsKmsKey.addToResourcePolicy(
+          new cdk.aws_iam.PolicyStatement({
+            sid: `Allow S3 to use the encryption key`,
+            principals: [new cdk.aws_iam.AnyPrincipal()],
+            actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey', 'kms:Describe*'],
+            resources: ['*'],
+            conditions: {
+              StringEquals: {
+                'kms:ViaService': `s3.${cdk.Stack.of(this).region}.amazonaws.com`,
+                ...this.getPrincipalOrgIdCondition(this.organizationId),
+              },
             },
-          },
-        }),
-      );
+          }),
+        );
 
-      //grant AssetsAccessRole access to KMS
-      assetsKmsKey.addToResourcePolicy(
-        new cdk.aws_iam.PolicyStatement({
-          principals: [new cdk.aws_iam.AnyPrincipal()],
-          actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey', 'kms:Describe*'],
-          resources: ['*'],
-          conditions: {
-            StringLike: {
-              'aws:PrincipalARN': `arn:${cdk.Stack.of(this).partition}:iam::*:role/${
-                props.prefixes.accelerator
-              }-AssetsAccessRole`,
-              ...this.getPrincipalOrgIdCondition(this.organizationId),
+        //grant AssetsAccessRole access to KMS
+        assetsKmsKey.addToResourcePolicy(
+          new cdk.aws_iam.PolicyStatement({
+            principals: [new cdk.aws_iam.AnyPrincipal()],
+            actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey', 'kms:Describe*'],
+            resources: ['*'],
+            conditions: {
+              StringLike: {
+                'aws:PrincipalARN': `arn:${cdk.Stack.of(this).partition}:iam::*:role/${
+                  props.prefixes.accelerator
+                }-AssetsAccessRole`,
+                ...this.getPrincipalOrgIdCondition(this.organizationId),
+              },
             },
+          }),
+        );
+
+        const assetBucketKmsKeyArnSsmParameter = new cdk.aws_ssm.StringParameter(
+          this,
+          'SsmParamAssetsAccountBucketKMSArn',
+          {
+            parameterName: this.acceleratorResourceNames.parameters.assetsBucketCmkArn,
+            stringValue: assetsKmsKey.keyArn,
           },
-        }),
-      );
+        );
+
+        // SSM parameter access IAM Role for
+        new cdk.aws_iam.Role(this, 'CrossAccountAssetsBucketKMSArnSsmParamAccessRole', {
+          roleName: this.acceleratorResourceNames.roles.crossAccountAssetsBucketCmkArnSsmParameterAccess,
+          assumedBy: this.getOrgPrincipals(this.organizationId, true),
+          inlinePolicies: {
+            default: new cdk.aws_iam.PolicyDocument({
+              statements: [
+                new cdk.aws_iam.PolicyStatement({
+                  effect: cdk.aws_iam.Effect.ALLOW,
+                  actions: ['ssm:GetParameters', 'ssm:GetParameter'],
+                  resources: [assetBucketKmsKeyArnSsmParameter.parameterArn],
+                  conditions: {
+                    ArnLike: {
+                      'aws:PrincipalARN': [
+                        `arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.prefixes.accelerator}-*`,
+                      ],
+                    },
+                  },
+                }),
+                new cdk.aws_iam.PolicyStatement({
+                  effect: cdk.aws_iam.Effect.ALLOW,
+                  actions: ['ssm:DescribeParameters'],
+                  resources: ['*'],
+                  conditions: {
+                    ArnLike: {
+                      'aws:PrincipalARN': [
+                        `arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.prefixes.accelerator}-*`,
+                      ],
+                    },
+                  },
+                }),
+              ],
+            }),
+          },
+        });
+      }
       const serverAccessLogsBucket = new Bucket(this, 'AssetsAccessLogsBucket', {
         encryptionType: BucketEncryptionType.SSE_S3, // Server access logging does not support SSE-KMS
         s3BucketName: `${this.acceleratorResourceNames.bucketPrefixes.assetsAccessLog}-${cdk.Stack.of(this).account}-${
@@ -2587,7 +2675,7 @@ export class LoggingStack extends AcceleratorStack {
 
       //create assets bucket
       const assetsBucket = new Bucket(this, 'CertificateAssetBucket', {
-        encryptionType: BucketEncryptionType.SSE_KMS,
+        encryptionType: this.isS3CMKEnabled ? BucketEncryptionType.SSE_KMS : BucketEncryptionType.SSE_S3,
         s3BucketName: `${this.acceleratorResourceNames.bucketPrefixes.assets}-${cdk.Stack.of(this).account}-${
           cdk.Stack.of(this).region
         }`,
@@ -2619,51 +2707,6 @@ export class LoggingStack extends AcceleratorStack {
         description: 'Name of the bucket which hosts solution assets ',
       });
 
-      const assetBucketKmsKeyArnSsmParameter = new cdk.aws_ssm.StringParameter(
-        this,
-        'SsmParamAssetsAccountBucketKMSArn',
-        {
-          parameterName: this.acceleratorResourceNames.parameters.assetsBucketCmkArn,
-          stringValue: assetsKmsKey.keyArn,
-        },
-      );
-
-      // SSM parameter access IAM Role for
-      new cdk.aws_iam.Role(this, 'CrossAccountAssetsBucketKMSArnSsmParamAccessRole', {
-        roleName: this.acceleratorResourceNames.roles.crossAccountAssetsBucketCmkArnSsmParameterAccess,
-        assumedBy: this.getOrgPrincipals(this.organizationId, true),
-        inlinePolicies: {
-          default: new cdk.aws_iam.PolicyDocument({
-            statements: [
-              new cdk.aws_iam.PolicyStatement({
-                effect: cdk.aws_iam.Effect.ALLOW,
-                actions: ['ssm:GetParameters', 'ssm:GetParameter'],
-                resources: [assetBucketKmsKeyArnSsmParameter.parameterArn],
-                conditions: {
-                  ArnLike: {
-                    'aws:PrincipalARN': [
-                      `arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.prefixes.accelerator}-*`,
-                    ],
-                  },
-                },
-              }),
-              new cdk.aws_iam.PolicyStatement({
-                effect: cdk.aws_iam.Effect.ALLOW,
-                actions: ['ssm:DescribeParameters'],
-                resources: ['*'],
-                conditions: {
-                  ArnLike: {
-                    'aws:PrincipalARN': [
-                      `arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.prefixes.accelerator}-*`,
-                    ],
-                  },
-                },
-              }),
-            ],
-          }),
-        },
-      });
-
       this.nagSuppressionInputs.push({
         id: NagSuppressionRuleIds.IAM5,
         details: [
@@ -2678,9 +2721,9 @@ export class LoggingStack extends AcceleratorStack {
 
   /**
    * Function to create Server access logs bucket
-   * @param serverAccessLogsBucket {@link cdk.aws_s3.IBucket}
+   * @param serverAccessLogsBucket {@link cdk.aws_s3.IBucket} | undefined
    */
-  private createMetadataBucket(serverAccessLogsBucket: cdk.aws_s3.IBucket) {
+  private createMetadataBucket(serverAccessLogsBucket?: cdk.aws_s3.IBucket) {
     if (this.props.globalConfig.acceleratorMetadata?.enable) {
       if (
         cdk.Stack.of(this).region === this.props.globalConfig.homeRegion &&
@@ -2688,19 +2731,41 @@ export class LoggingStack extends AcceleratorStack {
           this.props.accountsConfig.getAccountId(this.props.globalConfig.acceleratorMetadata.account)
       ) {
         const metadataBucket = new Bucket(this, 'AcceleratorMetadataBucket', {
-          encryptionType: BucketEncryptionType.SSE_KMS,
+          encryptionType: this.isS3CMKEnabled ? BucketEncryptionType.SSE_KMS : BucketEncryptionType.SSE_S3,
           kmsAliasName: this.acceleratorResourceNames.customerManagedKeys.metadataBucket.alias,
           kmsDescription: this.acceleratorResourceNames.customerManagedKeys.metadataBucket.description,
           s3BucketName: `${this.acceleratorResourceNames.bucketPrefixes.metadata}-${cdk.Stack.of(this).account}-${
             cdk.Stack.of(this).region
           }`,
-          serverAccessLogsBucket: serverAccessLogsBucket,
+          serverAccessLogsBucket,
         });
 
         const bucket = metadataBucket.getS3Bucket();
-        const key = metadataBucket.getKey();
-
         bucket.grantReadWrite(new cdk.aws_iam.AccountPrincipal(this.props.accountsConfig.getManagementAccountId()));
+        this.ssmParameters.push({
+          logicalId: 'AcceleratorS3MetadataBucket',
+          parameterName: this.acceleratorResourceNames.parameters.metadataBucketArn,
+          stringValue: bucket.bucketArn,
+        });
+
+        if (!serverAccessLogsBucket) {
+          // AwsSolutions-S1: The S3 Bucket has server access logs disabled
+          this.nagSuppressionInputs.push({
+            id: NagSuppressionRuleIds.S1,
+            details: [
+              {
+                path: `/${this.stackName}/AcceleratorMetadataBucket/Resource/Resource`,
+                reason: 'Due to configuration settings, server access logs have been disabled.',
+              },
+            ],
+          });
+        }
+
+        if (!this.isS3CMKEnabled) {
+          return;
+        }
+
+        const key = metadataBucket.getKey();
         key.grantEncryptDecrypt(new cdk.aws_iam.AccountPrincipal(this.props.accountsConfig.getManagementAccountId()));
         bucket.addToResourcePolicy(
           new iam.PolicyStatement({
@@ -2757,11 +2822,6 @@ export class LoggingStack extends AcceleratorStack {
             }),
           );
         }
-        this.ssmParameters.push({
-          logicalId: 'AcceleratorS3MetadataBucket',
-          parameterName: this.acceleratorResourceNames.parameters.metadataBucketArn,
-          stringValue: bucket.bucketArn,
-        });
 
         this.ssmParameters.push({
           logicalId: 'AcceleratorKmsMetadataKey',

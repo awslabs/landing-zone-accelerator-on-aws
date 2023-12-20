@@ -45,7 +45,7 @@ import {
 import { SnsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 
 export class SecurityAuditStack extends AcceleratorStack {
-  private readonly s3Key: cdk.aws_kms.IKey;
+  private readonly s3Key: cdk.aws_kms.IKey | undefined;
   private readonly cloudwatchKey: cdk.aws_kms.IKey | undefined;
   private readonly centralLogsBucketKey: cdk.aws_kms.IKey;
   private readonly replicationProps: BucketReplicationProps;
@@ -53,7 +53,7 @@ export class SecurityAuditStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
-    this.s3Key = this.getAcceleratorKey(AcceleratorKeyType.S3_KEY)!;
+    this.s3Key = this.getAcceleratorKey(AcceleratorKeyType.S3_KEY);
     this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
     this.centralLogsBucketKey = this.getCentralLogsBucketKey(this.cloudwatchKey);
 
@@ -252,12 +252,12 @@ export class SecurityAuditStack extends AcceleratorStack {
       }
 
       this.logger.info('Adding Audit Manager ');
-
+      const serverAccessLogsBucketName = this.getServerAccessLogsBucketName();
       const bucket = new Bucket(this, 'AuditManagerPublishingDestinationBucket', {
-        encryptionType: BucketEncryptionType.SSE_KMS,
+        encryptionType: this.isS3CMKEnabled ? BucketEncryptionType.SSE_KMS : BucketEncryptionType.SSE_S3,
         s3BucketName: `${this.acceleratorResourceNames.bucketPrefixes.auditManager}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
         kmsKey: this.s3Key,
-        serverAccessLogsBucketName: this.getServerAccessLogsBucketName(),
+        serverAccessLogsBucketName,
         s3LifeCycleRules: this.getS3LifeCycleRules(
           this.props.securityConfig.centralSecurityServices.auditManager?.lifecycleRules,
         ),
@@ -266,17 +266,18 @@ export class SecurityAuditStack extends AcceleratorStack {
 
       cdk.Tags.of(bucket).add(`aws-cdk:auto-audit-manager-access-bucket`, 'true');
 
-      // AwsSolutions-S1: The S3 Bucket has server access logs disabled.
-      this.nagSuppressionInputs.push({
-        id: NagSuppressionRuleIds.S1,
-        details: [
-          {
-            path: `${this.stackName}/AuditManagerPublishingDestinationBucket/Resource/Resource`,
-            reason:
-              'AuditManagerPublishingDestinationBucket has server access logs disabled till the task for access logging completed.',
-          },
-        ],
-      });
+      if (!serverAccessLogsBucketName) {
+        // AwsSolutions-S1: The S3 Bucket has server access logs disabled.
+        this.nagSuppressionInputs.push({
+          id: NagSuppressionRuleIds.S1,
+          details: [
+            {
+              path: `${this.stackName}/AuditManagerPublishingDestinationBucket/Resource/Resource`,
+              reason: 'Due to configuration settings, server access logs have been disabled.',
+            },
+          ],
+        });
+      }
 
       // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
       this.nagSuppressionInputs.push({

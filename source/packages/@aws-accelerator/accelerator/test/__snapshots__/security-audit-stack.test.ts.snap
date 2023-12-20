@@ -330,16 +330,6 @@ def script_handler(events, context):
     },
     "AuditManagerPublishingDestinationBucket74974FCF": {
       "DeletionPolicy": "Retain",
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-S1",
-              "reason": "AuditManagerPublishingDestinationBucket has server access logs disabled till the task for access logging completed.",
-            },
-          ],
-        },
-      },
       "Properties": {
         "BucketEncryption": {
           "ServerSideEncryptionConfiguration": [
@@ -3042,16 +3032,6 @@ def script_handler(events, context):
     },
     "AuditManagerPublishingDestinationBucket74974FCF": {
       "DeletionPolicy": "Retain",
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-S1",
-              "reason": "AuditManagerPublishingDestinationBucket has server access logs disabled till the task for access logging completed.",
-            },
-          ],
-        },
-      },
       "Properties": {
         "BucketEncryption": {
           "ServerSideEncryptionConfiguration": [

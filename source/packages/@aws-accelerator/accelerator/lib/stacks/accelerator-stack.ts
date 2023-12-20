@@ -38,6 +38,7 @@ import {
   OrganizationConfig,
   Region,
   ReplacementsConfig,
+  S3EncryptionConfig,
   SecurityConfig,
   ServiceEncryptionConfig,
   ShareTargets,
@@ -241,6 +242,16 @@ export abstract class AcceleratorStack extends cdk.Stack {
   public readonly isCloudWatchLogsGroupCMKEnabled: boolean;
 
   /**
+   * Flag indicating if AWS KMS CMK is enabled for AWS S3 bucket encryption
+   */
+  public readonly isS3CMKEnabled: boolean;
+
+  /**
+   * Flag indicating if S3 access logs bucket is enabled
+   */
+  public readonly isAccessLogsBucketEnabled: boolean;
+
+  /**
    * External resource SSM parameters
    * These parameters are loaded along with externalResourceMapping from SSM
    */
@@ -299,6 +310,16 @@ export abstract class AcceleratorStack extends cdk.Stack {
     this.isCloudWatchLogsGroupCMKEnabled = this.isCmkEnabled(
       this.props.globalConfig.logging.cloudwatchLogs?.encryption,
     );
+
+    //
+    // Set if AWS KMS CMK is enabled for AWS S3 bucket encryption
+    //
+    this.isS3CMKEnabled = this.isCmkEnabled(this.props.globalConfig.s3?.encryption);
+
+    //
+    // Set if S3 access log bucket is enabled
+    //
+    this.isAccessLogsBucketEnabled = this.accessLogsBucketEnabled();
   }
 
   /**
@@ -308,12 +329,14 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * @remarks
    * If importedBucket used returns imported server access logs bucket name else return solution defined bucket name
    */
-  protected getServerAccessLogsBucketName(): string {
+  protected getServerAccessLogsBucketName(): string | undefined {
     if (this.props.globalConfig.logging.accessLogBucket?.importedBucket?.name) {
       return this.getBucketNameReplacement(this.props.globalConfig.logging.accessLogBucket.importedBucket.name);
-    } else {
-      return `${this.acceleratorResourceNames.bucketPrefixes.s3AccessLogs}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
     }
+    if (!this.isAccessLogsBucketEnabled) {
+      return undefined;
+    }
+    return `${this.acceleratorResourceNames.bucketPrefixes.s3AccessLogs}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
   }
 
   /**
@@ -932,11 +955,16 @@ export abstract class AcceleratorStack extends cdk.Stack {
     let key: cdk.aws_kms.IKey | undefined;
     switch (keyType) {
       case AcceleratorKeyType.S3_KEY:
-        key = cdk.aws_kms.Key.fromKeyArn(
-          this,
-          'AcceleratorS3KeyLookup',
-          cdk.aws_ssm.StringParameter.valueForStringParameter(this, this.acceleratorResourceNames.parameters.s3CmkArn),
-        );
+        key = this.isS3CMKEnabled
+          ? cdk.aws_kms.Key.fromKeyArn(
+              this,
+              'AcceleratorS3KeyLookup',
+              cdk.aws_ssm.StringParameter.valueForStringParameter(
+                this,
+                this.acceleratorResourceNames.parameters.s3CmkArn,
+              ),
+            )
+          : undefined;
         break;
       case AcceleratorKeyType.CLOUDWATCH_KEY:
         key = this.isCloudWatchLogsGroupCMKEnabled
@@ -1051,33 +1079,56 @@ export abstract class AcceleratorStack extends cdk.Stack {
 
   /**
    * Function to check if LZA deployed CMK is enabled for a given service
-   * @param encryptionConfig {@link ServiceEncryptionConfig}
+   * @param encryptionConfig {@link ServiceEncryptionConfig} | {@link S3EncryptionConfig}
    * @returns boolean
    */
-  protected isCmkEnabled(encryptionConfig?: ServiceEncryptionConfig): boolean {
+  protected isCmkEnabled(encryptionConfig?: ServiceEncryptionConfig | S3EncryptionConfig): boolean {
+    let isCmkEnable = true;
     if (!encryptionConfig) {
-      return true;
+      return isCmkEnable;
     }
-    const useCMK = encryptionConfig.useCMK;
-    if (!encryptionConfig.deploymentTargets) {
-      return useCMK;
+
+    if (encryptionConfig instanceof ServiceEncryptionConfig) {
+      isCmkEnable = encryptionConfig.useCMK;
+    }
+
+    if (encryptionConfig instanceof S3EncryptionConfig) {
+      isCmkEnable = encryptionConfig.createCMK;
     }
 
     const deploymentTargets = encryptionConfig.deploymentTargets;
-    const targetAccountIds = this.props.accountsConfig.getAccountIdsFromDeploymentTarget(deploymentTargets);
 
-    const isRegionExcluded = this.isRegionExcluded(deploymentTargets.excludedRegions);
-    const isAccountIncluded = targetAccountIds.includes(cdk.Stack.of(this).account);
-
-    if (!isAccountIncluded || isRegionExcluded) {
-      return !useCMK;
+    if (!deploymentTargets) {
+      return isCmkEnable;
     }
 
-    if (isAccountIncluded && !isRegionExcluded) {
-      return useCMK;
+    return this.isIncluded(deploymentTargets) ? isCmkEnable : !isCmkEnable;
+  }
+
+  /**
+   * Function to check if LZA deployed S3 access logs bucket is enabled
+   *
+   * @remarks
+   * LogArchive account centralized logging region server access log bucket is always enabled since the solution deployed CentralLogs bucket requires access to the log bucket.
+   *
+   * @returns boolean
+   */
+  protected accessLogsBucketEnabled(): boolean {
+    if (
+      cdk.Stack.of(this).account === this.props.accountsConfig.getLogArchiveAccountId() &&
+      cdk.Stack.of(this).region == this.props.centralizedLoggingRegion
+    ) {
+      return true;
     }
 
-    return true;
+    const isEnable = this.props.globalConfig.logging.accessLogBucket?.enable ?? true;
+    const deploymentTargets = this.props.globalConfig.logging.accessLogBucket?.deploymentTargets ?? undefined;
+
+    if (!deploymentTargets) {
+      return isEnable;
+    }
+
+    return this.isIncluded(deploymentTargets) ? isEnable : !isEnable;
   }
 
   public isIncluded(deploymentTargets: DeploymentTargets): boolean {

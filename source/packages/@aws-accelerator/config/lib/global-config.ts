@@ -42,6 +42,15 @@ export abstract class GlobalConfigTypes {
     controls: t.optional(t.array(this.controlTowerControlConfig)),
   });
 
+  static readonly s3EncryptionConfig = t.type({
+    createCMK: t.boolean,
+    deploymentTargets: t.optional(t.deploymentTargets),
+  });
+
+  static readonly s3GlobalConfig = t.type({
+    encryption: t.optional(this.s3EncryptionConfig),
+  });
+
   static readonly serviceEncryptionConfig = t.type({
     useCMK: t.boolean,
     deploymentTargets: t.optional(t.deploymentTargets),
@@ -102,6 +111,8 @@ export abstract class GlobalConfigTypes {
   });
 
   static readonly accessLogBucketConfig = t.interface({
+    enable: t.optional(t.boolean),
+    deploymentTargets: t.optional(t.deploymentTargets),
     lifecycleRules: t.optional(t.array(t.lifecycleRuleConfig)),
     s3ResourcePolicyAttachments: t.optional(t.array(t.resourcePolicyStatement)),
     importedBucket: t.optional(t.importedS3ManagedEncryptionKeyBucketConfig),
@@ -285,6 +296,7 @@ export abstract class GlobalConfigTypes {
     acceleratorMetadata: t.optional(GlobalConfigTypes.acceleratorMetadataConfig),
     acceleratorSettings: t.optional(GlobalConfigTypes.acceleratorSettingsConfig),
     lambda: t.optional(GlobalConfigTypes.lambdaConfig),
+    s3: t.optional(this.s3GlobalConfig),
   });
 }
 
@@ -394,6 +406,75 @@ export class ServiceEncryptionConfig implements t.TypeOf<typeof GlobalConfigType
    * Leaving `deploymentTargets` undefined will apply `useCMK` setting to all accounts and enabled regions.
    */
   readonly deploymentTargets: t.DeploymentTargets | undefined = undefined;
+}
+
+/**
+ * *{@link GlobalConfig} / {@link S3GlobalConfig} / {@link S3EncryptionConfig}*
+ *
+ * AWS S3 encryption configuration settings
+ *
+ * @example
+ * ```
+ *  encryption:
+ *    createCMK: true
+ *    deploymentTargets:
+ *      organizationalUnits:
+ *        - Root
+ * ```
+ */
+export class S3EncryptionConfig implements t.TypeOf<typeof GlobalConfigTypes.s3EncryptionConfig> {
+  /**
+   * Flag indicates whether solution will create CMK for S3 bucket encryption.
+   *
+   * @remarks
+   * When set to `true`, the solution will create AWS KMS CMK which will be used by the S3 for server-side encryption.
+   *
+   * @default true
+   */
+  readonly createCMK: boolean = true;
+  /**
+   * To control target environments (AWS Account and Region) for the given `createCMK` setting, you may optionally specify deployment targets.
+   * Leaving `deploymentTargets` undefined will apply `createCMK` setting to all accounts and enabled regions.
+   */
+  readonly deploymentTargets: t.DeploymentTargets | undefined = undefined;
+}
+
+/**
+ * *{@link GlobalConfig} / {@link S3GlobalConfig}*
+ *
+ * AWS S3 global encryption configuration settings
+ *
+ * @example
+ * ```
+ *  encryption:
+ *    createCMK: true
+ *    deploymentTargets:
+ *      organizationalUnits:
+ *        - Root
+ * ```
+ */
+export class S3GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.s3GlobalConfig> {
+  /**
+   * S3 encryption configuration.
+   *
+   * @remarks
+   * Please use the following configuration to disable AWS KMS CMK for AWS S3 bucket encryption.
+   * In the absence of this property, the solution will deploy the AWS KMS CMK in every environment (AWS Account and Region).
+   * The solution will disregard this property and create CMKs to encrypt the installer bucket, pipeline bucket, and solution deployed CentralLogs bucket,
+   * because AWS KMS CMK is always used to encrypt installer buckets, pipeline buckets, and solution deployed CentralLogs buckets.
+   *
+   * @example
+   * ```
+   * s3:
+   *   encryption:
+   *     createCMK: false
+   *     deploymentTargets:
+   *       organizationalUnits:
+   *         - Root
+   * ```
+   * @default undefined
+   */
+  readonly encryption: S3EncryptionConfig | undefined = undefined;
 }
 
 /**
@@ -761,6 +842,10 @@ export class SessionManagerConfig implements t.TypeOf<typeof GlobalConfigTypes.s
  * @example
  * ```
  * accessLogBucket:
+ *   enable: true
+ *   deploymentTargets:
+ *     organizationalUnits:
+ *       - Root
  *   s3ResourcePolicyAttachments:
  *     - policy: s3-policies/policy1.json
  *   lifecycleRules:
@@ -799,6 +884,20 @@ export class AccessLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.
    * Declaration of (S3 Bucket) Lifecycle rules.
    */
   readonly lifecycleRules: t.LifeCycleRule[] | undefined = undefined;
+  /**
+   * Flag indicating S3 access logging bucket is enable by solution.
+   *
+   * @remarks
+   * When this property is undefined solution will create S3 access log bucket. You can use `deploymentTargets` to control target accounts and regions for the given `accessLogBucket` configuration.
+   * In the solution, this property will be ignored and S3 Access log buckets will be created for the installer bucket,
+   * pipeline bucket, solution deployed CentralLogs bucket, and solution deployed Assets bucket, since these buckets always have server access logging enabled.
+   */
+  readonly enable: boolean | undefined = undefined;
+  /**
+   * To control target environments (AWS Account and Region) for the given `accessLogBucket` setting, you may optionally specify deployment targets.
+   * Leaving `deploymentTargets` undefined will apply `useCMK` setting to all accounts and enabled regions.
+   */
+  readonly deploymentTargets: t.DeploymentTargets | undefined = undefined;
   /**
    * JSON policy files.
    *
@@ -2211,6 +2310,27 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    * ```
    */
   readonly lambda: LambdaConfig | undefined = undefined;
+
+  /**
+   * AWS S3 global configuration options.
+   *
+   * @remarks
+   * You can decide to create AWS KMS CMK for AWS S3 server side encryption.  When this property is undefined, the solution will deploy AWS KMS CMK to encrypt AWS S3 bucket.
+   * You can use `deploymentTargets` to control target accounts and regions for the given `createCMK` configuration.
+   * This configuration is not applicable to LogArchive's central logging region, because the solution deployed CentralLogs bucket always encrypted with AWS KMS CMK.
+   *
+   *  For more information please see [here](https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingEncryption.html)
+   *
+   * @example
+   * ```
+   * s3:
+   *   createCMK: true
+   *   deploymentTargets:
+   *     organizationalUnits:
+   *       - Root
+   * ```
+   */
+  readonly s3: S3GlobalConfig | undefined = undefined;
 
   /**
    *

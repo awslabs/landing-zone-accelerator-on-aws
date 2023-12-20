@@ -82,6 +82,16 @@ controlTower:
 cdkOptions:
   centralizeBuckets: true
   useManagementAccessRole: true
+s3:
+  encryption:
+    createCMK: true
+    deploymentTargets:
+      accounts:
+        - Management
+      organizationalUnits:
+        - Security
+      excludedRegions:
+        - us-west-2  
 logging:
   account: LogArchive
   centralizedLoggingRegion: us-west-2
@@ -148,7 +158,15 @@ logging:
       - policy: bucket-policies/central-log-bucket.json
 
   accessLogBucket:
-    importedBucket:
+    enable: true
+    deploymentTargets:
+      accounts:
+        - Management
+      organizationalUnits:
+        - Security
+      excludedRegions:
+        - us-west-2
+    importedBucket: 
       name: existing-access-logs-bucket-${ACCOUNT_ID}-${REGION}
     customPolicyOverrides:
       policy: bucket-policies/full-access-log-bucket.json
