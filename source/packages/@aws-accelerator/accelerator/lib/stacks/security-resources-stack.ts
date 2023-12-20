@@ -17,7 +17,14 @@ import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import path from 'path';
 import { Tag as ConfigRuleTag } from '@aws-sdk/client-config-service';
-import { AccountCloudTrailConfig, AwsConfigRuleSet, ConfigRule, Region, Tag } from '@aws-accelerator/config';
+import {
+  AccountCloudTrailConfig,
+  AwsConfigRuleSet,
+  ConfigRule,
+  Region,
+  Tag,
+  IsPublicSsmDoc,
+} from '@aws-accelerator/config';
 
 import {
   ConfigServiceRecorder,
@@ -839,16 +846,21 @@ export class SecurityResourcesStack extends AcceleratorStack {
       });
     }
 
+    let remediationTargetId = `arn:${cdk.Stack.of(this).partition}:ssm:${cdk.Stack.of(this).region}:${
+      rule.remediation.targetAccountName
+        ? this.props.accountsConfig.getAccountId(rule.remediation.targetAccountName)
+        : this.props.accountsConfig.getAuditAccountId()
+    }:document/${rule.remediation.targetId}`;
+
+    if (IsPublicSsmDoc(rule.remediation.targetId)) {
+      remediationTargetId = rule.remediation.targetId;
+    }
+
     new cdk.aws_config.CfnRemediationConfiguration(this, pascalCase(rule.name) + '-Remediation', {
       configRuleName: rule.name,
-      targetId: `arn:${cdk.Stack.of(this).partition}:ssm:${cdk.Stack.of(this).region}:${
-        rule.remediation.targetAccountName
-          ? this.props.accountsConfig.getAccountId(rule.remediation.targetAccountName)
-          : this.props.accountsConfig.getAuditAccountId()
-      }:document/${rule.remediation.targetId}`,
+      targetId: remediationTargetId,
       targetVersion: rule.remediation.targetVersion,
       targetType: 'SSM_DOCUMENT',
-
       automatic: rule.remediation.automatic,
       maximumAutomaticAttempts: rule.remediation.maximumAutomaticAttempts,
       retryAttemptSeconds: rule.remediation.retryAttemptSeconds,

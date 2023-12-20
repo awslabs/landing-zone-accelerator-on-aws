@@ -24,6 +24,7 @@ import {
   EbsDefaultVolumeEncryptionConfig,
   SecurityConfig,
   SecurityConfigTypes,
+  IsPublicSsmDoc,
 } from '../lib/security-config';
 import { CommonValidatorFunctions } from './common/common-validator-functions';
 
@@ -54,6 +55,9 @@ export class SecurityConfigValidator {
     //
     // Get list of Account names from account config file
     const accountNames = this.getAccountNames(accountsConfig);
+
+    // Validate SSM document name
+    this.validateSsmDocumentNames(ssmDocuments, errors);
 
     // Validate presence of SSM document files
     this.validateSsmDocumentFiles(configDir, ssmDocuments, errors);
@@ -763,20 +767,41 @@ export class SecurityConfigValidator {
   ) {
     for (const rule of ruleSet.rules) {
       if (rule.remediation) {
-        // Validate presence of SSM document before used as remediation target
-        if (!ssmDocuments.find(item => item.name === rule.remediation?.targetId)) {
-          errors.push(
-            `Rule: ${rule.name}, remediation target SSM document ${rule.remediation?.targetId} not found in ssm automation document lists`,
-          );
-          // Validate presence of custom rule's remediation SSM document invoke lambda function zip file
-          if (rule.remediation.targetDocumentLambda) {
-            if (!fs.existsSync(path.join(configDir, rule.remediation.targetDocumentLambda.sourceFilePath))) {
-              errors.push(
-                `Rule: ${rule.name}, remediation target SSM document lambda function file ${rule.remediation.targetDocumentLambda.sourceFilePath} not found`,
-              );
+        if (!IsPublicSsmDoc(rule.remediation.targetId)) {
+          // Validate presence of SSM document before used as remediation target
+          if (!ssmDocuments.find(item => item.name === rule.remediation?.targetId)) {
+            errors.push(
+              `Rule: ${rule.name}, remediation target SSM document ${rule.remediation?.targetId} not found in ssm automation document lists`,
+            );
+            // Validate presence of custom rule's remediation SSM document invoke lambda function zip file
+            if (rule.remediation.targetDocumentLambda) {
+              if (!fs.existsSync(path.join(configDir, rule.remediation.targetDocumentLambda.sourceFilePath))) {
+                errors.push(
+                  `Rule: ${rule.name}, remediation target SSM document lambda function file ${rule.remediation.targetDocumentLambda.sourceFilePath} not found`,
+                );
+              }
             }
           }
         }
+      }
+    }
+  }
+
+  /**
+   *
+   */
+  private validateSsmDocumentNames(
+    ssmDocuments: t.TypeOf<typeof SecurityConfigTypes.documentConfig>[],
+    errors: string[],
+  ) {
+    // check if document name falls under the regex specified by API for SSM CreateDocument
+    // ref: https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_CreateDocument.html#systemsmanager-CreateDocument-request-Name
+    const ssmDocumentNameRegex = /^[a-zA-Z0-9_\-.:/]{3,128}$/;
+    for (const document of ssmDocuments) {
+      if (!ssmDocumentNameRegex.test(document.name)) {
+        errors.push(
+          `SSM document: ${document.name} has does not conform with regular expression for Name in CreateDocument API call`,
+        );
       }
     }
   }

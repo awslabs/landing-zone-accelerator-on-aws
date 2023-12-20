@@ -495,6 +495,21 @@ awsConfig:
           complianceResourceTypes:
             - AWS::S3::Bucket
           identifier: S3_BUCKET_DEFAULT_LOCK_ENABLED
+        - name: accelerator-duplicate-s3-rule
+          identifier: S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED
+          remediation:
+            automatic: true
+            targetId: AWS-EnableS3BucketEncryption
+            rolePolicyFile: custom-config-rules/enable-s3-encryption.json
+            retryAttemptSeconds: 60
+            maximumAutomaticAttempts: 5
+            parameters:
+              - name: BucketName
+                value: RESOURCE_ID
+                type: String
+              - name: SSEAlgorithm
+                value: AES256
+                type: String
 cloudWatch:
   logGroups:
     - logGroupName: /App/Test1
