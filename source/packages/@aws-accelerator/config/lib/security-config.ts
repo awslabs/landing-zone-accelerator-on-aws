@@ -2854,3 +2854,23 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
     }
   }
 }
+
+/**
+ * Function to validate remediation rule name in security-config
+ * @param remediationRule: SecurityConfigTypes.configRuleRemediationType
+ * @param errors
+ * @returns boolean
+ */
+export function IsPublicSsmDoc(documentName: string) {
+  // any document starting with AWS- prefix is amazon owned document
+  // Ref: https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_CreateDocument.html#API_CreateDocument_RequestSyntax
+  // You can't use the following strings as document name prefixes. These are reserved by AWS for use as document name prefixes:
+  // - aws
+  // - amazon
+  // - amzn
+  const reservedPrefix = [/^AWS/i, /^AMZN/i, /^AMAZON/i];
+  if (reservedPrefix.some(obj => obj.test(documentName))) {
+    return true;
+  }
+  return false;
+}

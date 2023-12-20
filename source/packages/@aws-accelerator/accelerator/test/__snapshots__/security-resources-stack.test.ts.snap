@@ -631,6 +631,133 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       },
       "Type": "AWS::Config::ConfigRule",
     },
+    "AcceleratorDuplicateS3RuleAFE3802F": {
+      "DependsOn": [
+        "ConfigRecorder",
+      ],
+      "Properties": {
+        "ConfigRuleName": "accelerator-duplicate-s3-rule",
+        "InputParameters": {},
+        "Scope": {
+          "ComplianceResourceTypes": [],
+        },
+        "Source": {
+          "Owner": "AWS",
+          "SourceIdentifier": "S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorDuplicateS3RuleRemediation": {
+      "DependsOn": [
+        "AcceleratorDuplicateS3RuleAFE3802F",
+      ],
+      "Properties": {
+        "Automatic": true,
+        "ConfigRuleName": "accelerator-duplicate-s3-rule",
+        "MaximumAutomaticAttempts": 5,
+        "Parameters": {
+          "AutomationAssumeRole": {
+            "StaticValue": {
+              "Values": [
+                {
+                  "Fn::GetAtt": [
+                    "AcceleratorDuplicateS3RuleRemediationRole22D2D45F",
+                    "Arn",
+                  ],
+                },
+              ],
+            },
+          },
+          "BucketName": {
+            "ResourceValue": {
+              "Value": "RESOURCE_ID",
+            },
+          },
+          "SSEAlgorithm": {
+            "StaticValue": {
+              "Values": [
+                "AES256",
+              ],
+            },
+          },
+        },
+        "RetryAttemptSeconds": 60,
+        "TargetId": "AWS-EnableS3BucketEncryption",
+        "TargetType": "SSM_DOCUMENT",
+      },
+      "Type": "AWS::Config::RemediationConfiguration",
+    },
+    "AcceleratorDuplicateS3RuleRemediationRole22D2D45F": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ssm.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AcceleratorDuplicateS3RuleRemediationRoleDefaultPolicy6664FFB9": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "AWS Config rule remediation role, created by the permission provided in config repository",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "ssm:GetAutomationExecution",
+                "ssm:StartAutomationExecution",
+                "ssm:GetParameters",
+                "ssm:GetParameter",
+                "ssm:PutParameter",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":ssm:us-east-1:222222222222:document/AWS-EnableS3BucketEncryption",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": "s3:PutBucketEncryption",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "AcceleratorDuplicateS3RuleRemediationRoleDefaultPolicy6664FFB9",
+        "Roles": [
+          {
+            "Ref": "AcceleratorDuplicateS3RuleRemediationRole22D2D45F",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
     "AcceleratorDynamodbTableEncryptedKms3EE6CD77": {
       "DependsOn": [
         "ConfigRecorder",

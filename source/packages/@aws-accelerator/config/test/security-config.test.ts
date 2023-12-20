@@ -36,6 +36,7 @@ import {
   AlarmSetConfig,
   EncryptionConfig,
   LogGroupsConfig,
+  IsPublicSsmDoc,
 } from '../lib/security-config';
 
 describe('SecurityConfig', () => {
@@ -103,4 +104,9 @@ describe('should return right values for correct config', () => {
   );
   const securityConfigFromString = SecurityConfig.loadFromString(buffer);
   expect(securityConfigFromString?.awsConfig.enableConfigurationRecorder).toBe(true);
+});
+
+describe('isPublicSsmDoc', () => {
+  expect(IsPublicSsmDoc('AWSDoc')).toBeTruthy();
+  expect(IsPublicSsmDoc('Doc')).toBeFalsy();
 });
