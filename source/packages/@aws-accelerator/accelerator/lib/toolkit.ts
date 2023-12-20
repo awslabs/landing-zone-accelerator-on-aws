@@ -415,7 +415,7 @@ export class AcceleratorToolkit {
     stageName: AcceleratorStage,
     props: { stage: string; accountId?: string; region?: string },
   ) {
-    if (AcceleratorStage.DIAGNOSTICS_PACK) {
+    if (stageName === AcceleratorStage.DIAGNOSTICS_PACK) {
       return process.env['ACCELERATOR_QUALIFIER']
         ? `${process.env['ACCELERATOR_QUALIFIER']}-DiagnosticsPackStack-${props.accountId}-${props.region}`
         : `${AcceleratorStackNames[props.stage]}-${props.accountId}-${props.region}`;
