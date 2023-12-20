@@ -1385,16 +1385,28 @@ export class OperationsStack extends AcceleratorStack {
   ): Bucket | undefined {
     if (firewallRoles.length > 0) {
       // Create firewall config bucket
+      const serverAccessLogsBucketName = this.getServerAccessLogsBucketName();
       const firewallConfigBucket = new Bucket(this, 'FirewallConfigBucket', {
         s3BucketName: `${this.acceleratorResourceNames.bucketPrefixes.firewallConfig}-${cdk.Stack.of(this).account}-${
           cdk.Stack.of(this).region
         }`,
-        encryptionType: BucketEncryptionType.SSE_KMS,
-        kmsKey: this.getAcceleratorKey(AcceleratorKeyType.S3_KEY),
-        serverAccessLogsBucketName: `${this.acceleratorResourceNames.bucketPrefixes.s3AccessLogs}-${
-          cdk.Stack.of(this).account
-        }-${cdk.Stack.of(this).region}`,
+        encryptionType: this.isS3CMKEnabled ? BucketEncryptionType.SSE_KMS : BucketEncryptionType.SSE_S3,
+        kmsKey: this.isS3CMKEnabled ? this.getAcceleratorKey(AcceleratorKeyType.S3_KEY)! : undefined,
+        serverAccessLogsBucketName,
       });
+
+      if (!serverAccessLogsBucketName) {
+        // AwsSolutions-S1: The S3 Bucket has server access logs disabled
+        this.nagSuppressionInputs.push({
+          id: NagSuppressionRuleIds.S1,
+          details: [
+            {
+              path: `/${this.stackName}/FirewallConfigBucket/Resource/Resource`,
+              reason: 'Due to configuration settings, server access logs have been disabled.',
+            },
+          ],
+        });
+      }
 
       // Create IAM policy and role for config replacement custom resource
       this.createFirewallConfigCustomResourceRole(props, firewallConfigBucket, assetBucketKmsKey);

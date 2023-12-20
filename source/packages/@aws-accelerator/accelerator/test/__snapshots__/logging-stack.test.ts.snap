@@ -4495,91 +4495,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       "Type": "Custom::CreateServiceLinkedRole",
       "UpdateReplacePolicy": "Delete",
     },
-    "Accelerator3KeyAliasA5E4BDCB": {
-      "Properties": {
-        "AliasName": "alias/accelerator/kms/s3/key",
-        "TargetKeyId": {
-          "Fn::GetAtt": [
-            "Accelerator3KeyBF43FCD9",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::KMS::Alias",
-    },
-    "Accelerator3KeyBF43FCD9": {
-      "DeletionPolicy": "Retain",
-      "Properties": {
-        "Description": "AWS Accelerator S3 Kms Key",
-        "EnableKeyRotation": true,
-        "KeyPolicy": {
-          "Statement": [
-            {
-              "Action": "kms:*",
-              "Effect": "Allow",
-              "Principal": {
-                "AWS": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:",
-                      {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::333333333333:root",
-                    ],
-                  ],
-                },
-              },
-              "Resource": "*",
-            },
-            {
-              "Action": [
-                "kms:Encrypt",
-                "kms:Decrypt",
-                "kms:ReEncrypt*",
-                "kms:GenerateDataKey",
-                "kms:Describe*",
-              ],
-              "Condition": {
-                "StringEquals": {
-                  "aws:PrincipalOrgID": "o-asdf123456",
-                  "kms:ViaService": "s3.us-west-2.amazonaws.com",
-                },
-              },
-              "Effect": "Allow",
-              "Principal": {
-                "AWS": "*",
-              },
-              "Resource": "*",
-              "Sid": "Allow S3 to use the encryption key",
-            },
-            {
-              "Action": [
-                "kms:Decrypt",
-                "kms:DescribeKey",
-                "kms:Encrypt",
-                "kms:GenerateDataKey",
-                "kms:GenerateDataKeyPair",
-                "kms:GenerateDataKeyPairWithoutPlaintext",
-                "kms:GenerateDataKeyWithoutPlaintext",
-                "kms:ReEncryptFrom",
-                "kms:ReEncryptTo",
-              ],
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "delivery.logs.amazonaws.com",
-              },
-              "Resource": "*",
-              "Sid": "Allow AWS Services to encrypt and describe logs",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::KMS::Key",
-      "UpdateReplacePolicy": "Retain",
-    },
     "AcceleratorCentralSnsKmsArnParameter4E5BD663": {
       "Properties": {
         "Name": "/accelerator/kms/snstopic/key-arn",
@@ -4677,19 +4592,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         },
       },
       "Type": "AWS::KMS::Alias",
-    },
-    "AcceleratorS3KmsArnParameter82C4C525": {
-      "Properties": {
-        "Name": "/accelerator/kms/s3/key-arn",
-        "Type": "String",
-        "Value": {
-          "Fn::GetAtt": [
-            "Accelerator3KeyBF43FCD9",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
     },
     "AcceleratorSnsTopicKey4E909F1D": {
       "DeletionPolicy": "Delete",

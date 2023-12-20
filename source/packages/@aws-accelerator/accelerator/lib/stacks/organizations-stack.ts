@@ -281,12 +281,14 @@ export class OrganizationsStack extends AcceleratorStack {
     if (this.stackProperties.globalConfig.reports?.costAndUsageReport && this.props.partition != 'aws-us-gov') {
       this.logger.info('Adding Cost and Usage Reports');
 
+      const serverAccessLogsBucketName = this.getServerAccessLogsBucketName();
+
       const reportBucket = new Bucket(this, 'ReportBucket', {
         encryptionType: BucketEncryptionType.SSE_S3, // CUR does not support KMS CMK
         s3BucketName: `${this.acceleratorResourceNames.bucketPrefixes.costUsage}-${cdk.Stack.of(this).account}-${
           cdk.Stack.of(this).region
         }`,
-        serverAccessLogsBucketName: this.getServerAccessLogsBucketName(),
+        serverAccessLogsBucketName,
         s3LifeCycleRules: this.getS3LifeCycleRules(
           this.stackProperties.globalConfig.reports.costAndUsageReport.lifecycleRules,
         ),
@@ -306,6 +308,19 @@ export class OrganizationsStack extends AcceleratorStack {
           },
         ],
       });
+
+      if (!serverAccessLogsBucketName) {
+        // AwsSolutions-S1: The S3 Bucket has server access logs disabled
+        this.nagSuppressionInputs.push({
+          id: NagSuppressionRuleIds.S1,
+          details: [
+            {
+              path: `/${this.stackName}/ReportBucket/Resource/Resource`,
+              reason: 'Due to configuration settings, server access logs have been disabled.',
+            },
+          ],
+        });
+      }
 
       new ReportDefinition(this, 'ReportDefinition', {
         compression: this.stackProperties.globalConfig.reports.costAndUsageReport.compression,

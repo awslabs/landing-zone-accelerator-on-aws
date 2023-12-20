@@ -147,6 +147,19 @@ export class GlobalConfigValidator {
       this.validateCentralLogsS3Policy(configDir, values, errors);
       this.validateElbLogsS3Policy(configDir, values, errors);
     }
+
+    //
+    // Validate AccessLogs bucket configuration
+    //
+    this.validateAccessLogsBucketConfigDeploymentTargetOUs(values, ouIdNames, errors);
+    this.validateAccessLogsBucketConfigDeploymentTargetAccounts(values, accountNames, errors);
+
+    //
+    // Validate S3 configuration
+    //
+    this.validateS3ConfigDeploymentTargetOUs(values, ouIdNames, errors);
+    this.validateS3ConfigDeploymentTargetAccounts(values, accountNames, errors);
+
     if (errors.length) {
       throw new Error(`${GlobalConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
     }
@@ -684,6 +697,86 @@ export class GlobalConfigValidator {
             `Adding policy will make the Access Log S3 Bucket public and conflicts with the Block Public Access setting.`,
           );
         }
+      }
+    }
+  }
+
+  /**
+   * Function to validate existence of S3 configuration deployment target Accounts
+   * Make sure deployment target Accounts are part of account config file
+   * @param values
+   */
+  private validateS3ConfigDeploymentTargetAccounts(values: GlobalConfig, accountNames: string[], errors: string[]) {
+    if (!values.s3?.encryption?.deploymentTargets) {
+      return;
+    }
+    for (const account of values.s3.encryption.deploymentTargets.accounts ?? []) {
+      if (accountNames.indexOf(account) === -1) {
+        errors.push(
+          `Deployment target account ${account} for S3 encryption configuration does not exists in accounts-config.yaml file.`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Function to validate existence of S3 bucket config deployment target OUs
+   * Make sure deployment target OUs are part of Organization config file
+   * @param values
+   */
+  private validateS3ConfigDeploymentTargetOUs(values: GlobalConfig, ouIdNames: string[], errors: string[]) {
+    if (!values.s3?.encryption?.deploymentTargets) {
+      return;
+    }
+    for (const ou of values.s3.encryption.deploymentTargets.organizationalUnits ?? []) {
+      if (ouIdNames.indexOf(ou) === -1) {
+        errors.push(
+          `Deployment target OU ${ou} for S3 encryption configuration does not exist in organization-config.yaml file.`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Function to validate existence of AccessLogs bucket configuration deployment target Accounts
+   * Make sure deployment target Accounts are part of account config file
+   * @param values
+   */
+  private validateAccessLogsBucketConfigDeploymentTargetAccounts(
+    values: GlobalConfig,
+    accountNames: string[],
+    errors: string[],
+  ) {
+    if (!values.logging.accessLogBucket?.deploymentTargets) {
+      return;
+    }
+    for (const account of values.logging.accessLogBucket.deploymentTargets.accounts ?? []) {
+      if (accountNames.indexOf(account) === -1) {
+        errors.push(
+          `Deployment target account ${account} for AccessLogs bucket encryption configuration does not exists in accounts-config.yaml file.`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Function to validate existence of AccessLogs bucket config deployment target OUs
+   * Make sure deployment target OUs are part of Organization config file
+   * @param values
+   */
+  private validateAccessLogsBucketConfigDeploymentTargetOUs(
+    values: GlobalConfig,
+    ouIdNames: string[],
+    errors: string[],
+  ) {
+    if (!values.logging.accessLogBucket?.deploymentTargets) {
+      return;
+    }
+    for (const ou of values.logging.accessLogBucket.deploymentTargets.organizationalUnits ?? []) {
+      if (ouIdNames.indexOf(ou) === -1) {
+        errors.push(
+          `Deployment target OU ${ou} for AccessLogs bucket configuration does not exist in organization-config.yaml file.`,
+        );
       }
     }
   }
