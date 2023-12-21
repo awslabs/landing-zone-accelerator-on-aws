@@ -5,7 +5,7 @@ The following configurations are provided as a starter configuration to help mee
 - Configurations
   - [Standard Configuration](lza-sample-config/README.md)
 - Regional Configurations
-  - [Canadian Centre for Cyber Security (CCCS) Cloud Medium](lza-sample-config-cccs-medium/readme.md)
+  - [Canadian Centre for Cyber Security (CCCS) Cloud Medium](https://github.com/aws-samples/landing-zone-accelerator-on-aws-for-cccs-medium)
   - [AWS GovCloud (US)](lza-sample-config-govcloud-us/README.md)
   - National security, defence, and national law enforcement (outside the US)
     - [Trusted Secure Enclaves Sensitive Edition (TSE-SE)](lza-sample-config-tse-se/readme.md)
