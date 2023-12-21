@@ -160,6 +160,31 @@ awsConfig:
   enableDeliveryChannel: true
   ruleSets:
     - deploymentTargets:
+        accounts:
+          - Management
+        organizationalUnits:
+          - Security
+        excludedRegions:
+          - us-west-2
+      rules:
+        - name: accelerator-s3-bucket-server-side-encryption-enabled
+          identifier: S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED
+          complianceResourceTypes:
+            - AWS::S3::Bucket
+          remediation:
+            rolePolicyFile: custom-config-rules/bucket-sse-enabled-remediation-role.json
+            automatic: true
+            targetId: Put-S3-Encryption
+            retryAttemptSeconds: 60
+            maximumAutomaticAttempts: 5
+            parameters:
+              - name: BucketName
+                value: RESOURCE_ID
+                type: String
+              - name: KMSMasterKey
+                value: ${ACCEL_LOOKUP::KMS}
+                type: StringList
+    - deploymentTargets:
         organizationalUnits:
           - Root
       rules:
@@ -300,24 +325,7 @@ awsConfig:
                 type: StringList
               # - name: CustomerManagedPolicies
               #   value: ${ACCEL_LOOKUP::CustomerManagedPolicy:policy-00},${ACCEL_LOOKUP::CustomerManagedPolicy:policy-01}
-              #   type: StringList
-        - name: accelerator-s3-bucket-server-side-encryption-enabled
-          identifier: S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED
-          complianceResourceTypes:
-            - AWS::S3::Bucket
-          remediation:
-            rolePolicyFile: custom-config-rules/bucket-sse-enabled-remediation-role.json
-            automatic: true
-            targetId: Put-S3-Encryption
-            retryAttemptSeconds: 60
-            maximumAutomaticAttempts: 5
-            parameters:
-              - name: BucketName
-                value: RESOURCE_ID
-                type: String
-              - name: KMSMasterKey
-                value: ${ACCEL_LOOKUP::KMS}
-                type: StringList
+              #   type: StringList        
         - name: accelerator-elb-logging-enabled
           identifier: ELB_LOGGING_ENABLED
           complianceResourceTypes:

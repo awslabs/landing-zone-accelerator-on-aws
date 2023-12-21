@@ -25,6 +25,7 @@ import {
   SecurityConfig,
   SecurityConfigTypes,
   IsPublicSsmDoc,
+  ConfigRule,
 } from '../lib/security-config';
 import { CommonValidatorFunctions } from './common/common-validator-functions';
 
@@ -117,6 +118,8 @@ export class SecurityConfigValidator {
     this.validateAwsCloudWatchLogGroupsRetention(values, errors);
     this.validateResourcePolicyEnforcementConfig(values, ouIdNames, accountNames, errors);
     this.validateResourcePolicyParameters(configDir, values, replacementsConfig, errors);
+
+    this.validateConfigRuleCmkDependency(values, globalConfig, accountsConfig, errors);
 
     if (errors.length) {
       throw new Error(`${SecurityConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
@@ -957,5 +960,69 @@ export class SecurityConfigValidator {
       new Set([RESERVED_STATIC_PARAMETER_FOR_RESOURCE_POLICY]),
       errors,
     );
+  }
+
+  /**
+   * Function to validate AWS Config rules do not use solution defined CMK when global config s3 encryption was disabled.
+   * @param securityConfig
+   * @param globalConfig
+   * @param accountConfig
+   * @param errors
+   * @returns
+   */
+  private validateConfigRuleCmkDependency(
+    securityConfig: SecurityConfig,
+    globalConfig: GlobalConfig,
+    accountConfig: AccountsConfig,
+    errors: string[],
+  ) {
+    if (!globalConfig.s3?.encryption?.deploymentTargets) {
+      return;
+    }
+
+    for (const ruleSet of securityConfig.awsConfig.ruleSets) {
+      for (const rule of ruleSet.rules) {
+        if (this.isConfigRuleCmkDependent(rule)) {
+          const ruleEnvFromDeploymentTarget = CommonValidatorFunctions.getEnvironmentsFromDeploymentTarget(
+            accountConfig,
+            ruleSet.deploymentTargets,
+            globalConfig,
+          );
+          const s3EncryptionEnvFromDeploymentTarget = CommonValidatorFunctions.getEnvironmentsFromDeploymentTarget(
+            accountConfig,
+            globalConfig.s3.encryption.deploymentTargets,
+            globalConfig,
+          );
+
+          const compareDeploymentEnvironments = CommonValidatorFunctions.compareDeploymentEnvironments(
+            ruleEnvFromDeploymentTarget,
+            s3EncryptionEnvFromDeploymentTarget,
+          );
+
+          if (!compareDeploymentEnvironments.match) {
+            errors.push(
+              `There is a parameter in the security-config.yaml file that refers to the solution created KMS encryption replacement ACCEL_LOOKUP::KMS for the remediation Lambda function for AWS Config rule ${rule.name}, however, global-config.yaml disables the creation of CMK.`,
+            );
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to check if given config rule uses solution deployed CMK replacement
+   * @param rule
+   * @returns
+   */
+  private isConfigRuleCmkDependent(rule: ConfigRule): ConfigRule | undefined {
+    for (const parameter of rule.remediation?.parameters ?? []) {
+      for (const [value] of Object.entries(parameter)) {
+        if (parameter[value] === '${ACCEL_LOOKUP::KMS}') {
+          return rule;
+        }
+      }
+    }
+
+    return undefined;
   }
 }
