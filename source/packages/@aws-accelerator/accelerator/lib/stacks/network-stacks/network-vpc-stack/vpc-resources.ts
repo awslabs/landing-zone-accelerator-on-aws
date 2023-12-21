@@ -38,7 +38,7 @@ import { getVpc, getVpcConfig } from '../utils/getter-utils';
 import { isIpv4 } from '../utils/validation-utils';
 
 export class VpcResources {
-  public readonly deleteDefaultVpc: boolean;
+  public readonly deleteDefaultVpc?: DeleteDefaultVpc;
   public readonly sharedParameterMap: Map<string, SsmParameterProps[]>;
   public readonly vpcMap: Map<string, Vpc>;
   public readonly vpnMap: Map<string, string>;
@@ -83,19 +83,18 @@ export class VpcResources {
    * @param props
    * @returns
    */
-  private deleteDefaultVpcMethod(defaultVpc: DefaultVpcsConfig): boolean {
+  private deleteDefaultVpcMethod(defaultVpc: DefaultVpcsConfig): DeleteDefaultVpc | undefined {
     const accountExcluded = defaultVpc.excludeAccounts && this.stack.isAccountExcluded(defaultVpc.excludeAccounts);
     const regionExcluded = defaultVpc.excludeRegions && this.stack.isRegionExcluded(defaultVpc.excludeRegions);
 
     if (defaultVpc.delete && !accountExcluded && !regionExcluded) {
       this.stack.addLogs(LogLevel.INFO, 'Add DeleteDefaultVpc');
-      new DeleteDefaultVpc(this.stack, 'DeleteDefaultVpc', {
+      return new DeleteDefaultVpc(this.stack, 'DeleteDefaultVpc', {
         kmsKey: this.stack.cloudwatchKey,
         logRetentionInDays: this.stack.logRetention,
       });
-      return true;
     }
-    return false;
+    return;
   }
 
   /**
@@ -434,6 +433,10 @@ export class VpcResources {
     // Delete default security group rules
     //
     this.deleteDefaultSgRules(vpc, vpcItem);
+    //
+    // Add dependency on default VPC deletion
+    //
+    this.addDefaultVpcDependency(vpc, vpcItem);
     return vpc;
   }
 
@@ -673,6 +676,19 @@ export class VpcResources {
       return true;
     }
     return false;
+  }
+
+  /**
+   * Add dependency on deleting the default VPC to reduce risk of exceeding service limits
+   * @param vpc
+   * @param vpcItem
+   * @returns
+   */
+  private addDefaultVpcDependency(vpc: Vpc, vpcItem: VpcConfig | VpcTemplatesConfig): void {
+    if (this.deleteDefaultVpc) {
+      this.stack.addLogs(LogLevel.INFO, `Adding dependency on deletion of the default VPC for ${vpcItem.name}`);
+      vpc.node.addDependency(this.deleteDefaultVpc);
+    }
   }
 
   /**

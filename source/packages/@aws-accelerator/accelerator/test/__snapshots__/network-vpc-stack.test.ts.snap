@@ -1085,6 +1085,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::RAM::ResourceShare",
     },
     "NetworkEndpointsVpc619A1F01": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
       "Properties": {
         "EnableDnsHostnames": true,
         "EnableDnsSupport": true,
@@ -1107,6 +1110,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::VPC",
     },
     "NetworkEndpointsVpcCloudWatchFlowLogEB41E61E": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
       "Properties": {
         "DeliverLogsPermissionArn": {
           "Fn::GetAtt": [
@@ -1137,6 +1143,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::FlowLog",
     },
     "NetworkEndpointsVpcDhcpOptionsAssociationC9A5CF5F": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
       "Properties": {
         "DhcpOptionsId": {
           "Ref": "AcceleratorDhcpOptsDhcpOpts09C66A89",
@@ -1149,6 +1158,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "NetworkEndpointsVpcFlowLogsGroupB21A3331": {
       "DeletionPolicy": "Retain",
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
       "Properties": {
         "RetentionInDays": 3653,
         "Tags": [
@@ -1162,6 +1174,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Retain",
     },
     "NetworkEndpointsVpcFlowLogsRole2614AF13": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -1185,6 +1200,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Role",
     },
     "NetworkEndpointsVpcFlowLogsRoleDefaultPolicyA9F3924A": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
       "Properties": {
         "PolicyDocument": {
           "Statement": [
@@ -1219,6 +1237,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Policy",
     },
     "NetworkEndpointsVpcInternetGateway6505072B": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
       "Properties": {
         "Tags": [
           {
@@ -1230,6 +1251,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::InternetGateway",
     },
     "NetworkEndpointsVpcInternetGatewayAttachment8B5DCF4D": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
       "Properties": {
         "InternetGatewayId": {
           "Ref": "NetworkEndpointsVpcInternetGateway6505072B",
@@ -1966,6 +1990,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::RouteTable",
     },
     "NetworkEndpointsVpcS3FlowLog1207DE15": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
       "Properties": {
         "LogDestination": {
           "Fn::Join": [
@@ -2215,6 +2242,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::TransitGatewayVpcAttachment",
     },
     "NetworkEndpointsVpcVirtualPrivateGateway2CE2FFC3": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
       "Properties": {
         "AmazonSideAsn": 65200,
         "Tags": [
@@ -2228,6 +2258,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::VPNGateway",
     },
     "NetworkEndpointsVpcVirtualPrivateGatewayAttachment01185FBA": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
       "Properties": {
         "VpcId": {
           "Ref": "NetworkEndpointsVpc619A1F01",
@@ -2239,6 +2272,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::VPCGatewayAttachment",
     },
     "NetworkEndpointsVpcVpcCidrBlockC483B99B": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
       "Properties": {
         "Ipv4IpamPoolId": {
           "Ref": "SsmParameterValueacceleratornetworkipampoolshomeregionprodpoolidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -2278,6 +2314,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::VPNConnection",
     },
     "NetworkInspectionVpc302E00C0": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
       "Properties": {
         "CidrBlock": "10.2.0.0/22",
         "EnableDnsHostnames": true,
@@ -2380,6 +2419,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::NatGateway",
     },
     "NetworkInspectionVpcCloudWatchFlowLog2C44FB5C": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
       "Properties": {
         "DeliverLogsPermissionArn": {
           "Fn::GetAtt": [
@@ -2451,6 +2493,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "NetworkInspectionVpcFlowLogsGroupAF8DE105": {
       "DeletionPolicy": "Retain",
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
       "Properties": {
         "RetentionInDays": 3653,
         "Tags": [
@@ -2472,6 +2517,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Retain",
     },
     "NetworkInspectionVpcFlowLogsRole07B5123D": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -2503,6 +2551,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Role",
     },
     "NetworkInspectionVpcFlowLogsRoleDefaultPolicyCCB53259": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
       "Properties": {
         "PolicyDocument": {
           "Statement": [
@@ -2537,6 +2588,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Policy",
     },
     "NetworkInspectionVpcInternetGateway6D8C30C4": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
       "Properties": {
         "Tags": [
           {
@@ -2556,6 +2610,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::InternetGateway",
     },
     "NetworkInspectionVpcInternetGatewayAttachment6A85212A": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
       "Properties": {
         "InternetGatewayId": {
           "Ref": "NetworkInspectionVpcInternetGateway6D8C30C4",
@@ -2813,6 +2870,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::RouteTable",
     },
     "NetworkInspectionVpcS3FlowLogC404C8FC": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
       "Properties": {
         "LogDestination": {
           "Fn::Join": [
@@ -2880,6 +2940,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::TransitGatewayVpcAttachment",
     },
     "NetworkInspectionVpcVirtualPrivateGatewayAttachment8507FAB6": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
       "Properties": {
         "VpcId": {
           "Ref": "NetworkInspectionVpc302E00C0",
@@ -2891,6 +2954,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::VPCGatewayAttachment",
     },
     "NetworkInspectionVpcVirtualPrivateGatewayB665C776": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
       "Properties": {
         "AmazonSideAsn": 65000,
         "Tags": [
@@ -2912,6 +2978,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::VPNGateway",
     },
     "NetworkInspectionVpcVpcCidrBlock343B2A17": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
       "Properties": {
         "CidrBlock": "10.3.0.0/16",
         "VpcId": {
@@ -2921,6 +2990,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::VPCCidrBlock",
     },
     "NetworkSecondaryVpc37FB1791": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
       "Properties": {
         "EnableDnsHostnames": true,
         "EnableDnsSupport": true,
@@ -2943,6 +3015,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::VPC",
     },
     "NetworkSecondaryVpcCloudWatchFlowLogFA128544": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
       "Properties": {
         "DeliverLogsPermissionArn": {
           "Fn::GetAtt": [
@@ -2974,6 +3049,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "NetworkSecondaryVpcFlowLogsGroup3069B74B": {
       "DeletionPolicy": "Retain",
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
       "Properties": {
         "RetentionInDays": 3653,
         "Tags": [
@@ -2987,6 +3065,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Retain",
     },
     "NetworkSecondaryVpcFlowLogsRole8D6C92BF": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -3010,6 +3091,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Role",
     },
     "NetworkSecondaryVpcFlowLogsRoleDefaultPolicy8B098897": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
       "Properties": {
         "PolicyDocument": {
           "Statement": [
@@ -3388,6 +3472,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
     },
     "NetworkSecondaryVpcS3FlowLogA736115E": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
       "Properties": {
         "LogDestination": {
           "Fn::Join": [
