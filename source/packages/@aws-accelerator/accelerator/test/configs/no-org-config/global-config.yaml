@@ -1,0 +1,16 @@
+homeRegion: &HOME_REGION us-gov-west-1
+enabledRegions:
+  - *HOME_REGION
+managementAccountAccessRole: OrganizationAccountAccessRole
+cloudwatchLogRetentionInDays: 365
+terminationProtection: false
+controlTower:
+  enable: false
+logging:
+  account: LogArchive
+  cloudtrail:
+    enable: false
+    organizationTrail: false
+  sessionManager:
+    sendToCloudWatchLogs: false
+    sendToS3: false
