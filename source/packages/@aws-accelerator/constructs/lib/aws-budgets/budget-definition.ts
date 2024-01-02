@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import path from 'path';
+import { NotificationConfig } from '@aws-accelerator/config';
 
 type TimeUnit = 'DAILY' | 'WEEKLY' | 'MONTHLY' | string;
 
@@ -70,14 +71,7 @@ export interface BudgetDefinitionProps {
   /**
    * List of notifications.
    */
-  readonly notifications?: {
-    threshold: number;
-    thresholdType: 'PERCENTAGE' | 'ABSOLUTE_VALUE' | string;
-    type: 'ACTUAL' | 'FORECASTED' | string;
-    comparisonOperator: 'GREATER_THAN' | 'LESS_THAN' | string;
-    address: string;
-    subscriptionType: 'EMAIL' | 'SNS' | string;
-  }[];
+  readonly notifications?: NotificationConfig[];
   /**
    * The length of time until a budget resets the actual and forecasted spend.
    */
@@ -107,6 +101,15 @@ export interface BudgetDefinitionProps {
    * Custom resource lambda log retention in days
    */
   readonly logRetentionInDays: number;
+}
+
+export interface SubscribersDefination {
+  /**
+   * The total amount of costs, usage, RI utilization, RI coverage, Savings Plans utilization, or Savings Plans
+   * coverage that you want to track with your budget.
+   */
+  readonly subscriptionType: 'SNS' | 'EMAIL';
+  readonly address: string;
 }
 
 export class BudgetDefinition extends cdk.Resource {
@@ -144,12 +147,7 @@ export class BudgetDefinition extends cdk.Resource {
           threshold: notify.threshold,
           thresholdType: notify.thresholdType ?? undefined,
         },
-        subscribers: [
-          {
-            address: notify.address,
-            subscriptionType: notify.subscriptionType,
-          },
-        ],
+        subscribers: this.getRecipients(notify),
       };
       notificationsWithSubscribers.push(notificationWithSubscriber);
     }
@@ -235,5 +233,22 @@ export class BudgetDefinition extends cdk.Resource {
 
       this.id = resource.ref;
     }
+  }
+  private getRecipients(notify: NotificationConfig) {
+    const recipients: SubscribersDefination[] = [];
+    for (const recipient of notify.recipients ?? []) {
+      recipients.push({
+        subscriptionType: notify.subscriptionType,
+        address: recipient,
+      });
+    }
+    if (notify.address) {
+      recipients.push({
+        subscriptionType: notify.subscriptionType,
+        address: notify.address,
+      });
+    }
+    console.log(recipients);
+    return recipients;
   }
 }

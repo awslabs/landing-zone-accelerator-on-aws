@@ -1,5 +1,5 @@
 /**
- *  Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *  Copyright 2024 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance
  *  with the License. A copy of the License is located at
@@ -182,6 +182,7 @@ export abstract class GlobalConfigTypes {
     comparisonOperator: t.enums('ComparisonType', ['GREATER_THAN', 'LESS_THAN', 'EQUAL_TO']),
     threshold: t.optional(t.number),
     address: t.optional(t.nonEmptyString),
+    recipients: t.optional(t.array(t.nonEmptyString)),
     subscriptionType: t.enums('SubscriptionType', ['EMAIL', 'SNS']),
   });
 
@@ -1487,7 +1488,9 @@ export class CostAndUsageReportConfig implements t.TypeOf<typeof GlobalConfigTyp
  *         threshold: 90
  *         comparisonOperator: GREATER_THAN
  *         subscriptionType: EMAIL
- *         address: myemail+pa-budg@example.com
+ *         recipients:
+ *          - myemail+pa1-budg@example.com
+ *          - myemail+pa2-budg@example.com
  * ```
  */
 export class BudgetReportConfig implements t.TypeOf<typeof GlobalConfigTypes.budgetConfig> {
@@ -1594,20 +1597,67 @@ export class BudgetReportConfig implements t.TypeOf<typeof GlobalConfigTypes.bud
   /**
    * The comparison that's used for the notification that's associated with a budget.
    */
-  readonly notifications = [
-    {
-      type: '',
-      thresholdType: '',
-      comparisonOperator: '',
-      threshold: 90,
-      address: '',
-      subscriptionType: '',
-    },
-  ];
+  readonly notifications: NotificationConfig[] | undefined = [new NotificationConfig()];
   /**
    * List of OU's and accounts to be configured for Budgets configuration
    */
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
+}
+
+/**
+ * *{@link GlobalConfig} / {@link ReportConfig} / {@link BudgetReportConfig} / {@link NotificationConfig}*
+ *
+ * Notification configuration
+ *
+ * @example
+ * ```
+ * notifications:
+ *  - type: ACTUAL
+ *    thresholdType: PERCENTAGE
+ *    threshold: 90
+ *    comparisonOperator: GREATER_THAN
+ *    subscriptionType: EMAIL
+ *    recipients:
+ *     - myemail+pa1-budg@example.com
+ *     - myemail+pa2-budg@example.com
+ * ```
+ */
+export class NotificationConfig implements t.TypeOf<typeof GlobalConfigTypes.notificationConfig> {
+  /**
+   * The comparison that's used for the notification that's associated with a budget.
+   */
+  readonly type: 'ACTUAL' | 'FORECASTED' = 'ACTUAL';
+  /**
+   * The type of threshold for a notification.For ABSOLUTE_VALUE thresholds,
+   * AWS notifies you when you go over or are forecasted to go over your total cost threshold.
+   * For PERCENTAGE thresholds, AWS notifies you when you go over or are forecasted to go over a certain percentage of your forecasted spend.
+   * For example,if you have a budget for 200 dollars and you have a PERCENTAGE threshold of 80%, AWS notifies you when you go over 160 dollars.
+   */
+  readonly thresholdType: 'PERCENTAGE' | 'ABSOLUTE_VALUE' = 'PERCENTAGE';
+  /**
+   * The type of threshold associate with a notification.
+   */
+  readonly threshold: number = 90;
+  /**
+   * The comparison that's used for this notification.
+   */
+  readonly comparisonOperator: 'GREATER_THAN' | 'LESS_THAN' | 'EQUAL_TO' = 'GREATER_THAN';
+  /**
+   * The type of notification that AWS sends to a subscriber.
+   */
+  readonly subscriptionType: 'EMAIL' | 'SNS' = 'EMAIL';
+  /**
+   * The address that AWS sends budget notifications to, either an SNS topic or an email.
+   *
+   * @deprecated
+   * This is a temporary property and it has been deprecated.
+   * Please use recipients property to specify address for budget notifications.
+   */
+  readonly address: string | undefined = '';
+  /**
+   * The recipients list that AWS sends budget notifications to, either an SNS topic or an email.
+   */
+  readonly recipients: string[] | undefined = [];
 }
 
 /**

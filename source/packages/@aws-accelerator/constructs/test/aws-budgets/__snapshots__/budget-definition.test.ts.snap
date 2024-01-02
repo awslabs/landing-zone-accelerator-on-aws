@@ -85,6 +85,14 @@ exports[`BudgetDefinition Construct(BudgetDefinition):  Snapshot Test 1`] = `
                 "Address": "myemail+pa-budg@example.com",
                 "SubscriptionType": "EMAIL",
               },
+              {
+                "Address": "myemail+pa1-budg@example.com",
+                "SubscriptionType": "EMAIL",
+              },
+              {
+                "Address": "myemail+pa-budg@example.com",
+                "SubscriptionType": "EMAIL",
+              },
             ],
           },
         ],

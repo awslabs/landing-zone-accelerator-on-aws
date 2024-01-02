@@ -1609,8 +1609,8 @@ exports[`OperationsStack Construct(OperationsStack):  Snapshot Test 1`] = `
             },
             "Subscribers": [
               {
-                "Address": "myemail+pa-budg@example.com",
-                "SubscriptionType": "EMAIL",
+                "Address": "arn:aws:sns:us-east-1:111111111111:sample-budget",
+                "SubscriptionType": "SNS",
               },
             ],
           },
@@ -1623,8 +1623,8 @@ exports[`OperationsStack Construct(OperationsStack):  Snapshot Test 1`] = `
             },
             "Subscribers": [
               {
-                "Address": "myemail+pa-budg@example.com",
-                "SubscriptionType": "EMAIL",
+                "Address": "arn:aws:sns:us-east-1:111111111111:sample-budget",
+                "SubscriptionType": "SNS",
               },
             ],
           },
@@ -1638,6 +1638,10 @@ exports[`OperationsStack Construct(OperationsStack):  Snapshot Test 1`] = `
             "Subscribers": [
               {
                 "Address": "myemail+pa-budg@example.com",
+                "SubscriptionType": "EMAIL",
+              },
+              {
+                "Address": "myemail+pa1-budg@example.com",
                 "SubscriptionType": "EMAIL",
               },
             ],

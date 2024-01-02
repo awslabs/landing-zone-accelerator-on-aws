@@ -60,6 +60,10 @@ export class GlobalConfigValidator {
     //
     this.validateBudgetDeploymentTargetOUs(values, ouIdNames, errors);
     //
+    // budget subscribers address validation
+    //
+    this.validateBudgetSubscriberAddress(values, errors);
+    //
     // budget notification email validation
     //
     this.validateBudgetNotificationEmailIds(values, errors);
@@ -245,6 +249,22 @@ export class GlobalConfigValidator {
   }
 
   /**
+   * Function to validate budget subscriber address
+   * @param values
+   */
+  private validateBudgetSubscriberAddress(values: GlobalConfig, errors: string[]) {
+    for (const budget of values.reports?.budgets ?? []) {
+      for (const notification of budget.notifications ?? []) {
+        if (notification.address && notification.recipients) {
+          errors.push(`Cannot specify an address and a list of recipients for budget ${budget.name}.`);
+        } else if (!notification.address && !notification.recipients) {
+          errors.push(`Provide either an address or a list of recipients for budget ${budget.name}.`);
+        }
+      }
+    }
+  }
+
+  /**
    * Function to validate budget notification email address
    * @param values
    */
@@ -252,13 +272,29 @@ export class GlobalConfigValidator {
     for (const budget of values.reports?.budgets ?? []) {
       for (const notification of budget.notifications ?? []) {
         if (notification.subscriptionType === 'EMAIL') {
-          if (!emailValidator.validate(notification.address!)) {
+          if (Array.isArray(notification.recipients)) {
+            for (const recipient of notification.recipients) {
+              if (!emailValidator.validate(recipient)) {
+                errors.push(`Invalid report notification email ${recipient}.`);
+              }
+            }
+          } else if (!emailValidator.validate(notification.address!)) {
             errors.push(`Invalid report notification email ${notification.address!}.`);
           }
         } else if (notification.subscriptionType === 'SNS') {
           const snsGetArnRegex = new RegExp('^arn:.*:sns:.*:(.*):(.*)$');
-          const validSnsArn = snsGetArnRegex.test(notification.address);
-          if (!validSnsArn) {
+          if (Array.isArray(notification.recipients)) {
+            for (const recipient of notification.recipients) {
+              if (!snsGetArnRegex.test(recipient)) {
+                errors.push(`The following SNS Topic Arn is malformatted: ${recipient}.`);
+              }
+              if (notification.recipients.length > 1) {
+                errors.push(
+                  `SNS subscription type can have only one SNS topic as a recipient: ${notification.recipients}.`,
+                );
+              }
+            }
+          } else if (!snsGetArnRegex.test(notification.address!)) {
             errors.push(`The following SNS Topic Arn is malformatted: ${notification.address}.`);
           }
         }
