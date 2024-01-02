@@ -667,6 +667,11 @@ export class AcceleratorToolkit {
         ];
         break;
       case AcceleratorStage.CUSTOMIZATIONS:
+        stackName.push(
+          `${AcceleratorStackNames[AcceleratorStage.RESOURCE_POLICY_ENFORCEMENT]}-${options.accountId}-${
+            options.region
+          }`,
+        );
         stackName = await AcceleratorToolkit.getCustomizationsStackNames(stackName, options);
         break;
       case AcceleratorStage.IMPORT_ASEA_RESOURCES:

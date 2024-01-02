@@ -45,9 +45,6 @@ new RemediateResourcePolicy(stack, 'DetectResourcePolicy', {
       tempPath: `${configDirPath}/resource-policies/kms.json`,
     },
   ],
-  role: new cdk.aws_iam.Role(stack, 'RemediationRole', {
-    assumedBy: new cdk.aws_iam.ServicePrincipal('ssm.amazonaws.com'),
-  }),
 });
 
 /**

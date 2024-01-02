@@ -16,26 +16,18 @@ import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
 import { describe } from '@jest/globals';
 import { snapShotTest } from './snapshot-test';
 
-const testNamePrefix = 'Construct(DataPerimeterStack): ';
+const testNamePrefix = 'Construct(ResourcePolicyEnforcementStack): ';
 
 /**
- * DataPerimeterStack
+ * ResourcePolicyEnforcementStack
  */
-const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.DATA_PERIMETER, 'aws', 'us-east-1');
-const stack = acceleratorTestStacks.stacks.get(`Management-us-east-1`)!;
-
-describe('DataPerimeterStack', () => {
-  snapShotTest(testNamePrefix, stack);
-});
-
-const delegatedAdminTestStacks = new AcceleratorSynthStacks(
-  AcceleratorStage.DATA_PERIMETER,
+const acceleratorTestStacks = new AcceleratorSynthStacks(
+  AcceleratorStage.RESOURCE_POLICY_ENFORCEMENT,
   'aws',
   'us-east-1',
-  'all-enabled-delegated-admin',
 );
-const delegatedAdminStack = delegatedAdminTestStacks.stacks.get(`Management-us-east-1`)!;
+const stack = acceleratorTestStacks.stacks.get(`Management-us-east-1`)!;
 
-describe('delegatedAdminStack', () => {
-  snapShotTest(testNamePrefix, delegatedAdminStack);
+describe('ResourcePolicyEnforcementStack', () => {
+  snapShotTest(testNamePrefix, stack);
 });

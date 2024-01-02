@@ -360,8 +360,31 @@ export class SecurityConfigTypes {
     keySets: t.array(SecurityConfigTypes.keyConfig),
   });
 
+  static readonly resourceTypeEnum = t.enums(
+    'ResourceType',
+    [
+      'S3_BUCKET',
+      'KMS_KEY',
+      'IAM_ROLE',
+      'SECRETS_MANAGER_SECRET',
+      'ECR_REPOSITORY',
+      'OPENSEARCH_DOMAIN',
+      'SNS_TOPIC',
+      'SQS_QUEUE',
+      'APIGATEWAY_REST_API',
+      'LEX_BOT',
+      'EFS_FILE_SYSTEM',
+      'EVENTBRIDGE_EVENTBUS',
+      'BACKUP_VAULT',
+      'CODEARTIFACT_REPOSITORY',
+      'CERTIFICATE_AUTHORITY',
+      'LAMBDA_FUNCTION',
+    ],
+    'Value should be a valid resource Type',
+  );
+
   static readonly resourcePolicyConfig = t.interface({
-    name: t.nonEmptyString,
+    resourceType: SecurityConfigTypes.resourceTypeEnum,
     document: t.nonEmptyString,
   });
 
@@ -381,8 +404,23 @@ export class SecurityConfigTypes {
   });
 
   static readonly resourcePolicySetConfig = t.interface({
+    /**
+     * The deployment targets - accounts/OUs where the config rule and remediation action will be deployed to
+     */
     deploymentTargets: t.deploymentTargets,
+    /**
+     * A list of resource policy templates for different types of resources
+     */
     resourcePolicies: t.array(SecurityConfigTypes.resourcePolicyConfig),
+    /**
+     * The input parameters which will be set as environment variable in Custom Config Rule Lambda and Remediation lambda
+     *
+     * Meanwhile, 'SourceAccount' is a reserved parameters for allow-only resource policy -- Lambda_Function and CERTIFICATE_AUTHORITY.
+     * For example, 'SourceAccount: 123456789012,987654321098' means requests from these two accounts can be allowed.
+     * Apart from these two, No other external accounts can access a lambda function or Certificate Authority.
+     *
+     */
+    inputParameters: t.optional(t.dictionary(t.nonEmptyString, t.nonEmptyString)),
   });
 
   static readonly networkPerimeterConfig = t.interface({
@@ -390,13 +428,10 @@ export class SecurityConfigTypes {
   });
 
   /**
-   * Data Perimeter configuration
+   * Resource policy enforcement configuration
    */
-  static readonly dataPerimeterConfig = t.interface({
+  static readonly resourcePolicyEnforcementConfig = t.interface({
     enable: t.boolean,
-    ruleName: t.optional(t.nonEmptyString),
-    ssmDocumentName: t.optional(t.nonEmptyString),
-    resourcePolicies: t.array(SecurityConfigTypes.resourcePolicyConfig),
     remediation: SecurityConfigTypes.resourcePolicyRemediationType,
     policySets: t.array(SecurityConfigTypes.resourcePolicySetConfig),
     networkPerimeter: t.optional(SecurityConfigTypes.networkPerimeterConfig),
@@ -603,7 +638,7 @@ export class SecurityConfigTypes {
     awsConfig: this.awsConfig,
     cloudWatch: this.cloudWatchConfig,
     keyManagementService: t.optional(this.keyManagementServiceConfig),
-    dataPerimeter: t.optional(this.dataPerimeterConfig),
+    resourcePolicyEnforcement: t.optional(this.resourcePolicyEnforcementConfig),
   });
 }
 
@@ -756,7 +791,7 @@ export class KeyManagementServiceConfig implements t.TypeOf<typeof SecurityConfi
 }
 
 export class ResourcePolicyConfig implements t.TypeOf<typeof SecurityConfigTypes.resourcePolicyConfig> {
-  readonly name: string = '';
+  readonly resourceType: t.TypeOf<typeof SecurityConfigTypes.resourceTypeEnum> = 'S3_BUCKET';
   readonly document: string = '';
 }
 
@@ -769,10 +804,11 @@ export class ResourcePolicyRemediation implements t.TypeOf<typeof SecurityConfig
 export class ResourcePolicySetConfig implements t.TypeOf<typeof SecurityConfigTypes.resourcePolicySetConfig> {
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
   readonly resourcePolicies: ResourcePolicyConfig[] = [];
+  readonly inputParameters: { [key: string]: string } | undefined = {};
 }
 
 /**
- * *{@link SecurityConfig} / {@link DataPerimeterConfig}/{@link NetworkPerimeterConfig}*
+ * *{@link SecurityConfig} / {@link ResourcePolicyEnforcementConfig}/{@link NetworkPerimeterConfig}*
  *
  * Network Perimeter Config.
  *
@@ -784,53 +820,41 @@ export class NetworkPerimeterConfig implements t.TypeOf<typeof SecurityConfigTyp
 }
 
 /**
- * *{@link SecurityConfig} / {@link DataPerimeterConfig}*
+ * *{@link SecurityConfig} / {@link ResourcePolicyEnforcementConfig}*
  *
- *  Data Perimeter Config. The data perimeter configuration allows you to deploy AWS Config rules to
- *  automatically apply resource-based policies to AWS resources including S3 buckets, IAM roles, and KMS keys.
+ *  Resource Policy Enforcement Config. The configuration allows you to deploy AWS Config rules to
+ *  automatically apply resource-based policies to AWS resources including S3 buckets, IAM roles, and KMS keys etc.
+ *  AWS Organization is required to support it.
  *
- * Currently, only KMS, S3 and IAM Role are supported. Check the config rule defined in {@link DataPerimeterStack} for more detail
+ * Here are a list of supported service {@link SecurityConfigTypes.resourceTypeEnum }
  *
  * @example
  * ```
  *
- * dataPerimeter:
+ * resourcePolicyEnforcement:
  *   enable: true
- *   ruleName: AWSAccelerator-check-resource-policy
- *   resourcePolicies:
- *     - name: IAM
- *       document: path/to/iam-policy-template.json
- *     - name: S3
- *       document: path/to/s3-policy-template.json
- *     - name: KMS
- *       document: path/to/kms-policy-template.json
  *   remediation:
  *       automatic: false
  *       retryAttemptSeconds: 60
  *       maximumAutomaticAttempts: 5
  *   policySets:
- *       deploymentTargets:
- *         accounts:
- *           - Management
  *     - resourcePolicies:
- *         - name: IAM
- *           document: resource-policies/iam-workload.json
- *         - name: S3
- *           document: resource-policies/s3-workload.json
- *         - name: KMS
+ *         - resourceType: KMS
  *           document: resource-policies/kms-workload.json
+ *       inputParameters:
+ *         SourceAccount: 123456789012,987654321098
+ *         allowedAccountList: {{ ALLOWED_EXTERNAL_ACCOUNTS }}   # The parameter `ALLOWED_EXTERNAL_ACCOUNTS` is defined in replacement config.
  *       deploymentTargets:
  *         accounts:
- *           - TrustedWorkload1
+ *           - Root
  */
-export class DataPerimeterConfig implements t.TypeOf<typeof SecurityConfigTypes.dataPerimeterConfig> {
-  static readonly DEFAULT_RULE_NAME = 'Check-Resource-Policy';
+export class ResourcePolicyEnforcementConfig
+  implements t.TypeOf<typeof SecurityConfigTypes.resourcePolicyEnforcementConfig>
+{
+  static readonly DEFAULT_RULE_NAME = 'Resource-Policy-Compliance-Check';
   static readonly DEFAULT_SSM_DOCUMENT_NAME = `Attach-Resource-Based-Policy`;
 
   readonly enable = false;
-  readonly ruleName: string | undefined;
-  readonly ssmDocumentName: string | undefined;
-  readonly resourcePolicies: ResourcePolicyConfig[] = [];
   readonly remediation: ResourcePolicyRemediation = new ResourcePolicyRemediation();
   readonly policySets: ResourcePolicySetConfig[] = [];
   readonly networkPerimeter: NetworkPerimeterConfig | undefined = undefined;
@@ -2752,7 +2776,7 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
   readonly awsConfig: AwsConfig = new AwsConfig();
   readonly cloudWatch: CloudWatchConfig = new CloudWatchConfig();
   readonly keyManagementService: KeyManagementServiceConfig = new KeyManagementServiceConfig();
-  readonly dataPerimeter: DataPerimeterConfig | undefined;
+  readonly resourcePolicyEnforcement: ResourcePolicyEnforcementConfig | undefined;
 
   /**
    *

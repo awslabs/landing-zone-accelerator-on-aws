@@ -5,15 +5,16 @@ import * as fs from 'fs';
 export function copyPoliciesToDeploymentPackage(
   filePaths: { name: string; path: string; tempPath: string }[],
   deploymentPackagePath: string,
+  accountId: string,
 ) {
   // Make policy folder
-  fs.mkdirSync(path.join(deploymentPackagePath, 'policies'), { recursive: true });
+  fs.mkdirSync(path.join(deploymentPackagePath, 'policies', accountId), { recursive: true });
 
   for (const policyFilePath of filePaths) {
     //copy from generated temp path to original policy path
     fs.copyFileSync(
       path.join(policyFilePath.tempPath),
-      path.join(deploymentPackagePath, 'policies', `${policyFilePath.name}.json`),
+      path.join(deploymentPackagePath, 'policies', accountId, `${policyFilePath.name.toUpperCase()}.json`),
     );
   }
 }

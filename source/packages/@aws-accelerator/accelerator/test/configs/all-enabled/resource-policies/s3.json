@@ -23,12 +23,19 @@
       "Action": "s3:GetObject",
       "Resource": ["${ACCEL_LOOKUP::CUSTOM:ATTACHED_RESOURCE_ARN}", "${ACCEL_LOOKUP::CUSTOM:ATTACHED_RESOURCE_ARN}/*"],
       "Condition": {
+        "StringNotEqualsIfExists": {
+          "aws:SourceVpc": [${ACCEL_LOOKUP::VPC_ID:OU:Infrastructure}],
+          "aws:sourceVpce": [${ACCEL_LOOKUP::VPCE_ID:ACCOUNT:Network}]
+        },
+        "NotIpAddressIfExists": {
+          "aws:SourceIp": ${ACCEL_LOOKUP::CUSTOM:ALLOWED_CORPORATE_CIDRS}
+        },
         "BoolIfExists": {
           "aws:PrincipalIsAWSService": "false",
           "aws:ViaAWSService": "false"
         },
         "ArnNotLikeIfExists": {
-          "aws:PrincipalArn": ["arn:aws:iam::*:role/aws-service-role/*", "arn:aws:iam::*:role/AWSAccelerator-*"]
+          "aws:PrincipalARN": ${ACCEL_LOOKUP::CUSTOM:ALLOWED_PRINCIPAL_ARNS}
         }
       }
     }

@@ -53,6 +53,10 @@ export interface DetectResourcePolicyProps {
    * Resource base policy File Paths
    */
   readonly rbpFilePaths: { name: string; path: string; tempPath: string }[];
+  /**
+   * Input parameters as lambda environment variable
+   */
+  readonly inputParameters?: { [key: string]: string };
 }
 
 export class DetectResourcePolicy extends Construct {
@@ -61,24 +65,52 @@ export class DetectResourcePolicy extends Construct {
   constructor(scope: Construct, id: string, props: DetectResourcePolicyProps) {
     super(scope, id);
 
-    const deploymentPackagePath = path.join(__dirname, 'detect-resource-policy/dist');
-    copyPoliciesToDeploymentPackage(props.rbpFilePaths, deploymentPackagePath);
+    const deploymentPackagePath = path.join(__dirname, 'lambda-handler/dist');
+    copyPoliciesToDeploymentPackage(props.rbpFilePaths, deploymentPackagePath, cdk.Stack.of(this).account);
 
     const LAMBDA_TIMEOUT_IN_MINUTES = 1;
 
     this.lambdaFunction = new cdk.aws_lambda.Function(this, 'DetectResourcePolicyFunction', {
-      code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'detect-resource-policy/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
-      handler: 'index.handler',
+      code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'lambda-handler/dist')),
+      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      handler: 'detect-resource-policy.handler',
       description: 'Lambda function to detect non-compliant resource policy',
       timeout: cdk.Duration.minutes(LAMBDA_TIMEOUT_IN_MINUTES),
       environment: {
+        ...props.inputParameters,
         ACCELERATOR_PREFIX: props.acceleratorPrefix,
         AWS_PARTITION: cdk.Aws.PARTITION,
         HOME_REGION: props.homeRegion,
       },
       environmentEncryption: props.kmsKeyLambda,
     });
+
+    const stack = cdk.Stack.of(this);
+    this.lambdaFunction.addToRolePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        effect: cdk.aws_iam.Effect.ALLOW,
+        actions: [
+          'secretsmanager:GetResourcePolicy',
+          'lex:DescribeResourcePolicy',
+          'apigateway:GET',
+          'lambda:GetPolicy',
+          'backup:GetBackupVaultAccessPolicy',
+          'codeartifact:GetRepositoryPermissionsPolicy',
+          'events:DescribeEventBus',
+          'acm-pca:GetPolicy',
+        ],
+        resources: [
+          `arn:${stack.partition}:secretsmanager:${stack.region}:${stack.account}:*`, // "arn:aws:s3:::*"
+          `arn:${stack.partition}:lex:${stack.region}:${stack.account}:*`,
+          `arn:${stack.partition}:apigateway:${stack.region}::*`, // Policy doesn't allow account ID in apigateway ARN
+          `arn:${stack.partition}:lambda:${stack.region}:${stack.account}:*`,
+          `arn:${stack.partition}:backup:${stack.region}:${stack.account}:*`,
+          `arn:${stack.partition}:codeartifact:${stack.region}:${stack.account}:*`,
+          `arn:${stack.partition}:events:${stack.region}:${stack.account}:*`,
+          `arn:${stack.partition}:acm-pca:${stack.region}:${stack.account}:*`,
+        ],
+      }),
+    );
 
     // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
     NagSuppressions.addResourceSuppressions(this.lambdaFunction.role!, [

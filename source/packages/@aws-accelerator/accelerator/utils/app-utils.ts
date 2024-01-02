@@ -452,7 +452,7 @@ export async function setAcceleratorStackProps(
       region: globalRegion,
     }) ||
     includeStage(context, {
-      stage: AcceleratorStage.DATA_PERIMETER,
+      stage: AcceleratorStage.CUSTOMIZATIONS,
       account: accountsConfig.getManagementAccountId(),
       region: globalRegion,
     }) ||
@@ -475,7 +475,7 @@ export async function setAcceleratorStackProps(
       globalConfig.managementAccountAccessRole,
       context.partition,
       Array.from(lookupTypeAndAccountIdMap.get(POLICY_LOOKUP_TYPE.VPC_ID) || []),
-      securityConfig.dataPerimeter?.networkPerimeter?.managedVpcOnly || false,
+      securityConfig.resourcePolicyEnforcement?.networkPerimeter?.managedVpcOnly || false,
     );
     const accountVpcEndpointIds = await loadVpcEndpointIds(
       globalConfig.managementAccountAccessRole,
@@ -728,7 +728,9 @@ function getLookupTypeAndAccountIdMap(
   // 1. Get path of all the service control policy and resource based policy templates
   const policyPathSet = new Set<string>();
   organizationConfig.serviceControlPolicies.forEach(scp => policyPathSet.add(scp.policy));
-  securityConfig.dataPerimeter?.resourcePolicies.forEach(rcp => policyPathSet.add(rcp.document));
+  securityConfig.resourcePolicyEnforcement?.policySets.forEach(policySet =>
+    policySet.resourcePolicies.forEach(rcp => policyPathSet.add(rcp.document)),
+  );
 
   // 2. Extra all the dynamic parameters from policy templates
   const dynamicParams = new Set<string>();
