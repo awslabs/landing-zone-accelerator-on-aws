@@ -23,6 +23,38 @@ AWS.config.logger = console;
  * @param event
  * @returns
  */
+interface NotificationConfig {
+  threshold: string;
+  thresholdType: 'PERCENTAGE' | 'ABSOLUTE_VALUE';
+  type: 'ACTUAL' | 'FORECASTED';
+  comparisonOperator: 'GREATER_THAN' | 'LESS_THAN';
+  address: string;
+  recipients: string[];
+  subscriptionType: 'EMAIL' | 'SNS';
+}
+interface SubscribersDefinition {
+  readonly SubscriptionType: 'SNS' | 'EMAIL';
+  readonly Address: string;
+}
+interface BudgetDefinition {
+  amount: number;
+  includeCredit: string;
+  includeDiscount: string;
+  includeOtherSubscription: string;
+  includeRecurring: string;
+  includeRefund: string;
+  includeSubscription: string;
+  includeSupport: string;
+  includeTax: string;
+  includeUpfront: string;
+  name: string;
+  notifications?: NotificationConfig[];
+  timeUnit: string;
+  type: string;
+  useAmortized: string;
+  useBlended: string;
+  unit: string;
+}
 
 export async function handler(
   event: AWSLambda.CloudFormationCustomResourceEvent,
@@ -34,33 +66,6 @@ export async function handler(
     }
   | undefined
 > {
-  interface BudgetDefinition {
-    amount: number;
-    includeCredit: string;
-    includeDiscount: string;
-    includeOtherSubscription: string;
-    includeRecurring: string;
-    includeRefund: string;
-    includeSubscription: string;
-    includeSupport: string;
-    includeTax: string;
-    includeUpfront: string;
-    name: string;
-    notifications?: {
-      threshold: string;
-      thresholdType: 'PERCENTAGE' | 'ABSOLUTE_VALUE';
-      type: 'ACTUAL' | 'FORECASTED';
-      comparisonOperator: 'GREATER_THAN' | 'LESS_THAN';
-      address: string;
-      subscriptionType: 'EMAIL' | 'SNS';
-    }[];
-    timeUnit: string;
-    type: string;
-    useAmortized: string;
-    useBlended: string;
-    unit: string;
-  }
-
   const budgetDefinition: BudgetDefinition = event.ResourceProperties['budgetDefinition'];
 
   if (!budgetDefinition) {
@@ -111,12 +116,7 @@ export async function handler(
             Threshold: Number(budgetNotifications.threshold),
             ThresholdType: `${budgetNotifications.thresholdType}`,
           },
-          Subscribers: [
-            {
-              Address: budgetNotifications.address,
-              SubscriptionType: budgetNotifications.subscriptionType,
-            },
-          ],
+          Subscribers: JSON.parse(JSON.stringify(getRecipients(budgetNotifications))),
         };
         notifications.push(budgetNotification);
       }
@@ -206,4 +206,20 @@ export async function handler(
         Status: 'SUCCESS',
       };
   }
+}
+export function getRecipients(notify: NotificationConfig) {
+  const recipients: SubscribersDefinition[] = [];
+  for (const recipient of notify.recipients ?? []) {
+    recipients.push({
+      SubscriptionType: notify.subscriptionType,
+      Address: recipient,
+    });
+  }
+  if (notify.address) {
+    recipients.push({
+      SubscriptionType: notify.subscriptionType,
+      Address: notify.address,
+    });
+  }
+  return recipients;
 }

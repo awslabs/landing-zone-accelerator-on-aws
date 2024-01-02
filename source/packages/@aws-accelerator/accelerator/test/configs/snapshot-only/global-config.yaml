@@ -66,7 +66,7 @@ s3:
       organizationalUnits:
         - Security
       excludedRegions:
-        - us-west-2    
+        - us-west-2
 logging:
   account: LogArchive
   centralizedLoggingRegion: us-west-2
@@ -130,7 +130,7 @@ logging:
         - Security
       excludedRegions:
         - us-west-2
-    importedBucket: 
+    importedBucket:
       name: existing-access-logs-bucket-${ACCOUNT_ID}-${REGION}
     customPolicyOverrides:
       policy: bucket-policies/full-access-log-bucket.json
@@ -138,7 +138,7 @@ logging:
     #   - policy: bucket-policies/access-logs-bucket.json
     lifecycleRules: []
   elbLogBucket:
-    importedBucket: 
+    importedBucket:
       name: existing-elb-logs-bucket-${ACCOUNT_ID}-${REGION}
       applyAcceleratorManagedBucketPolicy: true
     # customPolicyOverrides:
@@ -214,7 +214,7 @@ limits:
     quotaCode: L-4019AD8B
     desiredValue: 15
     deploymentTargets:
-      accounts: 
+      accounts:
         - Management
 reports:
   costAndUsageReport:
@@ -257,25 +257,29 @@ reports:
           threshold: 90
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: myemail+pa-budg@example.com
+          recipients:
+            - myemail+pa-budg@example.com
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 80
           comparisonOperator: GREATER_THAN
-          subscriptionType: EMAIL
-          address: myemail+pa-budg@example.com
+          subscriptionType: SNS
+          address: arn:aws:sns:us-east-1:111111111111:sample-budget
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 75
           comparisonOperator: GREATER_THAN
-          subscriptionType: EMAIL
-          address: myemail+pa-budg@example.com
+          subscriptionType: SNS
+          recipients:
+            - arn:aws:sns:us-east-1:111111111111:sample-budget
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 50
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: myemail+pa-budg@example.com
+          recipients:
+            - myemail+pa-budg@example.com
+            - myemail+pa1-budg@example.com
 backup:
   vaults:
     - name: BackupVault

@@ -56,6 +56,7 @@ new BudgetDefinition(nativeStack, 'TestBudgetDefinition', {
       comparisonOperator: 'GREATER_THAN',
       subscriptionType: 'EMAIL',
       address: 'myemail+pa-budg@example.com',
+      recipients: ['myemail+pa-budg@example.com', 'myemail+pa1-budg@example.com'],
     },
   ],
   kmsKey: nativeKey,
