@@ -2,7 +2,7 @@ homeRegion: &HOME_REGION us-east-1
 enabledRegions:
   - *HOME_REGION
   - us-west-2
-  # - ap-south-1  
+  # - ap-south-1
   # - eu-central-1
   # - us-west-1
   # - eu-north-1
@@ -20,13 +20,13 @@ enabledRegions:
   # Opt-in regions commented now, once test pipeline account configured for opt-in regions will use those
   # - ap-south-2
   # - eu-south-1
-  # - eu-south-2  
+  # - eu-south-2
   # - me-central-1
   # - il-central-1
   # - eu-central-2
-  # - af-south-1  
+  # - af-south-1
   # - me-south-1
-  # - ap-east-1  
+  # - ap-east-1
   # - ap-southeast-3
 
 managementAccountAccessRole: AWSControlTowerExecution
@@ -144,6 +144,8 @@ logging:
           - storageClass: GLACIER
             transitionAfter: 365
         prefix: "macie"
+    s3ResourcePolicyAttachments:
+      - policy: bucket-policies/central-log-bucket.json
 
   accessLogBucket:
     importedBucket:

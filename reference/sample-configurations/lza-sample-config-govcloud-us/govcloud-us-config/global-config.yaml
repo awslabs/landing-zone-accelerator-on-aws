@@ -61,6 +61,8 @@ logging:
         abortIncompleteMultipartUpload: 7
         expiration: 365
         noncurrentVersionExpiration: 365
+    s3ResourcePolicyAttachments:
+      - policy: bucket-policies/central-log-bucket.json
   elbLogBucket:
     # Defining and storing storing log Bucket for 365 days
     lifecycleRules:
