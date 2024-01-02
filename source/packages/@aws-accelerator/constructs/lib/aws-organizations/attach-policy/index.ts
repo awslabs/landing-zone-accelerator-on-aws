@@ -94,16 +94,24 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       // if SCP strategy is allow-list, then FullAWSAccess policy should be detached
       if (strategy === 'allow-list' && fullAwsAccessPolicyAttached) {
         console.log('detaching FullAWSAccess policy because the strategy is allow-list');
-        await throttlingBackOff(() =>
-          organizationsClient.detachPolicy({ PolicyId: 'p-FullAWSAccess', TargetId: targetId }).promise(),
-        );
+        try {
+          await throttlingBackOff(() =>
+            organizationsClient.detachPolicy({ PolicyId: 'p-FullAWSAccess', TargetId: targetId }).promise(),
+          );
+        } catch (error: unknown) {
+          // Swallow the error if it's PolicyNotAttachedException
+          // The 'p-FullAWSAccess' policy might already be detached by other attach-policy custom resource concurrently.
+          if ((error as { name: string }).name !== 'PolicyNotAttachedException') {
+            throw error;
+          }
+        }
       }
 
       // if SCP strategy is changed from allow-list to deny list, then FullAWSAccess policy should be attached
       if (strategy === 'deny-list' && !fullAwsAccessPolicyAttached) {
         console.log('attaching FullAWSAccess policy because the strategy is deny-list');
         await throttlingBackOff(() =>
-          organizationsClient.detachPolicy({ PolicyId: 'p-FullAWSAccess', TargetId: targetId }).promise(),
+          organizationsClient.attachPolicy({ PolicyId: 'p-FullAWSAccess', TargetId: targetId }).promise(),
         );
       }
 
