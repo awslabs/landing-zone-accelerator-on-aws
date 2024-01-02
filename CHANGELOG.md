@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.5.2] - 2023-11-09
+## [1.5.2] - 2023-11-15
 
 ### Fixed
 
@@ -14,12 +14,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(pipeline): exit pipeline upon synth failure
 - fix(pipeline): consolidate customizations into single app
 
+### Changed
+
+- chore: update libs per audit findings
+
+### Configuration Changes
+
+- chore: migrate cccs and tse-se configuration
+
 ## [1.5.1] - 2023-10-19
 
 ### Fixed
 
 - fix(iam): Security_Resource stack failure to assume role into suspended and un-enrolled account
 - fix(identity-center): operation stack AcceleratorLambdaKey construct already exists
+- fix(customizations): Could not load credentials from any providers
 
 ## [1.5.0] - 2023-10-05
 
