@@ -49,6 +49,7 @@ coverage/
 
 ### Exclude Documentation ###
 docs
+!source/mkdocs/docs
 
 ### Exclude Jest test report directory
 test-reports

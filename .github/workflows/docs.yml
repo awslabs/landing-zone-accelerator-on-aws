@@ -1,0 +1,50 @@
+## This workflow runs when a new release is published in the Landing Zone Accelerator
+## GitHub repository. The workflow pulls the latest versioned TypeDocs from a private
+## S3 bucket, then builds and versions the documentation using mike.
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-mkdocs:
+    name: Build mkdocs
+    runs-on: ubuntu-latest
+    env: 
+      TYPEDOCS_DIR: ./source/mkdocs/docs/typedocs
+    # These permissions are needed to interact with GitHub's OIDC Token endpoint.
+    permissions:
+      id-token: write
+      contents: write
+    environment: release-docs
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.IAM_ROLE_ARN }}
+          aws-region: us-east-1
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+      - name: Copy TypeDocs from S3
+        id: s3
+        run: |
+          commit_tag=$(echo ${GITHUB_REF} | tr -d 'refs/tags/')
+          aws s3 cp s3://${{ secrets.BUCKET_NAME }}/${commit_tag}/typedocs.zip .
+          echo "commit_tag=$commit_tag" >> $GITHUB_OUTPUT
+      - name: Unzip TypeDocs
+        run: unzip -q ./typedocs.zip -d ${TYPEDOCS_DIR}
+      - name: Install Python dependencies
+        working-directory: ./source/mkdocs
+        run: pip install -r requirements.txt
+      - name: Deploy docs
+        working-directory: ./source/mkdocs
+        run: |
+          git fetch origin gh-pages --depth=1
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          mike deploy --update-aliases ${{ steps.s3.outputs.commit_tag }} latest
+          mike set-default --push latest
+
+    
+        
+        
