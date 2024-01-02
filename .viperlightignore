@@ -212,3 +212,8 @@ source/packages/@aws-accelerator/utils/lib/get-template.ts:64
 source/packages/@aws-accelerator/accelerator/lib/lambdas/diagnostic-pack/resources/functions.ts:91
 source/packages/@aws-accelerator/accelerator/lib/lambdas/diagnostic-pack/resources/functions.ts:272
 source/packages/@aws-accelerator/accelerator/lib/lambdas/diagnostic-pack/resources/functions.ts:597
+
+# Accelerator specific account id declaration
+
+source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/global-config.yaml:285
+source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/global-config.yaml:292

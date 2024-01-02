@@ -282,14 +282,14 @@ reports:
           threshold: 80
           comparisonOperator: GREATER_THAN
           subscriptionType: SNS
-          address: arn:aws:sns:us-east-1:111111111111:sample-budget
+          address: arn:aws:sns:us-east-1:390133044656:aws-accelerator-Security
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 75
           comparisonOperator: GREATER_THAN
           subscriptionType: SNS
           recipients:
-            - arn:aws:sns:us-east-1:111111111111:sample-budget
+            - arn:aws:sns:us-east-1:390133044656:aws-accelerator-Security
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 50
