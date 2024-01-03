@@ -37,7 +37,7 @@ import { getReplacementsConfig } from '../utils/app-utils';
 import { createLogger, getCloudFormationTemplate, printStackDiff } from '@aws-accelerator/utils';
 import { isBeforeBootstrapStage } from '../utils/app-utils';
 
-import { Accelerator, AcceleratorStackNames } from './accelerator';
+import { AcceleratorStackNames } from './accelerator';
 import { AcceleratorStage } from './accelerator-stage';
 import { isIncluded } from './stacks/custom-stack';
 
@@ -453,7 +453,6 @@ export class AcceleratorToolkit {
     const configDirPath = AcceleratorToolkit.validateAndGetConfigDirectory(options.configDirPath);
 
     if (fs.existsSync(path.join(configDirPath, CustomizationsConfig.FILENAME))) {
-      await Accelerator.getManagementAccountCredentials(options.partition);
       const accountsConfig = AccountsConfig.load(configDirPath);
       const homeRegion = GlobalConfig.loadRawGlobalConfig(configDirPath).homeRegion;
       const isOrgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(configDirPath).enable;
@@ -509,7 +508,6 @@ export class AcceleratorToolkit {
     const configDirPath = AcceleratorToolkit.validateAndGetConfigDirectory(options.configDirPath);
 
     if (fs.existsSync(path.join(configDirPath, CustomizationsConfig.FILENAME))) {
-      await Accelerator.getManagementAccountCredentials(options.partition);
       const accountsConfig = AccountsConfig.load(configDirPath);
       const homeRegion = GlobalConfig.loadRawGlobalConfig(configDirPath).homeRegion;
       const isOrgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(configDirPath).enable;
