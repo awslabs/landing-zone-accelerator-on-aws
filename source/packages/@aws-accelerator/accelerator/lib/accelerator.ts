@@ -1015,7 +1015,7 @@ export async function checkDiffStage(props: AcceleratorProps) {
  * @param partition
  * @returns
  */
-function setGlobalRegion(partition: string): string {
+export function setGlobalRegion(partition: string): string {
   switch (partition) {
     case 'aws-us-gov':
       return 'us-gov-west-1';

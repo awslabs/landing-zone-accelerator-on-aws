@@ -55,6 +55,9 @@ export async function getCrossAccountCredentials(
 }
 
 export async function getCurrentAccountId(partition: string, region: string): Promise<string> {
+  logger.debug(
+    `Sts endpoint for partition ${partition} and region ${region} is : ${getStsEndpoint(partition, region)}`,
+  );
   const stsClient = new STSClient({
     region,
     retryStrategy: setRetryStrategy(),
@@ -62,6 +65,7 @@ export async function getCurrentAccountId(partition: string, region: string): Pr
   });
   try {
     const response = await throttlingBackOff(() => stsClient.send(new GetCallerIdentityCommand({})));
+    logger.debug(`Current account id is ${response.Account!}`);
     return response.Account!;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
