@@ -199,6 +199,25 @@ export class ApplicationsStack extends AcceleratorStack {
     return [vpcMap, subnetMap, securityGroupMap];
   }
 
+  /**
+   * Function to get Account IDs where VPC is created and subnets are shared to.
+   * @param vpcItem
+   * @returns
+   */
+  private getVpcAccountIdsWithShared(vpcItem: VpcConfig | VpcTemplatesConfig): string[] {
+    const vpcAccountIds = this.getVpcAccountIds(vpcItem);
+    const sharedSubnets = vpcItem.subnets ? vpcItem.subnets.filter(subnet => subnet.shareTargets) : [];
+    for (const subnetItem of sharedSubnets) {
+      const subnetAccountIds = this.getAccountIdsFromShareTarget(subnetItem.shareTargets!);
+      subnetAccountIds.forEach(accountId => {
+        if (!vpcAccountIds.includes(accountId)) {
+          vpcAccountIds.push(accountId);
+        }
+      });
+    }
+    return vpcAccountIds;
+  }
+
   private setInitialMapProcessAppVpcItem(
     vpcItem: VpcConfig | VpcTemplatesConfig,
     vpcMap: Map<string, string>,
@@ -206,7 +225,7 @@ export class ApplicationsStack extends AcceleratorStack {
     securityGroupMap: Map<string, string>,
   ) {
     // Get account IDs
-    const vpcAccountIds = this.getVpcAccountIds(vpcItem);
+    const vpcAccountIds = this.getVpcAccountIdsWithShared(vpcItem);
     if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
       // Set VPC ID
       const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
@@ -246,7 +265,7 @@ export class ApplicationsStack extends AcceleratorStack {
     for (const vpcItem of allVpcItems) {
       if (vpcItem.name === appConfigItem.vpc) {
         // Get account IDs
-        const vpcAccountIds = this.getVpcAccountIds(vpcItem);
+        const vpcAccountIds = this.getVpcAccountIdsWithShared(vpcItem);
         if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
           // Create target group resource
           const targetGroups = this.createTargetGroup(

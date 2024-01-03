@@ -660,6 +660,52 @@ applications:
           type: forward
           certificate: cert1
           sslPolicy: ELBSecurityPolicy-2016-08
+  # autoscaling group and launch template created using subnet shared from another account
+  - name: appH
+    # vpc name is taken from network-config.yaml under vpcs
+    vpc: SharedServices-Main
+    deploymentTargets:
+      accounts:
+        - Network
+      excludedRegions:
+        - us-west-2
+    autoscaling:
+      name: appH-asg
+      maxSize: 1
+      minSize: 1
+      desiredSize: 1
+      # Launch Template name should match name from launchTemplate section
+      launchTemplate: appH-lt
+      healthCheckGracePeriod: 300
+      # this is the only example with ELB so targetGroups are also specified
+      healthCheckType: EC2 # EC2|ELB
+      # target group names should match the names from targetGroup section
+      subnets:
+        - SharedServices-App-C
+
+    launchTemplate:
+      name: appH-lt
+      blockDeviceMappings:
+        - deviceName: /dev/xvda
+          ebs:
+            deleteOnTermination: true
+            encrypted: true
+      securityGroups: 
+        - SharedServices-Main-Rsyslog-sg
+      # this instance profile is in iam-config.yaml under roleSets
+      iamInstanceProfile: EC2-Default-SSM-AD-Role
+      # Local or public SSM parameter store lookup for Image ID
+      imageId: ${ACCEL_LOOKUP::ImageId:/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2}
+      instanceType: t3.large
+      # this path is relative to the config repository and the content should be in regular text.
+      # Its encoded in base64 before passing in to launch Template
+      userData: appConfigs/appA/launchTemplate/userData.sh
+      metadataOptions:
+        httpTokens: required
+        httpPutResponseHopLimit: 2
+        httpEndpoint: enabled
+        httpProtocolIpv6: disabled
+        instanceMetadataTags: disabled
 
 
 firewalls:
