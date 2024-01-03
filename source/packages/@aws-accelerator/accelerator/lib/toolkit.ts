@@ -618,6 +618,16 @@ export class AcceleratorToolkit {
         AcceleratorToolkit.runDeployStackCli(context, options, stack.stackName, toolkitStackName, roleArn),
       );
     }
+    // Execute customization stack, regardless of runOrder customizations stack must be executed if present
+    deployPromises.push(
+      AcceleratorToolkit.runDeployStackCli(
+        context,
+        options,
+        `${AcceleratorStackNames[AcceleratorStage.CUSTOMIZATIONS]}-${options.accountId}-${options.region}`,
+        toolkitStackName,
+        roleArn,
+      ),
+    );
     await Promise.all(deployPromises);
   }
 
