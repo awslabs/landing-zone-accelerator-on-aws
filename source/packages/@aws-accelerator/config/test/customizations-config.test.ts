@@ -47,7 +47,7 @@ describe('CustomizationsConfig', () => {
       expect(customizationsConfigFromFile.customizations.cloudFormationStacks.length).toBe(3);
       expect(customizationsConfig.customizations.cloudFormationStacks.length).toBe(0);
       if (customizationsConfigFromFile.applications) {
-        expect(customizationsConfigFromFile.applications.length).toBe(7);
+        expect(customizationsConfigFromFile.applications.length).toBe(8);
         expect(customizationsConfig.applications.length).toBe(0);
       }
     });

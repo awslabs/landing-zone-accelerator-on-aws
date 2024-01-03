@@ -31,7 +31,7 @@ import {
 } from '../lib/customizations-config';
 import { GlobalConfig } from '../lib/global-config';
 import { IamConfig } from '../lib/iam-config';
-import { NetworkConfig, NetworkConfigTypes, VpcConfig, VpcTemplatesConfig } from '../lib/network-config';
+import { NetworkConfig, NetworkConfigTypes, SubnetConfig, VpcConfig, VpcTemplatesConfig } from '../lib/network-config';
 import { OrganizationConfig } from '../lib/organization-config';
 import { SecurityConfig } from '../lib/security-config';
 import { CommonValidatorFunctions } from './common/common-validator-functions';
@@ -343,13 +343,6 @@ class CustomizationValidator {
       if (!vpcCheck) {
         errors.push(`Application ${app.name}: VPC ${app.vpc} does not exist in file network-config.yaml`);
       } else if (vpcCheck) {
-        this.checkVpcDeploymentTarget(
-          app as AppConfigItem,
-          vpcCheck,
-          configs.accountsConfig,
-          configs.globalConfig,
-          errors,
-        );
         if (app.applicationLoadBalancer) {
           this.checkAlb(
             app.applicationLoadBalancer as ApplicationLoadBalancerConfig,
@@ -389,7 +382,7 @@ class CustomizationValidator {
           );
         }
         this.checkLaunchTemplate(app as AppConfigItem, vpcCheck, helpers, configs.securityConfig, errors);
-        this.checkAutoScaling(app as AppConfigItem, vpcCheck, helpers, errors);
+        this.checkAutoScaling(app as AppConfigItem, vpcCheck, helpers, configs.accountsConfig, errors);
       }
       // Validate file
       if (app.launchTemplate?.userData) {
@@ -472,10 +465,11 @@ class CustomizationValidator {
     app: AppConfigItem,
     vpcCheck: VpcConfig | VpcTemplatesConfig,
     helpers: CustomizationHelperMethods,
+    accountsConfig: AccountsConfig,
     errors: string[],
   ) {
     if (app.autoscaling) {
-      const allTargetGroupNames = app.targetGroups!.map(tg => tg.name);
+      const allTargetGroupNames = app.targetGroups?.map(tg => tg.name);
       const asgTargetGroupNames = app.autoscaling.targetGroups ?? [];
       const compareTargetGroupNames = helpers.compareArrays(asgTargetGroupNames, allTargetGroupNames ?? []);
       if (compareTargetGroupNames.length > 0) {
@@ -484,7 +478,7 @@ class CustomizationValidator {
             app.autoscaling.name
           } has target groups that are not defined in application config. Autoscaling target groups: ${asgTargetGroupNames.join(
             ',',
-          )} all target groups:  ${allTargetGroupNames.join(',')}`,
+          )} all target groups:  ${allTargetGroupNames?.join(',')}`,
         );
       }
       const duplicateAsgSubnets = app.autoscaling.subnets.some(element => {
@@ -497,12 +491,22 @@ class CustomizationValidator {
           }. Subnets: ${app.autoscaling!.subnets.join(',')}`,
         );
       }
-      const asgSubnetsCheck = helpers.checkSubnetsInConfig(app.autoscaling!.subnets, vpcCheck);
+      const asgSubnetsCheck = helpers.checkSubnetsInConfig(app.autoscaling.subnets, vpcCheck);
       if (asgSubnetsCheck === false) {
         errors.push(
-          `Autoscaling group ${app.autoscaling!.name} does not have subnets ${app.autoscaling!.subnets.join(
+          `Autoscaling group ${app.autoscaling.name} does not have subnets ${app.autoscaling!.subnets.join(
             ',',
           )} in VPC ${app.vpc}`,
+        );
+      }
+      if (
+        asgSubnetsCheck &&
+        !this.checkSubnetsTarget(app.autoscaling.subnets, vpcCheck, app.deploymentTargets, accountsConfig, errors)
+      ) {
+        errors.push(
+          `AutoScaling group ${app.autoscaling.name} has subnets ${app.autoscaling.subnets.join(
+            ',',
+          )} which are not created or shared in deploymentTargets`,
         );
       }
     }
@@ -546,16 +550,26 @@ class CustomizationValidator {
         `Network Load Balancer ${nlb.name} does not have subnets ${nlb.subnets.join(',')} in VPC ${appInfo.appVpc}`,
       );
     }
-    const allTargetGroupNames = appInfo.appTargetGroups!.map(tg => tg.name);
-    const nlbTargetGroupNames = nlb.listeners!.map(tg => tg.targetGroup);
+    if (
+      nlbSubnetsCheck &&
+      !this.checkSubnetsTarget(nlb.subnets, vpcCheck, appInfo.deploymentTargets, configs.accountsConfig, errors)
+    ) {
+      errors.push(
+        `Network Load Balancer ${nlb.name} has subnets ${nlb.subnets.join(
+          ',',
+        )} which are not created or shared in deploymentTargets`,
+      );
+    }
+    const allTargetGroupNames = appInfo.appTargetGroups?.map(tg => tg.name);
+    const nlbTargetGroupNames = nlb.listeners?.map(tg => tg.targetGroup);
     const compareTargetGroupNames = helpers.compareArrays(nlbTargetGroupNames ?? [], allTargetGroupNames ?? []);
     if (compareTargetGroupNames.length > 0) {
       errors.push(
         `Network Load Balancer ${
           nlb.name
-        } has target groups that are not defined in application config. NLB target groups: ${nlbTargetGroupNames.join(
+        } has target groups that are not defined in application config. NLB target groups: ${nlbTargetGroupNames?.join(
           ',',
-        )} all target groups:  ${allTargetGroupNames.join(',')}`,
+        )} all target groups:  ${allTargetGroupNames?.join(',')}`,
       );
     }
     const listenerNameCert = (nlb.listeners ?? [])
@@ -624,16 +638,22 @@ class CustomizationValidator {
       );
     }
 
-    const allTargetGroupNames = appInfo.appTargetGroups!.map(tg => tg.name);
-    const albTargetGroupNames = alb.listeners!.map(tg => tg.targetGroup);
+    if (
+      albSubnetsCheck &&
+      !this.checkSubnetsTarget(alb.subnets, vpcCheck, appInfo.deploymentTargets, configs.accountsConfig, errors)
+    ) {
+      errors.push(`Application Load Balancer ${alb.name} have invalid subnets configuration`);
+    }
+    const allTargetGroupNames = appInfo.appTargetGroups?.map(tg => tg.name);
+    const albTargetGroupNames = alb.listeners?.map(tg => tg.targetGroup);
     const compareTargetGroupNames = helpers.compareArrays(albTargetGroupNames ?? [], allTargetGroupNames ?? []);
     if (compareTargetGroupNames.length > 0) {
       errors.push(
         `Application Load Balancer ${
           alb.name
-        } has target groups that are not defined in application config. ALB target groups: ${albTargetGroupNames.join(
+        } has target groups that are not defined in application config. ALB target groups: ${albTargetGroupNames?.join(
           ',',
-        )} all target groups:  ${allTargetGroupNames.join(',')}`,
+        )} all target groups:  ${allTargetGroupNames?.join(',')}`,
       );
     }
     const listenerNameCert = (alb.listeners ?? [])
@@ -828,55 +848,44 @@ class CustomizationValidator {
   }
 
   /**
-   * Function to validate if application deployment targets match to VPC Name or VPC template
-   *
+   * Function to validate if subnet is available by local or shared target in deployment target.
    */
-  private checkVpcDeploymentTarget(
-    app: AppConfigItem,
+  private checkSubnetsTarget(
+    subnets: string[],
     vpcCheck: VpcConfig | VpcTemplatesConfig,
+    deploymentTargets: t.DeploymentTargets,
     accountsConfig: AccountsConfig,
-    globalConfig: GlobalConfig,
     errors: string[],
   ) {
-    // get unique app environments
-    const appDeploymentEnvironments = CommonValidatorFunctions.getEnvironmentsFromDeploymentTarget(
-      accountsConfig,
-      app.deploymentTargets,
-      globalConfig,
+    let isValid = true;
+    const subnetsInConfig: SubnetConfig[] = subnets.map(
+      (subnet: string) => vpcCheck.subnets!.find(item => item.name === subnet)!,
     );
-
-    // container for vpc environments
-    let vpcDeploymentEnvironments: string[];
-
-    if ('deploymentTargets' in vpcCheck) {
-      // get unique app environments
-      const vpcDeploymentAccounts = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
+    for (const subnet of subnetsInConfig) {
+      const subnetTargets = new Set([
+        ...CommonValidatorFunctions.getAccountNamesFromTargets(
+          accountsConfig,
+          (subnet.shareTargets ?? {}) as t.ShareTargets,
+        ),
+        ...('deploymentTargets' in vpcCheck
+          ? CommonValidatorFunctions.getAccountNamesFromTargets(accountsConfig, vpcCheck.deploymentTargets)
+          : [vpcCheck.account]),
+      ]);
+      const deploymentTargetAccounts = CommonValidatorFunctions.getAccountNamesFromTargets(
         accountsConfig,
-        vpcCheck.deploymentTargets,
+        deploymentTargets,
       );
-      vpcDeploymentEnvironments = vpcDeploymentAccounts.map(account => `${account}-${vpcCheck.region}`);
-    } else {
-      // standalone vpc only deploys to 1 account/region
-      vpcDeploymentEnvironments = [`${vpcCheck.account}-${vpcCheck.region}`];
-    }
-    // application takes precedence here which means app can be in 2 accounts-regions and vpcTemplate can be in 4 (this has 2 of the app accounts-regions)
-    // however, if app is in 2 and vpcTemplate is not in those 2 then fail.
 
-    const compareAppVpc = CommonValidatorFunctions.compareDeploymentEnvironments(
-      appDeploymentEnvironments,
-      vpcDeploymentEnvironments,
-    );
-
-    if (!compareAppVpc.match && compareAppVpc.message === 'Source length exceeds target') {
-      errors.push(
-        `Application: ${app.name} is being deployed across: ${appDeploymentEnvironments} but vpc ${vpcCheck.name} is only deployed to ${vpcDeploymentEnvironments}`,
-      );
-    } else if (!compareAppVpc.match && compareAppVpc.message === 'Source not in target') {
-      const missingAppEnv = appDeploymentEnvironments.filter(appEnv => !vpcDeploymentEnvironments.includes(appEnv));
-      errors.push(
-        `Application: ${app.name} is being deployed to ${appDeploymentEnvironments} on vpc: ${vpcCheck.name} which is deployed at ${vpcDeploymentEnvironments}. VPC is missing accounts-regions: ${missingAppEnv}`,
-      );
+      for (const targetItem of deploymentTargetAccounts) {
+        if (!subnetTargets.has(targetItem)) {
+          isValid = false;
+          errors.push(
+            `Subnet ${subnet.name} defined in launchTemplate or autoScalingGroup is not created or shared in account ${targetItem}`,
+          );
+        }
+      }
     }
+    return isValid;
   }
 }
 
