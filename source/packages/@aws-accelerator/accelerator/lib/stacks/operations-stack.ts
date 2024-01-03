@@ -1632,16 +1632,21 @@ export class OperationsStack extends AcceleratorStack {
       const logGroupItem = `arn:${cdk.Stack.of(this).partition}:logs:${regionItem}:${
         cdk.Stack.of(this).account
       }:log-group:*`;
+
+      // Already in the list, skip
       if (cloudWatchLogGroupListResources.includes(logGroupItem)) {
         continue;
       }
 
-      if (
-        this.props.globalConfig.logging.sessionManager.excludeRegions &&
-        !this.props.globalConfig.logging.sessionManager.excludeRegions.includes(regionItem)
-      ) {
-        cloudWatchLogGroupListResources.push(logGroupItem);
-      } else {
+      // Exclude regions is not used
+      if (this.props.globalConfig.logging.sessionManager.excludeRegions) {
+        // If exclude regions is defined, ensure not excluded
+        if (!this.props.globalConfig.logging.sessionManager.excludeRegions.includes(regionItem)) {
+          cloudWatchLogGroupListResources.push(logGroupItem);
+        }
+      }
+      // Exclude regions is not being used, add logGroupItem
+      else {
         cloudWatchLogGroupListResources.push(logGroupItem);
       }
     }
@@ -1658,16 +1663,20 @@ export class OperationsStack extends AcceleratorStack {
       const logGroupItem = `arn:${cdk.Stack.of(this).partition}:logs:${regionItem}:${
         cdk.Stack.of(this).account
       }:log-group:${logGroupName}:*`;
+      // Already in the list, skip
       if (cloudWatchLogGroupListResources.includes(logGroupItem)) {
         continue;
       }
 
-      if (
-        this.props.globalConfig.logging.sessionManager.excludeRegions &&
-        !this.props.globalConfig.logging.sessionManager.excludeRegions.includes(regionItem)
-      ) {
-        cloudWatchLogGroupListResources.push(logGroupItem);
-      } else {
+      // Exclude regions is not used
+      if (this.props.globalConfig.logging.sessionManager.excludeRegions) {
+        // If exclude regions is defined, ensure not excluded
+        if (!this.props.globalConfig.logging.sessionManager.excludeRegions.includes(regionItem)) {
+          cloudWatchLogGroupListResources.push(logGroupItem);
+        }
+      }
+      // Exclude regions is not being used, add logGroupItem
+      else {
         cloudWatchLogGroupListResources.push(logGroupItem);
       }
     }
@@ -1683,16 +1692,20 @@ export class OperationsStack extends AcceleratorStack {
       const s3Item = `arn:${cdk.Stack.of(this).partition}:s3:::${this.centralLogsBucketName}/session/${
         cdk.Stack.of(this).account
       }/${regionItem}/*`;
+      // Already in the list, skip
       if (s3BucketResourcesList.includes(s3Item)) {
         continue;
       }
 
-      if (
-        this.props.globalConfig.logging.sessionManager.excludeRegions &&
-        !this.props.globalConfig.logging.sessionManager.excludeRegions.includes(regionItem)
-      ) {
-        s3BucketResourcesList.push(s3Item);
-      } else {
+      // Exclude regions is not used
+      if (this.props.globalConfig.logging.sessionManager.excludeRegions) {
+        // If exclude regions is defined, ensure not excluded
+        if (!this.props.globalConfig.logging.sessionManager.excludeRegions.includes(regionItem)) {
+          s3BucketResourcesList.push(s3Item);
+        }
+      }
+      // Exclude regions is not being used, add s3Item
+      else {
         s3BucketResourcesList.push(s3Item);
       }
     }
