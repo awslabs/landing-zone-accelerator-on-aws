@@ -1,0 +1,20 @@
+# Release version will be provided on build. 
+# For example, to build 1.5.2 run
+# $ docker build -t lza-public-1.5.2 --build-arg LZA_VERSION=v1.5.2 -f Dockerfile.release .
+
+FROM public.ecr.aws/amazonlinux/amazonlinux:latest
+ENV NODE_OPTIONS=--max-old-space-size=12288
+
+RUN dnf update -y
+RUN dnf install -y nodejs awscli unzip
+
+ARG LZA_REPO_URL=https://github.com/awslabs/landing-zone-accelerator-on-aws/archive/release
+ARG LZA_VERSION
+ADD ${LZA_REPO_URL}/${LZA_VERSION}.zip /tmp
+RUN unzip /tmp/${LZA_VERSION}.zip -d /tmp \
+    && rm /tmp/${LZA_VERSION}.zip \
+    && mv /tmp/landing-zone-accelerator-on-aws-release-${LZA_VERSION} /landing-zone-accelerator-on-aws
+
+RUN npm -g install yarn
+RUN cd /landing-zone-accelerator-on-aws/source \
+    && yarn install && yarn build
