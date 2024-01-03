@@ -2420,6 +2420,11 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
       "commands": [
         "env",
         "cd source",
+        "if [ \\"prepare\\" = \\"\${ACCELERATOR_STAGE}\\" ]; then set -e && yarn run ts-node  packages/@aws-accelerator/accelerator/lib/prerequisites.ts --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                " --minimal; fi",
         "cd packages/@aws-accelerator/accelerator",
         "if [ -z \\"\${ACCELERATOR_STAGE}\\" ]; then for STAGE in \\"key\\" \\"logging\\" \\"organizations\\" \\"security-audit\\" \\"network-prep\\" \\"security\\" \\"operations\\" \\"network-vpc\\" \\"security-resources\\" \\"network-associations\\" \\"customizations\\" \\"finalize\\" \\"bootstrap\\"; do set -e && yarn run ts-node --transpile-only cdk.ts synth --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
@@ -2440,7 +2445,12 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                 {
                   "Ref": "AWS::Partition",
                 },
-                " --app cdk.out --stage $STAGE; done; find ./cdk.out -type f -name \\"*.diff\\" -exec cat \\"{}\\" \\\\;;  fi"
+                " --app cdk.out --stage $STAGE; done; find ./cdk.out -type f -name \\"*.diff\\" -exec cat \\"{}\\" \\\\;;  fi",
+        "if [ \\"prepare\\" = \\"\${ACCELERATOR_STAGE}\\" ]; then cd ../../../ && set -e && yarn run ts-node  packages/@aws-accelerator/accelerator/lib/prerequisites.ts --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "; fi"
       ]
     }
   }

@@ -30,6 +30,7 @@
     "@aws-sdk/client-config-service": "3.410.0",
     "@aws-sdk/client-ssm": "3.410.0",
     "@aws-sdk/client-sts": "3.410.0",
+    "@aws-sdk/client-service-quotas": "3.410.0",
     "@types/aws-lambda": "8.10.110",
     "@types/js-yaml": "4.0.5",
     "@types/semver": "7.5.0",
