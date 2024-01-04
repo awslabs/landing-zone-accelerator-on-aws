@@ -292,7 +292,6 @@ export function createTesterStack(
       );
       const app = new cdk.App({
         outdir: `cdk.out/${testerPipelineStackName}`,
-        autoSynth: false,
       });
       const testerPipelineStack = new TesterPipelineStack(app, testerPipelineStackName, {
         env: { account: context.account, region: context.region },
@@ -304,7 +303,6 @@ export function createTesterStack(
       });
       cdk.Aspects.of(testerPipelineStack).add(new AwsSolutionsChecks());
       new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
-      app.synth();
     }
   }
 }
@@ -379,7 +377,6 @@ export function createPrepareStack(
     const prepareStackName = `${AcceleratorStackNames[AcceleratorStage.PREPARE]}-${managementAccountId}-${homeRegion}`;
     const app = new cdk.App({
       outdir: `cdk.out/${prepareStackName}`,
-      autoSynth: false,
     });
     const prepareStack = new PrepareStack(app, `${prepareStackName}`, {
       env: {
@@ -394,7 +391,6 @@ export function createPrepareStack(
     addAcceleratorTags(prepareStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(prepareStack).add(new AwsSolutionsChecks());
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
-    app.synth();
   }
 }
 
@@ -426,7 +422,6 @@ export function createFinalizeStack(
     }-${managementAccountId}-${globalRegion}`;
     const app = new cdk.App({
       outdir: `cdk.out/${finalizeStackName}`,
-      autoSynth: false,
     });
     const finalizeStack = new FinalizeStack(app, `${finalizeStackName}`, {
       env: {
@@ -441,7 +436,6 @@ export function createFinalizeStack(
     addAcceleratorTags(finalizeStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(finalizeStack).add(new AwsSolutionsChecks());
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
-    app.synth();
   }
 }
 
@@ -473,7 +467,6 @@ export function createAccountsStack(
     }-${managementAccountId}-${globalRegion}`;
     const app = new cdk.App({
       outdir: `cdk.out/${accountsStackName}`,
-      autoSynth: false,
     });
     const accountsStack = new AccountsStack(app, `${accountsStackName}`, {
       env: {
@@ -488,7 +481,6 @@ export function createAccountsStack(
     addAcceleratorTags(accountsStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(accountsStack).add(new AwsSolutionsChecks());
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
-    app.synth();
   }
 }
 
@@ -520,7 +512,6 @@ export function createOrganizationsStack(
     }-${managementAccountId}-${enabledRegion}`;
     const app = new cdk.App({
       outdir: `cdk.out/${organizationStackName}`,
-      autoSynth: false,
     });
     const organizationStack = new OrganizationsStack(app, `${organizationStackName}`, {
       env: {
@@ -535,7 +526,6 @@ export function createOrganizationsStack(
     addAcceleratorTags(organizationStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(organizationStack).add(new AwsSolutionsChecks());
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
-    app.synth();
   }
 }
 
@@ -567,7 +557,6 @@ export function createSecurityAuditStack(
     }-${auditAccountId}-${enabledRegion}`;
     const app = new cdk.App({
       outdir: `cdk.out/${securityAuditStackName}`,
-      autoSynth: false,
     });
     const auditStack = new SecurityAuditStack(app, `${securityAuditStackName}`, {
       env: {
@@ -582,7 +571,6 @@ export function createSecurityAuditStack(
     addAcceleratorTags(auditStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(auditStack).add(new AwsSolutionsChecks());
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
-    app.synth();
   }
 }
 
@@ -614,7 +602,6 @@ export function createKeyDependencyStacks(
     const keyStackName = `${AcceleratorStackNames[AcceleratorStage.KEY]}-${accountId}-${enabledRegion}`;
     const app = new cdk.App({
       outdir: `cdk.out/${keyStackName}`,
-      autoSynth: false,
     });
     const keyStack = new KeyStack(app, `${keyStackName}`, {
       env,
@@ -630,7 +617,6 @@ export function createKeyDependencyStacks(
     const dependencyStackName = `${AcceleratorStackNames[AcceleratorStage.DEPENDENCIES]}-${accountId}-${enabledRegion}`;
     const appDependency = new cdk.App({
       outdir: `cdk.out/${dependencyStackName}`,
-      autoSynth: false,
     });
     const dependencyStack = new DependenciesStack(appDependency, `${dependencyStackName}`, {
       env,
@@ -642,7 +628,6 @@ export function createKeyDependencyStacks(
     addAcceleratorTags(dependencyStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(dependencyStack).add(new AwsSolutionsChecks());
     new AcceleratorAspects(appDependency, context.partition, context.useExistingRoles ?? false);
-    app.synth();
   }
 }
 
@@ -674,7 +659,6 @@ export function createBootstrapStack(
     const bootstrapStackName = `${AcceleratorStackNames[AcceleratorStage.BOOTSTRAP]}-${accountId}-${enabledRegion}`;
     const app = new cdk.App({
       outdir: `cdk.out/${bootstrapStackName}`,
-      autoSynth: false,
     });
     const bootstrapStack = new BootstrapStack(app, `${bootstrapStackName}`, {
       env,
@@ -686,7 +670,6 @@ export function createBootstrapStack(
     addAcceleratorTags(bootstrapStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(bootstrapStack).add(new AwsSolutionsChecks());
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
-    app.synth();
   }
 }
 
@@ -718,7 +701,6 @@ export function createLoggingStack(
     const loggingStackName = `${AcceleratorStackNames[AcceleratorStage.LOGGING]}-${accountId}-${enabledRegion}`;
     const app = new cdk.App({
       outdir: `cdk.out/${loggingStackName}`,
-      autoSynth: false,
     });
     const loggingStack = new LoggingStack(app, `${loggingStackName}`, {
       env,
@@ -730,7 +712,6 @@ export function createLoggingStack(
     addAcceleratorTags(loggingStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(loggingStack).add(new AwsSolutionsChecks());
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
-    app.synth();
   }
 }
 
@@ -762,7 +743,6 @@ export function createSecurityStack(
     const securityStackName = `${AcceleratorStackNames[AcceleratorStage.SECURITY]}-${accountId}-${enabledRegion}`;
     const app = new cdk.App({
       outdir: `cdk.out/${securityStackName}`,
-      autoSynth: false,
     });
     const securityStack = new SecurityStack(app, `${securityStackName}`, {
       env,
@@ -774,7 +754,6 @@ export function createSecurityStack(
     addAcceleratorTags(securityStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(securityStack).add(new AwsSolutionsChecks());
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
-    app.synth();
   }
 }
 
@@ -808,7 +787,6 @@ export function createOperationsStack(
     const operationsStackName = `${AcceleratorStackNames[AcceleratorStage.OPERATIONS]}-${accountId}-${enabledRegion}`;
     const app = new cdk.App({
       outdir: `cdk.out/${operationsStackName}`,
-      autoSynth: false,
     });
     const operationsStack = new OperationsStack(app, `${operationsStackName}`, {
       env,
@@ -821,7 +799,6 @@ export function createOperationsStack(
     addAcceleratorTags(operationsStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(operationsStack).add(new AwsSolutionsChecks());
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
-    app.synth();
   }
 }
 
@@ -855,7 +832,6 @@ export function createNetworkPrepStack(
     }-${accountId}-${enabledRegion}`;
     const app = new cdk.App({
       outdir: `cdk.out/${networkPrepStackName}`,
-      autoSynth: false,
     });
     const networkPrepStack = new NetworkPrepStack(app, `${networkPrepStackName}`, {
       env,
@@ -867,7 +843,6 @@ export function createNetworkPrepStack(
     addAcceleratorTags(networkPrepStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(networkPrepStack).add(new AwsSolutionsChecks());
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
-    app.synth();
   }
 }
 
@@ -901,7 +876,6 @@ export function createSecurityResourcesStack(
     }-${accountId}-${enabledRegion}`;
     const app = new cdk.App({
       outdir: `cdk.out/${securityResourcesStackName}`,
-      autoSynth: false,
     });
     const securityResourcesStack = new SecurityResourcesStack(app, `${securityResourcesStackName}`, {
       env,
@@ -913,7 +887,6 @@ export function createSecurityResourcesStack(
     addAcceleratorTags(securityResourcesStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(securityResourcesStack).add(new AwsSolutionsChecks());
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
-    app.synth();
   }
 }
 
@@ -946,7 +919,6 @@ export function createNetworkVpcStacks(
 
     const app = new cdk.App({
       outdir: `cdk.out/${dnsStackName}`,
-      autoSynth: false,
     });
     const vpcStack = new NetworkVpcStack(
       app,
@@ -988,7 +960,6 @@ export function createNetworkVpcStacks(
     dnsStack.addDependency(endpointsStack);
     cdk.Aspects.of(dnsStack).add(new AwsSolutionsChecks());
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
-    app.synth();
   }
 }
 
@@ -1025,7 +996,6 @@ export function createNetworkAssociationsStacks(
     }-${accountId}-${enabledRegion}`;
     const app = new cdk.App({
       outdir: `cdk.out/${networkGwlbStackName}`,
-      autoSynth: false,
     });
 
     const networkAssociationsStack = new NetworkAssociationsStack(app, `${networkAssociationsStackName}`, {
@@ -1050,7 +1020,6 @@ export function createNetworkAssociationsStacks(
     networkGwlbStack.addDependency(networkAssociationsStack);
     cdk.Aspects.of(networkGwlbStack).add(new AwsSolutionsChecks());
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
-    app.synth();
   }
 }
 
@@ -1084,7 +1053,6 @@ export function createCustomizationsStacks(
     }-${accountId}-${enabledRegion}`;
     const app = new cdk.App({
       outdir: `cdk.out/${customizationsStackName}`,
-      autoSynth: false,
     });
     const customizationsStack = new CustomizationsStack(app, `${customizationsStackName}`, {
       env,
@@ -1123,7 +1091,6 @@ export function createCustomizationsStacks(
     );
     cdk.Aspects.of(resourcePolicyEnforcementStack).add(new AwsSolutionsChecks());
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
-    app.synth();
   }
 }
 
@@ -1180,7 +1147,6 @@ export function importAseaResourceStacks(
    */
   const app = new cdk.App({
     outdir: `cdk.out/phase-${accountId}-${enabledRegion}`,
-    autoSynth: false,
   });
 
   const resourceMapping: AseaResourceMapping[] = [];
@@ -1221,7 +1187,6 @@ export function importAseaResourceStacks(
       resourceMapping.push(...stackResourceMapping);
     }
   }
-  app.synth();
   return resourceMapping;
 }
 
@@ -1324,7 +1289,6 @@ function createApplicationsStacks(
       });
       cdk.Aspects.of(applicationStack).add(new AwsSolutionsChecks());
       new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
-      app.synth();
     }
   }
 }
