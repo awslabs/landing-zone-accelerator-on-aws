@@ -627,10 +627,10 @@ export class InstallerStack extends cdk.Stack {
               'if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ' +
                 'ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; ' +
                 'fi',
-              `if ! aws cloudformation describe-stacks --stack-name ${acceleratorPrefix}-CDKToolkit --region ${cdk.Aws.REGION}; then ` +
+              `set -e && if ! aws cloudformation describe-stacks --stack-name ${acceleratorPrefix}-CDKToolkit --region ${cdk.Aws.REGION}; then ` +
                 'BOOTSTRAPPED_HOME="no"; ' +
                 'fi',
-              `if ! aws cloudformation describe-stacks --stack-name ${acceleratorPrefix}-CDKToolkit --region ${globalRegion}; then ` +
+              `set -e && if ! aws cloudformation describe-stacks --stack-name ${acceleratorPrefix}-CDKToolkit --region ${globalRegion}; then ` +
                 'BOOTSTRAPPED_GLOBAL="no"; ' +
                 'fi',
               `ENABLE_DIAGNOSTICS_PACK=${this.enableDiagnosticsPack.valueAsString}`,
@@ -641,14 +641,14 @@ export class InstallerStack extends cdk.Stack {
               'cd source',
               `if [ "${cdk.Stack.of(this).partition}" = "aws-cn" ]; then
                   sed -i "s#registry.yarnpkg.com#registry.npmmirror.com#g" yarn.lock;
-                  yarn config set registry https://registry.npmmirror.com
+                  set -e && yarn config set registry https://registry.npmmirror.com
                fi`,
               'yarn install',
               'yarn build',
               'cd packages/@aws-accelerator/installer',
-              `if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ${acceleratorPrefix}-CDKToolkit aws://${cdk.Aws.ACCOUNT_ID}/${cdk.Aws.REGION} --qualifier accel; fi`,
-              `if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ${acceleratorPrefix}-CDKToolkit aws://${cdk.Aws.ACCOUNT_ID}/${globalRegion} --qualifier accel; fi`,
-              `if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
+              `set -e && if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ${acceleratorPrefix}-CDKToolkit aws://${cdk.Aws.ACCOUNT_ID}/${cdk.Aws.REGION} --qualifier accel; fi`,
+              `set -e &&  if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ${acceleratorPrefix}-CDKToolkit aws://${cdk.Aws.ACCOUNT_ID}/${globalRegion} --qualifier accel; fi`,
+              `set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                   export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:${
                     cdk.Stack.of(this).partition
                   }:iam::"$MANAGEMENT_ACCOUNT_ID":role/"$MANAGEMENT_ACCOUNT_ROLE_NAME" --role-session-name acceleratorAssumeRoleSession --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" --output text));
@@ -674,19 +674,21 @@ export class InstallerStack extends cdk.Stack {
                     echo "SSM Parameter Found, setting ENABLE_ASEA_MIGRATION to true"
                     export ENABLE_ASEA_MIGRATION=true
                   fi;`,
-              `if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
+              `set -e && if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
                 yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage diagnostics-pack --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION} --partition ${cdk.Aws.PARTITION}
               fi`,
-              `yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION} --partition ${cdk.Aws.PARTITION}`,
-              `if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION}; fi`,
+              `set -e && yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION} --partition ${cdk.Aws.PARTITION}`,
+              `set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION}; fi`,
             ],
           },
           post_build: {
             commands: [
-              `inprogress_status_count=$(aws codepipeline get-pipeline-state --name "${acceleratorPipelineName}" | grep '"status": "InProgress"' | grep -v grep | wc -l)`,
-              `if [ $inprogress_status_count -eq 0 ]; then
-                aws codepipeline start-pipeline-execution --name "${acceleratorPipelineName}";
-                fi`,
+              `if [ $CODEBUILD_BUILD_SUCCEEDING -eq 1 ]; then
+                inprogress_status_count=$(aws codepipeline get-pipeline-state --name "${acceleratorPipelineName}" | grep '"status": "InProgress"' | grep -v grep | wc -l) && 
+                if [ $inprogress_status_count -eq 0 ]; then
+                set -e && aws codepipeline start-pipeline-execution --name "${acceleratorPipelineName}";
+                  fi
+               fi`,
             ],
           },
         },

@@ -1760,7 +1760,7 @@ phases:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
       - if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; fi
-      - if ! aws cloudformation describe-stacks --stack-name ",
+      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -1772,7 +1772,7 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; then BOOTSTRAPPED_HOME="no"; fi
-      - if ! aws cloudformation describe-stacks --stack-name ",
+      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -1805,12 +1805,12 @@ phases:
                 },
                 "" = "aws-cn" ]; then
                           sed -i "s#registry.yarnpkg.com#registry.npmmirror.com#g" yarn.lock;
-                          yarn config set registry https://registry.npmmirror.com
+                          set -e && yarn config set registry https://registry.npmmirror.com
                        fi
       - yarn install
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+      - set -e && if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -1826,7 +1826,7 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel; fi
-      - if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+      - set -e &&  if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -1849,7 +1849,7 @@ phases:
                 },
                 " --qualifier accel; fi
       - |-
-        if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
+        set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:",
                 {
                   "Ref": "AWS::Partition",
@@ -1931,7 +1931,7 @@ phases:
                             export ENABLE_ASEA_MIGRATION=true
                           fi;
       - |-
-        if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
+        set -e && if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
                         yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage diagnostics-pack --account ",
                 {
                   "Ref": "AWS::AccountId",
@@ -1946,7 +1946,7 @@ phases:
                 },
                 "
                       fi
-      - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -1959,7 +1959,7 @@ phases:
                   "Ref": "AWS::Partition",
                 },
                 "
-      - if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
+      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -1970,17 +1970,18 @@ phases:
                 "; fi
   post_build:
     commands:
-      - "inprogress_status_count=$(aws codepipeline get-pipeline-state --name \\"",
+      - |-
+        if [ $CODEBUILD_BUILD_SUCCEEDING -eq 1 ]; then
+                        inprogress_status_count=$(aws codepipeline get-pipeline-state --name "",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
                     "acceleratorPrefix",
                   ],
                 },
-                "-Pipeline\\" | grep '\\"status\\": \\"InProgress\\"' | grep -v grep | wc -l)"
-      - |-
-        if [ $inprogress_status_count -eq 0 ]; then
-                        aws codepipeline start-pipeline-execution --name "",
+                "-Pipeline" | grep '"status": "InProgress"' | grep -v grep | wc -l) && 
+                        if [ $inprogress_status_count -eq 0 ]; then
+                        set -e && aws codepipeline start-pipeline-execution --name "",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -1988,7 +1989,8 @@ phases:
                   ],
                 },
                 "-Pipeline";
-                        fi
+                          fi
+                       fi
 ",
               ],
             ],
@@ -5177,7 +5179,7 @@ phases:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
       - if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; fi
-      - if ! aws cloudformation describe-stacks --stack-name ",
+      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -5189,7 +5191,7 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; then BOOTSTRAPPED_HOME="no"; fi
-      - if ! aws cloudformation describe-stacks --stack-name ",
+      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -5222,12 +5224,12 @@ phases:
                 },
                 "" = "aws-cn" ]; then
                           sed -i "s#registry.yarnpkg.com#registry.npmmirror.com#g" yarn.lock;
-                          yarn config set registry https://registry.npmmirror.com
+                          set -e && yarn config set registry https://registry.npmmirror.com
                        fi
       - yarn install
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+      - set -e && if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -5243,7 +5245,7 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel; fi
-      - if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+      - set -e &&  if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -5266,7 +5268,7 @@ phases:
                 },
                 " --qualifier accel; fi
       - |-
-        if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
+        set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:",
                 {
                   "Ref": "AWS::Partition",
@@ -5348,7 +5350,7 @@ phases:
                             export ENABLE_ASEA_MIGRATION=true
                           fi;
       - |-
-        if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
+        set -e && if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
                         yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage diagnostics-pack --account ",
                 {
                   "Ref": "AWS::AccountId",
@@ -5363,7 +5365,7 @@ phases:
                 },
                 "
                       fi
-      - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -5376,7 +5378,7 @@ phases:
                   "Ref": "AWS::Partition",
                 },
                 "
-      - if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
+      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -5387,17 +5389,18 @@ phases:
                 "; fi
   post_build:
     commands:
-      - "inprogress_status_count=$(aws codepipeline get-pipeline-state --name \\"",
+      - |-
+        if [ $CODEBUILD_BUILD_SUCCEEDING -eq 1 ]; then
+                        inprogress_status_count=$(aws codepipeline get-pipeline-state --name "",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
                     "acceleratorPrefix",
                   ],
                 },
-                "-Pipeline\\" | grep '\\"status\\": \\"InProgress\\"' | grep -v grep | wc -l)"
-      - |-
-        if [ $inprogress_status_count -eq 0 ]; then
-                        aws codepipeline start-pipeline-execution --name "",
+                "-Pipeline" | grep '"status": "InProgress"' | grep -v grep | wc -l) && 
+                        if [ $inprogress_status_count -eq 0 ]; then
+                        set -e && aws codepipeline start-pipeline-execution --name "",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -5405,7 +5408,8 @@ phases:
                   ],
                 },
                 "-Pipeline";
-                        fi
+                          fi
+                       fi
 ",
               ],
             ],
@@ -8630,7 +8634,7 @@ phases:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
       - if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; fi
-      - if ! aws cloudformation describe-stacks --stack-name ",
+      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -8642,7 +8646,7 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; then BOOTSTRAPPED_HOME="no"; fi
-      - if ! aws cloudformation describe-stacks --stack-name ",
+      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -8675,12 +8679,12 @@ phases:
                 },
                 "" = "aws-cn" ]; then
                           sed -i "s#registry.yarnpkg.com#registry.npmmirror.com#g" yarn.lock;
-                          yarn config set registry https://registry.npmmirror.com
+                          set -e && yarn config set registry https://registry.npmmirror.com
                        fi
       - yarn install
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+      - set -e && if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -8696,7 +8700,7 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel; fi
-      - if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+      - set -e &&  if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -8719,7 +8723,7 @@ phases:
                 },
                 " --qualifier accel; fi
       - |-
-        if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
+        set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:",
                 {
                   "Ref": "AWS::Partition",
@@ -8801,7 +8805,7 @@ phases:
                             export ENABLE_ASEA_MIGRATION=true
                           fi;
       - |-
-        if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
+        set -e && if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
                         yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage diagnostics-pack --account ",
                 {
                   "Ref": "AWS::AccountId",
@@ -8816,7 +8820,7 @@ phases:
                 },
                 "
                       fi
-      - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -8829,7 +8833,7 @@ phases:
                   "Ref": "AWS::Partition",
                 },
                 "
-      - if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
+      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -8840,19 +8844,21 @@ phases:
                 "; fi
   post_build:
     commands:
-      - "inprogress_status_count=$(aws codepipeline get-pipeline-state --name \\"",
+      - |-
+        if [ $CODEBUILD_BUILD_SUCCEEDING -eq 1 ]; then
+                        inprogress_status_count=$(aws codepipeline get-pipeline-state --name "",
                 {
                   "Ref": "AcceleratorQualifier",
                 },
-                "-pipeline\\" | grep '\\"status\\": \\"InProgress\\"' | grep -v grep | wc -l)"
-      - |-
-        if [ $inprogress_status_count -eq 0 ]; then
-                        aws codepipeline start-pipeline-execution --name "",
+                "-pipeline" | grep '"status": "InProgress"' | grep -v grep | wc -l) && 
+                        if [ $inprogress_status_count -eq 0 ]; then
+                        set -e && aws codepipeline start-pipeline-execution --name "",
                 {
                   "Ref": "AcceleratorQualifier",
                 },
                 "-pipeline";
-                        fi
+                          fi
+                       fi
 ",
               ],
             ],
@@ -12060,7 +12066,7 @@ phases:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
       - if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; fi
-      - if ! aws cloudformation describe-stacks --stack-name ",
+      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -12072,7 +12078,7 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; then BOOTSTRAPPED_HOME="no"; fi
-      - if ! aws cloudformation describe-stacks --stack-name ",
+      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -12105,12 +12111,12 @@ phases:
                 },
                 "" = "aws-cn" ]; then
                           sed -i "s#registry.yarnpkg.com#registry.npmmirror.com#g" yarn.lock;
-                          yarn config set registry https://registry.npmmirror.com
+                          set -e && yarn config set registry https://registry.npmmirror.com
                        fi
       - yarn install
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+      - set -e && if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -12126,7 +12132,7 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel; fi
-      - if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+      - set -e &&  if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -12149,7 +12155,7 @@ phases:
                 },
                 " --qualifier accel; fi
       - |-
-        if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
+        set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:",
                 {
                   "Ref": "AWS::Partition",
@@ -12231,7 +12237,7 @@ phases:
                             export ENABLE_ASEA_MIGRATION=true
                           fi;
       - |-
-        if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
+        set -e && if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
                         yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage diagnostics-pack --account ",
                 {
                   "Ref": "AWS::AccountId",
@@ -12246,7 +12252,7 @@ phases:
                 },
                 "
                       fi
-      - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -12259,7 +12265,7 @@ phases:
                   "Ref": "AWS::Partition",
                 },
                 "
-      - if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
+      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -12270,19 +12276,21 @@ phases:
                 "; fi
   post_build:
     commands:
-      - "inprogress_status_count=$(aws codepipeline get-pipeline-state --name \\"",
+      - |-
+        if [ $CODEBUILD_BUILD_SUCCEEDING -eq 1 ]; then
+                        inprogress_status_count=$(aws codepipeline get-pipeline-state --name "",
                 {
                   "Ref": "AcceleratorQualifier",
                 },
-                "-pipeline\\" | grep '\\"status\\": \\"InProgress\\"' | grep -v grep | wc -l)"
-      - |-
-        if [ $inprogress_status_count -eq 0 ]; then
-                        aws codepipeline start-pipeline-execution --name "",
+                "-pipeline" | grep '"status": "InProgress"' | grep -v grep | wc -l) && 
+                        if [ $inprogress_status_count -eq 0 ]; then
+                        set -e && aws codepipeline start-pipeline-execution --name "",
                 {
                   "Ref": "AcceleratorQualifier",
                 },
                 "-pipeline";
-                        fi
+                          fi
+                       fi
 ",
               ],
             ],
@@ -15495,7 +15503,7 @@ phases:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
       - if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; fi
-      - if ! aws cloudformation describe-stacks --stack-name ",
+      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -15507,7 +15515,7 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; then BOOTSTRAPPED_HOME="no"; fi
-      - if ! aws cloudformation describe-stacks --stack-name ",
+      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -15540,12 +15548,12 @@ phases:
                 },
                 "" = "aws-cn" ]; then
                           sed -i "s#registry.yarnpkg.com#registry.npmmirror.com#g" yarn.lock;
-                          yarn config set registry https://registry.npmmirror.com
+                          set -e && yarn config set registry https://registry.npmmirror.com
                        fi
       - yarn install
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+      - set -e && if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -15561,7 +15569,7 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel; fi
-      - if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+      - set -e &&  if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -15584,7 +15592,7 @@ phases:
                 },
                 " --qualifier accel; fi
       - |-
-        if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
+        set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:",
                 {
                   "Ref": "AWS::Partition",
@@ -15666,7 +15674,7 @@ phases:
                             export ENABLE_ASEA_MIGRATION=true
                           fi;
       - |-
-        if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
+        set -e && if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
                         yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage diagnostics-pack --account ",
                 {
                   "Ref": "AWS::AccountId",
@@ -15681,7 +15689,7 @@ phases:
                 },
                 "
                       fi
-      - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -15694,7 +15702,7 @@ phases:
                   "Ref": "AWS::Partition",
                 },
                 "
-      - if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
+      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -15705,19 +15713,21 @@ phases:
                 "; fi
   post_build:
     commands:
-      - "inprogress_status_count=$(aws codepipeline get-pipeline-state --name \\"",
+      - |-
+        if [ $CODEBUILD_BUILD_SUCCEEDING -eq 1 ]; then
+                        inprogress_status_count=$(aws codepipeline get-pipeline-state --name "",
                 {
                   "Ref": "AcceleratorQualifier",
                 },
-                "-pipeline\\" | grep '\\"status\\": \\"InProgress\\"' | grep -v grep | wc -l)"
-      - |-
-        if [ $inprogress_status_count -eq 0 ]; then
-                        aws codepipeline start-pipeline-execution --name "",
+                "-pipeline" | grep '"status": "InProgress"' | grep -v grep | wc -l) && 
+                        if [ $inprogress_status_count -eq 0 ]; then
+                        set -e && aws codepipeline start-pipeline-execution --name "",
                 {
                   "Ref": "AcceleratorQualifier",
                 },
                 "-pipeline";
-                        fi
+                          fi
+                       fi
 ",
               ],
             ],
