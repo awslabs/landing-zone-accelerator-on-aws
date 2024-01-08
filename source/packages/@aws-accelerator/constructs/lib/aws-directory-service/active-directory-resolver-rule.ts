@@ -49,7 +49,7 @@ export class ActiveDirectoryResolverRule extends Construct {
 
     const providerLambda = new cdk.aws_lambda.Function(this, 'UpdateResolverRuleFunction', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'update-resolver-role/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_20_X,
       handler: 'index.handler',
       timeout: cdk.Duration.seconds(30),
       description: 'Update resolver group rule target ips',

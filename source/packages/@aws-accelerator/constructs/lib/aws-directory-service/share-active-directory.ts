@@ -57,7 +57,7 @@ export class ShareActiveDirectory extends Construct {
 
     const providerLambda = new cdk.aws_lambda.Function(this, 'ShareManageActiveDirectoryFunction', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'share-directory/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_20_X,
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(15),
       description: 'Share Manage active directory handler',

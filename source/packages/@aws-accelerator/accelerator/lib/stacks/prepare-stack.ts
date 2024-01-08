@@ -512,7 +512,7 @@ export class PrepareStack extends AcceleratorStack {
         // resources for control tower lifecycle events
         const controlTowerOuEventsFunction = new cdk.aws_lambda.Function(this, 'ControlTowerOuEventsFunction', {
           code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, '../lambdas/control-tower-ou-events/dist')),
-          runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
+          runtime: cdk.aws_lambda.Runtime.NODEJS_20_X,
           handler: 'index.handler',
           description: 'Lambda function to process ControlTower OU events from CloudTrail',
           timeout: cdk.Duration.minutes(5),
@@ -609,7 +609,7 @@ export class PrepareStack extends AcceleratorStack {
           'ControlTowerNotificationsFunction',
           {
             code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, '../lambdas/control-tower-notifications/dist')),
-            runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
+            runtime: cdk.aws_lambda.Runtime.NODEJS_20_X,
             handler: 'index.handler',
             description: 'Lambda function to process ControlTower notifications from audit account',
             timeout: cdk.Duration.minutes(5),

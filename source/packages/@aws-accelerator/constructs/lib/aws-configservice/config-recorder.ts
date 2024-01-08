@@ -109,7 +109,7 @@ export class ConfigServiceRecorder extends Construct {
 
     const lambdaFunction = new cdk.aws_lambda.Function(this, 'ConfigServiceRecorderFunction', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'config-recorder/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_20_X,
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(5),
       description: 'Create/Update Config Recorder',

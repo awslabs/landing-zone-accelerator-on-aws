@@ -101,7 +101,7 @@ export class NewCloudWatchLogEvent extends Construct {
       this,
       'SetLogRetentionSubscriptionFunction',
       {
-        runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
+        runtime: cdk.aws_lambda.Runtime.NODEJS_20_X,
         timeout: cdk.Duration.minutes(15),
         handler: 'index.handler',
         code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'put-subscription-policy/dist')),

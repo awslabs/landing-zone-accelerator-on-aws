@@ -105,7 +105,7 @@ export class LzaLambda extends Construct {
       functionName: props.functionName,
       description: props.description ?? `Accelerator deployed lambda function.`,
       code: cdk.aws_lambda.Code.fromAsset(props.assetPath),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_20_X,
       memorySize: props.memorySize ?? 256,
       timeout: props.timeOut,
       role: props.role,

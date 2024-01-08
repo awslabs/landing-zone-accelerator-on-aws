@@ -77,7 +77,7 @@ export class GovCloudAccountVendingStack extends cdk.Stack {
     // Lambda function to be used in Custom Resource
     const accountVendingFunction = new cdk.aws_lambda.Function(this, 'GovCloudAccountVendingFunction', {
       code: new cdk.aws_lambda.InlineCode(fileContents.toString()),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_20_X,
       handler: 'index.handler',
       timeout: cdk.Duration.seconds(900),
       functionName: `${props.acceleratorPrefix}-GovCloudAccountVending`,

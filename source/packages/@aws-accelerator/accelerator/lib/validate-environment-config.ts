@@ -109,7 +109,7 @@ export class ValidateEnvironmentConfig extends Construct {
     });
 
     const providerLambda = new cdk.aws_lambda.Function(this, 'ValidateEnvironmentFunction', {
-      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_20_X,
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, './lambdas/validate-environment/dist')),
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(15),

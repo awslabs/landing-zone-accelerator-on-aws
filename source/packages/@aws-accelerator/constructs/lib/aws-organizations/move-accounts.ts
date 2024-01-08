@@ -68,7 +68,7 @@ export class MoveAccounts extends Construct {
 
     const providerLambda = new cdk.aws_lambda.Function(this, 'MoveAccountsFunction', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'move-account/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_20_X,
       handler: 'index.handler',
       timeout: cdk.Duration.seconds(150),
       description: 'Moves accounts to conform account config',

@@ -52,7 +52,7 @@ export class GetCloudFormationResourceType extends Construct {
 
     const lambdaFunction = new cdk.aws_lambda.Function(this, 'GetCloudFormationResourceTypeFunction', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'get-resource-type/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_20_X,
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(3),
       description: 'Get CloudFormation Resources from Stack by LogicalResourceId',
