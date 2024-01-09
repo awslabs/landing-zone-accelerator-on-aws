@@ -2633,6 +2633,7 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
         this.getParametersByPath(getSsmPath(t.AseaResourceTypePaths.VPC), ssmClient),
         this.getParametersByPath(getSsmPath(t.AseaResourceTypePaths.TRANSIT_GATEWAY), ssmClient),
         this.getParametersByPath(getSsmPath(t.AseaResourceTypePaths.VPC_PEERING), ssmClient),
+        this.getParametersByPath(getSsmPath(t.AseaResourceTypePaths.NETWORK_FIREWALL), ssmClient),
       ];
       const ssmResults = await Promise.all(ssmPromises);
       this.externalLandingZoneResources.resourceParameters[`${accountId}-${region}`] = ssmResults.reduce(

@@ -546,10 +546,7 @@ export abstract class NetworkStack extends AcceleratorStack {
         // Get firewall policy ARN
         let policyArn: string;
 
-        if (
-          delegatedAdminAccountId === cdk.Stack.of(this).account ||
-          this.isManagedByAsea(AseaResourceType.NFW, firewallItem.name)
-        ) {
+        if (delegatedAdminAccountId === cdk.Stack.of(this).account) {
           policyArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
             this,
             this.getSsmPath(SsmResourceType.NFW_POLICY, [firewallItem.firewallPolicy]),

@@ -932,4 +932,5 @@ export enum AseaResourceTypePaths {
   VPC = '/network/vpc/',
   VPC_PEERING = '/network/vpcPeering/',
   TRANSIT_GATEWAY = '/network/transitGateways/',
+  NETWORK_FIREWALL = '/network/networkFirewall/',
 }

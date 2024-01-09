@@ -13,12 +13,7 @@ import {
   CfnVPNGateway,
 } from 'aws-cdk-lib/aws-ec2';
 
-import {
-  FirewallPolicyProperty,
-  NetworkFirewall,
-  NetworkFirewallPolicy,
-  NetworkFirewallRuleGroup,
-} from '@aws-accelerator/constructs';
+import { NetworkFirewall } from '@aws-accelerator/constructs';
 import { CfnInclude } from 'aws-cdk-lib/cloudformation-include';
 import {
   AseaStackInfo,
@@ -26,7 +21,6 @@ import {
   VpcTemplatesConfig,
   AseaResourceType,
   NfwFirewallConfig,
-  NfwStatefulRuleGroupReferenceConfig,
   RouteTableConfig,
   TransitGatewayAttachmentConfig,
   SecurityGroupRuleConfig,
@@ -1042,8 +1036,7 @@ export class VpcResources extends AseaResource {
     return stackInfo.resources.filter(cfnResource => cfnResource.resourceType === RESOURCE_TYPE.CIDR_BLOCK);
   }
 
-  private createNetworkFirewallRuleGroups(vpcStackInfo: NestedAseaStackInfo, vpcStack: CfnInclude) {
-    const ruleGroupMap = new Map<string, string>();
+  private deleteAseaNetworkFirewallRuleGroups(vpcStackInfo: NestedAseaStackInfo, vpcStack: CfnInclude) {
     const networkFirewallConfig = this.props.networkConfig.centralNetworkServices?.networkFirewall;
     const firewallRuleGroupResources = this.filterResourcesByType(
       vpcStackInfo.resources,
@@ -1057,97 +1050,26 @@ export class VpcResources extends AseaResource {
       const ruleItem = networkFirewallConfig?.rules.find(group => group.name === aseaManagedRuleGroupName);
       if (!ruleItem) {
         this.scope.addLogs(
-          LogLevel.WARN,
+          LogLevel.INFO,
           `No Firewall Rule Group found in configuration and firewall policy present in resource mapping`,
         );
         continue;
       }
-      const rule = NetworkFirewallRuleGroup.includedCfnResource(
-        vpcStack,
-        firewallRuleGroupResource.logicalResourceId,
-        ruleItem,
-      );
-      ruleGroupMap.set(ruleItem.name, rule.ref);
-      this.addSsmParameter({
-        logicalId: pascalCase(`SsmParam${ruleItem.name}NetworkFirewallRuleGroup`),
-        parameterName: this.scope.getSsmPath(SsmResourceType.NFW_RULE_GROUP, [ruleItem.name]),
-        stringValue: rule.ref,
-      });
-      this.scope.addAseaResource(AseaResourceType.NFW_RULE_GROUP, ruleItem.name);
+
+      this.scope.addLogs(LogLevel.INFO, `Removing NFW Rule Group: ${firewallRuleGroupResource.logicalResourceId}`);
+      vpcStack.node.tryRemoveChild(firewallRuleGroupResource.logicalResourceId);
     }
-    return ruleGroupMap;
   }
 
-  private getRuleGroupReferences<T>(
-    ruleGroupReferences: NfwStatefulRuleGroupReferenceConfig[],
-    ruleGroupMap?: Map<string, string>,
-  ): T[] {
-    const references: T[] = [];
-
-    for (const reference of ruleGroupReferences) {
-      let groupArn = !!ruleGroupMap && ruleGroupMap.get(reference.name);
-      if (!groupArn) {
-        groupArn = this.scope.getSsmPath(SsmResourceType.NFW_RULE_GROUP, [reference.name]);
-      }
-      if (groupArn) references.push({ resourceArn: groupArn, priority: reference.priority } as T);
-    }
-    return references;
-  }
-
-  private createNetworkFirewallPolicy(
-    vpcStackInfo: NestedAseaStackInfo,
-    vpcStack: CfnInclude,
-    ruleGroupsMap?: Map<string, string>,
-  ) {
-    const networkFirewallConfig = this.props.networkConfig.centralNetworkServices?.networkFirewall;
+  private deleteAseaNetworkFirewallPolicy(vpcStackInfo: NestedAseaStackInfo, vpcStack: CfnInclude) {
     const firewallResources = this.filterResourcesByType(vpcStackInfo.resources, RESOURCE_TYPE.NETWORK_FIREWALL_POLICY);
     if (firewallResources.length === 0) {
       return;
     }
     const aseaManagedPolicy = firewallResources[0];
-    const aseaManagedPolicyName: string = aseaManagedPolicy.resourceMetadata['Properties'].FirewallPolicyName;
-    const policyItem = networkFirewallConfig?.policies.find(policy => policy.name === aseaManagedPolicyName);
-    if (!policyItem) {
-      this.scope.addLogs(
-        LogLevel.WARN,
-        `No Firewall Policy found in configuration and firewall policy present in resource mapping`,
-      );
-      return;
-    }
-    const firewallPolicy: FirewallPolicyProperty = {
-      statelessDefaultActions: policyItem.firewallPolicy.statelessDefaultActions,
-      statelessFragmentDefaultActions: policyItem.firewallPolicy.statelessFragmentDefaultActions,
-      statefulDefaultActions: policyItem.firewallPolicy.statefulDefaultActions,
-      statefulEngineOptions: policyItem.firewallPolicy.statefulEngineOptions,
-      statefulRuleGroupReferences: policyItem.firewallPolicy.statefulRuleGroups
-        ? this.getRuleGroupReferences<{ resourceArn: string; priority?: number }>(
-            policyItem.firewallPolicy.statefulRuleGroups,
-            ruleGroupsMap,
-          )
-        : [],
-      statelessCustomActions: policyItem.firewallPolicy.statelessCustomActions,
-      statelessRuleGroupReferences: policyItem.firewallPolicy.statelessRuleGroups
-        ? this.getRuleGroupReferences<{ resourceArn: string; priority: number }>(
-            policyItem.firewallPolicy.statelessRuleGroups,
-            ruleGroupsMap,
-          )
-        : [],
-    };
-    const policy = NetworkFirewallPolicy.includedCfnResource(vpcStack, aseaManagedPolicy.logicalResourceId, {
-      description: policyItem.description,
-      name: policyItem.name,
-      firewallPolicy,
-    });
-    this.addSsmParameter({
-      logicalId: pascalCase(`SsmParam${policyItem.name}NetworkFirewallPolicy`),
-      parameterName: this.scope.getSsmPath(SsmResourceType.NFW_POLICY, [policyItem.name]),
-      stringValue: policy.ref,
-    });
-    this.scope.addAseaResource(AseaResourceType.NFW_POLICY, policyItem.name);
-    return {
-      name: policyItem.name,
-      arn: policy.ref,
-    };
+
+    this.scope.addLogs(LogLevel.INFO, `Removing NFW Policy: ${aseaManagedPolicy.logicalResourceId}`);
+    vpcStack.node.tryRemoveChild(aseaManagedPolicy.logicalResourceId);
   }
 
   private addFirewallLoggingConfiguration(
@@ -1199,28 +1121,46 @@ export class VpcResources extends AseaResource {
       logDestinationConfigs: destinationConfigs,
     };
   }
+
   private createNetworkFirewall(
     vpcItem: VpcConfig | VpcTemplatesConfig,
     vpcStackInfo: NestedAseaStackInfo,
     vpcStack: CfnInclude,
     vpcId: string,
     subnets: { [name: string]: CfnSubnet },
-    policy?: {
-      name: string;
-      arn: string;
-    },
   ) {
     const networkFirewallConfig = this.props.networkConfig.centralNetworkServices?.networkFirewall;
     const firewallsConfig = networkFirewallConfig?.firewalls.filter(
       firewallConfig => firewallConfig && firewallConfig.vpc === vpcItem.name,
     );
     const firewallResources = this.filterResourcesByType(vpcStackInfo.resources, RESOURCE_TYPE.NETWORK_FIREWALL);
+
+    // If there are not any ASEA managed firewalls in resource mapping continue
     if (firewallResources.length === 0) {
       return;
-    } else if (!firewallsConfig || firewallsConfig.length === 0) {
-      this.scope.addLogs(LogLevel.WARN, `No Firewall found in configuration and firewall present in resource mapping`);
+    }
+
+    // Delete any ASEA managed firewalls if no firewalls are found in configuration
+    if (!firewallsConfig || firewallsConfig.length === 0) {
+      this.scope.addLogs(LogLevel.INFO, `No Firewall found in configuration`);
+      for (const firewallResource of firewallResources) {
+        this.scope.addLogs(LogLevel.WARN, `Removing firewall ${firewallResource.physicalResourceId} from ASEA stack`);
+        this.scope.node.tryRemoveChild(firewallResource.logicalResourceId);
+      }
       return;
     }
+
+    // Delete any ASEA managed firewalls that don't exist in configuration.
+    for (const firewallResource of firewallResources) {
+      const firewallName = firewallResource.resourceMetadata['Properties']['FirewallName'];
+      const firewallConfig = firewallsConfig.find(nfw => nfw.name === firewallName);
+      if (!firewallConfig) {
+        this.scope.addLogs(LogLevel.WARN, `Removing firewall ${firewallResource.physicalResourceId} from ASEA stack`);
+        vpcStack.node.tryRemoveChild(firewallResource.logicalResourceId);
+        return;
+      }
+    }
+
     for (const firewallItem of firewallsConfig) {
       const firewallResource = this.findResourceByName(firewallResources, 'FirewallName', firewallItem.name);
       if (!firewallResource) continue;
@@ -1234,34 +1174,42 @@ export class VpcResources extends AseaResource {
         }
         if (subnetId) subnetIds.push(subnetId);
       });
-      let policyArn = !!policy && firewallItem.firewallPolicy === policy?.name ? policy.arn : undefined;
-      if (!policyArn) {
-        policyArn = this.scope.getExternalResourceParameter(
-          this.scope.getSsmPath(SsmResourceType.NFW_POLICY, [firewallItem.firewallPolicy]),
-        );
+
+      if (this.props.stage === AcceleratorStage.IMPORT_ASEA_RESOURCES) {
+        const firewallResource = this.findResourceByName(firewallResources, 'FirewallName', firewallItem.name);
+        if (!firewallResource) continue;
+        this.ssmParameters.push({
+          logicalId: pascalCase(`SsmParam${pascalCase(firewallItem.vpc) + pascalCase(firewallItem.name)}FirewallArn`),
+          parameterName: this.scope.getSsmPath(SsmResourceType.NFW, [firewallItem.vpc, firewallItem.name]),
+          stringValue: firewallResource?.physicalResourceId,
+        });
       }
-      if (!policyArn) {
-        throw new Error(
-          `Firewall is managed externally and no SSM Parameter found for policy "${firewallItem.firewallPolicy}"`,
-        );
-      }
-      const firewall = NetworkFirewall.includedCfnResource(vpcStack, firewallResource.logicalResourceId, {
-        firewallPolicyArn: policyArn,
-        name: firewallItem.name,
-        description: firewallItem.description,
-        subnets: subnetIds,
-        vpcId: vpcId,
-        deleteProtection: firewallItem.deleteProtection,
-        firewallPolicyChangeProtection: firewallItem.firewallPolicyChangeProtection,
-        subnetChangeProtection: firewallItem.subnetChangeProtection,
-      });
-      this.addFirewallLoggingConfiguration(vpcStackInfo, vpcStack, firewallItem);
-      this.ssmParameters.push({
-        logicalId: pascalCase(`SsmParam${pascalCase(firewallItem.vpc) + pascalCase(firewallItem.name)}FirewallArn`),
-        parameterName: this.scope.getSsmPath(SsmResourceType.NFW, [firewallItem.vpc, firewallItem.name]),
-        stringValue: firewall.attrFirewallArn,
-      });
+
       this.scope.addAseaResource(AseaResourceType.NFW, firewallItem.name);
+      if (this.props.stage === AcceleratorStage.POST_IMPORT_ASEA_RESOURCES) {
+        const region = vpcStackInfo.region;
+        const partition = this.props.partition;
+        const delegatedAdminAccountId = this.props.accountsConfig.getAccountId(
+          this.props.networkConfig.centralNetworkServices?.delegatedAdminAccount ?? '',
+        );
+        const firewallPolicyArn = `arn:${partition}:network-firewall:${region}:${delegatedAdminAccountId}:firewall-policy/${firewallItem.firewallPolicy}`;
+        const firewall = NetworkFirewall.includedCfnResource(vpcStack, firewallResource.logicalResourceId, {
+          firewallPolicyArn: firewallPolicyArn,
+          name: firewallItem.name,
+          description: firewallItem.description,
+          subnets: subnetIds,
+          vpcId: vpcId,
+          deleteProtection: firewallItem.deleteProtection,
+          firewallPolicyChangeProtection: firewallItem.firewallPolicyChangeProtection,
+          subnetChangeProtection: firewallItem.subnetChangeProtection,
+        });
+        this.addFirewallLoggingConfiguration(vpcStackInfo, vpcStack, firewallItem);
+        this.ssmParameters.push({
+          logicalId: pascalCase(`SsmParam${pascalCase(firewallItem.vpc) + pascalCase(firewallItem.name)}FirewallArn`),
+          parameterName: this.scope.getSsmPath(SsmResourceType.NFW, [firewallItem.vpc, firewallItem.name]),
+          stringValue: firewall.attrFirewallArn,
+        });
+      }
     }
   }
 
@@ -1300,9 +1248,14 @@ export class VpcResources extends AseaResource {
     vpcId: string,
     subnets: { [name: string]: CfnSubnet },
   ) {
-    const ruleGroupsMap = this.createNetworkFirewallRuleGroups(vpcStackInfo, vpcStack);
-    const firewallPolicy = this.createNetworkFirewallPolicy(vpcStackInfo, vpcStack, ruleGroupsMap);
-    this.createNetworkFirewall(vpcItem, vpcStackInfo, vpcStack, vpcId, subnets, firewallPolicy);
+    if (this.props.stage === AcceleratorStage.IMPORT_ASEA_RESOURCES) {
+      this.createNetworkFirewall(vpcItem, vpcStackInfo, vpcStack, vpcId, subnets);
+    }
+    if (this.props.stage === AcceleratorStage.POST_IMPORT_ASEA_RESOURCES) {
+      this.deleteAseaNetworkFirewallRuleGroups(vpcStackInfo, vpcStack);
+      this.deleteAseaNetworkFirewallPolicy(vpcStackInfo, vpcStack);
+      this.createNetworkFirewall(vpcItem, vpcStackInfo, vpcStack, vpcId, subnets);
+    }
   }
 
   private gatewayEndpoints(
