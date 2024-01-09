@@ -56,6 +56,7 @@ export class AccountsConfigTypes {
 export class AccountIdConfig implements t.TypeOf<typeof AccountsConfigTypes.accountIdConfig> {
   readonly email: string = '';
   readonly accountId: string = '';
+  readonly status?: string = '';
 }
 
 /**
@@ -349,7 +350,7 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
 
           page.Accounts?.forEach(item => {
             if (item.Email && item.Id) {
-              this.accountIds?.push({ email: item.Email, accountId: item.Id });
+              this.accountIds?.push({ email: item.Email, accountId: item.Id, status: item.Status });
             }
           });
           nextToken = page.NextToken;
@@ -396,7 +397,20 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
   }
 
   public getAccountIds(): string[] {
-    return this.accountIds?.flatMap(item => item.accountId) ?? [];
+    const accountEmails = [...this.mandatoryAccounts, ...this.workloadAccounts].map(account => account.email);
+    const lzaAccounts =
+      this.accountIds?.filter(item => {
+        if (accountEmails.includes(item.email)) {
+          if (!item.status) {
+            return true;
+          }
+          if (item.status === 'ACTIVE') {
+            return true;
+          }
+        }
+        return false;
+      }) ?? [];
+    return lzaAccounts.map(account => account.accountId);
   }
 
   public getAccount(name: string): AccountConfig {
