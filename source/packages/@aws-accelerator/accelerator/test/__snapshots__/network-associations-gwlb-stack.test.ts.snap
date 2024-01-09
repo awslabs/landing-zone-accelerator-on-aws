@@ -7,6 +7,10 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
       "Default": "/accelerator/kms/lambda/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworkgwlbAcceleratorGWLBNonDelegatedendpointServiceidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/gwlb/Accelerator-GWLB-NonDelegated/endpointService/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratornetworkgwlbAcceleratorGWLBarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/gwlb/Accelerator-GWLB/arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -2356,6 +2360,80 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
         },
       },
       "Type": "AWS::EC2::VPCEndpoint",
+    },
+    "NetworkSecondaryVpcSharedSecondaryEndpointAGwlbEpBCA22033": {
+      "Properties": {
+        "ServiceName": {
+          "Fn::Join": [
+            "",
+            [
+              "com.amazonaws.vpce.us-east-1.",
+              {
+                "Ref": "SsmParameterValueacceleratornetworkgwlbAcceleratorGWLBNonDelegatedendpointServiceidC96584B6F00A464EAD1953AFF4B05118Parameter",
+              },
+            ],
+          ],
+        },
+        "SubnetIds": [
+          {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondarysubnetNetworkSecondaryAidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+        ],
+        "VpcEndpointType": "GatewayLoadBalancer",
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
+    },
+    "NetworkSecondaryVpcSharedSecondaryEndpointAGwlbEpNetworkSecondaryVpcNetworkSecondaryARtRouteTableGwlbRoute8BFB7480": {
+      "Properties": {
+        "DestinationCidrBlock": "10.0.0.0/24",
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryrouteTableNetworkSecondaryARtidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "VpcEndpointId": {
+          "Ref": "NetworkSecondaryVpcSharedSecondaryEndpointAGwlbEpBCA22033",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "NetworkSecondaryVpcSharedSecondaryEndpointDGwlbEp3C49791E": {
+      "Properties": {
+        "ServiceName": {
+          "Fn::Join": [
+            "",
+            [
+              "com.amazonaws.vpce.us-east-1.",
+              {
+                "Ref": "SsmParameterValueacceleratornetworkgwlbAcceleratorGWLBNonDelegatedendpointServiceidC96584B6F00A464EAD1953AFF4B05118Parameter",
+              },
+            ],
+          ],
+        },
+        "SubnetIds": [
+          {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondarysubnetNetworkSecondaryDidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+        ],
+        "VpcEndpointType": "GatewayLoadBalancer",
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
+    },
+    "NetworkSecondaryVpcSharedSecondaryEndpointDGwlbEpNetworkSecondaryVpcNetworkSecondaryDRtRouteTableGwlbRouteEEDE358E": {
+      "Properties": {
+        "DestinationCidrBlock": "10.0.0.0/24",
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryrouteTableNetworkSecondaryDRtidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "VpcEndpointId": {
+          "Ref": "NetworkSecondaryVpcSharedSecondaryEndpointDGwlbEp3C49791E",
+        },
+      },
+      "Type": "AWS::EC2::Route",
     },
     "SameAccountFirewallCgwCustomerGatewayC0237E66": {
       "Properties": {

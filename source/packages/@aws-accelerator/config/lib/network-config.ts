@@ -935,6 +935,7 @@ export class NetworkConfigTypes {
     endpoints: t.array(this.gwlbEndpointConfig),
     subnets: t.array(t.nonEmptyString),
     vpc: t.nonEmptyString,
+    account: t.optional(t.nonEmptyString),
     crossZoneLoadBalancing: t.optional(t.boolean),
     deletionProtection: t.optional(t.boolean),
     targetGroup: t.optional(t.nonEmptyString),
@@ -7285,6 +7286,17 @@ export class GwlbConfig implements t.TypeOf<typeof NetworkConfigTypes.gwlbConfig
    * @see {@link VpcConfig}
    */
   readonly vpc: string = '';
+  /**
+   * (OPTIONAL) Set an override for the account the Gateway Load Balancer is deployed to.
+   *
+   * @remarks
+   * This is the `account` property of the VPC referenced in the `vpc` property.
+   *
+   * This value defaults to the value set for the central network services delegated admin account.
+   * Only set this value if you would like your Gateway Load Balancer deployed to an account other than
+   * the configured delegated admin account.
+   */
+  readonly account: string | undefined = undefined;
   /**
    * (OPTIONAL) Whether to enable cross-zone load balancing.
    */

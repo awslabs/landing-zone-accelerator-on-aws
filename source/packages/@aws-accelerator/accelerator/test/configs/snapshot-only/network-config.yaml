@@ -271,6 +271,31 @@ centralNetworkServices:
           account: SharedServices
           subnet: SharedServices-App-C
           vpc: SharedServices-Main
+    - name: Accelerator-GWLB-NonDelegated
+      subnets:
+        - SharedServices-App-A
+        - SharedServices-App-B
+      account: SharedServices
+      vpc: SharedServices-Main
+      deletionProtection: true
+      targetGroup: shared-services-target
+      endpoints:
+        - name: Shared-Endpoint-A
+          account: SharedServices
+          subnet: SharedServices-App-A
+          vpc: SharedServices-Main
+        - name: Shared-Endpoint-B
+          account: SharedServices
+          subnet: SharedServices-App-B
+          vpc: SharedServices-Main
+        - name: Shared-Secondary-Endpoint-D
+          account: Network
+          vpc: Network-Secondary
+          subnet: Network-Secondary-D
+        - name: Shared-Secondary-Endpoint-A
+          account: Network
+          vpc: Network-Secondary
+          subnet: Network-Secondary-A
   networkFirewall:
     firewalls:
       - name: accelerator-firewall
@@ -643,7 +668,11 @@ vpcs:
     instanceTenancy: default
     routeTables:
       - name: Network-Secondary-A-Rt
-        routes: []
+        routes:
+          - name: GwlbRoute
+            destination: 10.0.0.0/24
+            type: gatewayLoadBalancerEndpoint
+            target: Shared-Secondary-Endpoint-A
       - name: Network-Secondary-B-Rt
         routes:
           - name: LgwRoute
@@ -664,6 +693,10 @@ vpcs:
             type: networkFirewall
             target: az-id-firewall
             targetAvailabilityZone: 2
+          - name: GwlbRoute
+            destination: 10.0.0.0/24
+            type: gatewayLoadBalancerEndpoint
+            target: Shared-Secondary-Endpoint-D
     subnets:
       - name: Network-Secondary-A
         availabilityZone: a
@@ -1548,6 +1581,10 @@ vpcs:
             destination: 10.0.0.0/28
             type: networkInterface
             target: ${ACCEL_LOOKUP::EC2:ENI_0:firewall-with-shared-subnet}
+          - name: GwlbRoute
+            destination: 10.1.0.0/24
+            type: gatewayLoadBalancerEndpoint
+            target: Shared-Endpoint-A
       - name: SharedServices-App-B
         routes:
           - name: TgwRoute
@@ -1564,6 +1601,10 @@ vpcs:
             destination: 10.0.0.0/24
             type: vpcPeering
             target: CrossAccount
+          - name: GwlbRoute
+            destination: 10.1.0.0/24
+            type: gatewayLoadBalancerEndpoint
+            target: Shared-Endpoint-B
       - name: SharedServices-App-C
         routes:
           - name: TgwRoute

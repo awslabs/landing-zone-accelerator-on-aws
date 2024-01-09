@@ -874,6 +874,14 @@ firewalls:
         - accelerator-firewall
       attributes:
         targetFailover: rebalance
+    - name: shared-services-target
+      port: 6081
+      protocol: GENEVE
+      type: instance
+      targets:
+        - cross-account-firewall
+      attributes:
+        targetFailover: rebalance
     - name: asg-target
       port: 6081
       protocol: GENEVE
