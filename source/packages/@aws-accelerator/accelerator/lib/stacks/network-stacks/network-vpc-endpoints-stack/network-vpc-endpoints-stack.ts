@@ -368,6 +368,7 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
         this.logger.error(`Unable to locate Network Firewall policy ${firewallItem.firewallPolicy}`);
         throw new Error(`Configuration validation failed at runtime.`);
       }
+
       // Create firewall
       nfw = new NetworkFirewall(this, pascalCase(`${firewallItem.vpc}${firewallItem.name}NetworkFirewall`), {
         firewallPolicyArn: policyArn,
@@ -386,39 +387,42 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
         parameterName: this.getSsmPath(SsmResourceType.NFW, [firewallItem.vpc, firewallItem.name]),
         stringValue: nfw.firewallArn,
       });
-      // Add logging configurations
-      const destinationConfigs: cdk.aws_networkfirewall.CfnLoggingConfiguration.LogDestinationConfigProperty[] = [];
-      for (const logItem of firewallItem.loggingConfiguration ?? []) {
-        if (logItem.destination === 'cloud-watch-logs') {
-          // Create log group and log configuration
-          this.logger.info(`Add CloudWatch ${logItem.type} logs for Network Firewall ${firewallItem.name}`);
-          const logGroup = new cdk.aws_logs.LogGroup(this, pascalCase(`${firewallItem.name}${logItem.type}LogGroup`), {
-            encryptionKey: this.cloudwatchKey,
-            retention: this.logRetention,
-          });
-          destinationConfigs.push({
-            logDestination: {
-              logGroup: logGroup.logGroupName,
-            },
-            logDestinationType: 'CloudWatchLogs',
-            logType: logItem.type,
-          });
-        }
+    }
 
-        if (logItem.destination === 's3') {
-          this.logger.info(`Add S3 ${logItem.type} logs for Network Firewall ${firewallItem.name}`);
-
-          destinationConfigs.push({
-            logDestination: {
-              bucketName: firewallLogBucket.bucketName,
-              prefix: 'firewall',
-            },
-            logDestinationType: 'S3',
-            logType: logItem.type,
-          });
-        }
+    // Add logging configurations
+    const destinationConfigs: cdk.aws_networkfirewall.CfnLoggingConfiguration.LogDestinationConfigProperty[] = [];
+    for (const logItem of firewallItem.loggingConfiguration ?? []) {
+      if (logItem.destination === 'cloud-watch-logs') {
+        // Create log group and log configuration
+        this.logger.info(`Add CloudWatch ${logItem.type} logs for Network Firewall ${firewallItem.name}`);
+        const logGroup = new cdk.aws_logs.LogGroup(this, pascalCase(`${firewallItem.name}${logItem.type}LogGroup`), {
+          encryptionKey: this.cloudwatchKey,
+          retention: this.logRetention,
+        });
+        destinationConfigs.push({
+          logDestination: {
+            logGroup: logGroup.logGroupName,
+          },
+          logDestinationType: 'CloudWatchLogs',
+          logType: logItem.type,
+        });
       }
 
+      if (logItem.destination === 's3') {
+        this.logger.info(`Add S3 ${logItem.type} logs for Network Firewall ${firewallItem.name}`);
+
+        destinationConfigs.push({
+          logDestination: {
+            bucketName: firewallLogBucket.bucketName,
+            prefix: 'firewall',
+          },
+          logDestinationType: 'S3',
+          logType: logItem.type,
+        });
+      }
+    }
+
+    if (!this.isManagedByAsea(AseaResourceType.NFW, firewallItem.name)) {
       // Add logging configuration
       const config = {
         logDestinationConfigs: destinationConfigs,
