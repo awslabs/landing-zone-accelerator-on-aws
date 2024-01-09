@@ -491,8 +491,8 @@ export class GlobalConfigValidator {
    * @returns
    */
   private validateCmkExistsInManagementAccount(accountsConfig: AccountsConfig, values: GlobalConfig, errors: string[]) {
-    if (values.s3?.encryption?.createCMK ?? true) {
-      if (values.logging.assetBucket?.importedBucket?.createAcceleratorManagedKey ?? true) {
+    if (values.s3?.encryption?.createCMK) {
+      if (values.logging.assetBucket?.importedBucket?.createAcceleratorManagedKey) {
         const cmkDeploymentTargetSets = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
           accountsConfig,
           values.s3?.encryption?.deploymentTargets as DeploymentTargets,

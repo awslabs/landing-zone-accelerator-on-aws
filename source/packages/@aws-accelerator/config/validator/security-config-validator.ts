@@ -137,8 +137,10 @@ export class SecurityConfigValidator {
    */
   private getOuIdNames(organizationConfig: OrganizationConfig): string[] {
     const ouIdNames: string[] = [];
-    for (const organizationalUnit of organizationConfig.organizationalUnits) {
-      ouIdNames.push(organizationalUnit.name);
+    if (organizationConfig.enable) {
+      for (const organizationalUnit of organizationConfig.organizationalUnits ?? []) {
+        ouIdNames.push(organizationalUnit.name);
+      }
     }
     return ouIdNames;
   }
