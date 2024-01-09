@@ -146,10 +146,10 @@ export class GatewayLoadBalancersValidator {
         `[Gateway Load Balancer ${gwlb.name}]: VPC templates are not a supported target VPC type for Gateway Load Balancer`,
       );
     } else {
-      const delegatedAdmin = values.centralNetworkServices!.delegatedAdminAccount;
-      if (vpc.account !== delegatedAdmin) {
+      const vpcAccount = gwlb.account ? gwlb.account : values.centralNetworkServices!.delegatedAdminAccount;
+      if (vpc.account !== vpcAccount) {
         errors.push(
-          `[Gateway Load Balancer ${gwlb.name}]: VPC "${vpc.name}" is not deployed to delegated admin account "${delegatedAdmin}". Gateway Load Balancers must be deployed to the delegated admin account`,
+          `[Gateway Load Balancer ${gwlb.name}]: VPC "${vpc.name}" is not deployed to account "${vpcAccount}". Gateway Load Balancers must either be deployed to the delegated admin account or the account specified in the "account" property`,
         );
       }
     }

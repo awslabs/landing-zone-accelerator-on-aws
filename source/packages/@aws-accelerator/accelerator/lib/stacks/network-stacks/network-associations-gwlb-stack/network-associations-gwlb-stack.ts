@@ -805,11 +805,7 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
   private createGwlbEndpointResources() {
     for (const vpcItem of this.vpcsInScope) {
       // Get account IDs
-      const vpcId = this.vpcMap.get(vpcItem.name);
-      if (!vpcId) {
-        this.logger.error(`Unable to locate VPC ${vpcItem.name}`);
-        throw new Error(`Configuration validation failed at runtime.`);
-      }
+      const vpcId = getVpc(this.vpcMap, vpcItem.name) as string;
       // Create GWLB endpoints and set map
       const gwlbEndpointMap = this.createGwlbEndpoints(vpcItem, vpcId);
 
