@@ -834,7 +834,15 @@ export class OperationsStack extends AcceleratorStack {
 
   private enableInventory() {
     this.logger.info('Enabling SSM Inventory');
+    const resourceDataSyncName = `${this.props.prefixes.accelerator}-${cdk.Stack.of(this).account}-Inventory`;
+    const associationName = `${this.props.prefixes.accelerator}-${cdk.Stack.of(this).account}-InventoryCollection`;
 
+    if (
+      this.isManagedByAsea(AseaResourceType.SSM_RESOURCE_DATA_SYNC, resourceDataSyncName) &&
+      this.isManagedByAsea(AseaResourceType.SSM_ASSOCIATION, associationName)
+    ) {
+      return;
+    }
     new Inventory(this, 'AcceleratorSsmInventory', {
       bucketName: this.centralLogsBucketName,
       bucketRegion: this.props.centralizedLoggingRegion,

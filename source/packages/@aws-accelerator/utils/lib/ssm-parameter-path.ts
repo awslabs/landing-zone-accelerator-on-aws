@@ -384,6 +384,17 @@ export enum SsmResourceType {
    * `${1}` is replaced with the VPC name
    */
   CROSS_ACCOUNT_VGW = '/network/customerGateways/${0}/virtualPrivateGateway/${1}/id',
+  /**
+   * SSM Resource Data Sync Name
+   *
+   * `${0}` is replaced with the Resource Data Sync Name
+   */
+  RESOURCE_DATA_SYNC = '/ssm/resourceDataSync/${0}',
+  /**
+   * SSM Association Name
+   * `${0}` is replaced with the Resource Data Sync Name
+   */
+  ASSOCIATION = '/ssm/association/${0}',
 }
 
 export class SsmParameterPath {
