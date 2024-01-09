@@ -242,10 +242,6 @@ exports[`SsmSessionManagerPolicy Construct(SsmSessionManagerPolicy):  Snapshot T
           ],
           "Version": "2012-10-17",
         },
-        "Roles": [
-          "Test1",
-          "Test2",
-        ],
       },
       "Type": "AWS::IAM::ManagedPolicy",
     },
