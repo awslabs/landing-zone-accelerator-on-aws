@@ -13,6 +13,7 @@
 
 import { setRetryStrategy, throttlingBackOff } from '@aws-accelerator/utils';
 import {
+  BadRequestException,
   CreateDetectorCommand,
   CreatePublishingDestinationCommand,
   DeletePublishingDestinationCommand,
@@ -75,15 +76,26 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       if (options.overrideExisting) {
         await overrideExistingDestination(guardDutyClient, detectorId, options);
       } else {
-        await throttlingBackOff(() =>
-          guardDutyClient.send(
-            new CreatePublishingDestinationCommand({
-              DetectorId: detectorId,
-              DestinationType: options.exportDestinationType,
-              DestinationProperties: { DestinationArn: options.destinationArn, KmsKeyArn: options.kmsKeyArn },
-            }),
-          ),
-        );
+        try {
+          await throttlingBackOff(() =>
+            guardDutyClient.send(
+              new CreatePublishingDestinationCommand({
+                DetectorId: detectorId,
+                DestinationType: options.exportDestinationType,
+                DestinationProperties: { DestinationArn: options.destinationArn, KmsKeyArn: options.kmsKeyArn },
+              }),
+            ),
+          );
+        } catch (err) {
+          if (
+            err instanceof BadRequestException &&
+            err.message.startsWith('The request failed because a publishingDestination already exists')
+          ) {
+            console.log('Publishing destination already exists.');
+            return { Status: 'Success', StatusCode: 200 };
+          }
+          throw err;
+        }
       }
       return { Status: 'Success', StatusCode: 200 };
 
