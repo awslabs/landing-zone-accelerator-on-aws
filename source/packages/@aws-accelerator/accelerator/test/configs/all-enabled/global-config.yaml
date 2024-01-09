@@ -157,6 +157,14 @@ logging:
     s3ResourcePolicyAttachments:
       - policy: bucket-policies/central-log-bucket.json
 
+  assetBucket:
+    importedBucket:
+      name: aws-accelerator-imported-all-enabled
+      applyAcceleratorManagedBucketPolicy: true
+      createAcceleratorManagedKey: true
+    s3ResourcePolicyAttachments:
+      - policy: bucket-policies/assets-bucket.json
+
   accessLogBucket:
     enable: true
     deploymentTargets:

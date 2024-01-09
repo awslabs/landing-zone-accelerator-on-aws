@@ -21,6 +21,8 @@ import { GlobalConfig } from '../lib/global-config';
 import { IamConfig } from '../lib/iam-config';
 import { SecurityConfig } from '../lib/security-config';
 import { OrganizationConfig } from '../lib/organization-config';
+import { CommonValidatorFunctions } from './common/common-validator-functions';
+import { DeploymentTargets } from '../lib/common-types';
 
 export class GlobalConfigValidator {
   constructor(
@@ -90,6 +92,10 @@ export class GlobalConfigValidator {
     // Validate Imported Access logs bucket resource policies
     //
     this.validateImportedAccessLogsBucketPolicies(configDir, values, errors);
+    //
+    // Validate configuration of Imported Assets bucket
+    //
+    this.validateImportedAssetBucketConfig(configDir, accountsConfig, values, errors);
     //
     // validate cloudwatch logging
     //
@@ -364,6 +370,142 @@ export class GlobalConfigValidator {
         errors.push(
           `AccessLogs bucket resource policy attachment file ${s3ResourcePolicyAttachment.policy} not found !!!`,
         );
+      }
+    }
+  }
+
+  /**
+   * Function to validate imported Assets bucket config
+   * @param configDir string
+   * @param values {@link GlobalConfig}
+   * @param errors string[]
+   * @returns
+   */
+  private validateImportedAssetBucketConfig(
+    configDir: string,
+    accountsConfig: AccountsConfig,
+    values: GlobalConfig,
+    errors: string[],
+  ) {
+    this.validateImportedAssetBucketPolicies(configDir, values, errors);
+    this.validateImportedAssetBucketKmsPolicies(configDir, values, errors);
+    this.validateCmkExistsInManagementAccount(accountsConfig, values, errors);
+  }
+  /**
+   * Function to validate imported Assets S3 bucket policies
+   * @param configDir string
+   * @param values {@link GlobalConfig}
+   * @param errors string[]
+   * @returns
+   */
+  private validateImportedAssetBucketPolicies(configDir: string, values: GlobalConfig, errors: string[]) {
+    if (!values.logging.assetBucket) {
+      return;
+    }
+    const assetBucketItem = values.logging.assetBucket!;
+    const importedBucketItem = assetBucketItem.importedBucket;
+
+    if (importedBucketItem && assetBucketItem.customPolicyOverrides?.s3Policy) {
+      if (!fs.existsSync(path.join(configDir, assetBucketItem.customPolicyOverrides?.s3Policy))) {
+        errors.push(
+          `Assets bucket custom policy overrides file ${assetBucketItem.customPolicyOverrides?.s3Policy} not found !!!`,
+        );
+      }
+
+      if (importedBucketItem.applyAcceleratorManagedBucketPolicy) {
+        errors.push(
+          `Imported Assets bucket with customPolicyOverrides.policy can not have applyAcceleratorManagedPolicy set to true.`,
+        );
+      }
+      if (assetBucketItem.s3ResourcePolicyAttachments) {
+        errors.push(
+          `Imported AccessLogs bucket with customPolicyOverrides.policy can not have s3ResourcePolicyAttachments.`,
+        );
+      }
+    }
+
+    for (const s3ResourcePolicyAttachment of assetBucketItem.s3ResourcePolicyAttachments ?? []) {
+      if (!fs.existsSync(path.join(configDir, s3ResourcePolicyAttachment.policy))) {
+        errors.push(
+          `AccessLogs bucket resource policy attachment file ${s3ResourcePolicyAttachment.policy} not found !!!`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Function to validate imported CentralLogs bucket kms policies
+   * @param configDir string
+   * @param values {@link GlobalConfig}
+   * @param errors string[]
+   * @returns
+   */
+  private validateImportedAssetBucketKmsPolicies(configDir: string, values: GlobalConfig, errors: string[]) {
+    if (!values.logging.assetBucket) {
+      return;
+    }
+
+    const assetBucketItem = values.logging.assetBucket;
+    const importedBucketItem = assetBucketItem.importedBucket;
+
+    if (!importedBucketItem) {
+      return;
+    }
+
+    const createAcceleratorManagedKey = importedBucketItem.createAcceleratorManagedKey ?? false;
+
+    if (assetBucketItem.customPolicyOverrides?.kmsPolicy) {
+      if (!fs.existsSync(path.join(configDir, assetBucketItem.customPolicyOverrides.kmsPolicy))) {
+        errors.push(
+          `Assets bucket encryption custom policy overrides file ${assetBucketItem.customPolicyOverrides.kmsPolicy} not found !!!`,
+        );
+      }
+
+      if (assetBucketItem.kmsResourcePolicyAttachments) {
+        errors.push(
+          `Imported Assets bucket with customPolicyOverrides.kmsPolicy can not have policy attachments through centralLogBucketItem.kmsResourcePolicyAttachments.`,
+        );
+      }
+    }
+
+    if (!createAcceleratorManagedKey && assetBucketItem.kmsResourcePolicyAttachments) {
+      errors.push(
+        `Imported Assets bucket with createAcceleratorManagedKey set to false can not have policy attachments through centralLogBucketItem.kmsResourcePolicyAttachments. Accelerator will not be able to attach policies for the bucket key not created by solution.`,
+      );
+    }
+
+    for (const kmsResourcePolicyAttachment of assetBucketItem.kmsResourcePolicyAttachments ?? []) {
+      if (!fs.existsSync(path.join(configDir, kmsResourcePolicyAttachment.policy))) {
+        errors.push(
+          `Assets bucket encryption policy attachment file ${kmsResourcePolicyAttachment.policy} not found !!!`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Function to validate if S3 CMK exists in Management Account when using an imported Asset S3 Bucket
+   * @param accountsConfig {@link AccountsConfig}
+   * @param values {@link GlobalConfig}
+   * @param errors string[]
+   * @returns
+   */
+  private validateCmkExistsInManagementAccount(accountsConfig: AccountsConfig, values: GlobalConfig, errors: string[]) {
+    if (values.s3?.encryption?.createCMK ?? true) {
+      if (values.logging.assetBucket?.importedBucket?.createAcceleratorManagedKey ?? true) {
+        const cmkDeploymentTargetSets = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
+          accountsConfig,
+          values.s3?.encryption?.deploymentTargets as DeploymentTargets,
+        );
+        const managementAccountInTargets = cmkDeploymentTargetSets.find(item => item === 'Management');
+        const homeRegionInTargets = !values.s3?.encryption?.deploymentTargets?.excludedRegions.find(
+          item => item === values.homeRegion,
+        );
+        if (!managementAccountInTargets || !homeRegionInTargets) {
+          errors.push(
+            `Imported Assets bucket with createAcceleratorManagedKey being set to true has to have the CDK deployed to the Management account in the home region.`,
+          );
+        }
       }
     }
   }

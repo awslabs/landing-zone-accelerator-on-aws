@@ -110,6 +110,13 @@ export abstract class GlobalConfigTypes {
     attachPolicyToIamRoles: t.optional(t.array(t.string)),
   });
 
+  static readonly assetBucketConfig = t.interface({
+    s3ResourcePolicyAttachments: t.optional(t.array(t.resourcePolicyStatement)),
+    kmsResourcePolicyAttachments: t.optional(t.array(t.resourcePolicyStatement)),
+    importedBucket: t.optional(t.importedCustomerManagedEncryptionKeyBucketConfig),
+    customPolicyOverrides: t.optional(t.customS3ResourceAndKmsPolicyOverridesConfig),
+  });
+
   static readonly accessLogBucketConfig = t.interface({
     enable: t.optional(t.boolean),
     deploymentTargets: t.optional(t.deploymentTargets),
@@ -156,6 +163,7 @@ export abstract class GlobalConfigTypes {
     cloudtrail: GlobalConfigTypes.cloudTrailConfig,
     sessionManager: GlobalConfigTypes.sessionManagerConfig,
     accessLogBucket: t.optional(GlobalConfigTypes.accessLogBucketConfig),
+    assetBucket: t.optional(GlobalConfigTypes.assetBucketConfig),
     centralLogBucket: t.optional(GlobalConfigTypes.centralLogBucketConfig),
     elbLogBucket: t.optional(GlobalConfigTypes.elbLogBucketConfig),
     cloudwatchLogs: t.optional(GlobalConfigTypes.cloudwatchLogsConfig),
@@ -1059,7 +1067,80 @@ export class CentralLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes
    */
   readonly customPolicyOverrides: t.CustomS3ResourceAndKmsPolicyOverridesConfig | undefined = undefined;
 }
-
+/**
+ * *{@link GlobalConfig} / {@link LoggingConfig} / {@link AssetBucketConfig}*
+ *
+ * Accelerator global S3 asset bucket configuration
+ *
+ * @example
+ * ```
+ * assetBucket:
+ *   s3ResourcePolicyAttachments:
+ *     - policy: s3-policies/policy1.json
+ *   importedBucket:
+ *     name: aws-accelerator-assets
+ *     applyAcceleratorManagedBucketPolicy: true
+ * ```
+ */
+export class AssetBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.assetBucketConfig> {
+  /**
+   * JSON policy files.
+   *
+   * @remarks
+   * Policy statements from these files will be added to the bucket resource policy.
+   * This property can not be used when customPolicyOverrides.s3Policy property has value.
+   *
+   * Note: When Block Public Access is enabled for S3 on the AWS account, you can't specify a policy that would make
+   * the S3 Bucket public.
+   */
+  readonly s3ResourcePolicyAttachments: t.ResourcePolicyStatement[] | undefined = undefined;
+  /**
+   * JSON policy files.
+   *
+   * @remarks
+   * Policy statements from these files will be added to the bucket encryption key policy.
+   * This property can not be used when customPolicyOverrides.kmsPolicy property has value.
+   * When imported CentralLogs bucket used with createAcceleratorManagedKey set to false, this property can not have any value.
+   */
+  readonly kmsResourcePolicyAttachments: t.ResourcePolicyStatement[] | undefined = undefined;
+  /**
+   * Imported bucket configuration.
+   *
+   * @remarks
+   * Use this configuration when accelerator will import existing Assets bucket.
+   *
+   * Use the following configuration to imported Assets bucket, manage bucket resource policy and apply bucket encryption through the solution.
+   * ```
+   * importedBucket:
+   *    name: aws-assets
+   *    applyAcceleratorManagedBucketPolicy: true
+   *    createAcceleratorManagedKey: true
+   * ```
+   *
+   * @default
+   * undefined
+   */
+  readonly importedBucket: t.ImportedCustomerManagedEncryptionKeyBucketConfig | undefined = undefined;
+  /**
+   * Custom policy overrides configuration.
+   *
+   * @remarks
+   * Use this configuration to provide JSON string policy file for bucket resource policy.
+   * Bucket resource policy will be over written by content of this file, so when using these option policy files must contain complete policy document.
+   * When customPolicyOverrides.s3Policy defined importedBucket.applyAcceleratorManagedBucketPolicy can not be set to true also s3ResourcePolicyAttachments property can not be defined.
+   *
+   * Use the following configuration to apply custom bucket resource policy overrides through policy JSON file.
+   * ```
+   * customPolicyOverrides:
+   *   s3Policy: path/to/policy.json
+   *   kmsPolicy: kms/full-central-logs-bucket-key-policy.json
+   * ```
+   *
+   * @default
+   * undefined
+   */
+  readonly customPolicyOverrides: t.CustomS3ResourceAndKmsPolicyOverridesConfig | undefined = undefined;
+}
 /**
  * *{@link GlobalConfig} / {@link LoggingConfig} / {@link ElbLogBucketConfig}*
  *
@@ -1354,6 +1435,10 @@ export class LoggingConfig implements t.TypeOf<typeof GlobalConfigTypes.loggingC
    * SessionManager logging configuration
    */
   readonly sessionManager: SessionManagerConfig = new SessionManagerConfig();
+  /**
+   * Declaration of a (S3 Bucket) configuration.
+   */
+  readonly assetBucket: AssetBucketConfig | undefined = undefined;
   /**
    * Declaration of a (S3 Bucket) Lifecycle rule configuration.
    */

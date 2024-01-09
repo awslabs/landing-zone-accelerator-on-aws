@@ -14,6 +14,10 @@ export enum AcceleratorImportedBucketType {
    * ELB logs Bucket
    */
   ELB_LOGS_BUCKET = 'elb-logs',
+  /**
+   * ASSETS Bucket
+   */
+  ASSETS_BUCKET = 'assets',
 }
 
 /**

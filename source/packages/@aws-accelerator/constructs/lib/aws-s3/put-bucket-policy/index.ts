@@ -49,6 +49,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     event.ResourceProperties['principalOrgIdCondition'];
 
   const elbAccountId: string | undefined = event.ResourceProperties['elbAccountId'];
+  const firewallRoles: string[] = event.ResourceProperties['firewallRoles'] ?? [];
 
   const solutionId = process.env['SOLUTION_ID'];
   const s3Client = new AWS.S3({ customUserAgent: solutionId });
@@ -58,6 +59,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     case 'Update':
       if (applyAcceleratorManagedPolicy === 'true' || bucketPolicyFilePaths.length > 0) {
         const generatedPolicyString = generateBucketPolicy(
+          firewallRoles,
           applyAcceleratorManagedPolicy,
           partition,
           sourceAccount,
@@ -93,6 +95,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 }
 
 function generateBucketPolicy(
+  firewallRoles: string[],
   applyAcceleratorManagedPolicy: string,
   partition: string,
   sourceAccount: string,
@@ -107,6 +110,42 @@ function generateBucketPolicy(
 
   if (applyAcceleratorManagedPolicy === 'true') {
     switch (bucketType) {
+      case AcceleratorImportedBucketType.ASSETS_BUCKET:
+        policyStatements.push({
+          Sid: 'deny-insecure-connections',
+          Effect: 'Deny',
+          Principal: {
+            AWS: '*',
+          },
+          Action: 's3:*',
+          Resource: [bucketArn, `${bucketArn}/*`],
+          Condition: {
+            Bool: {
+              'aws:SecureTransport': 'false',
+            },
+          },
+        });
+        if (firewallRoles.length > 0) {
+          policyStatements.push({
+            Sid: 'Allow Organization principals to use the bucket',
+            Effect: 'Allow',
+            Principal: {
+              AWS: '*',
+            },
+            Action: ['s3:GetObject', 's3:ListBucket'],
+            Resource: [bucketArn, `${bucketArn}/*`],
+            Condition: {
+              StringEquals: {
+                ...principalOrgIdCondition,
+              },
+              StringLike: {
+                'aws:PrincipalARN': firewallRoles,
+              },
+            },
+          });
+        }
+
+        break;
       case AcceleratorImportedBucketType.CENTRAL_LOGS_BUCKET:
         policyStatements.push({
           Sid: 'deny-insecure-connections',
