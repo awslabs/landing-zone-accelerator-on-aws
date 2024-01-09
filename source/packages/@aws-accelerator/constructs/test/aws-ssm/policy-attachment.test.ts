@@ -24,6 +24,7 @@ new SsmSessionManagerPolicy(stack, 'SsmSessionManagerPolicy', {
   s3BucketName: 'bucketName',
   s3BucketKeyArn: 'arn',
   sendToS3: true,
+  homeRegion: 'us-east-1',
   sendToCloudWatchLogs: true,
   attachPolicyToIamRoles: ['Test1', 'Test2'],
   region: 'us-east-1',

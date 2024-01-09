@@ -427,17 +427,6 @@ export async function setAcceleratorStackProps(
     await globalConfig.loadExternalMapping(true);
     await globalConfig.loadLzaResources(context.partition, prefixes.ssmParamName);
   }
-  if (context.stage === AcceleratorStage.SECURITY_RESOURCES && orgsEnabled) {
-    const accountIds = accountsConfig.accountIds?.map(account => account.accountId) ?? [];
-    await globalConfig.loadIAMRoleSSMParameters(
-      globalConfig.homeRegion,
-      context.partition,
-      prefixes.ssmParamName,
-      accountIds,
-      accountsConfig.getManagementAccountId(),
-      orgsEnabled,
-    );
-  }
   const centralizedLoggingRegion = globalConfig.logging.centralizedLoggingRegion ?? globalConfig.homeRegion;
 
   const acceleratorResourceNames = new AcceleratorResourceNames({

@@ -11,6 +11,8 @@
  *  and limitations under the License.
  */
 
+import { RoleSetConfig } from '@aws-accelerator/config';
+import { AcceleratorStack } from '../../../accelerator/lib/stacks/accelerator-stack';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
@@ -22,10 +24,11 @@ export interface SsmSessionManagerPolicyProps {
   readonly s3BucketKeyArn?: string;
   readonly sendToS3: boolean;
   readonly sendToCloudWatchLogs: boolean;
+  readonly homeRegion: string;
+  readonly roleSets?: RoleSetConfig[];
   readonly attachPolicyToIamRoles?: string[];
   readonly region: string;
   readonly enabledRegions: string[];
-  readonly rolesInAccounts?: { account: string; region: string; parametersByPath: { [key: string]: string } }[];
   readonly cloudWatchLogGroupList: string[] | undefined;
   readonly sessionManagerCloudWatchLogGroupList: string[] | undefined;
   readonly s3BucketList: string[] | undefined;
@@ -201,7 +204,7 @@ export class SsmSessionManagerPolicy extends Construct {
 
     // Attach policies to configured roles
     for (const iamRoleName of props.attachPolicyToIamRoles ?? []) {
-      if (this.isRoleInAccount(iamRoleName, cdk.Stack.of(this).account, props.rolesInAccounts)) {
+      if (this.isRoleInAccount(iamRoleName, props.roleSets ?? [], props.homeRegion)) {
         const role = cdk.aws_iam.Role.fromRoleArn(
           this,
           `AcceleratorSessionManager-${iamRoleName}`,
@@ -212,22 +215,24 @@ export class SsmSessionManagerPolicy extends Construct {
     }
   }
 
-  isRoleInAccount(
-    roleName: string,
-    account: string,
-    rolesInAccount?: { account: string; region: string; parametersByPath: { [key: string]: string } }[],
-  ) {
-    if (!rolesInAccount || rolesInAccount.length === 0) {
-      return true;
+  isRoleInAccount(roleName: string, roleSets: RoleSetConfig[], homeRegion: string): boolean {
+    if (!roleSets) {
+      return false;
     }
-    for (const ssmAccount of rolesInAccount) {
-      if (account === ssmAccount.account) {
-        const roleExists = Object.keys(ssmAccount.parametersByPath).filter(parameter => parameter.includes(roleName));
-        if (roleExists.length > 0) {
-          return true;
-        }
-      }
-    }
-    return false;
+
+    const stack: AcceleratorStack = cdk.Stack.of(this) as AcceleratorStack;
+
+    const roleExists =
+      roleSets?.filter(roleSet => {
+        const roleNames = roleSet.roles.map(role => role.name);
+
+        return (
+          stack.isIncluded(roleSet.deploymentTargets) &&
+          roleNames.includes(roleName) &&
+          cdk.Stack.of(this).region === homeRegion
+        );
+      }) ?? [];
+
+    return roleExists.length > 0;
   }
 }

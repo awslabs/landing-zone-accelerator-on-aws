@@ -25,7 +25,6 @@ export interface SsmSessionManagerSettingsProps {
   readonly sendToS3: boolean;
   readonly sendToCloudWatchLogs: boolean;
   readonly cloudWatchEncryptionEnabled: boolean;
-  readonly attachPolicyToIamRoles?: string[];
   /**
    * Custom resource lambda log group encryption key, when undefined default AWS managed key will be used
    */

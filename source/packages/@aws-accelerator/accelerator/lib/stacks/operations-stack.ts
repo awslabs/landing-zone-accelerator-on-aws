@@ -213,6 +213,8 @@ export class OperationsStack extends AcceleratorStack {
 
     // Set up Session Manager Logging
     const ssmSessionManagerPolicy = new SsmSessionManagerPolicy(this, 'SsmSessionManagerSettings', {
+      roleSets: this.props.iamConfig.roleSets,
+      homeRegion: this.props.globalConfig.homeRegion,
       s3BucketName: this.centralLogsBucketName,
       s3BucketKeyArn: this.centralLogsBucketKey.keyArn,
       sendToCloudWatchLogs: this.props.globalConfig.logging.sessionManager.sendToCloudWatchLogs,
@@ -220,7 +222,6 @@ export class OperationsStack extends AcceleratorStack {
       attachPolicyToIamRoles: this.props.globalConfig.logging.sessionManager.attachPolicyToIamRoles,
       region: cdk.Stack.of(this).region,
       enabledRegions: this.props.globalConfig.enabledRegions,
-      rolesInAccounts: this.props.globalConfig.iamRoleSsmParameters,
       cloudWatchLogGroupList: cloudWatchLogGroupList ?? undefined,
       sessionManagerCloudWatchLogGroupList: sessionManagerCloudWatchLogGroupList ?? undefined,
       s3BucketList: s3BucketList ?? undefined,
