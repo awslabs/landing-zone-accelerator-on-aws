@@ -1,0 +1,22 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "Policy from file",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": ["s3:List*"],
+      "Resource": [
+        "arn:aws:s3:::aws-accelerator-imported-all-enabled",
+        "arn:aws:s3:::aws-accelerator-imported-all-enabled/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:PrincipalOrgID": "${ORG_ID}"
+        }
+      }
+    }
+  ]
+}

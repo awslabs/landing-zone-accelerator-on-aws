@@ -70,6 +70,10 @@ export interface BucketPolicyProps {
    * Custom resource lambda log retention in days
    */
   readonly customResourceLambdaLogRetentionInDays: number;
+  /**
+   * Accelerator Prefix Firewall Roles
+   */
+  readonly firewallRoles?: string[];
 }
 
 /**
@@ -111,6 +115,7 @@ export class BucketPolicy extends Construct {
           { principalOrgIdCondition: props.principalOrgIdCondition },
           { organizationId: props.organizationId },
           { elbAccountId: props.elbAccountId },
+          { firewallRoles: props.firewallRoles },
         ],
         forceUpdate: true,
       },

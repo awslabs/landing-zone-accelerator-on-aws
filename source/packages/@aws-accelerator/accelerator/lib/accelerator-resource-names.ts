@@ -60,6 +60,7 @@ interface ParameterNames {
   snsTopicCmkArn: string;
   lambdaCmkArn: string;
   managementCmkArn: string;
+  importedAssetsBucketCmkArn: string;
   assetsBucketCmkArn: string;
   identityCenterInstanceArn: string;
   identityStoreId: string;
@@ -81,6 +82,7 @@ interface CmkDetails {
   lambda: { alias: string; description: string };
   acceleratorKey: { alias: string; description: string };
   managementKey: { alias: string; description: string };
+  importedAssetsBucketCmkArn: { alias: string; description: string };
   assetsBucket: { alias: string; description: string };
   ssmKey: { alias: string; description: string };
 }
@@ -137,6 +139,7 @@ export class AcceleratorResourceNames {
     snsTopicCmkArn: 'PLACE_HOLDER',
     lambdaCmkArn: 'PLACE_HOLDER',
     managementCmkArn: 'PLACE_HOLDER',
+    importedAssetsBucketCmkArn: 'PLACE_HOLDER',
     assetsBucketCmkArn: 'PLACE_HOLDER',
     identityCenterInstanceArn: 'PLACE_HOLDER',
     identityStoreId: 'PLACE_HOLDER',
@@ -158,6 +161,7 @@ export class AcceleratorResourceNames {
     lambda: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
     acceleratorKey: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
     managementKey: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
+    importedAssetsBucketCmkArn: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
     assetsBucket: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
     ssmKey: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
   };
@@ -223,6 +227,7 @@ export class AcceleratorResourceNames {
     this.parameters.snsTopicCmkArn = props.prefixes.ssmParamName + '/kms/snstopic/key-arn';
     this.parameters.lambdaCmkArn = props.prefixes.ssmParamName + '/kms/lambda/key-arn';
     this.parameters.managementCmkArn = props.prefixes.ssmParamName + '/management/kms/key-arn';
+    this.parameters.importedAssetsBucketCmkArn = props.prefixes.importResourcesSsmParamName + '/assets/kms/key';
     this.parameters.assetsBucketCmkArn = props.prefixes.ssmParamName + '/assets/kms/key';
     this.parameters.identityCenterInstanceArn =
       props.prefixes.ssmParamName + '/organization/security/identity-center/instance-arn';
@@ -290,6 +295,10 @@ export class AcceleratorResourceNames {
     this.customerManagedKeys.managementKey = {
       alias: props.prefixes.kmsAlias + '/management/kms/key',
       description: 'AWS Accelerator Management Account Kms Key',
+    };
+    this.customerManagedKeys.importedAssetsBucketCmkArn = {
+      alias: props.prefixes.kmsAlias + '/assets/kms/key',
+      description: 'Key used to encrypt solution assets',
     };
     this.customerManagedKeys.assetsBucket = {
       alias: props.prefixes.kmsAlias + '/assets/kms/key',
