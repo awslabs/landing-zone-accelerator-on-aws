@@ -35,7 +35,7 @@ jobs:
         run: unzip -q ./typedocs.zip -d ${TYPEDOCS_DIR}
       - name: Install Python dependencies
         working-directory: ./source/mkdocs
-        run: pip install -r requirements.txt
+        run: pip install mkdocs==1.5.3 mkdocs-material==9.5.3 mike==2.0.0
       - name: Deploy docs
         working-directory: ./source/mkdocs
         run: |

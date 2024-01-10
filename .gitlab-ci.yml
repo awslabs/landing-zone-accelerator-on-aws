@@ -155,7 +155,7 @@ pages:
     - "yarn docs --out ./mkdocs/docs/typedocs/latest"
     - "export SITE_URL=https://landing-zone-accelerator.pages.aws.dev/landing-zone-accelerator-on-aws"
     - "cd mkdocs"
-    - "pip install -r requirements.txt"
+    - "pip install mkdocs==1.5.3 mkdocs-material==9.5.3 mike==2.0.0"
     - "mkdocs build"
     - "cp -R site/ ../../public/"
   artifacts:
