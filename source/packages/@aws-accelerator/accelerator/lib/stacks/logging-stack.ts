@@ -1388,6 +1388,17 @@ export class LoggingStack extends AcceleratorStack {
             }),
           },
         });
+        // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+        // rule suppression with evidence for this permission.
+        this.nagSuppressionInputs.push({
+          id: NagSuppressionRuleIds.IAM5,
+          details: [
+            {
+              path: `${this.stackName}/CrossAccountAcceleratorSecretsKmsArnSsmParamAccessRole/Resource`,
+              reason: 'Cross account kms arn SSM parameter needs access from other accounts',
+            },
+          ],
+        });
 
         return; // Create only one kms key even if there are multiple AD
       }
