@@ -2745,6 +2745,17 @@ export class LoggingStack extends AcceleratorStack {
       s3LifeCycleRules: this.getS3LifeCycleRules(this.props.globalConfig.logging.accessLogBucket?.lifecycleRules),
     });
 
+    // AwsSolutions-S1: The S3 Bucket has server access logs disabled.
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.S1,
+      details: [
+        {
+          path: `${this.stackName}/AssetsAccessLogsBucket/Resource/Resource`,
+          reason: 'AccessLogsBucket has server access logs disabled until the task for access logging completed.',
+        },
+      ],
+    });
+
     //  Create S3 Assets bucket
     const assetsBucket = new Bucket(this, 'CertificateAssetBucket', {
       encryptionType: BucketEncryptionType.SSE_KMS,
