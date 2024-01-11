@@ -5,11 +5,74 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.6.0] - TBD
+## [1.6.0] - 01-10-2024
 
 ### Added
 
-- TBD
+- feat(budgets): Budget notifications accept array of email addresses
+- feat(cloudwatch): provide the ability to use CloudWatch service key for LogGroup encryption
+- feat(config-service): allow reference of public ssm documents
+- feat(customizations): Enhance custom applications to deploy in shared VPC
+- feat(firewalls): load firewall configuration from directory and support secret replacement
+- feat(lambda): Allow option to use service key for AWS Lambda function environment variables encryption
+- feat(networking): add support for targeting network interfaces
+- feat(pipeline): use v2 tokens for sts
+- feat(regions) Add il-central-1 region
+- feat(replacements): added check for commented out replacements-config.yaml
+- feat(replacements): extend dynamic parameter lookups
+- feat(resource-policies): Support additional AWS services in resource based policies
+- feat(s3): make the creation of access log buckets and S3 encryption CMK optional
+- feat(ssm): add aggregated ssm region policy construct
+- feat(support): add Diagnostic Pack support
+- feat(validation): adds configuration validation for cmk replacement in the AWS config remediation lambda.
+- feat(validation): add option to skip static validation
+
+### Changed
+
+- chore(documentation): added SBOM instructions to FAQ
+- chore(documentation): added Architecture and Design Philosophy section to DEVELOPING.md
+- chore(documentation): Update security hub cis 1.4.0 control examples
+- chore(esbuild): update build target from node16 to node18
+- enhancement(ebs): Add deployment targets to ebs encryption options
+- enhancement(iam): added prefix condition to trust policies
+- enhancement(logging): Add validation for s3 resource policy attachments against public block access
+- enhancement(networking): allow ability to define static replacements for EC2 firewall configurations
+- enhancement(networking): allow ability to deploy EC2 firewall in RAM shared VPC account
+- enhancement(pipeline): optimize CodeBuild memory for over 1000 stacks
+- enhancement(validation): Managed active directory secret config account validation
+
+### Fixed
+
+- fix(aspects): saml lookup for console login to non-standard partitions fails
+- fix(budget): sns topic arn for budgets notifications
+- fix(config-service): modify public ssm document name validation
+- fix(guardduty): export findings frequency and exclude region settings for protections are ignored
+- fix(iam): update the iam role for systems manager
+- fix(logging): refactored CloudWatch Log exclusion filter to use regex
+- fix(networking): Allow for Target Groups with type IP to be created within VPC without targets specified
+- fix(networking): added explicit dependency between vpc creation and deletion of default vpc
+- fix(networking): create network interface route for firewall in shared vpc
+- fix(networking): reverted role name to VpcPeeringRole
+- fix(networking): share subnets with tags causes SSM parameter race condition
+- fix(networking): add dependency between networkAssociations and GWLB stages
+- fix(operations): account warming fails
+- fix(organizations): enablePolicyType function blocks tag and backup policy creation in GovCloud
+- fix(pipeline): consolidate customizations into single app
+- fix(pipeline): exit pipeline upon synth failure
+- fix(pipeline): evaluate limits before deploying workloads
+- fix(scp): Catch PolicyNotAttachedException when SCP is allow-list strategy
+- fix(scp): Add organization_enabled variable to revertSCP Lambda function
+- fix(ssm): intermittent failure in OperationsStack, added missing dependency
+- fix(toolkit): enforce runOrder for custom stacks in customizations stage
+- fix(validation): allow OUs and accounts for MAD shares
+- fix(validation): Fix max concurrent stacks validation
+- fix(validation): Add validation on static parameters for policy templates
+- fix(validation): validate kmsKey and subnet deployment targets
+
+### Configuration Changes
+
+- chore(aws-best-practices-tse-se): migrated to new GitHub repository
+- chore(aws-best-practices-cccs-medium): migrated to new GitHub repository
 
 ## [1.5.2] - 2023-11-15
 
