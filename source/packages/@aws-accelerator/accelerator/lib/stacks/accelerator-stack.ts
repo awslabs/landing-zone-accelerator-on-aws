@@ -302,19 +302,19 @@ export abstract class AcceleratorStack extends cdk.Stack {
     //
     // Set if AWS KMS CMK is enabled for Lambda environment encryption
     //
-    this.isLambdaCMKEnabled = this.isCmkEnabled(this.props.globalConfig.lambda?.encryption);
+    this.isLambdaCMKEnabled = this.isCmkEnabledServiceEncryption(this.props.globalConfig.lambda?.encryption);
 
     //
     // Set if AWS KMS CMK is enabled for AWS CloudWatch log group data encryption
     //
-    this.isCloudWatchLogsGroupCMKEnabled = this.isCmkEnabled(
+    this.isCloudWatchLogsGroupCMKEnabled = this.isCmkEnabledServiceEncryption(
       this.props.globalConfig.logging.cloudwatchLogs?.encryption,
     );
 
     //
     // Set if AWS KMS CMK is enabled for AWS S3 bucket encryption
     //
-    this.isS3CMKEnabled = this.isCmkEnabled(this.props.globalConfig.s3?.encryption);
+    this.isS3CMKEnabled = this.isCmkEnabledS3Encryption(this.props.globalConfig.s3?.encryption);
 
     //
     // Set if S3 access log bucket is enabled
@@ -1078,24 +1078,38 @@ export abstract class AcceleratorStack extends cdk.Stack {
   }
 
   /**
-   * Function to check if LZA deployed CMK is enabled for a given service
-   * @param encryptionConfig {@link ServiceEncryptionConfig} | {@link S3EncryptionConfig}
+   * Function to check if LZA deployed CMK is enabled for a generic Service Encryption Config
+   * @param encryptionConfig {@link ServiceEncryptionConfig}
    * @returns boolean
    */
-  protected isCmkEnabled(encryptionConfig?: ServiceEncryptionConfig | S3EncryptionConfig): boolean {
+  protected isCmkEnabledServiceEncryption(encryptionConfig?: ServiceEncryptionConfig): boolean {
     let isCmkEnable = true;
     if (!encryptionConfig) {
       return isCmkEnable;
     }
 
-    if (encryptionConfig instanceof ServiceEncryptionConfig) {
-      isCmkEnable = encryptionConfig.useCMK;
+    isCmkEnable = encryptionConfig.useCMK;
+    const deploymentTargets = encryptionConfig.deploymentTargets;
+
+    if (!deploymentTargets) {
+      return isCmkEnable;
     }
 
-    if (encryptionConfig instanceof S3EncryptionConfig) {
-      isCmkEnable = encryptionConfig.createCMK;
+    return this.isIncluded(deploymentTargets) ? isCmkEnable : !isCmkEnable;
+  }
+
+  /**
+   * Function to check if LZA deployed CMK is enabled for an S3 Encryption Config
+   * @param encryptionConfig {@link S3EncryptionConfig}
+   * @returns boolean
+   */
+  protected isCmkEnabledS3Encryption(encryptionConfig?: S3EncryptionConfig): boolean {
+    let isCmkEnable = true;
+    if (!encryptionConfig) {
+      return isCmkEnable;
     }
 
+    isCmkEnable = encryptionConfig.createCMK;
     const deploymentTargets = encryptionConfig.deploymentTargets;
 
     if (!deploymentTargets) {
