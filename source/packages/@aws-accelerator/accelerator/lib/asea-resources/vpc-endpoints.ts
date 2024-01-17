@@ -79,7 +79,8 @@ export class VpcEndpoints extends AseaResource {
           stringValue: hostedZone.attrId,
         });
         this.scope.addAseaResource(AseaResourceType.ROUTE_53_PHZ_ID, `${vpcItem.name}/${endpointItem.service}`);
-        const recordSetCfn = this.findResourceByName(existingRecordSetResources, 'Name', hostedZoneName);
+        const recordSetName = this.getRecordSetName(hostedZoneName);
+        const recordSetCfn = this.findResourceByName(existingRecordSetResources, 'Name', recordSetName);
         if (!recordSetCfn) {
           this.scope.addLogs(
             LogLevel.WARN,
@@ -100,6 +101,15 @@ export class VpcEndpoints extends AseaResource {
       }
     }
     this.createSsmParameters();
+  }
+
+  private getRecordSetName(hostedZoneName: string): string {
+    let recordSetName = hostedZoneName;
+    if (recordSetName === `dkr.ecr.${this.stackInfo.region}.amazonaws.com.`) {
+      recordSetName = `*.${recordSetName}`;
+    }
+
+    return recordSetName;
   }
   private getVPCId(vpcName: string) {
     if (!this.props.globalConfig.externalLandingZoneResources?.templateMap) {
