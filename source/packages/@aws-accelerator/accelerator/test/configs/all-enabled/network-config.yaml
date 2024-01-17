@@ -228,6 +228,35 @@ dhcpOptions:
     ntpServers:
       - 1.1.1.1
       - 2.2.2.2
+  - name: test-ipv6
+    accounts:
+      - Network
+    regions:
+      - us-east-1
+    domainName: example.com
+    domainNameServers:
+      - 192.168.1.2
+      - 192.168.2.2
+      - 10.0.0.2
+      - 10.0.1.2
+      - ::1
+      - ::1
+      - ::1
+      - ::1
+    ntpServers:
+      - 192.168.1.2
+      - 192.168.2.2
+      - 10.0.0.2
+      - 10.0.1.2
+      - ::1
+      - ::1
+      - ::1
+      - ::1
+    netbiosNameServers:
+      - 192.168.1.2
+      - 192.168.2.2
+      - 10.0.0.2
+      - 10.0.1.2
 centralNetworkServices:
   delegatedAdminAccount: Network
   ipams:

@@ -4493,6 +4493,44 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "TestIpv6DhcpOpts2920A043": {
+      "Properties": {
+        "DomainName": "example.com",
+        "DomainNameServers": [
+          "192.168.1.2",
+          "192.168.2.2",
+          "10.0.0.2",
+          "10.0.1.2",
+          "::1",
+          "::1",
+          "::1",
+          "::1",
+        ],
+        "NetbiosNameServers": [
+          "192.168.1.2",
+          "192.168.2.2",
+          "10.0.0.2",
+          "10.0.1.2",
+        ],
+        "NtpServers": [
+          "192.168.1.2",
+          "192.168.2.2",
+          "10.0.0.2",
+          "10.0.1.2",
+          "::1",
+          "::1",
+          "::1",
+          "::1",
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "test-ipv6",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::DHCPOptions",
+    },
     "appAalb01NetworkEndpointsD769A400": {
       "DependsOn": [
         "NetworkEndpointsVpcManagementSgManagementEgress00D58058BF",
