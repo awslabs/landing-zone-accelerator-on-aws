@@ -282,6 +282,7 @@ export class InstallerStack extends cdk.Stack {
         type: 'String',
         description: 'Accelerator assets arn qualifier',
         allowedPattern: '^[a-z]+[a-z0-9-]{1,61}[a-z0-9]+$',
+        constraintDescription: 'Qualifier must include lowercase letters and numbers only',
       });
 
       this.managementAccountId = new cdk.CfnParameter(this, 'ManagementAccountId', {
@@ -376,20 +377,20 @@ export class InstallerStack extends cdk.Stack {
     if (props.useExternalPipelineAccount) {
       //
       // Change the variable to use qualifier
-      stackIdSsmParameterName = `/accelerator/${this.acceleratorQualifier!.valueAsString}/${
+      stackIdSsmParameterName = `/${oneWordPrefix}/${this.acceleratorQualifier!.valueAsString}/${
         cdk.Stack.of(this).stackName
       }/stack-id`;
-      acceleratorVersionSsmParameterName = `/accelerator/${this.acceleratorQualifier!.valueAsString}/${
+      acceleratorVersionSsmParameterName = `/${oneWordPrefix}/${this.acceleratorQualifier!.valueAsString}/${
         cdk.Stack.of(this).stackName
       }/version`;
-      installerKeyAliasName = `alias/accelerator/${this.acceleratorQualifier!.valueAsString}/installer/kms/key`;
-      acceleratorManagementKmsArnSsmParameterName = `/accelerator/${
+      installerKeyAliasName = `alias/${oneWordPrefix}/${this.acceleratorQualifier!.valueAsString}/installer/kms/key`;
+      acceleratorManagementKmsArnSsmParameterName = `/${oneWordPrefix}/${
         this.acceleratorQualifier!.valueAsString
       }/installer/kms/key-arn`;
       installerAccessLogsBucketName = `${this.acceleratorQualifier!.valueAsString}-s3-logs-${cdk.Aws.ACCOUNT_ID}-${
         cdk.Aws.REGION
       }`;
-      installerAccessLogsBucketNameSsmParameterName = `/accelerator/${
+      installerAccessLogsBucketNameSsmParameterName = `/${oneWordPrefix}/${
         this.acceleratorQualifier!.valueAsString
       }/installer-access-logs-bucket-name`;
       secureBucketName = `${this.acceleratorQualifier!.valueAsString}-installer-${cdk.Aws.ACCOUNT_ID}-${

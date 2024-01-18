@@ -7037,6 +7037,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
     },
     "AcceleratorQualifier": {
       "AllowedPattern": "^[a-z]+[a-z0-9-]{1,61}[a-z0-9]+$",
+      "ConstraintDescription": "Qualifier must include lowercase letters and numbers only",
       "Description": "Accelerator assets arn qualifier",
       "Type": "String",
     },
@@ -7150,7 +7151,14 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
           "Fn::Join": [
             "",
             [
-              "/accelerator/",
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/",
               {
                 "Ref": "AcceleratorQualifier",
               },
@@ -7909,7 +7917,14 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
           "Fn::Join": [
             "",
             [
-              "/accelerator/",
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/",
               {
                 "Ref": "AcceleratorQualifier",
               },
@@ -8387,7 +8402,14 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
           "Fn::Join": [
             "",
             [
-              "alias/accelerator/",
+              "alias/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/",
               {
                 "Ref": "AcceleratorQualifier",
               },
@@ -9641,7 +9663,14 @@ phases:
           "Fn::Join": [
             "",
             [
-              "/accelerator/",
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/",
               {
                 "Ref": "AcceleratorQualifier",
               },
@@ -9660,7 +9689,14 @@ phases:
           "Fn::Join": [
             "",
             [
-              "/accelerator/",
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/",
               {
                 "Ref": "AcceleratorQualifier",
               },
@@ -10479,6 +10515,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
     },
     "AcceleratorQualifier": {
       "AllowedPattern": "^[a-z]+[a-z0-9-]{1,61}[a-z0-9]+$",
+      "ConstraintDescription": "Qualifier must include lowercase letters and numbers only",
       "Description": "Accelerator assets arn qualifier",
       "Type": "String",
     },
@@ -10592,7 +10629,14 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
           "Fn::Join": [
             "",
             [
-              "/accelerator/",
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/",
               {
                 "Ref": "AcceleratorQualifier",
               },
@@ -11351,7 +11395,14 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
           "Fn::Join": [
             "",
             [
-              "/accelerator/",
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/",
               {
                 "Ref": "AcceleratorQualifier",
               },
@@ -11829,7 +11880,14 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
           "Fn::Join": [
             "",
             [
-              "alias/accelerator/",
+              "alias/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/",
               {
                 "Ref": "AcceleratorQualifier",
               },
@@ -13073,7 +13131,14 @@ phases:
           "Fn::Join": [
             "",
             [
-              "/accelerator/",
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/",
               {
                 "Ref": "AcceleratorQualifier",
               },
@@ -13092,7 +13157,14 @@ phases:
           "Fn::Join": [
             "",
             [
-              "/accelerator/",
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/",
               {
                 "Ref": "AcceleratorQualifier",
               },
@@ -13911,6 +13983,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
     },
     "AcceleratorQualifier": {
       "AllowedPattern": "^[a-z]+[a-z0-9-]{1,61}[a-z0-9]+$",
+      "ConstraintDescription": "Qualifier must include lowercase letters and numbers only",
       "Description": "Accelerator assets arn qualifier",
       "Type": "String",
     },
@@ -14024,7 +14097,14 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
           "Fn::Join": [
             "",
             [
-              "/accelerator/",
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/",
               {
                 "Ref": "AcceleratorQualifier",
               },
@@ -14783,7 +14863,14 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
           "Fn::Join": [
             "",
             [
-              "/accelerator/",
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/",
               {
                 "Ref": "AcceleratorQualifier",
               },
@@ -15261,7 +15348,14 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
           "Fn::Join": [
             "",
             [
-              "alias/accelerator/",
+              "alias/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/",
               {
                 "Ref": "AcceleratorQualifier",
               },
@@ -16510,7 +16604,14 @@ phases:
           "Fn::Join": [
             "",
             [
-              "/accelerator/",
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/",
               {
                 "Ref": "AcceleratorQualifier",
               },
@@ -16529,7 +16630,14 @@ phases:
           "Fn::Join": [
             "",
             [
-              "/accelerator/",
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/",
               {
                 "Ref": "AcceleratorQualifier",
               },
