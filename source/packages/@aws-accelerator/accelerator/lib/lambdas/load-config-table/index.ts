@@ -30,6 +30,16 @@ import * as t from '@aws-accelerator/config/';
 import { Readable } from 'stream';
 
 export {};
+const marshallOptions = {
+  convertEmptyValues: false,
+  //overriding default value of false
+  removeUndefinedValues: true,
+  convertClassInstanceToMap: false,
+};
+const unmarshallOptions = {
+  wrapNumbers: false,
+};
+const translateConfig = { marshallOptions, unmarshallOptions };
 
 let dynamodbClient: DynamoDBClient;
 let documentClient: DynamoDBDocumentClient;
@@ -69,7 +79,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   console.log(`Configuration Repository Name: ${configRepositoryName}`);
 
   dynamodbClient = new DynamoDBClient({ customUserAgent: solutionId });
-  documentClient = DynamoDBDocumentClient.from(dynamodbClient);
+  documentClient = DynamoDBDocumentClient.from(dynamodbClient, translateConfig);
   cloudformationClient = new CloudFormationClient({ customUserAgent: solutionId });
   s3Client = new S3Client({ customUserAgent: solutionId });
 
