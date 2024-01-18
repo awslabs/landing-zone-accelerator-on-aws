@@ -17,6 +17,7 @@ nav:
     - Command Line Interface and Package Scripts: developer-guide/scripts.md
     - Architecture and Design Philosophy: developer-guide/design.md
     - Feature Development: developer-guide/features.md
+    - Documentation Guidelines: developer-guide/doc-guidelines.md
   - Sample Configurations:
     - sample-configurations/index.md
     - Standard:
