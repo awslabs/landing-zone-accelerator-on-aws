@@ -63,7 +63,7 @@ exports[`HostedZone Construct(HostedZone):  Snapshot Test 1`] = `
               {
                 "Ref": "AWS::Region",
               },
-              ".amazonaws.com",
+              ".amazonaws.com.",
             ],
           ],
         },
@@ -84,7 +84,7 @@ exports[`HostedZone Construct(HostedZone):  Snapshot Test 1`] = `
           "Fn::Join": [
             "",
             [
-              "ecs-agent.",
+              "ecs-a.",
               {
                 "Ref": "AWS::Region",
               },
@@ -109,7 +109,7 @@ exports[`HostedZone Construct(HostedZone):  Snapshot Test 1`] = `
           "Fn::Join": [
             "",
             [
-              "ecs-telemetry.",
+              "ecs-t.",
               {
                 "Ref": "AWS::Region",
               },

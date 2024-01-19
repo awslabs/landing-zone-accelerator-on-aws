@@ -529,7 +529,7 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
     },
     "NetworkEndpointsVpcEcrDkrEpHostedZoneE4E1EA3F": {
       "Properties": {
-        "Name": "dkr.ecr.us-east-1.amazonaws.com",
+        "Name": "dkr.ecr.us-east-1.amazonaws.com.",
         "VPCs": [
           {
             "VPCId": {
@@ -554,7 +554,7 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
         "HostedZoneId": {
           "Ref": "NetworkEndpointsVpcEcrDkrEpHostedZoneE4E1EA3F",
         },
-        "Name": "*.dkr.ecr.us-east-1.amazonaws.com",
+        "Name": "*.dkr.ecr.us-east-1.amazonaws.com.",
         "Type": "A",
       },
       "Type": "AWS::Route53::RecordSet",
@@ -572,7 +572,7 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
         "HostedZoneId": {
           "Ref": "NetworkEndpointsVpcEcrDkrEpHostedZoneE4E1EA3F",
         },
-        "Name": "dkr.ecr.us-east-1.amazonaws.com",
+        "Name": "dkr.ecr.us-east-1.amazonaws.com.",
         "Type": "A",
       },
       "Type": "AWS::Route53::RecordSet",
