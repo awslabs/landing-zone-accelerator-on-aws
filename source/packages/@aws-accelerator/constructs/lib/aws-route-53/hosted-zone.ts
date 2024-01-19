@@ -54,7 +54,7 @@ export class HostedZone extends cdk.Resource implements IHostedZone {
 
     if (service.indexOf('.') > 0 && !HostedZone.ignoreServiceEndpoint(service)) {
       const tmp = service.split('.').reverse().join('.');
-      hostedZoneName = `${tmp}.${region}.amazonaws.com`;
+      hostedZoneName = `${tmp}.${region}.amazonaws.com.`;
     }
     switch (service) {
       case 'appstream.api':
@@ -71,6 +71,12 @@ export class HostedZone extends cdk.Resource implements IHostedZone {
         break;
       case 's3-global.accesspoint':
         hostedZoneName = `${service}.amazonaws.com`;
+        break;
+      case 'ecs-agent':
+        hostedZoneName = `ecs-a.${region}.amazonaws.com`;
+        break;
+      case 'ecs-telemetry':
+        hostedZoneName = `ecs-t.${region}.amazonaws.com`;
         break;
       case 'codeartifact.api':
         hostedZoneName = `codeartifact.${region}.amazonaws.com`;
