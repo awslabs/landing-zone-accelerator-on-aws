@@ -112,18 +112,14 @@ async function validateConfig(props: {
   account: string | undefined;
   replacementsPresent: boolean;
 }) {
-  if (props.replacementsPresent) {
-    await Accelerator.getManagementAccountCredentials(props.partition);
-  }
+  await Accelerator.getManagementAccountCredentials(props.partition);
   const orgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(configDirPath).enable;
 
   // Load accounts config
   let accountsConfig: AccountsConfig | undefined = undefined;
   try {
     accountsConfig = AccountsConfig.load(configDirPath);
-    if (props.replacementsPresent) {
-      await accountsConfig.loadAccountIds(props.partition, props.enableSingleAccountMode, orgsEnabled, accountsConfig);
-    }
+    await accountsConfig.loadAccountIds(props.partition, props.enableSingleAccountMode, orgsEnabled, accountsConfig);
   } catch (e) {
     initErrors.push({ file: AccountsConfig.FILENAME, message: e });
   }
