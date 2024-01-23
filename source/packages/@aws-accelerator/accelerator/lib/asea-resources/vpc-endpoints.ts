@@ -68,9 +68,14 @@ export class VpcEndpoints extends AseaResource {
           stringValue: endpointCfn.physicalResourceId,
         });
         this.scope.addAseaResource(AseaResourceType.VPC_ENDPOINT, `${vpcItem.name}/${endpointItem.service}`);
-        const hostedZoneName =
-          HostedZone.getHostedZoneNameForService(endpointItem.service, this.stackInfo.region) + `.`;
-        const hostedZoneCfn = this.findResourceByName(existingHostedZoneResources, 'Name', hostedZoneName);
+        let hostedZoneName = HostedZone.getHostedZoneNameForService(endpointItem.service, this.stackInfo.region);
+        if (!hostedZoneName.endsWith('.')) {
+          hostedZoneName += '.';
+        }
+
+        const hostedZoneCfnName = this.getCfnHostedZoneName(hostedZoneName);
+
+        const hostedZoneCfn = this.findResourceByName(existingHostedZoneResources, 'Name', hostedZoneCfnName);
         if (!hostedZoneCfn) continue;
         const hostedZone = this.stack.getResource(hostedZoneCfn.logicalResourceId) as CfnHostedZone;
         this.addSsmParameter({
@@ -103,14 +108,6 @@ export class VpcEndpoints extends AseaResource {
     this.createSsmParameters();
   }
 
-  private getRecordSetName(hostedZoneName: string): string {
-    let recordSetName = hostedZoneName;
-    if (recordSetName === `dkr.ecr.${this.stackInfo.region}.amazonaws.com.`) {
-      recordSetName = `*.${recordSetName}`;
-    }
-
-    return recordSetName;
-  }
   private getVPCId(vpcName: string) {
     if (!this.props.globalConfig.externalLandingZoneResources?.templateMap) {
       return;
@@ -175,5 +172,50 @@ export class VpcEndpoints extends AseaResource {
       // Increment index
       index += 1;
     }
+  }
+
+  private getCfnHostedZoneName(hostedZoneName: string): string {
+    const hostedZoneNameArr = hostedZoneName.split('.');
+    const hostedZonePrefix = hostedZoneNameArr.shift();
+    if (!hostedZonePrefix) {
+      return hostedZoneName;
+    }
+
+    switch (hostedZonePrefix) {
+      case 'ecs-t':
+        hostedZoneNameArr.unshift('ecs-telemetry');
+        break;
+      case 'ecs-a':
+        hostedZoneNameArr.unshift('ecs-agent');
+        break;
+      default:
+        hostedZoneNameArr.unshift(hostedZonePrefix);
+    }
+
+    return hostedZoneNameArr.join('.');
+  }
+
+  private getRecordSetName(hostedZoneName: string): string {
+    const hostedZoneNameArr = hostedZoneName.split('.');
+    const hostedZonePrefix = hostedZoneNameArr.shift();
+    if (!hostedZonePrefix) {
+      return hostedZoneName;
+    }
+
+    switch (hostedZonePrefix) {
+      case 'dkr':
+        hostedZoneNameArr.unshift('dkr');
+        hostedZoneNameArr.unshift('*');
+        break;
+      case 'ecs-a':
+        hostedZoneNameArr.unshift('ecs-agent');
+        break;
+      case 'ecs-t':
+        hostedZoneNameArr.unshift('ecs-telemetry');
+        break;
+      default:
+        hostedZoneNameArr.unshift(hostedZonePrefix);
+    }
+    return hostedZoneNameArr.join('.');
   }
 }
