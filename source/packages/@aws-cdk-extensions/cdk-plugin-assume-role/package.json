@@ -2,8 +2,8 @@
   "name": "@aws-cdk-extensions/cdk-plugin-assume-role",
   "version": "0.0.0",
   "private": true,
-  "license": "Apache-2.0",
   "description": "Assume role plugin",
+  "license": "Apache-2.0",
   "author": {
     "name": "Amazon Web Services",
     "url": "https://aws.amazon.com/solutions"
@@ -11,19 +11,19 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "build": "tsc",
     "cleanup": "tsc --build ./ --clean && rm -rf node_modules && rm -rf yarn.lock && rm -rf dist",
     "cleanup:tsc": "tsc --build ./ --clean",
-    "build": "tsc",
-    "watch": "tsc -w",
-    "test": "jest --coverage --ci --passWithNoTests",
     "lint": "eslint --fix  --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}'",
-    "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}'"
+    "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}'",
+    "test": "jest --coverage --ci --passWithNoTests",
+    "watch": "tsc -w"
   },
   "dependencies": {
     "@typescript-eslint/eslint-plugin": "5.53.0",
     "@typescript-eslint/parser": "5.53.0",
-    "aws-cdk-lib": "2.93.0",
     "aws-cdk": "2.93.0",
+    "aws-cdk-lib": "2.93.0",
     "aws-sdk": "2.1379.0",
     "colors": "1.4.0",
     "exponential-backoff": "3.1.1"

@@ -1,23 +1,31 @@
 {
   "name": "@aws-accelerator/lambdas-control-tower-ou-events",
   "version": "0.0.0",
+  "private": true,
   "description": "Accelerator Lambda",
   "license": "Apache-2.0",
   "author": {
     "name": "Amazon Web Services",
     "url": "https://aws.amazon.com/solutions"
   },
-  "private": true,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "build": "esbuild --minify --bundle --sourcemap --platform=node --target=node18 --external:aws-sdk --outfile=./dist/index.js index.ts",
     "cleanup": "tsc --build ./ --clean && rm -rf node_modules && rm -rf yarn.lock && rm -rf dist && rm -rf cdk.out",
     "cleanup:tsc": "tsc --build ./ --clean",
-    "build": "esbuild --minify --bundle --sourcemap --platform=node --target=node18 --external:aws-sdk --outfile=./dist/index.js index.ts",
-    "test": "jest --coverage --ci --passWithNoTests",
-    "testreport": "",
     "lint": "eslint --fix  --max-warnings 0 -c ../../../../../../.eslintrc.json '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
-    "precommit": "eslint --max-warnings 0 -c ../../../../../../.eslintrc.json '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" "
+    "precommit": "eslint --max-warnings 0 -c ../../../../../../.eslintrc.json '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
+    "test": "jest --coverage --ci --passWithNoTests",
+    "testreport": ""
+  },
+  "dependencies": {
+    "@aws-accelerator/utils": "^0.0.0",
+    "@aws-sdk/client-dynamodb": "3.410.0",
+    "@aws-sdk/client-organizations": "3.410.0",
+    "@aws-sdk/lib-dynamodb": "3.410.0",
+    "@aws-sdk/smithy-client": "3.374.0",
+    "@aws-sdk/types": "3.410.0"
   },
   "devDependencies": {
     "@types/jest": "29.4.0",
@@ -36,13 +44,5 @@
     "ts-jest": "29.0.5",
     "ts-node": "10.9.1",
     "typescript": "4.9.5"
-  },
-  "dependencies": {
-    "@aws-accelerator/utils": "^0.0.0",
-    "@aws-sdk/client-dynamodb": "3.410.0",
-    "@aws-sdk/client-organizations": "3.410.0",
-    "@aws-sdk/lib-dynamodb": "3.410.0",
-    "@aws-sdk/smithy-client": "3.374.0",
-    "@aws-sdk/types": "3.410.0"
   }
 }

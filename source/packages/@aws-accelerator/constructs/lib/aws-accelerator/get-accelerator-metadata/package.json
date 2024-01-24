@@ -2,21 +2,21 @@
   "name": "@aws-accelerator/constructs-aws-accelerator-get-accelerator-metadata",
   "version": "1.0.0",
   "private": true,
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "description": "Custom resource Lambda",
   "license": "Apache-2.0",
   "author": {
     "name": "Amazon Web Services",
     "url": "https://aws.amazon.com/solutions"
   },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
+    "build": "esbuild --minify --bundle --outfile=./dist/index.js --platform=node --target=node18 --external:aws-sdk index.ts",
     "cleanup": "tsc --build ./ --clean && rm -rf node_modules && rm -rf yarn.lock && rm -rf dist && rm -rf cdk.out",
     "cleanup:tsc": "tsc --build ./ --clean",
-    "build": "esbuild --minify --bundle --outfile=./dist/index.js --platform=node --target=node18 --external:aws-sdk index.ts",
-    "test": "jest --coverage --ci --passWithNoTests",
     "lint": "eslint --fix  --max-warnings 0 -c ../../../../../../.eslintrc.json '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
-    "precommit": "eslint --max-warnings 0 -c ../../../../../../.eslintrc.json '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" "
+    "precommit": "eslint --max-warnings 0 -c ../../../../../../.eslintrc.json '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
+    "test": "jest --coverage --ci --passWithNoTests"
   },
   "dependencies": {
     "aws-sdk": "2.1379.0"

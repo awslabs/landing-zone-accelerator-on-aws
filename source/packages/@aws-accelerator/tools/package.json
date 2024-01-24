@@ -1,23 +1,40 @@
 {
   "name": "@aws-accelerator/tools",
   "version": "0.0.0",
+  "private": true,
   "description": "The tools package for the accelerator solution.",
   "license": "Apache-2.0",
   "author": {
     "name": "Amazon Web Services",
     "url": "https://aws.amazon.com/solutions"
   },
-  "private": true,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "build": "tsc",
     "cleanup": "tsc --build ./ --clean && rm -rf node_modules && rm -rf yarn.lock && rm -rf dist && rm -rf cdk.out",
     "cleanup:tsc": "tsc --build ./ --clean",
-    "build": "tsc",
-    "watch": "tsc -w",
-    "test": "jest --coverage --ci --passWithNoTests",
     "lint": "eslint --fix  --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
-    "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" "
+    "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
+    "test": "jest --coverage --ci --passWithNoTests",
+    "watch": "tsc -w"
+  },
+  "dependencies": {
+    "@aws-accelerator/config": "^0.0.0",
+    "@aws-accelerator/utils": "^0.0.0",
+    "@aws-cdk/cx-api": "2.93.0",
+    "@aws-sdk/client-backup": "3.410.0",
+    "@aws-sdk/client-cloudformation": "3.410.0",
+    "@aws-sdk/client-cloudwatch-logs": "3.410.0",
+    "@aws-sdk/client-codebuild": "3.410.0",
+    "@aws-sdk/client-codecommit": "3.410.0",
+    "@aws-sdk/client-codepipeline": "3.410.0",
+    "@aws-sdk/client-ecr": "3.410.0",
+    "@aws-sdk/client-iam": "3.410.0",
+    "@aws-sdk/client-kms": "3.410.0",
+    "@aws-sdk/client-organizations": "3.410.0",
+    "@aws-sdk/client-s3": "3.412.0",
+    "yargs": "17.7.1"
   },
   "devDependencies": {
     "@types/jest": "29.4.0",
@@ -44,22 +61,5 @@
     "reportPath": "coverage",
     "reportFile": "test-report.xml",
     "indent": 4
-  },
-  "dependencies": {
-    "@aws-accelerator/config": "^0.0.0",
-    "@aws-accelerator/utils": "^0.0.0",
-    "@aws-cdk/cx-api": "2.93.0",
-    "@aws-sdk/client-backup": "3.410.0",
-    "@aws-sdk/client-cloudformation": "3.410.0",
-    "@aws-sdk/client-cloudwatch-logs": "3.410.0",
-    "@aws-sdk/client-codebuild": "3.410.0",
-    "@aws-sdk/client-codecommit": "3.410.0",
-    "@aws-sdk/client-codepipeline": "3.410.0",
-    "@aws-sdk/client-ecr": "3.410.0",
-    "@aws-sdk/client-kms": "3.410.0",
-    "@aws-sdk/client-organizations": "3.410.0",
-    "@aws-sdk/client-s3": "3.412.0",
-    "@aws-sdk/client-iam": "3.410.0",
-    "yargs": "17.7.1"
   }
 }

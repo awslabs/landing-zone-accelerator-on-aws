@@ -1,6 +1,7 @@
 {
   "name": "@aws-accelerator/tester",
   "version": "0.0.0",
+  "private": true,
   "description": "The test package for the accelerator solution.",
   "license": "Apache-2.0",
   "author": {
@@ -9,21 +10,29 @@
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "private": true,
   "scripts": {
+    "build": "tsc",
     "cleanup": "tsc --build ../tests --clean && rm -rf node_modules && rm -rf yarn.lock && rm -rf dist && rm -rf cdk.out",
     "cleanup:tsc": "tsc --build ../tests --clean",
-    "build": "tsc",
-    "watch": "tsc -w",
-    "test": "jest --coverage --ci --passWithNoTests",
     "lint": "eslint --fix  --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}'  --ignore-pattern \\\\\\\"*.d.ts\\\\\\\" ",
-    "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}'  --ignore-pattern \\\\\\\"*.d.ts\\\\\\\" "
+    "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}'  --ignore-pattern \\\\\\\"*.d.ts\\\\\\\" ",
+    "test": "jest --coverage --ci --passWithNoTests",
+    "watch": "tsc -w"
+  },
+  "dependencies": {
+    "@types/fs-extra": "11.0.1",
+    "aws-cdk": "2.93.0",
+    "aws-cdk-lib": "2.93.0",
+    "ts-node": "10.9.1"
   },
   "devDependencies": {
     "@types/jest": "29.4.0",
     "@types/node": "18.14.0",
     "@typescript-eslint/eslint-plugin": "5.53.0",
     "@typescript-eslint/parser": "5.53.0",
+    "aws-cdk": "2.93.0",
+    "aws-cdk-lib": "2.93.0",
+    "constructs": "10.0.12",
     "eslint": "8.34.0",
     "eslint-config-prettier": "8.6.0",
     "eslint-config-standard": "17.0.0",
@@ -39,20 +48,11 @@
     "prettier": "2.8.4",
     "ts-jest": "29.0.5",
     "ts-node": "10.9.1",
-    "typescript": "4.9.5",
-    "aws-cdk": "2.93.0",
-    "aws-cdk-lib": "2.93.0",
-    "constructs": "10.0.12"
+    "typescript": "4.9.5"
   },
   "jestSonar": {
     "reportPath": "coverage",
     "reportFile": "test-report.xml",
     "indent": 4
-  },
-  "dependencies": {
-    "@types/fs-extra": "11.0.1",
-    "aws-cdk": "2.93.0",
-    "aws-cdk-lib": "2.93.0",
-    "ts-node": "10.9.1"
   }
 }
