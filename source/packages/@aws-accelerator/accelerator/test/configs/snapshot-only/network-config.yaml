@@ -709,15 +709,15 @@ vpcs:
             ipv6Destination: ::/0
             type: gatewayLoadBalancerEndpoint
             target: Shared-Secondary-Endpoint-A
-          - name: eigwRoute
-            ipv6Destination: ::/0
-            type: egressOnlyIgw
       - name: Network-Secondary-B-Rt
         routes:
           - name: LgwRoute
             destination: 0.0.0.0/0
             type: localGateway
             target: accelerator-lgw-1
+          - name: eigwRoute
+            ipv6Destination: ::/0
+            type: egressOnlyIgw
       - name: Network-Secondary-C-Rt
         routes:
           - name: NfwRoute
@@ -778,6 +778,15 @@ vpcs:
         ipamAllocation:
           ipamPoolName: home-region-prod-pool
           netmaskLength: 28
+      - name: Network-Secondary-Dual-Stack
+        availabilityZone: a
+        routeTable: Network-Secondary-A-Rt
+        ipv4CidrBlock: 10.0.0.192/28
+        ipv6CidrBlock: fd00::/64
+      - name: Network-Secondary-Ipv6-Only
+        availabilityZone: b
+        routeTable: Network-Secondary-B-Rt
+        ipv6CidrBlock: fd01::/64
     outposts:
       - name: accelerator-outpost-a
         arn: test-arn
