@@ -25,13 +25,17 @@ const firewallPolicyArn = 'arn:aws:network-firewall:us-east-1:222222222222:firew
 
 const importedFirewallArn = 'arn:aws:network-firewall:us-east-1:222222222222:firewall/TestImportedFirewall';
 
-new NetworkFirewall(stack, 'TestFirewall', {
+const testFirewall = new NetworkFirewall(stack, 'TestFirewall', {
   firewallPolicyArn: firewallPolicyArn,
   name: 'TestFirewall',
   subnets: ['Test-Subnet-1', 'Test-Subnet-2'],
   vpcId: 'TestVpc',
   tags: [],
 });
+const key = new cdk.aws_kms.Key(stack, 'CloudWatchKey', {});
+
+testFirewall.addNetworkFirewallRoute('testRouteId1', '1', 365, 'routeTableId', '10.0.0.6/32', undefined, key);
+testFirewall.addNetworkFirewallRoute('testRouteId2', '1', 365, 'routeTableId', undefined, '::1', key);
 
 const importedFirewall = NetworkFirewall.fromAttributes(stack, 'TestImportFirewall', {
   firewallArn: importedFirewallArn,
@@ -49,14 +53,7 @@ importedFirewall.addLogging({
   ],
 });
 
-importedFirewall.addNetworkFirewallRoute(
-  'endpointRouteId',
-  '10.0.0.6/32',
-  '1',
-  365,
-  'routeTableId',
-  new cdk.aws_kms.Key(stack, 'CloudWatchKey', {}),
-);
+importedFirewall.addNetworkFirewallRoute('endpointRouteId', '1', 365, 'routeTableId', '10.0.0.6/32', undefined, key);
 
 const app = new cdk.App();
 const includedStack = new cdk.Stack(app, `placeHolder`, {});

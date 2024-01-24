@@ -58,7 +58,7 @@ describe('VpcEndpoint', () => {
       }),
       routeTables: ['Test1', 'Test2'],
     });
-    expect(typeof initialStack.createEndpointRoute('id', '10.100.0.0/16', 'routeTableId')).toBe('undefined');
+    expect(typeof initialStack.createEndpointRoute('id', 'routeTableId', '10.100.0.0/16')).toBe('undefined');
   });
   it('vpc interface end point type test with sagemaker', () => {
     new VpcEndpoint(stack, 'VpcEndpointInterfaceSagemaker', {

@@ -33,6 +33,7 @@ import {
 import { createLogger } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
 import { getPrefixList, getSecurityGroup, getSubnet, getSubnetConfig, getVpcConfig } from './getter-utils';
+import { isIpv6Cidr } from './validation-utils';
 
 /**
  * Security group rule properties
@@ -734,7 +735,7 @@ function processIpSource(
   props: { ipProtocol: string; fromPort?: number; toPort?: number; description?: string },
 ): SecurityGroupRuleProps {
   logger.info(`Evaluate IP Source ${source}`);
-  if (source.includes('::')) {
+  if (isIpv6Cidr(source)) {
     return {
       cidrIpv6: source,
       ...props,
@@ -777,10 +778,13 @@ function processSubnetSource(
         ...props,
       });
     } else {
-      subnetRules.push({
-        cidrIp: subnetConfigItem.ipv4CidrBlock,
-        ...props,
-      });
+      const ruleProps = source.ipv6
+        ? { cidrIpv6: subnetConfigItem.ipv6CidrBlock, ...props }
+        : {
+            cidrIp: subnetConfigItem.ipv4CidrBlock,
+            ...props,
+          };
+      subnetRules.push(ruleProps);
     }
   }
   return subnetRules;

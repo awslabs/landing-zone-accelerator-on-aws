@@ -47,7 +47,7 @@ vpc.addFlowLogs({
   acceleratorPrefix: 'AWSAccelerator',
 });
 
-vpc.addCidr({ cidrBlock: '10.2.0.0/16' });
+vpc.addIpv4Cidr({ cidrBlock: '10.2.0.0/16' });
 const rt2 = RouteTable.fromRouteTableAttributes(stack, 'ImportedRouteTable', {
   routeTableId: 'someImportedRouteTableId',
   vpc,

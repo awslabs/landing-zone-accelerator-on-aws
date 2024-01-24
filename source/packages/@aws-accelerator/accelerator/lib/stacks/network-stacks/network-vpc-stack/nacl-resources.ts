@@ -24,7 +24,8 @@ import { SsmResourceType } from '@aws-accelerator/utils';
 import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'pascal-case';
 import { LogLevel } from '../network-stack';
-import { getSubnet, getVpc } from '../utils/getter-utils';
+import { getSubnet, getSubnetConfig, getVpc, getVpcConfig } from '../utils/getter-utils';
+import { isIpv6Cidr } from '../utils/validation-utils';
 import { NetworkVpcStack } from './network-vpc-stack';
 
 export class NaclResources {
@@ -212,13 +213,12 @@ export class NaclResources {
     //
     if (nonEmptyString.is(target)) {
       this.stack.addLogs(LogLevel.INFO, `Evaluate IP Target ${target}`);
-      if (target.includes('::')) {
+      if (isIpv6Cidr(target)) {
         return { ipv6CidrBlock: target };
       } else {
         return { cidrBlock: target };
       }
     }
-
     //
     // Subnet Source target
     //
@@ -227,26 +227,20 @@ export class NaclResources {
         LogLevel.INFO,
         `Evaluate Subnet Source account:${target.account} vpc:${target.vpc} subnets:[${target.subnet}]`,
       );
-
+      //
       // Locate the VPC
-      const vpcItem = this.stack.vpcResources.find(item => item.name === target.vpc);
-      if (!vpcItem) {
-        this.stack.addLogs(LogLevel.ERROR, `Specified VPC ${target.vpc} not defined`);
-        throw new Error(`Configuration validation failed at runtime.`);
-      }
-
+      const vpcConfigItem = getVpcConfig(this.stack.vpcResources, target.vpc);
+      //
       // Locate the Subnet
-      const subnetConfigItem = vpcItem.subnets?.find(item => item.name === target.subnet);
-      if (!subnetConfigItem) {
-        this.stack.addLogs(LogLevel.ERROR, `Specified subnet ${target.subnet} not defined`);
-        throw new Error(`Configuration validation failed at runtime.`);
-      }
+      const subnetConfigItem = getSubnetConfig(vpcConfigItem, target.subnet);
 
       if (subnetConfigItem.ipamAllocation) {
-        const subnetItem = getSubnet(subnetMap, vpcItem.name, subnetConfigItem.name) as Subnet;
+        const subnetItem = getSubnet(subnetMap, vpcConfigItem.name, subnetConfigItem.name) as Subnet;
         return { cidrBlock: subnetItem.ipv4CidrBlock };
       } else {
-        return { cidrBlock: subnetConfigItem.ipv4CidrBlock };
+        return target.ipv6
+          ? { ipv6CidrBlock: subnetConfigItem.ipv6CidrBlock }
+          : { cidrBlock: subnetConfigItem.ipv4CidrBlock };
       }
     }
 

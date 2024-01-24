@@ -936,7 +936,11 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
       // Get endpoint and route table items
       const gwlbEndpoint = gwlbEndpointMap.get(routeTableEntryItem.target!);
       const routeTableId = this.routeTableMap.get(`${vpcName}_${routeTableName}`);
-      const destination = this.setRouteEntryDestination(routeTableEntryItem, this.ipamSubnetArray, vpcName);
+      const [destination, ipv6Destination] = this.setRouteEntryDestination(
+        routeTableEntryItem,
+        this.ipamSubnetArray,
+        vpcName,
+      );
 
       // Check if route table exists im map
       if (!routeTableId) {
@@ -950,7 +954,7 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
       }
       // Add route
       this.logger.info(`Adding Gateway Load Balancer endpoint Route Table Entry ${routeTableEntryItem.name}`);
-      gwlbEndpoint.createEndpointRoute(endpointRouteId, destination, routeTableId);
+      gwlbEndpoint.createEndpointRoute(endpointRouteId, routeTableId, destination, ipv6Destination);
     }
   }
 

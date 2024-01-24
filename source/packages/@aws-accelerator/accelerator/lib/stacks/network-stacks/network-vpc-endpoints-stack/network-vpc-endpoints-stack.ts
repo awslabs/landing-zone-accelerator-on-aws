@@ -207,7 +207,7 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
 
     if (routeTableEntryItem.type && routeTableEntryItem.type === 'networkFirewall') {
       const routeTableId = this.routeTableMap.get(`${vpcName}_${routeTableItem.name}`);
-      const destination = this.setRouteEntryDestination(
+      const [destination, ipv6Destination] = this.setRouteEntryDestination(
         routeTableEntryItem,
         setIpamSubnetRouteTableEntryArray(this.vpcsInScope),
         vpcName,
@@ -234,10 +234,11 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
       this.logger.info(`Adding Network Firewall Route Table Entry ${routeTableEntryItem.name}`);
       firewall.addNetworkFirewallRoute(
         endpointRouteId,
-        destination,
         endpointAz,
         this.logRetention,
         routeTableId,
+        destination,
+        ipv6Destination,
         this.cloudwatchKey,
       );
     }

@@ -984,18 +984,26 @@ export abstract class NetworkStack extends AcceleratorStack {
    * @param routeTableEntryItem
    * @param subnetMap
    * @param vpcName
-   * @returns
+   * @returns [string | undefined, string | undefined]
    */
   public setRouteEntryDestination(
     routeTableEntryItem: RouteTableEntryConfig,
     ipamSubnetArray: string[],
     vpcName: string,
-  ): string {
-    const subnetKey = `${vpcName}_${routeTableEntryItem.destination!}`;
+  ): [string | undefined, string | undefined] {
+    let destination: string | undefined = undefined;
+    let ipv6Destination: string | undefined = undefined;
 
-    return ipamSubnetArray.includes(subnetKey)
-      ? this.lookupLocalIpamSubnet(vpcName, routeTableEntryItem.destination!).ipv4CidrBlock
-      : routeTableEntryItem.destination!;
+    const subnetKey = `${vpcName}_${routeTableEntryItem.ipv6Destination ?? routeTableEntryItem.destination!}`;
+
+    if (ipamSubnetArray.includes(subnetKey)) {
+      destination = this.lookupLocalIpamSubnet(vpcName, routeTableEntryItem.destination!).ipv4CidrBlock;
+    } else {
+      destination = routeTableEntryItem.destination;
+      ipv6Destination = routeTableEntryItem.ipv6Destination;
+    }
+
+    return [destination, ipv6Destination];
   }
 
   /**

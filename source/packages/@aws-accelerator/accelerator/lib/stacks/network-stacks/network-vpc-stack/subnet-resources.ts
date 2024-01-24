@@ -236,14 +236,18 @@ export class SubnetResources {
     } else {
       subnet = new Subnet(this.stack, pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${subnetItem.name}Subnet`), {
         name: subnetItem.name,
+        assignIpv6OnCreation: subnetItem.assignIpv6OnCreation,
         availabilityZone: isAvailabilityZoneId ? undefined : availabilityZone,
         availabilityZoneId: isAvailabilityZoneId ? availabilityZone : undefined,
         basePool,
+        enableDns64: subnetItem.enableDns64,
         ipamAllocation: subnetItem.ipamAllocation,
         ipv4CidrBlock: subnetItem.ipv4CidrBlock,
+        ipv6CidrBlock: subnetItem.ipv6CidrBlock,
         kmsKey: this.stack.cloudwatchKey,
         logRetentionInDays: this.stack.logRetention,
         mapPublicIpOnLaunch: subnetItem.mapPublicIpOnLaunch,
+        privateDnsOptions: subnetItem.privateDnsOptions,
         routeTable,
         vpc,
         tags: subnetItem.tags,
@@ -256,7 +260,7 @@ export class SubnetResources {
         stringValue: subnet.subnetId,
       });
       // If the VPC has additional CIDR blocks, depend on those CIDRs to be associated
-      for (const cidr of vpc.cidrs ?? []) {
+      for (const cidr of [...vpc.cidrs.ipv4, ...vpc.cidrs.ipv6]) {
         subnet.node.addDependency(cidr);
       }
     }

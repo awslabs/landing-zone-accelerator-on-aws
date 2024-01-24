@@ -60,20 +60,30 @@ export interface ISubnet extends cdk.IResource {
   readonly availabilityZoneId?: string;
 }
 
+interface SubnetPrivateDnsOptions {
+  readonly enableDnsAAAARecord?: boolean;
+  readonly enableDnsARecord?: boolean;
+  readonly hostnameType?: 'ip-name' | 'resource-name';
+}
+
 export interface SubnetProps {
   readonly name: string;
+  readonly vpc: IVpc;
+  readonly assignIpv6OnCreation?: boolean;
   readonly availabilityZone?: string;
   readonly availabilityZoneId?: string;
-  readonly mapPublicIpOnLaunch?: boolean;
-  readonly routeTable?: IRouteTable;
-  readonly vpc: IVpc;
   readonly basePool?: string[];
+  readonly enableDns64?: boolean;
   readonly ipamAllocation?: IpamAllocationConfig;
   readonly ipv4CidrBlock?: string;
+  readonly ipv6CidrBlock?: string;
   readonly kmsKey?: cdk.aws_kms.IKey;
   readonly logRetentionInDays?: number;
-  readonly tags?: cdk.CfnTag[];
+  readonly mapPublicIpOnLaunch?: boolean;
   readonly outpost?: OutpostsConfig;
+  readonly privateDnsOptions?: SubnetPrivateDnsOptions;
+  readonly routeTable?: IRouteTable;
+  readonly tags?: cdk.CfnTag[];
 }
 
 export interface ImportedSubnetProps {
@@ -85,12 +95,13 @@ export interface ImportedSubnetProps {
 
 abstract class SubnetBase extends cdk.Resource implements ISubnet {
   public abstract readonly subnetName: string;
-  public abstract readonly routeTable?: IRouteTable;
   public abstract readonly subnetId: string;
   public abstract readonly subnetArn: string;
-  public abstract readonly ipv4CidrBlock: string;
   public readonly availabilityZone?: string;
   public readonly availabilityZoneId?: string;
+  public abstract readonly ipv4CidrBlock?: string;
+  public abstract readonly ipv6CidrBlock?: string;
+  public abstract readonly routeTable?: IRouteTable;
 }
 
 export class ImportedSubnet extends SubnetBase {
@@ -98,7 +109,8 @@ export class ImportedSubnet extends SubnetBase {
   public readonly routeTable?: IRouteTable;
   public readonly subnetId: string;
   public readonly subnetArn: string;
-  public readonly ipv4CidrBlock: string;
+  public readonly ipv4CidrBlock?: string;
+  public readonly ipv6CidrBlock?: string;
 
   constructor(scope: Construct, id: string, props: ImportedSubnetProps) {
     super(scope, id);
@@ -112,7 +124,10 @@ export class ImportedSubnet extends SubnetBase {
       arnFormat: cdk.ArnFormat.SLASH_RESOURCE_NAME,
       resourceName: props.subnetId,
     });
-    this.ipv4CidrBlock = props.ipv4CidrBlock;
+
+    if (props.ipv4CidrBlock) {
+      this.ipv4CidrBlock = props.ipv4CidrBlock;
+    }
 
     if (props.routeTable) {
       // Route Table is not imported, Associating Subnet to new RouteTable
@@ -124,14 +139,16 @@ export class ImportedSubnet extends SubnetBase {
   }
 }
 export class Subnet extends SubnetBase {
+  public readonly subnetArn: string;
+  public readonly subnetId: string;
   public readonly subnetName: string;
   public readonly availabilityZone?: string;
   public readonly availabilityZoneId?: string;
-  public readonly ipv4CidrBlock: string;
+  public readonly ipv4CidrBlock?: string;
+  public readonly ipv6CidrBlock?: string;
   public readonly mapPublicIpOnLaunch?: boolean;
   public readonly routeTable?: IRouteTable;
-  public readonly subnetId: string;
-  public readonly subnetArn: string;
+
   public readonly outpostArn?: string;
 
   constructor(scope: Construct, id: string, props: SubnetProps) {
@@ -147,17 +164,32 @@ export class Subnet extends SubnetBase {
     // Determine if IPAM subnet or native
     let resource: cdk.aws_ec2.CfnSubnet | IpamSubnet;
 
-    if (props.ipv4CidrBlock) {
+    if (props.ipv4CidrBlock || props.ipv6CidrBlock) {
       this.ipv4CidrBlock = props.ipv4CidrBlock;
+      this.ipv6CidrBlock = props.ipv6CidrBlock;
+
+      const ipv6Native = this.ipv6CidrBlock !== undefined && !this.ipv4CidrBlock ? true : undefined;
+      const privateDnsNameOptionsOnLaunch = props.privateDnsOptions
+        ? {
+            EnableResourceNameDnsAAAARecord: props.privateDnsOptions?.enableDnsAAAARecord,
+            EnableResourceNameDnsARecord: props.privateDnsOptions?.enableDnsARecord,
+            HostnameType: props.privateDnsOptions?.hostnameType,
+          }
+        : undefined;
 
       resource = new cdk.aws_ec2.CfnSubnet(this, 'Resource', {
         vpcId: props.vpc.vpcId,
-        cidrBlock: props.ipv4CidrBlock,
+        assignIpv6AddressOnCreation: props.assignIpv6OnCreation,
         availabilityZone: props.availabilityZone,
         availabilityZoneId: props.availabilityZoneId,
+        cidrBlock: props.ipv4CidrBlock,
+        enableDns64: props.enableDns64,
+        ipv6CidrBlock: props.ipv6CidrBlock,
+        ipv6Native,
         mapPublicIpOnLaunch: props.mapPublicIpOnLaunch,
-        tags: props.tags,
         outpostArn: props.outpost?.arn,
+        privateDnsNameOptionsOnLaunch,
+        tags: props.tags,
       });
 
       cdk.Tags.of(this).add('Name', props.name);
@@ -585,7 +617,11 @@ export interface IVpc extends cdk.IResource {
   /**
    * Additional Cidrs for VPC
    */
-  readonly cidrs: cdk.aws_ec2.CfnVPCCidrBlock[];
+  readonly cidrs: { ipv4: cdk.aws_ec2.CfnVPCCidrBlock[]; ipv6: cdk.aws_ec2.CfnVPCCidrBlock[] };
+  /**
+   * The EIGW ID assinged to the VPC
+   */
+  egressOnlyIgwId?: string;
   /**
    * The InternetGatewayId assigned to VPC
    */
@@ -604,6 +640,7 @@ export interface VpcProps {
   readonly dhcpOptions?: string;
   readonly enableDnsHostnames?: boolean;
   readonly enableDnsSupport?: boolean;
+  readonly egressOnlyIgw?: boolean;
   readonly instanceTenancy?: 'default' | 'dedicated';
   readonly internetGateway?: boolean;
   readonly ipv4CidrBlock?: string;
@@ -623,9 +660,11 @@ export interface ImportedVpcProps {
 abstract class VpcBase extends cdk.Resource implements IVpc {
   public abstract readonly name: string;
   public abstract readonly vpcId: string;
-  public abstract readonly cidrs: cdk.aws_ec2.CfnVPCCidrBlock[];
+  public abstract readonly cidrs: { ipv4: cdk.aws_ec2.CfnVPCCidrBlock[]; ipv6: cdk.aws_ec2.CfnVPCCidrBlock[] };
+  public egressOnlyIgwId?: string;
   public internetGatewayId?: string;
   public virtualPrivateGatewayId?: string;
+  protected egressOnlyIgw: cdk.aws_ec2.CfnEgressOnlyInternetGateway | undefined;
   protected internetGateway: cdk.aws_ec2.CfnInternetGateway | undefined;
   protected internetGatewayAttachment: cdk.aws_ec2.CfnVPCGatewayAttachment | undefined;
   protected virtualPrivateGateway: cdk.aws_ec2.VpnGateway | undefined;
@@ -758,37 +797,53 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
     return role.roleArn;
   }
 
-  public addCidr(options: {
+  public addIpv4Cidr(options: { cidrBlock?: string; ipv4IpamPoolId?: string; ipv4NetmaskLength?: number }) {
+    // This block is required for backwards compatibility
+    // with a previous iteration. It appends a number to the
+    // logical ID so more than two VPC CIDRs can be defined.
+    let logicalId = 'VpcCidrBlock';
+    if (this.cidrs.ipv4.length > 0) {
+      logicalId = `VpcCidrBlock${this.cidrs.ipv4.length}`;
+    }
+
+    // Create a secondary VPC CIDR
+    this.cidrs.ipv4.push(
+      new cdk.aws_ec2.CfnVPCCidrBlock(this, logicalId, {
+        cidrBlock: options.cidrBlock,
+        ipv4IpamPoolId: options.ipv4IpamPoolId,
+        ipv4NetmaskLength: options.ipv4NetmaskLength,
+        vpcId: this.vpcId,
+      }),
+    );
+  }
+
+  public addIpv6Cidr(options: {
     amazonProvidedIpv6CidrBlock?: boolean;
-    cidrBlock?: string;
-    ipv4IpamPoolId?: string;
-    ipv4NetmaskLength?: number;
     ipv6CidrBlock?: string;
     ipv6IpamPoolId?: string;
     ipv6NetmaskLength?: number;
     ipv6Pool?: string;
   }) {
-    // This block is required for backwards compatibility
-    // with a previous iteration. It appends a number to the
-    // logical ID so more than two VPC CIDRs can be defined.
-    let logicalId = 'VpcCidrBlock';
-    if (this.cidrs.length > 0) {
-      logicalId = `VpcCidrBlock${this.cidrs.length}`;
-    }
+    const logicalId = `Ipv6CidrBlock${this.cidrs.ipv6.length}`;
 
     // Create a secondary VPC CIDR
-    this.cidrs.push(
+    this.cidrs.ipv6.push(
       new cdk.aws_ec2.CfnVPCCidrBlock(this, logicalId, {
         amazonProvidedIpv6CidrBlock: options.amazonProvidedIpv6CidrBlock,
-        cidrBlock: options.cidrBlock,
-        ipv4IpamPoolId: options.ipv4IpamPoolId,
-        ipv4NetmaskLength: options.ipv4NetmaskLength,
         ipv6CidrBlock: options.ipv6CidrBlock,
         ipv6IpamPoolId: options.ipv6IpamPoolId,
         ipv6Pool: options.ipv6Pool,
         vpcId: this.vpcId,
       }),
     );
+  }
+
+  addEgressOnlyIgw() {
+    if (this.egressOnlyIgwId) {
+      throw new Error(`Egress-Only Internet Gateway is already configured to VPC ${this.name}`);
+    }
+    this.egressOnlyIgw = new cdk.aws_ec2.CfnEgressOnlyInternetGateway(this, 'EgressOnlyIgw', { vpcId: this.vpcId });
+    this.egressOnlyIgwId = this.egressOnlyIgw.ref;
   }
 
   addInternetGateway() {
@@ -836,14 +891,14 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
 export class ImportedVpc extends VpcBase {
   public readonly name: string;
   public readonly vpcId: string;
-  public readonly cidrs: cdk.aws_ec2.CfnVPCCidrBlock[];
+  public readonly cidrs: { ipv4: cdk.aws_ec2.CfnVPCCidrBlock[]; ipv6: cdk.aws_ec2.CfnVPCCidrBlock[] };
   public readonly vpnConnections: VpnConnection[] = [];
 
   constructor(scope: Construct, id: string, props: ImportedVpcProps) {
     super(scope, id);
     this.name = props.name;
     this.vpcId = props.vpcId;
-    this.cidrs = [];
+    this.cidrs = { ipv4: [], ipv6: [] };
     this.internetGatewayId = props.internetGatewayId;
     this.virtualPrivateGatewayId = props.virtualPrivateGatewayId;
   }
@@ -855,7 +910,7 @@ export class ImportedVpc extends VpcBase {
 export class Vpc extends VpcBase {
   public readonly name: string;
   public readonly vpcId: string;
-  public readonly cidrs: cdk.aws_ec2.CfnVPCCidrBlock[];
+  public readonly cidrs: { ipv4: cdk.aws_ec2.CfnVPCCidrBlock[]; ipv6: cdk.aws_ec2.CfnVPCCidrBlock[] };
   public readonly vpnConnections: VpnConnection[] = [];
   constructor(scope: Construct, id: string, props: VpcProps) {
     super(scope, id);
@@ -873,7 +928,12 @@ export class Vpc extends VpcBase {
 
     this.vpcId = resource.ref;
 
-    this.cidrs = [];
+    this.cidrs = { ipv4: [], ipv6: [] };
+
+    if (props.egressOnlyIgw) {
+      this.addEgressOnlyIgw();
+    }
+
     if (props.internetGateway) {
       this.internetGateway = new cdk.aws_ec2.CfnInternetGateway(this, 'InternetGateway', {});
       this.internetGatewayAttachment = new cdk.aws_ec2.CfnVPCGatewayAttachment(this, 'InternetGatewayAttachment', {

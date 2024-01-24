@@ -2398,6 +2398,18 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
       },
       "Type": "AWS::EC2::Route",
     },
+    "NetworkSecondaryVpcSharedSecondaryEndpointAGwlbEpNetworkSecondaryVpcNetworkSecondaryARtRouteTableGwlbRoutev6341332ED": {
+      "Properties": {
+        "DestinationIpv6CidrBlock": "::/0",
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryrouteTableNetworkSecondaryARtidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "VpcEndpointId": {
+          "Ref": "NetworkSecondaryVpcSharedSecondaryEndpointAGwlbEpBCA22033",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
     "NetworkSecondaryVpcSharedSecondaryEndpointDGwlbEp3C49791E": {
       "Properties": {
         "ServiceName": {

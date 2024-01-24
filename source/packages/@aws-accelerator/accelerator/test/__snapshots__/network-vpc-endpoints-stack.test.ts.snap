@@ -1914,6 +1914,39 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
       "Type": "Custom::GetNetworkFirewallEndpoint",
       "UpdateReplacePolicy": "Delete",
     },
+    "NetworkSecondaryazIdFirewallNetworkFirewallNetworkSecondaryVpcNetworkSecondaryCRtRouteTableNfwRoutev6704FCC8B": {
+      "Properties": {
+        "DestinationIpv6CidrBlock": "::/0",
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryrouteTableNetworkSecondaryCRtidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "VpcEndpointId": {
+          "Ref": "NetworkSecondaryazIdFirewallNetworkFirewallNetworkSecondaryVpcNetworkSecondaryCRtRouteTableNfwRoutev6EndpointF406EA26",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "NetworkSecondaryazIdFirewallNetworkFirewallNetworkSecondaryVpcNetworkSecondaryCRtRouteTableNfwRoutev6EndpointF406EA26": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomGetNetworkFirewallEndpointCustomResourceProviderLogGroup98AC3B14",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomGetNetworkFirewallEndpointCustomResourceProviderHandler2EF030A1",
+            "Arn",
+          ],
+        },
+        "endpointAz": "use1-az1",
+        "firewallArn": {
+          "Ref": "NetworkSecondaryazIdFirewallNetworkFirewall7A5509D1",
+        },
+        "region": "us-east-1",
+      },
+      "Type": "Custom::GetNetworkFirewallEndpoint",
+      "UpdateReplacePolicy": "Delete",
+    },
     "NetworkSecondaryazIdFirewallNetworkFirewallNetworkSecondaryVpcNetworkSecondaryDRtRouteTableNfwRoute8CC7C03B": {
       "Properties": {
         "DestinationCidrBlock": "0.0.0.0/0",

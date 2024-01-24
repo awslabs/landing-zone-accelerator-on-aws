@@ -289,7 +289,7 @@ export class VpcValidator {
   ) {
     if (routeTableEntryItem.destinationPrefixList) {
       // Check if a CIDR destination is also defined
-      if (routeTableEntryItem.destination) {
+      if (routeTableEntryItem.destination || routeTableEntryItem.ipv6Destination) {
         errors.push(
           `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} using destination and destinationPrefixList. Please choose only one destination type`,
         );
@@ -329,16 +329,28 @@ export class VpcValidator {
     helpers: NetworkValidatorFunctions,
     errors: string[],
   ) {
-    if (!routeTableEntryItem.destination) {
+    if (!routeTableEntryItem.destination && !routeTableEntryItem.ipv6Destination) {
       errors.push(
         `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} does not have a destination defined`,
       );
     } else {
-      if (!helpers.isValidIpv4Cidr(routeTableEntryItem.destination)) {
+      if (routeTableEntryItem.destination && routeTableEntryItem.ipv6Destination) {
+        errors.push(
+          `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} has both a destination and ipv6Destination defined. Please choose only one.`,
+        );
+      }
+      if (
+        !helpers.isValidIpv4Cidr(routeTableEntryItem.destination) &&
+        !helpers.isValidIpv6Cidr(routeTableEntryItem.ipv6Destination)
+      ) {
         // Check if subnet exists in the VPC
-        if (!helpers.getSubnet(vpcItem, routeTableEntryItem.destination)) {
+        if (!helpers.getSubnet(vpcItem, routeTableEntryItem.ipv6Destination ?? routeTableEntryItem.destination!)) {
           errors.push(
-            `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} destination "${routeTableEntryItem.destination}" is not a valid CIDR or subnet name`,
+            `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${
+              routeTableEntryItem.name
+            } destination "${
+              routeTableEntryItem.ipv6Destination ?? routeTableEntryItem.destination
+            }" is not a valid IPv4/v6 CIDR or subnet name`,
           );
         }
         // Validate target type
@@ -366,6 +378,25 @@ export class VpcValidator {
     if (!vpcItem.internetGateway) {
       errors.push(
         `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} is targeting an IGW, but no IGW is attached to the VPC`,
+      );
+    }
+  }
+
+  /**
+   * Validate EIGW routes are associated with a VPC with an EIGW attached
+   * @param routeTableEntryItem
+   * @param routeTableName
+   * @param vpcItem
+   */
+  private validateEigwRouteEntry(
+    routeTableEntryItem: RouteTableEntryConfig,
+    routeTableName: string,
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    errors: string[],
+  ) {
+    if (!vpcItem.egressOnlyIgw) {
+      errors.push(
+        `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} is targeting an Egress-only IGW, but no EIGW is attached to the VPC. Please add "egressOnlyIgw: true" to the VPC configuration.`,
       );
     }
   }
@@ -652,6 +683,11 @@ export class VpcValidator {
           this.validateIgwRouteEntry(entry, routeTableItem.name, vpcItem, errors);
         }
 
+        // Validate IGW route
+        if (entry.type && entry.type === 'egressOnlyIgw') {
+          this.validateEigwRouteEntry(entry, routeTableItem.name, vpcItem, errors);
+        }
+
         // Validate VGW route
         if (entry.type && entry.type === 'virtualPrivateGateway') {
           this.validateVgwRouteEntry(entry, routeTableItem.name, vpcItem, errors);
@@ -795,7 +831,7 @@ export class VpcValidator {
         errors.push(`[VPC ${vpcItem.name}]: target IPAM pool ${alloc.ipamPoolName} is not defined`);
       }
       // Validate prefix length
-      if (ipamPool && !this.isValidPrefixLength(alloc.netmaskLength)) {
+      if (ipamPool && !this.isValidIpv4PrefixLength(alloc.netmaskLength)) {
         errors.push(
           `[VPC ${vpcItem.name} allocation ${alloc.ipamPoolName}]: netmaskLength cannot be larger than 16 or smaller than 28`,
         );
@@ -822,7 +858,7 @@ export class VpcValidator {
         );
       }
       // Validate prefix length
-      if (subnet.ipamAllocation && !this.isValidPrefixLength(subnet.ipamAllocation.netmaskLength)) {
+      if (subnet.ipamAllocation && !this.isValidIpv4PrefixLength(subnet.ipamAllocation.netmaskLength)) {
         errors.push(
           `[VPC ${vpcItem.name} subnet ${subnet.name}]: netmaskLength cannot be larger than 16 or smaller than 28`,
         );
@@ -925,8 +961,16 @@ export class VpcValidator {
     });
   }
 
-  private isValidPrefixLength(prefix: number): boolean {
+  private isValidIpv4PrefixLength(prefix: number): boolean {
     return prefix >= 16 && prefix <= 28;
+  }
+
+  private isValidIpv6VpcPrefixLength(prefix: number): boolean {
+    return prefix >= 44 && prefix <= 60 && prefix % 4 === 0;
+  }
+
+  private isValidIpv6SubnetPrefixLength(prefix: number): boolean {
+    return prefix >= 44 && prefix <= 64 && prefix % 4 === 0;
   }
 
   /**
@@ -947,6 +991,28 @@ export class VpcValidator {
       allValid = false;
       errors.push(`[VPC ${vpcItem.name}]: Neither a CIDR or IPAM allocation are defined. Please define one property`);
     }
+    // Validate there is at least one IPv4 CIDR assigned to the VPC
+    if (vpcItem.ipv6Cidrs && !vpcItem.cidrs && !vpcItem.ipamAllocations) {
+      allValid = false;
+      errors.push(
+        `[VPC ${vpcItem.name}]: A VPC must have at least one IPv4 CIDR defined. Please specify either an IPv4 static CIDR or IPAM allocation.`,
+      );
+    }
+    // Validate that a BYOP pool is defined if using a static IPv6 CIDR
+    vpcItem.ipv6Cidrs?.forEach(ipv6Cidr => {
+      if (ipv6Cidr.cidrBlock && !ipv6Cidr.byoipPoolId) {
+        allValid = false;
+        errors.push(
+          `[VPC ${vpcItem.name}]: IPv6 static CIDR block defined without specifying a BYOIP address pool ID. Please specify a pool ID or choose an Amazon-provided IPv6 CIDR instead`,
+        );
+      }
+      if (ipv6Cidr.amazonProvided && (ipv6Cidr.byoipPoolId || ipv6Cidr.cidrBlock)) {
+        allValid = false;
+        errors.push(
+          `[VPC ${vpcItem.name}]: IPv6 static CIDR block defined with "amazonProvided: true" and other property elements. Please choose either amazonProvided or a static IPv6 CIDR from a BYOIP address pool.`,
+        );
+      }
+    });
     // If the VPC is using central endpoints, ensure there is a central endpoints VPC in regions
     if (vpcItem.useCentralEndpoints && !this.centralEndpointVpcRegions.includes(vpcItem.region)) {
       allValid = false;
@@ -981,15 +1047,32 @@ export class VpcValidator {
     helpers: NetworkValidatorFunctions,
     errors: string[],
   ) {
+    // Validate IPv4 CIDRs
     vpcItem.cidrs?.forEach(cidr => {
       if (!helpers.isValidIpv4Cidr(cidr)) {
-        errors.push(`[VPC ${vpcItem.name}]: CIDR "${cidr}" is invalid. Value must be a valid IPv4 CIDR range`);
+        errors.push(`[VPC ${vpcItem.name}]: IPv4 CIDR "${cidr}" is invalid. Value must be a valid IPv4 CIDR range`);
       }
       // Validate prefix
       const prefix = helpers.isValidIpv4Cidr(cidr) ? cidr.split('/')[1] : undefined;
-      if (prefix && !this.isValidPrefixLength(parseInt(prefix))) {
+      if (prefix && !this.isValidIpv4PrefixLength(parseInt(prefix))) {
         errors.push(
-          `[VPC ${vpcItem.name}]: CIDR "${cidr}" is invalid. CIDR prefix cannot be larger than /16 or smaller than /28`,
+          `[VPC ${vpcItem.name}]: IPv4 CIDR "${cidr}" is invalid. CIDR prefix cannot be larger than /16 or smaller than /28`,
+        );
+      }
+    });
+    // Validate IPv6 CIDRs
+    vpcItem.ipv6Cidrs?.forEach(ipv6Cidr => {
+      const cidrRange = ipv6Cidr.cidrBlock;
+      if (cidrRange && !helpers.isValidIpv6Cidr(cidrRange)) {
+        errors.push(
+          `[VPC ${vpcItem.name}]: IPv6 CIDR "${ipv6Cidr.cidrBlock}" is invalid. Value must be a valid IPv6 CIDR range`,
+        );
+      }
+      // Validate prefix
+      const ipv6Prefix = cidrRange && helpers.isValidIpv6Cidr(cidrRange) ? cidrRange.split('/')[1] : undefined;
+      if (ipv6Prefix && !this.isValidIpv6VpcPrefixLength(parseInt(ipv6Prefix))) {
+        errors.push(
+          `[VPC ${vpcItem.name}]: IPv6 CIDR "${cidrRange}" is invalid. CIDR prefix cannot be larger than /44 or smaller than /60 and must be in an increment of /4`,
         );
       }
     });
@@ -1446,9 +1529,9 @@ export class VpcValidator {
       nacl.inboundRules?.forEach(inbound => {
         if (typeof inbound.source === 'string') {
           // Validate CIDR source
-          if (!helpers.isValidIpv4Cidr(inbound.source)) {
+          if (!helpers.isValidIpv4Cidr(inbound.source) && !helpers.isValidIpv6Cidr(inbound.source)) {
             errors.push(
-              `[VPC ${vpcItem.name} NACL ${nacl.name} inbound rule ${inbound.rule}]: source "${inbound.source}" is invalid. Source must be a valid IPv4 CIDR or subnet selection`,
+              `[VPC ${vpcItem.name} NACL ${nacl.name} inbound rule ${inbound.rule}]: source "${inbound.source}" is invalid. Source must be a valid IPv4/v6 CIDR or subnet selection`,
             );
           }
         }
@@ -1457,9 +1540,9 @@ export class VpcValidator {
       nacl.outboundRules?.forEach(outbound => {
         if (typeof outbound.destination === 'string') {
           // Validate CIDR source
-          if (!helpers.isValidIpv4Cidr(outbound.destination)) {
+          if (!helpers.isValidIpv4Cidr(outbound.destination) && !helpers.isValidIpv6Cidr(outbound.destination)) {
             errors.push(
-              `[VPC ${vpcItem.name} NACL ${nacl.name} outbound rule ${outbound.rule}]: destination "${outbound.destination}" is invalid. Destination must be a valid IPv4 CIDR or subnet selection`,
+              `[VPC ${vpcItem.name} NACL ${nacl.name} outbound rule ${outbound.rule}]: destination "${outbound.destination}" is invalid. Destination must be a valid IPv4/v6 CIDR or subnet selection`,
             );
           }
         }
@@ -1935,9 +2018,9 @@ export class VpcValidator {
         // Validate inbound sources
         inbound.sources.forEach(inboundSource => {
           if (typeof inboundSource === 'string') {
-            if (!helpers.isValidIpv4Cidr(inboundSource)) {
+            if (!helpers.isValidIpv4Cidr(inboundSource) && !helpers.isValidIpv6Cidr(inboundSource)) {
               errors.push(
-                `[VPC ${vpcItem.name} security group ${group.name}]: inbound rule source "${inboundSource}" is invalid. Value must be a valid IPv4 CIDR, subnet reference, security group reference, or prefix list reference`,
+                `[VPC ${vpcItem.name} security group ${group.name}]: inbound rule source "${inboundSource}" is invalid. Value must be a valid IPv4/v6 CIDR, subnet reference, security group reference, or prefix list reference`,
               );
             }
           }
@@ -1947,9 +2030,9 @@ export class VpcValidator {
       group.outboundRules.forEach(outbound => {
         outbound.sources.forEach(outboundSource => {
           if (typeof outboundSource === 'string') {
-            if (!helpers.isValidIpv4Cidr(outboundSource)) {
+            if (!helpers.isValidIpv4Cidr(outboundSource) && !helpers.isValidIpv6Cidr(outboundSource)) {
               errors.push(
-                `[VPC ${vpcItem.name} security group ${group.name}]: outbound rule source "${outboundSource}" is invalid. Value must be a valid IPv4 CIDR, subnet reference, security group reference, or prefix list reference`,
+                `[VPC ${vpcItem.name} security group ${group.name}]: outbound rule source "${outboundSource}" is invalid. Value must be a valid IPv4/v6 CIDR, subnet reference, security group reference, or prefix list reference`,
               );
             }
           }
@@ -2393,9 +2476,15 @@ export class VpcValidator {
           `[VPC ${vpcItem.name} subnet ${subnet.name}]: cannot define both ipv4CidrBlock and ipamAllocation properties`,
         );
       }
-      if (!subnet.ipv4CidrBlock && !subnet.ipamAllocation) {
+      if (!subnet.ipv6CidrBlock && !subnet.ipv4CidrBlock && !subnet.ipamAllocation) {
         errors.push(
-          `[VPC ${vpcItem.name} subnet ${subnet.name}]: must define either ipv4CidrBlock or ipamAllocation property`,
+          `[VPC ${vpcItem.name} subnet ${subnet.name}]: must define one of ipv4CidrBlock, ipv6CidrBlock, or ipamAllocation properties`,
+        );
+      }
+      // Validate IPv6 structure
+      if (subnet.ipv6CidrBlock && subnet.ipv4CidrBlock && subnet.ipamAllocation) {
+        errors.push(
+          `[VPC ${vpcItem.name} subnet ${subnet.name}]: ipv4CidrBlock, ipv6CidrBlock, and ipamAllocation properties are all defined. A subnet may only have a maximum of one IPv4 and one IPv6 address.`,
         );
       }
       // Validate an AZ is assigned
@@ -2424,6 +2513,7 @@ export class VpcValidator {
     errors: string[],
   ) {
     vpcItem.subnets?.forEach(subnet => {
+      // Validate IPv4 subnets
       if (subnet.ipv4CidrBlock) {
         if (!helpers.isValidIpv4Cidr(subnet.ipv4CidrBlock)) {
           errors.push(
@@ -2432,9 +2522,24 @@ export class VpcValidator {
         }
         // Validate prefix
         const prefix = helpers.isValidIpv4Cidr(subnet.ipv4CidrBlock) ? subnet.ipv4CidrBlock.split('/')[1] : undefined;
-        if (prefix && !this.isValidPrefixLength(parseInt(prefix))) {
+        if (prefix && !this.isValidIpv4PrefixLength(parseInt(prefix))) {
           errors.push(
             `[VPC ${vpcItem.name} subnet ${subnet.name}]: CIDR "${subnet.ipv4CidrBlock}" is invalid. CIDR prefix cannot be larger than /16 or smaller than /28`,
+          );
+        }
+      }
+      // Validate IPv6 subnets
+      if (subnet.ipv6CidrBlock) {
+        if (!helpers.isValidIpv6Cidr(subnet.ipv6CidrBlock)) {
+          errors.push(
+            `[VPC ${vpcItem.name} subnet ${subnet.name}]: CIDR "${subnet.ipv6CidrBlock}" is invalid. Value must be a valid IPv6 CIDR range`,
+          );
+        }
+        // Validate prefix
+        const prefix = helpers.isValidIpv6Cidr(subnet.ipv6CidrBlock) ? subnet.ipv6CidrBlock.split('/')[1] : undefined;
+        if (prefix && !this.isValidIpv6SubnetPrefixLength(parseInt(prefix))) {
+          errors.push(
+            `[VPC ${vpcItem.name} subnet ${subnet.name}]: CIDR "${subnet.ipv6CidrBlock}" is invalid. CIDR prefix cannot be larger than /44 or smaller than /64 and must be an increment of /4`,
           );
         }
       }

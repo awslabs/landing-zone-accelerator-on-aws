@@ -54,6 +54,7 @@ export abstract class RouteTableBase extends cdk.Resource implements IRouteTable
     transitGatewayAttachment: ITransitGatewayAttachment,
     destination?: string,
     destinationPrefixListId?: string,
+    ipv6Destination?: string,
     logGroupKmsKey?: cdk.aws_kms.IKey,
     logRetentionInDays?: number,
   ): cdk.aws_ec2.CfnRoute | PrefixListRoute {
@@ -72,13 +73,14 @@ export abstract class RouteTableBase extends cdk.Resource implements IRouteTable
         transitGatewayId,
       });
     } else {
-      if (!destination) {
+      if (!destination && !ipv6Destination) {
         throw new Error('Attempting to add CIDR route without specifying destination');
       }
 
       route = new cdk.aws_ec2.CfnRoute(this, id, {
         routeTableId: this.routeTableId,
         destinationCidrBlock: destination,
+        destinationIpv6CidrBlock: ipv6Destination,
         transitGatewayId: transitGatewayId,
       });
     }
@@ -92,15 +94,13 @@ export abstract class RouteTableBase extends cdk.Resource implements IRouteTable
     natGatewayId: string,
     destination?: string,
     destinationPrefixListId?: string,
+    ipv6Destination?: string,
     logGroupKmsKey?: cdk.aws_kms.IKey,
     logRetentionInDays?: number,
   ): cdk.aws_ec2.CfnRoute | PrefixListRoute {
     let route: cdk.aws_ec2.CfnRoute | PrefixListRoute;
 
     if (destinationPrefixListId) {
-      if (!logGroupKmsKey) {
-        throw new Error('Attempting to add prefix list route without specifying log group KMS key');
-      }
       if (!logRetentionInDays) {
         throw new Error('Attempting to add prefix list route without specifying log group retention period');
       }
@@ -113,13 +113,14 @@ export abstract class RouteTableBase extends cdk.Resource implements IRouteTable
         natGatewayId,
       });
     } else {
-      if (!destination) {
+      if (!destination && !ipv6Destination) {
         throw new Error('Attempting to add CIDR route without specifying destination');
       }
 
       route = new cdk.aws_ec2.CfnRoute(this, id, {
         routeTableId: this.routeTableId,
         destinationCidrBlock: destination,
+        destinationIpv6CidrBlock: ipv6Destination,
         natGatewayId: natGatewayId,
       });
     }
@@ -131,15 +132,13 @@ export abstract class RouteTableBase extends cdk.Resource implements IRouteTable
     localGatewayId: string,
     destination?: string,
     destinationPrefixListId?: string,
+    ipv6Destination?: string,
     logGroupKmsKey?: cdk.aws_kms.IKey,
     logRetentionInDays?: number,
   ): cdk.aws_ec2.CfnRoute | PrefixListRoute {
     let route: cdk.aws_ec2.CfnRoute | PrefixListRoute;
 
     if (destinationPrefixListId) {
-      if (!logGroupKmsKey) {
-        throw new Error('Attempting to add prefix list route without specifying log group KMS key');
-      }
       if (!logRetentionInDays) {
         throw new Error('Attempting to add prefix list route without specifying log group retention period');
       }
@@ -152,13 +151,14 @@ export abstract class RouteTableBase extends cdk.Resource implements IRouteTable
         localGatewayId,
       });
     } else {
-      if (!destination) {
+      if (!destination && !ipv6Destination) {
         throw new Error('Attempting to add CIDR route without specifying destination');
       }
 
       route = new cdk.aws_ec2.CfnRoute(this, id, {
         routeTableId: this.routeTableId,
         destinationCidrBlock: destination,
+        destinationIpv6CidrBlock: ipv6Destination,
         localGatewayId: localGatewayId,
       });
     }
@@ -169,6 +169,7 @@ export abstract class RouteTableBase extends cdk.Resource implements IRouteTable
     id: string,
     destination?: string,
     destinationPrefixListId?: string,
+    ipv6Destination?: string,
     logGroupKmsKey?: cdk.aws_kms.IKey,
     logRetentionInDays?: number,
   ): cdk.aws_ec2.CfnRoute | PrefixListRoute {
@@ -179,9 +180,6 @@ export abstract class RouteTableBase extends cdk.Resource implements IRouteTable
     let route: cdk.aws_ec2.CfnRoute | PrefixListRoute;
 
     if (destinationPrefixListId) {
-      if (!logGroupKmsKey) {
-        throw new Error('Attempting to add prefix list route without specifying log group KMS key');
-      }
       if (!logRetentionInDays) {
         throw new Error('Attempting to add prefix list route without specifying log group retention period');
       }
@@ -194,13 +192,14 @@ export abstract class RouteTableBase extends cdk.Resource implements IRouteTable
         gatewayId: this.vpc.internetGatewayId,
       });
     } else {
-      if (!destination) {
+      if (!destination && !ipv6Destination) {
         throw new Error('Attempting to add CIDR route without specifying destination');
       }
 
       route = new cdk.aws_ec2.CfnRoute(this, id, {
         routeTableId: this.routeTableId,
         destinationCidrBlock: destination,
+        destinationIpv6CidrBlock: ipv6Destination,
         gatewayId: this.vpc.internetGatewayId,
       });
     }
@@ -212,10 +211,52 @@ export abstract class RouteTableBase extends cdk.Resource implements IRouteTable
     return route;
   }
 
+  public addEgressOnlyIgwRoute(
+    id: string,
+    destination?: string,
+    destinationPrefixListId?: string,
+    ipv6Destination?: string,
+    logGroupKmsKey?: cdk.aws_kms.IKey,
+    logRetentionInDays?: number,
+  ): cdk.aws_ec2.CfnRoute | PrefixListRoute {
+    if (!this.vpc.egressOnlyIgwId) {
+      throw new Error('Attempting to add Egress-only Internet Gateway route without an EIGW defined.');
+    }
+
+    let route: cdk.aws_ec2.CfnRoute | PrefixListRoute;
+
+    if (destinationPrefixListId) {
+      if (!logRetentionInDays) {
+        throw new Error('Attempting to add prefix list route without specifying log group retention period');
+      }
+
+      route = new PrefixListRoute(this, id, {
+        routeTableId: this.routeTableId,
+        destinationPrefixListId,
+        logGroupKmsKey,
+        logRetentionInDays,
+        egressOnlyInternetGatewayId: this.vpc.egressOnlyIgwId,
+      });
+    } else {
+      if (!destination && !ipv6Destination) {
+        throw new Error('Attempting to add CIDR route without specifying destination');
+      }
+
+      route = new cdk.aws_ec2.CfnRoute(this, id, {
+        routeTableId: this.routeTableId,
+        destinationCidrBlock: destination,
+        destinationIpv6CidrBlock: ipv6Destination,
+        egressOnlyInternetGatewayId: this.vpc.egressOnlyIgwId,
+      });
+    }
+    return route;
+  }
+
   public addVirtualPrivateGatewayRoute(
     id: string,
     destination?: string,
     destinationPrefixListId?: string,
+    ipv6Destination?: string,
     logGroupKmsKey?: cdk.aws_kms.IKey,
     logRetentionInDays?: number,
   ): cdk.aws_ec2.CfnRoute | PrefixListRoute {
@@ -225,9 +266,6 @@ export abstract class RouteTableBase extends cdk.Resource implements IRouteTable
     let route: cdk.aws_ec2.CfnRoute | PrefixListRoute;
 
     if (destinationPrefixListId) {
-      if (!logGroupKmsKey) {
-        throw new Error('Attempting to add prefix list route without specifying log group KMS key');
-      }
       if (!logRetentionInDays) {
         throw new Error('Attempting to add prefix list route without specifying log group retention period');
       }
@@ -239,13 +277,14 @@ export abstract class RouteTableBase extends cdk.Resource implements IRouteTable
         gatewayId: this.vpc.virtualPrivateGatewayId,
       });
     } else {
-      if (!destination) {
+      if (!destination && !ipv6Destination) {
         throw new Error('Attempting to add CIDR route without specifying destination');
       }
 
       route = new cdk.aws_ec2.CfnRoute(this, id, {
         routeTableId: this.routeTableId,
         destinationCidrBlock: destination,
+        destinationIpv6CidrBlock: ipv6Destination,
         gatewayId: this.vpc.virtualPrivateGatewayId,
       });
     }

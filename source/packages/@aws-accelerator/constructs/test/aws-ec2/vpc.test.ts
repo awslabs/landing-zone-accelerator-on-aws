@@ -80,7 +80,10 @@ vpcExistingIam.addFlowLogs({
   acceleratorPrefix: 'AWSAccelerator',
 });
 
-vpc.addCidr({ cidrBlock: '10.2.0.0/16' });
+vpc.addIpv4Cidr({ cidrBlock: '10.2.0.0/16' });
+vpc.addIpv6Cidr({ amazonProvidedIpv6CidrBlock: true });
+vpc.addIpv6Cidr({ ipv6CidrBlock: '::1', ipv6Pool: 'ipv6Pool-ec2-1234' });
+
 const outpostConfig = new OutpostsConfig();
 const rt = new RouteTable(stack, 'test-rt', { name: 'test-rt', vpc });
 const subnet1 = new Subnet(stack, 'test', {
@@ -136,6 +139,34 @@ new Subnet(stack, 'testSubnetPhysicalAz2', {
   basePool: ['myBasePool'],
   logRetentionInDays: 10,
   kmsKey: new cdk.aws_kms.Key(stack, 'testKms2'),
+});
+
+new Subnet(stack, 'Ipv6OnlySubnet', {
+  availabilityZoneId: '1',
+  vpc,
+  name: 'test-ipv6-only-subnet',
+  routeTable: rt,
+  enableDns64: true,
+  ipv6CidrBlock: 'fd00::/58',
+  privateDnsOptions: {
+    enableDnsAAAARecord: true,
+    enableDnsARecord: false,
+    hostnameType: 'resource-name',
+  },
+});
+
+new Subnet(stack, 'DualStackSubnet', {
+  availabilityZoneId: '1',
+  vpc,
+  name: 'test-dualstack-subnet',
+  routeTable: rt,
+  enableDns64: true,
+  ipv4CidrBlock: '10.0.0.0/24',
+  ipv6CidrBlock: 'fd00::/58',
+  privateDnsOptions: {
+    enableDnsAAAARecord: true,
+    enableDnsARecord: true,
+  },
 });
 
 new NatGateway(stack, 'natGw', { name: 'ngw', subnet: subnet1, tags: [{ key: 'test', value: 'test2' }] });

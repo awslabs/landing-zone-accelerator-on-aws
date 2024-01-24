@@ -259,6 +259,73 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Role",
     },
+    "DualStackSubnetC42B1019": {
+      "Properties": {
+        "AvailabilityZoneId": "1",
+        "CidrBlock": "10.0.0.0/24",
+        "EnableDns64": true,
+        "Ipv6CidrBlock": "fd00::/58",
+        "PrivateDnsNameOptionsOnLaunch": {
+          "EnableResourceNameDnsAAAARecord": true,
+          "EnableResourceNameDnsARecord": true,
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "test-dualstack-subnet",
+          },
+        ],
+        "VpcId": {
+          "Ref": "TestVpcE77CE678",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "DualStackSubnetRouteTableAssociationD43A2316": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "testrtEA36A15F",
+        },
+        "SubnetId": {
+          "Ref": "DualStackSubnetC42B1019",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "Ipv6OnlySubnet53DACA43": {
+      "Properties": {
+        "AvailabilityZoneId": "1",
+        "EnableDns64": true,
+        "Ipv6CidrBlock": "fd00::/58",
+        "Ipv6Native": true,
+        "PrivateDnsNameOptionsOnLaunch": {
+          "EnableResourceNameDnsAAAARecord": true,
+          "EnableResourceNameDnsARecord": false,
+          "HostnameType": "resource-name",
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "test-ipv6-only-subnet",
+          },
+        ],
+        "VpcId": {
+          "Ref": "TestVpcE77CE678",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "Ipv6OnlySubnetRouteTableAssociation88B099B9": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "testrtEA36A15F",
+        },
+        "SubnetId": {
+          "Ref": "Ipv6OnlySubnet53DACA43",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
     "TestDeleteDefaultSgRules8A6777C7": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
@@ -586,6 +653,25 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
         },
       },
       "Type": "AWS::EC2::VPCGatewayAttachment",
+    },
+    "TestVpcIpv6CidrBlock02C3E0D0B": {
+      "Properties": {
+        "AmazonProvidedIpv6CidrBlock": true,
+        "VpcId": {
+          "Ref": "TestVpcE77CE678",
+        },
+      },
+      "Type": "AWS::EC2::VPCCidrBlock",
+    },
+    "TestVpcIpv6CidrBlock121C0BB97": {
+      "Properties": {
+        "Ipv6CidrBlock": "::1",
+        "Ipv6Pool": "ipv6Pool-ec2-1234",
+        "VpcId": {
+          "Ref": "TestVpcE77CE678",
+        },
+      },
+      "Type": "AWS::EC2::VPCCidrBlock",
     },
     "TestVpcS3FlowLog86FD93A4": {
       "Properties": {

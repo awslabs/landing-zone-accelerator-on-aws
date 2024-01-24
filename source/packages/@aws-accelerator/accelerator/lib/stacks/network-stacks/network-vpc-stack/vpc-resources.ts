@@ -37,6 +37,15 @@ import { LogLevel, NetworkStack } from '../network-stack';
 import { getVpc, getVpcConfig } from '../utils/getter-utils';
 import { isIpv4 } from '../utils/validation-utils';
 
+type Ipv4VpcCidrBlock = { cidrBlock: string } | { ipv4IpamPoolId: string; ipv4NetmaskLength: number };
+type Ipv6VpcCidrBlock = {
+  amazonProvidedIpv6CidrBlock?: boolean;
+  ipv6CidrBlock?: string;
+  ipv6IpamPoolId?: string;
+  ipv6NetmaskLength?: number;
+  ipv6Pool?: string;
+};
+
 export class VpcResources {
   public readonly deleteDefaultVpc?: DeleteDefaultVpc;
   public readonly sharedParameterMap: Map<string, SsmParameterProps[]>;
@@ -418,9 +427,13 @@ export class VpcResources {
       poolNetmask,
     });
     //
-    // Create additional CIDRs
+    // Create additional IPv4 CIDRs
     //
-    this.createAdditionalCidrs(vpc, vpcItem, ipamPoolMap);
+    this.createAdditionalIpv4Cidrs(vpc, vpcItem, ipamPoolMap);
+    //
+    // Create IPv6 CIDRs
+    //
+    this.createIpv6Cidrs(vpc, vpcItem);
     //
     // Add central endpoint tags
     //
@@ -491,6 +504,7 @@ export class VpcResources {
         ipv4CidrBlock: options.cidr,
         internetGateway: options.vpcItem.internetGateway,
         dhcpOptions: options.dhcpOptionsIds.get(options.vpcItem.dhcpOptions ?? ''),
+        egressOnlyIgw: options.vpcItem.egressOnlyIgw,
         enableDnsHostnames: options.vpcItem.enableDnsHostnames ?? true,
         enableDnsSupport: options.vpcItem.enableDnsSupport ?? true,
         instanceTenancy: options.vpcItem.instanceTenancy ?? 'default',
@@ -517,18 +531,18 @@ export class VpcResources {
   }
 
   /**
-   * Create additional CIDR blocks for a given VPC
+   * Create additional IPv4 CIDR blocks for a given VPC
    * @param vpc
    * @param vpcItem
    * @param ipamPoolMap
    * @returns
    */
-  private createAdditionalCidrs(
+  private createAdditionalIpv4Cidrs(
     vpc: Vpc,
     vpcItem: VpcConfig | VpcTemplatesConfig,
     ipamPoolMap: Map<string, string>,
-  ): ({ cidrBlock: string } | { ipv4IpamPoolId: string; ipv4NetmaskLength: number })[] {
-    const additionalCidrs: ({ cidrBlock: string } | { ipv4IpamPoolId: string; ipv4NetmaskLength: number })[] = [];
+  ): Ipv4VpcCidrBlock[] {
+    const additionalCidrs: Ipv4VpcCidrBlock[] = [];
 
     if (vpcItem.cidrs && vpcItem.cidrs.length > 1) {
       for (const vpcCidr of vpcItem.cidrs.slice(1)) {
@@ -537,7 +551,7 @@ export class VpcResources {
           continue;
         }
         this.stack.addLogs(LogLevel.INFO, `Adding secondary CIDR ${vpcCidr} to VPC ${vpcItem.name}`);
-        vpc.addCidr({ cidrBlock: vpcCidr });
+        vpc.addIpv4Cidr({ cidrBlock: vpcCidr });
         additionalCidrs.push({ cidrBlock: vpcCidr });
       }
     }
@@ -553,11 +567,32 @@ export class VpcResources {
           this.stack.addLogs(LogLevel.ERROR, `${vpcItem.name}: unable to locate IPAM pool ${alloc.ipamPoolName}`);
           throw new Error(`Configuration validation failed at runtime.`);
         }
-        vpc.addCidr({ ipv4IpamPoolId: poolId, ipv4NetmaskLength: alloc.netmaskLength });
+        vpc.addIpv4Cidr({ ipv4IpamPoolId: poolId, ipv4NetmaskLength: alloc.netmaskLength });
         additionalCidrs.push({ ipv4IpamPoolId: poolId, ipv4NetmaskLength: alloc.netmaskLength });
       }
     }
     return additionalCidrs;
+  }
+
+  /**
+   * Create IPv6 CIDRs for a given VPC
+   * @param vpc Vpc
+   * @param vpcItem VpcConfig | VpcTemplatesConfig
+   * @returns Ipv6VpcCidrBlock[]
+   */
+  private createIpv6Cidrs(vpc: Vpc, vpcItem: VpcConfig | VpcTemplatesConfig): Ipv6VpcCidrBlock[] {
+    const ipv6Cidrs: Ipv6VpcCidrBlock[] = [];
+
+    for (const vpcCidr of vpcItem.ipv6Cidrs ?? []) {
+      const cidrProps = {
+        amazonProvidedIpv6CidrBlock: vpcCidr.amazonProvided,
+        ipv6CidrBlock: vpcCidr.cidrBlock,
+        ipv6Pool: vpcCidr.byoipPoolId,
+      };
+      vpc.addIpv6Cidr(cidrProps);
+      ipv6Cidrs.push(cidrProps);
+    }
+    return ipv6Cidrs;
   }
 
   /**
