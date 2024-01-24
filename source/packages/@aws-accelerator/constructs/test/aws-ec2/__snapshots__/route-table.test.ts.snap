@@ -164,6 +164,67 @@ exports[`RouteTable Construct(RouteTable):  Snapshot Test 1`] = `
       "Type": "Custom::PrefixListRoute",
       "UpdateReplacePolicy": "Delete",
     },
+    "RouteTabletest3NgwRoute8D00A105": {
+      "Properties": {
+        "DestinationIpv6CidrBlock": "::1",
+        "NatGatewayId": {
+          "Ref": "ngwBD1698D5",
+        },
+        "RouteTableId": {
+          "Ref": "RouteTable82FB8FA6",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "RouteTabletestEigwRoute12DFE9140": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomPrefixListRouteCustomResourceProviderLogGroup68DB81A5",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomPrefixListRouteCustomResourceProviderHandler5B28D077",
+            "Arn",
+          ],
+        },
+        "routeDefinition": {
+          "DestinationPrefixListId": "pl-1234",
+          "EgressOnlyInternetGatewayId": {
+            "Ref": "TestVpcEgressOnlyIgwE0823B1A",
+          },
+          "RouteTableId": {
+            "Ref": "RouteTable82FB8FA6",
+          },
+        },
+      },
+      "Type": "Custom::PrefixListRoute",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "RouteTabletestEigwRoute29FFB6E44": {
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "EgressOnlyInternetGatewayId": {
+          "Ref": "TestVpcEgressOnlyIgwE0823B1A",
+        },
+        "RouteTableId": {
+          "Ref": "RouteTable82FB8FA6",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "RouteTabletestEigwRoute3C3EC8E23": {
+      "Properties": {
+        "DestinationIpv6CidrBlock": "::1",
+        "EgressOnlyInternetGatewayId": {
+          "Ref": "TestVpcEgressOnlyIgwE0823B1A",
+        },
+        "RouteTableId": {
+          "Ref": "RouteTable82FB8FA6",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
     "RouteTabletestIgwRoute23DD8B83D": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
@@ -189,6 +250,21 @@ exports[`RouteTable Construct(RouteTable):  Snapshot Test 1`] = `
       },
       "Type": "Custom::PrefixListRoute",
       "UpdateReplacePolicy": "Delete",
+    },
+    "RouteTabletestIgwRoute3141525D4": {
+      "DependsOn": [
+        "TestVpcInternetGatewayAttachment60E451D5",
+      ],
+      "Properties": {
+        "DestinationIpv6CidrBlock": "::1",
+        "GatewayId": {
+          "Ref": "TestVpcInternetGateway01360C82",
+        },
+        "RouteTableId": {
+          "Ref": "RouteTable82FB8FA6",
+        },
+      },
+      "Type": "AWS::EC2::Route",
     },
     "RouteTabletestIgwRoute3732DB68": {
       "DependsOn": [
@@ -243,6 +319,21 @@ exports[`RouteTable Construct(RouteTable):  Snapshot Test 1`] = `
       "Type": "Custom::PrefixListRoute",
       "UpdateReplacePolicy": "Delete",
     },
+    "RouteTabletestVgw3RouteFE177B5B": {
+      "DependsOn": [
+        "TestVpcVirtualPrivateGatewayAttachment5D655F8D",
+      ],
+      "Properties": {
+        "DestinationIpv6CidrBlock": "::1",
+        "GatewayId": {
+          "Ref": "TestVpcVirtualPrivateGateway56B5C340",
+        },
+        "RouteTableId": {
+          "Ref": "RouteTable82FB8FA6",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
     "RouteTabletestVgwRoute717D63D3": {
       "DependsOn": [
         "TestVpcVirtualPrivateGatewayAttachment5D655F8D",
@@ -264,6 +355,19 @@ exports[`RouteTable Construct(RouteTable):  Snapshot Test 1`] = `
       ],
       "Properties": {
         "DestinationCidrBlock": "10.0.5.0/24",
+        "RouteTableId": {
+          "Ref": "RouteTable82FB8FA6",
+        },
+        "TransitGatewayId": "tg-1234",
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "RouteTabletgipv684D762E9": {
+      "DependsOn": [
+        "tgwAttachment1E239374",
+      ],
+      "Properties": {
+        "DestinationIpv6CidrBlock": "::1",
         "RouteTableId": {
           "Ref": "RouteTable82FB8FA6",
         },
@@ -309,6 +413,14 @@ exports[`RouteTable Construct(RouteTable):  Snapshot Test 1`] = `
         ],
       },
       "Type": "AWS::EC2::VPC",
+    },
+    "TestVpcEgressOnlyIgwE0823B1A": {
+      "Properties": {
+        "VpcId": {
+          "Ref": "TestVpcE77CE678",
+        },
+      },
+      "Type": "AWS::EC2::EgressOnlyInternetGateway",
     },
     "TestVpcInternetGateway01360C82": {
       "Properties": {

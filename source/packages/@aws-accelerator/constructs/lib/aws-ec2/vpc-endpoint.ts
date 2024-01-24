@@ -23,7 +23,7 @@ export interface IVpcEndpoint extends cdk.IResource {
   readonly dnsName?: string;
   readonly hostedZoneId?: string;
 
-  createEndpointRoute: (id: string, destination: string, routeTableId: string) => void;
+  createEndpointRoute: (id: string, routeTableId: string, destination?: string, ipv6Destination?: string) => void;
 }
 
 export enum VpcEndpointType {
@@ -52,9 +52,10 @@ abstract class VpcEndpointBase extends cdk.Resource implements IVpcEndpoint {
   public abstract readonly dnsName?: string;
   public abstract readonly hostedZoneId?: string;
 
-  public createEndpointRoute(id: string, destination: string, routeTableId: string): void {
+  public createEndpointRoute(id: string, routeTableId: string, destination?: string, ipv6Destination?: string): void {
     new cdk.aws_ec2.CfnRoute(this, id, {
       destinationCidrBlock: destination,
+      destinationIpv6CidrBlock: ipv6Destination,
       routeTableId,
       vpcEndpointId: this.vpcEndpointId,
     });

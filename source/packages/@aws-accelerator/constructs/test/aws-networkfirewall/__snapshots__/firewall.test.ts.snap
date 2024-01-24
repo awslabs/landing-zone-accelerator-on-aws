@@ -149,6 +149,72 @@ exports[`Network Firewall Construct(NetworkFirewall):  Snapshot Test 1`] = `
       },
       "Type": "AWS::NetworkFirewall::Firewall",
     },
+    "TestFirewalltestRouteId1894E055E": {
+      "Properties": {
+        "DestinationCidrBlock": "10.0.0.6/32",
+        "RouteTableId": "routeTableId",
+        "VpcEndpointId": {
+          "Ref": "TestFirewalltestRouteId1Endpoint4D98AAD2",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "TestFirewalltestRouteId1Endpoint4D98AAD2": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomGetNetworkFirewallEndpointCustomResourceProviderLogGroup98AC3B14",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomGetNetworkFirewallEndpointCustomResourceProviderHandler2EF030A1",
+            "Arn",
+          ],
+        },
+        "endpointAz": "1",
+        "firewallArn": {
+          "Ref": "TestFirewallE26FCA5C",
+        },
+        "region": {
+          "Ref": "AWS::Region",
+        },
+      },
+      "Type": "Custom::GetNetworkFirewallEndpoint",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TestFirewalltestRouteId280883F56": {
+      "Properties": {
+        "DestinationIpv6CidrBlock": "::1",
+        "RouteTableId": "routeTableId",
+        "VpcEndpointId": {
+          "Ref": "TestFirewalltestRouteId2Endpoint9D8D500E",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "TestFirewalltestRouteId2Endpoint9D8D500E": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomGetNetworkFirewallEndpointCustomResourceProviderLogGroup98AC3B14",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomGetNetworkFirewallEndpointCustomResourceProviderHandler2EF030A1",
+            "Arn",
+          ],
+        },
+        "endpointAz": "1",
+        "firewallArn": {
+          "Ref": "TestFirewallE26FCA5C",
+        },
+        "region": {
+          "Ref": "AWS::Region",
+        },
+      },
+      "Type": "Custom::GetNetworkFirewallEndpoint",
+      "UpdateReplacePolicy": "Delete",
+    },
     "TestImportFirewallLoggingConfigB02138AE": {
       "Properties": {
         "FirewallArn": "arn:aws:network-firewall:us-east-1:222222222222:firewall/TestImportedFirewall",

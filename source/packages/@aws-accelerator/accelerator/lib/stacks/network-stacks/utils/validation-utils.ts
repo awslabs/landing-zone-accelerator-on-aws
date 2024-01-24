@@ -17,7 +17,7 @@ import {
   TransitGatewayRouteEntryConfig,
   VpnConnectionConfig,
 } from '@aws-accelerator/config';
-import { IPv4, IPv4CidrRange } from 'ip-num';
+import { IPv4, IPv4CidrRange, IPv6CidrRange } from 'ip-num';
 import { getObjectKeys } from './getter-utils';
 
 /**
@@ -66,6 +66,21 @@ export function hasAdvancedVpnOptions(vpn: VpnConnectionConfig): boolean {
 export function isIpv4Cidr(cidr: string): boolean {
   try {
     IPv4CidrRange.fromCidr(cidr);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
+ * Returns true if the passed string is a valid IPv6 CIDR.
+ *
+ * @param cidr string
+ * @returns boolean
+ */
+export function isIpv6Cidr(cidr: string): boolean {
+  try {
+    IPv6CidrRange.fromCidr(cidr);
     return true;
   } catch (e) {
     return false;

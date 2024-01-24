@@ -203,7 +203,11 @@ export class NetworkValidatorFunctions {
    * @param cidr
    * @returns
    */
-  public isValidIpv4Cidr(cidr: string): boolean {
+  public isValidIpv4Cidr(cidr?: string): boolean {
+    if (!cidr) {
+      return false;
+    }
+
     try {
       IPv4CidrRange.fromCidr(cidr);
     } catch (e) {
@@ -217,7 +221,11 @@ export class NetworkValidatorFunctions {
    * @param cidr
    * @returns
    */
-  public isValidIpv6Cidr(cidr: string): boolean {
+  public isValidIpv6Cidr(cidr?: string): boolean {
+    if (!cidr) {
+      return false;
+    }
+
     try {
       IPv6CidrRange.fromCidr(cidr);
     } catch (e) {

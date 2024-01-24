@@ -191,6 +191,7 @@ export class NetworkConfigTypes {
       'transitGateway',
       'natGateway',
       'internetGateway',
+      'egressOnlyIgw',
       'local',
       'localGateway',
       'gatewayEndpoint',
@@ -213,6 +214,7 @@ export class NetworkConfigTypes {
     name: t.nonEmptyString,
     destination: t.optional(t.nonEmptyString),
     destinationPrefixList: t.optional(t.nonEmptyString),
+    ipv6Destination: t.optional(t.nonEmptyString),
     type: t.optional(this.routeTableEntryTypeEnum),
     target: t.optional(t.nonEmptyString),
     targetAvailabilityZone: t.optional(t.union([t.nonEmptyString, t.number])),
@@ -230,13 +232,23 @@ export class NetworkConfigTypes {
     netmaskLength: t.number,
   });
 
+  static readonly subnetPrivateDnsConfig = t.interface({
+    enableDnsAAAARecord: t.optional(t.boolean),
+    enableDnsARecord: t.optional(t.boolean),
+    hostnameType: t.optional(t.enums('HostnameType', ['ip-name', 'resource-name'])),
+  });
+
   static readonly subnetConfig = t.interface({
     name: t.nonEmptyString,
+    assignIpv6OnCreation: t.optional(t.boolean),
     availabilityZone: t.optional(t.union([t.nonEmptyString, t.number])),
+    enableDns64: t.optional(t.boolean),
     routeTable: t.optional(t.nonEmptyString),
     ipv4CidrBlock: t.optional(t.nonEmptyString),
+    ipv6CidrBlock: t.optional(t.nonEmptyString),
     mapPublicIpOnLaunch: t.optional(t.boolean),
     ipamAllocation: t.optional(this.ipamAllocationConfig),
+    privateDnsOptions: t.optional(this.subnetPrivateDnsConfig),
     shareTargets: t.optional(t.shareTargets),
     tags: t.optional(t.array(t.tag)),
     outpost: t.optional(t.nonEmptyString),
@@ -346,6 +358,7 @@ export class NetworkConfigTypes {
     account: t.nonEmptyString,
     vpc: t.nonEmptyString,
     subnets: t.array(t.nonEmptyString),
+    ipv6: t.optional(t.boolean),
   });
 
   static readonly securityGroupSourceConfig = t.interface({
@@ -387,6 +400,7 @@ export class NetworkConfigTypes {
     account: t.optional(t.nonEmptyString),
     vpc: t.nonEmptyString,
     subnet: t.nonEmptyString,
+    ipv6: t.optional(t.boolean),
     region: t.optional(t.region),
   });
 
@@ -559,6 +573,12 @@ export class NetworkConfigTypes {
     networkLoadBalancers: t.optional(t.array(CustomizationsConfig.CustomizationsConfigTypes.networkLoadBalancerConfig)),
   });
 
+  static readonly vpcIpv6Config = t.interface({
+    amazonProvided: t.optional(t.boolean),
+    cidrBlock: t.optional(t.nonEmptyString),
+    byoipPoolId: t.optional(t.nonEmptyString),
+  });
+
   static readonly vpcConfig = t.interface({
     name: t.nonEmptyString,
     account: t.nonEmptyString,
@@ -567,6 +587,7 @@ export class NetworkConfigTypes {
     defaultSecurityGroupRulesDeletion: t.optional(t.boolean),
     dhcpOptions: t.optional(t.nonEmptyString),
     dnsFirewallRuleGroups: t.optional(t.array(this.vpcDnsFirewallAssociationConfig)),
+    egressOnlyIgw: t.optional(t.boolean),
     enableDnsHostnames: t.optional(t.boolean),
     enableDnsSupport: t.optional(t.boolean),
     gatewayEndpoints: t.optional(this.gatewayEndpointConfig),
@@ -574,6 +595,7 @@ export class NetworkConfigTypes {
     interfaceEndpoints: t.optional(this.interfaceEndpointConfig),
     internetGateway: t.optional(t.boolean),
     ipamAllocations: t.optional(t.array(this.ipamAllocationConfig)),
+    ipv6Cidrs: t.optional(t.array(this.vpcIpv6Config)),
     natGateways: t.optional(t.array(this.natGatewayConfig)),
     useCentralEndpoints: t.optional(t.boolean),
     securityGroups: t.optional(t.array(this.securityGroupConfig)),
@@ -599,6 +621,7 @@ export class NetworkConfigTypes {
     defaultSecurityGroupRulesDeletion: t.optional(t.boolean),
     dhcpOptions: t.optional(t.nonEmptyString),
     dnsFirewallRuleGroups: t.optional(t.array(this.vpcDnsFirewallAssociationConfig)),
+    egressOnlyIgw: t.optional(t.boolean),
     enableDnsHostnames: t.optional(t.boolean),
     enableDnsSupport: t.optional(t.boolean),
     gatewayEndpoints: t.optional(this.gatewayEndpointConfig),
@@ -606,6 +629,7 @@ export class NetworkConfigTypes {
     interfaceEndpoints: t.optional(this.interfaceEndpointConfig),
     internetGateway: t.optional(t.boolean),
     ipamAllocations: t.optional(t.array(this.ipamAllocationConfig)),
+    ipv6Cidrs: t.optional(t.array(this.vpcIpv6Config)),
     natGateways: t.optional(t.array(this.natGatewayConfig)),
     useCentralEndpoints: t.optional(t.boolean),
     securityGroups: t.optional(t.array(this.securityGroupConfig)),
@@ -2207,6 +2231,14 @@ export class IpamConfig implements t.TypeOf<typeof NetworkConfigTypes.ipamConfig
  *   destination: 10.0.0.0/16
  *   type: networkInterface
  *   target: eni-0123456789abcdef
+ * ```
+ *
+ * IPv6 route targeting an Egress-only IGW:
+ * ```
+ * - name: EigwRoute
+ *   ipv6Destination: ::/0
+ *   type: egressOnlyIgw
+ * ```
  *
  */
 export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes.routeTableEntryConfig> {
@@ -2220,18 +2252,18 @@ export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes
    */
   readonly name: string = '';
   /**
-   * (OPTIONAL) The destination CIDR block or dynamic subnet reference for the route table entry.
+   * (OPTIONAL) The destination IPv4 CIDR block or dynamic subnet reference for the route table entry.
    *
    * @remarks
-   * You can either use CIDR notation (i.e. 10.0.0.0/16) or target a subnet by referencing its logical `name` property.
+   * You can either use IPv4 CIDR notation (i.e. 10.0.0.0/16) or target a subnet by referencing its logical `name` property.
    * If referencing a subnet name, the subnet MUST be defined in the same VPC. This feature is intended for ingress routing scenarios
    * where a gateway route table must target a Gateway Load Balancer or Network Firewall endpoint in a dynamic IPAM-created subnet.
    * @see {@link SubnetConfig} and {@link RouteTableConfig}.
    *
-   * Either `destination` or `destinationPrefixList` must be specified for the following route entry types:
+   * `destination`, `ipv6Destination`, or `destinationPrefixList` must be specified for the following route entry types:
    * `transitGateway`, `natGateway`, `internetGateway`, `networkInterface`, `vpcPeering`, `virtualPrivateGateway`.
    *
-   * `destination` MUST be specified for route entry type `networkFirewall` or `gatewayLoadBalancerEndpoint`.
+   * `destination` or `ipv6Destination` MUST be specified for route entry type `networkFirewall` or `gatewayLoadBalancerEndpoint`.
    *
    * Note: Leave undefined for route entry type `gatewayEndpoint`.
    */
@@ -2242,16 +2274,33 @@ export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes
    * @remarks
    * This is the logical `name` property of the prefix list as defined in network-config.yaml.
    *
-   * Either `destination` or `destinationPrefixList` must be specified for the following route entry types:
-   * `transitGateway`, `natGateway`, `internetGateway`, `networkInterface`, `vpcPeering`, `virtualPrivateGateway`.
+   * `destination`, `ipv6Destination`, or `destinationPrefixList` must be specified for the following route entry types:
+   * `transitGateway`, `natGateway`, `internetGateway`, `egressOnlyIgw`, `networkInterface`, `vpcPeering`, `virtualPrivateGateway`.
    *
-   * Cannot be specified for route entry type `networkFirewall` or `gatewayLoadBalancerEndpoint`. Use `destination` instead.
+   * Cannot be specified for route entry type `networkFirewall` or `gatewayLoadBalancerEndpoint`. Use `destination` or `ipv6Destination` instead.
    *
    * Note: Leave undefined for route entry type `gatewayEndpoint`.
    *
    * @see {@link PrefixListConfig}
    */
   readonly destinationPrefixList: string | undefined = undefined;
+  /**
+   * (OPTIONAL) The destination IPv6 CIDR block or dynamic subnet reference for the route table entry.
+   *
+   * @remarks
+   * You can either use IPv6 CIDR notation (i.e. fd00::/8) or target a subnet by referencing its logical `name` property.
+   * If referencing a subnet name, the subnet MUST be defined in the same VPC. This feature is intended for ingress routing scenarios
+   * where a gateway route table must target a Gateway Load Balancer or Network Firewall endpoint in a dynamic IPAM-created subnet.
+   * @see {@link SubnetConfig} and {@link RouteTableConfig}.
+   *
+   * `destination`, `ipv6Destination`, or `destinationPrefixList` must be specified for the following route entry types:
+   * `transitGateway`, `natGateway`, `internetGateway`, `egressOnlyIgw`, `networkInterface`, `vpcPeering`, `virtualPrivateGateway`.
+   *
+   * `destination` or `ipv6Destination` MUST be specified for route entry type `networkFirewall` or `gatewayLoadBalancerEndpoint`.
+   *
+   * Note: Leave undefined for route entry type `gatewayEndpoint`.
+   */
+  readonly ipv6Destination: string | undefined = undefined;
   /**
    * The destination type of route table entry.
    *
@@ -2266,7 +2315,7 @@ export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes
    *
    * This is the logical `name` property of other target types as defined in network-config.yaml.
    *
-   * Note: Leave undefined for route entry type `internetGateway` or `virtualPrivateGateway`.
+   * Note: Leave undefined for route entry type `internetGateway`, `egressOnlyIgw`, or `virtualPrivateGateway`.
    */
   readonly target: string | undefined = undefined;
   /**
@@ -2332,6 +2381,44 @@ export class RouteTableConfig implements t.TypeOf<typeof NetworkConfigTypes.rout
 }
 
 /**
+ * *{@link NetworkConfig} / {@link VpcConfig} | {@link VpcTemplatesConfig} / {@link SubnetConfig} / {@link SubnetPrivateDnsConfig}*
+ *
+ * {@link https://docs.aws.amazon.com/vpc/latest/userguide/configure-subnets.html#subnet-settings | Subnet Resource-Based Name} configuration.
+ * Use this configuration to define custom DNS name settings for your VPC subnets.
+ *
+ * @example
+ * ```
+ * enableDnsAAAARecord: true
+ * enableDnsARecord: true
+ * hostNameType: resource-name
+ * ```
+ */
+
+export class SubnetPrivateDnsConfig implements t.TypeOf<typeof NetworkConfigTypes.subnetPrivateDnsConfig> {
+  /**
+   * (OPTIONAL) Indicates whether to respond to DNS queries for instance hostname with DNS AAAA records.
+   *
+   * @default `false`
+   */
+  readonly enableDnsAAAARecord: boolean | undefined = undefined;
+  /**
+   * (OPTIONAL) Indicates whether to respond to DNS queries for instance hostnames with DNS A records.
+   *
+   * @default `false`
+   */
+  readonly enableDnsARecord: boolean | undefined = undefined;
+  /**
+   * The type of hostname for EC2 instances.
+   *
+   * @remarks
+   * For IPv4 only subnets, an instance DNS name must be based on the instance IPv4 address.
+   * For IPv6 only subnets, an instance DNS name must be based on the instance ID.
+   * For dual-stack subnets, you can specify whether DNS names use the instance IPv4 address or the instance ID.
+   */
+  readonly hostnameType: 'ip-name' | 'resource-name' | undefined = undefined;
+}
+
+/**
  * *{@link NetworkConfig} / {@link VpcConfig} | {@link VpcTemplatesConfig} / {@link SubnetConfig}*
  *
  * {@link https://docs.aws.amazon.com/vpc/latest/userguide/configure-subnets.html | Virtual Private Cloud (VPC) subnet} configuration.
@@ -2339,7 +2426,7 @@ export class RouteTableConfig implements t.TypeOf<typeof NetworkConfigTypes.rout
  * A subnet is a range of IP addresses in your VPC that can be used to create AWS resources, such as EC2 instances.
  *
  * @example
- * Static CIDR:
+ * Static IPv4 CIDR:
  * ```
  * - name: accelerator-cidr-subnet-a
  *   availabilityZone: a
@@ -2347,7 +2434,7 @@ export class RouteTableConfig implements t.TypeOf<typeof NetworkConfigTypes.rout
  *   ipv4CidrBlock: 10.0.0.0/26
  *   tags: []
  * ```
- * Using the Physical ID for an Availibility Zone
+ * Using the Physical ID for an Availability Zone
  * ```
  * - name: accelerator-cidr-subnet-a
  *   availabilityZone: 1
@@ -2365,6 +2452,14 @@ export class RouteTableConfig implements t.TypeOf<typeof NetworkConfigTypes.rout
  *     netmaskLength: 26
  *   tags: []
  * ```
+ * Static IPv6 CIDR:
+ * ```
+ * - name: accelerator-cidr-subnet-1
+ *   availabilityZone: 1
+ *   routeTable: accelerator-cidr-subnet-1
+ *   ipv6CidrBlock: fd00::/64
+ *   tags: []
+ * ```
  */
 export class SubnetConfig implements t.TypeOf<typeof NetworkConfigTypes.subnetConfig> {
   /**
@@ -2375,6 +2470,15 @@ export class SubnetConfig implements t.TypeOf<typeof NetworkConfigTypes.subnetCo
    * Please be aware that any downstream dependencies may cause this property update to fail.
    */
   readonly name: string = '';
+  /**
+   * (OPTIONAL) Indicates whether a network interface created in this subnet receives an IPv6 address on creation.
+   *
+   * @remarks
+   * If you specify this property, you must also specify the `ipv6CidrBlock` property.
+   *
+   * This property defaults to `false`.
+   */
+  readonly assignIpv6OnCreation: boolean | undefined = undefined;
   /**
    * The Availability Zone (AZ) the subnet resides in.
    *
@@ -2387,7 +2491,12 @@ export class SubnetConfig implements t.TypeOf<typeof NetworkConfigTypes.subnetCo
    *  for more information.
    */
   readonly availabilityZone: string | number | undefined = undefined;
-
+  /**
+   * (OPTIONAL) Indicates whether DNS queries made to the Amazon-provided DNS Resolver in this subnet should return synthetic IPv6 addresses for IPv4-only destinations.
+   *
+   * For more information, see {@link https://docs.aws.amazon.com/vpc/latest/userguide/vpc-nat-gateway.html#nat-gateway-nat64-dns64 | DNS64 and NAT64} in the Amazon Virtual Private Cloud User Guide.
+   */
+  readonly enableDns64: boolean | undefined = undefined;
   /**
    * The friendly name of the route table to associate with the subnet.
    */
@@ -2409,9 +2518,20 @@ export class SubnetConfig implements t.TypeOf<typeof NetworkConfigTypes.subnetCo
    * **CAUTION**: changing this property after initial deployment will cause a subnet recreation.
    * Please be aware that any downstream dependencies may cause this property update to fail.
    *
-   * Use CIDR notation, i.e. 10.0.0.0/16
+   * Use IPv4 CIDR notation, i.e. 10.0.0.0/16
    */
   readonly ipv4CidrBlock: string | undefined = undefined;
+  /**
+   * (OPTIONAL) The IPv6 CIDR block to associate with the subnet.
+   *
+   * @remarks
+   * Use IPv6 CIDR notation, i.e. fd00::/64. Possible IPv6 netmask lengths are between /44 and /64 in increments of /4.
+   *
+   * **Note**: Only providing an IPv6 CIDR block or IPv6 IPAM allocation will create an IPv6-only subnet. You must also specify an
+   * IPv4 CIDR or IPAM allocation to create a dual-stack subnet. See {@link https://docs.aws.amazon.com/vpc/latest/userguide/configure-subnets.html#subnet-basics | Subnet basics} for more information.
+   *
+   */
+  readonly ipv6CidrBlock: string | undefined = undefined;
   /**
    * (OPTIONAL) Configure automatic mapping of public IPs.
    *
@@ -2420,6 +2540,12 @@ export class SubnetConfig implements t.TypeOf<typeof NetworkConfigTypes.subnetCo
    * IPv4 address for a new network interface in this subnet.
    */
   readonly mapPublicIpOnLaunch: boolean | undefined = undefined;
+  /**
+   * (OPTIONAL) Private DNS name options for the subnet.
+   *
+   * @see {@link SubnetPrivateDnsConfig}
+   */
+  readonly privateDnsOptions: SubnetPrivateDnsConfig | undefined = undefined;
   /**
    * (OPTIONAL) Resource Access Manager (RAM) share targets.
    *
@@ -3055,6 +3181,13 @@ export class SubnetSourceConfig implements t.TypeOf<typeof NetworkConfigTypes.su
    * @see {@link SubnetConfig}
    */
   readonly subnets: string[] = [];
+  /**
+   * (OPTIONAL) Indicates whether to target the IPv6 CIDR associated with a subnet.
+   *
+   * @remarks
+   * Leave this property undefined or set to `false` to target a subnet's IPv4 CIDR.
+   */
+  readonly ipv6: boolean | undefined = undefined;
 }
 
 /**
@@ -3357,9 +3490,6 @@ export class SecurityGroupRuleConfig implements t.TypeOf<typeof NetworkConfigTyp
    *
    * NOTE: Can only use `ipProtocols` or 'types'. If you need to allow the same source IP address, use multiple ingress/egress
    * rules.
-   *
-   *
-   *
    */
   readonly ipProtocols: string[] = [];
 }
@@ -3479,6 +3609,14 @@ export class NetworkAclSubnetSelection implements t.TypeOf<typeof NetworkConfigT
    * @see {@link SubnetConfig}
    */
   readonly subnet: string = '';
+
+  /**
+   * (OPTIONAL) Indicates whether to target the IPv6 CIDR associated with a subnet.
+   *
+   * @remarks
+   * Leave this property undefined or set to `false` to target a subnet's IPv4 CIDR.
+   */
+  readonly ipv6: boolean | undefined = undefined;
 
   /**
    * (OPTIONAL) The region that the subnet is located in.
@@ -4647,6 +4785,65 @@ export class VirtualPrivateGatewayConfig implements t.TypeOf<typeof NetworkConfi
 }
 
 /**
+ * *{@link NetworkConfig} / {@link VpcConfig} | {@link VpcTemplatesConfig} / {@link VpcIpv6Config}*
+ *
+ * VPC IPv6 static CIDR configuration. Use this to associate a static IPv6 CIDR block to your VPC.
+ *
+ * @example
+ * Use an Amazon-provided /56 CIDR:
+ * ```
+ * - amazonProvided: true
+ * ```
+ *
+ * Use a BYOIP address pool with a default /56 CIDR:
+ * ```
+ * - byoipPoolId: ipv6Pool-ec2-123abcxyz
+ * ```
+ *
+ * Use a specific CIDR range of a BYOIP address pool:
+ * ```
+ * - byoipPoolId: ipv6Pool-ec2-123abcxyz
+ *   cidrBlock: fd00::/48
+ * ```
+ */
+export class VpcIpv6Config implements t.TypeOf<typeof NetworkConfigTypes.vpcIpv6Config> {
+  /**
+   * (OPTIONAL) Indicates whether Amazon automatically provisions a /56 IPv6 CIDR block for the VPC.
+   *
+   * @remarks
+   * **CAUTION**: Changing this property value after initial deployment causes the CIDR block to be recreated.
+   * Please be aware that any downstream dependencies may cause this property update to fail.
+   *
+   * Leave this property undefined if using a Bring-Your-Own-IP (BYOIP) address pool.
+   */
+  readonly amazonProvided: boolean | undefined = undefined;
+  /**
+   * (OPTIONAL) Associate an IPv6 CIDR block with your VPC.
+   *
+   * @remarks
+   * **CAUTION**: Changing this property value after initial deployment causes the CIDR block to be recreated.
+   * Please be aware that any downstream dependencies may cause this property update to fail.
+   *
+   * You MUST also specify `boipPoolId` if configuring this property.
+   * You may leave this property undefined to have Amazon automatically provision a /56 CIDR
+   * from your BYOIP address pool.
+   * Possible IPv6 netmask lengths are between /44 and /60 in increments of /4.
+   */
+  readonly cidrBlock: string | undefined = undefined;
+  /**
+   * (OPTIONAL) Used to define the Bring-Your-Own-IP (BYOIP) address pool ID to use for the IPv6 CIDR block.
+   *
+   * @remarks
+   * **CAUTION**: Changing this property value after initial deployment causes the CIDR block to be recreated.
+   * Please be aware that any downstream dependencies may cause this property update to fail.
+   *
+   * You must have configured a BYOIP address pool in the account the VPC is being provisioned in.
+   * For more information on setting up an address pool, see {@link https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-byoip.html | Bring your own IP addresses (BYOIP) in Amazon EC2}.
+   */
+  readonly byoipPoolId: string | undefined = undefined;
+}
+
+/**
  * *{@link NetworkConfig} / {@link VpcConfig}*
  *
  * {@link https://docs.aws.amazon.com/vpc/latest/userguide/what-is-amazon-vpc.html | Virtual Private Cloud (VPC)} configuration.
@@ -4691,6 +4888,26 @@ export class VirtualPrivateGatewayConfig implements t.TypeOf<typeof NetworkConfi
  *     transitGatewayAttachments: []
  *     tags: []
  * ```
+ *
+ * IPv6 static CIDR:
+ * ```
+ * vpcs:
+ *   - name: Network-Inspection
+ *     account: Network
+ *     region: us-east-1
+ *     cidrs:
+ *       - 10.0.0.0/24
+ *     ipv6Cidrs:
+ *       - byoipPool: ipv6Pool-ec2-123abcxyz
+ *     enableDnsHostnames: true
+ *     enableDnsSupport: true
+ *     instanceTenancy: default
+ *     routeTables: []
+ *     subnets: []
+ *     natGateways: []
+ *     transitGatewayAttachments: []
+ *     tags: []
+ * ```
  */
 export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> {
   /**
@@ -4719,7 +4936,7 @@ export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> 
   readonly region: t.Region = 'us-east-1';
 
   /**
-   * (OPTIONAL) A list of CIDRs to associate with the VPC.
+   * (OPTIONAL) A list of IPv4 CIDRs to associate with the VPC.
    *
    * @remarks
    * **CAUTION**: Changing or removing an existing CIDR value after initial deployment causes the VPC to be recreated.
@@ -4731,7 +4948,7 @@ export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> 
    * At least one CIDR should be
    * provided if not using `ipamAllocations`.
    *
-   * Use CIDR notation, i.e. 10.0.0.0/16
+   * Use IPv4 CIDR notation, i.e. 10.0.0.0/16
    */
   readonly cidrs: string[] | undefined = undefined;
 
@@ -4776,7 +4993,10 @@ export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> 
    */
   readonly dnsFirewallRuleGroups: t.TypeOf<typeof NetworkConfigTypes.vpcDnsFirewallAssociationConfig>[] | undefined =
     undefined;
-
+  /**
+   * (OPTIONAL) Create an {@link https://docs.aws.amazon.com/vpc/latest/userguide/egress-only-internet-gateway.html | Egress-only internet gateway (EIGW)} for the VPC
+   */
+  readonly egressOnlyIgw: boolean | undefined = undefined;
   /**
    * Defines if an {@link https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Internet_Gateway.html | internet gateway} should be added to the VPC
    */
@@ -4821,6 +5041,21 @@ export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> 
    *
    */
   readonly ipamAllocations: IpamAllocationConfig[] | undefined = undefined;
+
+  /**
+   * (OPTIONAL) An array of IPv6 CIDR block configurations.
+   *
+   * @see {@link VpcIpv6Config}
+   *
+   * @remarks
+   * **CAUTION**: Changing or removing an existing IPv6 CIDR block may cause unexpected behavior if there are subnets provisioned using the CIDR.
+   * Please be aware that any downstream dependencies may cause this property update to fail.
+   * You can add additional IPv6 CIDR blocks to the VPC without interruptions occurring.
+   *
+   * At least one IPv4 static CIDR or IPAM allocation MUST be configured along with any IPv6 CIDR blocks.
+   * A VPC cannot be created without an IPv4 CIDR.
+   */
+  readonly ipv6Cidrs: VpcIpv6Config[] | undefined = undefined;
 
   /**
    * (OPTIONAL) A list of DNS query log configuration names.
@@ -5025,6 +5260,27 @@ export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> 
  *     transitGatewayAttachments: []
  *     tags: []
  * ```
+ * Static IPv6 CIDR:
+ * ```
+ * vpcTemplates:
+ *   - name: Accelerator-Template
+ *     deploymentTargets:
+ *       organizationalUnits:
+ *         - Infrastructure
+ *     region: us-east-1
+ *     cidrs:
+ *       - 10.0.0.0/24
+ *     ipv6Cidrs:
+ *       - amazonProvided: true
+ *     enableDnsHostnames: true
+ *     enableDnsSupport: true
+ *     instanceTenancy: default
+ *     routeTables: []
+ *     subnets: []
+ *     natGateways: []
+ *     transitGatewayAttachments: []
+ *     tags: []
+ * ```
  */
 export class VpcTemplatesConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcTemplatesConfig> {
   /**
@@ -5057,7 +5313,7 @@ export class VpcTemplatesConfig implements t.TypeOf<typeof NetworkConfigTypes.vp
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
 
   /**
-   * (OPTIONAL) A list of CIDRs to associate with the VPC.
+   * (OPTIONAL) A list of IPv4 CIDRs to associate with the VPC.
    *
    * @remarks
    * **CAUTION**: Changing or removing an existing CIDR value after initial deployment causes the VPC to be recreated.
@@ -5069,7 +5325,7 @@ export class VpcTemplatesConfig implements t.TypeOf<typeof NetworkConfigTypes.vp
    * At least one CIDR should be
    * provided if not using `ipamAllocations`.
    *
-   * Use CIDR notation, i.e. 10.0.0.0/16
+   * Use IPv4 CIDR notation, i.e. 10.0.0.0/16
    */
   readonly cidrs: string[] | undefined = undefined;
 
@@ -5133,7 +5389,10 @@ export class VpcTemplatesConfig implements t.TypeOf<typeof NetworkConfigTypes.vp
    */
   readonly dnsFirewallRuleGroups: t.TypeOf<typeof NetworkConfigTypes.vpcDnsFirewallAssociationConfig>[] | undefined =
     undefined;
-
+  /**
+   * (OPTIONAL) Create an {@link https://docs.aws.amazon.com/vpc/latest/userguide/egress-only-internet-gateway.html | Egress-only internet gateway (EIGW)} for the VPC
+   */
+  readonly egressOnlyIgw: boolean | undefined = undefined;
   /**
    * Defines if an {@link https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Internet_Gateway.html | internet gateway} should be added to the VPC
    */
@@ -5157,6 +5416,21 @@ export class VpcTemplatesConfig implements t.TypeOf<typeof NetworkConfigTypes.vp
    * @see {@link https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/dedicated-instance.html}
    */
   readonly instanceTenancy: t.TypeOf<typeof NetworkConfigTypes.instanceTenancyTypeEnum> | undefined = 'default';
+
+  /**
+   * (OPTIONAL) An array of IPv6 CIDR block configurations.
+   *
+   * @see {@link VpcIpv6Config}
+   *
+   * @remarks
+   * **CAUTION**: Changing or removing an existing IPv6 CIDR block may cause unexpected behavior if there are subnets provisioned using the CIDR.
+   * Please be aware that any downstream dependencies may cause this property update to fail.
+   * You can add additional IPv6 CIDR blocks to the VPC without interruptions occurring.
+   *
+   * At least one IPv4 static CIDR or IPAM allocation MUST be configured along with any IPv6 CIDR blocks.
+   * A VPC cannot be created without an IPv4 CIDR.
+   */
+  readonly ipv6Cidrs: VpcIpv6Config[] | undefined = undefined;
 
   /**
    * (OPTIONAL) A list of DNS query log configuration names.

@@ -1367,6 +1367,13 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
             "ToPort": 3389,
           },
           {
+            "CidrIpv6": "fd00::/8",
+            "Description": "Management RDP Traffic Inbound",
+            "FromPort": 3389,
+            "IpProtocol": "tcp",
+            "ToPort": 3389,
+          },
+          {
             "CidrIp": {
               "Fn::GetAtt": [
                 "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
@@ -1653,6 +1660,21 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       ],
       "Properties": {
         "DestinationCidrBlock": "0.0.0.0/0",
+        "RouteTableId": {
+          "Ref": "NetworkEndpointsVpcNetworkEndpointsARouteTable5B9BF71B",
+        },
+        "TransitGatewayId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "NetworkEndpointsVpcNetworkEndpointsARouteTableNetworkEndpointsVpcNetworkEndpointsARouteTableTgwRoutev65D772C9E": {
+      "DependsOn": [
+        "NetworkEndpointsVpcTransitGatewayAttachmentF207787E",
+      ],
+      "Properties": {
+        "DestinationIpv6CidrBlock": "::/0",
         "RouteTableId": {
           "Ref": "NetworkEndpointsVpcNetworkEndpointsARouteTable5B9BF71B",
         },
@@ -3047,6 +3069,17 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::EC2::FlowLog",
     },
+    "NetworkSecondaryVpcEgressOnlyIgwF55C954F": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "VpcId": {
+          "Ref": "NetworkSecondaryVpc37FB1791",
+        },
+      },
+      "Type": "AWS::EC2::EgressOnlyInternetGateway",
+    },
     "NetworkSecondaryVpcFlowLogsGroup3069B74B": {
       "DeletionPolicy": "Retain",
       "DependsOn": [
@@ -3127,6 +3160,18 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Policy",
     },
+    "NetworkSecondaryVpcIpv6CidrBlock093FFC4F7": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "AmazonProvidedIpv6CidrBlock": true,
+        "VpcId": {
+          "Ref": "NetworkSecondaryVpc37FB1791",
+        },
+      },
+      "Type": "AWS::EC2::VPCCidrBlock",
+    },
     "NetworkSecondaryVpcNetworkSecondaryARtRouteTable649EACD5": {
       "Properties": {
         "Tags": [
@@ -3141,10 +3186,23 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::EC2::RouteTable",
     },
+    "NetworkSecondaryVpcNetworkSecondaryARtRouteTableNetworkSecondaryVpcNetworkSecondaryARtRouteTableEigwRoute5FADECA6": {
+      "Properties": {
+        "DestinationIpv6CidrBlock": "::/0",
+        "EgressOnlyInternetGatewayId": {
+          "Ref": "NetworkSecondaryVpcEgressOnlyIgwF55C954F",
+        },
+        "RouteTableId": {
+          "Ref": "NetworkSecondaryVpcNetworkSecondaryARtRouteTable649EACD5",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
     "NetworkSecondaryVpcNetworkSecondaryASubnet791F4607": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+        "NetworkSecondaryVpcIpv6CidrBlock093FFC4F7",
       ],
       "Properties": {
         "ServiceToken": {
@@ -3172,6 +3230,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "NetworkSecondaryVpcNetworkSecondaryASubnetRouteTableAssociationBBEA4449": {
+      "DependsOn": [
+        "NetworkSecondaryVpcIpv6CidrBlock093FFC4F7",
+      ],
       "Properties": {
         "RouteTableId": {
           "Ref": "NetworkSecondaryVpcNetworkSecondaryARtRouteTable649EACD5",
@@ -3210,6 +3271,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DeletionPolicy": "Delete",
       "DependsOn": [
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+        "NetworkSecondaryVpcIpv6CidrBlock093FFC4F7",
         "NetworkSecondaryVpcNetworkSecondaryASubnet791F4607",
         "NetworkSecondaryVpcNetworkSecondaryASubnetRouteTableAssociationBBEA4449",
       ],
@@ -3240,6 +3302,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "NetworkSecondaryVpcNetworkSecondaryBSubnetRouteTableAssociation6EB02D15": {
       "DependsOn": [
+        "NetworkSecondaryVpcIpv6CidrBlock093FFC4F7",
         "NetworkSecondaryVpcNetworkSecondaryASubnet791F4607",
         "NetworkSecondaryVpcNetworkSecondaryASubnetRouteTableAssociationBBEA4449",
       ],
@@ -3271,6 +3334,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DeletionPolicy": "Delete",
       "DependsOn": [
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+        "NetworkSecondaryVpcIpv6CidrBlock093FFC4F7",
         "NetworkSecondaryVpcNetworkSecondaryBSubnetDD64E26D",
         "NetworkSecondaryVpcNetworkSecondaryBSubnetRouteTableAssociation6EB02D15",
       ],
@@ -3301,6 +3365,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "NetworkSecondaryVpcNetworkSecondaryCSubnetRouteTableAssociation0ADC5EBF": {
       "DependsOn": [
+        "NetworkSecondaryVpcIpv6CidrBlock093FFC4F7",
         "NetworkSecondaryVpcNetworkSecondaryBSubnetDD64E26D",
         "NetworkSecondaryVpcNetworkSecondaryBSubnetRouteTableAssociation6EB02D15",
       ],
@@ -3332,6 +3397,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DeletionPolicy": "Delete",
       "DependsOn": [
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+        "NetworkSecondaryVpcIpv6CidrBlock093FFC4F7",
         "NetworkSecondaryVpcNetworkSecondaryCSubnet7C04BEAE",
         "NetworkSecondaryVpcNetworkSecondaryCSubnetRouteTableAssociation0ADC5EBF",
       ],
@@ -3362,6 +3428,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "NetworkSecondaryVpcNetworkSecondaryDSubnetRouteTableAssociation7127663A": {
       "DependsOn": [
+        "NetworkSecondaryVpcIpv6CidrBlock093FFC4F7",
         "NetworkSecondaryVpcNetworkSecondaryCSubnet7C04BEAE",
         "NetworkSecondaryVpcNetworkSecondaryCSubnetRouteTableAssociation0ADC5EBF",
       ],
@@ -3379,6 +3446,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DeletionPolicy": "Delete",
       "DependsOn": [
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+        "NetworkSecondaryVpcIpv6CidrBlock093FFC4F7",
         "NetworkSecondaryVpcNetworkSecondaryOutpostsASubnet94859C6D",
         "NetworkSecondaryVpcNetworkSecondaryOutpostsASubnetRouteTableAssociation9ACEC596",
       ],
@@ -3410,6 +3478,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "NetworkSecondaryVpcNetworkSecondaryOutposts1SubnetRouteTableAssociation9EE45549": {
       "DependsOn": [
+        "NetworkSecondaryVpcIpv6CidrBlock093FFC4F7",
         "NetworkSecondaryVpcNetworkSecondaryOutpostsASubnet94859C6D",
         "NetworkSecondaryVpcNetworkSecondaryOutpostsASubnetRouteTableAssociation9ACEC596",
       ],
@@ -3427,6 +3496,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DeletionPolicy": "Delete",
       "DependsOn": [
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+        "NetworkSecondaryVpcIpv6CidrBlock093FFC4F7",
         "NetworkSecondaryVpcNetworkSecondaryDSubnet339A8E74",
         "NetworkSecondaryVpcNetworkSecondaryDSubnetRouteTableAssociation7127663A",
       ],
@@ -3458,6 +3528,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "NetworkSecondaryVpcNetworkSecondaryOutpostsASubnetRouteTableAssociation9ACEC596": {
       "DependsOn": [
+        "NetworkSecondaryVpcIpv6CidrBlock093FFC4F7",
         "NetworkSecondaryVpcNetworkSecondaryDSubnet339A8E74",
         "NetworkSecondaryVpcNetworkSecondaryDSubnetRouteTableAssociation7127663A",
       ],
@@ -3677,6 +3748,33 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::EC2::NetworkAclEntry",
     },
+    "NetworkSecondaryVpcTestNaclNaclNetworkSecondaryVpcTestNaclInbound10869F993D1": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Egress": false,
+        "Ipv6CidrBlock": "::/0",
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryVpcTestNaclNacl63646F9E",
+        },
+        "PortRange": {
+          "From": -1,
+          "To": -1,
+        },
+        "Protocol": -1,
+        "RuleAction": "deny",
+        "RuleNumber": 108,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
     "NetworkSecondaryVpcTestNaclNaclNetworkSecondaryVpcTestNaclNaclAssociateNetworkSecondaryA052E10A4": {
       "Properties": {
         "NetworkAclId": {
@@ -3868,6 +3966,33 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "Protocol": -1,
         "RuleAction": "deny",
         "RuleNumber": 107,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondaryVpcTestNaclNaclNetworkSecondaryVpcTestNaclOutbound1081A01D512": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Egress": true,
+        "Ipv6CidrBlock": "::/0",
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryVpcTestNaclNacl63646F9E",
+        },
+        "PortRange": {
+          "From": -1,
+          "To": -1,
+        },
+        "Protocol": -1,
+        "RuleAction": "deny",
+        "RuleNumber": 108,
       },
       "Type": "AWS::EC2::NetworkAclEntry",
     },

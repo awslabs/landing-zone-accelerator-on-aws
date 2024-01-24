@@ -133,12 +133,19 @@ export class RouteEntryResources {
         pascalCase(`${vpcItem.name}Vpc`) +
         pascalCase(`${routeTableItem.name}RouteTable`) +
         pascalCase(routeTableEntryItem.name);
-      const entryTypes = ['transitGateway', 'internetGateway', 'natGateway', 'virtualPrivateGateway', 'localGateway'];
+      const entryTypes = [
+        'transitGateway',
+        'internetGateway',
+        'egressOnlyIgw',
+        'natGateway',
+        'virtualPrivateGateway',
+        'localGateway',
+      ];
 
       // Check if using a prefix list or CIDR as the destination
       if (routeTableEntryItem.type && entryTypes.includes(routeTableEntryItem.type)) {
         // Set destination type
-        const [destination, destinationPrefixListId] = this.setRouteEntryDestination(
+        const [destination, destinationPrefixListId, ipv6Destination] = this.setRouteEntryDestination(
           routeTableEntryItem,
           maps.prefixLists,
           maps.subnets,
@@ -163,6 +170,7 @@ export class RouteEntryResources {
               transitGatewayAttachment,
               destination,
               destinationPrefixListId,
+              ipv6Destination,
               this.stack.cloudwatchKey,
               this.stack.logRetention,
             );
@@ -179,6 +187,7 @@ export class RouteEntryResources {
               natGateway.natGatewayId,
               destination,
               destinationPrefixListId,
+              ipv6Destination,
               this.stack.cloudwatchKey,
               this.stack.logRetention,
             );
@@ -191,10 +200,26 @@ export class RouteEntryResources {
               routeId,
               destination,
               destinationPrefixListId,
+              ipv6Destination,
               this.stack.cloudwatchKey,
               this.stack.logRetention,
             );
             routeTableItemEntryMap.set(`${vpcItem.name}_${routeTableItem.name}_${routeTableEntryItem.name}`, igwRoute);
+            break;
+          case 'egressOnlyIgw':
+            this.stack.addLogs(
+              LogLevel.INFO,
+              `Adding Egress-only Internet Gateway Route Table Entry ${routeTableEntryItem.name}`,
+            );
+            const eigwRoute = routeTable.addEgressOnlyIgwRoute(
+              routeId,
+              destination,
+              destinationPrefixListId,
+              ipv6Destination,
+              this.stack.cloudwatchKey,
+              this.stack.logRetention,
+            );
+            routeTableItemEntryMap.set(`${vpcItem.name}_${routeTableItem.name}_${routeTableEntryItem.name}`, eigwRoute);
             break;
           case 'virtualPrivateGateway':
             this.stack.addLogs(
@@ -205,6 +230,7 @@ export class RouteEntryResources {
               routeId,
               destination,
               destinationPrefixListId,
+              ipv6Destination,
               this.stack.cloudwatchKey,
               this.stack.logRetention,
             );
@@ -224,6 +250,7 @@ export class RouteEntryResources {
               localGatewayId,
               destination,
               destinationPrefixListId,
+              ipv6Destination,
               this.stack.cloudwatchKey,
               this.stack.logRetention,
             );
@@ -248,19 +275,50 @@ export class RouteEntryResources {
     prefixListMap: Map<string, PrefixList>,
     subnetMap: Map<string, Subnet>,
     vpcName: string,
-  ): [string | undefined, string | undefined] {
+  ): [string | undefined, string | undefined, string | undefined] {
     let destination: string | undefined = undefined;
     let destinationPrefixListId: string | undefined = undefined;
+    let ipv6Destination: string | undefined = undefined;
     if (routeTableEntryItem.destinationPrefixList) {
       // Get PL ID from map
       const prefixList = getPrefixList(prefixListMap, routeTableEntryItem.destinationPrefixList) as PrefixList;
       destinationPrefixListId = prefixList.prefixListId;
     } else {
-      const subnetKey = `${vpcName}_${routeTableEntryItem.destination}`;
-      destination = subnetMap.get(subnetKey)
-        ? getSubnet(subnetMap, vpcName, routeTableEntryItem.destination!).ipv4CidrBlock
-        : routeTableEntryItem.destination;
+      const subnetKey = `${vpcName}_${routeTableEntryItem.ipv6Destination ?? routeTableEntryItem.destination!}`;
+
+      if (subnetMap.get(subnetKey)) {
+        const subnet = getSubnet(
+          subnetMap,
+          vpcName,
+          routeTableEntryItem.ipv6Destination ?? routeTableEntryItem.destination!,
+        ) as Subnet;
+        [destination, ipv6Destination] = this.getSubnetCidrBlock(routeTableEntryItem, subnet);
+      } else {
+        destination = routeTableEntryItem.destination;
+        ipv6Destination = routeTableEntryItem.ipv6Destination;
+      }
     }
-    return [destination, destinationPrefixListId];
+    return [destination, destinationPrefixListId, ipv6Destination];
+  }
+
+  /**
+   * Returns either the IPv4 or IPv6 CIDR block of a dynamic subnet target.
+   * @param routeTableEntryItem RouteTableEntryConfig
+   * @param subnet Subnet
+   * @returns [string | undefined, string | undefined]
+   */
+  private getSubnetCidrBlock(
+    routeTableEntryItem: RouteTableEntryConfig,
+    subnet: Subnet,
+  ): [string | undefined, string | undefined] {
+    let destination: string | undefined = undefined;
+    let ipv6Destination: string | undefined = undefined;
+
+    if (routeTableEntryItem.ipv6Destination) {
+      ipv6Destination = subnet.ipv6CidrBlock;
+    } else {
+      destination = subnet.ipv4CidrBlock;
+    }
+    return [destination, ipv6Destination];
   }
 }

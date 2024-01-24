@@ -736,6 +736,9 @@ vpcs:
     ipamAllocations:
       - ipamPoolName: home-region-prod-pool
         netmaskLength: 25
+    ipv6Cidrs:
+      - amazonProvided: true
+    egressOnlyIgw: true
     internetGateway: false
     enableDnsHostnames: true
     enableDnsSupport: true
@@ -747,12 +750,24 @@ vpcs:
             destination: 10.0.0.0/24
             type: gatewayLoadBalancerEndpoint
             target: Shared-Secondary-Endpoint-A
+          - name: GwlbRoutev6
+            ipv6Destination: ::/0
+            type: gatewayLoadBalancerEndpoint
+            target: Shared-Secondary-Endpoint-A
+          - name: eigwRoute
+            ipv6Destination: ::/0
+            type: egressOnlyIgw
       - name: Network-Secondary-B-Rt
         routes: []
       - name: Network-Secondary-C-Rt
         routes:
           - name: NfwRoute
             destination: 0.0.0.0/0
+            type: networkFirewall
+            target: az-id-firewall
+            targetAvailabilityZone: 1
+          - name: NfwRoutev6
+            ipv6Destination: ::/0
             type: networkFirewall
             target: az-id-firewall
             targetAvailabilityZone: 1
@@ -866,6 +881,12 @@ vpcs:
               vpc: SharedServices-Main
               subnet: SharedServices-App-A
               region: us-east-1
+          - rule: 108
+            action: deny
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            destination: ::/0
         inboundRules:
           - rule: 101
             action: allow
@@ -933,6 +954,12 @@ vpcs:
               vpc: SharedServices-Main
               subnet: SharedServices-App-A
               region: us-east-1
+          - rule: 108
+            action: deny
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source: ::/0
     gatewayEndpoints:
       defaultPolicy: Default
       endpoints:
@@ -971,6 +998,10 @@ vpcs:
         routes:
           - name: TgwRoute
             destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+          - name: TgwRoutev6
+            ipv6Destination: ::/0
             type: transitGateway
             target: Network-Main
           - name: S3Gateway
@@ -1159,6 +1190,7 @@ vpcs:
               - '10.0.0.0/8'
               - '100.96.252.0/23'
               - '100.96.250.0/23'
+              - fd00::/8
               - account: 'Network'
                 vpc: 'Network-Endpoints'
                 subnets:

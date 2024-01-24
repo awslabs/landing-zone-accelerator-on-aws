@@ -40,10 +40,11 @@ export interface INetworkFirewall extends cdk.IResource {
 
   addNetworkFirewallRoute: (
     id: string,
-    destination: string,
     endpointAz: string,
     logRetentionInDays: number,
     routeTableId: string,
+    destination?: string,
+    ipv6Destination?: string,
     logGroupKmsKey?: cdk.aws_kms.IKey,
   ) => void;
 }
@@ -111,10 +112,11 @@ abstract class NetworkFirewallBase extends cdk.Resource implements INetworkFirew
 
   public addNetworkFirewallRoute(
     id: string,
-    destination: string,
     endpointAz: string,
     logRetentionInDays: number,
     routeTableId: string,
+    destination?: string,
+    ipv6Destination?: string,
     logGroupKmsKey?: cdk.aws_kms.IKey,
   ): void {
     // Get endpoint ID from custom resource
@@ -129,6 +131,7 @@ abstract class NetworkFirewallBase extends cdk.Resource implements INetworkFirew
     new cdk.aws_ec2.CfnRoute(this, id, {
       routeTableId,
       destinationCidrBlock: destination,
+      destinationIpv6CidrBlock: ipv6Destination,
       vpcEndpointId,
     });
   }
