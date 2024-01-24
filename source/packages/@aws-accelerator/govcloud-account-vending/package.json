@@ -1,33 +1,33 @@
 {
   "name": "@aws-accelerator/govcloud-account-vending",
   "version": "0.0.0",
+  "private": true,
   "description": "AWS GovCloud (US) account vending",
   "license": "Apache-2.0",
   "author": {
     "name": "Amazon Web Services",
     "url": "https://aws.amazon.com/solutions"
   },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": {
     "govcloud-avm": "bin/govcloud-avm.js"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "private": true,
   "scripts": {
+    "build": "tsc",
     "cleanup": "tsc --build ./ --clean && rm -rf node_modules && rm -rf yarn.lock && rm -rf dist && rm -rf cdk.out",
     "cleanup:tsc": "tsc --build ./ --clean",
-    "build": "tsc",
-    "watch": "tsc -w",
-    "test": "jest --coverage --ci --passWithNoTests",
     "lint": "eslint --fix  --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}'",
-    "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}'"
+    "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}'",
+    "test": "jest --coverage --ci --passWithNoTests",
+    "watch": "tsc -w"
   },
   "dependencies": {
-    "aws-cdk-lib": "2.93.0",
-    "aws-cdk": "2.93.0",
     "@aws-sdk/client-config-service": "3.410.0",
     "@types/js-yaml": "4.0.5",
     "@types/semver": "7.5.0",
+    "aws-cdk": "2.93.0",
+    "aws-cdk-lib": "2.93.0",
     "change-case": "4.1.2",
     "fs-extra": "11.1.0",
     "hash-sum": "2.0.0",
@@ -40,18 +40,18 @@
     "winston": "3.8.2"
   },
   "devDependencies": {
-    "aws-cdk-lib": "2.93.0",
-    "aws-cdk": "2.93.0",
     "@aws-cdk/cx-api": "2.93.0",
     "@aws-cdk/region-info": "2.93.0",
-    "cdk-assets": "2.93.0",
-    "chokidar": "3.5.3",
-    "constructs": "10.0.12",
     "@types/fs-extra": "11.0.1",
     "@types/jest": "29.4.0",
     "@types/mri": "1.1.1",
     "@types/node": "18.14.0",
     "@types/promptly": "3.0.2",
+    "aws-cdk": "2.93.0",
+    "aws-cdk-lib": "2.93.0",
+    "cdk-assets": "2.93.0",
+    "chokidar": "3.5.3",
+    "constructs": "10.0.12",
     "eslint": "8.34.0",
     "eslint-config-prettier": "8.6.0",
     "eslint-config-standard": "17.0.0",

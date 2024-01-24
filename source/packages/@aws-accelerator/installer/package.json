@@ -1,6 +1,7 @@
 {
   "name": "@aws-accelerator/installer",
   "version": "0.0.0",
+  "private": true,
   "description": "The installer package for the accelerator solution.",
   "license": "Apache-2.0",
   "author": {
@@ -9,23 +10,29 @@
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "private": true,
   "scripts": {
+    "build": "tsc",
+    "cdk": "cdk",
     "cleanup": "tsc --build ./ --clean && rm -rf node_modules && rm -rf yarn.lock && rm -rf dist && rm -rf cdk.out",
     "cleanup:tsc": "tsc --build ./ --clean",
-    "build": "tsc",
-    "watch": "tsc -w",
-    "test": "jest --coverage --ci --passWithNoTests",
-    "cdk": "cdk",
     "lint": "eslint --fix  --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
-    "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" "
+    "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
+    "test": "jest --coverage --ci --passWithNoTests",
+    "watch": "tsc -w"
+  },
+  "dependencies": {
+    "@aws-accelerator/accelerator": "^0.0.0",
+    "@aws-cdk-extensions/cdk-extensions": "^0.0.0",
+    "aws-cdk": "2.93.0",
+    "aws-cdk-lib": "2.93.0",
+    "cdk-nag": "2.5.2"
   },
   "devDependencies": {
-    "aws-cdk-lib": "2.93.0",
-    "aws-cdk": "2.93.0",
-    "constructs": "10.0.12",
     "@types/jest": "29.4.0",
     "@types/node": "18.14.0",
+    "aws-cdk": "2.93.0",
+    "aws-cdk-lib": "2.93.0",
+    "constructs": "10.0.12",
     "eslint": "8.34.0",
     "eslint-config-prettier": "8.6.0",
     "eslint-config-standard": "17.0.0",
@@ -44,12 +51,5 @@
     "reportPath": "coverage",
     "reportFile": "test-report.xml",
     "indent": 4
-  },
-  "dependencies": {
-    "@aws-cdk-extensions/cdk-extensions": "^0.0.0",
-    "@aws-accelerator/accelerator": "^0.0.0",
-    "aws-cdk-lib": "2.93.0",
-    "aws-cdk": "2.93.0",
-    "cdk-nag": "2.5.2"
   }
 }
