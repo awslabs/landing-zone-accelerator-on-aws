@@ -27,7 +27,7 @@ import {
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
 import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
-
+import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 interface ReferenceOptions {
   /**
    * API props
@@ -64,7 +64,7 @@ interface ReferenceOptions {
   readonly roleName?: string;
 }
 
-export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
+export async function handler(event: CloudFormationCustomResourceEvent): Promise<
   | {
       Status: string | undefined;
     }

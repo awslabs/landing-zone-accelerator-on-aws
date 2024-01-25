@@ -12,6 +12,7 @@
  */
 import { throttlingBackOff } from '@aws-accelerator/utils';
 import { wildcardMatch } from '@aws-accelerator/utils/lib/common-functions';
+import { ScheduledEvent } from '@aws-accelerator/utils/lib/common-types';
 import * as AWS from 'aws-sdk';
 AWS.config.logger = console;
 
@@ -36,7 +37,7 @@ if (logExclusionSetting) {
 } else {
   logExclusionParse = undefined;
 }
-export async function handler(event: AWSLambda.ScheduledEvent) {
+export async function handler(event: ScheduledEvent) {
   const logGroupName = event.detail.requestParameters.logGroupName as string;
 
   let nextToken: string | undefined = undefined;

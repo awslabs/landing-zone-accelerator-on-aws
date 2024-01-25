@@ -16,6 +16,12 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as uuid from 'uuid';
 import { throttlingBackOff } from '@aws-accelerator/utils';
+import {
+  FirehoseTransformationEvent,
+  FirehoseTransformationResult,
+  FirehoseTransformationResultRecord,
+  FirehoseTransformationEventRecord,
+} from '@aws-accelerator/utils/lib/common-types';
 const zlib = require('zlib');
 
 AWS.config.logger = console;
@@ -27,8 +33,8 @@ AWS.config.logger = console;
  * @returns
  */
 
-export async function handler(event: AWSLambda.FirehoseTransformationEvent) {
-  const firehoseRecordsOutput: AWSLambda.FirehoseTransformationResult = { records: [] };
+export async function handler(event: FirehoseTransformationEvent) {
+  const firehoseRecordsOutput: FirehoseTransformationResult = { records: [] };
 
   // Parse records
   for (const firehoseRecordInput of event.records) {
@@ -37,7 +43,7 @@ export async function handler(event: AWSLambda.FirehoseTransformationEvent) {
       firehoseRecordsOutput.records.push(processedFirehoseRecord);
     } catch (err) {
       console.warn(err);
-      const firehoseReturnErrorResult: AWSLambda.FirehoseTransformationResultRecord = {
+      const firehoseReturnErrorResult: FirehoseTransformationResultRecord = {
         recordId: firehoseRecordInput.recordId,
         data: firehoseRecordInput.data,
         result: 'ProcessingFailed',
@@ -49,7 +55,7 @@ export async function handler(event: AWSLambda.FirehoseTransformationEvent) {
   return await checkFirehoseRecords(firehoseRecordsOutput);
 }
 
-async function processFirehoseInputRecord(firehoseRecord: AWSLambda.FirehoseTransformationEventRecord) {
+async function processFirehoseInputRecord(firehoseRecord: FirehoseTransformationEventRecord) {
   const payload = Buffer.from(firehoseRecord.data, 'base64');
   const unzippedPayload = zlib.gunzipSync(payload).toString('utf-8');
   const jsonParsedPayload = JSON.parse(unzippedPayload);
@@ -67,7 +73,7 @@ async function processFirehoseInputRecord(firehoseRecord: AWSLambda.FirehoseTran
     const partitionKeys = {
       dynamicPrefix: prefixes,
     };
-    const firehoseReturnResult: AWSLambda.FirehoseTransformationResultRecord = {
+    const firehoseReturnResult: FirehoseTransformationResultRecord = {
       recordId: firehoseRecord.recordId,
       data: firehoseRecord.data,
       result: 'Ok',
@@ -81,7 +87,7 @@ async function processFirehoseInputRecord(firehoseRecord: AWSLambda.FirehoseTran
   } else {
     // if there is no logGroup in payload do not process and forward to firehose
     // mark processing failed
-    const firehoseReturnErrorResult: AWSLambda.FirehoseTransformationResultRecord = {
+    const firehoseReturnErrorResult: FirehoseTransformationResultRecord = {
       recordId: firehoseRecord.recordId,
       data: firehoseRecord.data,
       result: 'ProcessingFailed',
@@ -160,7 +166,7 @@ async function getDatePrefix(serviceName: string | null, inputTimestamp: Date) {
  * -- logEvents.length === 1 this means compressed payload is too large for lambda to send to kinesis. Fail with message that payload is too large with logGroup and logStream name to help troubleshoot further
  */
 
-async function checkFirehoseRecords(firehoseRecordsOutput: AWSLambda.FirehoseTransformationResult) {
+async function checkFirehoseRecords(firehoseRecordsOutput: FirehoseTransformationResult) {
   /**
    * Initial check to see if records are over 6MB.
    * 6MB is exactly 6291456 in binary, this code is assuming decimal so cut off will be 6000000
@@ -178,7 +184,7 @@ async function checkFirehoseRecords(firehoseRecordsOutput: AWSLambda.FirehoseTra
   return firehoseRecordsOutput;
 }
 
-async function checkFirehoseRecordLength(firehoseRecordsOutput: AWSLambda.FirehoseTransformationResult) {
+async function checkFirehoseRecordLength(firehoseRecordsOutput: FirehoseTransformationResult) {
   /**
    * Check for record length. If there is only 1 record uncompress the data
    * If the record length is greater than 1 then split the records
@@ -198,7 +204,7 @@ async function checkFirehoseRecordLength(firehoseRecordsOutput: AWSLambda.Fireho
   }
 }
 
-async function checkCloudWatchLog(singleRecord: AWSLambda.FirehoseTransformationResultRecord) {
+async function checkCloudWatchLog(singleRecord: FirehoseTransformationResultRecord) {
   const payload = Buffer.from(singleRecord.data, 'base64');
   const unzippedPayload = zlib.gunzipSync(payload).toString('utf-8');
   const jsonParsedPayload: CloudWatchLogsToFirehoseRecord = JSON.parse(unzippedPayload);
@@ -279,14 +285,14 @@ async function postRecordsToStream(recordsInput: AWS.Kinesis.PutRecordsInput) {
   await throttlingBackOff(() => kinesisClient.putRecords(recordsInput).promise());
 }
 
-async function splitFirehoseRecords(records: AWSLambda.FirehoseTransformationResult) {
+async function splitFirehoseRecords(records: FirehoseTransformationResult) {
   //split logEvents
   const halfSizeLogEvents = Math.floor(records.records.length / 2);
-  const firstHalfFirehoseRecordsArray: AWSLambda.FirehoseTransformationResultRecord[] = records.records.slice(
+  const firstHalfFirehoseRecordsArray: FirehoseTransformationResultRecord[] = records.records.slice(
     0,
     halfSizeLogEvents,
   );
-  const secondHalfFirehoseRecordsArray: AWSLambda.FirehoseTransformationResultRecord[] = records.records.slice(
+  const secondHalfFirehoseRecordsArray: FirehoseTransformationResultRecord[] = records.records.slice(
     halfSizeLogEvents,
     records.records.length,
   );
@@ -294,7 +300,7 @@ async function splitFirehoseRecords(records: AWSLambda.FirehoseTransformationRes
   await parseFirehoseRecordsForKinesisStream(secondHalfFirehoseRecordsArray);
 }
 
-async function parseFirehoseRecordsForKinesisStream(records: AWSLambda.FirehoseTransformationResultRecord[]) {
+async function parseFirehoseRecordsForKinesisStream(records: FirehoseTransformationResultRecord[]) {
   const kinesisDataPayload = [];
   for (const record of records) {
     const singleRecord = { Data: record.data, PartitionKey: uuid.v4() };
@@ -303,10 +309,10 @@ async function parseFirehoseRecordsForKinesisStream(records: AWSLambda.FirehoseT
   await postRecordsToStream({ Records: kinesisDataPayload, StreamARN: process.env['KinesisStreamArn']! });
 }
 
-async function markFirehoseRecordError(firehoseRecordsOutput: AWSLambda.FirehoseTransformationResult) {
+async function markFirehoseRecordError(firehoseRecordsOutput: FirehoseTransformationResult) {
   const errorRecords = [];
   for (const record of firehoseRecordsOutput.records) {
-    const firehoseReturnErrorResult: AWSLambda.FirehoseTransformationResultRecord = {
+    const firehoseReturnErrorResult: FirehoseTransformationResultRecord = {
       recordId: record.recordId,
       data: record.data,
       result: 'ProcessingFailed',

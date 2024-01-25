@@ -14,7 +14,10 @@
 import * as AWS from 'aws-sdk';
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
-
+import {
+  CloudFormationCustomResourceEvent,
+  CloudFormationCustomResourceUpdateEvent,
+} from '@aws-accelerator/utils/lib/common-types';
 import { VirtualInterfaceAllocationAttributes } from './attributes';
 
 /**
@@ -23,7 +26,7 @@ import { VirtualInterfaceAllocationAttributes } from './attributes';
  * @param event
  * @returns
  */
-export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
+export async function handler(event: CloudFormationCustomResourceEvent): Promise<
   | {
       PhysicalResourceId: string;
       Status: string;
@@ -118,7 +121,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
  * Initialize the virtual interface attributes object
  * @param event
  */
-function vifInit(event: AWSLambda.CloudFormationCustomResourceEvent): VirtualInterfaceAllocationAttributes {
+function vifInit(event: CloudFormationCustomResourceEvent): VirtualInterfaceAllocationAttributes {
   // Set variables from event
   const addressFamily: string = event.ResourceProperties['addressFamily'];
   const amazonAddress: string | undefined = event.ResourceProperties['amazonAddress'];
@@ -208,7 +211,7 @@ function setApiProps(
  * Initialize the virtual interface attributes object
  * @param event
  */
-function oldVifInit(event: AWSLambda.CloudFormationCustomResourceUpdateEvent): VirtualInterfaceAllocationAttributes {
+function oldVifInit(event: CloudFormationCustomResourceUpdateEvent): VirtualInterfaceAllocationAttributes {
   // Set variables from event
   const addressFamily: string = event.OldResourceProperties['addressFamily'];
   const amazonAddress: string | undefined = event.OldResourceProperties['amazonAddress'];

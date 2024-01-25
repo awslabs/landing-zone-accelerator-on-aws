@@ -12,6 +12,7 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
+import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 import * as AWS from 'aws-sdk';
 import { PermissionSet } from 'aws-sdk/clients/ssoadmin';
 import { IdentityCenterPermissionSetConfig } from '@aws-accelerator/config/lib/iam-config';
@@ -23,7 +24,7 @@ AWS.config.logger = console;
  * @param event
  * @returns
  */
-export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
+export async function handler(event: CloudFormationCustomResourceEvent): Promise<
   | {
       Status: string | undefined;
       StatusCode: number | undefined;

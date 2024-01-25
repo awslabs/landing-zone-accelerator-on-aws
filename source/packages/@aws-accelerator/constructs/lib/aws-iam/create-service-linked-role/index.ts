@@ -18,6 +18,7 @@ import {
   NoSuchEntityException,
   InvalidInputException,
 } from '@aws-sdk/client-iam';
+import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 
 /**
  * create-service-linked-role - lambda handler
@@ -26,7 +27,7 @@ import {
  * @returns
  */
 
-export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
+export async function handler(event: CloudFormationCustomResourceEvent): Promise<
   | {
       Status: string;
       Data: { roleArn: string; roleName: string } | undefined;

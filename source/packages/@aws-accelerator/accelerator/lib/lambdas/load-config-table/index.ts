@@ -28,6 +28,7 @@ import {
 } from '@aws-accelerator/config';
 import * as t from '@aws-accelerator/config/';
 import { Readable } from 'stream';
+import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 
 export {};
 const marshallOptions = {
@@ -52,7 +53,7 @@ let s3Client: S3Client;
  * @param event
  * @returns
  */
-export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
+export async function handler(event: CloudFormationCustomResourceEvent): Promise<
   | {
       PhysicalResourceId: string | undefined;
       Status: string;

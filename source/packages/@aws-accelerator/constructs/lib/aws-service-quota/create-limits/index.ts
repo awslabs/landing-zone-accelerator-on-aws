@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 import AWS from 'aws-sdk';
+import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 AWS.config.logger = console;
 
 /**
@@ -20,7 +21,7 @@ AWS.config.logger = console;
  * @returns
  */
 
-export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
+export async function handler(event: CloudFormationCustomResourceEvent): Promise<
   | {
       PhysicalResourceId: string | undefined;
       Status: string;

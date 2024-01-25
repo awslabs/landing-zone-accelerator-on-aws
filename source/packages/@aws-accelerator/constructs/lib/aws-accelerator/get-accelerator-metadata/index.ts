@@ -12,6 +12,7 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
+import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 import * as AWS from 'aws-sdk';
 AWS.config.logger = console;
 
@@ -23,7 +24,7 @@ AWS.config.logger = console;
  */
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function handler(_event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
+export async function handler(_event: CloudFormationCustomResourceEvent): Promise<
   | {
       Status: string | undefined;
       StatusCode: number | undefined;

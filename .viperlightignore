@@ -113,8 +113,8 @@ source/packages/@aws-accelerator/config/lib/global-config.ts:2897
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/constructs/lib/aws-directory-service/share-directory/index.ts:143
 source/packages/@aws-accelerator/constructs/lib/aws-directory-service/share-directory/index.ts:144
+source/packages/@aws-accelerator/constructs/lib/aws-directory-service/share-directory/index.ts:145
 
 # Accelerator specific assume role declaration
 
@@ -179,13 +179,13 @@ reference/sample-configurations/lza-sample-config-us-slg-central-it/README.md:10
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/index.ts:46
 source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/index.ts:47
+source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/index.ts:48
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/index.ts:56
 source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/index.ts:57
+source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/index.ts:58
 
 # Accelerator specific assume role declaration
 

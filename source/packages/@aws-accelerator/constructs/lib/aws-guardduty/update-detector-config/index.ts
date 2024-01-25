@@ -21,7 +21,7 @@ import {
   UpdateDetectorCommand,
   UpdateMemberDetectorsCommand,
 } from '@aws-sdk/client-guardduty';
-
+import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 interface UpdateDetectorOptions {
   /**
    * Enable EKS protection
@@ -43,7 +43,7 @@ interface UpdateDetectorOptions {
  * @param event
  * @returns
  */
-export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
+export async function handler(event: CloudFormationCustomResourceEvent): Promise<
   | {
       Status: string | undefined;
       StatusCode: number | undefined;

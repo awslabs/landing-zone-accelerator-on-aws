@@ -20,6 +20,12 @@ import {
   UntagResourceCommandInput,
   Tag,
 } from '@aws-sdk/client-config-service';
+import {
+  CloudFormationCustomResourceEvent,
+  CloudFormationCustomResourceCreateEvent,
+  CloudFormationCustomResourceUpdateEvent,
+  CloudFormationCustomResourceDeleteEvent,
+} from '@aws-accelerator/utils/lib/common-types';
 import { v4 as uuidv4 } from 'uuid';
 let configClient: ConfigServiceClient;
 
@@ -32,7 +38,7 @@ let configClient: ConfigServiceClient;
 export const handler = onEvent;
 
 async function onEvent(
-  event: AWSLambda.CloudFormationCustomResourceEvent,
+  event: CloudFormationCustomResourceEvent,
 ): Promise<{ PhysicalResourceId: string | undefined; Status: string } | undefined> {
   console.log(JSON.stringify(event));
   const solutionId = process.env['SOLUTION_ID'];
@@ -47,7 +53,7 @@ async function onEvent(
   }
 }
 
-async function onCreate(event: AWSLambda.CloudFormationCustomResourceCreateEvent) {
+async function onCreate(event: CloudFormationCustomResourceCreateEvent) {
   const resourceArn = event.ResourceProperties['resourceArn'];
   const acceleratorTags: Tag[] = event.ResourceProperties['tags'];
   await tagResource(resourceArn, await acceleratorTags);
@@ -57,7 +63,7 @@ async function onCreate(event: AWSLambda.CloudFormationCustomResourceCreateEvent
   };
 }
 
-async function onUpdate(event: AWSLambda.CloudFormationCustomResourceUpdateEvent) {
+async function onUpdate(event: CloudFormationCustomResourceUpdateEvent) {
   const resourceArn = event.ResourceProperties['resourceArn'];
   const previousTags: Tag[] = event.OldResourceProperties['tags'];
   const currentTags: Tag[] = event.ResourceProperties['tags'];
@@ -71,7 +77,7 @@ async function onUpdate(event: AWSLambda.CloudFormationCustomResourceUpdateEvent
   };
 }
 
-async function onDelete(event: AWSLambda.CloudFormationCustomResourceDeleteEvent) {
+async function onDelete(event: CloudFormationCustomResourceDeleteEvent) {
   const resourceArn = event.ResourceProperties['resourceArn'];
   const acceleratorTags: Tag[] = event.ResourceProperties['tags'];
   await unTagResource(resourceArn, acceleratorTags);

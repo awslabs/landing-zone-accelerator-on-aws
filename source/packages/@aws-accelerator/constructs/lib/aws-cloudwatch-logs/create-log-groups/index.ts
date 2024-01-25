@@ -21,6 +21,7 @@ import {
   PutRetentionPolicyCommand,
 } from '@aws-sdk/client-cloudwatch-logs';
 import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
+import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 
 /**
  * create-log-groups - lambda handler
@@ -29,7 +30,7 @@ import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
  * @returns
  */
 export async function handler(
-  event: AWSLambda.CloudFormationCustomResourceEvent,
+  event: CloudFormationCustomResourceEvent,
 ): Promise<
   | { PhysicalResourceId: string; Data: { LogGroupArn: string }; Status: string }
   | { PhysicalResourceId: string; Status: string }

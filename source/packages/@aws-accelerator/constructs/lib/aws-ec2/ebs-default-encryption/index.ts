@@ -25,8 +25,9 @@ import {
   EnableEbsEncryptionByDefaultCommand,
   ModifyEbsDefaultKmsKeyIdCommand,
 } from '@aws-sdk/client-ec2';
+import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 
-export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
+export async function handler(event: CloudFormationCustomResourceEvent): Promise<
   | {
       Status: string | undefined;
       StatusCode: number | undefined;

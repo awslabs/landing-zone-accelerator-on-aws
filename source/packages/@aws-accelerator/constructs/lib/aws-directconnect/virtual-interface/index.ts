@@ -14,7 +14,10 @@
 import * as AWS from 'aws-sdk';
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
-
+import {
+  CloudFormationCustomResourceEvent,
+  CloudFormationCustomResourceUpdateEvent,
+} from '@aws-accelerator/utils/lib/common-types';
 import { VirtualInterfaceAttributes } from './attributes';
 
 /**
@@ -23,7 +26,7 @@ import { VirtualInterfaceAttributes } from './attributes';
  * @param event
  * @returns
  */
-export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
+export async function handler(event: CloudFormationCustomResourceEvent): Promise<
   | {
       PhysicalResourceId: string;
       Status: string;
@@ -164,7 +167,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
  * Initialize the virtual interface attributes object
  * @param event
  */
-function vifInit(event: AWSLambda.CloudFormationCustomResourceEvent): VirtualInterfaceAttributes {
+function vifInit(event: CloudFormationCustomResourceEvent): VirtualInterfaceAttributes {
   // Set variables from event
   const addressFamily: string = event.ResourceProperties['addressFamily'];
   const amazonAddress: string | undefined = event.ResourceProperties['amazonAddress'];
@@ -245,7 +248,7 @@ function setApiProps(
  * @param event
  * @returns
  */
-function oldVifInit(event: AWSLambda.CloudFormationCustomResourceUpdateEvent) {
+function oldVifInit(event: CloudFormationCustomResourceUpdateEvent) {
   // Set variables from event
   const addressFamily: string = event.OldResourceProperties['addressFamily'];
   const amazonAddress: string | undefined = event.OldResourceProperties['amazonAddress'];
@@ -331,7 +334,7 @@ async function createTransitInterface(
  * @param event
  * @returns
  */
-function generateVifArn(event: AWSLambda.CloudFormationCustomResourceUpdateEvent): string {
+function generateVifArn(event: CloudFormationCustomResourceUpdateEvent): string {
   const accountId = event.ServiceToken.split(':')[4];
   const partition = event.ServiceToken.split(':')[1];
   const region = event.ResourceProperties['region'];
@@ -446,10 +449,7 @@ async function inProgress(dx: AWS.DirectConnect, virtualInterfaceId: string): Pr
  * @param lambdaClient
  * @param event
  */
-async function retryLambda(
-  lambdaClient: AWS.Lambda,
-  event: AWSLambda.CloudFormationCustomResourceEvent,
-): Promise<void> {
+async function retryLambda(lambdaClient: AWS.Lambda, event: CloudFormationCustomResourceEvent): Promise<void> {
   // Add retry attempt to event
   if (!event.ResourceProperties['retryAttempt']) {
     event.ResourceProperties['retryAttempt'] = 0;

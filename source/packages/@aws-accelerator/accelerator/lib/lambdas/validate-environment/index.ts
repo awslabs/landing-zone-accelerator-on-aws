@@ -25,6 +25,7 @@ import {
 import { CloudFormationClient, DescribeStacksCommand } from '@aws-sdk/client-cloudformation';
 import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
 import { throttlingBackOff } from '@aws-accelerator/utils';
+import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 
 type scpTargetType = 'ou' | 'account';
 
@@ -102,7 +103,7 @@ let driftDetectionMessageParameterName = '';
  * @param event
  * @returns
  */
-export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
+export async function handler(event: CloudFormationCustomResourceEvent): Promise<
   | {
       Status: string;
     }

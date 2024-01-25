@@ -18,6 +18,7 @@ import {
   EC2Client,
 } from '@aws-sdk/client-ec2';
 import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
+import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 
 interface TgwAssociationOptions {
   /**
@@ -54,9 +55,7 @@ interface TgwAssociationOptions {
   readonly roleName?: string;
 }
 
-export async function handler(
-  event: AWSLambda.CloudFormationCustomResourceEvent,
-): Promise<{ Status: string } | undefined> {
+export async function handler(event: CloudFormationCustomResourceEvent): Promise<{ Status: string } | undefined> {
   //
   // Set resource properties
   const options = setOptions(event.ResourceProperties, event.ServiceToken);

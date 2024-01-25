@@ -4582,11 +4582,6 @@
     "@tufjs/canonical-json" "1.0.0"
     minimatch "^9.0.0"
 
-"@types/aws-lambda@8.10.110":
-  version "8.10.110"
-  resolved "https://registry.yarnpkg.com/@types/aws-lambda/-/aws-lambda-8.10.110.tgz#32a1f9d40b855d69830243492bbb6408098f4c88"
-  integrity sha512-r6egf2Cwv/JaFTTrF9OXFVUB3j/SXTgM9BwrlbBRjWAa2Tu6GWoDoLflppAZ8uSfbUJdXvC7Br3DjuN9pQ2NUQ==
-
 "@types/babel__core@^7.1.14":
   version "7.20.1"
   resolved "https://registry.yarnpkg.com/@types/babel__core/-/babel__core-7.20.1.tgz#916ecea274b0c776fec721e333e55762d3a9614b"
@@ -5298,16 +5293,6 @@ aws-cdk@2.93.0:
   optionalDependencies:
     fsevents "2.3.2"
 
-aws-lambda@1.0.7:
-  version "1.0.7"
-  resolved "https://registry.yarnpkg.com/aws-lambda/-/aws-lambda-1.0.7.tgz#c6b674df47458b5ecd43ab734899ad2e2d457013"
-  integrity sha512-9GNFMRrEMG5y3Jvv+V4azWvc+qNWdWLTjDdhf/zgMlz8haaaLWv0xeAIWxz9PuWUBawsVxy0zZotjCdR3Xq+2w==
-  dependencies:
-    aws-sdk "^2.814.0"
-    commander "^3.0.2"
-    js-yaml "^3.14.1"
-    watchpack "^2.0.0-beta.10"
-
 aws-sdk-client-mock@2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/aws-sdk-client-mock/-/aws-sdk-client-mock-2.1.0.tgz#58247c0fb651cddedbd093c0c06d6bc0caf82e89"
@@ -5333,7 +5318,7 @@ aws-sdk@2.1379.0:
     uuid "8.0.0"
     xml2js "0.5.0"
 
-aws-sdk@^2.1442.0, aws-sdk@^2.814.0:
+aws-sdk@^2.1442.0:
   version "2.1452.0"
   resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.1452.0.tgz#5b91cf8a98d1a0223ddfa911d319bffb33bb1f8f"
   integrity sha512-PiCNbl3DPwiQPqQwkugfO+YaDxWz1BZ8m/05R7MSsOQ1VB9eXDNESASKkz9jEdDbM4u/olZIljV6HVZ9e6044g==
@@ -5947,11 +5932,6 @@ commander@11.0.0:
   version "11.0.0"
   resolved "https://registry.yarnpkg.com/commander/-/commander-11.0.0.tgz#43e19c25dbedc8256203538e8d7e9346877a6f67"
   integrity sha512-9HMlXtt/BNoYr8ooyjjNRdIilOTkVJXB+GhxMTtOKwk0R4j4lS4NpjuqmRxroBfnfTSHQIHQB7wryHhXarNjmQ==
-
-commander@^3.0.2:
-  version "3.0.2"
-  resolved "https://registry.yarnpkg.com/commander/-/commander-3.0.2.tgz#6837c3fb677ad9933d1cfba42dd14d5117d6b39e"
-  integrity sha512-Gar0ASD4BDyKC4hl4DwHqDrmvjoxWKZigVnAbn5H1owvm4CxCPdb0HQDehwNYMJpla5+M2tPmPARzhtYuwpHow==
 
 commander@^9.4.1:
   version "9.5.0"
@@ -7406,11 +7386,6 @@ glob-parent@^6.0.2:
   dependencies:
     is-glob "^4.0.3"
 
-glob-to-regexp@^0.4.1:
-  version "0.4.1"
-  resolved "https://registry.yarnpkg.com/glob-to-regexp/-/glob-to-regexp-0.4.1.tgz#c75297087c851b9a578bd217dd59a92f59fe546e"
-  integrity sha512-lkX1HJXwyMcprw/5YUZc2s7DrpAiHB21/V+E1rHUrVNokkvB6bqMzT0VfV6/86ZNabt1k14YOIaT7nDvOX3Iiw==
-
 glob@7.1.4:
   version "7.1.4"
   resolved "https://registry.yarnpkg.com/glob/-/glob-7.1.4.tgz#aa608a2f6c577ad357e1ae5a5c26d9a8d1969255"
@@ -8629,7 +8604,7 @@ js-yaml@4.1.0, js-yaml@^4.1.0:
   dependencies:
     argparse "^2.0.1"
 
-js-yaml@^3.10.0, js-yaml@^3.13.1, js-yaml@^3.14.1:
+js-yaml@^3.10.0, js-yaml@^3.13.1:
   version "3.14.1"
   resolved "https://registry.yarnpkg.com/js-yaml/-/js-yaml-3.14.1.tgz#dae812fdb3825fa306609a8717383c50c36a0537"
   integrity sha512-okMH7OXXJ7YrN9Ok3/SXrnu4iX9yOk+25nqX4imS2npuvTYDmo/QEZoqwZkYaIDk3jVvBOTOIEgEhaLOynBS9g==
@@ -11812,14 +11787,6 @@ walker@^1.0.8:
   integrity sha512-ts/8E8l5b7kY0vlWLewOkDXMmPdLcVV4GmOQLyxuSswIJsweeFZtAsMF7k1Nszz+TYBQrlYRmzOnr398y1JemQ==
   dependencies:
     makeerror "1.0.12"
-
-watchpack@^2.0.0-beta.10:
-  version "2.4.0"
-  resolved "https://registry.yarnpkg.com/watchpack/-/watchpack-2.4.0.tgz#fa33032374962c78113f93c7f2fb4c54c9862a5d"
-  integrity sha512-Lcvm7MGST/4fup+ifyKi2hjyIAwcdI4HRgtvTpIUxBRhB+RFtUh8XtDOxUfctVCnhVi+QQj49i91OyvzkJl6cg==
-  dependencies:
-    glob-to-regexp "^0.4.1"
-    graceful-fs "^4.1.2"
 
 wcwidth@^1.0.0, wcwidth@^1.0.1:
   version "1.0.1"
