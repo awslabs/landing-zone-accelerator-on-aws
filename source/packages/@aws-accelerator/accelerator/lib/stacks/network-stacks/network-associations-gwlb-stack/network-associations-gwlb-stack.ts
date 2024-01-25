@@ -962,19 +962,51 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
    * Create network interface route table entries.
    */
   private createNetworkInterfaceRouteTableEntries(): void {
+    const crossAccountRouteTableMap = this.getCrossAccountRouteTableIds(this.networkInterfaceRouteArray);
+
     for (const route of this.networkInterfaceRouteArray) {
       if (route.vpcOwnedByAccount) {
         this.createNetworkInterfaceRouteForOwnedVpc(route);
       } else if (route.firewallOwnedByAccount) {
-        this.createNetworkInterfaceRouteForOwnedFirewall(route);
+        this.createNetworkInterfaceRouteForOwnedFirewall(route, crossAccountRouteTableMap);
       }
     }
   }
 
   /**
+   * Retrieves a map of cross-account route table IDs
+   * @param routeDetailsArray networkInterfaceRouteDetails[]
+   * @returns Map<string, string>
+   */
+  private getCrossAccountRouteTableIds(routeDetailsArray: networkInterfaceRouteDetails[]): Map<string, string> {
+    const crossAccountRouteTableMap = new Map<string, string>();
+    for (const route of routeDetailsArray) {
+      if (route.firewallOwnedByAccount && !crossAccountRouteTableMap.has(route.routeTableName)) {
+        const vpcOwnerAccount = getVpcOwnerAccountName(this.props.networkConfig.vpcs, route.vpcName);
+        const vpcOwnerAccountId = this.props.accountsConfig.getAccountId(vpcOwnerAccount);
+        // get cross-account route table id
+        const routeTableId = new SsmParameterLookup(this, pascalCase(`SsmParamLookup${route.routeTableName}`), {
+          name: this.getSsmPath(SsmResourceType.ROUTE_TABLE, [route.vpcName, route.routeTableName]),
+          accountId: vpcOwnerAccountId,
+          parameterRegion: cdk.Stack.of(this).region,
+          roleName: `${this.props.prefixes.accelerator}-VpcPeeringRole-${cdk.Stack.of(this).region}`,
+          kmsKey: this.cloudwatchKey,
+          logRetentionInDays: this.logRetention,
+          acceleratorPrefix: this.props.prefixes.accelerator,
+        }).value;
+        crossAccountRouteTableMap.set(`${route.routeTableName}`, routeTableId);
+      }
+    }
+    return crossAccountRouteTableMap;
+  }
+
+  /**
    * Create network interface route table entries for entries in VPCs shared to this account.
    */
-  private createNetworkInterfaceRouteForOwnedFirewall(routeDetails: networkInterfaceRouteDetails): void {
+  private createNetworkInterfaceRouteForOwnedFirewall(
+    routeDetails: networkInterfaceRouteDetails,
+    crossAccountRouteTableMap: Map<string, string>,
+  ): void {
     if (routeDetails.firewallName && routeDetails.eniIndex !== undefined) {
       const networkInterfaceId = this.getNetworkInterfaceIdFromFirewall(
         routeDetails.firewallName,
@@ -989,6 +1021,7 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
         routeDetails.routeTableName,
         routeDetails.routeEntry,
         networkInterfaceId,
+        crossAccountRouteTableMap,
       );
     }
   }
@@ -1030,6 +1063,7 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
     routeTableName: string,
     routeTableEntryItem: RouteTableEntryConfig,
     networkInterfaceId: string,
+    crossAccountRouteTableMap: Map<string, string>,
   ): void {
     this.logger.info(`Adding cross-account Network Interface Route Table Entry ${routeTableEntryItem.name}`);
     const routeId =
@@ -1037,18 +1071,14 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
 
     const vpcOwnerAccount = getVpcOwnerAccountName(this.props.networkConfig.vpcs, vpcName);
     const vpcOwnerAccountId = this.props.accountsConfig.getAccountId(vpcOwnerAccount);
+    const routeTableId = crossAccountRouteTableMap.get(routeTableName);
 
-    // get cross-account route table id
-    const routeTableId = new SsmParameterLookup(this, pascalCase(`SsmParamLookup${routeTableName}`), {
-      name: this.getSsmPath(SsmResourceType.ROUTE_TABLE, [vpcName, routeTableName]),
-      accountId: vpcOwnerAccountId,
-      parameterRegion: cdk.Stack.of(this).region,
-      roleName: `${this.props.prefixes.accelerator}-VpcPeeringRole-${cdk.Stack.of(this).region}`,
-      kmsKey: this.cloudwatchKey,
-      logRetentionInDays: this.logRetention,
-      acceleratorPrefix: this.props.prefixes.accelerator,
-    }).value;
-
+    if (!routeTableId) {
+      this.logger.error(
+        `Attempting to create cross-account route ${routeTableEntryItem.name} but route table does not exist`,
+      );
+      throw new Error('No cross-account route table target');
+    }
     if (!this.crossAcctRouteProvider) {
       this.logger.error(
         `Attempting to create cross-account route ${routeTableEntryItem.name} but cross-account route provider does not exist`,
@@ -1063,6 +1093,7 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
       roleName: `${this.props.prefixes.accelerator}-VpcPeeringRole-${cdk.Stack.of(this).region}`,
       routeTableId: routeTableId,
       destination: routeTableEntryItem.destination,
+      ipv6Destination: routeTableEntryItem.ipv6Destination,
       networkInterfaceId: networkInterfaceId,
     });
   }
@@ -1083,6 +1114,7 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
 
     new cdk.aws_ec2.CfnRoute(this, routeId, {
       destinationCidrBlock: routeTableEntryItem.destination,
+      destinationIpv6CidrBlock: routeTableEntryItem.ipv6Destination,
       networkInterfaceId: networkInterfaceId,
       routeTableId,
     });

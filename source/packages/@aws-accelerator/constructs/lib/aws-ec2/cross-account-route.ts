@@ -134,6 +134,11 @@ interface CrossAccountRouteProps {
   readonly instanceId?: string;
 
   /**
+   * The destination IPv6 CIDR
+   */
+  readonly ipv6Destination?: string;
+
+  /**
    * The ID of a local gateway
    */
   readonly localGatewayId?: string;
@@ -185,6 +190,7 @@ export class CrossAccountRoute extends cdk.Resource {
         routeDefinition: {
           DestinationCidrBlock: props.destination,
           DestinationPrefixListId: props.destinationPrefixListId,
+          DestinationIpv6CidrBlock: props.ipv6Destination,
           RouteTableId: props.routeTableId,
           CarrierGatewayId: props.carrierGatewayId,
           EgressOnlyInternetGatewayId: props.egressOnlyInternetGatewayId,

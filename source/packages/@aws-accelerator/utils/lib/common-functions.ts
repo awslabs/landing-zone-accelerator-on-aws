@@ -98,3 +98,40 @@ export function wildcardMatch(text: string, pattern: string): boolean {
   logger.info(`Checking if input string ${text} matches pattern ${pattern} provided. Result: ${patternMatch}`);
   return patternMatch;
 }
+
+/**
+ * Returns STS credentials for a given role ARN
+ * @param stsClient STSClient
+ * @param roleArn string
+ * @returns `Promise<{ accessKeyId: string; secretAccessKey: string; sessionToken: string }>`
+ */
+export async function getStsCredentials(
+  stsClient: STSClient,
+  roleArn: string,
+): Promise<{ accessKeyId: string; secretAccessKey: string; sessionToken: string }> {
+  console.log(`Assuming role ${roleArn}...`);
+  try {
+    const response = await throttlingBackOff(() =>
+      stsClient.send(new AssumeRoleCommand({ RoleArn: roleArn, RoleSessionName: 'AcceleratorAssumeRole' })),
+    );
+    //
+    // Validate response
+    if (!response.Credentials?.AccessKeyId) {
+      throw new Error(`Access key ID not returned from AssumeRole command`);
+    }
+    if (!response.Credentials.SecretAccessKey) {
+      throw new Error(`Secret access key not returned from AssumeRole command`);
+    }
+    if (!response.Credentials.SessionToken) {
+      throw new Error(`Session token not returned from AssumeRole command`);
+    }
+
+    return {
+      accessKeyId: response.Credentials.AccessKeyId,
+      secretAccessKey: response.Credentials.SecretAccessKey,
+      sessionToken: response.Credentials.SessionToken,
+    };
+  } catch (e) {
+    throw new Error(`Could not assume role: ${e}`);
+  }
+}

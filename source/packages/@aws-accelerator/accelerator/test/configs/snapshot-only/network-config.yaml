@@ -23,6 +23,10 @@ transitGateways:
             attachment:
               vpcName: Network-Endpoints
               account: Network
+          - destinationCidrBlock: ::/0
+            attachment:
+              vpcName: Network-Endpoints
+              account: Network
           - destinationCidrBlock: 10.200.0.0/16
             attachment:
               directConnectGatewayName: Network-DXGW
@@ -30,6 +34,8 @@ transitGateways:
             attachment:
               vpnConnectionName: accelerator-vpn
           - destinationCidrBlock: 1.1.1.1/32
+            blackhole: true
+          - destinationCidrBlock: fd00::/8
             blackhole: true
           - destinationPrefixList: accelerator-prefix-list
             attachment:
@@ -1013,6 +1019,10 @@ vpcs:
             destination: 10.4.0.0/16
             type: vpcPeering
             target: CrossAccount
+          - name: VpcPeerv6
+            ipv6Destination: fd00::/8
+            type: vpcPeering
+            target: CrossAccount
       - name: Network-Endpoints-B
         routes:
           - name: TgwRoute
@@ -1031,6 +1041,10 @@ vpcs:
             target: Network-Main
           - name: VpcPeer
             destination: 10.4.0.0/16
+            type: vpcPeering
+            target: CrossAccount
+          - name: VpcPeerv6
+            ipv6Destination: fd00::/8
             type: vpcPeering
             target: CrossAccount
     subnets:
@@ -1498,6 +1512,14 @@ vpcs:
             destination: 10.0.0.0/28
             type: networkInterface
             target: eni-0123456789abcdeff
+          - name: NetworkInterfaceRoutev6
+            ipv6Destination: fd00::/8
+            type: networkInterface
+            target: ${ACCEL_LOOKUP::EC2:ENI_1:accelerator-firewall}
+          - name: NetworkInterfaceDirectRoutev6
+            ipv6Destination: fd01::/8
+            type: networkInterface
+            target: eni-0123456789abcdeff
       - name: Network-Inspection-Tgw-B
         routes:
           - name: NfwRoute
@@ -1647,8 +1669,16 @@ vpcs:
             destination: 10.0.0.0/24
             type: vpcPeering
             target: CrossAccount
+          - name: VpcPeerv6
+            ipv6Destination: fd00::/8
+            type: vpcPeering
+            target: CrossAccount
           - name: CrossAcctNetworkInterfaceRoute
             destination: 10.0.0.0/28
+            type: networkInterface
+            target: ${ACCEL_LOOKUP::EC2:ENI_0:firewall-with-shared-subnet}
+          - name: CrossAcctNetworkInterfaceRoutev6
+            ipv6Destination: fd00::/8
             type: networkInterface
             target: ${ACCEL_LOOKUP::EC2:ENI_0:firewall-with-shared-subnet}
           - name: GwlbRoute
@@ -1669,6 +1699,10 @@ vpcs:
             target: dynamodb
           - name: VpcPeer
             destination: 10.0.0.0/24
+            type: vpcPeering
+            target: CrossAccount
+          - name: VpcPeerv6
+            ipv6Destination: fd00::/8
             type: vpcPeering
             target: CrossAccount
           - name: GwlbRoute

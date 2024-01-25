@@ -652,9 +652,33 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       },
       "Type": "AWS::EC2::Route",
     },
+    "CrossAccountVpcPeeringNetworkEndpointsVpcNetworkEndpointsARouteTableVpcPeerv6521A0A3D": {
+      "Properties": {
+        "DestinationIpv6CidrBlock": "fd00::/8",
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsrouteTableNetworkEndpointsAidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "VpcPeeringConnectionId": {
+          "Ref": "CrossAccountVpcPeering9E0C69A2",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
     "CrossAccountVpcPeeringNetworkEndpointsVpcNetworkEndpointsBRouteTableVpcPeer7B5320E6": {
       "Properties": {
         "DestinationCidrBlock": "10.4.0.0/16",
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsrouteTableNetworkEndpointsBidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "VpcPeeringConnectionId": {
+          "Ref": "CrossAccountVpcPeering9E0C69A2",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "CrossAccountVpcPeeringNetworkEndpointsVpcNetworkEndpointsBRouteTableVpcPeerv69D50B758": {
+      "Properties": {
+        "DestinationIpv6CidrBlock": "fd00::/8",
         "RouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsrouteTableNetworkEndpointsBidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
@@ -688,6 +712,30 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Type": "Custom::CrossAccountRoute",
       "UpdateReplacePolicy": "Delete",
     },
+    "CrossAccountVpcPeeringSharedServicesMainVpcSharedServicesAppARouteTableVpcPeerv6B4238292": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CrossAccountRouteFrameworkCrossAccountRouteProviderframeworkonEventE7CF8ACC",
+            "Arn",
+          ],
+        },
+        "region": "us-east-1",
+        "roleArn": "arn:aws:iam::444444444444:role/AWSAccelerator-VpcPeeringRole-us-east-1",
+        "routeDefinition": {
+          "DestinationIpv6CidrBlock": "fd00::/8",
+          "RouteTableId": {
+            "Ref": "SsmParamLookupSharedServicesAppA27ABCD73",
+          },
+          "VpcPeeringConnectionId": {
+            "Ref": "CrossAccountVpcPeering9E0C69A2",
+          },
+        },
+      },
+      "Type": "Custom::CrossAccountRoute",
+      "UpdateReplacePolicy": "Delete",
+    },
     "CrossAccountVpcPeeringSharedServicesMainVpcSharedServicesAppBRouteTableVpcPeer02D33BA6": {
       "DeletionPolicy": "Delete",
       "Properties": {
@@ -701,6 +749,30 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "roleArn": "arn:aws:iam::444444444444:role/AWSAccelerator-VpcPeeringRole-us-east-1",
         "routeDefinition": {
           "DestinationCidrBlock": "10.0.0.0/24",
+          "RouteTableId": {
+            "Ref": "SsmParamLookupSharedServicesAppBD1161591",
+          },
+          "VpcPeeringConnectionId": {
+            "Ref": "CrossAccountVpcPeering9E0C69A2",
+          },
+        },
+      },
+      "Type": "Custom::CrossAccountRoute",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CrossAccountVpcPeeringSharedServicesMainVpcSharedServicesAppBRouteTableVpcPeerv66590CCF1": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CrossAccountRouteFrameworkCrossAccountRouteProviderframeworkonEventE7CF8ACC",
+            "Arn",
+          ],
+        },
+        "region": "us-east-1",
+        "roleArn": "arn:aws:iam::444444444444:role/AWSAccelerator-VpcPeeringRole-us-east-1",
+        "routeDefinition": {
+          "DestinationIpv6CidrBlock": "fd00::/8",
           "RouteTableId": {
             "Ref": "SsmParamLookupSharedServicesAppBD1161591",
           },
@@ -2290,6 +2362,18 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Type": "Custom::TransitGatewayPrefixListReference",
       "UpdateReplacePolicy": "Delete",
     },
+    "NetworkMainCore0NetworkEndpointsNetworkStaticRoute554C10A2": {
+      "Properties": {
+        "DestinationCidrBlock": "::/0",
+        "TransitGatewayAttachmentId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointstransitGatewayAttachmentNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TransitGatewayRouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRoute",
+    },
     "NetworkMainCore101000016NetworkEndpointsNetworkStaticRouteEC325B8C": {
       "Properties": {
         "DestinationCidrBlock": "10.100.0.0/16",
@@ -2365,6 +2449,16 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       },
       "Type": "Custom::TransitGatewayPrefixListReference",
       "UpdateReplacePolicy": "Delete",
+    },
+    "NetworkMainCorefd008blackholeStaticRoute2581AB5F": {
+      "Properties": {
+        "Blackhole": true,
+        "DestinationCidrBlock": "fd00::/8",
+        "TransitGatewayRouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRoute",
     },
     "NetworkMainShared102000016NetworkMainAndSharedServicesMainPeeringStaticRoute6433AEC2": {
       "Properties": {

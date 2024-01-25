@@ -31,14 +31,11 @@ const vpcPeer = new VpcPeering(stack, 'TestPeering', {
   tags: [{ key: 'key', value: 'value' }],
 });
 
-vpcPeer.addPeeringRoute(
-  'vpcPeeringRoute',
-  'rt-12345',
-  '10.0.0.5/32',
-  undefined,
-  new cdk.aws_kms.Key(stack, 'kmsKey'),
-  10,
-);
+const key = new cdk.aws_kms.Key(stack, 'kmsKey');
+
+vpcPeer.addPeeringRoute('vpcPeeringRoutev4', 'rt-12345', '10.0.0.5/32', undefined, undefined, key, 10);
+vpcPeer.addPeeringRoute('vpcPeeringRoutev6', 'rt-12345', undefined, undefined, 'fd00::/8', key, 10);
+vpcPeer.addPeeringRoute('vpcPeeringRoutepl', 'rt-12345', undefined, 'pl-test', undefined, key, 10);
 
 const crLambda = new cdk.aws_lambda.Function(stack, 'test', {
   code: new cdk.aws_lambda.InlineCode('foo'),
@@ -48,7 +45,7 @@ const crLambda = new cdk.aws_lambda.Function(stack, 'test', {
 const crProvider = new cdk.custom_resources.Provider(stack, 'myProvider', { onEventHandler: crLambda });
 
 vpcPeer.addCrossAcctPeeringRoute({
-  id: 'crossAccountPeerRoute',
+  id: 'crossAccountPeerRoutev4',
   ownerAccount: '111111111111',
   ownerRegion: stack.region,
   partition: stack.partition,
@@ -57,16 +54,32 @@ vpcPeer.addCrossAcctPeeringRoute({
   routeTableId: 'rt-3456',
   destination: '10.0.0.6/32',
 });
+
+vpcPeer.addCrossAcctPeeringRoute({
+  id: 'crossAccountPeerRoutepl',
+  ownerAccount: '111111111111',
+  ownerRegion: stack.region,
+  partition: stack.partition,
+  provider: crProvider,
+  roleName: 'role',
+  routeTableId: 'rt-3456',
+  destinationPrefixListId: 'pl-test',
+});
+
+vpcPeer.addCrossAcctPeeringRoute({
+  id: 'crossAccountPeerRoutev6',
+  ownerAccount: '111111111111',
+  ownerRegion: stack.region,
+  partition: stack.partition,
+  provider: crProvider,
+  roleName: 'role',
+  routeTableId: 'rt-3456',
+  ipv6Destination: 'fd00::/8',
+});
 /**
  * VPC peering construct test
  */
 describe('VpcPeering', () => {
-  it('destinationPrefix list without kms throws error', () => {
-    function noKmsKey() {
-      vpcPeer.addPeeringRoute('vpcPeeringRoute1', 'rt-12345', '10.0.0.5/32', 'destinationRoute', undefined, 10);
-    }
-    expect(noKmsKey).toThrow(new Error('Attempting to add prefix list route without specifying log group KMS key'));
-  });
   it('destinationPrefix list without logRetention throws error', () => {
     function noLogRetention() {
       vpcPeer.addPeeringRoute(
@@ -74,6 +87,7 @@ describe('VpcPeering', () => {
         'rt-12345',
         '10.0.0.5/32',
         'destinationRoute',
+        undefined,
         new cdk.aws_kms.Key(stack, 'kmsKey1'),
         undefined,
       );
@@ -88,6 +102,7 @@ describe('VpcPeering', () => {
       'rt-12345',
       '10.0.0.5/32',
       'destinationRoute',
+      undefined,
       new cdk.aws_kms.Key(stack, 'kmsKey2'),
       10,
     );
@@ -97,6 +112,7 @@ describe('VpcPeering', () => {
       vpcPeer.addPeeringRoute(
         'vpcPeeringRoute4',
         'rt-12345',
+        undefined,
         undefined,
         undefined,
         new cdk.aws_kms.Key(stack, 'kmsKey3'),
