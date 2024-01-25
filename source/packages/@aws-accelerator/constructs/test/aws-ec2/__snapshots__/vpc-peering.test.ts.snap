@@ -32,7 +32,7 @@ exports[`VpcPeering Construct(VpcPeering):  Snapshot Test 1`] = `
       "Properties": {
         "KmsKeyId": {
           "Fn::GetAtt": [
-            "kmsKey2EF55D91A",
+            "kmsKey3BB021CC",
             "Arn",
           ],
         },
@@ -124,7 +124,42 @@ exports[`VpcPeering Construct(VpcPeering):  Snapshot Test 1`] = `
       },
       "Type": "AWS::EC2::VPCPeeringConnection",
     },
-    "TestPeeringcrossAccountPeerRouteA647E009": {
+    "TestPeeringcrossAccountPeerRoutepl9DA94FD5": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "myProviderframeworkonEventAB595BBA",
+            "Arn",
+          ],
+        },
+        "region": {
+          "Ref": "AWS::Region",
+        },
+        "roleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::111111111111:role/role",
+            ],
+          ],
+        },
+        "routeDefinition": {
+          "DestinationPrefixListId": "pl-test",
+          "RouteTableId": "rt-3456",
+          "VpcPeeringConnectionId": {
+            "Ref": "TestPeeringF63C5812",
+          },
+        },
+      },
+      "Type": "Custom::CrossAccountRoute",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TestPeeringcrossAccountPeerRoutev4CAB8D1B0": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "ServiceToken": {
@@ -159,15 +194,40 @@ exports[`VpcPeering Construct(VpcPeering):  Snapshot Test 1`] = `
       "Type": "Custom::CrossAccountRoute",
       "UpdateReplacePolicy": "Delete",
     },
-    "TestPeeringvpcPeeringRoute112B3732": {
+    "TestPeeringcrossAccountPeerRoutev6CB7B447F": {
+      "DeletionPolicy": "Delete",
       "Properties": {
-        "DestinationCidrBlock": "10.0.0.5/32",
-        "RouteTableId": "rt-12345",
-        "VpcPeeringConnectionId": {
-          "Ref": "TestPeeringF63C5812",
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "myProviderframeworkonEventAB595BBA",
+            "Arn",
+          ],
+        },
+        "region": {
+          "Ref": "AWS::Region",
+        },
+        "roleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::111111111111:role/role",
+            ],
+          ],
+        },
+        "routeDefinition": {
+          "DestinationIpv6CidrBlock": "fd00::/8",
+          "RouteTableId": "rt-3456",
+          "VpcPeeringConnectionId": {
+            "Ref": "TestPeeringF63C5812",
+          },
         },
       },
-      "Type": "AWS::EC2::Route",
+      "Type": "Custom::CrossAccountRoute",
+      "UpdateReplacePolicy": "Delete",
     },
     "TestPeeringvpcPeeringRoute313B0AACD": {
       "DeletionPolicy": "Delete",
@@ -191,6 +251,49 @@ exports[`VpcPeering Construct(VpcPeering):  Snapshot Test 1`] = `
       },
       "Type": "Custom::PrefixListRoute",
       "UpdateReplacePolicy": "Delete",
+    },
+    "TestPeeringvpcPeeringRoutepl5A3561CF": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomPrefixListRouteCustomResourceProviderLogGroup68DB81A5",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomPrefixListRouteCustomResourceProviderHandler5B28D077",
+            "Arn",
+          ],
+        },
+        "routeDefinition": {
+          "DestinationPrefixListId": "pl-test",
+          "RouteTableId": "rt-12345",
+          "VpcPeeringConnectionId": {
+            "Ref": "TestPeeringF63C5812",
+          },
+        },
+      },
+      "Type": "Custom::PrefixListRoute",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TestPeeringvpcPeeringRoutev49F442833": {
+      "Properties": {
+        "DestinationCidrBlock": "10.0.0.5/32",
+        "RouteTableId": "rt-12345",
+        "VpcPeeringConnectionId": {
+          "Ref": "TestPeeringF63C5812",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "TestPeeringvpcPeeringRoutev64A0FC377": {
+      "Properties": {
+        "DestinationIpv6CidrBlock": "fd00::/8",
+        "RouteTableId": "rt-12345",
+        "VpcPeeringConnectionId": {
+          "Ref": "TestPeeringF63C5812",
+        },
+      },
+      "Type": "AWS::EC2::Route",
     },
     "kmsKey1A3FA0EFA": {
       "DeletionPolicy": "Retain",

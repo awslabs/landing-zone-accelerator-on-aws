@@ -81,6 +81,7 @@ import { SsmResourceType } from '@aws-accelerator/utils';
 import path from 'path';
 import { AcceleratorStackProps, NagSuppressionRuleIds } from '../../accelerator-stack';
 import { NetworkStack } from '../network-stack';
+import { getPrefixList } from '../utils/getter-utils';
 import { isEc2FirewallVpnRoute, isIpv4 } from '../utils/validation-utils';
 import { SharedResources } from './shared-resources';
 
@@ -1812,8 +1813,6 @@ export class NetworkAssociationsStack extends NetworkStack {
   ): void {
     if (routeTableEntry.type && routeTableEntry.type === 'vpcPeering' && routeTableEntry.target === peering.name) {
       this.logger.info(`Add route ${routeTableEntry.name} targeting VPC peer ${peering.name}`);
-      let destination: string | undefined = undefined;
-      let destinationPrefixListId: string | undefined = undefined;
       const routeTableId = this.routeTableMap.get(`${requesterVpc.name}_${routeTable.name}`);
       const routeId =
         pascalCase(`${requesterVpc.name}Vpc`) +
@@ -1824,22 +1823,14 @@ export class NetworkAssociationsStack extends NetworkStack {
         throw new Error(`Configuration validation failed at runtime.`);
       }
 
-      if (routeTableEntry.destinationPrefixList) {
-        // Get PL ID from map
-        destinationPrefixListId = this.prefixListMap.get(routeTableEntry.destinationPrefixList);
-        if (!destinationPrefixListId) {
-          this.logger.error(`Prefix list ${routeTableEntry.destinationPrefixList} not found`);
-          throw new Error(`Configuration validation failed at runtime.`);
-        }
-      } else {
-        destination = routeTableEntry.destination;
-      }
+      const requesterPeeringRouteDetails = this.getRequesterPeeringRouteDestinationConfig(routeTableEntry);
 
       peering.addPeeringRoute(
         routeId,
         routeTableId,
-        destination,
-        destinationPrefixListId,
+        requesterPeeringRouteDetails.destination,
+        requesterPeeringRouteDetails.destinationPrefixListId,
+        requesterPeeringRouteDetails.ipv6Destination,
         this.cloudwatchKey,
         this.logRetention,
       );
@@ -1870,32 +1861,58 @@ export class NetworkAssociationsStack extends NetworkStack {
     accepterVpc: VpcConfig,
     requesterVpc: VpcConfig,
     routeTableEntry: RouteTableEntryConfig,
-  ): { destinationPrefixListId?: string; destination?: string } {
+  ): { destinationPrefixListId?: string; destination?: string; ipv6Destination?: string } {
     let destination: string | undefined = undefined;
     let destinationPrefixListId: string | undefined = undefined;
+    let ipv6Destination: string | undefined = undefined;
     if (requesterVpc.account === accepterVpc.account && requesterVpc.region === accepterVpc.region) {
       if (routeTableEntry.destinationPrefixList) {
         // Get PL ID from map
-        destinationPrefixListId = this.prefixListMap.get(routeTableEntry.destinationPrefixList);
-        if (!destinationPrefixListId) {
-          this.logger.error(`Prefix list ${routeTableEntry.destinationPrefixList} not found`);
-          throw new Error(`Configuration validation failed at runtime.`);
-        }
+        destinationPrefixListId = getPrefixList(this.prefixListMap, routeTableEntry.destinationPrefixList) as string;
       } else {
         destination = routeTableEntry.destination;
+        ipv6Destination = routeTableEntry.ipv6Destination;
       }
     } else {
       if (routeTableEntry.destinationPrefixList) {
         // Get PL ID from map
-        destinationPrefixListId = this.prefixListMap.get(
+        destinationPrefixListId = getPrefixList(
+          this.prefixListMap,
           `${accepterVpc.account}_${accepterVpc.region}_${routeTableEntry.destinationPrefixList}`,
-        );
+        ) as string;
       } else {
         destination = routeTableEntry.destination;
+        ipv6Destination = routeTableEntry.ipv6Destination;
       }
     }
 
-    return { destinationPrefixListId: destinationPrefixListId, destination: destination };
+    return { destinationPrefixListId, destination, ipv6Destination };
+  }
+
+  /**
+   * Function to get accepter peering route destination configuration
+   * @param accepterVpc {@link VpcConfig}
+   * @param requesterVpc {@link VpcConfig}
+   * @param routeTableEntry {@link RouteTableEntryConfig}
+   * @returns
+   */
+  private getRequesterPeeringRouteDestinationConfig(routeTableEntry: RouteTableEntryConfig): {
+    destinationPrefixListId?: string;
+    destination?: string;
+    ipv6Destination?: string;
+  } {
+    let destination: string | undefined = undefined;
+    let destinationPrefixListId: string | undefined = undefined;
+    let ipv6Destination: string | undefined = undefined;
+    if (routeTableEntry.destinationPrefixList) {
+      // Get PL ID from map
+      destinationPrefixListId = getPrefixList(this.prefixListMap, routeTableEntry.destinationPrefixList) as string;
+    } else {
+      destination = routeTableEntry.destination;
+      ipv6Destination = routeTableEntry.ipv6Destination;
+    }
+
+    return { destinationPrefixListId, destination, ipv6Destination };
   }
 
   /**
@@ -1924,6 +1941,7 @@ export class NetworkAssociationsStack extends NetworkStack {
     );
     const destination = accepterPeeringRouteDestinationConfig.destination;
     const destinationPrefixListId = accepterPeeringRouteDestinationConfig.destinationPrefixListId;
+    const ipv6Destination = accepterPeeringRouteDestinationConfig.ipv6Destination;
 
     if (requesterVpc.account === accepterVpc.account && requesterVpc.region === accepterVpc.region) {
       peering.addPeeringRoute(
@@ -1931,6 +1949,7 @@ export class NetworkAssociationsStack extends NetworkStack {
         routeTableId,
         destination,
         destinationPrefixListId,
+        ipv6Destination,
         this.cloudwatchKey,
         this.logRetention,
       );
@@ -1950,6 +1969,7 @@ export class NetworkAssociationsStack extends NetworkStack {
         routeTableId,
         destination,
         destinationPrefixListId,
+        ipv6Destination,
       });
     }
   }

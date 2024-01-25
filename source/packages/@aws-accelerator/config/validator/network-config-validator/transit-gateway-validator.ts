@@ -355,9 +355,9 @@ export class TransitGatewayValidator {
 
     // Validate CIDRs
     cidrs.forEach(cidr => {
-      if (!helpers.isValidIpv4Cidr(cidr)) {
+      if (!helpers.isValidIpv4Cidr(cidr) && !helpers.isValidIpv6Cidr(cidr)) {
         errors.push(
-          `[Transit gateway ${tgw.name} route table ${routeTable.name}]: destination CIDR "${cidr}" is invalid. Value must be a valid IPv4 CIDR range`,
+          `[Transit gateway ${tgw.name} route table ${routeTable.name}]: destination CIDR "${cidr}" is invalid. Value must be a valid IPv4/v6 CIDR range`,
         );
       }
     });

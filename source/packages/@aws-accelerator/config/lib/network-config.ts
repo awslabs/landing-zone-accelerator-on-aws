@@ -1199,9 +1199,16 @@ export class TransitGatewayRouteTableTgwPeeringEntryConfig
  * Use this configuration to define static route entries in a Transit Gateway route table.
  *
  * @example
- * Destination CIDR:
+ * Destination IPv4 CIDR:
  * ```
  * - destinationCidrBlock: 0.0.0.0/0
+ *   attachment:
+ *     account: Network
+ *     vpcName: Network-Inspection
+ * ```
+ * Destination IPv6 CIDR:
+ * ```
+ * - destinationCidrBlock: ::/0
  *   attachment:
  *     account: Network
  *     vpcName: Network-Inspection
@@ -1212,9 +1219,15 @@ export class TransitGatewayRouteTableTgwPeeringEntryConfig
  *   attachment:
  *     vpnConnectionName: accelerator-vpn
  * ```
- * Blackhole route:
+ * Blackhole IPv4 route:
  * ```
  * - destinationCidrBlock: 1.1.1.1/32
+ *   blackhole: true
+ * ```
+ *
+ * Blackhole IPv6 route:
+ * ```
+ * - destinationCidrBlock: fd00::/8
  *   blackhole: true
  * ```
  */
@@ -1222,10 +1235,10 @@ export class TransitGatewayRouteEntryConfig
   implements t.TypeOf<typeof NetworkConfigTypes.transitGatewayRouteEntryConfig>
 {
   /**
-   * The destination CIDR block for the route table entry.
+   * The destination IPv4/v6 CIDR block for the route table entry.
    *
    * @remarks
-   * Use CIDR notation, i.e. 10.0.0.0/16. Leave undefined if specifying a destination prefix list.
+   * Use IPv4/v6 CIDR notation, i.e. 10.0.0.0/16, fd00::/8. Leave undefined if specifying a destination prefix list.
    *
    */
   readonly destinationCidrBlock: string | undefined = undefined;

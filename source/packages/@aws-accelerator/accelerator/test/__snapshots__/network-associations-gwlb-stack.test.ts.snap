@@ -1035,9 +1035,31 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
       },
       "Type": "AWS::EC2::Route",
     },
+    "NetworkInspectionVpcNetworkInspectionTgwARouteTableNetworkInterfaceDirectRoutev6": {
+      "Properties": {
+        "DestinationIpv6CidrBlock": "fd01::/8",
+        "NetworkInterfaceId": "eni-0123456789abcdeff",
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionTgwAidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
     "NetworkInspectionVpcNetworkInspectionTgwARouteTableNetworkInterfaceRoute": {
       "Properties": {
         "DestinationCidrBlock": "10.0.0.0/26",
+        "NetworkInterfaceId": {
+          "Ref": "NetworkInspectionacceleratorFirewallFirewallNetworkInterface13C23C566",
+        },
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionTgwAidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "NetworkInspectionVpcNetworkInspectionTgwARouteTableNetworkInterfaceRoutev6": {
+      "Properties": {
+        "DestinationIpv6CidrBlock": "fd00::/8",
         "NetworkInterfaceId": {
           "Ref": "NetworkInspectionacceleratorFirewallFirewallNetworkInterface13C23C566",
         },
@@ -2600,6 +2622,41 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
       "Type": "Custom::CrossAccountRoute",
       "UpdateReplacePolicy": "Delete",
     },
+    "SharedServicesMainVpcSharedServicesAppARouteTableCrossAcctNetworkInterfaceRoutev6B085C72A": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CrossAccountRouteFrameworkCrossAccountRouteProviderframeworkonEventE7CF8ACC",
+            "Arn",
+          ],
+        },
+        "region": "us-east-1",
+        "roleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::444444444444:role/AWSAccelerator-VpcPeeringRole-us-east-1",
+            ],
+          ],
+        },
+        "routeDefinition": {
+          "DestinationIpv6CidrBlock": "fd00::/8",
+          "NetworkInterfaceId": {
+            "Ref": "SharedServicesMainfirewallWithSharedSubnetFirewallNetworkInterface0C2930B84",
+          },
+          "RouteTableId": {
+            "Ref": "SsmParamLookupSharedServicesAppA27ABCD73",
+          },
+        },
+      },
+      "Type": "Custom::CrossAccountRoute",
+      "UpdateReplacePolicy": "Delete",
+    },
     "SharedServicesMainfirewallWithSharedSubnetFirewallB18C6438": {
       "Metadata": {
         "cdk_nag": {
@@ -2769,6 +2826,40 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
         "Value": "1.6.0",
       },
       "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamLookupNetworkInspectionTgwA7808FEAE": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
+            "Arn",
+          ],
+        },
+        "assumeRoleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::555555555555:role/AWSAccelerator-VpcPeeringRole-us-east-1",
+            ],
+          ],
+        },
+        "invokingAccountID": "555555555555",
+        "invokingRegion": "us-east-1",
+        "parameterAccountID": "555555555555",
+        "parameterName": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-Tgw-A/id",
+        "parameterRegion": "us-east-1",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::SsmGetParameterValue",
+      "UpdateReplacePolicy": "Delete",
     },
     "SsmParamLookupSharedServicesAppA27ABCD73": {
       "DeletionPolicy": "Delete",

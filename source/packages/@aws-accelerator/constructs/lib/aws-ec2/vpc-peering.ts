@@ -86,13 +86,11 @@ abstract class VpcPeeringBase extends cdk.Resource implements IVpcPeering {
     routeTableId: string,
     destination?: string,
     destinationPrefixListId?: string,
+    ipv6Destination?: string,
     logGroupKmsKey?: cdk.aws_kms.IKey,
     logRetentionInDays?: number,
   ): void {
     if (destinationPrefixListId) {
-      if (!logGroupKmsKey) {
-        throw new Error('Attempting to add prefix list route without specifying log group KMS key');
-      }
       if (!logRetentionInDays) {
         throw new Error('Attempting to add prefix list route without specifying log group retention period');
       }
@@ -105,13 +103,14 @@ abstract class VpcPeeringBase extends cdk.Resource implements IVpcPeering {
         vpcPeeringConnectionId: this.peeringId,
       });
     } else {
-      if (!destination) {
+      if (!destination && !ipv6Destination) {
         throw new Error('Attempting to add CIDR route without specifying destination');
       }
 
       new cdk.aws_ec2.CfnRoute(this, id, {
         routeTableId: routeTableId,
         destinationCidrBlock: destination,
+        destinationIpv6CidrBlock: ipv6Destination,
         vpcPeeringConnectionId: this.peeringId,
       });
     }
@@ -127,6 +126,7 @@ abstract class VpcPeeringBase extends cdk.Resource implements IVpcPeering {
     routeTableId: string;
     destination?: string;
     destinationPrefixListId?: string;
+    ipv6Destination?: string;
   }): void {
     new CrossAccountRoute(this, props.id, {
       ownerAccount: props.ownerAccount,
@@ -137,6 +137,7 @@ abstract class VpcPeeringBase extends cdk.Resource implements IVpcPeering {
       routeTableId: props.routeTableId,
       destination: props.destination,
       destinationPrefixListId: props.destinationPrefixListId,
+      ipv6Destination: props.ipv6Destination,
       vpcPeeringConnectionId: this.peeringId,
     });
   }
