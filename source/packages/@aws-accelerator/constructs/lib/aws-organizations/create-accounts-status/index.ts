@@ -20,7 +20,7 @@
 import * as AWS from 'aws-sdk';
 import { throttlingBackOff } from '@aws-accelerator/utils';
 import { CreateAccountResponse } from 'aws-sdk/clients/organizations';
-
+import { CloudFormationCustomResourceEvent, Context } from '@aws-accelerator/utils/lib/common-types';
 const documentClient = new AWS.DynamoDB.DocumentClient();
 const newOrgAccountsTableName = process.env['NewOrgAccountsTableName'] ?? '';
 const govCloudAccountMappingTableName = process.env['GovCloudAccountMappingTableName'] ?? '';
@@ -39,10 +39,9 @@ interface AccountConfig {
 type AccountConfigs = Array<AccountConfig>;
 let organizationsClient: AWS.Organizations;
 
-//eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function handler(
-  event: AWSLambda.CloudFormationCustomResourceEvent,
-  context: AWSLambda.Context,
+  event: CloudFormationCustomResourceEvent,
+  context: Context,
 ): Promise<
   | {
       IsComplete: boolean;

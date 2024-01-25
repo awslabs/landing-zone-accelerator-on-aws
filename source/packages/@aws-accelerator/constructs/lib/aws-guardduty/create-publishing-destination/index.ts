@@ -24,6 +24,7 @@ import {
   ListPublishingDestinationsCommandOutput,
   UpdatePublishingDestinationCommand,
 } from '@aws-sdk/client-guardduty';
+import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 
 interface PublishingDestinationOptions {
   /**
@@ -50,7 +51,7 @@ interface PublishingDestinationOptions {
  * @param event
  * @returns
  */
-export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
+export async function handler(event: CloudFormationCustomResourceEvent): Promise<
   | {
       Status: string | undefined;
       StatusCode: number | undefined;

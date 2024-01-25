@@ -23,6 +23,7 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 import { FirewallReplacements, VpnConnectionProps, initReplacements } from './replacements';
+import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 
 export interface IStaticReplacements {
   /**
@@ -90,9 +91,7 @@ export interface FirewallReplacementOptions {
   readonly managementAccountId?: string;
 }
 
-export async function handler(
-  event: AWSLambda.CloudFormationCustomResourceEvent,
-): Promise<{ Status: string } | undefined> {
+export async function handler(event: CloudFormationCustomResourceEvent): Promise<{ Status: string } | undefined> {
   //
   // Set custom resource options
   const options = setOptions(event.ResourceProperties);

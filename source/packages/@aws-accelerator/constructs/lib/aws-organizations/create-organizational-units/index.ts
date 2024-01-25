@@ -31,7 +31,7 @@ import {
   CreateOrganizationalUnitCommand,
 } from '@aws-sdk/client-organizations';
 import { ConfiguredRetryStrategy } from '@aws-sdk/util-retry';
-
+import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 AWS.config.logger = console;
 let organizationsClient: OrganizationsClient;
 const marshallOptions = {
@@ -62,7 +62,7 @@ type OrganizationConfigRecords = Array<OrganizationConfigRecord>;
  * @param event
  * @returns
  */
-export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
+export async function handler(event: CloudFormationCustomResourceEvent): Promise<
   | {
       Status: string;
     }

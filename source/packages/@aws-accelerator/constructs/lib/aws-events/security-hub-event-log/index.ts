@@ -14,14 +14,14 @@
 import { throttlingBackOff } from '@aws-accelerator/utils';
 import * as AWS from 'aws-sdk';
 import * as uuid from 'uuid';
-
+import { ScheduledEvent } from '@aws-accelerator/utils/lib/common-types';
 AWS.config.logger = console;
 const solutionId = process.env['SOLUTION_ID'];
 const acceleratorPrefix = process.env['ACCELERATOR_PREFIX'];
 const logsClient = new AWS.CloudWatchLogs({ customUserAgent: solutionId });
 const snsClient = new AWS.SNS({ customUserAgent: solutionId });
 
-export async function handler(event: AWSLambda.ScheduledEvent) {
+export async function handler(event: ScheduledEvent) {
   // Make sure event comes from Security Hub if not do not process
   if (event.source !== 'aws.securityhub') {
     throw new Error('Not a Security Hub event');
@@ -37,7 +37,7 @@ export async function handler(event: AWSLambda.ScheduledEvent) {
   await publishEventToLogs(event);
 }
 
-export async function publishEventToLogs(input: AWSLambda.ScheduledEvent) {
+export async function publishEventToLogs(input: ScheduledEvent) {
   const logStreamName = `${new Date().toISOString().slice(0, 10)}-${uuid.v4()}`;
   const logGroupName = `/${acceleratorPrefix}-SecurityHub`;
   await throttlingBackOff(() => logsClient.createLogStream({ logGroupName, logStreamName }).promise());
@@ -52,7 +52,7 @@ export async function publishEventToLogs(input: AWSLambda.ScheduledEvent) {
   );
 }
 
-export async function publishEventToSns(input: AWSLambda.ScheduledEvent) {
+export async function publishEventToSns(input: ScheduledEvent) {
   const snsTopicArn = process.env['SNS_TOPIC_ARN'];
   const notificationLevel = process.env['NOTIFICATION_LEVEL'];
 

@@ -25,6 +25,7 @@ import {
   BadRequestException,
 } from '@aws-sdk/client-guardduty';
 import { OrganizationsClient, ListAccountsCommand } from '@aws-sdk/client-organizations';
+import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 
 /**
  * enable-guardduty - lambda handler
@@ -32,7 +33,7 @@ import { OrganizationsClient, ListAccountsCommand } from '@aws-sdk/client-organi
  * @param event
  * @returns
  */
-export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
+export async function handler(event: CloudFormationCustomResourceEvent): Promise<
   | {
       Status: string | undefined;
       StatusCode: number | undefined;

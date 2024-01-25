@@ -24,6 +24,7 @@ import {
 } from '@aws-sdk/client-organizations';
 import { DynamoDBDocumentClient, paginateQuery, DynamoDBDocumentPaginationConfiguration } from '@aws-sdk/lib-dynamodb';
 import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
+import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 
 const marshallOptions = {
   convertEmptyValues: false,
@@ -57,7 +58,7 @@ type AccountDetails = Array<AccountDetail>;
  * @param event
  * @returns
  */
-export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
+export async function handler(event: CloudFormationCustomResourceEvent): Promise<
   | {
       Status: string;
     }

@@ -28,6 +28,7 @@ import {
   OrganizationsClient,
 } from '@aws-sdk/client-organizations';
 import { throttlingBackOff } from '@aws-accelerator/utils';
+import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 
 const marshallOptions = {
   convertEmptyValues: false,
@@ -73,7 +74,7 @@ const awsOuKeys: AwsOrganizationalUnitKeys[] = [];
  * @param event
  * @returns
  */
-export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
+export async function handler(event: CloudFormationCustomResourceEvent): Promise<
   | {
       Status: string;
     }

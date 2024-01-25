@@ -25,6 +25,12 @@ import {
   StartConfigurationRecorderCommand,
   StopConfigurationRecorderCommand,
 } from '@aws-sdk/client-config-service';
+import {
+  CloudFormationCustomResourceEvent,
+  CloudFormationCustomResourceCreateEvent,
+  CloudFormationCustomResourceUpdateEvent,
+  CloudFormationCustomResourceDeleteEvent,
+} from '@aws-accelerator/utils/lib/common-types';
 import { v4 as uuidv4 } from 'uuid';
 let configClient: ConfigServiceClient;
 
@@ -37,7 +43,7 @@ let configClient: ConfigServiceClient;
 export const handler = onEvent;
 
 export async function onEvent(
-  event: AWSLambda.CloudFormationCustomResourceEvent,
+  event: CloudFormationCustomResourceEvent,
 ): Promise<{ PhysicalResourceId: string | undefined; StatusCode: number; Status: string }> {
   //console.debug(`Event: ${JSON.stringify(event)}`);
   const solutionId = process.env['SOLUTION_ID'];
@@ -52,7 +58,7 @@ export async function onEvent(
   }
 }
 
-export async function onCreate(event: AWSLambda.CloudFormationCustomResourceCreateEvent) {
+export async function onCreate(event: CloudFormationCustomResourceCreateEvent) {
   const s3BucketName = event.ResourceProperties['s3BucketName'];
   const s3BucketKmsKeyArn = event.ResourceProperties['s3BucketKmsKeyArn'];
   const recorderRoleArn = event.ResourceProperties['recorderRoleArn'];
@@ -95,7 +101,7 @@ export async function onCreate(event: AWSLambda.CloudFormationCustomResourceCrea
   };
 }
 
-async function onUpdate(event: AWSLambda.CloudFormationCustomResourceUpdateEvent) {
+async function onUpdate(event: CloudFormationCustomResourceUpdateEvent) {
   const s3BucketName = event.ResourceProperties['s3BucketName'];
   const s3BucketKmsKeyArn = event.ResourceProperties['s3BucketKmsKeyArn'];
   const recorderRoleArn = event.ResourceProperties['recorderRoleArn'];
@@ -135,7 +141,7 @@ async function onUpdate(event: AWSLambda.CloudFormationCustomResourceUpdateEvent
   };
 }
 
-async function onDelete(event: AWSLambda.CloudFormationCustomResourceDeleteEvent) {
+async function onDelete(event: CloudFormationCustomResourceDeleteEvent) {
   const configRecorders = await throttlingBackOff(() =>
     configClient.send(new DescribeConfigurationRecordersCommand({})),
   );

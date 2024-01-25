@@ -21,6 +21,7 @@ import {
   Tag,
 } from '@aws-sdk/client-ec2';
 import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
+import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 
 interface CgwOptions {
   /**
@@ -62,7 +63,7 @@ interface CgwOptions {
 }
 
 export async function handler(
-  event: AWSLambda.CloudFormationCustomResourceEvent,
+  event: CloudFormationCustomResourceEvent,
 ): Promise<{ PhysicalResourceId: string; Status: string } | undefined> {
   //
   // Set resource properties

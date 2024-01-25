@@ -20,6 +20,7 @@
 import * as AWS from 'aws-sdk';
 import { throttlingBackOff } from '@aws-accelerator/utils';
 import { PortfolioAssociationConfig, PortfolioConfig } from '@aws-accelerator/config';
+import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 
 const ssoRolePrefix = '/aws-reserved/sso.amazonaws.com/';
 
@@ -28,7 +29,7 @@ export type CrossAccountClient = {
   iam: AWS.IAM;
 };
 
-export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
+export async function handler(event: CloudFormationCustomResourceEvent): Promise<
   | {
       PhysicalResourceId: string | undefined;
       Status: string;
@@ -66,7 +67,7 @@ export class AssociationPropagator {
   private associationsToPropagate: PortfolioAssociationConfig[];
   private requestType: string;
 
-  constructor(event: AWSLambda.CloudFormationCustomResourceEvent) {
+  constructor(event: CloudFormationCustomResourceEvent) {
     this.portfolioId = event.ResourceProperties['portfolioId'];
     this.crossAccountRole = event.ResourceProperties['crossAccountRole'];
     this.portfolioDefinition = <PortfolioConfig>JSON.parse(event.ResourceProperties['portfolioDefinition']);

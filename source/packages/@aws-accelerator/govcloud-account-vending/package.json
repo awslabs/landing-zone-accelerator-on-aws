@@ -25,13 +25,9 @@
   "dependencies": {
     "aws-cdk-lib": "2.93.0",
     "aws-cdk": "2.93.0",
-    "@aws-sdk/client-config-service": "3.100.0",
-    "@types/aws-lambda": "8.10.86",
     "@aws-sdk/client-config-service": "3.410.0",
-    "@types/aws-lambda": "8.10.110",
     "@types/js-yaml": "4.0.5",
     "@types/semver": "7.5.0",
-    "aws-lambda": "1.0.7",
     "change-case": "4.1.2",
     "fs-extra": "11.1.0",
     "hash-sum": "2.0.0",

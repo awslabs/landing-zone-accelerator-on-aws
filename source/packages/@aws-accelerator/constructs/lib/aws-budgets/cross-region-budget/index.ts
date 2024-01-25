@@ -14,6 +14,7 @@
 import * as AWS from 'aws-sdk';
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
+import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 
 AWS.config.logger = console;
 
@@ -57,7 +58,7 @@ interface BudgetDefinition {
 }
 
 export async function handler(
-  event: AWSLambda.CloudFormationCustomResourceEvent,
+  event: CloudFormationCustomResourceEvent,
   context: { invokedFunctionArn: string },
 ): Promise<
   | {

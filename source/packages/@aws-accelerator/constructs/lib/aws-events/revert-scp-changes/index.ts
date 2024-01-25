@@ -17,6 +17,7 @@ import * as path from 'path';
 
 import { AccountsConfig, OrganizationConfig } from '@aws-accelerator/config';
 import { throttlingBackOff } from '@aws-accelerator/utils';
+import { ScheduledEvent } from '@aws-accelerator/utils/lib/common-types';
 
 let organizationsClient: AWS.Organizations;
 
@@ -43,7 +44,7 @@ if (partition === 'aws-us-gov') {
  * @param event
  * @returns
  */
-export async function handler(event: AWSLambda.ScheduledEvent): Promise<{ statusCode: number }> {
+export async function handler(event: ScheduledEvent): Promise<{ statusCode: number }> {
   console.log(`Event: ${JSON.stringify(event, null, 2)}`);
 
   const eventName: string = event.detail.eventName;

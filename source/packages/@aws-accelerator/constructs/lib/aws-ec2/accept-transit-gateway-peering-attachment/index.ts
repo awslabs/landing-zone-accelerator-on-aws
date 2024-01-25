@@ -14,7 +14,7 @@
 import { throttlingBackOff } from '@aws-accelerator/utils';
 import * as AWS from 'aws-sdk';
 AWS.config.logger = console;
-
+import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 /**
  * delete-default-vpc - lambda handler
  *
@@ -22,7 +22,7 @@ AWS.config.logger = console;
  * @returns
  */
 
-export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
+export async function handler(event: CloudFormationCustomResourceEvent): Promise<
   | {
       PhysicalResourceId: string | undefined;
       Status: string;

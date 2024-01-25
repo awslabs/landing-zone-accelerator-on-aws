@@ -12,7 +12,7 @@
  */
 
 import { SNSClient, PublishCommand, PublishCommandInput } from '@aws-sdk/client-sns';
-import { SNSEvent } from 'aws-lambda';
+import { SNSEvent } from '@aws-accelerator/utils/lib/common-types';
 import { throttlingBackOff } from '@aws-accelerator/utils';
 
 const partition: string = process.env['PARTITION'] ?? 'aws';

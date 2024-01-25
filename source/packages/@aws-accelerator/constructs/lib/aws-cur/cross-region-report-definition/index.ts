@@ -14,6 +14,7 @@
 import * as AWS from 'aws-sdk';
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
+import { CloudFormationCustomResourceEvent, Context } from '@aws-accelerator/utils/lib/common-types';
 
 AWS.config.logger = console;
 
@@ -25,8 +26,8 @@ AWS.config.logger = console;
  */
 
 export async function handler(
-  event: AWSLambda.CloudFormationCustomResourceEvent,
-  context: AWSLambda.Context,
+  event: CloudFormationCustomResourceEvent,
+  context: Context,
 ): Promise<
   | {
       PhysicalResourceId: string;

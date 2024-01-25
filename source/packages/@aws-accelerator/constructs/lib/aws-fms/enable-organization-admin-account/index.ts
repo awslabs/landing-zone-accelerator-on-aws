@@ -12,6 +12,7 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
+import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 import * as AWS from 'aws-sdk';
 AWS.config.logger = console;
 
@@ -21,7 +22,7 @@ AWS.config.logger = console;
  * @param event
  * @returns
  */
-export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent) {
+export async function handler(event: CloudFormationCustomResourceEvent) {
   console.log(JSON.stringify(event, null, 4));
   const fmsClient = new AWS.FMS({ region: 'us-east-1' });
   const organizationsClient = new AWS.Organizations({ region: 'us-east-1' });

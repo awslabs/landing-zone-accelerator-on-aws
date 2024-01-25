@@ -17,13 +17,14 @@ import {
   ListMembersCommand,
   ListMembersCommandOutput,
 } from '@aws-sdk/client-detective';
+import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 /**
  * DetectiveUpdateGraph - lambda handler
  *
  * @param event
  * @returns
  */
-export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
+export async function handler(event: CloudFormationCustomResourceEvent): Promise<
   | {
       Status: string | undefined;
       StatusCode: number | undefined;

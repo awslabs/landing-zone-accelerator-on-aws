@@ -12,6 +12,7 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
+import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 import * as AWS from 'aws-sdk';
 
 /**
@@ -21,7 +22,7 @@ import * as AWS from 'aws-sdk';
  * @returns
  */
 
-export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent) {
+export async function handler(event: CloudFormationCustomResourceEvent) {
   console.log(event);
   const region = event.ResourceProperties['region'];
   const ssmSubnetIdPath = event.ResourceProperties['ssmSubnetIdPath'];
