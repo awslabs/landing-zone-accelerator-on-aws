@@ -2645,7 +2645,7 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
           ],
         },
         "routeDefinition": {
-          "DestinationIpv6CidrBlock": "fd00::/8",
+          "DestinationIpv6CidrBlock": "fd01::/8",
           "NetworkInterfaceId": {
             "Ref": "SharedServicesMainfirewallWithSharedSubnetFirewallNetworkInterface0C2930B84",
           },
