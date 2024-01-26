@@ -37,6 +37,7 @@ export enum AcceleratorStage {
   SECURITY = 'security',
   SECURITY_RESOURCES = 'security-resources',
   OPERATIONS = 'operations',
+  IDENTITY_CENTER = 'identity-center',
   NETWORK_PREP = 'network-prep',
   NETWORK_VPC = 'network-vpc',
   NETWORK_VPC_ENDPOINTS = 'network-vpc-endpoints',

@@ -72,6 +72,7 @@ export const AcceleratorStackNames: Record<string, string> = {
   [AcceleratorStage.SECURITY_RESOURCES]: `${stackPrefix}-SecurityResourcesStack`,
   [AcceleratorStage.RESOURCE_POLICY_ENFORCEMENT]: `${stackPrefix}-ResourcePolicyEnforcementStack`,
   [AcceleratorStage.OPERATIONS]: `${stackPrefix}-OperationsStack`,
+  [AcceleratorStage.IDENTITY_CENTER]: `${stackPrefix}-IdentityCenterStack`,
   [AcceleratorStage.NETWORK_PREP]: `${stackPrefix}-NetworkPrepStack`,
   [AcceleratorStage.NETWORK_VPC]: `${stackPrefix}-NetworkVpcStack`,
   [AcceleratorStage.NETWORK_VPC_ENDPOINTS]: `${stackPrefix}-NetworkVpcEndpointsStack`,
@@ -592,7 +593,8 @@ export abstract class Accelerator {
   ): Promise<void> {
     switch (toolkitProps.stage) {
       //
-      // PREPARE stage
+      // PREPARE and IDENTITY CENTER stage
+      case AcceleratorStage.IDENTITY_CENTER:
       case AcceleratorStage.PREPARE:
         logger.info(`Executing ${toolkitProps.stage} for ${managementAccountDetails.name} account.`);
         return AcceleratorToolkit.execute({
@@ -600,6 +602,7 @@ export abstract class Accelerator {
           region: homeRegion,
           ...toolkitProps,
         });
+
       //
       // ACCOUNTS and FINALIZE stages
       case AcceleratorStage.ACCOUNTS:
@@ -972,6 +975,7 @@ export async function checkDiffStage(props: AcceleratorProps) {
     AcceleratorStage.RESOURCE_POLICY_ENFORCEMENT,
     AcceleratorStage.DEPENDENCIES,
     AcceleratorStage.FINALIZE,
+    AcceleratorStage.IDENTITY_CENTER,
     AcceleratorStage.LOGGING,
     AcceleratorStage.NETWORK_ASSOCIATIONS,
     AcceleratorStage.NETWORK_ASSOCIATIONS_GWLB,

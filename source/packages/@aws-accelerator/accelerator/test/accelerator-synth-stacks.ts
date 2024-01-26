@@ -39,6 +39,7 @@ import { CustomStack, generateCustomStackMappings, isIncluded } from '../lib/sta
 import { CustomizationsStack } from '../lib/stacks/customizations-stack';
 import { DependenciesStack } from '../lib/stacks/dependencies-stack/dependencies-stack';
 import { FinalizeStack } from '../lib/stacks/finalize-stack';
+import { IdentityCenterStack } from '../lib/stacks/identity-center-stack';
 import { KeyStack } from '../lib/stacks/key-stack';
 import { LoggingStack } from '../lib/stacks/logging-stack';
 import { NetworkAssociationsGwlbStack } from '../lib/stacks/network-stacks/network-associations-gwlb-stack/network-associations-gwlb-stack';
@@ -181,6 +182,9 @@ export class AcceleratorSynthStacks {
         break;
       case AcceleratorStage.OPERATIONS:
         this.synthOperationsStacks();
+        break;
+      case AcceleratorStage.IDENTITY_CENTER:
+        this.synthIdentityCenterStacks();
         break;
       case AcceleratorStage.ORGANIZATIONS:
         this.synthOrganizationsStacks();
@@ -574,6 +578,34 @@ export class AcceleratorSynthStacks {
       }
     }
   }
+  /**
+   * synth IdentityCenter stacks
+   */
+  private synthIdentityCenterStacks() {
+    for (const region of this.props.globalConfig.enabledRegions) {
+      for (const account of [
+        ...this.props.accountsConfig.mandatoryAccounts,
+        ...this.props.accountsConfig.workloadAccounts,
+      ]) {
+        const accountId = this.props.accountsConfig.getAccountId(account.name);
+        this.stacks.set(
+          `${account.name}-${region}`,
+          new IdentityCenterStack(
+            this.app,
+            `${AcceleratorStackNames[AcceleratorStage.IDENTITY_CENTER]}-${accountId}-${region}`,
+            {
+              env: {
+                account: accountId,
+                region: region,
+              },
+              ...this.props,
+            },
+          ),
+        );
+      }
+    }
+  }
+
   /**
    * synth Organizations stacks
    */

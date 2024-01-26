@@ -94,10 +94,10 @@ source/packages/@aws-accelerator/utils/lib/regions.ts:62
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:346
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:347
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1144
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1145
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:348
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1148
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1149
 
 # Accelerator specific assume role declaration
 
@@ -181,16 +181,10 @@ reference/sample-configurations/lza-sample-config-us-slg-central-it/README.md:10
 
 source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/index.ts:47
 source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/index.ts:48
-
-# Accelerator specific assume role declaration
-
 source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/index.ts:57
 source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/index.ts:58
-
-# Accelerator specific assume role declaration
-
-source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/index.ts:63
 source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/index.ts:64
+source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/index.ts:65
 
 # Accelerator specific assume role declaration
 
@@ -198,6 +192,15 @@ source/packages/@aws-accelerator/constructs/lib/aws-cloudwatch-logs/create-log-g
 source/packages/@aws-accelerator/constructs/lib/aws-cloudwatch-logs/create-log-groups/index.ts:170
 source/packages/@aws-accelerator/constructs/lib/aws-cloudwatch-logs/create-log-groups/index.ts:176
 source/packages/@aws-accelerator/constructs/lib/aws-cloudwatch-logs/create-log-groups/index.ts:179
+
+# Accelerator specific assume role declaration
+
+source/packages/@aws-accelerator/constructs/lib/aws-identity-center/build-identity-center-assignments/index.ts:422
+source/packages/@aws-accelerator/constructs/lib/aws-identity-center/build-identity-center-assignments/index.ts:425
+source/packages/@aws-accelerator/constructs/lib/aws-identity-center/build-identity-center-assignments/index.ts:432
+source/packages/@aws-accelerator/constructs/lib/aws-identity-center/build-identity-center-assignments/index.ts:434
+source/packages/@aws-accelerator/constructs/lib/aws-identity-center/build-identity-center-assignments/index.ts:451
+source/packages/@aws-accelerator/constructs/lib/aws-identity-center/build-identity-center-assignments/index.ts:453
 
 # empty file to simulate certs
 

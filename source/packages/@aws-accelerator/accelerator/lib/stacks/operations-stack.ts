@@ -20,9 +20,6 @@ import {
   Ec2FirewallAutoScalingGroupConfig,
   Ec2FirewallConfig,
   Ec2FirewallInstanceConfig,
-  IdentityCenterAssignmentConfig,
-  IdentityCenterConfig,
-  IdentityCenterPermissionSetConfig,
   Region,
   RoleConfig,
   RoleSetConfig,
@@ -39,7 +36,6 @@ import {
   KeyLookup,
   LimitsDefinition,
   SsmSessionManagerPolicy,
-  UsersGroupsMetadata,
   WarmAccount,
 } from '@aws-accelerator/constructs';
 import {
@@ -53,13 +49,6 @@ import { getVpcConfig } from './network-stacks/utils/getter-utils';
 export interface OperationsStackProps extends AcceleratorStackProps {
   readonly accountWarming: boolean;
 }
-
-interface PermissionSetMapping {
-  name: string;
-  arn: string;
-  permissionSet: cdk.aws_sso.CfnPermissionSet;
-}
-
 export class OperationsStack extends AcceleratorStack {
   /**
    * List of all the defined SAML Providers
@@ -92,11 +81,6 @@ export class OperationsStack extends AcceleratorStack {
   private cloudwatchKey: cdk.aws_kms.IKey | undefined;
 
   /**
-   * KMS Key used to encrypt custom resource lambda environment variables, when undefined default AWS managed key will be used
-   */
-  private lambdaKey: cdk.aws_kms.IKey | undefined;
-
-  /**
    * KMS Key for central S3 Bucket
    */
   private centralLogsBucketKey: cdk.aws_kms.IKey;
@@ -112,13 +96,8 @@ export class OperationsStack extends AcceleratorStack {
     super(scope, id, props);
 
     this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
-    this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
-    this.centralLogsBucketKey = this.getCentralLogsBucketKey(this.cloudwatchKey);
 
-    // Security Services delegated admin account configuration
-    // Global decoration for security services
-    const securityAdminAccount = props.securityConfig.centralSecurityServices.delegatedAdminAccount;
-    const securityAdminAccountId = props.accountsConfig.getAccountId(securityAdminAccount);
+    this.centralLogsBucketKey = this.getCentralLogsBucketKey(this.cloudwatchKey);
 
     //
     // Look up asset bucket KMS key
@@ -136,9 +115,6 @@ export class OperationsStack extends AcceleratorStack {
       this.addGroups();
       this.addUsers();
       this.createStackSetRoles();
-      // Identity Center
-      //
-      this.addIdentityCenterResources(securityAdminAccountId);
       //
       //
       // Budgets
@@ -930,304 +906,6 @@ export class OperationsStack extends AcceleratorStack {
         },
       ],
     });
-  }
-
-  /**
-   * Function to create Identity Center Permission Sets
-   * @param identityCenterItem
-   * @param identityCenterInstanceArn
-   * @returns
-   */
-  private addIdentityCenterPermissionSets(
-    identityCenterItem: IdentityCenterConfig,
-    identityCenterInstanceArn: string,
-  ): PermissionSetMapping[] {
-    const permissionSetMap: PermissionSetMapping[] = [];
-
-    for (const identityCenterPermissionSet of identityCenterItem.identityCenterPermissionSets ?? []) {
-      const permissionSet = this.createPermissionsSet(
-        identityCenterPermissionSet,
-        identityCenterInstanceArn,
-        permissionSetMap,
-      );
-      permissionSetMap.push(permissionSet);
-    }
-
-    return permissionSetMap;
-  }
-
-  /**
-   * Function to get CustomerManaged Policy References List
-   * @param identityCenterPermissionSet {@link IdentityCenterPermissionSetConfig}
-   * @returns customerManagedPolicyReferencesList {@link cdk.aws_sso.CfnPermissionSet.CustomerManagedPolicyReferenceProperty}[]
-   */
-  private getCustomerManagedPolicyReferencesList(
-    identityCenterPermissionSet: IdentityCenterPermissionSetConfig,
-  ): cdk.aws_sso.CfnPermissionSet.CustomerManagedPolicyReferenceProperty[] {
-    const customerManagedPolicyReferencesList: cdk.aws_sso.CfnPermissionSet.CustomerManagedPolicyReferenceProperty[] =
-      [];
-
-    if (identityCenterPermissionSet.policies) {
-      this.logger.info(`Adding Identity Center Permission Set ${identityCenterPermissionSet.name}`);
-
-      // Add Customer managed and LZA managed policies
-      for (const policy of [
-        ...(identityCenterPermissionSet.policies.customerManaged ?? []),
-        ...(identityCenterPermissionSet.policies.acceleratorManaged ?? []),
-      ]) {
-        customerManagedPolicyReferencesList.push({ name: policy });
-      }
-    }
-
-    return customerManagedPolicyReferencesList;
-  }
-
-  /**
-   * Function to get AWS Managed permissionsets
-   * @param identityCenterPermissionSet {@link IdentityCenterPermissionSetConfig}
-   * @returns awsManagedPolicies string[]
-   */
-  private getAwsManagedPolicies(identityCenterPermissionSet: IdentityCenterPermissionSetConfig): string[] {
-    const awsManagedPolicies: string[] = [];
-
-    for (const awsManagedPolicy of identityCenterPermissionSet?.policies?.awsManaged ?? []) {
-      if (awsManagedPolicy.startsWith('arn:')) {
-        awsManagedPolicies.push(awsManagedPolicy);
-      } else {
-        awsManagedPolicies.push(cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName(awsManagedPolicy).managedPolicyArn);
-      }
-    }
-
-    return awsManagedPolicies;
-  }
-
-  /**
-   * Function to get permission boundary
-   * @param identityCenterPermissionSet {@link IdentityCenterPermissionSetConfig}
-   * @returns permissionsBoundary {@link cdk.aws_sso.CfnPermissionSet.PermissionsBoundaryProperty} | undefined
-   */
-  private getPermissionBoundary(
-    identityCenterPermissionSet: IdentityCenterPermissionSetConfig,
-  ): cdk.aws_sso.CfnPermissionSet.PermissionsBoundaryProperty | undefined {
-    let permissionsBoundary: cdk.aws_sso.CfnPermissionSet.PermissionsBoundaryProperty | undefined;
-
-    if (identityCenterPermissionSet.policies?.permissionsBoundary) {
-      if (identityCenterPermissionSet.policies.permissionsBoundary.customerManagedPolicy) {
-        permissionsBoundary = {
-          customerManagedPolicyReference: {
-            name: identityCenterPermissionSet.policies.permissionsBoundary.customerManagedPolicy.name,
-            path: identityCenterPermissionSet.policies.permissionsBoundary.customerManagedPolicy.path,
-          },
-        };
-      }
-      if (identityCenterPermissionSet.policies.permissionsBoundary.awsManagedPolicyName) {
-        permissionsBoundary = {
-          managedPolicyArn: cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName(
-            identityCenterPermissionSet.policies.permissionsBoundary.awsManagedPolicyName,
-          ).managedPolicyArn,
-        };
-      }
-    }
-
-    return permissionsBoundary;
-  }
-
-  /**
-   * Create Identity Center Permission sets
-   * @param identityCenterPermissionSet
-   * @param identityCenterInstanceArn
-   * @returns
-   */
-  private createPermissionsSet(
-    identityCenterPermissionSet: IdentityCenterPermissionSetConfig,
-    identityCenterInstanceArn: string,
-    permissionSetMap: PermissionSetMapping[],
-  ): PermissionSetMapping {
-    const customerManagedPolicyReferencesList =
-      this.getCustomerManagedPolicyReferencesList(identityCenterPermissionSet);
-
-    let convertedSessionDuration: string | undefined;
-
-    if (identityCenterPermissionSet.sessionDuration) {
-      convertedSessionDuration = this.convertMinutesToIso8601(identityCenterPermissionSet.sessionDuration);
-    }
-
-    const awsManagedPolicies = this.getAwsManagedPolicies(identityCenterPermissionSet);
-
-    const permissionsBoundary = this.getPermissionBoundary(identityCenterPermissionSet);
-
-    let permissionSetProps: cdk.aws_sso.CfnPermissionSetProps = {
-      name: identityCenterPermissionSet.name,
-      instanceArn: identityCenterInstanceArn,
-      managedPolicies: awsManagedPolicies.length > 0 ? awsManagedPolicies : undefined,
-      customerManagedPolicyReferences:
-        customerManagedPolicyReferencesList.length > 0 ? customerManagedPolicyReferencesList : undefined,
-      sessionDuration: convertedSessionDuration,
-      permissionsBoundary: permissionsBoundary,
-    };
-
-    if (identityCenterPermissionSet.policies?.inlinePolicy) {
-      // Read in the policy document which should be properly formatted json
-      const inlinePolicyDocument = JSON.parse(
-        this.generatePolicyReplacements(
-          path.join(this.props.configDirPath, identityCenterPermissionSet.policies?.inlinePolicy),
-          false,
-          this.organizationId,
-        ),
-      );
-      permissionSetProps = {
-        name: identityCenterPermissionSet.name,
-        instanceArn: identityCenterInstanceArn,
-        managedPolicies: awsManagedPolicies.length > 0 ? awsManagedPolicies : undefined,
-        customerManagedPolicyReferences:
-          customerManagedPolicyReferencesList.length > 0 ? customerManagedPolicyReferencesList : undefined,
-        sessionDuration: convertedSessionDuration ?? undefined,
-        inlinePolicy: inlinePolicyDocument,
-        permissionsBoundary: permissionsBoundary,
-      };
-    }
-
-    const permissionSet = new cdk.aws_sso.CfnPermissionSet(
-      this,
-      `${pascalCase(identityCenterPermissionSet.name)}IdentityCenterPermissionSet`,
-      permissionSetProps,
-    );
-
-    // Create dependency for CfnPermissionSet
-    for (const item of permissionSetMap) {
-      permissionSet.node.addDependency(item.permissionSet);
-    }
-
-    return { name: permissionSet.name, arn: permissionSet.attrPermissionSetArn, permissionSet: permissionSet };
-  }
-
-  private addIdentityCenterAssignments(
-    identityCenterItem: IdentityCenterConfig,
-    identityCenterInstanceArn: string,
-    permissionSetMap: PermissionSetMapping[],
-  ) {
-    for (const assignment of identityCenterItem.identityCenterAssignments ?? []) {
-      this.createAssignment(assignment, permissionSetMap, identityCenterInstanceArn);
-    }
-  }
-
-  private getAssignmentPrincipals(
-    assignment: IdentityCenterAssignmentConfig,
-    targetAccountId: string,
-  ): { type: string; name: string; id: string }[] {
-    if (!assignment.principals || assignment.principals.length === 0) {
-      return [];
-    }
-
-    const identityStoreId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-      this,
-      this.acceleratorResourceNames.parameters.identityStoreId,
-    );
-
-    const usersGroupsMetadata = new UsersGroupsMetadata(
-      this,
-      pascalCase(`UsersGroupsMetadata-${assignment.name}-${targetAccountId}`),
-      {
-        identityStoreId: identityStoreId,
-        principals: assignment.principals,
-        resourceUniqueIdentifier: `${targetAccountId}-${assignment.name}`,
-        customResourceLambdaEnvironmentEncryptionKmsKey: this.lambdaKey,
-        customResourceLambdaCloudWatchLogKmsKey: this.cloudwatchKey,
-        customResourceLambdaLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-      },
-    );
-
-    return usersGroupsMetadata.principalsMetadata;
-  }
-
-  private createAssignment(
-    assignment: IdentityCenterAssignmentConfig,
-    permissionSetMap: PermissionSetMapping[],
-    identityCenterInstanceArn: string,
-  ) {
-    const targetAccountIds = this.getAccountIdsFromDeploymentTarget(assignment.deploymentTargets);
-    const permissionSetArnValue = this.getPermissionSetArn(permissionSetMap, assignment.permissionSetName);
-
-    for (const targetAccountId of targetAccountIds) {
-      // backward compatibility for principalId & principalType property
-      if (assignment.principalId && assignment.principalType) {
-        this.logger.info(`Creating Identity Center Assignment ${assignment.name}-${targetAccountId}`);
-        new cdk.aws_sso.CfnAssignment(this, `${pascalCase(assignment.name)}-${targetAccountId}`, {
-          instanceArn: identityCenterInstanceArn,
-          permissionSetArn: permissionSetArnValue,
-          principalId: assignment.principalId,
-          principalType: assignment.principalType,
-          targetId: targetAccountId,
-          targetType: 'AWS_ACCOUNT',
-        });
-      }
-
-      // New feature with list of principals in assignment
-      const cfnAssignments: cdk.aws_sso.CfnAssignment[] = [];
-
-      const assignmentPrincipals = this.getAssignmentPrincipals(assignment, targetAccountId);
-
-      for (const assignmentPrincipal of assignmentPrincipals) {
-        const cfnAssignment = new cdk.aws_sso.CfnAssignment(
-          this,
-          `${pascalCase(assignment.name)}-${targetAccountId}-${assignmentPrincipal.type}-${assignmentPrincipal.name}`,
-          {
-            instanceArn: identityCenterInstanceArn,
-            permissionSetArn: permissionSetArnValue,
-            principalId: assignmentPrincipal.id,
-            principalType: assignmentPrincipal.type,
-            targetId: targetAccountId,
-            targetType: 'AWS_ACCOUNT',
-          },
-        );
-
-        // To create dependency for CfnAssignment object
-        for (const dependency of cfnAssignments) {
-          cfnAssignment.addDependency(dependency);
-        }
-        cfnAssignments.push(cfnAssignment);
-      }
-    }
-  }
-
-  private getPermissionSetArn(permissionSetMap: PermissionSetMapping[], name: string) {
-    let permissionSetArn = '';
-    for (const permissionSet of permissionSetMap) {
-      if (permissionSet.name == name && permissionSet.arn) {
-        permissionSetArn = permissionSet.arn;
-      }
-    }
-    return permissionSetArn;
-  }
-
-  /**
-   * Function to add Identity Center Resources
-   * @param securityAdminAccountId
-   */
-  private addIdentityCenterResources(securityAdminAccountId: string) {
-    if (this.props.iamConfig.identityCenter) {
-      const delegatedAdminAccountId = this.props.iamConfig.identityCenter.delegatedAdminAccount
-        ? this.props.accountsConfig.getAccountId(this.props.iamConfig.identityCenter.delegatedAdminAccount)
-        : securityAdminAccountId;
-
-      if (cdk.Stack.of(this).account === delegatedAdminAccountId) {
-        const identityCenterInstanceArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
-          this,
-          this.acceleratorResourceNames.parameters.identityCenterInstanceArn,
-        );
-
-        const permissionSetList = this.addIdentityCenterPermissionSets(
-          this.props.iamConfig.identityCenter,
-          identityCenterInstanceArn,
-        );
-
-        this.addIdentityCenterAssignments(
-          this.props.iamConfig.identityCenter,
-          identityCenterInstanceArn,
-          permissionSetList,
-        );
-      }
-    }
   }
 
   private createStackSetExecutionRole(managementAccountId: string) {

@@ -1400,8 +1400,6 @@ export class IdentityCenterAssignmentPrincipalConfig
  *
  * Identity Center Assignment Configuration
  *
- * @remarks You cannot deploy Identity Center assignments to the Management account with a delegated administrator enabled. For more information, see https://docs.aws.amazon.com/singlesignon/latest/userguide/delegated-admin.html
- *
  * @example
  * ```
  * identityCenterAssignments:

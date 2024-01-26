@@ -12,29 +12,29 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { UsersGroupsMetadata } from '../../lib/aws-identitystore/users-groups-metadata';
 import { snapShotTest } from '../snapshot-test';
 import { describe } from '@jest/globals';
+import { IdentityCenterAssignments } from '../../lib/aws-identity-center/identity-center-assignments';
 const testNamePrefix = 'Construct(IdentityCenterGetInstanceId): ';
 
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
 
-new UsersGroupsMetadata(stack, 'UsersGroupsMetadata', {
+new IdentityCenterAssignments(stack, 'IdentityCenterAssignments', {
   identityStoreId: 'd-906751796e',
+  identityCenterInstanceArn: 'arn:aws:sso:::instance/ssoins-123456789210',
   principals: [
     { type: 'USER', name: 'lza-accelerator-user' },
     { type: 'GROUP', name: 'lza-accelerator-group' },
   ],
-  resourceUniqueIdentifier: `111111111111-Assignment1`,
-  customResourceLambdaEnvironmentEncryptionKmsKey: new cdk.aws_kms.Key(stack, 'LambdaKey', {}),
-  customResourceLambdaCloudWatchLogKmsKey: new cdk.aws_kms.Key(stack, 'CloudWatchKey', {}),
-  customResourceLambdaLogRetentionInDays: 365,
+  principalType: 'GROUP',
+  principalId: '',
+  permissionSetArnValue: 'arn:aws:sso:::permissionSet/ssoins-1111111111111111/ps-1111111111111111',
+  accountIds: ['111111111111', '222222222222'],
+  kmsKey: new cdk.aws_kms.Key(stack, 'CloudWatchKey', {}),
+  logRetentionInDays: 365,
 });
 
-/**
- * UsersGroupsMetadata construct test
- */
-describe('UsersGroupsMetadata', () => {
+describe('IdentityCenterAssignments', () => {
   snapShotTest(testNamePrefix, stack);
 });
