@@ -1678,7 +1678,7 @@ vpcs:
             type: networkInterface
             target: ${ACCEL_LOOKUP::EC2:ENI_0:firewall-with-shared-subnet}
           - name: CrossAcctNetworkInterfaceRoutev6
-            ipv6Destination: fd00::/8
+            ipv6Destination: fd01::/8
             type: networkInterface
             target: ${ACCEL_LOOKUP::EC2:ENI_0:firewall-with-shared-subnet}
           - name: GwlbRoute
