@@ -27,6 +27,7 @@ import { CustomStack, generateCustomStackMappings, isIncluded } from '../lib/sta
 import { CustomizationsStack } from '../lib/stacks/customizations-stack';
 import { DependenciesStack } from '../lib/stacks/dependencies-stack/dependencies-stack';
 import { FinalizeStack } from '../lib/stacks/finalize-stack';
+import { IdentityCenterStack } from '../lib/stacks/identity-center-stack';
 import { KeyStack } from '../lib/stacks/key-stack';
 import { LoggingStack } from '../lib/stacks/logging-stack';
 import { NetworkAssociationsGwlbStack } from '../lib/stacks/network-stacks/network-associations-gwlb-stack/network-associations-gwlb-stack';
@@ -798,6 +799,49 @@ export function createOperationsStack(
     });
     addAcceleratorTags(operationsStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(operationsStack).add(new AwsSolutionsChecks());
+    new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
+  }
+}
+
+/**
+ * Create Identity-Center Stack
+ * @param rootApp
+ * @param context
+ * @param props
+ * @param env
+ * @param accountId
+ * @param enabledRegion
+ * @param accountWarming
+ */
+export function createIdentityCenterStack(
+  rootApp: cdk.App,
+  context: AcceleratorContext,
+  props: AcceleratorStackProps,
+  accountId: string,
+  homeRegion: string,
+) {
+  if (
+    includeStage(context, {
+      stage: AcceleratorStage.IDENTITY_CENTER,
+      account: accountId,
+      region: homeRegion,
+    })
+  ) {
+    checkRootApp(rootApp);
+    const identityCenterStackName = `${
+      AcceleratorStackNames[AcceleratorStage.IDENTITY_CENTER]
+    }-${accountId}-${homeRegion}`;
+    const app = new cdk.App({
+      outdir: `cdk.out/${identityCenterStackName}`,
+    });
+    const identityCenterStack = new IdentityCenterStack(app, `${identityCenterStackName}`, {
+      description: `(SO0199-identitycenter) Landing Zone Accelerator on AWS. Version ${version}.`,
+      synthesizer: getStackSynthesizer(props, accountId, homeRegion, context.stage),
+      terminationProtection: props.globalConfig.terminationProtection ?? true,
+      ...props,
+    });
+    addAcceleratorTags(identityCenterStack, context.partition, props.globalConfig, props.prefixes.accelerator);
+    cdk.Aspects.of(identityCenterStack).add(new AwsSolutionsChecks());
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }

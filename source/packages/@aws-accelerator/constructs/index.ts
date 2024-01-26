@@ -84,7 +84,7 @@ export * from './lib/aws-iam/service-linked-role';
 export * from './lib/aws-identity-center/identity-center-instance';
 export * from './lib/aws-identity-center/identity-center-organization-admin-account';
 export * from './lib/aws-identity-center/identity-center-get-permission-set-role-arn';
-export * from './lib/aws-identitystore/users-groups-metadata';
+export * from './lib/aws-identity-center/identity-center-assignments';
 export * from './lib/aws-firehose/cloudwatch-to-s3-firehose';
 export * from './lib/aws-fms/fms-notification-channel';
 export * from './lib/aws-fms/fms-organization-admin-account';

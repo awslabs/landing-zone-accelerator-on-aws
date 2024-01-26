@@ -16,14 +16,14 @@ import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
 import { describe } from '@jest/globals';
 import { snapShotTest } from './snapshot-test';
 
-const testNamePrefix = 'Construct(OperationsStack): ';
+const testNamePrefix = 'Construct(IdentityCenterStack): ';
 
 /**
- * OperationsStack
+ * IdentityCenter Stack
  */
-const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.OPERATIONS, 'aws', 'us-east-1');
-const stack = acceleratorTestStacks.stacks.get(`Management-us-east-1`)!;
+const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.IDENTITY_CENTER, 'aws', 'us-east-1');
+const stack = acceleratorTestStacks.stacks.get(`Audit-us-east-1`)!;
 
-describe('OperationsStack', () => {
+describe('IdentityCenterStack', () => {
   snapShotTest(testNamePrefix, stack);
 });

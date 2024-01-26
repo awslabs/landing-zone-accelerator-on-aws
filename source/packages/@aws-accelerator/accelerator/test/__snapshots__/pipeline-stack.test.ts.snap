@@ -807,6 +807,37 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   "Version": "1",
                 },
                 "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage identity-center"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"identity-center"}]",
+                  "PrimarySource": "Build",
+                  "ProjectName": {
+                    "Ref": "PipelineToolkitProjectBCBD6910",
+                  },
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "Build",
+                  },
+                  {
+                    "Name": "Config",
+                  },
+                ],
+                "Name": "Identity_Center",
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "PipelinePipelineRole6D983AD5",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 2,
+              },
+              {
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": {
                   "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage network-associations"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"network-associations"}]",
                   "PrimarySource": "Build",
                   "ProjectName": {
@@ -2426,7 +2457,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                 },
                 " --minimal; fi",
         "cd packages/@aws-accelerator/accelerator",
-        "if [ -z \\"\${ACCELERATOR_STAGE}\\" ]; then for STAGE in \\"key\\" \\"logging\\" \\"organizations\\" \\"security-audit\\" \\"network-prep\\" \\"security\\" \\"operations\\" \\"network-vpc\\" \\"security-resources\\" \\"network-associations\\" \\"customizations\\" \\"finalize\\" \\"bootstrap\\"; do set -e && yarn run ts-node --transpile-only cdk.ts synth --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+        "if [ -z \\"\${ACCELERATOR_STAGE}\\" ]; then for STAGE in \\"key\\" \\"logging\\" \\"organizations\\" \\"security-audit\\" \\"network-prep\\" \\"security\\" \\"operations\\" \\"identity-center\\" \\"network-vpc\\" \\"security-resources\\" \\"network-associations\\" \\"customizations\\" \\"finalize\\" \\"bootstrap\\"; do set -e && yarn run ts-node --transpile-only cdk.ts synth --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
@@ -2441,7 +2472,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   "Ref": "AWS::Partition",
                 },
                 " --app cdk.out; fi",
-        "if [ \\"diff\\" = \\"\${CDK_OPTIONS}\\" ]; then for STAGE in \\"key\\" \\"logging\\" \\"organizations\\" \\"security-audit\\" \\"network-prep\\" \\"security\\" \\"operations\\" \\"network-vpc\\" \\"security-resources\\" \\"network-associations\\" \\"customizations\\" \\"finalize\\" \\"bootstrap\\"; do set -e && yarn run ts-node --transpile-only cdk.ts --require-approval never $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+        "if [ \\"diff\\" = \\"\${CDK_OPTIONS}\\" ]; then for STAGE in \\"key\\" \\"logging\\" \\"organizations\\" \\"security-audit\\" \\"network-prep\\" \\"security\\" \\"operations\\" \\"identity-center\\" \\"network-vpc\\" \\"security-resources\\" \\"network-associations\\" \\"customizations\\" \\"finalize\\" \\"bootstrap\\"; do set -e && yarn run ts-node --transpile-only cdk.ts --require-approval never $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },

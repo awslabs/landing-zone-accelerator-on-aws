@@ -36,6 +36,7 @@ import {
   createCustomizationsStacks,
   createDiagnosticsPackStack,
   createFinalizeStack,
+  createIdentityCenterStack,
   createKeyDependencyStacks,
   createLoggingStack,
   createNetworkAssociationsStacks,
@@ -101,6 +102,9 @@ function createManagementAccountStacks(
   //
   // ACCOUNTS Stack
   createAccountsStack(app, context, props, managementAccountId, globalRegion);
+  //
+  // IDENTITY CENTER Stack
+  createIdentityCenterStack(app, context, props, managementAccountId, homeRegion);
   //
   // FINALIZE Stack
   createFinalizeStack(app, context, props, managementAccountId, globalRegion);
