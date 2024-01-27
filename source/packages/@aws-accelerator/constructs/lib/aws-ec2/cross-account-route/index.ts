@@ -18,10 +18,11 @@
  * @returns
  */
 
-import { getStsCredentials, setRetryStrategy, throttlingBackOff } from '@aws-accelerator/utils';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 import { CreateRouteCommand, DeleteRouteCommand, EC2Client } from '@aws-sdk/client-ec2';
 import { STSClient } from '@aws-sdk/client-sts';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+import { setRetryStrategy, getStsCredentials } from '@aws-accelerator/utils/lib/common-functions';
 
 export async function handler(event: CloudFormationCustomResourceEvent): Promise<
   | {

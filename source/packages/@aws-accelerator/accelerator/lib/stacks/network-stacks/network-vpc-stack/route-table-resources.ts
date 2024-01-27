@@ -13,7 +13,7 @@
 
 import { AseaResourceType, NetworkConfigTypes, VpcConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
 import { RouteTable, Vpc } from '@aws-accelerator/constructs';
-import { SsmResourceType } from '@aws-accelerator/utils';
+import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'pascal-case';
 import { getVpc } from '../utils/getter-utils';

@@ -32,7 +32,7 @@ import {
   TransitGatewayStaticRoute,
   VpnConnection,
 } from '@aws-accelerator/constructs';
-import { SsmResourceType } from '@aws-accelerator/utils';
+import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'pascal-case';
 import { AcceleratorStackProps, NagSuppressionRuleIds } from '../../accelerator-stack';

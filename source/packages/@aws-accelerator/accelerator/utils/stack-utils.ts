@@ -12,7 +12,7 @@
  */
 
 import { AseaResourceMapping, GlobalConfig } from '@aws-accelerator/config';
-import { createLogger } from '@aws-accelerator/utils';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import * as cdk from 'aws-cdk-lib';
 import { AwsSolutionsChecks, NagSuppressions } from 'cdk-nag';
 import { IConstruct } from 'constructs';

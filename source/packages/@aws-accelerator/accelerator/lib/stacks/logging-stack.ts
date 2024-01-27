@@ -52,12 +52,11 @@ import {
 
 import {
   AcceleratorImportedBucketType,
-  AcceleratorElbRootAccounts,
   AwsPrincipalAccessesType,
   BucketAccessType,
-  OptInRegions,
   PrincipalOrgIdConditionType,
-} from '@aws-accelerator/utils';
+} from '@aws-accelerator/utils/lib/common-resources';
+import { AcceleratorElbRootAccounts, OptInRegions } from '@aws-accelerator/utils/lib/regions';
 
 import {
   AcceleratorKeyType,

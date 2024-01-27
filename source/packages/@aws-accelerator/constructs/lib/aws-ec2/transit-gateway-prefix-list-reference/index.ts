@@ -25,7 +25,7 @@ import {
   ModifyTransitGatewayPrefixListReferenceCommand,
 } from '@aws-sdk/client-ec2';
 
-import { throttlingBackOff } from '@aws-accelerator/utils';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 interface ReferenceOptions {

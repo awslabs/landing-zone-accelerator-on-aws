@@ -12,7 +12,7 @@
  */
 import { IPv4CidrRange, IPv4Prefix, Pool } from 'ip-num';
 
-import { throttlingBackOff } from '@aws-accelerator/utils';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import {
   DescribeSubnetsCommand,
   DescribeSubnetsResult,

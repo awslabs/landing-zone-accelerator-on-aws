@@ -1,4 +1,4 @@
-import { PolicyStatementType } from '@aws-accelerator/utils';
+import { PolicyStatementType } from '@aws-accelerator/utils/lib/common-resources';
 
 /**
  * Supported Resource Type for AWS Config Rule

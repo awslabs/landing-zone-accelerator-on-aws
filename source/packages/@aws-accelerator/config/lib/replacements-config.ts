@@ -19,7 +19,8 @@ import * as path from 'path';
 import * as Handlebars from 'handlebars';
 import { AccountsConfig } from './accounts-config';
 
-import { createLogger, throttlingBackOff } from '@aws-accelerator/utils';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 
 import * as t from './common-types';
 

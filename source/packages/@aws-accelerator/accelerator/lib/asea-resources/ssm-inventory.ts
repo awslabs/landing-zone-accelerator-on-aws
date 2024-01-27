@@ -5,7 +5,7 @@ import { CfnResourceType } from '@aws-accelerator/config';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'pascal-case';
-import { SsmResourceType } from '@aws-accelerator/utils';
+import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 
 const enum RESOURCE_TYPE {
   RESOURCE_DATA_SYNC = 'AWS::SSM::ResourceDataSync',

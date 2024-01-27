@@ -15,8 +15,9 @@ import * as AWS from 'aws-sdk';
 AWS.config.logger = console;
 import * as path from 'path';
 
-import { AccountsConfig, OrganizationConfig } from '@aws-accelerator/config';
-import { throttlingBackOff } from '@aws-accelerator/utils';
+import { AccountsConfig } from '@aws-accelerator/config/lib/accounts-config';
+import { OrganizationConfig } from '@aws-accelerator/config/lib/organization-config';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { ScheduledEvent } from '@aws-accelerator/utils/lib/common-types';
 
 let organizationsClient: AWS.Organizations;

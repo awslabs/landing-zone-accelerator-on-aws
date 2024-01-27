@@ -11,7 +11,8 @@
  *  and limitations under the License.
  */
 
-import { setRetryStrategy, throttlingBackOff } from '@aws-accelerator/utils';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 import {
   SSOAdminClient,
@@ -22,6 +23,7 @@ import {
   PrincipalType,
 } from '@aws-sdk/client-sso-admin';
 import { Group, IdentitystoreClient, ListGroupsCommand, ListUsersCommand, User } from '@aws-sdk/client-identitystore';
+import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 
 /**
  * build-identity-center-assignments - lambda handler
@@ -29,7 +31,7 @@ import { Group, IdentitystoreClient, ListGroupsCommand, ListUsersCommand, User }
  * @param event
  * @returns
  */
-export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
+export async function handler(event: CloudFormationCustomResourceEvent): Promise<
   | {
       PhysicalResourceId: string | undefined;
       Status: string;

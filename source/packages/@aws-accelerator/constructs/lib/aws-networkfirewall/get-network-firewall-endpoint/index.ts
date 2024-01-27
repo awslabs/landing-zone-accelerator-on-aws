@@ -14,7 +14,7 @@
 import { DescribeAvailabilityZonesCommand, EC2Client } from '@aws-sdk/client-ec2';
 import { DescribeFirewallCommand, NetworkFirewallClient } from '@aws-sdk/client-network-firewall';
 
-import { throttlingBackOff } from '@aws-accelerator/utils';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 /**
  * get-network-firewall-endpoint - lambda handler

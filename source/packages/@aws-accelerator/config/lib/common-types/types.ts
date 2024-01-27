@@ -15,7 +15,7 @@ import { either } from 'fp-ts/lib/Either';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as t from 'io-ts';
 import { IPv4CidrRange } from 'ip-num';
-import { Regions } from '@aws-accelerator/utils';
+import { Regions } from '@aws-accelerator/utils/lib/regions';
 
 export type { Any, AnyProps, Mixed, Props, TypeC, TypeOf } from 'io-ts';
 export {

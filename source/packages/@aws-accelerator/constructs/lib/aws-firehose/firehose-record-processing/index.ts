@@ -15,7 +15,7 @@ import * as AWS from 'aws-sdk';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as uuid from 'uuid';
-import { throttlingBackOff } from '@aws-accelerator/utils';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import {
   FirehoseTransformationEvent,
   FirehoseTransformationResult,

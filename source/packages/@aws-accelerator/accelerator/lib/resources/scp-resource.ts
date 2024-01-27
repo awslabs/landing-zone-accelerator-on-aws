@@ -21,7 +21,8 @@ import {
   RevertScpChanges,
 } from '@aws-accelerator/constructs';
 import winston from 'winston';
-import { SsmResourceType, createLogger } from '@aws-accelerator/utils';
+import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import path from 'path';
 import { ServiceControlPolicyConfig } from '@aws-accelerator/config';
 import { pascalCase } from 'pascal-case';

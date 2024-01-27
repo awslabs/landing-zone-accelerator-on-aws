@@ -18,7 +18,7 @@
  */
 
 import * as AWS from 'aws-sdk';
-import { throttlingBackOff } from '@aws-accelerator/utils';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { v4 as uuidv4 } from 'uuid';
 
 const tableName = process.env['NewAccountsTableName'] ?? '';

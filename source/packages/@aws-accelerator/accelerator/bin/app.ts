@@ -17,7 +17,7 @@ import 'source-map-support/register';
 
 import * as cdk from 'aws-cdk-lib';
 
-import { createLogger } from '@aws-accelerator/utils';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
 
 import { AcceleratorAspects } from '../lib/accelerator-aspects';
 import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';

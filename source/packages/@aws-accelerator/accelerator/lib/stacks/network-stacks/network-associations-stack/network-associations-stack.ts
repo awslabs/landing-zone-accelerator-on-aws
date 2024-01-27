@@ -76,7 +76,7 @@ import {
   VpcPeering,
   albListenerActionProperty,
 } from '@aws-accelerator/constructs';
-import { SsmResourceType } from '@aws-accelerator/utils';
+import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 
 import path from 'path';
 import { AcceleratorStackProps, NagSuppressionRuleIds } from '../../accelerator-stack';

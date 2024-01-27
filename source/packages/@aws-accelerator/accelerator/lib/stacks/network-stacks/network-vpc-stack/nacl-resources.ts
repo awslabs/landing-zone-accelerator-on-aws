@@ -20,7 +20,7 @@ import {
   VpcTemplatesConfig,
 } from '@aws-accelerator/config';
 import { NetworkAcl, Subnet, Vpc } from '@aws-accelerator/constructs';
-import { SsmResourceType } from '@aws-accelerator/utils';
+import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'pascal-case';
 import { LogLevel } from '../network-stack';

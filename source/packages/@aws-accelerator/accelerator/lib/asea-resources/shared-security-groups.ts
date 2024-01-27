@@ -1,6 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { AseaResourceType, AseaStackInfo } from '@aws-accelerator/config';
-import { SsmResourceType } from '@aws-accelerator/utils';
+import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 import { AseaResource, AseaResourceProps } from './resource';
 import { VpcResourcesProps } from './vpc-resources';
 import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';

@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { throttlingBackOff } from '@aws-accelerator/utils';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import * as AWS from 'aws-sdk';
 import { validateTransitGateway } from './test-target-functions/validate-transit-gateway';
 AWS.config.logger = console;

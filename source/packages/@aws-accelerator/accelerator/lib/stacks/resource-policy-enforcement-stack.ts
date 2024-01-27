@@ -30,7 +30,7 @@ import {
   ResourcePolicySetConfig,
   SecurityConfigTypes,
 } from '@aws-accelerator/config';
-import { RESOURCE_TYPE_WITH_ALLOW_ONLY_POLICY, ResourceType } from '@aws-accelerator/utils';
+import { RESOURCE_TYPE_WITH_ALLOW_ONLY_POLICY, ResourceType } from '@aws-accelerator/utils/lib/common-resources';
 
 /**
  * Resource-based policy generated file path type

@@ -15,7 +15,8 @@ import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
 
-import { createLogger, loadOrganizationalUnits } from '@aws-accelerator/utils';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
+import { loadOrganizationalUnits } from '@aws-accelerator/utils/lib/load-organization-config';
 
 import * as t from './common-types';
 import { ReplacementsConfig } from './replacements-config';

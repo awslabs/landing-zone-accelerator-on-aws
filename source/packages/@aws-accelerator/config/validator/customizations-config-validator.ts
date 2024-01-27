@@ -14,7 +14,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { createLogger } from '@aws-accelerator/utils';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
 
 import { AccountsConfig } from '../lib/accounts-config';
 import * as t from '../lib/common-types';

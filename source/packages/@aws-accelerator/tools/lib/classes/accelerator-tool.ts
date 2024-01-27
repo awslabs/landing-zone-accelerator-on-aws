@@ -16,7 +16,8 @@ import * as path from 'path';
 import * as winston from 'winston';
 
 import { GlobalConfig } from '@aws-accelerator/config';
-import { createLogger, throttlingBackOff } from '@aws-accelerator/utils';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { BackupClient, DeleteBackupVaultCommand } from '@aws-sdk/client-backup';
 import {
   CloudFormationClient,

@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-sdk/client-sso-admin": "3.490.0",
-    "@aws-sdk/client-identitystore": "3.490.0"
+    "@aws-sdk/client-sso-admin": "3.410.0",
+    "@aws-sdk/client-identitystore": "3.410.0"
   }
 }

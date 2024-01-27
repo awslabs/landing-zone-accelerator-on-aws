@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { throttlingBackOff } from '@aws-accelerator/utils';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { SSMClient, PutParameterCommand, PutParameterCommandInput } from '@aws-sdk/client-ssm';
 
 const driftParameterName: string = process.env['DRIFT_PARAMETER_NAME'] ?? '';

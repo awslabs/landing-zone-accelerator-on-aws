@@ -13,7 +13,7 @@
 
 import { AseaResourceType, VpcConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
 import { INatGateway, NatGateway, Subnet } from '@aws-accelerator/constructs';
-import { SsmResourceType } from '@aws-accelerator/utils';
+import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 import { pascalCase } from 'pascal-case';
 import { LogLevel } from '../network-stack';
 import { getSubnet } from '../utils/getter-utils';
