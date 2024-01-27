@@ -18,7 +18,7 @@ import { AwsSolutionsChecks } from 'cdk-nag';
 import 'source-map-support/register';
 import { version } from '../../../../package.json';
 import * as installer from '../lib/installer-stack';
-import { createLogger } from '@aws-accelerator/utils';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
 
 const logger = createLogger(['installer']);
 

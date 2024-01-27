@@ -28,7 +28,7 @@ import {
   Vpc,
   VpnConnection,
 } from '@aws-accelerator/constructs';
-import { createLogger } from '@aws-accelerator/utils';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
 
 const logger = createLogger(['getter-utils']);
 

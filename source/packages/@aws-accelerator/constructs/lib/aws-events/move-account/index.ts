@@ -18,7 +18,7 @@ import {
   DynamoDBDocumentPaginationConfiguration,
   QueryCommand,
 } from '@aws-sdk/lib-dynamodb';
-import { throttlingBackOff } from '@aws-accelerator/utils';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import * as AWS from 'aws-sdk';
 AWS.config.logger = console;
 

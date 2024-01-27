@@ -19,7 +19,8 @@ import * as AWS from 'aws-sdk';
 import { STSClient, AssumeRoleCommand, AssumeRoleCommandInput, AssumeRoleCommandOutput } from '@aws-sdk/client-sts';
 import { SSMClient, GetParametersByPathCommand } from '@aws-sdk/client-ssm';
 
-import { createLogger, throttlingBackOff } from '@aws-accelerator/utils';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 
 import * as t from './common-types';
 import { AccountsConfig } from './accounts-config';

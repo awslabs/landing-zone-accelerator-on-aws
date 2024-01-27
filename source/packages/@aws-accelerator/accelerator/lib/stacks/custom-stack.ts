@@ -28,7 +28,7 @@ import {
   SecurityConfig,
   CfnParameter,
 } from '@aws-accelerator/config';
-import { createLogger } from '@aws-accelerator/utils';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
 
 import { version } from '../../../../../package.json';
 

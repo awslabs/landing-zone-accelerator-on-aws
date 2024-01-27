@@ -22,7 +22,7 @@ import {
   DescribeStackResourceCommand,
   DescribeStackResourceCommandOutput,
 } from '@aws-sdk/client-cloudformation';
-import { throttlingBackOff } from '@aws-accelerator/utils';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 
 export async function handler(event: CloudFormationCustomResourceEvent): Promise<

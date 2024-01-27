@@ -11,7 +11,8 @@
  *  and limitations under the License.
  */
 
-import { throttlingBackOff, chunkArray } from '@aws-accelerator/utils';
+import { chunkArray } from '@aws-accelerator/utils/lib/common-functions';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 import * as AWS from 'aws-sdk';
 AWS.config.logger = console;

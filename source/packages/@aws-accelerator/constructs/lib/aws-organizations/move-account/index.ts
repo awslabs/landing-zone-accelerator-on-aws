@@ -27,7 +27,7 @@ import {
   MoveAccountCommand,
   OrganizationsClient,
 } from '@aws-sdk/client-organizations';
-import { throttlingBackOff } from '@aws-accelerator/utils';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 
 const marshallOptions = {

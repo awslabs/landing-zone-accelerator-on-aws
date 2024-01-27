@@ -13,7 +13,9 @@
 import mri from 'mri';
 import * as fs from 'fs';
 import process from 'process';
-import { createLogger, evaluateLimits, getCurrentAccountId } from '@aws-accelerator/utils';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
+import { evaluateLimits } from '@aws-accelerator/utils/lib/evaluate-limits';
+import { getCurrentAccountId } from '@aws-accelerator/utils/lib/common-functions';
 import { AccountsConfig, GlobalConfig, OrganizationConfig } from '@aws-accelerator/config';
 import { setGlobalRegion } from './accelerator';
 

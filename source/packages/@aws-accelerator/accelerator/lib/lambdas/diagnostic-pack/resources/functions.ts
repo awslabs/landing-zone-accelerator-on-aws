@@ -1,5 +1,5 @@
 import { AssumeRoleCommand, STSClient, GetCallerIdentityCommand } from '@aws-sdk/client-sts';
-import { throttlingBackOff } from '@aws-accelerator/utils';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import {
   CloudFormationClient,
   DescribeStackEventsCommand,

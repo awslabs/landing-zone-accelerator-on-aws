@@ -29,12 +29,12 @@ import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
 import { getCentralLogBucketKmsKeyArn } from '../lib/accelerator';
 import { AcceleratorResourceNames } from '../lib/accelerator-resource-names';
 import {
-  throttlingBackOff,
   POLICY_LOOKUP_TYPE,
   POLICY_LOOKUP_SCOPE,
   ACCEL_POLICY_LOOKUP_REGEX,
-  createLogger,
-} from '@aws-accelerator/utils';
+} from '@aws-accelerator/utils/lib/policy-replacements';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import AWS from 'aws-sdk';
 const logger = createLogger(['app-utils']);
 export interface AcceleratorContext {

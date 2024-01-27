@@ -18,7 +18,7 @@
  */
 
 import * as AWS from 'aws-sdk';
-import { throttlingBackOff } from '@aws-accelerator/utils';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { PortfolioAssociationConfig, PortfolioConfig } from '@aws-accelerator/config';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 

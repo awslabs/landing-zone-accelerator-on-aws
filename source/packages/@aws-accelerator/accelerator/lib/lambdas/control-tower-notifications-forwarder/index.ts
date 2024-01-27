@@ -12,7 +12,7 @@
  */
 
 import { SNSClient, PublishCommand, PublishCommandInput } from '@aws-sdk/client-sns';
-import { throttlingBackOff } from '@aws-accelerator/utils';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 
 const snsTopicArn: string = process.env['SNS_TOPIC_ARN'] ?? '';
 const solutionId: string = process.env['SOLUTION_ID'] ?? '';

@@ -34,7 +34,9 @@ import {
   OrganizationConfig,
 } from '@aws-accelerator/config';
 import { getReplacementsConfig } from '../utils/app-utils';
-import { createLogger, getCloudFormationTemplate, printStackDiff } from '@aws-accelerator/utils';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
+import { getCloudFormationTemplate } from '@aws-accelerator/utils/lib/get-template';
+import { printStackDiff } from '@aws-accelerator/utils/lib/diff-stack';
 import { isBeforeBootstrapStage } from '../utils/app-utils';
 
 import { AcceleratorStackNames } from './accelerator';

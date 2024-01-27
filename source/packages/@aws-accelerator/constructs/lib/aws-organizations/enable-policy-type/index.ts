@@ -11,7 +11,8 @@
  *  and limitations under the License.
  */
 
-import { setOrganizationsClient, throttlingBackOff } from '@aws-accelerator/utils';
+import { setOrganizationsClient } from '@aws-accelerator/utils/lib/set-organizations-client';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { EnablePolicyTypeCommand, ListRootsCommand } from '@aws-sdk/client-organizations';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 

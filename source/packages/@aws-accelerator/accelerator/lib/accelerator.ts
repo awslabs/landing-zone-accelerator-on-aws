@@ -28,12 +28,11 @@ import {
 import { S3Client, HeadBucketCommand } from '@aws-sdk/client-s3';
 import { IAMClient, GetRoleCommand, GetRoleCommandInput } from '@aws-sdk/client-iam';
 import { AccountsConfig, GlobalConfig, OrganizationConfig } from '@aws-accelerator/config';
-import {
-  createLogger,
-  throttlingBackOff,
-  getCrossAccountCredentials,
-  setStsTokenPreferences,
-} from '@aws-accelerator/utils';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+import { getCrossAccountCredentials } from '@aws-accelerator/utils/lib/common-functions';
+import { setStsTokenPreferences } from '@aws-accelerator/utils/lib/set-token-preferences';
+
 import { AssumeProfilePlugin } from '@aws-cdk-extensions/cdk-plugin-assume-role';
 import { isBeforeBootstrapStage } from '../utils/app-utils';
 import { AcceleratorStage } from './accelerator-stage';

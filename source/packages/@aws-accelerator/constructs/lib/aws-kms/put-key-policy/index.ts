@@ -11,7 +11,8 @@
  *  and limitations under the License.
  */
 
-import { PolicyStatementType, throttlingBackOff } from '@aws-accelerator/utils';
+import { PolicyStatementType } from '@aws-accelerator/utils/lib/common-resources';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 import * as AWS from 'aws-sdk';
 import * as path from 'path';

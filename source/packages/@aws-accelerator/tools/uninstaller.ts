@@ -12,7 +12,7 @@
  */
 import yargs from 'yargs';
 
-import { createLogger } from '@aws-accelerator/utils';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
 
 import { AcceleratorTool } from './lib/classes/accelerator-tool';
 

@@ -20,7 +20,7 @@ import { v4 as uuidv4 } from 'uuid';
 import * as winston from 'winston';
 import { NagSuppressions } from 'cdk-nag';
 
-import { PrincipalOrgIdConditionType } from '@aws-accelerator/utils';
+import { PrincipalOrgIdConditionType } from '@aws-accelerator/utils/lib/common-resources';
 
 import {
   AccountConfig,
@@ -46,7 +46,9 @@ import {
   VpcTemplatesConfig,
 } from '@aws-accelerator/config';
 import { KeyLookup, S3LifeCycleRule, ServiceLinkedRole } from '@aws-accelerator/constructs';
-import { createLogger, policyReplacements, SsmParameterPath, SsmResourceType } from '@aws-accelerator/utils';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
+import { SsmParameterPath, SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+import { policyReplacements } from '@aws-accelerator/utils/lib/policy-replacements';
 
 import { version } from '../../../../../package.json';
 import { AcceleratorResourceNames } from '../accelerator-resource-names';

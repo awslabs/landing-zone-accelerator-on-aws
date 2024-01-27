@@ -12,7 +12,7 @@
  */
 
 import * as AWS from 'aws-sdk';
-import { delay, throttlingBackOff } from '@aws-accelerator/utils';
+import { delay, throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 
 const organizationsClient = new AWS.Organizations({
   region: 'us-east-1',

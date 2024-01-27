@@ -31,7 +31,7 @@ import {
   SecurityConfigValidator,
   ReplacementsConfigValidator,
 } from '@aws-accelerator/config';
-import { createLogger } from '@aws-accelerator/utils';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { Accelerator } from './accelerator';
 import { getReplacementsConfig } from '../utils/app-utils';
 

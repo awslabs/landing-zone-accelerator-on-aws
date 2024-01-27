@@ -18,7 +18,7 @@ import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'pascal-case';
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import { LogLevel, NetworkStack } from '../network-stack';
-import { SsmResourceType } from '@aws-accelerator/utils';
+import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 
 export class AcmResources {
   public readonly certificateMap: Map<string, Certificate>;

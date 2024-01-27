@@ -12,12 +12,12 @@
  */
 
 import {
+  PolicyStatementType,
   AcceleratorImportedBucketType,
   AwsPrincipalAccessesType,
-  PolicyStatementType,
   PrincipalOrgIdConditionType,
-  throttlingBackOff,
-} from '@aws-accelerator/utils';
+} from '@aws-accelerator/utils/lib/common-resources';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 import * as AWS from 'aws-sdk';
 import * as path from 'path';

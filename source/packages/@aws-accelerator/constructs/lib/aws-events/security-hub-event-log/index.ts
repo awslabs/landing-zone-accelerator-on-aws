@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { throttlingBackOff } from '@aws-accelerator/utils';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import * as AWS from 'aws-sdk';
 import * as uuid from 'uuid';
 import { ScheduledEvent } from '@aws-accelerator/utils/lib/common-types';

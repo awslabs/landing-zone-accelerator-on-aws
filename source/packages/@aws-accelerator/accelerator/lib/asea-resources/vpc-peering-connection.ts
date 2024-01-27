@@ -1,5 +1,5 @@
 import { pascalCase } from 'pascal-case';
-import { SsmResourceType } from '@aws-accelerator/utils';
+import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 import { AseaResourceType } from '@aws-accelerator/config';
 import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
 import { AseaResource, AseaResourceProps } from './resource';

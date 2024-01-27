@@ -18,7 +18,8 @@
  * @returns
  */
 
-import { setRetryStrategy, throttlingBackOff } from '@aws-accelerator/utils';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 import {
   DisableEbsEncryptionByDefaultCommand,
   EC2Client,

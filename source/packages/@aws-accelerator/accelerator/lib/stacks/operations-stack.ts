@@ -27,7 +27,7 @@ import {
   VpcConfig,
   VpcTemplatesConfig,
 } from '@aws-accelerator/config';
-import { SsmResourceType } from '@aws-accelerator/utils';
+import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 import {
   Bucket,
   BucketEncryptionType,

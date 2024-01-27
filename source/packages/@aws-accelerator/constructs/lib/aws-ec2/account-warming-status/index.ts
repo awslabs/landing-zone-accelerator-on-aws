@@ -28,7 +28,7 @@ import {
   TerminateInstancesCommand,
 } from '@aws-sdk/client-ec2';
 import { AdaptiveRetryStrategy } from '@aws-sdk/util-retry';
-import { delay } from '@aws-accelerator/utils';
+import { delay } from '@aws-accelerator/utils/lib/throttle';
 
 const solutionId = process.env['SOLUTION_ID'] ?? '';
 const retryStrategy = new AdaptiveRetryStrategy(() => Promise.resolve(5));

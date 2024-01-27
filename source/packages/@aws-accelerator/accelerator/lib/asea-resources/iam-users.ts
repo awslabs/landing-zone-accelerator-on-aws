@@ -13,7 +13,7 @@
 
 import { CfnGroup, CfnManagedPolicy, CfnUser } from 'aws-cdk-lib/aws-iam';
 import { AseaResourceType } from '@aws-accelerator/config';
-import { SsmResourceType } from '@aws-accelerator/utils';
+import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
 import { pascalCase } from 'pascal-case';
 import { AseaResource, AseaResourceProps } from './resource';

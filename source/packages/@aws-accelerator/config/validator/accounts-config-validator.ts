@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { createLogger } from '@aws-accelerator/utils';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import * as emailValidator from 'email-validator';
 import { AccountsConfig } from '../lib/accounts-config';
 import { OrganizationConfig } from '../lib/organization-config';

@@ -26,7 +26,7 @@ import {
   VpcTemplatesConfig,
 } from '@aws-accelerator/config';
 import { HostedZone, RecordSet, ResolverRule } from '@aws-accelerator/constructs';
-import { SsmResourceType } from '@aws-accelerator/utils';
+import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import { NetworkStack } from '../network-stack';
