@@ -12,6 +12,7 @@ transitGateways:
     asn: 65521
     dnsSupport: enable
     vpnEcmpSupport: enable
+    multicastSupport: enable
     defaultRouteTableAssociation: disable
     defaultRouteTablePropagation: disable
     autoAcceptSharingAttachments: enable
@@ -52,6 +53,7 @@ transitGateways:
     asn: 64512
     dnsSupport: enable
     vpnEcmpSupport: enable
+    multicastSupport: enable
     defaultRouteTableAssociation: disable
     defaultRouteTablePropagation: disable
     autoAcceptSharingAttachments: enable

@@ -503,6 +503,7 @@ export class TransitGateway extends TransitGatewayBase {
       defaultRouteTablePropagation: props.defaultRouteTablePropagation,
       dnsSupport: props.dnsSupport,
       vpnEcmpSupport: props.vpnEcmpSupport,
+      multicastSupport: props.multicastSupport,
       tags: props.tags,
     });
     cdk.Tags.of(this).add('Name', props.name);

@@ -27,6 +27,7 @@ transitGateways:
     asn: 65521
     dnsSupport: enable
     vpnEcmpSupport: enable
+    multicastSupport: disable
     defaultRouteTableAssociation: disable
     defaultRouteTablePropagation: disable
     autoAcceptSharingAttachments: enable

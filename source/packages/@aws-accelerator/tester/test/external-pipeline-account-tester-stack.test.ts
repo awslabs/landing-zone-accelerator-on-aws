@@ -143,6 +143,7 @@ describe('ExternalPipelineAccount-TesterStack', () => {
                   routeTableNames: ['core', 'segregated', 'shared', 'standalone'],
                   shareTargetAccountIds: ['111111111111', '222222222222'],
                   vpnEcmpSupport: 'enable',
+                  multicastSupport: 'enable',
                 },
                 suite: 'network',
                 testTarget: 'validateTransitGateway',

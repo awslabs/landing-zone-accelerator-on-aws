@@ -40,6 +40,7 @@ export class TransitGateways extends AseaResource {
       transitGateway.defaultRouteTablePropagation = tgwItem.defaultRouteTablePropagation;
       transitGateway.dnsSupport = tgwItem.dnsSupport;
       transitGateway.vpnEcmpSupport = tgwItem.vpnEcmpSupport;
+      transitGateway.multicastSupport = tgwItem.multicastSupport;
       this.createTgwRouteTables(tgwItem, tgwResource.logicalResourceId);
       this.scope.addSsmParameter({
         logicalId: pascalCase(`SsmParam${tgwItem.name}TransitGatewayId`),

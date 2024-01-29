@@ -102,6 +102,7 @@ export class NetworkConfigTypes {
     asn: t.number,
     dnsSupport: t.enableDisable,
     vpnEcmpSupport: t.enableDisable,
+    multicastSupport: t.enableDisable,
     defaultRouteTableAssociation: t.enableDisable,
     defaultRouteTablePropagation: t.enableDisable,
     autoAcceptSharingAttachments: t.enableDisable,
@@ -1487,6 +1488,7 @@ export class TransitGatewayPeeringConfig implements t.TypeOf<typeof NetworkConfi
  *     asn: 65000
  *     dnsSupport: enable
  *     vpnEcmpSupport: enable
+ *     multicastSupport: false
  *     defaultRouteTableAssociation: disable
  *     defaultRouteTablePropagation: disable
  *     autoAcceptSharingAttachments: enable
@@ -1552,6 +1554,14 @@ export class TransitGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.
    * If connections advertise the same CIDRs, the traffic is distributed equally between them.
    */
   readonly vpnEcmpSupport: t.EnableDisable = 'enable';
+  /**
+   * Multicast routing support between subnets of attached VPCs.
+   *
+   * @remarks
+   * Enable this option if you need multicast support traffic between subnets of attached VPCs.
+   * A subnet can only be in one multicast domain.
+   */
+  readonly multicastSupport: t.EnableDisable = 'disable';
   /**
    * Configure default route table association.
    *

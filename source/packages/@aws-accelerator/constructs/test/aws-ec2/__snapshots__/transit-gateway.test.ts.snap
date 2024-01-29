@@ -176,6 +176,7 @@ exports[`ImportTransitGateway Construct(ImportTransitGateway):  Snapshot Test 1`
         "DefaultRouteTableAssociation": "enable",
         "DefaultRouteTablePropagation": "enable",
         "DnsSupport": "enable",
+        "MulticastSupport": "enable",
         "Tags": [
           {
             "Key": "key",
@@ -825,6 +826,7 @@ exports[`TransitGateway Construct(TransitGateway):  Snapshot Test 1`] = `
         "DefaultRouteTableAssociation": "enable",
         "DefaultRouteTablePropagation": "enable",
         "DnsSupport": "enable",
+        "MulticastSupport": "enable",
         "Tags": [
           {
             "Key": "key",
@@ -1474,6 +1476,7 @@ exports[`TransitGatewayAttachment Construct(TransitGatewayAttachment):  Snapshot
         "DefaultRouteTableAssociation": "enable",
         "DefaultRouteTablePropagation": "enable",
         "DnsSupport": "enable",
+        "MulticastSupport": "enable",
         "Tags": [
           {
             "Key": "key",
@@ -1957,6 +1960,7 @@ exports[`TransitGatewayRouteTableAssociation Construct(TransitGatewayRouteTableA
         "DefaultRouteTableAssociation": "enable",
         "DefaultRouteTablePropagation": "enable",
         "DnsSupport": "enable",
+        "MulticastSupport": "enable",
         "Tags": [
           {
             "Key": "key",
@@ -2519,6 +2523,7 @@ exports[`TransitGatewayRouteTablePropagation Construct(TransitGatewayRouteTableP
         "DefaultRouteTableAssociation": "enable",
         "DefaultRouteTablePropagation": "enable",
         "DnsSupport": "enable",
+        "MulticastSupport": "enable",
         "Tags": [
           {
             "Key": "key",

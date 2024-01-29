@@ -46,6 +46,7 @@ export async function validateTransitGateway(
   const amazonSideAsn = parameters['amazonSideAsn'];
   const dnsSupport = parameters['dnsSupport'];
   const vpnEcmpSupport = parameters['vpnEcmpSupport'];
+  const multicastSupport = parameters['multicastSupport'];
   const autoAcceptSharingAttachments = parameters['autoAcceptSharingAttachments'];
   const defaultRouteTableAssociation = parameters['defaultRouteTableAssociation'];
   const defaultRouteTablePropagation = parameters['defaultRouteTablePropagation'];
@@ -105,6 +106,7 @@ export async function validateTransitGateway(
           amazonSideAsn: parseInt(amazonSideAsn ?? 0),
           dnsSupport,
           vpnEcmpSupport,
+          multicastSupport,
           autoAcceptSharedAttachments: autoAcceptSharingAttachments,
           defaultRouteTableAssociation,
           defaultRouteTablePropagation,
@@ -160,6 +162,7 @@ function areArraysEqual(first: string[], second: string[]) {
  * @param amazonSideAsn
  * @param dnsSupport
  * @param vpnEcmpSupport
+ * @param multicastSupport
  * @param autoAcceptSharedAttachments
  * @param defaultRouteTableAssociation
  * @param defaultRouteTablePropagation
@@ -171,6 +174,7 @@ async function transitGatewayExists(
     amazonSideAsn: number;
     dnsSupport: string | undefined;
     vpnEcmpSupport: string | undefined;
+    multicastSupport: string | undefined;
     autoAcceptSharedAttachments: string | undefined;
     defaultRouteTableAssociation: string | undefined;
     defaultRouteTablePropagation: string | undefined;
@@ -181,6 +185,7 @@ async function transitGatewayExists(
       (props.amazonSideAsn !== 0 ? props.amazonSideAsn : transitGateway.Options!.AmazonSideAsn) &&
     transitGateway.Options!.DnsSupport === (props.dnsSupport ?? transitGateway.Options!.DnsSupport) &&
     transitGateway.Options!.VpnEcmpSupport === (props.vpnEcmpSupport ?? transitGateway.Options!.VpnEcmpSupport) &&
+    transitGateway.Options!.multicastSupport === (props.multicastSupport ?? transitGateway.Options!.multicastSupport) &&
     transitGateway.Options!.AutoAcceptSharedAttachments ===
       (props.autoAcceptSharedAttachments ?? transitGateway.Options!.AutoAcceptSharedAttachments) &&
     transitGateway.Options!.DefaultRouteTableAssociation ===

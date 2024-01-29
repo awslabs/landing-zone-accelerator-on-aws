@@ -11,6 +11,7 @@ tests:
       amazonSideAsn: '65521'
       dnsSupport: enable
       vpnEcmpSupport: enable
+      multicastSupport: enable
       defaultRouteTableAssociation: disable
       defaultRouteTablePropagation: disable
       autoAcceptSharingAttachments: enable
