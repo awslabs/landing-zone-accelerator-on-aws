@@ -44,7 +44,7 @@ export class DiagnosticsPack {
         roleName: this.stack.acceleratorResourceNames.roles.diagnosticsPackAssumeRoleName,
         assumedBy: new cdk.aws_iam.ArnPrincipal(
           `arn:${cdk.Stack.of(this.stack).partition}:iam::${assumeByAccountId}:role/${
-            props.qualifier === 'aws-accelerator' ? props.prefixes.accelerator : props.qualifier
+            props.qualifier ? props.qualifier : props.prefixes.accelerator
           }-DiagnosticsPackLambdaRole`,
         ),
       });
