@@ -7,4 +7,4 @@ RUN dnf install -y nodejs awscli
 RUN npm -g install yarn
 RUN cd /landing-zone-accelerator-on-aws/source \
     && yarn install && yarn build
-RUN chmod +x /landing-zone-accelerator-on-aws/deployment/container/scripts/*.sh
+RUN chmod +x /landing-zone-accelerator-on-aws/scripts/*.sh

@@ -6,6 +6,16 @@ fi
 cdkSub=$1
 bucket=$2
 
+if [ -z "$2" ];
+then
+	    echo 's3 bucket name must be passed as the 1st parameter'
+	        exit 1
+fi
+bucket=$1
+export AWS_CA_BUNDLE=/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
+## sync LZA Config Files with S3 Repo
+aws s3 sync s3://$bucket/lza/aws-accelerator-config /landing-zone-accelerator-on-aws/aws-accelerator-config
+
 srcDirConfig='/landing-zone-accelerator-on-aws/aws-accelerator-config'
 caBundlePath='/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem'
 export AWS_CA_BUNDLE=/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
