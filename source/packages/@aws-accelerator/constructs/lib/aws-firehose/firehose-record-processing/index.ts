@@ -11,20 +11,22 @@
  *  and limitations under the License.
  */
 
-import * as AWS from 'aws-sdk';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as uuid from 'uuid';
+import * as zlib from 'zlib';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+import { setRetryStrategy, wildcardMatch } from '@aws-accelerator/utils/lib/common-functions';
+
+import { PutRecordsCommand, PutRecordsCommandInput, KinesisClient } from '@aws-sdk/client-kinesis';
 import {
   FirehoseTransformationEvent,
   FirehoseTransformationResult,
   FirehoseTransformationResultRecord,
   FirehoseTransformationEventRecord,
+  CloudWatchLogsToFirehoseRecordLogEvents,
+  CloudWatchLogsToFirehoseRecord,
 } from '@aws-accelerator/utils/lib/common-types';
-const zlib = require('zlib');
-
-AWS.config.logger = console;
 
 /**
  * firehose-prefix-processor - lambda handler
@@ -96,20 +98,6 @@ async function processFirehoseInputRecord(firehoseRecord: FirehoseTransformation
   }
 }
 
-// based on https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/ValidateLogEventFlow.html
-interface CloudWatchLogsToFirehoseRecordLogEvents {
-  id: string;
-  timestamp: number;
-  message: string;
-}
-interface CloudWatchLogsToFirehoseRecord {
-  owner: string;
-  logGroup: string;
-  logStream: string;
-  subscriptionFilters: string[];
-  messageType: string;
-  logEvents: CloudWatchLogsToFirehoseRecordLogEvents[];
-}
 async function checkDynamicPartition(firehoseRecordDynamicPartition: CloudWatchLogsToFirehoseRecord) {
   // data pattern for firehose dynamic mapping
   type S3LogPartitionType = {
@@ -131,7 +119,7 @@ async function checkDynamicPartition(firehoseRecordDynamicPartition: CloudWatchL
 
   if (mappings) {
     for (const mapping of mappings) {
-      if (firehoseRecordDynamicPartition.logGroup.indexOf(mapping.logGroupPattern) >= 0) {
+      if (wildcardMatch(firehoseRecordDynamicPartition.logGroup, mapping.logGroupPattern)) {
         serviceName = mapping.s3Prefix;
         break; // Take the first match
       }
@@ -194,13 +182,6 @@ async function checkFirehoseRecordLength(firehoseRecordsOutput: FirehoseTransfor
     await checkCloudWatchLog(firehoseRecordsOutput.records[0]);
   } else if (firehoseRecordsOutput.records.length > 1) {
     await splitFirehoseRecords(firehoseRecordsOutput);
-  } else {
-    // adding a unique prefix to make insights or log analysis easier.
-    throw new Error(
-      `NO_RECORDS_FOUND There were no records found in the output. Output event is: ${JSON.stringify(
-        firehoseRecordsOutput,
-      )}`,
-    );
   }
 }
 
@@ -211,7 +192,11 @@ async function checkCloudWatchLog(singleRecord: FirehoseTransformationResultReco
   if (jsonParsedPayload.logEvents.length === 1) {
     // adding a unique prefix to make insights or log analysis easier. The log group and log stream is printed out to help troubleshoot
     throw new Error(
-      `SINGLE_LARGE_FIREHOSE_PAYLOAD LogGroup: ${jsonParsedPayload.logGroup} with LogStream: ${jsonParsedPayload.logStream} has a single record with compressed data over 6000000`,
+      `SINGLE_LARGE_FIREHOSE_PAYLOAD LogGroup: ${jsonParsedPayload.logGroup} with LogStream: ${
+        jsonParsedPayload.logStream
+      } has a single record with compressed data over ${parseInt(
+        process.env['MaxOutputPayload']! ?? 6000000,
+      ).toString()}`,
     );
   } else if (jsonParsedPayload.logEvents.length > 1) {
     //split logEvents
@@ -269,20 +254,20 @@ function encodeZipRecords(
   // compression level 6 as per docs:
   // https://docs.aws.amazon.com/firehose/latest/dev/writing-with-cloudwatch-logs.html
   return {
-    Data: zlib.gzipSync(Buffer.from(JSON.stringify(payload)), { level: 6 }).toString('base64'),
+    Data: Buffer.from(zlib.gzipSync(Buffer.from(JSON.stringify(payload)), { level: 6 }).toString('base64')),
     PartitionKey: uuid.v4(),
   };
 }
 
-async function postRecordsToStream(recordsInput: AWS.Kinesis.PutRecordsInput) {
+async function postRecordsToStream(recordsInput: PutRecordsCommandInput) {
   // take records and post it to stream
   // records should be base64 encoded and compressed
   // Each shard can support writes up to 1,000 records per second, up to a maximum data write total of 1 MiB per second.
   // Note: When invoking this API, it is recommended you use the StreamARN input parameter rather than the StreamName input parameter.
 
   const solutionId = process.env['SOLUTION_ID'];
-  const kinesisClient = new AWS.Kinesis({ customUserAgent: solutionId });
-  await throttlingBackOff(() => kinesisClient.putRecords(recordsInput).promise());
+  const kinesisClient = new KinesisClient({ customUserAgent: solutionId, retryStrategy: setRetryStrategy() });
+  await throttlingBackOff(() => kinesisClient.send(new PutRecordsCommand(recordsInput)));
 }
 
 async function splitFirehoseRecords(records: FirehoseTransformationResult) {
@@ -303,7 +288,7 @@ async function splitFirehoseRecords(records: FirehoseTransformationResult) {
 async function parseFirehoseRecordsForKinesisStream(records: FirehoseTransformationResultRecord[]) {
   const kinesisDataPayload = [];
   for (const record of records) {
-    const singleRecord = { Data: record.data, PartitionKey: uuid.v4() };
+    const singleRecord = { Data: Buffer.from(record.data), PartitionKey: uuid.v4() };
     kinesisDataPayload.push(singleRecord);
   }
   await postRecordsToStream({ Records: kinesisDataPayload, StreamARN: process.env['KinesisStreamArn']! });
