@@ -341,6 +341,12 @@ export class SubnetResources {
         name: this.stack.getSsmPath(SsmResourceType.SUBNET, [vpcItem.name, subnetItem.name]),
         value: subnet.subnetId,
       });
+      if (subnet.ipv4CidrBlock) {
+        parameters.push({
+          name: this.stack.getSsmPath(SsmResourceType.SUBNET_IPV4_CIDR_BLOCK, [vpcItem.name, subnetItem.name]),
+          value: subnet.ipv4CidrBlock,
+        });
+      }
 
       // Retrieve accounts to share parameters with
       const subnetAccountIds = this.stack.getAccountIdsFromShareTarget(subnetItem.shareTargets!);

@@ -16,6 +16,7 @@ import {
   CustomerGatewayConfig,
   DefaultVpcsConfig,
   Ec2FirewallInstanceConfig,
+  NetworkConfigTypes,
   VpcConfig,
   VpcFlowLogsConfig,
   VpcTemplatesConfig,
@@ -341,21 +342,33 @@ export class VpcResources {
     const vpcPeeringAccountIds: string[] = [];
     for (const peering of props.networkConfig.vpcPeering ?? []) {
       // Get requester and accepter VPC configurations
-      const requesterVpc = props.networkConfig.vpcs.filter(item => item.name === peering.vpcs[0]);
-      const accepterVpc = props.networkConfig.vpcs.filter(item => item.name === peering.vpcs[1]);
-      const requesterAccountId = props.accountsConfig.getAccountId(requesterVpc[0].account);
-      const accepterAccountId = props.accountsConfig.getAccountId(accepterVpc[0].account);
-      const crossAccountCondition =
-        accepterAccountId !== requesterAccountId || accepterVpc[0].region !== requesterVpc[0].region;
+      const requesterVpc = this.stack.vpcResources.find(item => item.name === peering.vpcs[0])!;
+      const accepterVpc = this.stack.vpcResources.find(item => item.name === peering.vpcs[1])!;
+      const requesterAccountIds = this.stack.getVpcAccountIds(requesterVpc);
+      const accepterAccountIds = this.stack.getVpcAccountIds(accepterVpc);
+      let crossAccountCondition = false;
 
       // Check for different account peering -- only add IAM role to accepter account
-      if (this.stack.isTargetStack([accepterAccountId], [accepterVpc[0].region])) {
-        if (crossAccountCondition && !vpcPeeringAccountIds.includes(requesterAccountId)) {
-          vpcPeeringAccountIds.push(requesterAccountId);
+      if (this.stack.isTargetStack(accepterAccountIds, [accepterVpc.region])) {
+        if (
+          NetworkConfigTypes.vpcTemplatesConfig.is(requesterVpc) ||
+          NetworkConfigTypes.vpcTemplatesConfig.is(accepterVpc)
+        ) {
+          crossAccountCondition =
+            accepterVpc.region !== requesterVpc.region || !requesterAccountIds.includes(this.stack.account);
+        } else {
+          crossAccountCondition =
+            requesterVpc.account !== accepterVpc.account || requesterVpc.region !== accepterVpc.region;
+        }
+        if (crossAccountCondition) {
+          vpcPeeringAccountIds.push(...requesterAccountIds);
+        }
+        if (requesterVpc.region !== accepterVpc.region) {
+          vpcPeeringAccountIds.push(this.stack.account);
         }
       }
     }
-    return vpcPeeringAccountIds;
+    return [...new Set(vpcPeeringAccountIds)];
   }
 
   /**
@@ -485,6 +498,8 @@ export class VpcResources {
         vpcId,
         internetGatewayId,
         virtualPrivateGatewayId,
+        // ASEA VPC Resources are all cidr specified resources. IPAM is not supported during migration.
+        cidrBlock: options.vpcItem.cidrs?.[0] ?? '',
       });
       if (options.vpcItem.internetGateway && !internetGatewayId) {
         vpc.addInternetGateway();

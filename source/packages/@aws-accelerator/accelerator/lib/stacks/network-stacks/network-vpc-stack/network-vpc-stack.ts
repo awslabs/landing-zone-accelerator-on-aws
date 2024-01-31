@@ -14,7 +14,14 @@
 import { Construct } from 'constructs';
 
 import { OutpostsConfig, VpcConfig } from '@aws-accelerator/config';
-import { INatGateway, ITransitGatewayAttachment } from '@aws-accelerator/constructs';
+import {
+  INatGateway,
+  ITransitGatewayAttachment,
+  IVpc,
+  PutSsmParameter,
+  SsmParameterProps,
+  ISubnet,
+} from '@aws-accelerator/constructs';
 
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import { NetworkStack } from '../network-stack';
@@ -31,6 +38,8 @@ import { SecurityGroupResources } from './security-group-resources';
 import { SubnetResources } from './subnet-resources';
 import { TgwResources } from './tgw-resources';
 import { VpcResources } from './vpc-resources';
+import { pascalCase } from 'pascal-case';
+import { SsmResourceType } from '@aws-accelerator/utils';
 
 export class NetworkVpcStack extends NetworkStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
@@ -118,6 +127,10 @@ export class NetworkVpcStack extends NetworkStack {
     //
     new IpamResources(this, props.globalConfig.homeRegion, this.organizationId);
     //
+    // Create Stack resource SSM Parameters
+    //
+    this.createStackResourceParameters(vpcResources.vpcMap, subnetResources.subnetMap);
+    //
     // Create SSM Parameters
     //
     this.createSsmParameters();
@@ -127,6 +140,43 @@ export class NetworkVpcStack extends NetworkStack {
     this.addResourceSuppressionsByPath();
 
     this.logger.info('Completed stack synthesis');
+  }
+
+  /**
+   * Creates SSM Parameters for stack
+   *
+   * * Creates SSM Parameters for VPC and Subnet CIDR Blocks
+   */
+  private createStackResourceParameters(vpcMap: Map<string, IVpc>, subnetMap: Map<string, ISubnet>) {
+    const parameters: SsmParameterProps[] = [];
+    vpcMap.forEach((vpc, key) => {
+      parameters.push({
+        name: this.getSsmPath(SsmResourceType.VPC_IPV4_CIDR_BLOCK, [key]),
+        value: vpc.cidrBlock,
+      });
+    });
+    for (const vpcItem of this.vpcsInScope) {
+      for (const subnetItem of vpcItem.subnets ?? []) {
+        const subnet = subnetMap.get(`${vpcItem.name}_${subnetItem.name}`)!;
+        if (subnet.ipv4CidrBlock) {
+          parameters.push({
+            name: this.getSsmPath(SsmResourceType.SUBNET_IPV4_CIDR_BLOCK, [vpcItem.name, subnetItem.name]),
+            value: subnet.ipv4CidrBlock,
+          });
+        }
+      }
+    }
+    if (parameters.length === 0) return;
+    new PutSsmParameter(this, pascalCase(`PutNetworkVPCStackResourceParameters`), {
+      accountIds: [this.account],
+      region: this.region,
+      roleName: this.acceleratorResourceNames.roles.crossAccountSsmParameterShare,
+      kmsKey: this.cloudwatchKey,
+      logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+      parameters,
+      invokingAccountId: this.account,
+      acceleratorPrefix: this.props.prefixes.accelerator,
+    });
   }
 
   /**

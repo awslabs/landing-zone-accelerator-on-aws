@@ -1033,6 +1033,9 @@ vpcs:
             destination: 10.4.0.0/16
             type: vpcPeering
             target: CrossAccount
+          - name: PeeringRouteToWorkloadTemplate
+            type: vpcPeering
+            target: WorkloadTemplateToNetworkEndpoints
           - name: VpcPeerv6
             ipv6Destination: fd00::/8
             type: vpcPeering
@@ -1057,6 +1060,9 @@ vpcs:
             destination: 10.4.0.0/16
             type: vpcPeering
             target: CrossAccount
+          - name: PeeringRouteToWorkloadTemplate
+            type: vpcPeering
+            target: WorkloadTemplateToNetworkEndpoints
           - name: VpcPeerv6
             ipv6Destination: fd00::/8
             type: vpcPeering
@@ -1964,6 +1970,44 @@ vpcs:
         - flow-direction
         - traffic-path
 
+vpcTemplates:
+  - name: Workload-Template
+    region: *HOME_REGION
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+    ipamAllocations:
+      - ipamPoolName: home-region-pool
+        netmaskLength: 25
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Workload-A-Rt
+        routes:
+          - name: PeeringRouteToNetworkEndpoints
+            type: vpcPeering
+            target: WorkloadTemplateToNetworkEndpoints
+      - name: Workload-B-Rt
+        routes:
+          - name: PeeringRouteToNetworkEndpoints
+            type: vpcPeering
+            target: WorkloadTemplateToNetworkEndpoints
+    subnets:
+      - name: Workload-A
+        availabilityZone: a
+        routeTable: Workload-A-Rt
+        ipamAllocation:
+          ipamPoolName: home-region-pool
+          netmaskLength: 28
+      - name: Workload-B
+        availabilityZone: b
+        routeTable: Workload-B-Rt
+        ipamAllocation:
+          ipamPoolName: home-region-pool
+          netmaskLength: 28
+
 directConnectGateways:
   - name: Network-DXGW
     account: Network
@@ -2000,6 +2044,10 @@ vpcPeering:
     vpcs:
       - Network-Endpoints
       - SharedServices-Main
+  - name: WorkloadTemplateToNetworkEndpoints
+    vpcs:
+      - Workload-Template
+      - Network-Endpoints
 
 customerGateways:
   - name: accelerator-cgw

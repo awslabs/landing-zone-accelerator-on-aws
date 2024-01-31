@@ -107,6 +107,12 @@ export enum SsmResourceType {
    */
   VPC = '/network/vpc/${0}/id',
   /**
+   * VPC IPV4 CIDR Block
+   *
+   * `${0}` is  replaced with the VPC Primary CIDR Block
+   */
+  VPC_IPV4_CIDR_BLOCK = '/network/vpc/${0}/cidr/ipv4',
+  /**
    * VPC Endpoint ID
    *
    * `${0}` is  replaced with the VPC name
@@ -142,14 +148,15 @@ export enum SsmResourceType {
    *
    * `${1} is replaced with the subnet name
    */
+  SUBNET = '/network/vpc/${0}/subnet/${1}/id',
   /**
-   * Subnet ID
+   * Subnet IPV4 CIDR Block
    *
    * `${0}` is replaced with the VPC name
    *
    * `${1} is replaced with the subnet name
    */
-  SUBNET = '/network/vpc/${0}/subnet/${1}/id',
+  SUBNET_IPV4_CIDR_BLOCK = '/network/vpc/${0}/subnet/${1}/cidr/ipv4',
   /**
    * Route table ID
    *

@@ -31,6 +31,7 @@ const stack = new cdk.Stack();
 const vpc = Vpc.fromVpcAttributes(stack, 'TestVpc', {
   name: 'Main',
   vpcId: 'someImportedVpcId',
+  cidrBlock: '10.1.0.0/16',
 });
 
 vpc.addVirtualPrivateGateway(65000);

@@ -79,6 +79,10 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Default": "/accelerator/network/vpc/Network-Endpoints/alb/appA-alb-01/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointscidripv4C96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Endpoints/cidr/ipv4",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -221,6 +225,22 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
     },
     "SsmParameterValueacceleratornetworkvpcSharedServicesMainidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/SharedServices-Main/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcWorkloadTemplatecidripv4C96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Workload-Template/cidr/ipv4",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcWorkloadTemplateidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Workload-Template/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcWorkloadTemplaterouteTableWorkloadARtidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Workload-Template/routeTable/Workload-A-Rt/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcWorkloadTemplaterouteTableWorkloadBRtidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Workload-Template/routeTable/Workload-B-Rt/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
   },
@@ -702,7 +722,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "routeDefinition": {
           "DestinationCidrBlock": "10.0.0.0/24",
           "RouteTableId": {
-            "Ref": "SsmParamLookupSharedServicesAppA27ABCD73",
+            "Ref": "SsmParamLookupSharedServicesMain444444444444SharedServicesAppA08A11B17",
           },
           "VpcPeeringConnectionId": {
             "Ref": "CrossAccountVpcPeering9E0C69A2",
@@ -726,7 +746,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "routeDefinition": {
           "DestinationIpv6CidrBlock": "fd00::/8",
           "RouteTableId": {
-            "Ref": "SsmParamLookupSharedServicesAppA27ABCD73",
+            "Ref": "SsmParamLookupSharedServicesMain444444444444SharedServicesAppA08A11B17",
           },
           "VpcPeeringConnectionId": {
             "Ref": "CrossAccountVpcPeering9E0C69A2",
@@ -750,7 +770,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "routeDefinition": {
           "DestinationCidrBlock": "10.0.0.0/24",
           "RouteTableId": {
-            "Ref": "SsmParamLookupSharedServicesAppBD1161591",
+            "Ref": "SsmParamLookupSharedServicesMain444444444444SharedServicesAppB580D7687",
           },
           "VpcPeeringConnectionId": {
             "Ref": "CrossAccountVpcPeering9E0C69A2",
@@ -774,7 +794,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "routeDefinition": {
           "DestinationIpv6CidrBlock": "fd00::/8",
           "RouteTableId": {
-            "Ref": "SsmParamLookupSharedServicesAppBD1161591",
+            "Ref": "SsmParamLookupSharedServicesMain444444444444SharedServicesAppB580D7687",
           },
           "VpcPeeringConnectionId": {
             "Ref": "CrossAccountVpcPeering9E0C69A2",
@@ -798,7 +818,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "routeDefinition": {
           "DestinationCidrBlock": "10.0.0.0/24",
           "RouteTableId": {
-            "Ref": "SsmParamLookupSharedServicesAppC18786262",
+            "Ref": "SsmParamLookupSharedServicesMain444444444444SharedServicesAppCCD1A1D60",
           },
           "VpcPeeringConnectionId": {
             "Ref": "CrossAccountVpcPeering9E0C69A2",
@@ -2962,7 +2982,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Type": "Custom::SsmGetParameterValue",
       "UpdateReplacePolicy": "Delete",
     },
-    "SsmParamLookupSharedServicesAppA27ABCD73": {
+    "SsmParamLookupSharedServicesMain444444444444SharedServicesAppA08A11B17": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
         "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
@@ -2996,7 +3016,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Type": "Custom::SsmGetParameterValue",
       "UpdateReplacePolicy": "Delete",
     },
-    "SsmParamLookupSharedServicesAppBD1161591": {
+    "SsmParamLookupSharedServicesMain444444444444SharedServicesAppB580D7687": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
         "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
@@ -3030,7 +3050,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Type": "Custom::SsmGetParameterValue",
       "UpdateReplacePolicy": "Delete",
     },
-    "SsmParamLookupSharedServicesAppC18786262": {
+    "SsmParamLookupSharedServicesMain444444444444SharedServicesAppCCD1A1D60": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
         "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
@@ -3093,6 +3113,91 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         },
       },
       "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamWorkloadTemplateToNetworkEndpointsVpcPeeringA6E15753": {
+      "Properties": {
+        "Name": "/accelerator/network/vpcPeering/WorkloadTemplateToNetworkEndpoints/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "WorkloadTemplateToNetworkEndpointsVpcPeering1FE95B9F",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "WorkloadTemplateToNetworkEndpointsVpcPeering1FE95B9F": {
+      "Properties": {
+        "PeerOwnerId": "555555555555",
+        "PeerRegion": "us-east-1",
+        "PeerVpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "WorkloadTemplateToNetworkEndpoints",
+          },
+        ],
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcWorkloadTemplateidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::VPCPeeringConnection",
+    },
+    "WorkloadTemplateToNetworkEndpointsVpcPeeringNetworkEndpointsVpcNetworkEndpointsARouteTablePeeringRouteToWorkloadTemplate18B85C31": {
+      "Properties": {
+        "DestinationCidrBlock": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcWorkloadTemplatecidripv4C96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsrouteTableNetworkEndpointsAidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "VpcPeeringConnectionId": {
+          "Ref": "WorkloadTemplateToNetworkEndpointsVpcPeering1FE95B9F",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "WorkloadTemplateToNetworkEndpointsVpcPeeringNetworkEndpointsVpcNetworkEndpointsBRouteTablePeeringRouteToWorkloadTemplate2A3384CF": {
+      "Properties": {
+        "DestinationCidrBlock": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcWorkloadTemplatecidripv4C96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsrouteTableNetworkEndpointsBidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "VpcPeeringConnectionId": {
+          "Ref": "WorkloadTemplateToNetworkEndpointsVpcPeering1FE95B9F",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "WorkloadTemplateToNetworkEndpointsVpcPeeringWorkloadTemplateVpcWorkloadARtRouteTablePeeringRouteToNetworkEndpointsA455931E": {
+      "Properties": {
+        "DestinationCidrBlock": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointscidripv4C96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcWorkloadTemplaterouteTableWorkloadARtidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "VpcPeeringConnectionId": {
+          "Ref": "WorkloadTemplateToNetworkEndpointsVpcPeering1FE95B9F",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "WorkloadTemplateToNetworkEndpointsVpcPeeringWorkloadTemplateVpcWorkloadBRtRouteTablePeeringRouteToNetworkEndpoints3AE45A7C": {
+      "Properties": {
+        "DestinationCidrBlock": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointscidripv4C96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcWorkloadTemplaterouteTableWorkloadBRtidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "VpcPeeringConnectionId": {
+          "Ref": "WorkloadTemplateToNetworkEndpointsVpcPeering1FE95B9F",
+        },
+      },
+      "Type": "AWS::EC2::Route",
     },
     "appAnlbtg2ipLookupB24081DE": {
       "DeletionPolicy": "Delete",

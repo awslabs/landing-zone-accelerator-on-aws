@@ -7682,12 +7682,26 @@ export class CentralNetworkServicesConfig implements t.TypeOf<typeof NetworkConf
  * VPC peering configuration.
  * Used to define VPC peering connections.
  *
+ * VPC can be from vpc or vpcTemplates configuration.
+ *
+ * @remarks
+ * **CAUTION**: Both vpcs can't be from vpcTemplates.
+ *
  * @example
  * ```
  * vpcPeering:
  *   - name: Peering
  *     vpcs:
  *       - VPC-A
+ *       - VPC-B
+ *     tags: []
+ * ```
+ * Between VPC Template and VPC
+ * ```
+ * vpcPeering:
+ *   - name: Peering
+ *     vpcs:
+ *       - VPC-Template-A
  *       - VPC-B
  *     tags: []
  * ```
@@ -7699,6 +7713,11 @@ export class VpcPeeringConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcP
   readonly name: string = '';
   /**
    * The VPCs to peer.
+   *
+   * VPC can be from vpc or vpcTemplates configuration.
+   *
+   * @remarks
+   * **CAUTION**: Both vpcs can't be from vpcTemplates.
    */
   readonly vpcs: string[] = [];
   /**
