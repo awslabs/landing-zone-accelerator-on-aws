@@ -1,0 +1,3 @@
+[
+  { "logGroupPattern": "appA*region", "s3Prefix": "app-a-region" }
+]

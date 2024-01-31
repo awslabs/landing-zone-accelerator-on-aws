@@ -1,0 +1,3 @@
+[
+  { "logGroupPattern": "sandbox*", "s3Prefix": "sandbox" }
+]

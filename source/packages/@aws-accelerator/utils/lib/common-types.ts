@@ -5,6 +5,7 @@
  * your lambda directly.
  *
  */
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Handler<TEvent = any, TResult = any> = (
   event: TEvent,
