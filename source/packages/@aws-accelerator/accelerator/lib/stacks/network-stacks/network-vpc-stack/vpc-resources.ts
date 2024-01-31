@@ -355,7 +355,12 @@ export class VpcResources {
           NetworkConfigTypes.vpcTemplatesConfig.is(accepterVpc)
         ) {
           crossAccountCondition =
-            accepterVpc.region !== requesterVpc.region || !requesterAccountIds.includes(this.stack.account);
+            // true: If VPCs in peering connection are cross region
+            accepterVpc.region !== requesterVpc.region ||
+            // true: If requester or accepter has more accounts
+            requesterAccountIds.length !== accepterAccountIds.length ||
+            // true: If requester has any other accounts apart from accepter
+            requesterAccountIds.filter(requesterAccountId => requesterAccountId !== this.stack.account).length > 0;
         } else {
           crossAccountCondition =
             requesterVpc.account !== accepterVpc.account || requesterVpc.region !== accepterVpc.region;
