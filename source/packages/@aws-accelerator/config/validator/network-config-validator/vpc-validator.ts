@@ -308,9 +308,13 @@ export class VpcValidator {
           `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} destinationPrefixList ${routeTableEntryItem.destinationPrefixList} does not exist`,
         );
       }
-    } else {
+    } else if (routeTableEntryItem.destination || routeTableEntryItem.ipv6Destination) {
       // Validate the destination CIDR or subnet
       this.validateRouteEntryDestinationCidr(routeTableEntryItem, routeTableName, vpcItem, helpers, errors);
+    } else if (!['vpcPeering'].includes(routeTableEntryItem.type!)) {
+      errors.push(
+        `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} must define either destinationPrefixList, destination or ipv6Destination if type is not vpcPeering or gatewayEndpoint`,
+      );
     }
   }
 
@@ -3055,7 +3059,8 @@ export class VpcValidator {
    * @param errors
    */
   private validateVpcPeeringConfiguration(values: NetworkConfig, errors: string[]) {
-    const vpcs = values.vpcs;
+    const vpcs = [...values.vpcs, ...(values.vpcTemplates ?? [])];
+    const vpcTemplates = values.vpcTemplates ?? [];
     for (const peering of values.vpcPeering ?? []) {
       // Ensure exactly two VPCs are defined
       if (peering.vpcs.length < 2 || peering.vpcs.length > 2) {
@@ -3067,11 +3072,21 @@ export class VpcValidator {
       // Ensure VPCs exist and more than one is not defined
       for (const vpc of peering.vpcs) {
         if (!vpcs.find(item => item.name === vpc)) {
-          errors.push(`[VPC peering connection ${peering.name}]: VPC ${vpc} does not exist`);
+          errors.push(`[VPC peering connection ${peering.name}]: VPC or VPC Template ${vpc} does not exist`);
         }
         if (vpcs.filter(item => item.name === vpc).length > 1) {
-          errors.push(`[VPC peering connection ${peering.name}]: more than one VPC named ${vpc}`);
+          errors.push(`[VPC peering connection ${peering.name}]: more than one VPC or VPC Template named ${vpc}`);
         }
+      }
+
+      // Ensure not both vpcs are from vpcTemplates
+      if (
+        vpcTemplates.find(item => item.name === peering.vpcs[0]) &&
+        vpcTemplates.find(item => item.name === peering.vpcs[1])
+      ) {
+        errors.push(
+          `[VPC peering connection ${peering.name}]: Both VPCs ${peering.vpcs[0]}, ${peering.vpcs[1]} should not be from vpcTemplates. Only one VPC in a peering connection can be from vpcTemplate configuration`,
+        );
       }
     }
   }

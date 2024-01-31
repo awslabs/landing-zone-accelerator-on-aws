@@ -46,6 +46,11 @@ export interface ISubnet extends cdk.IResource {
   readonly subnetName: string;
 
   /**
+   * The CIDR Block of the subnet
+   */
+  readonly ipv4CidrBlock?: string;
+
+  /**
    * The Availability Zone the subnet is located in
    *
    * @attribute
@@ -58,6 +63,11 @@ export interface ISubnet extends cdk.IResource {
    * @attribute
    */
   readonly availabilityZoneId?: string;
+
+  /**
+   * The IPV6 CIDR Block of the subnet
+   */
+  readonly ipv6CidrBlock?: string;
 }
 
 interface SubnetPrivateDnsOptions {
@@ -99,8 +109,6 @@ abstract class SubnetBase extends cdk.Resource implements ISubnet {
   public abstract readonly subnetArn: string;
   public readonly availabilityZone?: string;
   public readonly availabilityZoneId?: string;
-  public abstract readonly ipv4CidrBlock?: string;
-  public abstract readonly ipv6CidrBlock?: string;
   public abstract readonly routeTable?: IRouteTable;
 }
 
@@ -110,7 +118,6 @@ export class ImportedSubnet extends SubnetBase {
   public readonly subnetId: string;
   public readonly subnetArn: string;
   public readonly ipv4CidrBlock?: string;
-  public readonly ipv6CidrBlock?: string;
 
   constructor(scope: Construct, id: string, props: ImportedSubnetProps) {
     super(scope, id);
@@ -615,6 +622,13 @@ export interface IVpc extends cdk.IResource {
    */
   readonly name: string;
   /**
+   * The CIDR Block of the vpc
+   * @remarks CloudFormation resource attribute is used.
+   *
+   * @attribute
+   */
+  readonly cidrBlock: string;
+  /**
    * Additional Cidrs for VPC
    */
   readonly cidrs: { ipv4: cdk.aws_ec2.CfnVPCCidrBlock[]; ipv6: cdk.aws_ec2.CfnVPCCidrBlock[] };
@@ -653,6 +667,7 @@ export interface VpcProps {
 export interface ImportedVpcProps {
   readonly name: string;
   readonly vpcId: string;
+  readonly cidrBlock: string;
   readonly internetGatewayId?: string;
   readonly virtualPrivateGatewayId?: string;
 }
@@ -662,6 +677,7 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
   public abstract readonly vpcId: string;
   public abstract readonly cidrs: { ipv4: cdk.aws_ec2.CfnVPCCidrBlock[]; ipv6: cdk.aws_ec2.CfnVPCCidrBlock[] };
   public egressOnlyIgwId?: string;
+  public abstract readonly cidrBlock: string;
   public internetGatewayId?: string;
   public virtualPrivateGatewayId?: string;
   protected egressOnlyIgw: cdk.aws_ec2.CfnEgressOnlyInternetGateway | undefined;
@@ -893,11 +909,13 @@ export class ImportedVpc extends VpcBase {
   public readonly vpcId: string;
   public readonly cidrs: { ipv4: cdk.aws_ec2.CfnVPCCidrBlock[]; ipv6: cdk.aws_ec2.CfnVPCCidrBlock[] };
   public readonly vpnConnections: VpnConnection[] = [];
+  public readonly cidrBlock: string;
 
   constructor(scope: Construct, id: string, props: ImportedVpcProps) {
     super(scope, id);
     this.name = props.name;
     this.vpcId = props.vpcId;
+    this.cidrBlock = props.cidrBlock;
     this.cidrs = { ipv4: [], ipv6: [] };
     this.internetGatewayId = props.internetGatewayId;
     this.virtualPrivateGatewayId = props.virtualPrivateGatewayId;
@@ -912,6 +930,7 @@ export class Vpc extends VpcBase {
   public readonly vpcId: string;
   public readonly cidrs: { ipv4: cdk.aws_ec2.CfnVPCCidrBlock[]; ipv6: cdk.aws_ec2.CfnVPCCidrBlock[] };
   public readonly vpnConnections: VpnConnection[] = [];
+  public readonly cidrBlock: string;
   constructor(scope: Construct, id: string, props: VpcProps) {
     super(scope, id);
     this.name = props.name;
@@ -925,6 +944,8 @@ export class Vpc extends VpcBase {
       tags: props.tags,
     });
     cdk.Tags.of(this).add('Name', props.name);
+
+    this.cidrBlock = resource.attrCidrBlock;
 
     this.vpcId = resource.ref;
 

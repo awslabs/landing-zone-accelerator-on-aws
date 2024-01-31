@@ -131,6 +131,10 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
       "Default": "/accelerator/network/vpc/Network-Secondary/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworkvpcWorkloadTemplateidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Workload-Template/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
   },
   "Resources": {
     "AcceleratorOutboundResolverRuleExampleRule8B329125": {

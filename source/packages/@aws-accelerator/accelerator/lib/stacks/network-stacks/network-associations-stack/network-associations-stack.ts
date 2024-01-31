@@ -42,6 +42,7 @@ import {
   TransitGatewayRouteEntryConfig,
   TransitGatewayRouteTableConfig,
   VpcConfig,
+  VpcPeeringConfig,
   VpcTemplatesConfig,
   VpnConnectionConfig,
 } from '@aws-accelerator/config';
@@ -87,9 +88,10 @@ import { SharedResources } from './shared-resources';
 
 interface Peering {
   name: string;
-  requester: VpcConfig;
-  accepter: VpcConfig;
+  requester: VpcConfig | VpcTemplatesConfig;
+  accepter: VpcConfig | VpcTemplatesConfig;
   tags: cdk.CfnTag[] | undefined;
+  crossAccount: boolean;
 }
 
 export class NetworkAssociationsStack extends NetworkStack {
@@ -683,19 +685,48 @@ export class NetworkAssociationsStack extends NetworkStack {
    */
   private setPeeringList() {
     const peeringList: Peering[] = [];
+    /**
+     * Verifies if given peering configuration is cross account or not.
+     * @param peering
+     * @returns
+     * False: If one of the peering vpcs is from a vpcTemplate and there is only one and same account matching vpcs.
+     * True: If one of the peering vpcs is from a vpcTemplate and length of vpc deployment target is not same or there is additional account in deployment target apart from accepter.
+     * True: If region of VPCs is different.
+     * True: If both vpcs are from vpcs configuration with different account.
+     */
+    const isCrossAccountPeering = (peering: VpcPeeringConfig) => {
+      const requesterVpc = this.vpcResources.find(item => item.name === peering.vpcs[0])!;
+      const accepterVpc = this.vpcResources.find(item => item.name === peering.vpcs[1])!;
+      const requesterAccountIds = this.getVpcAccountIds(requesterVpc);
+      const accepterAccountIds = this.getVpcAccountIds(accepterVpc);
+      let crossAccount = false;
+      if (
+        NetworkConfigTypes.vpcTemplatesConfig.is(requesterVpc) ||
+        NetworkConfigTypes.vpcTemplatesConfig.is(accepterVpc)
+      ) {
+        crossAccount =
+          requesterVpc.region !== accepterVpc.region ||
+          requesterAccountIds.length !== accepterAccountIds.length ||
+          requesterAccountIds.filter(requesterAccountId => !accepterAccountIds.includes(requesterAccountId)).length > 0;
+      } else {
+        crossAccount = requesterVpc.account !== accepterVpc.account || requesterVpc.region !== accepterVpc.region;
+      }
+      return crossAccount;
+    };
+
     for (const peering of this.props.networkConfig.vpcPeering ?? []) {
       // Get requester and accepter VPC configurations
-      const requesterVpc = this.props.networkConfig.vpcs.filter(item => item.name === peering.vpcs[0]);
-      const accepterVpc = this.props.networkConfig.vpcs.filter(item => item.name === peering.vpcs[1]);
-      const requesterAccountId = this.props.accountsConfig.getAccountId(requesterVpc[0].account);
-
+      const requesterVpc = this.vpcResources.find(item => item.name === peering.vpcs[0])!;
+      const accepterVpc = this.vpcResources.find(item => item.name === peering.vpcs[1])!;
+      const requesterAccountIds = this.getVpcAccountIds(requesterVpc);
       // Check if requester VPC is in this account and region
-      if (this.isTargetStack([requesterAccountId], [requesterVpc[0].region])) {
+      if (this.isTargetStack(requesterAccountIds, [requesterVpc.region])) {
         peeringList.push({
           name: peering.name,
-          requester: requesterVpc[0],
-          accepter: accepterVpc[0],
+          requester: requesterVpc,
+          accepter: accepterVpc,
           tags: peering.tags,
+          crossAccount: isCrossAccountPeering(peering),
         });
       }
     }
@@ -714,11 +745,9 @@ export class NetworkAssociationsStack extends NetworkStack {
           if (
             routeTableEntry.type &&
             routeTableEntry.type === 'vpcPeering' &&
-            routeTableEntry.target === peering.name &&
-            (peering.accepter.account !== peering.requester.account ||
-              peering.accepter.region !== peering.requester.region)
+            routeTableEntry.target === peering.name
           ) {
-            crossAccountRouteFramework = true;
+            crossAccountRouteFramework = peering.crossAccount;
           }
         }
       }
@@ -803,39 +832,37 @@ export class NetworkAssociationsStack extends NetworkStack {
     const prefixListMap = new Map<string, string>();
     for (const peering of this.peeringList) {
       // Get account IDs
-      const requesterAccountId = this.props.accountsConfig.getAccountId(peering.requester.account);
-      const accepterAccountId = this.props.accountsConfig.getAccountId(peering.accepter.account);
-      const crossAccountCondition =
-        accepterAccountId !== requesterAccountId || peering.accepter.region !== peering.requester.region;
-
-      for (const routeTable of peering.accepter.routeTables ?? []) {
-        for (const routeTableEntry of routeTable.routes ?? []) {
-          const mapKey = `${peering.accepter.account}_${peering.accepter.region}_${routeTableEntry.destinationPrefixList}`;
-          if (
-            routeTableEntry.type &&
-            routeTableEntry.type === 'vpcPeering' &&
-            routeTableEntry.target === peering.name &&
-            crossAccountCondition &&
-            routeTableEntry.destinationPrefixList &&
-            !prefixListMap.has(mapKey)
-          ) {
-            const prefixListId = new SsmParameterLookup(
-              this,
-              pascalCase(`SsmParamLookup${routeTableEntry.destinationPrefixList}`),
-              {
-                name: this.getSsmPath(SsmResourceType.PREFIX_LIST, [routeTableEntry.destinationPrefixList]),
-                accountId: accepterAccountId,
-                parameterRegion: peering.accepter.region,
-                roleName: `${this.props.prefixes.accelerator}-VpcPeeringRole-${peering.accepter.region}`,
-                kmsKey: this.cloudwatchKey,
-                logRetentionInDays: this.logRetention,
-                acceleratorPrefix: this.props.prefixes.accelerator,
-              },
-            ).value;
-            prefixListMap.set(mapKey, prefixListId);
+      const accepterAccountIds = this.getVpcAccountIds(peering.accepter);
+      accepterAccountIds.forEach(accepterAccountId => {
+        for (const routeTable of peering.accepter.routeTables ?? []) {
+          for (const routeTableEntry of routeTable.routes ?? []) {
+            const mapKey = `${accepterAccountId}_${peering.accepter.region}_${routeTableEntry.destinationPrefixList}`;
+            if (
+              routeTableEntry.type &&
+              routeTableEntry.type === 'vpcPeering' &&
+              routeTableEntry.target === peering.name &&
+              peering.crossAccount &&
+              routeTableEntry.destinationPrefixList &&
+              !prefixListMap.has(mapKey)
+            ) {
+              const prefixListId = new SsmParameterLookup(
+                this,
+                pascalCase(`SsmParamLookup${routeTableEntry.destinationPrefixList}`),
+                {
+                  name: this.getSsmPath(SsmResourceType.PREFIX_LIST, [routeTableEntry.destinationPrefixList]),
+                  accountId: accepterAccountId,
+                  parameterRegion: peering.accepter.region,
+                  roleName: `${this.props.prefixes.accelerator}-VpcPeeringRole-${peering.accepter.region}`,
+                  kmsKey: this.cloudwatchKey,
+                  logRetentionInDays: this.logRetention,
+                  acceleratorPrefix: this.props.prefixes.accelerator,
+                },
+              ).value;
+              prefixListMap.set(mapKey, prefixListId);
+            }
           }
         }
-      }
+      });
     }
     return prefixListMap;
   }
@@ -847,33 +874,36 @@ export class NetworkAssociationsStack extends NetworkStack {
     const routeTableMap = new Map<string, string>();
     for (const peering of this.peeringList) {
       // Get account IDs
-      const requesterAccountId = this.props.accountsConfig.getAccountId(peering.requester.account);
-      const accepterAccountId = this.props.accountsConfig.getAccountId(peering.accepter.account);
-      const crossAccountCondition =
-        accepterAccountId !== requesterAccountId || peering.accepter.region !== peering.requester.region;
-
-      for (const routeTable of peering.accepter.routeTables ?? []) {
-        for (const routeTableEntry of routeTable.routes ?? []) {
-          if (
-            routeTableEntry.type &&
-            routeTableEntry.type === 'vpcPeering' &&
-            routeTableEntry.target === peering.name &&
-            crossAccountCondition &&
-            !routeTableMap.has(`${peering.accepter.name}_${routeTable.name}`)
-          ) {
-            const routeTableId = new SsmParameterLookup(this, pascalCase(`SsmParamLookup${routeTable.name}`), {
-              name: this.getSsmPath(SsmResourceType.ROUTE_TABLE, [peering.accepter.name, routeTable.name]),
-              accountId: accepterAccountId,
-              parameterRegion: peering.accepter.region,
-              roleName: `${this.props.prefixes.accelerator}-VpcPeeringRole-${peering.accepter.region}`,
-              kmsKey: this.cloudwatchKey,
-              logRetentionInDays: this.logRetention,
-              acceleratorPrefix: this.props.prefixes.accelerator,
-            }).value;
-            routeTableMap.set(`${peering.accepter.name}_${routeTable.name}`, routeTableId);
+      const accepterAccountIds = this.getVpcAccountIds(peering.accepter);
+      accepterAccountIds.forEach(accepterAccountId => {
+        for (const routeTable of peering.accepter.routeTables ?? []) {
+          for (const routeTableEntry of routeTable.routes ?? []) {
+            if (
+              routeTableEntry.type &&
+              routeTableEntry.type === 'vpcPeering' &&
+              routeTableEntry.target === peering.name &&
+              peering.crossAccount &&
+              this.account !== accepterAccountId &&
+              !routeTableMap.has(`${peering.accepter.name}_${accepterAccountId}_${routeTable.name}`)
+            ) {
+              const routeTableId = new SsmParameterLookup(
+                this,
+                pascalCase(`SsmParamLookup${peering.accepter.name}${accepterAccountId}${routeTable.name}`),
+                {
+                  name: this.getSsmPath(SsmResourceType.ROUTE_TABLE, [peering.accepter.name, routeTable.name]),
+                  accountId: accepterAccountId,
+                  parameterRegion: peering.accepter.region,
+                  roleName: `${this.props.prefixes.accelerator}-VpcPeeringRole-${peering.accepter.region}`,
+                  kmsKey: this.cloudwatchKey,
+                  logRetentionInDays: this.logRetention,
+                  acceleratorPrefix: this.props.prefixes.accelerator,
+                },
+              ).value;
+              routeTableMap.set(`${peering.accepter.name}_${accepterAccountId}_${routeTable.name}`, routeTableId);
+            }
           }
         }
-      }
+      });
     }
     return routeTableMap;
   }
@@ -1692,10 +1722,7 @@ export class NetworkAssociationsStack extends NetworkStack {
     // Create VPC peering connections
     for (const peering of this.peeringList) {
       // Get account IDs
-      const requesterAccountId = this.props.accountsConfig.getAccountId(peering.requester.account);
-      const accepterAccountId = this.props.accountsConfig.getAccountId(peering.accepter.account);
-      const crossAccountCondition =
-        accepterAccountId !== requesterAccountId || peering.accepter.region !== peering.requester.region;
+      const accepterAccountIds = this.getVpcAccountIds(peering.accepter);
 
       // Get SSM parameters
       const requesterVpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
@@ -1703,96 +1730,114 @@ export class NetworkAssociationsStack extends NetworkStack {
         this.getSsmPath(SsmResourceType.VPC, [peering.requester.name]),
       );
 
-      let accepterVpcId: string;
-      let accepterRoleName: string | undefined = undefined;
-      if (crossAccountCondition) {
-        accepterVpcId = new SsmParameterLookup(this, pascalCase(`SsmParamLookup${peering.name}`), {
-          name: this.getSsmPath(SsmResourceType.VPC, [peering.accepter.name]),
-          accountId: accepterAccountId,
-          parameterRegion: peering.accepter.region,
-          roleName: `${this.props.prefixes.accelerator}-VpcPeeringRole-${peering.accepter.region}`,
-          kmsKey: this.cloudwatchKey,
-          logRetentionInDays: this.logRetention,
-          acceleratorPrefix: this.props.prefixes.accelerator,
-        }).value;
-
-        accepterRoleName = `${this.props.prefixes.accelerator}-VpcPeeringRole-${peering.accepter.region}`;
-      } else {
-        accepterVpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-          this,
-          this.getSsmPath(SsmResourceType.VPC, [peering.accepter.name]),
-        );
-      }
       let vpcPeering;
-      if (this.isManagedByAsea(AseaResourceType.EC2_VPC_PEERING, peering.name)) {
-        const peeringId = this.getExternalResourceParameter(
-          this.getSsmPath(SsmResourceType.VPC_PEERING, [peering.name]),
-        );
-        vpcPeering = VpcPeering.fromPeeringAttributes(this, `${peering.name}VpcPeering`, {
-          name: peering.name,
-          peeringId: peeringId,
-        });
-      } else {
-        // Create VPC peering
-        this.logger.info(
-          `Create VPC peering ${peering.name} between ${peering.requester.name} and ${peering.accepter.name}`,
-        );
-        vpcPeering = new VpcPeering(this, `${peering.name}VpcPeering`, {
-          name: peering.name,
-          peerOwnerId: accepterAccountId,
-          peerRegion: peering.accepter.region,
-          peerVpcId: accepterVpcId,
-          peerRoleName: accepterRoleName,
-          vpcId: requesterVpcId,
-          tags: peering.tags ?? [],
-        });
-        this.ssmParameters.push({
-          logicalId: pascalCase(`SsmParam${pascalCase(peering.name)}VpcPeering`),
-          parameterName: this.getSsmPath(SsmResourceType.VPC_PEERING, [peering.name]),
-          stringValue: vpcPeering.peeringId,
-        });
-      }
+      let aseaPeerMappingName = peering.name;
+      let peeringConstructId = `${peering.name}VpcPeering`;
+      let vpcPeerSsmConstructId = `SsmParam${pascalCase(peering.name)}VpcPeering`;
 
-      // Put cross-account SSM parameter if necessary
-      if (crossAccountCondition) {
-        new PutSsmParameter(this, pascalCase(`CrossAcctSsmParam${pascalCase(peering.name)}VpcPeering`), {
-          accountIds: [accepterAccountId],
-          region: peering.accepter.region,
-          roleName: this.acceleratorResourceNames.roles.crossAccountSsmParameterShare,
-          kmsKey: this.cloudwatchKey,
-          logRetentionInDays: this.logRetention,
-          parameters: [
-            {
-              name: this.getSsmPath(SsmResourceType.VPC_PEERING, [peering.name]),
-              value: vpcPeering.peeringId,
-            },
-          ],
-          invokingAccountId: cdk.Stack.of(this).account,
-          acceleratorPrefix: this.props.prefixes.accelerator,
-        });
-      }
+      for (const accepterAccountId of accepterAccountIds) {
+        let accepterVpcId: string;
+        let accepterRoleName: string | undefined = undefined;
+        if (peering.crossAccount && accepterAccountId !== this.account) {
+          accepterVpcId = new SsmParameterLookup(this, pascalCase(`SsmParamLookup${peering.name}`), {
+            name: this.getSsmPath(SsmResourceType.VPC, [peering.accepter.name]),
+            accountId: accepterAccountId,
+            parameterRegion: peering.accepter.region,
+            roleName: `${this.props.prefixes.accelerator}-VpcPeeringRole-${peering.accepter.region}`,
+            kmsKey: this.cloudwatchKey,
+            logRetentionInDays: this.logRetention,
+            acceleratorPrefix: this.props.prefixes.accelerator,
+          }).value;
 
-      // Create peering routes
-      this.createVpcPeeringRoutes(accepterAccountId, peering.requester, peering.accepter, vpcPeering);
+          accepterRoleName = `${this.props.prefixes.accelerator}-VpcPeeringRole-${peering.accepter.region}`;
+        } else {
+          accepterVpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+            this,
+            this.getSsmPath(SsmResourceType.VPC, [peering.accepter.name]),
+          );
+        }
+        if (
+          // NetworkConfigTypes.vpcTemplatesConfig.is(peering.requester) ||
+          NetworkConfigTypes.vpcTemplatesConfig.is(peering.accepter)
+        ) {
+          aseaPeerMappingName = `${peering.name}_${accepterAccountId}`;
+          peeringConstructId = `${peering.name}VpcPeering${accepterAccountId}`;
+          vpcPeerSsmConstructId = `SsmParam${pascalCase(peering.name)}VpcPeering${accepterAccountId}`;
+        }
+        if (this.isManagedByAsea(AseaResourceType.EC2_VPC_PEERING, peering.name)) {
+          const peeringId = this.getExternalResourceParameter(
+            this.getSsmPath(SsmResourceType.VPC_PEERING, [aseaPeerMappingName]),
+          );
+          vpcPeering = VpcPeering.fromPeeringAttributes(this, peeringConstructId, {
+            name: peering.name,
+            peeringId: peeringId,
+          });
+        } else {
+          // Create VPC peering
+          this.logger.info(
+            `Create VPC peering ${peering.name} between ${peering.requester.name} and ${peering.accepter.name}`,
+          );
+          vpcPeering = new VpcPeering(this, peeringConstructId, {
+            name: peering.name,
+            peerOwnerId: accepterAccountId,
+            peerRegion: peering.accepter.region,
+            peerVpcId: accepterVpcId,
+            peerRoleName: accepterRoleName,
+            vpcId: requesterVpcId,
+            tags: peering.tags ?? [],
+          });
+          this.ssmParameters.push({
+            logicalId: pascalCase(vpcPeerSsmConstructId),
+            parameterName: this.getSsmPath(SsmResourceType.VPC_PEERING, [
+              NetworkConfigTypes.vpcTemplatesConfig.is(peering.accepter)
+                ? // There will be multiple peering connections in requester account if accepter is VpcTemplate. Add accepterAccountId to avoid duplicate ssm parameter name
+                  `${peering.name}/${accepterAccountId}`
+                : peering.name,
+            ]),
+            stringValue: vpcPeering.peeringId,
+          });
+        }
+
+        // Put cross-account SSM parameter if necessary
+        if (peering.crossAccount && accepterAccountId !== this.account) {
+          new PutSsmParameter(this, pascalCase(`CrossAcctSsmParam${pascalCase(peering.name)}VpcPeering`), {
+            accountIds: [accepterAccountId],
+            region: peering.accepter.region,
+            roleName: this.acceleratorResourceNames.roles.crossAccountSsmParameterShare,
+            kmsKey: this.cloudwatchKey,
+            logRetentionInDays: this.logRetention,
+            parameters: [
+              {
+                name: this.getSsmPath(SsmResourceType.VPC_PEERING, [peering.name]),
+                value: vpcPeering.peeringId,
+              },
+            ],
+            invokingAccountId: cdk.Stack.of(this).account,
+            acceleratorPrefix: this.props.prefixes.accelerator,
+          });
+        }
+
+        // Create peering routes
+        this.createVpcPeeringRoutes(accepterAccountId, peering.requester, peering.accepter, vpcPeering);
+      }
     }
   }
 
   /**
    * Create VPC peering routes
-   * @param requesterAccountId
    * @param accepterAccountId
-   * @param requesterVpc
    * @param accepterVpc
+   * @param requesterVpc
    * @param peering
    */
   private createVpcPeeringRoutes(
     accepterAccountId: string,
-    requesterVpc: VpcConfig,
-    accepterVpc: VpcConfig,
+    requesterVpc: VpcConfig | VpcTemplatesConfig,
+    accepterVpc: VpcConfig | VpcTemplatesConfig,
     peering: VpcPeering,
   ): void {
     // Create requester VPC routes
-    this.createRequesterVpcPeeringRoutes(requesterVpc, peering);
+    this.createRequesterVpcPeeringRoutes(requesterVpc, accepterVpc, accepterAccountId, peering);
 
     // Create accepter account routes
     this.createAccepterVpcPeeringRoutes(accepterAccountId, accepterVpc, requesterVpc, peering);
@@ -1801,12 +1846,16 @@ export class NetworkAssociationsStack extends NetworkStack {
   /**
    * Function to add requester peering route
    * @param requesterVpc {@link VpcConfig}
+   * @param accepterVpc {@link VpcConfig}
+   * @param accepterAccountId
    * @param peering {@link VpcPeering}
    * @param routeTable {@link RouteTableConfig}
    * @param routeTableEntry {@link RouteTableEntryConfig}
    */
   private addRequesterPeeringRoute(
-    requesterVpc: VpcConfig,
+    requesterVpc: VpcConfig | VpcTemplatesConfig,
+    accepterVpc: VpcConfig | VpcTemplatesConfig,
+    accepterAccountId: string,
     peering: VpcPeering,
     routeTable: RouteTableConfig,
     routeTableEntry: RouteTableEntryConfig,
@@ -1823,7 +1872,11 @@ export class NetworkAssociationsStack extends NetworkStack {
         throw new Error(`Configuration validation failed at runtime.`);
       }
 
-      const requesterPeeringRouteDetails = this.getRequesterPeeringRouteDestinationConfig(routeTableEntry);
+      const requesterPeeringRouteDetails = this.getRequesterPeeringRouteDestinationConfig(
+        accepterVpc,
+        accepterAccountId,
+        routeTableEntry,
+      );
 
       peering.addPeeringRoute(
         routeId,
@@ -1840,12 +1893,26 @@ export class NetworkAssociationsStack extends NetworkStack {
   /**
    * Create requester peering routes
    * @param requesterVpc
+   * @param accepterVpc
+   * @param accepterAccountId
    * @param peering
    */
-  private createRequesterVpcPeeringRoutes(requesterVpc: VpcConfig, peering: VpcPeering): void {
+  private createRequesterVpcPeeringRoutes(
+    requesterVpc: VpcConfig | VpcTemplatesConfig,
+    accepterVpc: VpcConfig | VpcTemplatesConfig,
+    accepterAccountId: string,
+    peering: VpcPeering,
+  ): void {
     for (const routeTable of requesterVpc.routeTables ?? []) {
       for (const routeTableEntry of routeTable.routes ?? []) {
-        this.addRequesterPeeringRoute(requesterVpc, peering, routeTable, routeTableEntry);
+        this.addRequesterPeeringRoute(
+          requesterVpc,
+          accepterVpc,
+          accepterAccountId,
+          peering,
+          routeTable,
+          routeTableEntry,
+        );
       }
     }
   }
@@ -1854,49 +1921,62 @@ export class NetworkAssociationsStack extends NetworkStack {
    * Function to get accepter peering route destination configuration
    * @param accepterVpc {@link VpcConfig}
    * @param requesterVpc {@link VpcConfig}
+   * @param accepterAccountId
    * @param routeTableEntry {@link RouteTableEntryConfig}
    * @returns
    */
   private getAccepterPeeringRouteDestinationConfig(
-    accepterVpc: VpcConfig,
-    requesterVpc: VpcConfig,
+    accepterVpc: VpcConfig | VpcTemplatesConfig,
+    requesterVpc: VpcConfig | VpcTemplatesConfig,
+    accepterAccountId: string,
     routeTableEntry: RouteTableEntryConfig,
   ): { destinationPrefixListId?: string; destination?: string; ipv6Destination?: string } {
     let destination: string | undefined = undefined;
     let destinationPrefixListId: string | undefined = undefined;
+    const requesterAccountIds = this.getVpcAccountIds(requesterVpc);
     let ipv6Destination: string | undefined = undefined;
-    if (requesterVpc.account === accepterVpc.account && requesterVpc.region === accepterVpc.region) {
+    if (requesterAccountIds.includes(accepterAccountId) && requesterVpc.region === accepterVpc.region) {
       if (routeTableEntry.destinationPrefixList) {
         // Get PL ID from map
-        destinationPrefixListId = getPrefixList(this.prefixListMap, routeTableEntry.destinationPrefixList) as string;
-      } else {
+        destinationPrefixListId = this.prefixListMap.get(routeTableEntry.destinationPrefixList);
+        if (!destinationPrefixListId) {
+          this.logger.error(`Prefix list ${routeTableEntry.destinationPrefixList} not found`);
+          throw new Error(`Configuration validation failed at runtime.`);
+        }
+      } else if (routeTableEntry.destination || routeTableEntry.ipv6Destination) {
         destination = routeTableEntry.destination;
         ipv6Destination = routeTableEntry.ipv6Destination;
+      } else {
+        destination = this.getVpcCidr(requesterVpc, this.account);
       }
     } else {
       if (routeTableEntry.destinationPrefixList) {
         // Get PL ID from map
-        destinationPrefixListId = getPrefixList(
-          this.prefixListMap,
-          `${accepterVpc.account}_${accepterVpc.region}_${routeTableEntry.destinationPrefixList}`,
-        ) as string;
-      } else {
+        destinationPrefixListId = this.prefixListMap.get(
+          `${accepterAccountId}_${accepterVpc.region}_${routeTableEntry.destinationPrefixList}`,
+        );
+      } else if (routeTableEntry.destination || routeTableEntry.ipv6Destination) {
         destination = routeTableEntry.destination;
         ipv6Destination = routeTableEntry.ipv6Destination;
+      } else {
+        destination = this.getVpcCidr(requesterVpc, this.account);
       }
     }
-
-    return { destinationPrefixListId, destination, ipv6Destination };
+    return { destinationPrefixListId: destinationPrefixListId, destination, ipv6Destination };
   }
 
   /**
    * Function to get accepter peering route destination configuration
    * @param accepterVpc {@link VpcConfig}
-   * @param requesterVpc {@link VpcConfig}
+   * @param accepterAccountId
    * @param routeTableEntry {@link RouteTableEntryConfig}
    * @returns
    */
-  private getRequesterPeeringRouteDestinationConfig(routeTableEntry: RouteTableEntryConfig): {
+  private getRequesterPeeringRouteDestinationConfig(
+    accepterVpc: VpcConfig | VpcTemplatesConfig,
+    accepterAccountId: string,
+    routeTableEntry: RouteTableEntryConfig,
+  ): {
     destinationPrefixListId?: string;
     destination?: string;
     ipv6Destination?: string;
@@ -1907,9 +1987,11 @@ export class NetworkAssociationsStack extends NetworkStack {
     if (routeTableEntry.destinationPrefixList) {
       // Get PL ID from map
       destinationPrefixListId = getPrefixList(this.prefixListMap, routeTableEntry.destinationPrefixList) as string;
-    } else {
+    } else if (routeTableEntry.destination || routeTableEntry.ipv6Destination) {
       destination = routeTableEntry.destination;
       ipv6Destination = routeTableEntry.ipv6Destination;
+    } else {
+      destination = this.getVpcCidr(accepterVpc, accepterAccountId);
     }
 
     return { destinationPrefixListId, destination, ipv6Destination };
@@ -1927,8 +2009,8 @@ export class NetworkAssociationsStack extends NetworkStack {
    */
   private createAccepterPeeringRoute(
     accepterAccountId: string,
-    accepterVpc: VpcConfig,
-    requesterVpc: VpcConfig,
+    accepterVpc: VpcConfig | VpcTemplatesConfig,
+    requesterVpc: VpcConfig | VpcTemplatesConfig,
     peering: VpcPeering,
     routeTableEntry: RouteTableEntryConfig,
     routeId: string,
@@ -1937,13 +2019,15 @@ export class NetworkAssociationsStack extends NetworkStack {
     const accepterPeeringRouteDestinationConfig = this.getAccepterPeeringRouteDestinationConfig(
       accepterVpc,
       requesterVpc,
+      accepterAccountId,
       routeTableEntry,
     );
     const destination = accepterPeeringRouteDestinationConfig.destination;
     const destinationPrefixListId = accepterPeeringRouteDestinationConfig.destinationPrefixListId;
     const ipv6Destination = accepterPeeringRouteDestinationConfig.ipv6Destination;
+    const requestedAccountIds = this.getVpcAccountIds(requesterVpc);
 
-    if (requesterVpc.account === accepterVpc.account && requesterVpc.region === accepterVpc.region) {
+    if (requestedAccountIds.includes(accepterAccountId) && requesterVpc.region === accepterVpc.region) {
       peering.addPeeringRoute(
         routeId,
         routeTableId,
@@ -1983,8 +2067,8 @@ export class NetworkAssociationsStack extends NetworkStack {
    */
   private createAccepterVpcPeeringRoutes(
     accepterAccountId: string,
-    accepterVpc: VpcConfig,
-    requesterVpc: VpcConfig,
+    accepterVpc: VpcConfig | VpcTemplatesConfig,
+    requesterVpc: VpcConfig | VpcTemplatesConfig,
     peering: VpcPeering,
   ): void {
     for (const routeTable of accepterVpc.routeTables ?? []) {
@@ -1996,7 +2080,11 @@ export class NetworkAssociationsStack extends NetworkStack {
             pascalCase(`${accepterVpc.name}Vpc`) +
             pascalCase(`${routeTable.name}RouteTable`) +
             pascalCase(routeTableEntry.name);
-          const routeTableId = this.routeTableMap.get(`${accepterVpc.name}_${routeTable.name}`);
+          const routeTableId = this.routeTableMap.get(
+            requesterVpc.region !== accepterVpc.region || this.account !== accepterAccountId
+              ? `${accepterVpc.name}_${accepterAccountId}_${routeTable.name}`
+              : `${accepterVpc.name}_${routeTable.name}`,
+          );
           if (!routeTableId) {
             this.logger.error(`Route Table ${routeTable.name} not found`);
             throw new Error(`Configuration validation failed at runtime.`);
@@ -3549,6 +3637,40 @@ export class NetworkAssociationsStack extends NetworkStack {
           ],
         });
       }
+    }
+  }
+
+  /**
+   * Return Primary CIDR Block of VPC
+   * @param vpcName
+   * @param naclItem
+   * @param target
+   */
+  private getVpcCidr(vpcItem: VpcConfig | VpcTemplatesConfig, vpcAccountId: string): string {
+    if (vpcItem.cidrs && vpcItem.cidrs.length > 0) {
+      return vpcItem.cidrs[0];
+    }
+    this.logger.info(
+      `Retrieve VPC CIDR for account:${vpcAccountId} vpc:${vpcItem.name} in region:[${cdk.Stack.of(this).region}]`,
+    );
+    if (this.account === vpcAccountId) {
+      return cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        this.getSsmPath(SsmResourceType.VPC_IPV4_CIDR_BLOCK, [vpcItem.name]),
+      );
+    } else {
+      const cidrLookup =
+        (this.node.tryFindChild(pascalCase(`SsmParamLookup${vpcItem.name}${vpcAccountId}`)) as SsmParameterLookup) ??
+        new SsmParameterLookup(this, pascalCase(`SsmParamLookup${vpcItem.name}${vpcAccountId}`), {
+          name: this.getSsmPath(SsmResourceType.VPC_IPV4_CIDR_BLOCK, [vpcItem.name]),
+          accountId: vpcAccountId,
+          parameterRegion: vpcItem.region,
+          roleName: `${this.props.prefixes.accelerator}-VpcPeeringRole-${vpcItem.region}`,
+          kmsKey: this.cloudwatchKey,
+          logRetentionInDays: this.logRetention,
+          acceleratorPrefix: this.props.prefixes.accelerator,
+        });
+      return cidrLookup.value;
     }
   }
 }

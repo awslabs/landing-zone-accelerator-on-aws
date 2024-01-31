@@ -203,6 +203,26 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
       "Default": "/accelerator/network/vpc/SharedServices-Main/subnet/SharedServices-App-C/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworkvpcWorkloadTemplateidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Workload-Template/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcWorkloadTemplaterouteTableWorkloadARtidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Workload-Template/routeTable/Workload-A-Rt/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcWorkloadTemplaterouteTableWorkloadBRtidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Workload-Template/routeTable/Workload-B-Rt/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcWorkloadTemplatesubnetWorkloadAidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Workload-Template/subnet/Workload-A/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcWorkloadTemplatesubnetWorkloadBidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Workload-Template/subnet/Workload-B/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratorsecuritystackebsDefaultVolumeEncryptionKeyArnC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/security-stack/ebsDefaultVolumeEncryptionKeyArn",
       "Type": "AWS::SSM::Parameter::Value<String>",
