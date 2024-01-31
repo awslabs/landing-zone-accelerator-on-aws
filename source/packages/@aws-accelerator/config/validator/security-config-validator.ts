@@ -58,6 +58,9 @@ export class SecurityConfigValidator {
     const accountNames = this.getAccountNames(accountsConfig);
 
     // Validate SSM document name
+    this.validateSsmDocumentTargetTypes(ssmDocuments, errors);
+
+    // Validate SSM document name
     this.validateSsmDocumentNames(ssmDocuments, errors);
 
     // Validate presence of SSM document files
@@ -221,8 +224,10 @@ export class SecurityConfigValidator {
    * @param values
    * @returns
    */
-  private getSsmDocuments(values: SecurityConfig): { name: string; template: string }[] {
-    const ssmDocuments: { name: string; template: string }[] = [];
+  private getSsmDocuments(
+    values: SecurityConfig,
+  ): { name: string; template: string; targetType: string | undefined }[] {
+    const ssmDocuments: { name: string; template: string; targetType: string | undefined }[] = [];
 
     // SSM Document validations
     for (const documentSet of values.centralSecurityServices.ssmAutomation.documentSets) {
@@ -792,6 +797,30 @@ export class SecurityConfigValidator {
     }
   }
 
+  private validateSsmDocumentTargetTypes(
+    ssmDocuments: t.TypeOf<typeof SecurityConfigTypes.documentConfig>[],
+    errors: string[],
+  ) {
+    // check if document target type falls under the regex specified by API for SSM CreateDocument
+    // ref: https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_CreateDocument.html#systemsmanager-CreateDocument-request-TargetType
+    const ssmDocumentTargetTypeRegex = /^\/[\w.\-:/]*$/;
+    for (const document of ssmDocuments) {
+      if (document.targetType) {
+        if (!ssmDocumentTargetTypeRegex.test(document.targetType)) {
+          errors.push(
+            `SSM document: ${document.name} has does not conform with regular expression for TargetType in CreateDocument API call`,
+          );
+        } else {
+          // check if document target length is over 200
+          if (document.targetType.length > 200) {
+            errors.push(
+              `SSM document: ${document.name} has TargetType length over 200, please reduce the length of TargetType`,
+            );
+          }
+        }
+      }
+    }
+  }
   /**
    *
    */

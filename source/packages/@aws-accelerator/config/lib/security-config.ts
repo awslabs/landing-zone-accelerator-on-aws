@@ -326,6 +326,7 @@ export class SecurityConfigTypes {
   static readonly documentConfig = t.interface({
     name: t.nonEmptyString,
     template: t.nonEmptyString,
+    targetType: t.optional(t.nonEmptyString),
   });
 
   static readonly documentSetConfig = t.interface({
@@ -1396,6 +1397,13 @@ export class DocumentConfig implements t.TypeOf<typeof SecurityConfigTypes.docum
    * Document template file path. This file must be available in accelerator config repository.
    */
   readonly template: string = '';
+  /**
+   * Specify a target type to define the kinds of resources the document can run on. For example, to run a document on EC2 instances, specify the following value: /AWS::EC2::Instance. If you specify a value of '/' the document can run on all types of resources. If you don't specify a value, the document can't run on any resources. For a list of valid resource types, see AWS resource and property types reference in the AWS CloudFormation User Guide.
+   * Ref: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html
+   * Length Constraints: Maximum length of 200.
+   * Pattern: ^\/[\w\.\-\:\/]*$
+   */
+  targetType: string | undefined = undefined;
 }
 
 /**

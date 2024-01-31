@@ -114,6 +114,7 @@ centralSecurityServices:
           # Attaches instance profiles to an EC2 instance
           - name: Attach-IAM-Instance-Profile
             template: ssm-documents/attach-iam-instance-profile.yaml
+            targetType: /AWS::EC2::Instance
           # Attaches Aws IAM Managed Policy to IAM Role
           - name: Attach-IAM-Role-Policy
             template: ssm-documents/attach-iam-role-policy.yaml

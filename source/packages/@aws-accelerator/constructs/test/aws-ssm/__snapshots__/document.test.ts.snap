@@ -112,6 +112,38 @@ exports[`Document Construct(Document):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Role",
     },
+    "Document1573EA08D": {
+      "Properties": {
+        "Content": {},
+        "DocumentType": "Automation",
+        "Name": "DocumentName1",
+        "TargetType": "/AWS::EC2::Instance",
+        "UpdateMethod": "NewVersion",
+      },
+      "Type": "AWS::SSM::Document",
+    },
+    "Document1ShareDocument274F97DF": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomSSMShareDocumentCustomResourceProviderLogGroup11AEA42B",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomSSMShareDocumentCustomResourceProviderHandler02D98C87",
+            "Arn",
+          ],
+        },
+        "accountIds": [
+          "accountA",
+        ],
+        "name": {
+          "Ref": "Document1573EA08D",
+        },
+      },
+      "Type": "Custom::SSMShareDocument",
+      "UpdateReplacePolicy": "Delete",
+    },
     "Document7E43FA9A": {
       "Properties": {
         "Content": {},
@@ -142,6 +174,41 @@ exports[`Document Construct(Document):  Snapshot Test 1`] = `
       },
       "Type": "Custom::SSMShareDocument",
       "UpdateReplacePolicy": "Delete",
+    },
+    "Key13EAD1396": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
     },
     "Key961B73FD": {
       "DeletionPolicy": "Retain",

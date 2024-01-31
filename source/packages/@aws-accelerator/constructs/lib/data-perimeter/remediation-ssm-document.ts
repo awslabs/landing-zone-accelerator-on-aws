@@ -52,6 +52,7 @@ export class RemediationSsmDocument extends Construct {
       sharedWithAccountIds: props.sharedAccountIds,
       kmsKey: props.cloudwatchKey,
       logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+      targetType: undefined,
     });
   }
 }

@@ -33,6 +33,10 @@ export interface DocumentProps {
    * Custom resource lambda log retention in days
    */
   readonly logRetentionInDays: number;
+  /**
+   * Target type of the document
+   */
+  readonly targetType: string | undefined;
 }
 
 export class Document extends cdk.Resource implements IDocument {
@@ -46,6 +50,7 @@ export class Document extends cdk.Resource implements IDocument {
       content: props.content,
       documentType: props.documentType,
       updateMethod: 'NewVersion',
+      targetType: props.targetType,
     });
 
     this.documentName = document.ref;
