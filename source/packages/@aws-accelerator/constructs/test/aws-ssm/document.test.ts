@@ -28,6 +28,16 @@ new Document(stack, 'Document', {
   sharedWithAccountIds: ['accountA'],
   logRetentionInDays: 3653,
   kmsKey: new cdk.aws_kms.Key(stack, 'Key', {}),
+  targetType: undefined,
+});
+new Document(stack, 'Document1', {
+  name: 'DocumentName1',
+  content: JSON.parse('{}'),
+  documentType: 'Automation',
+  sharedWithAccountIds: ['accountA'],
+  logRetentionInDays: 3653,
+  kmsKey: new cdk.aws_kms.Key(stack, 'Key1', {}),
+  targetType: '/AWS::EC2::Instance',
 });
 
 /**

@@ -438,6 +438,7 @@ export class SecurityAuditStack extends AcceleratorStack {
             sharedWithAccountIds: accountIds,
             kmsKey: this.cloudwatchKey,
             logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+            targetType: documentItem.targetType,
           });
         }
       }
