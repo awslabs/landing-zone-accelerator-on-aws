@@ -1826,8 +1826,8 @@ export class NetworkAssociationsStack extends NetworkStack {
   /**
    * Create VPC peering routes
    * @param accepterAccountId
-   * @param accepterVpc
    * @param requesterVpc
+   * @param accepterVpc
    * @param peering
    */
   private createVpcPeeringRoutes(
@@ -2025,9 +2025,8 @@ export class NetworkAssociationsStack extends NetworkStack {
     const destination = accepterPeeringRouteDestinationConfig.destination;
     const destinationPrefixListId = accepterPeeringRouteDestinationConfig.destinationPrefixListId;
     const ipv6Destination = accepterPeeringRouteDestinationConfig.ipv6Destination;
-    const requestedAccountIds = this.getVpcAccountIds(requesterVpc);
 
-    if (requestedAccountIds.includes(accepterAccountId) && requesterVpc.region === accepterVpc.region) {
+    if (this.account === accepterAccountId && requesterVpc.region === accepterVpc.region) {
       peering.addPeeringRoute(
         routeId,
         routeTableId,
