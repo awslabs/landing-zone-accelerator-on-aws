@@ -18,7 +18,7 @@ Landing Zone Accelerator is installed into your AWS Organizations Management acc
 
 No, Landing Zone Accelerator is applicable for all customers that need to implement an architecture based on best practice security. Deployment is supported in any of the regions where Control Tower is available, as well as AWS GovCloud (US).
 
-Landing Zone Accelerator is delivered with [sample configuration files](https://github.com/awslabs/landing-zone-accelerator-on-aws/reference/sample-configurations) which deploy opinionated and prescriptive architectures designed to meet the security and operational requirements of many customers around the world. While installation of the provided prescriptive architectures are reasonably simple, deploying a customized architecture does require extensive understanding of the AWS platform.
+Landing Zone Accelerator is delivered with [sample configuration files](https://github.com/awslabs/landing-zone-accelerator-on-aws/tree/main/reference/sample-configurations) which deploy opinionated and prescriptive architectures designed to meet the security and operational requirements of many customers around the world. While installation of the provided prescriptive architectures are reasonably simple, deploying a customized architecture does require extensive understanding of the AWS platform.
 
 ## Will AWS have access to customer’s data if they use this solution?
 
