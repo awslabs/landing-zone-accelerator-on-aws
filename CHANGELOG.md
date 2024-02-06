@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- fix(docs): resolve broken links to appropriate pages
+
 ### Configuration Changes
 
 ## [1.6.0] - 01-10-2024
