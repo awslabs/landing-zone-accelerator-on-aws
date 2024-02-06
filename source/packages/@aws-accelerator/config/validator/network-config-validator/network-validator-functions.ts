@@ -12,14 +12,8 @@
  */
 import { IPv4, IPv4CidrRange, IPv6, IPv6CidrRange } from 'ip-num';
 import { AccountConfig, GovCloudAccountConfig } from '../../lib/accounts-config';
-import {
-  NetworkConfig,
-  VpcConfig,
-  VpcTemplatesConfig,
-  NetworkConfigTypes,
-  SubnetConfig,
-} from '../../lib/network-config';
-import * as t from '../../lib/common-types';
+import { NetworkConfig, VpcConfig, VpcTemplatesConfig, SubnetConfig } from '../../lib/network-config';
+import * as t from '../../lib/common';
 
 /**
  * Class for helper functions
@@ -108,7 +102,7 @@ export class NetworkValidatorFunctions {
   public getVpcAccountNames(vpcItem: VpcConfig | VpcTemplatesConfig): string[] {
     let vpcAccountNames: string[];
 
-    if (NetworkConfigTypes.vpcConfig.is(vpcItem)) {
+    if (t.isNetworkType<VpcConfig>('IVpcConfig', vpcItem)) {
       vpcAccountNames = [vpcItem.account];
     } else {
       const excludedAccountNames = this.getExcludedAccountNames(vpcItem.deploymentTargets);

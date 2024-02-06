@@ -27,7 +27,7 @@ import {
   AccessLogBucketConfig,
   AssetBucketConfig,
 } from '@aws-accelerator/config';
-import * as t from '@aws-accelerator/config/lib/common-types/types';
+import * as t from '@aws-accelerator/config/lib/common/types';
 import {
   Bucket,
   BucketEncryption,

@@ -16,11 +16,11 @@ import {
   CustomerGatewayConfig,
   DefaultVpcsConfig,
   Ec2FirewallInstanceConfig,
-  NetworkConfigTypes,
+  isNetworkType,
   VpcConfig,
-  VpcFlowLogsConfig,
   VpcTemplatesConfig,
 } from '@aws-accelerator/config';
+import { VpcFlowLogsConfig } from '@aws-accelerator/config/dist/lib/common/types';
 import {
   DeleteDefaultSecurityGroupRules,
   DeleteDefaultVpc,
@@ -351,8 +351,8 @@ export class VpcResources {
       // Check for different account peering -- only add IAM role to accepter account
       if (this.stack.isTargetStack(accepterAccountIds, [accepterVpc.region])) {
         if (
-          NetworkConfigTypes.vpcTemplatesConfig.is(requesterVpc) ||
-          NetworkConfigTypes.vpcTemplatesConfig.is(accepterVpc)
+          isNetworkType<VpcTemplatesConfig>('IVpcTemplatesConfig', requesterVpc) ||
+          isNetworkType<VpcTemplatesConfig>('IVpcTemplatesConfig', accepterVpc)
         ) {
           crossAccountCondition =
             // true: If VPCs in peering connection are cross region

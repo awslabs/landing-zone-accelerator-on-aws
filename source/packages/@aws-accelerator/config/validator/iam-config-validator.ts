@@ -17,8 +17,9 @@ import { createLogger } from '@aws-accelerator/utils/lib/logger';
 
 import { AccountsConfig } from '../lib/accounts-config';
 import { CommonValidatorFunctions } from './common/common-validator-functions';
-import * as t from '../lib/common-types';
-import { IamConfig, IamConfigTypes, PolicySetConfig } from '../lib/iam-config';
+import { DeploymentTargets } from '../lib/common';
+import { IamConfig, PolicySetConfig } from '../lib/iam-config';
+import { IIamConfig, IIdentityCenterConfig } from '../lib/models/iam-config';
 import { NetworkConfig } from '../lib/network-config';
 import { OrganizationConfig } from '../lib/organization-config';
 import { SecurityConfig } from '../lib/security-config';
@@ -185,11 +186,7 @@ export class IamConfigValidator {
    * @param values
    * @returns
    */
-  private validatePolicyFileExists(
-    configDir: string,
-    values: t.TypeOf<typeof IamConfigTypes.iamConfig>,
-    errors: string[],
-  ) {
+  private validatePolicyFileExists(configDir: string, values: IIamConfig, errors: string[]) {
     const policies: { name: string; policyFile: string }[] = [];
     for (const policySet of values.policySets ?? []) {
       for (const policy of policySet.policies) {
@@ -262,11 +259,7 @@ export class IamConfigValidator {
    * @param accountsConfig
    * @param errors
    */
-  private validateIamPolicyTargets(
-    values: t.TypeOf<typeof IamConfigTypes.iamConfig>,
-    accountsConfig: AccountsConfig,
-    errors: string[],
-  ) {
+  private validateIamPolicyTargets(values: IIamConfig, accountsConfig: AccountsConfig, errors: string[]) {
     for (const policyItem of values.policySets ?? []) {
       // Validate IAM Users
       this.validateIamUserTarget(values, accountsConfig, policyItem as PolicySetConfig, errors);
@@ -287,7 +280,7 @@ export class IamConfigValidator {
    * @param errors
    */
   private validateIamUserTarget(
-    values: t.TypeOf<typeof IamConfigTypes.iamConfig>,
+    values: IIamConfig,
     accountsConfig: AccountsConfig,
     policyItem: PolicySetConfig,
     errors: string[],
@@ -300,11 +293,11 @@ export class IamConfigValidator {
             if (userItem.boundaryPolicy === item.name) {
               const userDeploymentTargetSets = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
                 accountsConfig,
-                iamItem.deploymentTargets as t.DeploymentTargets,
+                iamItem.deploymentTargets as DeploymentTargets,
               );
               const policyTargets = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
                 accountsConfig,
-                policyItem.deploymentTargets as t.DeploymentTargets,
+                policyItem.deploymentTargets as DeploymentTargets,
               );
               // Check the policies and validate that they're deployment is available for respective user boundary-policy configuration.
               for (const targetItem of userDeploymentTargetSets ?? []) {
@@ -336,7 +329,7 @@ export class IamConfigValidator {
    * @param errors
    */
   private validateIamRoleTarget(
-    values: t.TypeOf<typeof IamConfigTypes.iamConfig>,
+    values: IIamConfig,
     accountsConfig: AccountsConfig,
     policyItem: PolicySetConfig,
     errors: string[],
@@ -349,11 +342,11 @@ export class IamConfigValidator {
             if (roleItem.boundaryPolicy === item.name) {
               const userDeploymentTargetSets = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
                 accountsConfig,
-                iamItem.deploymentTargets as t.DeploymentTargets,
+                iamItem.deploymentTargets as DeploymentTargets,
               );
               const policyTargets = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
                 accountsConfig,
-                policyItem.deploymentTargets as t.DeploymentTargets,
+                policyItem.deploymentTargets as DeploymentTargets,
               );
               // Check the boundary policy and validate that it's deployment is available for respective role boundary-policy configuration.
               for (const targetItem of userDeploymentTargetSets ?? []) {
@@ -372,11 +365,11 @@ export class IamConfigValidator {
             if (customerPolicy === item.name) {
               const userDeploymentTargetSets = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
                 accountsConfig,
-                iamItem.deploymentTargets as t.DeploymentTargets,
+                iamItem.deploymentTargets as DeploymentTargets,
               );
               const policyTargets = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
                 accountsConfig,
-                policyItem.deploymentTargets as t.DeploymentTargets,
+                policyItem.deploymentTargets as DeploymentTargets,
               );
               // Check the policies and validate that they're deployment is available for respective user boundary-policy configuration.
               for (const targetItem of userDeploymentTargetSets ?? []) {
@@ -408,7 +401,7 @@ export class IamConfigValidator {
    * @param errors
    */
   private validateIamGroupTarget(
-    values: t.TypeOf<typeof IamConfigTypes.iamConfig>,
+    values: IIamConfig,
     accountsConfig: AccountsConfig,
     policyItem: PolicySetConfig,
     errors: string[],
@@ -422,11 +415,11 @@ export class IamConfigValidator {
             if (customerPolicy === item.name) {
               const userDeploymentTargetSets = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
                 accountsConfig,
-                iamItem.deploymentTargets as t.DeploymentTargets,
+                iamItem.deploymentTargets as DeploymentTargets,
               );
               const policyTargets = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
                 accountsConfig,
-                policyItem.deploymentTargets as t.DeploymentTargets,
+                policyItem.deploymentTargets as DeploymentTargets,
               );
               // Check the policies and validate that they're deployment is available for respective group policy configuration.
               for (const targetItem of userDeploymentTargetSets ?? []) {
@@ -455,11 +448,7 @@ export class IamConfigValidator {
    * @param values
    * @param errors
    */
-  private validateIdentityCenter(
-    iamConfig: t.TypeOf<typeof IamConfigTypes.iamConfig>,
-    accountsConfig: AccountsConfig,
-    errors: string[],
-  ) {
+  private validateIdentityCenter(iamConfig: IIamConfig, accountsConfig: AccountsConfig, errors: string[]) {
     //
     //Function to validate PermissionSet and Assignment names are unique
     //
@@ -485,10 +474,7 @@ export class IamConfigValidator {
    * Function to validate PermissionSet and Assignment names are unique
    * @param values
    */
-  private validateIdentityCenterPermissionSetNameForUniqueness(
-    iamConfig: t.TypeOf<typeof IamConfigTypes.iamConfig>,
-    errors: string[],
-  ) {
+  private validateIdentityCenterPermissionSetNameForUniqueness(iamConfig: IIamConfig, errors: string[]) {
     const identityCenter = iamConfig.identityCenter;
     const assignmentNames = [...(identityCenter?.identityCenterAssignments ?? [])].map(item => item.name);
     const permissionSetNames = [...(identityCenter?.identityCenterPermissionSets ?? [])].map(item => item.name);
@@ -507,10 +493,7 @@ export class IamConfigValidator {
    * @param iamConfig
    * @param errors
    */
-  private validateIdentityCenterPermissionSetInAssignments(
-    iamConfig: t.TypeOf<typeof IamConfigTypes.iamConfig>,
-    errors: string[],
-  ) {
+  private validateIdentityCenterPermissionSetInAssignments(iamConfig: IIamConfig, errors: string[]) {
     if (iamConfig.identityCenter) {
       const permissionSetNames = [...(iamConfig.identityCenter?.identityCenterPermissionSets ?? [])].map(
         item => item.name,
@@ -568,10 +551,7 @@ export class IamConfigValidator {
    * @param iamConfig
    * @param errors
    */
-  private validateIdentityCenterPermissionSetPermissionsBoundary(
-    iamConfig: t.TypeOf<typeof IamConfigTypes.iamConfig>,
-    errors: string[],
-  ) {
+  private validateIdentityCenterPermissionSetPermissionsBoundary(iamConfig: IIamConfig, errors: string[]) {
     if (iamConfig.identityCenter) {
       for (const identityCenterPermissionSet of iamConfig.identityCenter.identityCenterPermissionSets ?? []) {
         if (identityCenterPermissionSet.policies?.permissionsBoundary) {
@@ -589,7 +569,7 @@ export class IamConfigValidator {
   }
 
   private validateIdentityCenterPermissionSetPolicies(
-    iamConfig: t.TypeOf<typeof IamConfigTypes.iamConfig>,
+    iamConfig: IIamConfig,
     accountsConfig: AccountsConfig,
     errors: string[],
   ) {
@@ -601,7 +581,7 @@ export class IamConfigValidator {
             name: policyItem.name,
             accountNames: CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
               accountsConfig,
-              policySet.deploymentTargets as t.DeploymentTargets,
+              policySet.deploymentTargets as DeploymentTargets,
             ),
           });
         }
@@ -675,7 +655,7 @@ export class IamConfigValidator {
    * @returns
    */
   private getIdentityCenterAssignmentDeployAccountNames(
-    identityCenter: t.TypeOf<typeof IamConfigTypes.identityCenterConfig>,
+    identityCenter: IIdentityCenterConfig,
     accountsConfig: AccountsConfig,
     identityCenterPermissionSetName: string,
   ): string[] {
@@ -685,7 +665,7 @@ export class IamConfigValidator {
         accountNames.push(
           ...CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
             accountsConfig,
-            identityCenterAssignmentItem.deploymentTargets as t.DeploymentTargets,
+            identityCenterAssignmentItem.deploymentTargets as DeploymentTargets,
           ),
         );
       }
@@ -699,11 +679,7 @@ export class IamConfigValidator {
    * Make sure deployment target accounts are part of account config file
    * @param values
    */
-  private validateAssignmentAccountNames(
-    values: t.TypeOf<typeof IamConfigTypes.iamConfig>,
-    accountNames: string[],
-    errors: string[],
-  ) {
+  private validateAssignmentAccountNames(values: IIamConfig, accountNames: string[], errors: string[]) {
     const identityCenter = values.identityCenter;
     for (const assignment of identityCenter?.identityCenterAssignments ?? []) {
       for (const account of assignment.deploymentTargets.accounts ?? []) {
@@ -721,11 +697,7 @@ export class IamConfigValidator {
    * Make sure deployment target accounts are part of account config file
    * @param values
    */
-  private validateAssignmentPrincipalsForIamRoles(
-    values: t.TypeOf<typeof IamConfigTypes.iamConfig>,
-    accountNames: string[],
-    errors: string[],
-  ) {
+  private validateAssignmentPrincipalsForIamRoles(values: IIamConfig, accountNames: string[], errors: string[]) {
     for (const roleSetItem of values.roleSets!) {
       for (const roleItem of roleSetItem.roles) {
         for (const assumedByItem of roleItem.assumedBy) {
@@ -766,11 +738,7 @@ export class IamConfigValidator {
    * Make sure deployment target OUs are part of Organization config file
    * @param values
    */
-  private validateAssignmentDeploymentTargetOUs(
-    values: t.TypeOf<typeof IamConfigTypes.iamConfig>,
-    ouIdNames: string[],
-    errors: string[],
-  ) {
+  private validateAssignmentDeploymentTargetOUs(values: IIamConfig, ouIdNames: string[], errors: string[]) {
     const identityCenter = values.identityCenter;
     for (const assignment of identityCenter?.identityCenterAssignments ?? []) {
       for (const ou of assignment.deploymentTargets.organizationalUnits ?? []) {
@@ -786,11 +754,7 @@ export class IamConfigValidator {
    * Make sure deployment target accounts are part of account config file
    * @param values
    */
-  private validatePolicySetsAccountNames(
-    values: t.TypeOf<typeof IamConfigTypes.iamConfig>,
-    accountNames: string[],
-    errors: string[],
-  ) {
+  private validatePolicySetsAccountNames(values: IIamConfig, accountNames: string[], errors: string[]) {
     for (const policySet of values.policySets ?? []) {
       for (const account of policySet.deploymentTargets.accounts ?? []) {
         if (accountNames.indexOf(account) === -1) {
@@ -807,11 +771,7 @@ export class IamConfigValidator {
    * Make sure deployment target accounts are part of account config file
    * @param values
    */
-  private validateRoleSetsAccountNames(
-    values: t.TypeOf<typeof IamConfigTypes.iamConfig>,
-    accountNames: string[],
-    errors: string[],
-  ) {
+  private validateRoleSetsAccountNames(values: IIamConfig, accountNames: string[], errors: string[]) {
     for (const roleSet of values.roleSets ?? []) {
       for (const account of roleSet.deploymentTargets.accounts ?? []) {
         if (accountNames.indexOf(account) === -1) {
@@ -828,11 +788,7 @@ export class IamConfigValidator {
    * Make sure deployment target accounts are part of account config file
    * @param values
    */
-  private validateGroupSetsAccountNames(
-    values: t.TypeOf<typeof IamConfigTypes.iamConfig>,
-    accountNames: string[],
-    errors: string[],
-  ) {
+  private validateGroupSetsAccountNames(values: IIamConfig, accountNames: string[], errors: string[]) {
     for (const groupSet of values.groupSets ?? []) {
       for (const account of groupSet.deploymentTargets.accounts ?? []) {
         if (accountNames.indexOf(account) === -1) {
@@ -849,11 +805,7 @@ export class IamConfigValidator {
    * Make sure deployment target accounts are part of account config file
    * @param values
    */
-  private validateUserSetsAccountNames(
-    values: t.TypeOf<typeof IamConfigTypes.iamConfig>,
-    accountNames: string[],
-    errors: string[],
-  ) {
+  private validateUserSetsAccountNames(values: IIamConfig, accountNames: string[], errors: string[]) {
     for (const userSet of values.userSets ?? []) {
       for (const account of userSet.deploymentTargets.accounts ?? []) {
         if (accountNames.indexOf(account) === -1) {
@@ -869,11 +821,7 @@ export class IamConfigValidator {
    * Function to validate Deployment targets OU name for IAM services
    * @param values
    */
-  private validateDeploymentTargetAccountNames(
-    values: t.TypeOf<typeof IamConfigTypes.iamConfig>,
-    accountNames: string[],
-    errors: string[],
-  ) {
+  private validateDeploymentTargetAccountNames(values: IIamConfig, accountNames: string[], errors: string[]) {
     //
     // Validate policy sets account name
     //
@@ -910,11 +858,7 @@ export class IamConfigValidator {
    * Make sure deployment target OUs are part of Organization config file
    * @param values
    */
-  private validatePolicySetsDeploymentTargetOUs(
-    values: t.TypeOf<typeof IamConfigTypes.iamConfig>,
-    ouIdNames: string[],
-    errors: string[],
-  ) {
+  private validatePolicySetsDeploymentTargetOUs(values: IIamConfig, ouIdNames: string[], errors: string[]) {
     for (const policySet of values.policySets ?? []) {
       for (const ou of policySet.deploymentTargets.organizationalUnits ?? []) {
         if (ouIdNames.indexOf(ou) === -1) {
@@ -929,11 +873,7 @@ export class IamConfigValidator {
    * Make sure deployment target OUs are part of Organization config file
    * @param values
    */
-  private validateRoleSetsDeploymentTargetOUs(
-    values: t.TypeOf<typeof IamConfigTypes.iamConfig>,
-    ouIdNames: string[],
-    errors: string[],
-  ) {
+  private validateRoleSetsDeploymentTargetOUs(values: IIamConfig, ouIdNames: string[], errors: string[]) {
     for (const roleSet of values.roleSets ?? []) {
       for (const ou of roleSet.deploymentTargets.organizationalUnits ?? []) {
         if (ouIdNames.indexOf(ou) === -1) {
@@ -948,11 +888,7 @@ export class IamConfigValidator {
    * Make sure deployment target OUs are part of Organization config file
    * @param values
    */
-  private validateGroupSetsDeploymentTargetOUs(
-    values: t.TypeOf<typeof IamConfigTypes.iamConfig>,
-    ouIdNames: string[],
-    errors: string[],
-  ) {
+  private validateGroupSetsDeploymentTargetOUs(values: IIamConfig, ouIdNames: string[], errors: string[]) {
     for (const groupSet of values.groupSets ?? []) {
       for (const ou of groupSet.deploymentTargets.organizationalUnits ?? []) {
         if (ouIdNames.indexOf(ou) === -1) {
@@ -967,11 +903,7 @@ export class IamConfigValidator {
    * Make sure deployment target OUs are part of Organization config file
    * @param values
    */
-  private validateUserSetsDeploymentTargetOUs(
-    values: t.TypeOf<typeof IamConfigTypes.iamConfig>,
-    ouIdNames: string[],
-    errors: string[],
-  ) {
+  private validateUserSetsDeploymentTargetOUs(values: IIamConfig, ouIdNames: string[], errors: string[]) {
     for (const userSet of values.userSets ?? []) {
       for (const ou of userSet.deploymentTargets.organizationalUnits ?? []) {
         if (ouIdNames.indexOf(ou) === -1) {
@@ -987,11 +919,7 @@ export class IamConfigValidator {
    * @param ouIdNames
    * @param errors
    */
-  private validateDeploymentTargetOUs(
-    values: t.TypeOf<typeof IamConfigTypes.iamConfig>,
-    ouIdNames: string[],
-    errors: string[],
-  ) {
+  private validateDeploymentTargetOUs(values: IIamConfig, ouIdNames: string[], errors: string[]) {
     //
     // Validate policy sets OU name
     //
@@ -1153,7 +1081,7 @@ class ManagedActiveDirectoryValidator {
    * @param errors
    */
   private validateMadVpcSettings(
-    values: t.TypeOf<typeof IamConfigTypes.iamConfig>,
+    values: IIamConfig,
     vpcSubnetLists: { vpcName: string; subnetName: string; subnetAz: string | number }[],
     errors: string[],
   ) {
@@ -1216,12 +1144,7 @@ class ManagedActiveDirectoryValidator {
    * @param accountNames
    * @param errors
    */
-  private validateMadSharingConfig(
-    values: t.TypeOf<typeof IamConfigTypes.iamConfig>,
-    ouIdNames: string[],
-    accountNames: string[],
-    errors: string[],
-  ) {
+  private validateMadSharingConfig(values: IIamConfig, ouIdNames: string[], accountNames: string[], errors: string[]) {
     for (const managedActiveDirectory of values.managedActiveDirectories ?? []) {
       if (managedActiveDirectory.sharedOrganizationalUnits) {
         if (managedActiveDirectory.sharedOrganizationalUnits.organizationalUnits.length === 0) {
@@ -1260,7 +1183,7 @@ class ManagedActiveDirectoryValidator {
    * @param accountNames
    * @param errors
    */
-  private validateMadSecretConfig(values: t.TypeOf<typeof IamConfigTypes.iamConfig>, errors: string[]) {
+  private validateMadSecretConfig(values: IIamConfig, errors: string[]) {
     for (const managedActiveDirectory of values.managedActiveDirectories ?? []) {
       if (managedActiveDirectory.account === 'Management') {
         if (

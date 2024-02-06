@@ -1,0 +1,1498 @@
+{
+  "$ref": "#/definitions/IGlobalConfig",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "ComparisonOperator": {
+      "enum": [
+        "GREATER_THAN",
+        "LESS_THAN",
+        "EQUAL_TO"
+      ],
+      "type": "string"
+    },
+    "CustomS3ResourceAndKmsPolicyOverridesConfig": {
+      "additionalProperties": false,
+      "description": "Custom policy overrides configuration  for S3 resource and KMS",
+      "properties": {
+        "kmsPolicy": {
+          "description": "KMS policy file",
+          "type": "string"
+        },
+        "s3Policy": {
+          "description": "S3 resource policy file",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "EmailAddress": {
+      "description": "An email address",
+      "maxLength": 64,
+      "minLength": 6,
+      "pattern": "^\\S+@\\S+\\.\\S+$",
+      "type": "string"
+    },
+    "IAcceleratorMetadataConfig": {
+      "additionalProperties": false,
+      "description": "Accelerator Metadata\n\nCreates a new bucket in the log archive account to retrieve metadata for the accelerator environment",
+      "properties": {
+        "account": {
+          "type": "string"
+        },
+        "enable": {
+          "description": "Enable Accelerator Metadata",
+          "type": "boolean"
+        },
+        "readOnlyAccessRoleArns": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "enable",
+        "account",
+        "readOnlyAccessRoleArns"
+      ],
+      "type": "object"
+    },
+    "IAcceleratorSettingsConfig": {
+      "additionalProperties": false,
+      "description": "Accelerator Settings Configuration\nAllows setting additional properties for accelerator",
+      "properties": {
+        "maxConcurrentStacks": {
+          "description": "Set maximum number of concurrent stacks that can be processed at a time while transpiling the application. If no value is specified it defaults to 250",
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
+    "IAccessLogBucketConfig": {
+      "additionalProperties": false,
+      "description": "Accelerator global S3 access logging configuration",
+      "properties": {
+        "customPolicyOverrides": {
+          "$ref": "#/definitions/ICustomS3ResourcePolicyOverridesConfig",
+          "default": "undefined",
+          "description": "Custom policy overrides configuration."
+        },
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "To control target environments (AWS Account and Region) for the given `accessLogBucket` setting, you may optionally specify deployment targets. Leaving `deploymentTargets` undefined will apply `useCMK` setting to all accounts and enabled regions."
+        },
+        "enable": {
+          "description": "Flag indicating S3 access logging bucket is enable by solution.",
+          "type": "boolean"
+        },
+        "importedBucket": {
+          "$ref": "#/definitions/IImportedS3ManagedEncryptionKeyBucketConfig",
+          "default": "undefined",
+          "description": "Imported bucket configuration."
+        },
+        "lifecycleRules": {
+          "description": "Declaration of (S3 Bucket) Lifecycle rules.",
+          "items": {
+            "$ref": "#/definitions/ILifecycleRule"
+          },
+          "type": "array"
+        },
+        "s3ResourcePolicyAttachments": {
+          "description": "JSON policy files.",
+          "items": {
+            "$ref": "#/definitions/IResourcePolicyStatement"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "IAccountCloudTrailConfig": {
+      "additionalProperties": false,
+      "description": "Account CloudTrail config",
+      "properties": {
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "Which OU's or Accounts the trail will be deployed to"
+        },
+        "name": {
+          "description": "Name that will be used to create the CloudTrail.",
+          "type": "string"
+        },
+        "regions": {
+          "description": "Region(s) that this account trail will be deployed in.",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        },
+        "settings": {
+          "$ref": "#/definitions/ICloudTrailSettingsConfig",
+          "description": "Settings for the CloudTrail log"
+        }
+      },
+      "required": [
+        "name",
+        "regions",
+        "deploymentTargets",
+        "settings"
+      ],
+      "type": "object"
+    },
+    "IAssetBucketConfig": {
+      "additionalProperties": false,
+      "description": "Accelerator global S3 asset bucket configuration",
+      "properties": {
+        "customPolicyOverrides": {
+          "$ref": "#/definitions/CustomS3ResourceAndKmsPolicyOverridesConfig",
+          "default": "undefined",
+          "description": "Custom policy overrides configuration."
+        },
+        "importedBucket": {
+          "$ref": "#/definitions/IImportedCustomerManagedEncryptionKeyBucketConfig",
+          "default": "undefined",
+          "description": "Imported bucket configuration."
+        },
+        "kmsResourcePolicyAttachments": {
+          "description": "JSON policy files.",
+          "items": {
+            "$ref": "#/definitions/IResourcePolicyStatement"
+          },
+          "type": "array"
+        },
+        "s3ResourcePolicyAttachments": {
+          "description": "JSON policy files.",
+          "items": {
+            "$ref": "#/definitions/IResourcePolicyStatement"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "IBackupConfig": {
+      "additionalProperties": false,
+      "description": "AWS Backup configuration",
+      "properties": {
+        "vaults": {
+          "description": "List of AWS Backup Vaults",
+          "items": {
+            "$ref": "#/definitions/IVaultConfig"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "vaults"
+      ],
+      "type": "object"
+    },
+    "IBudgetReportConfig": {
+      "additionalProperties": false,
+      "description": "BudgetReport configuration",
+      "properties": {
+        "amount": {
+          "default": 2000,
+          "description": "The cost or usage amount that's associated with a budget forecast, actual spend, or budget threshold.",
+          "type": "number"
+        },
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "List of OU's and accounts to be configured for Budgets configuration"
+        },
+        "includeCredit": {
+          "default": true,
+          "description": "Specifies whether a budget includes credits.",
+          "type": "boolean"
+        },
+        "includeDiscount": {
+          "default": true,
+          "description": "Specifies whether a budget includes discounts.",
+          "type": "boolean"
+        },
+        "includeOtherSubscription": {
+          "default": true,
+          "description": "Specifies whether a budget includes non-RI subscription costs.",
+          "type": "boolean"
+        },
+        "includeRecurring": {
+          "default": true,
+          "description": "Specifies whether a budget includes recurring fees such as monthly RI fees.",
+          "type": "boolean"
+        },
+        "includeRefund": {
+          "default": true,
+          "description": "Specifies whether a budget includes refunds.",
+          "type": "boolean"
+        },
+        "includeSubscription": {
+          "default": true,
+          "description": "Specifies whether a budget includes subscriptions.",
+          "type": "boolean"
+        },
+        "includeSupport": {
+          "default": true,
+          "description": "Specifies whether a budget includes support subscription fees.",
+          "type": "boolean"
+        },
+        "includeTax": {
+          "default": true,
+          "description": "Specifies whether a budget includes taxes.",
+          "type": "boolean"
+        },
+        "includeUpfront": {
+          "default": true,
+          "description": "Specifies whether a budget includes upfront RI costs.",
+          "type": "boolean"
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The name of a budget. The value must be unique within an account. BudgetName can't include : and \\ characters. If you don't include value for BudgetName in the template, Billing and Cost Management assigns your budget a randomly generated name."
+        },
+        "notifications": {
+          "description": "The comparison that's used for the notification that's associated with a budget.",
+          "items": {
+            "$ref": "#/definitions/INotificationConfig"
+          },
+          "type": "array"
+        },
+        "subscriptionType": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/SubscriptionType"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "description": "The type of notification that AWS sends to a subscriber.\n\nAn enum value that specifies the target subscription type either EMAIL or SNS"
+        },
+        "timeUnit": {
+          "description": "The length of time until a budget resets the actual and forecasted spend. DAILY is available only for RI_UTILIZATION and RI_COVERAGE budgets.",
+          "type": "string"
+        },
+        "type": {
+          "description": "Specifies whether this budget tracks costs, usage, RI utilization, RI coverage, Savings Plans utilization, or Savings Plans coverage.",
+          "type": "string"
+        },
+        "unit": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The unit of measurement that's used for the budget forecast, actual spend, or budget threshold, such as USD or GBP."
+        },
+        "useAmortized": {
+          "default": false,
+          "description": "Specifies whether a budget uses the amortized rate.",
+          "type": "boolean"
+        },
+        "useBlended": {
+          "default": false,
+          "description": "Specifies whether a budget uses a blended rate.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "amount",
+        "name",
+        "timeUnit",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ICdkOptionsConfig": {
+      "additionalProperties": false,
+      "description": "AWS CDK options configuration. This lets you customize the operation of the CDK within LZA, specifically:\n\ncentralizeBuckets: Enabling this option modifies the CDK bootstrap process to utilize a single S3 bucket per region located in the management account for CDK assets generated by LZA. Otherwise, CDK will create a new S3 bucket in every account and every region supported by LZA.\nuseManagementAccessRole: Enabling this option modifies CDK operations to use the IAM role specified in the `managementAccountAccessRole` option in `global-config.yaml` rather than the default roles created by CDK. Default CDK roles will still be created, but will remain unused. Any stacks previously deployed by LZA will retain their [associated execution role](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-iam-servicerole.html). For more information on these roles, please see [here](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html#bootstrapping-contract).",
+      "properties": {
+        "centralizeBuckets": {
+          "description": "Indicates whether CDK stacks in workload accounts will utilize S3 buckets in the management account rather than within the account.\n\nWhen the accelerator deploys resources using the AWS CDK, assets are first built and stored in S3. By default, the S3 bucket is located within the deployment target account.",
+          "type": "boolean"
+        },
+        "customDeploymentRole": {
+          "description": "Creates a deployment role in all accounts in the home region with the name specified in the parameter. This role is used by the LZA for all CDK deployment tasks.",
+          "type": "string"
+        },
+        "forceBootstrap": {
+          "description": "Forces the Accelerator to deploy the bootstrapping stack and circumvent the ssm parameter check. This option is needed when adding or removing a custom deployment role",
+          "type": "boolean"
+        },
+        "useManagementAccessRole": {
+          "description": "Indicates whether CDK operations use the IAM role specified in the `managementAccountAccessRole` option in `global-config.yaml` rather than the default roles created by CDK.\n\nThe roles created and leveraged by CDK by default can be found [here](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html#bootstrapping-contract).",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "centralizeBuckets",
+        "useManagementAccessRole"
+      ],
+      "type": "object"
+    },
+    "ICentralLogBucketConfig": {
+      "additionalProperties": false,
+      "description": "Accelerator global S3 central logging configuration",
+      "properties": {
+        "customPolicyOverrides": {
+          "$ref": "#/definitions/ICustomS3ResourceAndKmsPolicyOverridesConfig",
+          "default": "undefined",
+          "description": "Custom policy overrides configuration."
+        },
+        "importedBucket": {
+          "$ref": "#/definitions/IImportedS3ManagedEncryptionKeyBucketConfig",
+          "default": "undefined",
+          "description": "Imported bucket configuration."
+        },
+        "kmsResourcePolicyAttachments": {
+          "description": "JSON policy files.",
+          "items": {
+            "$ref": "#/definitions/IResourcePolicyStatement"
+          },
+          "type": "array"
+        },
+        "lifecycleRules": {
+          "description": "Declaration of (S3 Bucket) Lifecycle rules. Configure additional resource policy attachments",
+          "items": {
+            "$ref": "#/definitions/ILifecycleRule"
+          },
+          "type": "array"
+        },
+        "s3ResourcePolicyAttachments": {
+          "description": "JSON policy files.",
+          "items": {
+            "$ref": "#/definitions/IResourcePolicyStatement"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "ICentralizeCdkBucketsConfig": {
+      "additionalProperties": false,
+      "description": "AWS CDK Centralization configuration\n***Deprecated***\nReplaced by cdkOptions in global config",
+      "properties": {
+        "enable": {
+          "description": "***Deprecated*** Replaced by cdkOptions in global config.\n\nIndicates whether CDK stacks in workload accounts will utilize S3 buckets in the management account rather than within the account.\n\nWhen the accelerator deploys resources using the AWS CDK, assets are first built and stored in S3. By default, the S3 bucket is located within the deployment target account.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enable"
+      ],
+      "type": "object"
+    },
+    "ICloudTrailConfig": {
+      "additionalProperties": false,
+      "description": "AWS Cloudtrail configuration",
+      "properties": {
+        "accountTrails": {
+          "description": "Optional configuration of account level CloudTrails. Can be used with or without an Organization Trail",
+          "items": {
+            "$ref": "#/definitions/IAccountCloudTrailConfig"
+          },
+          "type": "array"
+        },
+        "enable": {
+          "description": "Indicates whether AWS Cloudtrail enabled.\n\nCloudtrail a service that helps you enable governance, compliance, and operational and risk auditing of your AWS account. This setting does not create any trails.  You will also need to either and organization trail or setup account level trails.",
+          "type": "boolean"
+        },
+        "lifecycleRules": {
+          "description": "Optional S3 Log Bucket Lifecycle rules",
+          "items": {
+            "$ref": "#/definitions/ILifecycleRule"
+          },
+          "type": "array"
+        },
+        "organizationTrail": {
+          "description": "Indicates whether AWS OrganizationTrail enabled.\n\nWhen OrganizationTrail and cloudtrail is enabled accelerator will enable trusted access designates CloudTrail as a trusted service in your organization. A trusted service can query the organization's structure and create service-linked roles in the organization's accounts.",
+          "type": "boolean"
+        },
+        "organizationTrailSettings": {
+          "$ref": "#/definitions/ICloudTrailSettingsConfig",
+          "description": "Optional configuration of the organization trail.  OrganizationTrail must be enabled in order to use these settings"
+        }
+      },
+      "required": [
+        "enable",
+        "organizationTrail"
+      ],
+      "type": "object"
+    },
+    "ICloudTrailSettingsConfig": {
+      "additionalProperties": false,
+      "description": "AWS CloudTrail Settings configuration",
+      "properties": {
+        "apiCallRateInsight": {
+          "description": "Will enable CloudTrail Insights and enable the API Call Rate Insight",
+          "type": "boolean"
+        },
+        "apiErrorRateInsight": {
+          "description": "Will enable CloudTrail Insights and enable the API Error Rate Insight",
+          "type": "boolean"
+        },
+        "globalServiceEvents": {
+          "description": "For global services such as AWS Identity and Access Management (IAM), AWS STS, Amazon CloudFront, and Route 53, events are delivered to any trail that includes global services,  and are logged as occurring in US East Region.",
+          "type": "boolean"
+        },
+        "lambdaDataEvents": {
+          "description": "Adds an Lambda Data Event Selector for filtering events that match Lambda operations. These events provide insight into the resource operations performed on or within a resource. These are also known as data plane operations.",
+          "type": "boolean"
+        },
+        "managementEvents": {
+          "description": "Management events provide insight into management operations that are on resources in your AWS account. These are also known as control plane operations. Management events can also include non-API events that occur in your account. For example, when a user logs in to your account, CloudTrail logs the ConsoleLogin event. Enabling will set ReadWriteType.ALL",
+          "type": "boolean"
+        },
+        "multiRegionTrail": {
+          "description": "Whether or not this trail delivers log files from all regions in the account.",
+          "type": "boolean"
+        },
+        "s3DataEvents": {
+          "description": "Adds an S3 Data Event Selector for filtering events that match S3 operations. These events provide insight into the resource operations performed on or within a resource. These are also known as data plane operations.",
+          "type": "boolean"
+        },
+        "sendToCloudWatchLogs": {
+          "description": "If CloudTrail pushes logs to CloudWatch Logs in addition to S3.  CloudWatch Logs will also be replicated to S3.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "multiRegionTrail",
+        "globalServiceEvents",
+        "managementEvents",
+        "s3DataEvents",
+        "lambdaDataEvents",
+        "sendToCloudWatchLogs",
+        "apiErrorRateInsight",
+        "apiCallRateInsight"
+      ],
+      "type": "object"
+    },
+    "ICloudWatchLogsConfig": {
+      "additionalProperties": false,
+      "description": "Accelerator global CloudWatch Logs logging configuration",
+      "properties": {
+        "dynamicPartitioning": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Declaration of Dynamic Partition for Kinesis Firehose."
+        },
+        "enable": {
+          "description": "Enable or disable CloudWatch replication",
+          "type": "boolean"
+        },
+        "encryption": {
+          "$ref": "#/definitions/IServiceEncryptionConfig",
+          "description": "Encryption setting for AWS CloudWatch log group data."
+        },
+        "exclusions": {
+          "description": "Exclude Log Groups during replication",
+          "items": {
+            "$ref": "#/definitions/ICloudWatchLogsExclusionConfig"
+          },
+          "type": "array"
+        },
+        "replaceLogDestinationArn": {
+          "$ref": "#/definitions/NonEmptyString",
+          "default": "undefined",
+          "description": "Customer defined log subscription filter destination arn, that is associated with with the existing log group. Accelerator solution needs to disassociate this destination before configuring solution defined subscription filter destination."
+        }
+      },
+      "type": "object"
+    },
+    "ICloudWatchLogsExclusionConfig": {
+      "additionalProperties": false,
+      "description": "Accelerator global CloudWatch Logs exclusion configuration",
+      "properties": {
+        "accounts": {
+          "description": "List of accounts where the exclusion will be applied to",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        },
+        "excludeAll": {
+          "description": "Exclude replication on all logs. By default this is set to false.",
+          "type": "boolean"
+        },
+        "logGroupNames": {
+          "description": "List of log groups names where the exclusion will be applied to",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        },
+        "organizationalUnits": {
+          "description": "List of OUs that the exclusion will apply to",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        },
+        "regions": {
+          "description": "List of regions where the exclusion will be applied to. If no value is supplied, exclusion is applied to all enabled regions.",
+          "items": {
+            "$ref": "#/definitions/Region"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "IControlTowerConfig": {
+      "additionalProperties": false,
+      "description": "AWS ControlTower configuration",
+      "properties": {
+        "controls": {
+          "description": "A list of Control Tower controls to enable.\n\nOnly Strongly recommended and Elective controls are permitted, with the exception of the Region deny guardrail. Please see this page for more information: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-controltower-enabledcontrol.html",
+          "items": {
+            "$ref": "#/definitions/IControlTowerControlConfig"
+          },
+          "type": "array"
+        },
+        "enable": {
+          "description": "Indicates whether AWS ControlTower enabled.\n\nWhen control tower is enabled, accelerator makes sure account configuration file have three mandatory AWS CT accounts. In AWS Control Tower, three shared accounts in your landing zone are provisioned automatically during setup: the management account, the log archive account, and the audit account.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enable"
+      ],
+      "type": "object"
+    },
+    "IControlTowerControlConfig": {
+      "additionalProperties": false,
+      "description": "Control Tower controls",
+      "properties": {
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "Control Tower control deployment targets, controls can only be deployed to Organizational Units"
+        },
+        "enable": {
+          "description": "Control enabled",
+          "type": "boolean"
+        },
+        "identifier": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Control Tower control identifier, for Strongly Recommended or Elective controls this should start with AWS-GR"
+        },
+        "regions": {
+          "description": "(Optional) Region(s) where this service quota increase will be requested. Service Quota increases will be requested in the home region only if this property is not defined.",
+          "items": {
+            "$ref": "#/definitions/Region"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "identifier",
+        "enable",
+        "deploymentTargets"
+      ],
+      "type": "object"
+    },
+    "ICostAndUsageReportConfig": {
+      "additionalProperties": false,
+      "description": "CostAndUsageReport configuration",
+      "properties": {
+        "additionalArtifacts": {
+          "description": "A list of manifests that you want Amazon Web Services to create for this report.",
+          "type": "string"
+        },
+        "additionalSchemaElements": {
+          "description": "A list of strings that indicate additional content that Amazon Web Services includes in the report, such as individual resource IDs.",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        },
+        "compression": {
+          "description": "The compression format that Amazon Web Services uses for the report.",
+          "type": "string"
+        },
+        "format": {
+          "description": "The format that Amazon Web Services saves the report in.",
+          "type": "string"
+        },
+        "lifecycleRules": {
+          "description": "Declaration of (S3 Bucket) Lifecycle rules.",
+          "items": {
+            "$ref": "#/definitions/ILifecycleRule"
+          },
+          "type": "array"
+        },
+        "refreshClosedReports": {
+          "description": "Whether you want Amazon Web Services to update your reports after they have been finalized if Amazon Web Services detects charges related to previous months. These charges can include refunds, credits, or support fees.",
+          "type": "boolean"
+        },
+        "reportName": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The name of the report that you want to create. The name must be unique, is case sensitive, and can't include spaces."
+        },
+        "reportVersioning": {
+          "description": "Whether you want Amazon Web Services to overwrite the previous version of each report or to deliver the report in addition to the previous versions.",
+          "type": "string"
+        },
+        "s3Prefix": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The prefix that Amazon Web Services adds to the report name when Amazon Web Services delivers the report. Your prefix can't include spaces."
+        },
+        "timeUnit": {
+          "description": "The granularity of the line items in the report.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "compression",
+        "format",
+        "reportName",
+        "s3Prefix",
+        "timeUnit",
+        "refreshClosedReports",
+        "reportVersioning"
+      ],
+      "type": "object"
+    },
+    "ICustomS3ResourceAndKmsPolicyOverridesConfig": {
+      "additionalProperties": false,
+      "description": "Custom policy overrides configuration for S3 resource and KMS",
+      "properties": {
+        "kmsPolicy": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "KMS policy file"
+        },
+        "s3Policy": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "S3 resource policy file"
+        }
+      },
+      "type": "object"
+    },
+    "ICustomS3ResourcePolicyOverridesConfig": {
+      "additionalProperties": false,
+      "description": "Custom policy overrides configuration for S3 resource policy",
+      "properties": {
+        "policy": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "S3 resource policy file"
+        }
+      },
+      "type": "object"
+    },
+    "IDeploymentTargets": {
+      "additionalProperties": false,
+      "properties": {
+        "accounts": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "excludedAccounts": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "excludedRegions": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "organizationalUnits": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "IElbLogBucketConfig": {
+      "additionalProperties": false,
+      "description": "Accelerator global S3 elb logging configuration",
+      "properties": {
+        "customPolicyOverrides": {
+          "$ref": "#/definitions/ICustomS3ResourcePolicyOverridesConfig",
+          "default": "undefined",
+          "description": "Custom policy overrides configuration."
+        },
+        "importedBucket": {
+          "$ref": "#/definitions/IImportedS3ManagedEncryptionKeyBucketConfig",
+          "default": "undefined",
+          "description": "Imported bucket configuration."
+        },
+        "lifecycleRules": {
+          "description": "Declaration of (S3 Bucket) Lifecycle rules. Configure additional resource policy attachments",
+          "items": {
+            "$ref": "#/definitions/ILifecycleRule"
+          },
+          "type": "array"
+        },
+        "s3ResourcePolicyAttachments": {
+          "description": "JSON policy files.",
+          "items": {
+            "$ref": "#/definitions/IResourcePolicyStatement"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "IExternalLandingZoneResourcesConfig": {
+      "additionalProperties": false,
+      "description": "External Landing Zone Resources Config",
+      "properties": {
+        "acceleratorName": {
+          "$ref": "#/definitions/NonEmptyString"
+        },
+        "acceleratorPrefix": {
+          "$ref": "#/definitions/NonEmptyString"
+        },
+        "importExternalLandingZoneResources": {
+          "description": "When the accelerator deploys resources using the AWS CDK, assets are first built and stored in S3. By default, the S3 bucket is located within the deployment target account.",
+          "type": "boolean"
+        },
+        "mappingFileBucket": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "importExternalLandingZoneResources",
+        "acceleratorPrefix",
+        "acceleratorName"
+      ],
+      "type": "object"
+    },
+    "IGlobalConfig": {
+      "additionalProperties": false,
+      "description": "Accelerator global configuration",
+      "properties": {
+        "acceleratorMetadata": {
+          "$ref": "#/definitions/IAcceleratorMetadataConfig",
+          "description": "Accelerator Metadata Configuration Creates a bucket in the logging account to enable accelerator metadata collection"
+        },
+        "acceleratorSettings": {
+          "$ref": "#/definitions/IAcceleratorSettingsConfig",
+          "description": "Accelerator Settings Configuration Allows setting additional properties for accelerator"
+        },
+        "backup": {
+          "$ref": "#/definitions/IBackupConfig",
+          "description": "Backup Vaults Configuration\n\nTo generate vaults, you need to provide below value for this parameter."
+        },
+        "cdkOptions": {
+          "$ref": "#/definitions/ICdkOptionsConfig",
+          "description": "AWS CDK options configuration. This lets you customize the operation of the CDK within LZA, specifically:\n\ncentralizeBuckets: Enabling this option modifies the CDK bootstrap process to utilize a single S3 bucket per region located in the management account for CDK assets generated by LZA. Otherwise, CDK will create a new S3 bucket in every account and every region supported by LZA. useManagementAccessRole: Enabling this option modifies CDK operations to use the IAM role specified in the `managementAccountAccessRole` option in `global-config.yaml` rather than the default roles created by CDK. Default CDK roles will still be created, but will remain unused. Any stacks previously deployed by LZA will retain their [associated execution role](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-iam-servicerole.html). For more information on these roles, please see [here](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html#bootstrapping-contract)."
+        },
+        "centralizeCdkBuckets": {
+          "$ref": "#/definitions/ICentralizeCdkBucketsConfig",
+          "description": "***Deprecated***\n\nNOTICE: The configuration of CDK buckets is being moved to cdkOptions in the Global Config. This block is deprecated and will be removed in a future release"
+        },
+        "cloudwatchLogRetentionInDays": {
+          "description": "Global  {@link  https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CloudWatchLogsConcepts.html CloudWatch Logs retention in days }  configuration.",
+          "type": "number"
+        },
+        "controlTower": {
+          "$ref": "#/definitions/IControlTowerConfig",
+          "description": "AWS ControlTower configuration\n\nTo indicate environment has control tower enabled, you need to provide below value for this parameter."
+        },
+        "enabledRegions": {
+          "description": "List of AWS Region names where accelerator will be deployed. Home region must be part of this list.\n\nTo add us-west-2 along with home region for accelerator deployment, you need to provide below value for this parameter.",
+          "items": {
+            "$ref": "#/definitions/Region"
+          },
+          "type": "array"
+        },
+        "externalLandingZoneResources": {
+          "$ref": "#/definitions/IExternalLandingZoneResourcesConfig",
+          "description": "ExternalLandingZoneResourcesConfig.\n\ncentralizeBuckets: Enabling this option modifies the CDK bootstrap process to utilize a single S3 bucket per region located in the management account for CDK assets generated by LZA. Otherwise, CDK will create a new S3 bucket in every account and every region supported by LZA."
+        },
+        "homeRegion": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Accelerator home region name. The region where accelerator pipeline deployed.\n\nTo use us-east-1 as home region for the accelerator, you need to provide below value for this parameter. Note: Variable HOME_REGION created for future usage of home region in the file"
+        },
+        "lambda": {
+          "$ref": "#/definitions/ILambdaConfig",
+          "description": "AWS Lambda Function environment variables encryption configuration options."
+        },
+        "limits": {
+          "description": "AWS Service Quota - Limit configuration\n\nTo enable limits within service quota, you need to provide below value for this parameter.",
+          "items": {
+            "$ref": "#/definitions/IServiceQuotaLimitsConfig"
+          },
+          "type": "array"
+        },
+        "logging": {
+          "$ref": "#/definitions/ILoggingConfig",
+          "description": "Accelerator logging configuration\n\nTo enable organization trail and session manager logs sending to S3, you need to provide below value for this parameter."
+        },
+        "managementAccountAccessRole": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "This role trusts the management account, allowing users in the management account to assume the role, as permitted by the management account administrator. The role has administrator permissions in the new member account.\n\nExamples:\n- AWSControlTowerExecution\n- OrganizationAccountAccessRole"
+        },
+        "reports": {
+          "$ref": "#/definitions/IReportConfig",
+          "description": "Report configuration\n\nTo enable budget report along with cost and usage report, you need to provide below value for this parameter."
+        },
+        "s3": {
+          "$ref": "#/definitions/IS3GlobalConfig",
+          "description": "AWS S3 global configuration options."
+        },
+        "snsTopics": {
+          "$ref": "#/definitions/ISnsConfig",
+          "description": "SNS Topics Configuration\n\nTo send CloudWatch Alarms and SecurityHub notifications you will need to configure at least one SNS Topic For SecurityHub notification you will need to set the deployment target to Root in order to receive notifications from all accounts"
+        },
+        "ssmInventory": {
+          "$ref": "#/definitions/ISsmInventoryConfig",
+          "description": "SSM Inventory Configuration\n\n[EC2 prerequisites](https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-inventory-walk.html) [Connectivity prerequisites](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-prereqs.html)"
+        },
+        "ssmParameters": {
+          "description": "SSM parameter configurations\n\nCreate SSM parameters through the LZA. Parameters can be deployed to Organizational Units or Accounts using deploymentTargets",
+          "items": {
+            "$ref": "#/definitions/ISsmParametersConfig"
+          },
+          "type": "array"
+        },
+        "tags": {
+          "description": "Custom Tags for all resources created by Landing Zone Accelerator that can be tagged.",
+          "items": {
+            "$ref": "#/definitions/ITag"
+          },
+          "type": "array"
+        },
+        "terminationProtection": {
+          "description": "Whether to enable termination protection for this stack.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "homeRegion",
+        "enabledRegions",
+        "managementAccountAccessRole",
+        "cloudwatchLogRetentionInDays",
+        "controlTower",
+        "logging"
+      ],
+      "type": "object"
+    },
+    "IImportedCustomerManagedEncryptionKeyBucketConfig": {
+      "additionalProperties": false,
+      "description": "Imported Bucket configuration with CMK enabled.",
+      "properties": {
+        "applyAcceleratorManagedBucketPolicy": {
+          "description": "Flag indicating Accelerator to apply solution generated policy to imported bucket.",
+          "type": "boolean"
+        },
+        "createAcceleratorManagedKey": {
+          "default": false,
+          "description": "Flag indicating solution should create CMK and apply to imported bucket.",
+          "type": "boolean"
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Imported bucket name"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "IImportedS3ManagedEncryptionKeyBucketConfig": {
+      "additionalProperties": false,
+      "description": "Imported Bucket configuration with S3 managed key encryption.",
+      "properties": {
+        "applyAcceleratorManagedBucketPolicy": {
+          "description": "Flag indicating Accelerator to apply solution generated policy to imported bucket.",
+          "type": "boolean"
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Imported bucket name"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "ILambdaConfig": {
+      "additionalProperties": false,
+      "description": "Lambda Function configuration settings",
+      "properties": {
+        "encryption": {
+          "$ref": "#/definitions/IServiceEncryptionConfig",
+          "description": "Encryption setting for AWS Lambda environment variables."
+        }
+      },
+      "type": "object"
+    },
+    "ILifecycleRule": {
+      "additionalProperties": false,
+      "description": "S3 bucket life cycle rules object.",
+      "properties": {
+        "abortIncompleteMultipartUpload": {
+          "description": "Specifies a lifecycle rule that aborts incomplete multipart uploads to an Amazon S3 bucket.",
+          "type": "number"
+        },
+        "enabled": {
+          "description": "Whether this rule is enabled.",
+          "type": "boolean"
+        },
+        "expiration": {
+          "description": "Indicates the number of days after creation when objects are deleted from Amazon S3 and Amazon Glacier.",
+          "type": "number"
+        },
+        "expiredObjectDeleteMarker": {
+          "description": "Indicates whether Amazon S3 will remove a delete marker with no noncurrent versions. If set to true, the delete marker will be expired.",
+          "type": "boolean"
+        },
+        "id": {
+          "description": "Friendly name for the rule. Rule name must be unique.",
+          "type": "string"
+        },
+        "noncurrentVersionExpiration": {
+          "description": "Time between when a new version of the object is uploaded to the bucket and when old versions of the object expire.",
+          "type": "number"
+        },
+        "noncurrentVersionTransitions": {
+          "description": "One or more transition rules that specify when non-current objects transition to a specified storage class.",
+          "items": {
+            "$ref": "#/definitions/ITransition"
+          },
+          "type": "array"
+        },
+        "prefix": {
+          "$ref": "#/definitions/NonEmptyString",
+          "default": "- Rule applies to all objects",
+          "description": "Object key prefix that identifies one or more objects to which this rule applies."
+        },
+        "transitions": {
+          "description": "One or more transition rules that specify when an object transitions to a specified storage class.",
+          "items": {
+            "$ref": "#/definitions/ITransition"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "ILoggingConfig": {
+      "additionalProperties": false,
+      "description": "Global logging configuration",
+      "properties": {
+        "accessLogBucket": {
+          "$ref": "#/definitions/IAccessLogBucketConfig",
+          "description": "Declaration of a (S3 Bucket) Lifecycle rule configuration."
+        },
+        "account": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Accelerator logging account name. Accelerator use LogArchive account for global logging. This account maintains consolidated logs."
+        },
+        "assetBucket": {
+          "$ref": "#/definitions/IAssetBucketConfig",
+          "description": "Declaration of a (S3 Bucket) configuration."
+        },
+        "centralLogBucket": {
+          "$ref": "#/definitions/ICentralLogBucketConfig",
+          "description": "Declaration of a (S3 Bucket) Lifecycle rule configuration."
+        },
+        "centralizedLoggingRegion": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Accelerator central logs bucket region name. Accelerator use CentralLogs bucket to store various log files, Accelerator created buckets and CWL replicates to CentralLogs bucket. CentralLogs bucket region is optional, when not provided this bucket will be created in Accelerator home region."
+        },
+        "cloudtrail": {
+          "$ref": "#/definitions/ICloudTrailConfig",
+          "description": "CloudTrail logging configuration"
+        },
+        "cloudwatchLogs": {
+          "$ref": "#/definitions/ICloudWatchLogsConfig",
+          "description": "CloudWatch Logging configuration."
+        },
+        "elbLogBucket": {
+          "$ref": "#/definitions/IElbLogBucketConfig",
+          "description": "Declaration of a (S3 Bucket) Lifecycle rule configuration."
+        },
+        "sessionManager": {
+          "$ref": "#/definitions/ISessionManagerConfig",
+          "description": "SessionManager logging configuration"
+        }
+      },
+      "required": [
+        "account",
+        "cloudtrail",
+        "sessionManager"
+      ],
+      "type": "object"
+    },
+    "INotificationConfig": {
+      "additionalProperties": false,
+      "description": "Notification configuration",
+      "properties": {
+        "address": {
+          "$ref": "#/definitions/NonEmptyString",
+          "deprecated": "This is a temporary property and it has been deprecated.\nPlease use recipients property to specify address for budget notifications.",
+          "description": "The address that AWS sends budget notifications to, either an SNS topic or an email."
+        },
+        "comparisonOperator": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ComparisonOperator"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "description": "The comparison that's used for this notification."
+        },
+        "recipients": {
+          "description": "The recipients list that AWS sends budget notifications to, either an SNS topic or an email.",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        },
+        "subscriptionType": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/SubscriptionType"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "description": "The type of notification that AWS sends to a subscriber."
+        },
+        "threshold": {
+          "description": "The type of threshold associate with a notification.",
+          "type": "number"
+        },
+        "thresholdType": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ThresholdType"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "description": "The type of threshold for a notification.For ABSOLUTE_VALUE thresholds, AWS notifies you when you go over or are forecasted to go over your total cost threshold. For PERCENTAGE thresholds, AWS notifies you when you go over or are forecasted to go over a certain percentage of your forecasted spend. For example,if you have a budget for 200 dollars and you have a PERCENTAGE threshold of 80%, AWS notifies you when you go over 160 dollars."
+        },
+        "type": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/NotificationType"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "description": "The comparison that's used for the notification that's associated with a budget."
+        }
+      },
+      "required": [
+        "type",
+        "thresholdType",
+        "comparisonOperator",
+        "subscriptionType"
+      ],
+      "type": "object"
+    },
+    "IReportConfig": {
+      "additionalProperties": false,
+      "description": "Accelerator report configuration",
+      "properties": {
+        "budgets": {
+          "description": "Budget report configuration\n\nIf you want to create budget report with monthly granularity of the line items in the report and other default parameters , you need to provide below value for this parameter.",
+          "items": {
+            "$ref": "#/definitions/IBudgetReportConfig"
+          },
+          "type": "array"
+        },
+        "costAndUsageReport": {
+          "$ref": "#/definitions/ICostAndUsageReportConfig",
+          "description": "Cost and usage report configuration\n\nIf you want to create cost and usage report with daily granularity of the line items in the report, you need to provide below value for this parameter."
+        }
+      },
+      "type": "object"
+    },
+    "IResourcePolicyStatement": {
+      "additionalProperties": false,
+      "properties": {
+        "policy": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "policy"
+      ],
+      "type": "object"
+    },
+    "IS3EncryptionConfig": {
+      "additionalProperties": false,
+      "description": "AWS S3 encryption configuration settings",
+      "properties": {
+        "createCMK": {
+          "default": true,
+          "description": "Flag indicates whether solution will create CMK for S3 bucket encryption.",
+          "type": "boolean"
+        },
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "To control target environments (AWS Account and Region) for the given `createCMK` setting, you may optionally specify deployment targets. Leaving `deploymentTargets` undefined will apply `createCMK` setting to all accounts and enabled regions."
+        }
+      },
+      "required": [
+        "createCMK"
+      ],
+      "type": "object"
+    },
+    "IS3GlobalConfig": {
+      "additionalProperties": false,
+      "description": "AWS S3 global encryption configuration settings",
+      "properties": {
+        "encryption": {
+          "$ref": "#/definitions/IS3EncryptionConfig",
+          "default": "undefined",
+          "description": "S3 encryption configuration."
+        }
+      },
+      "type": "object"
+    },
+    "IServiceEncryptionConfig": {
+      "additionalProperties": false,
+      "description": "AWS service encryption configuration settings",
+      "properties": {
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "To control target environments (AWS Account and Region) for the given `useCMK` setting, you may optionally specify deployment targets. Leaving `deploymentTargets` undefined will apply `useCMK` setting to all accounts and enabled regions."
+        },
+        "useCMK": {
+          "default": false,
+          "description": "Flag indicates whether Accelerator deployed AWS Service will use AWS KMS CMK for encryption or Service managed KMS.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "useCMK"
+      ],
+      "type": "object"
+    },
+    "IServiceQuotaLimitsConfig": {
+      "additionalProperties": false,
+      "description": "AWS Service Quotas configuration",
+      "properties": {
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "List of AWS Account names to be included in the Service Quota changes"
+        },
+        "desiredValue": {
+          "description": "Value associated with the limit change.",
+          "type": "number"
+        },
+        "quotaCode": {
+          "description": "Indicates the code for the service as these are tied to the account.",
+          "type": "string"
+        },
+        "regions": {
+          "description": "(Optional) Region(s) where this service quota increase will be requested. Service Quota increases will be requested in the home region only if this property is not defined.",
+          "items": {
+            "$ref": "#/definitions/Region"
+          },
+          "type": "array"
+        },
+        "serviceCode": {
+          "description": "Indicates which service Service Quota is changing the limit for.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "serviceCode",
+        "quotaCode",
+        "desiredValue",
+        "deploymentTargets"
+      ],
+      "type": "object"
+    },
+    "ISessionManagerConfig": {
+      "additionalProperties": false,
+      "description": "AWS SessionManager configuration",
+      "properties": {
+        "attachPolicyToIamRoles": {
+          "description": "List of IAM EC2 roles that the Session Manager access policy should be attached to",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "excludeAccounts": {
+          "description": "List of AWS Account names to be excluded from configuring SessionManager configuration",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "excludeRegions": {
+          "description": "List of AWS Region names to be excluded from configuring SessionManager configuration",
+          "items": {
+            "$ref": "#/definitions/Region"
+          },
+          "type": "array"
+        },
+        "lifecycleRules": {
+          "description": "S3 Lifecycle rule for log storage",
+          "items": {
+            "$ref": "#/definitions/ILifecycleRule"
+          },
+          "type": "array"
+        },
+        "sendToCloudWatchLogs": {
+          "description": "Indicates whether sending SessionManager logs to CloudWatchLogs enabled.",
+          "type": "boolean"
+        },
+        "sendToS3": {
+          "description": "Indicates whether sending SessionManager logs to S3 enabled.\n\nWhen this flag is on, accelerator will send session manager logs to Central log bucket in LogArchive account.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "sendToCloudWatchLogs",
+        "sendToS3"
+      ],
+      "type": "object"
+    },
+    "ISnsConfig": {
+      "additionalProperties": false,
+      "description": "SNS Configuration",
+      "properties": {
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "Deployment targets for SNS topics SNS Topics will always be deployed to the Log Archive account email subscriptions will be in the Log Archive account All other accounts and regions will forward to the Logging account"
+        },
+        "topics": {
+          "description": "List of SNS Topics",
+          "items": {
+            "$ref": "#/definitions/ISnsTopicConfig"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "ISnsTopicConfig": {
+      "additionalProperties": false,
+      "description": "SNS Topics Configuration\n\nTo send CloudWatch Alarms and SecurityHub notifications\nyou will need to configure at least one SNS Topic\nFor SecurityHub notification you will need\nto set the deployment target to Root in order\nto receive notifications from all accounts",
+      "properties": {
+        "emailAddresses": {
+          "description": "List of email address for notification",
+          "items": {
+            "$ref": "#/definitions/EmailAddress"
+          },
+          "type": "array"
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "SNS Topic Name"
+        }
+      },
+      "required": [
+        "name",
+        "emailAddresses"
+      ],
+      "type": "object"
+    },
+    "ISsmInventoryConfig": {
+      "additionalProperties": false,
+      "description": "SSM Inventory Configuration",
+      "properties": {
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "Configure the Deployment Targets"
+        },
+        "enable": {
+          "description": "Enable SSM Inventory",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enable",
+        "deploymentTargets"
+      ],
+      "type": "object"
+    },
+    "ISsmParameterConfig": {
+      "additionalProperties": false,
+      "description": "SSM Parameter Configuration",
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The friendly name of the SSM Parameter, this is used to generate the CloudFormation Logical Id."
+        },
+        "path": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The path or name used when creating SSM Parameter."
+        },
+        "value": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The value of the SSM Parameter"
+        }
+      },
+      "required": [
+        "name",
+        "path",
+        "value"
+      ],
+      "type": "object"
+    },
+    "ISsmParametersConfig": {
+      "additionalProperties": false,
+      "description": "SSM Parameters Configuration",
+      "properties": {
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "Configure the Deployment Targets"
+        },
+        "parameters": {
+          "description": "A list of SSM parameters to create",
+          "items": {
+            "$ref": "#/definitions/ISsmParameterConfig"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "parameters",
+        "deploymentTargets"
+      ],
+      "type": "object"
+    },
+    "ITag": {
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "value"
+      ],
+      "type": "object"
+    },
+    "ITransition": {
+      "additionalProperties": false,
+      "properties": {
+        "storageClass": {
+          "$ref": "#/definitions/StorageClass"
+        },
+        "transitionAfter": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "storageClass",
+        "transitionAfter"
+      ],
+      "type": "object"
+    },
+    "IVaultConfig": {
+      "additionalProperties": false,
+      "description": "AWS Backup vault configuration",
+      "properties": {
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "Which OU's or Accounts the vault will be deployed to"
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Name that will be used to create the vault."
+        },
+        "policy": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The path to a JSON file defining Backup Vault access policy"
+        }
+      },
+      "required": [
+        "name",
+        "deploymentTargets"
+      ],
+      "type": "object"
+    },
+    "NonEmptyString": {
+      "description": "A string that has at least 1 character",
+      "minLength": 1,
+      "type": "string"
+    },
+    "NotificationType": {
+      "enum": [
+        "ACTUAL",
+        "FORECASTED"
+      ],
+      "type": "string"
+    },
+    "Region": {
+      "description": "AWS Region",
+      "enum": [
+        "af-south-1",
+        "ap-east-1",
+        "ap-northeast-1",
+        "ap-northeast-2",
+        "ap-northeast-3",
+        "ap-south-1",
+        "ap-south-2",
+        "ap-southeast-1",
+        "ap-southeast-2",
+        "ap-southeast-3",
+        "ap-southeast-4",
+        "ca-central-1",
+        "cn-north-1",
+        "cn-northwest-1",
+        "eu-central-1",
+        "eu-central-2",
+        "eu-north-1",
+        "eu-south-1",
+        "eu-south-2",
+        "eu-west-1",
+        "eu-west-2",
+        "eu-west-3",
+        "il-central-1",
+        "me-central-1",
+        "me-south-1",
+        "sa-east-1",
+        "us-east-1",
+        "us-east-2",
+        "us-gov-west-1",
+        "us-gov-east-1",
+        "us-iso-east-1",
+        "us-isob-east-1",
+        "us-iso-west-1",
+        "us-west-1",
+        "us-west-2"
+      ],
+      "type": "string"
+    },
+    "StorageClass": {
+      "enum": [
+        "DEEP_ARCHIVE",
+        "GLACIER",
+        "GLACIER_IR",
+        "STANDARD_IA",
+        "INTELLIGENT_TIERING",
+        "ONEZONE_IA"
+      ],
+      "type": "string"
+    },
+    "SubscriptionType": {
+      "enum": [
+        "EMAIL",
+        "SNS"
+      ],
+      "type": "string"
+    },
+    "ThresholdType": {
+      "enum": [
+        "PERCENTAGE",
+        "ABSOLUTE_VALUE"
+      ],
+      "type": "string"
+    }
+  }
+}

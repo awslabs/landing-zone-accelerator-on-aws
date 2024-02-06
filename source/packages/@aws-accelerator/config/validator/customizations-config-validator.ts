@@ -17,11 +17,9 @@ import * as path from 'path';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 
 import { AccountsConfig } from '../lib/accounts-config';
-import * as t from '../lib/common-types';
 import {
   AppConfigItem,
   CustomizationsConfig,
-  CustomizationsConfigTypes,
   NlbTargetTypeConfig,
   ApplicationLoadBalancerConfig,
   TargetGroupItemConfig,
@@ -31,10 +29,20 @@ import {
 } from '../lib/customizations-config';
 import { GlobalConfig } from '../lib/global-config';
 import { IamConfig } from '../lib/iam-config';
-import { NetworkConfig, NetworkConfigTypes, SubnetConfig, VpcConfig, VpcTemplatesConfig } from '../lib/network-config';
+import { NetworkConfig, VpcConfig, VpcTemplatesConfig } from '../lib/network-config';
 import { OrganizationConfig } from '../lib/organization-config';
 import { SecurityConfig } from '../lib/security-config';
 import { CommonValidatorFunctions } from './common/common-validator-functions';
+import { INetworkConfig, ISubnetConfig } from '../lib/models/network-config';
+import {
+  IBlockDeviceMappingItem,
+  ICustomizationsConfig,
+  IEc2FirewallAutoScalingGroupConfig,
+  IEc2FirewallInstanceConfig,
+  INetworkInterfaceItem,
+  ITargetGroupItem,
+} from '../lib/models/customizations-config';
+import { DeploymentTargets, Region, ShareTargets, isCustomizationsType, isNetworkType } from '../lib/common';
 
 /**
  * Customizations Configuration validator.
@@ -174,11 +182,7 @@ class CustomizationValidator {
    * @param configDir
    * @param values
    */
-  private validateTemplateFile(
-    configDir: string,
-    values: t.TypeOf<typeof CustomizationsConfigTypes.customizationsConfig>,
-    errors: string[],
-  ) {
+  private validateTemplateFile(configDir: string, values: ICustomizationsConfig, errors: string[]) {
     for (const cloudFormationStack of values.customizations?.cloudFormationStacks ?? []) {
       if (!fs.existsSync(path.join(configDir, cloudFormationStack.template))) {
         errors.push(
@@ -211,10 +215,7 @@ class CustomizationValidator {
    * @param configDir
    * @param values
    */
-  private validateStackNameLength(
-    values: t.TypeOf<typeof CustomizationsConfigTypes.customizationsConfig>,
-    errors: string[],
-  ) {
+  private validateStackNameLength(values: ICustomizationsConfig, errors: string[]) {
     for (const cloudFormationStack of values.customizations?.cloudFormationStacks ?? []) {
       if (cloudFormationStack.name.length > 128) {
         errors.push(
@@ -235,10 +236,7 @@ class CustomizationValidator {
    * Function to validate stack and stackset names are unique
    * @param values
    */
-  private validateStackNameForUniqueness(
-    values: t.TypeOf<typeof CustomizationsConfigTypes.customizationsConfig>,
-    errors: string[],
-  ) {
+  private validateStackNameForUniqueness(values: ICustomizationsConfig, errors: string[]) {
     const stackNames = [...(values.customizations?.cloudFormationStacks ?? [])].map(item => item.name);
     const stackSetNames = [...(values.customizations?.cloudFormationStackSets ?? [])].map(item => item.name);
 
@@ -256,11 +254,7 @@ class CustomizationValidator {
    * Make sure deployment target OUs are part of Organization config file
    * @param values
    */
-  private validateDeploymentTargetOUs(
-    values: t.TypeOf<typeof CustomizationsConfigTypes.customizationsConfig>,
-    ouIdNames: string[],
-    errors: string[],
-  ) {
+  private validateDeploymentTargetOUs(values: ICustomizationsConfig, ouIdNames: string[], errors: string[]) {
     for (const stack of values.customizations?.cloudFormationStacks ?? []) {
       for (const ou of stack.deploymentTargets.organizationalUnits ?? []) {
         if (ouIdNames.indexOf(ou) === -1) {
@@ -287,7 +281,7 @@ class CustomizationValidator {
    * @param values
    */
   private validateDeploymentTargetAccountNames(
-    values: t.TypeOf<typeof CustomizationsConfigTypes.customizationsConfig>,
+    values: ICustomizationsConfig,
     accountNames: string[],
     errors: string[],
   ) {
@@ -321,7 +315,7 @@ class CustomizationValidator {
    * @param errors
    */
   private validateApplicationsInputs(
-    values: t.TypeOf<typeof CustomizationsConfigTypes.customizationsConfig>,
+    values: ICustomizationsConfig,
     configs: {
       configDir: string;
       accountsConfig: AccountsConfig;
@@ -356,7 +350,7 @@ class CustomizationValidator {
               appName: app.name,
               appVpc: app.vpc,
               appTargetGroups: (app.targetGroups as TargetGroupItemConfig[]) ?? undefined,
-              deploymentTargets: app.deploymentTargets as t.DeploymentTargets,
+              deploymentTargets: app.deploymentTargets as DeploymentTargets,
             },
             helpers,
             errors,
@@ -375,7 +369,7 @@ class CustomizationValidator {
               appName: app.name,
               appVpc: app.vpc,
               appTargetGroups: (app.targetGroups as TargetGroupItemConfig[]) ?? undefined,
-              deploymentTargets: app.deploymentTargets as t.DeploymentTargets,
+              deploymentTargets: app.deploymentTargets as DeploymentTargets,
             },
             helpers,
             errors,
@@ -413,7 +407,7 @@ class CustomizationValidator {
     }
 
     const allEnabledRegions = globalConfig.enabledRegions;
-    let filteredRegions: t.Region[];
+    let filteredRegions: Region[];
     if (app.deploymentTargets.excludedAccounts && app.deploymentTargets.excludedAccounts.length > 0) {
       filteredRegions = allEnabledRegions.filter(obj => !app.deploymentTargets.excludedAccounts.includes(obj));
     } else {
@@ -524,7 +518,7 @@ class CustomizationValidator {
       appName: string;
       appVpc: string;
       appTargetGroups: TargetGroupItemConfig[] | undefined;
-      deploymentTargets: t.DeploymentTargets;
+      deploymentTargets: DeploymentTargets;
     },
     helpers: CustomizationHelperMethods,
     errors: string[],
@@ -602,7 +596,7 @@ class CustomizationValidator {
       appName: string;
       appVpc: string;
       appTargetGroups: TargetGroupItemConfig[] | undefined;
-      deploymentTargets: t.DeploymentTargets;
+      deploymentTargets: DeploymentTargets;
     },
     helpers: CustomizationHelperMethods,
     errors: string[],
@@ -679,7 +673,7 @@ class CustomizationValidator {
     albName: string,
     appName: string,
     configs: { networkConfig: NetworkConfig; accountsConfig: AccountsConfig; globalConfig: GlobalConfig },
-    listenerDeploymentTargets: t.DeploymentTargets,
+    listenerDeploymentTargets: DeploymentTargets,
     loadBalancerType: string,
     errors: string[],
   ) {
@@ -710,7 +704,7 @@ class CustomizationValidator {
       listener: { name: string; certificate: string | undefined };
       loadBalancerType: string;
       loadBalancerName: string;
-      deploymentTargets: t.DeploymentTargets;
+      deploymentTargets: DeploymentTargets;
       appName: string;
     },
     configs: { networkConfig: NetworkConfig; accountsConfig: AccountsConfig; globalConfig: GlobalConfig },
@@ -768,7 +762,7 @@ class CustomizationValidator {
    * @param errors
    */
   private validateServiceCatalogInputs(
-    values: t.TypeOf<typeof CustomizationsConfigTypes.customizationsConfig>,
+    values: ICustomizationsConfig,
     accountsConfig: AccountsConfig,
     errors: string[],
     accountNames: string[],
@@ -788,10 +782,7 @@ class CustomizationValidator {
    * Function to validate portfolio names are unique
    * @param values
    */
-  private validatePortfolioNameForUniqueness(
-    values: t.TypeOf<typeof CustomizationsConfigTypes.customizationsConfig>,
-    errors: string[],
-  ) {
+  private validatePortfolioNameForUniqueness(values: ICustomizationsConfig, errors: string[]) {
     const portfolioNames = [...(values.customizations?.serviceCatalogPortfolios ?? [])].map(item => item.name);
 
     if (new Set(portfolioNames).size !== portfolioNames.length) {
@@ -805,7 +796,7 @@ class CustomizationValidator {
    * @param values
    */
   private validateServiceCatalogShareTargetAccounts(
-    values: t.TypeOf<typeof CustomizationsConfigTypes.customizationsConfig>,
+    values: ICustomizationsConfig,
     accountNames: string[],
     errors: string[],
   ) {
@@ -826,7 +817,7 @@ class CustomizationValidator {
    * @param values
    */
   private validateServiceCatalogShareTargetOUs(
-    values: t.TypeOf<typeof CustomizationsConfigTypes.customizationsConfig>,
+    values: ICustomizationsConfig,
     ouIdNames: string[],
     errors: string[],
     managementAccount: string,
@@ -853,19 +844,19 @@ class CustomizationValidator {
   private checkSubnetsTarget(
     subnets: string[],
     vpcCheck: VpcConfig | VpcTemplatesConfig,
-    deploymentTargets: t.DeploymentTargets,
+    deploymentTargets: DeploymentTargets,
     accountsConfig: AccountsConfig,
     errors: string[],
   ) {
     let isValid = true;
-    const subnetsInConfig: SubnetConfig[] = subnets.map(
+    const subnetsInConfig: ISubnetConfig[] = subnets.map(
       (subnet: string) => vpcCheck.subnets!.find(item => item.name === subnet)!,
     );
     for (const subnet of subnetsInConfig) {
       const subnetTargets = new Set([
         ...CommonValidatorFunctions.getAccountNamesFromTargets(
           accountsConfig,
-          (subnet.shareTargets ?? {}) as t.ShareTargets,
+          (subnet.shareTargets ?? {}) as ShareTargets,
         ),
         ...('deploymentTargets' in vpcCheck
           ? CommonValidatorFunctions.getAccountNamesFromTargets(accountsConfig, vpcCheck.deploymentTargets)
@@ -902,7 +893,7 @@ class CustomizationHelperMethods {
   /**
    * Get regions of deploymentTargets
    */
-  public getRegionsFromDeploymentTarget(deploymentTargets: t.DeploymentTargets): string[] {
+  public getRegionsFromDeploymentTarget(deploymentTargets: DeploymentTargets): string[] {
     if (deploymentTargets.excludedRegions) {
       return this.globalConfig.enabledRegions.filter(obj => !deploymentTargets.excludedRegions.includes(obj));
     } else {
@@ -913,7 +904,7 @@ class CustomizationHelperMethods {
    * Validate if VPC name is in config file
    * @param string
    */
-  public checkVpcInConfig(vpcName: string, values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
+  public checkVpcInConfig(vpcName: string, values: INetworkConfig) {
     for (const vpcItem of values.vpcs ?? []) {
       if (vpcName === vpcItem.name) {
         // vpc name exists in network config. Return to function
@@ -973,7 +964,7 @@ class CustomizationHelperMethods {
   }
 
   public checkBlockDeviceMappings(
-    blockDeviceMappings: t.TypeOf<typeof CustomizationsConfigTypes.blockDeviceMappingItem>[],
+    blockDeviceMappings: IBlockDeviceMappingItem[],
     securityConfig: SecurityConfig,
     launchTemplateName: string,
     errors: string[],
@@ -1037,7 +1028,7 @@ class CustomizationHelperMethods {
     return roleList;
   }
 
-  public getAccountNamesFromDeploymentTarget(deploymentTargets: t.DeploymentTargets): string[] {
+  public getAccountNamesFromDeploymentTarget(deploymentTargets: DeploymentTargets): string[] {
     const accountNames: string[] = [];
     // Helper function to add an account to the list
     const addAccountName = (accountName: string) => {
@@ -1128,7 +1119,7 @@ class FirewallValidator {
       if (!vpc) {
         errors.push(`[Firewall instance ${firewall.name}]: VPC ${firewall.vpc} does not exist in network-config.yaml`);
       }
-      if (vpc && NetworkConfigTypes.vpcTemplatesConfig.is(vpc)) {
+      if (vpc && isNetworkType('IVpcTemplatesConfig', vpc)) {
         errors.push(`[Firewall instance ${firewall.name}]: VPC templates are not supported`);
       }
 
@@ -1146,7 +1137,7 @@ class FirewallValidator {
       }
 
       // Validate launch template
-      if (NetworkConfigTypes.vpcConfig.is(vpc) && firewall.launchTemplate.networkInterfaces) {
+      if (isNetworkType<VpcConfig>('IVpcConfig', vpc) && firewall.launchTemplate.networkInterfaces) {
         this.validateLaunchTemplate(vpc, firewall, configDir, securityConfig, accountsConfig, helpers, errors);
         this.validateReplacementConfig(firewall, errors);
       }
@@ -1184,7 +1175,7 @@ class FirewallValidator {
       if (!vpc) {
         errors.push(`[Firewall ASG ${group.name}]: VPC ${group.vpc} does not exist in network-config.yaml`);
       }
-      if (vpc && NetworkConfigTypes.vpcTemplatesConfig.is(vpc)) {
+      if (vpc && isNetworkType<VpcTemplatesConfig>('IVpcTemplatesConfig', vpc)) {
         errors.push(`[Firewall ASG ${group.name}]: VPC templates are not supported`);
       }
 
@@ -1209,7 +1200,7 @@ class FirewallValidator {
       }
 
       // Validate launch template
-      if (NetworkConfigTypes.vpcConfig.is(vpc)) {
+      if (isNetworkType<VpcConfig>('IVpcConfig', vpc)) {
         this.validateLaunchTemplate(vpc, group, configDir, securityConfig, accountsConfig, helpers, errors);
         this.validateReplacementConfig(group, errors);
         this.validateAsgTargetGroups(values, group, errors);
@@ -1244,7 +1235,7 @@ class FirewallValidator {
   private checkTargetsInConfig(
     helpers: CustomizationHelperMethods,
     targets: (string | NlbTargetTypeConfig)[],
-    config: t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallInstanceConfig>[],
+    config: IEc2FirewallInstanceConfig[],
   ): boolean {
     // Retrieve target groups
     const targetInstances = config.map(instance => {
@@ -1260,13 +1251,9 @@ class FirewallValidator {
     return false;
   }
 
-  private checkInstanceVpcs(
-    group: t.TypeOf<typeof CustomizationsConfigTypes.targetGroupItem>,
-    config: t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallInstanceConfig>[],
-    errors: string[],
-  ) {
+  private checkInstanceVpcs(group: ITargetGroupItem, config: IEc2FirewallInstanceConfig[], errors: string[]) {
     // Retrieve instance configs
-    const instances: t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallInstanceConfig>[] = [];
+    const instances: IEc2FirewallInstanceConfig[] = [];
     group.targets!.forEach(target => instances.push(config.find(item => item.name === target)!));
 
     // Map VPCs
@@ -1290,9 +1277,7 @@ class FirewallValidator {
    */
   private validateLaunchTemplate(
     vpc: VpcConfig,
-    firewall:
-      | t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallInstanceConfig>
-      | t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallAutoScalingGroupConfig>,
+    firewall: IEc2FirewallInstanceConfig | IEc2FirewallAutoScalingGroupConfig,
     configDir: string,
     securityConfig: SecurityConfig,
     accountsConfig: AccountsConfig,
@@ -1332,9 +1317,7 @@ class FirewallValidator {
    */
   private validateLaunchTemplateSecurityGroups(
     vpc: VpcConfig,
-    firewall:
-      | t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallInstanceConfig>
-      | t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallAutoScalingGroupConfig>,
+    firewall: IEc2FirewallInstanceConfig | IEc2FirewallAutoScalingGroupConfig,
     helpers: CustomizationHelperMethods,
     errors: string[],
   ) {
@@ -1378,9 +1361,7 @@ class FirewallValidator {
    * @param interfaces
    * @returns
    */
-  private includesInterfaceGroups(
-    interfaces: t.TypeOf<typeof CustomizationsConfigTypes.networkInterfaceItem>[],
-  ): boolean {
+  private includesInterfaceGroups(interfaces: INetworkInterfaceItem[]): boolean {
     for (const interfaceItem of interfaces) {
       if (!interfaceItem.groups || interfaceItem.groups.length === 0) {
         return false;
@@ -1398,18 +1379,15 @@ class FirewallValidator {
    */
   private validateLaunchTemplateSubnets(
     vpc: VpcConfig,
-    firewall:
-      | t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallInstanceConfig>
-      | t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallAutoScalingGroupConfig>,
+    firewall: IEc2FirewallInstanceConfig | IEc2FirewallAutoScalingGroupConfig,
     helpers: CustomizationHelperMethods,
     accountsConfig: AccountsConfig,
     errors: string[],
   ) {
-    if (CustomizationsConfigTypes.ec2FirewallInstanceConfig.is(firewall)) {
-      this.validateInstanceLaunchTemplateSubnets(vpc, firewall, helpers, accountsConfig, errors);
-    }
-    if (CustomizationsConfigTypes.ec2FirewallAutoScalingGroupConfig.is(firewall)) {
+    if (isCustomizationsType<Ec2FirewallAutoScalingGroupConfig>('IEc2FirewallAutoScalingGroupConfig', firewall)) {
       this.validateAsgLaunchTemplateSubnets(vpc, firewall, helpers, errors);
+    } else {
+      this.validateInstanceLaunchTemplateSubnets(vpc, firewall, helpers, accountsConfig, errors);
     }
   }
 
@@ -1422,7 +1400,7 @@ class FirewallValidator {
    */
   private validateInstanceLaunchTemplateSubnets(
     vpc: VpcConfig,
-    firewall: t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallInstanceConfig>,
+    firewall: IEc2FirewallInstanceConfig,
     helpers: CustomizationHelperMethods,
     accountsConfig: AccountsConfig,
     errors: string[],
@@ -1438,7 +1416,7 @@ class FirewallValidator {
       return interfaceItem.subnetId!;
     });
     // Subnet configs
-    const subnets: t.TypeOf<typeof NetworkConfigTypes.subnetConfig>[] = [];
+    const subnets: ISubnetConfig[] = [];
     const subnetsExist = helpers.checkSubnetsInConfig(interfaceSubnets, vpc);
     if (!subnetsExist) {
       errors.push(
@@ -1471,7 +1449,7 @@ class FirewallValidator {
       subnet =>
         !CommonValidatorFunctions.getAccountNamesFromTargets(
           accountsConfig,
-          (subnet.shareTargets ?? {}) as t.ShareTargets,
+          (subnet.shareTargets ?? {}) as ShareTargets,
         ).includes(firewall.account!) && invalidInterfaceSubnets.push(subnet.name),
     );
     invalidInterfaceSubnets.forEach(subnetName =>
@@ -1490,7 +1468,7 @@ class FirewallValidator {
    */
   private validateAsgLaunchTemplateSubnets(
     vpc: VpcConfig,
-    firewall: t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallAutoScalingGroupConfig>,
+    firewall: IEc2FirewallAutoScalingGroupConfig,
     helpers: CustomizationHelperMethods,
     errors: string[],
   ) {
@@ -1521,7 +1499,7 @@ class FirewallValidator {
     }
   }
 
-  private includesSubnet(interfaces: t.TypeOf<typeof CustomizationsConfigTypes.networkInterfaceItem>[]) {
+  private includesSubnet(interfaces: INetworkInterfaceItem[]) {
     for (const interfaceItem of interfaces) {
       if (!interfaceItem.subnetId) {
         return false;
@@ -1539,9 +1517,7 @@ class FirewallValidator {
    */
   private validateIamInstanceProfile(
     vpc: VpcConfig,
-    firewall:
-      | t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallInstanceConfig>
-      | t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallAutoScalingGroupConfig>,
+    firewall: IEc2FirewallInstanceConfig | IEc2FirewallAutoScalingGroupConfig,
     helpers: CustomizationHelperMethods,
     errors: string[],
   ) {
@@ -1569,7 +1545,7 @@ class FirewallValidator {
 
   private validateAsgTargetGroups(
     values: CustomizationsConfig,
-    group: t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallAutoScalingGroupConfig>,
+    group: IEc2FirewallAutoScalingGroupConfig,
     errors: string[],
   ) {
     if (group.autoscaling.targetGroups) {

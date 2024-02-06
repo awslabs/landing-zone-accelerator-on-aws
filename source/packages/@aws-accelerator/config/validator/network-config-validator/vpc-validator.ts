@@ -10,21 +10,24 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import { ShareTargets } from '../../lib/common-types';
+import { ShareTargets, isNetworkType } from '../../lib/common';
 import {
   ApplicationLoadBalancerConfig,
   CustomizationsConfig,
   Ec2FirewallInstanceConfig,
 } from '../../lib/customizations-config';
 import {
+  NetworkAclSubnetSelection,
   NetworkConfig,
-  NetworkConfigTypes,
   NfwFirewallConfig,
+  PrefixListSourceConfig,
   ResolverRuleConfig,
   RouteTableEntryConfig,
   SecurityGroupConfig,
   SecurityGroupRuleConfig,
+  SecurityGroupSourceConfig,
   SubnetConfig,
+  SubnetSourceConfig,
   TransitGatewayAttachmentConfig,
   TransitGatewayConfig,
   VpcConfig,
@@ -96,10 +99,10 @@ export class VpcValidator {
     const unsupportedRegions = ['us-gov-west-1', 'us-gov-east-1'];
     // Get VPCs marked as central; do not allow VPC templates
     vpcs.forEach(vpc => {
-      if (vpc.interfaceEndpoints?.central && !NetworkConfigTypes.vpcConfig.is(vpc)) {
+      if (vpc.interfaceEndpoints?.central && !isNetworkType<VpcConfig>('IVpcConfig', vpc)) {
         errors.push(`[VPC ${vpc.name}]: cannot define a VPC template as a central interface endpoint VPC`);
       }
-      if (vpc.interfaceEndpoints?.central && NetworkConfigTypes.vpcConfig.is(vpc)) {
+      if (vpc.interfaceEndpoints?.central && isNetworkType<VpcConfig>('IVpcConfig', vpc)) {
         centralVpcs.push(vpc);
       }
     });
@@ -1567,7 +1570,7 @@ export class VpcValidator {
   ) {
     vpcItem.networkAcls?.forEach(nacl => {
       nacl.inboundRules?.forEach(inbound => {
-        if (NetworkConfigTypes.networkAclSubnetSelection.is(inbound.source)) {
+        if (isNetworkType<NetworkAclSubnetSelection>('INetworkAclSubnetSelection', inbound.source)) {
           // Validate subnet source
           const vpc = helpers.getVpc(inbound.source.vpc);
           if (!vpc) {
@@ -1618,7 +1621,7 @@ export class VpcValidator {
   ) {
     vpcItem.networkAcls?.forEach(nacl => {
       nacl.outboundRules?.forEach(outbound => {
-        if (NetworkConfigTypes.networkAclSubnetSelection.is(outbound.destination)) {
+        if (isNetworkType<NetworkAclSubnetSelection>('INetworkAclSubnetSelection', outbound.destination)) {
           // Validate subnet source
           const vpc = helpers.getVpc(outbound.destination.vpc);
           if (!vpc) {
@@ -2059,7 +2062,7 @@ export class VpcValidator {
     vpcItem.securityGroups?.forEach(group => {
       group.inboundRules.forEach(inbound => {
         inbound.sources.forEach(source => {
-          if (NetworkConfigTypes.subnetSourceConfig.is(source)) {
+          if (isNetworkType<SubnetSourceConfig>('ISubnetSourceConfig', source)) {
             // Validate subnet source
             const vpc = helpers.getVpc(source.vpc);
             if (!vpc) {
@@ -2116,7 +2119,7 @@ export class VpcValidator {
     vpcItem.securityGroups?.forEach(group => {
       group.outboundRules.forEach(outbound => {
         outbound.sources.forEach(source => {
-          if (NetworkConfigTypes.subnetSourceConfig.is(source)) {
+          if (isNetworkType<SubnetSourceConfig>('ISubnetSourceConfig', source)) {
             // Validate subnet source
             const vpc = helpers.getVpc(source.vpc);
             if (!vpc) {
@@ -2173,7 +2176,7 @@ export class VpcValidator {
       group.inboundRules.forEach(inbound => {
         // Validate inbound sources
         inbound.sources.forEach(inboundSource => {
-          if (NetworkConfigTypes.securityGroupSourceConfig.is(inboundSource)) {
+          if (isNetworkType<SecurityGroupSourceConfig>('ISecurityGroupSourceConfig', inboundSource)) {
             inboundSource.securityGroups.forEach(sg => {
               if (!securityGroups.includes(sg)) {
                 errors.push(
@@ -2187,7 +2190,7 @@ export class VpcValidator {
       // Validate outbound sources
       group.outboundRules.forEach(outbound => {
         outbound.sources.forEach(outboundSource => {
-          if (NetworkConfigTypes.securityGroupSourceConfig.is(outboundSource)) {
+          if (isNetworkType<SecurityGroupSourceConfig>('ISecurityGroupSourceConfig', outboundSource)) {
             outboundSource.securityGroups.forEach(item => {
               if (!securityGroups.includes(item)) {
                 errors.push(
@@ -2221,7 +2224,7 @@ export class VpcValidator {
       group.inboundRules.forEach(inbound => {
         // Validate inbound rules
         inbound.sources.forEach(inboundSource => {
-          if (NetworkConfigTypes.prefixListSourceConfig.is(inboundSource)) {
+          if (isNetworkType<PrefixListSourceConfig>('IPrefixListSourceConfig', inboundSource)) {
             inboundSource.prefixLists.forEach(listName => {
               const prefixList = values.prefixLists?.find(item => item.name === listName);
               if (!prefixList) {
@@ -2254,7 +2257,7 @@ export class VpcValidator {
       // Validate outbound rules
       group.outboundRules.forEach(outbound => {
         outbound.sources.forEach(outboundSource => {
-          if (NetworkConfigTypes.prefixListSourceConfig.is(outboundSource)) {
+          if (isNetworkType<PrefixListSourceConfig>('IPrefixListSourceConfig', outboundSource)) {
             outboundSource.prefixLists.forEach(listName => {
               const prefixList = values.prefixLists?.find(item => item.name === listName);
               if (!prefixList) {

@@ -334,7 +334,6 @@ centralNetworkServices:
   networkFirewall:
     firewalls:
       - name: accelerator-firewall
-        region: *HOME_REGION
         firewallPolicy: accelerator-policy
         subnets:
           - Network-Inspection-A
@@ -1373,25 +1372,6 @@ vpcs:
               protocol: HTTP
               targetGroup: appA-alb-tg-1
               type: forward
-        - name: appA-alb-test-01
-          scheme: internal
-          subnets:
-            - SharedServices-App-A
-            - SharedServices-App-B
-          securityGroups:
-            - InternalHTTP-SG
-          listeners:
-            - name: appA-listener-3
-              port: 443
-              protocol: HTTPS
-              targetGroup: deployed-tg-2
-              order: 3
-              type: forward
-              certificate: cert1
-              sslPolicy: ELBSecurityPolicy-2016-08
-          shareTargets:
-            organizationalUnits:
-              - Security
       networkLoadBalancers:
         - name: appA-nlb-01
           scheme: internet-facing
@@ -1840,6 +1820,27 @@ vpcs:
         - pkt-dst-aws-service
         - flow-direction
         - traffic-path
+      loadBalancers:
+        applicationLoadBalancers:
+          - name: appA-alb-test-01
+            scheme: internal
+            subnets:
+              - SharedServices-App-A
+              - SharedServices-App-B
+            securityGroups:
+              - InternalHTTP-SG
+            listeners:
+              - name: appA-listener-3
+                port: 443
+                protocol: HTTPS
+                targetGroup: deployed-tg-2
+                order: 3
+                type: forward
+                certificate: cert1
+                sslPolicy: ELBSecurityPolicy-2016-08
+            shareTargets:
+              organizationalUnits:
+                - Security
   - name: SharedServices-appVpc
     account: SharedServices
     region: us-east-1

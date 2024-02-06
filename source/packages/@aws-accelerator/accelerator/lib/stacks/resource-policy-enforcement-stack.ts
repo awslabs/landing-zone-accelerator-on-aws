@@ -28,7 +28,7 @@ import {
   ResourcePolicyEnforcementConfig,
   ResourcePolicyConfig,
   ResourcePolicySetConfig,
-  SecurityConfigTypes,
+  ResourceTypeEnum,
 } from '@aws-accelerator/config';
 import { RESOURCE_TYPE_WITH_ALLOW_ONLY_POLICY, ResourceType } from '@aws-accelerator/utils/lib/common-resources';
 
@@ -365,7 +365,7 @@ export class ResourcePolicyEnforcementStack extends AcceleratorStack {
    * @param resourcePolicies
    */
   private validateResourcePolicy(resourcePolicies: ResourcePolicyConfig[]) {
-    const requiredResourceTypes = SecurityConfigTypes.resourceTypeEnum.values.filter(
+    const requiredResourceTypes = Object.values(ResourceTypeEnum).filter(
       r => !RESOURCE_TYPE_WITH_ALLOW_ONLY_POLICY.includes(ResourceType[r as keyof typeof ResourceType]),
     );
 

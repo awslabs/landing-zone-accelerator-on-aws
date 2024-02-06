@@ -1,0 +1,1640 @@
+{
+  "$ref": "#/definitions/ISecurityConfig",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "IAccessAnalyzerConfig": {
+      "additionalProperties": false,
+      "description": "AWS AccessAnalyzer configuration",
+      "properties": {
+        "enable": {
+          "description": "Indicates whether AWS AccessAnalyzer enabled in your organization.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enable"
+      ],
+      "type": "object"
+    },
+    "IAlarmConfig": {
+      "additionalProperties": false,
+      "description": "AWS CloudWatch Alarm configuration",
+      "properties": {
+        "alarmDescription": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Description for the alarm"
+        },
+        "alarmName": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Name of the alarm"
+        },
+        "comparisonOperator": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Comparison to use to check if metric is breaching"
+        },
+        "evaluationPeriods": {
+          "description": "The number of periods over which data is compared to the specified threshold.",
+          "type": "number"
+        },
+        "metricName": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Name of the metric."
+        },
+        "namespace": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Namespace of the metric."
+        },
+        "period": {
+          "description": "The period over which the specified statistic is applied.",
+          "type": "number"
+        },
+        "snsAlertLevel": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Alert SNS notification level Deprecated"
+        },
+        "snsTopicName": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "(OPTIONAL) SNS Topic Name SNS Topic Name from global config"
+        },
+        "statistic": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "What functions to use for aggregating.\n\nCan be one of the following:\n-  “Minimum” | “min”\n-  “Maximum” | “max”\n-  “Average” | “avg”\n-  “Sum” | “sum”\n-  “SampleCount | “n”\n-  “pNN.NN”"
+        },
+        "threshold": {
+          "description": "The value against which the specified statistic is compared.",
+          "type": "number"
+        },
+        "treatMissingData": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Sets how this alarm is to handle missing data points."
+        }
+      },
+      "required": [
+        "alarmName",
+        "alarmDescription",
+        "metricName",
+        "namespace",
+        "comparisonOperator",
+        "evaluationPeriods",
+        "period",
+        "statistic",
+        "threshold",
+        "treatMissingData"
+      ],
+      "type": "object"
+    },
+    "IAlarmSetConfig": {
+      "additionalProperties": false,
+      "description": "AWS CloudWatch Alarm sets",
+      "properties": {
+        "alarms": {
+          "description": "List of AWS CloudWatch Alarms\n\nFollowing example will create CIS-1.1-RootAccountUsage alarm for RootAccountUsage metric with notification level low",
+          "items": {
+            "$ref": "#/definitions/IAlarmConfig"
+          },
+          "type": "array"
+        },
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "Deployment targets for CloudWatch Alarms configuration"
+        },
+        "regions": {
+          "description": "AWS region names to configure CloudWatch Alarms",
+          "items": {
+            "$ref": "#/definitions/Region"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "deploymentTargets",
+        "alarms"
+      ],
+      "type": "object"
+    },
+    "IAuditManagerConfig": {
+      "additionalProperties": false,
+      "description": "Use this configuration to enable AWS Audit Manager for an AWS Organization.",
+      "properties": {
+        "defaultReportsConfiguration": {
+          "$ref": "#/definitions/IAuditManagerDefaultReportsDestinationConfig",
+          "description": "AWS Audit Manager Default Reports configuration."
+        },
+        "enable": {
+          "description": "Indicates whether AWS Audit Manager enabled.",
+          "type": "boolean"
+        },
+        "excludeRegions": {
+          "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring AWS Audit Manager. Please ensure any regions enabled in the global configuration that do not support Audit Manager are added to the excluded regions list.  {@link  https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/ Supported services by region } .",
+          "items": {
+            "$ref": "#/definitions/Region"
+          },
+          "type": "array"
+        },
+        "lifecycleRules": {
+          "description": "(OPTIONAL) Declaration of a S3 Lifecycle rule.",
+          "items": {
+            "$ref": "#/definitions/ILifecycleRule"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "enable",
+        "defaultReportsConfiguration"
+      ],
+      "type": "object"
+    },
+    "IAuditManagerDefaultReportsDestinationConfig": {
+      "additionalProperties": false,
+      "description": "AWS Audit Manager Default Reports Destination configuration.\nUse this configuration to enable a destination for reports generated by AWS Audit Manager.",
+      "properties": {
+        "destinationType": {
+          "const": "S3",
+          "description": "The type of resource for the publishing destination. Currently only Amazon S3 buckets are supported.",
+          "type": "string"
+        },
+        "enable": {
+          "description": "Indicates whether AWS Audit Manager Default Reports enabled.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enable",
+        "destinationType"
+      ],
+      "type": "object"
+    },
+    "IAwsConfig": {
+      "additionalProperties": false,
+      "description": "AWS Config Recorder and Rules",
+      "properties": {
+        "aggregation": {
+          "$ref": "#/definitions/IAwsConfigAggregation",
+          "description": "Config Recorder Aggregation configuration"
+        },
+        "enableConfigurationRecorder": {
+          "description": "Indicates whether AWS Config recorder enabled.\n\nTo enable AWS Config, you must create a configuration recorder\n\nConfigurationRecorder resource describes the AWS resource types for which AWS Config records configuration changes. The configuration recorder stores the configurations of the supported resources in your account as configuration items.",
+          "type": "boolean"
+        },
+        "enableDeliveryChannel": {
+          "description": "Indicates whether delivery channel enabled.\n\nAWS Config uses the delivery channel to deliver the configuration changes to your Amazon S3 bucket. DEPRECATED",
+          "type": "boolean"
+        },
+        "overrideExisting": {
+          "description": "Indicates whether or not to override existing config recorder settings Must be enabled if any account and region combination has an existing config recorder, even if config recording is turned off The Landing Zone Accelerator will override the settings in all configured accounts and regions\n** Do not enable this setting if you have deployed LZA\n** successfully with enableConfigurationRecorder set to true\n** and overrideExisting either unset or set to false\n** Doing so will cause a resource conflict When the overrideExisting property is enabled ensure that any scp's are not blocking the passRole iam permission for the iam role name {acceleratorPrefix}Config",
+          "type": "boolean"
+        },
+        "ruleSets": {
+          "description": "AWS Config rule sets",
+          "items": {
+            "$ref": "#/definitions/IAwsConfigRuleSet"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "enableConfigurationRecorder"
+      ],
+      "type": "object"
+    },
+    "IAwsConfigAggregation": {
+      "additionalProperties": false,
+      "description": "AWS Config Aggregation Configuration\nNot used in Control Tower environment\nAggregation will be configured in all enabled regions\nunless specifically excluded\nIf the delegatedAdmin account is not provided\nconfig will be aggregated to the management account",
+      "properties": {
+        "delegatedAdminAccount": {
+          "$ref": "#/definitions/NonEmptyString"
+        },
+        "enable": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enable"
+      ],
+      "type": "object"
+    },
+    "IAwsConfigRuleSet": {
+      "additionalProperties": false,
+      "description": "List of AWS Config rules",
+      "properties": {
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "Config ruleset deployment target.\n\nTo configure AWS Config rules into Root and Infrastructure organizational units, you need to provide below value for this parameter."
+        },
+        "rules": {
+          "description": "AWS Config rule set\n\nFollowing example will create a custom rule named accelerator-attach-ec2-instance-profile with remediation and a managed rule named accelerator-iam-user-group-membership-check without remediation",
+          "items": {
+            "$ref": "#/definitions/IConfigRule"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "deploymentTargets",
+        "rules"
+      ],
+      "type": "object"
+    },
+    "ICentralSecurityServicesConfig": {
+      "additionalProperties": false,
+      "description": "AWS Accelerator central security services configuration",
+      "properties": {
+        "auditManager": {
+          "$ref": "#/definitions/IAuditManagerConfig",
+          "description": "(OPTIONAL) Amazon Audit Manager Configuration"
+        },
+        "delegatedAdminAccount": {
+          "$ref": "#/definitions/NonEmptyString",
+          "default": "Audit\n\nTo make Audit account as designated administrator account for every security services configured by accelerator, you need to provide below value for this parameter",
+          "description": "Designated administrator account name for accelerator security services. AWS organizations designate a member account as a delegated administrator for the organization users and roles from that account can perform administrative actions for security services like Macie, GuardDuty, Detective and Security Hub. Without designated administrator account administrative tasks for security services are performed only by users or roles in the organization's management account. This helps you to separate management of the organization from management of these security services. Accelerator use Audit account as designated administrator account."
+        },
+        "detective": {
+          "$ref": "#/definitions/IDetectiveConfig",
+          "description": "(OPTIONAL) Amazon Detective Configuration"
+        },
+        "ebsDefaultVolumeEncryption": {
+          "$ref": "#/definitions/IEbsDefaultVolumeEncryptionConfig",
+          "description": "AWS Elastic Block Store default encryption configuration\n\nAccelerator use this parameter to configure EBS default encryption. Accelerator will create KMS key for every AWS environment (account and region), which will be used as default EBS encryption key.\n\nTo enable EBS default encryption in every region accelerator implemented, you need to provide below value for this parameter."
+        },
+        "guardduty": {
+          "$ref": "#/definitions/IGuardDutyConfig",
+          "description": "Amazon GuardDuty Configuration"
+        },
+        "macie": {
+          "$ref": "#/definitions/IMacieConfig",
+          "description": "Amazon Macie Configuration\n\nAccelerator use this parameter to define AWS Macie configuration.\n\nTo enable Macie in every region accelerator implemented and set fifteen minutes of frequency to publish updates to policy findings for the account with publishing sensitive data findings to Security Hub. you need to provide below value for this parameter."
+        },
+        "s3PublicAccessBlock": {
+          "$ref": "#/definitions/IS3PublicAccessBlockConfig",
+          "description": "AWS S3 public access block configuration\n\nAccelerator use this parameter to block AWS S3 public access\n\nTo enable S3 public access blocking in every region accelerator implemented, you need to provide below value for this parameter."
+        },
+        "scpRevertChangesConfig": {
+          "$ref": "#/definitions/IScpRevertChangesConfig",
+          "description": "(OPTIONAL) AWS Service Control Policies Revert Manual Changes configuration"
+        },
+        "securityHub": {
+          "$ref": "#/definitions/ISecurityHubConfig",
+          "description": "AWS Security Hub configuration\n\nAccelerator use this parameter to define AWS Security Hub configuration.\n\nTo enable AWS Security Hub for all regions and enable \"AWS Foundational Security Best Practices v1.0.0\" security standard, deployment targets and disable controls you need provide below value for this parameter."
+        },
+        "snsSubscriptions": {
+          "description": "AWS SNS subscription configuration Deprecated\n\nNOTICE: The configuration of SNS topics is being moved to the Global Config. This block is deprecated and will be removed in a future release\n\nAccelerator use this parameter to define AWS SNS notification configuration.\n\nTo enable high, medium and low SNS notifications, you need to provide below value for this parameter.",
+          "items": {
+            "$ref": "#/definitions/ISnsSubscriptionConfig"
+          },
+          "type": "array"
+        },
+        "ssmAutomation": {
+          "$ref": "#/definitions/ISsmAutomationConfig",
+          "description": "AWS Systems Manager Document configuration\n\nAccelerator use this parameter to define AWS Systems Manager documents configuration. SSM documents are created in designated administrator account for security services, i.e. Audit account.\n\nTo create a SSM document named as \"SSM-ELB-Enable-Logging\" in every region accelerator implemented and share this document with Root organizational unit(OU), you need to provide below value for this parameter. To share document to specific account uncomment accounts list. A valid SSM document template file ssm-documents/ssm-elb-enable-logging.yaml must be present in Accelerator config repository. Accelerator will use this template file to create the document."
+        }
+      },
+      "required": [
+        "delegatedAdminAccount",
+        "ebsDefaultVolumeEncryption",
+        "s3PublicAccessBlock",
+        "macie",
+        "guardduty",
+        "securityHub",
+        "ssmAutomation"
+      ],
+      "type": "object"
+    },
+    "ICloudWatchConfig": {
+      "additionalProperties": false,
+      "description": "AWS CloudWatch configuration",
+      "properties": {
+        "alarmSets": {
+          "description": "List AWS CloudWatch Alarms configuration\n\nFollowing example will create CIS-1.1-RootAccountUsage alarm for RootAccountUsage metric with notification level low",
+          "items": {
+            "$ref": "#/definitions/IAlarmSetConfig"
+          },
+          "type": "array"
+        },
+        "logGroups": {
+          "description": "(OPTIONAL) List CloudWatch Logs configuration\n\nThe Following is an example of deploying CloudWatch Logs to multiple regions",
+          "items": {
+            "$ref": "#/definitions/ILogGroupsConfig"
+          },
+          "type": "array"
+        },
+        "metricSets": {
+          "description": "List AWS CloudWatch Metrics configuration\n\nFollowing example will create metric filter RootAccountMetricFilter for aws-controltower/CloudTrailLogs log group",
+          "items": {
+            "$ref": "#/definitions/IMetricSetConfig"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "metricSets",
+        "alarmSets"
+      ],
+      "type": "object"
+    },
+    "IConfigRule": {
+      "additionalProperties": false,
+      "description": "AWS ConfigRule configuration",
+      "properties": {
+        "complianceResourceTypes": {
+          "description": "(OPTIONAL) Defines which resources trigger an evaluation for an AWS Config rule.",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        },
+        "customRule": {
+          "$ref": "#/definitions/ICustomRuleConfigType",
+          "description": "(OPTIONAL) A custom config rule is backed by AWS Lambda function. This is required when creating custom config rule."
+        },
+        "description": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "(OPTIONAL) A description about this AWS Config rule."
+        },
+        "identifier": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "(OPTIONAL) The identifier of the AWS managed rule."
+        },
+        "inputParameters": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "$ref": "#/definitions/NonEmptyString"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "(OPTIONAL) Input parameter values that are passed to the AWS Config rule."
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "A name for the AWS Config rule."
+        },
+        "remediation": {
+          "$ref": "#/definitions/IConfigRuleRemediationType",
+          "description": "A remediation for the config rule, auto remediation to automatically remediate noncompliant resources."
+        },
+        "tags": {
+          "description": "(OPTIONAL) Tags for the config rule",
+          "items": {
+            "$ref": "#/definitions/ITag"
+          },
+          "type": "array"
+        },
+        "type": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "(OPTIONAL) Config rule type Managed or Custom. For custom config rule, this parameter value is Custom, when creating managed config rule this parameter value can be undefined or empty string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "IConfigRuleRemediationType": {
+      "additionalProperties": false,
+      "properties": {
+        "automatic": {
+          "description": "The remediation is triggered automatically.",
+          "type": "boolean"
+        },
+        "excludeRegions": {
+          "description": "List of AWS Region names to be excluded from applying remediation",
+          "items": {
+            "$ref": "#/definitions/Region"
+          },
+          "type": "array"
+        },
+        "maximumAutomaticAttempts": {
+          "description": "The maximum number of failed attempts for auto-remediation. If you do not select a number, the default is 5.\n\nFor example, if you specify MaximumAutomaticAttempts as 5 with RetryAttemptSeconds as 50 seconds, AWS Config will put a RemediationException on your behalf for the failing resource after the 5th failed attempt within 50 seconds.",
+          "type": "number"
+        },
+        "parameters": {
+          "description": "List of remediation parameters",
+          "items": {
+            "$ref": "#/definitions/IRemediationParametersConfigType"
+          },
+          "type": "array"
+        },
+        "retryAttemptSeconds": {
+          "description": "Maximum time in seconds that AWS Config runs auto-remediation. If you do not select a number, the default is 60 seconds.\n\nFor example, if you specify RetryAttemptSeconds as 50 seconds and MaximumAutomaticAttempts as 5, AWS Config will run auto-remediations 5 times within 50 seconds before throwing an exception.",
+          "type": "number"
+        },
+        "rolePolicyFile": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Remediation assume role policy definition json file. This file must be present in config repository.\n\nCreate your own custom remediation actions using AWS Systems Manager Automation documents. When a role needed to be created to perform custom remediation actions, role permission needs to be defined in this file."
+        },
+        "targetAccountName": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Name of the account owning the public document to perform custom remediation actions. Accelerator creates these documents in Audit account and shared with other accounts."
+        },
+        "targetDocumentLambda": {
+          "$ref": "#/definitions/ICustomRuleLambdaType",
+          "description": "Target SSM document remediation lambda function"
+        },
+        "targetId": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Target ID is the name of the public document.\n\nThe name of the AWS SSM document to perform custom remediation actions."
+        },
+        "targetVersion": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Version of the target. For example, version of the SSM document.\n\nIf you make backward incompatible changes to the SSM document, you must call PutRemediationConfiguration API again to ensure the remediations can run."
+        }
+      },
+      "required": [
+        "rolePolicyFile",
+        "automatic",
+        "targetId"
+      ],
+      "type": "object"
+    },
+    "ICustomRuleConfigType": {
+      "additionalProperties": false,
+      "properties": {
+        "configurationChanges": {
+          "description": "Whether to run the rule on configuration changes.\n\nDefault: false",
+          "type": "boolean"
+        },
+        "lambda": {
+          "$ref": "#/definitions/ICustomRuleLambdaType",
+          "description": "The Lambda function to run."
+        },
+        "maximumExecutionFrequency": {
+          "description": "The maximum frequency at which the AWS Config rule runs evaluations.\n\nDefault: MaximumExecutionFrequency.TWENTY_FOUR_HOURS",
+          "type": "string"
+        },
+        "periodic": {
+          "default": true,
+          "description": "Whether to run the rule on a fixed frequency.",
+          "type": "boolean"
+        },
+        "triggeringResources": {
+          "$ref": "#/definitions/ITriggeringResourceType",
+          "description": "Defines which resources trigger an evaluation for an AWS Config rule."
+        }
+      },
+      "required": [
+        "lambda",
+        "maximumExecutionFrequency",
+        "triggeringResources"
+      ],
+      "type": "object"
+    },
+    "ICustomRuleLambdaType": {
+      "additionalProperties": false,
+      "properties": {
+        "handler": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The name of the method within your code that Lambda calls to execute your function. The format includes the file name. It can also include namespaces and other qualifiers, depending on the runtime. For more information, see https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-features.html#gettingstarted-features-programmingmodel."
+        },
+        "rolePolicyFile": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Lambda execution role policy definition file"
+        },
+        "runtime": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The runtime environment for the Lambda function that you are uploading. For valid values, see the Runtime property in the AWS Lambda Developer Guide."
+        },
+        "sourceFilePath": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The source code file path of your Lambda function. This is a zip file containing lambda function, this file must be available in config repository."
+        },
+        "timeout": {
+          "description": "Lambda function execution timeout in seconds",
+          "type": "number"
+        }
+      },
+      "required": [
+        "sourceFilePath",
+        "handler",
+        "runtime",
+        "rolePolicyFile"
+      ],
+      "type": "object"
+    },
+    "IDeploymentTargets": {
+      "additionalProperties": false,
+      "properties": {
+        "accounts": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "excludedAccounts": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "excludedRegions": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "organizationalUnits": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "IDetectiveConfig": {
+      "additionalProperties": false,
+      "description": "Use this configuration to enable Amazon Detective for an AWS Organization that allows users to analyze, investigate, and\nquickly identify the root cause of security findings or suspicious activities.",
+      "properties": {
+        "enable": {
+          "description": "Indicates whether Amazon Detective is enabled.",
+          "type": "boolean"
+        },
+        "excludeRegions": {
+          "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring Amazon Detective. Please ensure any regions enabled in the global configuration that do not support Amazon Detective are added to the excluded regions list.  {@link  https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/ Supported services by region } .",
+          "items": {
+            "$ref": "#/definitions/Region"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "enable"
+      ],
+      "type": "object"
+    },
+    "IDocumentConfig": {
+      "additionalProperties": false,
+      "description": "Use this configuration to define AWS System Manager documents (SSM documents) that can be used on managed instances in an\nenvironment.",
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Name of document to be created"
+        },
+        "targetType": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Specify a target type to define the kinds of resources the document can run on. For example, to run a document on EC2 instances, specify the following value: /AWS::EC2::Instance. If you specify a value of '/' the document can run on all types of resources. If you don't specify a value, the document can't run on any resources. For a list of valid resource types, see AWS resource and property types reference in the AWS CloudFormation User Guide. Ref: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html Length Constraints: Maximum length of 200. Pattern: ^\\/[\\w\\.\\-\\:\\/]*$"
+        },
+        "template": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Document template file path. This file must be available in accelerator config repository."
+        }
+      },
+      "required": [
+        "name",
+        "template"
+      ],
+      "type": "object"
+    },
+    "IDocumentSetConfig": {
+      "additionalProperties": false,
+      "description": "AWS Systems Manager document sharing configuration",
+      "properties": {
+        "documents": {
+          "description": "List of the documents to be shared",
+          "items": {
+            "$ref": "#/definitions/IDocumentConfig"
+          },
+          "type": "array"
+        },
+        "shareTargets": {
+          "$ref": "#/definitions/IShareTargets",
+          "description": "Document share target, valid value should be any organizational unit. Document will be shared with every account within the given OU"
+        }
+      },
+      "required": [
+        "shareTargets",
+        "documents"
+      ],
+      "type": "object"
+    },
+    "IEbsDefaultVolumeEncryptionConfig": {
+      "additionalProperties": false,
+      "description": "Use this configuration to enable enforced encryption of new EBS volumes and snapshots created in an AWS environment.",
+      "properties": {
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "(OPTIONAL) Deployment targets for EBS default volume encryption"
+        },
+        "enable": {
+          "description": "Indicates whether AWS EBS volume have default encryption enabled.",
+          "type": "boolean"
+        },
+        "excludeRegions": {
+          "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring AWS EBS volume default encryption",
+          "items": {
+            "$ref": "#/definitions/Region"
+          },
+          "type": "array"
+        },
+        "kmsKey": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "(OPTIONAL) KMS key to encrypt EBS volume."
+        }
+      },
+      "required": [
+        "enable"
+      ],
+      "type": "object"
+    },
+    "IEncryptionConfig": {
+      "additionalProperties": false,
+      "description": "Use this configuration to enable encryption for a log group.",
+      "properties": {
+        "kmsKeyArn": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "(OPTIONAL) Reference the KMS Key Arn that is used to encrypt the AWS CloudWatch Logs Group. This should be a KMS Key that is not managed by Landing Zone Accelerator."
+        },
+        "kmsKeyName": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "(OPTIONAL) Use this property to reference a KMS Key Name that is created by Landing Zone Accelerator."
+        },
+        "useLzaManagedKey": {
+          "description": "(OPTIONAL) Set this property to `true` if you would like to use the default CloudWatch Logs KMS CMK that is deployed by Landing Zone Accelerator.",
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "IGuardDutyConfig": {
+      "additionalProperties": false,
+      "description": "AWS GuardDuty configuration\nUse this configuration to enable Amazon GuardDuty for an AWS Organization, as well as other modular\nfeature protections.",
+      "properties": {
+        "eksProtection": {
+          "$ref": "#/definitions/IGuardDutyEksProtectionConfig",
+          "description": "(OPTIONAL) AWS GuardDuty EKS Protection configuration."
+        },
+        "enable": {
+          "description": "Indicates whether AWS GuardDuty enabled.",
+          "type": "boolean"
+        },
+        "excludeRegions": {
+          "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty",
+          "items": {
+            "$ref": "#/definitions/Region"
+          },
+          "type": "array"
+        },
+        "exportConfiguration": {
+          "$ref": "#/definitions/IGuardDutyExportFindingsConfig",
+          "description": "AWS GuardDuty Export Findings configuration."
+        },
+        "lifecycleRules": {
+          "description": "(OPTIONAL) Declaration of a S3 Lifecycle rule.",
+          "items": {
+            "$ref": "#/definitions/ILifecycleRule"
+          },
+          "type": "array"
+        },
+        "s3Protection": {
+          "$ref": "#/definitions/IGuardDutyS3ProtectionConfig",
+          "description": "AWS GuardDuty S3 Protection configuration."
+        }
+      },
+      "required": [
+        "enable",
+        "s3Protection",
+        "exportConfiguration"
+      ],
+      "type": "object"
+    },
+    "IGuardDutyEksProtectionConfig": {
+      "additionalProperties": false,
+      "description": "AWS GuardDuty EKS Protection configuration.",
+      "properties": {
+        "enable": {
+          "description": "Indicates whether AWS GuardDuty EKS Protection enabled.",
+          "type": "boolean"
+        },
+        "excludeRegions": {
+          "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty EKS Protection",
+          "items": {
+            "$ref": "#/definitions/Region"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "enable"
+      ],
+      "type": "object"
+    },
+    "IGuardDutyExportFindingsConfig": {
+      "additionalProperties": false,
+      "description": "Use this configuration to export Amazon GuardDuty findings to Amazon CloudWatch Events, and, optionally, to an Amazon S3 bucket.",
+      "properties": {
+        "destinationType": {
+          "const": "S3",
+          "description": "The type of resource for the publishing destination. Currently only Amazon S3 buckets are supported.",
+          "type": "string"
+        },
+        "enable": {
+          "description": "Indicates whether AWS GuardDuty Export Findings enabled.",
+          "type": "boolean"
+        },
+        "exportFrequency": {
+          "description": "An enum value that specifies how frequently findings are exported, such as to CloudWatch Events. Possible values FIFTEEN_MINUTES, ONE_HOUR, or SIX_HOURS",
+          "enum": [
+            "FIFTEEN_MINUTES",
+            "ONE_HOUR",
+            "SIX_HOURS"
+          ],
+          "type": "string"
+        },
+        "overrideExisting": {
+          "description": "(OPTIONAL) Indicates whether AWS GuardDuty Export Findings can be overwritten.",
+          "type": "boolean"
+        },
+        "overrideGuardDutyPrefix": {
+          "$ref": "#/definitions/IPrefixConfig",
+          "description": "(OPTIONAL) AWS GuardDuty Prefix for centralized logging path."
+        }
+      },
+      "required": [
+        "enable",
+        "destinationType",
+        "exportFrequency"
+      ],
+      "type": "object"
+    },
+    "IGuardDutyS3ProtectionConfig": {
+      "additionalProperties": false,
+      "description": "Use this configuration to enable S3 Protection with Amazon GuardDuty to monitor object-level API operations for potential\nsecurity risks for data within Amazon S3 buckets.",
+      "properties": {
+        "enable": {
+          "description": "Indicates whether AWS GuardDuty S3 Protection enabled.",
+          "type": "boolean"
+        },
+        "excludeRegions": {
+          "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty S3 Protection",
+          "items": {
+            "$ref": "#/definitions/Region"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "enable"
+      ],
+      "type": "object"
+    },
+    "IIamPasswordPolicyConfig": {
+      "additionalProperties": false,
+      "description": "IAM password policy configuration",
+      "properties": {
+        "allowUsersToChangePassword": {
+          "default": true,
+          "description": "Allows all IAM users in your account to use the AWS Management Console to change their own passwords.",
+          "type": "boolean"
+        },
+        "hardExpiry": {
+          "default": true,
+          "description": "Prevents IAM users who are accessing the account via the AWS Management Console from setting a new console password after their password has expired. The IAM user cannot access the console until an administrator resets the password.",
+          "type": "boolean"
+        },
+        "maxPasswordAge": {
+          "default": 90,
+          "description": "The number of days that an IAM user password is valid.\n\nNote: If you do not specify a value for this parameter, then the operation uses the default value of 0. The result is that IAM user passwords never expire.",
+          "type": "number"
+        },
+        "minimumPasswordLength": {
+          "default": 14,
+          "description": "The minimum number of characters allowed in an IAM user password.\n\nNote: If you do not specify a value for this parameter, then the operation uses the default value of 6.",
+          "type": "number"
+        },
+        "passwordReusePrevention": {
+          "default": 24,
+          "description": "Specifies the number of previous passwords that IAM users are prevented from reusing.\n\nNote: If you do not specify a value for this parameter, then the operation uses the default value of 0. The result is that IAM users are not prevented from reusing previous passwords.",
+          "type": "number"
+        },
+        "requireLowercaseCharacters": {
+          "default": true,
+          "description": "Specifies whether IAM user passwords must contain at least one lowercase character from the ISO basic Latin alphabet (a to z).\n\nNote: If you do not specify a value for this parameter, then the operation uses the default value of false. The result is that passwords do not require at least one lowercase character.",
+          "type": "boolean"
+        },
+        "requireNumbers": {
+          "default": true,
+          "description": "Specifies whether IAM user passwords must contain at least one numeric character (0 to 9).\n\nNote: If you do not specify a value for this parameter, then the operation uses the default value of false. The result is that passwords do not require at least one numeric character.",
+          "type": "boolean"
+        },
+        "requireSymbols": {
+          "default": true,
+          "description": "Specifies whether IAM user passwords must contain at least one of the following non-alphanumeric characters:\n\n! @ # $ % ^ & * ( ) _ + - = [ ] { } | '\n\nNote: If you do not specify a value for this parameter, then the operation uses the default value of false. The result is that passwords do not require at least one symbol character.",
+          "type": "boolean"
+        },
+        "requireUppercaseCharacters": {
+          "default": true,
+          "description": "Specifies whether IAM user passwords must contain at least one uppercase character from the ISO basic Latin alphabet (A to Z).\n\nNote: If you do not specify a value for this parameter, then the operation uses the default value of false. The result is that passwords do not require at least one uppercase character.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "allowUsersToChangePassword",
+        "hardExpiry",
+        "requireUppercaseCharacters",
+        "requireLowercaseCharacters",
+        "requireSymbols",
+        "requireNumbers",
+        "minimumPasswordLength",
+        "passwordReusePrevention",
+        "maxPasswordAge"
+      ],
+      "type": "object"
+    },
+    "IKeyConfig": {
+      "additionalProperties": false,
+      "description": "Use this configuration to define your customer managed key (CMK) and where it's deployed to along with\nit's management properties.",
+      "properties": {
+        "alias": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "(OPTIONAL) Initial alias to add to the key"
+        },
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "This configuration determines which accounts and/or OUs the CMK is deployed to.\n\nTo deploy KMS key into Root and Infrastructure organizational units, you need to provide below value for this parameter."
+        },
+        "description": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "(OPTIONAL) A description of the key."
+        },
+        "enableKeyRotation": {
+          "default": true,
+          "description": "(OPTIONAL) Indicates whether AWS KMS rotates the key.",
+          "type": "boolean"
+        },
+        "enabled": {
+          "default": "- Key is enabled.",
+          "description": "(OPTIONAL) Indicates whether the key is available for use.",
+          "type": "boolean"
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Unique Key name for logical reference"
+        },
+        "policy": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "(OPTIONAL)Key policy file path. This file must be available in accelerator config repository."
+        },
+        "removalPolicy": {
+          "default": "retain",
+          "description": "(OPTIONAL) Whether the encryption key should be retained when it is removed from the Stack.",
+          "enum": [
+            "destroy",
+            "retain",
+            "snapshot"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "deploymentTargets"
+      ],
+      "type": "object"
+    },
+    "IKeyManagementServiceConfig": {
+      "additionalProperties": false,
+      "description": " KMS key management service configuration",
+      "properties": {
+        "keySets": {
+          "items": {
+            "$ref": "#/definitions/IKeyConfig"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "keySets"
+      ],
+      "type": "object"
+    },
+    "ILifecycleRule": {
+      "additionalProperties": false,
+      "description": "S3 bucket life cycle rules object.",
+      "properties": {
+        "abortIncompleteMultipartUpload": {
+          "description": "Specifies a lifecycle rule that aborts incomplete multipart uploads to an Amazon S3 bucket.",
+          "type": "number"
+        },
+        "enabled": {
+          "description": "Whether this rule is enabled.",
+          "type": "boolean"
+        },
+        "expiration": {
+          "description": "Indicates the number of days after creation when objects are deleted from Amazon S3 and Amazon Glacier.",
+          "type": "number"
+        },
+        "expiredObjectDeleteMarker": {
+          "description": "Indicates whether Amazon S3 will remove a delete marker with no noncurrent versions. If set to true, the delete marker will be expired.",
+          "type": "boolean"
+        },
+        "id": {
+          "description": "Friendly name for the rule. Rule name must be unique.",
+          "type": "string"
+        },
+        "noncurrentVersionExpiration": {
+          "description": "Time between when a new version of the object is uploaded to the bucket and when old versions of the object expire.",
+          "type": "number"
+        },
+        "noncurrentVersionTransitions": {
+          "description": "One or more transition rules that specify when non-current objects transition to a specified storage class.",
+          "items": {
+            "$ref": "#/definitions/ITransition"
+          },
+          "type": "array"
+        },
+        "prefix": {
+          "$ref": "#/definitions/NonEmptyString",
+          "default": "- Rule applies to all objects",
+          "description": "Object key prefix that identifies one or more objects to which this rule applies."
+        },
+        "transitions": {
+          "description": "One or more transition rules that specify when an object transitions to a specified storage class.",
+          "items": {
+            "$ref": "#/definitions/ITransition"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "ILogGroupsConfig": {
+      "additionalProperties": false,
+      "description": "Use this configuration to deploy CloudWatch log groups to your environment.\nYou can also import existing log groups into your accelerator configuration.\nLog groups define groups of log streams that share the same retention, monitoring, and access control settings.",
+      "properties": {
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "Deployment targets for CloudWatch Logs"
+        },
+        "encryption": {
+          "$ref": "#/definitions/IEncryptionConfig",
+          "description": "(OPTIONAL) The encryption configuration of the AWS CloudWatch Logs Group."
+        },
+        "logGroupName": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Name of the CloudWatch log group"
+        },
+        "logRetentionInDays": {
+          "default": "undefined",
+          "description": "(OPTIONAL) How long, in days, the log contents will be retained.\n\nTo retain all logs, set this value to undefined.",
+          "type": "number"
+        },
+        "terminationProtected": {
+          "default": true,
+          "description": "(OPTIONAL) Set this property to `false` if you would like the log group to be deleted if it is removed from the solution configuration file.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "logGroupName",
+        "logRetentionInDays",
+        "deploymentTargets"
+      ],
+      "type": "object"
+    },
+    "IMacieConfig": {
+      "additionalProperties": false,
+      "description": "Amazon Macie Configuration\nUse this configuration to enable Amazon Macie within your AWS Organization along with it's reporting configuration.",
+      "properties": {
+        "enable": {
+          "description": "Indicates whether AWS Macie enabled.",
+          "type": "boolean"
+        },
+        "excludeRegions": {
+          "description": "List of AWS Region names to be excluded from configuring Amazon Macie",
+          "items": {
+            "$ref": "#/definitions/Region"
+          },
+          "type": "array"
+        },
+        "lifecycleRules": {
+          "description": "(OPTIONAL) Declaration of a S3 Lifecycle rule.",
+          "items": {
+            "$ref": "#/definitions/ILifecycleRule"
+          },
+          "type": "array"
+        },
+        "policyFindingsPublishingFrequency": {
+          "description": "(OPTIONAL) Specifies how often to publish updates to policy findings for the account. This includes publishing updates to Security Hub and Amazon EventBridge (formerly called Amazon CloudWatch Events). An enum value that specifies how frequently findings are published Possible values FIFTEEN_MINUTES, ONE_HOUR, or SIX_HOURS",
+          "enum": [
+            "FIFTEEN_MINUTES",
+            "ONE_HOUR",
+            "SIX_HOURS"
+          ],
+          "type": "string"
+        },
+        "publishSensitiveDataFindings": {
+          "description": "Specifies whether to publish sensitive data findings to Security Hub. If you set this value to true, Amazon Macie automatically publishes all sensitive data findings that weren't suppressed by a findings filter. The default value is false.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enable",
+        "publishSensitiveDataFindings"
+      ],
+      "type": "object"
+    },
+    "IMetricConfig": {
+      "additionalProperties": false,
+      "description": "AWS CloudWatch Metric configuration",
+      "properties": {
+        "filterName": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Metric filter name"
+        },
+        "filterPattern": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Pattern to search for log events."
+        },
+        "logGroupName": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The log group to create the filter on."
+        },
+        "metricName": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The name of the metric to emit."
+        },
+        "metricNamespace": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The namespace of the metric to emit."
+        },
+        "metricValue": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The value to emit for the metric.\n\nCan either be a literal number (typically “1”), or the name of a field in the structure to take the value from the matched event. If you are using a field value, the field value must have been matched using the pattern."
+        },
+        "treatMissingData": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Sets how this alarm is to handle missing data points."
+        }
+      },
+      "required": [
+        "filterName",
+        "logGroupName",
+        "filterPattern",
+        "metricNamespace",
+        "metricName",
+        "metricValue"
+      ],
+      "type": "object"
+    },
+    "IMetricSetConfig": {
+      "additionalProperties": false,
+      "description": "AWS CloudWatch Metric set configuration",
+      "properties": {
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "Deployment targets for CloudWatch Metrics configuration"
+        },
+        "metrics": {
+          "description": "AWS CloudWatch Metric list\n\nFollowing example will create metric filter RootAccountMetricFilter for aws-controltower/CloudTrailLogs log group",
+          "items": {
+            "$ref": "#/definitions/IMetricConfig"
+          },
+          "type": "array"
+        },
+        "regions": {
+          "description": "(OPTIONAL) AWS region names to configure CloudWatch Metrics",
+          "items": {
+            "$ref": "#/definitions/Region"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "metrics"
+      ],
+      "type": "object"
+    },
+    "INetworkPerimeterConfig": {
+      "additionalProperties": false,
+      "description": "Network Perimeter Config.\n\nIf managedVpcOnly is true, all the VPCs in accounts will be included while parameter `ACCEL_LOOKUP:VPC|VPC_ID:XX` is used.\nIf managedVpcOnly is false, only the VPC  created by LZA will be included while parameter `ACCEL_LOOKUP:VPC|VPC_ID:XX` is used.",
+      "properties": {
+        "managedVpcOnly": {
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "IPrefixConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "customOverride": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "(Optional) Prefix to be used for Centralized Logging Path"
+        },
+        "useCustomPrefix": {
+          "description": "Indicates whether or not to add a custom prefix to LZA Default Centralized Logging location. If useCustomPrefix is set to true, logs will be stored in the Centralized Logging Bucket prefix.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "useCustomPrefix"
+      ],
+      "type": "object"
+    },
+    "IRemediationParametersConfigType": {
+      "additionalProperties": false,
+      "description": "Config rule remediation input parameter configuration type",
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Name of the parameter"
+        },
+        "type": {
+          "description": "Data type of the parameter, allowed value (StringList or String)",
+          "enum": [
+            "String",
+            "StringList"
+          ],
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Parameter value"
+        }
+      },
+      "required": [
+        "name",
+        "value",
+        "type"
+      ],
+      "type": "object"
+    },
+    "IResourcePolicyConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "document": {
+          "$ref": "#/definitions/NonEmptyString"
+        },
+        "resourceType": {
+          "enum": [
+            "S3_BUCKET",
+            "KMS_KEY",
+            "IAM_ROLE",
+            "SECRETS_MANAGER_SECRET",
+            "ECR_REPOSITORY",
+            "OPENSEARCH_DOMAIN",
+            "SNS_TOPIC",
+            "SQS_QUEUE",
+            "APIGATEWAY_REST_API",
+            "LEX_BOT",
+            "EFS_FILE_SYSTEM",
+            "EVENTBRIDGE_EVENTBUS",
+            "BACKUP_VAULT",
+            "CODEARTIFACT_REPOSITORY",
+            "CERTIFICATE_AUTHORITY",
+            "LAMBDA_FUNCTION"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "resourceType",
+        "document"
+      ],
+      "type": "object"
+    },
+    "IResourcePolicyEnforcementConfig": {
+      "additionalProperties": false,
+      "description": "Resource Policy Enforcement Config. The configuration allows you to deploy AWS Config rules to\nautomatically apply resource-based policies to AWS resources including S3 buckets, IAM roles, and KMS keys etc.\nAWS Organization is required to support it.\n\nHere are a list of supported service {@link SecurityConfigTypes.resourceTypeEnum }",
+      "properties": {
+        "enable": {
+          "type": "boolean"
+        },
+        "networkPerimeter": {
+          "$ref": "#/definitions/INetworkPerimeterConfig"
+        },
+        "policySets": {
+          "items": {
+            "$ref": "#/definitions/IResourcePolicySetConfig"
+          },
+          "type": "array"
+        },
+        "remediation": {
+          "$ref": "#/definitions/IResourcePolicyRemediation"
+        }
+      },
+      "required": [
+        "enable",
+        "remediation",
+        "policySets"
+      ],
+      "type": "object"
+    },
+    "IResourcePolicyRemediation": {
+      "additionalProperties": false,
+      "properties": {
+        "automatic": {
+          "description": "The remediation is triggered automatically.",
+          "type": "boolean"
+        },
+        "maximumAutomaticAttempts": {
+          "description": "The maximum number of failed attempts for auto-remediation. If you do not select a number, the default is 5.",
+          "type": "number"
+        },
+        "retryAttemptSeconds": {
+          "description": "Maximum time in seconds that AWS Config runs auto-remediation. If you do not select a number, the default is 60 seconds.",
+          "type": "number"
+        }
+      },
+      "required": [
+        "automatic"
+      ],
+      "type": "object"
+    },
+    "IResourcePolicySetConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "The deployment targets - accounts/OUs where the config rule and remediation action will be deployed to"
+        },
+        "inputParameters": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The input parameters which will be set as environment variable in Custom Config Rule Lambda and Remediation lambda\n\nMeanwhile, 'SourceAccount' is a reserved parameters for allow-only resource policy -- Lambda_Function and CERTIFICATE_AUTHORITY. For example, 'SourceAccount: 123456789012,987654321098' means requests from these two accounts can be allowed. Apart from these two, No other external accounts can access a lambda function or Certificate Authority.",
+          "type": "object"
+        },
+        "resourcePolicies": {
+          "description": "A list of resource policy templates for different types of resources",
+          "items": {
+            "$ref": "#/definitions/IResourcePolicyConfig"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "deploymentTargets",
+        "resourcePolicies"
+      ],
+      "type": "object"
+    },
+    "IS3PublicAccessBlockConfig": {
+      "additionalProperties": false,
+      "description": "This will create the Public Access Block configuration for the AWS account.",
+      "properties": {
+        "enable": {
+          "description": "Indicates whether AWS S3 block public access is enabled.",
+          "type": "boolean"
+        },
+        "excludeAccounts": {
+          "description": "List of AWS Account names to be excluded from configuring S3 PublicAccessBlock",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "enable"
+      ],
+      "type": "object"
+    },
+    "IScpRevertChangesConfig": {
+      "additionalProperties": false,
+      "description": "AWS Service Control Policies Revert Manual Changes configuration",
+      "properties": {
+        "enable": {
+          "description": "Indicates whether manual changes to Service Control Policies are automatically reverted.",
+          "type": "boolean"
+        },
+        "snsTopicName": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "(OPTIONAL) The name of the SNS Topic to send alerts to when SCPs are changed manually"
+        }
+      },
+      "required": [
+        "enable"
+      ],
+      "type": "object"
+    },
+    "ISecurityConfig": {
+      "additionalProperties": false,
+      "description": "Accelerator security configuration",
+      "properties": {
+        "accessAnalyzer": {
+          "$ref": "#/definitions/IAccessAnalyzerConfig"
+        },
+        "awsConfig": {
+          "$ref": "#/definitions/IAwsConfig"
+        },
+        "centralSecurityServices": {
+          "$ref": "#/definitions/ICentralSecurityServicesConfig",
+          "description": "Central security configuration"
+        },
+        "cloudWatch": {
+          "$ref": "#/definitions/ICloudWatchConfig"
+        },
+        "homeRegion": {
+          "$ref": "#/definitions/Region",
+          "description": "Accelerator home region name."
+        },
+        "iamPasswordPolicy": {
+          "$ref": "#/definitions/IIamPasswordPolicyConfig"
+        },
+        "keyManagementService": {
+          "$ref": "#/definitions/IKeyManagementServiceConfig"
+        },
+        "resourcePolicyEnforcement": {
+          "$ref": "#/definitions/IResourcePolicyEnforcementConfig"
+        }
+      },
+      "required": [
+        "centralSecurityServices",
+        "accessAnalyzer",
+        "iamPasswordPolicy",
+        "awsConfig",
+        "cloudWatch"
+      ],
+      "type": "object"
+    },
+    "ISecurityHubConfig": {
+      "additionalProperties": false,
+      "description": "Use this configuration to enable Amazon Security Hub for an AWS Organization along with it's auditing configuration.",
+      "properties": {
+        "enable": {
+          "description": "Indicates whether AWS Security Hub enabled.",
+          "type": "boolean"
+        },
+        "excludeRegions": {
+          "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring Security Hub",
+          "items": {
+            "$ref": "#/definitions/Region"
+          },
+          "type": "array"
+        },
+        "logging": {
+          "$ref": "#/definitions/ISecurityHubLoggingConfig",
+          "description": "(OPTIONAL) Security Hub logs are sent to CloudWatch logs by default. This option can enable or disable the logging."
+        },
+        "notificationLevel": {
+          "description": "(OPTIONAL) Security Hub notification level",
+          "type": "string"
+        },
+        "regionAggregation": {
+          "description": "(OPTIONAL) Indicates whether Security Hub results are aggregated in the Home Region.",
+          "type": "boolean"
+        },
+        "snsTopicName": {
+          "description": "(OPTIONAL) SNS Topic for Security Hub notifications.",
+          "type": "string"
+        },
+        "standards": {
+          "description": "Security Hub standards configuration",
+          "items": {
+            "$ref": "#/definitions/ISecurityHubStandardConfig"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "enable",
+        "standards"
+      ],
+      "type": "object"
+    },
+    "ISecurityHubLoggingCloudwatchConfig": {
+      "additionalProperties": false,
+      "description": "Security Hub Logging CloudWatch Config",
+      "properties": {
+        "enable": {
+          "description": "Security hub to cloudwatch logging is enabled by default.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enable"
+      ],
+      "type": "object"
+    },
+    "ISecurityHubLoggingConfig": {
+      "additionalProperties": false,
+      "description": "Security Hub Logging Config",
+      "properties": {
+        "cloudWatch": {
+          "$ref": "#/definitions/ISecurityHubLoggingCloudwatchConfig",
+          "description": "Data store to ship the Security Hub logs to."
+        }
+      },
+      "type": "object"
+    },
+    "ISecurityHubStandardConfig": {
+      "additionalProperties": false,
+      "description": "Use this configuration to define the security standard(s) that are enabled through Amazon Security Hub and which accounts and/or\norganization units that the controls are deployed to.",
+      "properties": {
+        "controlsToDisable": {
+          "description": "(OPTIONAL) An array of control names to be disabled for the given security standards",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        },
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "(OPTIONAL) Deployment targets for AWS Security Hub standard."
+        },
+        "enable": {
+          "description": "Indicates whether given AWS Security Hub standard enabled.",
+          "type": "boolean"
+        },
+        "name": {
+          "description": "An enum value that specifies one of three security standards supported by Security Hub Possible values are 'AWS Foundational Security Best Practices v1.0.0', 'CIS AWS Foundations Benchmark v1.2.0', 'CIS AWS Foundations Benchmark v1.4.0', 'NIST Special Publication 800-53 Revision 5, and 'PCI DSS v3.2.1'",
+          "enum": [
+            "AWS Foundational Security Best Practices v1.0.0",
+            "CIS AWS Foundations Benchmark v1.2.0",
+            "CIS AWS Foundations Benchmark v1.4.0",
+            "NIST Special Publication 800-53 Revision 5",
+            "PCI DSS v3.2.1",
+            ""
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "enable"
+      ],
+      "type": "object"
+    },
+    "IShareTargets": {
+      "additionalProperties": false,
+      "properties": {
+        "accounts": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "organizationalUnits": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "ISnsSubscriptionConfig": {
+      "additionalProperties": false,
+      "description": "AWS SNS Notification subscription configuration\n***Deprecated***\nReplaced by snsTopics in global config",
+      "properties": {
+        "email": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Subscribing email address"
+        },
+        "level": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Notification level high, medium or low"
+        }
+      },
+      "required": [
+        "level",
+        "email"
+      ],
+      "type": "object"
+    },
+    "ISsmAutomationConfig": {
+      "additionalProperties": false,
+      "description": "AWS Systems Manager automation configuration",
+      "properties": {
+        "documentSets": {
+          "description": "List of documents for automation",
+          "items": {
+            "$ref": "#/definitions/IDocumentSetConfig"
+          },
+          "type": "array"
+        },
+        "excludeRegions": {
+          "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring block S3 public access",
+          "items": {
+            "$ref": "#/definitions/Region"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "documentSets"
+      ],
+      "type": "object"
+    },
+    "ITag": {
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "value"
+      ],
+      "type": "object"
+    },
+    "ITransition": {
+      "additionalProperties": false,
+      "properties": {
+        "storageClass": {
+          "$ref": "#/definitions/StorageClass"
+        },
+        "transitionAfter": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "storageClass",
+        "transitionAfter"
+      ],
+      "type": "object"
+    },
+    "ITriggeringResourceType": {
+      "additionalProperties": false,
+      "properties": {
+        "lookupKey": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Resource lookup type, resource can be lookup by tag or types. When resource needs to lookup by tag, this field will have tag name."
+        },
+        "lookupType": {
+          "description": "An enum to identify triggering resource types. Possible values ResourceId, Tag, or ResourceTypes\n\nTriggering resource can be lookup by resource id, tags or resource types.",
+          "type": "string"
+        },
+        "lookupValue": {
+          "description": "Resource lookup value, when resource lookup using tag, this field will have tag value to search resource.",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "lookupType",
+        "lookupKey",
+        "lookupValue"
+      ],
+      "type": "object"
+    },
+    "NonEmptyString": {
+      "description": "A string that has at least 1 character",
+      "minLength": 1,
+      "type": "string"
+    },
+    "Region": {
+      "description": "AWS Region",
+      "enum": [
+        "af-south-1",
+        "ap-east-1",
+        "ap-northeast-1",
+        "ap-northeast-2",
+        "ap-northeast-3",
+        "ap-south-1",
+        "ap-south-2",
+        "ap-southeast-1",
+        "ap-southeast-2",
+        "ap-southeast-3",
+        "ap-southeast-4",
+        "ca-central-1",
+        "cn-north-1",
+        "cn-northwest-1",
+        "eu-central-1",
+        "eu-central-2",
+        "eu-north-1",
+        "eu-south-1",
+        "eu-south-2",
+        "eu-west-1",
+        "eu-west-2",
+        "eu-west-3",
+        "il-central-1",
+        "me-central-1",
+        "me-south-1",
+        "sa-east-1",
+        "us-east-1",
+        "us-east-2",
+        "us-gov-west-1",
+        "us-gov-east-1",
+        "us-iso-east-1",
+        "us-isob-east-1",
+        "us-iso-west-1",
+        "us-west-1",
+        "us-west-2"
+      ],
+      "type": "string"
+    },
+    "StorageClass": {
+      "enum": [
+        "DEEP_ARCHIVE",
+        "GLACIER",
+        "GLACIER_IR",
+        "STANDARD_IA",
+        "INTELLIGENT_TIERING",
+        "ONEZONE_IA"
+      ],
+      "type": "string"
+    }
+  }
+}

@@ -13,11 +13,12 @@
 
 import {
   CustomerGatewayConfig,
-  NetworkConfigTypes,
   TransitGatewayConfig,
   TransitGatewayRouteEntryConfig,
   TransitGatewayRouteTableConfig,
+  TransitGatewayRouteTableVpnEntryConfig,
   VpnConnectionConfig,
+  isNetworkType,
 } from '@aws-accelerator/config';
 import {
   CustomerGateway,
@@ -1032,7 +1033,10 @@ export class FirewallVpnResources {
         const ec2FirewallVpnRoutes = routeTableItem.routes.filter(
           routeItem =>
             routeItem.attachment &&
-            NetworkConfigTypes.transitGatewayRouteTableVpnEntryConfig.is(routeItem.attachment) &&
+            isNetworkType<TransitGatewayRouteTableVpnEntryConfig>(
+              'ITransitGatewayRouteTableVpnEntryConfig',
+              routeItem.attachment,
+            ) &&
             ec2FirewallVpnNames.includes(routeItem.attachment.vpnConnectionName),
         );
         //
@@ -1086,7 +1090,10 @@ export class FirewallVpnResources {
     for (const routeEntryItem of ec2FirewallVpnRoutes) {
       if (
         routeEntryItem.attachment &&
-        NetworkConfigTypes.transitGatewayRouteTableVpnEntryConfig.is(routeEntryItem.attachment)
+        isNetworkType<TransitGatewayRouteTableVpnEntryConfig>(
+          'ITransitGatewayRouteTableVpnEntryConfig',
+          routeEntryItem.attachment,
+        )
       ) {
         //
         // Set custom resource props

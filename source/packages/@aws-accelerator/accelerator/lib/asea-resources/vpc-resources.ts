@@ -24,8 +24,10 @@ import {
   RouteTableConfig,
   TransitGatewayAttachmentConfig,
   SecurityGroupRuleConfig,
-  nonEmptyString,
-  NetworkConfigTypes,
+  NonEmptyString,
+  isNetworkType,
+  SubnetSourceConfig,
+  SecurityGroupSourceConfig,
 } from '@aws-accelerator/config';
 import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
@@ -454,7 +456,7 @@ export class VpcResources extends AseaResource {
   ) => {
     const securityGroupRules: SecurityGroupRuleInfo[] = [];
     securityGroupRuleItem.sources.forEach(sourceItem => {
-      if (nonEmptyString.is(sourceItem)) {
+      if (isNetworkType<NonEmptyString>('NonEmptyString', sourceItem)) {
         securityGroupRules.push({
           ...ruleProps,
           source: sourceItem,
@@ -462,7 +464,7 @@ export class VpcResources extends AseaResource {
           description: securityGroupRuleItem.description,
         });
       }
-      if (NetworkConfigTypes.subnetSourceConfig.is(sourceItem)) {
+      if (isNetworkType<SubnetSourceConfig>('ISubnetSourceConfig', sourceItem)) {
         const sourceVpcItem = getVpcConfig(this.scope.vpcsInScope, sourceItem.vpc);
         sourceItem.subnets.forEach(subnet =>
           securityGroupRules.push({
@@ -474,7 +476,7 @@ export class VpcResources extends AseaResource {
           }),
         );
       }
-      if (NetworkConfigTypes.securityGroupSourceConfig.is(sourceItem)) {
+      if (isNetworkType<SecurityGroupSourceConfig>('ISecurityGroupSourceConfig', sourceItem)) {
         sourceItem.securityGroups.forEach(securityGroup => {
           const securityGroupId = this.getSecurityGroupId(securityGroupsMap, securityGroup, securityGroupVpc);
           if (!securityGroupId) return;

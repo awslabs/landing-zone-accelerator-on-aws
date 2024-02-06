@@ -28,12 +28,10 @@ import {
   NetworkAclInboundRuleConfig,
   NetworkAclOutboundRuleConfig,
   NetworkAclSubnetSelection,
-  NetworkConfigTypes,
   NetworkLoadBalancerConfig,
   NlbTargetTypeConfig,
   RouteTableConfig,
   RouteTableEntryConfig,
-  ShareTargets,
   SubnetConfig,
   Tag,
   TargetGroupItemConfig,
@@ -41,11 +39,17 @@ import {
   TransitGatewayConfig,
   TransitGatewayRouteEntryConfig,
   TransitGatewayRouteTableConfig,
+  TransitGatewayRouteTableDxGatewayEntryConfig,
+  TransitGatewayRouteTableTgwPeeringEntryConfig,
+  TransitGatewayRouteTableVpcEntryConfig,
+  TransitGatewayRouteTableVpnEntryConfig,
   VpcConfig,
   VpcPeeringConfig,
   VpcTemplatesConfig,
   VpnConnectionConfig,
+  isNetworkType,
 } from '@aws-accelerator/config';
+import { ShareTargets } from '@aws-accelerator/config/dist/lib/common/types';
 import {
   ActiveDirectory,
   ActiveDirectoryConfiguration,
@@ -701,8 +705,8 @@ export class NetworkAssociationsStack extends NetworkStack {
       const accepterAccountIds = this.getVpcAccountIds(accepterVpc);
       let crossAccount = false;
       if (
-        NetworkConfigTypes.vpcTemplatesConfig.is(requesterVpc) ||
-        NetworkConfigTypes.vpcTemplatesConfig.is(accepterVpc)
+        isNetworkType<VpcTemplatesConfig>('IVpcTemplatesConfig', requesterVpc) ||
+        isNetworkType<VpcTemplatesConfig>('IVpcTemplatesConfig', accepterVpc)
       ) {
         crossAccount =
           requesterVpc.region !== accepterVpc.region ||
@@ -987,7 +991,7 @@ export class NetworkAssociationsStack extends NetworkStack {
   private getTransitGatewayAttachmentAccounts(vpcItem: VpcConfig | VpcTemplatesConfig): [string[], string[]] {
     let accountNames: string[];
     let excludedAccountIds: string[] = [];
-    if (NetworkConfigTypes.vpcConfig.is(vpcItem)) {
+    if (isNetworkType<VpcConfig>('IVpcConfig', vpcItem)) {
       accountNames = [vpcItem.account];
     } else {
       accountNames = this.getAccountNamesFromDeploymentTarget(vpcItem.deploymentTargets);
@@ -1119,7 +1123,7 @@ export class NetworkAssociationsStack extends NetworkStack {
         continue;
       const associationsKey = `${tgwAttachmentItem.transitGateway.name}_${routeTableItem}`;
       let associationId: string;
-      if (NetworkConfigTypes.vpcConfig.is(vpcItem)) {
+      if (isNetworkType<VpcConfig>('IVpcConfig', vpcItem)) {
         associationId = `${pascalCase(tgwAttachmentItem.name)}${pascalCase(routeTableItem)}Association`;
       } else {
         associationId = `${pascalCase(tgwAttachmentItem.name)}${pascalCase(routeTableItem)}${pascalCase(
@@ -1219,7 +1223,7 @@ export class NetworkAssociationsStack extends NetworkStack {
         continue;
       const propagationsKey = `${tgwAttachmentItem.transitGateway.name}_${routeTableItem}`;
       let propagationId: string;
-      if (NetworkConfigTypes.vpcConfig.is(vpcItem)) {
+      if (isNetworkType('IVpcConfig', vpcItem)) {
         propagationId = `${pascalCase(tgwAttachmentItem.name)}${pascalCase(routeTableItem)}Propagation`;
       } else {
         propagationId = `${pascalCase(tgwAttachmentItem.name)}${pascalCase(routeTableItem)}${pascalCase(
@@ -1757,8 +1761,8 @@ export class NetworkAssociationsStack extends NetworkStack {
           );
         }
         if (
-          // NetworkConfigTypes.vpcTemplatesConfig.is(peering.requester) ||
-          NetworkConfigTypes.vpcTemplatesConfig.is(peering.accepter)
+          // isNetworkType<VpcTemplatesConfig>('IVpcTemplatesConfig', peering.requester) ||
+          isNetworkType<VpcTemplatesConfig>('IVpcTemplatesConfig', peering.accepter)
         ) {
           aseaPeerMappingName = `${peering.name}_${accepterAccountId}`;
           peeringConstructId = `${peering.name}VpcPeering${accepterAccountId}`;
@@ -1789,7 +1793,7 @@ export class NetworkAssociationsStack extends NetworkStack {
           this.ssmParameters.push({
             logicalId: pascalCase(vpcPeerSsmConstructId),
             parameterName: this.getSsmPath(SsmResourceType.VPC_PEERING, [
-              NetworkConfigTypes.vpcTemplatesConfig.is(peering.accepter)
+              isNetworkType<VpcTemplatesConfig>('IVpcTemplatesConfig', peering.accepter)
                 ? // There will be multiple peering connections in requester account if accepter is VpcTemplate. Add accepterAccountId to avoid duplicate ssm parameter name
                   `${peering.name}/${accepterAccountId}`
                 : peering.name,
@@ -2458,7 +2462,12 @@ export class NetworkAssociationsStack extends NetworkStack {
     let transitGatewayAttachmentId: string | undefined;
     if (routeItem.attachment) {
       // If route is for VPC attachment
-      if (NetworkConfigTypes.transitGatewayRouteTableVpcEntryConfig.is(routeItem.attachment)) {
+      if (
+        isNetworkType<TransitGatewayRouteTableVpcEntryConfig>(
+          'ITransitGatewayRouteTableVpcEntryConfig',
+          routeItem.attachment,
+        )
+      ) {
         this.logger.info(
           `Adding route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
         );
@@ -2469,7 +2478,12 @@ export class NetworkAssociationsStack extends NetworkStack {
       }
 
       // If route is for DX Gateway attachment
-      if (NetworkConfigTypes.transitGatewayRouteTableDxGatewayEntryConfig.is(routeItem.attachment)) {
+      if (
+        isNetworkType<TransitGatewayRouteTableDxGatewayEntryConfig>(
+          'ITransitGatewayRouteTableDxGatewayEntryConfig',
+          routeItem.attachment,
+        )
+      ) {
         this.logger.info(
           `Adding route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
         );
@@ -2482,7 +2496,12 @@ export class NetworkAssociationsStack extends NetworkStack {
       }
 
       // If route is for VPN attachment
-      if (NetworkConfigTypes.transitGatewayRouteTableVpnEntryConfig.is(routeItem.attachment)) {
+      if (
+        isNetworkType<TransitGatewayRouteTableVpnEntryConfig>(
+          'ITransitGatewayRouteTableVpnEntryConfig',
+          routeItem.attachment,
+        )
+      ) {
         this.logger.info(
           `Adding route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
         );
@@ -2495,7 +2514,12 @@ export class NetworkAssociationsStack extends NetworkStack {
       }
 
       // If route is for TGW peering attachment
-      if (NetworkConfigTypes.transitGatewayRouteTableTgwPeeringEntryConfig.is(routeItem.attachment)) {
+      if (
+        isNetworkType<TransitGatewayRouteTableTgwPeeringEntryConfig>(
+          'ITransitGatewayRouteTableTgwPeeringEntryConfig',
+          routeItem.attachment,
+        )
+      ) {
         this.logger.info(
           `Adding route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
         );
@@ -2542,7 +2566,12 @@ export class NetworkAssociationsStack extends NetworkStack {
 
     if (routeItem.attachment) {
       // If route is for VPC attachment
-      if (NetworkConfigTypes.transitGatewayRouteTableVpcEntryConfig.is(routeItem.attachment)) {
+      if (
+        isNetworkType<TransitGatewayRouteTableVpcEntryConfig>(
+          'ITransitGatewayRouteTableVpcEntryConfig',
+          routeItem.attachment,
+        )
+      ) {
         this.logger.info(
           `Adding prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
         );
@@ -2557,7 +2586,12 @@ export class NetworkAssociationsStack extends NetworkStack {
       }
 
       // If route is for DX Gateway attachment
-      if (NetworkConfigTypes.transitGatewayRouteTableDxGatewayEntryConfig.is(routeItem.attachment)) {
+      if (
+        isNetworkType<TransitGatewayRouteTableDxGatewayEntryConfig>(
+          'ITransitGatewayRouteTableDxGatewayEntryConfig',
+          routeItem.attachment,
+        )
+      ) {
         this.logger.info(
           `Adding prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
         );
@@ -2572,7 +2606,12 @@ export class NetworkAssociationsStack extends NetworkStack {
       }
 
       // If route is for VPN attachment
-      if (NetworkConfigTypes.transitGatewayRouteTableVpnEntryConfig.is(routeItem.attachment)) {
+      if (
+        isNetworkType<TransitGatewayRouteTableVpnEntryConfig>(
+          'ITransitGatewayRouteTableVpnEntryConfig',
+          routeItem.attachment,
+        )
+      ) {
         this.logger.info(
           `Adding prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
         );
@@ -2587,7 +2626,12 @@ export class NetworkAssociationsStack extends NetworkStack {
       }
 
       // If route is for TGW peering attachment
-      if (NetworkConfigTypes.transitGatewayRouteTableTgwPeeringEntryConfig.is(routeItem.attachment)) {
+      if (
+        isNetworkType<TransitGatewayRouteTableTgwPeeringEntryConfig>(
+          'ITransitGatewayRouteTableTgwPeeringEntryConfig',
+          routeItem.attachment,
+        )
+      ) {
         this.logger.info(
           `Adding prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
         );

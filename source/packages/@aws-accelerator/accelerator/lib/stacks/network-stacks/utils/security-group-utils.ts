@@ -12,7 +12,6 @@
  */
 
 import {
-  NetworkConfigTypes,
   PrefixListSourceConfig,
   SecurityGroupConfig,
   SecurityGroupRuleConfig,
@@ -20,7 +19,8 @@ import {
   SubnetSourceConfig,
   VpcConfig,
   VpcTemplatesConfig,
-  nonEmptyString,
+  isNetworkType,
+  NonEmptyString,
 } from '@aws-accelerator/config';
 import {
   IIpamSubnet,
@@ -102,7 +102,7 @@ function setSgItemIpamSubnets(
 
   for (const ruleItem of [...sgItem.inboundRules, ...sgItem.outboundRules]) {
     for (const source of ruleItem.sources) {
-      if (NetworkConfigTypes.subnetSourceConfig.is(source)) {
+      if (isNetworkType<SubnetSourceConfig>('ISubnetSourceConfig', source)) {
         ipamSubnets.push(...parseSubnetConfigs(allVpcResources, source.vpc, source.account, source.subnets));
       }
     }
@@ -272,7 +272,7 @@ function setSecurityGroupEgressRules(egressRules: SecurityGroupRuleProps[]): Sec
  */
 function includesSecurityGroupSource(rule: SecurityGroupRuleConfig): boolean {
   for (const source of rule.sources) {
-    if (NetworkConfigTypes.securityGroupSourceConfig.is(source)) {
+    if (isNetworkType<SecurityGroupRuleConfig>('ISecurityGroupSourceConfig', source)) {
       return true;
     }
   }
@@ -660,26 +660,26 @@ function prepareSecurityGroupRuleProps(
     //
     // IP source
     //
-    if (nonEmptyString.is(source)) {
+    if (isNetworkType<NonEmptyString>('NonEmptyString', source)) {
       rules.push(processIpSource(source, props));
     }
     //
     // Subnet source
     //
-    if (NetworkConfigTypes.subnetSourceConfig.is(source)) {
+    if (isNetworkType<SubnetSourceConfig>('ISubnetSourceConfig', source)) {
       rules.push(...processSubnetSource(vpcResources, maps.subnets, source, props));
     }
     //
     // Prefix List Source
     //
-    if (NetworkConfigTypes.prefixListSourceConfig.is(source)) {
+    if (isNetworkType<PrefixListSourceConfig>('IPrefixListSourceConfig', source)) {
       rules.push(...processPrefixListSource(maps.prefixLists, source, props));
     }
   } else {
     //
     // Security Group Source
     //
-    if (NetworkConfigTypes.securityGroupSourceConfig.is(source) && vpcName) {
+    if (isNetworkType<SecurityGroupSourceConfig>('ISecurityGroupSourceConfig', source) && vpcName) {
       rules.push(...processSecurityGroupSource(maps.securityGroups, vpcName, source, props));
     }
   }
@@ -697,7 +697,7 @@ function prepareSecurityGroupRuleProps(
  */
 function processSecurityGroupRuleSources(
   vpcResources: (VpcConfig | VpcTemplatesConfig)[],
-  sources: string[] | SecurityGroupSourceConfig[] | PrefixListSourceConfig[] | SubnetSourceConfig[],
+  sources: (string | SecurityGroupSourceConfig | PrefixListSourceConfig | SubnetSourceConfig)[],
   subnetMap: Map<string, Subnet> | Map<string, IIpamSubnet>,
   prefixListMap: Map<string, PrefixList> | Map<string, string>,
   props: {

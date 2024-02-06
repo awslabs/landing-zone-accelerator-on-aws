@@ -13,9 +13,10 @@
 
 import {
   CustomerGatewayConfig,
-  NetworkConfigTypes,
   TransitGatewayRouteEntryConfig,
+  TransitGatewayRouteTableVpnEntryConfig,
   VpnConnectionConfig,
+  isNetworkType,
 } from '@aws-accelerator/config';
 import { IPv4, IPv4CidrRange, IPv6CidrRange } from 'ip-num';
 import { getObjectKeys } from './getter-utils';
@@ -112,7 +113,13 @@ export function isEc2FirewallVpnRoute(
   customerGateways: CustomerGatewayConfig[],
   routeItem: TransitGatewayRouteEntryConfig,
 ): boolean {
-  if (routeItem.attachment && NetworkConfigTypes.transitGatewayRouteTableVpnEntryConfig.is(routeItem.attachment)) {
+  if (
+    routeItem.attachment &&
+    isNetworkType<TransitGatewayRouteTableVpnEntryConfig>(
+      'ITransitGatewayRouteTableVpnEntryConfig',
+      routeItem.attachment,
+    )
+  ) {
     const vpnName = routeItem.attachment.vpnConnectionName;
     const cgw = customerGateways.find(cgwItem => cgwItem.vpnConnections?.find(vpnItem => vpnItem.name === vpnName));
 

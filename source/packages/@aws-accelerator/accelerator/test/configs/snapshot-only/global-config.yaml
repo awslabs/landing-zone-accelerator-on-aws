@@ -16,7 +16,7 @@ snsTopics:
   topics:
     - name: Security
       emailAddresses:
-        - <notify-security>@example.com <----- UPDATE EMAIL ADDRESS
+        - notify-security@example.com
 terminationProtection: true
 lambda:
   encryption:

@@ -48,7 +48,7 @@ import {
   VpcTemplatesConfig,
 } from '../lib/network-config';
 
-import { VpcFlowLogsConfig } from '../lib/common-types/types';
+import { VpcFlowLogsConfig } from '../lib/common/types';
 
 import { describe, it, expect } from '@jest/globals';
 import * as path from 'path';

@@ -18,9 +18,9 @@ import {
   DeploymentTargets,
   AseaResourceMapping,
   CfnResourceType,
-  NetworkConfigTypes,
   VpcConfig,
   VpcTemplatesConfig,
+  isNetworkType,
 } from '@aws-accelerator/config';
 import { ManagedPolicies } from '../asea-resources/managed-policies';
 import { Roles } from '../asea-resources/iam-roles';
@@ -119,7 +119,7 @@ export class ImportAseaResourcesStack extends NetworkStack {
   getTransitGatewayAttachmentAccounts(vpcItem: VpcConfig | VpcTemplatesConfig): [string[], string[]] {
     let accountNames: string[];
     let excludedAccountIds: string[] = [];
-    if (NetworkConfigTypes.vpcConfig.is(vpcItem)) {
+    if (isNetworkType<VpcConfig>('IVpcConfig', vpcItem)) {
       accountNames = [vpcItem.account];
     } else {
       accountNames = this.getAccountNamesFromDeploymentTarget(vpcItem.deploymentTargets);

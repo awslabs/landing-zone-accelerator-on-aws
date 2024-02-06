@@ -19,7 +19,6 @@ import {
   NfwStatelessRulesAndCustomActionsConfig,
   NfwRuleSourceStatelessRuleDefinitionConfig,
   NfwRuleSourceStatelessMatchAttributesConfig,
-  NetworkConfigTypes,
   NfwFirewallPolicyConfig,
   NfwRuleSourceCustomActionConfig,
   NfwRuleSourceStatefulRuleConfig,
@@ -29,6 +28,8 @@ import {
   SubnetConfig,
 } from '../../lib/network-config';
 import { NetworkValidatorFunctions } from './network-validator-functions';
+import { isNetworkType } from '../../lib/common';
+import { NfwStatelessRuleActionType } from '../../lib/models/network-config';
 
 /**
  * Class to validate network firewall
@@ -405,7 +406,7 @@ export class NetworkFirewallValidator {
 
     for (const ruleItem of statelessRules ?? []) {
       for (const action of ruleItem.ruleDefinition.actions) {
-        if (!NetworkConfigTypes.nfwStatelessRuleActionType.is(action) && !customActions) {
+        if (!isNetworkType<NfwStatelessRuleActionType>('NfwStatelessRuleActionType', action) && !customActions) {
           errors.push(
             `[Network Firewall rule group ${rule.name}]: ruleDefinition custom action "${action}" is invalid. No matching actionName defined under the customActions property`,
           );
@@ -440,7 +441,7 @@ export class NetworkFirewallValidator {
       return item.actionName;
     });
     let allValid = true;
-    const resourceType = NetworkConfigTypes.nfwRuleGroupConfig.is(resource) ? 'rule group' : 'policy';
+    const resourceType = isNetworkType<NfwRuleGroupConfig>('INfwRuleGroupConfig', resource) ? 'rule group' : 'policy';
 
     // Check if duplicate action names are defined
     if (helpers.hasDuplicates(actionNames)) {
@@ -492,7 +493,10 @@ export class NetworkFirewallValidator {
 
     for (const definition of ruleDefinitions ?? []) {
       for (const action of definition.ruleDefinition.actions) {
-        if (!NetworkConfigTypes.nfwStatelessRuleActionType.is(action) && !actionNames.includes(action)) {
+        if (
+          !isNetworkType<NfwStatelessRuleActionType>('NfwStatelessRuleActionType', action) &&
+          !actionNames.includes(action)
+        ) {
           errors.push(
             `[Network Firewall rule group ${rule.name}]: ruleDefinition custom action "${action}" is invalid. Custom actions must be defined under the customActions property`,
           );
@@ -1189,7 +1193,7 @@ export class NetworkFirewallValidator {
         ...policy.firewallPolicy.statelessDefaultActions,
         ...policy.firewallPolicy.statelessFragmentDefaultActions,
       ]) {
-        if (!NetworkConfigTypes.nfwStatelessRuleActionType.is(action) && !customActions) {
+        if (!isNetworkType<NfwStatelessRuleActionType>('NfwStatelessRuleActionType', action) && !customActions) {
           errors.push(
             `[Network Firewall policy ${policy.name}]: stateless custom action "${action}" is invalid. No matching actionName defined under the statelessCustomActions property`,
           );
@@ -1227,7 +1231,10 @@ export class NetworkFirewallValidator {
       ...policy.firewallPolicy.statelessDefaultActions,
       ...policy.firewallPolicy.statelessFragmentDefaultActions,
     ]) {
-      if (!NetworkConfigTypes.nfwStatelessRuleActionType.is(action) && !actionNames.includes(action)) {
+      if (
+        !isNetworkType<NfwStatelessRuleActionType>('NfwStatelessRuleActionType', action) &&
+        !actionNames.includes(action)
+      ) {
         errors.push(
           `[Network Firewall policy ${policy.name}]: stateless custom action "${action}" is invalid. No matching actionName defined under the statelessCustomActions property`,
         );

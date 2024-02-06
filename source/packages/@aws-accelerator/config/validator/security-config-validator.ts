@@ -15,7 +15,14 @@ import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import fs from 'fs';
 import path from 'path';
 import { AccountsConfig } from '../lib/accounts-config';
-import * as t from '../lib/common-types';
+import { DeploymentTargets } from '../lib/common';
+import {
+  IAlarmSetConfig,
+  IAwsConfig,
+  IAwsConfigRuleSet,
+  IDocumentConfig,
+  ISecurityConfig,
+} from '../lib/models/security-config';
 import { GlobalConfig } from '../lib/global-config';
 import { OrganizationConfig } from '../lib/organization-config';
 import { ReplacementsConfig } from '../lib/replacements-config';
@@ -23,7 +30,6 @@ import {
   AwsConfigRuleSet,
   EbsDefaultVolumeEncryptionConfig,
   SecurityConfig,
-  SecurityConfigTypes,
   IsPublicSsmDoc,
   ConfigRule,
 } from '../lib/security-config';
@@ -188,7 +194,7 @@ export class SecurityConfigValidator {
   /**
    * Validate S3 lifecycle expiration to be smaller than noncurrentVersionExpiration
    */
-  private macieLifecycleRules(values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>, errors: string[]) {
+  private macieLifecycleRules(values: ISecurityConfig, errors: string[]) {
     for (const lifecycleRule of values.centralSecurityServices?.macie?.lifecycleRules ?? []) {
       if (lifecycleRule.expiration && !lifecycleRule.noncurrentVersionExpiration) {
         errors.push('You must supply a value for noncurrentVersionExpiration. Macie.');
@@ -205,7 +211,7 @@ export class SecurityConfigValidator {
   /**
    * Validate S3 lifecycle expiration to be smaller than noncurrentVersionExpiration
    */
-  private guarddutyLifecycleRules(values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>, errors: string[]) {
+  private guarddutyLifecycleRules(values: ISecurityConfig, errors: string[]) {
     for (const lifecycleRule of values.centralSecurityServices?.guardduty?.lifecycleRules ?? []) {
       if (lifecycleRule.expiration && !lifecycleRule.noncurrentVersionExpiration) {
         errors.push('You must supply a value for noncurrentVersionExpiration. GuardDuty');
@@ -362,7 +368,7 @@ export class SecurityConfigValidator {
    * @param values
    */
   private validateConfigRuleDeploymentTargetAccounts(
-    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
+    values: ISecurityConfig,
     accountNames: string[],
     errors: string[],
   ) {
@@ -383,16 +389,18 @@ export class SecurityConfigValidator {
    * @param values
    */
   private validateCloudWatchMetricsDeploymentTargetAccounts(
-    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
+    values: ISecurityConfig,
     accountNames: string[],
     errors: string[],
   ) {
     for (const metricSet of values.cloudWatch.metricSets ?? []) {
-      for (const account of metricSet.deploymentTargets.accounts ?? []) {
-        if (accountNames.indexOf(account) === -1) {
-          errors.push(
-            `Deployment target account ${account} for CloudWatch Metrics does not exists in accounts-config.yaml file.`,
-          );
+      if (metricSet.deploymentTargets) {
+        for (const account of metricSet.deploymentTargets.accounts ?? []) {
+          if (accountNames.indexOf(account) === -1) {
+            errors.push(
+              `Deployment target account ${account} for CloudWatch Metrics does not exists in accounts-config.yaml file.`,
+            );
+          }
         }
       }
     }
@@ -404,7 +412,7 @@ export class SecurityConfigValidator {
    * @param values
    */
   private validateCloudWatchAlarmsDeploymentTargetAccounts(
-    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
+    values: ISecurityConfig,
     accountNames: string[],
     errors: string[],
   ) {
@@ -425,7 +433,7 @@ export class SecurityConfigValidator {
    * @param values
    */
   private validateCloudWatchLogGroupsDeploymentTargetAccounts(
-    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
+    values: ISecurityConfig,
     accountNames: string[],
     errors: string[],
   ) {
@@ -445,7 +453,7 @@ export class SecurityConfigValidator {
    * @param values
    */
   private validateSsmDocumentsDeploymentTargetAccounts(
-    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
+    values: ISecurityConfig,
     accountNames: string[],
     errors: string[],
   ) {
@@ -465,7 +473,7 @@ export class SecurityConfigValidator {
    * @param values
    */
   private validateKmsKeyConfigDeploymentTargetAccounts(
-    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
+    values: ISecurityConfig,
     accountNames: string[],
     errors: string[],
   ) {
@@ -487,7 +495,7 @@ export class SecurityConfigValidator {
    * @param errors string[]
    */
   private validateEbsEncryptionDeploymentTargetAccounts(
-    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
+    values: ISecurityConfig,
     accountNames: string[],
     errors: string[],
   ) {
@@ -504,11 +512,7 @@ export class SecurityConfigValidator {
    * Function to validate Deployment targets account name for security services
    * @param values
    */
-  private validateDeploymentTargetAccountNames(
-    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
-    accountNames: string[],
-    errors: string[],
-  ) {
+  private validateDeploymentTargetAccountNames(values: ISecurityConfig, accountNames: string[], errors: string[]) {
     this.validateConfigRuleDeploymentTargetAccounts(values, accountNames, errors);
     this.validateCloudWatchMetricsDeploymentTargetAccounts(values, accountNames, errors);
     this.validateCloudWatchAlarmsDeploymentTargetAccounts(values, accountNames, errors);
@@ -523,11 +527,7 @@ export class SecurityConfigValidator {
    * Make sure deployment target OUs are part of Organization config file
    * @param values
    */
-  private validateConfigRuleDeploymentTargetOUs(
-    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
-    ouIdNames: string[],
-    errors: string[],
-  ) {
+  private validateConfigRuleDeploymentTargetOUs(values: ISecurityConfig, ouIdNames: string[], errors: string[]) {
     for (const ruleSet of values.awsConfig.ruleSets ?? []) {
       for (const ou of ruleSet.deploymentTargets.organizationalUnits ?? []) {
         if (ouIdNames.indexOf(ou) === -1) {
@@ -544,17 +544,15 @@ export class SecurityConfigValidator {
    * Make sure deployment target OUs are part of Organization config file
    * @param values
    */
-  private validateCloudWatchMetricsDeploymentTargetOUs(
-    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
-    ouIdNames: string[],
-    errors: string[],
-  ) {
+  private validateCloudWatchMetricsDeploymentTargetOUs(values: ISecurityConfig, ouIdNames: string[], errors: string[]) {
     for (const metricSet of values.cloudWatch.metricSets ?? []) {
-      for (const ou of metricSet.deploymentTargets.organizationalUnits ?? []) {
-        if (ouIdNames.indexOf(ou) === -1) {
-          errors.push(
-            `Deployment target OU ${ou} for CloudWatch metrics does not exists in organization-config.yaml file.`,
-          );
+      if (metricSet.deploymentTargets) {
+        for (const ou of metricSet.deploymentTargets.organizationalUnits ?? []) {
+          if (ouIdNames.indexOf(ou) === -1) {
+            errors.push(
+              `Deployment target OU ${ou} for CloudWatch metrics does not exists in organization-config.yaml file.`,
+            );
+          }
         }
       }
     }
@@ -565,11 +563,7 @@ export class SecurityConfigValidator {
    * Make sure deployment target OUs are part of Organization config file
    * @param values
    */
-  private validateCloudWatchAlarmsDeploymentTargetOUs(
-    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
-    ouIdNames: string[],
-    errors: string[],
-  ) {
+  private validateCloudWatchAlarmsDeploymentTargetOUs(values: ISecurityConfig, ouIdNames: string[], errors: string[]) {
     for (const alarmSet of values.cloudWatch.alarmSets ?? []) {
       for (const ou of alarmSet.deploymentTargets.organizationalUnits ?? []) {
         if (ouIdNames.indexOf(ou) === -1) {
@@ -586,11 +580,7 @@ export class SecurityConfigValidator {
    * Make sure deployment target OUs are part of Organization config file
    * @param values
    */
-  private validateSsmDocumentDeploymentTargetOUs(
-    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
-    ouIdNames: string[],
-    errors: string[],
-  ) {
+  private validateSsmDocumentDeploymentTargetOUs(values: ISecurityConfig, ouIdNames: string[], errors: string[]) {
     for (const documentSet of values.centralSecurityServices.ssmAutomation.documentSets ?? []) {
       for (const ou of documentSet.shareTargets.organizationalUnits ?? []) {
         if (ouIdNames.indexOf(ou) === -1) {
@@ -605,11 +595,7 @@ export class SecurityConfigValidator {
    * Make sure deployment target OUs are part of Organization config file
    * @param values
    */
-  private validateKmsKeyConfigDeploymentTargetOUs(
-    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
-    ouIdNames: string[],
-    errors: string[],
-  ) {
+  private validateKmsKeyConfigDeploymentTargetOUs(values: ISecurityConfig, ouIdNames: string[], errors: string[]) {
     for (const keySet of values.keyManagementService?.keySets ?? []) {
       for (const ou of keySet.deploymentTargets.organizationalUnits ?? []) {
         if (ouIdNames.indexOf(ou) === -1) {
@@ -656,11 +642,7 @@ export class SecurityConfigValidator {
    * @param configDir
    * @param ruleSet
    */
-  private validateConfigRuleAssets(
-    configDir: string,
-    ruleSet: t.TypeOf<typeof SecurityConfigTypes.awsConfigRuleSet>,
-    errors: string[],
-  ) {
+  private validateConfigRuleAssets(configDir: string, ruleSet: IAwsConfigRuleSet, errors: string[]) {
     for (const rule of ruleSet.rules) {
       if (rule.type === 'Custom' && rule.customRule) {
         // Validate presence of custom rule lambda function zip file
@@ -685,7 +667,7 @@ export class SecurityConfigValidator {
    * @param helpers
    */
   private validateConfigRuleNames(
-    configItem: t.TypeOf<typeof SecurityConfigTypes.awsConfig>,
+    configItem: IAwsConfig,
     accountsConfig: AccountsConfig,
     globalConfig: GlobalConfig,
     errors: string[],
@@ -700,7 +682,7 @@ export class SecurityConfigValidator {
           name: ruleItem.name,
           environments: CommonValidatorFunctions.getEnvironmentsFromDeploymentTarget(
             accountsConfig,
-            ruleSetItem.deploymentTargets as t.DeploymentTargets,
+            ruleSetItem.deploymentTargets as DeploymentTargets,
             globalConfig,
           ),
         });
@@ -747,11 +729,7 @@ export class SecurityConfigValidator {
    * @param configDir
    * @param ruleSet
    */
-  private validateConfigRuleRemediationAssumeRoleFile(
-    configDir: string,
-    ruleSet: t.TypeOf<typeof SecurityConfigTypes.awsConfigRuleSet>,
-    errors: string[],
-  ) {
+  private validateConfigRuleRemediationAssumeRoleFile(configDir: string, ruleSet: IAwsConfigRuleSet, errors: string[]) {
     for (const rule of ruleSet.rules) {
       if (rule.remediation) {
         // Validate presence of rule remediation assume role definition file
@@ -771,7 +749,7 @@ export class SecurityConfigValidator {
    */
   private validateConfigRuleRemediationTargetAssets(
     configDir: string,
-    ruleSet: t.TypeOf<typeof SecurityConfigTypes.awsConfigRuleSet>,
+    ruleSet: IAwsConfigRuleSet,
     ssmDocuments: { name: string; template: string }[],
     errors: string[],
   ) {
@@ -797,10 +775,7 @@ export class SecurityConfigValidator {
     }
   }
 
-  private validateSsmDocumentTargetTypes(
-    ssmDocuments: t.TypeOf<typeof SecurityConfigTypes.documentConfig>[],
-    errors: string[],
-  ) {
+  private validateSsmDocumentTargetTypes(ssmDocuments: IDocumentConfig[], errors: string[]) {
     // check if document target type falls under the regex specified by API for SSM CreateDocument
     // ref: https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_CreateDocument.html#systemsmanager-CreateDocument-request-TargetType
     const ssmDocumentTargetTypeRegex = /^\/[\w.\-:/]*$/;
@@ -824,10 +799,7 @@ export class SecurityConfigValidator {
   /**
    *
    */
-  private validateSsmDocumentNames(
-    ssmDocuments: t.TypeOf<typeof SecurityConfigTypes.documentConfig>[],
-    errors: string[],
-  ) {
+  private validateSsmDocumentNames(ssmDocuments: IDocumentConfig[], errors: string[]) {
     // check if document name falls under the regex specified by API for SSM CreateDocument
     // ref: https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_CreateDocument.html#systemsmanager-CreateDocument-request-Name
     const ssmDocumentNameRegex = /^[a-zA-Z0-9_\-.:/]{3,128}$/;
@@ -849,7 +821,7 @@ export class SecurityConfigValidator {
    */
   private validateSnsTopics(
     globalConfig: GlobalConfig,
-    alarmSet: t.TypeOf<typeof SecurityConfigTypes.alarmSetConfig>,
+    alarmSet: IAlarmSetConfig,
     snsTopicNames: string[],
     errors: string[],
   ) {
@@ -912,7 +884,7 @@ export class SecurityConfigValidator {
   private validateAwsConfigAggregation(
     globalConfig: GlobalConfig,
     accountNames: string[],
-    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
+    values: ISecurityConfig,
     errors: string[],
   ) {
     if (values.awsConfig.aggregation && globalConfig.controlTower.enable) {

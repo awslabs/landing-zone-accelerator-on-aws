@@ -13,7 +13,7 @@
 import fs from 'fs';
 import path from 'path';
 import { AccountsConfig } from '../../lib/accounts-config';
-import * as t from '../../lib/common-types';
+import * as t from '../../lib/common';
 import { GlobalConfig } from '../../lib/global-config';
 import { ReplacementsConfig } from '../../lib/replacements-config';
 
@@ -86,7 +86,7 @@ export class CommonValidatorFunctions {
       accountNames.push(account);
     }
 
-    const filterAccountNames = t.deploymentTargets.is(targets)
+    const filterAccountNames = t.isCustomizationsType<t.DeploymentTargets>('IDeploymentTargets', targets)
       ? accountNames.filter(item => !targets.excludedAccounts?.includes(item))
       : accountNames;
 
