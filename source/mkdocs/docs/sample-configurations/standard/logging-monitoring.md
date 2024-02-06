@@ -13,7 +13,7 @@ The AWS CloudTrail service provides a comprehensive log of control plane and dat
 ## VPC Flow Logs
 
 VPC Flow Logs capture information about the IP traffic going to and from network interfaces in a VPC such as source and destination IPs, protocol, ports, and success/failure of the flow. The [network-config.yaml](https://github.com/awslabs/landing-zone-accelerator-on-aws/blob/main/reference/sample-configurations/lza-sample-config/network-config.yaml) configuration file enables ALL (i.e. both accepted and rejected traffic) logs for all VPCs in all accounts to a local CloudWatch log group. It is important to use custom flow log formats to ensure all fields are captured as important fields are not part of the basic format. More details about VPC Flow Logs are [available here](https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs.html).
-It should be noted that certain categories of network flows are not captured, including traffic to and from the instance metadata service (`169.254.169.254`), and DNS traffic with an Amazon VPC DNS resolver. DNS logs are available by configuring [Route 53 Resolver query logs](https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.ResolverConfig.html#queryLogs).
+It should be noted that certain categories of network flows are not captured, including traffic to and from the instance metadata service (`169.254.169.254`), and DNS traffic with an Amazon VPC DNS resolver. DNS logs are available by configuring [Route 53 Resolver query logs](https://awslabs.github.io/landing-zone-accelerator-on-aws/latest/typedocs/latest/classes/_aws_accelerator_config.ResolverConfig.html#queryLogs).
 
 ## GuardDuty
 
