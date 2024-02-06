@@ -266,7 +266,7 @@ export class SecurityStack extends AcceleratorStack {
    */
   private deployEbsEncryption(ebsEncryptionConfig: EbsDefaultVolumeEncryptionConfig): boolean {
     if (ebsEncryptionConfig.excludeRegions) {
-      return ebsEncryptionConfig.excludeRegions.indexOf(this.region) === -1;
+      return ebsEncryptionConfig.excludeRegions.indexOf(this.region as Region) === -1;
     } else {
       return ebsEncryptionConfig.deploymentTargets ? this.isIncluded(ebsEncryptionConfig.deploymentTargets) : true;
     }

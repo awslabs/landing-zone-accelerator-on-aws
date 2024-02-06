@@ -1,0 +1,156 @@
+{
+  "$ref": "#/definitions/IAccountsConfig",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "AwsAccountId": {
+      "description": "AWS Account ID",
+      "maxLength": 12,
+      "minLength": 12,
+      "type": "string"
+    },
+    "EmailAddress": {
+      "description": "An email address",
+      "maxLength": 64,
+      "minLength": 6,
+      "pattern": "^\\S+@\\S+\\.\\S+$",
+      "type": "string"
+    },
+    "IAccountConfig": {
+      "additionalProperties": false,
+      "description": "Account configuration",
+      "properties": {
+        "description": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The description is to used to provide more information about the account. This value is not used when creating accounts."
+        },
+        "email": {
+          "$ref": "#/definitions/EmailAddress",
+          "description": "The email address of the owner to assign to the account. The email address must not already be associated with another AWS account. You must use a valid email address. The address must be a minimum of 6 and a maximum of 64 characters long. All characters must be 7-bit ASCII characters There must be one and only one @ symbol, which separates the local name from the domain name. The local name can’t contain any of the following characters: whitespace, ” ‘ ( ) < > [ ] : ; , | % & The local name can’t begin with a dot (.) The domain name can consist of only the characters [a-z],[A-Z],[0-9], hyphen (-), or dot (.) The domain name can’t begin or end with a hyphen (-) or dot (.) The domain name must contain at least one dot"
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyNoSpaceString",
+          "description": "The friendly name that is assigned to the account for reference within the Accelerator. The name will be used to reference this account in other configuration files and not to lookup the account in AWS.\n\nFor pre-existing accounts this does not need to match the AWS account name.\n\nWhen creating new accounts with the Accelerator, this name will be used as the AWS account name.\n\nThe name should not contain any spaces as this isn't supported by the Accelerator."
+        },
+        "organizationalUnit": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The friendly name for the Organizational Unit that this account is a member of. This Organizational Unit must exist in the organization-config.yaml file."
+        },
+        "warm": {
+          "description": "'Warm' the account by creating an EC2 instance that runs for 15 minutes Use for new accounts that will need to have ec2 instance provisioned as part of the solution The 'warming' will take place in the operations stack This property may be removed after the account has been provisioned",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "email",
+        "name"
+      ],
+      "type": "object"
+    },
+    "IAccountIdConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "accountId": {
+          "$ref": "#/definitions/AwsAccountId"
+        },
+        "email": {
+          "$ref": "#/definitions/EmailAddress"
+        }
+      },
+      "required": [
+        "email",
+        "accountId"
+      ],
+      "type": "object"
+    },
+    "IAccountsConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "accountIds": {
+          "items": {
+            "$ref": "#/definitions/IAccountIdConfig"
+          },
+          "type": "array"
+        },
+        "mandatoryAccounts": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/definitions/IAccountConfig"
+              },
+              "type": "array"
+            },
+            {
+              "items": {
+                "$ref": "#/definitions/IGovCloudAccountConfig"
+              },
+              "type": "array"
+            }
+          ]
+        },
+        "workloadAccounts": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/definitions/IAccountConfig"
+              },
+              "type": "array"
+            },
+            {
+              "items": {
+                "$ref": "#/definitions/IGovCloudAccountConfig"
+              },
+              "type": "array"
+            }
+          ]
+        }
+      },
+      "required": [
+        "mandatoryAccounts",
+        "workloadAccounts"
+      ],
+      "type": "object"
+    },
+    "IGovCloudAccountConfig": {
+      "additionalProperties": false,
+      "description": "GovCloud Account configuration\nUsed instead of the account configuration in the commercial\npartition when creating GovCloud partition linked accounts.",
+      "properties": {
+        "description": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The description is to used to provide more information about the account. This value is not used when creating accounts."
+        },
+        "email": {
+          "$ref": "#/definitions/EmailAddress",
+          "description": "The email address of the owner to assign to the account. The email address must not already be associated with another AWS account. You must use a valid email address. The address must be a minimum of 6 and a maximum of 64 characters long. All characters must be 7-bit ASCII characters There must be one and only one @ symbol, which separates the local name from the domain name. The local name can’t contain any of the following characters: whitespace, ” ‘ ( ) < > [ ] : ; , | % & The local name can’t begin with a dot (.) The domain name can consist of only the characters [a-z],[A-Z],[0-9], hyphen (-), or dot (.) The domain name can’t begin or end with a hyphen (-) or dot (.) The domain name must contain at least one dot"
+        },
+        "enableGovCloud": {
+          "description": "Indicates whether or not a GovCloud partition account should be created.",
+          "type": "boolean"
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyNoSpaceString",
+          "description": "The friendly name that is assigned to the account for reference within the Accelerator. The name will be used to reference this account in other configuration files and not to lookup the account in AWS.\n\nFor pre-existing accounts this does not need to match the AWS account name.\n\nWhen creating new accounts with the Accelerator, this name will be used as the AWS account name.\n\nThe name should not contain any spaces as this isn't supported by the Accelerator."
+        },
+        "organizationalUnit": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The friendly name for the Organizational Unit that this account is a member of. This Organizational Unit must exist in the organization-config.yaml file."
+        }
+      },
+      "required": [
+        "email",
+        "name"
+      ],
+      "type": "object"
+    },
+    "NonEmptyNoSpaceString": {
+      "description": "A string that contains no spaces",
+      "minLength": 1,
+      "pattern": "^[^\\s]*$",
+      "type": "string"
+    },
+    "NonEmptyString": {
+      "description": "A string that has at least 1 character",
+      "minLength": 1,
+      "type": "string"
+    }
+  }
+}

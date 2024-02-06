@@ -16,11 +16,13 @@ import { CustomizationsConfig, Ec2FirewallInstanceConfig } from '../../lib/custo
 import {
   CustomerGatewayConfig,
   NetworkConfig,
-  NetworkConfigTypes,
+  VpcConfig,
+  VpcTemplatesConfig,
   VpnConnectionConfig,
   VpnTunnelOptionsSpecificationsConfig,
 } from '../../lib/network-config';
 import { NetworkValidatorFunctions } from './network-validator-functions';
+import { isNetworkType } from '../../lib/common';
 
 /**
  * Class to validate Customer Gateways
@@ -429,12 +431,15 @@ export class CustomerGatewaysValidator {
       }
 
       // Validate VPC account and CGW account match
-      if (NetworkConfigTypes.vpcConfig.is(vpc) && vpc.account !== cgw.account) {
+      if (isNetworkType<VpcConfig>('IVpcConfig', vpc) && vpc.account !== cgw.account) {
         errors.push(
           `[Customer Gateway ${cgw.name} VPN Connection ${vpn.name}]: VPC ${vpn.vpc} referenced does not reside in the same account as the CGW`,
         );
       }
-      if (NetworkConfigTypes.vpcTemplatesConfig.is(vpc) && !helpers.getVpcAccountNames(vpc).includes(cgw.account)) {
+      if (
+        isNetworkType<VpcTemplatesConfig>('IVpcTemplatesConfig', vpc) &&
+        !helpers.getVpcAccountNames(vpc).includes(cgw.account)
+      ) {
         errors.push(
           `[Customer Gateway ${cgw.name} VPN Connection ${vpn.name}]: VPC ${vpn.vpc} referenced does not reside in the same account as the CGW`,
         );

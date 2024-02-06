@@ -1,0 +1,1697 @@
+{
+  "$ref": "#/definitions/ICustomizationsConfig",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "AlbListenerProtocolEnum": {
+      "enum": [
+        "HTTP",
+        "HTTPS"
+      ],
+      "type": "string"
+    },
+    "AlbListenerTypeEnum": {
+      "enum": [
+        "fixed-response",
+        "forward",
+        "redirect"
+      ],
+      "type": "string"
+    },
+    "AlbRoutingHttpConfigMitigationModeEnum": {
+      "enum": [
+        "monitor",
+        "defensive",
+        "strictest"
+      ],
+      "type": "string"
+    },
+    "AlbSchemeEnum": {
+      "enum": [
+        "internet-facing",
+        "internal"
+      ],
+      "type": "string"
+    },
+    "AlpnPolicyEnum": {
+      "enum": [
+        "HTTP1Only",
+        "HTTP2Only",
+        "HTTP2Optional",
+        "HTTP2Preferred",
+        "None"
+      ],
+      "type": "string"
+    },
+    "AutoScalingHealthCheckTypeEnum": {
+      "enum": [
+        "EC2",
+        "ELB"
+      ],
+      "type": "string"
+    },
+    "IAlbAttributesConfig": {
+      "additionalProperties": false,
+      "description": "Application Load Balancer attributes config.",
+      "properties": {
+        "deletionProtection": {
+          "description": "Enable or disable deletion protection.",
+          "type": "boolean"
+        },
+        "http2Enabled": {
+          "description": "Indicates whether HTTP/2 is enabled. The possible values are true and false. The default is true. Elastic Load Balancing requires that message header names contain only alphanumeric characters and hyphens.",
+          "type": "boolean"
+        },
+        "idleTimeout": {
+          "description": "The idle timeout value, in seconds. The valid range is 1-4000 seconds. The default is 60 seconds.",
+          "type": "number"
+        },
+        "routingHttpDesyncMitigationMode": {
+          "$ref": "#/definitions/AlbRoutingHttpConfigMitigationModeEnum",
+          "description": "Determines how the load balancer handles requests that might pose a security risk to your application. The possible values are `monitor` , `defensive` , and `strictest` . The default is `defensive`."
+        },
+        "routingHttpDropInvalidHeader": {
+          "description": "Indicates whether HTTP headers with invalid header fields are removed by the load balancer ( true ) or routed to targets ( false ). The default is false.",
+          "type": "boolean"
+        },
+        "routingHttpXAmznTlsCipherEnable": {
+          "description": "Indicates whether the two headers ( x-amzn-tls-version and x-amzn-tls-cipher-suite ), which contain information about the negotiated TLS version and cipher suite, are added to the client request before sending it to the target. The x-amzn-tls-version header has information about the TLS protocol version negotiated with the client, and the x-amzn-tls-cipher-suite header has information about the cipher suite negotiated with the client. Both headers are in OpenSSL format. The possible values for the attribute are true and false . The default is false.",
+          "type": "boolean"
+        },
+        "routingHttpXffClientPort": {
+          "description": "Indicates whether the X-Forwarded-For header should preserve the source port that the client used to connect to the load balancer. The possible values are true and false . The default is false.",
+          "type": "boolean"
+        },
+        "routingHttpXffHeaderProcessingMode": {
+          "$ref": "#/definitions/RoutingHttpXffHeaderProcessingModeEnum",
+          "description": "Enables you to modify, preserve, or remove the X-Forwarded-For header in the HTTP request before the Application Load Balancer sends the request to the target. The possible values are append, preserve, and remove. The default is append."
+        },
+        "wafFailOpen": {
+          "description": "Indicates whether to allow a WAF-enabled load balancer to route requests to targets if it is unable to forward the request to AWS WAF. The possible values are true and false. The default is false.",
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "IAlbListenerConfig": {
+      "additionalProperties": false,
+      "description": "Application Load Balancer listener config. Currently only action type of `forward`,  `redirect` and `fixed-response` is allowed.",
+      "properties": {
+        "certificate": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Applies to HTTPS listeners. The default certificate for the listener. You must provide exactly one certificate arn or a certificate name which was created by LZA"
+        },
+        "fixedResponseConfig": {
+          "$ref": "#/definitions/IAlbListenerFixedResponseConfig",
+          "description": "Information for creating an action that returns a custom HTTP response. Specify only when type is `fixed-response`."
+        },
+        "forwardConfig": {
+          "$ref": "#/definitions/IAlbListenerForwardConfig",
+          "description": "Information for creating an action that distributes requests to targetGroup. Stickiness for targetGroup can be set here."
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The name of the application load balancer listener"
+        },
+        "order": {
+          "description": "The order for the action. This value is required for rules with multiple actions. The action with the lowest value for order is performed first",
+          "type": "number"
+        },
+        "port": {
+          "description": "Port of the application load balancer listener",
+          "type": "number"
+        },
+        "protocol": {
+          "$ref": "#/definitions/AlbListenerProtocolEnum",
+          "description": "Protocol of the application load balancer listener. The supported protocols are HTTP and HTTPS"
+        },
+        "redirectConfig": {
+          "$ref": "#/definitions/IAlbListenerRedirectConfig",
+          "description": "Information for creating a redirect action. Specify only when type is `redirect`."
+        },
+        "sslPolicy": {
+          "$ref": "#/definitions/SslPolicyAlbEnum",
+          "description": "The security policy that defines which protocols and ciphers are supported."
+        },
+        "targetGroup": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Target Group name to which traffic will be forwarded to. This name should be same as  {@link  ApplicationLoadBalancerTargetGroupConfig targetGroup }  name."
+        },
+        "type": {
+          "$ref": "#/definitions/AlbListenerTypeEnum",
+          "description": "Type of the application load balancer listener"
+        }
+      },
+      "required": [
+        "name",
+        "port",
+        "protocol",
+        "type",
+        "targetGroup"
+      ],
+      "type": "object"
+    },
+    "IAlbListenerFixedResponseConfig": {
+      "additionalProperties": false,
+      "description": "Application load balancer listener fixed response config\nIt returns a custom HTTP response.\nApplicable only when `type` under {@link ApplicationLoadBalancerListenerConfig listener} is `fixed-response`.",
+      "properties": {
+        "contentType": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The message to send back."
+        },
+        "messageBody": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The HTTP response code (2XX, 4XX, or 5XX)."
+        },
+        "statusCode": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The content type. Valid Values: text/plain | text/css | text/html | application/javascript | application/json"
+        }
+      },
+      "required": [
+        "statusCode"
+      ],
+      "type": "object"
+    },
+    "IAlbListenerForwardConfig": {
+      "additionalProperties": false,
+      "description": "Application Load balancer listener forward config. Used to define forward action.\nApplicable only when `type` under {@link ApplicationLoadBalancerListenerConfig listener} is `forward`.",
+      "properties": {
+        "targetGroupStickinessConfig": {
+          "$ref": "#/definitions/IAlbListenerTargetGroupStickinessConfig"
+        }
+      },
+      "type": "object"
+    },
+    "IAlbListenerRedirectConfig": {
+      "additionalProperties": false,
+      "description": "Application Load balancer listener redirect config. Used to define redirect action.\nApplicable only when `type` under {@link ApplicationLoadBalancerListenerConfig listener} is `redirect`.",
+      "properties": {
+        "host": {
+          "$ref": "#/definitions/NonEmptyString"
+        },
+        "path": {
+          "$ref": "#/definitions/NonEmptyString"
+        },
+        "port": {
+          "type": "number"
+        },
+        "protocol": {
+          "$ref": "#/definitions/NonEmptyString"
+        },
+        "query": {
+          "$ref": "#/definitions/NonEmptyString"
+        },
+        "statusCode": {
+          "$ref": "#/definitions/NonEmptyString"
+        }
+      },
+      "type": "object"
+    },
+    "IAlbListenerTargetGroupStickinessConfig": {
+      "additionalProperties": false,
+      "description": "Application Load balancer listener forward config target group stickiness config\nApplicable only when `type` under {@link ApplicationLoadBalancerListenerConfig listener} is `forward`.",
+      "properties": {
+        "durationSeconds": {
+          "description": "The time period, in seconds, during which requests from a client should be routed to the same target group. The range is 1-604800 seconds (7 days).",
+          "type": "number"
+        },
+        "enabled": {
+          "description": "Indicates whether target group stickiness is enabled.",
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "IAppConfigItem": {
+      "additionalProperties": false,
+      "description": "Application configuration.\nUsed to define two tier application configurations for the accelerator.",
+      "properties": {
+        "applicationLoadBalancer": {
+          "$ref": "#/definitions/IApplicationLoadBalancerConfig",
+          "description": "Application Load Balancer for the application"
+        },
+        "autoscaling": {
+          "$ref": "#/definitions/IAutoScalingConfig",
+          "description": "AutoScalingGroup for the application"
+        },
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "The location where the application will be deployed."
+        },
+        "launchTemplate": {
+          "$ref": "#/definitions/ILaunchTemplateConfig",
+          "description": "Launch Template for the application"
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The name of the application. This should be unique per application."
+        },
+        "networkLoadBalancer": {
+          "$ref": "#/definitions/INetworkLoadBalancerConfig",
+          "description": "Network Load Balancer for the application"
+        },
+        "targetGroups": {
+          "description": "Target groups for the application",
+          "items": {
+            "$ref": "#/definitions/ITargetGroupItem"
+          },
+          "type": "array"
+        },
+        "vpc": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "VPC where the application will be deployed. The value should be a reference to the vpc in the network config under `vpcs:`."
+        }
+      },
+      "required": [
+        "name",
+        "vpc",
+        "deploymentTargets"
+      ],
+      "type": "object"
+    },
+    "IApplicationLoadBalancerConfig": {
+      "additionalProperties": false,
+      "description": "Used to define Application Load Balancer configurations for the accelerator.",
+      "properties": {
+        "attributes": {
+          "$ref": "#/definitions/IAlbAttributesConfig",
+          "description": "Attributes for Application Load Balancer."
+        },
+        "listeners": {
+          "description": "Listeners for Application Load Balancer.",
+          "items": {
+            "$ref": "#/definitions/IAlbListenerConfig"
+          },
+          "type": "array"
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The name of the application load balancer"
+        },
+        "scheme": {
+          "$ref": "#/definitions/AlbSchemeEnum",
+          "description": "Internal or internet facing scheme for Application Load Balancer."
+        },
+        "securityGroups": {
+          "description": "Security Groups to attach to the Application Load Balancer.",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        },
+        "shareTargets": {
+          "$ref": "#/definitions/IShareTargets",
+          "description": "The location where the Application Load Balancer(s) will be deployed to.\n*"
+        },
+        "subnets": {
+          "description": "Subnets to launch the Application Load Balancer in.",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "subnets",
+        "securityGroups"
+      ],
+      "type": "object"
+    },
+    "IAutoScalingConfig": {
+      "additionalProperties": false,
+      "description": "Autoscaling group configuration for the application.",
+      "properties": {
+        "desiredSize": {
+          "description": "The desired capacity is the initial capacity of the Auto Scaling group at the time of its creation and the capacity it attempts to maintain. It can scale beyond this capacity if you configure auto scaling. This number must be greater than or equal to the minimum size of the group and less than or equal to the maximum size of the group.",
+          "type": "number"
+        },
+        "healthCheckGracePeriod": {
+          "description": "The amount of time, in seconds, that Amazon EC2 Auto Scaling waits before checking the health status of an EC2 instance that has come into service and marking it unhealthy due to a failed Elastic Load Balancing or custom health check. This is useful if your instances do not immediately pass these health checks after they enter the `InService` state. Defaults to 0 if unspecified.",
+          "type": "number"
+        },
+        "healthCheckType": {
+          "$ref": "#/definitions/AutoScalingHealthCheckTypeEnum",
+          "description": "The service to use for the health checks. The valid values are EC2 (default) and ELB. If you configure an Auto Scaling group to use load balancer (ELB) health checks, it considers the instance unhealthy if it fails either the EC2 status checks or the load balancer health checks."
+        },
+        "launchTemplate": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Information used to specify the launch template and version to use to launch instances."
+        },
+        "maxSize": {
+          "description": "The maximum size of the group.",
+          "type": "number"
+        },
+        "minSize": {
+          "description": "The minimum size of the group.",
+          "type": "number"
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The name of the Auto Scaling group. This name must be unique per Region per account. The name can contain any ASCII character 33 to 126 including most punctuation characters, digits, and upper and lowercased letters.\n*Note* You cannot use a colon (:) in the name."
+        },
+        "subnets": {
+          "description": "List of subnet names for a virtual private cloud (VPC) where instances in the Auto Scaling group can be created. These subnets should  be created under the VPC in network-config.yaml.",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        },
+        "targetGroups": {
+          "description": "Target group name array to associate with the Auto Scaling group. These names are from the  {@link  TargetGroupItemConfig target group }  set in the application. Instances are registered as targets with the target groups. The target groups receive incoming traffic and route requests to one or more registered targets.",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "minSize",
+        "maxSize",
+        "desiredSize",
+        "launchTemplate",
+        "subnets"
+      ],
+      "type": "object"
+    },
+    "IBlockDeviceMappingItem": {
+      "additionalProperties": false,
+      "description": "The parameters for a block device mapping in launch template.",
+      "properties": {
+        "deviceName": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The device name (for example, /dev/sdh or xvdh)."
+        },
+        "ebs": {
+          "$ref": "#/definitions/IEbsItem",
+          "description": "Parameters used to automatically set up EBS volumes when the instance is launched."
+        }
+      },
+      "required": [
+        "deviceName"
+      ],
+      "type": "object"
+    },
+    "ICfnParameter": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "value"
+      ],
+      "type": "object"
+    },
+    "ICloudFormationStack": {
+      "additionalProperties": false,
+      "description": "Defines a custom CloudFormation Stack to be deployed to the environment.",
+      "properties": {
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "CloudFormation Stack deployment targets"
+        },
+        "description": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The description is to used to provide more information about the stack."
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The friendly name that will be used as a base for the created CloudFormation Stack Name. The name should not contain any spaces as this isn't supported by the Accelerator."
+        },
+        "parameters": {
+          "description": "The parameters to pass to the stack.",
+          "items": {
+            "$ref": "#/definitions/ICfnParameter"
+          },
+          "type": "array"
+        },
+        "regions": {
+          "description": "A list of AWS regions to deploy the stack to.",
+          "items": {
+            "$ref": "#/definitions/Region"
+          },
+          "type": "array"
+        },
+        "runOrder": {
+          "description": "The order to deploy the stack relative to the other stacks. Must be a positive integer. To deploy stacks in parallel, set runOrder of each stack to 1.",
+          "type": "number"
+        },
+        "template": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The file path to the template file defining the stack."
+        },
+        "terminationProtection": {
+          "description": "This determines whether to enable termination protection for the stack.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "deploymentTargets",
+        "name",
+        "regions",
+        "runOrder",
+        "template",
+        "terminationProtection"
+      ],
+      "type": "object"
+    },
+    "ICloudFormationStackSet": {
+      "additionalProperties": false,
+      "description": "Defines a custom CloudFormation StackSet to be deployed to the environment.",
+      "properties": {
+        "capabilities": {
+          "description": "The CloudFormation capabilities enabled to deploy the stackset.",
+          "items": {
+            "enum": [
+              "CAPABILITY_IAM",
+              "CAPABILITY_NAMED_IAM",
+              "CAPABILITY_AUTO_EXPAND"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "CloudFormation StackSet deployment targets"
+        },
+        "description": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The description is to used to provide more information about the stackset."
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The friendly name that will be used as a base for the created CloudFormation StackSet Name. The name should not contain any spaces as this isn't supported by the Accelerator."
+        },
+        "parameters": {
+          "description": "The parameters to be passed to the stackset.",
+          "items": {
+            "$ref": "#/definitions/ICfnParameter"
+          },
+          "type": "array"
+        },
+        "regions": {
+          "description": "A list of regions to deploy the stackset.",
+          "items": {
+            "$ref": "#/definitions/Region"
+          },
+          "type": "array"
+        },
+        "template": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The file path to the template file used for deployment."
+        }
+      },
+      "required": [
+        "deploymentTargets",
+        "name",
+        "regions",
+        "template"
+      ],
+      "type": "object"
+    },
+    "ICustomizationConfig": {
+      "additionalProperties": false,
+      "description": "Defines CloudFormation Stacks and StackSets to be deployed to the environment.\nThis feature supports the deployment of customer-provided CloudFormation templates to AWS\naccounts and/or organizational units. These deployments can leverage independent CloudFormation stacks\nor CloudFormation StackSets depending on the customer's deployment preference.",
+      "properties": {
+        "cloudFormationStackSets": {
+          "items": {
+            "$ref": "#/definitions/ICloudFormationStackSet"
+          },
+          "type": "array"
+        },
+        "cloudFormationStacks": {
+          "items": {
+            "$ref": "#/definitions/ICloudFormationStack"
+          },
+          "type": "array"
+        },
+        "serviceCatalogPortfolios": {
+          "items": {
+            "$ref": "#/definitions/IPortfolioConfig"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "ICustomizationsConfig": {
+      "additionalProperties": false,
+      "description": "Defines custom CloudFormation and external web and application tier resources. We recommend creating resources\nwith native LZA features where possible.",
+      "properties": {
+        "applications": {
+          "items": {
+            "$ref": "#/definitions/IAppConfigItem"
+          },
+          "type": "array"
+        },
+        "customizations": {
+          "$ref": "#/definitions/ICustomizationConfig"
+        },
+        "firewalls": {
+          "$ref": "#/definitions/IEc2FirewallConfig"
+        }
+      },
+      "type": "object"
+    },
+    "IDeploymentTargets": {
+      "additionalProperties": false,
+      "properties": {
+        "accounts": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "excludedAccounts": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "excludedRegions": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "organizationalUnits": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "IEbsItem": {
+      "additionalProperties": false,
+      "description": "The parameters for a block device for an EBS volume.",
+      "properties": {
+        "deleteOnTermination": {
+          "description": "Indicates whether the EBS volume is deleted on instance termination.",
+          "type": "boolean"
+        },
+        "encrypted": {
+          "description": "Indicates whether the EBS volume is encrypted. Encrypted volumes can only be attached to instances that support Amazon EBS encryption. If you are creating a volume from a snapshot, you can't specify an encryption value. If encrypted is `true` and kmsKeyId is not provided, then accelerator checks for  {@link  EbsDefaultVolumeEncryptionConfig default ebs encryption }  in the config.",
+          "type": "boolean"
+        },
+        "iops": {
+          "description": "The number of I/O operations per second (IOPS). For gp3, io1, and io2 volumes, this represents the number of IOPS that are provisioned for the volume. For gp2 volumes, this represents the baseline performance of the volume and the rate at which the volume accumulates I/O credits for bursting. This parameter is supported for io1, io2, and gp3 volumes only. This parameter is not supported for gp2, st1, sc1, or standard volumes.",
+          "type": "number"
+        },
+        "kmsKeyId": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The ARN of the symmetric AWS Key Management Service (AWS KMS) CMK used for encryption."
+        },
+        "snapshotId": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The ID of the snapshot."
+        },
+        "throughput": {
+          "description": "The throughput to provision for a gp3 volume, with a maximum of 1,000 MiB/s. Valid Range: Minimum value of 125. Maximum value of 1000.",
+          "type": "number"
+        },
+        "volumeSize": {
+          "description": "The size of the volume, in GiBs. You must specify either a snapshot ID or a volume size. The following are the supported volumes sizes for each volume type:\n- gp2 and gp3: 1-16,384\n- io1 and io2: 4-16,384\n- st1 and sc1: 125-16,384\n- standard: 1-1,024",
+          "type": "number"
+        },
+        "volumeType": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The volume type. Valid Values: `standard | io1 | io2 | gp2 | sc1 | st1 | gp3`"
+        }
+      },
+      "type": "object"
+    },
+    "IEc2FirewallAutoScalingGroupConfig": {
+      "additionalProperties": false,
+      "description": "EC2 firewall autoscaling group configuration.\nUsed to define EC2-based firewall instances to be deployed in an autoscaling group.\n\n```\n- name: accelerator-firewall-asg\n  autoscaling:\n    name: firewall-asg\n    maxSize: 4\n    minSize: 1\n    desiredSize: 2\n    launchTemplate: firewall-lt\n    healthCheckGracePeriod: 300\n    healthCheckType: ELB\n    targetGroups:\n      - firewall-gwlb-tg\n    subnets:\n      - firewall-subnet-a\n      - firewall-subnet-b\n  launchTemplate:\n    name: firewall-lt\n    blockDeviceMappings:\n      - deviceName: /dev/xvda\n        ebs:\n          deleteOnTermination: true\n          encrypted: true\n          volumeSize: 20\n    enforceImdsv2: true\n    iamInstanceProfile: firewall-profile\n    imageId: ami-123xyz\n    instanceType: c6i.xlarge\n    networkInterfaces:\n      - deleteOnTermination: true\n        description: Primary interface\n        deviceIndex: 0\n        groups:\n          - firewall-data-sg\n      - deleteOnTermination: true\n        description: Management interface\n        deviceIndex: 1\n        groups:\n          - firewall-mgmt-sg\n    userData: path/to/userdata.txt\n  vpc: Network-Inspection\n  tags: []\n```",
+      "properties": {
+        "account": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "(OPTIONAL) The logical name of the account to deploy the firewall autoscaling group to"
+        },
+        "autoscaling": {
+          "$ref": "#/definitions/IAutoScalingConfig",
+          "description": "An AutoScaling Group configuration"
+        },
+        "configDir": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "(OPTIONAL) Specify a relative S3 directory path to pull a firewall configuration directory.\n\nEither configFile or configDir can be set but not both.\n\nFor example, if your S3 folder path is `s3://path/to/config`, specify `path/to/config` for this property.\n\n**NOTE:** The custom resource backing this feature does not force update on every core pipeline run. To update the resource, update the name of the configuration directory."
+        },
+        "configFile": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "(OPTIONAL) Specify a relative S3 object path to pull a firewall configuration file from.\n\nFor example, if your S3 object path is `s3://path/to/config.txt`, specify `path/to/config.txt` for this property.\n\n**NOTE:** The custom resource backing this feature does not force update on every core pipeline run. To update the resource, update the name of the configuration file."
+        },
+        "launchTemplate": {
+          "$ref": "#/definitions/ILaunchTemplateConfig",
+          "description": "The launch template for the firewall instance"
+        },
+        "licenseFile": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "(OPTIONAL) Specify a relative S3 object path to pull a firewall license file from.\n\nFor example, if your S3 object path is `s3://path/to/license.lic`, specify `path/to/license.lic` for this property.\n\n**NOTE:** The custom resource backing this feature does not force update on every core pipeline run. To update the resource, update the name of the license file."
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The friendly name of the firewall instance"
+        },
+        "staticReplacements": {
+          "description": "(OPTIONAL) Static firewall configuration replacements definition.",
+          "items": {
+            "$ref": "#/definitions/IFirewallStaticReplacementsConfig"
+          },
+          "type": "array"
+        },
+        "tags": {
+          "description": "(OPTIONAL) An array of tags",
+          "items": {
+            "$ref": "#/definitions/ITag"
+          },
+          "type": "array"
+        },
+        "vpc": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The friendly name of the VPC to deploy the firewall instance to"
+        }
+      },
+      "required": [
+        "name",
+        "autoscaling",
+        "launchTemplate",
+        "vpc"
+      ],
+      "type": "object"
+    },
+    "IEc2FirewallConfig": {
+      "additionalProperties": false,
+      "description": "EC2 firewall configuration.\nUsed to define EC2-based firewall and management appliances",
+      "properties": {
+        "autoscalingGroups": {
+          "description": "Define EC2-based firewall instances in autoscaling groups",
+          "items": {
+            "$ref": "#/definitions/IEc2FirewallAutoScalingGroupConfig"
+          },
+          "type": "array"
+        },
+        "instances": {
+          "description": "Define EC2-based firewall standalone instances",
+          "items": {
+            "$ref": "#/definitions/IEc2FirewallInstanceConfig"
+          },
+          "type": "array"
+        },
+        "managerInstances": {
+          "description": "Define EC2-based firewall management instances",
+          "items": {
+            "$ref": "#/definitions/IEc2FirewallInstanceConfig"
+          },
+          "type": "array"
+        },
+        "targetGroups": {
+          "description": "Define target groups for EC2-based firewalls",
+          "items": {
+            "$ref": "#/definitions/ITargetGroupItem"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "IEc2FirewallInstanceConfig": {
+      "additionalProperties": false,
+      "description": "EC2 firewall instance configuration.\nUse to define an array of standalone firewall instances",
+      "properties": {
+        "account": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "(OPTIONAL) The logical name of the account to deploy the firewall instance to"
+        },
+        "configDir": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "(OPTIONAL) Specify a relative S3 directory path to pull a firewall configuration directory.\n\nEither configFile or configDir can be set but not both.\n\nFor example, if your S3 folder path is `s3://path/to/config`, specify `path/to/config` for this property.\n\n**NOTE:** The custom resource backing this feature does not force update on every core pipeline run. To update the resource, update the name of the configuration directory."
+        },
+        "configFile": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "(OPTIONAL) Specify a relative S3 object path to pull a firewall configuration file from.\n\nFor example, if your S3 object path is `s3://path/to/config.txt`, specify `path/to/config.txt` for this property.\n\n**NOTE:** The custom resource backing this feature does not force update on every core pipeline run. To update the resource, update the name of the configuration file."
+        },
+        "detailedMonitoring": {
+          "description": "(OPTIONAL) Specify true to enable detailed monitoring. Otherwise, basic monitoring is enabled.",
+          "type": "boolean"
+        },
+        "launchTemplate": {
+          "$ref": "#/definitions/ILaunchTemplateConfig",
+          "description": "The launch template for the firewall instance"
+        },
+        "licenseFile": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "(OPTIONAL) Specify a relative S3 object path to pull a firewall license file from.\n\nFor example, if your S3 object path is `s3://path/to/license.lic`, specify `path/to/license.lic` for this property.\n\n**NOTE:** The custom resource backing this feature does not force update on every core pipeline run. To update the resource, update the name of the license file."
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The friendly name of the firewall instance"
+        },
+        "staticReplacements": {
+          "description": "(OPTIONAL) Static firewall configuration replacements definition.",
+          "items": {
+            "$ref": "#/definitions/IFirewallStaticReplacementsConfig"
+          },
+          "type": "array"
+        },
+        "tags": {
+          "description": "(OPTIONAL) An array of tags",
+          "items": {
+            "$ref": "#/definitions/ITag"
+          },
+          "type": "array"
+        },
+        "terminationProtection": {
+          "description": "(OPTIONAL) If you set this parameter to true , you can't terminate the instance using the Amazon EC2 console, CLI, or API.\n\nMore information: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingDisableAPITermination",
+          "type": "boolean"
+        },
+        "vpc": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The friendly name of the VPC to deploy the firewall instance to"
+        }
+      },
+      "required": [
+        "name",
+        "launchTemplate",
+        "vpc"
+      ],
+      "type": "object"
+    },
+    "IFirewallStaticReplacementsConfig": {
+      "additionalProperties": false,
+      "description": "Firewall Static Replacements Config",
+      "properties": {
+        "key": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The key name for the static replacement"
+        },
+        "value": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The value of the static replacement"
+        }
+      },
+      "required": [
+        "key",
+        "value"
+      ],
+      "type": "object"
+    },
+    "ILaunchTemplateConfig": {
+      "additionalProperties": false,
+      "description": "Configure a launch template for the application.",
+      "properties": {
+        "blockDeviceMappings": {
+          "items": {
+            "$ref": "#/definitions/IBlockDeviceMappingItem"
+          },
+          "type": "array"
+        },
+        "enforceImdsv2": {
+          "description": "By default,  {@link  https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-service.html IMDSv2 }   is enabled. Disable it by setting this to false.",
+          "type": "boolean"
+        },
+        "iamInstanceProfile": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Name of the instance profile created by accelerator in iam-config.yaml under roleSets"
+        },
+        "imageId": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Valid AMI ID or a reference to ssm parameter store to get AMI ID. If ssm parameter is referenced it should follow the pattern ${ACCEL_LOOKUP::ImageId:/path/to/ssm/parameter/for/ami}\n\nFor example to get the latest x86_64 amazon linux 2 ami, the value would be `${ACCEL_LOOKUP::ImageId:/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2}`"
+        },
+        "instanceType": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Valid instance type which can be launched in the target account and region."
+        },
+        "keyPair": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The name of the key pair. LZA does not create keypair. This should exist in the account/region or else deployment will fail."
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString"
+        },
+        "networkInterfaces": {
+          "description": "One or more network interfaces. If you specify a network interface, you must specify any security groups and subnets as part of the network interface.",
+          "items": {
+            "$ref": "#/definitions/INetworkInterfaceItem"
+          },
+          "type": "array"
+        },
+        "securityGroups": {
+          "description": "One or more security group names. These should be created under the VPC in network-config.yaml",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        },
+        "userData": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Path to user data. The path is relative to the config repository and the content should be in regular text. It is encoded in base64 before passing in to Launch Template"
+        }
+      },
+      "required": [
+        "name",
+        "imageId",
+        "instanceType"
+      ],
+      "type": "object"
+    },
+    "INetworkInterfaceItem": {
+      "additionalProperties": false,
+      "description": "The parameters for a network interface.",
+      "properties": {
+        "associateCarrierIpAddress": {
+          "description": "Associates a Carrier IP address with eth0 for a new network interface. Use this option when you launch an instance in a Wavelength Zone and want to associate a Carrier IP address with the network interface.",
+          "type": "boolean"
+        },
+        "associateElasticIp": {
+          "description": "Associate an elastic IP with the interface",
+          "type": "boolean"
+        },
+        "associatePublicIpAddress": {
+          "description": "Associates a public IPv4 address with eth0 for a new network interface.",
+          "type": "boolean"
+        },
+        "deleteOnTermination": {
+          "description": "Indicates whether the network interface is deleted when the instance is terminated.",
+          "type": "boolean"
+        },
+        "description": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "A description for the network interface."
+        },
+        "deviceIndex": {
+          "description": "The device index for the network interface attachment.",
+          "type": "number"
+        },
+        "groups": {
+          "description": "Security group names to associate with this network interface.",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        },
+        "interfaceType": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The type of network interface. To create an Elastic Fabric Adapter (EFA), specify efa. If you are not creating an EFA, specify interface or omit this parameter. Valid values: `interface | efa`"
+        },
+        "networkCardIndex": {
+          "description": "The index of the network card. Some instance types support multiple network cards. The primary network interface must be assigned to network card index 0. The default is network card index 0.",
+          "type": "number"
+        },
+        "networkInterfaceId": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The ID of the network interface."
+        },
+        "privateIpAddress": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The primary private IPv4 address of the network interface."
+        },
+        "privateIpAddresses": {
+          "description": "One or more private IPv4 addresses.",
+          "items": {
+            "$ref": "#/definitions/IPrivateIpAddressItem"
+          },
+          "type": "array"
+        },
+        "secondaryPrivateIpAddressCount": {
+          "description": "The number of secondary private IPv4 addresses to assign to a network interface.",
+          "type": "number"
+        },
+        "sourceDestCheck": {
+          "description": "If the value is true , source/destination checks are enabled; otherwise, they are disabled. The default value is true. You must disable source/destination checks if the instance runs services such as network address translation, routing, or firewalls.",
+          "type": "boolean"
+        },
+        "subnetId": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Valid subnet name from network-config.yaml under the same vpc"
+        }
+      },
+      "type": "object"
+    },
+    "INetworkLoadBalancerConfig": {
+      "additionalProperties": false,
+      "description": "Network Load Balancer configuration.",
+      "properties": {
+        "crossZoneLoadBalancing": {
+          "description": "Cross Zone load balancing for Network Load Balancer.",
+          "type": "boolean"
+        },
+        "deletionProtection": {
+          "description": "Deletion protection for Network Load Balancer.",
+          "type": "boolean"
+        },
+        "listeners": {
+          "description": "Listeners for Network Load Balancer.",
+          "items": {
+            "$ref": "#/definitions/INlbListenerConfig"
+          },
+          "type": "array"
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Name for Network Load Balancer."
+        },
+        "scheme": {
+          "$ref": "#/definitions/LoadBalancerSchemeEnum",
+          "description": "Load Balancer scheme. If undefined, the default of  {@link  https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_CreateLoadBalancer.html ELBv2 CreateLoadBalancer API }  is used."
+        },
+        "subnets": {
+          "description": "Subnets to launch the Network Load Balancer in.",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "subnets",
+        "name"
+      ],
+      "type": "object"
+    },
+    "INlbListenerConfig": {
+      "additionalProperties": false,
+      "description": "Application Load Balancer listener config. Currently only action type of `forward`,  `redirect` and `fixed-response` is allowed.",
+      "properties": {
+        "alpnPolicy": {
+          "$ref": "#/definitions/AlpnPolicyEnum",
+          "description": "Application-Layer Protocol Negotiation (ALPN) policy} for TLS encrypted traffic"
+        },
+        "certificate": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "ACM ARN of the certificate to be associated with the listener."
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Name for Listener."
+        },
+        "port": {
+          "description": "Port where the traffic is directed to.",
+          "type": "number"
+        },
+        "protocol": {
+          "$ref": "#/definitions/NlbProtocolEnum",
+          "description": "Protocol used for the traffic. The supported protocols are TCP, TLS, UDP, or TCP_UDP."
+        },
+        "sslPolicy": {
+          "$ref": "#/definitions/SslPolicyNlbEnum",
+          "description": "SSL policy for TLS encrypted traffic"
+        },
+        "targetGroup": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Target Group to direct the traffic to."
+        }
+      },
+      "required": [
+        "name",
+        "targetGroup"
+      ],
+      "type": "object"
+    },
+    "INlbTargetType": {
+      "additionalProperties": false,
+      "description": "The codes to use when checking for a successful response from a target. If the protocol version is gRPC, these are gRPC codes. Otherwise, these are HTTP codes.",
+      "properties": {
+        "account": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Friendly Account Name where the NLB is deployed"
+        },
+        "nlbName": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Friendly name of the NLB"
+        },
+        "region": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Region where the NLB is deployed"
+        }
+      },
+      "required": [
+        "account",
+        "region",
+        "nlbName"
+      ],
+      "type": "object"
+    },
+    "IPortfolioAssociatoinConfig": {
+      "additionalProperties": false,
+      "description": "Portfolio Associations configuration",
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Indicates the name of the principal to associate the portfolio with."
+        },
+        "propagateAssociation": {
+          "description": "Indicates whether the principal association should be created in accounts the portfolio is shared with. Verify the IAM principal exists in all accounts the portfolio is shared with before enabling.",
+          "type": "boolean"
+        },
+        "type": {
+          "$ref": "#/definitions/PortfolioAssociationType",
+          "description": "Indicates the type of portfolio association, valid values are: Group, User, and Role."
+        }
+      },
+      "required": [
+        "type",
+        "name"
+      ],
+      "type": "object"
+    },
+    "IPortfolioConfig": {
+      "additionalProperties": false,
+      "description": "Service Catalog Portfolios configuration",
+      "properties": {
+        "account": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The name of the account to deploy the portfolio."
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The name of the portfolio"
+        },
+        "portfolioAssociations": {
+          "description": "Configuration of portfolio associations to give access to IAM principals.",
+          "items": {
+            "$ref": "#/definitions/IPortfolioAssociatoinConfig"
+          },
+          "type": "array"
+        },
+        "products": {
+          "description": "Product Configuration",
+          "items": {
+            "$ref": "#/definitions/IProductConfig"
+          },
+          "type": "array"
+        },
+        "provider": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The provider of the portfolio"
+        },
+        "regions": {
+          "description": "The region names to deploy the portfolio.",
+          "items": {
+            "$ref": "#/definitions/Region"
+          },
+          "type": "array"
+        },
+        "shareTagOptions": {
+          "description": "Whether or not to share TagOptions with other account(s)/OU(s)",
+          "type": "boolean"
+        },
+        "shareTargets": {
+          "$ref": "#/definitions/IShareTargets",
+          "description": "Portfolio share target. Sharing portfolios to Organizational Units is only supported for portfolios in the Management account."
+        },
+        "tagOptions": {
+          "description": "Portfolio TagOptions configuration",
+          "items": {
+            "$ref": "#/definitions/ITagOptionsConfig"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "account",
+        "regions",
+        "provider"
+      ],
+      "type": "object"
+    },
+    "IPrivateIpAddressItem": {
+      "additionalProperties": false,
+      "description": "Configure a secondary private IPv4 address for a network interface.",
+      "properties": {
+        "primary": {
+          "description": "Indicates whether the private IPv4 address is the primary private IPv4 address. Only one IPv4 address can be designated as primary.",
+          "type": "boolean"
+        },
+        "privateIpAddress": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The private IPv4 address."
+        }
+      },
+      "type": "object"
+    },
+    "IProductConfig": {
+      "additionalProperties": false,
+      "description": "Service Catalog Products configuration",
+      "properties": {
+        "constraints": {
+          "$ref": "#/definitions/IProductConstraintConfig",
+          "description": "Product Constraint configuration"
+        },
+        "description": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Product description"
+        },
+        "distributor": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The name of the product's publisher."
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The name of the product"
+        },
+        "owner": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The owner of the product"
+        },
+        "support": {
+          "$ref": "#/definitions/IProductSupportConfig",
+          "description": "Product support details."
+        },
+        "tagOptions": {
+          "description": "Product TagOptions configuration",
+          "items": {
+            "$ref": "#/definitions/ITagOptionsConfig"
+          },
+          "type": "array"
+        },
+        "versions": {
+          "description": "Product version configuration",
+          "items": {
+            "$ref": "#/definitions/IProductVersionConfig"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "owner",
+        "versions"
+      ],
+      "type": "object"
+    },
+    "IProductConstraintConfig": {
+      "additionalProperties": false,
+      "description": "Service Catalog Product Constraint configuration. For more information see https://docs.aws.amazon.com/servicecatalog/latest/adminguide/constraints.html",
+      "properties": {
+        "launch": {
+          "$ref": "#/definitions/IProductLaunchConstraintConfig",
+          "description": "Launch constraint role name and type, supports LocalRole or Role."
+        },
+        "notifications": {
+          "description": "A list of SNS topic names to stream product notifications to",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        },
+        "tagUpdate": {
+          "description": "Determines if Service Catalog Tag Update constraint is enabled",
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "IProductLaunchConstraintConfig": {
+      "additionalProperties": false,
+      "description": "Service Catalog Product Constraint configuration. For more information see https://docs.aws.amazon.com/servicecatalog/latest/adminguide/constraints.html",
+      "properties": {
+        "role": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The name of the IAM Role."
+        },
+        "type": {
+          "$ref": "#/definitions/ProductLaunchConstraintType",
+          "description": "The type of launch constraint, either Role or LocalRole. For more information, see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-servicecatalog-launchroleconstraint.html"
+        }
+      },
+      "required": [
+        "type",
+        "role"
+      ],
+      "type": "object"
+    },
+    "IProductSupportConfig": {
+      "additionalProperties": false,
+      "description": "Product Support configuration",
+      "properties": {
+        "description": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Support description of how users should use email contact and support link."
+        },
+        "email": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The email address to report issues with the product"
+        },
+        "url": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The url to the site where users can find support information or file tickets."
+        }
+      },
+      "type": "object"
+    },
+    "IProductVersionConfig": {
+      "additionalProperties": false,
+      "description": "Product Versions configuration",
+      "properties": {
+        "description": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The version description"
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Name of the version of the product"
+        },
+        "template": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The product template."
+        }
+      },
+      "required": [
+        "name",
+        "template"
+      ],
+      "type": "object"
+    },
+    "IShareTargets": {
+      "additionalProperties": false,
+      "properties": {
+        "accounts": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "organizationalUnits": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "ITag": {
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "value"
+      ],
+      "type": "object"
+    },
+    "ITagOptionsConfig": {
+      "additionalProperties": false,
+      "description": "Service Catalog TagOptions configuration.",
+      "properties": {
+        "key": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The tag key"
+        },
+        "values": {
+          "description": "An array of values that can be used for the tag key",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "key",
+        "values"
+      ],
+      "type": "object"
+    },
+    "ITargetGroupAttributeTypes": {
+      "additionalProperties": false,
+      "description": "Set attributes for target group.",
+      "properties": {
+        "algorithm": {
+          "$ref": "#/definitions/TargetGroupAttributeAlgorithm",
+          "description": "The load balancing algorithm determines how the load balancer selects targets when routing requests. The value is round_robin or least_outstanding_requests. The default is round_robin. The following attribute is supported only if the load balancer is an Application Load Balancer and the target is an instance or an IP address."
+        },
+        "appCookieDuration": {
+          "description": "The time period, in seconds, during which requests from a client should be routed to the same target. After this time period expires, the application-based cookie is considered stale. The range is 1 second to 1 week (604800 seconds). The default value is 1 day (86400 seconds). The following attribute is supported only if the load balancer is an Application Load Balancer and the target is an instance or an IP address.",
+          "type": "number"
+        },
+        "appCookieName": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Indicates the name of the application-based cookie. Names that start with the following prefixes are not allowed: AWSALB, AWSALBAPP, and AWSALBTG; they're reserved for use by the load balancer. The following attribute is supported only if the load balancer is an Application Load Balancer and the target is an instance or an IP address."
+        },
+        "connectionTermination": {
+          "description": "Indicates whether the load balancer terminates connections at the end of the deregistration timeout. The value is true or false. The default is false. The following attribute is supported only by Network Load Balancers.",
+          "type": "boolean"
+        },
+        "deregistrationDelay": {
+          "description": "The amount of time, in seconds, for Elastic Load Balancing to wait before changing the state of a deregistering target from draining to unused. The range is 0-3600 seconds. The default value is 300 seconds.",
+          "type": "number"
+        },
+        "lbCookieDuration": {
+          "description": "The time period, in seconds, during which requests from a client should be routed to the same target. After this time period expires, the load balancer-generated cookie is considered stale. The range is 1 second to 1 week (604800 seconds). The default value is 1 day (86400 seconds). The following attribute is supported only if the load balancer is an Application Load Balancer and the target is an instance or an IP address.",
+          "type": "number"
+        },
+        "preserveClientIp": {
+          "description": "Indicates whether client IP preservation is enabled. The value is true or false. The default is disabled if the target group type is IP address and the target group protocol is TCP or TLS. Otherwise, the default is enabled. Client IP preservation cannot be disabled for UDP and TCP_UDP target groups. The following attribute is supported only by Network Load Balancers.",
+          "type": "boolean"
+        },
+        "proxyProtocolV2": {
+          "description": "Indicates whether Proxy Protocol version 2 is enabled. The value is true or false. The default is false. The following attribute is supported only by Network Load Balancers.",
+          "type": "boolean"
+        },
+        "slowStart": {
+          "description": "The time period, in seconds, during which a newly registered target receives an increasing share of the traffic to the target group. After this time period ends, the target receives its full share of traffic. The range is 30-900 seconds (15 minutes). The default is 0 seconds (disabled). The following attribute is supported only if the load balancer is an Application Load Balancer and the target is an instance or an IP address.",
+          "type": "number"
+        },
+        "stickiness": {
+          "description": "Indicates whether target stickiness is enabled. The value is true or false. The default is false.",
+          "type": "boolean"
+        },
+        "stickinessType": {
+          "$ref": "#/definitions/TargetGroupAttributeStickinessType",
+          "description": "Indicates the type of stickiness. The possible values are:  - lb_cookie and app_cookie for Application Load Balancers.  - source_ip for Network Load Balancers.  - source_ip_dest_ip and source_ip_dest_ip_proto for Gateway Load Balancers"
+        },
+        "targetFailover": {
+          "$ref": "#/definitions/TargetGroupTargetFailoverType",
+          "description": "Indicates how the Gateway Load Balancer handles existing flows when a target is deregistered or becomes unhealthy. The possible values are rebalance and no_rebalance. The default is no_rebalance"
+        }
+      },
+      "type": "object"
+    },
+    "ITargetGroupHealthCheckType": {
+      "additionalProperties": false,
+      "description": "Configure health check for target group.",
+      "properties": {
+        "interval": {
+          "description": "The approximate amount of time, in seconds, between health checks of an individual target. The range is 5-300. If the target group protocol is TCP, TLS, UDP, TCP_UDP, HTTP or HTTPS, the default is 30 seconds. If the target group protocol is GENEVE, the default is 10 seconds.",
+          "type": "number"
+        },
+        "path": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "[HTTP/HTTPS health checks] The destination for health checks on the targets. [HTTP1 or HTTP2 protocol version] The ping path. The default is /. [GRPC protocol version] The path of a custom health check method with the format /package.service/method. The default is /AWS.ALB/healthcheck."
+        },
+        "port": {
+          "description": "The port the load balancer uses when performing health checks on targets. If the protocol is HTTP, HTTPS, TCP, TLS, UDP, or TCP_UDP, the default is `traffic-port`, which is the port on which each target receives traffic from the load balancer. If the protocol is GENEVE, the default is port 80.",
+          "type": "number"
+        },
+        "protocol": {
+          "$ref": "#/definitions/TargetGroupHealthCheckProtocolType",
+          "description": "The protocol the load balancer uses when performing health checks on targets. For Application Load Balancers, the default is HTTP. For Network Load Balancers and Gateway Load Balancers, the default is TCP. The TCP protocol is not supported for health checks if the protocol of the target group is HTTP or HTTPS. GENEVE, TLS, UDP, and TCP_UDP protocols are not supported for health checks."
+        },
+        "timeout": {
+          "description": "The amount of time, in seconds, during which no response from a target means a failed health check. The range is 2–120 seconds. For target groups with a protocol of HTTP, the default is 6 seconds. For target groups with a protocol of TCP, TLS or HTTPS, the default is 10 seconds. For target groups with a protocol of GENEVE, the default is 5 seconds.",
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
+    "ITargetGroupItem": {
+      "additionalProperties": false,
+      "description": "Target Group Configuration",
+      "properties": {
+        "attributes": {
+          "$ref": "#/definitions/ITargetGroupAttributeTypes",
+          "description": "Target Group Attributes."
+        },
+        "healthCheck": {
+          "$ref": "#/definitions/ITargetGroupHealthCheckType",
+          "description": "Target Group HealthCheck."
+        },
+        "matcher": {
+          "$ref": "#/definitions/ITargetGroupMatcherType",
+          "description": "The HTTP or gRPC codes to use when checking for a successful response from a target. For target groups with a protocol of TCP, TCP_UDP, UDP or TLS the range is 200-599. For target groups with a protocol of HTTP or HTTPS, the range is 200-499."
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The name of the target group. This value is used in  {@link  ApplicationLoadBalancerListenerConfig Application Load Balancer listeners } ,  {@link  NetworkLoadBalancerListenerConfig Network Load Balancer listeners } , and  {@link  AutoScalingConfig Autoscaling config } ."
+        },
+        "port": {
+          "description": "The port on which the targets receive traffic.",
+          "type": "number"
+        },
+        "protocol": {
+          "$ref": "#/definitions/TargetGroupProtocolType",
+          "description": "Target group protocol version. Should be one of HTTP, HTTPS, GENEVE, TCP, UDP, TCP_UDP or TLS The protocol to use for routing traffic to the targets. For Application Load Balancers, the supported protocols are HTTP and HTTPS. For Network Load Balancers, the supported protocols are TCP, TLS, UDP, or TCP_UDP. A TCP_UDP listener must be associated with a TCP_UDP target group. For Gateway Load Balancers, the supported protocol is GENEVE."
+        },
+        "protocolVersion": {
+          "$ref": "#/definitions/TargetGroupProtocolVersionType",
+          "description": "The protocol version. Should be one of 'GRPC', 'HTTP1', 'HTTP2'. Specify GRPC to send requests to targets using gRPC. Specify HTTP2 to send requests to targets using HTTP/2. The default is HTTP1, which sends requests to targets using HTTP/1.1."
+        },
+        "shareTargets": {
+          "$ref": "#/definitions/IShareTargets",
+          "description": "The accounts/OUs location where the Target Group will be deployed to."
+        },
+        "targets": {
+          "description": "Target group targets. These targets should be the friendly names assigned to firewall instances.",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/NonEmptyString"
+              },
+              {
+                "$ref": "#/definitions/INlbTargetType"
+              }
+            ]
+          },
+          "type": "array"
+        },
+        "threshold": {
+          "$ref": "#/definitions/ITargetGroupThresholdType",
+          "description": "Target Group Threshold."
+        },
+        "type": {
+          "$ref": "#/definitions/TargetGroupType",
+          "description": "The type of target that you must specify when registering targets with this target group. You can't specify targets for a target group using more than one target type.\n- `instance` - Register targets by instance ID. This is the default value.\n- `ip` - Register targets by IP address. You can specify IP addresses from the subnets of the virtual private cloud (VPC) for the target group, the RFC 1918 range (10.0.0.0/8, 172.16.0.0/12, and 192.168.0.0/16), and the RFC 6598 range (100.64.0.0/10). You can't specify publicly routable IP addresses. `alb` - Register a single Application Load Balancer as a target."
+        }
+      },
+      "required": [
+        "name",
+        "port",
+        "protocol",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ITargetGroupMatcherType": {
+      "additionalProperties": false,
+      "description": "Add the ability to target an NLB created by the Landing Zone Accelerator",
+      "properties": {
+        "grpcCode": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "You can specify values between 0 and 99. You can specify multiple values (for example, \"0,1\") or a range of values (for example, \"0-5\"). The default value is 12."
+        },
+        "httpCode": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "For Application Load Balancers, you can specify values between 200 and 499, with the default value being 200. You can specify multiple values (for example, \"200,202\") or a range of values (for example, \"200-299\"). For Network Load Balancers, you can specify values between 200 and 599, with the default value being 200-399. You can specify multiple values (for example, \"200,202\") or a range of values (for example, \"200-299\"). Note that when using shorthand syntax, some values such as commas need to be escaped."
+        }
+      },
+      "type": "object"
+    },
+    "ITargetGroupThresholdType": {
+      "additionalProperties": false,
+      "description": "Configure health check threshold for target group.",
+      "properties": {
+        "healthy": {
+          "description": "The number of consecutive health check successes required before considering a target healthy. The range is 2-10. If the target group protocol is TCP, TCP_UDP, UDP, TLS, HTTP or HTTPS, the default is 5. For target groups with a protocol of GENEVE, the default is 3.",
+          "type": "number"
+        },
+        "unhealthy": {
+          "description": "The number of consecutive health check failures required before considering a target unhealthy. The range is 2-10. If the target group protocol is TCP, TCP_UDP, UDP, TLS, HTTP or HTTPS, the default is 2. For target groups with a protocol of GENEVE, the default is 3.",
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
+    "LoadBalancerSchemeEnum": {
+      "enum": [
+        "internet-facing",
+        "internal"
+      ],
+      "type": "string"
+    },
+    "NlbProtocolEnum": {
+      "enum": [
+        "TCP",
+        "UDP",
+        "TLS",
+        "TCP_UDP"
+      ],
+      "type": "string"
+    },
+    "NonEmptyString": {
+      "description": "A string that has at least 1 character",
+      "minLength": 1,
+      "type": "string"
+    },
+    "PortfolioAssociationType": {
+      "enum": [
+        "User",
+        "Group",
+        "Role",
+        "PermissionSet"
+      ],
+      "type": "string"
+    },
+    "ProductLaunchConstraintType": {
+      "enum": [
+        "Role",
+        "LocalRole"
+      ],
+      "type": "string"
+    },
+    "Region": {
+      "description": "AWS Region",
+      "enum": [
+        "af-south-1",
+        "ap-east-1",
+        "ap-northeast-1",
+        "ap-northeast-2",
+        "ap-northeast-3",
+        "ap-south-1",
+        "ap-south-2",
+        "ap-southeast-1",
+        "ap-southeast-2",
+        "ap-southeast-3",
+        "ap-southeast-4",
+        "ca-central-1",
+        "cn-north-1",
+        "cn-northwest-1",
+        "eu-central-1",
+        "eu-central-2",
+        "eu-north-1",
+        "eu-south-1",
+        "eu-south-2",
+        "eu-west-1",
+        "eu-west-2",
+        "eu-west-3",
+        "il-central-1",
+        "me-central-1",
+        "me-south-1",
+        "sa-east-1",
+        "us-east-1",
+        "us-east-2",
+        "us-gov-west-1",
+        "us-gov-east-1",
+        "us-iso-east-1",
+        "us-isob-east-1",
+        "us-iso-west-1",
+        "us-west-1",
+        "us-west-2"
+      ],
+      "type": "string"
+    },
+    "RoutingHttpXffHeaderProcessingModeEnum": {
+      "enum": [
+        "append",
+        "preserve",
+        "remove"
+      ],
+      "type": "string"
+    },
+    "SslPolicyAlbEnum": {
+      "enum": [
+        "ELBSecurityPolicy-TLS-1-0-2015-04",
+        "ELBSecurityPolicy-TLS-1-1-2017-01",
+        "ELBSecurityPolicy-TLS-1-2-2017-01",
+        "ELBSecurityPolicy-TLS-1-2-Ext-2018-06",
+        "ELBSecurityPolicy-FS-2018-06",
+        "ELBSecurityPolicy-FS-1-1-2019-08",
+        "ELBSecurityPolicy-FS-1-2-2019-08",
+        "ELBSecurityPolicy-FS-1-2-Res-2019-08",
+        "ELBSecurityPolicy-2015-05",
+        "ELBSecurityPolicy-FS-1-2-Res-2020-10",
+        "ELBSecurityPolicy-2016-08"
+      ],
+      "type": "string"
+    },
+    "SslPolicyNlbEnum": {
+      "enum": [
+        "ELBSecurityPolicy-TLS-1-0-2015-04",
+        "ELBSecurityPolicy-TLS-1-1-2017-01",
+        "ELBSecurityPolicy-TLS-1-2-2017-01",
+        "ELBSecurityPolicy-TLS-1-2-Ext-2018-06",
+        "ELBSecurityPolicy-FS-2018-06",
+        "ELBSecurityPolicy-FS-1-1-2019-08",
+        "ELBSecurityPolicy-FS-1-2-2019-08",
+        "ELBSecurityPolicy-FS-1-2-Res-2019-08",
+        "ELBSecurityPolicy-2015-05",
+        "ELBSecurityPolicy-FS-1-2-Res-2020-10",
+        "ELBSecurityPolicy-TLS13-1-2-2021-06",
+        "ELBSecurityPolicy-TLS13-1-2-Res-2021-06",
+        "ELBSecurityPolicy-TLS13-1-2-Ext1-2021-06",
+        "ELBSecurityPolicy-TLS13-1-2-Ext2-2021-06",
+        "ELBSecurityPolicy-TLS13-1-1-2021-06",
+        "ELBSecurityPolicy-TLS13-1-0-2021-06",
+        "ELBSecurityPolicy-TLS13-1-3-2021-06",
+        "ELBSecurityPolicy-2016-08"
+      ],
+      "type": "string"
+    },
+    "TargetGroupAttributeAlgorithm": {
+      "enum": [
+        "round_robin",
+        "least_outstanding_requests"
+      ],
+      "type": "string"
+    },
+    "TargetGroupAttributeStickinessType": {
+      "enum": [
+        "lb_cookie",
+        "app_cookie",
+        "source_ip",
+        "source_ip_dest_ip",
+        "source_ip_dest_ip_proto"
+      ],
+      "type": "string"
+    },
+    "TargetGroupHealthCheckProtocolType": {
+      "enum": [
+        "HTTP",
+        "HTTPS",
+        "TCP"
+      ],
+      "type": "string"
+    },
+    "TargetGroupProtocolType": {
+      "enum": [
+        "TCP",
+        "TLS",
+        "UDP",
+        "TCP_UDP",
+        "HTTP",
+        "HTTPS",
+        "GENEVE"
+      ],
+      "type": "string"
+    },
+    "TargetGroupProtocolVersionType": {
+      "enum": [
+        "GRPC",
+        "HTTP1",
+        "HTTP2"
+      ],
+      "type": "string"
+    },
+    "TargetGroupTargetFailoverType": {
+      "enum": [
+        "no_rebalance",
+        "rebalance"
+      ],
+      "type": "string"
+    },
+    "TargetGroupType": {
+      "enum": [
+        "instance",
+        "ip",
+        "alb"
+      ],
+      "type": "string"
+    }
+  }
+}

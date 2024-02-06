@@ -15,6 +15,17 @@ keyManagementService:
         organizationalUnits:
           - Root
           - Infrastructure
+    - name: appEbsKey
+      alias: accelerator/test-key/app-ebs-key
+      policy: kms/kms-policy-01.json
+      description: Test KMS Key 2
+      enableKeyRotation: true
+      enabled: true
+      removalPolicy: destroy
+      deploymentTargets:
+        organizationalUnits:
+          - Root
+          - Infrastructure
 centralSecurityServices:
   delegatedAdminAccount: Audit
   ebsDefaultVolumeEncryption:

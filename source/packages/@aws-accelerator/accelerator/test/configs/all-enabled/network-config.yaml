@@ -379,7 +379,6 @@ centralNetworkServices:
   networkFirewall:
     firewalls:
       - name: accelerator-firewall
-        region: *HOME_REGION
         firewallPolicy: accelerator-policy
         subnets:
           - Network-Inspection-A

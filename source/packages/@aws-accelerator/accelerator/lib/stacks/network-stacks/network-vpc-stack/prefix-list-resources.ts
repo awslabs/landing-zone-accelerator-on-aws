@@ -13,9 +13,10 @@
 
 import {
   CustomerGatewayConfig,
-  NetworkConfigTypes,
   TransitGatewayConfig,
   TransitGatewayRouteEntryConfig,
+  TransitGatewayRouteTableVpnEntryConfig,
+  isNetworkType,
 } from '@aws-accelerator/config';
 import { PrefixList, PutSsmParameter, SsmParameterProps } from '@aws-accelerator/constructs';
 import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
@@ -93,7 +94,13 @@ export class PrefixListResources {
     //
     // Set CGWs in scope
     const plRouteVpnNames = ec2FirewallPrefixListRoutes.map(plRoute => {
-      if (plRoute.attachment && NetworkConfigTypes.transitGatewayRouteTableVpnEntryConfig.is(plRoute.attachment)) {
+      if (
+        plRoute.attachment &&
+        isNetworkType<TransitGatewayRouteTableVpnEntryConfig>(
+          'ITransitGatewayRouteTableVpnEntryConfig',
+          plRoute.attachment,
+        )
+      ) {
         return plRoute.attachment.vpnConnectionName;
       }
       return '';
@@ -176,7 +183,10 @@ export class PrefixListResources {
       const route = ec2FirewallPrefixListRoutes.find(
         routeItem =>
           routeItem.attachment &&
-          NetworkConfigTypes.transitGatewayRouteTableVpnEntryConfig.is(routeItem.attachment) &&
+          isNetworkType<TransitGatewayRouteTableVpnEntryConfig>(
+            'ITransitGatewayRouteTableVpnEntryConfig',
+            routeItem.attachment,
+          ) &&
           routeItem.attachment.vpnConnectionName === vpnItem.name,
       );
       if (route && route.destinationPrefixList) {

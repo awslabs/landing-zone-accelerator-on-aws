@@ -31,8 +31,6 @@
     "change-case": "4.1.2",
     "fs-extra": "11.1.0",
     "hash-sum": "2.0.0",
-    "io-ts": "2.2.20",
-    "io-ts-types": "0.5.19",
     "js-yaml": "4.1.0",
     "pascal-case": "3.1.2",
     "semver": "7.5.2",

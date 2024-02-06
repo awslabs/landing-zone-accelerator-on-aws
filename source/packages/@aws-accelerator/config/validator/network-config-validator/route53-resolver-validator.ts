@@ -15,7 +15,6 @@ import path from 'path';
 import * as fs from 'fs';
 import {
   NetworkConfig,
-  NetworkConfigTypes,
   DnsQueryLogsConfig,
   DnsFirewallRuleGroupConfig,
   DnsFirewallRulesConfig,
@@ -23,8 +22,10 @@ import {
   VpcConfig,
   SubnetConfig,
   ResolverRuleConfig,
+  VpcTemplatesConfig,
 } from '../../lib/network-config';
 import { NetworkValidatorFunctions } from './network-validator-functions';
+import { isNetworkType } from '../../lib/common';
 
 /**
  * Class to validate Route53Resolver
@@ -513,13 +514,13 @@ export class Route53ResolverValidator {
       errors.push(`[Resolver endpoint ${endpoint.name}]: VPC "${endpoint.vpc}" does not exist`);
     } else {
       // Validate the target is not a VPC template
-      if (NetworkConfigTypes.vpcTemplatesConfig.is(vpc)) {
+      if (isNetworkType<VpcTemplatesConfig>('IVpcTemplatesConfig', vpc)) {
         errors.push(
           `[Resolver endpoint ${endpoint.name}]: VPC templates are not a supported target VPC type for Resolver endpoints`,
         );
       }
 
-      if (NetworkConfigTypes.vpcConfig.is(vpc)) {
+      if (isNetworkType<VpcConfig>('IVpcConfig', vpc)) {
         // Validate we are targeting delegated admin account
         if (vpc.account !== delegatedAdmin) {
           errors.push(

@@ -12,10 +12,10 @@
  */
 
 import {
+  isNetworkType,
   NetworkAclConfig,
   NetworkAclSubnetSelection,
-  NetworkConfigTypes,
-  nonEmptyString,
+  NonEmptyString,
   VpcConfig,
   VpcTemplatesConfig,
 } from '@aws-accelerator/config';
@@ -211,7 +211,7 @@ export class NaclResources {
     //
     // IP target
     //
-    if (nonEmptyString.is(target)) {
+    if (isNetworkType<NonEmptyString>('NonEmptyString', target)) {
       this.stack.addLogs(LogLevel.INFO, `Evaluate IP Target ${target}`);
       if (isIpv6Cidr(target)) {
         return { ipv6CidrBlock: target };
@@ -222,7 +222,7 @@ export class NaclResources {
     //
     // Subnet Source target
     //
-    if (NetworkConfigTypes.networkAclSubnetSelection.is(target)) {
+    if (isNetworkType<NetworkAclSubnetSelection>('INetworkAclSubnetSelection', target)) {
       this.stack.addLogs(
         LogLevel.INFO,
         `Evaluate Subnet Source account:${target.account} vpc:${target.vpc} subnets:[${target.subnet}]`,

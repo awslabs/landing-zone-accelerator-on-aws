@@ -4090,7 +4090,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "managementAccountEmail": "all-enabled-management-account@example.com",
         "organizationsConfigS3Key": "29e639b0504791a9b73ef59577e6d45340c83df98a1ce73036279781280aa23f.yaml",
         "partition": "aws",
-        "replacementsConfigS3Key": "43902f9b49ec9d00c56c665a14e57bc669fb10695dd206414062c8ab5b4ec74e.yaml",
+        "replacementsConfigS3Key": "f33999d04768f056c04ef4417b310f958677ca8251322a60c18f88a4b2420d8a.yaml",
         "stackName": "AWSAccelerator-PrepareStack-111111111111-us-east-1",
         "uuid": "REPLACED-UUID",
       },

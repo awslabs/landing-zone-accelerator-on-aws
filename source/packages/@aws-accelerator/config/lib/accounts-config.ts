@@ -19,182 +19,35 @@ import * as path from 'path';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 
-import * as t from './common-types';
+import * as i from './models/accounts-config';
+import { DeploymentTargets, parseAccountsConfig } from './common';
 
 const logger = createLogger(['accounts-config']);
-/**
- * Accounts configuration items.
- */
-export class AccountsConfigTypes {
-  static readonly accountConfig = t.interface({
-    name: t.nonEmptyString,
-    description: t.optional(t.nonEmptyString),
-    email: t.nonEmptyString,
-    organizationalUnit: t.optional(t.nonEmptyString),
-    warm: t.optional(t.boolean),
-  });
 
-  static readonly govCloudAccountConfig = t.interface({
-    name: t.nonEmptyString,
-    description: t.optional(t.nonEmptyString),
-    email: t.nonEmptyString,
-    organizationalUnit: t.optional(t.nonEmptyString),
-    enableGovCloud: t.optional(t.boolean),
-  });
-
-  static readonly accountIdConfig = t.interface({
-    email: t.nonEmptyString,
-    accountId: t.nonEmptyString,
-  });
-
-  static readonly accountsConfig = t.interface({
-    mandatoryAccounts: t.array(t.union([this.accountConfig, this.govCloudAccountConfig])),
-    workloadAccounts: t.array(t.union([this.accountConfig, this.govCloudAccountConfig])),
-    accountIds: t.optional(t.array(this.accountIdConfig)),
-  });
-}
-
-export class AccountIdConfig implements t.TypeOf<typeof AccountsConfigTypes.accountIdConfig> {
+export class AccountIdConfig implements i.IAccountIdConfig {
   readonly email: string = '';
   readonly accountId: string = '';
   readonly status?: string = '';
 }
 
-/**
- * {@link AccountsConfig} / {@link AccountConfig}
- *
- * Account configuration
- *
- * @example
- * ```
- * - name: Workload01
- *   description: Workload account 01
- *   email: example-email+workload01@example.com
- *   organizationalUnit: Workloads
- *   warm: true
- * ```
- */
-export class AccountConfig implements t.TypeOf<typeof AccountsConfigTypes.accountConfig> {
-  /**
-   * The friendly name that is assigned to the account for reference within the Accelerator. The name will be used to reference
-   * this account in other configuration files and not to lookup the account in AWS.
-   *
-   * For pre-existing accounts this does not need to match the AWS account name.
-   *
-   * When creating new accounts with the Accelerator, this name will be used as the AWS account name.
-   *
-   * The name should not contain any spaces as this isn't supported by the Accelerator.
-   */
+export class AccountConfig implements i.IAccountConfig {
   readonly name: string = '';
-  /**
-   * The description is to used to provide more information about the account.
-   * This value is not used when creating accounts.
-   */
   readonly description: string = '';
-  /**
-   * The email address of the owner to assign to the account. The email address
-   * must not already be associated with another AWS account. You must use a
-   * valid email address.
-   * The address must be a minimum of 6 and a maximum of 64 characters long.
-   * All characters must be 7-bit ASCII characters
-   * There must be one and only one @ symbol, which separates the local name from the domain name.
-   * The local name can’t contain any of the following characters: whitespace, ” ‘ ( ) < > [ ] : ; , | % &
-   * The local name can’t begin with a dot (.)
-   * The domain name can consist of only the characters [a-z],[A-Z],[0-9], hyphen (-), or dot (.)
-   * The domain name can’t begin or end with a hyphen (-) or dot (.)
-   * The domain name must contain at least one dot
-   */
   readonly email: string = '';
-  /**
-   * The friendly name for the Organizational Unit that this account
-   * is a member of.
-   * This Organizational Unit must exist in the organization-config.yaml file.
-   */
   readonly organizationalUnit: string = '';
-  /**
-   * 'Warm' the account by creating an EC2 instance
-   * that runs for 15 minutes
-   * Use for new accounts that will need to have
-   * ec2 instance provisioned as part of the solution
-   * The 'warming' will take place in the operations stack
-   * This property may be removed after the account has
-   * been provisioned
-   */
   readonly warm: boolean | undefined = undefined;
 }
 
-/**
- * *{@link AccountsConfig} / {@link GovCloudAccountConfig}
- *
- * GovCloud Account configuration
- * Used instead of the account configuration in the commercial
- * partition when creating GovCloud partition linked accounts.
- *
- * ```
- * - name: Workload01
- *   description: Workload account 01
- *   email: example-email+workload01@example.com
- *   organizationalUnit: Workloads
- *   enableGovCloud: true
- * ```
- */
-export class GovCloudAccountConfig implements t.TypeOf<typeof AccountsConfigTypes.govCloudAccountConfig> {
-  /**
-   * The friendly name that is assigned to the account for reference within the Accelerator. The name will be used to reference
-   * this account in other configuration files and not to lookup the account in AWS.
-   *
-   * For pre-existing accounts this does not need to match the AWS account name.
-   *
-   * When creating new accounts with the Accelerator, this name will be used as the AWS account name.
-   *
-   * The name should not contain any spaces as this isn't supported by the Accelerator.
-   */
+export class GovCloudAccountConfig implements i.IGovCloudAccountConfig {
   readonly name: string = '';
-  /**
-   * The description is to used to provide more information about the account.
-   * This value is not used when creating accounts.
-   */
   readonly description: string = '';
-  /**
-   * The email address of the owner to assign to the account. The email address
-   * must not already be associated with another AWS account. You must use a
-   * valid email address.
-   * The address must be a minimum of 6 and a maximum of 64 characters long.
-   * All characters must be 7-bit ASCII characters
-   * There must be one and only one @ symbol, which separates the local name from the domain name.
-   * The local name can’t contain any of the following characters: whitespace, ” ‘ ( ) < > [ ] : ; , | % &
-   * The local name can’t begin with a dot (.)
-   * The domain name can consist of only the characters [a-z],[A-Z],[0-9], hyphen (-), or dot (.)
-   * The domain name can’t begin or end with a hyphen (-) or dot (.)
-   * The domain name must contain at least one dot
-   */
   readonly email: string = '';
-  /**
-   * The friendly name for the Organizational Unit that this account
-   * is a member of.
-   * This Organizational Unit must exist in the organization-config.yaml file.
-   */
   readonly organizationalUnit: string = '';
-  /**
-   * 'Warm' the account by creating an EC2 instance
-   * that runs for 15 minutes
-   * Use for new accounts that will need to have
-   * ec2 instance provisioned as part of the solution
-   * The 'warming' will take place in the operations stack
-   * This property may be removed after the account has
-   * been provisioned
-   */
   readonly warm: boolean | undefined = undefined;
-  /**
-   * Indicates whether or not a GovCloud partition account
-   * should be created.
-   */
   readonly enableGovCloud: boolean | undefined = undefined;
 }
-/**
- *
- */
-export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accountsConfig> {
+
+export class AccountsConfig implements i.IAccountsConfig {
   static readonly FILENAME = 'accounts-config.yaml';
   static readonly MANAGEMENT_ACCOUNT = 'Management';
   static readonly LOG_ARCHIVE_ACCOUNT = 'LogArchive';
@@ -205,7 +58,11 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
   readonly workloadAccounts: AccountConfig[] | GovCloudAccountConfig[] = [];
 
   public isGovCloudAccount(account: AccountConfig | GovCloudAccountConfig) {
-    return AccountsConfigTypes.govCloudAccountConfig.is(account);
+    if ('enableGovCloud' in account) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
   public anyGovCloudAccounts(): boolean {
@@ -218,8 +75,8 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
   }
 
   public isGovCloudEnabled(account: AccountConfig | GovCloudAccountConfig) {
-    if (AccountsConfigTypes.govCloudAccountConfig.is(account)) {
-      return account.enableGovCloud;
+    if (this.isGovCloudAccount(account)) {
+      return (account as GovCloudAccountConfig).enableGovCloud;
     }
     return false;
   }
@@ -239,7 +96,7 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
    */
   constructor(
     props: { managementAccountEmail: string; logArchiveAccountEmail: string; auditAccountEmail: string },
-    values?: t.TypeOf<typeof AccountsConfigTypes.accountsConfig>,
+    values?: i.IAccountsConfig,
   ) {
     if (values) {
       Object.assign(this, values);
@@ -288,17 +145,19 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
    */
   static load(dir: string): AccountsConfig {
     const buffer = fs.readFileSync(path.join(dir, AccountsConfig.FILENAME), 'utf8');
-    const values = t.parse(AccountsConfigTypes.accountsConfig, yaml.load(buffer));
-
+    const values = parseAccountsConfig(yaml.load(buffer));
     const managementAccountEmail =
-      values.mandatoryAccounts.find(value => value.name == AccountsConfig.MANAGEMENT_ACCOUNT)?.email ||
-      '<management-account>@example.com <----- UPDATE EMAIL ADDRESS';
+      (values.mandatoryAccounts as unknown as i.IBaseAccountConfig[]).find(
+        value => value.name == AccountsConfig.MANAGEMENT_ACCOUNT,
+      )?.email || '<management-account>@example.com <----- UPDATE EMAIL ADDRESS';
     const logArchiveAccountEmail =
-      values.mandatoryAccounts.find(value => value.name == AccountsConfig.LOG_ARCHIVE_ACCOUNT)?.email ||
-      '<log-archive>@example.com  <----- UPDATE EMAIL ADDRESS';
+      (values.mandatoryAccounts as unknown as i.IBaseAccountConfig[]).find(
+        value => value.name == AccountsConfig.MANAGEMENT_ACCOUNT,
+      )?.email || '<management-account>@example.com <----- UPDATE EMAIL ADDRESS';
     const auditAccountEmail =
-      values.mandatoryAccounts.find(value => value.name == AccountsConfig.AUDIT_ACCOUNT)?.email ||
-      '<audit>@example.com  <----- UPDATE EMAIL ADDRESS';
+      (values.mandatoryAccounts as unknown as i.IBaseAccountConfig[]).find(
+        value => value.name == AccountsConfig.MANAGEMENT_ACCOUNT,
+      )?.email || '<management-account>@example.com <----- UPDATE EMAIL ADDRESS';
 
     return new AccountsConfig(
       {
@@ -442,7 +301,7 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
     }
   }
 
-  public getAccountIdsFromDeploymentTarget(deploymentTargets: t.DeploymentTargets): string[] {
+  public getAccountIdsFromDeploymentTarget(deploymentTargets: DeploymentTargets): string[] {
     const accountIds: string[] = [];
 
     for (const ou of deploymentTargets.organizationalUnits ?? []) {
@@ -472,7 +331,7 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
     return filteredAccountIds;
   }
 
-  public getExcludedAccountIds(deploymentTargets: t.DeploymentTargets): string[] {
+  public getExcludedAccountIds(deploymentTargets: DeploymentTargets): string[] {
     const accountIds: string[] = [];
 
     if (deploymentTargets.excludedAccounts) {

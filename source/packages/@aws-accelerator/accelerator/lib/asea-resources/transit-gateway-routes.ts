@@ -2,10 +2,14 @@ import {
   AseaResourceType,
   AseaStackInfo,
   CfnResourceType,
-  NetworkConfigTypes,
   TransitGatewayConfig,
   TransitGatewayRouteEntryConfig,
   TransitGatewayRouteTableConfig,
+  TransitGatewayRouteTableDxGatewayEntryConfig,
+  TransitGatewayRouteTableTgwPeeringEntryConfig,
+  TransitGatewayRouteTableVpcEntryConfig,
+  TransitGatewayRouteTableVpnEntryConfig,
+  isNetworkType,
 } from '@aws-accelerator/config';
 import { AseaResource, AseaResourceProps } from './resource';
 import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
@@ -127,7 +131,12 @@ export class TransitGatewayRoutes extends AseaResource {
     let transitGatewayAttachmentId: string | undefined;
     if (routeItem.attachment) {
       // If route is for VPC attachment
-      if (NetworkConfigTypes.transitGatewayRouteTableVpcEntryConfig.is(routeItem.attachment)) {
+      if (
+        isNetworkType<TransitGatewayRouteTableVpcEntryConfig>(
+          'ITransitGatewayRouteTableVpcEntryConfig',
+          routeItem.attachment,
+        )
+      ) {
         this.scope.addLogs(
           LogLevel.INFO,
           `Adding route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
@@ -141,7 +150,12 @@ export class TransitGatewayRoutes extends AseaResource {
       }
 
       // If route is for DX Gateway attachment
-      if (NetworkConfigTypes.transitGatewayRouteTableDxGatewayEntryConfig.is(routeItem.attachment)) {
+      if (
+        isNetworkType<TransitGatewayRouteTableDxGatewayEntryConfig>(
+          'ITransitGatewayRouteTableDxGatewayEntryConfig',
+          routeItem.attachment,
+        )
+      ) {
         this.scope.addLogs(
           LogLevel.INFO,
           `Adding route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
@@ -150,7 +164,12 @@ export class TransitGatewayRoutes extends AseaResource {
       }
 
       // If route is for VPN attachment
-      if (NetworkConfigTypes.transitGatewayRouteTableVpnEntryConfig.is(routeItem.attachment)) {
+      if (
+        isNetworkType<TransitGatewayRouteTableVpnEntryConfig>(
+          'ITransitGatewayRouteTableVpnEntryConfig',
+          routeItem.attachment,
+        )
+      ) {
         this.scope.addLogs(
           LogLevel.INFO,
           `Adding route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
@@ -159,7 +178,12 @@ export class TransitGatewayRoutes extends AseaResource {
       }
 
       // If route is for TGW peering attachment
-      if (NetworkConfigTypes.transitGatewayRouteTableTgwPeeringEntryConfig.is(routeItem.attachment)) {
+      if (
+        isNetworkType<TransitGatewayRouteTableTgwPeeringEntryConfig>(
+          'ITransitGatewayRouteTableTgwPeeringEntryConfig',
+          routeItem.attachment,
+        )
+      ) {
         this.scope.addLogs(
           LogLevel.INFO,
           `Adding route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,

@@ -34,7 +34,6 @@ import {
   IamConfig,
   LifeCycleRule,
   NetworkConfig,
-  NetworkConfigTypes,
   OrganizationConfig,
   Region,
   ReplacementsConfig,
@@ -44,6 +43,7 @@ import {
   ShareTargets,
   VpcConfig,
   VpcTemplatesConfig,
+  isNetworkType,
 } from '@aws-accelerator/config';
 import { KeyLookup, S3LifeCycleRule, ServiceLinkedRole } from '@aws-accelerator/constructs';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
@@ -1337,7 +1337,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
   public getVpcAccountIds(vpcItem: VpcConfig | VpcTemplatesConfig): string[] {
     let vpcAccountIds: string[];
 
-    if (NetworkConfigTypes.vpcConfig.is(vpcItem)) {
+    if (isNetworkType<VpcConfig>('IVpcConfig', vpcItem)) {
       vpcAccountIds = [this.props.accountsConfig.getAccountId(vpcItem.account)];
     } else {
       const excludedAccountIds = this.getExcludedAccountIds(vpcItem.deploymentTargets);

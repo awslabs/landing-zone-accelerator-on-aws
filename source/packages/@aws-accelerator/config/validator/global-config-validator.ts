@@ -22,7 +22,7 @@ import { IamConfig } from '../lib/iam-config';
 import { SecurityConfig } from '../lib/security-config';
 import { OrganizationConfig } from '../lib/organization-config';
 import { CommonValidatorFunctions } from './common/common-validator-functions';
-import { DeploymentTargets } from '../lib/common-types';
+import { DeploymentTargets } from '../lib/common';
 
 export class GlobalConfigValidator {
   constructor(

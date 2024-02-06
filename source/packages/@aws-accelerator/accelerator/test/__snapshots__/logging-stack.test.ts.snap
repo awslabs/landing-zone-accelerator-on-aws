@@ -496,6 +496,19 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       "Type": "Custom::SsmGetParameterValue",
       "UpdateReplacePolicy": "Delete",
     },
+    "AcceleratorKmsArnParameterAppEbsKey9D12461F": {
+      "Properties": {
+        "Name": "/accelerator/kms/appEbsKey/key-arn",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "AcceleratorKmsKeyAppEbsKey332A95A6",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "AcceleratorKmsArnParameterKey13EEB1676": {
       "Properties": {
         "Name": "/accelerator/kms/key1/key-arn",
@@ -508,6 +521,78 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         },
       },
       "Type": "AWS::SSM::Parameter",
+    },
+    "AcceleratorKmsKeyAppEbsKey332A95A6": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleResourceE203F878",
+        "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleResource5A765F9A",
+      ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-S1",
+              "reason": "CMK policy defined by customer provided policy definition file.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Description": "Test KMS Key 2",
+        "EnableKeyRotation": true,
+        "Enabled": true,
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::333333333333:root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "arn:aws:iam::111111111111:root",
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AcceleratorKmsKeyAppEbsKeyAlias009947BE": {
+      "DependsOn": [
+        "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleResourceE203F878",
+        "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleResource5A765F9A",
+      ],
+      "Properties": {
+        "AliasName": "alias/accelerator/test-key/app-ebs-key",
+        "TargetKeyId": {
+          "Fn::GetAtt": [
+            "AcceleratorKmsKeyAppEbsKey332A95A6",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::KMS::Alias",
     },
     "AcceleratorKmsKeyKey1660964AC": {
       "DeletionPolicy": "Delete",
@@ -583,7 +668,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
     },
     "AcceleratorKmsMetadataKey9CF7DF88": {
       "DependsOn": [
-        "AcceleratorS3MetadataBucket3CD9B291",
+        "AcceleratorKmsArnParameterAppEbsKey9D12461F",
       ],
       "Properties": {
         "Name": "/accelerator/kms/metadata/key-arn",
@@ -1062,6 +1147,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "AcceleratorS3MetadataBucket3CD9B291": {
+      "DependsOn": [
+        "AcceleratorKmsArnParameterAppEbsKey9D12461F",
+      ],
       "Properties": {
         "Name": "/accelerator/metadata/bucket/arn",
         "Type": "String",
@@ -3580,9 +3668,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::SNS::TopicPolicy",
     },
-    "SecuritySNSTopicnotifysecurityexamplecomUPDATEEMAILADDRESS3E2951A5": {
+    "SecuritySNSTopicnotifysecurityexamplecom26985403": {
       "Properties": {
-        "Endpoint": "<notify-security>@example.com <----- UPDATE EMAIL ADDRESS",
+        "Endpoint": "notify-security@example.com",
         "Protocol": "email",
         "TopicArn": {
           "Ref": "SecuritySNSTopicE3C1354E",
@@ -4508,6 +4596,19 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "AcceleratorKmsArnParameterAppEbsKey9D12461F": {
+      "Properties": {
+        "Name": "/accelerator/kms/appEbsKey/key-arn",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "AcceleratorKmsKeyAppEbsKey332A95A6",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "AcceleratorKmsArnParameterKey13EEB1676": {
       "Properties": {
         "Name": "/accelerator/kms/key1/key-arn",
@@ -4520,6 +4621,78 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         },
       },
       "Type": "AWS::SSM::Parameter",
+    },
+    "AcceleratorKmsKeyAppEbsKey332A95A6": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleResourceE203F878",
+        "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleResource5A765F9A",
+      ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-S1",
+              "reason": "CMK policy defined by customer provided policy definition file.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Description": "Test KMS Key 2",
+        "EnableKeyRotation": true,
+        "Enabled": true,
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::333333333333:root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "arn:aws:iam::111111111111:root",
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AcceleratorKmsKeyAppEbsKeyAlias009947BE": {
+      "DependsOn": [
+        "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleResourceE203F878",
+        "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleResource5A765F9A",
+      ],
+      "Properties": {
+        "AliasName": "alias/accelerator/test-key/app-ebs-key",
+        "TargetKeyId": {
+          "Fn::GetAtt": [
+            "AcceleratorKmsKeyAppEbsKey332A95A6",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::KMS::Alias",
     },
     "AcceleratorKmsKeyKey1660964AC": {
       "DeletionPolicy": "Delete",
@@ -7860,9 +8033,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       },
       "Type": "AWS::SNS::TopicPolicy",
     },
-    "SecuritySNSTopicnotifysecurityexamplecomUPDATEEMAILADDRESS3E2951A5": {
+    "SecuritySNSTopicnotifysecurityexamplecom26985403": {
       "Properties": {
-        "Endpoint": "<notify-security>@example.com <----- UPDATE EMAIL ADDRESS",
+        "Endpoint": "notify-security@example.com",
         "Protocol": "email",
         "TopicArn": {
           "Ref": "SecuritySNSTopicE3C1354E",
@@ -12321,9 +12494,9 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
       },
       "Type": "AWS::SNS::TopicPolicy",
     },
-    "SecuritySNSTopicnotifysecurityexamplecomUPDATEEMAILADDRESS3E2951A5": {
+    "SecuritySNSTopicnotifysecurityexamplecom26985403": {
       "Properties": {
-        "Endpoint": "<notify-security>@example.com <----- UPDATE EMAIL ADDRESS",
+        "Endpoint": "notify-security@example.com",
         "Protocol": "email",
         "TopicArn": {
           "Ref": "SecuritySNSTopicE3C1354E",

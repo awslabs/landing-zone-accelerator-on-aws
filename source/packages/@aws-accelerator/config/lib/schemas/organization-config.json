@@ -1,0 +1,262 @@
+{
+  "$ref": "#/definitions/IOrganizationConfig",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "IBackupPolicyConfig": {
+      "additionalProperties": false,
+      "description": "Organization backup policy\n\nBackup policies enable you to deploy organization-wide backup plans to help ensure compliance across your organization's accounts.\nUsing policies helps ensure consistency in how you implement your backup plans",
+      "properties": {
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "Backup policy deployment targets"
+        },
+        "description": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "A description to assign to the policy."
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The friendly name to assign to the policy. The regex pattern that is used to validate this parameter is a string of any of the characters in the ASCII character range."
+        },
+        "policy": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Backup policy definition json file. This file must be present in config repository"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "policy",
+        "deploymentTargets"
+      ],
+      "type": "object"
+    },
+    "IDeploymentTargets": {
+      "additionalProperties": false,
+      "properties": {
+        "accounts": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "excludedAccounts": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "excludedRegions": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "organizationalUnits": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "IOrganizationConfig": {
+      "additionalProperties": false,
+      "description": "Organization configuration",
+      "properties": {
+        "backupPolicies": {
+          "description": "A Record of Backup Policy configurations",
+          "items": {
+            "$ref": "#/definitions/IBackupPolicyConfig"
+          },
+          "type": "array"
+        },
+        "enable": {
+          "description": "Indicates whether AWS Organization enabled.",
+          "type": "boolean"
+        },
+        "organizationalUnitIds": {
+          "description": "Optionally provide a list of Organizational Unit IDs to bypass the usage of the AWS Organizations Client lookup. This is not a readonly member since we will initialize it with values if it is not provided",
+          "items": {
+            "$ref": "#/definitions/IOrganizationalUnitIdConfig"
+          },
+          "type": "array"
+        },
+        "organizationalUnits": {
+          "description": "A Record of Organizational Unit configurations",
+          "items": {
+            "$ref": "#/definitions/IOrganizationalUnitConfig"
+          },
+          "type": "array"
+        },
+        "quarantineNewAccounts": {
+          "$ref": "#/definitions/IQuarantineNewAccountsConfig",
+          "description": "A record of Quarantine New Accounts configuration"
+        },
+        "serviceControlPolicies": {
+          "description": "A Record of Service Control Policy configurations",
+          "items": {
+            "$ref": "#/definitions/IServiceControlPolicyConfig"
+          },
+          "type": "array"
+        },
+        "taggingPolicies": {
+          "description": "A Record of Tagging Policy configurations",
+          "items": {
+            "$ref": "#/definitions/ITaggingPolicyConfig"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "enable",
+        "organizationalUnits",
+        "serviceControlPolicies",
+        "taggingPolicies",
+        "backupPolicies"
+      ],
+      "type": "object"
+    },
+    "IOrganizationalUnitConfig": {
+      "additionalProperties": false,
+      "description": "AWS Organizational Unit (OU) configuration",
+      "properties": {
+        "ignore": {
+          "description": "Optional property used to ignore organizational unit and the associated accounts Default value is false",
+          "type": "boolean"
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The name and nested path that you want to assign to the OU. When referring to OU's in the other configuration files ensure that the name matches what has been provided here. For example if you wanted an OU directly off of root just supply the OU name. Always configure all of the OUs in the path. A nested OU configuration would be like this\n- name: Sandbox\n- name: Sandbox/Pipeline\n- name: Sandbox/Development\n- name: Sandbox/Development/Application1"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "IOrganizationalUnitIdConfig": {
+      "additionalProperties": false,
+      "description": "Organizational unit id configuration",
+      "properties": {
+        "arn": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "OU arn"
+        },
+        "id": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "OU id"
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "A name for the OU"
+        }
+      },
+      "required": [
+        "name",
+        "id",
+        "arn"
+      ],
+      "type": "object"
+    },
+    "IQuarantineNewAccountsConfig": {
+      "additionalProperties": false,
+      "description": "Quarantine SCP application configuration",
+      "properties": {
+        "enable": {
+          "description": "Indicates where or not a Quarantine policy is applied when new accounts are created. If enabled all accounts created by any means will have the configured policy applied.",
+          "type": "boolean"
+        },
+        "scpPolicyName": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The policy to apply to new accounts. This value must exist if the feature is enabled. The name must also match a policy that is defined in the serviceControlPolicy section."
+        }
+      },
+      "required": [
+        "enable"
+      ],
+      "type": "object"
+    },
+    "IServiceControlPolicyConfig": {
+      "additionalProperties": false,
+      "description": "Service control policy configuration",
+      "properties": {
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "Service control policy strategy. https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps_strategies.html"
+        },
+        "description": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "A description to assign to the policy."
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The friendly name to assign to the policy. The regex pattern that is used to validate this parameter is a string of any of the characters in the ASCII character range."
+        },
+        "policy": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Service control definition json file. This file must be present in config repository"
+        },
+        "strategy": {
+          "description": "Service control policy deployment targets",
+          "enum": [
+            "deny-list",
+            "allow-list"
+          ],
+          "type": "string"
+        },
+        "type": {
+          "description": "Kind of service control policy",
+          "enum": [
+            "awsManaged",
+            "customerManaged"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "policy",
+        "type",
+        "deploymentTargets"
+      ],
+      "type": "object"
+    },
+    "ITaggingPolicyConfig": {
+      "additionalProperties": false,
+      "description": "Organizations tag policy.\n\nTag policies help you standardize tags on all tagged resources across your organization.\nYou can use tag policies to define tag keys (including how they should be capitalized) and their allowed values.",
+      "properties": {
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "Tagging policy deployment targets"
+        },
+        "description": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "A description to assign to the policy."
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The friendly name to assign to the policy. The regex pattern that is used to validate this parameter is a string of any of the characters in the ASCII character range."
+        },
+        "policy": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Tagging policy definition json file. This file must be present in config repository"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "policy",
+        "deploymentTargets"
+      ],
+      "type": "object"
+    },
+    "NonEmptyString": {
+      "description": "A string that has at least 1 character",
+      "minLength": 1,
+      "type": "string"
+    }
+  }
+}

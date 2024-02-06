@@ -56,60 +56,52 @@ development
 
 # ELB Root Account References https://docs.aws.amazon.com/elasticloadbalancing/latest/application/enable-access-logging.html#attach-bucket-policy
 
-source/packages/@aws-accelerator/utils/lib/regions.ts:28
-source/packages/@aws-accelerator/utils/lib/regions.ts:29
-source/packages/@aws-accelerator/utils/lib/regions.ts:30
-source/packages/@aws-accelerator/utils/lib/regions.ts:31
-source/packages/@aws-accelerator/utils/lib/regions.ts:32
-source/packages/@aws-accelerator/utils/lib/regions.ts:33
-source/packages/@aws-accelerator/utils/lib/regions.ts:34
-source/packages/@aws-accelerator/utils/lib/regions.ts:35
-source/packages/@aws-accelerator/utils/lib/regions.ts:36
-source/packages/@aws-accelerator/utils/lib/regions.ts:37
-source/packages/@aws-accelerator/utils/lib/regions.ts:38
-source/packages/@aws-accelerator/utils/lib/regions.ts:39
-source/packages/@aws-accelerator/utils/lib/regions.ts:40
-source/packages/@aws-accelerator/utils/lib/regions.ts:41
-source/packages/@aws-accelerator/utils/lib/regions.ts:42
-source/packages/@aws-accelerator/utils/lib/regions.ts:43
-source/packages/@aws-accelerator/utils/lib/regions.ts:44
-source/packages/@aws-accelerator/utils/lib/regions.ts:45
-source/packages/@aws-accelerator/utils/lib/regions.ts:46
-source/packages/@aws-accelerator/utils/lib/regions.ts:47
-source/packages/@aws-accelerator/utils/lib/regions.ts:48
-source/packages/@aws-accelerator/utils/lib/regions.ts:49
-source/packages/@aws-accelerator/utils/lib/regions.ts:50
-source/packages/@aws-accelerator/utils/lib/regions.ts:51
-source/packages/@aws-accelerator/utils/lib/regions.ts:52
-source/packages/@aws-accelerator/utils/lib/regions.ts:53
-source/packages/@aws-accelerator/utils/lib/regions.ts:54
-source/packages/@aws-accelerator/utils/lib/regions.ts:55
-source/packages/@aws-accelerator/utils/lib/regions.ts:56
-source/packages/@aws-accelerator/utils/lib/regions.ts:57
-source/packages/@aws-accelerator/utils/lib/regions.ts:58
-source/packages/@aws-accelerator/utils/lib/regions.ts:59
-source/packages/@aws-accelerator/utils/lib/regions.ts:60
-source/packages/@aws-accelerator/utils/lib/regions.ts:61
-source/packages/@aws-accelerator/utils/lib/regions.ts:62
+source/packages/@aws-accelerator/utils/lib/regions.ts:63
+source/packages/@aws-accelerator/utils/lib/regions.ts:64
+source/packages/@aws-accelerator/utils/lib/regions.ts:65
+source/packages/@aws-accelerator/utils/lib/regions.ts:66
+source/packages/@aws-accelerator/utils/lib/regions.ts:67
+source/packages/@aws-accelerator/utils/lib/regions.ts:68
+source/packages/@aws-accelerator/utils/lib/regions.ts:69
+source/packages/@aws-accelerator/utils/lib/regions.ts:70
+source/packages/@aws-accelerator/utils/lib/regions.ts:71
+source/packages/@aws-accelerator/utils/lib/regions.ts:72
+source/packages/@aws-accelerator/utils/lib/regions.ts:73
+source/packages/@aws-accelerator/utils/lib/regions.ts:74
+source/packages/@aws-accelerator/utils/lib/regions.ts:75
+source/packages/@aws-accelerator/utils/lib/regions.ts:76
+source/packages/@aws-accelerator/utils/lib/regions.ts:77
+source/packages/@aws-accelerator/utils/lib/regions.ts:78
+source/packages/@aws-accelerator/utils/lib/regions.ts:79
+source/packages/@aws-accelerator/utils/lib/regions.ts:80
+source/packages/@aws-accelerator/utils/lib/regions.ts:81
+source/packages/@aws-accelerator/utils/lib/regions.ts:82
+source/packages/@aws-accelerator/utils/lib/regions.ts:83
+source/packages/@aws-accelerator/utils/lib/regions.ts:84
+source/packages/@aws-accelerator/utils/lib/regions.ts:85
+source/packages/@aws-accelerator/utils/lib/regions.ts:86
+source/packages/@aws-accelerator/utils/lib/regions.ts:87
+source/packages/@aws-accelerator/utils/lib/regions.ts:88
+source/packages/@aws-accelerator/utils/lib/regions.ts:89
+source/packages/@aws-accelerator/utils/lib/regions.ts:90
+source/packages/@aws-accelerator/utils/lib/regions.ts:91
+source/packages/@aws-accelerator/utils/lib/regions.ts:92
+source/packages/@aws-accelerator/utils/lib/regions.ts:93
+source/packages/@aws-accelerator/utils/lib/regions.ts:94
+source/packages/@aws-accelerator/utils/lib/regions.ts:95
+source/packages/@aws-accelerator/utils/lib/regions.ts:96
+source/packages/@aws-accelerator/utils/lib/regions.ts:97
 
 # Accelerator specific assume role declaration
 
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:346
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:347
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1143
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1144
-
-# Accelerator specific assume role declaration
-
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1106
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1107
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1147
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1148
 
 # Accelerator specific assume role declaration
-
-source/packages/@aws-accelerator/config/lib/global-config.ts:2897
-source/packages/@aws-accelerator/config/lib/global-config.ts:2898
+source/packages/@aws-accelerator/config/lib/global-config.ts:754
+source/packages/@aws-accelerator/config/lib/global-config.ts:755
 
 # Accelerator specific assume role declaration
 

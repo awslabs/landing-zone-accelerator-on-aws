@@ -11,9 +11,8 @@
  *  and limitations under the License.
  */
 
-import { parse } from '../lib/common-types';
+import { parseOrganizationConfig } from '../lib/common';
 import { describe, it, expect } from '@jest/globals';
-import { OrganizationConfigTypes } from '../lib/organization-config';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
@@ -25,7 +24,7 @@ describe('parse method', () => {
         path.resolve('../accelerator/test/configs/snapshot-only/organization-config.yaml'),
         'utf8',
       );
-      const r = parse(OrganizationConfigTypes.organizationConfig, yaml.load(buffer));
+      const r = parseOrganizationConfig(yaml.load(buffer));
       expect(r && typeof r === 'object').toBe(true);
     });
   });
@@ -38,7 +37,7 @@ describe('parse method', () => {
       quarantineNewAccounts: { enable: true, scpPolicyName: 'Quarantine' },
     }`;
       expect(() => {
-        parse(OrganizationConfigTypes.organizationConfig, loadedyaml);
+        parseOrganizationConfig(loadedyaml);
       }).toThrow();
     });
   });

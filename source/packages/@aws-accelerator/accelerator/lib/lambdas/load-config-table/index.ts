@@ -16,12 +16,16 @@ import { DynamoDBDocumentClient, UpdateCommand, UpdateCommandInput } from '@aws-
 import { CloudFormationClient, DescribeStacksCommand } from '@aws-sdk/client-cloudformation';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
-import { load as yamlLoad } from 'js-yaml';
-import { AccountConfig, AccountsConfig, AccountsConfigTypes } from '@aws-accelerator/config/lib/accounts-config';
-import { OrganizationalUnitConfig, OrganizationConfig } from '@aws-accelerator/config/lib/organization-config';
-import { ReplacementsConfig, ReplacementsConfigTypes } from '@aws-accelerator/config/lib/replacements-config';
-
-import { parse } from '@aws-accelerator/config/lib/common-types/parse';
+import * as yaml from 'js-yaml';
+import {
+  AccountConfig,
+  AccountsConfig,
+  OrganizationalUnitConfig,
+  OrganizationConfig,
+  parseAccountsConfig,
+  parseReplacementsConfig,
+  ReplacementsConfig,
+} from '@aws-accelerator/config';
 import { Readable } from 'stream';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 
@@ -266,7 +270,7 @@ async function onCreateUpdateFunction(
   Status: string;
 }> {
   const accountsConfigContent = await getConfigFileContents(bucket.name, bucket.accountConfigS3Key);
-  const accountsValues = parse(AccountsConfigTypes.accountsConfig, yamlLoad(accountsConfigContent));
+  const accountsValues = parseAccountsConfig(yaml.load(accountsConfigContent));
   const accountsConfig = new AccountsConfig(
     {
       managementAccountEmail: emails.managementAccount,
@@ -279,7 +283,7 @@ async function onCreateUpdateFunction(
   let replacementsConfig = undefined;
   if (bucket.replacementsConfigS3Key) {
     const replacementsConfigContent = await getConfigFileContents(bucket.name, bucket.replacementsConfigS3Key);
-    const replacementsValues = parse(ReplacementsConfigTypes.replacementsConfig, yamlLoad(replacementsConfigContent));
+    const replacementsValues = parseReplacementsConfig(yaml.load(replacementsConfigContent));
 
     // edge-case: loading without looking up SSM replacements
     replacementsConfig = new ReplacementsConfig(replacementsValues, accountsConfig, true);

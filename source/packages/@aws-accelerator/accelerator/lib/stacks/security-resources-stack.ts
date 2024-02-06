@@ -338,7 +338,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
    */
   private configureCloudWatchMetrics() {
     for (const metricSetItem of this.props.securityConfig.cloudWatch.metricSets ?? []) {
-      if (!metricSetItem.regions?.includes(cdk.Stack.of(this).region)) {
+      if (!metricSetItem.regions?.includes(cdk.Stack.of(this).region as Region)) {
         continue;
       }
 
@@ -371,7 +371,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
    */
   private configureCloudwatchAlarm() {
     for (const alarmSetItem of this.props.securityConfig.cloudWatch.alarmSets ?? []) {
-      if (!alarmSetItem.regions?.includes(cdk.Stack.of(this).region)) {
+      if (!alarmSetItem.regions?.includes(cdk.Stack.of(this).region as Region)) {
         continue;
       }
 

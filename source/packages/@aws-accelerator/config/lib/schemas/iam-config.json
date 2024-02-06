@@ -1,0 +1,928 @@
+{
+  "$ref": "#/definitions/IIamConfig",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "AssumedByType": {
+      "enum": [
+        "service",
+        "account",
+        "provider"
+      ],
+      "type": "string"
+    },
+    "IActiveDirectoryConfigurationInstanceConfig": {
+      "additionalProperties": false,
+      "description": "Active directory configuration instance configuration. The machine will be used to configure and manage active directory configuration.\nAccelerator can create user, groups when following configuration provided",
+      "properties": {
+        "adConnectorGroup": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Active directory connector group"
+        },
+        "adGroups": {
+          "description": "Active directory group list",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        },
+        "adPasswordPolicy": {
+          "$ref": "#/definitions/IActiveDirectoryPasswordPolicyConfig",
+          "description": "Active directory user password policy"
+        },
+        "adPerAccountGroups": {
+          "description": "Active directory per account group list",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        },
+        "adUsers": {
+          "description": "Active directory user list",
+          "items": {
+            "$ref": "#/definitions/IActiveDirectoryUserConfig"
+          },
+          "type": "array"
+        },
+        "enableTerminationProtection": {
+          "default": false,
+          "description": "Flag for Ec2 instance enable api termination protection",
+          "type": "boolean"
+        },
+        "imagePath": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Ec2 image path"
+        },
+        "instanceRole": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Ec2 instance role name"
+        },
+        "instanceType": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Ec2 instance type"
+        },
+        "securityGroupInboundSources": {
+          "description": "Ec2 security group inbound sources",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        },
+        "subnetName": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Ec2 instance subnet name"
+        },
+        "userDataScripts": {
+          "description": "Instance user data script configuration",
+          "items": {
+            "$ref": "#/definitions/IActiveDirectoryConfigurationInstanceUserDataConfig"
+          },
+          "type": "array"
+        },
+        "vpcName": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Ec2 instance vpc name"
+        }
+      },
+      "required": [
+        "instanceType",
+        "vpcName",
+        "imagePath",
+        "securityGroupInboundSources",
+        "instanceRole",
+        "subnetName",
+        "userDataScripts",
+        "adGroups",
+        "adPerAccountGroups",
+        "adConnectorGroup",
+        "adUsers",
+        "adPasswordPolicy"
+      ],
+      "type": "object"
+    },
+    "IActiveDirectoryConfigurationInstanceUserDataConfig": {
+      "additionalProperties": false,
+      "description": "User data scripts to create users, groups, password policy.\n\nAccelerator can provision users, groups when following user data scripts are provided, these scripts are part of Accelerator sample configuration",
+      "properties": {
+        "scriptFilePath": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Script file path"
+        },
+        "scriptName": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Friendly name for the user data script"
+        }
+      },
+      "required": [
+        "scriptName",
+        "scriptFilePath"
+      ],
+      "type": "object"
+    },
+    "IActiveDirectoryPasswordPolicyConfig": {
+      "additionalProperties": false,
+      "description": "Managed active directory user password policy configuration",
+      "properties": {
+        "complexity": {
+          "type": "boolean"
+        },
+        "failedAttempts": {
+          "type": "number"
+        },
+        "history": {
+          "type": "number"
+        },
+        "lockoutAttemptsReset": {
+          "type": "number"
+        },
+        "lockoutDuration": {
+          "type": "number"
+        },
+        "maximumAge": {
+          "type": "number"
+        },
+        "minimumAge": {
+          "type": "number"
+        },
+        "minimumLength": {
+          "type": "number"
+        },
+        "reversible": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "history",
+        "maximumAge",
+        "minimumAge",
+        "minimumLength",
+        "complexity",
+        "reversible",
+        "failedAttempts",
+        "lockoutDuration",
+        "lockoutAttemptsReset"
+      ],
+      "type": "object"
+    },
+    "IActiveDirectoryUserConfig": {
+      "additionalProperties": false,
+      "description": "Active directory user configuration",
+      "properties": {
+        "email": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Active directory user email"
+        },
+        "groups": {
+          "description": "Active directory user group names",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Active directory user name"
+        }
+      },
+      "required": [
+        "name",
+        "email",
+        "groups"
+      ],
+      "type": "object"
+    },
+    "IAssumedByConfig": {
+      "additionalProperties": false,
+      "description": "AssumedBy configuration\n\nService principal:",
+      "properties": {
+        "principal": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Type of IAM principal type like service, account or provider, which can assume this role."
+        },
+        "type": {
+          "$ref": "#/definitions/AssumedByType",
+          "description": "IAM principal of either service, account or provider type.\n\nIAM principal of sns service type (i.e. new ServicePrincipal('sns.amazonaws.com')), which can assume this role."
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "type": "object"
+    },
+    "ICustomerManagedPolicyReferenceConfig": {
+      "additionalProperties": false,
+      "description": "Customer Managed Policy Reference Config",
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Identity Center PermissionSet permissions boundary customer managed policy name."
+        },
+        "path": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The path to the IAM policy that you have configured in each account where you want to deploy your permission set."
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "IDeploymentTargets": {
+      "additionalProperties": false,
+      "properties": {
+        "accounts": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "excludedAccounts": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "excludedRegions": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "organizationalUnits": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "IGroupConfig": {
+      "additionalProperties": false,
+      "description": "IAM group configuration",
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "A name for the IAM group. For valid values, see the GroupName parameter for the CreateGroup action in the IAM API Reference. If you don't specify a name, AWS CloudFormation generates a unique physical ID and uses that ID for the group name.\n\nIf you specify a name, you must specify the CAPABILITY_NAMED_IAM value to acknowledge your template's capabilities. For more information, see Acknowledging IAM Resources in AWS CloudFormation Templates."
+        },
+        "policies": {
+          "$ref": "#/definitions/IPoliciesConfig",
+          "description": "List of policy objects"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "IGroupSetConfig": {
+      "additionalProperties": false,
+      "description": "IAM group set configuration",
+      "properties": {
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "Group set's deployment targets"
+        },
+        "groups": {
+          "description": "List of IAM group objects",
+          "items": {
+            "$ref": "#/definitions/IGroupConfig"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "deploymentTargets",
+        "groups"
+      ],
+      "type": "object"
+    },
+    "IIamConfig": {
+      "additionalProperties": false,
+      "description": "IAM configuration",
+      "properties": {
+        "groupSets": {
+          "description": "Group set configuration",
+          "items": {
+            "$ref": "#/definitions/IGroupSetConfig"
+          },
+          "type": "array"
+        },
+        "homeRegion": {
+          "$ref": "#/definitions/Region",
+          "description": "Accelerator home region name."
+        },
+        "identityCenter": {
+          "$ref": "#/definitions/IIdentityCenterConfig",
+          "description": "Identity Center configuration"
+        },
+        "managedActiveDirectories": {
+          "description": "Managed active directory configuration",
+          "items": {
+            "$ref": "#/definitions/IManagedActiveDirectoryConfig"
+          },
+          "type": "array"
+        },
+        "policySets": {
+          "description": "Policy set configuration.\n\nTo configure IAM policy named Default-Boundary-Policy with permission boundary defined in iam-policies/boundary-policy.json file, you need to provide following values for this parameter.",
+          "items": {
+            "$ref": "#/definitions/IPolicySetConfig"
+          },
+          "type": "array"
+        },
+        "providers": {
+          "description": "SAML provider configuration To configure SAML configuration, you need to provide the following values for this parameter. Replace provider name and metadata document file. Document file must be in config repository",
+          "items": {
+            "$ref": "#/definitions/ISamlProviderConfig"
+          },
+          "type": "array"
+        },
+        "roleSets": {
+          "description": "Role sets configuration",
+          "items": {
+            "$ref": "#/definitions/IRoleSetConfig"
+          },
+          "type": "array"
+        },
+        "userSets": {
+          "description": "User set configuration",
+          "items": {
+            "$ref": "#/definitions/IUserSetConfig"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "IIdentityCenterAssignmentConfig": {
+      "additionalProperties": false,
+      "description": "Identity Center Assignment Configuration",
+      "properties": {
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "Identity Center assignment deployment targets"
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The Name for the Assignment."
+        },
+        "permissionSetName": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Permission Set name that will be used for the Assignment."
+        },
+        "principalId": {
+          "$ref": "#/definitions/NonEmptyString",
+          "deprecated": "This is a temporary property and it has been deprecated.\nPlease use principals property to specify principal name for assignment.",
+          "description": "PrincipalId that will be used for the Assignment"
+        },
+        "principalType": {
+          "$ref": "#/definitions/PrincipalType",
+          "deprecated": "This is a temporary property and it has been deprecated.\nPlease use principals property to specify principal type for assignment.",
+          "description": "PrincipalType that will be used for the Assignment"
+        },
+        "principals": {
+          "description": "Assignment principal configuration list.",
+          "items": {
+            "$ref": "#/definitions/IIdentityCenterAssignmentPrincipalConfig"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "permissionSetName",
+        "deploymentTargets",
+        "name"
+      ],
+      "type": "object"
+    },
+    "IIdentityCenterAssignmentPrincipalConfig": {
+      "additionalProperties": false,
+      "description": "Identity Center Permission Set Assignment Principal Configuration",
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Name of the principal"
+        },
+        "type": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Assignment principal type"
+        }
+      },
+      "required": [
+        "type",
+        "name"
+      ],
+      "type": "object"
+    },
+    "IIdentityCenterConfig": {
+      "additionalProperties": false,
+      "description": "Identity Center Configuration",
+      "properties": {
+        "delegatedAdminAccount": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Override for Delegated Admin Account"
+        },
+        "identityCenterAssignments": {
+          "description": "List of Assignments",
+          "items": {
+            "$ref": "#/definitions/IIdentityCenterAssignmentConfig"
+          },
+          "type": "array"
+        },
+        "identityCenterPermissionSets": {
+          "description": "List of PermissionSets",
+          "items": {
+            "$ref": "#/definitions/IIdentityCenterPermissionSetConfig"
+          },
+          "type": "array"
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "A name for the Identity Center Configuration"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "IIdentityCenterPermissionSetConfig": {
+      "additionalProperties": false,
+      "description": "Identity Center Permission Set Configuration",
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "A name for the Identity Center Permission Set Configuration"
+        },
+        "policies": {
+          "$ref": "#/definitions/IIdentityCenterPoliciesConfig",
+          "description": "Policy Configuration for Customer Managed Permissions and AWS Managed Permissions"
+        },
+        "sessionDuration": {
+          "default": "undefined",
+          "description": "A number value (in minutes). The length of time that the application user sessions are valid for in the ISO-8601 standard.",
+          "type": "number"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "IIdentityCenterPoliciesConfig": {
+      "additionalProperties": false,
+      "description": "Identity Center Permission Set Policy Configuration",
+      "properties": {
+        "acceleratorManaged": {
+          "description": "List of the names customer managed policies that would be attached to permission set.",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        },
+        "awsManaged": {
+          "description": "List of AWS managed policies that would be attached to permission set.",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        },
+        "customerManaged": {
+          "description": "List of the names and paths of the customer managed policies that would be attached to permission set.",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        },
+        "inlinePolicy": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The inline policy that is attached to the permission set.\n\n {@link  http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-sso-permissionset.html#cfn-sso-permissionset-inlinepolicy InlinePolicy }  reference"
+        },
+        "permissionsBoundary": {
+          "$ref": "#/definitions/IPermissionsBoundaryConfig",
+          "description": "Specifies the configuration of the AWS managed or customer managed policy that you want to set as a permissions boundary."
+        }
+      },
+      "type": "object"
+    },
+    "IManagedActiveDirectoryConfig": {
+      "additionalProperties": false,
+      "description": "Managed Active directory configuration.",
+      "properties": {
+        "account": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Active directory deploy target account"
+        },
+        "activeDirectoryConfigurationInstance": {
+          "$ref": "#/definitions/IActiveDirectoryConfigurationInstanceConfig",
+          "description": "(OPTIONAL) Active directory instance to configure active directory"
+        },
+        "description": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Descriptive text that appears on the details page after the directory has been created."
+        },
+        "dnsName": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "A fully qualified domain name. This name will resolve inside your VPC only. It does not need to be publicly resolvable."
+        },
+        "edition": {
+          "description": "Active directory edition, example AWS Managed Microsoft AD is available in two editions: Standard and Enterprise",
+          "enum": [
+            "Standard",
+            "Enterprise"
+          ],
+          "type": "string"
+        },
+        "logs": {
+          "$ref": "#/definitions/IManagedActiveDirectoryLogConfig",
+          "description": "(OPTIONAL) Active directory logs configuration"
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Friendly name for the active directory"
+        },
+        "netBiosDomainName": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "A short identifier for your Net BIOS domain name."
+        },
+        "region": {
+          "$ref": "#/definitions/Region",
+          "description": "Active directory deploy target region"
+        },
+        "resolverRuleName": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "(OPTIONAL) Active directory route 53 resolver rule name"
+        },
+        "secretConfig": {
+          "$ref": "#/definitions/IManagedActiveDirectorySecretConfig",
+          "description": "(OPTIONAL) Active directory admin user secret configuration.\n\n* {@link  IamConfig  }  /  {@link  ManagedActiveDirectoryConfig  }  /  {@link  ManagedActiveDirectorySecretConfig  }"
+        },
+        "sharedAccounts": {
+          "description": "(OPTIONAL) Active directory shared account name list.",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        },
+        "sharedOrganizationalUnits": {
+          "$ref": "#/definitions/IManagedActiveDirectorySharedOuConfig",
+          "description": "(OPTIONAL) Active directory shared ou configuration.\n\n* {@link  IamConfig  }  /  {@link  ManagedActiveDirectoryConfig  }  /  {@link  ManagedActiveDirectorySharedOuConfig  }"
+        },
+        "vpcSettings": {
+          "$ref": "#/definitions/IManagedActiveDirectoryVpcSettingsConfig",
+          "description": "Specifies the VPC settings of the Microsoft AD directory server in AWS"
+        }
+      },
+      "required": [
+        "name",
+        "account",
+        "region",
+        "dnsName",
+        "netBiosDomainName",
+        "edition",
+        "vpcSettings"
+      ],
+      "type": "object"
+    },
+    "IManagedActiveDirectoryLogConfig": {
+      "additionalProperties": false,
+      "description": "Active directory logs configuration",
+      "properties": {
+        "groupName": {
+          "$ref": "#/definitions/NonEmptyString",
+          "default": "undefined, Accelerator will create log group name as /aws/directoryservice/DirectoryServiceName",
+          "description": "Active directory log group name,  that will be used to receive the security logs from your domain controllers. We recommend pre-pending the name with /aws/directoryservice/, but that is not required."
+        },
+        "retentionInDays": {
+          "description": "Log group retention in days",
+          "type": "number"
+        }
+      },
+      "required": [
+        "groupName"
+      ],
+      "type": "object"
+    },
+    "IManagedActiveDirectorySecretConfig": {
+      "additionalProperties": false,
+      "description": "Active directory admin user secret configuration.",
+      "properties": {
+        "account": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Active directory admin user secret account name. When no account name provided Accelerator will create the secret into the account MAD exists\n\nNote: Please do not use the Management account for the admin user secret account name."
+        },
+        "adminSecretName": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Active directory admin user secret account name. When no account name provided Accelerator will create the secret into the account MAD exists\n\nNote: Please do not use the Management account for the admin user secret account name."
+        },
+        "region": {
+          "$ref": "#/definitions/Region",
+          "description": "Active directory admin user secret region name. When no region name provided Accelerator will create the secret into the region MAD exists"
+        }
+      },
+      "type": "object"
+    },
+    "IManagedActiveDirectorySharedOuConfig": {
+      "additionalProperties": false,
+      "description": "Active directory shared ou configuration.",
+      "properties": {
+        "excludedAccounts": {
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        },
+        "organizationalUnits": {
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "organizationalUnits"
+      ],
+      "type": "object"
+    },
+    "IManagedActiveDirectoryVpcSettingsConfig": {
+      "additionalProperties": false,
+      "description": "Specifies the VPC settings of the Microsoft AD directory server in AWS",
+      "properties": {
+        "subnets": {
+          "description": "Friendly name of the vpc subnets, where active directory will be deployed\n\nMinimum of two subnets from two different availability zone is required",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        },
+        "vpcName": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Friendly name of the vpc where active directory will be deployed"
+        }
+      },
+      "required": [
+        "vpcName",
+        "subnets"
+      ],
+      "type": "object"
+    },
+    "IPermissionsBoundaryConfig": {
+      "additionalProperties": false,
+      "description": "Specify either customerManagedPolicy to use the name and path of a customer managed policy, or managedPolicy to use the ARN of an AWS managed policy.",
+      "properties": {
+        "awsManagedPolicyName": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The AWS managed policy name that you want to attach to a permission set as a permissions boundary."
+        },
+        "customerManagedPolicy": {
+          "$ref": "#/definitions/ICustomerManagedPolicyReferenceConfig",
+          "description": "Specifies the name and path of a customer managed policy."
+        }
+      },
+      "type": "object"
+    },
+    "IPoliciesConfig": {
+      "additionalProperties": false,
+      "description": "IAM policies configuration",
+      "properties": {
+        "awsManaged": {
+          "description": "List of AWS managed policies. Values can be policy arn or policy name",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        },
+        "customerManaged": {
+          "description": "List of Customer managed policies",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "IPolicyConfig": {
+      "additionalProperties": false,
+      "description": "Use this configuration to define accelerator managed IAM managed policies.",
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The name of the managed policy."
+        },
+        "policy": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "A JSON file containing policy boundary definition."
+        }
+      },
+      "required": [
+        "name",
+        "policy"
+      ],
+      "type": "object"
+    },
+    "IPolicySetConfig": {
+      "additionalProperties": false,
+      "description": "Policy set configuration",
+      "properties": {
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "Policy set deployment targets"
+        },
+        "identityCenterDependency": {
+          "description": "Flag indicates if the policy is used in Identity Center PermissionSet assignments.",
+          "type": "boolean"
+        },
+        "policies": {
+          "description": "List of Policies",
+          "items": {
+            "$ref": "#/definitions/IPolicyConfig"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "deploymentTargets",
+        "policies"
+      ],
+      "type": "object"
+    },
+    "IRoleConfig": {
+      "additionalProperties": false,
+      "description": "IAM Role configuration",
+      "properties": {
+        "assumedBy": {
+          "description": "AssumedBy configuration",
+          "items": {
+            "$ref": "#/definitions/IAssumedByConfig"
+          },
+          "type": "array"
+        },
+        "boundaryPolicy": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "A permissions boundary configuration"
+        },
+        "instanceProfile": {
+          "description": "Indicates whether role is used for EC2 instance profile",
+          "type": "boolean"
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "A name for the role"
+        },
+        "policies": {
+          "$ref": "#/definitions/IPoliciesConfig",
+          "description": "List of policies for the role"
+        }
+      },
+      "required": [
+        "name",
+        "assumedBy"
+      ],
+      "type": "object"
+    },
+    "IRoleSetConfig": {
+      "additionalProperties": false,
+      "description": "Role set configuration",
+      "properties": {
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "Role set deployment targets"
+        },
+        "path": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The path to the role"
+        },
+        "roles": {
+          "description": "List of role objects",
+          "items": {
+            "$ref": "#/definitions/IRoleConfig"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "deploymentTargets",
+        "roles"
+      ],
+      "type": "object"
+    },
+    "ISamlProviderConfig": {
+      "additionalProperties": false,
+      "description": "SAML provider configuration",
+      "properties": {
+        "metadataDocument": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "SAML metadata document XML file, this file must be present in config repository"
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "default": "a CloudFormation generated name",
+          "description": "The name of the provider to create.\n\nThis parameter allows a string of characters consisting of upper and lowercase alphanumeric characters with no spaces. You can also include any of the following characters: _+=,.@-\n\nLength must be between 1 and 128 characters."
+        }
+      },
+      "required": [
+        "name",
+        "metadataDocument"
+      ],
+      "type": "object"
+    },
+    "IUserConfig": {
+      "additionalProperties": false,
+      "description": "IAM User configuration",
+      "properties": {
+        "boundaryPolicy": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "AWS supports permissions boundaries for IAM entities (users or roles). A permissions boundary is an advanced feature for using a managed policy to set the maximum permissions that an identity-based policy can grant to an IAM entity. An entity's permissions boundary allows it to perform only the actions that are allowed by both its identity-based policies and its permissions boundaries.\n\nPermission boundary is derived from iam-policies/boundary-policy.json file in config repository"
+        },
+        "group": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Group to add this user to."
+        },
+        "username": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "A name for the IAM user. For valid values, see the UserName parameter for the CreateUser action in the IAM API Reference. If you don't specify a name, AWS CloudFormation generates a unique physical ID and uses that ID for the user name.\n\nIf you specify a name, you cannot perform updates that require replacement of this resource. You can perform updates that require no or some interruption. If you must replace the resource, specify a new name."
+        }
+      },
+      "required": [
+        "username",
+        "group"
+      ],
+      "type": "object"
+    },
+    "IUserSetConfig": {
+      "additionalProperties": false,
+      "description": "User set configuration\n\n```\nuserSets:\n  - deploymentTargets:\n      accounts:\n        - Management\n    users:\n      - username: accelerator-user\n        boundaryPolicy: Default-Boundary-Policy\n        group: Admins\n```",
+      "properties": {
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "User set's deployment target"
+        },
+        "users": {
+          "description": "List os user objects",
+          "items": {
+            "$ref": "#/definitions/IUserConfig"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "deploymentTargets",
+        "users"
+      ],
+      "type": "object"
+    },
+    "NonEmptyString": {
+      "description": "A string that has at least 1 character",
+      "minLength": 1,
+      "type": "string"
+    },
+    "PrincipalType": {
+      "enum": [
+        "USER",
+        "GROUP"
+      ],
+      "type": "string"
+    },
+    "Region": {
+      "description": "AWS Region",
+      "enum": [
+        "af-south-1",
+        "ap-east-1",
+        "ap-northeast-1",
+        "ap-northeast-2",
+        "ap-northeast-3",
+        "ap-south-1",
+        "ap-south-2",
+        "ap-southeast-1",
+        "ap-southeast-2",
+        "ap-southeast-3",
+        "ap-southeast-4",
+        "ca-central-1",
+        "cn-north-1",
+        "cn-northwest-1",
+        "eu-central-1",
+        "eu-central-2",
+        "eu-north-1",
+        "eu-south-1",
+        "eu-south-2",
+        "eu-west-1",
+        "eu-west-2",
+        "eu-west-3",
+        "il-central-1",
+        "me-central-1",
+        "me-south-1",
+        "sa-east-1",
+        "us-east-1",
+        "us-east-2",
+        "us-gov-west-1",
+        "us-gov-east-1",
+        "us-iso-east-1",
+        "us-isob-east-1",
+        "us-iso-west-1",
+        "us-west-1",
+        "us-west-2"
+      ],
+      "type": "string"
+    }
+  }
+}

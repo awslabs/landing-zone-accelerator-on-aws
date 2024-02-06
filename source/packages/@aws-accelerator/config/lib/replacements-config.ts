@@ -22,118 +22,20 @@ import { AccountsConfig } from './accounts-config';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 
-import * as t from './common-types';
+import * as t from './common';
+import * as i from './models/replacements-config';
 
 const logger = createLogger(['replacements-config']);
 
-/**
- * Replacements configuration items.
- */
-export class ReplacementsConfigTypes {
-  static readonly parameterReplacementType = t.enums('ParameterReplacementType', ['SSM', 'String', 'StringList']);
-
-  static readonly parameterReplacement = t.interface({
-    key: t.nonEmptyString,
-    path: t.nonEmptyString,
-  });
-
-  static readonly parameterReplacementV2 = t.interface({
-    key: t.nonEmptyString,
-    path: t.optional(t.nonEmptyString),
-    type: ReplacementsConfigTypes.parameterReplacementType,
-    value: t.optional(t.union([t.nonEmptyString, t.array(t.nonEmptyString)])),
-  });
-
-  static readonly replacementsConfig = t.interface({
-    globalReplacements: t.optional(t.array(t.union([this.parameterReplacement, this.parameterReplacementV2]))),
-  });
-}
-
-/**
- * *{@link ReplacementsConfig} / {@link ParameterReplacementConfig}*
- *
- * Fixed replacement value to apply throughout config files. Loaded from SSM
- * parameters in the management account in the HOME_REGION.
- *
- * @remarks These SSM Parameters must exist with non-null values before they are added to the replacements-config.yaml file.
- *
- * @example
- * ```
- * globalReplacements:
- *   - key: FndPrefix
- *     path: /accelerator/replacements/FndPrefix
- *   - key: BudgetEmail
- *     value: /accelerator/replacements/BudgetEmail
- *   - key: ProtectTagKey
- *     value: /accelerator/replacements/ProtectTagKey
- *   - key: ProtectTagValue
- *     value: /accelerator/replacements/ProtectTagValue
- * ```
- */
-export abstract class ParameterReplacementConfig
-  implements t.TypeOf<typeof ReplacementsConfigTypes.parameterReplacement>
-{
-  /**
-   * Key of the replacement placeholder
-   */
+export abstract class ParameterReplacementConfig implements i.IParameterReplacement {
   readonly key: string = '';
-  /**
-   * Path of the SSM Parameter containing the value to replace
-   */
   readonly path: string = '';
 }
 
-/**
- * *{@link ReplacementsConfig} / {@link ParameterReplacementConfig}*
- *
- * Fixed replacement value to apply throughout config files. Loaded from SSM
- * parameters in the management account in the HOME_REGION.
- *
- * @remarks These SSM Parameters must exist with non-null values before they are added to the replacements-config.yaml file.
- *
- * @example
- * ```
- * globalReplacements:
- *   - key: FndPrefix
- *     type: 'SSM'
- *     path: /accelerator/replacements/FndPrefix
- *   - key: BudgetEmail
- *     type: 'SSM'
- *     path: /accelerator/replacements/BudgetEmail
- *   - key: ProtectTagKey
- *     type: 'SSM'
- *     path: /accelerator/replacements/ProtectTagKey
- *   - key: ProtectTagValue
- *     type: 'SSM'
- *     path: /accelerator/replacements/ProtectTagValue
- *  -  key: ALLOWED_CORPORATE_CIDRS
- *     type: 'StringList'
- *     value:
- *       - 10.0.1.0/24
- *       - 10.0.2.0/24
- *  -  key: ALLOWED_PRINCIPAL_ARN
- *     type: 'String'
- *     value: arn:aws:iam::*:role/AWSA*
- * ```
- */
-export abstract class ParameterReplacementConfigV2
-  implements t.TypeOf<typeof ReplacementsConfigTypes.parameterReplacementV2>
-{
-  /**
-   * Key of the replacement placeholder
-   */
+export abstract class ParameterReplacementConfigV2 implements i.IParameterReplacementV2 {
   readonly key: string = '';
-  /**
-   * Path of the SSM Parameter containing the value to replace
-   */
   readonly path: string = '';
-  /**
-   * Type of the global parameters
-   * */
-  readonly type: t.TypeOf<typeof ReplacementsConfigTypes.parameterReplacementType> = 'SSM';
-  /**
-   * Value of the parameter if type is string or array
-   */
+  readonly type: t.ParameterReplacementType = 'SSM';
   readonly value: string | string[] | undefined = undefined;
 }
 
@@ -141,10 +43,7 @@ export interface ReplacementsConfigProps {
   readonly region?: string;
 }
 
-/**
- * Accelerator replacements configuration
- */
-export class ReplacementsConfig implements t.TypeOf<typeof ReplacementsConfigTypes.replacementsConfig> {
+export class ReplacementsConfig implements i.IReplacementsConfig {
   /**
    * Replacements configuration file name, this file must be present in accelerator config repository
    */
@@ -157,9 +56,6 @@ export class ReplacementsConfig implements t.TypeOf<typeof ReplacementsConfigTyp
    */
   public static readonly POLICY_PARAMETER_PREFIX = 'ACCEL_LOOKUP::CUSTOM';
 
-  /**
-   * The set of placeholder parameters (key/path pairs) that will be merged with yaml configuration files.
-   */
   readonly globalReplacements: (ParameterReplacementConfig | ParameterReplacementConfigV2)[] = [];
 
   readonly accountsConfig: AccountsConfig | undefined = undefined;
@@ -174,11 +70,7 @@ export class ReplacementsConfig implements t.TypeOf<typeof ReplacementsConfigTyp
    * @param configDir
    * @param validateConfig
    */
-  constructor(
-    values?: t.TypeOf<typeof ReplacementsConfigTypes.replacementsConfig>,
-    accountsConfig?: AccountsConfig,
-    validateOnly = false,
-  ) {
+  constructor(values?: i.IReplacementsConfig, accountsConfig?: AccountsConfig, validateOnly = false) {
     this.accountsConfig = accountsConfig;
     this.validateOnly = validateOnly;
 
@@ -198,7 +90,7 @@ export class ReplacementsConfig implements t.TypeOf<typeof ReplacementsConfigTyp
 
     const buffer = fs.readFileSync(path.join(dir, ReplacementsConfig.FILENAME), 'utf8');
     if (!yaml.load(buffer)) return new ReplacementsConfig();
-    const values = t.parse(ReplacementsConfigTypes.replacementsConfig, yaml.load(buffer));
+    const values = t.parseReplacementsConfig(yaml.load(buffer));
     return new ReplacementsConfig(values, accountsConfig, validateOnly);
   }
 

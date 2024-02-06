@@ -65,6 +65,7 @@ This software includes third party software subject to the following copyrights:
 @types/uuid - MIT
 @typescript-eslint/eslint-plugin - MIT
 @typescript-eslint/parser - BSD-2-Clause
+ajv - MIT
 aws-cdk - Apache-2.0
 aws-cdk-lib - Apache-2.0
 aws-lambda - MIT
@@ -91,13 +92,10 @@ eslint-plugin-node - MIT
 eslint-plugin-prettier - MIT
 eslint-plugin-promise - ISC
 exponential-backoff - Apache-2.0
-fp-ts - MIT
 fs-extra - MIT
 hash-sum - MIT
 husky - MIT
 husky-init - MIT
-io-ts - MIT
-io-ts-types - MIT
 ip-num - MIT
 jest - MIT
 jest-junit - Apache-2.0
@@ -119,6 +117,7 @@ proxy-agent - MIT
 semver - MIT
 tempy - MIT
 ts-jest - MIT
+ts-json-schema-generator - MIT
 ts-node - MIT
 typedoc - Apache-2.0
 typescript - Apache-2.0

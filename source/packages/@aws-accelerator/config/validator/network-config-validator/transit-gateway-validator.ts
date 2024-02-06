@@ -10,9 +10,9 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
+import { isNetworkType } from '../../lib/common';
 import {
   NetworkConfig,
-  NetworkConfigTypes,
   TransitGatewayConfig,
   TransitGatewayRouteTableConfig,
   TransitGatewayRouteEntryConfig,
@@ -87,7 +87,12 @@ export class TransitGatewayValidator {
     for (const transitGateway of values.transitGateways) {
       for (const routeTable of transitGateway.routeTables) {
         for (const route of routeTable.routes) {
-          if (NetworkConfigTypes.transitGatewayRouteTableTgwPeeringEntryConfig.is(route.attachment)) {
+          if (
+            isNetworkType<TransitGatewayRouteTableTgwPeeringEntryConfig>(
+              'ITransitGatewayRouteTableTgwPeeringEntryConfig',
+              route.attachment,
+            )
+          ) {
             const attachment: TransitGatewayRouteTableTgwPeeringEntryConfig = route.attachment;
             if (!values.transitGatewayPeering?.find(item => item.name === attachment.transitGatewayPeeringName)) {
               errors.push(
@@ -467,7 +472,10 @@ export class TransitGatewayValidator {
     helpers: NetworkValidatorFunctions,
     errors: string[],
   ) {
-    if (entry.attachment && NetworkConfigTypes.transitGatewayRouteTableVpcEntryConfig.is(entry.attachment)) {
+    if (
+      entry.attachment &&
+      isNetworkType<TransitGatewayRouteTableVpcEntryConfig>('ITransitGatewayRouteTableVpcEntryConfig', entry.attachment)
+    ) {
       const vpcAttachment = entry.attachment as TransitGatewayRouteTableVpcEntryConfig;
       const vpc = helpers.getVpc(vpcAttachment.vpcName);
 
@@ -500,7 +508,13 @@ export class TransitGatewayValidator {
     entry: TransitGatewayRouteEntryConfig,
     errors: string[],
   ) {
-    if (entry.attachment && NetworkConfigTypes.transitGatewayRouteTableDxGatewayEntryConfig.is(entry.attachment)) {
+    if (
+      entry.attachment &&
+      isNetworkType<TransitGatewayRouteTableDxGatewayEntryConfig>(
+        'ITransitGatewayRouteTableDxGatewayEntryConfig',
+        entry.attachment,
+      )
+    ) {
       const dxAttachment = entry.attachment as TransitGatewayRouteTableDxGatewayEntryConfig;
       const dxgw = dxgws.find(item => item.name === dxAttachment.directConnectGatewayName);
       // Catch error if DXGW doesn't exist
@@ -540,7 +554,10 @@ export class TransitGatewayValidator {
     entry: TransitGatewayRouteEntryConfig,
     errors: string[],
   ) {
-    if (entry.attachment && NetworkConfigTypes.transitGatewayRouteTableVpnEntryConfig.is(entry.attachment)) {
+    if (
+      entry.attachment &&
+      isNetworkType<TransitGatewayRouteTableVpnEntryConfig>('ITransitGatewayRouteTableVpnEntryConfig', entry.attachment)
+    ) {
       const vpnAttachment = entry.attachment as TransitGatewayRouteTableVpnEntryConfig;
       const cgw = cgws.find(cgwItem =>
         cgwItem.vpnConnections?.find(vpnItem => vpnItem.name === vpnAttachment.vpnConnectionName),

@@ -1,0 +1,96 @@
+{
+  "$ref": "#/definitions/IReplacementsConfig",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "IParameterReplacement": {
+      "additionalProperties": false,
+      "description": "Fixed replacement value to apply throughout config files. Loaded from SSM\nparameters in the management account in the HOME_REGION.",
+      "properties": {
+        "key": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Key of the replacement placeholder"
+        },
+        "path": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Path of the SSM Parameter containing the value to replace"
+        }
+      },
+      "required": [
+        "key",
+        "path"
+      ],
+      "type": "object"
+    },
+    "IParameterReplacementV2": {
+      "additionalProperties": false,
+      "description": "Fixed replacement value to apply throughout config files. Loaded from SSM\nparameters in the management account in the HOME_REGION.",
+      "properties": {
+        "key": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Key of the replacement placeholder"
+        },
+        "path": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Path of the SSM Parameter containing the value to replace"
+        },
+        "type": {
+          "$ref": "#/definitions/ParameterReplacementType",
+          "description": "Type of the global parameters"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/NonEmptyString"
+            },
+            {
+              "items": {
+                "$ref": "#/definitions/NonEmptyString"
+              },
+              "type": "array"
+            }
+          ],
+          "description": "Value of the parameter if type is string or array"
+        }
+      },
+      "required": [
+        "key",
+        "type"
+      ],
+      "type": "object"
+    },
+    "IReplacementsConfig": {
+      "additionalProperties": false,
+      "description": "Accelerator replacements configuration",
+      "properties": {
+        "globalReplacements": {
+          "description": "The set of placeholder parameters (key/path pairs) that will be merged with yaml configuration files.",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/IParameterReplacement"
+              },
+              {
+                "$ref": "#/definitions/IParameterReplacementV2"
+              }
+            ]
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "NonEmptyString": {
+      "description": "A string that has at least 1 character",
+      "minLength": 1,
+      "type": "string"
+    },
+    "ParameterReplacementType": {
+      "enum": [
+        "SSM",
+        "String",
+        "StringList"
+      ],
+      "type": "string"
+    }
+  }
+}

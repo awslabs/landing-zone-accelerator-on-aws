@@ -12,7 +12,7 @@
  */
 
 export * from './lib/accounts-config';
-export * from './lib/common-types';
+export * from './lib/common';
 export * from './lib/customizations-config';
 export * from './lib/global-config';
 export * from './lib/iam-config';
@@ -20,6 +20,11 @@ export * from './lib/network-config';
 export * from './lib/organization-config';
 export * from './lib/replacements-config';
 export * from './lib/security-config';
+export * from './lib/models/accounts-config';
+export * from './lib/models/global-config';
+export * from './lib/models/iam-config';
+export * from './lib/models/organization-config';
+export * from './lib/models/security-config';
 export * from './validator/accounts-config-validator';
 export * from './validator/customizations-config-validator';
 export * from './validator/global-config-validator';

@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { AseaResourceType, NetworkConfigTypes, VpcConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
+import { AseaResourceType, VpcConfig, VpcTemplatesConfig, isNetworkType } from '@aws-accelerator/config';
 import { RouteTable, Vpc } from '@aws-accelerator/constructs';
 import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 import * as cdk from 'aws-cdk-lib';
@@ -66,7 +66,7 @@ export class RouteTableResources {
    */
   private associateOutpostRouteTables(vpc: Vpc, vpcItem: VpcConfig | VpcTemplatesConfig) {
     let outpostRouteTableMap = new Map<string, RouteTable>();
-    if (NetworkConfigTypes.vpcConfig.is(vpcItem)) {
+    if (isNetworkType<VpcConfig>('IVpcConfig', vpcItem)) {
       outpostRouteTableMap = this.getOutpostRouteTables(vpc, vpcItem);
       this.associateLocalGatewayRouteTablesToVpc({
         vpcAccountName: vpcItem.account,

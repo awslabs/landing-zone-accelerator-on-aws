@@ -1,0 +1,2151 @@
+/**
+ *  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance
+ *  with the License. A copy of the License is located at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  or in the 'license' file accompanying this file. This file is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES
+ *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
+ *  and limitations under the License.
+ */
+
+import * as t from '../common/types';
+
+/**
+ * {@link GlobalConfig} / {@link ControlTowerConfig} / {@link ControlTowerControlConfig}
+ *
+ * @description
+ * Control Tower controls
+ *
+ * @see ControlTowerControlConfig
+ *
+ * This allows you to enable Strongly Recommended or Elective Controls
+ * https://docs.aws.amazon.com/controltower/latest/userguide/optional-controls.html
+ *
+ * @remarks AWS Control Tower is limited to 10 concurrent operations, where enabling a control for one Organizational Unit constitutes a single operation.
+ * To avoid throttling, please enable controls in batches of 10 or fewer each pipeline run. Keep in mind other Control Tower operations may use up some of the available quota.
+ *
+ * @example
+ * controlTowerControls:
+ *   - identifier: AWS-GR_RESTRICT_ROOT_USER_ACCESS_KEYS
+ *     enable: true
+ *     deploymentTargets:
+ *       organizationalUnits:
+ *         - Workloads
+ */
+export interface IControlTowerControlConfig {
+  /**
+   * Control Tower control identifier, for Strongly Recommended or Elective controls this should start with AWS-GR
+   */
+  readonly identifier: t.NonEmptyString;
+  /**
+   * Control enabled
+   */
+  readonly enable: boolean;
+  /**
+   * Control Tower control deployment targets, controls can only be deployed to Organizational Units
+   */
+  readonly deploymentTargets: t.IDeploymentTargets;
+  /**
+   * (Optional) Region(s) where this service quota increase will be requested. Service Quota increases will be requested in the home region only if this property is not defined.
+   */
+  readonly regions?: t.Region[];
+}
+
+/**
+ * *{@link GlobalConfig} / {@link ControlTowerConfig}*
+ *
+ * @description
+ * AWS ControlTower configuration
+ *
+ * @example
+ * ```
+ * controlTower:
+ *   enable: true
+ * ```
+ */
+export interface IControlTowerConfig {
+  /**
+   * Indicates whether AWS ControlTower enabled.
+   *
+   * When control tower is enabled, accelerator makes sure account configuration file have three mandatory AWS CT accounts.
+   * In AWS Control Tower, three shared accounts in your landing zone are provisioned automatically during setup: the management account,
+   * the log archive account, and the audit account.
+   */
+  readonly enable: boolean;
+  /**
+   * A list of Control Tower controls to enable.
+   *
+   * Only Strongly recommended and Elective controls are permitted, with the exception of the Region deny guardrail. Please see this page for more information: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-controltower-enabledcontrol.html
+   */
+  readonly controls?: IControlTowerControlConfig[];
+}
+
+/**
+ * *{@link GlobalConfig} / {@link S3GlobalConfig} / {@link S3EncryptionConfig}*
+ *
+ * @description
+ * AWS S3 encryption configuration settings
+ *
+ * @example
+ * ```
+ *  encryption:
+ *    createCMK: true
+ *    deploymentTargets:
+ *      organizationalUnits:
+ *        - Root
+ * ```
+ */
+export interface IS3EncryptionConfig {
+  /**
+   * Flag indicates whether solution will create CMK for S3 bucket encryption.
+   *
+   * @remarks
+   * When set to `true`, the solution will create AWS KMS CMK which will be used by the S3 for server-side encryption.
+   *
+   * @default true
+   */
+  readonly createCMK: boolean;
+  /**
+   * To control target environments (AWS Account and Region) for the given `createCMK` setting, you may optionally specify deployment targets.
+   * Leaving `deploymentTargets` undefined will apply `createCMK` setting to all accounts and enabled regions.
+   */
+  readonly deploymentTargets?: t.IDeploymentTargets;
+}
+
+/**
+ * *{@link GlobalConfig} / {@link S3GlobalConfig}*
+ *
+ * @description
+ * AWS S3 global encryption configuration settings
+ *
+ * @example
+ * ```
+ *  encryption:
+ *    createCMK: true
+ *    deploymentTargets:
+ *      organizationalUnits:
+ *        - Root
+ * ```
+ */
+export interface IS3GlobalConfig {
+  /**
+   * S3 encryption configuration.
+   *
+   * @remarks
+   * Please use the following configuration to disable AWS KMS CMK for AWS S3 bucket encryption.
+   * In the absence of this property, the solution will deploy the AWS KMS CMK in every environment (AWS Account and Region).
+   * The solution will disregard this property and create CMKs to encrypt the installer bucket, pipeline bucket, and solution deployed CentralLogs bucket,
+   * because AWS KMS CMK is always used to encrypt installer buckets, pipeline buckets, and solution deployed CentralLogs buckets.
+   *
+   * @example
+   * ```
+   * s3:
+   *   encryption:
+   *     createCMK: false
+   *     deploymentTargets:
+   *       organizationalUnits:
+   *         - Root
+   * ```
+   * @default undefined
+   */
+  readonly encryption?: IS3EncryptionConfig;
+}
+
+/**
+ * *{@link GlobalConfig} / {@link centralizeCdkBucketsConfig}*
+ *
+ * @description
+ * AWS CDK Centralization configuration
+ * ***Deprecated***
+ * Replaced by cdkOptions in global config
+ *
+ * @example
+ * ```
+ * centralizeCdkBuckets:
+ *   enable: true
+ * ```
+ */
+export interface ICentralizeCdkBucketsConfig {
+  /**
+   * ***Deprecated***
+   * Replaced by cdkOptions in global config.
+   *
+   * Indicates whether CDK stacks in workload accounts will utilize S3 buckets in the management account rather than within the account.
+   *
+   * When the accelerator deploys resources using the AWS CDK, assets are first built and stored in S3. By default, the S3 bucket is
+   * located within the deployment target account.
+   */
+  readonly enable: boolean;
+}
+
+/**
+ * *{@link GlobalConfig} / {@link cdkOptionsConfig}*
+ *
+ * @description
+ * AWS CDK options configuration. This lets you customize the operation of the CDK within LZA, specifically:
+ *
+ * centralizeBuckets: Enabling this option modifies the CDK bootstrap process to utilize a single S3 bucket per region located in the management account for CDK assets generated by LZA. Otherwise, CDK will create a new S3 bucket in every account and every region supported by LZA.
+ * useManagementAccessRole: Enabling this option modifies CDK operations to use the IAM role specified in the `managementAccountAccessRole` option in `global-config.yaml` rather than the default roles created by CDK. Default CDK roles will still be created, but will remain unused. Any stacks previously deployed by LZA will retain their [associated execution role](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-iam-servicerole.html). For more information on these roles, please see [here](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html#bootstrapping-contract).
+ *
+ * @example
+ * ```
+ * cdkOptions:
+ *   centralizeBuckets: true
+ *   useManagementAccessRole: true
+ * ```
+ */
+export interface ICdkOptionsConfig {
+  /**
+   * Indicates whether CDK stacks in workload accounts will utilize S3 buckets in the management account rather than within the account.
+   *
+   * When the accelerator deploys resources using the AWS CDK, assets are first built and stored in S3. By default, the S3 bucket is
+   * located within the deployment target account.
+   */
+  readonly centralizeBuckets: boolean;
+  /**
+   * Indicates whether CDK operations use the IAM role specified in the `managementAccountAccessRole` option in `global-config.yaml` rather than the default roles created by CDK.
+   *
+   * The roles created and leveraged by CDK by default can be found [here](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html#bootstrapping-contract).
+   */
+  readonly useManagementAccessRole: boolean;
+  /**
+   * Creates a deployment role in all accounts in the home region with the name specified in the parameter. This role is used by the LZA for all CDK deployment tasks.
+   */
+  readonly customDeploymentRole?: string;
+  /**
+   * Forces the Accelerator to deploy the bootstrapping stack and circumvent the ssm parameter check. This option is needed when adding or removing a custom deployment role
+   */
+  readonly forceBootstrap?: boolean;
+}
+
+/**
+ * *{@link GlobalConfig} / {@link externalLandingZoneResourcesConfig}*
+ *
+ * @description
+ * External Landing Zone Resources Config
+ *
+ * @example
+ * ```
+ * externalLandingZoneResourcesConfig:
+ *   importExternalLandingZoneResources: true
+ * ```
+ */
+export interface IExternalLandingZoneResourcesConfig {
+  /**
+   * When the accelerator deploys resources using the AWS CDK, assets are first built and stored in S3. By default, the S3 bucket is
+   * located within the deployment target account.
+   */
+  readonly importExternalLandingZoneResources: boolean;
+  readonly mappingFileBucket?: string;
+  readonly acceleratorPrefix: t.NonEmptyString;
+  readonly acceleratorName: t.NonEmptyString;
+}
+
+/**
+ * *{@link GlobalConfig} / {@link LoggingConfig} / {@link CloudTrailConfig} / ({@link AccountCloudTrailConfig}) / {@link CloudTrailSettingsConfig}*
+ *
+ * @description
+ * AWS CloudTrail Settings configuration
+ *
+ * @example
+ * ```
+ * multiRegionTrail: true
+ * globalServiceEvents: true
+ * managementEvents: true
+ * s3DataEvents: true
+ * lambdaDataEvents: true
+ * sendToCloudWatchLogs: true
+ * apiErrorRateInsight: false
+ * apiCallRateInsight: false
+ * ```
+ */
+export interface ICloudTrailSettingsConfig {
+  /**
+   * Whether or not this trail delivers log files from all regions in the account.
+   */
+  multiRegionTrail: boolean;
+  /**
+   * For global services such as AWS Identity and Access Management (IAM), AWS STS, Amazon CloudFront,
+   * and Route 53, events are delivered to any trail that includes global services,
+   *  and are logged as occurring in US East Region.
+   */
+  globalServiceEvents: boolean;
+  /**
+   * Management events provide insight into management operations that are
+   * on resources in your AWS account. These are also known as control plane operations.
+   * Management events can also include non-API events that occur in your account.
+   * For example, when a user logs in to your account, CloudTrail logs the ConsoleLogin event.
+   * Enabling will set ReadWriteType.ALL
+   */
+  managementEvents: boolean;
+  /**
+   * Adds an S3 Data Event Selector for filtering events that match S3 operations.
+   * These events provide insight into the resource operations performed on or within a resource.
+   * These are also known as data plane operations.
+   */
+  s3DataEvents: boolean;
+  /**
+   * Adds an Lambda Data Event Selector for filtering events that match Lambda operations.
+   * These events provide insight into the resource operations performed on or within a resource.
+   * These are also known as data plane operations.
+   */
+  lambdaDataEvents: boolean;
+  /**
+   * If CloudTrail pushes logs to CloudWatch Logs in addition to S3.  CloudWatch Logs
+   * will also be replicated to S3.
+   */
+  sendToCloudWatchLogs: boolean;
+  /**
+   * Will enable CloudTrail Insights and enable the API Error Rate Insight
+   */
+  readonly apiErrorRateInsight: boolean;
+  /**
+   * Will enable CloudTrail Insights and enable the API Call Rate Insight
+   */
+  readonly apiCallRateInsight: boolean;
+}
+
+/**
+ * *{@link GlobalConfig} / {@link LoggingConfig} / {@link CloudTrailConfig} / {@link AccountCloudTrailConfig}*
+ *
+ * @description
+ * Account CloudTrail config
+ *
+ * @example
+ * ```
+ * - name: AWSAccelerator-Account-CloudTrail
+ *   regions:
+ *     - us-east-1
+ *   deploymentTargets:
+ *     organizationalUnits:
+ *       - Root
+ *   settings:
+ *     multiRegionTrail: true
+ *     globalServiceEvents: true
+ *     managementEvents: true
+ *     s3DataEvents: true
+ *     lambdaDataEvents: true
+ *     sendToCloudWatchLogs: true
+ *     apiErrorRateInsight: false
+ *     apiCallRateInsight: false
+ * ```
+ */
+export interface IAccountCloudTrailConfig {
+  /**
+   * Name that will be used to create the CloudTrail.
+   */
+  readonly name: string;
+  /**
+   * Region(s) that this account trail will be deployed in.
+   */
+  readonly regions: t.NonEmptyString[];
+  /**
+   * Which OU's or Accounts the trail will be deployed to
+   */
+  readonly deploymentTargets: t.IDeploymentTargets;
+  /**
+   * Settings for the CloudTrail log
+   */
+  readonly settings: ICloudTrailSettingsConfig;
+}
+
+/**
+ * *{@link GlobalConfig} / {@link LoggingConfig} / {@link CloudTrailConfig} / {@link AccountCloudTrailConfig}*
+ *
+ * @description
+ * AWS Cloudtrail configuration
+ *
+ * @example
+ * ```
+ * cloudtrail:
+ *   enable: true
+ *   organizationTrail: true
+ *   organizationTrailSettings:
+ *     multiRegionTrail: true
+ *     globalServiceEvents: true
+ *     managementEvents: true
+ *     s3DataEvents: true
+ *     lambdaDataEvents: true
+ *     sendToCloudWatchLogs: true
+ *     apiErrorRateInsight: false
+ *     apiCallRateInsight: false
+ *   accountTrails: []
+ *   lifecycleRules: []
+ * ```
+ */
+export interface ICloudTrailConfig {
+  /**
+   * Indicates whether AWS Cloudtrail enabled.
+   *
+   * Cloudtrail a service that helps you enable governance, compliance, and operational and risk auditing of your AWS account.
+   * This setting does not create any trails.  You will also need to either and organization trail
+   * or setup account level trails.
+   */
+  readonly enable: boolean;
+  /**
+   * Indicates whether AWS OrganizationTrail enabled.
+   *
+   * When OrganizationTrail and cloudtrail is enabled accelerator will enable trusted access designates CloudTrail as a trusted service in your organization.
+   * A trusted service can query the organization's structure and create service-linked roles in the organization's accounts.
+   */
+  readonly organizationTrail: boolean;
+  /**
+   * Optional configuration of the organization trail.  OrganizationTrail must be enabled
+   * in order to use these settings
+   */
+  readonly organizationTrailSettings?: ICloudTrailSettingsConfig;
+  /**
+   * Optional configuration of account level CloudTrails. Can be used with or without
+   * an Organization Trail
+   */
+  readonly accountTrails?: IAccountCloudTrailConfig[];
+  /**
+   * Optional S3 Log Bucket Lifecycle rules
+   */
+  readonly lifecycleRules?: t.ILifecycleRule[];
+}
+
+/**
+ * *{@link GlobalConfig} / {@link LoggingConfig} / {@link SessionManagerConfig}*
+ *
+ * @description
+ * AWS Service Quotas configuration
+ */
+export interface IServiceQuotaLimitsConfig {
+  /**
+   * Indicates which service Service Quota is changing the limit for.
+   */
+  readonly serviceCode: string;
+  /**
+   * Indicates the code for the service as these are tied to the account.
+   *
+   */
+  readonly quotaCode: string;
+  /**
+   * Value associated with the limit change.
+   */
+  readonly desiredValue: number;
+  /**
+   * List of AWS Account names to be included in the Service Quota changes
+   */
+  readonly deploymentTargets: t.IDeploymentTargets;
+  /**
+   * (Optional) Region(s) where this service quota increase will be requested. Service Quota increases will be requested in the home region only if this property is not defined.
+   */
+  readonly regions?: t.Region[];
+}
+
+/**
+ * @description
+ * AWS SessionManager configuration
+ *
+ * @example
+ * ```
+ * sessionManager:
+ *   sendToCloudWatchLogs: true
+ *   sendToS3: true
+ *   excludeRegions: []
+ *   excludeAccounts: []
+ *   lifecycleRules: []
+ *   attachPolicyToIamRoles:
+ *     - EC2-Default-SSM-AD-Role
+ * ```
+ */
+export interface ISessionManagerConfig {
+  /**
+   * Indicates whether sending SessionManager logs to CloudWatchLogs enabled.
+   */
+  readonly sendToCloudWatchLogs: boolean;
+  /**
+   * Indicates whether sending SessionManager logs to S3 enabled.
+   *
+   * When this flag is on, accelerator will send session manager logs to Central log bucket in LogArchive account.
+   */
+  readonly sendToS3: boolean;
+  /**
+   * List of AWS Region names to be excluded from configuring SessionManager configuration
+   */
+  readonly excludeRegions?: t.Region[];
+  /**
+   * List of AWS Account names to be excluded from configuring SessionManager configuration
+   */
+  readonly excludeAccounts?: string[];
+  /**
+   * S3 Lifecycle rule for log storage
+   */
+  readonly lifecycleRules?: t.ILifecycleRule[];
+  /**
+   * List of IAM EC2 roles that the Session Manager
+   * access policy should be attached to
+   */
+  readonly attachPolicyToIamRoles?: string[];
+}
+
+/**
+ * *{@link GlobalConfig} / {@link LoggingConfig} / {@link AssetBucketConfig}*
+ *
+ * @description
+ * Accelerator global S3 asset bucket configuration
+ *
+ * @example
+ * ```
+ * assetBucket:
+ *   s3ResourcePolicyAttachments:
+ *     - policy: s3-policies/policy1.json
+ *   importedBucket:
+ *     name: aws-accelerator-assets
+ *     applyAcceleratorManagedBucketPolicy: true
+ * ```
+ */
+export interface IAssetBucketConfig {
+  /**
+   * JSON policy files.
+   *
+   * @remarks
+   * Policy statements from these files will be added to the bucket resource policy.
+   * This property can not be used when customPolicyOverrides.s3Policy property has value.
+   *
+   * Note: When Block Public Access is enabled for S3 on the AWS account, you can't specify a policy that would make
+   * the S3 Bucket public.
+   */
+  readonly s3ResourcePolicyAttachments?: t.IResourcePolicyStatement[];
+  /**
+   * JSON policy files.
+   *
+   * @remarks
+   * Policy statements from these files will be added to the bucket encryption key policy.
+   * This property can not be used when customPolicyOverrides.kmsPolicy property has value.
+   * When imported CentralLogs bucket used with createAcceleratorManagedKey set to false, this property can not have any value.
+   */
+  readonly kmsResourcePolicyAttachments?: t.IResourcePolicyStatement[];
+  /**
+   * Imported bucket configuration.
+   *
+   * @remarks
+   * Use this configuration when accelerator will import existing Assets bucket.
+   *
+   * Use the following configuration to imported Assets bucket, manage bucket resource policy and apply bucket encryption through the solution.
+   * ```
+   * importedBucket:
+   *    name: aws-assets
+   *    applyAcceleratorManagedBucketPolicy: true
+   *    createAcceleratorManagedKey: true
+   * ```
+   *
+   * @default
+   * undefined
+   */
+  readonly importedBucket?: t.IImportedCustomerManagedEncryptionKeyBucketConfig;
+  /**
+   * Custom policy overrides configuration.
+   *
+   * @remarks
+   * Use this configuration to provide JSON string policy file for bucket resource policy.
+   * Bucket resource policy will be over written by content of this file, so when using these option policy files must contain complete policy document.
+   * When customPolicyOverrides.s3Policy defined importedBucket.applyAcceleratorManagedBucketPolicy can not be set to true also s3ResourcePolicyAttachments property can not be defined.
+   *
+   * Use the following configuration to apply custom bucket resource policy overrides through policy JSON file.
+   * ```
+   * customPolicyOverrides:
+   *   s3Policy: path/to/policy.json
+   *   kmsPolicy: kms/full-central-logs-bucket-key-policy.json
+   * ```
+   *
+   * @default
+   * undefined
+   */
+  readonly customPolicyOverrides?: t.CustomS3ResourceAndKmsPolicyOverridesConfig;
+}
+
+/**
+ * *{@link GlobalConfig} / {@link LoggingConfig} / {@link AccessLogBucketConfig}*
+ *
+ * @description
+ * Accelerator global S3 access logging configuration
+ *
+ * @example
+ * ```
+ * accessLogBucket:
+ *   enable: true
+ *   deploymentTargets:
+ *     organizationalUnits:
+ *       - Root
+ *   s3ResourcePolicyAttachments:
+ *     - policy: s3-policies/policy1.json
+ *   lifecycleRules:
+ *     - enabled: true
+ *       id: AccessLifecycle-01
+ *       abortIncompleteMultipartUpload: 14
+ *       expiration: 3563
+ *       expiredObjectDeleteMarker: false
+ *       noncurrentVersionExpiration: 3653
+ *       noncurrentVersionTransitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       transitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       prefix: PREFIX
+ *     - enabled: true
+ *       id: AccessLifecycle-02
+ *       abortIncompleteMultipartUpload: 14
+ *       expiredObjectDeleteMarker: true
+ *       noncurrentVersionExpiration: 3653
+ *       noncurrentVersionTransitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       transitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       prefix: PREFIX
+ *   importedBucket:
+ *     name: existing-access-log-bucket
+ *     applyAcceleratorManagedBucketPolicy: true
+ * ```
+ */
+export interface IAccessLogBucketConfig {
+  /**
+   * Declaration of (S3 Bucket) Lifecycle rules.
+   */
+  readonly lifecycleRules?: t.ILifecycleRule[];
+  /**
+   * Flag indicating S3 access logging bucket is enable by solution.
+   *
+   * @remarks
+   * When this property is undefined solution will create S3 access log bucket. You can use `deploymentTargets` to control target accounts and regions for the given `accessLogBucket` configuration.
+   * In the solution, this property will be ignored and S3 Access log buckets will be created for the installer bucket,
+   * pipeline bucket, solution deployed CentralLogs bucket, and solution deployed Assets bucket, since these buckets always have server access logging enabled.
+   */
+  readonly enable?: boolean;
+  /**
+   * To control target environments (AWS Account and Region) for the given `accessLogBucket` setting, you may optionally specify deployment targets.
+   * Leaving `deploymentTargets` undefined will apply `useCMK` setting to all accounts and enabled regions.
+   */
+  readonly deploymentTargets?: t.IDeploymentTargets;
+  /**
+   * JSON policy files.
+   *
+   * @remarks
+   * Policy statements from these files will be added to the bucket resource policy.
+   * This property can not be used when customPolicyOverrides.s3Policy property has value.
+   *
+   * Note: When Block Public Access is enabled for S3 on the AWS account, you can't specify a policy that would make
+   * the S3 Bucket public.
+   */
+  readonly s3ResourcePolicyAttachments?: t.IResourcePolicyStatement[];
+  /**
+   * Imported bucket configuration.
+   *
+   * @remarks
+   * Use this configuration when accelerator will import existing AccessLogs bucket.
+   *
+   * Use the following configuration to imported AccessLogs bucket, manage bucket resource policy through solution.
+   * ```
+   * importedBucket:
+   *    name: existing-access-log-bucket
+   *    applyAcceleratorManagedBucketPolicy: true
+   * ```
+   *
+   * @default
+   * undefined
+   */
+  readonly importedBucket?: t.IImportedS3ManagedEncryptionKeyBucketConfig;
+  /**
+   * Custom policy overrides configuration.
+   *
+   * @remarks
+   * Use this configuration to provide JSON string policy file for bucket resource policy.
+   * Bucket resource policy will be over written by content of this file, so when using these option policy files must contain complete policy document.
+   * When customPolicyOverrides.s3Policy defined importedBucket.applyAcceleratorManagedBucketPolicy can not be set to true also s3ResourcePolicyAttachments property can not be defined.
+   *
+   * Use the following configuration to apply custom bucket resource policy overrides through policy JSON file.
+   * ```
+   * customPolicyOverrides:
+   *   s3Policy: path/to/policy.json
+   * ```
+   *
+   * @default
+   * undefined
+   */
+  readonly customPolicyOverrides?: t.ICustomS3ResourcePolicyOverridesConfig;
+}
+
+/**
+ * *{@link GlobalConfig} / {@link LoggingConfig} / {@link CentralLogBucketConfig}*
+ *
+ * @description
+ * Accelerator global S3 central logging configuration
+ *
+ * @example
+ * ```
+ * centralLogBucket:
+ *   applyAcceleratorManagedPolicy: true
+ *   lifecycleRules:
+ *     - enabled: true
+ *       id: CentralLifecycleRule-01
+ *       abortIncompleteMultipartUpload: 14
+ *       expiration: 3563
+ *       expiredObjectDeleteMarker: false
+ *       noncurrentVersionExpiration: 3653
+ *       noncurrentVersionTransitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       transitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       prefix: PREFIX
+ *     - enabled: true
+ *       id: CentralLifecycleRule-02
+ *       abortIncompleteMultipartUpload: 14
+ *       expiredObjectDeleteMarker: true
+ *       noncurrentVersionExpiration: 3653
+ *       noncurrentVersionTransitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       transitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       prefix: PREFIX
+ *   s3ResourcePolicyAttachments:
+ *     - policy: s3-policies/policy1.json
+ *   kmsResourcePolicyAttachments:
+ *     - policy: kms-policies/policy1.json
+ *   importedBucket:
+ *     name: central-log-bucket
+ *     applyAcceleratorManagedBucketPolicy: true
+ *     createAcceleratorManagedKey: false
+ * ```
+ */
+export interface ICentralLogBucketConfig {
+  /**
+   * Declaration of (S3 Bucket) Lifecycle rules.
+   * Configure additional resource policy attachments
+   */
+  readonly lifecycleRules?: t.ILifecycleRule[];
+  /**
+   * JSON policy files.
+   *
+   * @remarks
+   * Policy statements from these files will be added to the bucket resource policy.
+   * This property can not be used when customPolicyOverrides.s3Policy property has value.
+   *
+   * Note: When Block Public Access is enabled for S3 on the AWS account, you can't specify a policy that would make
+   * the S3 Bucket public.
+   */
+  readonly s3ResourcePolicyAttachments?: t.IResourcePolicyStatement[];
+  /**
+   * JSON policy files.
+   *
+   * @remarks
+   * Policy statements from these files will be added to the bucket encryption key policy.
+   * This property can not be used when customPolicyOverrides.kmsPolicy property has value.
+   * When imported CentralLogs bucket used with createAcceleratorManagedKey set to false, this property can not have any value.
+   */
+  readonly kmsResourcePolicyAttachments?: t.IResourcePolicyStatement[];
+  /**
+   * Imported bucket configuration.
+   *
+   * @remarks
+   * Use this configuration when accelerator will import existing CentralLogs bucket.
+   *
+   * Use the following configuration to imported CentralLogs bucket, manage bucket resource policy and kms policy through solution.
+   * ```
+   * importedBucket:
+   *    name: existing-central-log-bucket
+   *    applyAcceleratorManagedBucketPolicy: true
+   *    createAcceleratorManagedKey: true
+   * ```
+   *
+   * @default
+   * undefined
+   */
+  readonly importedBucket?: t.IImportedS3ManagedEncryptionKeyBucketConfig;
+  /**
+   * Custom policy overrides configuration.
+   *
+   * @remarks
+   * Use this configuration to provide JSON string policy file for bucket resource policy and KMS key policy.
+   * Bucket resource policy and kms key policy will be over written by content of this file, so when using these option policy files must contain complete policy document.
+   * When customPolicyOverrides.s3Policy defined importedBucket.applyAcceleratorManagedBucketPolicy can not be set to true also s3ResourcePolicyAttachments property can not be defined.
+   * When customPolicyOverrides.kmsPolicy defined kmsResourcePolicyAttachments property can not be defined.
+   *
+   *
+   * Use the following configuration to apply custom bucket resource policy and KMS policy overrides through policy JSON file.
+   * ```
+   * customPolicyOverrides:
+   *   s3Policy: path/to/policy.json
+   *   kmsPolicy: kms/full-central-logs-bucket-key-policy.json
+   * ```
+   *
+   * @default
+   * undefined
+   */
+  readonly customPolicyOverrides?: t.ICustomS3ResourceAndKmsPolicyOverridesConfig;
+}
+
+/**
+ * *{@link GlobalConfig} / {@link LoggingConfig} / {@link ElbLogBucketConfig}*
+ *
+ * @description
+ * Accelerator global S3 elb logging configuration
+ *
+ * @example
+ * ```
+ * elbLogBucket:
+ *   applyAcceleratorManagedPolicy: true
+ *   lifecycleRules:
+ *     - enabled: true
+ *       id: ElbLifecycleRule-01
+ *       abortIncompleteMultipartUpload: 14
+ *       expiration: 3563
+ *       expiredObjectDeleteMarker: false
+ *       noncurrentVersionExpiration: 3653
+ *       noncurrentVersionTransitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       transitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       prefix: PREFIX
+ *     - enabled: true
+ *       id: ElbLifecycleRule-02
+ *       abortIncompleteMultipartUpload: 14
+ *       expiredObjectDeleteMarker: true
+ *       noncurrentVersionExpiration: 3653
+ *       noncurrentVersionTransitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       transitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       prefix: PREFIX
+ *   s3ResourcePolicyAttachments:
+ *     - policy: s3-policies/policy1.json
+ *   importedBucket:
+ *     name: elb-logs-bucket
+ *     applyAcceleratorManagedBucketPolicy: true
+ * ```
+ */
+export interface IElbLogBucketConfig {
+  /**
+   * Declaration of (S3 Bucket) Lifecycle rules.
+   * Configure additional resource policy attachments
+   */
+  readonly lifecycleRules?: t.ILifecycleRule[];
+  /**
+   * JSON policy files.
+   *
+   * @remarks
+   * Policy statements from these files will be added to the bucket resource policy.
+   * This property can not be used when customPolicyOverrides.s3Policy property has value.
+   *
+   * Note: When Block Public Access is enabled for S3 on the AWS account, you can't specify a policy that would make
+   * the S3 Bucket public.
+   */
+  readonly s3ResourcePolicyAttachments?: t.IResourcePolicyStatement[];
+  /**
+   * Imported bucket configuration.
+   *
+   * @remarks
+   * Use this configuration when accelerator will import existing ElbLogs bucket.
+   *
+   * Use the following configuration to imported ElbLogs bucket, manage bucket resource policy through solution.
+   * ```
+   * importedBucket:
+   *    name: existing-elb-log-bucket
+   *    applyAcceleratorManagedBucketPolicy: true
+   * ```
+   *
+   * @default
+   * undefined
+   */
+  readonly importedBucket?: t.IImportedS3ManagedEncryptionKeyBucketConfig;
+  /**
+   * Custom policy overrides configuration.
+   *
+   * @remarks
+   * Use this configuration to provide JSON string policy file for bucket resource policy.
+   * Bucket resource policy will be over written by content of this file, so when using these option policy files must contain complete policy document.
+   * When customPolicyOverrides.s3Policy defined importedBucket.applyAcceleratorManagedBucketPolicy can not be set to true also s3ResourcePolicyAttachments property can not be defined.
+   *
+   * Use the following configuration to apply custom bucket resource policy overrides through policy JSON file.
+   * ```
+   * customPolicyOverrides:
+   *   s3Policy: path/to/policy.json
+   * ```
+   *
+   * @default
+   * undefined
+   */
+  readonly customPolicyOverrides?: t.ICustomS3ResourcePolicyOverridesConfig;
+}
+
+/**
+ * *{@link GlobalConfig} / {@link LoggingConfig} / {@link CloudWatchLogsConfig}/ {@link CloudWatchLogsExclusionConfig}*
+ *
+ * @description
+ * Accelerator global CloudWatch Logs exclusion configuration
+ *
+ * @example
+ * ```
+ * organizationalUnits:
+ *  - Sandbox
+ * regions:
+ *  - us-west-1
+ *  - us-west-2
+ * accounts:
+ *  - WorkloadAccount1
+ * excludeAll: true
+ * logGroupNames:
+ *  - 'test/*'
+ *  - '/appA/*'
+ *
+ * ```
+ */
+export interface ICloudWatchLogsExclusionConfig {
+  /**
+   * List of OUs that the exclusion will apply to
+   */
+  readonly organizationalUnits?: t.NonEmptyString[];
+  /**
+   * List of regions where the exclusion will be applied to. If no value is supplied, exclusion is applied to all enabled regions.
+   */
+  readonly regions?: t.Region[];
+  /**
+   * List of accounts where the exclusion will be applied to
+   */
+  readonly accounts?: t.NonEmptyString[];
+  /**
+   * Exclude replication on all logs. By default this is set to false.
+   *
+   * @remarks
+   * If undefined, this is set to false. When set to true, it disables replication on entire OU or account for that region.
+   * Setting OU as `Root` with no region specified and making this true will fail validation since that usage is redundant.
+   * Instead use the {@link CloudWatchLogsConfig | enable} parameter in cloudwatch log config which will disable replication across all accounts in all regions.
+   */
+  readonly excludeAll?: boolean;
+  /**
+   * List of log groups names where the exclusion will be applied to
+   *
+   * @remarks
+   * Wild cards are supported. These log group names are added in the eventbridge payload which triggers lambda. If `excludeAll` is used then all logGroups are excluded and this parameter is not used.
+   */
+  readonly logGroupNames?: t.NonEmptyString[];
+}
+
+/**
+ * *{@link GlobalConfig} / {@link LoggingConfig} / {@link CloudWatchLogsConfig}*
+ *
+ * @description
+ * Accelerator global CloudWatch Logs logging configuration
+ *
+ * @remarks
+ * You can decide to use AWS KMS CMK or server-side encryption for the log data at rest. When this `encryption` property is undefined, the solution will deploy AWS KMS CMK to encrypt AWS CloudWatch log data at rest.
+ * You can use `deploymentTargets` to control target accounts and regions for the given `useCMK` configuration.
+ * please see [here](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/data-protection.html) or [here](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/encrypt-log-data-kms.html) for more information.
+ *
+ * @example
+ * ```
+ * cloudwatchLogs:
+ *   dynamicPartitioning: path/to/filter.json
+ *   # default is true, if undefined this is set to true
+ *   # if set to false, no replication is performed which is useful in test or temporary environments
+ *   enable: true
+ *   encryption:
+ *     useCMK: true
+ *     deploymentTargets:
+ *       organizationalUnits:
+ *         - Root
+ *   replaceLogDestinationArn: arn:aws:logs:us-east-1:111111111111:destination:ReplaceDestination
+ *   exclusions:
+ *    # in these OUs do not do log replication
+ *    - organizationalUnits:
+ *        - Research
+ *        - ProofOfConcept
+ *      excludeAll: true
+ *    # in these accounts exclude pattern testApp
+ *    - accounts:
+ *        - WorkloadAccount1
+ *        - WorkloadAccount1
+ *      logGroupNames:
+ *        - testApp*
+ *    # in these accounts exclude logs in specific regions
+ *    - accounts:
+ *        - WorkloadAccount1
+ *        - WorkloadAccount1
+ *      regions:
+ *        - us-west-2
+ *        - eu-west-1
+ *      logGroupNames:
+ *        - pattern1*
+ * ```
+ *
+ */
+export interface ICloudWatchLogsConfig {
+  /**
+   * Declaration of Dynamic Partition for Kinesis Firehose.
+   *
+   * @remarks
+   * Kinesis firehose Dynamic Partition allows streaming Cloudwatch logs data to be assigned to a specific prefix. The input provided here is the path to log filter JSON file array. More details in the link: https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/centralized-logging.html
+   * Each item in the array is of the format
+   * ```
+   * { "logGroupPattern": "LogGroupName", "s3Prefix": "s3-prefix" }
+   * ```
+   * The logs end up in central logs bucket under prefix CloudWatchLogs.
+   * In the above example, the log group with `LogGroupName` will stream to `s3://<central-logs-bucket>/CloudWatchLogs/s3-prefix/`
+   *
+   * It is possible to use `*` for grouping log groups into same prefix. So, in the example below:
+   * ```
+   * [{ "logGroupPattern": "Application*", "s3Prefix": "app" }]
+   * ```
+   * The above will take log groups with name `ApplicationA`, `ApplicationB`, `ApplicationC` into s3 prefix `app`.
+   * Please make sure that `logGroupPattern` do not conflict each other as the logs are streamed to one destination and not replicated.
+   * For example, extending the above example to below
+   * ```
+   * [{ "logGroupPattern": "Application*", "s3Prefix": "app" }, { "logGroupPattern": "App*", "s3Prefix": "apple" }]
+   * ```
+   * In the above case, logs from `ApplicationA` can either end up in `app` or `apple`. They will not be replicated to both prefixes.
+   *
+   *  For more information on Kinesis Firehose dynamic partitioning limits please refer to::
+   * https://docs.aws.amazon.com/firehose/latest/dev/limits.html
+   *
+   *
+   */
+  readonly dynamicPartitioning?: t.NonEmptyString;
+  /**
+   * Enable or disable CloudWatch replication
+   */
+  readonly enable?: boolean;
+  /**
+   * Encryption setting for AWS CloudWatch log group data.
+   *
+   * @remarks
+   *  For more information please refer {@link ServiceEncryptionConfig}
+   */
+  readonly encryption?: IServiceEncryptionConfig;
+  /**
+   * Exclude Log Groups during replication
+   */
+  readonly exclusions?: ICloudWatchLogsExclusionConfig[];
+  /**
+   * Customer defined log subscription filter destination arn, that is associated with with the existing log group.
+   * Accelerator solution needs to disassociate this destination before configuring solution defined subscription filter destination.
+   *
+   * @default
+   * undefined
+   *
+   * @remarks
+   * When no value provided, accelerator solution will not attempt to remove existing customer defined log subscription filter destination.
+   * When existing log group(s) have two subscription filter destinations defined, and none of that is solution configured subscription filter destination,
+   * then solution will fail to configure log replication for such log groups and as a result pipeline will fail.
+   */
+  readonly replaceLogDestinationArn?: t.NonEmptyString;
+}
+
+/**
+ * *{@link GlobalConfig} / {@link LoggingConfig}*
+ *
+ * @description
+ * Global logging configuration
+ *
+ * @example
+ * ```
+ * logging:
+ *   account: LogArchive
+ *   centralizedLoggingRegion: us-east-1
+ *   cloudtrail:
+ *     enable: false
+ *     organizationTrail: false
+ *   sessionManager:
+ *     sendToCloudWatchLogs: false
+ *     sendToS3: true
+ * ```
+ */
+export interface ILoggingConfig {
+  /**
+   * Accelerator logging account name.
+   * Accelerator use LogArchive account for global logging.
+   * This account maintains consolidated logs.
+   */
+  readonly account: t.NonEmptyString;
+  /**
+   * Accelerator central logs bucket region name.
+   * Accelerator use CentralLogs bucket to store various log files, Accelerator created buckets and CWL replicates to CentralLogs bucket.
+   * CentralLogs bucket region is optional, when not provided this bucket will be created in Accelerator home region.
+   */
+  readonly centralizedLoggingRegion?: t.NonEmptyString;
+  /**
+   * CloudTrail logging configuration
+   */
+  readonly cloudtrail: ICloudTrailConfig;
+  /**
+   * SessionManager logging configuration
+   */
+  readonly sessionManager: ISessionManagerConfig;
+  /**
+   * Declaration of a (S3 Bucket) Lifecycle rule configuration.
+   */
+  readonly accessLogBucket?: IAccessLogBucketConfig;
+  /**
+   * Declaration of a (S3 Bucket) configuration.
+   */
+  readonly assetBucket?: IAssetBucketConfig;
+  /**
+   * Declaration of a (S3 Bucket) Lifecycle rule configuration.
+   */
+  readonly centralLogBucket?: ICentralLogBucketConfig;
+  /**
+   * Declaration of a (S3 Bucket) Lifecycle rule configuration.
+   */
+  readonly elbLogBucket?: IElbLogBucketConfig;
+  /**
+   * CloudWatch Logging configuration.
+   */
+  readonly cloudwatchLogs?: ICloudWatchLogsConfig;
+}
+
+/**
+ * *{@link GlobalConfig} / {@link ReportConfig} / {@link CostAndUsageReportConfig}*
+ *
+ * @description
+ * CostAndUsageReport configuration
+ *
+ * @example
+ * ```
+ * costAndUsageReport:
+ *     compression: Parquet
+ *     format: Parquet
+ *     reportName: accelerator-cur
+ *     s3Prefix: cur
+ *     timeUnit: DAILY
+ *     refreshClosedReports: true
+ *     reportVersioning: CREATE_NEW_REPORT
+ *     lifecycleRules:
+ *     - enabled: true
+ *       id: CostAndUsageBucketLifecycleRule-01
+ *       abortIncompleteMultipartUpload: 14
+ *       expiration: 3563
+ *       expiredObjectDeleteMarker: false
+ *       noncurrentVersionExpiration: 3653
+ *       noncurrentVersionTransitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       transitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       prefix: PREFIX
+ *     - enabled: true
+ *       id: CostAndUsageBucketLifecycleRule-02
+ *       abortIncompleteMultipartUpload: 14
+ *       expiredObjectDeleteMarker: true
+ *       noncurrentVersionExpiration: 3653
+ *       noncurrentVersionTransitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       transitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       prefix: PREFIX
+ * ```
+ */
+export interface ICostAndUsageReportConfig {
+  /**
+   * A list of strings that indicate additional content that Amazon Web Services includes in the report, such as individual resource IDs.
+   */
+  readonly additionalSchemaElements?: t.NonEmptyString[];
+  /**
+   * The compression format that Amazon Web Services uses for the report.
+   */
+  readonly compression: string;
+  /**
+   * The format that Amazon Web Services saves the report in.
+   */
+  readonly format: string;
+  /**
+   * The name of the report that you want to create. The name must be unique, is case sensitive, and can't include spaces.
+   */
+  readonly reportName: t.NonEmptyString;
+  /**
+   * The prefix that Amazon Web Services adds to the report name when Amazon Web Services delivers the report. Your prefix can't include spaces.
+   */
+  readonly s3Prefix: t.NonEmptyString;
+  /**
+   * The granularity of the line items in the report.
+   */
+  readonly timeUnit: 'HOURLY' | 'DAILY' | 'MONTHLY' | string;
+  /**
+   * A list of manifests that you want Amazon Web Services to create for this report.
+   */
+  readonly additionalArtifacts?: 'REDSHIFT' | 'QUICKSIGHT' | 'ATHENA' | string;
+  /**
+   * Whether you want Amazon Web Services to update your reports after they have been finalized if Amazon Web Services detects charges related to previous months. These charges can include refunds, credits, or support fees.
+   */
+  readonly refreshClosedReports: boolean;
+  /**
+   * Whether you want Amazon Web Services to overwrite the previous version of each report or to deliver the report in addition to the previous versions.
+   */
+  readonly reportVersioning: 'CREATE_NEW_REPORT' | 'OVERWRITE_REPORT' | string;
+  /**
+   * Declaration of (S3 Bucket) Lifecycle rules.
+   */
+  readonly lifecycleRules?: t.ILifecycleRule[];
+}
+
+/**
+ * *{@link GlobalConfig} / {@link ReportConfig} / {@link BudgetReportConfig} / {@link NotificationConfig}*
+ *
+ * @description
+ * Notification configuration
+ *
+ * @example
+ * ```
+ * notifications:
+ *  - type: ACTUAL
+ *    thresholdType: PERCENTAGE
+ *    threshold: 90
+ *    comparisonOperator: GREATER_THAN
+ *    subscriptionType: EMAIL
+ *    recipients:
+ *     - myemail+pa1-budg@example.com
+ *     - myemail+pa2-budg@example.com
+ * ```
+ */
+export interface INotificationConfig {
+  /**
+   * The comparison that's used for the notification that's associated with a budget.
+   */
+  readonly type: t.NotificationType | string;
+  /**
+   * The type of threshold for a notification.For ABSOLUTE_VALUE thresholds,
+   * AWS notifies you when you go over or are forecasted to go over your total cost threshold.
+   * For PERCENTAGE thresholds, AWS notifies you when you go over or are forecasted to go over a certain percentage of your forecasted spend.
+   * For example,if you have a budget for 200 dollars and you have a PERCENTAGE threshold of 80%, AWS notifies you when you go over 160 dollars.
+   */
+  readonly thresholdType: t.ThresholdType | string;
+  /**
+   * The comparison that's used for this notification.
+   */
+  readonly comparisonOperator: t.ComparisonOperator | string;
+  /**
+   * The type of threshold associate with a notification.
+   */
+  readonly threshold?: number;
+  /**
+   * The address that AWS sends budget notifications to, either an SNS topic or an email.
+   *
+   * @deprecated
+   * This is a temporary property and it has been deprecated.
+   * Please use recipients property to specify address for budget notifications.
+   */
+  readonly address?: t.NonEmptyString;
+  /**
+   * The recipients list that AWS sends budget notifications to, either an SNS topic or an email.
+   */
+  readonly recipients?: t.NonEmptyString[];
+  /**
+   * The type of notification that AWS sends to a subscriber.
+   */
+  readonly subscriptionType: t.SubscriptionType | string;
+}
+
+/**
+ * *{@link GlobalConfig} / {@link ReportConfig} / {@link BudgetReportConfig}*
+ *
+ * @description
+ * BudgetReport configuration
+ *
+ * @example
+ * ```
+ * budgets:
+ *     - name: accel-budget
+ *       timeUnit: MONTHLY
+ *       type: COST
+ *       amount: 2000
+ *       includeUpfront: true
+ *       includeTax: true
+ *       includeSupport: true
+ *       includeSubscription: true
+ *       includeRecurring: true
+ *       includeOtherSubscription: true
+ *       includeDiscount: true
+ *       includeCredit: false
+ *       includeRefund: false
+ *       useBlended: false
+ *       useAmortized: false
+ *       unit: USD
+ *       notifications:
+ *       - type: ACTUAL
+ *         thresholdType: PERCENTAGE
+ *         threshold: 90
+ *         comparisonOperator: GREATER_THAN
+ *         subscriptionType: EMAIL
+ *         recipients:
+ *          - myemail+pa1-budg@example.com
+ *          - myemail+pa2-budg@example.com
+ * ```
+ */
+export interface IBudgetReportConfig {
+  /**
+   * The cost or usage amount that's associated with a budget forecast, actual spend, or budget threshold.
+   *
+   * @default 2000
+   */
+  readonly amount: number;
+  /**
+   * The name of a budget. The value must be unique within an account. BudgetName can't include : and \ characters. If you don't include value for BudgetName in the template, Billing and Cost Management assigns your budget a randomly generated name.
+   */
+  readonly name: t.NonEmptyString;
+  /**
+   * The length of time until a budget resets the actual and forecasted spend. DAILY is available only for RI_UTILIZATION and RI_COVERAGE budgets.
+   */
+  readonly timeUnit: 'DAILY' | 'MONTHLY' | 'QUARTERLY' | 'ANNUALLY' | string;
+  /**
+   * Specifies whether this budget tracks costs, usage, RI utilization, RI coverage, Savings Plans utilization, or Savings Plans coverage.
+   */
+  readonly type:
+    | 'USAGE'
+    | 'COST'
+    | 'RI_UTILIZATION'
+    | 'RI_COVERAGE'
+    | 'SAVINGS_PLANS_UTILIZATION'
+    | 'SAVINGS_PLANS_COVERAGE'
+    | string;
+  /**
+   * Specifies whether a budget includes upfront RI costs.
+   *
+   * @default true
+   */
+  readonly includeUpfront?: boolean;
+  /**
+   * Specifies whether a budget includes taxes.
+   *
+   * @default true
+   */
+  readonly includeTax?: boolean;
+  /**
+   * Specifies whether a budget includes support subscription fees.
+   *
+   * @default true
+   */
+  readonly includeSupport?: boolean;
+  /**
+   * Specifies whether a budget includes non-RI subscription costs.
+   *
+   * @default true
+   */
+  readonly includeOtherSubscription?: boolean;
+  /**
+   * Specifies whether a budget includes subscriptions.
+   *
+   * @default true
+   */
+  readonly includeSubscription?: boolean;
+  /**
+   * Specifies whether a budget includes recurring fees such as monthly RI fees.
+   *
+   * @default true
+   */
+  readonly includeRecurring?: boolean;
+  /**
+   * Specifies whether a budget includes discounts.
+   *
+   * @default true
+   */
+  readonly includeDiscount?: boolean;
+  /**
+   * Specifies whether a budget includes refunds.
+   *
+   * @default true
+   */
+  readonly includeRefund?: boolean;
+  /**
+   * Specifies whether a budget includes credits.
+   *
+   * @default true
+   */
+  readonly includeCredit?: boolean;
+  /**
+   * Specifies whether a budget uses the amortized rate.
+   *
+   * @default false
+   */
+  readonly useAmortized?: boolean;
+  /**
+   * Specifies whether a budget uses a blended rate.
+   *
+   * @default false
+   */
+  readonly useBlended?: boolean;
+  /**
+   * The type of notification that AWS sends to a subscriber.
+   *
+   * An enum value that specifies the target subscription type either EMAIL or SNS
+   */
+  readonly subscriptionType?: t.SubscriptionType | string;
+  /**
+   * The unit of measurement that's used for the budget forecast, actual spend, or budget threshold, such as USD or GBP.
+   */
+  readonly unit?: t.NonEmptyString;
+  /**
+   * The type of threshold for a notification. For ABSOLUTE_VALUE thresholds,
+   * AWS notifies you when you go over or are forecasted to go over your total cost threshold.
+   * For PERCENTAGE thresholds, AWS notifies you when you go over or are forecasted to go over a certain percentage of your forecasted spend. For example,
+   * if you have a budget for 200 dollars and you have a PERCENTAGE threshold of 80%, AWS notifies you when you go over 160 dollars.
+   */
+  /**
+   * The comparison that's used for the notification that's associated with a budget.
+   */
+  readonly notifications?: INotificationConfig[];
+  /**
+   * List of OU's and accounts to be configured for Budgets configuration
+   */
+  readonly deploymentTargets?: t.IDeploymentTargets;
+}
+
+/**
+ * {@link GlobalConfig} / {@link ReportConfig}
+ *
+ * @description
+ * Accelerator report configuration
+ */
+export interface IReportConfig {
+  /**
+   * Cost and usage report configuration
+   *
+   * If you want to create cost and usage report with daily granularity of the line items in the report, you need to provide below value for this parameter.
+   *
+   * @example
+   * ```
+   * costAndUsageReport:
+   *     compression: Parquet
+   *     format: Parquet
+   *     reportName: accelerator-cur
+   *     s3Prefix: cur
+   *     timeUnit: DAILY
+   *     refreshClosedReports: true
+   *     reportVersioning: CREATE_NEW_REPORT
+   *     lifecycleRules:
+   *       storageClass: DEEP_ARCHIVE
+   *       enabled: true
+   *       multiPart: 1
+   *       expiration: 1825
+   *       deleteMarker: false
+   *       nonCurrentExpiration: 366
+   *       transitionAfter: 365
+   * ```
+   */
+  readonly costAndUsageReport?: ICostAndUsageReportConfig;
+  /**
+   * Budget report configuration
+   *
+   * If you want to create budget report with monthly granularity of the line items in the report and other default parameters , you need to provide below value for this parameter.
+   *
+   * @example
+   * ```
+   * budgets:
+   *     - name: accel-budget
+   *       timeUnit: MONTHLY
+   *       type: COST
+   *       amount: 2000
+   *       includeUpfront: true
+   *       includeTax: true
+   *       includeSupport: true
+   *       includeSubscription: true
+   *       includeRecurring: true
+   *       includeOtherSubscription: true
+   *       includeDiscount: true
+   *       includeCredit: false
+   *       includeRefund: false
+   *       useBlended: false
+   *       useAmortized: false
+   *       unit: USD
+   *       notifications:
+   *       - type: ACTUAL
+   *         thresholdType: PERCENTAGE
+   *         threshold: 90
+   *         comparisonOperator: GREATER_THAN
+   *         subscriptionType: EMAIL
+   *         address: myemail+pa-budg@example.com
+   * ```
+   */
+  readonly budgets?: IBudgetReportConfig[];
+}
+
+/**
+ * *{@link GlobalConfig} / {@link BackupConfig} / {@link VaultConfig}*
+ *
+ * @description
+ * AWS Backup vault configuration
+ *
+ * @example
+ * ```
+ * - name: BackupVault
+ *   deploymentTargets:
+ *     organizationalUnits:
+ *      - Root
+ *   policy: policies/backup-vault-policy.json
+ * ```
+ */
+export interface IVaultConfig {
+  /**
+   * Name that will be used to create the vault.
+   */
+  readonly name: t.NonEmptyString;
+
+  /**
+   * Which OU's or Accounts the vault will be deployed to
+   */
+  readonly deploymentTargets: t.IDeploymentTargets;
+
+  /**
+   * The path to a JSON file defining Backup Vault access policy
+   */
+  readonly policy?: t.NonEmptyString;
+}
+
+/**
+ * *{@link GlobalConfig} / {@link BackupConfig}*
+ *
+ * @description
+ * AWS Backup configuration
+ *
+ * @example
+ * ```
+ * backup:
+ *   vaults:
+ *     - name: BackupVault
+ *       deploymentTargets:
+ *         organizationalUnits:
+ *           - Root
+ * ```
+ */
+export interface IBackupConfig {
+  /**
+   * List of AWS Backup Vaults
+   */
+  readonly vaults: IVaultConfig[];
+}
+
+/**
+ *
+ * *{@link GlobalConfig} / {@link SnsConfig} / {@link SnsTopicConfig}*
+ *
+ * @description
+ * SNS Topics Configuration
+ *
+ * To send CloudWatch Alarms and SecurityHub notifications
+ * you will need to configure at least one SNS Topic
+ * For SecurityHub notification you will need
+ * to set the deployment target to Root in order
+ * to receive notifications from all accounts
+ *
+ * @example
+ * ```
+ * snsTopics:
+ *   deploymentTargets:
+ *     organizationalUnits:
+ *       - Root
+ *   topics:
+ *     - name: Security
+ *       emailAddresses:
+ *         - SecurityNotifications@example.com
+ * ```
+ */
+export interface ISnsTopicConfig {
+  /**
+   * *{@link GlobalConfig} / {@link SnsTopicConfig} / {@link TopicConfig}*
+   *
+   * SNS Topic Config
+   *
+   * @example
+   * ```
+   * - name: Security
+   *   emailAddresses:
+   *     - SecurityNotifications@example.com
+   * ```
+   */
+  /**
+   * List of SNS Topics definition
+   */
+
+  /**
+   * SNS Topic Name
+   */
+  readonly name: t.NonEmptyString;
+
+  /**
+   * List of email address for notification
+   */
+  readonly emailAddresses: t.EmailAddress[];
+}
+
+/**
+ * *{@link GlobalConfig} / {@link SnsConfig}*
+ *
+ * @description
+ * SNS Configuration
+ */
+export interface ISnsConfig {
+  /**
+   * Deployment targets for SNS topics
+   * SNS Topics will always be deployed to the Log Archive account
+   * email subscriptions will be in the Log Archive account
+   * All other accounts and regions will forward to the Logging account
+   */
+  readonly deploymentTargets?: t.IDeploymentTargets;
+  /**
+   * List of SNS Topics
+   */
+  readonly topics?: ISnsTopicConfig[];
+}
+
+/**
+ * *{@link GlobalConfig} / {@link AcceleratorMetadataConfig}*
+ *
+ * @description
+ * Accelerator Metadata
+ *
+ * Creates a new bucket in the log archive account to retrieve metadata for the accelerator environment
+ *
+ * @example
+ * ```
+ * acceleratorMetadataConfig:
+ *   enable: true
+ *   account: Logging
+ *   readOnlyAccessRoleArns:
+ *     - arn:aws:iam::111111111111:role/test-access-role
+ * ```
+ */
+export interface IAcceleratorMetadataConfig {
+  /**
+   * Enable Accelerator Metadata
+   */
+  readonly enable: boolean;
+  readonly account: string;
+  readonly readOnlyAccessRoleArns: string[];
+}
+
+/**
+ * *{@link GlobalConfig} / {@link AcceleratorSettingsConfig}*
+ *
+ * @description
+ * Accelerator Settings Configuration
+ * Allows setting additional properties for accelerator
+ *
+ * @example
+ * ```
+ * acceleratorSettings:
+ *  maxConcurrentStacks: 250
+ * ```
+ *
+ */
+export interface IAcceleratorSettingsConfig {
+  /**
+   * Accelerator Settings
+   */
+
+  /**
+   * Set maximum number of concurrent stacks that can be processed at a time while transpiling the application.
+   * If no value is specified it defaults to 250
+   */
+  readonly maxConcurrentStacks?: number;
+}
+
+/**
+ * *{@link GlobalConfig} / {@link ServiceEncryptionConfig}*
+ *
+ * @description
+ * AWS service encryption configuration settings
+ *
+ * @example
+ * ```
+ *  encryption:
+ *    useCMK: true
+ *    deploymentTargets:
+ *      organizationalUnits:
+ *        - Root
+ * ```
+ */
+export interface IServiceEncryptionConfig {
+  /**
+   * Flag indicates whether Accelerator deployed AWS Service will use AWS KMS CMK for encryption or Service managed KMS.
+   *
+   * @remarks
+   * When set to `true`, the solution will create AWS KMS CMK which will be used by the service for encryption. Example, when flag set to `true` for AWS Lambda service, the solution will create AWS KMS CMK to encrypt lambda function environment variables, otherwise AWS managed key will be used for environment variables encryption.
+   *
+   * @default false
+   */
+  readonly useCMK: boolean;
+  /**
+   * To control target environments (AWS Account and Region) for the given `useCMK` setting, you may optionally specify deployment targets.
+   * Leaving `deploymentTargets` undefined will apply `useCMK` setting to all accounts and enabled regions.
+   */
+  readonly deploymentTargets?: t.IDeploymentTargets;
+}
+
+/**
+ * *{@link GlobalConfig} / {@link lambdaConfig}*
+ *
+ * @description
+ * Lambda Function configuration settings
+ *
+ * @example
+ * ```
+ *   encryption:
+ *    useCMK: true
+ *    deploymentTargets:
+ *      organizationalUnits:
+ *        - Root
+ * ```
+ */
+export interface ILambdaConfig {
+  /**
+   * Encryption setting for AWS Lambda environment variables.
+   *
+   * @remarks
+   *  For more information please refer {@link ServiceEncryptionConfig}
+   */
+  readonly encryption?: IServiceEncryptionConfig;
+}
+
+/**
+ * *{@link GlobalConfig} / {@link SsmInventoryConfig}*
+ *
+ * @description
+ * SSM Inventory Configuration
+ *
+ * @example
+ * ```
+ * ssmInventoryConfig:
+ *   enable: true
+ *   deploymentTargets:
+ *     organizationalUnits:
+ *       - Infrastructure
+ * ```
+ *
+ */
+export interface ISsmInventoryConfig {
+  /**
+   * Enable SSM Inventory
+   */
+  readonly enable: boolean;
+  /**
+   * Configure the Deployment Targets
+   */
+  readonly deploymentTargets: t.IDeploymentTargets;
+}
+
+/**
+ * *{@link GlobalConfig} / {@link ssmParametersConfig}*
+ *
+ * @description
+ * SSM Parameters Configuration
+ *
+ * @example
+ * ```
+ * ssmParameters:
+ *   - deploymentTargets:
+ *       organizationalUnits:
+ *         - Workloads
+ *     parameters:
+ *       - name: MyWorkloadParameter
+ *         path: /my/custom/path/variable
+ *         value: 'MySSMParameterValue'
+ * ```
+ *
+ */
+export interface ISsmParametersConfig {
+  /**
+   * A list of SSM parameters to create
+   */
+  readonly parameters: ISsmParameterConfig[];
+  /**
+   * Configure the Deployment Targets
+   */
+  readonly deploymentTargets: t.IDeploymentTargets;
+}
+
+/**
+ * *{@link GlobalConfig} / {@link ssmParametersConfig} / {@link ssmParameterConfig}*
+ *
+ * @description
+ * SSM Parameter Configuration
+ *
+ * @example
+ * ```
+ * ssmParameters:
+ *   - deploymentTargets:
+ *       organizationalUnits:
+ *         - Workloads
+ *     parameters:
+ *       - name: WorkloadsSsmParameter
+ *         path: /my/custom/path/variable
+ *         value: 'MySSMParameterValue'
+ * ```
+ *
+ */
+export interface ISsmParameterConfig {
+  /**
+   * The friendly name of the SSM Parameter, this is used to generate the CloudFormation Logical Id.
+   */
+  readonly name: t.NonEmptyString;
+  /**
+   * The path or name used when creating SSM Parameter.
+   */
+  readonly path: t.NonEmptyString;
+  /**
+   * The value of the SSM Parameter
+   */
+  readonly value: t.NonEmptyString;
+}
+
+/**
+ * Accelerator global configuration
+ */
+export interface IGlobalConfig {
+  /**
+   * Accelerator home region name. The region where accelerator pipeline deployed.
+   *
+   * To use us-east-1 as home region for the accelerator, you need to provide below value for this parameter.
+   * Note: Variable HOME_REGION created for future usage of home region in the file
+   *
+   * @example
+   * ```
+   * homeRegion: &HOME_REGION us-east-1
+   * ```
+   */
+  readonly homeRegion: t.NonEmptyString;
+  /**
+   * List of AWS Region names where accelerator will be deployed. Home region must be part of this list.
+   *
+   * To add us-west-2 along with home region for accelerator deployment, you need to provide below value for this parameter.
+   *
+   * @example
+   * ```
+   * enabledRegions:
+   *   - *HOME_REGION
+   *   - us-west-2
+   * ```
+   */
+  readonly enabledRegions: t.Region[];
+  /**
+   * This role trusts the management account, allowing users in the management
+   * account to assume the role, as permitted by the management account
+   * administrator. The role has administrator permissions in the new member
+   * account.
+   *
+   * Examples:
+   * - AWSControlTowerExecution
+   * - OrganizationAccountAccessRole
+   */
+  readonly managementAccountAccessRole: t.NonEmptyString;
+  /**
+   * Global {@link https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CloudWatchLogsConcepts.html | CloudWatch Logs retention in days} configuration.
+   *
+   * @remarks
+   * This retention setting will be applied to all CloudWatch log groups created by the accelerator.
+   * Additionally, this retention setting will be applied to any CloudWatch log groups that already exist
+   * in the target environment if the log group's retention setting is LOWER than this configured value.
+   *
+   */
+  readonly cloudwatchLogRetentionInDays: number;
+  /**
+   * ***Deprecated***
+   *
+   * NOTICE: The configuration of CDK buckets is being moved
+   * to cdkOptions in the Global Config. This block is deprecated and
+   * will be removed in a future release
+   * @see {@link cdkOptionsConfig}
+   *
+   * To indicate workload accounts should utilize the cdk-assets S3 buckets in the management account, you need to provide below value for this parameter.
+   *
+   * @example
+   * ```
+   * centralizeCdkBuckets:
+   *   enable: true
+   * ```
+   */
+  readonly centralizeCdkBuckets?: ICentralizeCdkBucketsConfig;
+  /**
+   * AWS CDK options configuration. This lets you customize the operation of the CDK within LZA, specifically:
+   *
+   * centralizeBuckets: Enabling this option modifies the CDK bootstrap process to utilize a single S3 bucket per region located in the management account for CDK assets generated by LZA. Otherwise, CDK will create a new S3 bucket in every account and every region supported by LZA.
+   * useManagementAccessRole: Enabling this option modifies CDK operations to use the IAM role specified in the `managementAccountAccessRole` option in `global-config.yaml` rather than the default roles created by CDK. Default CDK roles will still be created, but will remain unused. Any stacks previously deployed by LZA will retain their [associated execution role](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-iam-servicerole.html). For more information on these roles, please see [here](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html#bootstrapping-contract).
+   *
+   * @example
+   * ```
+   * cdkOptions:
+   *   centralizeBuckets: true
+   *   useManagementAccessRole: true
+   * ```
+   */
+  readonly cdkOptions?: ICdkOptionsConfig;
+  /**
+   * Whether to enable termination protection for this stack.
+   */
+  readonly terminationProtection?: boolean;
+  /**
+   * AWS ControlTower configuration
+   *
+   * To indicate environment has control tower enabled, you need to provide below value for this parameter.
+   *
+   * @example
+   * ```
+   * controlTower:
+   *   enable: true
+   * ```
+   */
+  readonly controlTower: IControlTowerConfig;
+  /**
+   * ExternalLandingZoneResourcesConfig.
+   *
+   * centralizeBuckets: Enabling this option modifies the CDK bootstrap process to utilize a single S3 bucket per region located in the management account for CDK assets generated by LZA. Otherwise, CDK will create a new S3 bucket in every account and every region supported by LZA.
+   *
+   * @example
+   * ```
+   * externalLandingZoneResources:
+   *   importExternalLandingZoneResources: false
+   * ```
+   */
+  readonly externalLandingZoneResources?: IExternalLandingZoneResourcesConfig;
+  /**
+   * Accelerator logging configuration
+   *
+   * To enable organization trail and session manager logs sending to S3, you need to provide below value for this parameter.
+   *
+   * @example
+   * ```
+   * logging:
+   *   account: LogArchive
+   *   cloudtrail:
+   *     enable: false
+   *     organizationTrail: false
+   *     cloudtrailInsights:
+   *       apiErrorRateInsight: true
+   *       apiCallRateInsight: true
+   *   sessionManager:
+   *     sendToCloudWatchLogs: false
+   *     sendToS3: true
+   *   cloudwatchLogs:
+   *     dynamicPartitioning: logging/dynamic-partition.json
+   * ```
+   */
+  readonly logging: ILoggingConfig;
+  /**
+   * Report configuration
+   *
+   * To enable budget report along with cost and usage report, you need to provide below value for this parameter.
+   *
+   * @example
+   * ```
+   * reports:
+   *   costAndUsageReport:
+   *     compression: Parquet
+   *     format: Parquet
+   *     reportName: accelerator-cur
+   *     s3Prefix: cur
+   *     timeUnit: DAILY
+   *     refreshClosedReports: true
+   *     reportVersioning: CREATE_NEW_REPORT
+   *   budgets:
+   *     - name: accel-budget
+   *       timeUnit: MONTHLY
+   *       type: COST
+   *       amount: 2000
+   *       includeUpfront: true
+   *       includeTax: true
+   *       includeSupport: true
+   *       includeSubscription: true
+   *       includeRecurring: true
+   *       includeOtherSubscription: true
+   *       includeDiscount: true
+   *       includeCredit: false
+   *       includeRefund: false
+   *       useBlended: false
+   *       useAmortized: false
+   *       unit: USD
+   *       notifications:
+   *       - type: ACTUAL
+   *         thresholdType: PERCENTAGE
+   *         threshold: 90
+   *         comparisonOperator: GREATER_THAN
+   *         subscriptionType: EMAIL
+   *         address: myemail+pa-budg@example.com
+   * ```
+   */
+  readonly reports?: IReportConfig;
+  /**
+   * AWS Service Quota - Limit configuration
+   *
+   * To enable limits within service quota, you need to provide below value for this parameter.
+   *
+   * @example
+   * ```
+   * limits:
+   *   - serviceCode: lambda
+   *     quotaCode: L-2ACBD22F
+   *     desiredValue: 2000
+   *     deploymentTargets:
+   *       organizationalUnits:
+   *         - Infrastructure
+   * ```
+   */
+  readonly limits?: IServiceQuotaLimitsConfig[];
+  /**
+   * Backup Vaults Configuration
+   *
+   * To generate vaults, you need to provide below value for this parameter.
+   *
+   * @example
+   * ```
+   * backup:
+   *   vaults:
+   *     - name: MyBackUpVault
+   *       deploymentTargets:
+   *         organizationalUnits:
+   *           - Root
+   * ```
+   */
+  readonly backup?: IBackupConfig;
+  /**
+   * SNS Topics Configuration
+   *
+   * To send CloudWatch Alarms and SecurityHub notifications
+   * you will need to configure at least one SNS Topic
+   * For SecurityHub notification you will need
+   * to set the deployment target to Root in order
+   * to receive notifications from all accounts
+   *
+   * @example
+   * ```
+   * snsTopics:
+   *   deploymentTargets:
+   *     organizationalUnits:
+   *       - Root
+   *   topics:
+   *     - name: Security
+   *       emailAddresses:
+   *         - SecurityNotifications@example.com
+   * ```
+   */
+  readonly snsTopics?: ISnsConfig;
+  /**
+   * SSM Inventory Configuration
+   *
+   * [EC2 prerequisites](https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-inventory-walk.html)
+   * [Connectivity prerequisites](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-prereqs.html)
+   *
+   * @example
+   * ```
+   * ssmInventory:
+   *   enable: true
+   *   deploymentTargets:
+   *     organizationalUnits:
+   *       - Infrastructure
+   * ```
+   *
+   */
+  readonly ssmInventory?: ISsmInventoryConfig;
+  /**
+   * Custom Tags for all resources created by Landing Zone Accelerator that can be tagged.
+   *
+   * @example
+   * ```
+   * tags:
+   *   - key: Environment
+   *     value: Dev
+   *   - key: ResourceOwner
+   *     value: AcmeApp
+   *   - key: CostCenter
+   *     value: '123'
+   * ```
+   **/
+  readonly tags?: t.ITag[];
+  /**
+   * SSM parameter configurations
+   *
+   * Create SSM parameters through the LZA. Parameters can be deployed to Organizational Units or Accounts using deploymentTargets
+   *
+   * @example
+   * ```
+   * ssmParameters:
+   *   - deploymentTargets:
+   *       organizationalUnits:
+   *         - Workloads
+   *     parameters:
+   *       - name: WorkloadParameter
+   *         path: /my/custom/path/variable
+   *         value: 'MySSMParameterValue'
+   * ```
+   */
+  readonly ssmParameters?: ISsmParametersConfig[];
+  /**
+   * Accelerator Metadata Configuration
+   * Creates a bucket in the logging account to enable accelerator metadata collection
+   *
+   * @example
+   * ```
+   * acceleratorMetadata:
+   *   enable: true
+   *   account: Logging
+   * ```
+   *
+   */
+  readonly acceleratorMetadata?: IAcceleratorMetadataConfig;
+  /**
+   * Accelerator Settings Configuration
+   * Allows setting additional properties for accelerator
+   *
+   * @example
+   * ```
+   * acceleratorSettings:
+   *  maxConcurrentStacks: 250
+   * ```
+   *
+   */
+  readonly acceleratorSettings?: IAcceleratorSettingsConfig;
+
+  /**
+   * AWS Lambda Function environment variables encryption configuration options.
+   *
+   * @remarks
+   * You can decide to use AWS KMS CMK or AWS managed key for Lambda function environment variables encryption. When this property is undefined, the solution will deploy AWS KMS CMK to encrypt function environment variables.
+   * You can use `deploymentTargets` to control target accounts and regions for the given `useCMK` configuration.
+   *
+   *  For more information please see [here](https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html#configuration-envvars-encryption)
+   *
+   * @example
+   * ```
+   * lambda:
+   *   encryption:
+   *    useCMK: true
+   *    deploymentTargets:
+   *      organizationalUnits:
+   *        - Root
+   * ```
+   */
+  readonly lambda?: ILambdaConfig;
+  /**
+   * AWS S3 global configuration options.
+   *
+   * @remarks
+   * You can decide to create AWS KMS CMK for AWS S3 server side encryption.  When this property is undefined, the solution will deploy AWS KMS CMK to encrypt AWS S3 bucket.
+   * You can use `deploymentTargets` to control target accounts and regions for the given `createCMK` configuration.
+   * This configuration is not applicable to LogArchive's central logging region, because the solution deployed CentralLogs bucket always encrypted with AWS KMS CMK.
+   *
+   *  For more information please see [here](https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingEncryption.html)
+   *
+   * @example
+   * ```
+   * s3:
+   *   createCMK: true
+   *   deploymentTargets:
+   *     organizationalUnits:
+   *       - Root
+   * ```
+   */
+  readonly s3?: IS3GlobalConfig;
+}
