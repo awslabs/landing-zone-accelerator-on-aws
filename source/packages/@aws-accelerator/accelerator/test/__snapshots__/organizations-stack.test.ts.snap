@@ -6924,6 +6924,10 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
         "ReportBucketPolicyC1DDDC0D",
       ],
       "Properties": {
+        "AdditionalArtifacts": [
+          "ATHENA",
+          "QUICKSIGHT",
+        ],
         "Compression": "Parquet",
         "Format": "Parquet",
         "RefreshClosedReports": true,

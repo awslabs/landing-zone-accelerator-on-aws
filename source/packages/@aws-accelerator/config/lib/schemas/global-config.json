@@ -591,7 +591,10 @@
       "properties": {
         "additionalArtifacts": {
           "description": "A list of manifests that you want Amazon Web Services to create for this report.",
-          "type": "string"
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "additionalSchemaElements": {
           "description": "A list of strings that indicate additional content that Amazon Web Services includes in the report, such as individual resource IDs.",
