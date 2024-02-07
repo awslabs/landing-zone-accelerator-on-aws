@@ -40,12 +40,17 @@ export class DiagnosticsPack {
 
     // Create diagnostic role in every account home region except management account for non external deployment
     if (isDiagnosticsPackEnabled && this.stack.region === props.globalConfig.homeRegion) {
+      let diagnosticsPackLambdaRoleNamePrefix = props.prefixes.accelerator;
+      if (props.qualifier && props.qualifier !== 'aws-accelerator' && props.prefixes.accelerator !== 'AWSAccelerator') {
+        diagnosticsPackLambdaRoleNamePrefix = props.qualifier;
+      }
+
       const role = new cdk.aws_iam.Role(this.stack, 'DiagnosticsPackAssumeRole', {
         roleName: this.stack.acceleratorResourceNames.roles.diagnosticsPackAssumeRoleName,
         assumedBy: new cdk.aws_iam.ArnPrincipal(
-          `arn:${cdk.Stack.of(this.stack).partition}:iam::${assumeByAccountId}:role/${
-            props.qualifier ? props.qualifier : props.prefixes.accelerator
-          }-DiagnosticsPackLambdaRole`,
+          `arn:${
+            cdk.Stack.of(this.stack).partition
+          }:iam::${assumeByAccountId}:role/${diagnosticsPackLambdaRoleNamePrefix}-DiagnosticsPackLambdaRole`,
         ),
       });
 
