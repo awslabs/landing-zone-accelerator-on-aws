@@ -1179,7 +1179,7 @@ export interface ICostAndUsageReportConfig {
   /**
    * A list of manifests that you want Amazon Web Services to create for this report.
    */
-  readonly additionalArtifacts?: 'REDSHIFT' | 'QUICKSIGHT' | 'ATHENA' | string;
+  readonly additionalArtifacts?: ('REDSHIFT' | 'QUICKSIGHT' | 'ATHENA' | string)[];
   /**
    * Whether you want Amazon Web Services to update your reports after they have been finalized if Amazon Web Services detects charges related to previous months. These charges can include refunds, credits, or support fees.
    */

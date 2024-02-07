@@ -218,6 +218,9 @@ limits:
         - Management
 reports:
   costAndUsageReport:
+    additionalArtifacts: 
+      - ATHENA
+      - QUICKSIGHT
     compression: Parquet
     format: Parquet
     reportName: accelerator-cur
