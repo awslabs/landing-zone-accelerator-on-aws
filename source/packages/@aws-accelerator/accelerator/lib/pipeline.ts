@@ -375,6 +375,17 @@ export class AcceleratorPipeline extends Construct {
               nodejs: 16,
             },
           },
+          pre_build: {
+            commands: [
+              `export PACKAGE_VERSION=$(cat source/package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g')`,
+              `if [ "$ACCELERATOR_CHECK_VERSION" = "yes" ]; then 
+                if [ "$PACKAGE_VERSION" != "$ACCELERATOR_PIPELINE_VERSION" ]; then
+                  echo "ERROR: Accelerator package version in Source does not match currently installed LZA version. Please ensure that the Installer stack has been updated prior to updating the Source code in CodePipeline."
+                  exit 1
+                fi
+              fi`,
+            ],
+          },
           build: {
             commands: [
               'env',
@@ -402,6 +413,14 @@ export class AcceleratorPipeline extends Construct {
           NODE_OPTIONS: {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: '--max_old_space_size=8192',
+          },
+          ACCELERATOR_PIPELINE_VERSION: {
+            type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+            value: `${props.prefixes.ssmParamName}/${cdk.Stack.of(this).stackName}/version`,
+          },
+          ACCELERATOR_CHECK_VERSION: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: 'yes',
           },
           ...enableSingleAccountModeEnvVariables,
           ...pipelineAccountEnvVariables,

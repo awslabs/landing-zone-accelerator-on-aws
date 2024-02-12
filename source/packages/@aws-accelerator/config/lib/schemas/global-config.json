@@ -1202,7 +1202,7 @@
       "properties": {
         "createCMK": {
           "default": true,
-          "description": "Flag indicates whether solution will create CMK for S3 bucket encryption. Note: A CMK will always be created for the assets S3 bucket if the bucket is needed.",
+          "description": "Flag indicates whether solution will create CMK for S3 bucket encryption.",
           "type": "boolean"
         },
         "deploymentTargets": {

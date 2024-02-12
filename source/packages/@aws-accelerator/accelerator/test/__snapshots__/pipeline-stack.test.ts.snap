@@ -1402,6 +1402,16 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
               "Type": "PLAINTEXT",
               "Value": "--max_old_space_size=8192",
             },
+            {
+              "Name": "ACCELERATOR_PIPELINE_VERSION",
+              "Type": "PARAMETER_STORE",
+              "Value": "/accelerator/PipelineStack/version",
+            },
+            {
+              "Name": "ACCELERATOR_CHECK_VERSION",
+              "Type": "PLAINTEXT",
+              "Value": "yes",
+            },
           ],
           "Image": "aws/codebuild/standard:6.0",
           "ImagePullCredentialsType": "CODEBUILD",
@@ -1420,19 +1430,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
             "Fn::Join": [
               "",
               [
-                "{
-  "version": "0.2",
-  "phases": {
-    "install": {
-      "runtime-versions": {
-        "nodejs": 16
-      }
-    },
-    "build": {
-      "commands": [
-        "env",
-        "cd source",
-        "if [ \\"",
+                "REPLACED-JSON-PATH.json",
                 {
                   "Ref": "AWS::Partition",
                 },
@@ -1504,6 +1502,22 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
       "Properties": {
         "PolicyDocument": {
           "Statement": [
+            {
+              "Action": "ssm:GetParameters",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":ssm:us-east-1:000000000000:parameter/accelerator/PipelineStack/version",
+                  ],
+                ],
+              },
+            },
             {
               "Action": [
                 "logs:CreateLogGroup",
