@@ -83,7 +83,6 @@ export interface PipelineStackProps extends cdk.StackProps {
 export class PipelineStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: PipelineStackProps) {
     super(scope, id, props);
-
     new cdk.aws_ssm.StringParameter(this, 'SsmParamStackId', {
       parameterName: `${props.prefixes.ssmParamName}/${cdk.Stack.of(this).stackName}/stack-id`,
       stringValue: cdk.Stack.of(this).stackId,
