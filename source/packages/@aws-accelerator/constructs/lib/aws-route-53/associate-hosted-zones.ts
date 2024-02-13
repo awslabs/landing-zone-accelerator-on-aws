@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { Size } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -47,6 +48,7 @@ export class AssociateHostedZones extends cdk.Resource {
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
       codeDirectory: path.join(__dirname, 'associate-hosted-zones/dist'),
       runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
+      memorySize: Size.mebibytes(512),
       policyStatements: [
         {
           Sid: 'Route53AssociateHostedZonesActions',

@@ -19,10 +19,6 @@
     "test": "jest --coverage --ci --passWithNoTests",
     "testreport": ""
   },
-  "dependencies": {
-    "@aws-accelerator/utils": "^0.0.0",
-    "aws-sdk": "2.1379.0"
-  },
   "devDependencies": {
     "@types/jest": "29.4.0",
     "@types/node": "18.14.0",
@@ -40,5 +36,11 @@
     "prettier": "2.8.4",
     "ts-jest": "29.0.5",
     "typescript": "4.9.5"
+  },
+  "dependencies": {
+    "@aws-accelerator/utils": "^0.0.0",
+    "@aws-sdk/client-sts": "3.410.0",
+    "@aws-sdk/client-ec2": "3.410.0",
+    "@aws-sdk/client-route-53": "3.410.0"
   }
 }
