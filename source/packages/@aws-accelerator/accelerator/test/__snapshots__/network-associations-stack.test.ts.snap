@@ -1300,7 +1300,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomRoute53AssociateHostedZonesCustomResourceProviderRole17C82AD6",
