@@ -393,9 +393,9 @@ export class VpcResources extends AseaResource {
       );
       if (!existingSecurityGroup) continue;
       const securityGroup = vpcStack.getResource(existingSecurityGroup.logicalResourceId) as CfnSecurityGroup;
-      console.log(
-        'Adding SSM Parameter for',
-        `${pascalCase(vpcItem.name) + pascalCase(securityGroupItem.name)}SecurityGroup`,
+      this.scope.addLogs(
+        LogLevel.INFO,
+        `Adding SSM Parameter for ${pascalCase(vpcItem.name) + pascalCase(securityGroupItem.name)}SecurityGroup`,
       );
       this.addSsmParameter({
         logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(securityGroupItem.name)}SecurityGroup`),
@@ -650,8 +650,8 @@ export class VpcResources extends AseaResource {
     );
 
     if (existingIngressRulesToBeUpdated && existingIngressRulesToBeUpdated.length > 0) {
-      console.log('Updating Ingress rules on SG:', securityGroup.groupName);
-      console.log('Pushing on rule(s):', existingIngressRulesToBeUpdated);
+      this.scope.addLogs(LogLevel.INFO, `'Updating Ingress rules on Security Group ${securityGroup.groupName}`);
+      this.scope.addLogs(LogLevel.INFO, `Pushing on rule(s): ${existingIngressRulesToBeUpdated}`);
       if (securityGroup) {
         securityGroup.securityGroupIngress = existingIngressRulesToBeUpdated;
       }
@@ -673,8 +673,8 @@ export class VpcResources extends AseaResource {
     );
 
     if (existingEgressRulesToBeUpdated && existingEgressRulesToBeUpdated.length > 0) {
-      console.log('Updating Egress rules on SG:', securityGroup.groupName);
-      console.log('Pushing on rule(s):', existingEgressRulesToBeUpdated);
+      this.scope.addLogs(LogLevel.INFO, `Updating Egress rules on SG: ${securityGroup.groupName}`);
+      this.scope.addLogs(LogLevel.INFO, `Pushing on rule(s) ${existingEgressRulesToBeUpdated}`);
       if (securityGroup) {
         securityGroup.securityGroupEgress = existingEgressRulesToBeUpdated;
       }

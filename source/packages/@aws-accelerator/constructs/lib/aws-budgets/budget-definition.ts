@@ -248,7 +248,6 @@ export class BudgetDefinition extends cdk.Resource {
         address: notify.address,
       });
     }
-    console.log(recipients);
     return recipients;
   }
 }

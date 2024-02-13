@@ -12,8 +12,33 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
-import * as AWS from 'aws-sdk';
-AWS.config.logger = console;
+import { STSClient, AssumeRoleCommand, AssumeRoleCommandOutput } from '@aws-sdk/client-sts';
+import { DescribeVpcsCommandInput, EC2Client, Filter, paginateDescribeVpcs } from '@aws-sdk/client-ec2';
+import {
+  AssociateVPCWithHostedZoneCommand,
+  CreateVPCAssociationAuthorizationCommand,
+  CreateVPCAssociationAuthorizationRequest,
+  DeleteVPCAssociationAuthorizationCommand,
+  GetHostedZoneCommand,
+  GetHostedZoneResponse,
+  Route53Client,
+} from '@aws-sdk/client-route-53';
+
+import type {
+  AssumeRoleAccountCredentials,
+  AllAccountsCredentialParams,
+  AssumeRoleParams,
+  AWSClients,
+  DescribeVpcByTagFiltersParams,
+  VpcItem,
+  SetClientsParams,
+  TagFilter,
+  VpcAssociation,
+  CfnResponse,
+  VpcAssociationItem,
+} from './interfaces';
+
+import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 
 /**
  * associate-hosted-zones - lambda handler
@@ -21,13 +46,8 @@ AWS.config.logger = console;
  * @param event
  * @returns
  */
-export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
-  | {
-      PhysicalResourceId: string | undefined;
-      Status: string;
-    }
-  | undefined
-> {
+
+export async function handler(event: CloudFormationCustomResourceEvent): Promise<CfnResponse | undefined> {
   const solutionId = process.env['SOLUTION_ID'];
 
   switch (event.RequestType) {
@@ -39,119 +59,58 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       const partition = event.ResourceProperties['partition'];
       const region = event.ResourceProperties['region'];
       const roleName = event.ResourceProperties['roleName'];
-      const tagFilters: {
-        key: string;
-        value: string;
-      }[] = event.ResourceProperties['tagFilters'];
+      const roleSessionName = 'AssociateHostedZone';
+      const tagFilters: TagFilter[] = event.ResourceProperties['tagFilters'];
 
-      // Loop through all the associated accounts
-      for (const accountId of accountIds ?? []) {
-        //
-        // Create clients
-        //
-        let targetEc2Client: AWS.EC2;
-        let targetRoute53Client: AWS.Route53;
-        const hostedZoneRoute53Client: AWS.Route53 = new AWS.Route53({ customUserAgent: solutionId });
+      const assumeRoleResponses = await getAllAssumeRoleCredentials({
+        accountIds,
+        roleName,
+        solutionId,
+        region,
+        partition,
+        roleSessionName,
+        hostedZoneAccountId,
+      });
 
-        if (accountId === hostedZoneAccountId) {
-          console.log('Running in hosted zone account, create local clients');
-          targetEc2Client = new AWS.EC2({ customUserAgent: solutionId });
-          targetRoute53Client = new AWS.Route53({ customUserAgent: solutionId });
-        } else {
-          console.log('Not running in hosted zone account, assume role to create clients');
-          const stsClient = new AWS.STS({ customUserAgent: solutionId, region: region });
-          const assumeRoleResponse = await throttlingBackOff(() =>
-            stsClient
-              .assumeRole({
-                RoleArn: `arn:${partition}:iam::${accountId}:role/${roleName}`,
-                RoleSessionName: 'AssociateHostedZone',
-              })
-              .promise(),
-          );
+      const awsClients = setAwsClients({
+        assumeRoleCredentials: assumeRoleResponses,
+        hostedZoneAccountId,
+        solutionId,
+      });
 
-          targetEc2Client = new AWS.EC2({
-            credentials: {
-              accessKeyId: assumeRoleResponse.Credentials?.AccessKeyId ?? '',
-              secretAccessKey: assumeRoleResponse.Credentials?.SecretAccessKey ?? '',
-              sessionToken: assumeRoleResponse.Credentials?.SessionToken,
-            },
-            customUserAgent: solutionId,
-          });
-
-          targetRoute53Client = new AWS.Route53({
-            credentials: {
-              accessKeyId: assumeRoleResponse.Credentials?.AccessKeyId ?? '',
-              secretAccessKey: assumeRoleResponse.Credentials?.SecretAccessKey ?? '',
-              sessionToken: assumeRoleResponse.Credentials?.SessionToken,
-            },
-            customUserAgent: solutionId,
-          });
-        }
-
-        //
-        // Find all the VPCs in the account to create associations
-        //
-        let nextToken: string | undefined = undefined;
-        do {
-          const page = await throttlingBackOff(() => targetEc2Client.describeVpcs({ NextToken: nextToken }).promise());
-          for (const vpc of page.Vpcs ?? []) {
-            console.log(`Checking vpc: ${vpc.VpcId}`);
-            console.log('Tags:');
-            console.log(vpc.Tags);
-
-            // Verify all tag filters are present for the VPC
-            let includeVpc = true;
-            tagFilters.forEach(tagFilter => {
-              if (!vpc.Tags?.find(tagItem => tagItem.Key === tagFilter.key && tagItem.Value == tagFilter.value)) {
-                includeVpc = false;
-              }
-            });
-
-            if (includeVpc) {
-              // Create the association for each hosted zone
-              for (const hostedZoneId of hostedZoneIds ?? []) {
-                // Check if vpc is already connected to the HostedZone
-                const response = await throttlingBackOff(() =>
-                  hostedZoneRoute53Client.getHostedZone({ Id: hostedZoneId }).promise(),
-                );
-                if (response.VPCs?.find(item => item.VPCId === vpc.VpcId && item.VPCRegion === region)) {
-                  console.log(`${vpc.VpcId} is already attached to the hosted zone ${hostedZoneId}`);
-                  continue;
-                }
-
-                const hostedZoneProps = {
-                  HostedZoneId: hostedZoneId,
-                  VPC: {
-                    VPCId: vpc.VpcId,
-                    VPCRegion: region,
-                  },
-                };
-
-                // authorize association of VPC with Hosted zones when VPC and Hosted Zones are defined in two different accounts
-                if (accountId !== hostedZoneAccountId) {
-                  await throttlingBackOff(() =>
-                    hostedZoneRoute53Client.createVPCAssociationAuthorization(hostedZoneProps).promise(),
-                  );
-                }
-
-                // associate VPC with Hosted zones
-                console.log(`Associating hosted zone ${hostedZoneId} with VPC ${vpc.VpcId}...`);
-                await throttlingBackOff(() =>
-                  targetRoute53Client.associateVPCWithHostedZone(hostedZoneProps).promise(),
-                );
-
-                // delete association of VPC with Hosted zones when VPC and Hosted Zones are defined in two different accounts
-                if (accountId !== hostedZoneAccountId) {
-                  await throttlingBackOff(() =>
-                    hostedZoneRoute53Client.deleteVPCAssociationAuthorization(hostedZoneProps).promise(),
-                  );
-                }
-              }
-            }
-          }
-          nextToken = page.NextToken;
-        } while (nextToken);
+      const hostedZoneRoute53Client = awsClients[hostedZoneAccountId].route53Client;
+      if (!hostedZoneRoute53Client) {
+        throw new Error(`Could not get clients for account ${hostedZoneAccountId}`);
       }
+
+      const describeVpcsPromises: Promise<VpcItem[]>[] = Object.keys(awsClients).map(account =>
+        describeVpcsByTagFilters({ account, ec2Client: awsClients[account].ec2Client, tagFilters }),
+      );
+
+      const hostedZonePromises = hostedZoneIds.map(hostedZoneId =>
+        getHostedZone(hostedZoneRoute53Client, hostedZoneId),
+      );
+
+      const vpcsToAssociate = (await Promise.all(describeVpcsPromises)).flat();
+
+      console.log('Retrieved VPC information for the following vpcs');
+      vpcsToAssociate.forEach(vpc => {
+        console.log(vpc.account, vpc.vpc.VpcId);
+      });
+
+      const hostedZoneItems = await Promise.all(hostedZonePromises);
+
+      console.log('Retrieved Information for the following hosted zones:');
+      hostedZoneItems.forEach(hostedZoneItem => {
+        console.log(hostedZoneItem.HostedZone);
+      });
+
+      const nonAssociatedVpcs = findNonAssociatedVpcs(vpcsToAssociate, hostedZoneItems, hostedZoneAccountId, region);
+
+      console.log('Vpcs not associated with hosted zones:');
+      console.log(JSON.stringify(nonAssociatedVpcs, null, 2));
+
+      await associateVpcs(nonAssociatedVpcs, awsClients);
 
       return {
         PhysicalResourceId: 'associate-hosted-zones',
@@ -165,4 +124,222 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         Status: 'SUCCESS',
       };
   }
+}
+
+async function getAllAssumeRoleCredentials(
+  allAccountsCredentialParams: AllAccountsCredentialParams,
+): Promise<AssumeRoleAccountCredentials[]> {
+  const assumeRoleAccounts = allAccountsCredentialParams.accountIds.filter(
+    account => account !== allAccountsCredentialParams.hostedZoneAccountId,
+  );
+  const assumeRoleAccountPromises = assumeRoleAccounts.map(accountId =>
+    getAssumeRoleCredentials({
+      accountId,
+      roleName: allAccountsCredentialParams.roleName,
+      solutionId: allAccountsCredentialParams.solutionId,
+      region: allAccountsCredentialParams.region,
+      partition: allAccountsCredentialParams.partition,
+      roleSessionName: allAccountsCredentialParams.roleSessionName,
+    }),
+  );
+
+  return Promise.all(assumeRoleAccountPromises);
+}
+
+async function getAssumeRoleCredentials(assumeRoleParams: AssumeRoleParams): Promise<AssumeRoleAccountCredentials> {
+  try {
+    console.log(
+      `Retrieving Credentials for account ${assumeRoleParams.accountId} with role ${assumeRoleParams.roleName}`,
+    );
+    const stsClient = new STSClient({
+      customUserAgent: assumeRoleParams.solutionId,
+      region: assumeRoleParams.region,
+    });
+    const assumeRoleRequestParams = new AssumeRoleCommand({
+      RoleArn: `arn:${assumeRoleParams.partition}:iam::${assumeRoleParams.accountId}:role/${assumeRoleParams.roleName}`,
+      RoleSessionName: assumeRoleParams.roleSessionName,
+    });
+
+    const stsResponse: AssumeRoleCommandOutput = await throttlingBackOff(() => stsClient.send(assumeRoleRequestParams));
+    if (
+      !stsResponse.Credentials ||
+      !stsResponse.Credentials.AccessKeyId ||
+      !stsResponse.Credentials.SecretAccessKey ||
+      !stsResponse.Credentials.SessionToken
+    ) {
+      throw new Error(
+        `Could Not retrieve credentials for account ${assumeRoleParams.accountId} in region ${assumeRoleParams.region} for role ${assumeRoleParams.roleName}`,
+      );
+    }
+    return {
+      account: assumeRoleParams.accountId,
+      credentials: {
+        accessKeyId: stsResponse.Credentials.AccessKeyId,
+        secretAccessKey: stsResponse.Credentials.SecretAccessKey,
+        sessionToken: stsResponse.Credentials.SessionToken,
+      },
+    };
+  } catch (err) {
+    console.log(err);
+    throw err;
+  }
+}
+
+function setAwsClients(setClientsParams: SetClientsParams): AWSClients {
+  const awsClients: AWSClients = setClientsParams.assumeRoleCredentials.reduce(
+    (clients: AWSClients, assumeRoleResponse) => {
+      const config = {
+        credentials: assumeRoleResponse.credentials,
+        customUserAgent: setClientsParams.solutionId,
+      };
+
+      clients[assumeRoleResponse.account] = {
+        ec2Client: new EC2Client(config),
+        route53Client: new Route53Client(config),
+      };
+
+      return clients;
+    },
+    {},
+  );
+  awsClients[setClientsParams.hostedZoneAccountId] = {
+    ec2Client: new EC2Client(),
+    route53Client: new Route53Client(),
+  };
+
+  return awsClients;
+}
+
+async function describeVpcsByTagFilters(
+  describeVpcByTagFiltersParams: DescribeVpcByTagFiltersParams,
+): Promise<VpcItem[]> {
+  let filters: Filter[] = [];
+  if (describeVpcByTagFiltersParams.tagFilters && describeVpcByTagFiltersParams.tagFilters.length > 0) {
+    filters = describeVpcByTagFiltersParams.tagFilters.map(tagFilter => {
+      return {
+        Name: `tag:${tagFilter.key}`,
+        Values: [tagFilter.value],
+      };
+    });
+  }
+
+  const vpcs = await describeVpcsWithFilter(describeVpcByTagFiltersParams.ec2Client, filters);
+
+  return vpcs.map(vpc => {
+    const hostedZoneAccountTag = vpc.Tags?.find(tag => tag.Key === 'accelerator:central-endpoints-account-id');
+    return {
+      account: describeVpcByTagFiltersParams.account,
+      hostedZoneAccount: hostedZoneAccountTag?.Value,
+      vpc,
+    };
+  });
+}
+
+async function describeVpcsWithFilter(ec2Client: EC2Client, filters: Filter[]) {
+  const vpcs = [];
+  const describeVpcsInput: DescribeVpcsCommandInput = {
+    Filters: filters,
+  };
+  const describeVpcPagination = paginateDescribeVpcs({ client: ec2Client }, describeVpcsInput);
+  for await (const page of describeVpcPagination) {
+    if (page.Vpcs) {
+      vpcs.push(...page.Vpcs);
+    }
+  }
+
+  return vpcs;
+}
+
+async function getHostedZone(route53Client: Route53Client, hostedZoneId: string): Promise<GetHostedZoneResponse> {
+  const getHostedZoneCommand = new GetHostedZoneCommand({
+    Id: hostedZoneId,
+  });
+
+  return throttlingBackOff(() => route53Client.send(getHostedZoneCommand));
+}
+
+async function associateVpcs(vpcsToAssociate: VpcAssociation, awsClients: AWSClients): Promise<void> {
+  const hostedZoneAssociationPromises = Object.keys(vpcsToAssociate).map(hostedZoneId =>
+    associateVpcsPerHostedZone(vpcsToAssociate[hostedZoneId], awsClients),
+  );
+
+  await Promise.all(hostedZoneAssociationPromises);
+}
+
+async function associateVpcsPerHostedZone(
+  vpcAssociationItem: VpcAssociationItem[],
+  clients: AWSClients,
+): Promise<void> {
+  for (const associationItem of vpcAssociationItem) {
+    const route53Client = clients[associationItem.account].route53Client;
+    if (associationItem.account === associationItem.hostedZoneAccountId) {
+      console.log(`Associating VPC: ${JSON.stringify(associationItem, null, 2)}`);
+      await associateVpc(route53Client, associationItem.hostedZoneParams);
+    } else {
+      console.log(`Associating CrossAccount VPC: ${JSON.stringify(associationItem, null, 2)}`);
+      const hostedZoneRoute53Client = clients[associationItem.hostedZoneAccountId].route53Client;
+      await associateCrossAccountVpc(hostedZoneRoute53Client, route53Client, associationItem.hostedZoneParams);
+    }
+  }
+}
+
+async function associateVpc(
+  route53Client: Route53Client,
+  hostedZoneParams: CreateVPCAssociationAuthorizationRequest,
+): Promise<void> {
+  await throttlingBackOff(() => route53Client.send(new AssociateVPCWithHostedZoneCommand(hostedZoneParams)));
+}
+
+async function associateCrossAccountVpc(
+  hostedZoneRoute53Client: Route53Client,
+  route53Client: Route53Client,
+  hostedZoneParams: CreateVPCAssociationAuthorizationRequest,
+): Promise<void> {
+  await throttlingBackOff(() =>
+    hostedZoneRoute53Client.send(new CreateVPCAssociationAuthorizationCommand(hostedZoneParams)),
+  );
+  // associate VPC with Hosted zones
+  console.log(`Associating hosted zone ${hostedZoneParams.HostedZoneId} with VPC ${hostedZoneParams.VPC?.VPCId}...`);
+  await throttlingBackOff(() => route53Client.send(new AssociateVPCWithHostedZoneCommand(hostedZoneParams)));
+  // delete association of VPC with Hosted zones when VPC and Hosted Zones are defined in two different accounts
+  await throttlingBackOff(() =>
+    hostedZoneRoute53Client.send(new DeleteVPCAssociationAuthorizationCommand(hostedZoneParams)),
+  );
+}
+
+function findNonAssociatedVpcs(
+  vpcs: VpcItem[],
+  hostedZones: GetHostedZoneResponse[],
+  hostedZoneAccountId: string,
+  region: string,
+): VpcAssociation {
+  const nonAssociatedVpcs: VpcAssociation = {};
+  for (const hostedZone of hostedZones) {
+    if (!hostedZone.HostedZone?.Id || !hostedZone.VPCs) {
+      continue;
+    }
+    if (!nonAssociatedVpcs[hostedZone.HostedZone.Id]) {
+      nonAssociatedVpcs[hostedZone.HostedZone.Id] = [];
+    }
+    const hostedZoneVpcIds = hostedZone.VPCs.map(vpc => vpc.VPCId);
+    const vpcsToAssociate = vpcs.filter(vpc => vpc.vpc.VpcId && !hostedZoneVpcIds.includes(vpc.vpc.VpcId));
+    const vpcItemsToAssociate = vpcsToAssociate.map(vpc => {
+      return {
+        account: vpc.account,
+        hostedZoneAccountId,
+        hostedZoneParams: {
+          HostedZoneId: hostedZone.HostedZone!.Id!,
+          VPC: {
+            VPCId: vpc.vpc.VpcId!,
+            VPCRegion: region,
+          },
+        },
+      };
+    });
+    if (vpcItemsToAssociate.length > 0) {
+      nonAssociatedVpcs[hostedZone.HostedZone.Id].push(...vpcItemsToAssociate);
+    }
+  }
+
+  return nonAssociatedVpcs;
 }
