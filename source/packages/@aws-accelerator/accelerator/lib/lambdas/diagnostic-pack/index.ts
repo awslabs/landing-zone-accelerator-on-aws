@@ -38,9 +38,6 @@ export async function handler(event: any): Promise<void> {
   // Get installer metadata
   const installerStackMetadata = await getInstallerStackMetadata(homeRegion, installerStackName);
 
-  console.log('installerStackMetadata');
-  console.log(installerStackMetadata);
-
   // Set resource names
   let pipelineStackName = `${installerStackMetadata.prefix}-PipelineStack-${pipelineAccountId}-${homeRegion}`;
   let installerPipelineName = `${installerStackMetadata.prefix}-Installer`;
@@ -62,37 +59,25 @@ export async function handler(event: any): Promise<void> {
     installerStackMetadata,
     managementAccountRoleName,
   );
-  console.log('accountDetails');
-  console.log(accountDetails);
 
   //
   // Get LZA Global config metadata
   //
   const lzaGlobalConfigMetadata = await getLzaGlobalConfigMetadata(homeRegion, configRepoName);
 
-  console.log('lzaGlobalConfigMetadata');
-  console.log(lzaGlobalConfigMetadata);
-
   //
   // Get LZA enabled account details
   const lzaEnabledAccounts = await getEnabledAccounts(homeRegion, configRepoName, accountDetails);
-
-  console.log('lzaEnabledAccounts');
-  console.log(lzaEnabledAccounts);
 
   //
   // Get Installer Stack Status
   //
   const installerStackStatus = await getStackStatus(homeRegion, installerStackName);
-  console.log('installerStackStatus');
-  console.log(installerStackStatus);
 
   //
   // Get Pipeline Stack Status
   //
   const pipelineStackStatus = await getStackStatus(homeRegion, pipelineStackName);
-  console.log('pipelineStackStatus');
-  console.log(pipelineStackStatus);
 
   //
   // Get Installer Pipeline Status
@@ -109,9 +94,6 @@ export async function handler(event: any): Promise<void> {
     Number(daysSincePipelineFailed),
   );
 
-  console.log('installerPipelineStatuses');
-  console.log(installerPipelineStatuses);
-
   //
   // Get LZA Pipeline Status
   //
@@ -126,9 +108,6 @@ export async function handler(event: any): Promise<void> {
     false,
     Number(daysSincePipelineFailed),
   );
-
-  console.log('lzaPipelineStatuses');
-  console.log(lzaPipelineStatuses);
 
   //
   // Print LZA External/Internal Deployment
