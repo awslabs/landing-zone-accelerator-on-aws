@@ -249,9 +249,6 @@ export async function getOrgAccountDetails(
     installerStackMetadata.managementAccountId,
   );
 
-  console.log('managementAccountCredential');
-  console.log(managementAccountCredential);
-
   const orgClient = new OrganizationsClient({ region: homeRegion, credentials: managementAccountCredential });
 
   const accountDetails: AccountDetailsType[] = [];
