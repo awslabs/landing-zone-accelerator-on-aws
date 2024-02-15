@@ -398,12 +398,6 @@ export class ApplicationsStack extends AcceleratorStack {
     subnetMap: Map<string, string>,
     configDirPath: string,
   ) {
-    let userDataPath: string | undefined;
-    if (launchTemplate?.userData) {
-      userDataPath = path.join(configDirPath, launchTemplate.userData);
-    } else {
-      userDataPath = undefined;
-    }
     if (launchTemplate) {
       const getSecurityGroups = this.getSecurityGroups(launchTemplate.securityGroups ?? [], vpcName, securityGroupMap);
       const blockDeviceMappingsValue = this.processBlockDeviceReplacements(
@@ -422,7 +416,10 @@ export class ApplicationsStack extends AcceleratorStack {
         appName: appName,
         vpc: vpcName,
         blockDeviceMappings: blockDeviceMappingsValue,
-        userData: userDataPath,
+        userData:
+          launchTemplate.userData &&
+          // Applies replacements and return temp path if userData is defined in configuration
+          this.generatePolicyReplacements(path.join(configDirPath, launchTemplate.userData), true),
         securityGroups: getSecurityGroups ?? undefined,
         networkInterfaces: networkInterfacesValue ?? undefined,
         instanceType: launchTemplate.instanceType,
