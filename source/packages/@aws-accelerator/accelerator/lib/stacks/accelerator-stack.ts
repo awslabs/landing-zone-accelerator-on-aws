@@ -1589,7 +1589,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
   }
 
   /**
-   * Generate policy replacements and optionally return a temp path
+   * Generate replacements and optionally return a temp path
    * to the transformed document
    * @param policyPath
    * @param returnTempPath
@@ -1623,6 +1623,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
       '\\${LOGARCHIVE_ACCOUNT_ID}': this.props.accountsConfig.getLogArchiveAccountId(),
       '\\${MANAGEMENT_ACCOUNT_ID}': this.props.accountsConfig.getManagementAccountId(),
       '\\${REGION}': cdk.Stack.of(this).region,
+      '\\${ACCOUNT_NAME}': this.props.accountsConfig.getAccountNameById(cdk.Stack.of(this).account)!,
     };
 
     if (organizationId) {
@@ -1648,11 +1649,12 @@ export abstract class AcceleratorStack extends cdk.Stack {
       networkConfig: this.props.networkConfig,
       accountsConfig: this.props.accountsConfig,
     });
-
-    // Validate and remove all unnecessary spaces in JSON string
-    policyContent = JSON.stringify(JSON.parse(policyContent));
+    if (path.extname(policyPath) === '.json') {
+      // Validate and remove all unnecessary spaces in JSON string
+      policyContent = JSON.stringify(JSON.parse(policyContent));
+    }
     if (returnTempPath) {
-      return this.createTempFile(policyContent, tempFileName);
+      return this.createTempFile(policyContent, policyPath, tempFileName);
     } else {
       return policyContent;
     }
@@ -1660,11 +1662,11 @@ export abstract class AcceleratorStack extends cdk.Stack {
 
   /**
    * Create a temp file of a transformed policy document
-   * @param policyContent
+   * @param content
    * @param tempFileName
    * @returns
    */
-  private createTempFile(policyContent: string, tempFileName?: string): string {
+  private createTempFile(content: string, inputFileName: string, tempFileName?: string): string {
     // Generate unique file path in temporary directory
     let tempDir: string;
     if (process.platform === 'win32') {
@@ -1673,22 +1675,21 @@ export abstract class AcceleratorStack extends cdk.Stack {
       } catch (e) {
         this.logger.error(`Unable to write files to temp directory: ${e}`);
       }
-      tempDir = path.join(process.env['Temp']!, 'temp-accelerator-policies');
+      tempDir = path.join(process.env['Temp']!, 'temp-transformed-documents');
     } else {
       try {
         fs.accessSync('/tmp', fs.constants.W_OK);
       } catch (e) {
         this.logger.error(`Unable to write files to temp directory: ${e}`);
       }
-      tempDir = path.join('/tmp', 'temp-accelerator-policies');
+      tempDir = path.join('/tmp', 'temp-transformed-documents');
     }
-    const tempPath = path.join(tempDir, tempFileName ?? `${uuidv4()}.json`);
-
+    const tempPath = path.join(tempDir, tempFileName ?? `${uuidv4()}.${path.extname(inputFileName)}`);
     // Write transformed file
     if (!fs.existsSync(tempDir)) {
       fs.mkdirSync(tempDir);
     }
-    fs.writeFileSync(tempPath, policyContent, 'utf-8');
+    fs.writeFileSync(tempPath, content, 'utf-8');
 
     return tempPath;
   }
