@@ -164,6 +164,11 @@ export class NetworkAssociationsStack extends NetworkStack {
       this.createCentralNetworkAssociations(props);
 
       //
+      // Create central network service VPC associations
+      //
+      this.createRoute53LocalVpcResources(props);
+
+      //
       // Create VPC peering connections
       //
       this.createVpcPeeringConnections();
@@ -1530,6 +1535,19 @@ export class NetworkAssociationsStack extends NetworkStack {
   }
 
   /**
+   * Create local VPC Route53 Resources
+   * @param props
+   */
+  private createRoute53LocalVpcResources(props: AcceleratorStackProps) {
+    for (const vpcItem of props.networkConfig.vpcs) {
+      const vpcAccountIds = this.getVpcAccountIds(vpcItem);
+      if (this.isTargetStack(vpcAccountIds, [vpcItem.region])) {
+        const accountId = cdk.Stack.of(this).account;
+        this.createVpcQueryLogConfigAssociations(vpcItem, accountId);
+      }
+    }
+  }
+  /**
    * Create Route 53 Resolver DNS Firewall VPC associations
    * @param vpcItem
    * @param owningAccountId
@@ -1662,6 +1680,31 @@ export class NetworkAssociationsStack extends NetworkStack {
         configNames.push(`${configItem}-s3`);
       }
       if (centralNetworkConfig.route53Resolver?.queryLogs?.destinations.includes('cloud-watch-logs')) {
+        configNames.push(`${configItem}-cwl`);
+      }
+
+      this.createQueryLogMap(configNames, owningAccountId);
+
+      // Create association
+      this.createQueryLoggingConfigAssociation(vpcItem, vpcId, configNames);
+    }
+  }
+
+  private createVpcQueryLogConfigAssociations(vpcItem: VpcConfig, owningAccountId: string) {
+    if (vpcItem.vpcRoute53Resolver?.queryLogs?.name) {
+      // Get VPC ID
+      const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        this.getSsmPath(SsmResourceType.VPC, [vpcItem.name]),
+      );
+      // Determine query log destination(s)
+      const configItem = vpcItem.vpcRoute53Resolver?.queryLogs.name;
+      const vpcConfig = vpcItem.vpcRoute53Resolver!;
+      const configNames: string[] = [];
+      if (vpcConfig.queryLogs?.destinations.includes('s3')) {
+        configNames.push(`${configItem}-s3`);
+      }
+      if (vpcConfig.queryLogs?.destinations.includes('cloud-watch-logs')) {
         configNames.push(`${configItem}-cwl`);
       }
 

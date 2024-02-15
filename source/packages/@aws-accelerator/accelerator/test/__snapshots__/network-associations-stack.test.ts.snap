@@ -31,6 +31,14 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Default": "/accelerator/network/route53Resolver/queryLogConfigs/accelerator-query-logs-s3/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworkroute53ResolverqueryLogConfigsnetworklocalendpointquerylogscwlidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/route53Resolver/queryLogConfigs/network-local-endpoint-query-logs-cwl/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkroute53ResolverqueryLogConfigsnetworklocalendpointquerylogss3idC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/route53Resolver/queryLogConfigs/network-local-endpoint-query-logs-s3/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratornetworkroute53ResolverrulesexampleruleidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/route53Resolver/rules/example-rule/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -2217,6 +2225,28 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         },
       },
       "Type": "AWS::Route53Resolver::ResolverRuleAssociation",
+    },
+    "NetworkEndpointsnetworkLocalEndpointQueryLogsCwlQueryLogAssociation37ECC626": {
+      "Properties": {
+        "ResolverQueryLogConfigId": {
+          "Ref": "SsmParameterValueacceleratornetworkroute53ResolverqueryLogConfigsnetworklocalendpointquerylogscwlidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "ResourceId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::Route53Resolver::ResolverQueryLoggingConfigAssociation",
+    },
+    "NetworkEndpointsnetworkLocalEndpointQueryLogsS3QueryLogAssociationE8BA7A88": {
+      "Properties": {
+        "ResolverQueryLogConfigId": {
+          "Ref": "SsmParameterValueacceleratornetworkroute53ResolverqueryLogConfigsnetworklocalendpointquerylogss3idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "ResourceId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::Route53Resolver::ResolverQueryLoggingConfigAssociation",
     },
     "NetworkInspectionNetworkMainCorePropagation37D40A21": {
       "Properties": {
