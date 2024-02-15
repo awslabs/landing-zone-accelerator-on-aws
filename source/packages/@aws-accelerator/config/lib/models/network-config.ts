@@ -4299,6 +4299,12 @@ export interface IVpcConfig {
    * @see {@link TargetGroupItemConfig}
    */
   readonly targetGroups?: ci.ITargetGroupItem[];
+  /**
+   * A Route 53 resolver configuration local to the VPC.
+   *
+   * @see {@link ResolverConfig}
+   */
+  readonly vpcRoute53Resolver?: IResolverConfig;
 }
 
 /**
@@ -5107,6 +5113,52 @@ export interface IDnsFirewallRuleGroupConfig {
 }
 
 /**
+ * *{@link NetworkConfig} / {@link VpcConfig}*
+ *
+ * {@link https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resolver.html Route 53 Resolver} configuration.
+ *
+ * @description
+ * Use this configuration to define local resolver endpoints and Route 53 query logging to the VPC.
+ *
+ * @example
+ * ```
+ * vpcRoute53Resolver:
+ *   endpoints:
+ *     - name: accelerator-outbound
+ *       type: OUTBOUND
+ *       vpc: Network-Endpoints
+ *       allowedCidrs:
+ *         - 10.0.0.0/16
+ *       subnets:
+ *         - Subnet-A
+ *         - Subnet-B
+ *       rules: []
+ *       tags: []
+ *   queryLogs:
+ *     name: accelerator-query-logs
+ *     destinations:
+ *       - s3
+ *       - cloud-watch-logs
+ *     shareTargets:
+ *       organizationalUnits:
+ *         - Root
+ * ```
+ */
+export interface IVpcResolverConfig {
+  /**
+   * (OPTIONAL) An array of Route 53 resolver endpoint configurations.
+   *
+   * @see {@link ResolverEndpointConfig}
+   */
+  readonly endpoints?: IResolverEndpointConfig[];
+  /**
+   * (OPTIONAL) A Route 53 resolver DNS query logging configuration.
+   *
+   * @see {@link DnsQueryLogsConfig}
+   */
+  readonly queryLogs?: IDnsQueryLogsConfig;
+}
+/**
  * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link ResolverConfig}*
  *
  * {@link https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resolver.html Route 53 Resolver} configuration.
@@ -5155,6 +5207,7 @@ export interface IDnsFirewallRuleGroupConfig {
  *         - Root
  * ```
  */
+
 export interface IResolverConfig {
   /**
    * (OPTIONAL) An array of Route 53 resolver endpoint configurations.

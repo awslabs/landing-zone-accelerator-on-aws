@@ -100,6 +100,11 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
     }
 
     //
+    // Create Route 53 Resolver Endpoints for VPC
+    //
+    this.createVpcRoute53ResolverEndpoints(props);
+
+    //
     // Create SSM parameters
     //
     this.createSsmParameters();
@@ -331,6 +336,36 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
           // Create endpoint
           if (endpointSubnets.length > 0) {
             this.createResolverEndpoint(endpointItem, vpcId, endpointSubnets);
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to create non-centralized Route 53 Resolver Endpoints
+   * @param props {@link AcceleratorStackProps}
+   */
+  private createVpcRoute53ResolverEndpoints(props: AcceleratorStackProps) {
+    // Loop through the VPCs that specify Route53 configurations
+    for (const vpcItem of props.networkConfig.vpcs ?? []) {
+      const accountId = this.props.accountsConfig.getAccountId(vpcItem.account);
+      if (cdk.Stack.of(this).region === vpcItem.region && cdk.Stack.of(this).account === accountId) {
+        // Get Vpc Id
+        const vpcId = this.getVpcId(vpcItem.name);
+        if (vpcItem.vpcRoute53Resolver?.endpoints) {
+          {
+            const endpoints = vpcItem.vpcRoute53Resolver.endpoints;
+            for (const endpointItem of endpoints) {
+              const endpointSubnets: string[] = [];
+              // Get route 53 resolver endpoint subnet ids
+              this.getRoute53ResolverEndpointSubnetIds(vpcItem, endpointItem, endpointSubnets);
+
+              // Create endpoint
+              if (endpointSubnets.length > 0) {
+                this.createResolverEndpoint(endpointItem, vpcId, endpointSubnets);
+              }
+            }
           }
         }
       }

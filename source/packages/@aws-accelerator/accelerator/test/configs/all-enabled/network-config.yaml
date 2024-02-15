@@ -996,6 +996,19 @@ vpcs:
     enableDnsHostnames: true
     enableDnsSupport: true
     instanceTenancy: default
+    vpcRoute53Resolver:
+      endpoints:
+        - name: inbound-endpoint-test
+          type: INBOUND
+          vpc: Network
+          subnets:
+            - Network-Endpoints-A
+            - Network-Endpoints-B
+      queryLogs:
+        name: network-local-endpoint-query-logs
+        destinations:
+          - s3
+          - cloud-watch-logs
     dnsFirewallRuleGroups:
       - name: accelerator-block-group
         priority: 101

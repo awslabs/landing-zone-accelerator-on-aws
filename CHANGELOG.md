@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- feat(network): allow Route53 resolver endpoints and query logging to be defined in the VPC object.
+
 ### Changed
 
 ### Fixed

@@ -487,6 +487,82 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
       },
       "Type": "AWS::IAM::Role",
     },
+    "InboundEndpointTestEpSecurityGroup36BC026D": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-EC23",
+              "reason": "Allowed access for interface endpoints",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "GroupDescription": "AWS Route 53 Resolver endpoint - inbound-endpoint-test",
+        "GroupName": "ep_inbound-endpoint-test_sg",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "127.0.0.1/32",
+            "IpProtocol": "-1",
+          },
+        ],
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "FromPort": 53,
+            "IpProtocol": "tcp",
+            "ToPort": 53,
+          },
+          {
+            "CidrIp": "0.0.0.0/0",
+            "FromPort": 53,
+            "IpProtocol": "udp",
+            "ToPort": 53,
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "ep_inbound-endpoint-test_sg",
+          },
+        ],
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "InboundEndpointTestResolverEndpoint05016974": {
+      "Properties": {
+        "Direction": "INBOUND",
+        "IpAddresses": [
+          {
+            "SubnetId": {
+              "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsAidC96584B6F00A464EAD1953AFF4B05118Parameter",
+            },
+          },
+          {
+            "SubnetId": {
+              "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsBidC96584B6F00A464EAD1953AFF4B05118Parameter",
+            },
+          },
+        ],
+        "Name": "inbound-endpoint-test",
+        "SecurityGroupIds": [
+          {
+            "Ref": "InboundEndpointTestEpSecurityGroup36BC026D",
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "inbound-endpoint-test",
+          },
+        ],
+      },
+      "Type": "AWS::Route53Resolver::ResolverEndpoint",
+    },
     "NetworkEndpointsVpcCodeartifactApiEp2E4B51E8": {
       "Properties": {
         "PolicyDocument": {
@@ -2854,6 +2930,22 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
         "Value": {
           "Fn::GetAtt": [
             "AcceleratorOutboundResolverEndpoint67D7E14C",
+            "ResolverEndpointId",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParaminboundEndpointTestResolverEndpointCF9A7F57": {
+      "DependsOn": [
+        "SsmParamNetworkInspectionAcceleratorFirewallFirewallArn40D3C53C",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/route53Resolver/endpoints/inbound-endpoint-test/id",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "InboundEndpointTestResolverEndpoint05016974",
             "ResolverEndpointId",
           ],
         },

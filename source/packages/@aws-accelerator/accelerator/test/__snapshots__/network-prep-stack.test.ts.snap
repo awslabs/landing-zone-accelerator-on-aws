@@ -1966,6 +1966,63 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "Custom::DirectConnectGateway",
       "UpdateReplacePolicy": "Delete",
     },
+    "NetworkLocalEndpointQueryLogsCwlQueryLogConfig48CF2515": {
+      "Properties": {
+        "DestinationArn": {
+          "Fn::GetAtt": [
+            "NetworkLocalEndpointQueryLogsQueryLogsLogGroup931180D2",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::Route53Resolver::ResolverQueryLoggingConfig",
+    },
+    "NetworkLocalEndpointQueryLogsQueryLogsLogGroup931180D2": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "NetworkLocalEndpointQueryLogsQueryLogsLogGroupPolicyResourcePolicyA532C052": {
+      "Properties": {
+        "PolicyDocument": {
+          "Fn::Join": [
+            "",
+            [
+              "{"Statement":[{"Action":["logs:CreateLogStream","logs:PutLogEvents"],"Condition":{"StringEquals":{"aws:PrincipalOrgId":"o-asdf123456"}},"Effect":"Allow","Principal":{"Service":"delivery.logs.amazonaws.com"},"Resource":"",
+              {
+                "Fn::GetAtt": [
+                  "NetworkLocalEndpointQueryLogsQueryLogsLogGroup931180D2",
+                  "Arn",
+                ],
+              },
+              ":log-stream:*","Sid":"Allow log delivery access"}],"Version":"2012-10-17"}",
+            ],
+          ],
+        },
+        "PolicyName": "AWSAcceleratorNetworkPrepStack555555555555useast1NetworkLocalEndpointQueryLogsQueryLogsLogGroupPolicy16658257",
+      },
+      "Type": "AWS::Logs::ResourcePolicy",
+    },
+    "NetworkLocalEndpointQueryLogsS3QueryLogConfigB308F9D0": {
+      "Properties": {
+        "DestinationArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":s3:::aws-accelerator-central-logs-333333333333-us-west-2",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Route53Resolver::ResolverQueryLoggingConfig",
+    },
     "NetworkMain2CoreTransitGatewayRouteTableA0D16E8B": {
       "Properties": {
         "Tags": [
@@ -2386,9 +2443,6 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamacceleratorPolicyNetworkFirewallPolicy68E9C1A5": {
-      "DependsOn": [
-        "SsmParamacceleratorStrictRuleGroupNetworkFirewallRuleGroup315F5768",
-      ],
       "Properties": {
         "Name": "/accelerator/network/networkFirewall/policies/accelerator-policy/arn",
         "Type": "String",
@@ -2432,7 +2486,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamacceleratorRuleGroupNetworkFirewallRuleGroup28931513": {
       "DependsOn": [
-        "SsmParamacceleratorStrictRuleGroupNetworkFirewallRuleGroup315F5768",
+        "SsmParamnetworkLocalEndpointQueryLogsCwlQueryLogConfig40CFAA3E",
       ],
       "Properties": {
         "Name": "/accelerator/network/networkFirewall/ruleGroups/accelerator-rule-group/arn",
@@ -2445,7 +2499,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamacceleratorStrictPolicyNetworkFirewallPolicy2C70E8B6": {
       "DependsOn": [
-        "SsmParamacceleratorStrictRuleGroupNetworkFirewallRuleGroup315F5768",
+        "SsmParamacceleratorPolicyNetworkFirewallPolicy68E9C1A5",
       ],
       "Properties": {
         "Name": "/accelerator/network/networkFirewall/policies/accelerator-strict-policy/arn",
@@ -2457,6 +2511,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamacceleratorStrictRuleGroupNetworkFirewallRuleGroup315F5768": {
+      "DependsOn": [
+        "SsmParamnetworkLocalEndpointQueryLogsCwlQueryLogConfig40CFAA3E",
+      ],
       "Properties": {
         "Name": "/accelerator/network/networkFirewall/ruleGroups/accelerator-strict-rule-group/arn",
         "Type": "String",
@@ -2468,7 +2525,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamacceleratorSuricataRuleGroupNetworkFirewallRuleGroup5707985D": {
       "DependsOn": [
-        "SsmParamwestRegionPoolPoolId673ACD76",
+        "SsmParamnetworkLocalEndpointQueryLogsCwlQueryLogConfig40CFAA3E",
       ],
       "Properties": {
         "Name": "/accelerator/network/networkFirewall/ruleGroups/accelerator-suricata-rule-group/arn",
@@ -2507,7 +2564,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamdomainListGroupNetworkFirewallRuleGroupC2BC037A": {
       "DependsOn": [
-        "SsmParamacceleratorStrictRuleGroupNetworkFirewallRuleGroup315F5768",
+        "SsmParamnetworkLocalEndpointQueryLogsCwlQueryLogConfig40CFAA3E",
       ],
       "Properties": {
         "Name": "/accelerator/network/networkFirewall/ruleGroups/domain-list-group/arn",
@@ -2553,6 +2610,35 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
         "Type": "String",
         "Value": {
           "Ref": "HomeRegionProdPoolPool04473C66",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamnetworkLocalEndpointQueryLogsCwlQueryLogConfig40CFAA3E": {
+      "Properties": {
+        "Name": "/accelerator/network/route53Resolver/queryLogConfigs/network-local-endpoint-query-logs-cwl/id",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "NetworkLocalEndpointQueryLogsCwlQueryLogConfig48CF2515",
+            "Id",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamnetworkLocalEndpointQueryLogsS3QueryLogConfig14EBC8D4": {
+      "DependsOn": [
+        "SsmParamwestRegionPoolPoolId673ACD76",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/route53Resolver/queryLogConfigs/network-local-endpoint-query-logs-s3/id",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "NetworkLocalEndpointQueryLogsS3QueryLogConfigB308F9D0",
+            "Id",
+          ],
         },
       },
       "Type": "AWS::SSM::Parameter",

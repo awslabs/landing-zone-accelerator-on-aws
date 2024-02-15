@@ -499,6 +499,7 @@ export class VpcConfig implements i.IVpcConfig {
   readonly vpcFlowLogs: t.VpcFlowLogsConfig | undefined = undefined;
   readonly loadBalancers: LoadBalancersConfig | undefined = undefined;
   readonly targetGroups: CustomizationsConfig.TargetGroupItemConfig[] | undefined = undefined;
+  readonly vpcRoute53Resolver: VpcResolverConfig | undefined = undefined;
 }
 
 export class VpcTemplatesConfig implements i.IVpcTemplatesConfig {
@@ -581,6 +582,15 @@ export class DnsFirewallRuleGroupConfig implements i.IDnsFirewallRuleGroupConfig
   readonly tags: t.Tag[] | undefined = undefined;
 }
 
+export class LocalResolverConfig implements i.IResolverConfig {
+  readonly endpoints: ResolverEndpointConfig[] | undefined = undefined;
+  readonly queryLogs: DnsQueryLogsConfig | undefined = undefined;
+}
+
+export class VpcResolverConfig implements i.IResolverConfig {
+  readonly endpoints: ResolverEndpointConfig[] | undefined = undefined;
+  readonly queryLogs: DnsQueryLogsConfig | undefined = undefined;
+}
 export class ResolverConfig implements i.IResolverConfig {
   readonly endpoints: ResolverEndpointConfig[] | undefined = undefined;
   readonly firewallRuleGroups: DnsFirewallRuleGroupConfig[] | undefined = undefined;
