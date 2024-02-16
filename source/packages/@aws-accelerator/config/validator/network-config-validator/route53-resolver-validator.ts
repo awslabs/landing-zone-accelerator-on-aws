@@ -57,6 +57,10 @@ export class Route53ResolverValidator {
     // Validate resolver rules
     //
     this.validateResolverRules(values, helpers, errors);
+    //
+    // Validate VPC Query Log configuration
+    //
+    this.validateLocalQueryLogConfig(values, errors);
   }
 
   /**
@@ -887,6 +891,30 @@ export class Route53ResolverValidator {
           `[Resolver endpoint ${endpoint.name} rule ${rule.name}]: target endpoint "${rule.inboundEndpointTarget}" is not an INBOUND endpoint`,
         );
       }
+    }
+  }
+
+  /**
+   * Validate Multiple Query Logging Config Associations for a VPC.
+   * @param values
+   * @param errors
+   */
+  private validateLocalQueryLogConfig(values: NetworkConfig, errors: string[]) {
+    // Validate that centralized query logs and local query logs aren't referenced in the same VPC
+    const invalidConfig: string[] = [];
+    for (const vpcItem of values.vpcs ?? []) {
+      if (vpcItem.queryLogs && vpcItem.vpcRoute53Resolver?.queryLogs) {
+        if (!invalidConfig.includes(vpcItem.name)) {
+          invalidConfig.push(vpcItem.name);
+        }
+      }
+    }
+    if (invalidConfig.length > 0) {
+      errors.push(
+        `These VPCS: [${invalidConfig.join(
+          ', ',
+        )}]  have multiple Route53 query logs associated in the config. Please only specify a queryLog from the central network services or from the local vpcResolver config. `,
+      );
     }
   }
 }

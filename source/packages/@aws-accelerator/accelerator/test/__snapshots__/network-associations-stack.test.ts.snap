@@ -2226,28 +2226,6 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       },
       "Type": "AWS::Route53Resolver::ResolverRuleAssociation",
     },
-    "NetworkEndpointsnetworkLocalEndpointQueryLogsCwlQueryLogAssociation37ECC626": {
-      "Properties": {
-        "ResolverQueryLogConfigId": {
-          "Ref": "SsmParameterValueacceleratornetworkroute53ResolverqueryLogConfigsnetworklocalendpointquerylogscwlidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "ResourceId": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-      },
-      "Type": "AWS::Route53Resolver::ResolverQueryLoggingConfigAssociation",
-    },
-    "NetworkEndpointsnetworkLocalEndpointQueryLogsS3QueryLogAssociationE8BA7A88": {
-      "Properties": {
-        "ResolverQueryLogConfigId": {
-          "Ref": "SsmParameterValueacceleratornetworkroute53ResolverqueryLogConfigsnetworklocalendpointquerylogss3idC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "ResourceId": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-      },
-      "Type": "AWS::Route53Resolver::ResolverQueryLoggingConfigAssociation",
-    },
     "NetworkInspectionNetworkMainCorePropagation37D40A21": {
       "Properties": {
         "TransitGatewayAttachmentId": {
@@ -2756,6 +2734,28 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "RuleNumber": 106,
       },
       "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondarynetworkLocalEndpointQueryLogsCwlQueryLogAssociation93B2790B": {
+      "Properties": {
+        "ResolverQueryLogConfigId": {
+          "Ref": "SsmParameterValueacceleratornetworkroute53ResolverqueryLogConfigsnetworklocalendpointquerylogscwlidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "ResourceId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::Route53Resolver::ResolverQueryLoggingConfigAssociation",
+    },
+    "NetworkSecondarynetworkLocalEndpointQueryLogsS3QueryLogAssociation35881457": {
+      "Properties": {
+        "ResolverQueryLogConfigId": {
+          "Ref": "SsmParameterValueacceleratornetworkroute53ResolverqueryLogConfigsnetworklocalendpointquerylogss3idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "ResourceId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::Route53Resolver::ResolverQueryLoggingConfigAssociation",
     },
     "ShareSubnetTagsSharedServicesSharedServicesAppC062D4D03": {
       "DeletionPolicy": "Delete",
