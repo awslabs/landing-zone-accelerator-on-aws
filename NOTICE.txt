@@ -39,7 +39,7 @@ This software includes third party software subject to the following copyrights:
 @aws-sdk/client-kms - Apache-2.0
 @aws-sdk/client-network-firewall - Apache-2.0
 @aws-sdk/client-organizations - Apache-2.0
-@aws-sdk/client-s3 - Apache-2.0
+@aws-sdk/client-route-53 - Apache-2.0
 @aws-sdk/client-s3 - Apache-2.0
 @aws-sdk/client-secrets-manager - Apache-2.0
 @aws-sdk/client-service-quotas - Apache-2.0

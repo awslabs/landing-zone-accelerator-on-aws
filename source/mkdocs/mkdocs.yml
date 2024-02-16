@@ -72,6 +72,7 @@ nav:
       - v1.5.2: typedocs/v1.5.2/index.html
     - v1.6:
       - v1.6.0: typedocs/v1.6.0/index.html
+      - v1.6.1: typedocs/v1.6.1/index.html
       
 
 theme:
