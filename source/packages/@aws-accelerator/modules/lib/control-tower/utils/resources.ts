@@ -207,12 +207,12 @@ export function makeManifestDocument(
 
 /**
  * This function compares the AWS Region list from configuration with the existing AWS Control Tower Landing Zone govern region list
- * @param existingRegions
- * @param configRegions
- * @returns
+ * @param existingRegions string[]
+ * @param configRegions string[]
+ * @returns status boolean
  */
-export function compareGovernedRegions(existingRegions: string[], configRegions: string[]): boolean {
-  return (
+export function isGovernedRegionsChanged(existingRegions: string[], configRegions: string[]): boolean {
+  return !(
     existingRegions.length === configRegions.length && existingRegions.every(region => configRegions.includes(region))
   );
 }
@@ -221,29 +221,20 @@ export function compareGovernedRegions(existingRegions: string[], configRegions:
  * Function to validate AWS Control Tower Landing Zone organization version provided in global config file is latest version
  * @param configVersion string
  * @param latestVersion string
- * @param currentVersion string
  * @param reason string
  * @param operationType string
  */
 function validateLandingZoneVersion(
   configVersion: string,
   latestVersion: string,
-  currentVersion: string,
   reason: string,
   operationType: string,
 ): void {
-  if (latestVersion !== currentVersion) {
+  if (latestVersion !== configVersion) {
     throw new Error(
       `It is necessary to ${operationType} the AWS Control Tower Landing Zone because "${reason}". AWS Control Tower Landing Zone's most recent version is ${latestVersion}, which is different from the version ${configVersion} specified in global-config.yaml file. AWS Control Tower Landing Zone can be ${
         operationType === 'update' ? 'updated' : operationType
       } when you specify the latest version in the configuration.`,
-    );
-  }
-  if (currentVersion !== configVersion) {
-    throw new Error(
-      `It is necessary to ${operationType} the AWS Control Tower Landing Zone because "${reason}". AWS Control Tower Landing Zone's current version is ${currentVersion}, which is different from the version ${configVersion} specified in global-config.yaml file. AWS Control Tower Landing Zone can be ${
-        operationType === 'update' ? 'updated' : operationType
-      } when you specify the current version in the configuration.`,
     );
   }
 }
@@ -257,62 +248,57 @@ export function isLandingZoneUpdateOrResetRequired(
   landingZoneConfiguration: ControlTowerLandingZoneConfigType,
   landingZoneDetails: ControlTowerLandingZoneDetailsType,
 ): LandingZoneUpdateOrResetRequiredType {
-  // When Landing Zone version specified in global-config.yaml differs from current AWS Control Tower  Landing Zone version
-  if (landingZoneDetails.version !== landingZoneConfiguration.version) {
+  //when drifted
+  if (landingZoneDetails.driftStatus === LandingZoneDriftStatus.DRIFTED) {
+    const reason = 'The Landing Zone has drifted';
     validateLandingZoneVersion(
       landingZoneConfiguration.version,
       landingZoneDetails.latestAvailableVersion!,
-      landingZoneDetails.version!,
-      'Landing Zone version specified in global-config.yaml file differs from existing AWS Control Tower Landing Zone version.',
-      'update',
+      reason,
+      'reset',
     );
+
+    return {
+      updateRequired: false,
+      targetVersion: landingZoneDetails.latestAvailableVersion!,
+      resetRequired: true,
+      reason,
+    };
   }
 
   // Changes in the AWS Control Tower Landing Zone configuration force an update of the AWS Control Tower Landing Zone, which will update the AWS Control Tower Landing Zone to the latest version if it is available
-  const changeInAccessLoggingBucketRetentionDays =
-    landingZoneDetails.accessLoggingBucketRetentionDays !== landingZoneConfiguration.accessLoggingBucketRetentionDays;
-  const changeInLoggingBucketRetentionDays =
-    landingZoneDetails.loggingBucketRetentionDays !== landingZoneConfiguration.loggingBucketRetentionDays;
-  const changeInEnableIdentityCenterAccess =
-    landingZoneDetails.enableIdentityCenterAccess !== landingZoneConfiguration.enableIdentityCenterAccess;
-  const changeInGovernedRegions = !compareGovernedRegions(
-    landingZoneDetails.governedRegions ?? [],
-    landingZoneConfiguration.governedRegions,
-  );
+  // find reasons to update
+  const reasons: string[] = [];
   if (
-    changeInAccessLoggingBucketRetentionDays ||
-    changeInLoggingBucketRetentionDays ||
-    changeInEnableIdentityCenterAccess ||
-    changeInGovernedRegions
+    landingZoneDetails.accessLoggingBucketRetentionDays !== landingZoneConfiguration.accessLoggingBucketRetentionDays
   ) {
-    const reasons: string[] = [];
-    if (changeInAccessLoggingBucketRetentionDays) {
-      reasons.push(
-        `Changes made in AccessLoggingBucketRetentionDays from ${landingZoneDetails.accessLoggingBucketRetentionDays} to ${landingZoneConfiguration.accessLoggingBucketRetentionDays}`,
-      );
-    }
-    if (changeInLoggingBucketRetentionDays) {
-      reasons.push(
-        `Changes made in LoggingBucketRetentionDays from ${landingZoneDetails.loggingBucketRetentionDays} to ${landingZoneConfiguration.loggingBucketRetentionDays}`,
-      );
-    }
-    if (changeInEnableIdentityCenterAccess) {
-      reasons.push(
-        `Changes made in EnableIdentityCenterAccess from ${landingZoneDetails.enableIdentityCenterAccess} to ${landingZoneConfiguration.enableIdentityCenterAccess}`,
-      );
-    }
-    if (changeInGovernedRegions) {
-      reasons.push(
-        `Changes made in EnableIdentityCenterAccess from [${landingZoneDetails.governedRegions?.join(
-          ',',
-        )}] to [${landingZoneConfiguration.governedRegions.join(',')}]`,
-      );
-    }
+    reasons.push(
+      `Changes made in AccessLoggingBucketRetentionDays from ${landingZoneDetails.accessLoggingBucketRetentionDays} to ${landingZoneConfiguration.accessLoggingBucketRetentionDays}`,
+    );
+  }
+  if (landingZoneDetails.loggingBucketRetentionDays !== landingZoneConfiguration.loggingBucketRetentionDays) {
+    reasons.push(
+      `Changes made in LoggingBucketRetentionDays from ${landingZoneDetails.loggingBucketRetentionDays} to ${landingZoneConfiguration.loggingBucketRetentionDays}`,
+    );
+  }
+  if (landingZoneDetails.enableIdentityCenterAccess !== landingZoneConfiguration.enableIdentityCenterAccess) {
+    reasons.push(
+      `Changes made in EnableIdentityCenterAccess from ${landingZoneDetails.enableIdentityCenterAccess} to ${landingZoneConfiguration.enableIdentityCenterAccess}`,
+    );
+  }
 
+  if (isGovernedRegionsChanged(landingZoneDetails.governedRegions ?? [], landingZoneConfiguration.governedRegions)) {
+    reasons.push(
+      `Changes made in governed regions from [${landingZoneDetails.governedRegions?.join(
+        ',',
+      )}] to [${landingZoneConfiguration.governedRegions.join(',')}]`,
+    );
+  }
+
+  if (reasons.length > 0) {
     validateLandingZoneVersion(
       landingZoneConfiguration.version,
       landingZoneDetails.latestAvailableVersion!,
-      landingZoneDetails.version!,
       reasons.join('. '),
       'update',
     );
@@ -321,25 +307,7 @@ export function isLandingZoneUpdateOrResetRequired(
       updateRequired: true,
       targetVersion: landingZoneDetails.latestAvailableVersion!,
       resetRequired: false,
-      reason: `The configuration of the Landing Zone has been modified. ${reasons.join('. ')}`,
-    };
-  }
-
-  // Reset the AWS Control Tower Landing Zone if it has drifted
-  if (landingZoneDetails.driftStatus === LandingZoneDriftStatus.DRIFTED) {
-    const reason = 'The Landing Zone has drifted';
-    validateLandingZoneVersion(
-      landingZoneConfiguration.version,
-      landingZoneDetails.latestAvailableVersion!,
-      landingZoneDetails.version!,
-      reason,
-      'update',
-    );
-    return {
-      updateRequired: false,
-      targetVersion: landingZoneDetails.latestAvailableVersion!,
-      resetRequired: true,
-      reason,
+      reason: `${reasons.join('. ')}`,
     };
   }
 
