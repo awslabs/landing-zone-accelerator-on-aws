@@ -57,6 +57,7 @@ const stack = new PipelineStack(app, 'PipelineStack', {
   },
   enableSingleAccountMode: false,
   pipelineAccountId: '000000000000',
+  useExistingRoles: false,
 });
 
 describe('PipelineStack', () => {

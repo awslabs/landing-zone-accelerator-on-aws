@@ -198,12 +198,7 @@ export class OrganizationsStack extends AcceleratorStack {
    * https://docs.aws.amazon.com/controltower/latest/userguide/optional-controls.html
    */
   private enableControlTowerControls() {
-    if (
-      this.stackProperties.globalConfig.controlTower.enable &&
-      this.stackProperties.globalConfig.controlTower?.controls?.length > 0
-    ) {
-      this.logger.info(`Enabling Control Tower Controls`);
-
+    if (this.stackProperties.globalConfig.controlTower.enable) {
       for (const control of this.stackProperties.globalConfig.controlTower.controls ?? []) {
         this.logger.info(`Control ${control.identifier} status: ${control.enable}`);
 

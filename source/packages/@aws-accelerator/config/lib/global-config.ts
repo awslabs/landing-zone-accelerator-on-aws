@@ -82,6 +82,129 @@ export class AccountCloudTrailConfig implements i.IAccountCloudTrailConfig {
   readonly settings = new CloudTrailSettingsConfig();
 }
 
+/**
+ * {@link GlobalConfig} / {@link ControlTowerConfig} / {@link ControlTowerLandingZoneConfig} / {@link ControlTowerLandingZoneLoggingConfig}
+ *
+ * @description
+ * AWS Control Tower Landing Zone logging configuration
+ *
+ * @remarks
+ * This allows you to manage logging options for the landing zone.
+ * In the log configuration section, you can configure the retention time of the Amazon S3 log archive bucket, and the retention time of the logs for access to the bucket.
+ *
+ * Please use the following configuration to configure AWS Control Tower Landing Zone logging configuration, with organization-level AWS CloudTrail configuration.
+ * @example
+ * ```
+ *   logging:
+ *     loggingBucketRetentionDays: 365
+ *     accessLoggingBucketRetentionDays: 3650
+ *     organizationTrail: true
+ * ```
+ */
+export class ControlTowerLandingZoneLoggingConfig implements i.IControlTowerLandingZoneLoggingConfig {
+  /**
+   * Retention time of the Amazon S3 log archive bucket
+   *
+   * @default
+   * 365
+   */
+  readonly loggingBucketRetentionDays: number = 365;
+  /**
+   * Retention time of the logs for access to the bucket.
+   *
+   * @default
+   * 3650
+   */
+  readonly accessLoggingBucketRetentionDays: number = 3650;
+  /**
+   * Flag indicates Organizational-level AWS CloudTrail configuration is configured or not.
+   *
+   * @remarks
+   * It is important to note that the CloudTrail configured by AWS Control Tower at the organization level is different from the CloudTrail deployed by the solution. In the event that AWS Control Tower and Solution defined CloudTrail are enabled, two cloud trails will be created.
+   * @default
+   * true
+   */
+  readonly organizationTrail: boolean = true;
+}
+
+/**
+ * {@link GlobalConfig} / {@link ControlTowerConfig} / {@link ControlTowerLandingZoneConfig} / {@link ControlTowerLandingZoneSecurityConfig}
+ *
+ * @description
+ * AWS Control Tower Landing Zone security configuration
+ *
+ * @remarks
+ * This allows you to manage security options for the landing zone.
+ *
+ * The following AWS Control Tower Landing Zone security example configuration sets up AWS account access with IAM Identity Center.
+ * @example
+ * ```
+ *   security:
+ *     enableIdentityCenterAccess: true
+ * ```
+ */
+export class ControlTowerLandingZoneSecurityConfig implements i.IControlTowerLandingZoneSecurityConfig {
+  /**
+   * Flag indicates AWS account access option.
+   *
+   * @remarks
+   * When this property is to true, AWS Control Tower sets up AWS account access with IAM Identity Center. Otherwise, please use self-managed AWS account access with IAM Identity Center or another method.
+   *
+   * @default
+   * true
+   */
+  readonly enableIdentityCenterAccess: boolean = true;
+}
+
+/**
+ * {@link GlobalConfig} / {@link ControlTowerConfig} / {@link ControlTowerLandingZoneConfig}
+ *
+ * @description
+ * AWS Control Tower Landing Zone configuration
+ *
+ * @remarks
+ *  This allows you to manage AWS Control Tower Landing Zone configuration.
+ *
+ * Please use the following configuration to configure AWS Control Tower Landing Zone.
+ * @example
+ * ```
+ * landingZone:
+ *   version: '3.3'
+ *   logging:
+ *     loggingBucketRetentionDays: 365
+ *     accessLoggingBucketRetentionDays: 3650
+ *     organizationTrail: true
+ *   security:
+ *     enableIdentityCenterAccess: true
+ * ```
+ */
+export class ControlTowerLandingZoneConfig implements i.IControlTowerLandingZoneConfig {
+  /**
+   * The landing zone version, for example, 3.3.
+   *
+   * @remarks
+   * Most AWS Control Tower Landing Zone operation needs the version to latest available version.
+   * The AWS Control Tower Landing Zone will be updated or reset when it drifts or when any configuration changes have been made in global-config.
+   * When the value of this property is set to the latest available version, AWS Control Tower Landing Zone can be updated or reset.
+   * The solution will fail if this property version is not set to the latest available version.
+   * If you wish to update or reset the AWS Control Tower Landing Zone, you will need to update this property to match the latest available version.
+   *
+   */
+  readonly version: string = '3.3';
+  /**
+   * AWS Control Tower Landing Zone logging configuration
+   *
+   * @see {@link ControlTowerLandingZoneLoggingConfig} for more information.
+   */
+  readonly logging: ControlTowerLandingZoneLoggingConfig = new ControlTowerLandingZoneLoggingConfig();
+  /**
+   * AWS Control Tower Landing Zone security configuration
+   *
+   * @see {@link ControlTowerLandingZoneSecurityConfig} for more information.
+   */
+  readonly security: ControlTowerLandingZoneSecurityConfig = new ControlTowerLandingZoneSecurityConfig();
+}
+
 export abstract class ControlTowerControlConfig implements i.IControlTowerControlConfig {
   readonly identifier: string = '';
   readonly enable: boolean = true;
@@ -89,9 +212,49 @@ export abstract class ControlTowerControlConfig implements i.IControlTowerContro
   readonly regions: t.Region[] | undefined = undefined;
 }
 
+/**
+ * *{@link GlobalConfig} / {@link ControlTowerConfig}*
+ *
+ * AWS Control Tower Landing Zone configuration.
+ *
+ * Please use the following configuration to configure AWS Control Tower Landing Zone.
+ * @example
+ * ```
+ * controlTower:
+ *   enable: true
+ *   landingZone:
+ *     version: '3.3'
+ *     logging:
+ *       loggingBucketRetentionDays: 365
+ *       accessLoggingBucketRetentionDays: 3650
+ *       organizationTrail: true
+ *     security:
+ *       enableIdentityCenterAccess: true
+ * ```
+ */
 export class ControlTowerConfig implements i.IControlTowerConfig {
+  /**
+   * Indicates whether AWS Control Tower enabled.
+   *
+   * When control tower is enabled, accelerator makes sure account configuration file have three mandatory AWS CT accounts.
+   * In AWS Control Tower, three shared accounts in your landing zone are provisioned automatically during setup: the management account,
+   * the log archive account, and the audit account.
+   */
   readonly enable: boolean = true;
+  /**
+   * A list of Control Tower controls to enable.
+   *
+   * Only Strongly recommended and Elective controls are permitted, with the exception of the Region deny guardrail. Please see this [page](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-controltower-enabledcontrol.html) for more information.
+   *
+   * @see {@link ControlTowerControlConfig} for more information.
+   */
   readonly controls: ControlTowerControlConfig[] = [];
+  /**
+   * AWS Control Tower Landing Zone configuration
+   *
+   * @see {@link ControlTowerLandingZoneConfig} for more information.
+   */
+  readonly landingZone: ControlTowerLandingZoneConfig | undefined = undefined;
 }
 
 export class ServiceEncryptionConfig implements i.IServiceEncryptionConfig {
@@ -336,7 +499,7 @@ export class GlobalConfig implements i.IGlobalConfig {
   constructor(
     props: {
       homeRegion: string;
-      controlTower: { enable: boolean };
+      controlTower: { enable: boolean; landingZone?: ControlTowerLandingZoneConfig };
       managementAccountAccessRole: string;
     },
     values?: i.IGlobalConfig,
@@ -346,7 +509,11 @@ export class GlobalConfig implements i.IGlobalConfig {
     } else {
       this.homeRegion = props.homeRegion;
       this.enabledRegions = [props.homeRegion as t.Region];
-      this.controlTower = { ...props.controlTower, controls: [] };
+      this.controlTower = {
+        enable: props.controlTower.enable,
+        landingZone: props.controlTower.landingZone,
+        controls: [],
+      };
       this.managementAccountAccessRole = props.managementAccountAccessRole;
     }
   }
@@ -373,7 +540,7 @@ export class GlobalConfig implements i.IGlobalConfig {
     return new GlobalConfig(
       {
         homeRegion,
-        controlTower,
+        controlTower: { enable: controlTower.enable, landingZone: controlTower.landingZone },
         managementAccountAccessRole,
       },
       values,

@@ -535,7 +535,7 @@
     },
     "IControlTowerConfig": {
       "additionalProperties": false,
-      "description": "AWS ControlTower configuration",
+      "description": "AWS Control Tower Landing Zone configuration",
       "properties": {
         "controls": {
           "description": "A list of Control Tower controls to enable.\n\nOnly Strongly recommended and Elective controls are permitted, with the exception of the Region deny guardrail. Please see this page for more information: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-controltower-enabledcontrol.html",
@@ -545,8 +545,12 @@
           "type": "array"
         },
         "enable": {
-          "description": "Indicates whether AWS ControlTower enabled.\n\nWhen control tower is enabled, accelerator makes sure account configuration file have three mandatory AWS CT accounts. In AWS Control Tower, three shared accounts in your landing zone are provisioned automatically during setup: the management account, the log archive account, and the audit account.",
+          "description": "Indicates whether AWS Control Tower Landing Zone enabled.\n\nWhen control tower is enabled, accelerator makes sure account configuration file have three mandatory AWS CT accounts. In AWS Control Tower, three shared accounts in your landing zone are provisioned automatically during setup: the management account, the log archive account, and the audit account.",
           "type": "boolean"
+        },
+        "landingZone": {
+          "$ref": "#/definitions/IControlTowerLandingZoneConfig",
+          "description": "AWS Control Tower Landing Zone configuration"
         }
       },
       "required": [
@@ -582,6 +586,72 @@
         "identifier",
         "enable",
         "deploymentTargets"
+      ],
+      "type": "object"
+    },
+    "IControlTowerLandingZoneConfig": {
+      "additionalProperties": false,
+      "description": "AWS Control Tower Landing Zone configuration",
+      "properties": {
+        "logging": {
+          "$ref": "#/definitions/IControlTowerLandingZoneLoggingConfig",
+          "description": "AWS Control Tower Landing Zone logging configuration"
+        },
+        "security": {
+          "$ref": "#/definitions/IControlTowerLandingZoneSecurityConfig",
+          "description": "AWS Control Tower Landing Zone security configuration"
+        },
+        "version": {
+          "description": "The landing zone version, for example, 3.3.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "version",
+        "logging",
+        "security"
+      ],
+      "type": "object"
+    },
+    "IControlTowerLandingZoneLoggingConfig": {
+      "additionalProperties": false,
+      "description": "{@link  IGlobalConfig }  /  {@link  IControlTowerConfig }  /  {@link  IControlTowerLandingZoneConfig }  /  {@link  IControlTowerLandingZoneLoggingConfig } \n\nAWS Control Tower Landing Zone logging configuration",
+      "properties": {
+        "accessLoggingBucketRetentionDays": {
+          "default": 3650,
+          "description": "Retention time of the logs for access to the bucket.",
+          "type": "number"
+        },
+        "loggingBucketRetentionDays": {
+          "default": 365,
+          "description": "Retention time of the Amazon S3 log archive bucket",
+          "type": "number"
+        },
+        "organizationTrail": {
+          "default": true,
+          "description": "Flag indicates Organizational-level AWS CloudTrail configuration is configured or not.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "loggingBucketRetentionDays",
+        "accessLoggingBucketRetentionDays",
+        "organizationTrail"
+      ],
+      "type": "object"
+    },
+    "IControlTowerLandingZoneSecurityConfig": {
+      "additionalProperties": false,
+      "description": "{@link  IGlobalConfig }  /  {@link  IControlTowerConfig }  /  {@link  IControlTowerLandingZoneConfig }  /  {@link  IControlTowerLandingZoneSecurityConfig }  AWS Control Tower Landing Zone security configuration",
+      "properties": {
+        "enableIdentityCenterAccess": {
+          "default": true,
+          "description": "Flag indicates AWS account access option.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enableIdentityCenterAccess"
       ],
       "type": "object"
     },
@@ -792,7 +862,7 @@
         },
         "controlTower": {
           "$ref": "#/definitions/IControlTowerConfig",
-          "description": "AWS ControlTower configuration\n\nTo indicate environment has control tower enabled, you need to provide below value for this parameter."
+          "description": "AWS Control Tower Landing Zone configuration\n\nTo indicate environment has control tower enabled, you need to provide below value for this parameter."
         },
         "enabledRegions": {
           "description": "List of AWS Region names where accelerator will be deployed. Home region must be part of this list.\n\nTo add us-west-2 along with home region for accelerator deployment, you need to provide below value for this parameter.",

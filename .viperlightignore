@@ -100,8 +100,9 @@ source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1147
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1148
 
 # Accelerator specific assume role declaration
-source/packages/@aws-accelerator/config/lib/global-config.ts:754
-source/packages/@aws-accelerator/config/lib/global-config.ts:755
+
+source/packages/@aws-accelerator/config/lib/global-config.ts:921
+source/packages/@aws-accelerator/config/lib/global-config.ts:922
 
 # Accelerator specific assume role declaration
 
