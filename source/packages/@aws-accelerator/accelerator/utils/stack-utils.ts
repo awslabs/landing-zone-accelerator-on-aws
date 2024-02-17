@@ -239,6 +239,7 @@ export function createPipelineStack(
   context: AcceleratorContext,
   acceleratorEnv: AcceleratorEnvironment,
   resourcePrefixes: AcceleratorResourcePrefixes,
+  useExistingRoles: boolean,
 ) {
   if (includeStage(context, { stage: AcceleratorStage.PIPELINE, account: context.account, region: context.region })) {
     const pipelineStackName = AcceleratorToolkit.getNonConfigDependentStackName(AcceleratorStage.PIPELINE, {
@@ -252,6 +253,7 @@ export function createPipelineStack(
       terminationProtection: true,
       partition: context.partition,
       prefixes: resourcePrefixes,
+      useExistingRoles,
       ...acceleratorEnv,
     });
     cdk.Aspects.of(pipelineStack).add(new AwsSolutionsChecks());

@@ -39,3 +39,92 @@ Customers should use Landing Zone Accelerator if they want a no-code solution wi
 ## Can I use both Landing Zone Accelerator and CfCT? Are there any one-way doors?
 
 You can use both Landing Zone Accelerator and CfCT to deploy additional customizations to your CT landing zone. Both Landing Zone Accelerator and CfCT support event driven architectures and post an SNS topic at the completion of their respective pipelines. Subscriptions can be set up against these SNS topics to initiate additional pipelines or custom IaC deployments. This includes having CfCT called after the completion of a Landing Zone Accelerator pipeline and vice versa. For customers that want a hybrid approach of a no-code solution to handle the orchestration and deployment of AWS security and networking services through Landing Zone Accelerator, can then use CfCT to add additional customizations directly with custom-developed CloudFormation templates
+
+## Can I deploy or manage existing AWS Control Tower in Landing Zone Accelerator solution?
+
+Using the Landing Zone Accelerator on AWS solution, you can create, update, or reset an AWS Control Tower Landing Zone.
+It is possible to maintain the AWS Control Tower Landing Zone using the Landing Zone Accelerator solution. When the installer stack of the solution is deployed with the `ControlTowerEnabled` parameter set to `Yes`, then the Landing Zone Accelerator can deploy the AWS Control Tower Landing Zone for you. The solution will deploy the AWS Control Tower Landing Zone with the most recent version available.  
+
+The Landing Zone Accelerator solution can deploy AWS Control Tower Landing Zone when following pre-requisites are met.
+
+- AWS Organizations with all feature enabled
+
+When AWS Organizations are not configured in your environment, the Landing Zone Accelerator solution will return an error. In the event that AWS Organizations has been configured, but not all features have been enabled, the solution will enable all features for your organization. After you create an organization and before you can deploy Landing Zone Accelerator solution, you must verify that you own the email address provided for the management account in the organization.  In order to learn more about setting up an AWS organization, you may refer to this [Creating an organization](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_org_create.html). 
+
+- No AWS services enabled for AWS Organizations 
+
+The Landing Zone Accelerator solution cannot deploy AWS Control Tower Landing Zone if AWS Organizations have any AWS service access enabled.
+
+
+- No organization units in AWS Organizations
+
+The Landing Zone Accelerator solution cannot deploy AWS Control Tower Landing Zone if there are any organizational units in AWS Organizations. AWS Control Tower and the Landing Zone Accelerator solution will create the necessary organization units for the deployment of the AWS Control Tower Landing Zone.
+
+- No additional accounts in AWS Organizations
+
+The Landing Zone Accelerator cannot deploy AWS Control Tower Landing Zone when there are other accounts in AWS Organizations than the management account. During the deployment of the AWS Control Tower Landing Zone, the solution will create shared accounts (LogArchive and Audit).
+
+- No AWS IAM Identity Center configured
+
+The Landing Zone Accelerator cannot deploy AWS Control Tower Landing Zone when an existing AWS IAM Identity Center is configured. AWS IAM Identity Center will be deployed during the deployment of the AWS Control Tower Landing Zone.
+
+- None of the AWS Control Tower service roles are preset
+    - [AWSControlTowerAdmin](https://docs.aws.amazon.com/controltower/latest/userguide/access-control-managing-permissions.html#AWSControlTowerAdmin)
+    - [AWSControlTowerCloudTrailRole](https://docs.aws.amazon.com/controltower/latest/userguide/access-control-managing-permissions.html#AWSControlTowerCloudTrailRole)
+    - [AWSControlTowerStackSetRole](https://docs.aws.amazon.com/controltower/latest/userguide/access-control-managing-permissions.html#AWSControlTowerStackSetRole)
+    - [AWSControlTowerConfigAggregatorRoleForOrganizations](https://docs.aws.amazon.com/controltower/latest/userguide/roles-how.html#config-role-for-organizations)
+
+If there are any AWS Control Tower service roles in the management account, Landing Zone Accelerator cannot deploy the AWS Control Tower Landing Zone. 
+
+
+Landing Zone Accelerator performs the following pre-requisites before deploying AWS Control Tower Landing Zone. This [document](https://docs.aws.amazon.com/controltower/latest/userguide/lz-api-prereques.html) provides more information about AWS Control Tower pre-requisites. The solution will not perform any of the pre-requisites if there is an existing AWS Control Tower Landing Zone.
+
+- Deploy AWS Control Tower service roles 
+    - [AWSControlTowerAdmin](https://docs.aws.amazon.com/controltower/latest/userguide/access-control-managing-permissions.html#AWSControlTowerAdmin)
+    - [AWSControlTowerCloudTrailRole](https://docs.aws.amazon.com/controltower/latest/userguide/access-control-managing-permissions.html#AWSControlTowerCloudTrailRole)
+    - [AWSControlTowerStackSetRole](https://docs.aws.amazon.com/controltower/latest/userguide/access-control-managing-permissions.html#AWSControlTowerStackSetRole)
+    - [AWSControlTowerConfigAggregatorRoleForOrganizations](https://docs.aws.amazon.com/controltower/latest/userguide/roles-how.html#config-role-for-organizations)
+
+The Landing Zone Accelerator will deploy above AWS Control Tower service roles.
+
+
+
+- Deploy AWS KMS CMK
+
+The Landing Zone Accelerator will deploy AWS KMS CMK to encrypt AWS Control Tower resources.
+
+The Landing Zone Accelerator solution will add the following `landingZone` configuration.
+
+[GlobalConfig](../typedocs/latest/classes/_aws_accelerator_config.GlobalConfig.html) / [ControlTowerConfig](../typedocs/latest/classes/_aws_accelerator_config.ControlTowerConfig.html) / [ControlTowerLandingZoneConfig](../typedocs/latest/classes/_aws_accelerator_config.ControlTowerLandingZoneConfig.html)
+
+```
+landingZone:
+  version: '3.3'
+  logging:
+    loggingBucketRetentionDays: 365
+    accessLoggingBucketRetentionDays: 3650
+    organizationTrail: true
+  security:
+    enableIdentityCenterAccess: true
+  enableRegionDeny: true
+```
+
+#### AWS Control Tower Landing Zone Deployment
+Landing Zone Accelerator will create two organizational units (`Security` and `Infrastructure`) when it deploys AWS Control Tower Landing Zone. In addition, AWS Organization level AWS CloudTrail trails will be configured with AWS KMS CMK encryption.
+
+In the event that there is already an existing AWS Control Tower Landing Zone, Landing Zone Accelerator will not make any changes to it during initial deployment. In order to manage existing AWS Control Tower Landing Zone through the Landing Zone Accelerator solution, you will need to add `landingZone` configuration [ControlTowerLandingZoneConfig](../typedocs/latest/classes/_aws_accelerator_config.ControlTowerLandingZoneConfig.html) for `controlTower` configuration [GlobalConfig](../typedocs/latest/classes/_aws_accelerator_config.GlobalConfig.html) / [ControlTowerConfig](../typedocs/latest/classes/_aws_accelerator_config.ControlTowerConfig.html).
+
+If any changes are made to the AWS Control Tower Landing Zone configuration, the Landing Zone Accelerator solution will attempt to update the AWS Control Tower Landing Zone. In the event that the current AWS Control Tower Landing Zone has drifted, the solution will attempt to reset it. 
+
+The Landing Zone Accelerator solution will update AWS Control Tower Landing Zone when the [GlobalConfig.enabledRegions](../typedocs/latest/classes/_aws_accelerator_config.GlobalConfig.html#enabledRegions) property is modified. In this solution, the AWS Control Tower Landing Zone govern regions will be updated to match those included in [GlobalConfig.enabledRegions](../typedocs/latest/classes/_aws_accelerator_config.GlobalConfig.html#enabledRegions). 
+
+
+!!! warning "Important"
+
+    In the event that the Landing Zone Accelerator solution determines that an existing AWS Control Tower Landing Zone needs to be reset or updated due to a change in `landingZone` [ControlTowerLandingZoneConfig](../typedocs/latest/classes/_aws_accelerator_config.ControlTowerLandingZoneConfig.html) configuration, it will validate that the version property of `landingZone` [ControlTowerLandingZoneConfig](../typedocs/latest/classes/_aws_accelerator_config.ControlTowerLandingZoneConfig.html) configuration is similar to the latest version ([AWS Control Tower release notes](https://docs.aws.amazon.com/controltower/latest/userguide/release-notes.html)) of AWS Control Tower Landing Zone available. This is due to the fact that changes to AWS Control Tower Landing Zone can only be made when the version matches that of the most recent available version of AWS Control Tower Landing Zone. A version mismatch error will be thrown when the Landing Zone Accelerator solution finds the latest version is not provided in global configuration.
+
+
+
+!!! note
+    AWS Console should be used to enable or disable the region deny property for your AWS Control Tower Landing Zone. Currently, the Landing Zone Accelerator solution does not support the modification of the region deny feature. 
+---    

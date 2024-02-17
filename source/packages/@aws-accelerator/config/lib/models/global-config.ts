@@ -12,9 +12,127 @@
  */
 
 import * as t from '../common/types';
+/**
+ * {@link IGlobalConfig} / {@link IControlTowerConfig} / {@link IControlTowerLandingZoneConfig} / {@link IControlTowerLandingZoneLoggingConfig}
+ *
+ * AWS Control Tower Landing Zone logging configuration
+ *
+ * @remarks
+ * This allows you to manage logging options for the landing zone.
+ * In the log configuration section, you can configure the retention time of the Amazon S3 log archive bucket, and the retention time of the logs for access to the bucket.
+ *
+ * @example
+ * ```
+ *   logging:
+ *     loggingBucketRetentionDays: 365
+ *     accessLoggingBucketRetentionDays: 3650
+ *     organizationTrail: true
+ * ```
+ */
+export interface IControlTowerLandingZoneLoggingConfig {
+  /**
+   * Retention time of the Amazon S3 log archive bucket
+   *
+   * @default
+   * 365
+   */
+  readonly loggingBucketRetentionDays: number;
+  /**
+   * Retention time of the logs for access to the bucket.
+   *
+   * @default
+   * 3650
+   */
+  readonly accessLoggingBucketRetentionDays: number;
+  /**
+   * Flag indicates Organizational-level AWS CloudTrail configuration is configured or not.
+   *
+   * @remarks
+   * It is important to note that the CloudTrail configured by AWS Control Tower Landing Zone at the organization level is different from the CloudTrail deployed by the solution. In the event that AWS Control Tower Landing Zone and Solution defined CloudTrail are enabled, two cloud trails will be created.
+   * @default
+   * true
+   */
+  readonly organizationTrail: boolean;
+}
 
 /**
- * {@link GlobalConfig} / {@link ControlTowerConfig} / {@link ControlTowerControlConfig}
+ * {@link IGlobalConfig} / {@link IControlTowerConfig} / {@link IControlTowerLandingZoneConfig} / {@link IControlTowerLandingZoneSecurityConfig}
+ * AWS Control Tower Landing Zone security configuration
+ *
+ * @remarks
+ * This allows you to manage security options for the landing zone.
+ *
+ * @example
+ * ```
+ *   security:
+ *     enableIdentityCenterAccess: true
+ * ```
+ */
+export interface IControlTowerLandingZoneSecurityConfig {
+  /**
+   * Flag indicates AWS account access option.
+   *
+   * @remarks
+   * When this property is to true, AWS Control Tower sets up AWS account access with IAM Identity Center. Otherwise, please use self-managed AWS account access with IAM Identity Center or another method.
+   *
+   * @default
+   * true
+   */
+  readonly enableIdentityCenterAccess: boolean;
+}
+
+/**
+ * {@link IGlobalConfig} / {@link IControlTowerConfig} / {@link IControlTowerLandingZoneConfig}
+ *
+ * @description
+ * AWS Control Tower Landing Zone configuration
+ *
+ * @remarks
+ * This allows you to manage AWS Control Tower Landing Zone configuration.
+ *
+ *
+ * @example
+ *
+ * ```
+ * landingZone:
+ *   version: '3.3'
+ *   logging:
+ *     loggingBucketRetentionDays: 365
+ *     accessLoggingBucketRetentionDays: 3650
+ *     organizationTrail: true
+ *   security:
+ *     enableIdentityCenterAccess: true
+ * ```
+ */
+export interface IControlTowerLandingZoneConfig {
+  /**
+   * The landing zone version, for example, 3.3.
+   *
+   * @remarks
+   * Most AWS Control Tower Landing Zone operation needs the version to latest available version.
+   * The AWS Control Tower Landing Zone will be updated or reset when it drifts or when any configuration changes have been made in global-config.
+   * When the value of this property is set to the latest available version, AWS Control Tower Landing Zone can be updated or reset.
+   * The solution will fail if this property version is not set to the latest available version.
+   * If you wish to update or reset the AWS Control Tower Landing Zone, you will need to update this property to match the latest available version.
+   *
+   */
+  readonly version: string;
+  /**
+   * AWS Control Tower Landing Zone logging configuration
+   *
+   * @see {@link IControlTowerLandingZoneLoggingConfig} for more information.
+   */
+  readonly logging: IControlTowerLandingZoneLoggingConfig;
+  /**
+   * AWS Control Tower Landing Zone security configuration
+   *
+   * @see {@link IControlTowerLandingZoneSecurityConfig} for more information.
+   */
+  readonly security: IControlTowerLandingZoneSecurityConfig;
+}
+
+/**
+ * {@link IGlobalConfig} / {@link IControlTowerConfig} / {@link IControlTowerControlConfig}
  *
  * @description
  * Control Tower controls
@@ -55,20 +173,28 @@ export interface IControlTowerControlConfig {
 }
 
 /**
- * *{@link GlobalConfig} / {@link ControlTowerConfig}*
+ * *{@link IGlobalConfig} / {@link IControlTowerConfig}
  *
  * @description
- * AWS ControlTower configuration
+ * AWS Control Tower Landing Zone configuration
  *
  * @example
  * ```
  * controlTower:
  *   enable: true
+ *   landingZone:
+ *     version: '3.3'
+ *     logging:
+ *       loggingBucketRetentionDays: 365
+ *       accessLoggingBucketRetentionDays: 3650
+ *       organizationTrail: true
+ *     security:
+ *       enableIdentityCenterAccess: true
  * ```
  */
 export interface IControlTowerConfig {
   /**
-   * Indicates whether AWS ControlTower enabled.
+   * Indicates whether AWS Control Tower Landing Zone enabled.
    *
    * When control tower is enabled, accelerator makes sure account configuration file have three mandatory AWS CT accounts.
    * In AWS Control Tower, three shared accounts in your landing zone are provisioned automatically during setup: the management account,
@@ -79,8 +205,20 @@ export interface IControlTowerConfig {
    * A list of Control Tower controls to enable.
    *
    * Only Strongly recommended and Elective controls are permitted, with the exception of the Region deny guardrail. Please see this page for more information: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-controltower-enabledcontrol.html
+   *
+   * @see {@link IControlTowerControlConfig}
+   *
+   * @remarks
+   * Only Strongly recommended and Elective controls are permitted, with the exception of the Region deny guardrail. Please see this page for more information: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-controltower-enabledcontrol.html
    */
   readonly controls?: IControlTowerControlConfig[];
+
+  /**
+   * AWS Control Tower Landing Zone configuration
+   *
+   * @see {@link IControlTowerLandingZoneConfig} for more information.
+   */
+  readonly landingZone?: IControlTowerLandingZoneConfig;
 }
 
 /**
@@ -1888,7 +2026,7 @@ export interface IGlobalConfig {
    */
   readonly terminationProtection?: boolean;
   /**
-   * AWS ControlTower configuration
+   * AWS Control Tower Landing Zone configuration
    *
    * To indicate environment has control tower enabled, you need to provide below value for this parameter.
    *

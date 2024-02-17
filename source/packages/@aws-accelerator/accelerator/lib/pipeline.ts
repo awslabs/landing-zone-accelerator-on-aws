@@ -114,6 +114,15 @@ export interface AcceleratorPipelineProps {
    * Accelerator pipeline account id, for external deployment it will be pipeline account otherwise management account
    */
   pipelineAccountId: string;
+  /**
+   * Flag indicating existing role
+   */
+  readonly useExistingRoles: boolean;
+}
+
+enum BuildLogLevel {
+  ERROR = 'error',
+  INFO = 'info',
 }
 
 /**
@@ -222,6 +231,18 @@ export class AcceleratorPipeline extends Construct {
         logArchiveAccountEmail: this.props.logArchiveAccountEmail,
         auditAccountEmail: this.props.auditAccountEmail,
         controlTowerEnabled: this.props.controlTowerEnabled,
+        controlTowerLandingZoneConfig:
+          this.props.controlTowerEnabled.toLocaleLowerCase() === 'yes'
+            ? {
+                version: '3.3',
+                logging: {
+                  loggingBucketRetentionDays: 365,
+                  accessLoggingBucketRetentionDays: 3650,
+                  organizationTrail: true,
+                },
+                security: { enableIdentityCenterAccess: true },
+              }
+            : undefined,
         enableSingleAccountMode: this.props.enableSingleAccountMode,
       }).getRepository();
 
@@ -425,6 +446,13 @@ export class AcceleratorPipeline extends Construct {
             commands: [
               'env',
               'cd source',
+              `if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && export LOG_LEVEL=${
+                BuildLogLevel.INFO
+              } && yarn run ts-node packages/@aws-accelerator/modules/bin/runner.ts --module control-tower --stage $ACCELERATOR_STAGE --partition ${
+                cdk.Aws.PARTITION
+              } --use-existing-role ${
+                this.props.useExistingRoles ? 'Yes' : 'No'
+              } --config-dir $CODEBUILD_SRC_DIR_Config && export LOG_LEVEL=${BuildLogLevel.ERROR} ; fi`,
               `if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && yarn run ts-node  packages/@aws-accelerator/accelerator/lib/prerequisites.ts --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION} --minimal; fi`,
               'cd packages/@aws-accelerator/accelerator',
               `if [ -z "\${ACCELERATOR_STAGE}" ]; then for STAGE in "key" "logging" "organizations" "security-audit" "network-prep" "security" "operations" "identity-center" "network-vpc" "security-resources" "network-associations" "customizations" "finalize" "bootstrap"; do set -e && yarn run ts-node --transpile-only cdk.ts synth --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION} --stage $STAGE; done; fi`,
@@ -443,7 +471,7 @@ export class AcceleratorPipeline extends Construct {
         environmentVariables: {
           LOG_LEVEL: {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: 'error',
+            value: BuildLogLevel.ERROR,
           },
           NODE_OPTIONS: {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,

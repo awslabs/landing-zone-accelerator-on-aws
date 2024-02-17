@@ -126,9 +126,9 @@ export class GlobalConfigValidator {
     //
     this.validateCdkOptions(values, errors);
     //
-    // Control Tower control validation
+    // Validate AWS ControlTower configuration
     //
-    this.validateControlTowerControls(values, errors);
+    this.validateControlTowerConfiguration(values, organizationConfig, errors);
     //
     // Service Limit Quotas validation
     //
@@ -1083,6 +1083,37 @@ export class GlobalConfigValidator {
     if (!values?.cdkOptions?.centralizeBuckets && values?.cdkOptions?.customDeploymentRole) {
       errors.push(`cdkOptions.centralizeBuckets must be set to true to enable cdkOptions.customDeploymentRole`);
     }
+  }
+
+  /**
+   * Function to validate AWS ControlTower configuration
+   * @param values {@link GlobalConfig}
+   * @param organizationConfig {@link OrganizationConfig}
+   * @param errors string[]
+   */
+  private validateControlTowerConfiguration(
+    values: GlobalConfig,
+    organizationConfig: OrganizationConfig,
+    errors: string[],
+  ) {
+    if (values.controlTower.enable && !organizationConfig.enable) {
+      errors.push(
+        'The AWS ControlTower cannot be enabled when the Organization enable property is set to false in organization-config.yaml file.',
+      );
+    }
+
+    if (!values.controlTower.enable && values.controlTower.landingZone) {
+      errors.push(
+        'The AWS ControlTower LandingZone configuration cannot be provided when the ControlTower enable property is set to false',
+      );
+    }
+
+    if (values.controlTower.landingZone && !organizationConfig.enable) {
+      errors.push(
+        'The AWS ControlTower LandingZone configuration cannot be provided when the Organization enable property is set to false in organization-config.yaml file.',
+      );
+    }
+    this.validateControlTowerControls(values, errors);
   }
 
   private validateControlTowerControls(values: GlobalConfig, errors: string[]) {

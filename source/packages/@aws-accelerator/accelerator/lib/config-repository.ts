@@ -19,6 +19,7 @@ import {
   OrganizationConfig,
   SecurityConfig,
   Region,
+  ControlTowerLandingZoneConfig,
 } from '@aws-accelerator/config';
 import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
 import * as cdk from 'aws-cdk-lib';
@@ -38,6 +39,10 @@ export interface ConfigRepositoryProps {
   readonly auditAccountEmail: string;
   readonly controlTowerEnabled: string;
   readonly enableSingleAccountMode: boolean;
+  /**
+   * AWS Control Tower Landing Zone configuration
+   */
+  readonly controlTowerLandingZoneConfig?: ControlTowerLandingZoneConfig;
 }
 
 /**
@@ -62,6 +67,18 @@ export class ConfigRepository extends Construct {
     }
 
     fs.writeFileSync(
+      path.join(tempDirPath, GlobalConfig.FILENAME),
+      yaml.dump(
+        new GlobalConfig({
+          homeRegion: cdk.Stack.of(this).region as Region,
+          controlTower: { enable: controlTowerEnabledValue, landingZone: props.controlTowerLandingZoneConfig },
+          managementAccountAccessRole: managementAccountAccessRole,
+        }),
+      ),
+      'utf8',
+    );
+
+    fs.writeFileSync(
       path.join(tempDirPath, AccountsConfig.FILENAME),
       yaml.dump(
         new AccountsConfig({
@@ -72,17 +89,7 @@ export class ConfigRepository extends Construct {
       ),
       'utf8',
     );
-    fs.writeFileSync(
-      path.join(tempDirPath, GlobalConfig.FILENAME),
-      yaml.dump(
-        new GlobalConfig({
-          homeRegion: cdk.Stack.of(this).region as Region,
-          controlTower: { enable: controlTowerEnabledValue },
-          managementAccountAccessRole: managementAccountAccessRole,
-        }),
-      ),
-      'utf8',
-    );
+
     fs.writeFileSync(path.join(tempDirPath, IamConfig.FILENAME), yaml.dump(new IamConfig()), 'utf8');
     fs.writeFileSync(path.join(tempDirPath, NetworkConfig.FILENAME), yaml.dump(new NetworkConfig()), 'utf8');
     if (props.enableSingleAccountMode) {

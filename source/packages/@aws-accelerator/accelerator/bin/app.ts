@@ -69,10 +69,11 @@ function createPipelineStacks(
   context: AcceleratorContext,
   acceleratorEnv: AcceleratorEnvironment,
   resourcePrefixes: AcceleratorResourcePrefixes,
+  useExistingRoles: boolean,
 ) {
   //
   // PIPELINE Stack
-  createPipelineStack(app, context, acceleratorEnv, resourcePrefixes);
+  createPipelineStack(app, context, acceleratorEnv, resourcePrefixes, useExistingRoles);
   //
   // TESTER Stack
   createTesterStack(app, context, acceleratorEnv, resourcePrefixes);
@@ -225,7 +226,7 @@ async function main() {
 
   //
   // PIPELINE and TESTER Stacks
-  createPipelineStacks(app, context, acceleratorEnv, resourcePrefixes);
+  createPipelineStacks(app, context, acceleratorEnv, resourcePrefixes, useExistingRoles);
   //
   // Set accelerator stack props
   const props = await setAcceleratorStackProps(context, acceleratorEnv, resourcePrefixes, globalRegion);

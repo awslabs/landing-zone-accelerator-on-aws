@@ -5,6 +5,7 @@
     - [@aws-accelerator/config](#aws-acceleratorconfig)
     - [@aws-accelerator/constructs](#aws-acceleratorconstructs)
     - [@aws-accelerator/installer](#aws-acceleratorinstaller)
+    - [@aws-accelerator/modules](#aws-acceleratormodules)
     - [@aws-accelerator/ui (future)](#aws-acceleratorui-future)
     - [@aws-accelerator/utils](#aws-acceleratorutils)
     - [@aws-cdk-extensions/cdk-extensions](#aws-cdk-extensionscdk-extensions)
@@ -90,6 +91,10 @@ the bucket.
 ### @aws-accelerator/installer
 
 Contains a CDK Application that defines the accelerator Installer stack.
+
+### @aws-accelerator/modules
+
+Contains various accelerator modules, deployed by the solution.
 
 ### @aws-accelerator/ui (future)
 

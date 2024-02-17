@@ -74,6 +74,10 @@ export interface PipelineStackProps extends cdk.StackProps {
    * Accelerator pipeline account id, for external deployment it will be pipeline account otherwise management account
    */
   pipelineAccountId: string;
+  /**
+   * Flag indicating existing role
+   */
+  readonly useExistingRoles: boolean;
 }
 
 export class PipelineStack extends cdk.Stack {
