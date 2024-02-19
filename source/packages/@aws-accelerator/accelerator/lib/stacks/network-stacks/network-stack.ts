@@ -403,6 +403,32 @@ export abstract class NetworkStack extends AcceleratorStack {
   }
 
   /**
+   * Update security group endpoint map for VPC Endpoint security groups
+   * @param values
+   */
+  protected setEndpointSecurityGroupMap(values: (VpcConfig | VpcTemplatesConfig)[]): Map<string, SecurityGroup> {
+    const securityGroupEndpointMap = new Map<string, SecurityGroup>();
+
+    for (const vpcItem of values ?? []) {
+      for (const endpointItem of vpcItem.interfaceEndpoints?.endpoints ?? []) {
+        if (endpointItem.securityGroup) {
+          if (!securityGroupEndpointMap.has(`${vpcItem.name}_${endpointItem.securityGroup}`)) {
+            const endpointSecurityGroupId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+              this,
+              this.getSsmPath(SsmResourceType.SECURITY_GROUP, [vpcItem.name, endpointItem.securityGroup]),
+            );
+            securityGroupEndpointMap.set(
+              `${vpcItem.name}_${endpointItem.securityGroup}`,
+              SecurityGroup.fromSecurityGroupId(this, endpointSecurityGroupId),
+            );
+          }
+        }
+      }
+    }
+    return securityGroupEndpointMap;
+  }
+
+  /**
    * Returns a map of security group IDs for the target stack
    * @param vpcResources
    * @returns

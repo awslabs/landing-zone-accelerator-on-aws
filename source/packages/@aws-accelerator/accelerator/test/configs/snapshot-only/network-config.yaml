@@ -1154,9 +1154,10 @@ vpcs:
           applyPolicy: false
         - service: secretsmanager
           securityGroup: Network-Endpoints-CustomEndpointSg
+        - service: access-analyzer
+          securityGroup: Network-Endpoints-CustomEndpointSg
         # - service: secretsmanager
         # - service: cloudformation
-        # - service: access-analyzer
         # - service: application-autoscaling
         # - service: appmesh-envoy-management
         # - service: athena

@@ -103,6 +103,10 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Default": "/accelerator/network/vpc/Network-Endpoints/nlb/appA-nlb-01/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZoneaccessanalyzeridC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/access-analyzer/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonecodeartifactapiidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/codeartifact.api/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -354,6 +358,9 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           },
           {
             "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonesecretsmanageridC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+          {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZoneaccessanalyzeridC96584B6F00A464EAD1953AFF4B05118Parameter",
           },
         ],
         "partition": {
