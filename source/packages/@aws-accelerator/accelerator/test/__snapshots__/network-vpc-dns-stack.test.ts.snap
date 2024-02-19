@@ -15,6 +15,14 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
       "Default": "/accelerator/network/route53Resolver/endpoints/accelerator-outbound/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointsaccessanalyzerdnsC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Endpoints/endpoints/access-analyzer/dns",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointsaccessanalyzerhostedZoneIdC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Endpoints/endpoints/access-analyzer/hostedZoneId",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointscodeartifactapidnsC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/endpoints/codeartifact.api/dns",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -384,6 +392,38 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
         ],
       },
       "Type": "AWS::RAM::ResourceShare",
+    },
+    "NetworkEndpointsVpcAccessAnalyzerEpHostedZone51F8537E": {
+      "Properties": {
+        "Name": "access-analyzer.us-east-1.amazonaws.com",
+        "VPCs": [
+          {
+            "VPCId": {
+              "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
+            },
+            "VPCRegion": "us-east-1",
+          },
+        ],
+      },
+      "Type": "AWS::Route53::HostedZone",
+    },
+    "NetworkEndpointsVpcAccessAnalyzerEpRecordSetCE96E911": {
+      "Properties": {
+        "AliasTarget": {
+          "DNSName": {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointsaccessanalyzerdnsC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+          "HostedZoneId": {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointsaccessanalyzerhostedZoneIdC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+        },
+        "HostedZoneId": {
+          "Ref": "NetworkEndpointsVpcAccessAnalyzerEpHostedZone51F8537E",
+        },
+        "Name": "access-analyzer.us-east-1.amazonaws.com",
+        "Type": "A",
+      },
+      "Type": "AWS::Route53::RecordSet",
     },
     "NetworkEndpointsVpcCodeartifactApiEpHostedZoneF2395ADF": {
       "Properties": {
@@ -978,6 +1018,19 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
         "Name": "/accelerator/AWSAccelerator-NetworkVpcDnsStack-555555555555-us-east-1/version",
         "Type": "String",
         "Value": "1.7.0",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkEndpointsVpcAccessAnalyzerEpHostedZone6D516002": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointsVpcSecretsmanagerEpHostedZone8D952494",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/access-analyzer/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkEndpointsVpcAccessAnalyzerEpHostedZone51F8537E",
+        },
       },
       "Type": "AWS::SSM::Parameter",
     },

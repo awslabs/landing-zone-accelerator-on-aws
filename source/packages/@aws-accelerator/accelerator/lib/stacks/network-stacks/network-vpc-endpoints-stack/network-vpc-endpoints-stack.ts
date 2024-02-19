@@ -43,6 +43,7 @@ import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import { NetworkStack } from '../network-stack';
+import { getSecurityGroup } from '../utils/getter-utils';
 import { setIpamSubnetRouteTableEntryArray } from '../utils/setter-utils';
 
 export class NetworkVpcEndpointsStack extends NetworkStack {
@@ -52,6 +53,7 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
   private subnetMap: Map<string, string>;
   private routeTableMap: Map<string, string>;
   private firewallMap: Map<string, INetworkFirewall>;
+  private securityGroupEndpointMap: Map<string, SecurityGroup>;
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
@@ -61,7 +63,7 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
     this.vpcMap = this.setVpcMap(this.vpcsInScope);
     this.subnetMap = this.setSubnetMap(this.vpcsInScope);
     this.routeTableMap = this.setRouteTableMap(this.vpcsInScope);
-
+    this.securityGroupEndpointMap = this.setEndpointSecurityGroupMap(this.vpcsInScope);
     this.firewallMap = new Map<string, NetworkFirewall>();
 
     //
@@ -627,11 +629,7 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
     vpcId: string,
   ): SecurityGroup {
     if (endpointItem.securityGroup) {
-      const endpointSecurityGroupId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-        this,
-        this.getSsmPath(SsmResourceType.SECURITY_GROUP, [vpcItem.name, endpointItem.securityGroup]),
-      );
-      return SecurityGroup.fromSecurityGroupId(this, endpointSecurityGroupId);
+      return getSecurityGroup(this.securityGroupEndpointMap, vpcItem.name, endpointItem.securityGroup) as SecurityGroup;
     }
     const interfaceEndpointSecurityGroupItem = this.getInterfaceEndpointSecurityGroupItem(
       endpointItem,
