@@ -12,6 +12,9 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
+
 import {
   AssociateKmsKeyCommand,
   CloudWatchLogsClient,
@@ -127,7 +130,11 @@ async function setLogsClient(options: {
   solutionId?: string;
 }): Promise<CloudWatchLogsClient> {
   const roleArn = `arn:${options.partition}:iam::${options.owningAccountId}:role/${options.roleName}`;
-  const stsClient = new STSClient({ region: options.invokingRegion, customUserAgent: options.solutionId });
+  const stsClient = new STSClient({
+    region: options.invokingRegion,
+    customUserAgent: options.solutionId,
+    retryStrategy: setRetryStrategy(),
+  });
 
   if (options.owningAccountId && options.owningRegion) {
     if (!options.roleName) {
@@ -141,6 +148,7 @@ async function setLogsClient(options: {
     return new CloudWatchLogsClient({
       region: options.owningRegion,
       customUserAgent: options.solutionId,
+      retryStrategy: setRetryStrategy(),
       credentials,
     });
   } else if (options.owningAccountId && !options.owningRegion) {
@@ -155,12 +163,14 @@ async function setLogsClient(options: {
     return new CloudWatchLogsClient({
       region: options.invokingRegion,
       customUserAgent: options.solutionId,
+      retryStrategy: setRetryStrategy(),
       credentials,
     });
   } else {
     return new CloudWatchLogsClient({
       region: options.owningRegion ?? options.invokingRegion,
       customUserAgent: options.solutionId,
+      retryStrategy: setRetryStrategy(),
     });
   }
 }
@@ -176,30 +186,26 @@ async function getStsCredentials(
   roleArn: string,
 ): Promise<{ accessKeyId: string; secretAccessKey: string; sessionToken: string }> {
   console.log(`Assuming role ${roleArn}...`);
-  try {
-    const response = await throttlingBackOff(() =>
-      stsClient.send(new AssumeRoleCommand({ RoleArn: roleArn, RoleSessionName: 'AcceleratorAssumeRole' })),
-    );
-    //
-    // Validate response
-    if (!response.Credentials?.AccessKeyId) {
-      throw new Error(`Access key ID not returned from AssumeRole command`);
-    }
-    if (!response.Credentials.SecretAccessKey) {
-      throw new Error(`Secret access key not returned from AssumeRole command`);
-    }
-    if (!response.Credentials.SessionToken) {
-      throw new Error(`Session token not returned from AssumeRole command`);
-    }
-
-    return {
-      accessKeyId: response.Credentials.AccessKeyId,
-      secretAccessKey: response.Credentials.SecretAccessKey,
-      sessionToken: response.Credentials.SessionToken,
-    };
-  } catch (e) {
-    throw new Error(`Could not assume role: ${e}`);
+  const response = await throttlingBackOff(() =>
+    stsClient.send(new AssumeRoleCommand({ RoleArn: roleArn, RoleSessionName: 'AcceleratorAssumeRole' })),
+  );
+  //
+  // Validate response
+  if (!response.Credentials?.AccessKeyId) {
+    throw new Error(`Access key ID not returned from AssumeRole command`);
   }
+  if (!response.Credentials.SecretAccessKey) {
+    throw new Error(`Secret access key not returned from AssumeRole command`);
+  }
+  if (!response.Credentials.SessionToken) {
+    throw new Error(`Session token not returned from AssumeRole command`);
+  }
+
+  return {
+    accessKeyId: response.Credentials.AccessKeyId,
+    secretAccessKey: response.Credentials.SecretAccessKey,
+    sessionToken: response.Credentials.SessionToken,
+  };
 }
 
 /**
@@ -228,14 +234,11 @@ function setLogGroupArn(options: {
  */
 async function logGroupExists(logClient: CloudWatchLogsClient, logGroupName: string): Promise<boolean> {
   console.log(`Describing existing log groups...`);
-  try {
-    const response = await throttlingBackOff(() =>
-      logClient.send(new DescribeLogGroupsCommand({ logGroupNamePrefix: logGroupName })),
-    );
-    return response.logGroups?.find(lg => lg.logGroupName === logGroupName) ? true : false;
-  } catch (e) {
-    throw new Error(`Could not describe log groups: ${e}`);
-  }
+
+  const response = await throttlingBackOff(() =>
+    logClient.send(new DescribeLogGroupsCommand({ logGroupNamePrefix: logGroupName })),
+  );
+  return response.logGroups?.find(lg => lg.logGroupName === logGroupName) ? true : false;
 }
 
 /**
@@ -246,11 +249,7 @@ async function logGroupExists(logClient: CloudWatchLogsClient, logGroupName: str
  */
 async function associateKey(logClient: CloudWatchLogsClient, kmsKeyId: string, logGroupName: string) {
   console.log(`Associating KMS key ${kmsKeyId} with log group ${logGroupName}...`);
-  try {
-    await throttlingBackOff(() => logClient.send(new AssociateKmsKeyCommand({ kmsKeyId, logGroupName })));
-  } catch (e) {
-    throw new Error(`Could not associate KMS key with log group: ${e}`);
-  }
+  await throttlingBackOff(() => logClient.send(new AssociateKmsKeyCommand({ kmsKeyId, logGroupName })));
 }
 
 /**
@@ -261,11 +260,7 @@ async function associateKey(logClient: CloudWatchLogsClient, kmsKeyId: string, l
  */
 async function createLogGroup(logClient: CloudWatchLogsClient, logGroupName: string, kmsKeyId?: string) {
   console.log(`Creating log group ${logGroupName}...`);
-  try {
-    await throttlingBackOff(() => logClient.send(new CreateLogGroupCommand({ kmsKeyId, logGroupName })));
-  } catch (e) {
-    throw new Error(`Unable to create log group: ${e}`);
-  }
+  await throttlingBackOff(() => logClient.send(new CreateLogGroupCommand({ kmsKeyId, logGroupName })));
 }
 
 /**
@@ -276,11 +271,7 @@ async function createLogGroup(logClient: CloudWatchLogsClient, logGroupName: str
  */
 async function putPolicy(logClient: CloudWatchLogsClient, logGroupName: string, retentionInDays: number) {
   console.log(`Modifying log group ${logGroupName} retention and expiration policy`);
-  try {
-    await throttlingBackOff(() => logClient.send(new PutRetentionPolicyCommand({ logGroupName, retentionInDays })));
-  } catch (e) {
-    throw new Error(`Unable to put retention policy to log group: ${e}`);
-  }
+  await throttlingBackOff(() => logClient.send(new PutRetentionPolicyCommand({ logGroupName, retentionInDays })));
 }
 
 /**
@@ -290,9 +281,5 @@ async function putPolicy(logClient: CloudWatchLogsClient, logGroupName: string, 
  */
 async function deleteLogGroup(logClient: CloudWatchLogsClient, logGroupName: string) {
   console.log(`The Log Group ${logGroupName} is not set to retain. Deleting log group.`);
-  try {
-    await throttlingBackOff(() => logClient.send(new DeleteLogGroupCommand({ logGroupName })));
-  } catch (e) {
-    throw new Error(`Unable to delete log group: ${e}`);
-  }
+  await throttlingBackOff(() => logClient.send(new DeleteLogGroupCommand({ logGroupName })));
 }
