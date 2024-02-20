@@ -750,7 +750,7 @@ vpcs:
     instanceTenancy: default
     vpcRoute53Resolver:
       endpoints:
-        - name: inbound-endpoint-test
+        - name: inbound-endpoint-local
           type: INBOUND
           vpc: Network-Secondary
           subnets:
