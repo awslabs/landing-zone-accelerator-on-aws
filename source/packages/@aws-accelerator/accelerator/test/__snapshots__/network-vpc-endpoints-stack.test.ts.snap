@@ -487,7 +487,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
       },
       "Type": "AWS::IAM::Role",
     },
-    "InboundEndpointTestEpSecurityGroup36BC026D": {
+    "InboundEndpointLocalEpSecurityGroup4A3F8547": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -499,8 +499,8 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
         },
       },
       "Properties": {
-        "GroupDescription": "AWS Route 53 Resolver endpoint - inbound-endpoint-test",
-        "GroupName": "ep_inbound-endpoint-test_sg",
+        "GroupDescription": "AWS Route 53 Resolver endpoint - inbound-endpoint-local",
+        "GroupName": "ep_inbound-endpoint-local_sg",
         "SecurityGroupEgress": [
           {
             "CidrIp": "127.0.0.1/32",
@@ -524,7 +524,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
         "Tags": [
           {
             "Key": "Name",
-            "Value": "ep_inbound-endpoint-test_sg",
+            "Value": "ep_inbound-endpoint-local_sg",
           },
         ],
         "VpcId": {
@@ -533,7 +533,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
       },
       "Type": "AWS::EC2::SecurityGroup",
     },
-    "InboundEndpointTestResolverEndpoint05016974": {
+    "InboundEndpointLocalResolverEndpointB3CA66C8": {
       "Properties": {
         "Direction": "INBOUND",
         "IpAddresses": [
@@ -548,16 +548,16 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
             },
           },
         ],
-        "Name": "inbound-endpoint-test",
+        "Name": "inbound-endpoint-local",
         "SecurityGroupIds": [
           {
-            "Ref": "InboundEndpointTestEpSecurityGroup36BC026D",
+            "Ref": "InboundEndpointLocalEpSecurityGroup4A3F8547",
           },
         ],
         "Tags": [
           {
             "Key": "Name",
-            "Value": "inbound-endpoint-test",
+            "Value": "inbound-endpoint-local",
           },
         ],
       },
@@ -3055,16 +3055,16 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SsmParaminboundEndpointTestResolverEndpointCF9A7F57": {
+    "SsmParaminboundEndpointLocalResolverEndpoint79EEABA5": {
       "DependsOn": [
         "SsmParamacceleratorInboundResolverEndpoint80E88844",
       ],
       "Properties": {
-        "Name": "/accelerator/network/route53Resolver/endpoints/inbound-endpoint-test/id",
+        "Name": "/accelerator/network/route53Resolver/endpoints/inbound-endpoint-local/id",
         "Type": "String",
         "Value": {
           "Fn::GetAtt": [
-            "InboundEndpointTestResolverEndpoint05016974",
+            "InboundEndpointLocalResolverEndpointB3CA66C8",
             "ResolverEndpointId",
           ],
         },
