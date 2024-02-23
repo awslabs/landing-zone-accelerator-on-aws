@@ -886,7 +886,7 @@ export class SecurityConfigValidator {
     values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
     errors: string[],
   ) {
-    if (values.awsConfig.aggregation && globalConfig.controlTower.enable) {
+    if (values.awsConfig.aggregation?.enable && globalConfig.controlTower.enable) {
       errors.push(`Control Tower is enabled.  Config aggregation cannot be managed by AWS LZA`);
     }
 
