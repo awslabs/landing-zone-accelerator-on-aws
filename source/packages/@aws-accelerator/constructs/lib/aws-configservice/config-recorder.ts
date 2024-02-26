@@ -74,6 +74,7 @@ export class ConfigServiceRecorder extends Construct {
             'config:PutDeliveryChannel',
             'config:StartConfigurationRecorder',
             'config:StopConfigurationRecorder',
+            'config:DeleteConfigurationRecorder',
           ],
           resources: ['*'],
         }),

@@ -190,6 +190,7 @@ exports[`ConfigServiceRecorder Construct(ConfigServiceDeliveryChannel):  Snapsho
                     "config:PutDeliveryChannel",
                     "config:StartConfigurationRecorder",
                     "config:StopConfigurationRecorder",
+                    "config:DeleteConfigurationRecorder",
                   ],
                   "Effect": "Allow",
                   "Resource": "*",
