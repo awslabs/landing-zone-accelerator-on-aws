@@ -90,7 +90,7 @@ export class AcceleratorMetadata extends Construct {
     const lambdaCode = cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'get-accelerator-metadata/dist'));
     this.role = this.createLambdaRole(props.acceleratorPrefix, account, region, props.metadataLogBucketName);
     this.lambdaFunction = this.createLambdaFunction(functionName, stack, lambdaCode, this.role, props);
-    this.rule = this.createMetadataCloudwatchRule(props.acceleratorPrefix, this.lambdaFunction.lambda);
+    this.rule = this.createMetadataCloudwatchRule(stack, props.acceleratorPrefix, this.lambdaFunction.lambda);
     this.setCdkNagSuppressions(stack, id, this.role);
   }
 
@@ -190,8 +190,25 @@ export class AcceleratorMetadata extends Construct {
       logGroup,
     };
   }
-  private createMetadataCloudwatchRule(acceleratorPrefix: string, targetFunction: cdk.aws_lambda.Function) {
+  private createMetadataCloudwatchRule(
+    stack: cdk.Stack,
+    acceleratorPrefix: string,
+    targetFunction: cdk.aws_lambda.Function,
+  ) {
     const rule = new cdk.aws_events.Rule(this, pascalCase(`${acceleratorPrefix}MetadataCollectionRule`), {
+      eventPattern: {
+        source: ['aws.cloudformation'],
+        account: [stack.account],
+        region: [stack.region],
+        resources: [stack.stackId],
+        detailType: ['CloudFormation Stack Status Change'],
+        detail: {
+          'stack-id': [stack.stackId],
+          'status-details': {
+            status: ['CREATE_COMPLETE', 'UPDATE_COMPLETE'],
+          },
+        },
+      },
       schedule: cdk.aws_events.Schedule.rate(cdk.Duration.days(1)),
       ruleName: `${acceleratorPrefix}-metadata-collection-rule`,
     });
