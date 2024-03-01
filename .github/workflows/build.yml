@@ -1,0 +1,13 @@
+name: Build Accelerator Tool Workflow
+on: []
+jobs:
+  Build-Source-Accelerator-Workflow:
+    runs-on: ubuntu-latest
+    steps:
+      -run: echo "${{ github.event_name }} event automatically trigferred this job"
+      -run: echo "A ${{ runner.os }} server hosted on Github has this job running"
+      -run: echo "Details: Repo Name: ${{ github.repository }} on Branch: ${{ github.ref }} and Repository: ${{ github.repository }}"
+      -name: List repository files
+        run: |
+          ls ${{github.workspace}}
+      -run: echo "job status: ${{job.status}}"
