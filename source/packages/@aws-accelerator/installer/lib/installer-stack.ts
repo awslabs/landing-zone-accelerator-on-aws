@@ -127,6 +127,13 @@ export class InstallerStack extends cdk.Stack {
     maxLength: 15,
   });
 
+  private readonly sendAnonymousDataToAWS = new cdk.CfnParameter(this, 'sendAnonymousDataToAWS', {
+    type: 'String',
+    description: 'Whether to send anonymous data to AWS',
+    default: 'Yes',
+    allowedValues: ['Yes', 'No'],
+  });
+
   /**
    * Use existing configuration repository name flag
    * @private
@@ -455,6 +462,7 @@ export class InstallerStack extends cdk.Stack {
       repositoryOwner: this.repositoryOwner,
       repositoryBranchName: this.repositoryBranchName,
       repositoryName: this.repositoryName,
+      sendAnonymousDataToAWS: this.sendAnonymousDataToAWS,
     });
 
     // Create Accelerator Installer KMS Key

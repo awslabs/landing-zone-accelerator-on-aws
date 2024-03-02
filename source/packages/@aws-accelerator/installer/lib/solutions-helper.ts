@@ -23,6 +23,7 @@ export interface SolutionHelperProps {
   readonly repositoryOwner: cdk.CfnParameter;
   readonly repositoryBranchName: cdk.CfnParameter;
   readonly repositoryName: cdk.CfnParameter;
+  readonly sendAnonymousDataToAWS: cdk.CfnParameter;
 }
 
 export class SolutionHelper extends Construct {
@@ -31,7 +32,7 @@ export class SolutionHelper extends Construct {
     const metricsMapping = new cdk.CfnMapping(this, 'AnonymousData', {
       mapping: {
         SendAnonymizedData: {
-          Data: 'Yes',
+          Data: props.sendAnonymousDataToAWS.valueAsString,
         },
       },
     });
