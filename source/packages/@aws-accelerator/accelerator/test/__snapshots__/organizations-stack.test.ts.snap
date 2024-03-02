@@ -6202,6 +6202,30 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
             },
             "sessionDuration": 60,
           },
+          {
+            "description": "This is a useful permission set description.",
+            "name": "PermissionSet3",
+            "policies": {
+              "acceleratorManaged": [
+                "lzaManagedPolicy01",
+              ],
+              "awsManaged": [
+                "PowerUserAccess",
+                "ReadOnlyAccess",
+              ],
+              "customerManaged": [
+                "ResourceConfigurationCollectorPolicy",
+              ],
+              "inlinePolicy": "REPLACED-JSON-PATH.json",
+              "permissionsBoundary": {
+                "customerManagedPolicy": {
+                  "name": "lzaManagedPolicy01",
+                  "path": "/",
+                },
+              },
+            },
+            "sessionDuration": 60,
+          },
         ],
         "partition": {
           "Ref": "AWS::Partition",

@@ -1064,6 +1064,7 @@ export class OperationsStack extends AcceleratorStack {
         customerManagedPolicyReferencesList.length > 0 ? customerManagedPolicyReferencesList : undefined,
       sessionDuration: convertedSessionDuration,
       permissionsBoundary: permissionsBoundary,
+      description: identityCenterPermissionSet.description,
     };
 
     if (identityCenterPermissionSet.policies?.inlinePolicy) {
@@ -1084,6 +1085,7 @@ export class OperationsStack extends AcceleratorStack {
         sessionDuration: convertedSessionDuration ?? undefined,
         inlinePolicy: inlinePolicyDocument,
         permissionsBoundary: permissionsBoundary,
+        description: identityCenterPermissionSet.description,
       };
     }
 
