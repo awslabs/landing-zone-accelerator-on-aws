@@ -11,125 +11,87 @@
  *  and limitations under the License.
  */
 
-import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
-import * as AWS from 'aws-sdk';
-import * as uuid from 'uuid';
-import { ScheduledEvent } from '@aws-accelerator/utils/lib/common-types';
-AWS.config.logger = console;
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
+import {
+  CloudWatchLogsClient,
+  CreateLogGroupCommand,
+  PutResourcePolicyCommand,
+  ResourceAlreadyExistsException,
+} from '@aws-sdk/client-cloudwatch-logs';
+import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
+
 const solutionId = process.env['SOLUTION_ID'];
-const acceleratorPrefix = process.env['ACCELERATOR_PREFIX'];
-const logsClient = new AWS.CloudWatchLogs({ customUserAgent: solutionId });
-const snsClient = new AWS.SNS({ customUserAgent: solutionId });
+const logsClient = new CloudWatchLogsClient({ customUserAgent: solutionId, retryStrategy: setRetryStrategy() });
 
-export async function handler(event: ScheduledEvent) {
-  // Make sure event comes from Security Hub if not do not process
-  if (event.source !== 'aws.securityhub') {
-    throw new Error('Not a Security Hub event');
+export async function handler(event: CloudFormationCustomResourceEvent) {
+  console.log(event);
+
+  switch (event.RequestType) {
+    case 'Create':
+    case 'Update':
+      const logGroupName = event.ResourceProperties['logGroupName'];
+      const logGroupArn = event.ResourceProperties['logGroupArn'];
+
+      // Create the log group /AWSAccelerator-SecurityHub if it does not exist
+      await createLogGroup(logGroupName);
+      // Update resource policy
+      await putLogGroupResourcePolicy(logGroupArn);
+      return {
+        PhysicalResourceId: undefined,
+        Status: 'SUCCESS',
+      };
+
+    case 'Delete':
+      // Do Nothing
+      return {
+        PhysicalResourceId: event.PhysicalResourceId,
+        Status: 'SUCCESS',
+      };
   }
-
-  // Check the account for log group /AWSAccelerator-SecurityHub
-  // Create log group if none is found
-  await checkLogGroup();
-
-  await publishEventToSns(event);
-
-  // Send event to CloudWatchLogs
-  await publishEventToLogs(event);
 }
 
-export async function publishEventToLogs(input: ScheduledEvent) {
-  const logStreamName = `${new Date().toISOString().slice(0, 10)}-${uuid.v4()}`;
-  const logGroupName = `/${acceleratorPrefix}-SecurityHub`;
-  await throttlingBackOff(() => logsClient.createLogStream({ logGroupName, logStreamName }).promise());
-  await throttlingBackOff(() =>
-    logsClient
-      .putLogEvents({
-        logGroupName,
-        logStreamName,
-        logEvents: [{ timestamp: Date.now(), message: JSON.stringify(input) }],
-      })
-      .promise(),
-  );
-}
-
-export async function publishEventToSns(input: ScheduledEvent) {
-  const snsTopicArn = process.env['SNS_TOPIC_ARN'];
-  const notificationLevel = process.env['NOTIFICATION_LEVEL'];
-
-  if (!snsTopicArn || !notificationLevel) {
-    console.log('Either no snsTopic or notificationLevel provided, skipping notification');
-    return;
-  }
+export async function putLogGroupResourcePolicy(logGroupArn: string) {
+  const policyDocument = await generateResourcePolicy(logGroupArn);
+  console.log('Attempting to update resource policy on CloudWatch log group');
   try {
-    const severity = input.detail['findings'][0]['Severity']['Label'];
-
-    console.log(`***Severity: ${severity}***`);
-    console.log(`***NotificationLevel: ${notificationLevel}***`);
-    let sendNotification = false;
-    switch (notificationLevel) {
-      case 'CRITICAL':
-        if (severity === 'CRITICAL') {
-          sendNotification = true;
-        }
-        break;
-      case 'HIGH':
-        if (severity === 'HIGH' || severity === 'CRITICAL') {
-          sendNotification = true;
-        }
-        break;
-      case 'MEDIUM':
-        if (severity === 'MEDIUM' || severity === 'HIGH' || severity === 'CRITICAL') {
-          sendNotification = true;
-        }
-        break;
-      case 'LOW':
-        if (severity === 'LOW' || severity === 'MEDIUM' || severity === 'HIGH' || severity === 'CRITICAL') {
-          sendNotification = true;
-        }
-        break;
-      default:
-        sendNotification = true;
-    }
-    if (sendNotification) {
-      await throttlingBackOff(() =>
-        snsClient
-          .publish({
-            TopicArn: snsTopicArn,
-            Subject: `SecurityHub ${severity} Notification`,
-            Message: JSON.stringify(input.detail['findings'][0], null, 2),
-          })
-          .promise(),
-      );
-    }
-  } catch (e) {
-    console.error(`***Failed SNS notification processing***`);
-    console.error(e);
+    await logsClient.send(
+      new PutResourcePolicyCommand({
+        policyDocument,
+        policyName: 'TrustEventsToStoreLogEvent',
+      }),
+    );
+  } catch (e: unknown) {
+    console.log('Encountered an error putting resource policy on log group');
+    throw e;
   }
 }
 
-export async function checkLogGroup() {
-  const securityHubLogGroupName = `/${acceleratorPrefix}-SecurityHub`;
-  const nextToken: string | undefined = undefined;
-  do {
-    const page = await throttlingBackOff(() =>
-      logsClient.describeLogGroups({ nextToken, logGroupNamePrefix: securityHubLogGroupName }).promise(),
-    );
+export async function generateResourcePolicy(logGroupArn: string) {
+  return JSON.stringify({
+    Statement: [
+      {
+        Action: ['logs:CreateLogStream', 'logs:PutLogEvents'],
+        Effect: 'Allow',
+        Principal: {
+          Service: ['events.amazonaws.com', 'delivery.logs.amazonaws.com'],
+        },
+        Resource: logGroupArn,
+        Sid: 'TrustEventsToStoreLogs',
+      },
+    ],
+    Version: '2012-10-17',
+  });
+}
 
-    const pageLength: number = page.logGroups?.length || 0;
-    if (pageLength > 0) {
-      //there is a log group. Check name
-      for (const logGroup of page.logGroups ?? []) {
-        if (logGroup.logGroupName === securityHubLogGroupName) {
-          // there is an existing log group with required name
-          return;
-        }
-      }
+export async function createLogGroup(logGroupName: string) {
+  try {
+    console.log(`Attempting to create CloudWatch log group ${logGroupName}`);
+    await logsClient.send(new CreateLogGroupCommand({ logGroupName: logGroupName }));
+  } catch (e) {
+    if (e instanceof ResourceAlreadyExistsException) {
+      console.log(`Found existing CloudWatch log group ${logGroupName}, continuing`);
     } else {
-      // checked all log groups. They might be similar prefix but they do not have exact name.
-      // Or there is no log group with this specific prefix
-      // Create one with exact name
-      //console.log(`Creating log group: ${securityHubLogGroupName}`);
-      await throttlingBackOff(() => logsClient.createLogGroup({ logGroupName: securityHubLogGroupName }).promise());
+      throw e;
     }
-  } while (nextToken);
+  }
 }

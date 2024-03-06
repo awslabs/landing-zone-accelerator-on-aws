@@ -381,6 +381,7 @@ export type ThresholdType = 'PERCENTAGE' | 'ABSOLUTE_VALUE';
 export type ComparisonOperator = 'GREATER_THAN' | 'LESS_THAN' | 'EQUAL_TO';
 export type SubscriptionType = 'EMAIL' | 'SNS';
 export type NotificationType = 'ACTUAL' | 'FORECASTED';
+export type SecurityHubSeverityLevel = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'INFORMATIONAL';
 
 export interface ITag {
   key: string;

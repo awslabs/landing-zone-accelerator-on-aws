@@ -26,6 +26,7 @@ new SecurityHubEventsLog(stack, 'SecurityHubEventsLog', {
   lambdaKey: new cdk.aws_kms.Key(stack, 'CustomLambdaKey', {}),
   notificationLevel: 'INFORMATIONAL',
   acceleratorPrefix: 'AWSAccelerator',
+  cloudWatchLogRetentionInDays: 365,
 });
 
 /**

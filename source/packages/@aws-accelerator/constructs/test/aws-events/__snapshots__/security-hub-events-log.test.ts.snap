@@ -73,10 +73,10 @@ exports[`SecurityHubEventsLog Construct(SecurityHubEventsLog):  Snapshot Test 1`
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "SecurityHubEventsLogSecurityHubEventsFunction9EF04515": {
+    "SecurityHubEventsLogSecurityHubEventsFunction6170C5C5": {
       "DependsOn": [
-        "SecurityHubEventsLogSecurityHubEventsFunctionServiceRoleDefaultPolicy519456B0",
-        "SecurityHubEventsLogSecurityHubEventsFunctionServiceRole30E0096C",
+        "SecurityHubEventsLogSecurityHubEventsFunctionServiceRoleDefaultPolicy56E1474C",
+        "SecurityHubEventsLogSecurityHubEventsFunctionServiceRole3A655D2A",
       ],
       "Properties": {
         "Code": {
@@ -85,13 +85,7 @@ exports[`SecurityHubEventsLog Construct(SecurityHubEventsLog):  Snapshot Test 1`
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Environment": {
-          "Variables": {
-            "ACCELERATOR_PREFIX": "AWSAccelerator",
-            "NOTIFICATION_LEVEL": "INFORMATIONAL",
-            "SNS_TOPIC_ARN": "arn:aws:us-east-1:999999999999:aws-accelerator-test",
-          },
-        },
+        "Description": "Creates a CloudWatch Logs Group to store SecurityHub findings and updates CW Log Group resource policy",
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -102,16 +96,80 @@ exports[`SecurityHubEventsLog Construct(SecurityHubEventsLog):  Snapshot Test 1`
         "MemorySize": 256,
         "Role": {
           "Fn::GetAtt": [
-            "SecurityHubEventsLogSecurityHubEventsFunctionServiceRole30E0096C",
+            "SecurityHubEventsLogSecurityHubEventsFunctionServiceRole3A655D2A",
             "Arn",
           ],
         },
         "Runtime": "nodejs16.x",
-        "Timeout": 120,
+        "Timeout": 60,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "SecurityHubEventsLogSecurityHubEventsFunctionServiceRole30E0096C": {
+    "SecurityHubEventsLogSecurityHubEventsFunctionResourceLogGroupB7A99902": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "SecurityHubEventsLogSecurityHubEventsFunction6170C5C5",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 365,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SecurityHubEventsLogSecurityHubEventsFunctionSecurityHubEventsFunctionResourceF6D56745": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "SecurityHubEventsLogSecurityHubEventsFunctionframeworkonEvent1729ADC9",
+            "Arn",
+          ],
+        },
+        "logGroupArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":logs:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":log-group:/*:*",
+            ],
+          ],
+        },
+        "logGroupName": "/AWSAccelerator-SecurityHub",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SecurityHubEventsLogSecurityHubEventsFunctionServiceRole3A655D2A": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Lambda needs Managed policy.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -142,7 +200,17 @@ exports[`SecurityHubEventsLog Construct(SecurityHubEventsLog):  Snapshot Test 1`
       },
       "Type": "AWS::IAM::Role",
     },
-    "SecurityHubEventsLogSecurityHubEventsFunctionServiceRoleDefaultPolicy519456B0": {
+    "SecurityHubEventsLogSecurityHubEventsFunctionServiceRoleDefaultPolicy56E1474C": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "AWS Lambda needs Managed policy.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "PolicyDocument": {
           "Statement": [
@@ -174,7 +242,10 @@ exports[`SecurityHubEventsLog Construct(SecurityHubEventsLog):  Snapshot Test 1`
               },
             },
             {
-              "Action": "logs:DescribeLogGroups",
+              "Action": [
+                "logs:DescribeLogGroups",
+                "logs:PutResourcePolicy",
+              ],
               "Effect": "Allow",
               "Resource": {
                 "Fn::Join": [
@@ -197,65 +268,159 @@ exports[`SecurityHubEventsLog Construct(SecurityHubEventsLog):  Snapshot Test 1`
                 ],
               },
             },
-            {
-              "Action": "logs:PutLogEvents",
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    "arn:",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    ":logs:",
-                    {
-                      "Ref": "AWS::Region",
-                    },
-                    ":",
-                    {
-                      "Ref": "AWS::AccountId",
-                    },
-                    ":log-group:/AWSAccelerator*:log-stream:*",
-                  ],
-                ],
-              },
-            },
-            {
-              "Action": "sns:Publish",
-              "Effect": "Allow",
-              "Resource": "arn:aws:us-east-1:999999999999:aws-accelerator-test",
-              "Sid": "sns",
-            },
-            {
-              "Action": [
-                "kms:Decrypt",
-                "kms:GenerateDataKey",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "CustomSnsKey2E607E8C",
-                  "Arn",
-                ],
-              },
-              "Sid": "kms",
-            },
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "SecurityHubEventsLogSecurityHubEventsFunctionServiceRoleDefaultPolicy519456B0",
+        "PolicyName": "SecurityHubEventsLogSecurityHubEventsFunctionServiceRoleDefaultPolicy56E1474C",
         "Roles": [
           {
-            "Ref": "SecurityHubEventsLogSecurityHubEventsFunctionServiceRole30E0096C",
+            "Ref": "SecurityHubEventsLogSecurityHubEventsFunctionServiceRole3A655D2A",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "SecurityHubEventsLogSecurityHubEventsRule4AFFB1EB": {
+    "SecurityHubEventsLogSecurityHubEventsFunctionframeworkonEvent1729ADC9": {
+      "DependsOn": [
+        "SecurityHubEventsLogSecurityHubEventsFunctionframeworkonEventServiceRoleDefaultPolicy4C5BFF85",
+        "SecurityHubEventsLogSecurityHubEventsFunctionframeworkonEventServiceRole2DBDE006",
+      ],
       "Properties": {
-        "Description": "Sends all Security Hub Findings to a Lambda that writes to CloudWatch Logs",
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/SecurityHubEventsLog/SecurityHubEventsFunction/Resource)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "SecurityHubEventsLogSecurityHubEventsFunction6170C5C5",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "SecurityHubEventsLogSecurityHubEventsFunctionframeworkonEventServiceRole2DBDE006",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "SecurityHubEventsLogSecurityHubEventsFunctionframeworkonEventServiceRole2DBDE006": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "SecurityHubEventsLogSecurityHubEventsFunctionframeworkonEventServiceRoleDefaultPolicy4C5BFF85": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "SecurityHubEventsLogSecurityHubEventsFunction6170C5C5",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "SecurityHubEventsLogSecurityHubEventsFunction6170C5C5",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "SecurityHubEventsLogSecurityHubEventsFunctionframeworkonEventServiceRoleDefaultPolicy4C5BFF85",
+        "Roles": [
+          {
+            "Ref": "SecurityHubEventsLogSecurityHubEventsFunctionframeworkonEventServiceRole2DBDE006",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "SecurityHubEventsLogSecurityHubLogEventsRule9AC6959D": {
+      "DependsOn": [
+        "SecurityHubEventsLogSecurityHubEventsFunction6170C5C5",
+        "SecurityHubEventsLogSecurityHubEventsFunctionServiceRoleDefaultPolicy56E1474C",
+        "SecurityHubEventsLogSecurityHubEventsFunctionServiceRole3A655D2A",
+        "SecurityHubEventsLogSecurityHubEventsFunctionResourceLogGroupB7A99902",
+        "SecurityHubEventsLogSecurityHubEventsFunctionframeworkonEvent1729ADC9",
+        "SecurityHubEventsLogSecurityHubEventsFunctionframeworkonEventServiceRoleDefaultPolicy4C5BFF85",
+        "SecurityHubEventsLogSecurityHubEventsFunctionframeworkonEventServiceRole2DBDE006",
+        "SecurityHubEventsLogSecurityHubEventsFunctionSecurityHubEventsFunctionResourceF6D56745",
+      ],
+      "Properties": {
+        "Description": "Sends Security Hub Findings above threshold to CloudWatch Logs",
         "EventPattern": {
           "detail-type": [
             "Security Hub Findings - Imported",
@@ -264,42 +429,66 @@ exports[`SecurityHubEventsLog Construct(SecurityHubEventsLog):  Snapshot Test 1`
             "aws.securityhub",
           ],
         },
-        "State": "ENABLED",
         "Targets": [
           {
             "Arn": {
-              "Fn::GetAtt": [
-                "SecurityHubEventsLogSecurityHubEventsFunction9EF04515",
-                "Arn",
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":logs:",
+                  {
+                    "Ref": "AWS::Region",
+                  },
+                  ":",
+                  {
+                    "Ref": "AWS::AccountId",
+                  },
+                  ":log-group:/AWSAccelerator-SecurityHub:*",
+                ],
               ],
             },
-            "Id": "Target0",
-            "RetryPolicy": {
-              "MaximumRetryAttempts": 5,
-            },
+            "Id": "CloudWatchLogTarget",
           },
         ],
       },
       "Type": "AWS::Events::Rule",
     },
-    "SecurityHubEventsLogSecurityHubEventsRuleAllowEventRuleSecurityHubEventsLogSecurityHubEventsFunction356006B498169971": {
+    "SecurityHubEventsLogSecurityHubSnsEventsRule3900A9EA": {
       "Properties": {
-        "Action": "lambda:InvokeFunction",
-        "FunctionName": {
-          "Fn::GetAtt": [
-            "SecurityHubEventsLogSecurityHubEventsFunction9EF04515",
-            "Arn",
+        "Description": "Sends Security Hub Findings above threshold to SNS",
+        "EventPattern": {
+          "detail": {
+            "findings": {
+              "Severity": {
+                "Label": [
+                  "CRITICAL",
+                  "HIGH",
+                  "MEDIUM",
+                  "LOW",
+                  "INFORMATIONAL",
+                ],
+              },
+            },
+          },
+          "detail-type": [
+            "Security Hub Findings - Imported",
+          ],
+          "source": [
+            "aws.securityhub",
           ],
         },
-        "Principal": "events.amazonaws.com",
-        "SourceArn": {
-          "Fn::GetAtt": [
-            "SecurityHubEventsLogSecurityHubEventsRule4AFFB1EB",
-            "Arn",
-          ],
-        },
+        "Targets": [
+          {
+            "Arn": "arn:aws:us-east-1:999999999999:aws-accelerator-test",
+            "Id": "SnsTarget",
+          },
+        ],
       },
-      "Type": "AWS::Lambda::Permission",
+      "Type": "AWS::Events::Rule",
     },
   },
 }

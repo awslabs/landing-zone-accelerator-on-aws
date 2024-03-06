@@ -571,6 +571,20 @@ export class LoggingStack extends AcceleratorStack {
         }),
       );
 
+      cloudwatchKey.addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: `Allow EventBridge to send to encrypted CloudWatch log groups`,
+          principals: [new cdk.aws_iam.ServicePrincipal('events.amazonaws.com')],
+          actions: ['kms:GenerateDataKey', 'kms:Decrypt'],
+          resources: ['*'],
+          conditions: {
+            StringEqualsIfExists: {
+              'aws:SourceAccount': cdk.Stack.of(this).account,
+            },
+          },
+        }),
+      );
+
       this.ssmParameters.push({
         logicalId: 'AcceleratorCloudWatchKmsArnParameter',
         parameterName: this.acceleratorResourceNames.parameters.cloudWatchLogCmkArn,
@@ -2099,6 +2113,12 @@ export class LoggingStack extends AcceleratorStack {
       grantPrincipal: new cdk.aws_iam.ServicePrincipal('lambda.amazonaws.com'),
     });
 
+    if (this.props.securityConfig.centralSecurityServices.securityHub.snsTopicName === snsTopic.name) {
+      topic.grantPublish({
+        grantPrincipal: new cdk.aws_iam.ServicePrincipal('events.amazonaws.com'),
+      });
+    }
+
     topic.grantPublish({
       grantPrincipal: this.getOrgPrincipals(this.organizationId),
     });
@@ -2192,6 +2212,13 @@ export class LoggingStack extends AcceleratorStack {
     topic.grantPublish({
       grantPrincipal: new cdk.aws_iam.ServicePrincipal('cloudwatch.amazonaws.com'),
     });
+
+    if (this.props.securityConfig.centralSecurityServices.securityHub.snsTopicName === snsTopic.name) {
+      topic.grantPublish({
+        grantPrincipal: new cdk.aws_iam.ServicePrincipal('events.amazonaws.com'),
+      });
+    }
+
     const fmsDelegatedAdminAccount = this.props.networkConfig.firewallManagerService?.delegatedAdminAccount;
     if (
       fmsDelegatedAdminAccount &&
@@ -2263,7 +2290,7 @@ export class LoggingStack extends AcceleratorStack {
         actions: ['kms:GenerateDataKey', 'kms:Decrypt'],
         resources: ['*'],
         conditions: {
-          StringEquals: {
+          StringEqualsIfExists: {
             'aws:SourceAccount': cdk.Stack.of(this).account,
           },
         },
@@ -2403,7 +2430,7 @@ export class LoggingStack extends AcceleratorStack {
         actions: ['kms:GenerateDataKey', 'kms:Decrypt'],
         resources: ['*'],
         conditions: {
-          StringEquals: {
+          StringEqualsIfExists: {
             'aws:SourceAccount': cdk.Stack.of(this).account,
           },
         },

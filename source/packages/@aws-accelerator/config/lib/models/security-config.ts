@@ -503,6 +503,7 @@ export interface ISecurityHubStandardConfig {
  * @example
  * ```
  * enable: true
+ * logLevel: MEDIUM
  * ```
  */
 export interface ISecurityHubLoggingCloudwatchConfig {
@@ -510,6 +511,16 @@ export interface ISecurityHubLoggingCloudwatchConfig {
    * Security hub to cloudwatch logging is enabled by default.
    */
   readonly enable: boolean;
+  /**
+   * (OPTIONAL) Security Hub logging level
+   *
+   * @remarks
+   * Note: Values accepted are CRITICAL, HIGH, MEDIUM, LOW, INFORMATIONAL
+   *
+   * Security Hub findings for events at the Level provided and above will be logged to CloudWatch Logs
+   * For example, if you specify the HIGH level findings will be sent to CloudWatch Logs for HIGH and CRITICAL
+   */
+  readonly logLevel?: t.SecurityHubSeverityLevel;
 }
 
 /**
@@ -523,6 +534,7 @@ export interface ISecurityHubLoggingCloudwatchConfig {
  * logging:
  *   cloudWatch:
  *     enable: true
+ *     logLevel: MEDIUM
  * ```
  */
 export interface ISecurityHubLoggingConfig {
@@ -560,6 +572,7 @@ export interface ISecurityHubLoggingConfig {
  *   logging:
  *     cloudWatch:
  *       enable: true
+ *       logLevel: MEDIUM
  * ```
  */
 export interface ISecurityHubConfig {
@@ -972,6 +985,10 @@ export interface ICentralSecurityServicesConfig {
    *           # https://docs.aws.amazon.com/securityhub/latest/userguide/fsbp-standard.html
    *           - Control1
    *           - Control2
+   *     logging:
+   *       cloudwatch:
+   *         enabled: true
+   *         logLevel: MEDIUM
    * ```
    */
   readonly securityHub: ISecurityHubConfig;

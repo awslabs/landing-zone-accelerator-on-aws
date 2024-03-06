@@ -87,6 +87,7 @@ centralSecurityServices:
     logging:
       cloudWatch:
         enable: true
+        logLevel: MEDIUM
     excludeRegions:
       - us-west-2
     standards:
