@@ -13,6 +13,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as path from 'path';
+import { LzaCustomResource } from '../lza-custom-resource';
 
 export interface SecurityHubEventsLogProps {
   /**
@@ -20,22 +21,26 @@ export interface SecurityHubEventsLogProps {
    */
   readonly acceleratorPrefix: string;
   /**
-   *
+   * Number of days to retain CloudWatch logs
+   */
+  readonly cloudWatchLogRetentionInDays: number;
+  /**
    * SNS Topic Arn that notification will be delivered to
    */
   snsTopicArn?: string;
   /**
-   *
    * SNS KMS Key
    */
   snsKmsKey?: cdk.aws_kms.IKey;
   /**
-   *
    * Alert level
    */
   notificationLevel?: string;
   /**
-   *
+   * Log level
+   */
+  logLevel?: string;
+  /**
    * Account Lambda key for environment encryption
    */
   lambdaKey?: cdk.aws_kms.IKey;
@@ -47,79 +52,113 @@ export interface SecurityHubEventsLogProps {
 export class SecurityHubEventsLog extends Construct {
   constructor(scope: Construct, id: string, props: SecurityHubEventsLogProps) {
     super(scope, id);
+    const logGroupName = `/${props.acceleratorPrefix}-SecurityHub`;
+    const logGroupArn = `arn:${cdk.Stack.of(this).partition}:logs:${cdk.Stack.of(this).region}:${
+      cdk.Stack.of(this).account
+    }:log-group:/*:*`;
 
-    const securityHubEventsRule = new cdk.aws_events.Rule(this, 'SecurityHubEventsRule', {
-      description: 'Sends all Security Hub Findings to a Lambda that writes to CloudWatch Logs',
-      eventPattern: {
+    // Create custom resource Lambda to create CloudWatch Logs Group target and update resource policy
+    const customResource = new LzaCustomResource(this, 'SecurityHubEventsFunction', {
+      resource: {
+        name: 'SecurityHubEventsFunction',
+        parentId: id,
+        properties: [{ logGroupName: logGroupName }, { logGroupArn: logGroupArn }],
+        forceUpdate: true,
+      },
+      lambda: {
+        assetPath: path.join(__dirname, 'security-hub-event-log/dist'),
+        description:
+          'Creates a CloudWatch Logs Group to store SecurityHub findings and updates CW Log Group resource policy',
+        timeOut: cdk.Duration.seconds(60),
+        environmentEncryptionKmsKey: props.lambdaKey,
+        cloudWatchLogRetentionInDays: props.cloudWatchLogRetentionInDays,
+        roleInitialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            actions: ['logs:CreateLogGroup', 'logs:CreateLogStream'],
+            resources: [
+              `arn:${cdk.Stack.of(this).partition}:logs:${cdk.Stack.of(this).region}:${
+                cdk.Stack.of(this).account
+              }:log-group:/${props.acceleratorPrefix}*`,
+            ],
+          }),
+          // Describe call needs access to entire region and account
+          new cdk.aws_iam.PolicyStatement({
+            actions: ['logs:DescribeLogGroups', 'logs:PutResourcePolicy'],
+            resources: [
+              `arn:${cdk.Stack.of(this).partition}:logs:${cdk.Stack.of(this).region}:${
+                cdk.Stack.of(this).account
+              }:log-group:*`,
+            ],
+          }),
+        ],
+      },
+      nagSuppressionPrefix: 'SecurityHubEventsLog',
+    });
+    const logGroup = cdk.aws_logs.LogGroup.fromLogGroupName(this, 'ExistingShLogGroup', logGroupName);
+    logGroup.node.addDependency(customResource);
+
+    // Create EventBridge rule targeting CloudWatch Log Group
+    const securityHubEventsRule = new cdk.aws_events.CfnRule(this, 'SecurityHubLogEventsRule', {
+      description: 'Sends Security Hub Findings above threshold to CloudWatch Logs',
+      eventPattern: this.getLogRuleEventPattern(props.logLevel),
+      targets: [{ arn: logGroup.logGroupArn, id: 'CloudWatchLogTarget' }],
+    });
+    securityHubEventsRule.node.addDependency(customResource);
+
+    // Create EventBridge rule targeting SNS Topic
+    if (props.snsTopicArn && props.notificationLevel) {
+      new cdk.aws_events.CfnRule(this, 'SecurityHubSnsEventsRule', {
+        description: 'Sends Security Hub Findings above threshold to SNS',
+        eventPattern: {
+          source: ['aws.securityhub'],
+          'detail-type': ['Security Hub Findings - Imported'],
+          detail: {
+            findings: {
+              Severity: {
+                Label: this.getSeverityLevelArray(props.notificationLevel),
+              },
+            },
+          },
+        },
+        targets: [{ arn: props.snsTopicArn, id: 'SnsTarget' }],
+      });
+    }
+  }
+
+  private getLogRuleEventPattern(logLevel?: string) {
+    if (logLevel) {
+      return {
         source: ['aws.securityhub'],
-        detailType: ['Security Hub Findings - Imported'],
-      },
-    });
-
-    const securityHubEventsFunction = new cdk.aws_lambda.Function(this, 'SecurityHubEventsFunction', {
-      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
-      code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'security-hub-event-log/dist')),
-      handler: 'index.handler',
-      memorySize: 256,
-      timeout: cdk.Duration.minutes(2),
-      environmentEncryption: props.lambdaKey,
-      environment: {
-        SNS_TOPIC_ARN: props.snsTopicArn ?? '',
-        NOTIFICATION_LEVEL: props.notificationLevel ?? '',
-        ACCELERATOR_PREFIX: props.acceleratorPrefix,
-      },
-      initialPolicy: [
-        new cdk.aws_iam.PolicyStatement({
-          actions: ['logs:CreateLogGroup', 'logs:CreateLogStream'],
-          resources: [
-            `arn:${cdk.Stack.of(this).partition}:logs:${cdk.Stack.of(this).region}:${
-              cdk.Stack.of(this).account
-            }:log-group:/${props.acceleratorPrefix}*`,
-          ],
-        }),
-        // Describe call needs access to entire region and account
-        new cdk.aws_iam.PolicyStatement({
-          actions: ['logs:DescribeLogGroups'],
-          resources: [
-            `arn:${cdk.Stack.of(this).partition}:logs:${cdk.Stack.of(this).region}:${
-              cdk.Stack.of(this).account
-            }:log-group:*`,
-          ],
-        }),
-        new cdk.aws_iam.PolicyStatement({
-          actions: ['logs:PutLogEvents'],
-          resources: [
-            `arn:${cdk.Stack.of(this).partition}:logs:${cdk.Stack.of(this).region}:${
-              cdk.Stack.of(this).account
-            }:log-group:/${props.acceleratorPrefix}*:log-stream:*`,
-          ],
-        }),
-      ],
-    });
-
-    if (props.snsTopicArn) {
-      securityHubEventsFunction.addToRolePolicy(
-        new cdk.aws_iam.PolicyStatement({
-          sid: 'sns',
-          actions: ['sns:Publish'],
-          resources: [props.snsTopicArn],
-        }),
-      );
+        'detail-type': ['Security Hub Findings - Imported'],
+        detail: {
+          findings: {
+            Severity: {
+              Label: this.getSeverityLevelArray(logLevel),
+            },
+          },
+        },
+      };
+    } else {
+      return {
+        source: ['aws.securityhub'],
+        'detail-type': ['Security Hub Findings - Imported'],
+      };
     }
+  }
 
-    if (props.snsKmsKey) {
-      securityHubEventsFunction.addToRolePolicy(
-        new cdk.aws_iam.PolicyStatement({
-          sid: 'kms',
-          actions: ['kms:Decrypt', 'kms:GenerateDataKey'],
-          resources: [props.snsKmsKey.keyArn],
-        }),
-      );
+  private getSeverityLevelArray(level: string) {
+    switch (level) {
+      case 'CRITICAL':
+        return ['CRITICAL'];
+      case 'HIGH':
+        return ['CRITICAL', 'HIGH'];
+      case 'MEDIUM':
+        return ['CRITICAL', 'HIGH', 'MEDIUM'];
+      case 'LOW':
+        return ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
+      case 'INFORMATIONAL':
+      default:
+        return ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFORMATIONAL'];
     }
-
-    // set basic trigger with 5 retries
-    securityHubEventsRule.addTarget(
-      new cdk.aws_events_targets.LambdaFunction(securityHubEventsFunction, { retryAttempts: 5 }),
-    );
   }
 }

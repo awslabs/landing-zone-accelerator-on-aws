@@ -1404,6 +1404,10 @@
         "enable": {
           "description": "Security hub to cloudwatch logging is enabled by default.",
           "type": "boolean"
+        },
+        "logLevel": {
+          "$ref": "#/definitions/SecurityHubSeverityLevel",
+          "description": "(OPTIONAL) Security Hub logging level"
         }
       },
       "required": [
@@ -1622,6 +1626,16 @@
         "us-iso-west-1",
         "us-west-1",
         "us-west-2"
+      ],
+      "type": "string"
+    },
+    "SecurityHubSeverityLevel": {
+      "enum": [
+        "CRITICAL",
+        "HIGH",
+        "MEDIUM",
+        "LOW",
+        "INFORMATIONAL"
       ],
       "type": "string"
     },

@@ -1415,6 +1415,8 @@ export class SecurityResourcesStack extends AcceleratorStack {
         snsKmsKey: this.snsKey,
         notificationLevel: this.props.securityConfig.centralSecurityServices.securityHub.notificationLevel,
         lambdaKey: this.lambdaKey,
+        cloudWatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+        logLevel: this.props.securityConfig.centralSecurityServices.securityHub.logging?.cloudWatch?.logLevel,
       });
       this.nagSuppressionInputs.push({
         id: NagSuppressionRuleIds.IAM4,

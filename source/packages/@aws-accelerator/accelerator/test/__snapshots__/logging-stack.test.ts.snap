@@ -442,6 +442,23 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
               "Resource": "*",
               "Sid": "Allow Cloudwatch logs to use the encryption key",
             },
+            {
+              "Action": [
+                "kms:GenerateDataKey",
+                "kms:Decrypt",
+              ],
+              "Condition": {
+                "StringEqualsIfExists": {
+                  "aws:SourceAccount": "333333333333",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": "*",
+              "Sid": "Allow EventBridge to send to encrypted CloudWatch log groups",
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -1228,7 +1245,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
                 "kms:Decrypt",
               ],
               "Condition": {
-                "StringEquals": {
+                "StringEqualsIfExists": {
                   "aws:SourceAccount": "333333333333",
                 },
               },
@@ -3643,6 +3660,17 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
             },
             {
               "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": {
+                "Ref": "SecuritySNSTopicE3C1354E",
+              },
+              "Sid": "2",
+            },
+            {
+              "Action": "sns:Publish",
               "Condition": {
                 "StringEquals": {
                   "aws:PrincipalOrgID": "o-asdf123456",
@@ -3655,7 +3683,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
               "Resource": {
                 "Ref": "SecuritySNSTopicE3C1354E",
               },
-              "Sid": "2",
+              "Sid": "3",
             },
           ],
           "Version": "2012-10-17",
@@ -4832,7 +4860,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
                 "kms:Decrypt",
               ],
               "Condition": {
-                "StringEquals": {
+                "StringEqualsIfExists": {
                   "aws:SourceAccount": "333333333333",
                 },
               },
@@ -8008,6 +8036,17 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
             },
             {
               "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": {
+                "Ref": "SecuritySNSTopicE3C1354E",
+              },
+              "Sid": "2",
+            },
+            {
+              "Action": "sns:Publish",
               "Condition": {
                 "StringEquals": {
                   "aws:PrincipalOrgID": "o-asdf123456",
@@ -8020,7 +8059,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
               "Resource": {
                 "Ref": "SecuritySNSTopicE3C1354E",
               },
-              "Sid": "2",
+              "Sid": "3",
             },
           ],
           "Version": "2012-10-17",
@@ -9407,6 +9446,23 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
               "Resource": "*",
               "Sid": "Allow Cloudwatch logs to use the encryption key",
             },
+            {
+              "Action": [
+                "kms:GenerateDataKey",
+                "kms:Decrypt",
+              ],
+              "Condition": {
+                "StringEqualsIfExists": {
+                  "aws:SourceAccount": "333333333333",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": "*",
+              "Sid": "Allow EventBridge to send to encrypted CloudWatch log groups",
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -10073,7 +10129,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
                 "kms:Decrypt",
               ],
               "Condition": {
-                "StringEquals": {
+                "StringEqualsIfExists": {
                   "aws:SourceAccount": "333333333333",
                 },
               },
@@ -12469,6 +12525,17 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
             },
             {
               "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": {
+                "Ref": "SecuritySNSTopicE3C1354E",
+              },
+              "Sid": "2",
+            },
+            {
+              "Action": "sns:Publish",
               "Condition": {
                 "StringEquals": {
                   "aws:PrincipalOrgID": "o-asdf123456",
@@ -12481,7 +12548,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
               "Resource": {
                 "Ref": "SecuritySNSTopicE3C1354E",
               },
-              "Sid": "2",
+              "Sid": "3",
             },
           ],
           "Version": "2012-10-17",

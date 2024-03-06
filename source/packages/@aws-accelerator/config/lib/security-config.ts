@@ -141,6 +141,7 @@ export class SecurityHubStandardConfig implements i.ISecurityHubStandardConfig {
 
 export class SecurityHubLoggingCloudwatchConfig implements i.ISecurityHubLoggingCloudwatchConfig {
   readonly enable = true;
+  readonly logLevel? = undefined;
 }
 
 export class SecurityHubLoggingConfig implements i.ISecurityHubLoggingConfig {
