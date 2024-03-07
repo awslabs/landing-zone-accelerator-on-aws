@@ -1,6 +1,7 @@
 import {
   CloudFormationClient,
   GetTemplateCommand,
+  GetTemplateCommandInput,
   CloudFormationServiceException,
 } from '@aws-sdk/client-cloudformation';
 import { ConfiguredRetryStrategy } from '@aws-sdk/util-retry';
@@ -15,6 +16,7 @@ export async function getCloudFormationTemplate(
   accountId: string,
   region: string,
   partition: string,
+  stage: string | undefined,
   stackName: string,
   savePath: string,
   roleName: string,
@@ -30,15 +32,23 @@ export async function getCloudFormationTemplate(
       currentAccountId,
     );
 
-    const input = {
-      StackName: stackName,
-      TemplateStage: 'Processed',
-    };
-    const command = new GetTemplateCommand(input);
-    const template = await getTemplate(client, command, stackName);
+    let template = await getTemplate(client, stackName);
+
+    if (stage === 'customizations' && template === '{}') {
+      logger.warn(`template is empty for ${stackName}. Trying to retrieve stack by customizations stack name`);
+      // Removes account and region to find possible customizations stack name
+      const stackNameArr = stackName.split('-');
+      for (let i = 0; i < 4; i++) {
+        stackNameArr.pop();
+      }
+      const customizationsStackName = stackNameArr.join('-');
+      logger.info(`Possible customizations stack name is ${customizationsStackName}`);
+      template = await getTemplate(client, customizationsStackName, 'Original');
+    }
     fs.writeFileSync(path.join(savePath, `${stackName}.json`), template, 'utf-8');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
+    logger.error(e);
     logger.error(
       `Error trying to get template for account ${accountId}, region: ${region}, stack: ${stackName} using role ${roleName}`,
     );
@@ -68,12 +78,16 @@ async function getCloudFormationClient(
   }
 }
 
-async function getTemplate(
-  client: CloudFormationClient,
-  command: GetTemplateCommand,
-  stackName: string,
-): Promise<string> {
+async function getTemplate(client: CloudFormationClient, stackName: string, templateStage?: string): Promise<string> {
   try {
+    if (!templateStage) {
+      templateStage = 'Processed';
+    }
+    const input: GetTemplateCommandInput = {
+      StackName: stackName,
+      TemplateStage: templateStage,
+    };
+    const command = new GetTemplateCommand(input);
     const response = await throttlingBackOff(() => client.send(command));
     return response.TemplateBody!;
   } catch (e) {

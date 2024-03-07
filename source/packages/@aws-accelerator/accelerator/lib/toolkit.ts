@@ -806,8 +806,15 @@ export class AcceleratorToolkit {
     const saveDirectory = await AcceleratorToolkit.setOutputDirectory(options, stack);
     const savePath = path.join(__dirname, '..', saveDirectory!);
     const roleName = GlobalConfig.loadRawGlobalConfig(options.configDirPath!).managementAccountAccessRole;
-
-    await getCloudFormationTemplate(options.accountId!, options.region!, options.partition!, stack, savePath, roleName);
+    await getCloudFormationTemplate(
+      options.accountId!,
+      options.region!,
+      options.partition!,
+      options.stage,
+      stack,
+      savePath,
+      roleName,
+    );
     const stream = fs.createWriteStream(path.join(savePath, `${stack}.diff`), { flags: 'w' });
     await stream.write(`\nStack: ${stack} \n`);
     await printStackDiff(
