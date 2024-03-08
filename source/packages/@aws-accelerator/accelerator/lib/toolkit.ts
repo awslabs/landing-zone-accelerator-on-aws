@@ -36,6 +36,7 @@ import {
 import { getReplacementsConfig } from '../utils/app-utils';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { getCloudFormationTemplate } from '@aws-accelerator/utils/lib/get-template';
+import { getAllFilesInPattern, checkDiffFiles } from '@aws-accelerator/utils/lib/common-functions';
 import { printStackDiff } from '@aws-accelerator/utils/lib/diff-stack';
 import { isBeforeBootstrapStage } from '../utils/app-utils';
 
@@ -805,27 +806,36 @@ export class AcceleratorToolkit {
   private static async runDiffStackCli(options: AcceleratorToolkitProps, stack: string) {
     const saveDirectory = await AcceleratorToolkit.setOutputDirectory(options, stack);
     const savePath = path.join(__dirname, '..', saveDirectory!);
+    const stacksInFolder = await getAllFilesInPattern(savePath, '.template.json');
+
     const roleName = GlobalConfig.loadRawGlobalConfig(options.configDirPath!).managementAccountAccessRole;
-    await getCloudFormationTemplate(
-      options.accountId!,
-      options.region!,
-      options.partition!,
-      options.stage,
-      stack,
-      savePath,
-      roleName,
-    );
-    const stream = fs.createWriteStream(path.join(savePath, `${stack}.diff`), { flags: 'w' });
-    await stream.write(`\nStack: ${stack} \n`);
-    await printStackDiff(
-      path.join(savePath, `${stack}.json`),
-      path.join(savePath, `${stack}.template.json`),
-      false,
-      3,
-      false,
-      stream,
-    );
-    await stream.close();
+
+    for (const eachStack of stacksInFolder) {
+      logger.debug(
+        `Running diff for stack ${eachStack} in stage ${options.stage} for account ${options.accountId} in region ${options.region}`,
+      );
+      await getCloudFormationTemplate(
+        options.accountId!,
+        options.region!,
+        options.partition!,
+        options.stage,
+        eachStack,
+        savePath,
+        roleName,
+      );
+      const stream = fs.createWriteStream(path.join(savePath, `${eachStack}.diff`), { flags: 'w' });
+      await stream.write(`\nStack: ${stack} \n`);
+      await printStackDiff(
+        path.join(savePath, `${eachStack}.json`),
+        path.join(savePath, `${eachStack}.template.json`),
+        false,
+        3,
+        false,
+        stream,
+      );
+      await stream.close();
+    }
+    await checkDiffFiles(savePath, '.template.json', '.diff');
   }
 
   private static async setOutputDirectory(
