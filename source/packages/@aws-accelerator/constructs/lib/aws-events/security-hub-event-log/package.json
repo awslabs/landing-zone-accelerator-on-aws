@@ -16,7 +16,7 @@
     "cleanup:tsc": "tsc --build ./ --clean",
     "lint": "eslint --fix  --max-warnings 0 -c ../../../../../../.eslintrc.json '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
     "precommit": "eslint --max-warnings 0 -c ../../../../../../.eslintrc.json '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
-    "test": "jest --coverage --ci --passWithNoTests",
+    "test": "jest --coverage --ci",
     "testreport": ""
   },
   "dependencies": {
@@ -40,5 +40,10 @@
     "prettier": "2.8.4",
     "ts-jest": "29.0.5",
     "typescript": "4.9.5"
+  },
+  "jestSonar": {
+    "reportPath": "coverage",
+    "reportFile": "test-report.xml",
+    "indent": 4
   }
 }
