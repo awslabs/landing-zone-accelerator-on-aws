@@ -12,7 +12,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "yarn schema:accounts && yarn schema:global && yarn schema:iam && yarn schema:organization && yarn schema:security && yarn schema:replacements && yarn schema:customizations && yarn schema:network && tsc",
-    "cleanup": "tsc --build ./ --clean && rm -rf node_modules && rm -rf yarn.lock && rm -rf dist && rm -rf cdk.out",
+    "cleanup": "tsc --build ./ --clean && rm -rf node_modules && rm -rf dist && rm -rf cdk.out",
     "cleanup:tsc": "tsc --build ./ --clean",
     "watch": "tsc -w",
     "test": "jest --coverage --ci --passWithNoTests",
