@@ -2421,6 +2421,16 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
               "Type": "PLAINTEXT",
               "Value": "000000000000",
             },
+            {
+              "Name": "ENABLE_DIAGNOSTICS_PACK",
+              "Type": "PLAINTEXT",
+              "Value": "Yes",
+            },
+            {
+              "Name": "INSTALLER_STACK_NAME",
+              "Type": "PLAINTEXT",
+              "Value": "",
+            },
           ],
           "Image": "aws/codebuild/standard:6.0",
           "ImagePullCredentialsType": "CODEBUILD",

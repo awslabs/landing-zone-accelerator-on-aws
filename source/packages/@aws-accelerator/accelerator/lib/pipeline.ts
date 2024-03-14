@@ -529,6 +529,14 @@ export class AcceleratorPipeline extends Construct {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: props.pipelineAccountId,
           },
+          ENABLE_DIAGNOSTICS_PACK: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: process.env['ENABLE_DIAGNOSTICS_PACK'] ?? 'Yes',
+          },
+          INSTALLER_STACK_NAME: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: process.env['INSTALLER_STACK_NAME'] ?? '',
+          },
           ...enableSingleAccountModeEnvVariables,
           ...pipelineAccountEnvVariables,
         },
