@@ -65,7 +65,7 @@ interface Tag {
   readonly Key: string;
   readonly Value: string;
 }
-export type CustomizationStackRunOrder = {
+export type CustomStackRunOrder = {
   stackName: string;
   runOrder: number;
 };
@@ -504,10 +504,8 @@ export class AcceleratorToolkit {
    * @param options {@link AcceleratorToolkitProps}
    * @returns customizationsStackRunOrderData CustomizationStackRunOrder[]
    */
-  private static async getCustomizationsStackRunOrder(
-    options: AcceleratorToolkitProps,
-  ): Promise<CustomizationStackRunOrder[]> {
-    const customizationsStackRunOrderData: CustomizationStackRunOrder[] = [];
+  private static async getCustomStackRunOrder(options: AcceleratorToolkitProps): Promise<CustomStackRunOrder[]> {
+    const customizationsStackRunOrderData: CustomStackRunOrder[] = [];
     const configDirPath = AcceleratorToolkit.validateAndGetConfigDirectory(options.configDirPath);
 
     if (fs.existsSync(path.join(configDirPath, CustomizationsConfig.FILENAME))) {
@@ -562,24 +560,25 @@ export class AcceleratorToolkit {
       });
     }
 
-    if (
-      // stage is customizations
-      options.stage === AcceleratorStage.CUSTOMIZATIONS &&
-      // there are stacks in customizations which have runOrder
-      (await AcceleratorToolkit.getCustomizationsStackRunOrder(options)).length > 0
-    ) {
-      const getStackNameRunOrder = await AcceleratorToolkit.getCustomizationsStackRunOrder(options);
-      await AcceleratorToolkit.deployCustomizationStacksWithRunOrder(
-        getStackNameRunOrder,
-        context,
-        options,
-        toolkitStackName,
-        roleArn,
-      );
-    } else {
+    if (options.stage === AcceleratorStage.CUSTOMIZATIONS) {
+      const getStackNameRunOrder = await AcceleratorToolkit.getCustomStackRunOrder(options);
+      if (getStackNameRunOrder.length > 0) {
+        // there are stacks in customizations which have runOrder
+        await AcceleratorToolkit.deployCustomStacksWithRunOrder(
+          getStackNameRunOrder,
+          context,
+          options,
+          toolkitStackName,
+          roleArn,
+        );
+      }
+      // deploy customizations, resource-policy-enforcement, and application stacks
       const deployPromises: Promise<void>[] = [];
       for (const stack of stackName) {
-        deployPromises.push(AcceleratorToolkit.runDeployStackCli(context, options, stack, toolkitStackName, roleArn));
+        // custom stacks are already deployed in deployCustomStacksWithRunOrder(), so we filter them out here
+        if (stack.startsWith(options.stackPrefix)) {
+          deployPromises.push(AcceleratorToolkit.runDeployStackCli(context, options, stack, toolkitStackName, roleArn));
+        }
       }
       await Promise.all(deployPromises);
     }
@@ -598,8 +597,8 @@ export class AcceleratorToolkit {
    * @returns Promise<void>
    *
    */
-  private static async deployCustomizationStacksWithRunOrder(
-    stackData: CustomizationStackRunOrder[],
+  private static async deployCustomStacksWithRunOrder(
+    stackData: CustomStackRunOrder[],
     context: string[],
     options: AcceleratorToolkitProps,
     toolkitStackName: string,
@@ -619,16 +618,6 @@ export class AcceleratorToolkit {
         AcceleratorToolkit.runDeployStackCli(context, options, stack.stackName, toolkitStackName, roleArn),
       );
     }
-    // Execute customization stack, regardless of runOrder customizations stack must be executed if present
-    deployPromises.push(
-      AcceleratorToolkit.runDeployStackCli(
-        context,
-        options,
-        `${AcceleratorStackNames[AcceleratorStage.CUSTOMIZATIONS]}-${options.accountId}-${options.region}`,
-        toolkitStackName,
-        roleArn,
-      ),
-    );
     await Promise.all(deployPromises);
   }
 

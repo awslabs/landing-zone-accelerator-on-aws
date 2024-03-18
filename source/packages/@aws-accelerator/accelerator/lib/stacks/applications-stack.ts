@@ -234,12 +234,21 @@ export class ApplicationsStack extends AcceleratorStack {
       );
       vpcMap.set(vpcItem.name, vpcId);
       // Set subnet IDs
+      const ownedVpcIds = this.getVpcAccountIds(vpcItem);
       for (const subnetItem of vpcItem.subnets ?? []) {
-        const subnetId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-          this,
-          this.getSsmPath(SsmResourceType.SUBNET, [vpcItem.name, subnetItem.name]),
-        );
-        subnetMap.set(`${vpcItem.name}_${subnetItem.name}`, subnetId);
+        // Lookup all subnet ids if VPC is owned by this account
+        // otherwise only lookup shared subnet ids
+        if (
+          ownedVpcIds.includes(cdk.Stack.of(this).account) ||
+          (subnetItem.shareTargets &&
+            this.getAccountIdsFromShareTarget(subnetItem.shareTargets).includes(cdk.Stack.of(this).account))
+        ) {
+          const subnetId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+            this,
+            this.getSsmPath(SsmResourceType.SUBNET, [vpcItem.name, subnetItem.name]),
+          );
+          subnetMap.set(`${vpcItem.name}_${subnetItem.name}`, subnetId);
+        }
       }
       // Set security group IDs
       for (const securityGroupItem of vpcItem.securityGroups ?? []) {
