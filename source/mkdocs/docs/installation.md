@@ -59,14 +59,15 @@ You must store the personal access token in Secrets Manager in the account and r
 2. Create an S3 bucket and copy the generated template file.
 ```
 cd <rootDir>/source/packages/@aws-accelerator/installer
-aws s3 mb s3://<bucket name>
+export BUCKET_NAME=<bucket name>
+aws s3 mb s3://$BUCKET_NAME
 export ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-aws s3api head-bucket --bucket <bucket name> --expected-bucket-owner $ACCOUNT_ID
-aws s3 cp ./cdk.out/AWSAccelerator-InstallerStack.template.json s3://<bucket name>
+aws s3api head-bucket --bucket $BUCKET_NAME --expected-bucket-owner $ACCOUNT_ID
+aws s3 cp ./cdk.out/AWSAccelerator-InstallerStack.template.json s3://$BUCKET_NAME
 ```
 3. Create the Installer stack with AWS CLI command:
 ```
-aws cloudformation create-stack --stack-name AWSAccelerator-InstallerStack --template-body https://<bucket name>.s3.<region>.amazonaws.com/AWSAccelerator-InstallerStack.template.json \
+aws cloudformation create-stack --stack-name AWSAccelerator-InstallerStack --template-url https://$BUCKET_NAME.s3.<region>.amazonaws.com/AWSAccelerator-InstallerStack.template.json \
 --parameters ParameterKey=RepositoryName,ParameterValue=<Repository_Name> \
 ParameterKey=RepositoryBranchName,ParameterValue=<Branch_Name> \
 ParameterKey=ManagementAccountEmail,ParameterValue=<Management_Email> \
