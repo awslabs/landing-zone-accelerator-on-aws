@@ -21,6 +21,7 @@ module.exports = {
     '/node_modules/',
     './lib/control-tower/utils/resources.ts',
     './lib/control-tower/index.ts',
+    './common/functions.ts',
   ],
 
   // An object that configures minimum threshold enforcement for coverage results

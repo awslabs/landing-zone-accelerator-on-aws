@@ -1,3 +1,16 @@
+/**
+ *  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance
+ *  with the License. A copy of the License is located at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  or in the 'license' file accompanying this file. This file is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES
+ *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
+ *  and limitations under the License.
+ */
+
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
@@ -5,11 +18,9 @@ import {
   ControlTowerClient,
   CreateLandingZoneCommand,
   CreateLandingZoneCommandInput,
-  GetLandingZoneCommand,
   GetLandingZoneOperationCommand,
   LandingZoneOperationStatus,
   LandingZoneStatus,
-  ListLandingZonesCommand,
   ResetLandingZoneCommand,
   UpdateLandingZoneCommand,
 } from '@aws-sdk/client-controltower';
@@ -28,9 +39,10 @@ import { KmsKey } from './prerequisites/kms-key';
 import path from 'path';
 import { Organization } from './prerequisites/organization';
 import { SharedAccount } from './prerequisites/shared-account';
-import { ModuleOptionsType, getGlobalRegion } from '../../common/resources';
+import { ModuleOptionsType } from '../../common/resources';
 import { AcceleratorModule } from '../accelerator-module';
 import { AcceleratorConfigLoader } from '../../common/accelerator-config-loader';
+import { getGlobalRegion, getLandingZoneDetails, getLandingZoneIdentifier } from '../../common/functions';
 
 const logger: winston.Logger = createLogger([path.parse(path.basename(__filename)).name]);
 
@@ -38,105 +50,6 @@ const logger: winston.Logger = createLogger([path.parse(path.basename(__filename
  * ControlTowerLandingZone class to manage AWS Control Tower Landing Zone operation.
  */
 export class ControlTowerLandingZone implements AcceleratorModule {
-  /**
-   * Function to get the landing zone identifier.
-   *
-   * @remarks
-   * Function returns undefined when there is no landing zone configured, otherwise returns arn for the landing zone.
-   * If there are multiple landing zone deployment found, function will return error.
-   * @returns landingZoneIdentifier string | undefined
-   *
-   * @param client {@link ControlTowerClient}
-   * @returns landingZoneIdentifier string | undefined
-   */
-  private async getLandingZoneIdentifier(client: ControlTowerClient): Promise<string | undefined> {
-    const response = await throttlingBackOff(() => client.send(new ListLandingZonesCommand({})));
-
-    if (response.landingZones?.length === 1 && response.landingZones[0].arn) {
-      logger.info(`There is an existing AWS Control Tower Landing Zone ${response.landingZones[0].arn}.`);
-      return response.landingZones[0].arn;
-    }
-
-    if (response.landingZones!.length! > 1) {
-      throw new Error(
-        `Multiple AWS Control Tower Landing Zone configuration found, list of Landing Zone arns are - ${response.landingZones?.join(
-          ',',
-        )}`,
-      );
-    }
-    return undefined;
-  }
-
-  /**
-   * Function to get the landing zone details
-   * @param client {@link ControlTowerClient}
-   * @param region string
-   * @param landingZoneIdentifier string| undefined
-   * @returns landingZoneDetails {@link ControlTowerLandingZoneDetailsType} | undefined
-   */
-  private async getLandingZoneDetails(
-    client: ControlTowerClient,
-    region: string,
-    landingZoneIdentifier?: string,
-  ): Promise<ControlTowerLandingZoneDetailsType | undefined> {
-    if (!landingZoneIdentifier) {
-      return undefined;
-    }
-
-    const landingZoneDetails: ControlTowerLandingZoneDetailsType = { landingZoneIdentifier: landingZoneIdentifier };
-
-    try {
-      const response = await throttlingBackOff(() =>
-        client.send(new GetLandingZoneCommand({ landingZoneIdentifier: landingZoneIdentifier })),
-      );
-
-      if (response.landingZone) {
-        for (const [key, value] of Object.entries(response.landingZone.manifest!)) {
-          switch (key) {
-            case 'governedRegions':
-              landingZoneDetails.governedRegions = value;
-              break;
-            case 'accessManagement':
-              landingZoneDetails.enableIdentityCenterAccess = value['enabled'];
-              break;
-            case 'organizationStructure':
-              landingZoneDetails.securityOuName = value['security']['name'];
-              if (value['sandbox']) {
-                landingZoneDetails.sandboxOuName = value['sandbox']['name'];
-              }
-              break;
-            case 'centralizedLogging':
-              landingZoneDetails.loggingBucketRetentionDays = value['configurations']['loggingBucket']['retentionDays'];
-              landingZoneDetails.accessLoggingBucketRetentionDays =
-                value['configurations']['accessLoggingBucket']['retentionDays'];
-              landingZoneDetails.kmsKeyArn = value['configurations']['kmsKeyArn'];
-              break;
-          }
-        }
-        landingZoneDetails.landingZoneIdentifier = response.landingZone.arn!;
-        landingZoneDetails.status = response.landingZone.status!;
-        landingZoneDetails.version = response.landingZone.version!;
-        landingZoneDetails.latestAvailableVersion = response.landingZone.latestAvailableVersion!;
-        landingZoneDetails.driftStatus = response.landingZone.driftStatus!.status!;
-      }
-    } catch (
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      e: any
-    ) {
-      if (e.name === 'ResourceNotFoundException' && landingZoneIdentifier) {
-        logger.warn(
-          `Existing AWS Control Tower Landing Zone home region differs from the executing environment region ${region}. Existing Landing Zone identifier is ${landingZoneIdentifier}`,
-        );
-        throw new Error(
-          `Existing AWS Control Tower Landing Zone home region differs from the executing environment region ${region}. Existing Landing Zone identifier is ${landingZoneIdentifier}`,
-        );
-      }
-      throw e;
-    }
-
-    return landingZoneDetails;
-  }
-
   /**
    * Function to get the landing zone operation status
    *
@@ -250,7 +163,7 @@ export class ControlTowerLandingZone implements AcceleratorModule {
       retryStrategy: setRetryStrategy(),
     });
 
-    const landingZoneIdentifier = await this.getLandingZoneIdentifier(client);
+    const landingZoneIdentifier = await getLandingZoneIdentifier(client);
 
     const preRequisitesResources = await ControlTowerPreRequisites.completePreRequisites(
       props,
@@ -269,7 +182,7 @@ export class ControlTowerLandingZone implements AcceleratorModule {
       accountsConfigWithAccountIds,
     );
 
-    const landingZoneDetails = await this.getLandingZoneDetails(client, globalConfig.homeRegion, landingZoneIdentifier);
+    const landingZoneDetails = await getLandingZoneDetails(client, globalConfig.homeRegion, landingZoneIdentifier);
 
     if (landingZoneDetails?.status === LandingZoneStatus.PROCESSING) {
       throw new Error(

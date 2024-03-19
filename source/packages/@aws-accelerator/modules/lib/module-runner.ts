@@ -1,5 +1,18 @@
-import { AcceleratorStage } from '../../accelerator/lib/accelerator-stage';
+/**
+ *  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance
+ *  with the License. A copy of the License is located at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  or in the 'license' file accompanying this file. This file is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES
+ *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
+ *  and limitations under the License.
+ */
+
 import { AcceleratorModuleName, ModuleRunnerParametersType } from '../common/resources';
+import { AWSOrganization } from './aws-organization';
 import { ControlTowerLandingZone } from './control-tower/index';
 
 /**
@@ -14,21 +27,11 @@ export abstract class ModuleRunner {
   public static async execute(runnerParams: ModuleRunnerParametersType): Promise<string> {
     switch (runnerParams.module) {
       case AcceleratorModuleName.CONTROL_TOWER:
-        return await ModuleRunner.executeControlTowerLandingZoneModule(runnerParams);
+        return new ControlTowerLandingZone().handler(runnerParams.module, runnerParams.options);
+      case AcceleratorModuleName.AWS_ORGANIZATIONS:
+        return new AWSOrganization().handler(runnerParams.module, runnerParams.options);
       default:
         throw new Error(`Invalid module name "${runnerParams.module}".`);
     }
-  }
-
-  /**
-   * Function to execute AWS Control Tower Landing Zone module
-   * @param runnerParams {@link ModuleRunnerParametersType}
-   * @returns status string
-   */
-  private static async executeControlTowerLandingZoneModule(runnerParams: ModuleRunnerParametersType): Promise<string> {
-    if (runnerParams.options.stage === AcceleratorStage.PREPARE) {
-      return await new ControlTowerLandingZone().handler(runnerParams.module, runnerParams.options);
-    }
-    throw new Error(`Invalid stage ${runnerParams.options.stage} for module ${runnerParams.module}`);
   }
 }

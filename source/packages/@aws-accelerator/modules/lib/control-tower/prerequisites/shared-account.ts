@@ -1,3 +1,16 @@
+/**
+ *  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance
+ *  with the License. A copy of the License is located at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  or in the 'license' file accompanying this file. This file is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES
+ *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
+ *  and limitations under the License.
+ */
+
 import {
   CreateAccountCommand,
   CreateAccountStatus,
@@ -6,10 +19,13 @@ import {
   OrganizationsClient,
 } from '@aws-sdk/client-organizations';
 
-import * as winston from 'winston';
-import { createLogger, setRetryStrategy, throttlingBackOff } from '@aws-accelerator/utils';
-import { AccountsConfig } from '@aws-accelerator/config';
 import path from 'path';
+import * as winston from 'winston';
+
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
+import { AccountsConfig } from '@aws-accelerator/config';
 
 import { delay } from '../utils/resources';
 
@@ -82,7 +98,7 @@ export abstract class SharedAccount {
       };
     }
 
-    return await SharedAccount.waitTillAccountCreationCompletes(client, response.CreateAccountStatus!);
+    return await SharedAccount.waitUntilAccountCreationCompletes(client, response.CreateAccountStatus!);
   }
 
   /**
@@ -91,7 +107,7 @@ export abstract class SharedAccount {
    * @param createAccountStatus {@link CreateAccountStatus}
    * @returns creationStatus {@link SharedAccountCreationStatusType}
    */
-  private static async waitTillAccountCreationCompletes(
+  private static async waitUntilAccountCreationCompletes(
     client: OrganizationsClient,
     createAccountStatus: CreateAccountStatus,
   ): Promise<AccountCreationStatusType> {

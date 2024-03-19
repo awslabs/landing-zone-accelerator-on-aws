@@ -61,7 +61,7 @@ controlTower:
   landingZone:
     version: '3.3'
     logging:
-      loggingBucketRetentionDays: 365
+      loggingBucketRetentionDays: 3650
       accessLoggingBucketRetentionDays: 3650
       organizationTrail: true
     security:

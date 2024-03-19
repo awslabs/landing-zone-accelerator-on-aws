@@ -10,6 +10,15 @@ organizationalUnits:
   - name: SecureWorkloads
   - name: Suspended
     ignore: true
+  - name: Level1/Level2-02/Level3-01/Level4-01
+  - name: Level1/Level2-02/Level3-01/Level4-01/Level5-01
+  - name: Level1/Level2-02/Level3-01/Level4-01/Level5-02
+  - name: Level1/Level2-02/Level3-01/Level4-01/Level5-03
+  - name: Devops
+  - name: Level1/Level2-01 
+  - name: Level1
+  - name: Level1/Level2-02
+  - name: Level1/Level2-02/Level3-01        
 quarantineNewAccounts:
   enable: true
   scpPolicyName: Quarantine

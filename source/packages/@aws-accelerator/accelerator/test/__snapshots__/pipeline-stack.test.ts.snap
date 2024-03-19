@@ -2461,7 +2461,11 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
       "commands": [
         "env",
         "cd source",
-        "if [ \\"prepare\\" = \\"\${ACCELERATOR_STAGE}\\" ]; then set -e && export LOG_LEVEL=info && yarn run ts-node packages/@aws-accelerator/modules/bin/runner.ts --module control-tower --stage $ACCELERATOR_STAGE --partition ",
+        "if [ \\"prepare\\" = \\"\${ACCELERATOR_STAGE}\\" ]; then set -e && export LOG_LEVEL=info && yarn run ts-node packages/@aws-accelerator/modules/bin/runner.ts --module control-tower --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                " --use-existing-role No --config-dir $CODEBUILD_SRC_DIR_Config && yarn run ts-node packages/@aws-accelerator/modules/bin/runner.ts --module aws-organizations --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },

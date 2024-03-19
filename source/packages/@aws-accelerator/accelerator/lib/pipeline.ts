@@ -26,6 +26,7 @@ import { AcceleratorStage } from './accelerator-stage';
 import * as config_repository from './config-repository';
 import { AcceleratorToolkitCommand } from './toolkit';
 import { Repository } from '@aws-cdk-extensions/cdk-extensions';
+import { CONTROL_TOWER_LANDING_ZONE_VERSION } from '@aws-accelerator/utils/lib/control-tower';
 
 /**
  *
@@ -234,7 +235,7 @@ export class AcceleratorPipeline extends Construct {
         controlTowerLandingZoneConfig:
           this.props.controlTowerEnabled.toLocaleLowerCase() === 'yes'
             ? {
-                version: '3.3',
+                version: CONTROL_TOWER_LANDING_ZONE_VERSION,
                 logging: {
                   loggingBucketRetentionDays: 365,
                   accessLoggingBucketRetentionDays: 3650,
@@ -448,7 +449,11 @@ export class AcceleratorPipeline extends Construct {
               'cd source',
               `if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && export LOG_LEVEL=${
                 BuildLogLevel.INFO
-              } && yarn run ts-node packages/@aws-accelerator/modules/bin/runner.ts --module control-tower --stage $ACCELERATOR_STAGE --partition ${
+              } && yarn run ts-node packages/@aws-accelerator/modules/bin/runner.ts --module control-tower --partition ${
+                cdk.Aws.PARTITION
+              } --use-existing-role ${
+                this.props.useExistingRoles ? 'Yes' : 'No'
+              } --config-dir $CODEBUILD_SRC_DIR_Config && yarn run ts-node packages/@aws-accelerator/modules/bin/runner.ts --module aws-organizations --partition ${
                 cdk.Aws.PARTITION
               } --use-existing-role ${
                 this.props.useExistingRoles ? 'Yes' : 'No'
