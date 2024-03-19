@@ -1,3 +1,16 @@
+/**
+ *  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance
+ *  with the License. A copy of the License is located at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  or in the 'license' file accompanying this file. This file is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES
+ *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
+ *  and limitations under the License.
+ */
+
 import {
   AliasListEntry,
   KMSClient,
@@ -6,10 +19,15 @@ import {
   paginateListAliases,
   PutKeyPolicyCommand,
 } from '@aws-sdk/client-kms';
-import * as winston from 'winston';
-import { createLogger, setRetryStrategy, throttlingBackOff } from '@aws-accelerator/utils';
-import { PolicyDocument } from '../utils/resources';
+
 import path from 'path';
+import * as winston from 'winston';
+
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
+
+import { PolicyDocument } from '../utils/resources';
 
 /**
  * KmsKey abstract class to create AWS Control Tower Landing Zone AWS KMS CMK to encrypt AWS Control Tower Landing Zone resources.

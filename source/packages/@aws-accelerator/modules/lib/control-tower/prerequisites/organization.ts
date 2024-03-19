@@ -1,3 +1,16 @@
+/**
+ *  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance
+ *  with the License. A copy of the License is located at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  or in the 'license' file accompanying this file. This file is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES
+ *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
+ *  and limitations under the License.
+ */
+
 import {
   DescribeOrganizationCommand,
   ListRootsCommand,
@@ -5,7 +18,6 @@ import {
   OrganizationFeatureSet,
   OrganizationalUnit,
   paginateListAccounts,
-  paginateListOrganizationalUnitsForParent,
   EnableAllFeaturesCommand,
   Account,
   AWSOrganizationsNotInUseException,
@@ -13,10 +25,16 @@ import {
   EnabledServicePrincipal,
 } from '@aws-sdk/client-organizations';
 import { InstanceMetadata, paginateListInstances, SSOAdminClient } from '@aws-sdk/client-sso-admin';
-import * as winston from 'winston';
-import { createLogger, setRetryStrategy, throttlingBackOff } from '@aws-accelerator/utils';
+
 import path from 'path';
+import * as winston from 'winston';
+
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
+
 import { OrganizationRootType } from '../utils/resources';
+import { getOrganizationalUnitsForParent } from '../../../common/functions';
 
 /**
  * Organization abstract class to get AWS Organizations details and create AWS Organizations if not exists
@@ -161,27 +179,6 @@ export abstract class Organization {
   }
 
   /**
-   * Function to get list of organization for given parent
-   * @param client {@link OrganizationsClient}
-   * @param parentId string
-   * @returns organizationalUnits {@link OrganizationalUnit}[]
-   */
-  private static async getOrganizationalUnitsForParent(
-    client: OrganizationsClient,
-    parentId: string,
-  ): Promise<OrganizationalUnit[]> {
-    const organizationalUnits: OrganizationalUnit[] = [];
-
-    const paginator = paginateListOrganizationalUnitsForParent({ client }, { ParentId: parentId });
-    for await (const page of paginator) {
-      for (const organizationalUnit of page.OrganizationalUnits ?? []) {
-        organizationalUnits.push(organizationalUnit);
-      }
-    }
-    return organizationalUnits;
-  }
-
-  /**
    * Function to get Organizational units for root
    *
    * @param client {@link OrganizationsClient}
@@ -191,7 +188,7 @@ export abstract class Organization {
     rootId?: string,
   ): Promise<OrganizationalUnit[]> {
     const parentId = rootId ?? (await Organization.getOrganizationsRoot(client)).Id;
-    return await Organization.getOrganizationalUnitsForParent(client, parentId);
+    return getOrganizationalUnitsForParent(client, parentId);
   }
 
   /**

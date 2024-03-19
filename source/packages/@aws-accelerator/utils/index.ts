@@ -25,3 +25,4 @@ export * from './lib/regions';
 export * from './lib/set-token-preferences';
 export * from './lib/evaluate-limits';
 export * from './lib/common-types';
+export * from './lib/control-tower';

@@ -126,5 +126,46 @@ The Landing Zone Accelerator solution will update AWS Control Tower Landing Zone
 
 
 !!! note
-    AWS Console should be used to enable or disable the region deny property for your AWS Control Tower Landing Zone. Currently, the Landing Zone Accelerator solution does not support the modification of the region deny feature. 
+    The AWS Console should be used to enable or disable the region deny property for your AWS Control Tower Landing Zone. Currently, the Landing Zone Accelerator solution does not support the modification of the region deny feature. 
 ---    
+
+#### Register organizational unit with AWS Control Tower
+The Landing Zone Accelerator supports the registration of AWS Organizations organizational units with the AWS Control Tower. 
+
+If a new organizational unit is found in the organization configuration file, the following activities will be performed by the solution:
+
+- Create the AWS Organizations organizational unit.
+- Register the organizational unit with AWS Control Tower.
+- Invite any existing Amazon Web Services accounts to join the AWS Organization and accept the invitation from the invited account.
+- Move the invited accounts into the organizational unit specified in the account configuration file.
+- Enrollment in the AWS Control Tower for the invited accounts
+
+
+Creating new organizational units and registering with AWS Control Tower is accomplished by adding them to the [OrganizationalUnitConfig](../typedocs/latest/classes/_aws_accelerator_config.OrganizationalUnitConfig.html) configuration.
+
+!!! note
+    For existing AWS accounts to be invited into AWS Organizations and registered with AWS Control Tower, the `managementAccountAccessRole` role in [GlobalConfig](../typedocs/latest/classes/_aws_accelerator_config.GlobalConfig.html) must be created. It is necessary for this role to include a trust policy that allows the management account to assume the role. The AWS managed policy [AdministratorAccess](https://docs.aws.amazon.com/aws-managed-policy/latest/reference/AdministratorAccess.html) must be assigned to this role. This role allows AWS Control Tower to manage your individual accounts and report information about them to your Audit and Log Archive accounts. The following is an example of a role trust policy. 
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "controltower.amazonaws.com",
+                "AWS": "arn:<PARTITION>:iam::<MANAGEMENT_ACCOUNT_ID>:root"
+            },
+            "Action": "sts:AssumeRole"
+        }
+    ]
+}
+```
+
+---  
+
+
+
+The Landing Zone Accelerator will check the status of already registered organizational units with the AWS Control Tower. In the event that the registration status has been `FAILED`, the solution will re-register the organizational unit.
+
+
+

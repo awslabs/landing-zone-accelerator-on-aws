@@ -1,3 +1,16 @@
+/**
+ *  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance
+ *  with the License. A copy of the License is located at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  or in the 'license' file accompanying this file. This file is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES
+ *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
+ *  and limitations under the License.
+ */
+
 import { describe, beforeEach, expect, test } from '@jest/globals';
 import {
   AcceleratorMockClient,
@@ -7,15 +20,15 @@ import {
   GlobalRegion,
   LogArchiveAccount,
   SolutionId,
-} from './utils/test-resources';
-import { SharedAccount } from '../prerequisites/shared-account';
+} from '../utils/test-resources';
+import { SharedAccount } from '../../lib/control-tower/prerequisites/shared-account';
 import {
   CreateAccountCommand,
   CreateAccountState,
   DescribeCreateAccountStatusCommand,
   OrganizationsClient,
 } from '@aws-sdk/client-organizations';
-import * as CommonResources from '../utils/resources';
+import * as CommonResources from '../../lib/control-tower/utils/resources';
 
 const client = AcceleratorMockClient(OrganizationsClient);
 const mockDelay = jest.spyOn(CommonResources, 'delay');
