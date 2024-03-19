@@ -549,7 +549,7 @@ export class AcceleratorToolkit {
    * @param options {@link AcceleratorToolkitProps}
    */
   private static async deployStacks(context: string[], toolkitStackName: string, options: AcceleratorToolkitProps) {
-    const stackName = await AcceleratorToolkit.getStackNames(options);
+    let stackName = await AcceleratorToolkit.getStackNames(options);
     let roleArn;
     if (!isBeforeBootstrapStage(options.command, options.stage)) {
       roleArn = getDeploymentRoleArn({
@@ -572,16 +572,14 @@ export class AcceleratorToolkit {
           roleArn,
         );
       }
-      // deploy customizations, resource-policy-enforcement, and application stacks
-      const deployPromises: Promise<void>[] = [];
-      for (const stack of stackName) {
-        // custom stacks are already deployed in deployCustomStacksWithRunOrder(), so we filter them out here
-        if (stack.startsWith(options.stackPrefix)) {
-          deployPromises.push(AcceleratorToolkit.runDeployStackCli(context, options, stack, toolkitStackName, roleArn));
-        }
-      }
-      await Promise.all(deployPromises);
+      // custom stacks are already deployed in deployCustomStacksWithRunOrder(), so we filter them out here
+      stackName = stackName.filter(stack => stack.startsWith(options.stackPrefix));
     }
+    const deployPromises: Promise<void>[] = [];
+    for (const stack of stackName) {
+      deployPromises.push(AcceleratorToolkit.runDeployStackCli(context, options, stack, toolkitStackName, roleArn));
+    }
+    await Promise.all(deployPromises);
   }
 
   /**
