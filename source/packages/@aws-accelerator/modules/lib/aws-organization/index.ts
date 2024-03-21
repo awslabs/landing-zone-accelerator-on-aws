@@ -184,8 +184,11 @@ export class AWSOrganization implements AcceleratorModule {
       // If applicable create the AWS organizational units
       await this.manageOuCreation(organizationsClient, ouItem, organizationRoot, statuses);
 
-      // If applicable, enable or update baseline for the AWS organizational unit
-      await this.manageOuRegistration(controlTowerClient, organizationsClient, ouItem, statuses, landingZoneDetails);
+      // OU baseline only when CT is enabled
+      if (globalConfig.controlTower.enable) {
+        // If applicable, enable or update baseline for the AWS organizational unit
+        await this.manageOuRegistration(controlTowerClient, organizationsClient, ouItem, statuses, landingZoneDetails);
+      }
 
       // If applicable invite any AWS Accounts for the AWS organizational unit
       await this.inviteAccountsToOrganization(
