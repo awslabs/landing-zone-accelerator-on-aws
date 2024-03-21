@@ -118,6 +118,10 @@ If any changes are made to the AWS Control Tower Landing Zone configuration, the
 
 The Landing Zone Accelerator solution will update AWS Control Tower Landing Zone when the [GlobalConfig.enabledRegions](../typedocs/latest/classes/_aws_accelerator_config.GlobalConfig.html#enabledRegions) property is modified. In this solution, the AWS Control Tower Landing Zone govern regions will be updated to match those included in [GlobalConfig.enabledRegions](../typedocs/latest/classes/_aws_accelerator_config.GlobalConfig.html#enabledRegions). 
 
+!!! note
+    Due to the fact that the Landing Zone Accelerator may deploy certain global AWS services, such as AWS Identity and Access Management (IAM) and AWS Organizations, the solution will add the global region to the list of governed regions in the AWS Control Tower if the home region of the Landing Zone Accelerator is not the same as the global region.  
+---   
+
 
 !!! warning "Important"
 

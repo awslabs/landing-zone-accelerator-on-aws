@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(network): allow Route53 resolver endpoints and query logging to be defined in the VPC object.
 - feat(control-tower): integrate lz management api.
 - feat(control-tower): integrate lz baseline api
+- feat(control-tower): add global region into the Control Tower governed region list
 
 ### Changed
 
