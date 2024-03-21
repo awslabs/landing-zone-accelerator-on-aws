@@ -17,6 +17,14 @@ snsTopics:
         - <security-notifications>@example.com  <----- UPDATE EMAIL ADDRESS
 controlTower:
   enable: true
+  landingZone:
+    version: '3.3'
+    logging:
+      loggingBucketRetentionDays: 365
+      accessLoggingBucketRetentionDays: 3650
+      organizationTrail: true
+    security:
+      enableIdentityCenterAccess: true
 logging:
   account: LogArchive
   cloudtrail:

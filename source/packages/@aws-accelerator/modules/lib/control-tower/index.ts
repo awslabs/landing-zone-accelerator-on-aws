@@ -105,12 +105,19 @@ export class ControlTowerLandingZone implements AcceleratorModule {
   private async getControlTowerLandingZoneConfig(
     globalConfig: GlobalConfig,
     accountsConfig: AccountsConfig,
+    globalRegion: string,
   ): Promise<ControlTowerLandingZoneConfigType> {
     const landingZoneConfig = globalConfig.controlTower.landingZone!;
 
+    const governedRegions: string[] = globalConfig.enabledRegions;
+
+    if (!governedRegions.includes(globalRegion)) {
+      governedRegions.push(globalRegion);
+    }
+
     return {
       version: landingZoneConfig.version,
-      governedRegions: globalConfig.enabledRegions,
+      governedRegions,
       logArchiveAccountId: accountsConfig.getLogArchiveAccountId(),
       auditAccountId: accountsConfig.getAuditAccountId(),
       enableIdentityCenterAccess: landingZoneConfig.security.enableIdentityCenterAccess,
@@ -152,6 +159,7 @@ export class ControlTowerLandingZone implements AcceleratorModule {
   private async manageModule(module: string, props: ModuleOptionsType): Promise<string> {
     const globalConfig = GlobalConfig.load(props.configDirPath);
     const accountsConfig = AccountsConfig.load(props.configDirPath);
+    const globalRegion = getGlobalRegion(props.partition);
 
     if (!globalConfig.controlTower.landingZone) {
       return `The global-config.yaml file did not contain any configuration for AWS Control Tower Landing Zone, no activities for module ${module}.`;
@@ -168,6 +176,7 @@ export class ControlTowerLandingZone implements AcceleratorModule {
     const preRequisitesResources = await ControlTowerPreRequisites.completePreRequisites(
       props,
       globalConfig.homeRegion,
+      globalRegion,
       accountsConfig.getManagementAccount().email,
       landingZoneIdentifier,
     );
@@ -180,6 +189,7 @@ export class ControlTowerLandingZone implements AcceleratorModule {
     const landingZoneConfiguration = await this.getControlTowerLandingZoneConfig(
       globalConfig,
       accountsConfigWithAccountIds,
+      globalRegion,
     );
 
     const landingZoneDetails = await getLandingZoneDetails(client, globalConfig.homeRegion, landingZoneIdentifier);
@@ -407,18 +417,20 @@ abstract class ControlTowerPreRequisites {
    * - Create the shared accounts (LogArchive and Audit)
    *
    * @param props {@link ModuleOptionsType}
-   * @param landingZoneIdentifier
+   * @param region string
+   * @param globalRegion string
+   * @param managementAccountEmail string
+   * @param landingZoneIdentifier string | undefined
    * @returns metadata { kmsKeyArn: string } | undefined
    */
   public static async completePreRequisites(
     props: ModuleOptionsType,
     region: string,
+    globalRegion: string,
     managementAccountEmail: string,
     landingZoneIdentifier?: string,
   ): Promise<{ kmsKeyArn: string } | undefined> {
     if (!landingZoneIdentifier) {
-      const globalRegion = getGlobalRegion(props.partition);
-
       await Organization.ValidateOrganization(globalRegion, region, props.solutionId);
 
       const managementAccountId = await Organization.getManagementAccountId(
