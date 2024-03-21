@@ -133,6 +133,10 @@ The Landing Zone Accelerator solution will update AWS Control Tower Landing Zone
     The AWS Console should be used to enable or disable the region deny property for your AWS Control Tower Landing Zone. Currently, the Landing Zone Accelerator solution does not support the modification of the region deny feature. 
 ---    
 
+!!! warning "Important"
+
+    When the AWS Control Tower home region is an opt-in region, deploying the AWS Control Tower Landing Zone using the Landing Zone Accelerator on AWS may fail with the error message `AccessDenied`. The issue can be resolved by ensuring that the LogArchive and Audit accounts have opt-in regions enabled and then retrying the Control Tower. After Control Tower has been successfully deployed, you can retry the Landing Zone Accelerator pipeline.
+    
 #### Register organizational unit with AWS Control Tower
 The Landing Zone Accelerator supports the registration of AWS Organizations organizational units with the AWS Control Tower. 
 
