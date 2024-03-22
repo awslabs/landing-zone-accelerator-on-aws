@@ -13,4 +13,7 @@ globalReplacements:
   - key: ALLOWED_EXTERNAL_ACCOUNTS
     type: StringList
     value:
-      - "1234567890"
+      - "123456789012"
+  - key: DEFINED_PLACEHOLDER
+    type: String
+    value: "TagReplacementValue"

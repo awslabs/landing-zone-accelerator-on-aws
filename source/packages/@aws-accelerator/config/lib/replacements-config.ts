@@ -259,12 +259,20 @@ export class ReplacementsConfig implements t.TypeOf<typeof ReplacementsConfigTyp
       }
     } else {
       Handlebars.registerHelper('account', accountName => {
-        logger.info(`Validating received account name ${accountName}, responding with generic account Id`);
+        logger.debug(`Validating received account name ${accountName}, responding with generic account Id`);
         return '111122223333';
       });
     }
 
-    const template = Handlebars.compile(initialBuffer);
+    Handlebars.registerHelper('helperMissing', token => {
+      logger.warn(`Ignoring replacement ${token.name} because it is not present in replacements-config.yaml`);
+      return new Handlebars.SafeString(`{{${token.name}}}`);
+    });
+
+    // Replace instances of "{{resolve:" with "\{{resolve:" to ignore replacement behavior
+    const dynamicRefRegex = /"{{resolve:/g;
+    const escapedBuffer = initialBuffer.replace(dynamicRefRegex, '"\\{{resolve:');
+    const template = Handlebars.compile(escapedBuffer);
     const output = template(this.placeholders);
     return output;
   }

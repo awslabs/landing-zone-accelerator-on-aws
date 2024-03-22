@@ -11,15 +11,33 @@
  *  and limitations under the License.
  */
 
-import { createLogger } from '@aws-accelerator/utils';
+import * as fs from 'fs';
+import * as path from 'path';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import {
   ParameterReplacementConfigV2,
   ReplacementsConfig,
   ParameterReplacementConfig,
 } from '../lib/replacements-config';
+import { CustomizationsConfig } from '../lib/customizations-config';
+import { AccountsConfig } from '../lib/accounts-config';
+import { GlobalConfig } from '../lib/global-config';
+import { SecurityConfig } from '../lib/security-config';
+import { OrganizationConfig } from '../lib/organization-config';
+import { NetworkConfig } from '../lib/network-config';
+import { IamConfig } from '../lib/iam-config';
 
+const fileNameList = [
+  AccountsConfig.FILENAME,
+  CustomizationsConfig.FILENAME,
+  GlobalConfig.FILENAME,
+  IamConfig.FILENAME,
+  NetworkConfig.FILENAME,
+  OrganizationConfig.FILENAME,
+  SecurityConfig.FILENAME,
+];
 export class ReplacementsConfigValidator {
-  constructor(values: ReplacementsConfig) {
+  constructor(values: ReplacementsConfig, configDir: string) {
     const errors: string[] = [];
 
     const logger = createLogger(['replacement-config-validator']);
@@ -30,6 +48,11 @@ export class ReplacementsConfigValidator {
     // Validate global replacements
     //
     this.validateGlobalReplacement(values, errors);
+
+    //
+    // Validate any instances of double-curly brackets in config files are deliberate
+    //
+    this.validateNoUnusedReplacements(values, configDir, errors);
 
     if (errors.length) {
       throw new Error(`${ReplacementsConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
@@ -51,6 +74,8 @@ export class ReplacementsConfigValidator {
       } else {
         this.validateParameterReplacementConfig(replacement, errors);
       }
+
+      this.validateReplacementForKeywords(replacement, errors);
     }
   }
 
@@ -85,5 +110,78 @@ export class ReplacementsConfigValidator {
         );
       }
     }
+  }
+
+  private validateReplacementForKeywords(replacement: ParameterReplacementConfig, errors: string[]) {
+    if (replacement.key.toLowerCase().startsWith('resolve')) {
+      errors.push(
+        `Invalid replacement ${replacement.key} , replacement key cannot start with keyword "resolve". The keyword "resolve" is reserved for CloudFormation dynamic references.`,
+      );
+    }
+  }
+
+  /**
+   * Function to validate all strings in the config files surrounded by double curly braces are using LZA lookups or SSM Dynamic references
+   * @param values
+   * @param configDir
+   * @param errors
+   */
+  private validateNoUnusedReplacements(values: ReplacementsConfig, configDir: string, errors: string[]) {
+    // Retrieve replacement keys defined explicitly in replacements-config.yaml
+    const definedReplacementKeys = values.globalReplacements.map(replacement => replacement.key);
+
+    for (const fileName of fileNameList) {
+      if (
+        fileName === CustomizationsConfig.FILENAME &&
+        !fs.existsSync(path.join(configDir, CustomizationsConfig.FILENAME))
+      ) {
+        continue;
+      } else {
+        const replacementKeys = this.getReplacementKeysInFile(configDir, fileName);
+        this.evaluateReplacementKeys(replacementKeys, definedReplacementKeys, errors);
+      }
+    }
+  }
+
+  /**
+   * Function to evaluate that a replacement key meets one of the 3 criteria to be determined intentional
+   * @param replacementKeys
+   * @param definedReplacementKeys
+   * @param errors
+   */
+  private evaluateReplacementKeys(replacementKeys: string[], definedReplacementKeys: string[], errors: string[]) {
+    for (const key of replacementKeys) {
+      if (definedReplacementKeys.includes(key)) {
+        continue;
+      } else if (key.startsWith('account')) {
+        continue;
+      } else if (key.startsWith('resolve:')) {
+        continue;
+      } else {
+        errors.push(
+          `Undefined replacement {{${key}}} found. Double-curly brackets are reserved for LZA lookups and SSM dynamic reference parameters.`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Function to find instances of double curly braces in each config file
+   * @param configDir
+   * @param fileName
+   */
+  private getReplacementKeysInFile(configDir: string, fileName: string): string[] {
+    const data = fs.readFileSync(path.join(configDir, fileName), 'utf-8');
+    const replacements = data.match(/{{.+}}/g) ?? [];
+    const replacementKeys = replacements.map(key => this.trimCurlyBraces(key));
+    return replacementKeys;
+  }
+
+  /**
+   * Function to remove double curly braces from a string
+   * @param replacementString
+   */
+  private trimCurlyBraces(replacementString: string) {
+    return replacementString.replace('{{', '').replace('}}', '').trim();
   }
 }

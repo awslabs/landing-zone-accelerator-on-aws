@@ -344,7 +344,7 @@ function runValidators(
 
   if (replacementsPresent && replacementsConfig) {
     try {
-      new ReplacementsConfigValidator(replacementsConfig);
+      new ReplacementsConfigValidator(replacementsConfig, configDirPath);
     } catch (e) {
       configErrors.push(e);
     }
