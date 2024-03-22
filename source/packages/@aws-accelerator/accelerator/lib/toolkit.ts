@@ -25,7 +25,7 @@ import { Command, Configuration } from 'aws-cdk/lib/settings';
 import { HotswapMode } from 'aws-cdk/lib/api/hotswap/common';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as fsPromises from 'fs/promises';
+
 import {
   AccountsConfig,
   cdkOptionsConfig,
@@ -323,11 +323,9 @@ export class AcceleratorToolkit {
     try {
       switch (action) {
         case 'render':
-          logger.debug(`Rendering asset file: ${assetFile}`);
           processAssetPromises.push(AcceleratorToolkit.renderAssets(assetJson, gitRoot, configDirPath));
           break;
         case 'parse':
-          logger.debug(`Parsing asset file: ${assetFile}`);
           processAssetPromises.push(AcceleratorToolkit.parseAssets(assetJson, gitRoot, configDirPath, assetFile));
           break;
       }
@@ -335,7 +333,7 @@ export class AcceleratorToolkit {
       await Promise.all(processAssetPromises);
 
       // write processedFile
-      await fsPromises.writeFile(assetFile, JSON.stringify(assetJson, undefined, 2), 'utf-8');
+      fs.writeFileSync(assetFile, JSON.stringify(assetJson, undefined, 2), 'utf-8');
     } catch (error) {
       const msg = `Error processing asset file: ${assetFile} on action: ${action}`;
       logger.error(msg);
@@ -367,7 +365,6 @@ export class AcceleratorToolkit {
         !file.source.path.includes('GIT_ROOT') &&
         !file.source.path.includes('CONFIG_ROOT')
       ) {
-        logger.debug(`Found ${fileHash} not inside git repo`);
         parseAssetsPromises.push(
           AcceleratorToolkit.moveAssetLocally(
             { file, fileHash, assetFile, assetJson },
@@ -422,9 +419,9 @@ export class AcceleratorToolkit {
       const destDirPath = path.dirname(destFilePath);
       // fsPromises does not have existSync
       if (!fs.existsSync(destDirPath)) {
-        fsPromises.mkdir(destDirPath, { recursive: true });
+        fs.mkdirSync(destDirPath, { recursive: true });
       }
-      fsPromises.copyFile(assetData.file.source.path, destFilePath);
+      fs.copyFileSync(assetData.file.source.path, destFilePath);
       // replace file.source.path in asset.json file
       assetData.assetJson.files[assetData.fileHash].source.path = destFilePath
         .replace(paths.gitRoot, 'GIT_ROOT')
