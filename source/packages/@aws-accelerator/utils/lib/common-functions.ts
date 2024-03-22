@@ -143,15 +143,18 @@ export async function getStsCredentials(
  * its recursive so top level files will be returned as well as files in sub directories
  * Only file name will be returned. For example, if file is testName.extension then return will be testName
  */
-export async function getAllFilesInPattern(dir: string, pattern: string): Promise<string[]> {
+export async function getAllFilesInPattern(dir: string, pattern: string, fullPath?: boolean): Promise<string[]> {
   const files = await glob(`${dir}/**/*${pattern}`, {
     ignore: ['**/node_modules/**'],
   });
-  logger.debug(`Found ${JSON.stringify(files)} files matching pattern ${pattern}`);
+  // logger.debug(`Found ${JSON.stringify(files)} files matching pattern ${pattern}`);
   const parsedFiles = files.map(file => {
     return file.replace(dirname(file), '').replace('/', '').replace(pattern, '');
   });
-  logger.debug(`Parsed files ${JSON.stringify(parsedFiles)}`);
+  // logger.debug(`Parsed files ${JSON.stringify(parsedFiles)}`);
+  if (fullPath) {
+    return files;
+  }
   return parsedFiles;
 }
 
