@@ -10,6 +10,11 @@ customizations:
       runOrder: 1
       template: cloudformation-templates/custom-s3-bucket.yaml
       terminationProtection: false
+      parameters:
+        - name: pStringParameter
+          value: "test"
+        - name: pDynamicParameter
+          value: "{{resolve:ssm:/accelerator/lza-prefix}}"
     - deploymentTargets:
         organizationalUnits:
           - Security

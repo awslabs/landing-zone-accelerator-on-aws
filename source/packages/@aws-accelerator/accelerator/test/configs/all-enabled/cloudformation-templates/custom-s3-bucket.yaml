@@ -1,4 +1,17 @@
 AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  pStringParameter:
+    Description: A parameter passed explicitly as a string
+    Type: String
+    Default: ""
+  pDynamicParameter:
+    Description: A parameter passed as a dynamic lookup from SSM
+    Type: String
+    Default: ""
+Conditions:
+  hasStringParameter: !Not [ !Equals [ !Ref pStringParameter, "" ]]
+  hasDynamicParameter: !Not [ !Equals [ !Ref pDynamicParameter, "" ]]
+  hasParameters: !And [!Condition hasStringParameter, !Condition hasDynamicParameter]
 Resources:
   LZACustomizationsBucket:
     Type: 'AWS::S3::Bucket'
@@ -35,3 +48,8 @@ Resources:
             Condition:
               Bool:
                 aws:SecureTransport: 'false'
+  MySNSTopic:
+    Condition: hasParameters
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub ${pDynamicParameter}-${pStringParameter}-topic
