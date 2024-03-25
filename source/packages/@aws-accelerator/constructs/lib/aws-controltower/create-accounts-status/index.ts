@@ -17,15 +17,34 @@
  * @returns
  */
 
-import * as AWS from 'aws-sdk';
+import { DynamoDBDocumentClient, ScanCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import {
+  ServiceCatalogClient,
+  ListProvisioningArtifactsCommand,
+  SearchProductsCommandInput,
+  paginateSearchProducts,
+  ProductViewSummary,
+  paginateSearchProvisionedProducts,
+  SearchProvisionedProductsCommandInput,
+  ProvisionProductOutput,
+  ProvisionProductCommand,
+  ProvisionedProductAttribute,
+} from '@aws-sdk/client-service-catalog';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
+
 import { v4 as uuidv4 } from 'uuid';
 
 const tableName = process.env['NewAccountsTableName'] ?? '';
 const solutionId = process.env['SOLUTION_ID'] ?? '';
 
-const documentClient = new AWS.DynamoDB.DocumentClient({ customUserAgent: solutionId });
-const serviceCatalogClient = new AWS.ServiceCatalog({ customUserAgent: solutionId });
+const dynamodbClient = new DynamoDBClient({ customUserAgent: solutionId, retryStrategy: setRetryStrategy() });
+const documentClient = DynamoDBDocumentClient.from(dynamodbClient);
+const serviceCatalogClient = new ServiceCatalogClient({
+  customUserAgent: solutionId,
+  retryStrategy: setRetryStrategy(),
+});
 
 interface AccountConfig {
   name: string;
@@ -95,16 +114,18 @@ export async function handler(event: any): Promise<
 }
 
 async function inProgress(): Promise<number> {
-  const provisionedProductsUnderChange: AWS.ServiceCatalog.ProvisionedProductAttribute[] =
-    await getProvisionedProductsWithStatus('UNDER_CHANGE');
+  const provisionedProductsUnderChange: ProvisionedProductAttribute[] = await getProvisionedProductsWithStatus(
+    'UNDER_CHANGE',
+  );
   let accountsInProcess = 0;
   if (provisionedProductsUnderChange.length > 0) {
     console.log(`Products that are UNDER_CHANGE ${provisionedProductsUnderChange.length}`);
     accountsInProcess = accountsInProcess + provisionedProductsUnderChange.length;
   }
 
-  const provisionedProductsPlan: AWS.ServiceCatalog.ProvisionedProductAttribute[] =
-    await getProvisionedProductsWithStatus('PLAN_IN_PROGRESS');
+  const provisionedProductsPlan: ProvisionedProductAttribute[] = await getProvisionedProductsWithStatus(
+    'PLAN_IN_PROGRESS',
+  );
   if (provisionedProductsPlan.length > 0) {
     console.log(`Products that are PLAN_IN_PROGRESS ${provisionedProductsPlan.length}`);
     accountsInProcess = accountsInProcess + provisionedProductsPlan.length;
@@ -115,15 +136,13 @@ async function inProgress(): Promise<number> {
 }
 
 async function provisionSuccess(): Promise<boolean> {
-  const provisionedProductsError: AWS.ServiceCatalog.ProvisionedProductAttribute[] =
-    await getProvisionedProductsWithStatus('ERROR');
+  const provisionedProductsError: ProvisionedProductAttribute[] = await getProvisionedProductsWithStatus('ERROR');
   if (provisionedProductsError.length > 0) {
     console.log(`Provisioning failure error message: ${provisionedProductsError[0].StatusMessage}`);
     return false;
   }
 
-  const provisionedProductsTainted: AWS.ServiceCatalog.ProvisionedProductAttribute[] =
-    await getProvisionedProductsWithStatus('TAINTED');
+  const provisionedProductsTainted: ProvisionedProductAttribute[] = await getProvisionedProductsWithStatus('TAINTED');
   if (provisionedProductsTainted.length > 0) {
     return false;
   }
@@ -131,35 +150,24 @@ async function provisionSuccess(): Promise<boolean> {
   return true;
 }
 
-async function getProvisionedProductsWithStatus(
-  searchStatus: string,
-): Promise<AWS.ServiceCatalog.ProvisionedProductAttribute[]> {
-  const provisionedProducts: AWS.ServiceCatalog.ProvisionedProductAttribute[] = [];
-  let nextToken: string | undefined = undefined;
-  do {
-    const page = await throttlingBackOff(() =>
-      serviceCatalogClient
-        .searchProvisionedProducts({
-          Filters: {
-            SearchQuery: [`status: ${searchStatus}`],
-          },
-          AccessLevelFilter: {
-            Key: 'Account',
-            Value: 'self',
-          },
-          PageToken: nextToken,
-        })
-        .promise(),
-    );
-
-    for (const product of page.ProvisionedProducts ?? []) {
+async function getProvisionedProductsWithStatus(searchStatus: string): Promise<ProvisionedProductAttribute[]> {
+  const provisionedProducts: ProvisionedProductAttribute[] = [];
+  const inputParameters: SearchProvisionedProductsCommandInput = {
+    Filters: {
+      SearchQuery: [`status: ${searchStatus}`],
+    },
+    AccessLevelFilter: {
+      Key: 'Account',
+      Value: 'self',
+    },
+  };
+  for await (const page of paginateSearchProvisionedProducts({ client: serviceCatalogClient }, inputParameters)) {
+    page?.ProvisionedProducts?.forEach(product => {
       if (product.Type === 'CONTROL_TOWER_ACCOUNT') {
         provisionedProducts.push(product);
       }
-    }
-    nextToken = page.NextPageToken;
-  } while (nextToken);
-
+    });
+  }
   return provisionedProducts;
 }
 
@@ -169,12 +177,11 @@ async function getSingleAccountConfigFromTable(): Promise<AccountConfigs> {
     TableName: tableName,
     Limit: 1,
   };
-  const response = await throttlingBackOff(() => documentClient.scan(scanParams).promise());
+  const scanResponse = await throttlingBackOff(() => documentClient.send(new ScanCommand(scanParams)));
 
-  console.log(`getSingleAccount response ${JSON.stringify(response)}`);
-  const itemCount = response.Items?.length ?? 0;
+  const itemCount = scanResponse.Items?.length ?? 0;
   if (itemCount > 0) {
-    const account: AccountConfig = JSON.parse(response.Items![0]['accountConfig']);
+    const account: AccountConfig = JSON.parse(scanResponse.Items![0]['accountConfig']);
     accountToAdd.push(account);
     console.log(`Account to add ${JSON.stringify(accountToAdd)}`);
   }
@@ -188,25 +195,34 @@ async function deleteSingleAccountConfigFromTable(accountToDeleteEmail: string):
       accountEmail: accountToDeleteEmail,
     },
   };
-  const response = await throttlingBackOff(() => documentClient.delete(deleteParams).promise());
-  return JSON.stringify(response);
+  const deleteResponse = await throttlingBackOff(() => documentClient.send(new DeleteCommand(deleteParams)));
+  return JSON.stringify(deleteResponse);
 }
 
-async function provisionAccount(accountToAdd: AccountConfig): Promise<AWS.ServiceCatalog.ProvisionProductOutput> {
-  const provisionToken = uuidv4();
+async function provisionAccount(accountToAdd: AccountConfig): Promise<ProvisionProductOutput> {
+  const searchProducts: ProductViewSummary[] = [];
+  const inputParameters: SearchProductsCommandInput = {
+    Filters: { FullTextSearch: ['AWS Control Tower Account Factory'] },
+  };
 
-  const searchProductsCommandOutput = await throttlingBackOff(() =>
-    serviceCatalogClient
-      .searchProducts({ Filters: { FullTextSearch: ['AWS Control Tower Account Factory'] } })
-      .promise(),
-  );
+  for await (const page of paginateSearchProducts({ client: serviceCatalogClient }, inputParameters)) {
+    searchProducts.push(...page.ProductViewSummaries!);
+  }
 
-  const productId = searchProductsCommandOutput?.ProductViewSummaries?.[0]?.ProductId ?? '';
+  let productId: string;
+  if (searchProducts.length === 0) {
+    throw new Error('No products were found while searching for AWS Control Tower Account Factory');
+  } else if (searchProducts.length > 1) {
+    throw new Error('Multiple products were found while searching for AWS Control Tower Account Factory');
+  } else {
+    productId = searchProducts[0].ProductId!;
+    console.log(`Service Catalog ProductId ${productId}`);
+  }
 
-  console.log(`Service Catalog ProductId ${productId}`);
-
+  // this is non-paginated command
+  // Ref: https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/service-catalog/command/ListProvisioningArtifactsCommand/
   const listProvisioningArtifactsOutput = await throttlingBackOff(() =>
-    serviceCatalogClient.listProvisioningArtifacts({ ProductId: productId }).promise(),
+    serviceCatalogClient.send(new ListProvisioningArtifactsCommand({ ProductId: productId })),
   );
 
   const provisioningArtifact = listProvisioningArtifactsOutput?.ProvisioningArtifactDetails?.find(a => a.Active);
@@ -215,7 +231,7 @@ async function provisionAccount(accountToAdd: AccountConfig): Promise<AWS.Servic
 
   const provisionInput = {
     ProductName: 'AWS Control Tower Account Factory',
-    ProvisionToken: provisionToken,
+    ProvisionToken: uuidv4(),
     ProvisioningArtifactId: provisioningArtifactId,
     ProvisionedProductName: accountToAdd.name,
     ProvisioningParameters: [
@@ -262,7 +278,7 @@ async function provisionAccount(accountToAdd: AccountConfig): Promise<AWS.Servic
     ],
   };
 
-  return throttlingBackOff(() => serviceCatalogClient.provisionProduct(provisionInput).promise());
+  return throttlingBackOff(() => serviceCatalogClient.send(new ProvisionProductCommand(provisionInput)));
 }
 
 async function deleteAllRecordsFromTable(paramTableName: string) {
@@ -270,9 +286,9 @@ async function deleteAllRecordsFromTable(paramTableName: string) {
     TableName: paramTableName,
     ProjectionExpression: 'accountEmail',
   };
-  const response = await documentClient.scan(params).promise();
-  if (response.Items) {
-    for (const item of response.Items) {
+  const scanResponse = await throttlingBackOff(() => documentClient.send(new ScanCommand(params)));
+  if (scanResponse.Items) {
+    for (const item of scanResponse.Items) {
       console.log(item['accountEmail']);
       const itemParams = {
         TableName: paramTableName,
@@ -280,7 +296,7 @@ async function deleteAllRecordsFromTable(paramTableName: string) {
           accountEmail: item['accountEmail'],
         },
       };
-      await documentClient.delete(itemParams).promise();
+      await throttlingBackOff(() => documentClient.send(new DeleteCommand(itemParams)));
     }
   }
 }
