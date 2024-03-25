@@ -5,9 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.2] - 03-27-2024
+
+### Fixed
+
+- fix(replacements): throw error for undefined replacements
+- fix(diff): dependent CloudFormation stacks not included in diff review stage
+- fix(diff): customizations templates are not included in diff review stage
+- fix(networking): ca-central-1 physical AZ subnet incorrect
+- fix: metadata updates should execute on pipeline completion
+
+### Changed
+
+- chore(documentation): improvements to installation.md
+
 ## [1.6.1] - 02-21-2024
 
 ### Fixed
+
+- fix(docs): resolve broken links to appropriate pages
+- fix(networking): resolve duplicate construct error for endpoint security groups
+- fix(networking): Fix Canada region physical AZ Subnet lookup
+
+### Configuration Changes
 
 - fix(docs): broken links in documentation
 - fix(route53): associate hosted zones timeout
