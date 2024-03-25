@@ -60,7 +60,7 @@ else
 echo "BOOTSTRAPPING GLOBAL REGION"
 cd /landing-zone-accelerator-on-aws/source/packages/\@aws-accelerator/accelerator/
 yarn run ts-node --transpile-only cdk.ts synth --require-approval never --config-dir $srcDirConfig --partition $PARTITION --ca-bundle-path $caBundlePath --account $MANAGEMENT_ACCOUNT_ID --region $GLOBAL_REGION
-yarn run ts-node --transpile-only cdk.ts --require-approval never bootstrap --config-dir $srcDirConfig --partition $PARTITION --ca-bundle-path $caBundlePath --account $MANAGEMENT_ACCOUNT_ID --region $GLOBAL_REGION
+yarn run ts-node --transpile-only cdk.ts --require-approval never bootstrap --config-dir $srcDirConfig --partition $PARTITION --ca-bundle-path $caBundlePath --account $MANAGEMENT_ACCOUNT_ID --region $GLOBAL_REGION --app cdk.out
 fi
 
 if [ -z "$SomeStacks" ]; then
