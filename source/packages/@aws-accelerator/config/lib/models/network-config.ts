@@ -1350,7 +1350,7 @@ export interface IRouteTableEntryConfig {
    *
    * @remarks
    * Include only the letter of the AZ name (i.e. 'a' for 'us-east-1a') to target a subnet created in a specific AZ. Use an integer
-   * (i.e. 1) for subnets using a physical mapping ID to an AZ. Please reference the documentation {@link https://docs.aws.amazon.com/ram/latest/userguide/working-with-az-ids.html | Availability Zone IDs for your AWS resources}
+   * (i.e. 1) for subnets using a physical mapping ID to an AZ. Use the availability zone suffix e.g. "laz-1a" for Local Zones. Please reference the documentation {@link https://docs.aws.amazon.com/ram/latest/userguide/working-with-az-ids.html | Availability Zone IDs for your AWS resources}
    *  for more information.
    *
    * Note: Leave undefined for targets of route entry types other than `networkFirewall`.
