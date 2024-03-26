@@ -91,13 +91,17 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       };
 
     case 'Delete':
-      await throttlingBackOff(() =>
-        s3Client
-          .deleteBucketReplication({
-            Bucket: sourceBucketName,
-          })
-          .promise(),
-      );
+      try {
+        await throttlingBackOff(() =>
+          s3Client
+            .deleteBucketReplication({
+              Bucket: sourceBucketName,
+            })
+            .promise(),
+        );
+      } catch (error) {
+        console.error(JSON.stringify(error));
+      }
       return {
         PhysicalResourceId: event.PhysicalResourceId,
         Status: 'SUCCESS',

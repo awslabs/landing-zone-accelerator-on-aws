@@ -2594,116 +2594,115 @@ export class LoggingStack extends AcceleratorStack {
       cdk.Stack.of(this).account === props.accountsConfig.getManagementAccountId() &&
       cdk.Stack.of(this).region === props.globalConfig.homeRegion
     ) {
-      let assetsKmsKey: cdk.aws_kms.Key | undefined;
-      if (this.isS3CMKEnabled) {
-        assetsKmsKey = new cdk.aws_kms.Key(this, 'AssetsKmsKey', {
-          alias: this.acceleratorResourceNames.customerManagedKeys.assetsBucket.alias,
-          description: this.acceleratorResourceNames.customerManagedKeys.assetsBucket.description,
-          enableKeyRotation: true,
-          removalPolicy: cdk.RemovalPolicy.RETAIN,
-        });
-        // Allow management account access
-        assetsKmsKey.addToResourcePolicy(
-          new cdk.aws_iam.PolicyStatement({
-            sid: 'Management Actions',
-            principals: [new cdk.aws_iam.AccountPrincipal(cdk.Stack.of(this).account)],
-            actions: [
-              'kms:Create*',
-              'kms:Describe*',
-              'kms:Enable*',
-              'kms:List*',
-              'kms:Put*',
-              'kms:Update*',
-              'kms:Revoke*',
-              'kms:Disable*',
-              'kms:Get*',
-              'kms:Delete*',
-              'kms:ScheduleKeyDeletion',
-              'kms:CancelKeyDeletion',
-              'kms:GenerateDataKey',
+      // This is key is always created regardless of the S3 encryption setting
+      // This bucket may contain sensitive data
+      const assetsKmsKey = new cdk.aws_kms.Key(this, 'AssetsKmsKey', {
+        alias: this.acceleratorResourceNames.customerManagedKeys.assetsBucket.alias,
+        description: this.acceleratorResourceNames.customerManagedKeys.assetsBucket.description,
+        enableKeyRotation: true,
+        removalPolicy: cdk.RemovalPolicy.RETAIN,
+      });
+      // Allow management account access
+      assetsKmsKey.addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'Management Actions',
+          principals: [new cdk.aws_iam.AccountPrincipal(cdk.Stack.of(this).account)],
+          actions: [
+            'kms:Create*',
+            'kms:Describe*',
+            'kms:Enable*',
+            'kms:List*',
+            'kms:Put*',
+            'kms:Update*',
+            'kms:Revoke*',
+            'kms:Disable*',
+            'kms:Get*',
+            'kms:Delete*',
+            'kms:ScheduleKeyDeletion',
+            'kms:CancelKeyDeletion',
+            'kms:GenerateDataKey',
+          ],
+          resources: ['*'],
+        }),
+      );
+
+      //grant s3 service access
+      assetsKmsKey.addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: `Allow S3 to use the encryption key`,
+          principals: [new cdk.aws_iam.AnyPrincipal()],
+          actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey', 'kms:Describe*'],
+          resources: ['*'],
+          conditions: {
+            StringEquals: {
+              'kms:ViaService': `s3.${cdk.Stack.of(this).region}.amazonaws.com`,
+              ...this.getPrincipalOrgIdCondition(this.organizationId),
+            },
+          },
+        }),
+      );
+
+      //grant AssetsAccessRole access to KMS
+      assetsKmsKey.addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          principals: [new cdk.aws_iam.AnyPrincipal()],
+          actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey', 'kms:Describe*'],
+          resources: ['*'],
+          conditions: {
+            StringLike: {
+              'aws:PrincipalARN': `arn:${cdk.Stack.of(this).partition}:iam::*:role/${
+                props.prefixes.accelerator
+              }-AssetsAccessRole`,
+              ...this.getPrincipalOrgIdCondition(this.organizationId),
+            },
+          },
+        }),
+      );
+
+      const assetBucketKmsKeyArnSsmParameter = new cdk.aws_ssm.StringParameter(
+        this,
+        'SsmParamAssetsAccountBucketKMSArn',
+        {
+          parameterName: this.acceleratorResourceNames.parameters.assetsBucketCmkArn,
+          stringValue: assetsKmsKey.keyArn,
+        },
+      );
+
+      // SSM parameter access IAM Role for
+      new cdk.aws_iam.Role(this, 'CrossAccountAssetsBucketKMSArnSsmParamAccessRole', {
+        roleName: this.acceleratorResourceNames.roles.crossAccountAssetsBucketCmkArnSsmParameterAccess,
+        assumedBy: this.getOrgPrincipals(this.organizationId, true),
+        inlinePolicies: {
+          default: new cdk.aws_iam.PolicyDocument({
+            statements: [
+              new cdk.aws_iam.PolicyStatement({
+                effect: cdk.aws_iam.Effect.ALLOW,
+                actions: ['ssm:GetParameters', 'ssm:GetParameter'],
+                resources: [assetBucketKmsKeyArnSsmParameter.parameterArn],
+                conditions: {
+                  ArnLike: {
+                    'aws:PrincipalARN': [
+                      `arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.prefixes.accelerator}-*`,
+                    ],
+                  },
+                },
+              }),
+              new cdk.aws_iam.PolicyStatement({
+                effect: cdk.aws_iam.Effect.ALLOW,
+                actions: ['ssm:DescribeParameters'],
+                resources: ['*'],
+                conditions: {
+                  ArnLike: {
+                    'aws:PrincipalARN': [
+                      `arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.prefixes.accelerator}-*`,
+                    ],
+                  },
+                },
+              }),
             ],
-            resources: ['*'],
           }),
-        );
-
-        //grant s3 service access
-        assetsKmsKey.addToResourcePolicy(
-          new cdk.aws_iam.PolicyStatement({
-            sid: `Allow S3 to use the encryption key`,
-            principals: [new cdk.aws_iam.AnyPrincipal()],
-            actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey', 'kms:Describe*'],
-            resources: ['*'],
-            conditions: {
-              StringEquals: {
-                'kms:ViaService': `s3.${cdk.Stack.of(this).region}.amazonaws.com`,
-                ...this.getPrincipalOrgIdCondition(this.organizationId),
-              },
-            },
-          }),
-        );
-
-        //grant AssetsAccessRole access to KMS
-        assetsKmsKey.addToResourcePolicy(
-          new cdk.aws_iam.PolicyStatement({
-            principals: [new cdk.aws_iam.AnyPrincipal()],
-            actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey', 'kms:Describe*'],
-            resources: ['*'],
-            conditions: {
-              StringLike: {
-                'aws:PrincipalARN': `arn:${cdk.Stack.of(this).partition}:iam::*:role/${
-                  props.prefixes.accelerator
-                }-AssetsAccessRole`,
-                ...this.getPrincipalOrgIdCondition(this.organizationId),
-              },
-            },
-          }),
-        );
-
-        const assetBucketKmsKeyArnSsmParameter = new cdk.aws_ssm.StringParameter(
-          this,
-          'SsmParamAssetsAccountBucketKMSArn',
-          {
-            parameterName: this.acceleratorResourceNames.parameters.assetsBucketCmkArn,
-            stringValue: assetsKmsKey.keyArn,
-          },
-        );
-
-        // SSM parameter access IAM Role for
-        new cdk.aws_iam.Role(this, 'CrossAccountAssetsBucketKMSArnSsmParamAccessRole', {
-          roleName: this.acceleratorResourceNames.roles.crossAccountAssetsBucketCmkArnSsmParameterAccess,
-          assumedBy: this.getOrgPrincipals(this.organizationId, true),
-          inlinePolicies: {
-            default: new cdk.aws_iam.PolicyDocument({
-              statements: [
-                new cdk.aws_iam.PolicyStatement({
-                  effect: cdk.aws_iam.Effect.ALLOW,
-                  actions: ['ssm:GetParameters', 'ssm:GetParameter'],
-                  resources: [assetBucketKmsKeyArnSsmParameter.parameterArn],
-                  conditions: {
-                    ArnLike: {
-                      'aws:PrincipalARN': [
-                        `arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.prefixes.accelerator}-*`,
-                      ],
-                    },
-                  },
-                }),
-                new cdk.aws_iam.PolicyStatement({
-                  effect: cdk.aws_iam.Effect.ALLOW,
-                  actions: ['ssm:DescribeParameters'],
-                  resources: ['*'],
-                  conditions: {
-                    ArnLike: {
-                      'aws:PrincipalARN': [
-                        `arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.prefixes.accelerator}-*`,
-                      ],
-                    },
-                  },
-                }),
-              ],
-            }),
-          },
-        });
-      }
+        },
+      });
       this.nagSuppressionInputs.push({
         id: NagSuppressionRuleIds.IAM5,
         details: [

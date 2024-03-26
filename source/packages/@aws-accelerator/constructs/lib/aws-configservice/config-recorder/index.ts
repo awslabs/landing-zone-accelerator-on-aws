@@ -228,7 +228,6 @@ async function deleteConfigRecorder(): Promise<void> {
       console.debug(`Delete config recorder response: ${JSON.stringify(response)}`);
     } catch (error) {
       console.error(JSON.stringify(error));
-      throw new Error(`Failed to delete configuration recorder ${existingConfigRecorderName}`);
     }
   }
 }
@@ -252,7 +251,6 @@ async function deleteDeliveryChannel() {
       console.debug(`Delete delivery channel response: ${JSON.stringify(response)}`);
     } catch (error) {
       console.error(JSON.stringify(error));
-      throw new Error(`Failed to delete delivery channel ${existingDeliveryChannelName}`);
     }
   }
 }
