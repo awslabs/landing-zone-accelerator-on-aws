@@ -1161,8 +1161,11 @@ export class SecurityResourcesStack extends AcceleratorStack {
    * @param replacementArray string[]
    * @returns KeyArn string
    */
-  private getKmsArnReplacementValue(ruleName: string, replacementArray: string[]): string {
+  private getKmsArnReplacementValue(ruleName: string, replacementArray: string[]): string | undefined {
     if (replacementArray.length === 1) {
+      if (!this.isS3CMKEnabled) {
+        return undefined;
+      }
       return cdk.aws_kms.Key.fromKeyArn(
         this,
         pascalCase(ruleName) + '-AcceleratorGetS3Key',
