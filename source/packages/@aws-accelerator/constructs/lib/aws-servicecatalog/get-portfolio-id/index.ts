@@ -17,10 +17,14 @@
  * @returns
  */
 
-import * as AWS from 'aws-sdk';
-import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+import { paginateListPortfolios, ServiceCatalogClient } from '@aws-sdk/client-service-catalog';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 
+const serviceCatalogClient = new ServiceCatalogClient({
+  retryStrategy: setRetryStrategy(),
+  customUserAgent: process.env['SOLUTION_ID'],
+});
 export async function handler(event: CloudFormationCustomResourceEvent): Promise<
   | {
       PhysicalResourceId: string | undefined;
@@ -30,34 +34,13 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 > {
   const displayName = event.ResourceProperties['displayName'];
   const providerName = event.ResourceProperties['providerName'];
-  const solutionId = process.env['SOLUTION_ID'];
 
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      const serviceCatalogClient = new AWS.ServiceCatalog({ customUserAgent: solutionId });
-      let nextToken: string | undefined = undefined;
-      do {
-        const page = await throttlingBackOff(() =>
-          serviceCatalogClient.listPortfolios({ PageToken: nextToken }).promise(),
-        );
-        for (const portfolio of page.PortfolioDetails ?? []) {
-          if (portfolio.DisplayName === displayName && portfolio.ProviderName === providerName) {
-            const portfolioId = portfolio.Id;
-            if (portfolioId) {
-              console.log(portfolioId);
-              return {
-                PhysicalResourceId: portfolioId,
-                Status: 'SUCCESS',
-              };
-            }
-          }
-        }
-        nextToken = page.NextPageToken;
-      } while (nextToken);
-
+      const portfolioId = await getPortfolioId(serviceCatalogClient, displayName, providerName);
       return {
-        PhysicalResourceId: 'none',
+        PhysicalResourceId: portfolioId,
         Status: 'SUCCESS',
       };
     case 'Delete':
@@ -67,4 +50,24 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
         Status: 'SUCCESS',
       };
   }
+}
+async function getPortfolioId(serviceCatalogClient: ServiceCatalogClient, displayName: string, providerName: string) {
+  const portfolios = [];
+  // get all portfolio id for specific provider and display name
+  for await (const page of paginateListPortfolios({ client: serviceCatalogClient }, {})) {
+    for (const portfolio of page.PortfolioDetails ?? []) {
+      if (portfolio.DisplayName === displayName && portfolio.ProviderName === providerName) {
+        portfolios.push(portfolio.Id);
+      }
+    }
+  }
+  // there are no portfolios in the account for that specified filter
+  if (portfolios.length === 0) {
+    throw new Error(`No portfolio ID was found for ${displayName} ${providerName} in the account`);
+  }
+  // this is to handle the case where there are multiple portfolios with the same display name and provider name
+  if (portfolios.length > 1) {
+    throw new Error(`Multiple portfolio IDs were found for ${displayName} ${providerName} in the account`);
+  }
+  return portfolios[0];
 }

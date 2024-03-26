@@ -10,9 +10,14 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import AWS from 'aws-sdk';
+import {
+  ServiceQuotasClient,
+  GetServiceQuotaCommand,
+  RequestServiceQuotaIncreaseCommand,
+} from '@aws-sdk/client-service-quotas';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-AWS.config.logger = console;
 
 /**
  * service-quota-limits - lambda handler
@@ -33,7 +38,10 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
     case 'Update':
       console.log(event);
 
-      const servicequotas = new AWS.ServiceQuotas();
+      const servicequotas = new ServiceQuotasClient({
+        customUserAgent: process.env['SOLUTION_ID'],
+        retryStrategy: setRetryStrategy(),
+      });
       const serviceCode = event.ResourceProperties['serviceCode'];
       const quotaCode = event.ResourceProperties['quotaCode'];
       const desiredValue = Number(event.ResourceProperties['desiredValue']);
@@ -46,23 +54,27 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       };
 
       try {
-        const getServiceQuotaResponse = await servicequotas.getServiceQuota(serviceQuotaParams).promise();
+        const getServiceQuotaResponse = await throttlingBackOff(() =>
+          servicequotas.send(new GetServiceQuotaCommand(serviceQuotaParams)),
+        );
         if (getServiceQuotaResponse.Quota?.Adjustable) {
           const increaseLimitParams = {
             ServiceCode: serviceCode,
             QuotaCode: quotaCode,
             DesiredValue: desiredValue,
           };
-          const quotaIncreaseResponse = await servicequotas.requestServiceQuotaIncrease(increaseLimitParams).promise();
+          const quotaIncreaseResponse = await throttlingBackOff(() =>
+            servicequotas.send(new RequestServiceQuotaIncreaseCommand(increaseLimitParams)),
+          );
           console.log(quotaIncreaseResponse.RequestedQuota);
         } else {
-          console.log(`Service Quota ${serviceCode}-${quotaCode} is not adjustable, skipping`);
+          console.log(`Service Quota: ${serviceCode} with quota code: ${quotaCode} is not adjustable, skipping`);
         }
       } catch (error) {
-        console.error(
+        console.error(error);
+        throw new Error(
           `[service-quota-limits-config] Error increasing service quota ${quotaCode} for service ${serviceCode} in account ${accountId} region ${region}`,
         );
-        console.error(`${error}`);
       }
 
       return {

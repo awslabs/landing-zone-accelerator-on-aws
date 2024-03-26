@@ -17,10 +17,20 @@
  * @returns
  */
 
-import * as AWS from 'aws-sdk';
+import {
+  CreatePortfolioShareCommand,
+  DeletePortfolioShareCommand,
+  DescribePortfolioShareStatusCommand,
+  ServiceCatalogClient,
+  UpdatePortfolioShareCommand,
+} from '@aws-sdk/client-service-catalog';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-const serviceCatalogClient = new AWS.ServiceCatalog();
+const serviceCatalogClient = new ServiceCatalogClient({
+  retryStrategy: setRetryStrategy(),
+  customUserAgent: process.env['SOLUTION_ID'],
+});
 
 export async function handler(event: CloudFormationCustomResourceEvent): Promise<
   | {
@@ -36,7 +46,9 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const tagShareOptions = event.ResourceProperties['tagShareOptions'] === 'true';
 
   try {
-    if (organizationalUnitId) {
+    if (organizationId && organizationalUnitId) {
+      throw new Error('Both organizational unit id and organization id is specified');
+    } else if (organizationalUnitId) {
       await modifyPortfolioShare(
         organizationalUnitId,
         event.RequestType,
@@ -75,22 +87,24 @@ export async function createPortfolioShare(
 ): Promise<string> {
   try {
     const response = await throttlingBackOff(() =>
-      serviceCatalogClient
-        .createPortfolioShare({
+      serviceCatalogClient.send(
+        new CreatePortfolioShareCommand({
           PortfolioId: portfolioId,
           OrganizationNode: {
             Type: nodeType,
             Value: orgResourceId,
           },
           ShareTagOptions: tagShareOptions,
-        })
-        .promise(),
+        }),
+      ),
     );
     return response.PortfolioShareToken!;
   } catch (error) {
     console.error(error);
+    throw new Error(
+      `Error while trying to create portfolio share with organization resource id: ${orgResourceId} with portfolio id: ${portfolioId}`,
+    );
   }
-  return 'error';
 }
 
 export async function updatePortfolioShare(
@@ -101,22 +115,23 @@ export async function updatePortfolioShare(
 ): Promise<string> {
   try {
     const response = await throttlingBackOff(() =>
-      serviceCatalogClient
-        .updatePortfolioShare({
+      serviceCatalogClient.send(
+        new UpdatePortfolioShareCommand({
           PortfolioId: portfolioId,
           OrganizationNode: {
             Type: nodeType,
             Value: orgResourceId,
           },
           ShareTagOptions: tagShareOptions,
-        })
-        .promise(),
+        }),
+      ),
     );
     return response.PortfolioShareToken!;
   } catch (error) {
-    console.error(error);
+    throw new Error(
+      `UpdatePortfolioShare ran into error with portfolio id: ${portfolioId} on organization resource: ${orgResourceId}`,
+    );
   }
-  return 'error';
 }
 
 export async function deletePortfolioShare(
@@ -126,54 +141,56 @@ export async function deletePortfolioShare(
 ): Promise<string> {
   try {
     const response = await throttlingBackOff(() =>
-      serviceCatalogClient
-        .deletePortfolioShare({
+      serviceCatalogClient.send(
+        new DeletePortfolioShareCommand({
           PortfolioId: portfolioId,
           OrganizationNode: {
             Type: nodeType,
             Value: orgResourceId,
           },
-        })
-        .promise(),
+        }),
+      ),
     );
     return response.PortfolioShareToken!;
   } catch (error) {
-    console.error(error);
+    throw new Error(`Delete Portfolio share failed on portfolio: ${portfolioId}, organization unit: ${orgResourceId}`);
   }
-  return 'error';
 }
 
-export async function checkPortfolioShareTokenStatus(portfolioShareToken: string): Promise<string> {
+export async function checkPortfolioShareTokenStatus(
+  portfolioShareToken: string,
+  portfolioId: string,
+): Promise<string> {
   try {
     const response = await throttlingBackOff(() =>
-      serviceCatalogClient
-        .describePortfolioShareStatus({
+      serviceCatalogClient.send(
+        new DescribePortfolioShareStatusCommand({
           PortfolioShareToken: portfolioShareToken,
-        })
-        .promise(),
+        }),
+      ),
     );
     console.log(response);
     return response.Status!;
   } catch (error) {
-    console.error(error);
+    throw new Error(`Error on checking portfolio share status with portfolioId: ${portfolioId}`);
   }
-  return 'error';
 }
 
-export async function retryCheckPortfolioShareTokenStatus(portfolioShareToken: string): Promise<string> {
+export async function retryCheckPortfolioShareTokenStatus(
+  portfolioShareToken: string,
+  portfolioId: string,
+): Promise<string> {
   let portfolioShareStatus = 'NOT_STARTED';
-  if (portfolioShareToken !== 'error') {
-    do {
-      await delay(1000);
-      portfolioShareStatus = await checkPortfolioShareTokenStatus(portfolioShareToken);
-    } while (
-      portfolioShareStatus === 'NOT_STARTED' ||
-      portfolioShareStatus === 'IN_PROGRESS' ||
-      portfolioShareStatus === 'error'
-    );
-    return portfolioShareStatus;
-  }
-  return 'error';
+
+  do {
+    await delay(1000);
+    portfolioShareStatus = await checkPortfolioShareTokenStatus(portfolioShareToken, portfolioId);
+  } while (
+    portfolioShareStatus === 'NOT_STARTED' ||
+    portfolioShareStatus === 'IN_PROGRESS' ||
+    portfolioShareStatus === 'error'
+  );
+  return portfolioShareStatus;
 }
 
 export async function modifyPortfolioShare(
@@ -190,21 +207,21 @@ export async function modifyPortfolioShare(
   switch (requestType) {
     case 'Create':
       portfolioShareToken = await createPortfolioShare(orgResourceId, portfolioId, tagShareOptions, nodeType);
-      portfolioShareStatus = await retryCheckPortfolioShareTokenStatus(portfolioShareToken);
+      portfolioShareStatus = await retryCheckPortfolioShareTokenStatus(portfolioShareToken, portfolioId);
       console.log(
         `Create portfolio share for portfolio ${portfolioId} with organizational resource ${orgResourceId} status is ${portfolioShareStatus} (portfolioShareToken: ${portfolioShareToken}).`,
       );
       break;
     case 'Update':
       portfolioShareToken = await updatePortfolioShare(orgResourceId, portfolioId, tagShareOptions, nodeType);
-      portfolioShareStatus = await retryCheckPortfolioShareTokenStatus(portfolioShareToken);
+      portfolioShareStatus = await retryCheckPortfolioShareTokenStatus(portfolioShareToken, portfolioId);
       console.log(
         `Update portfolio share for portfolio ${portfolioId} with organizational resource ${orgResourceId} status is ${portfolioShareStatus} (portfolioShareToken:${portfolioShareToken}.`,
       );
       break;
     case 'Delete':
       portfolioShareToken = await deletePortfolioShare(orgResourceId, portfolioId, nodeType);
-      portfolioShareStatus = await retryCheckPortfolioShareTokenStatus(portfolioShareToken);
+      portfolioShareStatus = await retryCheckPortfolioShareTokenStatus(portfolioShareToken, portfolioId);
       console.log(
         `Delete portfolio share for portfolio ${portfolioId} with organizational resource ${orgResourceId} status is ${portfolioShareStatus} (portfolioShareToken:${portfolioShareToken}.`,
       );
