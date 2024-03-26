@@ -17,16 +17,26 @@
  * @returns
  */
 
-import * as AWS from 'aws-sdk';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+import { getCrossAccountCredentials, setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 import { PortfolioAssociationConfig, PortfolioConfig } from '@aws-accelerator/config';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
+import {
+  AcceptPortfolioShareCommand,
+  AssociatePrincipalWithPortfolioCommand,
+  DisassociatePrincipalFromPortfolioCommand,
+  paginateListPrincipalsForPortfolio,
+  paginateListAcceptedPortfolioShares,
+  ServiceCatalogClient,
+} from '@aws-sdk/client-service-catalog';
+import { IAMClient, paginateListRoles } from '@aws-sdk/client-iam';
+import { AssumeRoleCommandOutput } from '@aws-sdk/client-sts';
 
 const ssoRolePrefix = '/aws-reserved/sso.amazonaws.com/';
 
 export type CrossAccountClient = {
-  serviceCatalog: AWS.ServiceCatalog;
-  iam: AWS.IAM;
+  serviceCatalog: ServiceCatalogClient;
+  iam: IAMClient;
 };
 
 export async function handler(event: CloudFormationCustomResourceEvent): Promise<
@@ -81,7 +91,12 @@ export class AssociationPropagator {
   public async processPropagations(): Promise<void> {
     for (const accountId of this.shareAccountIds) {
       console.log(`Assuming role ${this.crossAccountRole} in account ${accountId}`);
-      const crossAccountCredential = await this.getCrossAccountCredentials(accountId);
+      const crossAccountCredential = await getCrossAccountCredentials(
+        accountId,
+        this.region,
+        this.partition,
+        this.crossAccountRole,
+      );
       const clients = await this.getCrossAccountClients(crossAccountCredential);
       await this.preprocessPortfolio(clients);
       const existingPrincipalArns = await this.getAssociatedPortfolioPrincipals(clients);
@@ -129,6 +144,11 @@ export class AssociationPropagator {
   ): Promise<void> {
     for (const principalAssociation of this.associationsToPropagate) {
       const principalArn = await this.getPrincipalArnToAssociate(principalAssociation, accountId, clients.iam);
+      console.warn(
+        `deletePropagations existingPrincipalArns: ${JSON.stringify(
+          existingPrincipalArns,
+        )}, principalArn: ${principalArn}`,
+      );
       if (existingPrincipalArns.includes(principalArn)) {
         await this.deletePropagatedAssociation(principalArn, clients);
       } else {
@@ -150,12 +170,12 @@ export class AssociationPropagator {
   private async importPortfolio(client: CrossAccountClient): Promise<void> {
     try {
       await throttlingBackOff(() =>
-        client.serviceCatalog
-          .acceptPortfolioShare({
+        client.serviceCatalog.send(
+          new AcceptPortfolioShareCommand({
             PortfolioId: this.portfolioId,
             PortfolioShareType: 'IMPORTED',
-          })
-          .promise(),
+          }),
+        ),
       );
     } catch (error) {
       console.error(error);
@@ -175,13 +195,13 @@ export class AssociationPropagator {
   private async createPropagatedAssociation(principalArn: string, client: CrossAccountClient): Promise<void> {
     try {
       await throttlingBackOff(() =>
-        client.serviceCatalog
-          .associatePrincipalWithPortfolio({
+        client.serviceCatalog.send(
+          new AssociatePrincipalWithPortfolioCommand({
             PortfolioId: this.portfolioId,
             PrincipalARN: principalArn,
             PrincipalType: 'IAM',
-          })
-          .promise(),
+          }),
+        ),
       );
     } catch (error) {
       console.error(error);
@@ -192,12 +212,12 @@ export class AssociationPropagator {
   private async deletePropagatedAssociation(principalArn: string, client: CrossAccountClient): Promise<void> {
     try {
       await throttlingBackOff(() =>
-        client.serviceCatalog
-          .disassociatePrincipalFromPortfolio({
+        client.serviceCatalog.send(
+          new DisassociatePrincipalFromPortfolioCommand({
             PortfolioId: this.portfolioId,
             PrincipalARN: principalArn,
-          })
-          .promise(),
+          }),
+        ),
       );
     } catch (error) {
       console.error(error);
@@ -207,29 +227,15 @@ export class AssociationPropagator {
 
   private async getAssociatedPortfolioPrincipals(client: CrossAccountClient): Promise<string[]> {
     const principalList: string[] = [];
-
-    let hasNext = true;
-    let pageToken: string | undefined = undefined;
-
-    while (hasNext) {
-      const response = await throttlingBackOff(() =>
-        client.serviceCatalog
-          .listPrincipalsForPortfolio({
-            PortfolioId: this.portfolioId,
-            PageSize: 20,
-            PageToken: pageToken,
-          })
-          .promise(),
-      );
-
-      for (const principal of response.Principals ?? []) {
+    for await (const page of paginateListPrincipalsForPortfolio(
+      { client: client.serviceCatalog },
+      { PortfolioId: this.portfolioId },
+    )) {
+      for (const principal of page.Principals ?? []) {
         if (principal.PrincipalType === 'IAM') {
           principalList.push(principal.PrincipalARN!);
         }
       }
-
-      pageToken = response.NextPageToken;
-      hasNext = !!pageToken;
     }
     return principalList;
   }
@@ -244,7 +250,7 @@ export class AssociationPropagator {
   private async getPrincipalArnToAssociate(
     association: PortfolioAssociationConfig,
     accountId: string,
-    iamClient: AWS.IAM,
+    iamClient: IAMClient,
   ): Promise<string> {
     const associationType = association.type.toLowerCase();
     let roleArn = '';
@@ -257,59 +263,42 @@ export class AssociationPropagator {
     return roleArn;
   }
 
-  private async getCrossAccountClients(credentials: AWS.STS.Credentials) {
-    const iamClient = new AWS.IAM({
-      credentials: {
-        accessKeyId: credentials.AccessKeyId,
-        secretAccessKey: credentials.SecretAccessKey,
-        sessionToken: credentials.SessionToken,
-        expireTime: credentials.Expiration,
-      },
+  private async getCrossAccountClients(crossAccountCredentials: AssumeRoleCommandOutput) {
+    const credentials = {
+      accessKeyId: crossAccountCredentials.Credentials!.AccessKeyId!,
+      secretAccessKey: crossAccountCredentials.Credentials!.SecretAccessKey!,
+      sessionToken: crossAccountCredentials.Credentials!.SessionToken!,
+    };
+    const iamClient = new IAMClient({
+      credentials,
+      retryStrategy: setRetryStrategy(),
     });
 
-    const serviceCatalogClient = new AWS.ServiceCatalog({
+    const serviceCatalogClient = new ServiceCatalogClient({
       region: this.region,
-      credentials: {
-        accessKeyId: credentials.AccessKeyId,
-        secretAccessKey: credentials.SecretAccessKey,
-        sessionToken: credentials.SessionToken,
-        expireTime: credentials.Expiration,
-      },
+      credentials,
+      retryStrategy: setRetryStrategy(),
     });
     return {
       iam: iamClient,
       serviceCatalog: serviceCatalogClient,
     };
   }
-
-  private async getCrossAccountCredentials(accountId: string): Promise<AWS.STS.Credentials> {
-    const stsClient = new AWS.STS({ region: this.region });
-
-    const roleArn = `arn:${this.partition}:iam::${accountId}:role/${this.crossAccountRole}`;
-    const assumeRoleCredential = await throttlingBackOff(() =>
-      stsClient
-        .assumeRole({
-          RoleArn: roleArn,
-          RoleSessionName: 'acceleratorAssumeRoleSession',
-        })
-        .promise(),
-    );
-    return assumeRoleCredential.Credentials!;
-  }
 }
 
 export async function getPermissionSetRoleArn(
   permissionSetName: string,
   account: string,
-  iamClient: AWS.IAM,
+  iamClient: IAMClient,
 ): Promise<string> {
-  const iamRoleList = await getIamRoleList(iamClient);
-  const roleArn = iamRoleList.find(role => {
-    const regex = new RegExp(`AWSReservedSSO_${permissionSetName}_([0-9a-fA-F]{16})`);
-    const match = regex.test(role.RoleName);
-    console.log(`Test ${role} for pattern ${regex} result: ${match}`);
-    return match;
-  })?.Arn;
+  const regex = new RegExp(`AWSReservedSSO_${permissionSetName}_([0-9a-fA-F]{16})`);
+  const roles = await getIamRoleList(iamClient, ssoRolePrefix);
+  const foundRole = roles.find(role => {
+    const match = regex.test(role.RoleName!);
+    console.log(`Test ${JSON.stringify(role)} for pattern ${regex} result: ${match}`);
+    return role;
+  });
+  const roleArn = foundRole?.Arn ?? undefined;
 
   if (roleArn) {
     console.log(`Found provisioned role for permission set ${permissionSetName} with ARN: ${roleArn}`);
@@ -320,27 +309,17 @@ export async function getPermissionSetRoleArn(
   return roleArn;
 }
 
-export async function getIamRoleList(iamClient: AWS.IAM): Promise<AWS.IAM.Role[]> {
+export async function getIamRoleList(iamClient: IAMClient, prefix: string) {
   const roleList = [];
-
-  let hasNext = true;
-  let marker: string | undefined = undefined;
-
-  while (hasNext) {
-    const response = await throttlingBackOff(() =>
-      iamClient.listRoles({ PathPrefix: ssoRolePrefix, Marker: marker }).promise(),
-    );
-
-    // Add roles returned in this paged response
-    roleList.push(...response.Roles);
-
-    marker = response.Marker;
-    hasNext = !!marker;
+  for await (const page of paginateListRoles({ client: iamClient }, { PathPrefix: prefix })) {
+    if (page.Roles) {
+      roleList.push(...page.Roles);
+    }
   }
   return roleList;
 }
 
-export async function getAcceptedPortfolioIds(scClient: AWS.ServiceCatalog): Promise<string[]> {
+export async function getAcceptedPortfolioIds(scClient: ServiceCatalogClient): Promise<string[]> {
   const importedShares = await listAcceptedShares(scClient, 'IMPORTED');
   const organizationShares = await listAcceptedShares(scClient, 'AWS_ORGANIZATIONS');
 
@@ -348,28 +327,17 @@ export async function getAcceptedPortfolioIds(scClient: AWS.ServiceCatalog): Pro
 }
 
 export async function listAcceptedShares(
-  scClient: AWS.ServiceCatalog,
+  scClient: ServiceCatalogClient,
   shareType: 'IMPORTED' | 'AWS_ORGANIZATIONS',
 ): Promise<string[]> {
   const shareList: string[] = [];
-
-  let hasNext = true;
-  let marker: string | undefined = undefined;
-
-  while (hasNext) {
-    const response = await throttlingBackOff(() =>
-      scClient.listAcceptedPortfolioShares({ PageToken: marker, PortfolioShareType: shareType }).promise(),
-    );
-
-    response.PortfolioDetails;
-
-    // Add portfolios returned in this paged response
-    if (response.PortfolioDetails) {
-      shareList.push(...response.PortfolioDetails.map(a => a.Id!));
+  for await (const page of paginateListAcceptedPortfolioShares(
+    { client: scClient },
+    { PortfolioShareType: shareType },
+  )) {
+    if (page.PortfolioDetails) {
+      shareList.push(...page.PortfolioDetails.map(a => a.Id!));
     }
-
-    marker = response.NextPageToken;
-    hasNext = !!marker;
   }
   return shareList;
 }
