@@ -28,6 +28,7 @@ enabledRegions:
   # - me-south-1
   # - ap-east-1
   # - ap-southeast-3
+  # - ca-west-1
 
 managementAccountAccessRole: AWSControlTowerExecution
 cloudwatchLogRetentionInDays: 3653
