@@ -80,6 +80,16 @@ export type OrganizationalUnitDetailsType = {
 };
 
 /**
+ * Cross Account assume role credential type
+ */
+export type AssumeRoleCredentialType = {
+  accessKeyId: string;
+  secretAccessKey: string;
+  sessionToken: string;
+  expiration?: Date;
+};
+
+/**
  * AWS Control Tower Landing Zone details type.
  */
 export type ControlTowerLandingZoneDetailsType = {

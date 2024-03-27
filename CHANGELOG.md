@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(control-tower): add global region into the Control Tower governed region list
 - fix(organization): ou baseline operation should be skipped when Control Tower is not enabled
 - chore(documentation): update opt-in region requirement for Control Tower deployment
+- feat(control-tower) integrate lz management and baseline api for external account deployment
 
 ### Changed
 

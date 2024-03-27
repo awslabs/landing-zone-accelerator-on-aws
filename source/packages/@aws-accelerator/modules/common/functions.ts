@@ -32,7 +32,11 @@ import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
-import { ControlTowerLandingZoneDetailsType, OrganizationalUnitDetailsType } from './resources';
+import {
+  AssumeRoleCredentialType,
+  ControlTowerLandingZoneDetailsType,
+  OrganizationalUnitDetailsType,
+} from './resources';
 
 /**
  * Logger
@@ -408,16 +412,6 @@ export function delay(minutes: number) {
 }
 
 /**
- * Cross Account assume role credential type
- */
-export type AssumeRoleCredentialType = {
-  accessKeyId: string;
-  secretAccessKey: string;
-  sessionToken: string;
-  expiration?: Date;
-};
-
-/**
  * Function to get cross account assume role credential
  * @param options
  * @returns credentials {@link Credentials}
@@ -430,6 +424,7 @@ export async function getCredentials(options: {
   assumeRoleName?: string;
   assumeRoleArn?: string;
   sessionName?: string;
+  credentials?: AssumeRoleCredentialType;
 }): Promise<AssumeRoleCredentialType | undefined> {
   if (options.assumeRoleName && options.assumeRoleArn) {
     throw new Error(`Either assumeRoleName or assumeRoleArn can be provided not both`);
@@ -450,6 +445,7 @@ export async function getCredentials(options: {
     region: options.region,
     customUserAgent: options.solutionId,
     retryStrategy: setRetryStrategy(),
+    credentials: options.credentials,
   });
 
   const currentSessionResponse = await throttlingBackOff(() => client.send(new GetCallerIdentityCommand({})));
@@ -483,4 +479,38 @@ export async function getCredentials(options: {
     sessionToken: response.Credentials.SessionToken,
     expiration: response.Credentials.Expiration,
   };
+}
+
+/**
+ * Function to get management account credential.
+ *
+ * @remarks
+ * When solution deployed from external account management account credential will be provided
+ * @param partition string
+ * @param region string
+ * @param solutionId string
+ * @returns credential {@AssumeRoleCredentialType} | undefined
+ */
+export async function getManagementAccountCredentials(
+  partition: string,
+  region: string,
+  solutionId: string,
+): Promise<AssumeRoleCredentialType | undefined> {
+  if (process.env['MANAGEMENT_ACCOUNT_ID'] && process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']) {
+    logger.info('set management account credentials');
+    logger.info(`managementAccountId => ${process.env['MANAGEMENT_ACCOUNT_ID']}`);
+    logger.info(`management account role name => ${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`);
+
+    const assumeRoleArn = `arn:${partition}:iam::${process.env['MANAGEMENT_ACCOUNT_ID']}:role/${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`;
+
+    return getCredentials({
+      accountId: process.env['MANAGEMENT_ACCOUNT_ID'],
+      region,
+      solutionId,
+      assumeRoleArn,
+      sessionName: 'ManagementAccountCredentials',
+    });
+  }
+
+  return undefined;
 }

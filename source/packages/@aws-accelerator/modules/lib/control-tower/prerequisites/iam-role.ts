@@ -27,6 +27,7 @@ import * as winston from 'winston';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
+import { AssumeRoleCredentialType } from '../../../common/resources';
 
 /**
  * IamRole abstract class to create AWS Control Tower Landing Zone IAM roles.
@@ -202,12 +203,19 @@ export abstract class IamRole {
    * @param partition string
    * @param region string
    * @param solutionId string
+   * @param managementAccountCredentials {@link AssumeRoleCredentialType} | undefined
    */
-  public static async createControlTowerRoles(partition: string, region: string, solutionId: string): Promise<void> {
+  public static async createControlTowerRoles(
+    partition: string,
+    region: string,
+    solutionId: string,
+    managementAccountCredentials?: AssumeRoleCredentialType,
+  ): Promise<void> {
     const client: IAMClient = new IAMClient({
       region: region,
       customUserAgent: solutionId,
       retryStrategy: setRetryStrategy(),
+      credentials: managementAccountCredentials,
     });
 
     const existingRoles = await IamRole.areControlTowerRoleExists(client);

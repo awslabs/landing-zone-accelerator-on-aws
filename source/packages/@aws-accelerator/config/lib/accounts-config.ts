@@ -178,6 +178,10 @@ export class AccountsConfig implements i.IAccountsConfig {
     enableSingleAccountMode: boolean,
     isOrgsEnabled: boolean,
     accountsConfig: AccountsConfig,
+    /**
+     * Management account credential when deployed from external account, otherwise this should remain undefined
+     */
+    managementAccountCredentials?: AWS.Credentials,
   ): Promise<void> {
     if (this.accountIds === undefined) {
       this.accountIds = [];
@@ -194,11 +198,20 @@ export class AccountsConfig implements i.IAccountsConfig {
       } else if (isOrgsEnabled) {
         let organizationsClient: AWS.Organizations;
         if (partition === 'aws-us-gov') {
-          organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1' });
+          organizationsClient = new AWS.Organizations({
+            region: 'us-gov-west-1',
+            credentials: managementAccountCredentials,
+          });
         } else if (partition === 'aws-cn') {
-          organizationsClient = new AWS.Organizations({ region: 'cn-northwest-1' });
+          organizationsClient = new AWS.Organizations({
+            region: 'cn-northwest-1',
+            credentials: managementAccountCredentials,
+          });
         } else {
-          organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
+          organizationsClient = new AWS.Organizations({
+            region: 'us-east-1',
+            credentials: managementAccountCredentials,
+          });
         }
 
         let nextToken: string | undefined = undefined;
