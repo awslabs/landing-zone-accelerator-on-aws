@@ -28,6 +28,7 @@ import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 import { PolicyDocument } from '../utils/resources';
+import { AssumeRoleCredentialType } from '../../../common/resources';
 
 /**
  * KmsKey abstract class to create AWS Control Tower Landing Zone AWS KMS CMK to encrypt AWS Control Tower Landing Zone resources.
@@ -77,15 +78,23 @@ export abstract class KmsKey {
    * @param region string
    * @returns keyArn string
    * @param solutionId string
+   * @param managementAccountCredentials {@link AssumeRoleCredentialType} | undefined
+   * @returns keyArn string
    */
   public static async createControlTowerKey(
     partition: string,
     accountId: string,
     region: string,
     solutionId: string,
+    managementAccountCredentials?: AssumeRoleCredentialType,
   ): Promise<string> {
     const keyAlias = `alias/aws-controltower/key`;
-    const client: KMSClient = new KMSClient({ region, customUserAgent: solutionId, retryStrategy: setRetryStrategy() });
+    const client: KMSClient = new KMSClient({
+      region,
+      customUserAgent: solutionId,
+      retryStrategy: setRetryStrategy(),
+      credentials: managementAccountCredentials,
+    });
 
     if (await KmsKey.isKeyAliasExists(client, keyAlias)) {
       throw new Error(

@@ -39,10 +39,15 @@ import { KmsKey } from './prerequisites/kms-key';
 import path from 'path';
 import { Organization } from './prerequisites/organization';
 import { SharedAccount } from './prerequisites/shared-account';
-import { ModuleOptionsType } from '../../common/resources';
+import { AssumeRoleCredentialType, ModuleOptionsType } from '../../common/resources';
 import { AcceleratorModule } from '../accelerator-module';
 import { AcceleratorConfigLoader } from '../../common/accelerator-config-loader';
-import { getGlobalRegion, getLandingZoneDetails, getLandingZoneIdentifier } from '../../common/functions';
+import {
+  getGlobalRegion,
+  getLandingZoneDetails,
+  getLandingZoneIdentifier,
+  getManagementAccountCredentials,
+} from '../../common/functions';
 
 const logger: winston.Logger = createLogger([path.parse(path.basename(__filename)).name]);
 
@@ -53,24 +58,16 @@ export class ControlTowerLandingZone implements AcceleratorModule {
   /**
    * Function to get the landing zone operation status
    *
+   * @param client {@link ControlTowerClient}
    * @param operationIdentifier string
-   * @param region string
-   * @param solutionId string
    * @returns landingZoneOperationStatus string
    */
   private async getLandingZoneOperationStatus(
+    client: ControlTowerClient,
     operationIdentifier: string,
-    region: string,
-    solutionId: string,
   ): Promise<string> {
-    const controlTowerClient = new ControlTowerClient({
-      region,
-      customUserAgent: solutionId,
-      retryStrategy: setRetryStrategy(),
-    });
-
     const response = await throttlingBackOff(() =>
-      controlTowerClient.send(new GetLandingZoneOperationCommand({ operationIdentifier })),
+      client.send(new GetLandingZoneOperationCommand({ operationIdentifier })),
     );
 
     const operationStatus = response.operationDetails?.status;
@@ -102,11 +99,11 @@ export class ControlTowerLandingZone implements AcceleratorModule {
    * @param accountsConfig {@link AccountsConfig}
    * @returns config {@link ControlTowerLandingZoneConfigType}
    */
-  private async getControlTowerLandingZoneConfig(
+  private getControlTowerLandingZoneConfig(
     globalConfig: GlobalConfig,
     accountsConfig: AccountsConfig,
     globalRegion: string,
-  ): Promise<ControlTowerLandingZoneConfigType> {
+  ): ControlTowerLandingZoneConfigType {
     const landingZoneConfig = globalConfig.controlTower.landingZone!;
 
     const governedRegions: string[] = globalConfig.enabledRegions;
@@ -129,16 +126,13 @@ export class ControlTowerLandingZone implements AcceleratorModule {
 
   /**
    * Function to check and wait till the landing zone operation completion.
+   * @param client {@link ControlTowerClient}
    * @param operationIdentifier string
    * @param region string
    */
-  private async waitTillOperationCompletes(
-    operationIdentifier: string,
-    region: string,
-    solutionId: string,
-  ): Promise<void> {
+  private async waitTillOperationCompletes(client: ControlTowerClient, operationIdentifier: string): Promise<void> {
     const queryIntervalInMinutes = 5;
-    let status = await this.getLandingZoneOperationStatus(operationIdentifier, region, solutionId);
+    let status = await this.getLandingZoneOperationStatus(client, operationIdentifier);
 
     while (status !== LandingZoneOperationStatus.SUCCEEDED) {
       logger.info(
@@ -146,7 +140,7 @@ export class ControlTowerLandingZone implements AcceleratorModule {
       );
 
       await delay(queryIntervalInMinutes);
-      status = await this.getLandingZoneOperationStatus(operationIdentifier, region, solutionId);
+      status = await this.getLandingZoneOperationStatus(client, operationIdentifier);
     }
   }
 
@@ -165,10 +159,20 @@ export class ControlTowerLandingZone implements AcceleratorModule {
       return `The global-config.yaml file did not contain any configuration for AWS Control Tower Landing Zone, no activities for module ${module}.`;
     }
 
+    //
+    // Get Management account credentials
+    //
+    const managementAccountCredentials = await getManagementAccountCredentials(
+      props.partition,
+      globalConfig.homeRegion,
+      props.solutionId,
+    );
+
     const client: ControlTowerClient = new ControlTowerClient({
       region: globalConfig.homeRegion,
       customUserAgent: props.solutionId,
       retryStrategy: setRetryStrategy(),
+      credentials: managementAccountCredentials,
     });
 
     const landingZoneIdentifier = await getLandingZoneIdentifier(client);
@@ -179,14 +183,17 @@ export class ControlTowerLandingZone implements AcceleratorModule {
       globalRegion,
       accountsConfig.getManagementAccount().email,
       landingZoneIdentifier,
+      managementAccountCredentials,
     );
 
     const accountsConfigWithAccountIds = await AcceleratorConfigLoader.getAccountsConfigWithAccountIds(
       props.configDirPath,
       props.partition,
+      true,
+      managementAccountCredentials,
     );
 
-    const landingZoneConfiguration = await this.getControlTowerLandingZoneConfig(
+    const landingZoneConfiguration = this.getControlTowerLandingZoneConfig(
       globalConfig,
       accountsConfigWithAccountIds,
       globalRegion,
@@ -214,7 +221,7 @@ export class ControlTowerLandingZone implements AcceleratorModule {
           landingZoneConfiguration,
           landingZoneDetails,
         );
-        await this.waitTillOperationCompletes(operationIdentifier, globalConfig.homeRegion, props.solutionId);
+        await this.waitTillOperationCompletes(client, operationIdentifier);
 
         return `Module - ${module} The Landing Zone update operation completed successfully.`;
       }
@@ -225,7 +232,7 @@ export class ControlTowerLandingZone implements AcceleratorModule {
           landingZoneDetails.landingZoneIdentifier,
           landingZoneUpdateOrResetStatus.reason,
         );
-        await this.waitTillOperationCompletes(operationIdentifier, globalConfig.homeRegion, props.solutionId);
+        await this.waitTillOperationCompletes(client, operationIdentifier);
 
         return `Module - ${module} The Landing Zone reset operation completed successfully.`;
       }
@@ -238,7 +245,7 @@ export class ControlTowerLandingZone implements AcceleratorModule {
         landingZoneConfiguration,
         preRequisitesResources!.kmsKeyArn,
       );
-      await this.waitTillOperationCompletes(operationIdentifier, globalConfig.homeRegion, props.solutionId);
+      await this.waitTillOperationCompletes(client, operationIdentifier);
 
       return `Module - ${module} The Landing Zone deployed successfully.`;
     }
@@ -421,6 +428,7 @@ abstract class ControlTowerPreRequisites {
    * @param globalRegion string
    * @param managementAccountEmail string
    * @param landingZoneIdentifier string | undefined
+   * @param managementAccountCredentials {@link AssumeRoleCredentialType} | undefined
    * @returns metadata { kmsKeyArn: string } | undefined
    */
   public static async completePreRequisites(
@@ -429,30 +437,38 @@ abstract class ControlTowerPreRequisites {
     globalRegion: string,
     managementAccountEmail: string,
     landingZoneIdentifier?: string,
+    managementAccountCredentials?: AssumeRoleCredentialType,
   ): Promise<{ kmsKeyArn: string } | undefined> {
     if (!landingZoneIdentifier) {
-      await Organization.ValidateOrganization(globalRegion, region, props.solutionId);
+      await Organization.ValidateOrganization(globalRegion, region, props.solutionId, managementAccountCredentials);
 
       const managementAccountId = await Organization.getManagementAccountId(
         globalRegion,
         props.solutionId,
         managementAccountEmail,
+        managementAccountCredentials,
       );
 
       if (!props.useExistingRole) {
-        await IamRole.createControlTowerRoles(props.partition, region, props.solutionId);
+        await IamRole.createControlTowerRoles(props.partition, region, props.solutionId, managementAccountCredentials);
         // giving time to complete Role creation completes, otherwise ValidationException - CUSTOMER_ASSUME_ROLE_FAILED error occurs
         logger.info(`Created AWS Control Tower roles, sleeping for 5 minutes for role creations to complete.`);
         await delay(5);
       }
 
-      await SharedAccount.createAccounts(props.configDirPath, globalRegion, props.solutionId);
+      await SharedAccount.createAccounts(
+        props.configDirPath,
+        globalRegion,
+        props.solutionId,
+        managementAccountCredentials,
+      );
 
       const kmsKeyArn = await KmsKey.createControlTowerKey(
         props.partition,
         managementAccountId,
         region,
         props.solutionId,
+        managementAccountCredentials,
       );
       return { kmsKeyArn };
     }

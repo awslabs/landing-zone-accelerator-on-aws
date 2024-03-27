@@ -12,6 +12,7 @@
  */
 
 import { AccountsConfig, GlobalConfig, OrganizationConfig, SecurityConfig } from '@aws-accelerator/config';
+import { AssumeRoleCredentialType } from './resources';
 
 /**
  * Accelerator all configuration types
@@ -32,15 +33,24 @@ export abstract class AcceleratorConfigLoader {
    * @param configDirPath
    * @param partition
    * @param orgsEnabled
-   * @returns
+   * @param managementAccountCredentials {@link AssumeRoleCredentialType} | undefined
+   * @returns accountConfig {@link AccountsConfig}
    */
   public static async getAccountsConfigWithAccountIds(
     configDirPath: string,
     partition: string,
-    orgsEnabled?: boolean,
+    orgsEnabled: boolean,
+    managementAccountCredentials?: AssumeRoleCredentialType,
   ): Promise<AccountsConfig> {
     const accountsConfig = AccountsConfig.load(configDirPath);
-    await accountsConfig.loadAccountIds(partition, false, orgsEnabled ?? true, accountsConfig);
+    await accountsConfig.loadAccountIds(
+      partition,
+      false,
+      orgsEnabled,
+      accountsConfig,
+      managementAccountCredentials as AWS.Credentials,
+    );
+
     return accountsConfig;
   }
 

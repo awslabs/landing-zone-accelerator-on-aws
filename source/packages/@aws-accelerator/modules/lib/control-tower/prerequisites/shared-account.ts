@@ -28,6 +28,7 @@ import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 import { AccountsConfig } from '@aws-accelerator/config';
 
 import { delay } from '../utils/resources';
+import { AssumeRoleCredentialType } from '../../../common/resources';
 
 type AccountDetailsType = { name: string; email: string };
 
@@ -154,12 +155,19 @@ export abstract class SharedAccount {
    * @param configDirPath string
    * @param globalRegion string
    * @param solutionId string
+   * @param managementAccountCredentials {@link AssumeRoleCredentialType} | undefined
    */
-  public static async createAccounts(configDirPath: string, globalRegion: string, solutionId: string): Promise<void> {
+  public static async createAccounts(
+    configDirPath: string,
+    globalRegion: string,
+    solutionId: string,
+    managementAccountCredentials?: AssumeRoleCredentialType,
+  ): Promise<void> {
     const client: OrganizationsClient = new OrganizationsClient({
       region: globalRegion,
       customUserAgent: solutionId,
       retryStrategy: setRetryStrategy(),
+      credentials: managementAccountCredentials,
     });
 
     const accountCreationStatuses: AccountCreationStatusType[] = [];

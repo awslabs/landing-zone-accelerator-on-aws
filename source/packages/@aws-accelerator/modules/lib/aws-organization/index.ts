@@ -49,7 +49,6 @@ import path from 'path';
 import { AccountIdConfig, AccountsConfig, GlobalConfig, OrganizationConfig } from '@aws-accelerator/config';
 
 import {
-  AssumeRoleCredentialType,
   OuRelationType,
   delay,
   getAllOusInOrganization,
@@ -57,10 +56,12 @@ import {
   getGlobalRegion,
   getLandingZoneDetails,
   getLandingZoneIdentifier,
+  getManagementAccountCredentials,
   getOrganizationsRoot,
   getOuRelationsFromConfig,
 } from '../../common/functions';
 import {
+  AssumeRoleCredentialType,
   ControlTowerLandingZoneDetailsType,
   ModuleOptionsType,
   OrganizationalUnitDetailsType,
@@ -137,6 +138,16 @@ export class AWSOrganization implements AcceleratorModule {
   public async handler(module: string, props: ModuleOptionsType): Promise<string> {
     const statuses: string[] = [];
     const globalConfig = GlobalConfig.load(props.configDirPath);
+
+    //
+    // Get Management account credentials
+    //
+    const managementAccountCredentials = await getManagementAccountCredentials(
+      props.partition,
+      globalConfig.homeRegion,
+      props.solutionId,
+    );
+
     const organizationConfig = OrganizationConfig.load(props.configDirPath);
 
     if (!organizationConfig.enable) {
@@ -151,12 +162,14 @@ export class AWSOrganization implements AcceleratorModule {
       region: globalConfig.homeRegion,
       customUserAgent: props.solutionId,
       retryStrategy: setRetryStrategy(),
+      credentials: managementAccountCredentials,
     });
 
     const organizationsClient = new OrganizationsClient({
       region: globalRegion,
       customUserAgent: props.solutionId,
       retryStrategy: setRetryStrategy(),
+      credentials: managementAccountCredentials,
     });
 
     const organizationRoot = await getOrganizationsRoot(organizationsClient);
@@ -166,6 +179,7 @@ export class AWSOrganization implements AcceleratorModule {
       globalConfig.homeRegion,
       globalConfig.controlTower.enable,
     );
+
     const enabledBaselines: EnabledBaselineSummary[] = [];
 
     if (landingZoneDetails) {
@@ -199,6 +213,7 @@ export class AWSOrganization implements AcceleratorModule {
         globalRegion,
         globalConfig.managementAccountAccessRole,
         statuses,
+        managementAccountCredentials,
       );
     }
 
@@ -707,6 +722,7 @@ export class AWSOrganization implements AcceleratorModule {
    * @param globalRegion string
    * @param assumeRoleName string
    * @param statuses string[]
+   * @param managementAccountCredentials {@link AssumeRoleCredentialType} | undefined
    */
   private async inviteAccountsToOrganization(
     props: ModuleOptionsType,
@@ -716,6 +732,7 @@ export class AWSOrganization implements AcceleratorModule {
     globalRegion: string,
     assumeRoleName: string,
     statuses: string[],
+    managementAccountCredentials?: AssumeRoleCredentialType,
   ): Promise<void> {
     const localStatuses: string[] = [];
     if (ouItem.hasAccountsToInvite) {
@@ -747,6 +764,7 @@ export class AWSOrganization implements AcceleratorModule {
               assumeRoleName,
               handshakeId,
               inviteAccountOrgDetails.accountItem,
+              managementAccountCredentials,
             ),
           );
 
@@ -866,6 +884,7 @@ export class AWSOrganization implements AcceleratorModule {
    * @param assumeRoleName string
    * @param handshakeId string
    * @param accountItem {@link AccountIdConfig}
+   * @param managementAccountCredentials {@link AssumeRoleCredentialType} | undefined
    * @returns status string
    */
   private async acceptAccountInvitationToOrganization(
@@ -876,6 +895,7 @@ export class AWSOrganization implements AcceleratorModule {
     assumeRoleName: string,
     handshakeId: string,
     accountItem: AccountIdConfig,
+    managementAccountCredentials?: AssumeRoleCredentialType,
   ): Promise<string> {
     let credentials: AssumeRoleCredentialType | undefined;
     try {
@@ -886,6 +906,7 @@ export class AWSOrganization implements AcceleratorModule {
         partition,
         assumeRoleName,
         sessionName: 'AcceleratorAcceptInviteAssumeRole',
+        credentials: managementAccountCredentials,
       });
     } catch (
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
