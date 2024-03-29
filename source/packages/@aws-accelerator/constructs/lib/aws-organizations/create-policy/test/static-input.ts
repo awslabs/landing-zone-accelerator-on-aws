@@ -1,6 +1,3 @@
-import { sdkStreamMixin } from '@smithy/util-stream';
-import { Readable } from 'stream';
-
 /**
  * Abstract class to configure static input for create-log-groups custom resource AWS Lambda unit testing
  */
@@ -29,14 +26,5 @@ export abstract class StaticInput {
     homeRegion: 'homeRegion',
     region: 'region',
   };
-  public static readonly policyContent = stringToStream('policyContent');
-}
-
-function stringToStream(input: string) {
-  // create Stream from string
-  const stream = new Readable();
-  stream.push(input);
-  stream.push(null); // end of stream
-  // wrap the Stream with SDK mixin
-  return sdkStreamMixin(stream);
+  public static readonly policyContent = 'policyContent';
 }
