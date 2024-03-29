@@ -11,15 +11,16 @@
  *  and limitations under the License.
  */
 
-import * as cdk from 'aws-cdk-lib';
-
+import { Stack } from 'aws-cdk-lib';
+import { Key } from 'aws-cdk-lib/aws-kms';
 import { Policy, PolicyType } from '../../index';
 import { snapShotTest } from '../snapshot-test';
+import { describe } from '@jest/globals';
 
 const testNamePrefix = 'Construct(Policy): ';
 
 //Initialize stack for snapshot test and resource configuration test
-const stack = new cdk.Stack();
+const stack = new Stack();
 
 new Policy(stack, 'Policy', {
   path: '.',
@@ -33,8 +34,9 @@ new Policy(stack, 'Policy', {
     { Key: 'name', Value: 'TestPolicy' },
     { Key: 'usage', Value: 'ConstructTest' },
   ],
-  kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
+  kmsKey: new Key(stack, 'CustomKey', {}),
   logRetentionInDays: 3653,
+  homeRegion: 'us-east-1',
 });
 
 /**

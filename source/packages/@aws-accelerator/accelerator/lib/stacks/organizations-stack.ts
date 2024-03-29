@@ -244,6 +244,7 @@ export class OrganizationsStack extends AcceleratorStack {
           acceleratorPrefix: this.props.prefixes.accelerator,
           kmsKey: this.cloudwatchKey,
           logRetentionInDays: this.logRetention,
+          homeRegion: this.props.globalConfig.homeRegion,
         });
 
         policy.node.addDependency(enablePolicyTypeBackup);
@@ -260,6 +261,7 @@ export class OrganizationsStack extends AcceleratorStack {
               acceleratorPrefix: this.props.prefixes.accelerator,
               kmsKey: this.cloudwatchKey,
               logRetentionInDays: this.logRetention,
+              homeRegion: this.props.globalConfig.homeRegion,
             },
           );
 
@@ -665,6 +667,7 @@ export class OrganizationsStack extends AcceleratorStack {
           acceleratorPrefix: this.props.prefixes.accelerator,
           kmsKey: this.cloudwatchKey,
           logRetentionInDays: this.logRetention,
+          homeRegion: this.props.globalConfig.homeRegion,
         });
         policy.node.addDependency(enablePolicyTypeTag);
         for (const orgUnit of taggingPolicy.deploymentTargets.organizationalUnits ?? []) {
@@ -679,6 +682,7 @@ export class OrganizationsStack extends AcceleratorStack {
               acceleratorPrefix: this.props.prefixes.accelerator,
               kmsKey: this.cloudwatchKey,
               logRetentionInDays: this.logRetention,
+              homeRegion: this.props.globalConfig.homeRegion,
             },
           );
           tagPolicyAttachment.node.addDependency(policy);

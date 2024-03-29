@@ -97,8 +97,8 @@ source/packages/@aws-accelerator/utils/lib/regions.ts:99
 
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:346
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:347
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1147
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1148
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1127
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1128
 
 # Accelerator specific assume role declaration
 
@@ -127,43 +127,43 @@ source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1280
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1281
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1282
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1289
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1290
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1291
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1299
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1300
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1301
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1308
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1309
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1310
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1317
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1318
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1319
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1326
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1327
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1328
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1964
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1965
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1948
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1949
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:2047
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:2048
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:2031
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:2032
 
 # Sample configuration READMEs
 
