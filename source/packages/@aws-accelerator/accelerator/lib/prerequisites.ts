@@ -15,8 +15,9 @@ import * as fs from 'fs';
 import process from 'process';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { evaluateLimits } from '@aws-accelerator/utils/lib/evaluate-limits';
-import { getCurrentAccountId, getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
+import { getCurrentAccountId } from '@aws-accelerator/utils/lib/common-functions';
 import { AccountsConfig, GlobalConfig, OrganizationConfig } from '@aws-accelerator/config';
+import { setGlobalRegion } from './accelerator';
 
 const logger = createLogger(['prerequisites']);
 
@@ -101,7 +102,7 @@ export async function main(
   if (minimalArgs) {
     // minimal will only check for management account in homeRegion and globalRegion
     const homeRegion = globalConfig.homeRegion;
-    const globalRegion = getGlobalRegion(partitionArgs);
+    const globalRegion = setGlobalRegion(partitionArgs);
     logger.debug(`Checking limits in account ${accountsConfig.getManagementAccountId()} in region ${homeRegion}`);
     await evaluateLimits(
       homeRegion,

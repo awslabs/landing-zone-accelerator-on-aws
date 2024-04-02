@@ -36,10 +36,6 @@ export interface PolicyAttachmentProps {
    * Custom resource lambda log retention in days
    */
   readonly logRetentionInDays: number;
-  /**
-   * Home region for the solution
-   */
-  readonly homeRegion: string;
 }
 
 /**
@@ -97,8 +93,6 @@ export class PolicyAttachment extends Construct {
         strategy: props.strategy,
         configPolicyNames: props.configPolicyNames,
         policyTagKey: `${props.acceleratorPrefix}Managed`,
-        homeRegion: props.homeRegion,
-        region: cdk.Stack.of(this).region,
       },
     });
 

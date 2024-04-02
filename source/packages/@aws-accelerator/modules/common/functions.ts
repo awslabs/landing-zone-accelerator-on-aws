@@ -377,6 +377,32 @@ export function getOuRelationsFromConfig(organizationConfig: OrganizationConfig)
 }
 
 /**
+ * Function to get global region
+ * @param partition string
+ * @returns globalRegion string
+ */
+export function getGlobalRegion(partition: string): string {
+  let globalRegion = 'us-east-1';
+
+  switch (partition) {
+    case 'aws-us-gov':
+      globalRegion = 'us-gov-west-1';
+      break;
+    case 'aws-iso':
+      globalRegion = 'us-iso-east-1';
+      break;
+    case 'aws-iso-b':
+      globalRegion = 'us-isob-east-1';
+      break;
+    case 'aws-cn':
+      globalRegion = 'cn-northwest-1';
+      break;
+  }
+
+  return globalRegion;
+}
+
+/**
  * Function to sleep process
  * @param ms
  * @returns

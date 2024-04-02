@@ -43,11 +43,11 @@ import { AssumeRoleCredentialType, ModuleOptionsType } from '../../common/resour
 import { AcceleratorModule } from '../accelerator-module';
 import { AcceleratorConfigLoader } from '../../common/accelerator-config-loader';
 import {
+  getGlobalRegion,
   getLandingZoneDetails,
   getLandingZoneIdentifier,
   getManagementAccountCredentials,
 } from '../../common/functions';
-import { getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
 
 const logger: winston.Logger = createLogger([path.parse(path.basename(__filename)).name]);
 

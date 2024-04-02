@@ -152,7 +152,6 @@ export class ScpResource {
       acceleratorPrefix: props.prefixes.accelerator,
       kmsKey: this.cloudwatchKey,
       logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-      homeRegion: props.globalConfig.homeRegion,
     });
 
     if (
@@ -199,7 +198,6 @@ export class ScpResource {
           acceleratorPrefix: props.prefixes.accelerator,
           kmsKey: this.cloudwatchKey,
           logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-          homeRegion: props.globalConfig.homeRegion,
         },
       );
       ouPolicyAttachment.node.addDependency(scp);
@@ -226,7 +224,6 @@ export class ScpResource {
         acceleratorPrefix: props.prefixes.accelerator,
         kmsKey: this.cloudwatchKey,
         logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-        homeRegion: props.globalConfig.homeRegion,
       });
       accountPolicyAttachment.node.addDependency(scp);
     }

@@ -81,10 +81,6 @@ export interface PolicyProps {
    * An optional list of tags for the policy
    */
   readonly tags?: Tag[];
-  /**
-   * Home region where changes occur
-   */
-  readonly homeRegion: string;
 }
 
 /**
@@ -171,8 +167,6 @@ export class Policy extends Construct {
         type: props.type,
         strategy: props.strategy,
         tags: props.tags,
-        homeRegion: props.homeRegion,
-        region: cdk.Stack.of(this).region,
       },
     });
 

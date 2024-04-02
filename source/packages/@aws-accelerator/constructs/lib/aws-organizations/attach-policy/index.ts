@@ -12,17 +12,9 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
-import { setRetryStrategy, getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
-import {
-  OrganizationsClient,
-  paginateListTagsForResource,
-  PolicyNotAttachedException,
-  DetachPolicyCommand,
-  paginateListPoliciesForTarget,
-  AttachPolicyCommand,
-  DuplicatePolicyAttachmentException,
-} from '@aws-sdk/client-organizations';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
+import * as AWS from 'aws-sdk';
+AWS.config.logger = console;
 
 /**
  * attach-policy - lambda handler
@@ -44,69 +36,113 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const partition: string = event.ResourceProperties['partition'];
   const configPolicyNames: string[] = event.ResourceProperties['configPolicyNames'];
   const policyTagKey: string = event.ResourceProperties['policyTagKey'];
-  const homeRegion: string = event.ResourceProperties['homeRegion'];
-  const currentRegion = event.ResourceProperties['region'];
-
   const solutionId = process.env['SOLUTION_ID'];
-  const organizationsClient = new OrganizationsClient({
-    region: getGlobalRegion(partition),
-    customUserAgent: solutionId,
-    retryStrategy: setRetryStrategy(),
-  });
+
+  let organizationsClient: AWS.Organizations;
+  if (partition === 'aws-us-gov') {
+    organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1', customUserAgent: solutionId });
+  } else if (partition === 'aws-cn') {
+    organizationsClient = new AWS.Organizations({ region: 'cn-northwest-1', customUserAgent: solutionId });
+  } else {
+    organizationsClient = new AWS.Organizations({ region: 'us-east-1', customUserAgent: solutionId });
+  }
+
+  let nextToken: string | undefined = undefined;
 
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      if (currentRegion === homeRegion) {
-        //
-        // First detach all non config policies from target
-        //
-        await detachNonConfigPolicies(organizationsClient, targetId, configPolicyNames, policyTagKey);
+      //
+      // First detach all non config policies from target
+      //
+      await detachNonConfigPolicies(organizationsClient, targetId, configPolicyNames, policyTagKey);
 
-        //
-        // Check if already exists, update and return the ID
-        //
-        const attachedPolicies = await getListPoliciesForTarget(organizationsClient, type, targetId);
-
-        // check if policyId exists in attachedPolicies id
-        const policyAttached = attachedPolicies?.some(p => p.id === policyId);
-        const fullAwsAccessPolicyAttached = attachedPolicies?.some(p => p.id === 'p-FullAWSAccess');
-
-        // Attach if not attached already.
-        if (!policyAttached) {
-          await attachSpecificPolicy(organizationsClient, policyId, targetId);
+      //
+      // Check if already exists, update and return the ID
+      //
+      let policyAttached = false;
+      let fullAwsAccessPolicyAttached = false;
+      do {
+        const page: AWS.Organizations.ListPoliciesForTargetResponse = await getListPoliciesForTarget(
+          organizationsClient,
+          type,
+          targetId,
+          nextToken,
+        );
+        for (const policy of page.Policies ?? []) {
+          if (policy.Id === policyId) {
+            console.log('Policy already attached');
+            policyAttached = true;
+            continue;
+          }
+          if (policy.Id === 'p-FullAWSAccess') {
+            console.log('FullAWSAccess policy attached');
+            fullAwsAccessPolicyAttached = true;
+          }
         }
+        nextToken = page.NextToken;
+      } while (nextToken);
 
-        // if SCP strategy is allow-list, then FullAWSAccess policy should be detached
-        if (strategy === 'allow-list' && fullAwsAccessPolicyAttached) {
-          console.log('detaching FullAWSAccess policy because the strategy is allow-list');
-          await detachSpecificPolicy(organizationsClient, 'p-FullAWSAccess', targetId);
-        }
-
-        // if SCP strategy is changed from allow-list to deny list, then FullAWSAccess policy should be attached
-        if (strategy === 'deny-list' && !fullAwsAccessPolicyAttached) {
-          console.log('attaching FullAWSAccess policy because the strategy is deny-list');
-          await attachSpecificPolicy(organizationsClient, 'p-FullAWSAccess', targetId);
-        }
-
-        return {
-          PhysicalResourceId: `${policyId}_${targetId}`,
-          Status: 'SUCCESS',
-        };
-      } else {
-        return {
-          PhysicalResourceId: 'NoOperation',
-          Status: 'SUCCESS',
-        };
+      //
+      // Create if not found
+      //
+      if (!policyAttached) {
+        await throttlingBackOff(() =>
+          organizationsClient.attachPolicy({ PolicyId: policyId, TargetId: targetId }).promise(),
+        );
       }
+
+      // if SCP strategy is allow-list, then FullAWSAccess policy should be detached
+      if (strategy === 'allow-list' && fullAwsAccessPolicyAttached) {
+        console.log('detaching FullAWSAccess policy because the strategy is allow-list');
+        try {
+          await throttlingBackOff(() =>
+            organizationsClient.detachPolicy({ PolicyId: 'p-FullAWSAccess', TargetId: targetId }).promise(),
+          );
+        } catch (error: unknown) {
+          // Swallow the error if it's PolicyNotAttachedException
+          // The 'p-FullAWSAccess' policy might already be detached by other attach-policy custom resource concurrently.
+          if ((error as { name: string }).name !== 'PolicyNotAttachedException') {
+            throw error;
+          }
+        }
+      }
+
+      // if SCP strategy is changed from allow-list to deny list, then FullAWSAccess policy should be attached
+      if (strategy === 'deny-list' && !fullAwsAccessPolicyAttached) {
+        console.log('attaching FullAWSAccess policy because the strategy is deny-list');
+        await throttlingBackOff(() =>
+          organizationsClient.attachPolicy({ PolicyId: 'p-FullAWSAccess', TargetId: targetId }).promise(),
+        );
+      }
+
+      return {
+        PhysicalResourceId: `${policyId}_${targetId}`,
+        Status: 'SUCCESS',
+      };
+
     case 'Delete':
       //
       // Detach policy, let CDK manage where it's deployed,
       //
-      // do not remove FullAWSAccess and do nothing for NoOperation
-      if (!['p-FullAWSAccess', 'NoOperation'].includes(policyId) && currentRegion === homeRegion) {
-        const attachedPolicies = await getListPoliciesForTarget(organizationsClient, type, targetId);
-        await detachPolicyFromSpecificTarget(attachedPolicies, targetId, organizationsClient);
+      // do not remove FullAWSAccess
+      if (policyId !== 'p-FullAWSAccess') {
+        do {
+          const page: AWS.Organizations.ListPoliciesForTargetResponse = await getListPoliciesForTarget(
+            organizationsClient,
+            type,
+            targetId,
+            nextToken,
+          );
+          for (const policy of page.Policies ?? []) {
+            if (policy.Id === policyId) {
+              await throttlingBackOff(() =>
+                organizationsClient.detachPolicy({ PolicyId: policyId, TargetId: targetId }).promise(),
+              );
+            }
+          }
+          nextToken = page.NextToken;
+        } while (nextToken);
       }
 
       return {
@@ -116,55 +152,38 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   }
 }
 
-async function detachSpecificPolicy(organizationsClient: OrganizationsClient, policyId: string, targetId: string) {
-  try {
-    await throttlingBackOff(() =>
-      organizationsClient.send(new DetachPolicyCommand({ PolicyId: policyId, TargetId: targetId })),
-    );
-  } catch (error: unknown) {
-    // Swallow the error if it's PolicyNotAttachedException
-    // The policy might already be detached by other attach-policy custom resource concurrently.
-    if (error instanceof PolicyNotAttachedException) {
-      console.log(`Policy: ${policyId} was not attached. Continuing...`);
-    } else {
-      throw new Error(`Error while trying to detach policy: ${policyId}. Error message: ${JSON.stringify(error)}`);
-    }
-  }
-}
-async function attachSpecificPolicy(organizationsClient: OrganizationsClient, policyId: string, targetId: string) {
-  try {
-    await throttlingBackOff(() =>
-      organizationsClient.send(new AttachPolicyCommand({ PolicyId: policyId, TargetId: targetId })),
-    );
-  } catch (error: unknown) {
-    if (error instanceof DuplicatePolicyAttachmentException) {
-      console.log('Policy already attached. Continuing...');
-    } else {
-      throw new Error(`Error while trying to attach policy: ${policyId}. Error message: ${JSON.stringify(error)}`);
-    }
-  }
-}
-
-async function getListPoliciesForTarget(organizationsClient: OrganizationsClient, type: string, targetId: string) {
-  const attachedPolicies: { name: string; id: string }[] = [];
-  for await (const page of paginateListPoliciesForTarget(
-    { client: organizationsClient },
-    { Filter: type, TargetId: targetId },
-  )) {
-    attachedPolicies.push(...(page.Policies! ?? []).map(p => ({ name: p.Name!, id: p.Id! })));
-  }
-  return attachedPolicies;
+async function getListPoliciesForTarget(
+  organizationsClient: AWS.Organizations,
+  type: string,
+  targetId: string,
+  nextToken?: string,
+): Promise<AWS.Organizations.ListPoliciesForTargetResponse> {
+  return throttlingBackOff(() =>
+    organizationsClient.listPoliciesForTarget({ Filter: type, TargetId: targetId, NextToken: nextToken }).promise(),
+  );
 }
 
 async function detachNonConfigPolicies(
-  organizationsClient: OrganizationsClient,
+  organizationsClient: AWS.Organizations,
   targetId: string,
   configPolicyNames: string[],
   policyTagKey: string,
 ): Promise<void> {
   console.log(`Detaching non config policies from target ${targetId}`);
   console.log(`Config policies are ${configPolicyNames.join(',')}`);
-  const attachedPolicies = await getListPoliciesForTarget(organizationsClient, 'SERVICE_CONTROL_POLICY', targetId);
+  const attachedPolicies: { name: string; id: string }[] = [];
+  let nextToken: string | undefined = undefined;
+  do {
+    const page = await throttlingBackOff(() =>
+      organizationsClient
+        .listPoliciesForTarget({ Filter: 'SERVICE_CONTROL_POLICY', TargetId: targetId, NextToken: nextToken })
+        .promise(),
+    );
+    for (const policy of page.Policies ?? []) {
+      attachedPolicies.push({ name: policy.Name!, id: policy.Id! });
+    }
+    nextToken = page.NextToken;
+  } while (nextToken);
 
   const attachedPolicyNames: string[] = [];
   for (const attachedPolicy of attachedPolicies) {
@@ -184,17 +203,29 @@ async function detachNonConfigPolicies(
   }
 
   console.log(`Polices to be detached [${removePolicyNames.join(',')}]`);
-  await detachPolicyFromSpecificTarget(removeLzaPolicies, targetId, organizationsClient);
-}
 
-async function detachPolicyFromSpecificTarget(
-  removeLzaPolicies: { name: string; id: string }[],
-  targetId: string,
-  organizationsClient: OrganizationsClient,
-) {
   for (const removeLzaPolicy of removeLzaPolicies) {
     console.log(`Detaching ${removeLzaPolicy.name} policy from ${targetId} target`);
-    await detachSpecificPolicy(organizationsClient, removeLzaPolicy.id, targetId);
+    try {
+      await throttlingBackOff(() =>
+        organizationsClient.detachPolicy({ PolicyId: removeLzaPolicy.id, TargetId: targetId }).promise(),
+      );
+      console.log(`${removeLzaPolicy.name} policy detached successfully from ${targetId} target`);
+    } catch (
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      e: any
+    ) {
+      if (
+        // SDKv2 Error Structure
+        e.code === 'PolicyNotAttachedException' ||
+        // SDKv3 Error Structure
+        e.name === 'PolicyNotAttachedException'
+      ) {
+        console.log(`${removeLzaPolicy.name} policy not found to detach`);
+      } else {
+        throw new Error(`Policy detach error message - ${e}`);
+      }
+    }
   }
 }
 
@@ -204,20 +235,31 @@ async function detachPolicyFromSpecificTarget(
  * @returns
  */
 async function isLzaManagedPolicy(
-  organizationsClient: OrganizationsClient,
+  organizationsClient: AWS.Organizations,
   policyId: string,
   policyTagKey: string,
 ): Promise<boolean> {
-  // keep full access and operations that were imported by createPolicy called NoOperation
-  if (policyId === 'p-FullAWSAccess' || policyId === 'NoOperation') {
+  if (policyId === 'p-FullAWSAccess') {
     return false;
   }
-  for await (const page of paginateListTagsForResource({ client: organizationsClient }, { ResourceId: policyId })) {
+
+  let nextToken: string | undefined = undefined;
+  do {
+    const page = await throttlingBackOff(() =>
+      organizationsClient
+        .listTagsForResource({
+          ResourceId: policyId,
+          NextToken: nextToken,
+        })
+        .promise(),
+    );
     for (const tag of page.Tags ?? []) {
       if (tag.Key === policyTagKey && tag.Value === 'Yes') {
         return true;
       }
     }
-  }
+    nextToken = page.NextToken;
+  } while (nextToken);
+
   return false;
 }

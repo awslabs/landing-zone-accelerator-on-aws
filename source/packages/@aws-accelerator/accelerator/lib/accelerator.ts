@@ -30,7 +30,7 @@ import { IAMClient, GetRoleCommand, GetRoleCommandInput } from '@aws-sdk/client-
 import { AccountsConfig, GlobalConfig, OrganizationConfig } from '@aws-accelerator/config';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
-import { getCrossAccountCredentials, getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
+import { getCrossAccountCredentials } from '@aws-accelerator/utils/lib/common-functions';
 import { setStsTokenPreferences } from '@aws-accelerator/utils/lib/set-token-preferences';
 
 import { AssumeProfilePlugin } from '@aws-cdk-extensions/cdk-plugin-assume-role';
@@ -128,7 +128,7 @@ export abstract class Accelerator {
     //
     // Set global region
     //
-    const globalRegion = getGlobalRegion(props.partition);
+    const globalRegion = setGlobalRegion(props.partition);
     //
     // If not pipeline stage, load global config, management account credentials,
     // and assume role plugin
@@ -1010,6 +1010,26 @@ export async function checkDiffStage(props: AcceleratorProps) {
       diffPromises.push(Accelerator.run(diffProps));
     }
     await Promise.all(diffPromises);
+  }
+}
+
+/**
+ * Sets the global region for API calls based on the given partition
+ * @param partition
+ * @returns
+ */
+export function setGlobalRegion(partition: string): string {
+  switch (partition) {
+    case 'aws-us-gov':
+      return 'us-gov-west-1';
+    case 'aws-iso-b':
+      return 'us-isob-east-1';
+    case 'aws-iso':
+      return 'us-iso-east-1';
+    case 'aws-cn':
+      return 'cn-northwest-1';
+    default:
+      return 'us-east-1';
   }
 }
 

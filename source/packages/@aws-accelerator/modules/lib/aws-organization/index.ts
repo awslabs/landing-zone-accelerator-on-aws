@@ -40,7 +40,6 @@ import {
 } from '@aws-sdk/client-controltower';
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
-import { getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 
 import * as winston from 'winston';
@@ -54,6 +53,7 @@ import {
   delay,
   getAllOusInOrganization,
   getCredentials,
+  getGlobalRegion,
   getLandingZoneDetails,
   getLandingZoneIdentifier,
   getManagementAccountCredentials,

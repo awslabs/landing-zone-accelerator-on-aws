@@ -66,20 +66,8 @@ taggingPolicies:
     deploymentTargets:
       organizationalUnits:
         - Root
-  - name: TagPolicy01
-    description: Organization Tagging Policy
-    policy: tagging-policies/org-tag-policy.json
-    deploymentTargets:
-      organizationalUnits:
-        - Root
 backupPolicies:
   - name: BackupPolicy
-    description: Organization Backup Policy
-    policy: backup-policies/org-backup-policies.json
-    deploymentTargets:
-      organizationalUnits:
-        - Root
-  - name: BackupPolicy01
     description: Organization Backup Policy
     policy: backup-policies/org-backup-policies.json
     deploymentTargets:

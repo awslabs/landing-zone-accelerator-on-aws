@@ -18,7 +18,6 @@ import * as winston from 'winston';
 import { GlobalConfig } from '@aws-accelerator/config';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
-import { getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
 import { BackupClient, DeleteBackupVaultCommand } from '@aws-sdk/client-backup';
 import {
   CloudFormationClient,
@@ -333,7 +332,7 @@ export class AcceleratorTool {
    */
   public async uninstallAccelerator(installerStackName: string): Promise<boolean> {
     // Set global region
-    this.globalRegion = getGlobalRegion(this.acceleratorToolProps.partition);
+    this.setGlobalRegion();
 
     // Get executing account ID
     const response = await throttlingBackOff(() => new STSClient({}).send(new GetCallerIdentityCommand({})));
@@ -1909,6 +1908,23 @@ export class AcceleratorTool {
       case 'display':
         this.logger.info(message);
         break;
+    }
+  }
+
+  /**
+   * Function to set global region
+   */
+  private setGlobalRegion() {
+    if (this.acceleratorToolProps.partition === 'aws-us-gov') {
+      this.globalRegion = 'us-gov-west-1';
+    }
+
+    if (this.acceleratorToolProps.partition === 'aws-iso-b') {
+      this.globalRegion = 'us-isob-east-1';
+    }
+
+    if (this.acceleratorToolProps.partition === 'aws-cn') {
+      this.globalRegion = 'cn-northwest-1';
     }
   }
 

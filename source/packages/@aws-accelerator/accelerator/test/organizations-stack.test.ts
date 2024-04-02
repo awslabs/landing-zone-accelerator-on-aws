@@ -57,7 +57,7 @@ describe('tagging policies', () => {
   test("two OU's both get tagging policies", () => {
     const template = Template.fromStack(multiOuStack);
 
-    template.hasResourceProperties('Custom::CreatePolicy', { name: 'BackupPolicy', type: 'BACKUP_POLICY' });
+    template.hasResourceProperties('Custom::CreatePolicy', { name: 'TagPolicy', type: 'TAG_POLICY' });
     template.hasResourceProperties('Custom::AttachPolicy', { targetId: 'ou-asdf-11111111', type: 'TAG_POLICY' });
     template.hasResourceProperties('Custom::AttachPolicy', { targetId: 'ou-asdf-22222222', type: 'TAG_POLICY' });
 
@@ -69,12 +69,12 @@ describe('tagging policies', () => {
   test('Root OU gets tagging policies', () => {
     const template = Template.fromStack(stack);
 
-    template.hasResourceProperties('Custom::CreatePolicy', { name: 'TagPolicy01', type: 'TAG_POLICY' });
+    template.hasResourceProperties('Custom::CreatePolicy', { name: 'TagPolicy', type: 'TAG_POLICY' });
     template.hasResourceProperties('Custom::AttachPolicy', { targetId: 'r-asdf', type: 'TAG_POLICY' });
 
-    // 4 policies for backup and tagging policies, 1 target -> 2 attachments
-    template.resourceCountIs('Custom::CreatePolicy', 4);
-    template.resourceCountIs('Custom::AttachPolicy', 4);
+    // 2 policies for backup and tagging policies, 1 target -> 2 attachments
+    template.resourceCountIs('Custom::CreatePolicy', 2);
+    template.resourceCountIs('Custom::AttachPolicy', 2);
   });
 });
 
