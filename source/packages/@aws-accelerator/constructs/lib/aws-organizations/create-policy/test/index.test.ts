@@ -17,8 +17,6 @@ import { AcceleratorMockClient, EventType } from '../../../../test/unit-test/com
 import { StaticInput } from './static-input';
 
 import { AcceleratorUnitTest } from '../../../../test/unit-test/accelerator-unit-test';
-import { sdkStreamMixin } from '@smithy/util-stream';
-import { Readable } from 'stream';
 
 const orgClient = AcceleratorMockClient(OrganizationsClient);
 
@@ -42,7 +40,7 @@ describe('Create Event', () => {
     const event = AcceleratorUnitTest.getEvent(EventType.CREATE, { new: [StaticInput.newProps] });
     s3Client
       .on(GetObjectCommand, { Bucket: StaticInput.newProps.bucket, Key: StaticInput.newProps.key })
-      .resolves({ Body: stringToStream(StaticInput.policyContent) });
+      .resolves({ Body: StaticInput.policyContent });
     orgClient.on(CreatePolicyCommand).resolves({ Policy: { PolicySummary: { Id: 'Id' } } });
     const response = await handler(event);
     expect(response?.Status).toStrictEqual('SUCCESS');
@@ -51,7 +49,7 @@ describe('Create Event', () => {
     const event = AcceleratorUnitTest.getEvent(EventType.CREATE, { new: [StaticInput.newProps] });
     s3Client
       .on(GetObjectCommand, { Bucket: StaticInput.newProps.bucket, Key: StaticInput.newProps.key })
-      .resolves({ Body: stringToStream(StaticInput.policyContent) });
+      .resolves({ Body: StaticInput.policyContent });
     orgClient
       .on(CreatePolicyCommand)
       .rejects(new DuplicatePolicyException({ $metadata: { httpStatusCode: 400 }, message: 'Duplicate policy' }));
@@ -78,7 +76,7 @@ describe('Update Event', () => {
     const event = AcceleratorUnitTest.getEvent(EventType.UPDATE, { new: [StaticInput.newProps] });
     s3Client
       .on(GetObjectCommand, { Bucket: StaticInput.newProps.bucket, Key: StaticInput.newProps.key })
-      .resolves({ Body: stringToStream(StaticInput.policyContent) });
+      .resolves({ Body: StaticInput.policyContent });
     orgClient.on(CreatePolicyCommand).rejects({});
     await expect(handler(event)).rejects.toThrowError(
       `Error in creating policy ${StaticInput.newProps.name} in AWS Organizations. Exception: {}`,
@@ -123,12 +121,3 @@ describe('Delete Event', () => {
     );
   });
 });
-
-function stringToStream(input: string) {
-  // create Stream from string
-  const stream = new Readable();
-  stream.push(input);
-  stream.push(null); // end of stream
-  // wrap the Stream with SDK mixin
-  return sdkStreamMixin(stream);
-}

@@ -74,9 +74,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       // Read in the policy content from the specified S3 location
       //
       const s3Object = await throttlingBackOff(() => s3Client.send(new GetObjectCommand({ Bucket: bucket, Key: key })));
-      // as per javascript section in https://docs.aws.amazon.com/AmazonS3/latest/userguide/example_s3_GetObject_section.html
-      const content = await s3Object.Body!.transformToString();
-
+      const content = s3Object.Body!.toString();
       const policyId = await createPolicy(
         { name, type, content, description, tags, policyTagKey },
         organizationsClient,
@@ -212,7 +210,7 @@ async function createPolicy(
     const createPolicyResponse = await throttlingBackOff(() =>
       organizationsClient.send(
         new CreatePolicyCommand({
-          Content: policyMetadata.content,
+          Content: JSON.stringify(policyMetadata.content),
           Description: policyMetadata.description,
           Name: policyMetadata.name,
           Type: policyMetadata.type,
