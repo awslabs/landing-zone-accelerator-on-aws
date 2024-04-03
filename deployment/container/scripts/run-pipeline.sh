@@ -1,3 +1,4 @@
+set -x
 if [ -z "$1" ];
 then
 	    echo 'synth or deploy must be passed as the 1st parameter'
@@ -11,7 +12,7 @@ then
 	    echo 's3 bucket name must be passed as the 1st parameter'
 	        exit 1
 fi
-bucket=$1
+
 export AWS_CA_BUNDLE=/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
 ## sync LZA Config Files with S3 Repo
 aws s3 sync s3://$bucket/lza/aws-accelerator-config /landing-zone-accelerator-on-aws/aws-accelerator-config
