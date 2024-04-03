@@ -234,21 +234,27 @@ export function isGovernedRegionsChanged(existingRegions: string[], configRegion
  * Function to validate AWS Control Tower Landing Zone organization version provided in global config file is latest version
  * @param configVersion string
  * @param latestVersion string
- * @param reason string
- * @param operationType string
+ * @param reason string | undefined
+ * @param operationType string | undefined
  */
 function validateLandingZoneVersion(
   configVersion: string,
   latestVersion: string,
-  reason: string,
-  operationType: string,
+  reason?: string,
+  operationType?: string,
 ): void {
   if (latestVersion !== configVersion) {
-    throw new Error(
-      `It is necessary to ${operationType} the AWS Control Tower Landing Zone because "${reason}". AWS Control Tower Landing Zone's most recent version is ${latestVersion}, which is different from the version ${configVersion} specified in global-config.yaml file. AWS Control Tower Landing Zone can be ${
-        operationType === 'update' ? 'updated' : operationType
-      } when you specify the latest version in the configuration.`,
-    );
+    if (reason && operationType) {
+      throw new Error(
+        `It is necessary to ${operationType} the AWS Control Tower Landing Zone because "${reason}". AWS Control Tower Landing Zone's most recent version is ${latestVersion}, which is different from the version ${configVersion} specified in global-config.yaml file. AWS Control Tower Landing Zone can be ${
+          operationType === 'update' ? 'updated' : operationType
+        } when you specify the latest version in the configuration.`,
+      );
+    } else {
+      throw new Error(
+        `AWS Control Tower Landing Zone's most recent version is ${latestVersion}, which is different from the version ${configVersion} specified in global-config.yaml file, execution terminated.`,
+      );
+    }
   }
 }
 /**
@@ -261,6 +267,9 @@ export function isLandingZoneUpdateOrResetRequired(
   landingZoneConfiguration: ControlTowerLandingZoneConfigType,
   landingZoneDetails: ControlTowerLandingZoneDetailsType,
 ): LandingZoneUpdateOrResetRequiredType {
+  // validate landing zone version listed in global config
+  validateLandingZoneVersion(landingZoneConfiguration.version, landingZoneDetails.latestAvailableVersion!);
+
   //when drifted
   if (landingZoneDetails.driftStatus === LandingZoneDriftStatus.DRIFTED) {
     const reason = 'The Landing Zone has drifted';

@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(organization): ou baseline operation should be skipped when Control Tower is not enabled
 - chore(documentation): update opt-in region requirement for Control Tower deployment
 - feat(control-tower) integrate lz management and baseline api for external account deployment
+- fix(control-tower): add validation to check incorrect landing zone version in global config
 
 ### Changed
 
