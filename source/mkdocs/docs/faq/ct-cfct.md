@@ -106,7 +106,6 @@ landingZone:
     organizationTrail: true
   security:
     enableIdentityCenterAccess: true
-  enableRegionDeny: true
 ```
 
 #### AWS Control Tower Landing Zone Deployment
