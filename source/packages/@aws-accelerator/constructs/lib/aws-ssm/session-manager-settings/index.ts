@@ -13,9 +13,16 @@
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-import * as AWS from 'aws-sdk';
 import { CreateDocumentRequest, UpdateDocumentRequest } from 'aws-sdk/clients/ssm';
-AWS.config.logger = console;
+import {
+  SSMClient,
+  DescribeDocumentCommand,
+  UpdateDocumentCommand,
+  CreateDocumentCommand,
+  DuplicateDocumentContent,
+  InvalidDocument,
+} from '@aws-sdk/client-ssm';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 const documentName = 'SSM-SessionManagerRunShell';
 
@@ -34,7 +41,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const kmsKeyId: string = event.ResourceProperties['kmsKeyId'];
   const solutionId = process.env['SOLUTION_ID'];
 
-  const ssm = new AWS.SSM({ customUserAgent: solutionId });
+  const ssm = new SSMClient({ customUserAgent: solutionId, retryStrategy: setRetryStrategy() });
 
   switch (event.RequestType) {
     case 'Create':
@@ -56,36 +63,30 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
         },
       };
       try {
-        await throttlingBackOff(() =>
-          ssm
-            .describeDocument({
-              Name: documentName,
-            })
-            .promise(),
-        );
+        await throttlingBackOff(() => ssm.send(new DescribeDocumentCommand({ Name: documentName })));
         const updateDocumentRequest: UpdateDocumentRequest = {
           Content: JSON.stringify(settings),
           Name: documentName,
           DocumentVersion: '$LATEST',
         };
         console.log('Update SSM Document Request: ', updateDocumentRequest);
-        await throttlingBackOff(() => ssm.updateDocument(updateDocumentRequest).promise());
+        await throttlingBackOff(() => ssm.send(new UpdateDocumentCommand(updateDocumentRequest)));
         console.log('Update SSM Document Success');
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (error: any) {
-        if (error.code === 'DuplicateDocumentContent') {
+      } catch (e: any) {
+        if (e instanceof DuplicateDocumentContent) {
           console.log(`SSM Document is Already latest :${documentName}`);
-        } else if (error.code === 'InvalidDocument') {
+        } else if (e instanceof InvalidDocument) {
           const createDocumentRequest: CreateDocumentRequest = {
             Content: JSON.stringify(settings),
             Name: documentName,
             DocumentType: `Session`,
           };
           console.log('Create SSM Document Request: ', createDocumentRequest);
-          await throttlingBackOff(() => ssm.createDocument(createDocumentRequest).promise());
+          await throttlingBackOff(() => ssm.send(new CreateDocumentCommand(createDocumentRequest)));
           console.log('Create SSM Document Success');
         } else {
-          throw error;
+          throw new Error(`Error while updating SSM Document :${documentName}. Received: ${JSON.stringify(e)}`);
         }
       }
 

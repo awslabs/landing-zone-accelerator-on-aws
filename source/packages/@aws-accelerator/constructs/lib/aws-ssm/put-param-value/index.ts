@@ -11,12 +11,11 @@
  *  and limitations under the License.
  */
 
-import * as AWS from 'aws-sdk';
-import * as console from 'console';
-
+import { SSMClient, PutParameterCommand, DeleteParameterCommand } from '@aws-sdk/client-ssm';
+import { STSClient } from '@aws-sdk/client-sts';
+import { setRetryStrategy, getStsCredentials } from '@aws-accelerator/utils/lib/common-functions';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-AWS.config.logger = console;
 
 interface SsmParameterProps {
   readonly name: string;
@@ -118,30 +117,18 @@ async function getSsmClient(
   region: string,
   assumeRoleArn: string,
   solutionId?: string,
-): Promise<AWS.SSM> {
-  let ssmClient: AWS.SSM;
+): Promise<SSMClient> {
+  let ssmClient: SSMClient;
   if (invokingAccountId !== parameterAccountId) {
-    const stsClient = new AWS.STS({ region: region, customUserAgent: solutionId });
-    const assumeRoleCredential = await throttlingBackOff(() =>
-      stsClient
-        .assumeRole({
-          RoleArn: assumeRoleArn,
-          RoleSessionName: 'acceleratorAssumeRoleSession',
-        })
-        .promise(),
-    );
-    ssmClient = new AWS.SSM({
+    const stsClient = new STSClient({ region: region, customUserAgent: solutionId, retryStrategy: setRetryStrategy() });
+    ssmClient = new SSMClient({
       region: region,
-      credentials: {
-        accessKeyId: assumeRoleCredential.Credentials!.AccessKeyId,
-        secretAccessKey: assumeRoleCredential.Credentials!.SecretAccessKey,
-        sessionToken: assumeRoleCredential.Credentials!.SessionToken,
-        expireTime: assumeRoleCredential.Credentials!.Expiration,
-      },
+      credentials: await getStsCredentials(stsClient, assumeRoleArn),
       customUserAgent: solutionId,
+      retryStrategy: setRetryStrategy(),
     });
   } else {
-    ssmClient = new AWS.SSM({ region: region, customUserAgent: solutionId });
+    ssmClient = new SSMClient({ region: region, customUserAgent: solutionId, retryStrategy: setRetryStrategy() });
   }
   return ssmClient;
 }
@@ -240,14 +227,14 @@ async function processParameterCreate(
  * @param parameterAccountId string
  * @param parameters {@link SsmParameterProps}[]
  */
-async function createParameters(ssmClient: AWS.SSM, parameterAccountId: string, parameters: SsmParameterProps[]) {
+async function createParameters(ssmClient: SSMClient, parameterAccountId: string, parameters: SsmParameterProps[]) {
   // Put parameters
   for (const parameter of parameters) {
     console.log(`Put SSM parameter ${parameter.name} to account ${parameterAccountId}`);
     await throttlingBackOff(() =>
-      ssmClient
-        .putParameter({ Name: parameter.name, Value: parameter.value, Type: 'String', Overwrite: true })
-        .promise(),
+      ssmClient.send(
+        new PutParameterCommand({ Name: parameter.name, Value: parameter.value, Type: 'String', Overwrite: true }),
+      ),
     );
   }
 }
@@ -260,7 +247,7 @@ async function createParameters(ssmClient: AWS.SSM, parameterAccountId: string, 
  * @param parameterProps SsmParameterProps[]
  */
 async function deleteParameters(
-  ssmClient: AWS.SSM,
+  ssmClient: SSMClient,
   parameterAccountId: string,
   parameterNames?: string[],
   parameterProps?: SsmParameterProps[],
@@ -276,7 +263,7 @@ async function deleteParameters(
   // Remove parameters
   for (const deleteParameterName of deleteParameterNames) {
     console.log(`Delete SSM parameter ${deleteParameterName} from account ${parameterAccountId}`);
-    await throttlingBackOff(() => ssmClient.deleteParameter({ Name: deleteParameterName }).promise());
+    await throttlingBackOff(() => ssmClient.send(new DeleteParameterCommand({ Name: deleteParameterName })));
   }
 }
 
@@ -288,7 +275,7 @@ async function deleteParameters(
  * @param oldParameters {@link SsmParameterProps}[]
  */
 async function modifyParameters(
-  ssmClient: AWS.SSM,
+  ssmClient: SSMClient,
   parameterAccountId: string,
   newParameters: SsmParameterProps[],
   oldParameters: SsmParameterProps[],
@@ -308,9 +295,9 @@ async function modifyParameters(
   for (const parameter of modifiedParameters) {
     console.log(`Modify SSM parameter ${parameter.name} in account ${parameterAccountId}`);
     await throttlingBackOff(() =>
-      ssmClient
-        .putParameter({ Name: parameter.name, Value: parameter.value, Type: 'String', Overwrite: true })
-        .promise(),
+      ssmClient.send(
+        new PutParameterCommand({ Name: parameter.name, Value: parameter.value, Type: 'String', Overwrite: true }),
+      ),
     );
   }
 }
