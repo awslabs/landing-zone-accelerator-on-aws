@@ -221,7 +221,7 @@ release-artifact-al2023-prep:
   stage: build-test
   tags:
     - arch:amd64
-    - size:large
+    - size:xlarge
   before_script:
     # package needed to unzip code archive
     - "dnf install -y zip"
@@ -255,7 +255,7 @@ release-artifact-al2023-build:
   stage: build-artifacts
   tags:
     - arch:amd64
-    - size:large
+    - size:xlarge
   before_script:
     - mkdir -p /kaniko/.docker
   image: 
@@ -277,7 +277,7 @@ release-artifact-al2023-upload:
   stage: upload-artifacts
   tags:
     - arch:amd64
-    - size:large
+    - size:xlarge
   variables:
     TOKEN: 
   before_script:

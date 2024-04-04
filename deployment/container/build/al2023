@@ -1,5 +1,5 @@
 FROM public.ecr.aws/amazonlinux/amazonlinux:latest
-ENV NODE_OPTIONS=--max-old-space-size=12288
+ENV NODE_OPTIONS=--max-old-space-size=16384
 
 ADD ./ /landing-zone-accelerator-on-aws
 RUN dnf update -y
