@@ -512,6 +512,15 @@ export interface ISecurityHubLoggingCloudwatchConfig {
    */
   readonly enable: boolean;
   /**
+   * (OPTIONAL) CloudWatch Log Group Name
+   * @remarks
+   * Note: Log Group name must be unique in the account and region.
+   *
+   * The name of the log group SecurityHub Events are forwarded to. LZA will create a
+   * log group with this name if the property is provided, unless the log group already exists.
+   */
+  readonly logGroupName?: string;
+  /**
    * (OPTIONAL) Security Hub logging level
    *
    * @remarks
@@ -535,6 +544,7 @@ export interface ISecurityHubLoggingCloudwatchConfig {
  *   cloudWatch:
  *     enable: true
  *     logLevel: MEDIUM
+ *     logGroupName: /Custom/SecurityHubLogGroup
  * ```
  */
 export interface ISecurityHubLoggingConfig {

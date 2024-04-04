@@ -138,9 +138,9 @@ export class SecurityHubStandardConfig implements i.ISecurityHubStandardConfig {
   readonly enable = true;
   readonly controlsToDisable: string[] = [];
 }
-
 export class SecurityHubLoggingCloudwatchConfig implements i.ISecurityHubLoggingCloudwatchConfig {
   readonly enable = true;
+  readonly logGroupName? = undefined;
   readonly logLevel? = undefined;
 }
 

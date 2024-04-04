@@ -236,7 +236,7 @@ exports[`SecurityHubEventsLog Construct(SecurityHubEventsLog):  Snapshot Test 1`
                     {
                       "Ref": "AWS::AccountId",
                     },
-                    ":log-group:/AWSAccelerator*",
+                    ":log-group:/AWSAccelerator-SecurityHub*",
                   ],
                 ],
               },

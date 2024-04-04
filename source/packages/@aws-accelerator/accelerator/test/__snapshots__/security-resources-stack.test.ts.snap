@@ -4329,7 +4329,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
                     {
                       "Ref": "AWS::Partition",
                     },
-                    ":logs:us-east-1:111111111111:log-group:/AWSAccelerator*",
+                    ":logs:us-east-1:111111111111:log-group:/AWSAccelerator-SecurityHub*",
                   ],
                 ],
               },
@@ -7575,7 +7575,7 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
                     {
                       "Ref": "AWS::Partition",
                     },
-                    ":logs:us-east-1:111111111111:log-group:/AWSAccelerator*",
+                    ":logs:us-east-1:111111111111:log-group:/AWSAccelerator-SecurityHub*",
                   ],
                 ],
               },

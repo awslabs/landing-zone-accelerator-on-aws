@@ -13,11 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(control-tower): integrate lz management api.
 - feat(control-tower): integrate lz baseline api
 - feat(control-tower): add global region into the Control Tower governed region list
+- feat(securityhub): allow custom cloudwatch log group for events
 - fix(organization): ou baseline operation should be skipped when Control Tower is not enabled
 - chore(documentation): update opt-in region requirement for Control Tower deployment
 - feat(control-tower) integrate lz management and baseline api for external account deployment
 - fix(control-tower): add validation to check incorrect landing zone version in global config
-- fix(organizations): unable to create ou with same name under different parent 
+- fix(organizations): unable to create ou with same name under different parent
 
 ### Changed
 
