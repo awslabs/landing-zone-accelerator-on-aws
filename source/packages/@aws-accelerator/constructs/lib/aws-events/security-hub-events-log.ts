@@ -44,6 +44,10 @@ export interface SecurityHubEventsLogProps {
    * Account Lambda key for environment encryption
    */
   lambdaKey?: cdk.aws_kms.IKey;
+  /**
+   * Log Group Name
+   */
+  logGroupName?: string;
 }
 
 /**
@@ -52,7 +56,7 @@ export interface SecurityHubEventsLogProps {
 export class SecurityHubEventsLog extends Construct {
   constructor(scope: Construct, id: string, props: SecurityHubEventsLogProps) {
     super(scope, id);
-    const logGroupName = `/${props.acceleratorPrefix}-SecurityHub`;
+    const logGroupName = props.logGroupName ?? `/${props.acceleratorPrefix}-SecurityHub`;
     const logGroupArn = `arn:${cdk.Stack.of(this).partition}:logs:${cdk.Stack.of(this).region}:${
       cdk.Stack.of(this).account
     }:log-group:/*:*`;
@@ -78,7 +82,7 @@ export class SecurityHubEventsLog extends Construct {
             resources: [
               `arn:${cdk.Stack.of(this).partition}:logs:${cdk.Stack.of(this).region}:${
                 cdk.Stack.of(this).account
-              }:log-group:/${props.acceleratorPrefix}*`,
+              }:log-group:${logGroupName}*`,
             ],
           }),
           // Describe call needs access to entire region and account

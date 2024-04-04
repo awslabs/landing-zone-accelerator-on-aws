@@ -32,7 +32,7 @@ export async function handler(event: CloudFormationCustomResourceEvent) {
       const logGroupName = event.ResourceProperties['logGroupName'];
       const logGroupArn = event.ResourceProperties['logGroupArn'];
 
-      // Create the log group /AWSAccelerator-SecurityHub if it does not exist
+      // Create the log group /AWSAccelerator-SecurityHub (if a specified log group name wasn't provided) if it does not exist.
       await createLogGroup(logGroupName);
       // Update resource policy
       await putLogGroupResourcePolicy(logGroupArn);
