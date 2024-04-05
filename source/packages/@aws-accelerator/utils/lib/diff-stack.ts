@@ -12,7 +12,9 @@
  */
 import * as cfnDiff from '@aws-cdk/cloudformation-diff';
 import * as fs from 'fs';
+import { createLogger } from './logger';
 
+const logger = createLogger(['diff']);
 /**
  * Pretty-prints the differences between two template states to the console.
  *
@@ -94,7 +96,13 @@ function logicalIdMapFromTemplate(template: any) {
 }
 
 function readTemplate(input: string) {
-  return JSON.parse(fs.readFileSync(input, { encoding: 'utf-8' }));
-}
+  try {
+    return JSON.parse(fs.readFileSync(input, { encoding: 'utf-8' }));
+  } catch (e) {
+    logger.error(`Error reading template: ${input}`);
+    const fileContents = fs.readFileSync(input, { encoding: 'utf-8' });
+    logger.error(`File Content: \n\n${fileContents}\n\n Exception: ${e}\n`);
 
-// cat ../cdk.out/someFile.txt | sed 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g'
+    throw e;
+  }
+}
