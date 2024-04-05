@@ -15,7 +15,8 @@ import * as cdk from 'aws-cdk-lib';
 import * as assets from 'aws-cdk-lib/aws-s3-assets';
 import { Construct } from 'constructs';
 import * as path from 'path';
-import { v4 as uuidv4 } from 'uuid';
+import { createHash } from 'crypto';
+import { readFileSync } from 'fs';
 
 export enum PolicyType {
   AISERVICES_OPT_OUT_POLICY = 'AISERVICES_OPT_OUT_POLICY',
@@ -81,6 +82,10 @@ export interface PolicyProps {
    * An optional list of tags for the policy
    */
   readonly tags?: Tag[];
+  /**
+   * Home region where changes occur
+   */
+  readonly homeRegion: string;
 }
 
 /**
@@ -111,6 +116,9 @@ export class Policy extends Construct {
     const asset = new assets.Asset(this, 'Policy', {
       path: props.path,
     });
+
+    // generating md5 hash to allow for file changes and only trigger change when file is updated
+    const fileHash = createHash('md5').update(readFileSync(props.path)).digest('hex');
 
     //
     // Function definition for the custom resource
@@ -161,12 +169,14 @@ export class Policy extends Construct {
         key: asset.s3ObjectKey,
         partition: props.partition,
         policyTagKey: `${props.acceleratorPrefix}Managed`,
-        uuid: uuidv4(),
+        uuid: fileHash,
         name: props.name,
         description: props.description,
         type: props.type,
         strategy: props.strategy,
         tags: props.tags,
+        homeRegion: props.homeRegion,
+        region: cdk.Stack.of(this).region,
       },
     });
 

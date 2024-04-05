@@ -167,3 +167,23 @@ export async function checkDiffFiles(dir: string, templatePattern: string, diffP
     );
   }
 }
+
+/**
+ * Sets the global region for API calls based on the given partition
+ * @param partition
+ * @returns region
+ */
+export function getGlobalRegion(partition: string): string {
+  switch (partition) {
+    case 'aws-us-gov':
+      return 'us-gov-west-1';
+    case 'aws-iso-b':
+      return 'us-isob-east-1';
+    case 'aws-iso':
+      return 'us-iso-east-1';
+    case 'aws-cn':
+      return 'cn-northwest-1';
+    default:
+      return 'us-east-1';
+  }
+}
