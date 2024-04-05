@@ -213,6 +213,19 @@ logging:
           - Security
         excludedRegions:
           - us-west-2
+    dataProtection: 
+      overrideExisting: true
+      deploymentTargets:
+        accounts:
+          - Management
+        organizationalUnits:
+          - Security
+          - Infrastructure
+        excludedRegions:
+          - us-west-2
+      managedDataIdentifiers:
+        categories:
+          - Credentials
     enable: true
     dynamicPartitioning: dynamic-partitioning/log-filters.json
     replaceLogDestinationArn: replaceLogDestinationArn

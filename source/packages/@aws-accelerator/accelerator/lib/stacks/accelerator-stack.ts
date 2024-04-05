@@ -27,6 +27,7 @@ import {
   AccountsConfig,
   BlockDeviceMappingItem,
   CustomizationsConfig,
+  CloudWatchLogDataProtectionCategories,
   DeploymentTargets,
   EbsItemConfig,
   GlobalConfig,
@@ -152,6 +153,19 @@ export type NagSuppressionDetailType = {
     reason: string;
   }[];
 };
+
+/**
+ * List of CloudWatch log data protection identifiers for given categories.
+ *
+ * @remarks
+ * More information can be found [here](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/protect-sensitive-log-data-types.html)
+ *
+ * - [Data identifier ARNs for credential data types](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/protect-sensitive-log-data-types-credentials.html)
+ */
+export const CloudWatchDataProtectionIdentifiers: Record<keyof typeof CloudWatchLogDataProtectionCategories, string[]> =
+  {
+    Credentials: ['AwsSecretKey', 'OpenSshPrivateKey', 'PgpPrivateKey', 'PkcsPrivateKey', 'PuttyPrivateKey'],
+  };
 
 export interface AcceleratorStackProps extends cdk.StackProps {
   readonly configDirPath: string;

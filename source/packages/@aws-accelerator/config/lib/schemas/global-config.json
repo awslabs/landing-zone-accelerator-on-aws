@@ -463,10 +463,38 @@
       ],
       "type": "object"
     },
+    "ICloudWatchDataProtectionConfig": {
+      "additionalProperties": false,
+      "description": "AWS CloudWatch Log data protection configuration, you can find more information [here](https://awslabs.github.io/landing-zone-accelerator-on-aws/latest/faq/Logging/cwl/)",
+      "properties": {
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "To control target environments (AWS Account and Region) for the given `categories` setting, you may optionally specify deployment targets. Leaving `deploymentTargets` undefined will apply `categories` setting to all accounts and enabled regions."
+        },
+        "managedDataIdentifiers": {
+          "$ref": "#/definitions/ICloudWatchManagedDataProtectionIdentifierConfig",
+          "default": "Credentials",
+          "description": "CloudWatch Logs managed data identifiers configuration."
+        },
+        "overrideExisting": {
+          "default": false,
+          "description": "(OPTIONAL) Indicates whether existing CloudWatch Log data protection configuration can be overwritten.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "managedDataIdentifiers"
+      ],
+      "type": "object"
+    },
     "ICloudWatchLogsConfig": {
       "additionalProperties": false,
       "description": "Accelerator global CloudWatch Logs logging configuration",
       "properties": {
+        "dataProtection": {
+          "$ref": "#/definitions/ICloudWatchDataProtectionConfig",
+          "description": "CloudWatch Log data protection configuration"
+        },
         "dynamicPartitioning": {
           "$ref": "#/definitions/NonEmptyString",
           "description": "Declaration of Dynamic Partition for Kinesis Firehose."
@@ -531,6 +559,24 @@
           "type": "array"
         }
       },
+      "type": "object"
+    },
+    "ICloudWatchManagedDataProtectionIdentifierConfig": {
+      "additionalProperties": false,
+      "description": "AWS CloudWatch log data protection configuration",
+      "properties": {
+        "categories": {
+          "default": "Credentials",
+          "description": "CloudWatch Logs managed data identifiers configuration.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "categories"
+      ],
       "type": "object"
     },
     "IControlTowerConfig": {
