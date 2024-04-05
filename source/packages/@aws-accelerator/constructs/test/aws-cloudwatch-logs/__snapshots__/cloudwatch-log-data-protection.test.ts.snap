@@ -1,0 +1,388 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CloudWatchLogDataProtection Construct(CloudWatchLogDataProtection):  Snapshot Test 1`] = `
+{
+  "Resources": {
+    "CloudWatchLogDataProtectionCloudWatchDataProtectionCloudWatchDataProtectionResource070294E0": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CloudWatchLogDataProtectionCloudWatchDataProtectionframeworkonEvent60FCE4B2",
+            "Arn",
+          ],
+        },
+        "centralLogBucketName": "aws-accelerator-central-logs",
+        "identifierNames": [
+          "AwsSecretKey",
+          "OpenSshPrivateKey",
+          "PgpPrivateKey",
+          "PkcsPrivateKey",
+          "PuttyPrivateKey",
+        ],
+        "overrideExisting": true,
+        "partition": {
+          "Ref": "AWS::Partition",
+        },
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CloudWatchLogDataProtectionCloudWatchDataProtectionFunction45F668F9": {
+      "DependsOn": [
+        "CloudWatchLogDataProtectionCloudWatchDataProtectionFunctionServiceRoleDefaultPolicy4FB3E4E5",
+        "CloudWatchLogDataProtectionCloudWatchDataProtectionFunctionServiceRole5D3C0EC2",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Accelerator deployed CloudWatchDataProtection custom resource lambda function.",
+        "Handler": "index.handler",
+        "KmsKeyArn": {
+          "Fn::GetAtt": [
+            "LambdaKey984A39D9",
+            "Arn",
+          ],
+        },
+        "MemorySize": 256,
+        "Role": {
+          "Fn::GetAtt": [
+            "CloudWatchLogDataProtectionCloudWatchDataProtectionFunctionServiceRole5D3C0EC2",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CloudWatchLogDataProtectionCloudWatchDataProtectionFunctionResourceLogGroupFE66A616": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "CloudWatchLogKeyF6569487",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CloudWatchLogDataProtectionCloudWatchDataProtectionFunction45F668F9",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 365,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CloudWatchLogDataProtectionCloudWatchDataProtectionFunctionServiceRole5D3C0EC2": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Lambda needs Managed policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CloudWatchLogDataProtectionCloudWatchDataProtectionFunctionServiceRoleDefaultPolicy4FB3E4E5": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "AWS Lambda needs Managed policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "logs:DeleteAccountPolicy",
+                "logs:DescribeAccountPolicies",
+                "logs:PutAccountPolicy",
+                "logs:PutDataProtectionPolicy",
+                "logs:DeleteDataProtectionPolicy",
+                "logs:CreateLogDelivery",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "CloudWatchAccess",
+            },
+            {
+              "Action": [
+                "s3:GetBucketPolicy",
+                "s3:PutBucketPolicy",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":s3:::aws-accelerator-central-logs",
+                  ],
+                ],
+              },
+              "Sid": "S3Access",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "CloudWatchLogDataProtectionCloudWatchDataProtectionFunctionServiceRoleDefaultPolicy4FB3E4E5",
+        "Roles": [
+          {
+            "Ref": "CloudWatchLogDataProtectionCloudWatchDataProtectionFunctionServiceRole5D3C0EC2",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "CloudWatchLogDataProtectionCloudWatchDataProtectionframeworkonEvent60FCE4B2": {
+      "DependsOn": [
+        "CloudWatchLogDataProtectionCloudWatchDataProtectionframeworkonEventServiceRoleDefaultPolicyB8DFFB44",
+        "CloudWatchLogDataProtectionCloudWatchDataProtectionframeworkonEventServiceRole055954B7",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/CloudWatchLogDataProtection/CloudWatchDataProtection/Resource)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "CloudWatchLogDataProtectionCloudWatchDataProtectionFunction45F668F9",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "CloudWatchLogDataProtectionCloudWatchDataProtectionframeworkonEventServiceRole055954B7",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CloudWatchLogDataProtectionCloudWatchDataProtectionframeworkonEventServiceRole055954B7": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CloudWatchLogDataProtectionCloudWatchDataProtectionframeworkonEventServiceRoleDefaultPolicyB8DFFB44": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "CloudWatchLogDataProtectionCloudWatchDataProtectionFunction45F668F9",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "CloudWatchLogDataProtectionCloudWatchDataProtectionFunction45F668F9",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "CloudWatchLogDataProtectionCloudWatchDataProtectionframeworkonEventServiceRoleDefaultPolicyB8DFFB44",
+        "Roles": [
+          {
+            "Ref": "CloudWatchLogDataProtectionCloudWatchDataProtectionframeworkonEventServiceRole055954B7",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "CloudWatchLogKeyF6569487": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "LambdaKey984A39D9": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+  },
+}
+`;

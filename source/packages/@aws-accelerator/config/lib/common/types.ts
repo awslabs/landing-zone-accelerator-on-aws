@@ -406,6 +406,16 @@ export class CfnParameter implements ICfnParameter {
 export type TrafficType = 'ALL' | 'ACCEPT' | 'REJECT';
 export type LogDestinationType = 's3' | 'cloud-watch-logs';
 
+/**
+ * Solution supported CloudWatch Log data protection categories
+ *
+ * @remarks
+ * Refer [Types of data that you can protect](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/protect-sensitive-log-data-types.html) for more information.
+ */
+export enum CloudWatchLogDataProtectionCategories {
+  Credentials = 'Credentials',
+}
+
 export interface IVpcFlowLogsS3BucketConfig {
   lifecycleRules?: ILifecycleRule[];
   overrideS3LogPath?: NonEmptyString;

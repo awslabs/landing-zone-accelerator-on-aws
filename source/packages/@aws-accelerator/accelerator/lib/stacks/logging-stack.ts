@@ -48,6 +48,7 @@ import {
   PutSsmParameter,
   BucketPolicyProps,
   ServiceLinkedRole,
+  CloudWatchLogDataProtection,
 } from '@aws-accelerator/constructs';
 
 import {
@@ -62,6 +63,7 @@ import {
   AcceleratorKeyType,
   AcceleratorStack,
   AcceleratorStackProps,
+  CloudWatchDataProtectionIdentifiers,
   NagSuppressionRuleIds,
 } from './accelerator-stack';
 
@@ -201,6 +203,11 @@ export class LoggingStack extends AcceleratorStack {
     // Create SSM Parameters
     //
     this.createSsmParameters();
+
+    //
+    // Configure Account level CloudWatch Log data protection policy
+    //
+    this.configureAccountDataProtectionPolicy();
 
     this.logger.debug(`Stack synthesis complete`);
 
@@ -2979,5 +2986,60 @@ export class LoggingStack extends AcceleratorStack {
         customResourceLambdaLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
       });
     }
+  }
+
+  /**
+   * Function to configure account level CloudWatch log data protection
+   * @returns
+   */
+  private configureAccountDataProtectionPolicy() {
+    if (!this.props.globalConfig.logging.cloudwatchLogs?.dataProtection) {
+      return;
+    }
+
+    if (this.props.globalConfig.logging.cloudwatchLogs.dataProtection.deploymentTargets) {
+      if (!this.isIncluded(this.props.globalConfig.logging.cloudwatchLogs.dataProtection.deploymentTargets)) {
+        this.logger.info(
+          `CloudWatch log data protection ignored for account ${cdk.Stack.of(this).account}, region ${
+            cdk.Stack.of(this).region
+          }`,
+        );
+        return;
+      }
+    }
+
+    this.logger.info(
+      `CloudWatch log data protection will be configured for account ${cdk.Stack.of(this).account}, region ${
+        cdk.Stack.of(this).region
+      }`,
+    );
+    const identifierNames: string[] = [];
+
+    for (const category of this.props.globalConfig.logging.cloudwatchLogs.dataProtection.managedDataIdentifiers
+      .categories) {
+      identifierNames.push(...this.getDataIdentifierNamesForCategory(category));
+    }
+
+    new CloudWatchLogDataProtection(this, 'AcceleratorCloudWatchDataProtection', {
+      centralLogBucketName: this.centralLogsBucketName,
+      identifierNames: identifierNames,
+      overrideExisting: this.props.globalConfig.logging.cloudwatchLogs.dataProtection.overrideExisting ?? false,
+      customResourceLambdaEnvironmentEncryptionKmsKey: this.lambdaKey,
+      customResourceLambdaCloudWatchLogKmsKey: this.cloudwatchKey,
+      customResourceLambdaLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+    });
+  }
+
+  /**
+   * Function to get CloudWatch log data identifier names for given category
+   * @param category string
+   * @returns names string[]
+   */
+  private getDataIdentifierNamesForCategory(category: string): string[] {
+    const identifierNames: string[] = [];
+    if (category === t.CloudWatchLogDataProtectionCategories.Credentials) {
+      return CloudWatchDataProtectionIdentifiers.Credentials;
+    }
+    return identifierNames;
   }
 }

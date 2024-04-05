@@ -14,3 +14,5 @@ This section contains several categories of FAQs about the Landing Zone Accelera
         - [AWS Network Firewall](./networking/network-firewall.md)
         - [AWS Gateway Load Balancer](./networking/gwlb.md)
     - [Security](./security.md)
+    - Logging
+        - [Amazon CloudWatch](./logging/cwl.md)

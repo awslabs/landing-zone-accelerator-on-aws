@@ -262,6 +262,73 @@ export class ServiceEncryptionConfig implements i.IServiceEncryptionConfig {
   readonly deploymentTargets: t.DeploymentTargets | undefined = undefined;
 }
 
+/**
+ * *{@link GlobalConfig} / {@link LoggingConfig} / {@link CloudWatchLogsConfig}/ {@link CloudWatchDataProtectionConfig}/ {@link CloudWatchManagedDataProtectionIdentifierConfig}*
+ *
+ * @description
+ * AWS CloudWatch log data protection configuration
+ *
+ * @remarks
+ * Currently, only the [`Credentials`](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/protect-sensitive-log-data-types-credentials.html) category is supported.
+ *
+ * @example
+ * ```
+ *   categories:
+ *     - Credentials
+ * ```
+ */
+export class CloudWatchManagedDataProtectionIdentifierConfig
+  implements i.ICloudWatchManagedDataProtectionIdentifierConfig
+{
+  /**
+   * CloudWatch Logs managed data identifiers configuration.
+   *
+   * @remarks
+   * The solution supports only identifiers associated with the `Credentials` category, you can find more information about `Credentials` category [here](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/protect-sensitive-log-data-types-credentials.html)
+   *
+   * @default Credentials
+   */
+  readonly categories: `${t.CloudWatchLogDataProtectionCategories}`[] = ['Credentials'];
+}
+
+/**
+ * *{@link GlobalConfig} / {@link LoggingConfig} / {@link CloudWatchLogsConfig}/ {@link CloudWatchDataProtectionConfig}*
+ *
+ * @description
+ * AWS CloudWatch log data protection configuration
+ *
+ * @example
+ * ```
+ *  dataProtection:
+ *    managedDataIdentifiers:
+ *      categories:
+ *        - Credentials
+ *    deploymentTargets:
+ *      organizationalUnits:
+ *        - Root
+ * ```
+ */
+export class CloudWatchDataProtectionConfig implements i.ICloudWatchDataProtectionConfig {
+  /**
+   * CloudWatch Logs managed data identifiers configuration.
+   *
+   * @remarks
+   * Please review [CloudWatch Logs managed data identifiers for sensitive data types](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL-managed-data-identifiers.html) for more information.
+   *
+   * @default Credentials
+   */
+  readonly managedDataIdentifiers: CloudWatchManagedDataProtectionIdentifierConfig =
+    new CloudWatchManagedDataProtectionIdentifierConfig();
+
+  readonly deploymentTargets: t.DeploymentTargets | undefined = undefined;
+  /**
+   * (OPTIONAL) Indicates whether existing CloudWatch Log data protection policy configuration can be overwritten.
+   *
+   * @default false
+   */
+  readonly overrideExisting: boolean | undefined = undefined;
+}
+
 export class S3EncryptionConfig implements i.IS3EncryptionConfig {
   readonly createCMK: boolean = true;
   readonly deploymentTargets: t.DeploymentTargets | undefined = undefined;
@@ -345,6 +412,7 @@ export class CloudWatchLogsConfig implements i.ICloudWatchLogsConfig {
   readonly encryption: ServiceEncryptionConfig | undefined = undefined;
   readonly exclusions: CloudWatchLogsExclusionConfig[] | undefined = undefined;
   readonly replaceLogDestinationArn: string | undefined = undefined;
+  readonly dataProtection: CloudWatchDataProtectionConfig | undefined = undefined;
 }
 
 export class LoggingConfig implements i.ILoggingConfig {

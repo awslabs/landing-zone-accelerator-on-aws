@@ -1075,7 +1075,7 @@ export interface ICloudWatchLogsExclusionConfig {
 }
 
 /**
- * *{@link GlobalConfig} / {@link LoggingConfig} / {@link CloudWatchLogsConfig}*
+ * *{@link IGlobalConfig} / {@link ILoggingConfig} / {@link ICloudWatchLogsConfig}*
  *
  * @description
  * Accelerator global CloudWatch Logs logging configuration
@@ -1084,6 +1084,8 @@ export interface ICloudWatchLogsExclusionConfig {
  * You can decide to use AWS KMS CMK or server-side encryption for the log data at rest. When this `encryption` property is undefined, the solution will deploy AWS KMS CMK to encrypt AWS CloudWatch log data at rest.
  * You can use `deploymentTargets` to control target accounts and regions for the given `useCMK` configuration.
  * please see [here](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/data-protection.html) or [here](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/encrypt-log-data-kms.html) for more information.
+ *
+ * Please review [CloudWatch Logs managed data identifiers for sensitive data types](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL-managed-data-identifiers.html) for more information.
  *
  * @example
  * ```
@@ -1119,6 +1121,13 @@ export interface ICloudWatchLogsExclusionConfig {
  *        - eu-west-1
  *      logGroupNames:
  *        - pattern1*
+ *   dataProtection:
+ *     managedDataIdentifiers:
+ *       categories:
+ *         - Credentials
+ *     deploymentTargets:
+ *       organizationalUnits:
+ *         - Root
  * ```
  *
  */
@@ -1181,6 +1190,10 @@ export interface ICloudWatchLogsConfig {
    * then solution will fail to configure log replication for such log groups and as a result pipeline will fail.
    */
   readonly replaceLogDestinationArn?: t.NonEmptyString;
+  /**
+   * CloudWatch Log data protection configuration
+   */
+  readonly dataProtection?: ICloudWatchDataProtectionConfig;
 }
 
 /**
@@ -1822,6 +1835,72 @@ export interface IServiceEncryptionConfig {
    * Leaving `deploymentTargets` undefined will apply `useCMK` setting to all accounts and enabled regions.
    */
   readonly deploymentTargets?: t.IDeploymentTargets;
+}
+
+/**
+ * *{@link IGlobalConfig} / {@link ILoggingConfig} / {@link ICloudWatchLogsConfig}/ {@link ICloudWatchDataProtectionConfig} / {@link ICloudWatchManagedDataProtectionIdentifierConfig}*
+ *
+ * @description
+ * AWS CloudWatch log data protection configuration
+ *
+ * @remarks
+ * Currently, only the [`Credentials`](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/protect-sensitive-log-data-types-credentials.html) category is supported.
+ * @example
+ * ```
+ *   categories:
+ *     - Credentials
+ * ```
+ */
+export interface ICloudWatchManagedDataProtectionIdentifierConfig {
+  /**
+   * CloudWatch Logs managed data identifiers configuration.
+   *
+   * @remarks
+   * The solution supports only identifiers associated with the `Credentials` category, you can find more information about `Credentials` category [here](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/protect-sensitive-log-data-types-credentials.html)
+   *
+   * @default Credentials
+   */
+  readonly categories: `${t.CloudWatchLogDataProtectionCategories}`[];
+}
+
+/**
+ * *{@link IGlobalConfig} / {@link ILoggingConfig} / {@link ICloudWatchLogsConfig}/ {@link ICloudWatchDataProtectionConfig}*
+ *
+ * @description
+ * AWS CloudWatch Log data protection configuration, you can find more information [here](https://awslabs.github.io/landing-zone-accelerator-on-aws/latest/faq/Logging/cwl/)
+ *
+ * @example
+ * ```
+ *  dataProtection:
+ *    managedDataIdentifiers:
+ *      categories:
+ *        - Credentials
+ *    deploymentTargets:
+ *      organizationalUnits:
+ *        - Root
+ * ```
+ */
+export interface ICloudWatchDataProtectionConfig {
+  /**
+   * CloudWatch Logs managed data identifiers configuration.
+   *
+   * @remarks
+   * Please review [CloudWatch Logs managed data identifiers for sensitive data types](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL-managed-data-identifiers.html) for more information.
+   *
+   * @default Credentials
+   */
+  readonly managedDataIdentifiers: ICloudWatchManagedDataProtectionIdentifierConfig;
+  /**
+   * To control target environments (AWS Account and Region) for the given `categories` setting, you may optionally specify deployment targets.
+   * Leaving `deploymentTargets` undefined will apply `categories` setting to all accounts and enabled regions.
+   */
+  readonly deploymentTargets?: t.IDeploymentTargets;
+  /**
+   * (OPTIONAL) Indicates whether existing CloudWatch Log data protection configuration can be overwritten.
+   *
+   * @default false
+   */
+  readonly overrideExisting?: boolean;
 }
 
 /**

@@ -68,6 +68,10 @@ logging:
       - EC2-Default-SSM-AD-Role
   cloudwatchLogs:
     dynamicPartitioning: dynamic-partitioning/log-filters.json
+    dataProtection: 
+      managedDataIdentifiers:
+        categories:
+          - Credentials
   accessLogBucket:
     lifecycleRules:
       - enabled: true

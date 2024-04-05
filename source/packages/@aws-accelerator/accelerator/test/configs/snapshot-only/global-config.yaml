@@ -28,7 +28,7 @@ lambda:
       organizationalUnits:
         - Security
       excludedRegions:
-        - us-west-2
+        - us-west-2  
 controlTower:
   enable: true
   landingZone:
@@ -187,6 +187,18 @@ logging:
           - Security
         excludedRegions:
           - us-west-2
+    dataProtection: 
+      deploymentTargets:
+        accounts:
+          - Management
+        organizationalUnits:
+          - Security
+          - Infrastructure
+        excludedRegions:
+          - us-west-2
+      managedDataIdentifiers:
+        categories:
+          - Credentials
     enable: true
     replaceLogDestinationArn: arn:aws:logs:us-east-1:111111111111:destination/log-destination
     dynamicPartitioning: dynamic-partitioning/log-filters.json

@@ -374,6 +374,312 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "AcceleratorCloudWatchDataProtectionCloudWatchDataProtectionResource62439E9B": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "AcceleratorCloudWatchDataProtectionframeworkonEvent41D3EE34",
+            "Arn",
+          ],
+        },
+        "centralLogBucketName": "existing-central-log-bucket",
+        "identifierNames": [
+          "AwsSecretKey",
+          "OpenSshPrivateKey",
+          "PgpPrivateKey",
+          "PkcsPrivateKey",
+          "PuttyPrivateKey",
+        ],
+        "overrideExisting": false,
+        "partition": {
+          "Ref": "AWS::Partition",
+        },
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AcceleratorCloudWatchDataProtectionFunctionAB6284FB": {
+      "DependsOn": [
+        "AcceleratorCloudWatchDataProtectionFunctionServiceRoleDefaultPolicy142CDDF6",
+        "AcceleratorCloudWatchDataProtectionFunctionServiceRole84B1A0EF",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Accelerator deployed CloudWatchDataProtection custom resource lambda function.",
+        "Handler": "index.handler",
+        "KmsKeyArn": {
+          "Fn::GetAtt": [
+            "AcceleratorLambdaKeyD279839E",
+            "Arn",
+          ],
+        },
+        "MemorySize": 256,
+        "Role": {
+          "Fn::GetAtt": [
+            "AcceleratorCloudWatchDataProtectionFunctionServiceRole84B1A0EF",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "AcceleratorCloudWatchDataProtectionFunctionResourceLogGroupBF7014C4": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "AcceleratorCloudWatchKeyF93B6E17",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "AcceleratorCloudWatchDataProtectionFunctionAB6284FB",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AcceleratorCloudWatchDataProtectionFunctionServiceRole84B1A0EF": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Lambda needs Managed policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AcceleratorCloudWatchDataProtectionFunctionServiceRoleDefaultPolicy142CDDF6": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "AWS Lambda needs Managed policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "logs:DeleteAccountPolicy",
+                "logs:DescribeAccountPolicies",
+                "logs:PutAccountPolicy",
+                "logs:PutDataProtectionPolicy",
+                "logs:DeleteDataProtectionPolicy",
+                "logs:CreateLogDelivery",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "CloudWatchAccess",
+            },
+            {
+              "Action": [
+                "s3:GetBucketPolicy",
+                "s3:PutBucketPolicy",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":s3:::existing-central-log-bucket",
+                  ],
+                ],
+              },
+              "Sid": "S3Access",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "AcceleratorCloudWatchDataProtectionFunctionServiceRoleDefaultPolicy142CDDF6",
+        "Roles": [
+          {
+            "Ref": "AcceleratorCloudWatchDataProtectionFunctionServiceRole84B1A0EF",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "AcceleratorCloudWatchDataProtectionframeworkonEvent41D3EE34": {
+      "DependsOn": [
+        "AcceleratorCloudWatchDataProtectionframeworkonEventServiceRoleDefaultPolicyA23F360B",
+        "AcceleratorCloudWatchDataProtectionframeworkonEventServiceRole37B79FF9",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-east-1/AcceleratorCloudWatchDataProtection/CloudWatchDataProtection/Resource)",
+        "Environment": {
+          "Variables": {
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "AcceleratorCloudWatchDataProtectionFunctionAB6284FB",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "AcceleratorCloudWatchDataProtectionframeworkonEventServiceRole37B79FF9",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "AcceleratorCloudWatchDataProtectionframeworkonEventServiceRole37B79FF9": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AcceleratorCloudWatchDataProtectionframeworkonEventServiceRoleDefaultPolicyA23F360B": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "AcceleratorCloudWatchDataProtectionFunctionAB6284FB",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "AcceleratorCloudWatchDataProtectionFunctionAB6284FB",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "AcceleratorCloudWatchDataProtectionframeworkonEventServiceRoleDefaultPolicyA23F360B",
+        "Roles": [
+          {
+            "Ref": "AcceleratorCloudWatchDataProtectionframeworkonEventServiceRole37B79FF9",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
     "AcceleratorCloudWatchKeyAlias6842582C": {
       "Properties": {
         "AliasName": "alias/accelerator/kms/cloudwatch/key",

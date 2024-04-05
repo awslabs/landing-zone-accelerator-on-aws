@@ -47,6 +47,8 @@ nav:
         - AWS Network Firewall: faq/networking/network-firewall.md
         - AWS Gateway Load Balancer: faq/networking/gwlb.md
       - Security: faq/security.md
+      - Logging: 
+          - Amazon CloudWatch Log Group: faq/logging/cwl.md
   - TypeDocs:
     - typedocs/index.md
     - v1.0:
