@@ -12,9 +12,9 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { v4 as uuidv4 } from 'uuid';
 import { PolicyType } from './policy';
 import { Construct } from 'constructs';
+import { createHash } from 'crypto';
 
 const path = require('path');
 
@@ -36,6 +36,10 @@ export interface PolicyAttachmentProps {
    * Custom resource lambda log retention in days
    */
   readonly logRetentionInDays: number;
+  /**
+   * Home region for the solution
+   */
+  readonly homeRegion: string;
 }
 
 /**
@@ -76,6 +80,9 @@ export class PolicyAttachment extends Construct {
       ],
     });
 
+    const attachArray = [props.policyId, props.targetId ?? '', ...props.configPolicyNames].toString();
+    const attachHash = createHash('md5').update(attachArray).digest('hex');
+
     //
     // Custom Resource definition. We want this resource to be evaluated on
     // every CloudFormation update, so we generate a new uuid to force
@@ -86,13 +93,15 @@ export class PolicyAttachment extends Construct {
       serviceToken: provider.serviceToken,
       properties: {
         partition: cdk.Aws.PARTITION,
-        uuid: uuidv4(),
+        uuid: attachHash,
         policyId: props.policyId,
         targetId: props.targetId,
         type: props.type,
         strategy: props.strategy,
         configPolicyNames: props.configPolicyNames,
         policyTagKey: `${props.acceleratorPrefix}Managed`,
+        homeRegion: props.homeRegion,
+        region: cdk.Stack.of(this).region,
       },
     });
 

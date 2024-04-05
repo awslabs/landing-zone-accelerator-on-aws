@@ -11,14 +11,16 @@
  *  and limitations under the License.
  */
 
-import * as cdk from 'aws-cdk-lib';
+import { Stack } from 'aws-cdk-lib';
+import { Key } from 'aws-cdk-lib/aws-kms';
 import { PolicyAttachment, PolicyType } from '../../index';
 import { snapShotTest } from '../snapshot-test';
+import { describe } from '@jest/globals';
 
 const testNamePrefix = 'Construct(PolicyAttachment): ';
 
 //Initialize stack for snapshot test and resource configuration test
-const stack = new cdk.Stack();
+const stack = new Stack();
 
 new PolicyAttachment(stack, 'PolicyAttachment', {
   policyId: 'policyId',
@@ -27,8 +29,9 @@ new PolicyAttachment(stack, 'PolicyAttachment', {
   strategy: 'deny-list',
   configPolicyNames: ['AcceleratorGuardrails1', 'AcceleratorGuardrails2'],
   acceleratorPrefix: 'AWSAccelerator',
-  kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
+  kmsKey: new Key(stack, 'CustomKey', {}),
   logRetentionInDays: 3653,
+  homeRegion: 'us-east-1',
 });
 
 /**
