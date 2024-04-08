@@ -57,7 +57,7 @@ exports[`SecurityHubRegionAggregation Construct(SecurityHubRegionAggregation):  
             "Arn",
           ],
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs18.x",
         "Timeout": 180,
       },
       "Type": "AWS::Lambda::Function",

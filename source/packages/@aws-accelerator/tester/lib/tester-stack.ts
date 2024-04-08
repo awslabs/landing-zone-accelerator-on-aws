@@ -115,7 +115,7 @@ export class TesterStack extends cdk.Stack {
        * https://github.com/aws/aws-cdk/issues/17582
        */
       const lambdaFunction = new lambda.Function(this, `${props.qualifier}-${testName}Function`, {
-        runtime: lambda.Runtime.NODEJS_16_X,
+        runtime: lambda.Runtime.NODEJS_18_X,
         handler: 'index.handler',
         code: lambda.Code.fromAsset(path.join(__dirname, '../lambdas/dist')),
         description: `AWS Config custom rule function used for test case "${test.name}"`,

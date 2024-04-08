@@ -57,7 +57,7 @@ export class DirectConnectGateway extends cdk.Resource implements IDirectConnect
 
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
       codeDirectory: path.join(__dirname, 'direct-connect-gateway/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
       policyStatements: [
         {
           Sid: 'DirectConnectGatewayCRUD',

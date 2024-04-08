@@ -22,7 +22,7 @@ exports[`IdentityCenterGetPermissionRoleArn Construct(IdentityCenterGetPermissio
             "Arn",
           ],
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs18.x",
         "Timeout": 60,
       },
       "Type": "AWS::Lambda::Function",

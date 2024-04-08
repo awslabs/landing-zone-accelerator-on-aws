@@ -11,7 +11,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "esbuild --minify --bundle --sourcemap --platform=node --target=node18 --external:aws-sdk --outfile=./dist/index.js index.ts",
+    "build": "esbuild --minify --bundle --sourcemap --platform=node --target=node18 --outfile=./dist/index.js index.ts",
     "cleanup": "tsc --build ./ --clean && rm -rf node_modules && rm -rf dist && rm -rf cdk.out",
     "cleanup:tsc": "tsc --build ./ --clean",
     "lint": "eslint --fix  --max-warnings 0 -c ../../../../../../.eslintrc.json '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",

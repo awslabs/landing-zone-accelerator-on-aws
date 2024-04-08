@@ -48,14 +48,14 @@ exports[`CloudWatchLogDataProtection Construct(CloudWatchLogDataProtection):  Sn
             "Arn",
           ],
         },
-        "MemorySize": 256,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CloudWatchLogDataProtectionCloudWatchDataProtectionFunctionServiceRole5D3C0EC2",
             "Arn",
           ],
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs18.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",

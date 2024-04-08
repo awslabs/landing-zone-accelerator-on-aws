@@ -372,7 +372,7 @@ export class AcceleratorPipeline extends Construct {
         phases: {
           install: {
             'runtime-versions': {
-              nodejs: 16,
+              nodejs: 18,
             },
           },
           pre_build: {
@@ -406,8 +406,8 @@ export class AcceleratorPipeline extends Construct {
         },
       }),
       environment: {
-        buildImage: codebuild.LinuxBuildImage.STANDARD_6_0,
-        privileged: false, // Allow access to the Docker daemon
+        buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
+        privileged: false,
         computeType: codebuild.ComputeType.MEDIUM,
         environmentVariables: {
           NODE_OPTIONS: {
@@ -459,7 +459,7 @@ export class AcceleratorPipeline extends Construct {
         phases: {
           install: {
             'runtime-versions': {
-              nodejs: 16,
+              nodejs: 18,
             },
           },
           build: {
@@ -489,7 +489,7 @@ export class AcceleratorPipeline extends Construct {
         },
       }),
       environment: {
-        buildImage: codebuild.LinuxBuildImage.STANDARD_6_0,
+        buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
         privileged: false, // Allow access to the Docker daemon
         computeType: codebuild.ComputeType.LARGE,
         environmentVariables: {

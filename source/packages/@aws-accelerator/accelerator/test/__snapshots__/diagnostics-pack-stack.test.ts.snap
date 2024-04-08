@@ -311,7 +311,7 @@ exports[`DiagnosticsPackStack Construct(DiagnosticsPackStack):  Snapshot Test 1`
               "Value": "1",
             },
           ],
-          "Image": "aws/codebuild/standard:6.0",
+          "Image": "aws/codebuild/standard:7.0",
           "ImagePullCredentialsType": "CODEBUILD",
           "PrivilegedMode": false,
           "Type": "LINUX_CONTAINER",

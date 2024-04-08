@@ -51,7 +51,7 @@ export class LimitsDefinition extends Construct {
     //
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, DEFAULT_LIMITS, {
       codeDirectory: path.join(__dirname, 'create-limits/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
       policyStatements: [
         {
           Sid: 'OrganizationListActions',

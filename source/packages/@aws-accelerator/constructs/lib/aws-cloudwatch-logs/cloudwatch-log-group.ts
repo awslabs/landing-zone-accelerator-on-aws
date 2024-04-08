@@ -142,7 +142,7 @@ export class CloudWatchLogGroups extends cdk.Resource implements ILogGroup {
       pascalCase(`${this.logGroupName}-${CLOUD_WATCH_LOG_GROUPS}`),
       {
         codeDirectory: path.join(__dirname, 'create-log-groups/dist'),
-        runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
+        runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
         policyStatements,
       },
     );

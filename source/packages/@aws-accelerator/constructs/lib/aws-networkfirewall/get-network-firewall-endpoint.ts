@@ -57,7 +57,7 @@ export class GetNetworkFirewallEndpoint extends cdk.Resource implements IGetNetw
 
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::GetNetworkFirewallEndpoint', {
       codeDirectory: path.join(__dirname, 'get-network-firewall-endpoint/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
       policyStatements: [
         {
           Effect: 'Allow',

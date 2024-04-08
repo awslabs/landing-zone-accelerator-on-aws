@@ -46,7 +46,7 @@ export class IdentityCenterOrganizationAdminAccount extends Construct {
     const functionId = `${id}ProviderLambda`;
     const providerLambda = new cdk.aws_lambda.Function(this, functionId, {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'enable-organization-admin-account/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
       timeout: cdk.Duration.seconds(160),
       initialPolicy: [
         new cdk.aws_iam.PolicyStatement({

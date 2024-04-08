@@ -98,7 +98,7 @@ export interface LzaCustomResourceProps {
     readonly role?: cdk.aws_iam.Role | cdk.aws_iam.IRole;
     /**
      * The amount of memory, in MB, that is allocated to custom resource Lambda function. Lambda uses this value to proportionally allocate the amount of CPU power.
-     * @default 256
+     * @default 512
      */
     readonly memorySize?: number;
     /**

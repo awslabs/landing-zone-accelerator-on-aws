@@ -52,7 +52,7 @@ export class ValidateScpCount extends cdk.Resource {
 
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, VALIDATE_SCP_COUNT, {
       codeDirectory: path.join(__dirname, 'list-policy-for-target/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
       policyStatements: [
         {
           Effect: 'Allow',

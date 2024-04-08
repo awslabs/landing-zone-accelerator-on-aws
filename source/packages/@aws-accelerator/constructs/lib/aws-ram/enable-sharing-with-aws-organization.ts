@@ -43,7 +43,7 @@ export class EnableSharingWithAwsOrganization extends Construct {
     //
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, ENABLE_SHARING_WITH_AWS_ORGANIZATION_TYPE, {
       codeDirectory: path.join(__dirname, 'enable-sharing-with-aws-organization/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
       policyStatements: [
         {
           Effect: 'Allow',

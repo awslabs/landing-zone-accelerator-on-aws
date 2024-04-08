@@ -180,7 +180,7 @@ export class BudgetDefinition extends cdk.Resource {
       // Use custom resource
       const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::CrossRegionBudget', {
         codeDirectory: path.join(__dirname, 'cross-region-budget/dist'),
-        runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
+        runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
         policyStatements: [
           {
             Effect: 'Allow',

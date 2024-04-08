@@ -61,7 +61,7 @@ export class Document extends cdk.Resource implements IDocument {
 
       const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, SHARE_SSM_DOCUMENT, {
         codeDirectory: path.join(__dirname, 'share-document/dist'),
-        runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
+        runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
         policyStatements: [
           {
             Sid: 'ShareDocumentActions',

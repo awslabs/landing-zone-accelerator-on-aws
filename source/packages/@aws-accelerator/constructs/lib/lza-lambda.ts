@@ -53,7 +53,7 @@ export interface LzaLambdaProps {
   readonly role?: cdk.aws_iam.Role | cdk.aws_iam.IRole;
   /**
    * The amount of memory, in MB, that is allocated to custom resource Lambda function. Lambda uses this value to proportionally allocate the amount of CPU power.
-   * @default 256
+   * @default 512
    */
   readonly memorySize?: number;
   /**
@@ -105,8 +105,8 @@ export class LzaLambda extends Construct {
       functionName: props.functionName,
       description: props.description ?? `Accelerator deployed lambda function.`,
       code: cdk.aws_lambda.Code.fromAsset(props.assetPath),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
-      memorySize: props.memorySize ?? 256,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      memorySize: props.memorySize ?? 512,
       timeout: props.timeOut,
       role: props.role,
       initialPolicy: props.roleInitialPolicy,

@@ -61,10 +61,10 @@ export class ServiceLinkedRole extends Construct {
 
     const lambdaFunction = new cdk.aws_lambda.Function(this, 'CreateServiceLinkedRoleFunction', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'create-service-linked-role/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(15),
-      memorySize: 256,
+      memorySize: 512,
       description: 'Custom resource provider to create service linked role',
       initialPolicy: [
         new cdk.aws_iam.PolicyStatement({

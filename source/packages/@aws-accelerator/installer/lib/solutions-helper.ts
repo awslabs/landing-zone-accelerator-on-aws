@@ -41,12 +41,11 @@ export class SolutionHelper extends Construct {
     });
 
     const helperFunction = new lambda.Function(this, 'SolutionHelper', {
-      runtime: lambda.Runtime.NODEJS_16_X,
+      runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'index.handler',
       description:
         'This function generates UUID for each deployment and sends anonymous data to the AWS Solutions team',
       code: lambda.Code.fromInline(`
-        const AWS = require('aws-sdk');
         const response = require('cfn-response');
         const https = require('https');
 

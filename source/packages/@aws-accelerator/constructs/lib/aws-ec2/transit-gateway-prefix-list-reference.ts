@@ -85,7 +85,7 @@ export class TransitGatewayPrefixListReference extends cdk.Resource {
 
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::TransitGatewayPrefixListReference', {
       codeDirectory: path.join(__dirname, 'transit-gateway-prefix-list-reference/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
       policyStatements,
     });
 

@@ -23,14 +23,14 @@ exports[`BucketPrefix Construct(BucketPrefix):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
-        "MemorySize": 256,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "BucketPrefixS3CreateBucketPrefixFunctionServiceRoleFB8AFED9",
             "Arn",
           ],
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs18.x",
         "Timeout": 300,
       },
       "Type": "AWS::Lambda::Function",

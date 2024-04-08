@@ -1120,7 +1120,7 @@ exports[`TesterPipelineStack Construct(TesterPipelineStack):  Snapshot Test 1`] 
               "Value": "/accelerator",
             },
           ],
-          "Image": "aws/codebuild/standard:6.0",
+          "Image": "aws/codebuild/standard:7.0",
           "ImagePullCredentialsType": "CODEBUILD",
           "PrivilegedMode": true,
           "Type": "LINUX_CONTAINER",
@@ -1141,7 +1141,7 @@ exports[`TesterPipelineStack Construct(TesterPipelineStack):  Snapshot Test 1`] 
 phases:
   install:
     runtime-versions:
-      nodejs: 16
+      nodejs: 18
   build:
     commands:
       - cd source

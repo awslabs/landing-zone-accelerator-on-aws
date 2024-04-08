@@ -232,7 +232,7 @@ export class DiagnosticsPackStack extends cdk.Stack {
         },
       }),
       environment: {
-        buildImage: cdk.aws_codebuild.LinuxBuildImage.STANDARD_6_0,
+        buildImage: cdk.aws_codebuild.LinuxBuildImage.STANDARD_7_0,
         privileged: false,
         computeType: cdk.aws_codebuild.ComputeType.SMALL,
         environmentVariables: {

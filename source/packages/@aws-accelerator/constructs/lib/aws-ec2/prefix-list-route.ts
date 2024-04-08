@@ -95,7 +95,7 @@ export class PrefixListRoute extends cdk.Resource {
 
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::PrefixListRoute', {
       codeDirectory: path.join(__dirname, 'prefix-list-route/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
       policyStatements: [
         {
           Sid: 'AllowModifyRoutes',
