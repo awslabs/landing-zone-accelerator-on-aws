@@ -24,6 +24,15 @@
 <!-- If you have not added unit and/or integration tests, how have you tested this manually? -->
 <!-- Why can't this code be tested automatically? -->
 
+### Are there any unit tests included?
+- [ ] Yes
+- [ ] No
+- [ ] NA
+
+#### How to write unit tests
+
+This [document](https://quip-amazon.com/aKwoAAlpE7aA/LZA-AWS-SDK-V3-Unit-Testing) provides information on how to write unit tests.
+
 ## Documentation Checklist:
 
 <!-- As a submitter, put an `x` in all the boxes that apply. -->
