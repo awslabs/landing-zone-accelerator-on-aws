@@ -93,7 +93,7 @@ export class CloudWatchLogsSubscriptionFilter extends Construct {
     //
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, UPDATE_SUBSCRIPTION_FILTER, {
       codeDirectory: path.join(__dirname, 'update-subscription-filter/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
       policyStatements: [
         {
           Effect: 'Allow',

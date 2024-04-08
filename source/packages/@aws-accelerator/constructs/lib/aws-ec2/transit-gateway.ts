@@ -232,7 +232,7 @@ export class TransitGatewayAttachment extends TransitGatewayAttachmentBase {
 
         const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, GET_TRANSIT_GATEWAY_ATTACHMENT, {
           codeDirectory: path.join(__dirname, 'get-transit-gateway-attachment/dist'),
-          runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
+          runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
           policyStatements: [
             {
               Effect: 'Allow',

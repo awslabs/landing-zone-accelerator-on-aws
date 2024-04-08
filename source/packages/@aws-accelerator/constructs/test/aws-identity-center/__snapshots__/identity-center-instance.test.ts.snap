@@ -58,14 +58,14 @@ exports[`IdentityCenterInstance Construct(IdentityCenterGetInstanceId):  Snapsho
             "Arn",
           ],
         },
-        "MemorySize": 256,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "IdentityCenterInstanceIdentityCenterGetInstanceIdFunctionServiceRoleC3631797",
             "Arn",
           ],
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs18.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",

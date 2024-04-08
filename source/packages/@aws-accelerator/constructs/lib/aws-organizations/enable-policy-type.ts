@@ -49,7 +49,7 @@ export class EnablePolicyType extends cdk.Resource {
 
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, ENABLE_POLICY_TYPE, {
       codeDirectory: path.join(__dirname, 'enable-policy-type/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
       policyStatements: [
         {
           Effect: 'Allow',

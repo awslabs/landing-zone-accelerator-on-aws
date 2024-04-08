@@ -1721,7 +1721,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
               "Value": "AWSControlTowerExecution",
             },
           ],
-          "Image": "aws/codebuild/standard:6.0",
+          "Image": "aws/codebuild/standard:7.0",
           "ImagePullCredentialsType": "CODEBUILD",
           "PrivilegedMode": false,
           "Type": "LINUX_CONTAINER",
@@ -1755,7 +1755,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
 phases:
   install:
     runtime-versions:
-      nodejs: 16
+      nodejs: 18
   pre_build:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
@@ -2072,14 +2072,15 @@ phases:
         "Code": {
           "ZipFile": "
           const response = require('cfn-response'); 
-          const AWS = require('aws-sdk');
+          const { SSMClient, DeleteParameterCommand, GetParameterCommand, ParameterNotFound, PutParameterCommand } = require("@aws-sdk/client-ssm");
+          const { ConfiguredRetryStrategy } = require("@aws-sdk/util-retry");
           exports.handler = async function (event, context) { 
           console.log(JSON.stringify(event, null, 4)); 
           const prefix=event.ResourceProperties.prefix;
           const pipelineStackVersionSsmParamName=event.ResourceProperties.pipelineStackVersionSsmParamName;
           const lowerCasePrefix=prefix.toLowerCase();
           
-          const ssm = new AWS.SSM({});
+          const ssm = new SSMClient({retryStrategy: new ConfiguredRetryStrategy(10, (attempt) => 100 + attempt * 1000)});
           
           let data = {};
           
@@ -2102,7 +2103,7 @@ phases:
                 Name: paramName,
               };
               try {
-                  const ssmResponse = await ssm.getParameter(params).promise();
+                  const ssmResponse = await ssm.send(new GetParameterCommand(params));
                   // Fail stack if prefix was changed during update
                   if (ssmResponse.Parameter.Value !== prefix) {
                       await response.send(event, context, response.FAILED, {'FailureReason': 'LZA does not allow changing AcceleratorPrefix parameter value after initial deploy !!! Existing prefix: ' + event.OldResourceProperties.prefix + ' New prefix: ' + prefix + '.' }, event.PhysicalResourceId);
@@ -2111,7 +2112,7 @@ phases:
                   await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
               } catch (error) {
                   console.log(error);
-                  if (error.code === 'ParameterNotFound'){
+                  if (error instanceof ParameterNotFound){
                       await response.send(event, context, response.FAILED, {'FailureReason': 'LZA prefix ssm parameter ' + paramName + ' not found!!! Recreate the parameter with existing AcceleratorPrefix parameter value to fix the issue'}, event.PhysicalResourceId);
                       return;
                   }
@@ -2136,13 +2137,13 @@ phases:
                     Name: pipelineStackVersionSsmParamName,
                   };
                   try {
-                    await ssm.getParameter(versionParams).promise();
+                    await ssm.send(new GetParameterCommand(versionParams));
                     await response.send(event, context, response.FAILED, {'FailureReason': 'Can not change AcceleratorPrefix parameter for existing deployment, existing prefix value is AWSAccelerator, keep AcceleratorPrefix parameter value to default value for successfully stack update !!!'}, event.PhysicalResourceId);
                     return;
                   }
                   catch (error) {
                     console.log(error);
-                    if (error.code !== 'ParameterNotFound'){
+                    if (!(error instanceof ParameterNotFound)){
                       await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while accessing LZA ssm parameter ' + pipelineStackVersionSsmParamName }, event.PhysicalResourceId);
                       return;
                     }
@@ -2157,7 +2158,7 @@ phases:
                         Description: 'LZA created SSM parameter for Accelerator prefix value, DO NOT MODIFY/DELETE this parameter',
                         Type: 'String',
                       };
-                  await ssm.putParameter(newParams).promise();
+                  await ssm.send(new PutParameterCommand(newParams));
                   console.log('LZA prefix parameter ' + paramName  + ' created successfully.');
                   await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
               }
@@ -2173,12 +2174,12 @@ phases:
               Name: paramName,
             };
             try {
-              await ssm.deleteParameter(deleteParams).promise();
+              await ssm.send(new DeleteParameterCommand(deleteParams));
               console.log('LZA prefix parameter ' + paramName  + ' deleted successfully.');
             }
             catch (error) {
               console.log(error);
-              if (error.code !== 'ParameterNotFound'){
+              if (!(error instanceof ParameterNotFound)){
                 await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while deleting LZA ssm parameter ' + paramName }, event.PhysicalResourceId);
                 return;
               }
@@ -2197,7 +2198,7 @@ phases:
             "Arn",
           ],
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs18.x",
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -2552,7 +2553,6 @@ phases:
       "Properties": {
         "Code": {
           "ZipFile": "
-        const AWS = require('aws-sdk');
         const response = require('cfn-response');
         const https = require('https');
 
@@ -2655,7 +2655,7 @@ phases:
             "Arn",
           ],
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs18.x",
         "Timeout": 30,
       },
       "Type": "AWS::Lambda::Function",
@@ -2837,10 +2837,16 @@ phases:
  *  and limitations under the License.
  */
 
-const AWS = require('aws-sdk');
+const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
+const { CodePipelineClient, GetPipelineCommand, UpdatePipelineCommand } = require('@aws-sdk/client-codepipeline');
+const { ConfiguredRetryStrategy } = require('@aws-sdk/util-retry');
 
-const secretsManager = new AWS.SecretsManager({});
-const codePipeline = new AWS.CodePipeline({});
+const secretsManager = new SecretsManagerClient({
+  retryStrategy: new ConfiguredRetryStrategy(10, attempt => 100 + attempt * 1000),
+});
+const codePipeline = new CodePipelineClient({
+  retryStrategy: new ConfiguredRetryStrategy(10, attempt => 100 + attempt * 1000),
+});
 const installerPipelineName = process.env['INSTALLER_PIPELINE_NAME'] ?? '';
 const acceleratorPipelineName = process.env['ACCELERATOR_PIPELINE_NAME'] ?? '';
 const pipelineArray = [installerPipelineName, acceleratorPipelineName];
@@ -2864,12 +2870,11 @@ exports.handler = async (event, context) => {
 
 async function getSecretValue(secretName) {
   try {
-    const data = await secretsManager
-      .getSecretValue({
+    const data = await secretsManager.send(
+      new GetSecretValueCommand({
         SecretId: secretName,
-      })
-      .promise();
-
+      }),
+    );
     if (!data || !data.SecretString) {
       throw new Error(\`Secret \${secretName} didn't exist.\`);
     }
@@ -2900,7 +2905,7 @@ async function getPipelineDetails(pipelineName) {
     name: pipelineName,
   };
   console.log(\`Retrieving existing pipeline configuration for: \${pipelineName}...\`);
-  const pipelineObject = await codePipeline.getPipeline(getPipelineParams).promise();
+  const pipelineObject = await codePipeline.send(new GetPipelineCommand(getPipelineParams));
   console.log(JSON.stringify(pipelineObject));
   return pipelineObject;
 }
@@ -2909,7 +2914,7 @@ async function updatePipeline(updatedPipelineDetails) {
   //Remove metadata from getPipelineOutput to use as updatePipelineInput
   delete updatedPipelineDetails.metadata;
   console.log(\`Updating pipeline with new OAuth Token...\`);
-  return codePipeline.updatePipeline(updatedPipelineDetails).promise();
+  return codePipeline.send(new UpdatePipelineCommand(updatedPipelineDetails));
 }
 
 async function updatePipelineDetailsForBothPipelines(secretValue) {
@@ -2974,7 +2979,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             "Arn",
           ],
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs18.x",
         "Timeout": 60,
       },
       "Type": "AWS::Lambda::Function",
@@ -3380,7 +3385,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             "Arn",
           ],
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs18.x",
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -5140,7 +5145,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
               },
             },
           ],
-          "Image": "aws/codebuild/standard:6.0",
+          "Image": "aws/codebuild/standard:7.0",
           "ImagePullCredentialsType": "CODEBUILD",
           "PrivilegedMode": false,
           "Type": "LINUX_CONTAINER",
@@ -5174,7 +5179,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
 phases:
   install:
     runtime-versions:
-      nodejs: 16
+      nodejs: 18
   pre_build:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
@@ -5491,14 +5496,15 @@ phases:
         "Code": {
           "ZipFile": "
           const response = require('cfn-response'); 
-          const AWS = require('aws-sdk');
+          const { SSMClient, DeleteParameterCommand, GetParameterCommand, ParameterNotFound, PutParameterCommand } = require("@aws-sdk/client-ssm");
+          const { ConfiguredRetryStrategy } = require("@aws-sdk/util-retry");
           exports.handler = async function (event, context) { 
           console.log(JSON.stringify(event, null, 4)); 
           const prefix=event.ResourceProperties.prefix;
           const pipelineStackVersionSsmParamName=event.ResourceProperties.pipelineStackVersionSsmParamName;
           const lowerCasePrefix=prefix.toLowerCase();
           
-          const ssm = new AWS.SSM({});
+          const ssm = new SSMClient({retryStrategy: new ConfiguredRetryStrategy(10, (attempt) => 100 + attempt * 1000)});
           
           let data = {};
           
@@ -5521,7 +5527,7 @@ phases:
                 Name: paramName,
               };
               try {
-                  const ssmResponse = await ssm.getParameter(params).promise();
+                  const ssmResponse = await ssm.send(new GetParameterCommand(params));
                   // Fail stack if prefix was changed during update
                   if (ssmResponse.Parameter.Value !== prefix) {
                       await response.send(event, context, response.FAILED, {'FailureReason': 'LZA does not allow changing AcceleratorPrefix parameter value after initial deploy !!! Existing prefix: ' + event.OldResourceProperties.prefix + ' New prefix: ' + prefix + '.' }, event.PhysicalResourceId);
@@ -5530,7 +5536,7 @@ phases:
                   await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
               } catch (error) {
                   console.log(error);
-                  if (error.code === 'ParameterNotFound'){
+                  if (error instanceof ParameterNotFound){
                       await response.send(event, context, response.FAILED, {'FailureReason': 'LZA prefix ssm parameter ' + paramName + ' not found!!! Recreate the parameter with existing AcceleratorPrefix parameter value to fix the issue'}, event.PhysicalResourceId);
                       return;
                   }
@@ -5555,13 +5561,13 @@ phases:
                     Name: pipelineStackVersionSsmParamName,
                   };
                   try {
-                    await ssm.getParameter(versionParams).promise();
+                    await ssm.send(new GetParameterCommand(versionParams));
                     await response.send(event, context, response.FAILED, {'FailureReason': 'Can not change AcceleratorPrefix parameter for existing deployment, existing prefix value is AWSAccelerator, keep AcceleratorPrefix parameter value to default value for successfully stack update !!!'}, event.PhysicalResourceId);
                     return;
                   }
                   catch (error) {
                     console.log(error);
-                    if (error.code !== 'ParameterNotFound'){
+                    if (!(error instanceof ParameterNotFound)){
                       await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while accessing LZA ssm parameter ' + pipelineStackVersionSsmParamName }, event.PhysicalResourceId);
                       return;
                     }
@@ -5576,7 +5582,7 @@ phases:
                         Description: 'LZA created SSM parameter for Accelerator prefix value, DO NOT MODIFY/DELETE this parameter',
                         Type: 'String',
                       };
-                  await ssm.putParameter(newParams).promise();
+                  await ssm.send(new PutParameterCommand(newParams));
                   console.log('LZA prefix parameter ' + paramName  + ' created successfully.');
                   await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
               }
@@ -5592,12 +5598,12 @@ phases:
               Name: paramName,
             };
             try {
-              await ssm.deleteParameter(deleteParams).promise();
+              await ssm.send(new DeleteParameterCommand(deleteParams));
               console.log('LZA prefix parameter ' + paramName  + ' deleted successfully.');
             }
             catch (error) {
               console.log(error);
-              if (error.code !== 'ParameterNotFound'){
+              if (!(error instanceof ParameterNotFound)){
                 await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while deleting LZA ssm parameter ' + paramName }, event.PhysicalResourceId);
                 return;
               }
@@ -5616,7 +5622,7 @@ phases:
             "Arn",
           ],
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs18.x",
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -5971,7 +5977,6 @@ phases:
       "Properties": {
         "Code": {
           "ZipFile": "
-        const AWS = require('aws-sdk');
         const response = require('cfn-response');
         const https = require('https');
 
@@ -6074,7 +6079,7 @@ phases:
             "Arn",
           ],
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs18.x",
         "Timeout": 30,
       },
       "Type": "AWS::Lambda::Function",
@@ -6256,10 +6261,16 @@ phases:
  *  and limitations under the License.
  */
 
-const AWS = require('aws-sdk');
+const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
+const { CodePipelineClient, GetPipelineCommand, UpdatePipelineCommand } = require('@aws-sdk/client-codepipeline');
+const { ConfiguredRetryStrategy } = require('@aws-sdk/util-retry');
 
-const secretsManager = new AWS.SecretsManager({});
-const codePipeline = new AWS.CodePipeline({});
+const secretsManager = new SecretsManagerClient({
+  retryStrategy: new ConfiguredRetryStrategy(10, attempt => 100 + attempt * 1000),
+});
+const codePipeline = new CodePipelineClient({
+  retryStrategy: new ConfiguredRetryStrategy(10, attempt => 100 + attempt * 1000),
+});
 const installerPipelineName = process.env['INSTALLER_PIPELINE_NAME'] ?? '';
 const acceleratorPipelineName = process.env['ACCELERATOR_PIPELINE_NAME'] ?? '';
 const pipelineArray = [installerPipelineName, acceleratorPipelineName];
@@ -6283,12 +6294,11 @@ exports.handler = async (event, context) => {
 
 async function getSecretValue(secretName) {
   try {
-    const data = await secretsManager
-      .getSecretValue({
+    const data = await secretsManager.send(
+      new GetSecretValueCommand({
         SecretId: secretName,
-      })
-      .promise();
-
+      }),
+    );
     if (!data || !data.SecretString) {
       throw new Error(\`Secret \${secretName} didn't exist.\`);
     }
@@ -6319,7 +6329,7 @@ async function getPipelineDetails(pipelineName) {
     name: pipelineName,
   };
   console.log(\`Retrieving existing pipeline configuration for: \${pipelineName}...\`);
-  const pipelineObject = await codePipeline.getPipeline(getPipelineParams).promise();
+  const pipelineObject = await codePipeline.send(new GetPipelineCommand(getPipelineParams));
   console.log(JSON.stringify(pipelineObject));
   return pipelineObject;
 }
@@ -6328,7 +6338,7 @@ async function updatePipeline(updatedPipelineDetails) {
   //Remove metadata from getPipelineOutput to use as updatePipelineInput
   delete updatedPipelineDetails.metadata;
   console.log(\`Updating pipeline with new OAuth Token...\`);
-  return codePipeline.updatePipeline(updatedPipelineDetails).promise();
+  return codePipeline.send(new UpdatePipelineCommand(updatedPipelineDetails));
 }
 
 async function updatePipelineDetailsForBothPipelines(secretValue) {
@@ -6393,7 +6403,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             "Arn",
           ],
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs18.x",
         "Timeout": 60,
       },
       "Type": "AWS::Lambda::Function",
@@ -6799,7 +6809,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             "Arn",
           ],
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs18.x",
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -8620,7 +8630,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
               "Value": "AWSControlTowerExecution",
             },
           ],
-          "Image": "aws/codebuild/standard:6.0",
+          "Image": "aws/codebuild/standard:7.0",
           "ImagePullCredentialsType": "CODEBUILD",
           "PrivilegedMode": false,
           "Type": "LINUX_CONTAINER",
@@ -8651,7 +8661,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
 phases:
   install:
     runtime-versions:
-      nodejs: 16
+      nodejs: 18
   pre_build:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
@@ -8977,14 +8987,15 @@ phases:
         "Code": {
           "ZipFile": "
           const response = require('cfn-response'); 
-          const AWS = require('aws-sdk');
+          const { SSMClient, DeleteParameterCommand, GetParameterCommand, ParameterNotFound, PutParameterCommand } = require("@aws-sdk/client-ssm");
+          const { ConfiguredRetryStrategy } = require("@aws-sdk/util-retry");
           exports.handler = async function (event, context) { 
           console.log(JSON.stringify(event, null, 4)); 
           const prefix=event.ResourceProperties.prefix;
           const pipelineStackVersionSsmParamName=event.ResourceProperties.pipelineStackVersionSsmParamName;
           const lowerCasePrefix=prefix.toLowerCase();
           
-          const ssm = new AWS.SSM({});
+          const ssm = new SSMClient({retryStrategy: new ConfiguredRetryStrategy(10, (attempt) => 100 + attempt * 1000)});
           
           let data = {};
           
@@ -9007,7 +9018,7 @@ phases:
                 Name: paramName,
               };
               try {
-                  const ssmResponse = await ssm.getParameter(params).promise();
+                  const ssmResponse = await ssm.send(new GetParameterCommand(params));
                   // Fail stack if prefix was changed during update
                   if (ssmResponse.Parameter.Value !== prefix) {
                       await response.send(event, context, response.FAILED, {'FailureReason': 'LZA does not allow changing AcceleratorPrefix parameter value after initial deploy !!! Existing prefix: ' + event.OldResourceProperties.prefix + ' New prefix: ' + prefix + '.' }, event.PhysicalResourceId);
@@ -9016,7 +9027,7 @@ phases:
                   await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
               } catch (error) {
                   console.log(error);
-                  if (error.code === 'ParameterNotFound'){
+                  if (error instanceof ParameterNotFound){
                       await response.send(event, context, response.FAILED, {'FailureReason': 'LZA prefix ssm parameter ' + paramName + ' not found!!! Recreate the parameter with existing AcceleratorPrefix parameter value to fix the issue'}, event.PhysicalResourceId);
                       return;
                   }
@@ -9041,13 +9052,13 @@ phases:
                     Name: pipelineStackVersionSsmParamName,
                   };
                   try {
-                    await ssm.getParameter(versionParams).promise();
+                    await ssm.send(new GetParameterCommand(versionParams));
                     await response.send(event, context, response.FAILED, {'FailureReason': 'Can not change AcceleratorPrefix parameter for existing deployment, existing prefix value is AWSAccelerator, keep AcceleratorPrefix parameter value to default value for successfully stack update !!!'}, event.PhysicalResourceId);
                     return;
                   }
                   catch (error) {
                     console.log(error);
-                    if (error.code !== 'ParameterNotFound'){
+                    if (!(error instanceof ParameterNotFound)){
                       await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while accessing LZA ssm parameter ' + pipelineStackVersionSsmParamName }, event.PhysicalResourceId);
                       return;
                     }
@@ -9062,7 +9073,7 @@ phases:
                         Description: 'LZA created SSM parameter for Accelerator prefix value, DO NOT MODIFY/DELETE this parameter',
                         Type: 'String',
                       };
-                  await ssm.putParameter(newParams).promise();
+                  await ssm.send(new PutParameterCommand(newParams));
                   console.log('LZA prefix parameter ' + paramName  + ' created successfully.');
                   await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
               }
@@ -9078,12 +9089,12 @@ phases:
               Name: paramName,
             };
             try {
-              await ssm.deleteParameter(deleteParams).promise();
+              await ssm.send(new DeleteParameterCommand(deleteParams));
               console.log('LZA prefix parameter ' + paramName  + ' deleted successfully.');
             }
             catch (error) {
               console.log(error);
-              if (error.code !== 'ParameterNotFound'){
+              if (!(error instanceof ParameterNotFound)){
                 await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while deleting LZA ssm parameter ' + paramName }, event.PhysicalResourceId);
                 return;
               }
@@ -9102,7 +9113,7 @@ phases:
             "Arn",
           ],
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs18.x",
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -9456,7 +9467,6 @@ phases:
       "Properties": {
         "Code": {
           "ZipFile": "
-        const AWS = require('aws-sdk');
         const response = require('cfn-response');
         const https = require('https');
 
@@ -9559,7 +9569,7 @@ phases:
             "Arn",
           ],
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs18.x",
         "Timeout": 30,
       },
       "Type": "AWS::Lambda::Function",
@@ -9749,10 +9759,16 @@ phases:
  *  and limitations under the License.
  */
 
-const AWS = require('aws-sdk');
+const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
+const { CodePipelineClient, GetPipelineCommand, UpdatePipelineCommand } = require('@aws-sdk/client-codepipeline');
+const { ConfiguredRetryStrategy } = require('@aws-sdk/util-retry');
 
-const secretsManager = new AWS.SecretsManager({});
-const codePipeline = new AWS.CodePipeline({});
+const secretsManager = new SecretsManagerClient({
+  retryStrategy: new ConfiguredRetryStrategy(10, attempt => 100 + attempt * 1000),
+});
+const codePipeline = new CodePipelineClient({
+  retryStrategy: new ConfiguredRetryStrategy(10, attempt => 100 + attempt * 1000),
+});
 const installerPipelineName = process.env['INSTALLER_PIPELINE_NAME'] ?? '';
 const acceleratorPipelineName = process.env['ACCELERATOR_PIPELINE_NAME'] ?? '';
 const pipelineArray = [installerPipelineName, acceleratorPipelineName];
@@ -9776,12 +9792,11 @@ exports.handler = async (event, context) => {
 
 async function getSecretValue(secretName) {
   try {
-    const data = await secretsManager
-      .getSecretValue({
+    const data = await secretsManager.send(
+      new GetSecretValueCommand({
         SecretId: secretName,
-      })
-      .promise();
-
+      }),
+    );
     if (!data || !data.SecretString) {
       throw new Error(\`Secret \${secretName} didn't exist.\`);
     }
@@ -9812,7 +9827,7 @@ async function getPipelineDetails(pipelineName) {
     name: pipelineName,
   };
   console.log(\`Retrieving existing pipeline configuration for: \${pipelineName}...\`);
-  const pipelineObject = await codePipeline.getPipeline(getPipelineParams).promise();
+  const pipelineObject = await codePipeline.send(new GetPipelineCommand(getPipelineParams));
   console.log(JSON.stringify(pipelineObject));
   return pipelineObject;
 }
@@ -9821,7 +9836,7 @@ async function updatePipeline(updatedPipelineDetails) {
   //Remove metadata from getPipelineOutput to use as updatePipelineInput
   delete updatedPipelineDetails.metadata;
   console.log(\`Updating pipeline with new OAuth Token...\`);
-  return codePipeline.updatePipeline(updatedPipelineDetails).promise();
+  return codePipeline.send(new UpdatePipelineCommand(updatedPipelineDetails));
 }
 
 async function updatePipelineDetailsForBothPipelines(secretValue) {
@@ -9880,7 +9895,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             "Arn",
           ],
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs18.x",
         "Timeout": 60,
       },
       "Type": "AWS::Lambda::Function",
@@ -10277,7 +10292,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             "Arn",
           ],
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs18.x",
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -12088,7 +12103,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
               },
             },
           ],
-          "Image": "aws/codebuild/standard:6.0",
+          "Image": "aws/codebuild/standard:7.0",
           "ImagePullCredentialsType": "CODEBUILD",
           "PrivilegedMode": false,
           "Type": "LINUX_CONTAINER",
@@ -12119,7 +12134,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
 phases:
   install:
     runtime-versions:
-      nodejs: 16
+      nodejs: 18
   pre_build:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
@@ -12445,14 +12460,15 @@ phases:
         "Code": {
           "ZipFile": "
           const response = require('cfn-response'); 
-          const AWS = require('aws-sdk');
+          const { SSMClient, DeleteParameterCommand, GetParameterCommand, ParameterNotFound, PutParameterCommand } = require("@aws-sdk/client-ssm");
+          const { ConfiguredRetryStrategy } = require("@aws-sdk/util-retry");
           exports.handler = async function (event, context) { 
           console.log(JSON.stringify(event, null, 4)); 
           const prefix=event.ResourceProperties.prefix;
           const pipelineStackVersionSsmParamName=event.ResourceProperties.pipelineStackVersionSsmParamName;
           const lowerCasePrefix=prefix.toLowerCase();
           
-          const ssm = new AWS.SSM({});
+          const ssm = new SSMClient({retryStrategy: new ConfiguredRetryStrategy(10, (attempt) => 100 + attempt * 1000)});
           
           let data = {};
           
@@ -12475,7 +12491,7 @@ phases:
                 Name: paramName,
               };
               try {
-                  const ssmResponse = await ssm.getParameter(params).promise();
+                  const ssmResponse = await ssm.send(new GetParameterCommand(params));
                   // Fail stack if prefix was changed during update
                   if (ssmResponse.Parameter.Value !== prefix) {
                       await response.send(event, context, response.FAILED, {'FailureReason': 'LZA does not allow changing AcceleratorPrefix parameter value after initial deploy !!! Existing prefix: ' + event.OldResourceProperties.prefix + ' New prefix: ' + prefix + '.' }, event.PhysicalResourceId);
@@ -12484,7 +12500,7 @@ phases:
                   await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
               } catch (error) {
                   console.log(error);
-                  if (error.code === 'ParameterNotFound'){
+                  if (error instanceof ParameterNotFound){
                       await response.send(event, context, response.FAILED, {'FailureReason': 'LZA prefix ssm parameter ' + paramName + ' not found!!! Recreate the parameter with existing AcceleratorPrefix parameter value to fix the issue'}, event.PhysicalResourceId);
                       return;
                   }
@@ -12509,13 +12525,13 @@ phases:
                     Name: pipelineStackVersionSsmParamName,
                   };
                   try {
-                    await ssm.getParameter(versionParams).promise();
+                    await ssm.send(new GetParameterCommand(versionParams));
                     await response.send(event, context, response.FAILED, {'FailureReason': 'Can not change AcceleratorPrefix parameter for existing deployment, existing prefix value is AWSAccelerator, keep AcceleratorPrefix parameter value to default value for successfully stack update !!!'}, event.PhysicalResourceId);
                     return;
                   }
                   catch (error) {
                     console.log(error);
-                    if (error.code !== 'ParameterNotFound'){
+                    if (!(error instanceof ParameterNotFound)){
                       await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while accessing LZA ssm parameter ' + pipelineStackVersionSsmParamName }, event.PhysicalResourceId);
                       return;
                     }
@@ -12530,7 +12546,7 @@ phases:
                         Description: 'LZA created SSM parameter for Accelerator prefix value, DO NOT MODIFY/DELETE this parameter',
                         Type: 'String',
                       };
-                  await ssm.putParameter(newParams).promise();
+                  await ssm.send(new PutParameterCommand(newParams));
                   console.log('LZA prefix parameter ' + paramName  + ' created successfully.');
                   await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
               }
@@ -12546,12 +12562,12 @@ phases:
               Name: paramName,
             };
             try {
-              await ssm.deleteParameter(deleteParams).promise();
+              await ssm.send(new DeleteParameterCommand(deleteParams));
               console.log('LZA prefix parameter ' + paramName  + ' deleted successfully.');
             }
             catch (error) {
               console.log(error);
-              if (error.code !== 'ParameterNotFound'){
+              if (!(error instanceof ParameterNotFound)){
                 await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while deleting LZA ssm parameter ' + paramName }, event.PhysicalResourceId);
                 return;
               }
@@ -12570,7 +12586,7 @@ phases:
             "Arn",
           ],
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs18.x",
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -12924,7 +12940,6 @@ phases:
       "Properties": {
         "Code": {
           "ZipFile": "
-        const AWS = require('aws-sdk');
         const response = require('cfn-response');
         const https = require('https');
 
@@ -13027,7 +13042,7 @@ phases:
             "Arn",
           ],
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs18.x",
         "Timeout": 30,
       },
       "Type": "AWS::Lambda::Function",
@@ -13217,10 +13232,16 @@ phases:
  *  and limitations under the License.
  */
 
-const AWS = require('aws-sdk');
+const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
+const { CodePipelineClient, GetPipelineCommand, UpdatePipelineCommand } = require('@aws-sdk/client-codepipeline');
+const { ConfiguredRetryStrategy } = require('@aws-sdk/util-retry');
 
-const secretsManager = new AWS.SecretsManager({});
-const codePipeline = new AWS.CodePipeline({});
+const secretsManager = new SecretsManagerClient({
+  retryStrategy: new ConfiguredRetryStrategy(10, attempt => 100 + attempt * 1000),
+});
+const codePipeline = new CodePipelineClient({
+  retryStrategy: new ConfiguredRetryStrategy(10, attempt => 100 + attempt * 1000),
+});
 const installerPipelineName = process.env['INSTALLER_PIPELINE_NAME'] ?? '';
 const acceleratorPipelineName = process.env['ACCELERATOR_PIPELINE_NAME'] ?? '';
 const pipelineArray = [installerPipelineName, acceleratorPipelineName];
@@ -13244,12 +13265,11 @@ exports.handler = async (event, context) => {
 
 async function getSecretValue(secretName) {
   try {
-    const data = await secretsManager
-      .getSecretValue({
+    const data = await secretsManager.send(
+      new GetSecretValueCommand({
         SecretId: secretName,
-      })
-      .promise();
-
+      }),
+    );
     if (!data || !data.SecretString) {
       throw new Error(\`Secret \${secretName} didn't exist.\`);
     }
@@ -13280,7 +13300,7 @@ async function getPipelineDetails(pipelineName) {
     name: pipelineName,
   };
   console.log(\`Retrieving existing pipeline configuration for: \${pipelineName}...\`);
-  const pipelineObject = await codePipeline.getPipeline(getPipelineParams).promise();
+  const pipelineObject = await codePipeline.send(new GetPipelineCommand(getPipelineParams));
   console.log(JSON.stringify(pipelineObject));
   return pipelineObject;
 }
@@ -13289,7 +13309,7 @@ async function updatePipeline(updatedPipelineDetails) {
   //Remove metadata from getPipelineOutput to use as updatePipelineInput
   delete updatedPipelineDetails.metadata;
   console.log(\`Updating pipeline with new OAuth Token...\`);
-  return codePipeline.updatePipeline(updatedPipelineDetails).promise();
+  return codePipeline.send(new UpdatePipelineCommand(updatedPipelineDetails));
 }
 
 async function updatePipelineDetailsForBothPipelines(secretValue) {
@@ -13348,7 +13368,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             "Arn",
           ],
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs18.x",
         "Timeout": 60,
       },
       "Type": "AWS::Lambda::Function",
@@ -13745,7 +13765,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             "Arn",
           ],
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs18.x",
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -15561,7 +15581,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
               "Value": "true",
             },
           ],
-          "Image": "aws/codebuild/standard:6.0",
+          "Image": "aws/codebuild/standard:7.0",
           "ImagePullCredentialsType": "CODEBUILD",
           "PrivilegedMode": false,
           "Type": "LINUX_CONTAINER",
@@ -15592,7 +15612,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
 phases:
   install:
     runtime-versions:
-      nodejs: 16
+      nodejs: 18
   pre_build:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
@@ -15918,14 +15938,15 @@ phases:
         "Code": {
           "ZipFile": "
           const response = require('cfn-response'); 
-          const AWS = require('aws-sdk');
+          const { SSMClient, DeleteParameterCommand, GetParameterCommand, ParameterNotFound, PutParameterCommand } = require("@aws-sdk/client-ssm");
+          const { ConfiguredRetryStrategy } = require("@aws-sdk/util-retry");
           exports.handler = async function (event, context) { 
           console.log(JSON.stringify(event, null, 4)); 
           const prefix=event.ResourceProperties.prefix;
           const pipelineStackVersionSsmParamName=event.ResourceProperties.pipelineStackVersionSsmParamName;
           const lowerCasePrefix=prefix.toLowerCase();
           
-          const ssm = new AWS.SSM({});
+          const ssm = new SSMClient({retryStrategy: new ConfiguredRetryStrategy(10, (attempt) => 100 + attempt * 1000)});
           
           let data = {};
           
@@ -15948,7 +15969,7 @@ phases:
                 Name: paramName,
               };
               try {
-                  const ssmResponse = await ssm.getParameter(params).promise();
+                  const ssmResponse = await ssm.send(new GetParameterCommand(params));
                   // Fail stack if prefix was changed during update
                   if (ssmResponse.Parameter.Value !== prefix) {
                       await response.send(event, context, response.FAILED, {'FailureReason': 'LZA does not allow changing AcceleratorPrefix parameter value after initial deploy !!! Existing prefix: ' + event.OldResourceProperties.prefix + ' New prefix: ' + prefix + '.' }, event.PhysicalResourceId);
@@ -15957,7 +15978,7 @@ phases:
                   await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
               } catch (error) {
                   console.log(error);
-                  if (error.code === 'ParameterNotFound'){
+                  if (error instanceof ParameterNotFound){
                       await response.send(event, context, response.FAILED, {'FailureReason': 'LZA prefix ssm parameter ' + paramName + ' not found!!! Recreate the parameter with existing AcceleratorPrefix parameter value to fix the issue'}, event.PhysicalResourceId);
                       return;
                   }
@@ -15982,13 +16003,13 @@ phases:
                     Name: pipelineStackVersionSsmParamName,
                   };
                   try {
-                    await ssm.getParameter(versionParams).promise();
+                    await ssm.send(new GetParameterCommand(versionParams));
                     await response.send(event, context, response.FAILED, {'FailureReason': 'Can not change AcceleratorPrefix parameter for existing deployment, existing prefix value is AWSAccelerator, keep AcceleratorPrefix parameter value to default value for successfully stack update !!!'}, event.PhysicalResourceId);
                     return;
                   }
                   catch (error) {
                     console.log(error);
-                    if (error.code !== 'ParameterNotFound'){
+                    if (!(error instanceof ParameterNotFound)){
                       await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while accessing LZA ssm parameter ' + pipelineStackVersionSsmParamName }, event.PhysicalResourceId);
                       return;
                     }
@@ -16003,7 +16024,7 @@ phases:
                         Description: 'LZA created SSM parameter for Accelerator prefix value, DO NOT MODIFY/DELETE this parameter',
                         Type: 'String',
                       };
-                  await ssm.putParameter(newParams).promise();
+                  await ssm.send(new PutParameterCommand(newParams));
                   console.log('LZA prefix parameter ' + paramName  + ' created successfully.');
                   await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
               }
@@ -16019,12 +16040,12 @@ phases:
               Name: paramName,
             };
             try {
-              await ssm.deleteParameter(deleteParams).promise();
+              await ssm.send(new DeleteParameterCommand(deleteParams));
               console.log('LZA prefix parameter ' + paramName  + ' deleted successfully.');
             }
             catch (error) {
               console.log(error);
-              if (error.code !== 'ParameterNotFound'){
+              if (!(error instanceof ParameterNotFound)){
                 await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while deleting LZA ssm parameter ' + paramName }, event.PhysicalResourceId);
                 return;
               }
@@ -16043,7 +16064,7 @@ phases:
             "Arn",
           ],
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs18.x",
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -16397,7 +16418,6 @@ phases:
       "Properties": {
         "Code": {
           "ZipFile": "
-        const AWS = require('aws-sdk');
         const response = require('cfn-response');
         const https = require('https');
 
@@ -16500,7 +16520,7 @@ phases:
             "Arn",
           ],
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs18.x",
         "Timeout": 30,
       },
       "Type": "AWS::Lambda::Function",
@@ -16690,10 +16710,16 @@ phases:
  *  and limitations under the License.
  */
 
-const AWS = require('aws-sdk');
+const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
+const { CodePipelineClient, GetPipelineCommand, UpdatePipelineCommand } = require('@aws-sdk/client-codepipeline');
+const { ConfiguredRetryStrategy } = require('@aws-sdk/util-retry');
 
-const secretsManager = new AWS.SecretsManager({});
-const codePipeline = new AWS.CodePipeline({});
+const secretsManager = new SecretsManagerClient({
+  retryStrategy: new ConfiguredRetryStrategy(10, attempt => 100 + attempt * 1000),
+});
+const codePipeline = new CodePipelineClient({
+  retryStrategy: new ConfiguredRetryStrategy(10, attempt => 100 + attempt * 1000),
+});
 const installerPipelineName = process.env['INSTALLER_PIPELINE_NAME'] ?? '';
 const acceleratorPipelineName = process.env['ACCELERATOR_PIPELINE_NAME'] ?? '';
 const pipelineArray = [installerPipelineName, acceleratorPipelineName];
@@ -16717,12 +16743,11 @@ exports.handler = async (event, context) => {
 
 async function getSecretValue(secretName) {
   try {
-    const data = await secretsManager
-      .getSecretValue({
+    const data = await secretsManager.send(
+      new GetSecretValueCommand({
         SecretId: secretName,
-      })
-      .promise();
-
+      }),
+    );
     if (!data || !data.SecretString) {
       throw new Error(\`Secret \${secretName} didn't exist.\`);
     }
@@ -16753,7 +16778,7 @@ async function getPipelineDetails(pipelineName) {
     name: pipelineName,
   };
   console.log(\`Retrieving existing pipeline configuration for: \${pipelineName}...\`);
-  const pipelineObject = await codePipeline.getPipeline(getPipelineParams).promise();
+  const pipelineObject = await codePipeline.send(new GetPipelineCommand(getPipelineParams));
   console.log(JSON.stringify(pipelineObject));
   return pipelineObject;
 }
@@ -16762,7 +16787,7 @@ async function updatePipeline(updatedPipelineDetails) {
   //Remove metadata from getPipelineOutput to use as updatePipelineInput
   delete updatedPipelineDetails.metadata;
   console.log(\`Updating pipeline with new OAuth Token...\`);
-  return codePipeline.updatePipeline(updatedPipelineDetails).promise();
+  return codePipeline.send(new UpdatePipelineCommand(updatedPipelineDetails));
 }
 
 async function updatePipelineDetailsForBothPipelines(secretValue) {
@@ -16821,7 +16846,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             "Arn",
           ],
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs18.x",
         "Timeout": 60,
       },
       "Type": "AWS::Lambda::Function",
@@ -17218,7 +17243,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             "Arn",
           ],
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs18.x",
       },
       "Type": "AWS::Lambda::Function",
     },

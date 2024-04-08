@@ -2146,7 +2146,7 @@ export class LoggingStack extends AcceleratorStack {
 
     this.snsForwarderFunction = new cdk.aws_lambda.Function(this, 'SnsTopicForwarderFunction', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, '../lambdas/sns-topic-forwarder/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
       handler: 'index.handler',
       description: 'Lambda function to forward Accelerator SNS Topics to log archive account',
       timeout: cdk.Duration.minutes(2),

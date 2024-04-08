@@ -40,7 +40,7 @@ const app = new cdk.App();
 
 export class AspectIntegTestStack extends cdk.Stack {
   public function128Name: string;
-  public function512Name: string;
+  public function1024Name: string;
   constructor(scope: Construct, id: string, props: cdk.StackProps) {
     super(scope, id, props);
 
@@ -51,17 +51,17 @@ export class AspectIntegTestStack extends cdk.Stack {
       memorySize: 128,
     });
 
-    const function512 = new cdk.aws_lambda.Function(this, 'Function512', {
+    const function1024 = new cdk.aws_lambda.Function(this, 'Function1024', {
       runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
       handler: 'index.handler',
       code: cdk.aws_lambda.Code.fromInline('exports.handler = function(event, ctx, cb) { return cb(null, "hi"); }'),
-      memorySize: 512,
+      memorySize: 1024,
     });
 
     cdk.Aspects.of(this).add(new ApplyDestroyPolicyAspect());
     new AcceleratorAspects(app, 'aws', false);
     this.function128Name = function128.functionName;
-    this.function512Name = function512.functionName;
+    this.function1024Name = function1024.functionName;
   }
 }
 
@@ -89,23 +89,23 @@ const integ = new IntegTest(app, 'AspectIntegTest', {
   regions: [stackUnderTest.region],
 });
 
-// test that the aspect increases default memory from 128 to 256
+// test that the aspect increases default memory from 128 to 512
 integ.assertions
   .awsApiCall('Lambda', 'getFunction', { FunctionName: stackUnderTest.function128Name })
   .expect(
     ExpectedResult.objectLike({
-      Configuration: { MemorySize: 256 },
+      Configuration: { MemorySize: 512 },
     }),
   )
   .waitForAssertions({ totalTimeout: cdk.Duration.minutes(5) });
 
-// test that the aspect ignores functions with memorySize defined > 256 & AWS Solutions env variable is populated
+// test that the aspect ignores functions with memorySize defined > 512 & AWS Solutions env variable is populated
 integ.assertions
-  .awsApiCall('Lambda', 'getFunction', { FunctionName: stackUnderTest.function512Name })
+  .awsApiCall('Lambda', 'getFunction', { FunctionName: stackUnderTest.function1024Name })
   .expect(
     ExpectedResult.objectLike({
       Configuration: {
-        MemorySize: 512,
+        MemorySize: 1024,
         Environment: {
           Variables: {
             SOLUTION_ID: `AwsSolution/SO0199/${version}`,

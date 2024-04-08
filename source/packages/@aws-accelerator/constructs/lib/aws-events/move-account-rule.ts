@@ -95,7 +95,7 @@ export class MoveAccountRule extends Construct {
     // resources for control tower lifecycle events
     const moveAccountTargetFunction = new cdk.aws_lambda.Function(this, 'MoveAccountTargetFunction', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'move-account/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
       handler: 'index.handler',
       description: 'Lambda function to process Organizations MoveAccount event from CloudTrail',
       timeout: cdk.Duration.minutes(5),

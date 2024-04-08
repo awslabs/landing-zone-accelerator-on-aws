@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - fix(logging): refactored Security Hub logging to use EventBridge
+- chore(lambda): upgraded runtime to Node18
 
 ### Fixed
 

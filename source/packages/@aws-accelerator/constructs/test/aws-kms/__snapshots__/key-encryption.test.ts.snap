@@ -58,14 +58,14 @@ exports[`KmsEncryption Construct(KmsEncryption):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
-        "MemorySize": 256,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "KeyLookupKmsEncryptionFunctionServiceRole3CBF5633",
             "Arn",
           ],
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs18.x",
         "Timeout": 300,
       },
       "Type": "AWS::Lambda::Function",

@@ -49,7 +49,7 @@ export class CreateControlTowerAccounts extends Construct {
 
     this.onEvent = new cdk.aws_lambda.Function(this, 'CreateControlTowerAccount', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'create-accounts/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(1),
       description: 'Create Control Tower Account onEvent handler',
@@ -126,7 +126,7 @@ export class CreateControlTowerAccounts extends Construct {
     });
     this.isComplete = new cdk.aws_lambda.Function(this, 'CreateControlTowerAccountStatus', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'create-accounts-status/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(5),
       description: 'Create Control Tower Account isComplete handler',

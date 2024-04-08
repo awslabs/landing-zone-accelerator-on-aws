@@ -945,14 +945,14 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
         "KmsKeyArn": {
           "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
-        "MemorySize": 256,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
             "Arn",
           ],
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs18.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -1413,7 +1413,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
               "Value": "yes",
             },
           ],
-          "Image": "aws/codebuild/standard:6.0",
+          "Image": "aws/codebuild/standard:7.0",
           "ImagePullCredentialsType": "CODEBUILD",
           "PrivilegedMode": false,
           "Type": "LINUX_CONTAINER",
@@ -2446,7 +2446,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
               "Value": "",
             },
           ],
-          "Image": "aws/codebuild/standard:6.0",
+          "Image": "aws/codebuild/standard:7.0",
           "ImagePullCredentialsType": "CODEBUILD",
           "PrivilegedMode": false,
           "Type": "LINUX_CONTAINER",
@@ -2468,7 +2468,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
   "phases": {
     "install": {
       "runtime-versions": {
-        "nodejs": 16
+        "nodejs": 18
       }
     },
     "build": {

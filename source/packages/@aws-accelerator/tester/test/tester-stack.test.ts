@@ -189,7 +189,7 @@ describe('TesterStack', () => {
             Role: {
               'Fn::GetAtt': ['awsacceleratorvalidatemaintransitgatewayFunctionServiceRoleB1766D38', 'Arn'],
             },
-            Runtime: 'nodejs16.x',
+            Runtime: 'nodejs18.x',
           },
         },
       },

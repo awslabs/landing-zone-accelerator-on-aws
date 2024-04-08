@@ -93,14 +93,14 @@ exports[`ServiceLinkedRole Construct(ServiceLinkedRole):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
-        "MemorySize": 256,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "ServiceLinkedRoleCreateServiceLinkedRoleFunctionServiceRoleFC9D35BB",
             "Arn",
           ],
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs18.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",

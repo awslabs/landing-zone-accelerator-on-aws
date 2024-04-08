@@ -35,20 +35,21 @@ export class ResourceNamePrefixes extends Construct {
       : `/accelerator/AWSAccelerator-PipelineStack-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}/version`;
 
     const lambdaFunction = new cdk.aws_lambda.Function(this, 'ResourceNamePrefixesFunction', {
-      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
       handler: 'index.handler',
       description:
         'This function converts accelerator prefix parameter to lower case to name s3 buckets in installer stack',
       code: cdk.aws_lambda.Code.fromInline(`
           const response = require('cfn-response'); 
-          const AWS = require('aws-sdk');
+          const { SSMClient, DeleteParameterCommand, GetParameterCommand, ParameterNotFound, PutParameterCommand } = require("@aws-sdk/client-ssm");
+          const { ConfiguredRetryStrategy } = require("@aws-sdk/util-retry");
           exports.handler = async function (event, context) { 
           console.log(JSON.stringify(event, null, 4)); 
           const prefix=event.ResourceProperties.prefix;
           const pipelineStackVersionSsmParamName=event.ResourceProperties.pipelineStackVersionSsmParamName;
           const lowerCasePrefix=prefix.toLowerCase();
           
-          const ssm = new AWS.SSM({});
+          const ssm = new SSMClient({retryStrategy: new ConfiguredRetryStrategy(10, (attempt) => 100 + attempt * 1000)});
           
           let data = {};
           
@@ -71,7 +72,7 @@ export class ResourceNamePrefixes extends Construct {
                 Name: paramName,
               };
               try {
-                  const ssmResponse = await ssm.getParameter(params).promise();
+                  const ssmResponse = await ssm.send(new GetParameterCommand(params));
                   // Fail stack if prefix was changed during update
                   if (ssmResponse.Parameter.Value !== prefix) {
                       await response.send(event, context, response.FAILED, {'FailureReason': 'LZA does not allow changing AcceleratorPrefix parameter value after initial deploy !!! Existing prefix: ' + event.OldResourceProperties.prefix + ' New prefix: ' + prefix + '.' }, event.PhysicalResourceId);
@@ -80,7 +81,7 @@ export class ResourceNamePrefixes extends Construct {
                   await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
               } catch (error) {
                   console.log(error);
-                  if (error.code === 'ParameterNotFound'){
+                  if (error instanceof ParameterNotFound){
                       await response.send(event, context, response.FAILED, {'FailureReason': 'LZA prefix ssm parameter ' + paramName + ' not found!!! Recreate the parameter with existing AcceleratorPrefix parameter value to fix the issue'}, event.PhysicalResourceId);
                       return;
                   }
@@ -105,13 +106,13 @@ export class ResourceNamePrefixes extends Construct {
                     Name: pipelineStackVersionSsmParamName,
                   };
                   try {
-                    await ssm.getParameter(versionParams).promise();
+                    await ssm.send(new GetParameterCommand(versionParams));
                     await response.send(event, context, response.FAILED, {'FailureReason': 'Can not change AcceleratorPrefix parameter for existing deployment, existing prefix value is AWSAccelerator, keep AcceleratorPrefix parameter value to default value for successfully stack update !!!'}, event.PhysicalResourceId);
                     return;
                   }
                   catch (error) {
                     console.log(error);
-                    if (error.code !== 'ParameterNotFound'){
+                    if (!(error instanceof ParameterNotFound)){
                       await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while accessing LZA ssm parameter ' + pipelineStackVersionSsmParamName }, event.PhysicalResourceId);
                       return;
                     }
@@ -126,7 +127,7 @@ export class ResourceNamePrefixes extends Construct {
                         Description: 'LZA created SSM parameter for Accelerator prefix value, DO NOT MODIFY/DELETE this parameter',
                         Type: 'String',
                       };
-                  await ssm.putParameter(newParams).promise();
+                  await ssm.send(new PutParameterCommand(newParams));
                   console.log('LZA prefix parameter ' + paramName  + ' created successfully.');
                   await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
               }
@@ -142,12 +143,12 @@ export class ResourceNamePrefixes extends Construct {
               Name: paramName,
             };
             try {
-              await ssm.deleteParameter(deleteParams).promise();
+              await ssm.send(new DeleteParameterCommand(deleteParams));
               console.log('LZA prefix parameter ' + paramName  + ' deleted successfully.');
             }
             catch (error) {
               console.log(error);
-              if (error.code !== 'ParameterNotFound'){
+              if (!(error instanceof ParameterNotFound)){
                 await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while deleting LZA ssm parameter ' + paramName }, event.PhysicalResourceId);
                 return;
               }

@@ -47,8 +47,8 @@ class LambdaDefaultMemoryAspect implements IAspect {
           memorySize = (node as CfnFunction).memorySize;
         }
 
-        if (!memorySize || memorySize < 256) {
-          node.addPropertyOverride('MemorySize', 256);
+        if (!memorySize || memorySize < 512) {
+          node.addPropertyOverride('MemorySize', 512);
         }
       }
     }

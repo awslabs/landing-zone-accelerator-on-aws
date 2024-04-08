@@ -11,9 +11,18 @@
  *  and limitations under the License.
  */
 
-const aws = require('aws-sdk');
-const org = new aws.Organizations({ region: 'us-east-1' });
+const {
+  OrganizationsClient,
+  CreateGovCloudAccountCommand,
+  DescribeCreateAccountStatusCommand,
+} = require('@aws-sdk/client-organizations');
+const { ConfiguredRetryStrategy } = require('@aws-sdk/util-retry');
 const cfn = require('cfn-response');
+
+const org = new OrganizationsClient({
+  retryStrategy: new ConfiguredRetryStrategy(10, attempt => 100 + attempt * 1000),
+  region: 'us-east-1',
+});
 /**
  * create-govcloud-account - lambda handler
  *
@@ -30,14 +39,14 @@ exports.handler = async (event, context) => {
     let i = 0;
 
     if (event.RequestType === 'Create') {
-      var accResp = await org.createGovCloudAccount({ AccountName: acc, Email: em, RoleName: role }).promise();
+      var accResp = await org.send(new CreateGovCloudAccountCommand({ AccountName: acc, Email: em, RoleName: role }));
       console.log(JSON.stringify(accResp));
       var car = accResp.CreateAccountStatus.Id;
-      let accStatR = await org.describeCreateAccountStatus({ CreateAccountRequestId: car }).promise();
+      let accStatR = await org.send(new DescribeCreateAccountStatusCommand({ CreateAccountRequestId: car }));
       let accStat = accStatR.CreateAccountStatus.State;
       while (accStat === 'IN_PROGRESS' && i < 40) {
         await new Promise(resolve => setTimeout(resolve, 15e3));
-        accStatR = await org.describeCreateAccountStatus({ CreateAccountRequestId: car }).promise();
+        accStatR = await org.send(new DescribeCreateAccountStatusCommand({ CreateAccountRequestId: car }));
         accStat = accStatR.CreateAccountStatus.State;
         i++;
         // print responses to help troubleshoot

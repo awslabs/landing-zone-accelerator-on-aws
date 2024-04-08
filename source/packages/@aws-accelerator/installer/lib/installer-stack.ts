@@ -619,7 +619,7 @@ export class InstallerStack extends cdk.Stack {
         phases: {
           install: {
             'runtime-versions': {
-              nodejs: 16,
+              nodejs: 18,
             },
           },
           pre_build: {
@@ -695,8 +695,8 @@ export class InstallerStack extends cdk.Stack {
         },
       }),
       environment: {
-        buildImage: cdk.aws_codebuild.LinuxBuildImage.STANDARD_6_0,
-        privileged: false, // Allow access to the Docker daemon
+        buildImage: cdk.aws_codebuild.LinuxBuildImage.STANDARD_7_0,
+        privileged: false,
         computeType: cdk.aws_codebuild.ComputeType.MEDIUM,
         environmentVariables: {
           NODE_OPTIONS: {
@@ -957,7 +957,7 @@ export class InstallerStack extends cdk.Stack {
 
     const updatePipelineGithubTokenFunction = new cdk.aws_lambda.Function(this, 'UpdatePipelineGithubTokenFunction', {
       code: new cdk.aws_lambda.InlineCode(fileContents.toString()),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
       handler: 'index.handler',
       description: 'Lambda function to update CodePipeline OAuth Token',
       timeout: cdk.Duration.minutes(1),

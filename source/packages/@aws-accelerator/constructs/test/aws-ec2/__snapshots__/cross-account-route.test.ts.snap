@@ -23,7 +23,7 @@ exports[`CrossAccountRoute Construct(CrossAccountRoute):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs18.x",
         "Timeout": 15,
       },
       "Type": "AWS::Lambda::Function",

@@ -46,7 +46,7 @@ export class DetachQuarantineScp extends Construct {
     //
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, DETACH_QUARANTINE_SCP_RESOURCE_TYPE, {
       codeDirectory: path.join(__dirname, 'lambdas/detach-quarantine-scp/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
       timeout: cdk.Duration.minutes(15),
       policyStatements: [
         {

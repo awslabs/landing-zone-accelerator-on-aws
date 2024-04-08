@@ -11,10 +11,16 @@
  *  and limitations under the License.
  */
 
-const AWS = require('aws-sdk');
+const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
+const { CodePipelineClient, GetPipelineCommand, UpdatePipelineCommand } = require('@aws-sdk/client-codepipeline');
+const { ConfiguredRetryStrategy } = require('@aws-sdk/util-retry');
 
-const secretsManager = new AWS.SecretsManager({});
-const codePipeline = new AWS.CodePipeline({});
+const secretsManager = new SecretsManagerClient({
+  retryStrategy: new ConfiguredRetryStrategy(10, attempt => 100 + attempt * 1000),
+});
+const codePipeline = new CodePipelineClient({
+  retryStrategy: new ConfiguredRetryStrategy(10, attempt => 100 + attempt * 1000),
+});
 const installerPipelineName = process.env['INSTALLER_PIPELINE_NAME'] ?? '';
 const acceleratorPipelineName = process.env['ACCELERATOR_PIPELINE_NAME'] ?? '';
 const pipelineArray = [installerPipelineName, acceleratorPipelineName];
@@ -38,12 +44,11 @@ exports.handler = async (event, context) => {
 
 async function getSecretValue(secretName) {
   try {
-    const data = await secretsManager
-      .getSecretValue({
+    const data = await secretsManager.send(
+      new GetSecretValueCommand({
         SecretId: secretName,
-      })
-      .promise();
-
+      }),
+    );
     if (!data || !data.SecretString) {
       throw new Error(`Secret ${secretName} didn't exist.`);
     }
@@ -74,7 +79,7 @@ async function getPipelineDetails(pipelineName) {
     name: pipelineName,
   };
   console.log(`Retrieving existing pipeline configuration for: ${pipelineName}...`);
-  const pipelineObject = await codePipeline.getPipeline(getPipelineParams).promise();
+  const pipelineObject = await codePipeline.send(new GetPipelineCommand(getPipelineParams));
   console.log(JSON.stringify(pipelineObject));
   return pipelineObject;
 }
@@ -83,7 +88,7 @@ async function updatePipeline(updatedPipelineDetails) {
   //Remove metadata from getPipelineOutput to use as updatePipelineInput
   delete updatedPipelineDetails.metadata;
   console.log(`Updating pipeline with new OAuth Token...`);
-  return codePipeline.updatePipeline(updatedPipelineDetails).promise();
+  return codePipeline.send(new UpdatePipelineCommand(updatedPipelineDetails));
 }
 
 async function updatePipelineDetailsForBothPipelines(secretValue) {

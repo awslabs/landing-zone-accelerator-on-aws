@@ -67,7 +67,7 @@ export class EbsDefaultEncryption extends Construct {
 
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, EBS_ENCRYPTION_TYPE, {
       codeDirectory: path.join(__dirname, 'ebs-default-encryption/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
       policyStatements: iamPolicy,
     });
 

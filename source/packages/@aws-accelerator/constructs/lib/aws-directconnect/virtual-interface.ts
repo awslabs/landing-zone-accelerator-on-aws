@@ -163,7 +163,7 @@ export class VirtualInterface extends cdk.Resource implements IVirtualInterface 
 
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
       codeDirectory,
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
       policyStatements,
       timeout: cdk.Duration.minutes(15),
     });

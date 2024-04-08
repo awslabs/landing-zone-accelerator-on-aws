@@ -1026,7 +1026,7 @@ export class DeleteDefaultSecurityGroupRules extends Construct {
     //
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, DELETE_DEFAULT_SECURITY_GROUP_RULES, {
       codeDirectory: path.join(__dirname, 'delete-default-security-group-rules/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
       policyStatements: [
         {
           Effect: 'Allow',

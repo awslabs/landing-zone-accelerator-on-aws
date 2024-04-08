@@ -80,7 +80,7 @@ exports[`OrganizationalUnits Construct(OrganizationalUnit):  Snapshot Test 1`] =
             "Arn",
           ],
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs18.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
