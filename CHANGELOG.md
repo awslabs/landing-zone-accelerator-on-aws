@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore(documentation): update opt-in region requirement for Control Tower deployment
 - feat(control-tower) integrate lz management and baseline api for external account deployment
 - fix(control-tower): add validation to check incorrect landing zone version in global config
-- fix(organizations): unable to create ou with same name under different parent 
+- fix(organizations): unable to create ou with same name under different parent
 - feat(logging): add cloudwatch log group data protection policy
 - chore(documentation): update merge request template to add unit test information
 
@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - fix(logging): refactored Security Hub logging to use EventBridge
 - chore(lambda): upgraded runtime to Node18
+- chore(config): remove break glass user from the sample configurations
 
 ### Fixed
 
