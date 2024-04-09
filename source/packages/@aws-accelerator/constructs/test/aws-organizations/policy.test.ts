@@ -36,7 +36,6 @@ new Policy(stack, 'Policy', {
   ],
   kmsKey: new Key(stack, 'CustomKey', {}),
   logRetentionInDays: 3653,
-  homeRegion: 'us-east-1',
 });
 
 /**

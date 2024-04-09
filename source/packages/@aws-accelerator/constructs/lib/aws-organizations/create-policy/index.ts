@@ -49,8 +49,6 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const tags: Tag[] = event.ResourceProperties['tags'] || [];
   const partition: string = event.ResourceProperties['partition'];
   const policyTagKey: string = event.ResourceProperties['policyTagKey'];
-  const homeRegion: string = event.ResourceProperties['homeRegion'];
-  const currentRegion = event.ResourceProperties['region'];
   const globalRegion = getGlobalRegion(partition);
 
   const solutionId = process.env['SOLUTION_ID'];
@@ -65,51 +63,39 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
     case 'Create':
     case 'Update':
       // Any configured AWS Organization Service Control Policies (SCPs) are also created and attached to configuration-specified deployment targets in accounts stage in global region
-      if (currentRegion === homeRegion || (currentRegion === globalRegion && type === 'SERVICE_CONTROL_POLICY')) {
-        //
-        // Read in the policy content from the specified S3 location
-        //
-        const s3Object = await throttlingBackOff(() =>
-          s3Client.send(new GetObjectCommand({ Bucket: bucket, Key: key })),
-        );
-        // as per javascript section in https://docs.aws.amazon.com/AmazonS3/latest/userguide/example_s3_GetObject_section.html
-        const content = await s3Object.Body!.transformToString();
 
-        const policyId = await createPolicy(
-          { name, type, content, description, tags, policyTagKey },
-          organizationsClient,
-        );
+      //
+      // Read in the policy content from the specified S3 location
+      //
+      const s3Object = await throttlingBackOff(() => s3Client.send(new GetObjectCommand({ Bucket: bucket, Key: key })));
+      // as per javascript section in https://docs.aws.amazon.com/AmazonS3/latest/userguide/example_s3_GetObject_section.html
+      const content = await s3Object.Body!.transformToString();
 
-        return {
-          PhysicalResourceId: policyId,
-          Status: 'SUCCESS',
-        };
-      } else {
-        // do nothing
-        return {
-          PhysicalResourceId: 'NoOperation',
-          Status: 'SUCCESS',
-        };
-      }
+      const policyId = await createPolicy(
+        { name, type, content, description, tags, policyTagKey },
+        organizationsClient,
+      );
+
+      return {
+        PhysicalResourceId: policyId,
+        Status: 'SUCCESS',
+      };
 
     case 'Delete':
-      if (currentRegion === homeRegion || (currentRegion === globalRegion && type === 'SERVICE_CONTROL_POLICY')) {
-        const deletePolicyId = await getPolicyId(organizationsClient, name, type);
+      const deletePolicyId = await getPolicyId(organizationsClient, name, type);
 
-        if (deletePolicyId) {
-          console.log(`${type} ${name} found for deletion`);
-          console.log(`Checking if policy ${name} has any attachments`);
-          await detachPolicyFromAllAttachedTargets(organizationsClient, { name: name, id: deletePolicyId });
+      if (deletePolicyId) {
+        console.log(`${type} ${name} found for deletion`);
+        console.log(`Checking if policy ${name} has any attachments`);
+        await detachPolicyFromAllAttachedTargets(organizationsClient, { name: name, id: deletePolicyId });
 
-          console.log(`Deleting policy ${name}, policy type is ${type}`);
-          await throttlingBackOff(() =>
-            organizationsClient.send(new DeletePolicyCommand({ PolicyId: deletePolicyId })),
-          );
-          console.log(`Policy ${name} deleted successfully!`);
-        } else {
-          throw new Error(`Policy: ${name} was not found in AWS Organizations`);
-        }
+        console.log(`Deleting policy ${name}, policy type is ${type}`);
+        await throttlingBackOff(() => organizationsClient.send(new DeletePolicyCommand({ PolicyId: deletePolicyId })));
+        console.log(`Policy ${name} deleted successfully!`);
+      } else {
+        throw new Error(`Policy: ${name} was not found in AWS Organizations`);
       }
+
       return {
         PhysicalResourceId: event.PhysicalResourceId,
         Status: 'SUCCESS',
