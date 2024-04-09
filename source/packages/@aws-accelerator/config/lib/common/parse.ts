@@ -28,6 +28,8 @@ import * as replacementsSchema from '../schemas/replacements-config.json';
 import * as customizationsSchema from '../schemas/customizations-config.json';
 import * as networkSchema from '../schemas/network-config.json';
 
+const ajv = new Ajv({ allErrors: true, verbose: true });
+
 interface JsonSchema {
   $ref: string;
   $schema: string;
@@ -50,7 +52,6 @@ type FilteredErrors = { [key: string]: string };
  * extra properties that were not found in the schema.
  */
 function validate(schema: JsonSchema, content: unknown): FilteredErrors {
-  const ajv = new Ajv({ allErrors: true, verbose: true });
   ajv.validate(schema, content);
 
   const errors: FilteredErrors = {};
@@ -153,8 +154,15 @@ export function parseNetworkConfig(content: unknown): INetworkConfig {
  * @returns Returns true if the content conforms to the interface, false otherwise.
  */
 function is(schema: JsonSchema, interfaceName: string, content: unknown): boolean {
-  const newSchema: JsonSchema = { ...schema, $ref: `#/definitions/${interfaceName}` };
-  const errors = validate(newSchema, content);
+  let newSchema = ajv.getSchema(interfaceName);
+  if (!newSchema) {
+    ajv.addSchema({ ...schema, $ref: `#/definitions/${interfaceName}` }, interfaceName);
+    newSchema = ajv.getSchema(interfaceName);
+  }
+  if (!newSchema?.schema) {
+    throw new Error(`Could not find schema for ${interfaceName}`);
+  }
+  const errors = validate(newSchema.schema as JsonSchema, content);
 
   return Object.keys(errors).length == 0;
 }
