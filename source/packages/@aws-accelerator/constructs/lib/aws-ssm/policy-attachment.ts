@@ -180,6 +180,9 @@ export class SsmSessionManagerPolicy extends Construct {
           `arn:${cdk.Stack.of(this).partition}:kms:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:key/*`,
         ],
         conditions: {
+          Null: {
+            'kms:ResourceAliases': 'false',
+          },
           'ForAllValues:StringLike': {
             'kms:ResourceAliases': [props.ssmKeyDetails.alias],
           },
@@ -195,6 +198,9 @@ export class SsmSessionManagerPolicy extends Construct {
           `arn:${cdk.Stack.of(this).partition}:kms:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:key/*`,
         ],
         conditions: {
+          Null: {
+            'kms:ResourceAliases': 'false',
+          },
           'ForAllValues:StringLike': {
             'kms:ResourceAliases': [props.ssmKeyDetails.alias],
           },

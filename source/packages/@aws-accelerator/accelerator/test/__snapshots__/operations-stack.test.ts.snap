@@ -1262,6 +1262,9 @@ exports[`OperationsStack Construct(OperationsStack):  Snapshot Test 1`] = `
                     "alias/accelerator/sessionmanager-logs/session",
                   ],
                 },
+                "Null": {
+                  "kms:ResourceAliases": "false",
+                },
               },
               "Effect": "Allow",
               "Resource": {
@@ -1423,6 +1426,9 @@ exports[`OperationsStack Construct(OperationsStack):  Snapshot Test 1`] = `
                   "kms:ResourceAliases": [
                     "alias/accelerator/sessionmanager-logs/session",
                   ],
+                },
+                "Null": {
+                  "kms:ResourceAliases": "false",
                 },
               },
               "Effect": "Allow",
