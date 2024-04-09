@@ -36,6 +36,7 @@ import { TgwCrossAccountResources } from '../asea-resources/tgw-cross-account-re
 import { TransitGatewayRoutes } from '../asea-resources/transit-gateway-routes';
 import { VpcEndpoints } from '../asea-resources/vpc-endpoints';
 import { SsmInventory } from '../asea-resources/ssm-inventory';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
 
 /**
  * Enum for log level
@@ -72,6 +73,7 @@ export class ImportAseaResourcesStack extends NetworkStack {
   public firewallBucket: cdk.aws_s3.IBucket;
   constructor(scope: Construct, id: string, props: ImportAseaResourcesStackProps) {
     super(scope, id, props);
+    this.logger = createLogger([`${cdk.Stack.of(this).stackName}-${cdk.Stack.of(this).region}`]);
     this.stackInfo = props.stackInfo;
     const nestedStacks: { [stackName: string]: cdk.cloudformation_include.CfnIncludeProps } = {};
     this.firewallBucket = cdk.aws_s3.Bucket.fromBucketName(this, 'FirewallLogsBucket', this.centralLogsBucketName);
