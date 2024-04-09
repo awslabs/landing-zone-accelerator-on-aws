@@ -145,15 +145,11 @@ exports[`PolicyAttachment Construct(PolicyAttachment):  Snapshot Test 1`] = `
           "AcceleratorGuardrails1",
           "AcceleratorGuardrails2",
         ],
-        "homeRegion": "us-east-1",
         "partition": {
           "Ref": "AWS::Partition",
         },
         "policyId": "policyId",
         "policyTagKey": "AWSAcceleratorManaged",
-        "region": {
-          "Ref": "AWS::Region",
-        },
         "strategy": "deny-list",
         "targetId": "targetId",
         "type": "SERVICE_CONTROL_POLICY",

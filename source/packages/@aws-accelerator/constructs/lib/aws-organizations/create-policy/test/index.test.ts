@@ -61,11 +61,6 @@ describe('Create Event', () => {
     const response = await handler(event);
     expect(response?.Status).toStrictEqual('SUCCESS');
   });
-  test('Create a policy not home region', async () => {
-    const event = AcceleratorUnitTest.getEvent(EventType.CREATE, { new: [StaticInput.otherRegionProps] });
-    const response = await handler(event);
-    expect(response?.Status).toStrictEqual('SUCCESS');
-  });
 });
 
 describe('Update Event', () => {
@@ -99,7 +94,7 @@ describe('Delete Event', () => {
     process.env = OLD_ENV; // Restore old environment
   });
 
-  test('Delete policy in homeRegion', async () => {
+  test('Delete policy ideally', async () => {
     const event = AcceleratorUnitTest.getEvent(EventType.DELETE, { new: [StaticInput.newProps] });
     orgClient
       .on(ListPoliciesCommand, { Filter: StaticInput.newProps.type })
@@ -107,11 +102,6 @@ describe('Delete Event', () => {
     orgClient.on(ListTargetsForPolicyCommand, { PolicyId: 'Id' }).resolves({ Targets: [{ TargetId: 'targetId' }] });
     orgClient.on(DetachPolicyCommand, { PolicyId: 'Id', TargetId: 'targetId' }).resolves({});
     orgClient.on(DeletePolicyCommand, { PolicyId: 'Id' }).resolves({});
-    const response = await handler(event);
-    expect(response?.Status).toStrictEqual('SUCCESS');
-  });
-  test('Delete policy not homeRegion', async () => {
-    const event = AcceleratorUnitTest.getEvent(EventType.DELETE, { new: [StaticInput.otherRegionProps] });
     const response = await handler(event);
     expect(response?.Status).toStrictEqual('SUCCESS');
   });

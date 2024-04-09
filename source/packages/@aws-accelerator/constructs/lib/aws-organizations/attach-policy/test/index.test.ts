@@ -170,11 +170,6 @@ describe('Update Event', () => {
     const response = await handler(event);
     expect(response?.Status).toStrictEqual('SUCCESS');
   });
-  test('Run in nonHome region', async () => {
-    const event = AcceleratorUnitTest.getEvent(EventType.UPDATE, { new: [StaticInput.otherRegionProps] });
-    const response = await handler(event);
-    expect(response?.Status).toStrictEqual('SUCCESS');
-  });
 });
 
 describe('Delete Event', () => {
@@ -206,11 +201,6 @@ describe('Delete Event', () => {
       .rejectsOnce(
         new PolicyNotAttachedException({ $metadata: { httpStatusCode: 400 }, message: 'Policy not attached' }),
       );
-    const response = await handler(event);
-    expect(response?.Status).toStrictEqual('SUCCESS');
-  });
-  test('Run delete in nonHome region', async () => {
-    const event = AcceleratorUnitTest.getEvent(EventType.DELETE, { new: [StaticInput.otherRegionProps] });
     const response = await handler(event);
     expect(response?.Status).toStrictEqual('SUCCESS');
   });

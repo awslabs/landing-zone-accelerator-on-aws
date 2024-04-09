@@ -44,8 +44,6 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const partition: string = event.ResourceProperties['partition'];
   const configPolicyNames: string[] = event.ResourceProperties['configPolicyNames'];
   const policyTagKey: string = event.ResourceProperties['policyTagKey'];
-  const homeRegion: string = event.ResourceProperties['homeRegion'];
-  const currentRegion = event.ResourceProperties['region'];
   const globalRegion = getGlobalRegion(partition);
 
   const solutionId = process.env['SOLUTION_ID'];
@@ -59,57 +57,49 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
     case 'Create':
     case 'Update':
       // Any configured AWS Organization Service Control Policies (SCPs) are also created and attached to configuration-specified deployment targets in accounts stage in global region
-      if (currentRegion === homeRegion || (currentRegion === globalRegion && type === 'SERVICE_CONTROL_POLICY')) {
-        //
-        // First detach all non config policies from target
-        //
-        await detachNonConfigPolicies(organizationsClient, targetId, configPolicyNames, policyTagKey);
 
-        //
-        // Check if already exists, update and return the ID
-        //
-        const attachedPolicies = await getListPoliciesForTarget(organizationsClient, type, targetId);
+      //
+      // First detach all non config policies from target
+      //
+      await detachNonConfigPolicies(organizationsClient, targetId, configPolicyNames, policyTagKey);
 
-        // check if policyId exists in attachedPolicies id
-        const policyAttached = attachedPolicies?.some(p => p.id === policyId);
-        const fullAwsAccessPolicyAttached = attachedPolicies?.some(p => p.id === 'p-FullAWSAccess');
+      //
+      // Check if already exists, update and return the ID
+      //
+      const attachedPolicies = await getListPoliciesForTarget(organizationsClient, type, targetId);
 
-        // Attach if not attached already.
-        if (!policyAttached) {
-          await attachSpecificPolicy(organizationsClient, policyId, targetId);
-        }
+      // check if policyId exists in attachedPolicies id
+      const policyAttached = attachedPolicies?.some(p => p.id === policyId);
+      const fullAwsAccessPolicyAttached = attachedPolicies?.some(p => p.id === 'p-FullAWSAccess');
 
-        // if SCP strategy is allow-list, then FullAWSAccess policy should be detached
-        if (strategy === 'allow-list' && fullAwsAccessPolicyAttached) {
-          console.log('detaching FullAWSAccess policy because the strategy is allow-list');
-          await detachSpecificPolicy(organizationsClient, 'p-FullAWSAccess', targetId);
-        }
-
-        // if SCP strategy is changed from allow-list to deny list, then FullAWSAccess policy should be attached
-        if (strategy === 'deny-list' && !fullAwsAccessPolicyAttached) {
-          console.log('attaching FullAWSAccess policy because the strategy is deny-list');
-          await attachSpecificPolicy(organizationsClient, 'p-FullAWSAccess', targetId);
-        }
-
-        return {
-          PhysicalResourceId: `${policyId}_${targetId}`,
-          Status: 'SUCCESS',
-        };
-      } else {
-        return {
-          PhysicalResourceId: 'NoOperation',
-          Status: 'SUCCESS',
-        };
+      // Attach if not attached already.
+      if (!policyAttached) {
+        await attachSpecificPolicy(organizationsClient, policyId, targetId);
       }
+
+      // if SCP strategy is allow-list, then FullAWSAccess policy should be detached
+      if (strategy === 'allow-list' && fullAwsAccessPolicyAttached) {
+        console.log('detaching FullAWSAccess policy because the strategy is allow-list');
+        await detachSpecificPolicy(organizationsClient, 'p-FullAWSAccess', targetId);
+      }
+
+      // if SCP strategy is changed from allow-list to deny list, then FullAWSAccess policy should be attached
+      if (strategy === 'deny-list' && !fullAwsAccessPolicyAttached) {
+        console.log('attaching FullAWSAccess policy because the strategy is deny-list');
+        await attachSpecificPolicy(organizationsClient, 'p-FullAWSAccess', targetId);
+      }
+
+      return {
+        PhysicalResourceId: `${policyId}_${targetId}`,
+        Status: 'SUCCESS',
+      };
+
     case 'Delete':
       //
       // Detach policy, let CDK manage where it's deployed,
       //
       // do not remove FullAWSAccess and do nothing for NoOperation
-      if (
-        !['p-FullAWSAccess', 'NoOperation'].includes(policyId) &&
-        (currentRegion === homeRegion || (currentRegion === globalRegion && type === 'SERVICE_CONTROL_POLICY'))
-      ) {
+      if (!['p-FullAWSAccess', 'NoOperation'].includes(policyId)) {
         const attachedPolicies = await getListPoliciesForTarget(organizationsClient, type, targetId);
         await detachPolicyFromSpecificTarget(attachedPolicies, targetId, organizationsClient);
       }

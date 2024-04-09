@@ -31,7 +31,6 @@ new PolicyAttachment(stack, 'PolicyAttachment', {
   acceleratorPrefix: 'AWSAccelerator',
   kmsKey: new Key(stack, 'CustomKey', {}),
   logRetentionInDays: 3653,
-  homeRegion: 'us-east-1',
 });
 
 /**

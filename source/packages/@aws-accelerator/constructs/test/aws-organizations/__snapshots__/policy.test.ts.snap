@@ -171,14 +171,10 @@ exports[`Policy Construct(Policy):  Snapshot Test 1`] = `
           "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
         },
         "description": "Testing Policy construct",
-        "homeRegion": "us-east-1",
-        "key": "5251d37a6a35b9b3313187d3b71d72451f7d6ac6eb5086d6e7f94495a2f8acd8.ts",
+        "key": "9a06438d25ba7eb0057300ba8f4af8a74030d3cdc30edea8bd0168ca94c6038e.ts",
         "name": "TestPolicy",
         "partition": "aws",
         "policyTagKey": "AWSAcceleratorManaged",
-        "region": {
-          "Ref": "AWS::Region",
-        },
         "strategy": "deny-list",
         "tags": [
           {
