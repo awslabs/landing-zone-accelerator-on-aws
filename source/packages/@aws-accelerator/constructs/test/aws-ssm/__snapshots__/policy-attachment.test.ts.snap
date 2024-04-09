@@ -89,6 +89,9 @@ exports[`SsmSessionManagerPolicy Construct(SsmSessionManagerPolicy):  Snapshot T
                     "accelerator/sessionmanager-logs/session",
                   ],
                 },
+                "Null": {
+                  "kms:ResourceAliases": "false",
+                },
               },
               "Effect": "Allow",
               "Resource": {
@@ -215,6 +218,9 @@ exports[`SsmSessionManagerPolicy Construct(SsmSessionManagerPolicy):  Snapshot T
                   "kms:ResourceAliases": [
                     "accelerator/sessionmanager-logs/session",
                   ],
+                },
+                "Null": {
+                  "kms:ResourceAliases": "false",
                 },
               },
               "Effect": "Allow",
