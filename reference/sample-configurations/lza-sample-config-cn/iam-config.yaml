@@ -1,10 +1,4 @@
-policySets:
-  - deploymentTargets:
-      organizationalUnits:
-        - Root
-    policies:
-      - name: Default-Boundary-Policy
-        policy: iam-policies/boundary-policy.json
+policySets: []
 # providers:
   # - name: ActiveDirectory
   #   metadataDocument: iam-providers/active-directory.xml
@@ -32,23 +26,5 @@ roleSets:
       #     awsManaged:
       #       - SecurityAudit
       #   boundaryPolicy: Default-Boundary-Policy
-groupSets:
-  - deploymentTargets:
-      organizationalUnits:
-        - Root
-    groups:
-      - name: Administrators
-        policies:
-          awsManaged:
-            - AdministratorAccess
-userSets:
-  - deploymentTargets:
-      accounts:
-        - Management
-    users:
-      - username: breakGlassUser01
-        group: Administrators
-        boundaryPolicy: Default-Boundary-Policy
-      - username: breakGlassUser02
-        group: Administrators
-        boundaryPolicy: Default-Boundary-Policy
+groupSets: []
+userSets: []
