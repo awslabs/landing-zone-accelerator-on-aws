@@ -93,7 +93,8 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
         await throttlingBackOff(() => organizationsClient.send(new DeletePolicyCommand({ PolicyId: deletePolicyId })));
         console.log(`Policy ${name} deleted successfully!`);
       } else {
-        throw new Error(`Policy: ${name} was not found in AWS Organizations`);
+        // Policy set for deletion was not found in AWS Organizations. Log message and send success.
+        console.warn(`Policy: ${name} was not found in AWS Organizations`);
       }
 
       return {

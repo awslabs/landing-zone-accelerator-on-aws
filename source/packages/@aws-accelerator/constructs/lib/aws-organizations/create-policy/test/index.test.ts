@@ -108,9 +108,8 @@ describe('Delete Event', () => {
   test('Delete policy in homeRegion - policyId not found', async () => {
     const event = AcceleratorUnitTest.getEvent(EventType.DELETE, { new: [StaticInput.newProps] });
     orgClient.on(ListPoliciesCommand, { Filter: StaticInput.newProps.type }).resolves({});
-    await expect(handler(event)).rejects.toThrowError(
-      `Policy: ${StaticInput.newProps.name} was not found in AWS Organizations`,
-    );
+    const response = await handler(event);
+    expect(response?.Status).toStrictEqual('SUCCESS');
   });
 });
 
