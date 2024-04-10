@@ -1,5 +1,5 @@
 /**
- *  Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance
  *  with the License. A copy of the License is located at
@@ -15,7 +15,12 @@ import * as cdk from 'aws-cdk-lib';
 import * as assets from 'aws-cdk-lib/aws-s3-assets';
 import { Construct } from 'constructs';
 import * as path from 'path';
+import { createHash } from 'crypto';
+import { readFileSync } from 'fs';
 import { v4 as uuidv4 } from 'uuid';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
+
+const logger = createLogger(['constructs-organization-policy']);
 
 export enum PolicyType {
   AISERVICES_OPT_OUT_POLICY = 'AISERVICES_OPT_OUT_POLICY',
@@ -112,12 +117,28 @@ export class Policy extends Construct {
       path: props.path,
     });
 
+    let uuid: string;
+    // generating md5 hash to allow for file changes and only trigger change when file is updated
+    const fileHash = createHash('md5').update(readFileSync(props.path)).digest('hex');
+
+    // Boolean to force update
+    const forceUpdate = process.env['ACCELERATOR_FORCED_UPDATE']
+      ? process.env['ACCELERATOR_FORCED_UPDATE'] === 'true'
+      : false;
+
+    if (forceUpdate) {
+      logger.warn(`ACCELERATOR_FORCED_UPDATE env variable is set. Forcing an update.`);
+      uuid = uuidv4();
+    } else {
+      uuid = fileHash;
+    }
+
     //
     // Function definition for the custom resource
     //
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::OrganizationsCreatePolicy', {
       codeDirectory: path.join(__dirname, 'create-policy/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_16_X,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
       description: 'Organizations create policy',
       policyStatements: [
         {
@@ -161,7 +182,7 @@ export class Policy extends Construct {
         key: asset.s3ObjectKey,
         partition: props.partition,
         policyTagKey: `${props.acceleratorPrefix}Managed`,
-        uuid: uuidv4(),
+        uuid,
         name: props.name,
         description: props.description,
         type: props.type,

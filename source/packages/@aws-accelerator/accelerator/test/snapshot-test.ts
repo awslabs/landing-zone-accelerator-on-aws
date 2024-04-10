@@ -1,5 +1,5 @@
 /**
- *  Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance
  *  with the License. A copy of the License is located at
@@ -23,6 +23,7 @@ export function snapShotTest(testNamePrefix: string, stack: cdk.Stack) {
     // limited: only match length of generated zip file or UUID spec lengths.
     const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/;
     const zipRegex = /[0-9a-f]{64}\.zip/;
+    const md5Regex = /^[0-9a-f]{32}$/; // limited: only match length of md5 hash.
 
     // test each serialized object - if any part of string matches regex
     // replace with value of print()
@@ -50,6 +51,13 @@ export function snapShotTest(testNamePrefix: string, stack: cdk.Stack) {
       print: () => '"REPLACED-JSON-PATH.json"',
     });
 
+    expect.addSnapshotSerializer({
+      test: (
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        val: any,
+      ) => typeof val === 'string' && val.match(md5Regex) != null && !val.startsWith('REPLACED'),
+      print: () => '"REPLACED-MD5"',
+    });
     expect(SynthUtils.toCloudFormation(stack)).toMatchSnapshot();
   });
 }
