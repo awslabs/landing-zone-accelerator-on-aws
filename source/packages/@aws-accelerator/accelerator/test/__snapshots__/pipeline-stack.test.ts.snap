@@ -1403,6 +1403,13 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
               "Value": "--max_old_space_size=8192",
             },
             {
+              "Name": "PARTITION",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "AWS::Partition",
+              },
+            },
+            {
               "Name": "ACCELERATOR_PIPELINE_VERSION",
               "Type": "PARAMETER_STORE",
               "Value": "/accelerator/PipelineStack/version",
