@@ -30,7 +30,11 @@ import { IAMClient, GetRoleCommand, GetRoleCommandInput } from '@aws-sdk/client-
 import { AccountsConfig, GlobalConfig, OrganizationConfig } from '@aws-accelerator/config';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
-import { getCrossAccountCredentials, getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
+import {
+  getCrossAccountCredentials,
+  getGlobalRegion,
+  getCurrentAccountId,
+} from '@aws-accelerator/utils/lib/common-functions';
 import { setStsTokenPreferences } from '@aws-accelerator/utils/lib/set-token-preferences';
 
 import { AssumeProfilePlugin } from '@aws-cdk-extensions/cdk-plugin-assume-role';
@@ -1173,13 +1177,28 @@ export async function getCentralLogBucketKmsKeyArn(
   if (!orgsEnabled) {
     return uuidv4();
   }
-  const crossAccountCredentials = await getCrossAccountCredentials(
-    accountId,
-    region,
-    partition,
-    managementAccountAccessRole,
-  );
-  const ssmClient = (await getCrossAccountClient(region, crossAccountCredentials, 'SSM')) as SSMClient;
 
-  return await getSsmParameterValue(parameterName, ssmClient);
+  let ssmClient: SSMClient;
+  try {
+    const currentAccountId = await getCurrentAccountId(partition, region);
+    // if its not the current account then get the credentials from the logArchive account
+    if (currentAccountId !== accountId) {
+      const crossAccountCredentials = await getCrossAccountCredentials(
+        accountId,
+        region,
+        partition,
+        managementAccountAccessRole,
+      );
+      ssmClient = (await getCrossAccountClient(region, crossAccountCredentials, 'SSM')) as SSMClient;
+    } else {
+      ssmClient = new SSMClient({ region });
+    }
+
+    return await getSsmParameterValue(parameterName, ssmClient);
+  } catch (error) {
+    logger.error(
+      `Error getting central log bucket kms key arn: ${error} using parameter ${parameterName} for account ${accountId} using role ${managementAccountAccessRole}`,
+    );
+    return uuidv4();
+  }
 }
