@@ -414,6 +414,10 @@ export class AcceleratorPipeline extends Construct {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: '--max_old_space_size=8192',
           },
+          PARTITION: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: cdk.Stack.of(this).partition,
+          },
           ACCELERATOR_PIPELINE_VERSION: {
             type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
             value: `${props.prefixes.ssmParamName}/${cdk.Stack.of(this).stackName}/version`,
