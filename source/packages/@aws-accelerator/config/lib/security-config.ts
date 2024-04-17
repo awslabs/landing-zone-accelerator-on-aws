@@ -2868,7 +2868,7 @@ export function IsPublicSsmDoc(documentName: string) {
   // - aws
   // - amazon
   // - amzn
-  const reservedPrefix = [/^AWS/i, /^AMZN-/i, /^AMAZON-/i];
+  const reservedPrefix = [/^AWS-/i, /^AMZN-/i, /^AMAZON-/i, /^AWSEC2-/i, /^AWSConfigRemediation-/i, /^AWSSupport-/i];
   if (reservedPrefix.some(obj => obj.test(documentName))) {
     return true;
   }
