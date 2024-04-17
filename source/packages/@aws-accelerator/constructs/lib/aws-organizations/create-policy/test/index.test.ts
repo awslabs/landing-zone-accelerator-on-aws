@@ -6,11 +6,12 @@ import {
   DuplicatePolicyException,
   DetachPolicyCommand,
   DeletePolicyCommand,
+  PolicyNotFoundException,
 } from '@aws-sdk/client-organizations';
 
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
-import { describe, beforeEach, afterEach, expect, test, jest } from '@jest/globals';
+import { describe, beforeEach, expect, test } from '@jest/globals';
 import { handler } from '../index';
 import { AcceleratorMockClient, EventType } from '../../../../test/unit-test/common/resources';
 
@@ -25,19 +26,12 @@ const orgClient = AcceleratorMockClient(OrganizationsClient);
 const s3Client = AcceleratorMockClient(S3Client);
 
 process.env['SOLUTION_ID'] = 'testLza';
+beforeEach(() => {
+  orgClient.reset();
+  s3Client.reset();
+});
 
 describe('Create Event', () => {
-  const OLD_ENV = process.env; // cache old env
-  beforeEach(() => {
-    orgClient.reset();
-    s3Client.reset();
-    jest.resetModules(); // Most important - it clears the cache
-    process.env = { ...OLD_ENV }; // Make a copy
-  });
-  // process env can change between tests so making this afterEach not afterAll
-  afterEach(() => {
-    process.env = OLD_ENV; // Restore old environment
-  });
   test('Create a policy that does not exist', async () => {
     const event = AcceleratorUnitTest.getEvent(EventType.CREATE, { new: [StaticInput.newProps] });
     s3Client
@@ -64,11 +58,6 @@ describe('Create Event', () => {
 });
 
 describe('Update Event', () => {
-  beforeEach(() => {
-    orgClient.reset();
-    s3Client.reset();
-  });
-
   test('Update a policy that exists', async () => {
     const event = AcceleratorUnitTest.getEvent(EventType.UPDATE, { new: [StaticInput.newProps] });
     s3Client
@@ -82,28 +71,47 @@ describe('Update Event', () => {
 });
 
 describe('Delete Event', () => {
-  const OLD_ENV = process.env; // cache old env
-  beforeEach(() => {
-    orgClient.reset();
-    s3Client.reset();
-    jest.resetModules(); // Most important - it clears the cache
-    process.env = { ...OLD_ENV }; // Make a copy
-  });
-  // process env can change between tests so making this afterEach not afterAll
-  afterEach(() => {
-    process.env = OLD_ENV; // Restore old environment
-  });
-
   test('Delete policy ideally', async () => {
     const event = AcceleratorUnitTest.getEvent(EventType.DELETE, { new: [StaticInput.newProps] });
     orgClient
       .on(ListPoliciesCommand, { Filter: StaticInput.newProps.type })
-      .resolves({ Policies: [{ Name: StaticInput.newProps.name, Id: 'Id' }] });
-    orgClient.on(ListTargetsForPolicyCommand, { PolicyId: 'Id' }).resolves({ Targets: [{ TargetId: 'targetId' }] });
-    orgClient.on(DetachPolicyCommand, { PolicyId: 'Id', TargetId: 'targetId' }).resolves({});
-    orgClient.on(DeletePolicyCommand, { PolicyId: 'Id' }).resolves({});
+      .resolves({ Policies: [{ Name: StaticInput.newProps.name, Id: 'PhysicalResourceId' }] });
+    orgClient
+      .on(ListTargetsForPolicyCommand, { PolicyId: 'PhysicalResourceId' })
+      .resolves({ Targets: [{ TargetId: 'targetId' }] });
+    orgClient.on(DetachPolicyCommand, { PolicyId: 'PhysicalResourceId', TargetId: 'targetId' }).resolves({});
+    orgClient.on(DeletePolicyCommand, { PolicyId: 'PhysicalResourceId' }).resolves({});
     const response = await handler(event);
     expect(response?.Status).toStrictEqual('SUCCESS');
+  });
+  test('Delete policy - policy not found', async () => {
+    const event = AcceleratorUnitTest.getEvent(EventType.DELETE, { new: [StaticInput.newProps] });
+    orgClient
+      .on(ListPoliciesCommand, { Filter: StaticInput.newProps.type })
+      .resolves({ Policies: [{ Name: StaticInput.newProps.name, Id: 'PhysicalResourceId' }] });
+    orgClient
+      .on(ListTargetsForPolicyCommand, { PolicyId: 'PhysicalResourceId' })
+      .resolves({ Targets: [{ TargetId: 'targetId' }] });
+    orgClient.on(DetachPolicyCommand, { PolicyId: 'PhysicalResourceId', TargetId: 'targetId' }).resolves({});
+    orgClient
+      .on(DeletePolicyCommand)
+      .rejects(new PolicyNotFoundException({ $metadata: { httpStatusCode: 400 }, message: 'Policy not found' }));
+    const response = await handler(event);
+    expect(response?.Status).toStrictEqual('SUCCESS');
+  });
+  test('Delete policy - policy is in use', async () => {
+    const event = AcceleratorUnitTest.getEvent(EventType.DELETE, { new: [StaticInput.newProps] });
+    orgClient
+      .on(ListPoliciesCommand, { Filter: StaticInput.newProps.type })
+      .resolves({ Policies: [{ Name: StaticInput.newProps.name, Id: 'PhysicalResourceId' }] });
+    orgClient
+      .on(ListTargetsForPolicyCommand, { PolicyId: 'PhysicalResourceId' })
+      .resolves({ Targets: [{ TargetId: 'targetId' }] });
+    orgClient.on(DetachPolicyCommand, { PolicyId: 'PhysicalResourceId', TargetId: 'targetId' }).resolves({});
+    orgClient.on(DeletePolicyCommand).rejects();
+    await expect(handler(event)).rejects.toThrowError(
+      `Error while trying to delete policy: PhysicalResourceId. Error message: {}`,
+    );
   });
   test('Delete policy in homeRegion - policyId not found', async () => {
     const event = AcceleratorUnitTest.getEvent(EventType.DELETE, { new: [StaticInput.newProps] });
@@ -112,6 +120,8 @@ describe('Delete Event', () => {
     expect(response?.Status).toStrictEqual('SUCCESS');
   });
 });
+
+// describe('Delete Event - errors', () => {});
 
 function stringToStream(input: string) {
   // create Stream from string

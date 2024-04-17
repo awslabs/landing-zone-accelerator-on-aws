@@ -171,7 +171,7 @@ exports[`Policy Construct(Policy):  Snapshot Test 1`] = `
           "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
         },
         "description": "Testing Policy construct",
-        "key": "9a06438d25ba7eb0057300ba8f4af8a74030d3cdc30edea8bd0168ca94c6038e.ts",
+        "key": "cc6645b789ecec398524e5ade5814359a8403b9c8c2c4b54b7c4e7ba20348a98.ts",
         "name": "TestPolicy",
         "partition": "aws",
         "policyTagKey": "AWSAcceleratorManaged",
