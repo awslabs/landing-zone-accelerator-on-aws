@@ -15,6 +15,10 @@ import * as cdk from 'aws-cdk-lib';
 import { PolicyType } from './policy';
 import { Construct } from 'constructs';
 import { createHash } from 'crypto';
+import { v4 as uuidv4 } from 'uuid';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
+
+const logger = createLogger(['constructs-organization-policy-attachment']);
 
 const path = require('path');
 
@@ -76,8 +80,20 @@ export class PolicyAttachment extends Construct {
       ],
     });
 
+    let uuid: string;
     const attachArray = [props.policyId, props.targetId ?? '', ...props.configPolicyNames].toString();
     const attachHash = createHash('md5').update(attachArray).digest('hex');
+    // Boolean to force update
+    const forceUpdate = process.env['ACCELERATOR_FORCED_UPDATE']
+      ? process.env['ACCELERATOR_FORCED_UPDATE'] === 'true'
+      : false;
+
+    if (forceUpdate) {
+      logger.warn(`ACCELERATOR_FORCED_UPDATE env variable is set. Forcing an update.`);
+      uuid = uuidv4();
+    } else {
+      uuid = attachHash;
+    }
 
     //
     // Custom Resource definition. We want this resource to be evaluated on
@@ -89,7 +105,7 @@ export class PolicyAttachment extends Construct {
       serviceToken: provider.serviceToken,
       properties: {
         partition: cdk.Aws.PARTITION,
-        uuid: attachHash,
+        uuid,
         policyId: props.policyId,
         targetId: props.targetId,
         type: props.type,

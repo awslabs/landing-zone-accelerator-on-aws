@@ -20,6 +20,7 @@ import {
   paginateListTargetsForPolicy,
   DetachPolicyCommand,
   PolicyNotAttachedException,
+  PolicyNotFoundException,
   CreatePolicyCommand,
   DuplicatePolicyException,
 } from '@aws-sdk/client-organizations';
@@ -82,15 +83,17 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       };
 
     case 'Delete':
+      const deleteEventPolicyId = event.PhysicalResourceId;
       const deletePolicyId = await getPolicyId(organizationsClient, name, type);
 
-      if (deletePolicyId) {
+      // only detach if policy ID from event matches policy ID from AWS Organizations
+      if (deletePolicyId === deleteEventPolicyId) {
         console.log(`${type} ${name} found for deletion`);
         console.log(`Checking if policy ${name} has any attachments`);
         await detachPolicyFromAllAttachedTargets(organizationsClient, { name: name, id: deletePolicyId });
 
         console.log(`Deleting policy ${name}, policy type is ${type}`);
-        await throttlingBackOff(() => organizationsClient.send(new DeletePolicyCommand({ PolicyId: deletePolicyId })));
+        await deletePolicy(deletePolicyId, organizationsClient);
         console.log(`Policy ${name} deleted successfully!`);
       } else {
         // Policy set for deletion was not found in AWS Organizations. Log message and send success.
@@ -104,6 +107,23 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   }
 }
 
+/**
+ * Function to delete specific policy
+ */
+async function deletePolicy(policyId: string, organizationsClient: OrganizationsClient): Promise<void> {
+  try {
+    await throttlingBackOff(() => organizationsClient.send(new DeletePolicyCommand({ PolicyId: policyId })));
+  } catch (error: unknown) {
+    if (error instanceof PolicyNotFoundException) {
+      // if policy was recreated outside of accelerator
+      // it will have a unique ID which is not the org and throw this exception
+      // ignore it and proceed with next step
+      console.log(`Policy: ${policyId} was not found. Continuing...`);
+    } else {
+      throw new Error(`Error while trying to delete policy: ${policyId}. Error message: ${JSON.stringify(error)}`);
+    }
+  }
+}
 /**
  * Function to get policy Id required for deletion
  * @param organizationsClient

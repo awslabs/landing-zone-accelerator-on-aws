@@ -17,8 +17,10 @@ import {
   OrganizationsClient,
   paginateListTagsForResource,
   PolicyNotAttachedException,
+  PolicyNotFoundException,
   DetachPolicyCommand,
   paginateListPoliciesForTarget,
+  paginateListPolicies,
   AttachPolicyCommand,
   DuplicatePolicyAttachmentException,
 } from '@aws-sdk/client-organizations';
@@ -99,9 +101,15 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       // Detach policy, let CDK manage where it's deployed,
       //
       // do not remove FullAWSAccess and do nothing for NoOperation
-      if (!['p-FullAWSAccess', 'NoOperation'].includes(policyId)) {
+      if (
+        !['p-FullAWSAccess', 'NoOperation'].includes(policyId) &&
+        // check the org to see if the policy is present
+        // policy id can change due to out of band change
+        // if no policy is found, no action should be taken
+        (await isPolicyInOrg(policyId, type, organizationsClient))
+      ) {
         const attachedPolicies = await getListPoliciesForTarget(organizationsClient, type, targetId);
-        await detachPolicyFromSpecificTarget(attachedPolicies, targetId, organizationsClient);
+        await detachPolicyFromSpecificTarget(attachedPolicies, targetId, organizationsClient, policyTagKey);
       }
 
       return {
@@ -109,6 +117,18 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
         Status: 'SUCCESS',
       };
   }
+}
+
+async function isPolicyInOrg(policyId: string, type: string, organizationsClient: OrganizationsClient) {
+  for await (const page of paginateListPolicies({ client: organizationsClient }, { Filter: type })) {
+    for (const policy of page.Policies ?? []) {
+      if (policy.Id === policyId) {
+        return true;
+      }
+    }
+  }
+  // went through all policies and did not find that policy ID, return false
+  return false;
 }
 
 async function detachSpecificPolicy(organizationsClient: OrganizationsClient, policyId: string, targetId: string) {
@@ -121,6 +141,11 @@ async function detachSpecificPolicy(organizationsClient: OrganizationsClient, po
     // The policy might already be detached by other attach-policy custom resource concurrently.
     if (error instanceof PolicyNotAttachedException) {
       console.log(`Policy: ${policyId} was not attached. Continuing...`);
+    } else if (error instanceof PolicyNotFoundException) {
+      // if policy was recreated outside of accelerator
+      // incoming policy will have a unique ID which is not the org and throw this exception
+      // ignore it and proceed with next step
+      console.log('Policy: ${policyId} was not found. Continuing...');
     } else {
       throw new Error(`Error while trying to detach policy: ${policyId}. Error message: ${JSON.stringify(error)}`);
     }
@@ -169,27 +194,21 @@ async function detachNonConfigPolicies(
 
   const removePolicies = attachedPolicies.filter(item => configPolicyNames.indexOf(item.name) === -1);
 
-  const removePolicyNames: string[] = [];
-  const removeLzaPolicies: { name: string; id: string }[] = [];
-  for (const removePolicy of removePolicies) {
-    if (await isLzaManagedPolicy(organizationsClient, removePolicy.id, policyTagKey)) {
-      removePolicyNames.push(removePolicy.name);
-      removeLzaPolicies.push(removePolicy);
-    }
-  }
-
-  console.log(`Polices to be detached [${removePolicyNames.join(',')}]`);
-  await detachPolicyFromSpecificTarget(removeLzaPolicies, targetId, organizationsClient);
+  await detachPolicyFromSpecificTarget(removePolicies, targetId, organizationsClient, policyTagKey);
 }
 
 async function detachPolicyFromSpecificTarget(
   removeLzaPolicies: { name: string; id: string }[],
   targetId: string,
   organizationsClient: OrganizationsClient,
+  policyTagKey: string,
 ) {
   for (const removeLzaPolicy of removeLzaPolicies) {
-    console.log(`Detaching ${removeLzaPolicy.name} policy from ${targetId} target`);
-    await detachSpecificPolicy(organizationsClient, removeLzaPolicy.id, targetId);
+    // only remove policies that are managed by LZA
+    if (await isLzaManagedPolicy(organizationsClient, removeLzaPolicy.id, policyTagKey)) {
+      console.log(`Detaching ${removeLzaPolicy.name} policy from ${targetId} target`);
+      await detachSpecificPolicy(organizationsClient, removeLzaPolicy.id, targetId);
+    }
   }
 }
 

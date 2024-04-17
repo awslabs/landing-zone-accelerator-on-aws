@@ -13,7 +13,8 @@
 
 import { Stack } from 'aws-cdk-lib';
 import { Key } from 'aws-cdk-lib/aws-kms';
-import { PolicyAttachment, PolicyType } from '../../index';
+import { PolicyAttachment } from '../../lib/aws-organizations/policy-attachment';
+import { PolicyType } from '../../lib/aws-organizations/policy';
 import { snapShotTest } from '../snapshot-test';
 import { describe } from '@jest/globals';
 

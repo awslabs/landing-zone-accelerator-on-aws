@@ -7,6 +7,8 @@ import {
   AttachPolicyCommand,
   MalformedPolicyDocumentException,
   DuplicatePolicyAttachmentException,
+  PolicyNotFoundException,
+  ListPoliciesCommand,
 } from '@aws-sdk/client-organizations';
 
 import { describe, beforeEach, afterEach, expect, test, jest } from '@jest/globals';
@@ -193,6 +195,9 @@ describe('Delete Event', () => {
         { Name: 'configPolicy3', Id: 'NoOperation' },
       ],
     });
+    orgClient.on(ListPoliciesCommand).resolves({
+      Policies: [{ Name: 'configPolicyId2', Id: StaticInput.attachProps.policyId }],
+    });
     orgClient
       .on(ListTagsForResourceCommand)
       .resolves({ Tags: [{ Key: StaticInput.attachProps.policyTagKey, Value: 'Yes' }] });
@@ -201,6 +206,50 @@ describe('Delete Event', () => {
       .rejectsOnce(
         new PolicyNotAttachedException({ $metadata: { httpStatusCode: 400 }, message: 'Policy not attached' }),
       );
+    const response = await handler(event);
+    expect(response?.Status).toStrictEqual('SUCCESS');
+  });
+  test('Delete policy for target - policy not in org', async () => {
+    const event = AcceleratorUnitTest.getEvent(EventType.DELETE, { new: [StaticInput.attachProps] });
+    orgClient.on(ListPoliciesForTargetCommand).resolves({
+      Policies: [
+        { Name: 'configPolicy1', Id: StaticInput.attachProps.policyId },
+        { Name: 'configPolicy2', Id: 'configPolicyId2' },
+        { Name: 'FullAWSAccess', Id: 'p-FullAWSAccess' },
+        { Name: 'configPolicy3', Id: 'NoOperation' },
+      ],
+    });
+    orgClient.on(ListPoliciesCommand).resolves({
+      Policies: [],
+    });
+    orgClient
+      .on(ListTagsForResourceCommand)
+      .resolves({ Tags: [{ Key: StaticInput.attachProps.policyTagKey, Value: 'Yes' }] });
+    orgClient
+      .on(DetachPolicyCommand, { PolicyId: 'configPolicyId2', TargetId: StaticInput.attachProps.targetId })
+      .rejectsOnce(new PolicyNotFoundException({ $metadata: { httpStatusCode: 400 }, message: 'Policy not found' }));
+    const response = await handler(event);
+    expect(response?.Status).toStrictEqual('SUCCESS');
+  });
+  test('Delete policy for target - policy not found on detach', async () => {
+    const event = AcceleratorUnitTest.getEvent(EventType.DELETE, { new: [StaticInput.attachProps] });
+    orgClient.on(ListPoliciesForTargetCommand).resolves({
+      Policies: [
+        { Name: 'configPolicy1', Id: StaticInput.attachProps.policyId },
+        { Name: 'configPolicy2', Id: 'configPolicyId2' },
+        { Name: 'FullAWSAccess', Id: 'p-FullAWSAccess' },
+        { Name: 'configPolicy3', Id: 'NoOperation' },
+      ],
+    });
+    orgClient.on(ListPoliciesCommand).resolves({
+      Policies: [{ Name: 'configPolicyId2', Id: StaticInput.attachProps.policyId }],
+    });
+    orgClient
+      .on(ListTagsForResourceCommand)
+      .resolves({ Tags: [{ Key: StaticInput.attachProps.policyTagKey, Value: 'Yes' }] });
+    orgClient
+      .on(DetachPolicyCommand, { PolicyId: 'configPolicyId2', TargetId: StaticInput.attachProps.targetId })
+      .rejectsOnce(new PolicyNotFoundException({ $metadata: { httpStatusCode: 400 }, message: 'Policy not found' }));
     const response = await handler(event);
     expect(response?.Status).toStrictEqual('SUCCESS');
   });
