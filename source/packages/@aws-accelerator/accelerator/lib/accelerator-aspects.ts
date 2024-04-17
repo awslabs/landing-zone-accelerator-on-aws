@@ -50,10 +50,6 @@ class IsobOverrides implements cdk.IAspect {
       node.addPropertyDeletionOverride('KmsKeyId');
       node.addPropertyDeletionOverride('Tags');
     }
-    if (node instanceof cdk.aws_s3.CfnBucket) {
-      node.addPropertyDeletionOverride('PublicAccessBlockConfiguration');
-      node.addPropertyDeletionOverride('OwnershipControls');
-    }
     if (node instanceof cdk.aws_cloudtrail.CfnTrail) {
       node.addPropertyDeletionOverride('InsightSelectors');
       node.addPropertyDeletionOverride('IsOrganizationTrail');
@@ -90,10 +86,6 @@ class IsoOverrides implements cdk.IAspect {
     if (node instanceof cdk.aws_logs.CfnLogGroup) {
       node.addPropertyDeletionOverride('KmsKeyId');
       node.addPropertyDeletionOverride('Tags');
-    }
-    if (node instanceof cdk.aws_s3.CfnBucket) {
-      node.addPropertyDeletionOverride('PublicAccessBlockConfiguration');
-      node.addPropertyDeletionOverride('OwnershipControls');
     }
     if (node instanceof cdk.aws_cloudtrail.CfnTrail) {
       node.addPropertyDeletionOverride('InsightSelectors');
