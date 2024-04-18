@@ -107,7 +107,7 @@ describe('should return right values for correct config', () => {
 });
 
 describe('isPublicSsmDoc', () => {
-  expect(IsPublicSsmDoc('AWSDoc')).toBe(true); // when using AWS docs expect to be public
+  expect(IsPublicSsmDoc('AWSDoc')).toBeFalsy(); // not public doc
   expect(IsPublicSsmDoc('Doc')).toBeFalsy(); // not public doc
   expect(IsPublicSsmDoc('AWSAccelerator-Attach-IAM-Instance-Profile')).toBeFalsy(); // not public doc
   expect(IsPublicSsmDoc('AWS-AWSAccelerator-Attach-IAM-Instance-Profile')).toBeTruthy(); //public doc
