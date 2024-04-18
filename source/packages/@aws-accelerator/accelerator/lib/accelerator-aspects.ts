@@ -54,10 +54,6 @@ class IsobOverrides implements cdk.IAspect {
       node.addPropertyDeletionOverride('InsightSelectors');
       node.addPropertyDeletionOverride('IsOrganizationTrail');
     }
-    if (node instanceof cdk.aws_ec2.CfnVPCEndpoint) {
-      const ServiceName = node.serviceName.replace('com.amazonaws.us', 'gov.sgov.sc2s.us');
-      node.addPropertyOverride('ServiceName', ServiceName);
-    }
     if (node instanceof cdk.aws_ecr.CfnRepository) {
       node.addPropertyDeletionOverride('ImageTagMutability');
     }
@@ -91,14 +87,9 @@ class IsoOverrides implements cdk.IAspect {
       node.addPropertyDeletionOverride('InsightSelectors');
       node.addPropertyDeletionOverride('IsOrganizationTrail');
     }
-    if (node instanceof cdk.aws_ec2.CfnVPCEndpoint) {
-      const ServiceName = node.serviceName.replace('com.amazonaws.us', 'gov.ic.c2s.us');
-      node.addPropertyOverride('ServiceName', ServiceName);
-    }
     if (node instanceof cdk.aws_ecr.CfnRepository) {
       node.addPropertyDeletionOverride('ImageTagMutability');
     }
-
     if (node instanceof cdk.aws_iam.CfnRole) {
       const trustPolicyDoc = node.assumeRolePolicyDocument as cdk.aws_iam.SamlConsolePrincipal;
       if (JSON.stringify(trustPolicyDoc).includes('signin.aws.amazon.com')) {
