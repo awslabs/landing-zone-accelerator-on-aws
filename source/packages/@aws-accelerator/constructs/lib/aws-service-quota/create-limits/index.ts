@@ -57,23 +57,32 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
         const getServiceQuotaResponse = await throttlingBackOff(() =>
           servicequotas.send(new GetServiceQuotaCommand(serviceQuotaParams)),
         );
-        if (getServiceQuotaResponse.Quota?.Adjustable) {
-          const increaseLimitParams = {
-            ServiceCode: serviceCode,
-            QuotaCode: quotaCode,
-            DesiredValue: desiredValue,
-          };
-          const quotaIncreaseResponse = await throttlingBackOff(() =>
-            servicequotas.send(new RequestServiceQuotaIncreaseCommand(increaseLimitParams)),
-          );
-          console.log(quotaIncreaseResponse.RequestedQuota);
+        const isAdjustable = getServiceQuotaResponse.Quota?.Adjustable ?? false;
+        const currentValue = getServiceQuotaResponse.Quota?.Value ?? 0;
+        // check to see if quota is adjustable and current value is less than desired value
+        if (isAdjustable) {
+          if (currentValue < desiredValue) {
+            const increaseLimitParams = {
+              ServiceCode: serviceCode,
+              QuotaCode: quotaCode,
+              DesiredValue: desiredValue,
+            };
+            const quotaIncreaseResponse = await throttlingBackOff(() =>
+              servicequotas.send(new RequestServiceQuotaIncreaseCommand(increaseLimitParams)),
+            );
+            console.log(quotaIncreaseResponse.RequestedQuota);
+          }
         } else {
-          console.log(`Service Quota: ${serviceCode} with quota code: ${quotaCode} is not adjustable, skipping`);
+          console.log(
+            `Service Quota: ${serviceCode} with quota code: ${quotaCode} has adjustable set to ${isAdjustable} and current value set to ${currentValue}, skipping`,
+          );
         }
       } catch (error) {
         console.error(error);
         throw new Error(
-          `[service-quota-limits-config] Error increasing service quota ${quotaCode} for service ${serviceCode} in account ${accountId} region ${region}`,
+          `[service-quota-limits-config] Error increasing service quota ${quotaCode} for service ${serviceCode} in account ${accountId} region ${region}. Error: ${JSON.stringify(
+            error,
+          )}`,
         );
       }
 

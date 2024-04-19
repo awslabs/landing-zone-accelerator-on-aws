@@ -25,7 +25,7 @@ describe('Create Event', () => {
         ServiceCode: StaticInput.newProps.serviceCode,
         QuotaCode: StaticInput.newProps.quotaCode,
       })
-      .resolves({ Quota: { Adjustable: true } });
+      .resolves({ Quota: { Adjustable: true, Value: 1 } });
     sqClient
       .on(RequestServiceQuotaIncreaseCommand, {
         ServiceCode: StaticInput.newProps.serviceCode,
@@ -64,7 +64,7 @@ describe('Update Event', () => {
     const accountId = event.StackId.split(':')[4];
     sqClient.on(GetServiceQuotaCommand, serviceQuotaParams).rejects({});
     await expect(handler(event)).rejects.toThrowError(
-      `[service-quota-limits-config] Error increasing service quota ${quotaCode} for service ${serviceCode} in account ${accountId} region ${region}`,
+      `[service-quota-limits-config] Error increasing service quota ${quotaCode} for service ${serviceCode} in account ${accountId} region ${region}. Error: {}`,
     );
   });
 });
