@@ -2488,7 +2488,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
             "Arn",
           ],
         },
-        "Runtime": "python3.7",
+        "Runtime": "python3.12",
         "Timeout": 3,
       },
       "Type": "AWS::Lambda::Function",
