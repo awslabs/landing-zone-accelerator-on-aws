@@ -169,7 +169,7 @@ awsConfig:
             lambda:
               sourceFilePath: custom-config-rules/waf-logging-enabled.zip
               handler: index.handler
-              runtime: python3.7
+              runtime: python3.12
               rolePolicyFile: custom-config-rules/waf-logging-enabled-detection-role.json
             periodic: true
             maximumExecutionFrequency: Six_Hours
