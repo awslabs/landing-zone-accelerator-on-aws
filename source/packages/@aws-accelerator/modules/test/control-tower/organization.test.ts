@@ -44,6 +44,8 @@ import {
   Region,
   ManagementAccount,
   ManagementAccountNotFoundError,
+  Partition,
+  GovCloud_US,
 } from '../utils/test-resources';
 
 const client = AcceleratorMockClient(OrganizationsClient);
@@ -52,12 +54,8 @@ const ssoAdminClient = AcceleratorMockClient(SSOAdminClient);
 describe('Success', () => {
   beforeEach(() => {
     client.reset();
-  });
-
-  test('Valid Organization Configuration ', async () => {
-    client.on(ListRootsCommand, {}).resolves({ Roots: [RootOrganization] });
-
     client.on(ListAWSServiceAccessForOrganizationCommand, {}).resolves({ EnabledServicePrincipals: [] });
+    client.on(ListRootsCommand, {}).resolves({ Roots: [RootOrganization] });
 
     ssoAdminClient.on(ListInstancesCommand, {}).resolves({ Instances: [] });
 
@@ -66,8 +64,15 @@ describe('Success', () => {
     client.on(ListOrganizationalUnitsForParentCommand, {}).resolves({ OrganizationalUnits: [] });
 
     client.on(ListAccountsCommand, {}).resolves({ Accounts: [] });
+  });
 
-    expect(await Organization.ValidateOrganization(GlobalRegion, Region, SolutionId)).toBeUndefined();
+  test('Valid Organization Configuration ', async () => {
+    expect(
+      await Organization.ValidateOrganization(GlobalRegion, Region, SolutionId, Partition, {
+        logArchive: LogArchiveAccount.Email,
+        audit: AuditAccount.Email,
+      }),
+    ).toBeUndefined();
   });
 
   test('Get management account ID ', async () => {
@@ -75,6 +80,21 @@ describe('Success', () => {
 
     const accountId = await Organization.getManagementAccountId(GlobalRegion, SolutionId, ManagementAccount.Email);
     expect(accountId).toEqual(ManagementAccount.Id);
+  });
+
+  test('GovCloud Required Accounts Found', async () => {
+    client.on(DescribeOrganizationCommand, {}).resolves({ Organization: AllFeatureEnabledOrganizationConfig });
+
+    client.on(ListOrganizationalUnitsForParentCommand, {}).resolves({ OrganizationalUnits: [] });
+
+    client.on(ListAccountsCommand, {}).resolves({ Accounts: [ManagementAccount, LogArchiveAccount, AuditAccount] });
+
+    expect(
+      await Organization.ValidateOrganization(GlobalRegion, Region, SolutionId, GovCloud_US, {
+        logArchive: LogArchiveAccount.Email,
+        audit: AuditAccount.Email,
+      }),
+    ).toBeUndefined();
   });
 });
 
@@ -89,9 +109,12 @@ describe('Failure', () => {
   test('Organization Not Enabled', async () => {
     client.on(DescribeOrganizationCommand, {}).resolves({ Organization: undefined });
 
-    await expect(Organization.ValidateOrganization(GlobalRegion, Region, SolutionId)).rejects.toThrow(
-      ValidateOrganizationError([OrganizationValidationError.ORG_NOT_FOUND]),
-    );
+    await expect(
+      Organization.ValidateOrganization(GlobalRegion, Region, SolutionId, Partition, {
+        logArchive: LogArchiveAccount.Email,
+        audit: AuditAccount.Email,
+      }),
+    ).rejects.toThrow(ValidateOrganizationError([OrganizationValidationError.ORG_NOT_FOUND]));
   });
 
   test('Organization All Feature Not Enabled', async () => {
@@ -103,7 +126,12 @@ describe('Failure', () => {
 
     client.on(ListAccountsCommand, {}).resolves({ Accounts: [] });
 
-    expect(await Organization.ValidateOrganization(GlobalRegion, Region, SolutionId)).toBeUndefined();
+    expect(
+      await Organization.ValidateOrganization(GlobalRegion, Region, SolutionId, Partition, {
+        logArchive: LogArchiveAccount.Email,
+        audit: AuditAccount.Email,
+      }),
+    ).toBeUndefined();
   });
 
   test('Additional OU Found', async () => {
@@ -113,9 +141,12 @@ describe('Failure', () => {
 
     client.on(ListAccountsCommand, {}).resolves({ Accounts: [] });
 
-    await expect(Organization.ValidateOrganization(GlobalRegion, Region, SolutionId)).rejects.toThrow(
-      ValidateOrganizationError([OrganizationValidationError.OU_FOUND]),
-    );
+    await expect(
+      Organization.ValidateOrganization(GlobalRegion, Region, SolutionId, Partition, {
+        logArchive: LogArchiveAccount.Email,
+        audit: AuditAccount.Email,
+      }),
+    ).rejects.toThrow(ValidateOrganizationError([OrganizationValidationError.OU_FOUND]));
   });
 
   test('Additional Accounts Found', async () => {
@@ -125,9 +156,27 @@ describe('Failure', () => {
 
     client.on(ListAccountsCommand, {}).resolves({ Accounts: [AuditAccount, LogArchiveAccount] });
 
-    await expect(Organization.ValidateOrganization(GlobalRegion, Region, SolutionId)).rejects.toThrow(
-      ValidateOrganizationError([OrganizationValidationError.ACCOUNT_FOUND]),
-    );
+    await expect(
+      Organization.ValidateOrganization(GlobalRegion, Region, SolutionId, Partition, {
+        logArchive: LogArchiveAccount.Email,
+        audit: AuditAccount.Email,
+      }),
+    ).rejects.toThrow(ValidateOrganizationError([OrganizationValidationError.ACCOUNT_FOUND]));
+  });
+
+  test('GovCloud Required Accounts Not Found', async () => {
+    client.on(DescribeOrganizationCommand, {}).resolves({ Organization: AllFeatureEnabledOrganizationConfig });
+
+    client.on(ListOrganizationalUnitsForParentCommand, {}).resolves({ OrganizationalUnits: [] });
+
+    client.on(ListAccountsCommand, {}).resolves({ Accounts: [ManagementAccount] });
+
+    await expect(
+      Organization.ValidateOrganization(GlobalRegion, Region, SolutionId, GovCloud_US, {
+        logArchive: LogArchiveAccount.Email,
+        audit: AuditAccount.Email,
+      }),
+    ).rejects.toThrow(ValidateOrganizationError([OrganizationValidationError.GOV_CLOUD_ACCOUNT_NOT_FOUND]));
   });
 
   test('Organizations have services enabled', async () => {
@@ -159,9 +208,12 @@ describe('Failure', () => {
 
     client.on(ListAccountsCommand, {}).resolves({ Accounts: [] });
 
-    await expect(Organization.ValidateOrganization(GlobalRegion, Region, SolutionId)).rejects.toThrow(
-      ValidateOrganizationError([OrganizationValidationError.SERVICE_ENABLED]),
-    );
+    await expect(
+      Organization.ValidateOrganization(GlobalRegion, Region, SolutionId, Partition, {
+        logArchive: LogArchiveAccount.Email,
+        audit: AuditAccount.Email,
+      }),
+    ).rejects.toThrow(ValidateOrganizationError([OrganizationValidationError.SERVICE_ENABLED]));
   });
 
   test('IAM Identity Center enabled', async () => {
@@ -173,9 +225,12 @@ describe('Failure', () => {
 
     client.on(ListAccountsCommand, {}).resolves({ Accounts: [] });
 
-    await expect(Organization.ValidateOrganization(GlobalRegion, Region, SolutionId)).rejects.toThrow(
-      ValidateOrganizationError([OrganizationValidationError.IDENTITY_CENTER_ENABLED]),
-    );
+    await expect(
+      Organization.ValidateOrganization(GlobalRegion, Region, SolutionId, Partition, {
+        logArchive: LogArchiveAccount.Email,
+        audit: AuditAccount.Email,
+      }),
+    ).rejects.toThrow(ValidateOrganizationError([OrganizationValidationError.IDENTITY_CENTER_ENABLED]));
   });
 
   test('AWSOrganizationsNotInUseException', async () => {
@@ -191,9 +246,12 @@ describe('Failure', () => {
         Organization: undefined,
       });
 
-    await expect(Organization.ValidateOrganization(GlobalRegion, Region, SolutionId)).rejects.toThrow(
-      ValidateOrganizationError([OrganizationValidationError.ORG_NOT_FOUND]),
-    );
+    await expect(
+      Organization.ValidateOrganization(GlobalRegion, Region, SolutionId, Partition, {
+        logArchive: LogArchiveAccount.Email,
+        audit: AuditAccount.Email,
+      }),
+    ).rejects.toThrow(ValidateOrganizationError([OrganizationValidationError.ORG_NOT_FOUND]));
   });
 
   test('Describe Organization internal error', async () => {
@@ -201,9 +259,12 @@ describe('Failure', () => {
       Organization: undefined,
     });
 
-    await expect(Organization.ValidateOrganization(GlobalRegion, Region, SolutionId)).rejects.toThrow(
-      MockInternalError,
-    );
+    await expect(
+      Organization.ValidateOrganization(GlobalRegion, Region, SolutionId, Partition, {
+        logArchive: LogArchiveAccount.Email,
+        audit: AuditAccount.Email,
+      }),
+    ).rejects.toThrow(MockInternalError);
   });
 
   test('Management account not found ', async () => {

@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(organizations): unable to create ou with same name under different parent
 - feat(logging): add cloudwatch log group data protection policy
 - chore(documentation): update merge request template to add unit test information
+- feat(control-tower): lz management api gov cloud support
 
 ### Changed
 

@@ -22,7 +22,7 @@
   "dependencies": {
     "@aws-accelerator/config": "^0.0.0",
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-sdk/client-controltower":"3.515.0",
+    "@aws-sdk/client-controltower":"3.556.0",
     "@aws-sdk/client-iam": "3.410.0",
     "@aws-sdk/client-sso-admin":"3.410.0",
     "@aws-sdk/client-kms": "3.410.0",
