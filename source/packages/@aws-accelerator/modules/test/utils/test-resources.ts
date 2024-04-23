@@ -35,6 +35,11 @@ export const ConfigPath = path.join(__dirname, '../../../accelerator/test/config
 export const Partition = 'aws';
 
 /**
+ * GovCloud US Partition
+ */
+export const GovCloud_US = 'aws-us-gov';
+
+/**
  * AWS Account Id
  */
 export const AccountId = '111111111111';
@@ -187,6 +192,7 @@ export enum OrganizationValidationError {
   SERVICE_ENABLED = `AWS Control Tower Landing Zone cannot deploy because AWS Organizations have services enabled.`,
   OU_FOUND = `AWS Control Tower Landing Zone cannot deploy because there are multiple organizational units in AWS Organizations.`,
   ACCOUNT_FOUND = `AWS Control Tower Landing Zone cannot deploy because there are multiple accounts in AWS Organizations.`,
+  GOV_CLOUD_ACCOUNT_NOT_FOUND = `Either AWS Organizations does not have required shared accounts (LogArchive and Audit) or have other accounts.`,
   IDENTITY_CENTER_ENABLED = `AWS Control Tower Landing Zone cannot deploy because IAM Identity Center is configured.`,
 }
 

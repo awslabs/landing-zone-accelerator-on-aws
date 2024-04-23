@@ -125,20 +125,48 @@ export abstract class Organization {
 
   /**
    * Function to check if AWS Organizations have any accounts other than management account.
+   *
+   * @remarks
+   * GovCloud (US) will have shared accounts within the AWS Organizations, for AWS standard partition these accounts will be created by the solution
    * @param client {@link OrganizationsClient}
+   * @param partition string
+   * @param sharedAccountEmail
    * @returns status boolean
    */
-  private static async isOrganizationHaveAdditionalAccounts(client: OrganizationsClient): Promise<boolean> {
+  private static async isOrganizationHaveAdditionalAccounts(
+    client: OrganizationsClient,
+    partition: string,
+    sharedAccountEmail: { logArchive: string; audit: string },
+  ): Promise<boolean> {
     const accounts = await Organization.getOrganizationAccounts(client);
-    if (accounts.length > 1) {
-      Organization.logger.warn(
-        `AWS Organizations have multiple accounts "${accounts
-          .map(account => account.Name + ' -> ' + account.Email)
-          .join(',')}", the solution cannot deploy AWS Control Tower Landing Zone.`,
-      );
-      return true;
+
+    switch (partition) {
+      case 'aws-us-gov':
+        const logArchiveAccount = accounts.find(item => item.Email === sharedAccountEmail.logArchive);
+        const auditAccount = accounts.find(item => item.Email === sharedAccountEmail.audit);
+
+        if (accounts.length === 3 && logArchiveAccount && auditAccount) {
+          return false;
+        } else {
+          Organization.logger.warn(
+            `Either AWS Organizations does not have required shared accounts (LogArchive and Audit) or have other accounts. Existing AWS Organizations accounts are - "${accounts
+              .map(account => account.Name + ' -> ' + account.Email)
+              .join(',')}", the solution cannot deploy AWS Control Tower Landing Zone.`,
+          );
+          return true;
+        }
+      default:
+        if (accounts.length > 1) {
+          Organization.logger.warn(
+            `AWS Organizations have multiple accounts "${accounts
+              .map(account => account.Name + ' -> ' + account.Email)
+              .join(',')}", the solution cannot deploy AWS Control Tower Landing Zone.`,
+          );
+          return true;
+        } else {
+          return false;
+        }
     }
-    return false;
   }
 
   /**
@@ -284,12 +312,15 @@ export abstract class Organization {
    * @param globalRegion string
    * @param region string
    * @param solutionId string
+   * @param sharedAccountEmail
    * @param managementAccountCredentials {@link AssumeRoleCredentialType} | undefined
    */
   public static async ValidateOrganization(
     globalRegion: string,
     region: string,
     solutionId: string,
+    partition: string,
+    sharedAccountEmail: { logArchive: string; audit: string },
     managementAccountCredentials?: AssumeRoleCredentialType,
   ): Promise<void> {
     const client: OrganizationsClient = new OrganizationsClient({
@@ -322,10 +353,16 @@ export abstract class Organization {
         );
       }
 
-      if (await Organization.isOrganizationHaveAdditionalAccounts(client)) {
-        validationErrors.push(
-          `AWS Control Tower Landing Zone cannot deploy because there are multiple accounts in AWS Organizations.`,
-        );
+      if (await Organization.isOrganizationHaveAdditionalAccounts(client, partition, sharedAccountEmail)) {
+        if (partition === 'aws-us-gov') {
+          validationErrors.push(
+            `Either AWS Organizations does not have required shared accounts (LogArchive and Audit) or have other accounts.`,
+          );
+        } else {
+          validationErrors.push(
+            `AWS Control Tower Landing Zone cannot deploy because there are multiple accounts in AWS Organizations.`,
+          );
+        }
       }
     }
 

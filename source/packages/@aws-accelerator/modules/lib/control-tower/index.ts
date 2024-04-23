@@ -181,7 +181,7 @@ export class ControlTowerLandingZone implements AcceleratorModule {
       props,
       globalConfig.homeRegion,
       globalRegion,
-      accountsConfig.getManagementAccount().email,
+      accountsConfig,
       landingZoneIdentifier,
       managementAccountCredentials,
     );
@@ -426,7 +426,7 @@ abstract class ControlTowerPreRequisites {
    * @param props {@link ModuleOptionsType}
    * @param region string
    * @param globalRegion string
-   * @param managementAccountEmail string
+   * @param accountsConfig {@link AccountsConfig}
    * @param landingZoneIdentifier string | undefined
    * @param managementAccountCredentials {@link AssumeRoleCredentialType} | undefined
    * @returns metadata { kmsKeyArn: string } | undefined
@@ -435,17 +435,24 @@ abstract class ControlTowerPreRequisites {
     props: ModuleOptionsType,
     region: string,
     globalRegion: string,
-    managementAccountEmail: string,
+    accountsConfig: AccountsConfig,
     landingZoneIdentifier?: string,
     managementAccountCredentials?: AssumeRoleCredentialType,
   ): Promise<{ kmsKeyArn: string } | undefined> {
     if (!landingZoneIdentifier) {
-      await Organization.ValidateOrganization(globalRegion, region, props.solutionId, managementAccountCredentials);
+      await Organization.ValidateOrganization(
+        globalRegion,
+        region,
+        props.solutionId,
+        props.partition,
+        { logArchive: accountsConfig.getLogArchiveAccount().email, audit: accountsConfig.getAuditAccount().email },
+        managementAccountCredentials,
+      );
 
       const managementAccountId = await Organization.getManagementAccountId(
         globalRegion,
         props.solutionId,
-        managementAccountEmail,
+        accountsConfig.getManagementAccount().email,
         managementAccountCredentials,
       );
 
@@ -456,12 +463,17 @@ abstract class ControlTowerPreRequisites {
         await delay(5);
       }
 
-      await SharedAccount.createAccounts(
-        props.configDirPath,
-        globalRegion,
-        props.solutionId,
-        managementAccountCredentials,
-      );
+      //
+      // Do not create accounts for US GovCloud
+      //
+      if (props.partition !== 'aws-us-gov') {
+        await SharedAccount.createAccounts(
+          props.configDirPath,
+          globalRegion,
+          props.solutionId,
+          managementAccountCredentials,
+        );
+      }
 
       const kmsKeyArn = await KmsKey.createControlTowerKey(
         props.partition,

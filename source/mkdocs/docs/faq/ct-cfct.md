@@ -64,6 +64,11 @@ The Landing Zone Accelerator solution cannot deploy AWS Control Tower Landing Zo
 
 The Landing Zone Accelerator cannot deploy AWS Control Tower Landing Zone when there are other accounts in AWS Organizations than the management account. During the deployment of the AWS Control Tower Landing Zone, the solution will create shared accounts (LogArchive and Audit).
 
+
+!!! warning "GovCloud (US)"
+    Since shared accounts (LogArchive and Audit) will be existing in GovCloud (US), AWS Control Tower can be deployed when shared accounts (LogArchive and Audit) are successfully invited into AWS Organizations. The Landing Zone Accelerator requires that only three (3) AWS accounts (Management, LogArchive, and Audit) be part of the AWS Organization.
+
+
 - No AWS IAM Identity Center configured
 
 The Landing Zone Accelerator cannot deploy AWS Control Tower Landing Zone when an existing AWS IAM Identity Center is configured. AWS IAM Identity Center will be deployed during the deployment of the AWS Control Tower Landing Zone.
@@ -135,7 +140,7 @@ The Landing Zone Accelerator solution will update AWS Control Tower Landing Zone
 !!! warning "Important"
 
     When the AWS Control Tower home region is an opt-in region, deploying the AWS Control Tower Landing Zone using the Landing Zone Accelerator on AWS may fail with the error message `AccessDenied`. The issue can be resolved by ensuring that the LogArchive and Audit accounts have opt-in regions enabled and then retrying the Control Tower. After Control Tower has been successfully deployed, you can retry the Landing Zone Accelerator pipeline.
-    
+
 #### Register organizational unit with AWS Control Tower
 The Landing Zone Accelerator supports the registration of AWS Organizations organizational units with the AWS Control Tower. 
 
