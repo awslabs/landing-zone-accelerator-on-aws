@@ -347,7 +347,13 @@ export async function getLandingZoneDetails(
 /**
  * Type to define OU relation
  */
-export type OuRelationType = { level: number; name: string; parentName?: string; completePath: string };
+export type OuRelationType = {
+  level: number;
+  name: string;
+  parentName?: string;
+  completePath: string;
+  isIgnored: boolean;
+};
 
 /**
  * Function to get Ou relation from config
@@ -358,21 +364,24 @@ export function getOuRelationsFromConfig(organizationConfig: OrganizationConfig)
   const ouRelations: OuRelationType[] = [];
   for (const organizationalUnit of organizationConfig.organizationalUnits) {
     const isIgnored = organizationalUnit.ignore ?? false;
+
     const isParentChildPath = organizationalUnit.name.split('/');
     const pathLength = isParentChildPath.length;
 
-    if (isIgnored) {
-      continue;
-    }
-
     if (pathLength === 1) {
-      ouRelations.push({ level: pathLength, name: isParentChildPath[0], completePath: isParentChildPath[0] });
+      ouRelations.push({
+        level: pathLength,
+        name: isParentChildPath[0],
+        completePath: isParentChildPath[0],
+        isIgnored,
+      });
     } else {
       ouRelations.push({
         level: pathLength,
         name: isParentChildPath[pathLength - 1],
         parentName: isParentChildPath[pathLength - 2],
         completePath: organizationalUnit.name,
+        isIgnored,
       });
     }
   }
