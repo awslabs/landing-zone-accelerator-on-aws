@@ -313,6 +313,13 @@ cloudWatch:
           metricNamespace: LogMetrics
           metricName: VPCChanges
           metricValue: "1"
+        # Monitor for the use of breakglass accounts
+        - filterName: BreakglassAccountUsageMetricFilter
+          logGroupName: aws-controltower/CloudTrailLogs
+          filterPattern: "{ ($.userIdentity.userName = \"breakGlassUser0*\") && ($.userIdentity.invokedBy NOT EXISTS) && ($.eventType != \"AwsServiceEvent\") }"
+          metricNamespace: LogMetrics
+          metricName: BreakglassAccountUsage
+          metricValue: "1"
   alarmSets:
     - regions:
         - *HOME_REGION
@@ -464,6 +471,18 @@ cloudWatch:
           alarmDescription: Alarm for VPC changes
           snsTopicName: Security
           metricName: VPCChanges
+          namespace: LogMetrics
+          comparisonOperator: GreaterThanOrEqualToThreshold
+          evaluationPeriods: 1
+          period: 300
+          statistic: Sum
+          threshold: 1
+          treatMissingData: notBreaching
+        # Ensure a log metric filter and alarm exist for breakglass account usage
+        - alarmName: BreakglassAccountUsage
+          alarmDescription: Alarm for usage of "breakglass" accounts
+          snsTopicName: Security
+          metricName: BreakglassAccountUsage
           namespace: LogMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
           evaluationPeriods: 1
