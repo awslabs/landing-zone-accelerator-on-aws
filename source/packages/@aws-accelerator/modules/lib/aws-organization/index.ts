@@ -199,23 +199,26 @@ export class AWSOrganization implements AcceleratorModule {
       // If applicable create the AWS organizational units
       await this.manageOuCreation(organizationsClient, ouItem, organizationRoot, statuses);
 
-      // OU baseline only when CT is enabled
-      if (globalConfig.controlTower.enable) {
+      // OU baseline only when CT is enabled and OU is not ignored
+      if (globalConfig.controlTower.enable && !ouItem.ou.isIgnored) {
         // If applicable, enable or update baseline for the AWS organizational unit
         await this.manageOuRegistration(controlTowerClient, organizationsClient, ouItem, statuses, landingZoneDetails);
       }
 
       // If applicable invite any AWS Accounts for the AWS organizational unit
-      await this.inviteAccountsToOrganization(
-        props,
-        organizationsClient,
-        organizationRoot,
-        ouItem,
-        globalRegion,
-        globalConfig.managementAccountAccessRole,
-        statuses,
-        managementAccountCredentials,
-      );
+      // Only for OU not marked as ignored.
+      if (!ouItem.ou.isIgnored) {
+        await this.inviteAccountsToOrganization(
+          props,
+          organizationsClient,
+          organizationRoot,
+          ouItem,
+          globalRegion,
+          globalConfig.managementAccountAccessRole,
+          statuses,
+          managementAccountCredentials,
+        );
+      }
     }
 
     return `Module "${module}" completed with following status.\n ${statuses.join('\n')}`;
@@ -272,7 +275,7 @@ export class AWSOrganization implements AcceleratorModule {
 
       if (baselineStatus === EnablementStatus.FAILED) {
         this.logger.info(
-          `The organizational unit "${ouItem.ou.name}" baseline status is "${baselineStatus}", update baseline for the organizational unit wil be performed.`,
+          `The organizational unit "${ouItem.ou.completePath}" baseline status is "${baselineStatus}", update baseline for the organizational unit wil be performed.`,
         );
 
         statuses.push(
@@ -287,12 +290,12 @@ export class AWSOrganization implements AcceleratorModule {
         );
       } else {
         this.logger.info(
-          `The organizational unit "${ouItem.ou.name}" baseline status is "${baselineStatus}", update baseline skipped.`,
+          `The organizational unit "${ouItem.ou.completePath}" baseline status is "${baselineStatus}", update baseline skipped.`,
         );
       }
     } else {
       this.logger.info(
-        `The organizational unit "${ouItem.ou.name}" is not registered into AWS Control Tower, it will be registered now.`,
+        `The organizational unit "${ouItem.ou.completePath}" is not registered into AWS Control Tower, it will be registered now.`,
       );
 
       statuses.push(
@@ -322,7 +325,6 @@ export class AWSOrganization implements AcceleratorModule {
     statuses: string[],
   ): Promise<void> {
     if (!ouItem.isExistsInOrg) {
-      let parentName = organizationRoot.Name!;
       let parentId = organizationRoot.Id!;
       if (ouItem.ou.parentName) {
         // reload organization unit details to reflect newly created ou
@@ -333,22 +335,21 @@ export class AWSOrganization implements AcceleratorModule {
 
         if (!parentDetails) {
           throw new Error(
-            `Parent organizational unit "${ouItem.ou.parentName}" not found for organizational unit "${ouItem.ou.name}" in AWS Organizations.`,
+            `Parent organizational unit "${ouItem.ou.parentName}" not found for organizational unit "${ouItem.ou.completePath}" in AWS Organizations.`,
           );
         }
 
         this.logger.info(
-          `The organizational unit "${ouItem.ou.name}" with parent "${parentName}" not found in AWS Organizations. It will be created and register.`,
+          `The organizational unit "${ouItem.ou.completePath}" not found in AWS Organizations. It will be created and register if not ignored.`,
         );
 
         parentId = parentDetails.id;
-        parentName = parentDetails.name;
       }
 
-      statuses.push(await this.createOrganizationUnit(client, ouItem.ou.name, parentName, parentId));
+      statuses.push(await this.createOrganizationUnit(client, ouItem.ou, parentId));
     } else {
       this.logger.info(
-        `The organization unit "${ouItem.ou.name}" already exists in AWS Organizations, create organizational operation skipped.`,
+        `The organization unit "${ouItem.ou.completePath}" already exists in AWS Organizations, create organizational operation skipped.`,
       );
     }
   }
@@ -493,6 +494,7 @@ export class AWSOrganization implements AcceleratorModule {
           isRegisteredInCt = this.isOuRegisteredInControlTower(existingOu.arn, enabledBaselines);
         }
       }
+
       ouItems.push({
         isExistsInOrg,
         isRegisteredInCt,
@@ -527,38 +529,38 @@ export class AWSOrganization implements AcceleratorModule {
   /**
    * Function to create the given AWS Organizations organizational unit
    * @param client {@link OrganizationsClient}
-   * @param name string
-   * @param parentName string
+   * @param ouItem {@link OuRelationType}
    * @param parentId string
    * @returns status string
    */
   private async createOrganizationUnit(
     client: OrganizationsClient,
-    name: string,
-    parentName: string,
+    ouItem: OuRelationType,
     parentId: string,
   ): Promise<string> {
-    this.logger.info(`Creating Organizational unit ${name} for parent ${parentName}`);
+    this.logger.info(`Creating Organizational unit ${ouItem.completePath}`);
     try {
       const response = await throttlingBackOff(() =>
-        client.send(new CreateOrganizationalUnitCommand({ Name: name, ParentId: parentId })),
+        client.send(new CreateOrganizationalUnitCommand({ Name: ouItem.name, ParentId: parentId })),
       );
 
       if (!response.OrganizationalUnit) {
-        throw new Error(`The organization unit "${name}", create organizational unit operation didn't return output.`);
+        throw new Error(
+          `The organization unit "${ouItem.completePath}", create organizational unit operation didn't return output.`,
+        );
       }
 
-      this.logger.info(
-        `AWS Organizations organizational unit "${name}" created successfully under parent "${parentName}".`,
-      );
+      this.logger.info(`AWS Organizations organizational unit "${ouItem.completePath}" created successfully.`);
 
-      return `AWS Organizations organizational unit "${name}" created successfully under parent "${parentName}".`;
+      return `AWS Organizations organizational unit "${ouItem.completePath}" created successfully.`;
     } catch (
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       e: any
     ) {
       if (e instanceof DuplicateOrganizationalUnitException) {
-        this.logger.warn(`DuplicateOrganizationalUnitException exception occurred while creating ou ${name}`);
+        this.logger.warn(
+          `DuplicateOrganizationalUnitException exception occurred while creating ou ${ouItem.completePath}`,
+        );
       }
       throw e;
     }
@@ -591,7 +593,7 @@ export class AWSOrganization implements AcceleratorModule {
 
     if (!targetOuItem) {
       throw new Error(
-        `Organizational unit "${ouItem.name}" not found in existing organization list failed to register the organization unit.`,
+        `Organizational unit "${ouItem.completePath}" not found in existing organization list failed to register the organization unit.`,
       );
     }
 
@@ -607,10 +609,9 @@ export class AWSOrganization implements AcceleratorModule {
     return this.enableBaseline(
       controlTowerClient,
       'Organizational Unit',
-      targetOuItem.name,
+      targetOuItem,
       baselineIdentifier,
       baselineVersion,
-      targetOuItem.arn,
       parameters,
     );
   }
@@ -619,7 +620,7 @@ export class AWSOrganization implements AcceleratorModule {
    * Function to enable baseline for the target organization unit
    * @param client {@link ControlTowerClient}
    * @param itemType 'Organizational Unit' | 'AWS Account'
-   * @param itemName string
+   * @param targetOuItem {@link OrganizationalUnitDetailsType}
    * @param baselineIdentifier string
    * @param baselineVersion string
    * @param targetIdentifier string
@@ -629,62 +630,63 @@ export class AWSOrganization implements AcceleratorModule {
   private async enableBaseline(
     client: ControlTowerClient,
     itemType: 'Organizational Unit' | 'AWS Account',
-    itemName: string,
+    targetOuItem: OrganizationalUnitDetailsType,
     baselineIdentifier: string,
     baselineVersion: string,
-    targetIdentifier: string,
     parameters?: EnabledBaselineParameter[],
   ): Promise<string> {
     this.logger.info(
-      `Enabling baseline for ${itemType} "${itemName}". Baseline version is "${baselineVersion}" and baseline identifier is "${baselineIdentifier}".`,
+      `Enabling baseline for "${itemType} "${targetOuItem.name}" with id "${targetOuItem.id}" for parent "${targetOuItem.parentName}". Baseline version is "${baselineVersion}" and baseline identifier is "${baselineIdentifier}".`,
     );
     const response = await throttlingBackOff(() =>
       client.send(
         new EnableBaselineCommand({
           baselineIdentifier,
           baselineVersion,
-          targetIdentifier,
+          targetIdentifier: targetOuItem.arn,
           parameters,
         }),
       ),
     );
 
     if (!response.operationIdentifier) {
-      throw new Error(`The ${itemType} "${itemName}" enable base line api didn't return operation identifier.`);
+      throw new Error(
+        `The "${itemType} "${targetOuItem.name}" with id "${targetOuItem.id}" for parent "${targetOuItem.parentName}" enable base line api didn't return operation identifier.`,
+      );
     }
 
-    await this.waitTillBaselineCompletes(client, itemName, response.operationIdentifier);
+    await this.waitTillBaselineCompletes(client, targetOuItem, response.operationIdentifier);
 
-    return `The ${itemType} "${itemName}" registered successfully into AWS Control Tower.`;
+    return `The "${itemType} "${targetOuItem.name}" with id "${targetOuItem.id}" for parent "${targetOuItem.parentName}" registered successfully into AWS Control Tower.`;
   }
 
   /**
    * Function to check and wait till the AWS Organizations organizational unit registration completion.
    * @param client {@link ControlTowerClient}
-   * @param ouName string
+   * @param targetOuItem {@link OrganizationalUnitDetailsType}
    * @param operationIdentifier string
    */
   private async waitTillBaselineCompletes(
     client: ControlTowerClient,
-    ouName: string,
+    targetOuItem: OrganizationalUnitDetailsType,
     operationIdentifier: string,
   ): Promise<void> {
     const queryIntervalInMinutes = 2;
     const timeoutInMinutes = 60;
     let elapsedInMinutes = 0;
-    let status = await this.getBaselineOperationStatus(client, ouName, operationIdentifier);
+    let status = await this.getBaselineOperationStatus(client, targetOuItem.name, operationIdentifier);
 
     while (status !== BaselineOperationStatus.SUCCEEDED) {
       await delay(queryIntervalInMinutes);
-      status = await this.getBaselineOperationStatus(client, ouName, operationIdentifier);
+      status = await this.getBaselineOperationStatus(client, targetOuItem.name, operationIdentifier);
       elapsedInMinutes = elapsedInMinutes + queryIntervalInMinutes;
       if (elapsedInMinutes >= timeoutInMinutes) {
         throw new Error(
-          `The organizational unit "${ouName}" baseline operation took more than ${timeoutInMinutes} minutes. Pipeline aborted, please review AWS Control Tower console to make sure organization unit registration completes.`,
+          `The organizational unit "${targetOuItem.name}" baseline operation took more than ${timeoutInMinutes} minutes. Pipeline aborted, please review AWS Control Tower console to make sure organization unit registration completes.`,
         );
       }
       this.logger.info(
-        `The organizational unit "${ouName}" baseline operation with identifier "${operationIdentifier}" is currently in "${status}" state. After ${queryIntervalInMinutes} minutes delay, the status will be rechecked. Elapsed time ${elapsedInMinutes} minutes.`,
+        `The organizational unit "${targetOuItem.name}" with id "${targetOuItem.id}" for parent "${targetOuItem.parentName}" baseline operation with identifier "${operationIdentifier}" is currently in "${status}" state. After ${queryIntervalInMinutes} minutes delay, the status will be rechecked. Elapsed time ${elapsedInMinutes} minutes.`,
       );
     }
   }
