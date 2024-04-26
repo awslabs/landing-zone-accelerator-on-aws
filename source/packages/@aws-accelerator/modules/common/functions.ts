@@ -357,8 +357,13 @@ export type OuRelationType = { level: number; name: string; parentName?: string;
 export function getOuRelationsFromConfig(organizationConfig: OrganizationConfig): OuRelationType[] {
   const ouRelations: OuRelationType[] = [];
   for (const organizationalUnit of organizationConfig.organizationalUnits) {
+    const isIgnored = organizationalUnit.ignore ?? false;
     const isParentChildPath = organizationalUnit.name.split('/');
     const pathLength = isParentChildPath.length;
+
+    if (isIgnored) {
+      continue;
+    }
 
     if (pathLength === 1) {
       ouRelations.push({ level: pathLength, name: isParentChildPath[0], completePath: isParentChildPath[0] });
