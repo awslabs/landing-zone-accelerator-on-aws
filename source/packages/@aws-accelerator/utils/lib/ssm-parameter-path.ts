@@ -231,15 +231,21 @@ export enum SsmResourceType {
    */
   PHZ_ID = '/network/vpc/${0}/route53/hostedZone/${1}/id',
   /**
-   * Route 53 query logs configuration ID\
+   * Route 53 query logs configuration ID
    *
    * `${0}` is replaced with the query logs configuration name
    */
   QUERY_LOGS = '/network/route53Resolver/queryLogConfigs/${0}/id',
   /**
+   * Route 53 query logs association ID
+   *
+   * `${0}` is replaced with the name of the VPC
+   */
+  QUERY_LOGS_ASSOCIATION = '/network/vpc/${0}/route53/queryLogAssociation/id',
+  /**
    * Route 53 resolver endpoint ID
    *
-   * `${0}` is replaced with the resolver endpoint name
+   *  `${0} is replaced with the resolver endpoint name
    */
   RESOLVER_ENDPOINT = '/network/route53Resolver/endpoints/${0}/id',
   /**

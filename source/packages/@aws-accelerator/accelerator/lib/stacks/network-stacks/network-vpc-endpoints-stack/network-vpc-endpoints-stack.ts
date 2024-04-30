@@ -359,6 +359,12 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
           {
             const endpoints = vpcItem.vpcRoute53Resolver.endpoints;
             for (const endpointItem of endpoints) {
+              if (this.isManagedByAsea(AseaResourceType.ROUTE_53_RESOLVER_ENDPOINT, `${endpointItem.name}`)) {
+                this.logger.info(
+                  `Resolver Endpoint "${endpointItem.name}" for VPC "${vpcItem.name}" is managed externally`,
+                );
+                continue;
+              }
               const endpointSubnets: string[] = [];
               // Get route 53 resolver endpoint subnet ids
               this.getRoute53ResolverEndpointSubnetIds(vpcItem, endpointItem, endpointSubnets);
@@ -922,6 +928,7 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
     }
 
     // Create resolver endpoint
+
     const endpoint = new ResolverEndpoint(this, `${pascalCase(endpointItem.name)}ResolverEndpoint`, {
       direction: endpointItem.type,
       ipAddresses: subnets,
