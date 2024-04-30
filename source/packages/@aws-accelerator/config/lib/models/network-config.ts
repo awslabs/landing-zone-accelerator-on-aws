@@ -4633,7 +4633,7 @@ export interface IVpcTemplatesConfig {
    *
    * @see {@link VpcFlowLogsConfig}
    */
-  readonly vpcFlowLogs?: t.VpcFlowLogsConfig;
+  readonly vpcFlowLogs?: t.IVpcFlowLogsConfig;
   /**
    * Elastic Load Balancing configuration.
    * Use this property to define Elastic Load Balancers for this VPC.
