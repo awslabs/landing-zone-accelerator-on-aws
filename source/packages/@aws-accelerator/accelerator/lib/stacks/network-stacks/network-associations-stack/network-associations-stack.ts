@@ -1615,18 +1615,24 @@ export class NetworkAssociationsStack extends NetworkStack {
   ): void {
     // Create association
     for (const nameItem of configNames) {
-      if (!this.queryLogMap.get(nameItem)) {
+      if (this.isManagedByAsea(AseaResourceType.ROUTE_53_QUERY_LOGGING_ASSOCIATION, vpcItem.name)) {
+        this.logger.info(
+          `Route 53 Query Logging is already associated with VPC "${vpcItem.name}" and is managed externally.`,
+        );
+        break;
+      } else if (!this.queryLogMap.get(nameItem)) {
         this.logger.error(`Could not find existing DNS query log config ${nameItem}`);
         throw new Error(`Configuration validation failed at runtime.`);
+      } else {
+        this.logger.info(`Add DNS query log config ${nameItem} to ${vpcItem.name}`);
+        new QueryLoggingConfigAssociation(this, pascalCase(`${vpcItem.name}${nameItem}QueryLogAssociation`), {
+          resolverQueryLogConfigId: this.queryLogMap.get(nameItem),
+          vpcId: vpcId,
+          partition: this.props.partition,
+          kmsKey: this.cloudwatchKey,
+          logRetentionInDays: this.logRetention,
+        });
       }
-      this.logger.info(`Add DNS query log config ${nameItem} to ${vpcItem.name}`);
-      new QueryLoggingConfigAssociation(this, pascalCase(`${vpcItem.name}${nameItem}QueryLogAssociation`), {
-        resolverQueryLogConfigId: this.queryLogMap.get(nameItem),
-        vpcId: vpcId,
-        partition: this.props.partition,
-        kmsKey: this.cloudwatchKey,
-        logRetentionInDays: this.logRetention,
-      });
     }
   }
 
@@ -1641,6 +1647,10 @@ export class NetworkAssociationsStack extends NetworkStack {
       // Skip lookup if already added to map
       if (!this.queryLogMap.has(nameItem)) {
         if (owningAccountId === cdk.Stack.of(this).account) {
+          if (this.isManagedByAsea(AseaResourceType.ROUTE_53_QUERY_LOGGING, nameItem.replace('-cwl', ''))) {
+            this.logger.info(`DNS Logging for VPC "${nameItem.replace('-cwl', '')}" is managed externally`);
+            break;
+          }
           const configId = cdk.aws_ssm.StringParameter.valueForStringParameter(
             this,
             this.getSsmPath(SsmResourceType.QUERY_LOGS, [nameItem]),

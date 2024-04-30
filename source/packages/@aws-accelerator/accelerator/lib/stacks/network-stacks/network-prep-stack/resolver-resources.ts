@@ -11,7 +11,12 @@
  *  and limitations under the License.
  */
 
-import { CentralNetworkServicesConfig, DnsFirewallRuleGroupConfig, DnsQueryLogsConfig } from '@aws-accelerator/config';
+import {
+  AseaResourceType,
+  CentralNetworkServicesConfig,
+  DnsFirewallRuleGroupConfig,
+  DnsQueryLogsConfig,
+} from '@aws-accelerator/config';
 import {
   QueryLoggingConfig,
   ResolverFirewallDomainList,
@@ -254,6 +259,10 @@ export class ResolverResources {
     for (const vpcItem of props.networkConfig.vpcs ?? []) {
       const queryLogName = vpcItem.vpcRoute53Resolver?.queryLogs?.name;
       if (vpcItem.vpcRoute53Resolver?.queryLogs) {
+        if (this.stack.isManagedByAsea(AseaResourceType.ROUTE_53_QUERY_LOGGING, queryLogName!)) {
+          this.stack.addLogs(LogLevel.INFO, `DNS Logging for VPC "${vpcItem.name}" is managed externally`);
+          break;
+        }
         if (vpcItem.vpcRoute53Resolver.queryLogs.destinations.includes('s3')) {
           this.stack.addLogs(LogLevel.INFO, `Create DNS query log ${queryLogName}-s3 for central S3 destination`);
           const s3QueryLogConfig = this.createQueryLogItem(
