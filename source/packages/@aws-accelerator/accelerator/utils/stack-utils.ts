@@ -837,6 +837,10 @@ export function createIdentityCenterStack(
       outdir: `cdk.out/${identityCenterStackName}`,
     });
     const identityCenterStack = new IdentityCenterStack(app, `${identityCenterStackName}`, {
+      env: {
+        account: accountId,
+        region: homeRegion,
+      },
       description: `(SO0199-identitycenter) Landing Zone Accelerator on AWS. Version ${version}.`,
       synthesizer: getStackSynthesizer(props, accountId, homeRegion, context.stage),
       terminationProtection: props.globalConfig.terminationProtection ?? true,
