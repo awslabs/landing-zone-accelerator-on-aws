@@ -157,9 +157,13 @@ export class ReplacementsConfig implements i.IReplacementsConfig {
       });
     }
 
-    Handlebars.registerHelper('helperMissing', token => {
-      logger.warn(`Ignoring replacement ${token.name} because it is not present in replacements-config.yaml`);
-      return new Handlebars.SafeString(`{{${token.name}}}`);
+    Handlebars.registerHelper('helperMissing', function (context, options) {
+      const tokenName = options?.name ?? context?.name;
+      if (tokenName && tokenName !== 'account') {
+        logger.warn(`Ignoring replacement ${tokenName} because it is not present in replacements-config.yaml`);
+        return new Handlebars.SafeString(`{{${tokenName}}}`);
+      }
+      return;
     });
 
     // Replace instances of "{{resolve:" with "\{{resolve:" to ignore replacement behavior
