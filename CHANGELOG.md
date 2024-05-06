@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore(test): update all-enabled custom config rule lambda python version
 - fix(control-tower): exclude ignored ou from registering with control tower
 - fix(control-tower): manage ignored ou creation and registration
+- chore(logging): static code scan for logging
 
 ### Changed
 

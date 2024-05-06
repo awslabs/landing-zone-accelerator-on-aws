@@ -10,3 +10,6 @@ cd source
 npx lint-staged
 # ensure package.json and yarn.lock are in sync
 yarn check --integrity
+
+# Display Console logs from changed files
+yarn run scan-logging
