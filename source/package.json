@@ -56,7 +56,8 @@
     "test:clean": "rm -f ./test-reports/*.xml",
     "update-snapshots": "../deployment/update-snapshots.sh",
     "validate-config": "ts-node ./packages/@aws-accelerator/accelerator/lib/config-validator.ts",
-    "viper-scan": "cd .. && aws s3 cp s3://viperlight-scanner/latest/viperlight.zip . && unzip -qo viperlight.zip -d ../viperlight && rm -r ./viperlight.zip && ../viperlight/bin/viperlight scan"
+    "viper-scan": "cd .. && aws s3 cp s3://viperlight-scanner/latest/viperlight.zip . && unzip -qo viperlight.zip -d ../viperlight && rm -r ./viperlight.zip && ../viperlight/bin/viperlight scan",
+    "scan-logging": "chmod +x ./log-scanner.sh && ./log-scanner.sh"
   },
   "lint-staged": {
     "*.{ts,tsx}": "eslint --fix --max-warnings 0 -c .eslintrc.json --ignore-pattern \"*.d.ts\""
