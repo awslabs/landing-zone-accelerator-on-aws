@@ -218,7 +218,7 @@ export type StorageClass =
  *
  * @minLength 6
  * @maxLength 64
- * @pattern ^\S+@\S+\.\S+$
+ * @pattern  ['^\S+@\S+\.\S+$', '^\w+$']
  */
 export type EmailAddress = string;
 
