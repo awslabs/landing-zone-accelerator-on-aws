@@ -12,7 +12,7 @@
       "description": "An email address",
       "maxLength": 64,
       "minLength": 6,
-      "pattern": "^\\S+@\\S+\\.\\S+$",
+      "pattern": "['^\\S+@\\S+\\.\\S+$', '^\\w+$']",
       "type": "string"
     },
     "IAccountConfig": {
