@@ -22,6 +22,7 @@ import {
   PolicyNotAttachedException,
   PolicyNotFoundException,
   CreatePolicyCommand,
+  UpdatePolicyCommand,
   DuplicatePolicyException,
 } from '@aws-sdk/client-organizations';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
@@ -235,7 +236,19 @@ async function createPolicy(
     return createPolicyResponse.Policy!.PolicySummary!.Id; // return policy id for create policy response
   } catch (error) {
     if (error instanceof DuplicatePolicyException) {
-      console.log(`Policy ${policyMetadata.name} already exists`);
+      const policyId = await getPolicyId(organizationsClient, policyMetadata.name, policyMetadata.type)!;
+      console.log(`Policy ${policyMetadata.name} already exists, updating`);
+      await throttlingBackOff(() =>
+        organizationsClient.send(
+          new UpdatePolicyCommand({
+            Content: policyMetadata.content,
+            Description: policyMetadata.description,
+            Name: policyMetadata.name,
+            PolicyId: policyId,
+          }),
+        ),
+      );
+      console.log(`Policy ${policyMetadata.name} updated successfully.`);
       return await getPolicyId(organizationsClient, policyMetadata.name, policyMetadata.type)!; // return if policy already exists, no need to create it again.
     }
     throw new Error(
