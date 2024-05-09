@@ -1,7 +1,7 @@
 globalReplacements:
   - key: ALLOWED_CORPORATE_CIDRS
     type: StringList
-    value: 
+    value:
       - 10.0.1.0/24
       - 10.0.2.0/24
   - key: ALLOWED_PRINCIPAL_ARNS
@@ -13,7 +13,7 @@ globalReplacements:
   - key: ALLOWED_EXTERNAL_ACCOUNTS
     type: StringList
     value:
-      - "123456789012"
+      - '123456789012'
   - key: DEFINED_PLACEHOLDER
     type: String
-    value: "TagReplacementValue"
+    value: 'TagReplacementValue'

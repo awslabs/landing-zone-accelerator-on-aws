@@ -435,6 +435,8 @@ export class OperationsStack extends AcceleratorStack {
             principals.push(new cdk.aws_iam.SamlConsolePrincipal(this.providers[assumedByItem.principal]));
           }
           break;
+        case 'principalArn':
+          principals.push(new cdk.aws_iam.ArnPrincipal(assumedByItem.principal));
       }
     }
 
@@ -486,6 +488,7 @@ export class OperationsStack extends AcceleratorStack {
 
     const role = new cdk.aws_iam.Role(this, pascalCase(roleItem.name), {
       roleName: roleItem.name,
+      externalIds: roleItem.externalIds,
       assumedBy,
       managedPolicies,
       path: roleSetItem.path,

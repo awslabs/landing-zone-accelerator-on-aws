@@ -141,6 +141,7 @@ export class AssumedByConfig implements i.IAssumedByConfig {
 
 export class RoleConfig implements i.IRoleConfig {
   readonly assumedBy: AssumedByConfig[] = [];
+  readonly externalIds?: string[] | undefined;
   readonly instanceProfile: boolean | undefined = undefined;
   readonly boundaryPolicy: string = '';
   readonly name: string = '';

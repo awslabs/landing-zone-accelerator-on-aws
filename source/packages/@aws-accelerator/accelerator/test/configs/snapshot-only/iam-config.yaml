@@ -40,6 +40,24 @@ roleSets:
           awsManaged:
             - service-role/AWSBackupServiceRolePolicyForBackup
             - service-role/AWSBackupServiceRolePolicyForRestores
+  - deploymentTargets:
+      organizationalUnits:
+        - Root
+      # excludedAccounts:
+      #   - Management
+    roles:
+      - name: Network-Security-Role
+        instanceProfile: true
+        assumedBy:
+          - type: principalArn
+            principal: 'arn:aws:iam::444455556666:role/test-access-role'
+        externalIds:
+          - '111122223333'
+        policies:
+          awsManaged:
+            - AmazonSSMManagedInstanceCore
+            - AmazonCognitoReadOnly
+        boundaryPolicy: Default-Boundary-Policy
 groupSets:
   - deploymentTargets:
       organizationalUnits:
@@ -66,7 +84,7 @@ identityCenter:
           - lzaManagedPolicy01
           - lzaManagedPolicy02
         inlinePolicy: iam-policies/sso-permissionSet1-inline-policy.json
-        permissionsBoundary: 
+        permissionsBoundary:
           # customerManagedPolicy:
           #   name: lzaManagedPolicy01
           #   path: /
@@ -83,7 +101,7 @@ identityCenter:
           - lzaManagedPolicy01
           # - lzaManagedPolicy02
         inlinePolicy: iam-policies/sso-permissionSet1-inline-policy.json
-        permissionsBoundary: 
+        permissionsBoundary:
           customerManagedPolicy:
             name: lzaManagedPolicy01
             path: /
@@ -107,7 +125,7 @@ identityCenter:
         organizationalUnits:
           - Root
         excludedAccounts:
-          - Management 
+          - Management
     - name: Assignment2
       permissionSetName: PermissionSet1
       principalId: '1234abcd-1001-70f0-9c12-56a6aa967ca4'
@@ -164,10 +182,10 @@ managedActiveDirectories:
       region: us-east-1
       adminSecretName: my-admin-002
     sharedOrganizationalUnits:
-        organizationalUnits: 
-          - Root
-        excludedAccounts:
-          - Audit
+      organizationalUnits:
+        - Root
+      excludedAccounts:
+        - Audit
     # sharedAccounts:
     #   - Network
     #   - Management
@@ -179,11 +197,11 @@ managedActiveDirectories:
       vpcName: SharedServices-Main
       subnetName: SharedServices-App-A
       imagePath: /aws/service/ami-windows-latest/Windows_Server-2016-English-Full-Base
-      securityGroupInboundSources: 
-          - 10.4.0.0/16
-      # securityGroupInboundConfigs: 
+      securityGroupInboundSources:
+        - 10.4.0.0/16
+      # securityGroupInboundConfigs:
       #   - description: Allow RDP and HTTPS Traffic Inbound
-      #     types: 
+      #     types:
       #       - RDP
       #       - HTTPS
       #     sources:
@@ -199,7 +217,7 @@ managedActiveDirectories:
         - scriptName: ADGroupSetup
           scriptFilePath: ad-config-scripts/AD-group-setup.ps1
         - scriptName: ADUserSetup
-          scriptFilePath: ad-config-scripts/AD-user-setup.ps1           
+          scriptFilePath: ad-config-scripts/AD-user-setup.ps1
         - scriptName: ADUserGroupSetup
           scriptFilePath: ad-config-scripts/AD-user-group-setup.ps1
         - scriptName: ADGroupGrantPermissionsSetup
@@ -212,9 +230,9 @@ managedActiveDirectories:
         - aws-Provisioning
         - aws-Billing
       adPerAccountGroups:
-        - "*-Admin"
-        - "*-PowerUser"
-        - "*-View"
+        - '*-Admin'
+        - '*-PowerUser'
+        - '*-View'
       adConnectorGroup: ADConnector-grp
       adPasswordPolicy:
         history: 24
@@ -235,13 +253,12 @@ managedActiveDirectories:
           email: example-user1@example.com
           groups:
             - aws-Provisioning
-            - "*-View"
-            - "*-Admin"
-            - "*-PowerUser"
+            - '*-View'
+            - '*-Admin'
+            - '*-PowerUser'
             - AWS Delegated Administrators
         - name: user2-002
           email: example-user2@example.com
           groups:
             - aws-Provisioning
-            - "*-View"
-
+            - '*-View'

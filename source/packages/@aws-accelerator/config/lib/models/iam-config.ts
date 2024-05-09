@@ -427,16 +427,24 @@ export interface IGroupSetConfig {
  *   - type: account
  *     principal: 'arn:aws:iam::111111111111:root'
  * ``
+ * @example
+ * ```
+ * assumedBy:
+ *   - type: principalArn
+ *     principal: 'arn:aws:iam::111122223333:role/path/role-name'
+ * ``
+ * @remarks In order to use a Principal ARN in the assume role policy, the principal must exist.
+ *
  */
 export interface IAssumedByConfig {
   /**
-   * IAM principal of either service, account or provider type.
+   * IAM principal of either service, account, principalArn or provider type.
    *
    * IAM principal of sns service type (i.e. new ServicePrincipal('sns.amazonaws.com')), which can assume this role.
    */
   readonly type: t.AssumedByType;
   /**
-   * Type of IAM principal type like service, account or provider, which can assume this role.
+   * Type of IAM principal type like service, account, principalArn or provider, which can assume this role.
    */
   readonly principal?: t.NonEmptyString;
 }
@@ -471,6 +479,26 @@ export interface IRoleConfig {
    * Indicates whether role is used for EC2 instance profile
    */
   readonly instanceProfile?: boolean;
+  /**
+   * List of IDs that the role assumer needs to provide one of when assuming this role
+   * @remarks For more information about granting third party access to assume an IAM Role, please reference the [documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-user_externalid.html).
+   * From the documentation, this will apply a similar stanza in the assume role policy document of your IAM role.
+   *
+   * ```
+   * "Principal": {"AWS": "Example Corp's AWS account ID"},
+   * "Condition": {"StringEquals": {"sts:ExternalId": "Unique ID Assigned by Example Corp"}}
+   * ```
+   * @example
+   * ```
+   * - name: Test-Arn-Role
+   *   assumedBy:
+   *     - type: principalArn
+   *       principal: "arn:aws:iam::555555555555:user/TestUser"
+   *    externalIds:
+   *      - "777777777777"
+   * ```
+   */
+  readonly externalIds?: t.NonEmptyString[];
   /**
    * AssumedBy configuration
    */
