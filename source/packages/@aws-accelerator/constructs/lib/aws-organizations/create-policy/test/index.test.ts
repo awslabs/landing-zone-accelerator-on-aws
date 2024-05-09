@@ -7,6 +7,7 @@ import {
   DetachPolicyCommand,
   DeletePolicyCommand,
   PolicyNotFoundException,
+  UpdatePolicyCommand,
 } from '@aws-sdk/client-organizations';
 
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
@@ -67,6 +68,7 @@ describe('Update Event', () => {
     await expect(handler(event)).rejects.toThrowError(
       `Error in creating policy ${StaticInput.newProps.name} in AWS Organizations. Exception: {}`,
     );
+    orgClient.on(UpdatePolicyCommand).resolves({ Policy: { PolicySummary: { Id: 'Id' } } });
   });
 });
 
