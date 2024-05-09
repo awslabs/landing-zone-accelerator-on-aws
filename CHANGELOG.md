@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(control-tower): exclude ignored ou from registering with control tower
 - fix(control-tower): manage ignored ou creation and registration
 - chore(logging): static code scan for logging
+- documentation(securityhub): security hub findings description with prescriptive guidance
 
 ### Changed
 

@@ -11,6 +11,7 @@ nav:
     - user-guide/index.md
     - Services, Features, and Configuration References: user-guide/config.md
     - Centralized Logging: user-guide/logging.md
+    - SecurityHub Findings: user-guide/securityhub-findings.md
   - Developer Guide:
     - developer-guide/index.md
     - Development Dependencies: developer-guide/dependencies.md
@@ -34,7 +35,7 @@ nav:
       - Security Controls: sample-configurations/govcloud-us/security-controls.md
       - Networking: sample-configurations/govcloud-us/networking.md
       - Additional Considerations: sample-configurations/govcloud-us/considerations.md
-  - FAQ: 
+  - FAQ:
       - faq/index.md
       - General: faq/general.md
       - Architecture: faq/architecture.md
@@ -47,7 +48,7 @@ nav:
         - AWS Network Firewall: faq/networking/network-firewall.md
         - AWS Gateway Load Balancer: faq/networking/gwlb.md
       - Security: faq/security.md
-      - Logging: 
+      - Logging:
           - Amazon CloudWatch Log Group: faq/logging/cwl.md
   - TypeDocs:
     - typedocs/index.md
@@ -56,15 +57,15 @@ nav:
       - v1.0.1: typedocs/v1.0.1/index.html
     - v1.1:
       - v1.1.0: typedocs/v1.1.0/index.html
-    - v1.2: 
+    - v1.2:
       - v1.2.0: typedocs/v1.2.0/index.html
       - v1.2.1: typedocs/v1.2.1/index.html
       - v1.2.2: typedocs/v1.2.2/index.html
-    - v1.3: 
+    - v1.3:
       - v1.3.0: typedocs/v1.3.0/index.html
       - v1.3.1: typedocs/v1.3.1/index.html
       - v1.3.2: typedocs/v1.3.2/index.html
-    - v1.4: 
+    - v1.4:
       - v1.4.0: typedocs/v1.4.0/index.html
       - v1.4.1: typedocs/v1.4.1/index.html
       - v1.4.2: typedocs/v1.4.2/index.html
@@ -75,7 +76,7 @@ nav:
       - v1.5.2: typedocs/v1.5.2/index.html
     - v1.6:
       - v1.6.0: typedocs/v1.6.0/index.html
-      
+
 
 theme:
   name: material
