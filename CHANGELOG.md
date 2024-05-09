@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(control-tower): integrate lz baseline api
 - feat(control-tower): add global region into the Control Tower governed region list
 - feat(securityhub): allow custom cloudwatch log group for events
+- feat(iam): allow IAM Principal Arn as well as externalId for trust policy with IAM Roles
 - fix(organization): ou baseline operation should be skipped when Control Tower is not enabled
 - chore(documentation): update opt-in region requirement for Control Tower deployment
 - feat(control-tower) integrate lz management and baseline api for external account deployment

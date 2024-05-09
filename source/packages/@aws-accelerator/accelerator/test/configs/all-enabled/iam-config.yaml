@@ -12,7 +12,7 @@ policySets:
       #   - Audit
       # accounts:
       #   - Audit
-        # - LogArchive
+      # - LogArchive
     identityCenterDependency: true
     policies:
       - name: lzaManagedPolicy01
@@ -69,7 +69,7 @@ identityCenter:
           - lzaManagedPolicy01
           - lzaManagedPolicy02
         inlinePolicy: iam-policies/sso-permissionSet1-inline-policy.json
-        permissionsBoundary: 
+        permissionsBoundary:
           # customerManagedPolicy:
           #   name: lzaManagedPolicy01
           #   path: /
@@ -86,7 +86,7 @@ identityCenter:
           - lzaManagedPolicy01
           # - lzaManagedPolicy02
         inlinePolicy: iam-policies/sso-permissionSet1-inline-policy.json
-        permissionsBoundary: 
+        permissionsBoundary:
           customerManagedPolicy:
             name: lzaManagedPolicy01
             path: /
@@ -165,10 +165,10 @@ managedActiveDirectories:
       region: us-east-1
       adminSecretName: my-admin-002
     sharedOrganizationalUnits:
-        organizationalUnits: 
-          - Root
-        excludedAccounts:
-          - Audit
+      organizationalUnits:
+        - Root
+      excludedAccounts:
+        - Audit
     # sharedAccounts:
     #   - Network
     #   - Management
@@ -180,11 +180,11 @@ managedActiveDirectories:
     #   vpcName: SharedServices-Main
     #   subnetName: SharedServices-App-A
     #   imagePath: /aws/service/ami-windows-latest/Windows_Server-2016-English-Full-Base
-    #   securityGroupInboundSources: 
+    #   securityGroupInboundSources:
     #       - 10.4.0.0/16
-    #   # securityGroupInboundConfigs: 
+    #   # securityGroupInboundConfigs:
     #   #   - description: Allow RDP and HTTPS Traffic Inbound
-    #   #     types: 
+    #   #     types:
     #   #       - RDP
     #   #       - HTTPS
     #   #     sources:
@@ -200,7 +200,7 @@ managedActiveDirectories:
     #     - scriptName: ADGroupSetup
     #       scriptFilePath: ad-config-scripts/AD-group-setup.ps1
     #     - scriptName: ADUserSetup
-    #       scriptFilePath: ad-config-scripts/AD-user-setup.ps1           
+    #       scriptFilePath: ad-config-scripts/AD-user-setup.ps1
     #     - scriptName: ADUserGroupSetup
     #       scriptFilePath: ad-config-scripts/AD-user-group-setup.ps1
     #     - scriptName: ADGroupGrantPermissionsSetup
@@ -245,4 +245,3 @@ managedActiveDirectories:
     #       groups:
     #         - aws-Provisioning
     #         - "*-View"
-

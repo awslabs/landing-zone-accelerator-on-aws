@@ -724,7 +724,7 @@ export enum AseaResourceTypePaths {
   NETWORK_FIREWALL = '/network/networkFirewall/',
 }
 
-export type AssumedByType = 'service' | 'account' | 'provider';
+export type AssumedByType = 'service' | 'account' | 'principalArn' | 'provider';
 export type PrincipalType = 'USER' | 'GROUP';
 export type ParameterReplacementType = 'SSM' | 'String' | 'StringList';
 

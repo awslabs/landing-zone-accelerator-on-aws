@@ -727,6 +727,14 @@ export class IamConfigValidator {
                 errors.push(`Cannot find an account with the name ${account} in accounts-config.yaml`);
               }
             }
+          } else if (assumedByItem.type === 'principalArn') {
+            const accountArnRegex = new RegExp('^arn:.+:iam::\\d{12}:(user|group|role)/.*$');
+            if (!accountArnRegex.test(assumedByItem.principal!)) {
+              errors.push(`The arn ${assumedByItem.principal} is not a valid principal arn for a trust policy`);
+            }
+            if (assumedByItem.principal!.length > 2048) {
+              errors.push(`The principal defined in arn ${assumedByItem.principal} is too long`);
+            }
           }
         }
       }

@@ -913,6 +913,81 @@ exports[`OperationsStack Construct(OperationsStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::InstanceProfile",
     },
+    "NetworkSecurityRoleC82A0DA7": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "IAM Role created as per accelerator iam-config needs AWS managed policy",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Condition": {
+                "StringEquals": {
+                  "sts:ExternalId": "111122223333",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "arn:aws:iam::444455556666:role/test-access-role",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/AmazonSSMManagedInstanceCore",
+              ],
+            ],
+          },
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/AmazonCognitoReadOnly",
+              ],
+            ],
+          },
+        ],
+        "PermissionsBoundary": {
+          "Ref": "DefaultBoundaryPolicy489A8D26",
+        },
+        "RoleName": "Network-Security-Role",
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "NetworkSecurityRoleInstanceProfile": {
+      "Properties": {
+        "InstanceProfileName": {
+          "Ref": "NetworkSecurityRoleC82A0DA7",
+        },
+        "Roles": [
+          {
+            "Ref": "NetworkSecurityRoleC82A0DA7",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::InstanceProfile",
+    },
     "ServiceCatalogPropagationRole17EC5FCF": {
       "Metadata": {
         "cdk_nag": {
@@ -1076,6 +1151,9 @@ exports[`OperationsStack Construct(OperationsStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamBreakGlassUser01UserArn935D8C01": {
+      "DependsOn": [
+        "SsmParamAdministratorsGroupArn1018D83B",
+      ],
       "Properties": {
         "Name": "/accelerator/iam/user/breakGlassUser01/arn",
         "Type": "String",
@@ -1090,7 +1168,7 @@ exports[`OperationsStack Construct(OperationsStack):  Snapshot Test 1`] = `
     },
     "SsmParamBreakGlassUser02UserArnB4B8C9E3": {
       "DependsOn": [
-        "SsmParamBreakGlassUser01UserArn935D8C01",
+        "SsmParamAdministratorsGroupArn1018D83B",
       ],
       "Properties": {
         "Name": "/accelerator/iam/user/breakGlassUser02/arn",
@@ -1121,6 +1199,19 @@ exports[`OperationsStack Construct(OperationsStack):  Snapshot Test 1`] = `
         "Value": {
           "Fn::GetAtt": [
             "Ec2DefaultSsmAdRoleADFFA4C6",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecurityRoleRoleArn068849A7": {
+      "Properties": {
+        "Name": "/accelerator/iam/role/Network-Security-Role/arn",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "NetworkSecurityRoleC82A0DA7",
             "Arn",
           ],
         },

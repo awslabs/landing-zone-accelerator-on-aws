@@ -6,6 +6,7 @@
       "enum": [
         "service",
         "account",
+        "principalArn",
         "provider"
       ],
       "type": "string"
@@ -196,11 +197,11 @@
       "properties": {
         "principal": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Type of IAM principal type like service, account or provider, which can assume this role."
+          "description": "Type of IAM principal type like service, account, principalArn or provider, which can assume this role."
         },
         "type": {
           "$ref": "#/definitions/AssumedByType",
-          "description": "IAM principal of either service, account or provider type.\n\nIAM principal of sns service type (i.e. new ServicePrincipal('sns.amazonaws.com')), which can assume this role."
+          "description": "IAM principal of either service, account, principalArn or provider type.\n\nIAM principal of sns service type (i.e. new ServicePrincipal('sns.amazonaws.com')), which can assume this role."
         }
       },
       "required": [
@@ -760,6 +761,13 @@
         "boundaryPolicy": {
           "$ref": "#/definitions/NonEmptyString",
           "description": "A permissions boundary configuration"
+        },
+        "externalIds": {
+          "description": "List of IDs that the role assumer needs to provide one of when assuming this role",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
         },
         "instanceProfile": {
           "description": "Indicates whether role is used for EC2 instance profile",
