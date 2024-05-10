@@ -46,13 +46,12 @@ import { SecurityStack } from '../lib/stacks/security-stack';
 import { TesterPipelineStack } from '../lib/stacks/tester-pipeline-stack';
 import { AcceleratorContext, AcceleratorEnvironment, AcceleratorResourcePrefixes } from './app-utils';
 import { ImportAseaResourcesStack } from '../lib/stacks/import-asea-resources-stack';
-import { AcceleratorAspects } from '../lib/accelerator-aspects';
+import { AcceleratorAspects, PermissionsBoundaryAspect } from '../lib/accelerator-aspects';
 import { ResourcePolicyEnforcementStack } from '../lib/stacks/resource-policy-enforcement-stack';
 import { DiagnosticsPackStack } from '../lib/stacks/diagnostics-pack-stack';
 import { AcceleratorToolkit } from '../lib/toolkit';
 
 const logger = createLogger(['stack-utils']);
-
 /**
  * This function returns a CDK stack synthesizer based on configuration options
  * @param props
@@ -257,6 +256,7 @@ export function createPipelineStack(
       ...acceleratorEnv,
     });
     cdk.Aspects.of(pipelineStack).add(new AwsSolutionsChecks());
+    cdk.Aspects.of(pipelineStack).add(new PermissionsBoundaryAspect(context.account!, context.partition));
 
     NagSuppressions.addStackSuppressions(pipelineStack, [
       {
@@ -351,6 +351,7 @@ export function createDiagnosticsPackStack(
       qualifier: acceleratorEnv.qualifier,
     });
     cdk.Aspects.of(diagnosticsPackStack).add(new AwsSolutionsChecks());
+    cdk.Aspects.of(diagnosticsPackStack).add(new PermissionsBoundaryAspect(context.account!, context.partition));
   }
 }
 
@@ -393,6 +394,7 @@ export function createPrepareStack(
     });
     addAcceleratorTags(prepareStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(prepareStack).add(new AwsSolutionsChecks());
+    cdk.Aspects.of(prepareStack).add(new PermissionsBoundaryAspect(managementAccountId, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
@@ -438,6 +440,7 @@ export function createFinalizeStack(
     });
     addAcceleratorTags(finalizeStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(finalizeStack).add(new AwsSolutionsChecks());
+    cdk.Aspects.of(finalizeStack).add(new PermissionsBoundaryAspect(managementAccountId, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
@@ -483,6 +486,7 @@ export function createAccountsStack(
     });
     addAcceleratorTags(accountsStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(accountsStack).add(new AwsSolutionsChecks());
+    cdk.Aspects.of(accountsStack).add(new PermissionsBoundaryAspect(managementAccountId, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
@@ -528,6 +532,7 @@ export function createOrganizationsStack(
     });
     addAcceleratorTags(organizationStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(organizationStack).add(new AwsSolutionsChecks());
+    cdk.Aspects.of(organizationStack).add(new PermissionsBoundaryAspect(managementAccountId, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
@@ -573,6 +578,7 @@ export function createSecurityAuditStack(
     });
     addAcceleratorTags(auditStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(auditStack).add(new AwsSolutionsChecks());
+    cdk.Aspects.of(auditStack).add(new PermissionsBoundaryAspect(auditAccountId, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
@@ -615,6 +621,7 @@ export function createKeyDependencyStacks(
     });
     addAcceleratorTags(keyStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(keyStack).add(new AwsSolutionsChecks());
+    cdk.Aspects.of(keyStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
 
     const dependencyStackName = `${AcceleratorStackNames[AcceleratorStage.DEPENDENCIES]}-${accountId}-${enabledRegion}`;
@@ -630,6 +637,7 @@ export function createKeyDependencyStacks(
     });
     addAcceleratorTags(dependencyStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(dependencyStack).add(new AwsSolutionsChecks());
+    cdk.Aspects.of(dependencyStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
     new AcceleratorAspects(appDependency, context.partition, context.useExistingRoles ?? false);
   }
 }
@@ -672,6 +680,7 @@ export function createBootstrapStack(
     });
     addAcceleratorTags(bootstrapStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(bootstrapStack).add(new AwsSolutionsChecks());
+    cdk.Aspects.of(bootstrapStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
@@ -714,6 +723,7 @@ export function createLoggingStack(
     });
     addAcceleratorTags(loggingStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(loggingStack).add(new AwsSolutionsChecks());
+    cdk.Aspects.of(loggingStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
@@ -756,6 +766,7 @@ export function createSecurityStack(
     });
     addAcceleratorTags(securityStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(securityStack).add(new AwsSolutionsChecks());
+    cdk.Aspects.of(securityStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
@@ -801,6 +812,7 @@ export function createOperationsStack(
     });
     addAcceleratorTags(operationsStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(operationsStack).add(new AwsSolutionsChecks());
+    cdk.Aspects.of(operationsStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
@@ -848,6 +860,7 @@ export function createIdentityCenterStack(
     });
     addAcceleratorTags(identityCenterStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(identityCenterStack).add(new AwsSolutionsChecks());
+    cdk.Aspects.of(identityCenterStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
@@ -892,6 +905,7 @@ export function createNetworkPrepStack(
     });
     addAcceleratorTags(networkPrepStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(networkPrepStack).add(new AwsSolutionsChecks());
+    cdk.Aspects.of(networkPrepStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
@@ -936,6 +950,7 @@ export function createSecurityResourcesStack(
     });
     addAcceleratorTags(securityResourcesStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(securityResourcesStack).add(new AwsSolutionsChecks());
+    cdk.Aspects.of(securityResourcesStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
@@ -983,6 +998,7 @@ export function createNetworkVpcStacks(
     );
     addAcceleratorTags(vpcStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(vpcStack).add(new AwsSolutionsChecks());
+    cdk.Aspects.of(vpcStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
 
     const endpointsStack = new NetworkVpcEndpointsStack(
       app,
@@ -998,7 +1014,7 @@ export function createNetworkVpcStacks(
     addAcceleratorTags(endpointsStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     endpointsStack.addDependency(vpcStack);
     cdk.Aspects.of(endpointsStack).add(new AwsSolutionsChecks());
-
+    cdk.Aspects.of(endpointsStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
     const dnsStack = new NetworkVpcDnsStack(app, `${dnsStackName}`, {
       env,
       description: `(SO0199-networkdns) Landing Zone Accelerator on AWS. Version ${version}.`,
@@ -1009,6 +1025,7 @@ export function createNetworkVpcStacks(
     addAcceleratorTags(dnsStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     dnsStack.addDependency(endpointsStack);
     cdk.Aspects.of(dnsStack).add(new AwsSolutionsChecks());
+    cdk.Aspects.of(dnsStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
@@ -1057,6 +1074,7 @@ export function createNetworkAssociationsStacks(
     });
     addAcceleratorTags(networkAssociationsStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(networkAssociationsStack).add(new AwsSolutionsChecks());
+    cdk.Aspects.of(networkAssociationsStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
 
     const networkGwlbStack = new NetworkAssociationsGwlbStack(app, networkGwlbStackName, {
       env,
@@ -1069,6 +1087,7 @@ export function createNetworkAssociationsStacks(
     // Since shared security groups are created in networkAssociations. NetworkGwlbStack depends on NetworkAssociationsStack
     networkGwlbStack.addDependency(networkAssociationsStack);
     cdk.Aspects.of(networkGwlbStack).add(new AwsSolutionsChecks());
+    cdk.Aspects.of(networkAssociationsStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
@@ -1112,6 +1131,7 @@ export function createCustomizationsStacks(
       ...props,
     });
     cdk.Aspects.of(customizationsStack).add(new AwsSolutionsChecks());
+    cdk.Aspects.of(customizationsStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
 
     createCustomStacks(app, props, env, accountId, enabledRegion);
 
@@ -1140,6 +1160,7 @@ export function createCustomizationsStacks(
       props.prefixes.accelerator,
     );
     cdk.Aspects.of(resourcePolicyEnforcementStack).add(new AwsSolutionsChecks());
+    cdk.Aspects.of(resourcePolicyEnforcementStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
@@ -1338,6 +1359,7 @@ function createApplicationsStacks(
         appConfigItem: application,
       });
       cdk.Aspects.of(applicationStack).add(new AwsSolutionsChecks());
+      cdk.Aspects.of(applicationStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
       new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
     }
   }

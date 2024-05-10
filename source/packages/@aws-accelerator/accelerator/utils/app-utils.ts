@@ -212,6 +212,12 @@ export interface AcceleratorEnvironment {
    * Accelerator pipeline account id, for external deployment it will be pipeline account otherwise management account
    */
   pipelineAccountId: string;
+  /**
+   * Accelerator permission boundary as SSM path
+   * If permission boundary is already is applied then it will not overwrite it
+   * Only applies if that SSM is present in the account
+   */
+  acceleratorPermissionBoundary?: string;
 }
 
 /**
@@ -356,6 +362,7 @@ export function setAcceleratorEnvironment(
     managementAccountRoleName: env['MANAGEMENT_ACCOUNT_ROLE_NAME'],
     managementCrossAccountRoleName: env['MANAGEMENT_CROSS_ACCOUNT_ROLE_NAME'],
     qualifier: env['ACCELERATOR_QUALIFIER'],
+    acceleratorPermissionBoundary: env['ACCELERATOR_PERMISSION_BOUNDARY'],
   };
 }
 

@@ -14,7 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { InstallerStack } from '../lib/installer-stack';
 import { SynthUtils } from '@aws-cdk/assert';
-import { expect, test } from '@jest/globals';
+import { expect, test, describe } from '@jest/globals';
 
 // Test prefix
 const testNamePrefix = 'Stack(installer): ';
@@ -29,6 +29,7 @@ const stacks: InstallerStack[] = [
     enableTester: true,
     managementCrossAccountRoleName: 'AWSControlTowerExecution',
     enableSingleAccountMode: false,
+    usePermissionBoundary: false,
   }),
   // Initialize stack from management account without tester pipeline
   new InstallerStack(new cdk.App(), 'AWSAccelerator-Test-InstallerStack', {
@@ -38,6 +39,7 @@ const stacks: InstallerStack[] = [
     useExternalPipelineAccount: false,
     enableTester: false,
     enableSingleAccountMode: false,
+    usePermissionBoundary: false,
   }),
   //Initialize stack from external pipeline account with tester pipeline
   new InstallerStack(new cdk.App(), 'AWSAccelerator-Test-InstallerStack', {
@@ -48,6 +50,7 @@ const stacks: InstallerStack[] = [
     enableTester: true,
     managementCrossAccountRoleName: 'AWSControlTowerExecution',
     enableSingleAccountMode: false,
+    usePermissionBoundary: false,
   }),
   //Initialize stack from external pipeline account without tester pipeline
   new InstallerStack(new cdk.App(), 'AWSAccelerator-Test-InstallerStack', {
@@ -57,6 +60,7 @@ const stacks: InstallerStack[] = [
     useExternalPipelineAccount: true,
     enableTester: false,
     enableSingleAccountMode: false,
+    usePermissionBoundary: false,
   }),
   //Initialize stack from external pipeline account without tester pipeline
   new InstallerStack(new cdk.App(), 'AWSAccelerator-Test-InstallerStack', {
@@ -66,6 +70,17 @@ const stacks: InstallerStack[] = [
     useExternalPipelineAccount: true,
     enableTester: false,
     enableSingleAccountMode: true,
+    usePermissionBoundary: false,
+  }),
+  //Initialize stack from management account with permission boundary
+  new InstallerStack(new cdk.App(), 'AWSAccelerator-Test-InstallerStack', {
+    synthesizer: new cdk.DefaultStackSynthesizer({
+      generateBootstrapVersionRule: false,
+    }),
+    useExternalPipelineAccount: false,
+    enableTester: false,
+    enableSingleAccountMode: false,
+    usePermissionBoundary: true,
   }),
 ];
 

@@ -47,6 +47,10 @@ export interface InstallerStackProps extends cdk.StackProps {
    * Single account deployment enable flag
    */
   readonly enableSingleAccountMode: boolean;
+  /**
+   * Accelerator Permission boundary usage flag
+   */
+  readonly usePermissionBoundary: boolean;
 }
 
 export class InstallerStack extends cdk.Stack {
@@ -193,6 +197,12 @@ export class InstallerStack extends cdk.Stack {
    * @private
    */
   private readonly acceleratorQualifier: cdk.CfnParameter | undefined;
+
+  /**
+   * Permission boundary SSM Parameter Path
+   * @private
+   */
+  private readonly acceleratorPermissionBoundary: cdk.CfnParameter | undefined;
 
   constructor(scope: Construct, id: string, props: InstallerStackProps) {
     super(scope, id, props);
@@ -1101,6 +1111,26 @@ export class InstallerStack extends cdk.Stack {
           reason: 'Project requires access to the Docker daemon.',
         },
       ]);
+    }
+    if (props.usePermissionBoundary) {
+      this.acceleratorPermissionBoundary = new cdk.CfnParameter(this, 'AcceleratorPermissionBoundary', {
+        type: 'String',
+        description: 'Permission boundary Policy Name which is valid only for management account',
+      });
+
+      parameterGroups.push({
+        Label: { default: 'Permission Boundary Configuration' },
+        Parameters: [this.acceleratorPermissionBoundary.logicalId],
+      });
+
+      targetAcceleratorEnvVariables = {
+        ...targetAcceleratorEnvVariables,
+        ACCELERATOR_PERMISSION_BOUNDARY: {
+          type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+          value: this.acceleratorPermissionBoundary.valueAsString,
+        },
+      };
+      this.acceleratorPermissionBoundary.overrideLogicalId('PermissionBoundaryPolicyName');
     }
   }
 
