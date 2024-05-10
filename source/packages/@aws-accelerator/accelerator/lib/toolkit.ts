@@ -260,17 +260,11 @@ export class AcceleratorToolkit {
         break;
 
       case Command.DEPLOY:
-        logger.debug('Starting rendering of asset.json');
-        await AcceleratorToolkit.assetFiles('render', options.configDirPath!);
-        logger.debug('Completed rendering of asset.json. Proceeding to deploy.');
         await AcceleratorToolkit.deployStacks(context, toolkitStackName, options);
         break;
       case Command.SYNTHESIZE:
       case Command.SYNTH:
         await AcceleratorToolkit.synthStacks(cli, options);
-        logger.debug(`Completed stack synthesis. Proceeding to parse assets.`);
-        await AcceleratorToolkit.assetFiles('parse', options.configDirPath!);
-        logger.debug(`Completed parsing assets.`);
         break;
 
       default:
@@ -293,7 +287,7 @@ export class AcceleratorToolkit {
    *
    * All the asset.json files are overwritten so synth can be decoupled from stage
    */
-  private static async assetFiles(action: 'render' | 'parse', configDirPath: string) {
+  static async assetFiles(action: 'render' | 'parse', configDirPath: string) {
     // Point to root cdk.out and get all file path of pattern assets.json
     const assetFiles = await getAllFilesInPattern(path.join(__dirname, '..', 'cdk.out'), '.assets.json', true);
     logger.debug(`Found ${assetFiles.length} asset.json files`);
