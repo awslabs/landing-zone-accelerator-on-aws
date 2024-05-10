@@ -109,6 +109,32 @@ create_template_json()
         mv -- "$f" "${f%.template.json}.template"
     done
 }
+create_template_installer_json()
+{
+    # Run 'cdk synth' to generate raw solution outputs
+    do_cmd yarn run cdk synth --output=$staging_dist_dir --context use-permission-boundary=true
+    do_cmd find $staging_dist_dir -name '*InstallerStack.template.json' -exec mv {} {}-CustomBp.template.json \;
+
+    do_cmd yarn run cdk synth --output=$staging_dist_dir --context use-external-pipeline-account=true
+    do_cmd find $staging_dist_dir -name '*InstallerStack.template.json' -exec mv {} {}-ExternalPipeline.template.json \;
+
+    do_cmd yarn run cdk synth --output=$staging_dist_dir
+    # Remove unnecessary output files
+    do_cmd cd $staging_dist_dir
+    # ignore return code - can be non-zero if any of these does not exist
+    rm tree.json manifest.json cdk.out
+
+    # Move outputs from staging to template_dist_dir
+    echo "Move outputs from staging to template_dist_dir"
+    do_cmd mv $staging_dist_dir/*.template.json $template_dist_dir/
+
+    # Rename all *.template.json files to *.template
+    echo "Rename all *.template.json to *.template"
+    echo "copy templates and rename"
+    for f in $template_dist_dir/*.template.json; do
+        mv -- "$f" "${f%.template.json}.template"
+    done
+}
 
 create_template_yaml()
 {
@@ -280,7 +306,7 @@ echo "--------------------------------------------------------------------------
 
 if fn_exists create_template_${template_format}; then
     do_cmd cd $installer_dir
-    create_template_${template_format}
+    create_template_installer_${template_format}
     do_cmd cd $source_dir
     do_cmd cd $govcloud_vending_dir
     create_template_${template_format}

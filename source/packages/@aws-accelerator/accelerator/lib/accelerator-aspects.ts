@@ -14,7 +14,9 @@
 import * as cdk from 'aws-cdk-lib';
 import { IConstruct } from 'constructs';
 import { version } from '../../../../package.json';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
 
+const logger = createLogger(['accelerator-aspects']);
 /**
  * Property overrides for GovCloud environments
  */
@@ -214,6 +216,69 @@ class ExistingRoleOverrides implements cdk.IAspect {
     );
   }
 }
+
+/**
+ * Permission boundary aspect
+ */
+export class PermissionsBoundaryAspect implements cdk.IAspect {
+  /**
+   * Account this will be applied in
+   */
+  readonly account: string;
+  /**
+   * Partition this will be deployed to
+   */
+  readonly partition: string;
+  constructor(account: string, partition: string) {
+    this.account = account;
+    this.partition = partition;
+  }
+  public visit(node: IConstruct): void {
+    const policyLength = (process.env['ACCELERATOR_PERMISSION_BOUNDARY'] ?? '').trim().length;
+    // check if node is type of cloudformation resource
+    if (!(node instanceof cdk.CfnResource)) {
+      return;
+    }
+    // check if node is type of IAM role
+    if (node.cfnResourceType !== 'AWS::IAM::Role') {
+      return;
+    }
+    // check if deployment is external
+    if (process.env['MANAGEMENT_ACCOUNT_ID'] && process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']) {
+      return;
+    }
+    // check if its management account
+    if (this.account !== process.env['PIPELINE_ACCOUNT_ID']!) {
+      return;
+    }
+    // policy name is not empty
+    if (policyLength === 0) {
+      return;
+    }
+
+    try {
+      // Build permissions boundary ARN from input
+      const permissionsBoundaryArn = `arn:${this.partition}:iam::${this.account}:policy/${process.env[
+        'ACCELERATOR_PERMISSION_BOUNDARY'
+      ]!}`;
+      // convert role in to cfn.role this allows for checking properties
+      const roleResource = node as cdk.aws_iam.CfnRole;
+      if (roleResource && roleResource.permissionsBoundary && roleResource.permissionsBoundary > '') {
+        //do nothing, use existing permission boundary
+      } else {
+        // no permission boundary was found, add permission boundary
+        roleResource.addPropertyOverride('PermissionsBoundary', permissionsBoundaryArn);
+      }
+    } catch (error) {
+      const msg = `Error while applying permission boundary to IAM role ${node.node.path}. Error: ${JSON.stringify(
+        error,
+      )}. Permission boundary will not be applied to stacks.`;
+      logger.error(msg);
+      throw new Error(msg);
+    }
+  }
+}
+
 /**
  * Add accelerator specific aspects to the application based on partition
  */
@@ -259,7 +324,6 @@ export class AcceleratorAspects {
       // removing solutions aspect to prevent this error
       cdk.Aspects.of(app).add(new AwsSolutionAspect());
     }
-
     // Set global region
     this.globalRegion = globalRegion;
   }

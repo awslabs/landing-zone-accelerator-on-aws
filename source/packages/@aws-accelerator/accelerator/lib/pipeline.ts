@@ -565,6 +565,10 @@ export class AcceleratorPipeline extends Construct {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: process.env['INSTALLER_STACK_NAME'] ?? '',
           },
+          ACCELERATOR_PERMISSION_BOUNDARY: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: process.env['ACCELERATOR_PERMISSION_BOUNDARY'] ?? '',
+          },
           ...enableSingleAccountModeEnvVariables,
           ...pipelineAccountEnvVariables,
         },

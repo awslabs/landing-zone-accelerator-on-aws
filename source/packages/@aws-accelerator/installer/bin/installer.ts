@@ -19,6 +19,7 @@ import 'source-map-support/register';
 import { version } from '../../../../package.json';
 import * as installer from '../lib/installer-stack';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
+import { IConstruct } from 'constructs';
 
 const logger = createLogger(['installer']);
 
@@ -30,11 +31,12 @@ async function main() {
   const enableTester = app.node.tryGetContext('enable-tester') === 'true';
   const managementCrossAccountRoleName = app.node.tryGetContext('management-cross-account-role-name');
   const enableSingleAccountMode = app.node.tryGetContext('enable-single-account-mode') === 'true';
+  const usePermissionBoundary = app.node.tryGetContext('use-permission-boundary') === 'true';
 
   if (enableTester && managementCrossAccountRoleName === undefined) {
     console.log(`Invalid --management-cross-account-role-name ${managementCrossAccountRoleName}`);
     throw new Error(
-      'Usage: app.ts [--context use-external-pipeline-account=BOOLEAN] [--context enable-tester=BOOLEAN] [--context management-cross-account-role-name=MANAGEMENT_CROSS_ACCOUNT_ROLE_NAME]',
+      'Usage: app.ts [--context use-external-pipeline-account=BOOLEAN] [--context enable-tester=BOOLEAN] [--context management-cross-account-role-name=MANAGEMENT_CROSS_ACCOUNT_ROLE_NAME] [--context use-permission-boundary=BOOLEAN]',
     );
   }
 
@@ -47,7 +49,22 @@ async function main() {
     enableTester: enableTester,
     managementCrossAccountRoleName: managementCrossAccountRoleName,
     enableSingleAccountMode,
+    usePermissionBoundary,
   });
+  if (usePermissionBoundary) {
+    cdk.Aspects.of(app).add(new installerPermissionBoundary());
+  }
+}
+
+class installerPermissionBoundary implements cdk.IAspect {
+  public visit(node: IConstruct): void {
+    if (node instanceof cdk.CfnResource && node.cfnResourceType === 'AWS::IAM::Role') {
+      node.addPropertyOverride(
+        'PermissionsBoundary.Fn::Sub',
+        'arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/${PermissionBoundaryPolicyName}',
+      );
+    }
+  }
 }
 
 (async () => {
