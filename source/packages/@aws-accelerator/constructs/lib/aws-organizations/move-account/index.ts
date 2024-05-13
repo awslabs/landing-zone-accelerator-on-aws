@@ -28,6 +28,8 @@ import {
   OrganizationsClient,
 } from '@aws-sdk/client-organizations';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
+
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 
 const marshallOptions = {
@@ -88,6 +90,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   organizationsClient = new OrganizationsClient({
     region: event.ResourceProperties['globalRegion'],
     customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
   });
 
   dynamodbClient = new DynamoDBClient({ customUserAgent: solutionId });
