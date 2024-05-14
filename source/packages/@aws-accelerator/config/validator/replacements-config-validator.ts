@@ -172,7 +172,7 @@ export class ReplacementsConfigValidator {
    */
   private getReplacementKeysInFile(configDir: string, fileName: string): string[] {
     const data = fs.readFileSync(path.join(configDir, fileName), 'utf-8');
-    const replacements = data.match(/{{.+}}/g) ?? [];
+    const replacements = data.match(/{{[\w\s\d]*}}/g) ?? [];
     const replacementKeys = replacements.map(key => this.trimCurlyBraces(key));
     return replacementKeys;
   }
