@@ -37,6 +37,7 @@ import { TransitGatewayRoutes } from '../asea-resources/transit-gateway-routes';
 import { VpcEndpoints } from '../asea-resources/vpc-endpoints';
 import { SsmInventory } from '../asea-resources/ssm-inventory';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
+import { FirewallResources } from '../asea-resources/firewall-resources';
 import { Route53ResolverQueryLogging } from '../asea-resources/route-53-query-logging';
 import { Route53ResolverQueryLoggingAssociation } from '../asea-resources/route-53-query-logging-association';
 import { Route53ResolverEndpoint } from '../asea-resources/route-53-resolver-endpoint';
@@ -113,6 +114,7 @@ export class ImportAseaResourcesStack extends NetworkStack {
     new TransitGatewayRoutes(this, props);
     new VpcEndpoints(this, props);
     new SsmInventory(this, props);
+    new FirewallResources(this, { ...props, nestedStacksInfo });
     new Route53ResolverQueryLogging(this, props);
     new Route53ResolverQueryLoggingAssociation(this, props);
     new Route53ResolverEndpoint(this, props);

@@ -408,6 +408,11 @@ export enum SsmResourceType {
    * `${0}` is replaced with the Resource Data Sync Name
    */
   ASSOCIATION = '/ssm/association/${0}',
+  /**
+   * Firewall Instance ID
+   * `${0}` is replaced with the Firewall Instance Name
+   */
+  FIREWALL_INSTANCE = '/network/ec2/firewall/instanceName/${0}/instanceId',
 }
 
 export class SsmParameterPath {
