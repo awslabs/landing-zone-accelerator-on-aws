@@ -17,6 +17,7 @@ import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 
 import {
+  AseaResourceType,
   AutoScalingConfig,
   Ec2FirewallAutoScalingGroupConfig,
   Ec2FirewallInstanceConfig,
@@ -327,6 +328,10 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
       ...(this.props.customizationsConfig.firewalls?.managerInstances ?? []),
     ];
     for (const firewallInstance of firewallInstances) {
+      if (this.isManagedByAsea(AseaResourceType.FIREWALL_INSTANCE, firewallInstance.name)) {
+        this.logger.info(`Firewall Instance ${firewallInstance.name} is managed by ASEA`);
+        continue;
+      }
       if (this.isInScope(firewallInstance.vpc, firewallInstance.account)) {
         instanceMap.set(firewallInstance.name, this.createFirewallInstance(firewallInstance));
       }
