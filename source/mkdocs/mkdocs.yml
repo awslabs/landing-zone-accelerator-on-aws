@@ -40,6 +40,7 @@ nav:
       - General: faq/general.md
       - Architecture: faq/architecture.md
       - AWS Control Tower and Customizations for Control Tower: faq/ct-cfct.md
+      - Customizations: faq/customizations.md
       - Operations: faq/operations.md
       - Networking:
         - General: faq/networking/general.md
@@ -131,3 +132,4 @@ markdown_extensions:
       custom_checkbox: true
   - toc:
       permalink: ⚓︎
+

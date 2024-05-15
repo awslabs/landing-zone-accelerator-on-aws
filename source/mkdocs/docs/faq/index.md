@@ -6,6 +6,7 @@ This section contains several categories of FAQs about the Landing Zone Accelera
     - [General](./general.md)
     - [Architecture](./architecture.md)
     - [AWS Control Tower and Customizations for Control Tower](./ct-cfct.md)
+    - [Customizations](./customizations.md)
     - [Operations](./operations.md)
     - Networking:
         - [General](./networking/general.md)
