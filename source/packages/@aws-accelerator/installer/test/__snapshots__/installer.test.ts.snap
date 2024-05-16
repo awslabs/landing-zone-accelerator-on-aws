@@ -19014,6 +19014,13 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 6`] = `
                 "Ref": "AWS::AccountId",
               },
             },
+            {
+              "Name": "ACCELERATOR_PERMISSION_BOUNDARY",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "PermissionBoundaryPolicyName",
+              },
+            },
           ],
           "Image": "aws/codebuild/standard:7.0",
           "ImagePullCredentialsType": "CODEBUILD",

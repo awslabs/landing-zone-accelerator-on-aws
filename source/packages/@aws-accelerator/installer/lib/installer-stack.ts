@@ -287,6 +287,27 @@ export class InstallerStack extends cdk.Stack {
     let targetAcceleratorParameterLabels: { [p: string]: { default: string } } = {};
     let targetAcceleratorEnvVariables: { [p: string]: cdk.aws_codebuild.BuildEnvironmentVariable } = {};
 
+    if (props.usePermissionBoundary) {
+      this.acceleratorPermissionBoundary = new cdk.CfnParameter(this, 'AcceleratorPermissionBoundary', {
+        type: 'String',
+        description: 'Permission boundary Policy Name which is valid only for management account',
+      });
+
+      parameterGroups.push({
+        Label: { default: 'Permission Boundary Configuration' },
+        Parameters: [this.acceleratorPermissionBoundary.logicalId],
+      });
+
+      targetAcceleratorEnvVariables = {
+        ...targetAcceleratorEnvVariables,
+        ACCELERATOR_PERMISSION_BOUNDARY: {
+          type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+          value: this.acceleratorPermissionBoundary.valueAsString,
+        },
+      };
+      this.acceleratorPermissionBoundary.overrideLogicalId('PermissionBoundaryPolicyName');
+    }
+
     if (props.useExternalPipelineAccount) {
       this.acceleratorQualifier = new cdk.CfnParameter(this, 'AcceleratorQualifier', {
         type: 'String',
@@ -1111,26 +1132,6 @@ export class InstallerStack extends cdk.Stack {
           reason: 'Project requires access to the Docker daemon.',
         },
       ]);
-    }
-    if (props.usePermissionBoundary) {
-      this.acceleratorPermissionBoundary = new cdk.CfnParameter(this, 'AcceleratorPermissionBoundary', {
-        type: 'String',
-        description: 'Permission boundary Policy Name which is valid only for management account',
-      });
-
-      parameterGroups.push({
-        Label: { default: 'Permission Boundary Configuration' },
-        Parameters: [this.acceleratorPermissionBoundary.logicalId],
-      });
-
-      targetAcceleratorEnvVariables = {
-        ...targetAcceleratorEnvVariables,
-        ACCELERATOR_PERMISSION_BOUNDARY: {
-          type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-          value: this.acceleratorPermissionBoundary.valueAsString,
-        },
-      };
-      this.acceleratorPermissionBoundary.overrideLogicalId('PermissionBoundaryPolicyName');
     }
   }
 
