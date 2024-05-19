@@ -26,6 +26,7 @@ import {
   ElbLogBucketConfig,
   AccessLogBucketConfig,
   AssetBucketConfig,
+  AseaResourceType,
 } from '@aws-accelerator/config';
 import * as t from '@aws-accelerator/config/lib/common/types';
 import {
@@ -1328,6 +1329,10 @@ export class LoggingStack extends AcceleratorStack {
    */
   private createManagedDirectoryAdminSecretsManagerKey() {
     for (const managedActiveDirectory of this.props.iamConfig.managedActiveDirectories ?? []) {
+      if (this.isManagedByAseaGlobal(AseaResourceType.MANAGED_AD, managedActiveDirectory.name)) {
+        this.logger.info(`${managedActiveDirectory.name} is managed by ASEA, skipping creation of resources.`);
+        return;
+      }
       const madAccountId = this.props.accountsConfig.getAccountId(managedActiveDirectory.account);
       const madAdminSecretAccountId = this.props.accountsConfig.getAccountId(
         this.props.iamConfig.getManageActiveDirectorySecretAccountName(managedActiveDirectory.name),

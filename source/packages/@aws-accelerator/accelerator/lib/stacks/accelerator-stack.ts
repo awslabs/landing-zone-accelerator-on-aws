@@ -1859,6 +1859,20 @@ export abstract class AcceleratorStack extends cdk.Stack {
     );
   }
 
+  /**
+   * Helper function to verify if resource managed by ASEA or not by looking in resource mapping
+   * Different than isManagedByAsea() because it does not filter for region or account id.
+   *
+   * @param resourceType
+   * @param resourceIdentifier
+   * @returns
+   */
+  public isManagedByAseaGlobal(resourceType: string, resourceIdentifier: string): boolean {
+    if (!this.props.globalConfig.externalLandingZoneResources?.importExternalLandingZoneResources) return false;
+    const aseaResourceList = this.props.globalConfig.externalLandingZoneResources.resourceList;
+    return !!aseaResourceList.find(r => r.resourceType === resourceType && r.resourceIdentifier === resourceIdentifier);
+  }
+
   public getExternalResourceParameter(name: string) {
     if (!this.externalResourceParameters) throw new Error(`No ssm parameter "${name}" found in account and region`);
     return this.externalResourceParameters[name];

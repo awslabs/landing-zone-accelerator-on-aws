@@ -24,6 +24,7 @@ import {
   Region,
   Tag,
   IsPublicSsmDoc,
+  AseaResourceType,
 } from '@aws-accelerator/config';
 
 import {
@@ -187,6 +188,10 @@ export class SecurityResourcesStack extends AcceleratorStack {
    */
   private createManagedActiveDirectorySecrets() {
     for (const managedActiveDirectory of this.props.iamConfig.managedActiveDirectories ?? []) {
+      if (this.isManagedByAseaGlobal(AseaResourceType.MANAGED_AD, managedActiveDirectory.name)) {
+        this.logger.info(`${managedActiveDirectory.name} is managed by ASEA, skipping creation of resources.`);
+        return;
+      }
       const madAccountId = this.props.accountsConfig.getAccountId(managedActiveDirectory.account);
       const madRegion = managedActiveDirectory.region;
 

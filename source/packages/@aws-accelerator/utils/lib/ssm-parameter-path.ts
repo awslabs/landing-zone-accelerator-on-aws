@@ -413,6 +413,16 @@ export enum SsmResourceType {
    * `${0}` is replaced with the Firewall Instance Name
    */
   FIREWALL_INSTANCE = '/network/ec2/firewall/instanceName/${0}/instanceId',
+  /**
+   *  Managed AD Directory Id
+   * `${0}` is replaced with the Directory Friendly Name
+   */
+  MANAGED_AD = '/managed_ad/directory/name/${0}/directoryId',
+  /**
+   *  Managed AD Domain Name
+   * `${0}` is replaced with the Directory Friendly Name
+   */
+  MANAGED_AD_DNS_NAME = '/managed_ad/directory/name/${0}/dnsName',
 }
 
 export class SsmParameterPath {
