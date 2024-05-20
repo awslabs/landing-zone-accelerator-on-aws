@@ -74,29 +74,33 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 
     case 'Delete':
       console.log('starting - Delete');
-      const dataSourcesToRemove: DataSourceConfigurations = {};
-      dataSourcesToRemove.S3Logs = { Enable: false };
-      dataSourcesToRemove.Kubernetes = { AuditLogs: { Enable: false } };
-      await throttlingBackOff(() =>
-        guardDutyClient.send(
-          new UpdateDetectorCommand({
-            DetectorId: detectorId,
-            Enable: false,
-            FindingPublishingFrequency: options.exportFrequency,
-            DataSources: dataSourcesToRemove,
-          }),
-        ),
-      );
+      try {
+        const dataSourcesToRemove: DataSourceConfigurations = {};
+        dataSourcesToRemove.S3Logs = { Enable: false };
+        dataSourcesToRemove.Kubernetes = { AuditLogs: { Enable: false } };
+        await throttlingBackOff(() =>
+          guardDutyClient.send(
+            new UpdateDetectorCommand({
+              DetectorId: detectorId,
+              Enable: false,
+              FindingPublishingFrequency: options.exportFrequency,
+              DataSources: dataSourcesToRemove,
+            }),
+          ),
+        );
 
-      await throttlingBackOff(() =>
-        guardDutyClient.send(
-          new UpdateMemberDetectorsCommand({
-            DetectorId: detectorId,
-            AccountIds: existingMemberAccountIds,
-            DataSources: dataSourcesToRemove,
-          }),
-        ),
-      );
+        await throttlingBackOff(() =>
+          guardDutyClient.send(
+            new UpdateMemberDetectorsCommand({
+              DetectorId: detectorId,
+              AccountIds: existingMemberAccountIds,
+              DataSources: dataSourcesToRemove,
+            }),
+          ),
+        );
+      } catch (error) {
+        console.error(error);
+      }
 
       return { Status: 'Success', StatusCode: 200 };
   }

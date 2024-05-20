@@ -43,6 +43,7 @@ export const isThrottlingError = (
   e.code === 'OperationNotPermittedException' || // Retry for RAM
   e.code === 'InvalidStateException' || //retry for ServiceCatalog
   e.code === 'TooManyRequestsException' ||
+  e.code === 'TooManyUpdates' ||
   e.code === 'Throttling' ||
   e.code === 'ThrottlingException' ||
   e.code === 'InternalErrorException' ||
@@ -60,6 +61,7 @@ export const isThrottlingError = (
   e.name === 'OperationNotPermittedException' || // Retry for RAM
   e.name === 'CredentialsProviderError' || // Retry for STS
   e.name === 'TooManyRequestsException' ||
+  e.name === 'TooManyUpdates' ||
   e.name === 'Throttling' ||
   e.name === 'ThrottlingException' ||
   e.name === 'InternalErrorException' ||
