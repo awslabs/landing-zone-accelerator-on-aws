@@ -470,7 +470,10 @@ export class SecurityResourcesStack extends AcceleratorStack {
     if (
       (!this.props.globalConfig.controlTower.enable ||
         this.props.accountsConfig.getManagementAccountId() === cdk.Stack.of(this).account) &&
-      this.props.securityConfig.awsConfig.enableConfigurationRecorder
+      this.props.securityConfig.awsConfig.enableConfigurationRecorder &&
+      (this.props.securityConfig.awsConfig.deploymentTargets
+        ? this.isIncluded(this.props.securityConfig.awsConfig.deploymentTargets)
+        : true)
     ) {
       // declaring variable here as this value is called twice and synth can run into duplicate construct name error
       const configRecorderRoleArn = this.createConfigRecorderRole();

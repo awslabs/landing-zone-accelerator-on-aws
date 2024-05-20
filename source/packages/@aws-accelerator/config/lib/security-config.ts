@@ -275,6 +275,7 @@ export class AwsConfigRuleSet implements i.IAwsConfigRuleSet {
 
 export class AwsConfig implements i.IAwsConfig {
   readonly enableConfigurationRecorder = false;
+  readonly deploymentTargets: t.DeploymentTargets | undefined;
   readonly enableDeliveryChannel: boolean | undefined;
   readonly overrideExisting: boolean | undefined;
   readonly aggregation: AwsConfigAggregation | undefined;
