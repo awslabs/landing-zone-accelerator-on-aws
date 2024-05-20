@@ -412,6 +412,10 @@ export class NetworkAssociationsStack extends NetworkStack {
     listenerMap: Map<string, cdk.aws_elasticloadbalancingv2.CfnListener>,
   ): void {
     for (const listener of albItem.listeners ?? []) {
+      if (this.isManagedByAsea(AseaResourceType.APPLICATION_LOAD_BALANCER, `${albItem.name}`)) {
+        this.logger.info(`Application Load Balancer ${albItem.name} is managed externally.`);
+        continue;
+      }
       const targetGroup = targetGroupMap.get(`${vpcItem.name}-${listener.targetGroup}`);
       if (!targetGroup) {
         this.logger.error(
