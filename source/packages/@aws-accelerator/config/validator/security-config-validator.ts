@@ -14,6 +14,7 @@
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import fs from 'fs';
 import path from 'path';
+import * as t from '../lib/common';
 import { AccountsConfig } from '../lib/accounts-config';
 import { DeploymentTargets } from '../lib/common';
 import {
@@ -93,6 +94,8 @@ export class SecurityConfigValidator {
     this.validateDelegatedAdminAccount(values, accountNames, errors);
     this.validateDeploymentTargetOUs(values, ouIdNames, errors);
     this.validateDeploymentTargetAccountNames(values, accountNames, errors);
+    this.validateConfigRuleDeploymentTargetsInConfigDeploymentTargets(values, accountsConfig, globalConfig, errors);
+    this.validateSecurityHubWhenConfigDeploymentTargetsExists(values, errors);
 
     // Validate expiration for Macie and GuardDuty Lifecycle Rules
     this.macieLifecycleRules(values, errors);
@@ -363,6 +366,21 @@ export class SecurityConfigValidator {
   }
 
   /**
+   * Function to validate existence of Config deployment target Accounts
+   * Make sure deployment target Accounts are part of account config file
+   * @param values
+   */
+  private validateConfigDeploymentTargetAccounts(values: ISecurityConfig, accountNames: string[], errors: string[]) {
+    for (const account of values.awsConfig.deploymentTargets?.accounts ?? []) {
+      if (accountNames.indexOf(account) === -1) {
+        errors.push(
+          `Deployment target account ${account} for AWS Config does not exists in accounts-config.yaml file.`,
+        );
+      }
+    }
+  }
+
+  /**
    * Function to validate existence of custom config rule deployment target Accounts
    * Make sure deployment target Accounts are part of account config file
    * @param values
@@ -377,6 +395,85 @@ export class SecurityConfigValidator {
         if (accountNames.indexOf(account) === -1) {
           errors.push(
             `Deployment target account ${account} for AWS Config rules does not exists in accounts-config.yaml file.`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to validate existence of securityHub when awsConfig deploymentTargets exist
+   * SecurityHub requires awsConfig to be running in all the accounts and hence securityHub
+   * cannot be enabled when awsConfig deploymentTargets exist
+   * @param values
+   * @param errors
+   */
+  private validateSecurityHubWhenConfigDeploymentTargetsExists(values: ISecurityConfig, errors: string[]) {
+    const configDeploymentTargets: t.IDeploymentTargets | undefined = values.awsConfig.deploymentTargets;
+    const securityHubEnabled: boolean = values.centralSecurityServices.securityHub.enable;
+    if (configDeploymentTargets && securityHubEnabled) {
+      errors.push(
+        `SecurityHub cannot be enabled with awsConfig deploymentTargets. Please disable SecurityHub or don't use awsConfig deploymentTargets`,
+      );
+    }
+  }
+
+  /**
+   * Function to validate existence of Config Recorder and Delivery Channel in accounts where RuleSets are getting deployed
+   * @param values
+   * @param accountsConfig
+   * @param globalConfig
+   * @param errors
+   */
+  private validateConfigRuleDeploymentTargetsInConfigDeploymentTargets(
+    values: ISecurityConfig,
+    accountsConfig: AccountsConfig,
+    globalConfig: GlobalConfig,
+    errors: string[],
+  ) {
+    const configDeploymentTargets = values.awsConfig.deploymentTargets;
+    if (configDeploymentTargets) {
+      const configAccounts = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
+        accountsConfig,
+        configDeploymentTargets as DeploymentTargets,
+      );
+      const configRegions = CommonValidatorFunctions.getRegionsFromDeploymentTarget(
+        configDeploymentTargets as DeploymentTargets,
+        globalConfig,
+      );
+      let configRuleSetAccounts: string[] = [];
+      let configRuleSetRegions: t.Region[] = [];
+
+      for (const ruleSet of values.awsConfig.ruleSets ?? []) {
+        configRuleSetAccounts.push(
+          ...CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
+            accountsConfig,
+            ruleSet.deploymentTargets as DeploymentTargets,
+          ),
+        );
+        configRuleSetRegions.push(
+          ...CommonValidatorFunctions.getRegionsFromDeploymentTarget(
+            ruleSet.deploymentTargets as DeploymentTargets,
+            globalConfig,
+          ),
+        );
+      }
+
+      configRuleSetAccounts = [...new Set(configRuleSetAccounts)];
+      configRuleSetRegions = [...new Set(configRuleSetRegions)];
+
+      for (const account of configRuleSetAccounts) {
+        if (!configAccounts.includes(account)) {
+          errors.push(
+            `awsConfig RuleSets deployment target account: "${account}" not present in deployment targets for awsConfig : "${configAccounts}".`,
+          );
+        }
+      }
+
+      for (const region of configRuleSetRegions) {
+        if (!configRegions.includes(region)) {
+          errors.push(
+            `awsConfig RuleSets deployment target region: "${region}" not present in deployment targets for awsConfig : "${configRegions}".`,
           );
         }
       }
@@ -513,6 +610,7 @@ export class SecurityConfigValidator {
    * @param values
    */
   private validateDeploymentTargetAccountNames(values: ISecurityConfig, accountNames: string[], errors: string[]) {
+    this.validateConfigDeploymentTargetAccounts(values, accountNames, errors);
     this.validateConfigRuleDeploymentTargetAccounts(values, accountNames, errors);
     this.validateCloudWatchMetricsDeploymentTargetAccounts(values, accountNames, errors);
     this.validateCloudWatchAlarmsDeploymentTargetAccounts(values, accountNames, errors);
@@ -520,6 +618,21 @@ export class SecurityConfigValidator {
     this.validateCloudWatchLogGroupsDeploymentTargetAccounts(values, accountNames, errors);
     this.validateKmsKeyConfigDeploymentTargetAccounts(values, accountNames, errors);
     this.validateEbsEncryptionDeploymentTargetAccounts(values, accountNames, errors);
+  }
+
+  /**
+   * Function to validate existence of Config deployment target OUs
+   * Make sure deployment target OUs are part of Organization config file
+   * @param values
+   */
+  private validateConfigDeploymentTargetOUs(values: ISecurityConfig, ouIdNames: string[], errors: string[]) {
+    for (const ou of values.awsConfig.deploymentTargets?.organizationalUnits ?? []) {
+      if (ouIdNames.indexOf(ou) === -1) {
+        errors.push(
+          `Deployment target OU ${ou} for AWS Config rules does not exists in organization-config.yaml file.`,
+        );
+      }
+    }
   }
 
   /**
@@ -632,6 +745,7 @@ export class SecurityConfigValidator {
     this.validateSsmDocumentDeploymentTargetOUs(values, ouIdNames, errors);
     this.validateCloudWatchAlarmsDeploymentTargetOUs(values, ouIdNames, errors);
     this.validateCloudWatchMetricsDeploymentTargetOUs(values, ouIdNames, errors);
+    this.validateConfigDeploymentTargetOUs(values, ouIdNames, errors);
     this.validateConfigRuleDeploymentTargetOUs(values, ouIdNames, errors);
     this.validateKmsKeyConfigDeploymentTargetOUs(values, ouIdNames, errors);
     this.validateEbsEncryptionDeploymentTargetOUs(values, ouIdNames, errors);

@@ -1651,6 +1651,9 @@ export interface IAwsConfigAggregation {
  *   ** enableDeliveryChannel DEPRECATED
  *   enableDeliveryChannel: true
  *   overrideExisting: false
+ *   deploymentTargets:
+ *     organizationalUnits:
+ *         - Infrastructure
  *   aggregation:
  *     enable: true
  *     delegatedAdminAccount: LogArchive
@@ -1674,6 +1677,24 @@ export interface IAwsConfig {
    * ConfigurationRecorder resource describes the AWS resource types for which AWS Config records configuration changes. The configuration recorder stores the configurations of the supported resources in your account as configuration items.
    */
   readonly enableConfigurationRecorder: boolean;
+  /**
+   * (OPTIONAL) AWS Config deployment target.
+   *
+   * Leaving `deploymentTargets` undefined will enable AWS Config across all accounts and enabled regions.
+   *
+   * We highly recommend enabling AWS Config across all accounts and enabled regions within your organization.
+   * `deploymentTargets` should only be used when more granular control is required, not as a default configuration.
+   *
+   * To enable AWS Config into Infrastructure organizational unit, you need to provide below value for this parameter.
+   *
+   * @example
+   * ```
+   * - deploymentTargets:
+   *         organizationalUnits:
+   *           - Infrastructure
+   * ```
+   */
+  readonly deploymentTargets?: t.IDeploymentTargets;
   /**
    * Indicates whether delivery channel enabled.
    *
