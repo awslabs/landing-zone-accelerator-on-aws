@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(networking): resolve duplicate construct error for endpoint security groups
 - fix(networking): Fix Canada region physical AZ Subnet lookup
 - fix(organizations): resolve issue where existing policies were not being updated
+- fix(sample-config): root account cloudwatch metric filter name
 
 ### Configuration Changes
 
