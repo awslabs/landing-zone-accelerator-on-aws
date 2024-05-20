@@ -848,6 +848,7 @@ export abstract class NetworkStack extends AcceleratorStack {
           subnetMap,
           prefixListMap,
         );
+
         const allIngressRule = containsAllIngressRule(processedIngressRules);
         const processedEgressRules = processSecurityGroupEgressRules(
           this.vpcResources,
@@ -873,6 +874,7 @@ export abstract class NetworkStack extends AcceleratorStack {
       // Create security group rules that reference other security groups
       this.createSecurityGroupSgSources(vpcItem, subnetMap, prefixListMap, securityGroupMap);
     }
+
     return securityGroupMap;
   }
 
@@ -890,10 +892,6 @@ export abstract class NetworkStack extends AcceleratorStack {
     securityGroupMap: Map<string, SecurityGroup>,
   ) {
     for (const securityGroupItem of vpcItem.securityGroups ?? []) {
-      const isSecurityGroupExternal = this.isManagedByAsea(
-        AseaResourceType.EC2_SECURITY_GROUP,
-        `${vpcItem.name}/${securityGroupItem.name}`,
-      );
       const securityGroup = getSecurityGroup(securityGroupMap, vpcItem.name, securityGroupItem.name) as SecurityGroup;
       const ingressRules = processSecurityGroupSgIngressSources(
         this.vpcResources,
@@ -914,7 +912,6 @@ export abstract class NetworkStack extends AcceleratorStack {
 
       // Create ingress rules
       ingressRules.forEach(ingressRule => {
-        if (isSecurityGroupExternal) return;
         securityGroup.addIngressRule(ingressRule.logicalId, {
           sourceSecurityGroup: ingressRule.rule.targetSecurityGroup,
           ...ingressRule.rule,
@@ -923,7 +920,6 @@ export abstract class NetworkStack extends AcceleratorStack {
 
       // Create egress rules
       egressRules.forEach(egressRule => {
-        if (isSecurityGroupExternal) return;
         securityGroup.addEgressRule(egressRule.logicalId, {
           destinationSecurityGroup: egressRule.rule.targetSecurityGroup,
           ...egressRule.rule,

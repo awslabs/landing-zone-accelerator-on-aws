@@ -156,7 +156,6 @@ export function processSecurityGroupIngressRules(
 
   for (const [ruleId, ingressRuleItem] of securityGroupItem.inboundRules.entries() ?? []) {
     logger.info(`Adding ingress rule ${ruleId} to ${securityGroupItem.name}`);
-
     const ingressRules: SecurityGroupRuleProps[] = processSecurityGroupRules(
       vpcResources,
       ingressRuleItem,
@@ -296,7 +295,6 @@ export function processSecurityGroupSgIngressSources(
   securityGroupMap: Map<string, SecurityGroup>,
 ): { logicalId: string; rule: SecurityGroupRuleProps }[] {
   const securityGroupSources: { logicalId: string; rule: SecurityGroupRuleProps }[] = [];
-
   for (const [ruleId, ingressRuleItem] of securityGroupItem.inboundRules.entries() ?? []) {
     // Add security group sources if they exist
     if (includesSecurityGroupSource(ingressRuleItem)) {
@@ -311,6 +309,7 @@ export function processSecurityGroupSgIngressSources(
       securityGroupSources.push(...setSecurityGroupSgIngressSources(securityGroupItem, ingressRules, ruleId));
     }
   }
+
   return securityGroupSources;
 }
 
@@ -425,6 +424,7 @@ function processSecurityGroupRules(
   } else {
     rules.push(...processTypeSources(vpcResources, item, subnetMap, prefixListMap, securityGroupMap, vpcName));
   }
+
   return rules;
 }
 
@@ -623,6 +623,7 @@ function processTypeSources(
       );
     }
   }
+  logger.info(`****************** `);
   return typeRules;
 }
 

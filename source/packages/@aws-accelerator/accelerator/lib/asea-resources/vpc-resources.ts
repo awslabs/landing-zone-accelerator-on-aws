@@ -399,6 +399,7 @@ export class VpcResources extends AseaResource {
         LogLevel.INFO,
         `Adding SSM Parameter for ${pascalCase(vpcItem.name) + pascalCase(securityGroupItem.name)}SecurityGroup`,
       );
+
       this.addSsmParameter({
         logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(securityGroupItem.name)}SecurityGroup`),
         parameterName: this.scope.getSsmPath(SsmResourceType.SECURITY_GROUP, [vpcItem.name, securityGroupItem.name]),
@@ -531,6 +532,7 @@ export class VpcResources extends AseaResource {
         ...this.processTypeSources(ingressRuleItem, securityGroupsMap, securityGroupVpc),
       );
     }
+
     return securityGroupIngressRules;
   }
 
@@ -556,6 +558,7 @@ export class VpcResources extends AseaResource {
     securityGroupVpc: string,
   ) => {
     const securityGroupRules: SecurityGroupRuleInfo[] = [];
+
     for (const ruleType of securityGroupRuleItem.types ?? []) {
       if (ruleType === 'ALL') {
         const defaultRuleProps = {
@@ -653,7 +656,10 @@ export class VpcResources extends AseaResource {
 
     if (existingIngressRulesToBeUpdated && existingIngressRulesToBeUpdated.length > 0) {
       this.scope.addLogs(LogLevel.INFO, `'Updating Ingress rules on Security Group ${securityGroup.groupName}`);
-      this.scope.addLogs(LogLevel.INFO, `Pushing on rule(s): ${existingIngressRulesToBeUpdated}`);
+      this.scope.addLogs(
+        LogLevel.INFO,
+        `Pushing on ingress rule(s): ${JSON.stringify(existingIngressRulesToBeUpdated)}`,
+      );
       if (securityGroup) {
         securityGroup.securityGroupIngress = existingIngressRulesToBeUpdated;
       }
@@ -676,7 +682,7 @@ export class VpcResources extends AseaResource {
 
     if (existingEgressRulesToBeUpdated && existingEgressRulesToBeUpdated.length > 0) {
       this.scope.addLogs(LogLevel.INFO, `Updating Egress rules on SG: ${securityGroup.groupName}`);
-      this.scope.addLogs(LogLevel.INFO, `Pushing on rule(s) ${existingEgressRulesToBeUpdated}`);
+      this.scope.addLogs(LogLevel.INFO, `Pushing on egress rule(s): ${JSON.stringify(existingEgressRulesToBeUpdated)}`);
       if (securityGroup) {
         securityGroup.securityGroupEgress = existingEgressRulesToBeUpdated;
       }

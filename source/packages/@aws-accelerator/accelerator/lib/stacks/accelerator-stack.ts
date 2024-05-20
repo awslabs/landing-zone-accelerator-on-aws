@@ -1874,7 +1874,9 @@ export abstract class AcceleratorStack extends cdk.Stack {
   }
 
   public getExternalResourceParameter(name: string) {
-    if (!this.externalResourceParameters) throw new Error(`No ssm parameter "${name}" found in account and region`);
+    if (!this.externalResourceParameters) {
+      throw new Error(`No ssm parameter "${name}" found in account and region`);
+    }
     return this.externalResourceParameters[name];
   }
 
