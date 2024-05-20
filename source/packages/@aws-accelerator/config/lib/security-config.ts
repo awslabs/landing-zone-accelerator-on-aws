@@ -108,6 +108,8 @@ export class GuardDutyExportFindingsConfig implements i.IGuardDutyExportFindings
 export class GuardDutyConfig implements i.IGuardDutyConfig {
   readonly enable = false;
   readonly excludeRegions: t.Region[] = [];
+  readonly deploymentTargets: t.DeploymentTargets | undefined = undefined;
+  readonly autoEnableOrgMembers: boolean | undefined = undefined;
   readonly s3Protection: GuardDutyS3ProtectionConfig = new GuardDutyS3ProtectionConfig();
   readonly eksProtection: GuardDutyEksProtectionConfig | undefined = undefined;
   readonly exportConfiguration: GuardDutyExportFindingsConfig = new GuardDutyExportFindingsConfig();

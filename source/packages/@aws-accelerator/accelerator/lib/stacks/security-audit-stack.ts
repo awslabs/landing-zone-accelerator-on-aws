@@ -18,7 +18,13 @@ import * as yaml from 'js-yaml';
 import { pascalCase } from 'pascal-case';
 import * as path from 'path';
 
-import { ResourcePolicyEnforcementConfig, GuardDutyConfig, Region } from '@aws-accelerator/config';
+import {
+  ResourcePolicyEnforcementConfig,
+  GuardDutyConfig,
+  Region,
+  AccountsConfig,
+  DeploymentTargets,
+} from '@aws-accelerator/config';
 import {
   Bucket,
   BucketEncryptionType,
@@ -43,6 +49,7 @@ import {
   NagSuppressionRuleIds,
 } from './accelerator-stack';
 import { SnsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
+import { CommonValidatorFunctions } from '@aws-accelerator/config';
 
 export class SecurityAuditStack extends AcceleratorStack {
   private readonly s3Key: cdk.aws_kms.IKey | undefined;
@@ -77,7 +84,7 @@ export class SecurityAuditStack extends AcceleratorStack {
     //
     // GuardDuty configuration
     //
-    this.configureGuardDuty(this.props.securityConfig.centralSecurityServices.guardduty);
+    this.configureGuardDuty(this.props.securityConfig.centralSecurityServices.guardduty, this.props.accountsConfig);
 
     //
     // Audit Manager configuration
@@ -175,11 +182,32 @@ export class SecurityAuditStack extends AcceleratorStack {
    * Function to configure GuardDuty
    * @param guardDutyConfig GuardDutyConfig
    */
-  private configureGuardDuty(guardDutyConfig: GuardDutyConfig) {
+  private configureGuardDuty(guardDutyConfig: GuardDutyConfig, accountsConfig: AccountsConfig) {
     this.logger.debug(`centralSecurityServices.guardduty.enable: ${guardDutyConfig.enable}`);
 
-    if (guardDutyConfig.enable && guardDutyConfig.excludeRegions.indexOf(cdk.Stack.of(this).region as Region) === -1) {
-      this.logger.info('Enabling GuardDuty for all existing accounts');
+    if (
+      guardDutyConfig.enable &&
+      (guardDutyConfig.excludeRegions
+        ? guardDutyConfig.excludeRegions.indexOf(this.region as Region) === -1
+        : guardDutyConfig.deploymentTargets?.excludedRegions
+        ? guardDutyConfig.deploymentTargets?.excludedRegions?.indexOf(this.region as Region) === -1
+        : true)
+    ) {
+      const guardDutyMemberAccountIds: string[] = [];
+      if (guardDutyConfig.deploymentTargets) {
+        guardDutyMemberAccountIds.push(
+          ...CommonValidatorFunctions.getAccountIdsFromDeploymentTargets(
+            accountsConfig,
+            guardDutyConfig.deploymentTargets as DeploymentTargets,
+          ),
+        );
+      }
+
+      this.logger.info(
+        guardDutyMemberAccountIds.length > 0
+          ? `Enabling GuardDuty for accounts defined in GuardDuty deploymentTargets`
+          : 'Enabling GuardDuty for all existing accounts',
+      );
 
       // Determine S3 and EKS protection
       const [s3Protection, eksProtection] = this.processGuardDutyProtectionConfig(guardDutyConfig);
@@ -192,6 +220,8 @@ export class SecurityAuditStack extends AcceleratorStack {
         enableEksProtection: eksProtection,
         kmsKey: this.cloudwatchKey,
         logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+        guardDutyMemberAccountIds,
+        autoEnableOrgMembers: guardDutyConfig.autoEnableOrgMembers ?? true,
       });
 
       if (s3Protection || eksProtection || updateExportFrequency) {

@@ -33,3 +33,4 @@ export * from './validator/organization-config-validator';
 export * from './validator/network-config-validator/network-config-validator';
 export * from './validator/security-config-validator';
 export * from './validator/replacements-config-validator';
+export * from './validator/common/common-validator-functions';

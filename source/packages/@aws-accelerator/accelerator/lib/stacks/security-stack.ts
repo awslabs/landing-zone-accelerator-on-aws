@@ -15,7 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 
-import { EbsDefaultVolumeEncryptionConfig, Region } from '@aws-accelerator/config';
+import { EbsDefaultVolumeEncryptionConfig, GuardDutyConfig, Region } from '@aws-accelerator/config';
 import {
   AcceleratorMetadata,
   EbsDefaultEncryption,
@@ -158,23 +158,21 @@ export class SecurityStack extends AcceleratorStack {
    * Function to configure GuardDuty
    */
   private configureGuardDuty() {
+    const guardDutyConfig: GuardDutyConfig = this.props.securityConfig.centralSecurityServices.guardduty;
     if (
-      this.props.securityConfig.centralSecurityServices.guardduty.enable &&
-      this.props.securityConfig.centralSecurityServices.guardduty.excludeRegions.indexOf(
-        cdk.Stack.of(this).region as Region,
-      ) === -1
+      guardDutyConfig.enable &&
+      (guardDutyConfig.excludeRegions
+        ? guardDutyConfig.excludeRegions.indexOf(this.region as Region) === -1
+        : guardDutyConfig.deploymentTargets
+        ? this.isIncluded(guardDutyConfig.deploymentTargets)
+        : true)
     ) {
-      if (this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.enable) {
+      if (guardDutyConfig.exportConfiguration.enable) {
         // Validate Delegated Admin Account name is part of account config
         this.validateDelegatedAdminAccountName('Guardduty');
         let destinationPrefix = 'guardduty';
-        if (
-          this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.overrideGuardDutyPrefix
-            ?.useCustomPrefix
-        ) {
-          destinationPrefix =
-            this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.overrideGuardDutyPrefix
-              ?.customOverride ?? '';
+        if (guardDutyConfig.exportConfiguration.overrideGuardDutyPrefix?.useCustomPrefix) {
+          destinationPrefix = guardDutyConfig.exportConfiguration.overrideGuardDutyPrefix?.customOverride ?? '';
         }
 
         const destinationArn = `arn:${cdk.Stack.of(this).partition}:s3:::${
@@ -182,10 +180,8 @@ export class SecurityStack extends AcceleratorStack {
         }/${destinationPrefix}`;
 
         new GuardDutyPublishingDestination(this, 'GuardDutyPublishingDestination', {
-          exportDestinationType:
-            this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.destinationType,
-          exportDestinationOverride:
-            this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.overrideExisting ?? false,
+          exportDestinationType: guardDutyConfig.exportConfiguration.destinationType,
+          exportDestinationOverride: guardDutyConfig.exportConfiguration.overrideExisting ?? false,
           destinationArn: destinationArn,
           destinationKmsKey: this.centralLogsBucketKey,
           logKmsKey: this.cloudwatchKey,

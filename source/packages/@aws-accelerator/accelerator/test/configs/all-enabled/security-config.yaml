@@ -55,8 +55,13 @@ centralSecurityServices:
     publishSensitiveDataFindings: true
   guardduty:
     enable: true
-    excludeRegions:
-      - us-west-2
+    deploymentTargets:
+      accounts:
+        - Management
+        - Network
+      excludedRegions:
+        - us-west-2
+    autoEnableOrgMembers: false
     s3Protection:
       enable: true
       excludeRegions:

@@ -16,7 +16,12 @@ import { Construct } from 'constructs';
 import { pascalCase } from 'pascal-case';
 import * as path from 'path';
 
-import { IdentityCenterAssignmentConfig, IdentityCenterPermissionSetConfig, Region } from '@aws-accelerator/config';
+import {
+  GuardDutyConfig,
+  IdentityCenterAssignmentConfig,
+  IdentityCenterPermissionSetConfig,
+  Region,
+} from '@aws-accelerator/config';
 import {
   AuditManagerOrganizationAdminAccount,
   Bucket,
@@ -509,16 +514,20 @@ export class OrganizationsStack extends AcceleratorStack {
       }
     }
   }
+
   /**
    * Function to enable GuardDuty delegated admin account
    * @param adminAccountId
    */
   private enableGuardDutyDelegatedAdminAccount(adminAccountId: string) {
-    if (this.stackProperties.securityConfig.centralSecurityServices.guardduty.enable) {
+    const guardDutyConfig: GuardDutyConfig = this.stackProperties.securityConfig.centralSecurityServices.guardduty;
+    if (guardDutyConfig.enable) {
       if (
-        this.stackProperties.securityConfig.centralSecurityServices.guardduty.excludeRegions.indexOf(
-          cdk.Stack.of(this).region as Region,
-        ) == -1
+        guardDutyConfig.excludeRegions
+          ? guardDutyConfig.excludeRegions.indexOf(this.region as Region) === -1
+          : guardDutyConfig.deploymentTargets?.excludedRegions
+          ? guardDutyConfig.deploymentTargets?.excludedRegions?.indexOf(this.region as Region) === -1
+          : true
       ) {
         this.logger.debug(
           `Starts guardduty admin account delegation to the account with email ${

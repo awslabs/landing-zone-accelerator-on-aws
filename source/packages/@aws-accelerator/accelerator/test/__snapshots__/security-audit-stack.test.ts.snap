@@ -2074,8 +2074,13 @@ def script_handler(events, context):
             "Arn",
           ],
         },
+        "autoEnableOrgMembers": false,
         "enableEksProtection": true,
         "enableS3Protection": true,
+        "guardDutyMemberAccountIds": [
+          "111111111111",
+          "555555555555",
+        ],
         "partition": {
           "Ref": "AWS::Partition",
         },
@@ -4790,8 +4795,10 @@ def script_handler(events, context):
             "Arn",
           ],
         },
+        "autoEnableOrgMembers": true,
         "enableEksProtection": false,
         "enableS3Protection": true,
+        "guardDutyMemberAccountIds": [],
         "partition": {
           "Ref": "AWS::Partition",
         },

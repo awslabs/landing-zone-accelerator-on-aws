@@ -169,8 +169,10 @@ exports[`GuardDutyMembers Construct(GuardDutyMembers):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
+        "autoEnableOrgMembers": true,
         "enableEksProtection": true,
         "enableS3Protection": true,
+        "guardDutyMemberAccountIds": [],
         "partition": {
           "Ref": "AWS::Partition",
         },

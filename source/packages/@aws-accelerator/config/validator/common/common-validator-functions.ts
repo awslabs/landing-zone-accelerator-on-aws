@@ -58,6 +58,45 @@ export class CommonValidatorFunctions {
   }
 
   /**
+   * Get account ids for a deployment target object
+   * @param targets
+   * @returns
+   */
+  public static getAccountIdsFromDeploymentTargets(
+    accountsConfig: AccountsConfig,
+    deploymentTargets: t.DeploymentTargets,
+  ): string[] {
+    const accountIds: string[] = [];
+
+    for (const ou of deploymentTargets.organizationalUnits ?? []) {
+      if (ou === 'Root') {
+        for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
+          accountIds.push(accountsConfig.getAccountId(account.name));
+        }
+      } else {
+        for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
+          if (ou === account.organizationalUnit) {
+            accountIds.push(accountsConfig.getAccountId(account.name));
+          }
+        }
+      }
+    }
+
+    for (const account of deploymentTargets.accounts ?? []) {
+      accountIds.push(accountsConfig.getAccountId(account));
+    }
+
+    const excludedAccountIds: string[] = [];
+    for (const account of deploymentTargets.excludedAccounts ?? []) {
+      excludedAccountIds.push(accountsConfig.getAccountId(account));
+    }
+
+    const filterAccountIds = accountIds.filter(item => !excludedAccountIds.includes(item));
+
+    return [...new Set(filterAccountIds)];
+  }
+
+  /**
    * Get account names for a share target or deployment target object
    * @param targets
    * @returns

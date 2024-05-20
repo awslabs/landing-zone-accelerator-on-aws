@@ -25,6 +25,8 @@ new GuardDutyMembers(stack, 'GuardDutyMembers', {
   enableEksProtection: true,
   kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
   logRetentionInDays: 3653,
+  guardDutyMemberAccountIds: [],
+  autoEnableOrgMembers: true,
 });
 
 /**
