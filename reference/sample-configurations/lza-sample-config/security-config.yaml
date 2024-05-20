@@ -230,11 +230,11 @@ cloudWatch:
           - Management
       metrics:
         # CIS 1.7 – Avoid the use of the "root" account
-        - filterName: RootAccountUsage
+        - filterName: RootAccountUsageMetricFilter
           logGroupName: aws-controltower/CloudTrailLogs
           filterPattern: '{$.userIdentity.type="Root" && $.userIdentity.invokedBy NOT EXISTS && $.eventType !="AwsServiceEvent"}'
           metricNamespace: LogMetrics
-          metricName: RootAccount
+          metricName: RootAccountUsage
           metricValue: "1"
         # CIS 4.4 – Ensure a log metric filter and alarm exist for IAM policy changes
         - filterName: IAMPolicyChangesMetricFilter
