@@ -11,7 +11,13 @@
  *  and limitations under the License.
  */
 
-import { ApplicationLoadBalancerConfig, GwlbConfig, VpcConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
+import {
+  ApplicationLoadBalancerConfig,
+  AseaResourceType,
+  GwlbConfig,
+  VpcConfig,
+  VpcTemplatesConfig,
+} from '@aws-accelerator/config';
 import {
   ApplicationLoadBalancer,
   GatewayLoadBalancer,
@@ -300,6 +306,9 @@ export class LoadBalancerResources {
 
     for (const vpcItem of vpcResources) {
       for (const albItem of vpcItem.loadBalancers?.applicationLoadBalancers || []) {
+        if (this.stack.isManagedByAsea(AseaResourceType.APPLICATION_LOAD_BALANCER, `${albItem.name}`)) {
+          continue;
+        }
         // Logic to only create Application Load Balancers that don't include the shareTargets property
         if (!albItem.shareTargets) {
           const subnetLookups = albItem.subnets.map(subnetName => subnetMap.get(`${vpcItem.name}_${subnetName}`));
