@@ -667,6 +667,15 @@
       "additionalProperties": false,
       "description": "AWS GuardDuty configuration\nUse this configuration to enable Amazon GuardDuty for an AWS Organization, as well as other modular\nfeature protections.",
       "properties": {
+        "autoEnableOrgMembers": {
+          "default": true,
+          "description": "(OPTIONAL) Enables/disables the auto enabling of GuardDuty for any account including the new accounts joining the organization\n\nIt is recommended to set the value to `false` when using the `deploymentTargets` property to enable GuardDuty only on targeted accounts mentioned in the deploymentTargets. If you do not define or do not set it to `false` any new accounts joining the organization will automatically be enabled with GuardDuty.",
+          "type": "boolean"
+        },
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "(OPTIONAL) Deployment targets for GuardDuty\n\nWe highly recommend enabling GuardDuty across all accounts and enabled regions within your organization. `deploymentTargets` should only be used when more granular control is required, not as a default configuration Please only specify one of the `deploymentTargets` or `excludeRegions` properties."
+        },
         "eksProtection": {
           "$ref": "#/definitions/IGuardDutyEksProtectionConfig",
           "description": "(OPTIONAL) AWS GuardDuty EKS Protection configuration."
@@ -676,7 +685,7 @@
           "type": "boolean"
         },
         "excludeRegions": {
-          "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty",
+          "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty\n\nPlease only specify one of the `excludeRegions` or `deploymentTargets` properties.",
           "items": {
             "$ref": "#/definitions/Region"
           },

@@ -328,8 +328,29 @@ export interface IGuardDutyConfig {
   readonly enable: boolean;
   /**
    * (OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty
+   *
+   * Please only specify one of the `excludeRegions` or `deploymentTargets` properties.
+   *
    */
   readonly excludeRegions?: t.Region[];
+  /**
+   * (OPTIONAL) Deployment targets for GuardDuty
+   *
+   * We highly recommend enabling GuardDuty across all accounts and enabled regions within your organization.
+   * `deploymentTargets` should only be used when more granular control is required, not as a default configuration
+   * Please only specify one of the `deploymentTargets` or `excludeRegions` properties.
+   *
+   * @see {@link DeploymentTargets}
+   */
+  readonly deploymentTargets?: t.IDeploymentTargets;
+  /**
+   * (OPTIONAL) Enables/disables the auto enabling of GuardDuty for any account including the new accounts joining the organization
+   *
+   * It is recommended to set the value to `false` when using the `deploymentTargets` property to enable GuardDuty only on targeted accounts mentioned in the deploymentTargets. If you do not define or do not set it to `false` any new accounts joining the organization will automatically be enabled with GuardDuty.
+   *
+   * @default true
+   */
+  readonly autoEnableOrgMembers?: boolean;
   /**
    * AWS GuardDuty S3 Protection configuration.
    * @type object

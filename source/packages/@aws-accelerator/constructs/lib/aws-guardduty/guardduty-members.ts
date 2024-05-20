@@ -36,6 +36,14 @@ export interface GuardDutyMembersProps {
    * Custom resource lambda log retention in days
    */
   readonly logRetentionInDays: number;
+  /**
+   * List of GuardDuty member accountIds populated only when deploymentTargets are defined
+   */
+  readonly guardDutyMemberAccountIds: string[];
+  /**
+   * Enable/disable autoEnableOrgMembers
+   */
+  readonly autoEnableOrgMembers: boolean;
 }
 
 /**
@@ -99,6 +107,8 @@ export class GuardDutyMembers extends Construct {
         partition: cdk.Aws.PARTITION,
         enableS3Protection: props.enableS3Protection,
         enableEksProtection: props.enableEksProtection,
+        guardDutyMemberAccountIds: props.guardDutyMemberAccountIds,
+        autoEnableOrgMembers: props.autoEnableOrgMembers,
       },
     });
 

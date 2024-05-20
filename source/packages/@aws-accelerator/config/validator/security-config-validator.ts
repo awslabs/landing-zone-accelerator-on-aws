@@ -33,6 +33,7 @@ import {
   SecurityConfig,
   IsPublicSsmDoc,
   ConfigRule,
+  GuardDutyConfig,
 } from '../lib/security-config';
 import { CommonValidatorFunctions } from './common/common-validator-functions';
 
@@ -87,6 +88,8 @@ export class SecurityConfigValidator {
     // Validate EBS default encryption configuration
     this.validateEbsEncryptionConfiguration(values.centralSecurityServices.ebsDefaultVolumeEncryption, errors);
 
+    // Validate GuardDuty configuration
+    this.validateGuardDutyConfiguration(values.centralSecurityServices.guardduty, errors);
     //
     // Validate delegated admin account
     // Validate deployment targets against organization config file
@@ -303,6 +306,28 @@ export class SecurityConfigValidator {
           );
         }
       }
+    }
+  }
+
+  /**
+   * Validate GuardDuty configuration
+   * @param guardDutyConfig GuardDutyConfig
+   * @param errors string[]
+   */
+  private validateGuardDutyConfiguration(guardDutyConfig: GuardDutyConfig, errors: string[]) {
+    if (guardDutyConfig.excludeRegions && guardDutyConfig.deploymentTargets) {
+      errors.push(
+        `GuardDuty configuration cannot include both "deploymentTargets" and "excludeRegions" properties. Please use only one.`,
+      );
+    }
+
+    if (
+      guardDutyConfig.deploymentTargets &&
+      (guardDutyConfig.autoEnableOrgMembers === undefined || guardDutyConfig.autoEnableOrgMembers)
+    ) {
+      errors.push(
+        `"autoEnableOrgMembers" should be disabled when using "deploymentTargets" property in GuardDuty configuration`,
+      );
     }
   }
 
@@ -606,6 +631,20 @@ export class SecurityConfigValidator {
   }
 
   /**
+   * Validate deployment target accounts for GuardDuty
+   * @param values SecurityConfig
+   * @param accountNames string[]
+   * @param errors string[]
+   */
+  private validateGuardDutyDeploymentTargetAccounts(values: ISecurityConfig, accountNames: string[], errors: string[]) {
+    for (const account of values.centralSecurityServices.guardduty.deploymentTargets?.accounts ?? []) {
+      if (accountNames.indexOf(account) === -1) {
+        errors.push(`Deployment target account ${account} for GuardDuty does not exist in accounts-config.yaml file.`);
+      }
+    }
+  }
+
+  /**
    * Function to validate Deployment targets account name for security services
    * @param values
    */
@@ -618,6 +657,7 @@ export class SecurityConfigValidator {
     this.validateCloudWatchLogGroupsDeploymentTargetAccounts(values, accountNames, errors);
     this.validateKmsKeyConfigDeploymentTargetAccounts(values, accountNames, errors);
     this.validateEbsEncryptionDeploymentTargetAccounts(values, accountNames, errors);
+    this.validateGuardDutyDeploymentTargetAccounts(values, accountNames, errors);
   }
 
   /**
@@ -738,6 +778,20 @@ export class SecurityConfigValidator {
   }
 
   /**
+   * Validate deployment target OUs for GuardDuty
+   * @param values SecurityConfig
+   * @param ouIdNames string[]
+   * @param errors string[]
+   */
+  private validateGuardDutyDeploymentTargetOUs(values: SecurityConfig, ouIdNames: string[], errors: string[]) {
+    for (const ou of values.centralSecurityServices.guardduty.deploymentTargets?.organizationalUnits ?? []) {
+      if (ouIdNames.indexOf(ou) === -1) {
+        errors.push(`Deployment target OU ${ou} for GuardDuty does not exist in organization-config.yaml file.`);
+      }
+    }
+  }
+
+  /**
    * Function to validate Deployment targets OU name for security services
    * @param values
    */
@@ -749,6 +803,7 @@ export class SecurityConfigValidator {
     this.validateConfigRuleDeploymentTargetOUs(values, ouIdNames, errors);
     this.validateKmsKeyConfigDeploymentTargetOUs(values, ouIdNames, errors);
     this.validateEbsEncryptionDeploymentTargetOUs(values, ouIdNames, errors);
+    this.validateGuardDutyDeploymentTargetOUs(values, ouIdNames, errors);
   }
 
   /**
