@@ -1276,6 +1276,13 @@ export class VpcValidator {
       );
     }
 
+    // Validate that tags are specified for the central endpoint VPC and not the spoke(s)
+    if (vpcItem.interfaceEndpoints?.tags && !vpcItem.interfaceEndpoints.central) {
+      errors.push(
+        `[VPC ${vpcItem.name}]: has tags set under interfaceEndpoints to tag the Private Hosted Zones, but is not set to the central VPC for interface endpoints`,
+      );
+    }
+
     // Validate subnets
     const azs: (string | number)[] = [];
     vpcItem.interfaceEndpoints?.subnets.forEach(subnetName => {

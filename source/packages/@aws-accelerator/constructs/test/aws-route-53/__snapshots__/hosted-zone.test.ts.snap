@@ -5,6 +5,12 @@ exports[`HostedZone Construct(HostedZone):  Snapshot Test 1`] = `
   "Resources": {
     "AppstreamApiHostedZoneEC555793": {
       "Properties": {
+        "HostedZoneTags": [
+          {
+            "Key": "key",
+            "Value": "value",
+          },
+        ],
         "Name": {
           "Fn::Join": [
             "",
@@ -30,6 +36,12 @@ exports[`HostedZone Construct(HostedZone):  Snapshot Test 1`] = `
     },
     "DeviceAdvisorIotHostedZoneC6F4CC0C": {
       "Properties": {
+        "HostedZoneTags": [
+          {
+            "Key": "key",
+            "Value": "value",
+          },
+        ],
         "Name": {
           "Fn::Join": [
             "",
@@ -55,6 +67,12 @@ exports[`HostedZone Construct(HostedZone):  Snapshot Test 1`] = `
     },
     "EcrApiHostedZoneD58C89CF": {
       "Properties": {
+        "HostedZoneTags": [
+          {
+            "Key": "key",
+            "Value": "value",
+          },
+        ],
         "Name": {
           "Fn::Join": [
             "",
@@ -244,6 +262,12 @@ exports[`HostedZone Construct(HostedZone):  Snapshot Test 1`] = `
     },
     "codeArtifactApiHostedZoneD0D526E8": {
       "Properties": {
+        "HostedZoneTags": [
+          {
+            "Key": "key",
+            "Value": "value",
+          },
+        ],
         "Name": {
           "Fn::Join": [
             "",
@@ -269,6 +293,12 @@ exports[`HostedZone Construct(HostedZone):  Snapshot Test 1`] = `
     },
     "codeArtifactRepositoriesHostedZoneF088B188": {
       "Properties": {
+        "HostedZoneTags": [
+          {
+            "Key": "key",
+            "Value": "value",
+          },
+        ],
         "Name": {
           "Fn::Join": [
             "",
@@ -294,6 +324,12 @@ exports[`HostedZone Construct(HostedZone):  Snapshot Test 1`] = `
     },
     "s3HostedHostedZoneC29BF087": {
       "Properties": {
+        "HostedZoneTags": [
+          {
+            "Key": "key",
+            "Value": "value",
+          },
+        ],
         "Name": {
           "Fn::Join": [
             "",

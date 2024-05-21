@@ -2204,6 +2204,10 @@ export interface IInterfaceEndpointConfig {
    * Use CIDR notation, i.e. 10.0.0.0/16
    */
   readonly allowedCidrs?: t.NonEmptyString[];
+  /**
+   * (OPTIONAL) An array of tag objects for the private hosted zones associated with the VPC Interface endpoints.
+   */
+  readonly tags?: t.ITag[];
 }
 
 export type SecurityGroupRuleType =

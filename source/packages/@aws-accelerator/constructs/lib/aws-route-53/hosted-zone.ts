@@ -18,17 +18,20 @@ export interface IHostedZone extends cdk.IResource {
   readonly hostedZoneId: string;
   readonly hostedZoneName: string;
   readonly vpcId: string;
+  readonly tags?: cdk.CfnTag[];
 }
 
 export interface HostedZoneProps {
   readonly hostedZoneName: string;
   readonly vpcId: string;
+  readonly tags?: cdk.CfnTag[];
 }
 
 export class HostedZone extends cdk.Resource implements IHostedZone {
   readonly hostedZoneId: string;
   readonly hostedZoneName: string;
   readonly vpcId: string;
+  readonly tags?: cdk.CfnTag[];
 
   constructor(scope: Construct, id: string, props: HostedZoneProps) {
     super(scope, id);
@@ -44,9 +47,19 @@ export class HostedZone extends cdk.Resource implements IHostedZone {
           vpcRegion: cdk.Stack.of(this).region,
         },
       ],
+      hostedZoneTags: this.processTags(props.tags ?? []),
     });
 
     this.hostedZoneId = resource.ref;
+  }
+
+  private processTags(tags: cdk.CfnTag[]): cdk.aws_route53.CfnHostedZone.HostedZoneTagProperty[] {
+    return tags.map(tag => {
+      return {
+        key: tag.key,
+        value: tag.value,
+      };
+    });
   }
 
   static getHostedZoneNameForService(service: string, region: string): string {

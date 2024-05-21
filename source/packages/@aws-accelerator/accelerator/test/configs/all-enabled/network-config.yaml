@@ -1148,6 +1148,9 @@ vpcs:
         - service: dynamodb
     interfaceEndpoints:
       central: true
+      tags:
+        - key: Environment
+          value: CentralVpc
       defaultPolicy: Default
       subnets:
         - Network-Endpoints-A

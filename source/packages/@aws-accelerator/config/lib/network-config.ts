@@ -283,8 +283,8 @@ export class InterfaceEndpointConfig implements i.IInterfaceEndpointConfig {
   readonly subnets: string[] = [];
   readonly central: boolean | undefined = undefined;
   readonly allowedCidrs: string[] | undefined = undefined;
+  readonly tags: t.Tag[] | undefined = undefined;
 }
-
 export class SubnetSourceConfig implements i.ISubnetSourceConfig {
   readonly account: string = '';
   readonly vpc: string = '';

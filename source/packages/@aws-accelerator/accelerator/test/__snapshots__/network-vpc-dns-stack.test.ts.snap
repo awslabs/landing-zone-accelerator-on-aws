@@ -395,6 +395,12 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
     },
     "NetworkEndpointsVpcAccessAnalyzerEpHostedZone51F8537E": {
       "Properties": {
+        "HostedZoneTags": [
+          {
+            "Key": "Environment",
+            "Value": "CentralVpc",
+          },
+        ],
         "Name": "access-analyzer.us-east-1.amazonaws.com",
         "VPCs": [
           {
@@ -427,6 +433,12 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
     },
     "NetworkEndpointsVpcCodeartifactApiEpHostedZoneF2395ADF": {
       "Properties": {
+        "HostedZoneTags": [
+          {
+            "Key": "Environment",
+            "Value": "CentralVpc",
+          },
+        ],
         "Name": "codeartifact.us-east-1.amazonaws.com",
         "VPCs": [
           {
@@ -459,6 +471,12 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
     },
     "NetworkEndpointsVpcCodeartifactRepositoriesEpHostedZoneA4A53667": {
       "Properties": {
+        "HostedZoneTags": [
+          {
+            "Key": "Environment",
+            "Value": "CentralVpc",
+          },
+        ],
         "Name": "d.codeartifact.us-east-1.amazonaws.com",
         "VPCs": [
           {
@@ -509,6 +527,12 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
     },
     "NetworkEndpointsVpcEc2EpHostedZone3457AFDE": {
       "Properties": {
+        "HostedZoneTags": [
+          {
+            "Key": "Environment",
+            "Value": "CentralVpc",
+          },
+        ],
         "Name": "ec2.us-east-1.amazonaws.com",
         "VPCs": [
           {
@@ -541,6 +565,12 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
     },
     "NetworkEndpointsVpcEc2messagesEpHostedZoneD74E6E18": {
       "Properties": {
+        "HostedZoneTags": [
+          {
+            "Key": "Environment",
+            "Value": "CentralVpc",
+          },
+        ],
         "Name": "ec2messages.us-east-1.amazonaws.com",
         "VPCs": [
           {
@@ -573,6 +603,12 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
     },
     "NetworkEndpointsVpcEcrDkrEpHostedZoneE4E1EA3F": {
       "Properties": {
+        "HostedZoneTags": [
+          {
+            "Key": "Environment",
+            "Value": "CentralVpc",
+          },
+        ],
         "Name": "dkr.ecr.us-east-1.amazonaws.com.",
         "VPCs": [
           {
@@ -623,6 +659,12 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
     },
     "NetworkEndpointsVpcEksEpHostedZoneB3A66C5D": {
       "Properties": {
+        "HostedZoneTags": [
+          {
+            "Key": "Environment",
+            "Value": "CentralVpc",
+          },
+        ],
         "Name": "eks.us-east-1.amazonaws.com",
         "VPCs": [
           {
@@ -655,6 +697,12 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
     },
     "NetworkEndpointsVpcKmsEpHostedZoneC9CFEF9D": {
       "Properties": {
+        "HostedZoneTags": [
+          {
+            "Key": "Environment",
+            "Value": "CentralVpc",
+          },
+        ],
         "Name": "kms.us-east-1.amazonaws.com",
         "VPCs": [
           {
@@ -687,6 +735,12 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
     },
     "NetworkEndpointsVpcLogsEpHostedZoneDBA51FD8": {
       "Properties": {
+        "HostedZoneTags": [
+          {
+            "Key": "Environment",
+            "Value": "CentralVpc",
+          },
+        ],
         "Name": "logs.us-east-1.amazonaws.com",
         "VPCs": [
           {
@@ -819,6 +873,12 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
     },
     "NetworkEndpointsVpcS3EpHostedZoneD27476BE": {
       "Properties": {
+        "HostedZoneTags": [
+          {
+            "Key": "Environment",
+            "Value": "CentralVpc",
+          },
+        ],
         "Name": "s3.us-east-1.amazonaws.com",
         "VPCs": [
           {
@@ -869,6 +929,12 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
     },
     "NetworkEndpointsVpcS3GlobalAccesspointEpHostedZone763F0212": {
       "Properties": {
+        "HostedZoneTags": [
+          {
+            "Key": "Environment",
+            "Value": "CentralVpc",
+          },
+        ],
         "Name": "s3-global.accesspoint.amazonaws.com",
         "VPCs": [
           {
@@ -919,6 +985,12 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
     },
     "NetworkEndpointsVpcSecretsmanagerEpHostedZoneE5742A7A": {
       "Properties": {
+        "HostedZoneTags": [
+          {
+            "Key": "Environment",
+            "Value": "CentralVpc",
+          },
+        ],
         "Name": "secretsmanager.us-east-1.amazonaws.com",
         "VPCs": [
           {
@@ -951,6 +1023,12 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
     },
     "NetworkEndpointsVpcSsmEpHostedZoneE400276D": {
       "Properties": {
+        "HostedZoneTags": [
+          {
+            "Key": "Environment",
+            "Value": "CentralVpc",
+          },
+        ],
         "Name": "ssm.us-east-1.amazonaws.com",
         "VPCs": [
           {
@@ -983,6 +1061,12 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
     },
     "NetworkEndpointsVpcSsmmessagesEpHostedZone19BD15F2": {
       "Properties": {
+        "HostedZoneTags": [
+          {
+            "Key": "Environment",
+            "Value": "CentralVpc",
+          },
+        ],
         "Name": "ssmmessages.us-east-1.amazonaws.com",
         "VPCs": [
           {

@@ -148,12 +148,14 @@ export class NetworkVpcDnsStack extends NetworkStack {
         // Create the private hosted zone
         this.logger.info(`Creating private hosted zone for VPC:${vpcItem.name} endpoint:${endpointItem.service}`);
         const hostedZoneName = HostedZone.getHostedZoneNameForService(endpointItem.service, cdk.Stack.of(this).region);
+        const tags = vpcItem.interfaceEndpoints?.tags;
         const hostedZone = new HostedZone(
           this,
           `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem.service)}EpHostedZone`,
           {
             hostedZoneName,
             vpcId,
+            tags,
           },
         );
         this.ssmParameters.push({
