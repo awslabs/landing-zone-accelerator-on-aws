@@ -44,31 +44,37 @@ new HostedZone(stack, `TestHostedZone`, {
 new HostedZone(stack, `codeArtifactApiHostedZone`, {
   hostedZoneName: codeArtifactApiHostedZoneName,
   vpcId: 'Test',
+  tags: [{ key: 'key', value: 'value' }],
 });
 
 new HostedZone(stack, `codeArtifactRepositoriesHostedZone`, {
   hostedZoneName: codeArtifactRepositoriesHostedZoneName,
   vpcId: 'Test',
+  tags: [{ key: 'key', value: 'value' }],
 });
 
 new HostedZone(stack, `s3HostedHostedZone`, {
   hostedZoneName: s3HostedHostedZoneName,
   vpcId: 'Test',
+  tags: [{ key: 'key', value: 'value' }],
 });
 
 new HostedZone(stack, `EcrApiHostedZone`, {
   hostedZoneName: ecrApiHostedZoneName,
   vpcId: 'Test',
+  tags: [{ key: 'key', value: 'value' }],
 });
 
 new HostedZone(stack, `AppstreamApiHostedZone`, {
   hostedZoneName: appstreamApiHostedZoneName,
   vpcId: 'Test',
+  tags: [{ key: 'key', value: 'value' }],
 });
 
 new HostedZone(stack, `DeviceAdvisorIotHostedZone`, {
   hostedZoneName: deviceAdvisorIotHostedZoneName,
   vpcId: 'Test',
+  tags: [{ key: 'key', value: 'value' }],
 });
 
 new HostedZone(stack, `PintpointSmsVoiceV2HostedZone`, {
