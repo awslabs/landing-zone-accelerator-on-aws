@@ -150,6 +150,7 @@ export class ValidateEnvironmentConfig extends Construct {
         driftDetectionParameterName: props.driftDetectionParameter.parameterName,
         driftDetectionMessageParameterName: props.driftDetectionMessageParameter.parameterName,
         serviceControlPolicies: props.serviceControlPolicies,
+        skipScpValidation: process.env['ACCELERATOR_SKIP_SCP_VALIDATION'] ?? 'no',
         uuid: uuidv4(), // Generates a new UUID to force the resource to update
       },
     });

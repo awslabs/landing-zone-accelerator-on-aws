@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(config): added deploymentTargets for awsConfig since configuration recorder cannot be turned off selectively
 - feat(guardduty): add deploymentTargets and autoEnableOrgMembers settings for guardduty
 - feat(networking): add tags property to interfaceEndpoints to tag private hosted zones for interface endpoints
+- feat(validation): add option to skip scp validation during prepare stage
 
 ### Changed
 
