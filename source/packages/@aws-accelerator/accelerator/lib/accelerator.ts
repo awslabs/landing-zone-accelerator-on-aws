@@ -27,19 +27,59 @@ import {
 } from '@aws-sdk/client-ssm';
 import { S3Client, HeadBucketCommand } from '@aws-sdk/client-s3';
 import { IAMClient, GetRoleCommand, GetRoleCommandInput } from '@aws-sdk/client-iam';
-import { AccountsConfig, GlobalConfig, OrganizationConfig } from '@aws-accelerator/config';
 import {
-  createLogger,
-  throttlingBackOff,
-  getCrossAccountCredentials,
-  setStsTokenPreferences,
-} from '@aws-accelerator/utils';
+  AccountsConfig,
+  GlobalConfig,
+  OrganizationConfig,
+  CustomizationsConfig,
+  ReplacementsConfig,
+  Region,
+  DeploymentTargets,
+} from '@aws-accelerator/config';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+import { getCrossAccountCredentials, setStsTokenPreferences } from '@aws-accelerator/utils';
 import { AssumeProfilePlugin } from '@aws-cdk-extensions/cdk-plugin-assume-role';
 import { isBeforeBootstrapStage } from '../utils/app-utils';
 import { AcceleratorStage } from './accelerator-stage';
 import { AcceleratorToolkit, AcceleratorToolkitProps } from './toolkit';
 import { v4 as uuidv4 } from 'uuid';
+import { getReplacementsConfig } from '../utils/app-utils';
+import * as path from 'path';
 
+export type CustomStackRunOrder = {
+  /**
+   * Unique stack name for customizations config custom stack
+   */
+  stackName: string;
+  /**
+   * Run order of stack
+   */
+  runOrder: number;
+  /**
+   * Account Ids where custom stack is deployed to
+   */
+  accounts: string[];
+  /**
+   * Regions where custom stack is deployed to
+   */
+  regions: string[];
+};
+
+export type ApplicationStackRunOrder = {
+  /**
+   * Unique stack name for application stack
+   */
+  stackName: string;
+  /**
+   * Account Ids where application stack is deployed to
+   */
+  accounts: string[];
+  /**
+   * Regions where application stack is deployed to
+   */
+  regions: string[];
+};
 const logger = createLogger(['accelerator']);
 
 process.on('uncaughtException', err => {
@@ -231,6 +271,8 @@ export abstract class Accelerator {
         organizationsConfig.enable,
         accountsConfig,
       );
+      const replacementsConfig = getReplacementsConfig(props.configDirPath, accountsConfig);
+
       //
       // Set details about mandatory accounts
       //
@@ -302,6 +344,7 @@ export abstract class Accelerator {
         managementAccountDetails,
         globalConfig.enabledRegions,
         maxStacks,
+        replacementsConfig,
       );
 
       await Promise.all(promises);
@@ -810,6 +853,7 @@ export abstract class Accelerator {
     managementAccountDetails: { id: string; name: string },
     enabledRegions: string[],
     maxStacks: number,
+    replacementsConfig: ReplacementsConfig,
   ) {
     if (
       toolkitProps.stage === AcceleratorStage.SECURITY ||
@@ -824,6 +868,8 @@ export abstract class Accelerator {
       //
       // Execute for all regions in Management account
       await this.executeManagementRemainingStages(toolkitProps, promises, managementAccountDetails.id, enabledRegions);
+      await Promise.all(promises);
+      promises.length = 0;
       //
       // Execute for all remaining accounts and regions
       await this.executeAllAccountRemainingStages(
@@ -834,7 +880,108 @@ export abstract class Accelerator {
         enabledRegions,
         maxStacks,
       );
+      await Promise.all(promises);
+      promises.length = 0;
+
+      // check to see if customizations has stacks. If no stacks are specified then do nothing
+      if (
+        toolkitProps.stage === AcceleratorStage.CUSTOMIZATIONS &&
+        fs.existsSync(path.join(toolkitProps.configDirPath!, CustomizationsConfig.FILENAME))
+      ) {
+        this.executeCustomizationsStacks(
+          toolkitProps,
+          promises,
+          replacementsConfig,
+          accountsConfig,
+          enabledRegions,
+          maxStacks,
+        );
+      }
+      // clearing queue after customizations run
+      await Promise.all(promises);
+      promises.length = 0;
     }
+  }
+  private static async executeCustomizationsStacks(
+    toolkitProps: AcceleratorToolkitProps,
+    promises: Promise<void>[],
+    replacementsConfig: ReplacementsConfig,
+    accountsConfig: AccountsConfig,
+    enabledRegions: string[],
+    maxStacks: number,
+  ) {
+    const customizationsConfig = CustomizationsConfig.load(toolkitProps.configDirPath!, replacementsConfig);
+    const customStacks = customizationsConfig.getCustomStacks();
+    const customizationsStackRunOrderData: CustomStackRunOrder[] = [];
+    for (const stack of customStacks) {
+      // get accounts where custom stack is deployed to
+      const deploymentAccts = accountsConfig.getAccountIdsFromDeploymentTarget(stack.deploymentTargets);
+      // get regions where custom stack is deployed to
+      const deploymentRegions = stack.regions.map(a => a.toString());
+      customizationsStackRunOrderData.push({
+        stackName: stack.name,
+        runOrder: stack.runOrder,
+        accounts: deploymentAccts,
+        regions: deploymentRegions,
+      });
+    }
+    const groupedRunOrders = groupByRunOrder(customizationsStackRunOrderData);
+
+    for (const groupRunOrder of groupedRunOrders) {
+      for (const stack of groupRunOrder.stacks) {
+        logger.info(
+          `Executing custom stacks ${stack.stackNames.join(', ')} for ${stack.account} account in ${
+            stack.region
+          } region.`,
+        );
+        promises.push(
+          AcceleratorToolkit.execute({
+            accountId: stack.account,
+            region: stack.region,
+            ...toolkitProps,
+            stackNames: stack.stackNames,
+          }),
+        );
+        if (promises.length >= maxStacks) {
+          await Promise.all(promises);
+          promises.length = 0;
+        }
+      }
+      // exhaust each runOrder before proceeding to the next
+      await Promise.all(promises);
+    }
+
+    promises.length = 0;
+    // process application stacks
+    const appStacks = customizationsConfig.getAppStacks();
+    for (const application of appStacks) {
+      //find out deployment account
+      const deploymentAccts = accountsConfig.getAccountIdsFromDeploymentTarget(application.deploymentTargets);
+      //find out deployment region
+      const deploymentRegions = getRegionsFromDeploymentTarget(application.deploymentTargets, enabledRegions);
+      for (const deploymentAcct of deploymentAccts) {
+        for (const deploymentRegion of deploymentRegions) {
+          const applicationStackName = `${toolkitProps.stackPrefix}-App-${application.name}-${deploymentAcct}-${deploymentRegion}`;
+          logger.info(
+            `Executing application stack ${applicationStackName} for ${deploymentAcct} account in ${deploymentRegion} region.`,
+          );
+          promises.push(
+            AcceleratorToolkit.execute({
+              accountId: deploymentAcct,
+              region: deploymentRegion,
+              ...toolkitProps,
+              stackNames: [applicationStackName],
+            }),
+          );
+          if (promises.length >= maxStacks) {
+            await Promise.all(promises);
+            promises.length = 0;
+          }
+        }
+      }
+    }
+    // wait for all applications stacks to deploy
+    await Promise.all(promises);
   }
 
   /**
@@ -1199,4 +1346,123 @@ export async function getCentralLogBucketKmsKeyArn(
   const ssmClient = (await getCrossAccountClient(region, crossAccountCredentials, 'SSM')) as SSMClient;
 
   return await getSsmParameterValue(parameterName, ssmClient);
+}
+
+/**
+ * Function to group runOrder in custom stacks
+ * Example usage:
+
+const customStackRunOrders: CustomStackRunOrder[] = [
+  {
+    stackName: 'Stack1',
+    runOrder: 2,
+    accounts: ['123456789012', '999999999999'],
+    regions: ['us-east-1', 'eu-west-1'],
+  },
+  {
+    stackName: 'Stack2',
+    runOrder: 1,
+    accounts: ['123456789012'],
+    regions: ['us-east-1'],
+  },
+  {
+    stackName: 'Stack3',
+    runOrder: 2,
+    accounts: ['999999999999'],
+    regions: ['eu-west-1'],
+  },
+];
+
+const groupedRunOrders = groupByRunOrder(customStackRunOrders);
+console.log(groupedRunOrders);
+
+Output:
+
+[
+  {
+    runOrder: 1,
+    stacks: [
+      {
+        account: '123456789012',
+        region: 'us-east-1',
+        stackNames: ['Stack2-123456789012-us-east-1']
+      }
+    ]
+  },
+  {
+    runOrder: 2,
+    stacks: [
+      {
+        account: '123456789012',
+        region: 'us-east-1',
+        stackNames: ['Stack1-123456789012-us-east-1']
+      },
+      {
+        account: '123456789012',
+        region: 'eu-west-1',
+        stackNames: ['Stack1-123456789012-eu-west-1']
+      },
+      {
+        account: '999999999999',
+        region: 'us-east-1',
+        stackNames: ['Stack1-999999999999-us-east-1']
+      },
+      {
+        account: '999999999999',
+        region: 'eu-west-1',
+        stackNames: ['Stack1-999999999999-eu-west-1', 'Stack3-999999999999-eu-west-1']
+      }
+    ]
+  }
+]
+ */
+function groupByRunOrder(
+  customStackRunOrders: CustomStackRunOrder[],
+): { runOrder: number; stacks: { account: string; region: string; stackNames: string[] }[] }[] {
+  // Sort the array by runOrder
+  const sortedRunOrders = customStackRunOrders.sort((a, b) => a.runOrder - b.runOrder);
+
+  // Group the objects by runOrder, account, and region
+  const groupedRunOrders: { [runOrder: number]: { account: string; region: string; stackNames: string[] }[] } = {};
+
+  sortedRunOrders.forEach(runOrder => {
+    const { runOrder: order, accounts, regions, stackName } = runOrder;
+
+    if (!groupedRunOrders[order]) {
+      groupedRunOrders[order] = [];
+    }
+
+    accounts.forEach(account => {
+      regions.forEach(region => {
+        const modifiedStackName = `${stackName}-${account}-${region}`;
+        const existingStackGroup = groupedRunOrders[order].find(
+          group => group.account === account && group.region === region,
+        );
+        if (existingStackGroup) {
+          existingStackGroup.stackNames.push(modifiedStackName);
+        } else {
+          groupedRunOrders[order].push({ account, region, stackNames: [modifiedStackName] });
+        }
+      });
+    });
+  });
+
+  // Convert the object to an array of objects
+  return Object.entries(groupedRunOrders).map(([runOrder, stacks]) => ({
+    runOrder: parseInt(runOrder),
+    stacks,
+  }));
+}
+
+export function getRegionsFromDeploymentTarget(
+  deploymentTargets: DeploymentTargets,
+  enabledRegions: string[],
+): string[] {
+  const regions: string[] = [];
+  regions.push(
+    ...enabledRegions.filter(region => {
+      return !deploymentTargets?.excludedRegions?.includes(region as Region);
+    }),
+  );
+  return regions;
 }
