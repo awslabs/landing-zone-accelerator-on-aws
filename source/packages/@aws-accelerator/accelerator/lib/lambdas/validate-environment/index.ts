@@ -120,6 +120,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const serviceControlPolicies: serviceControlPolicyType[] = event.ResourceProperties['serviceControlPolicies'];
   driftDetectionParameterName = event.ResourceProperties['driftDetectionParameterName'];
   driftDetectionMessageParameterName = event.ResourceProperties['driftDetectionMessageParameterName'];
+  const skipScpValidation = event.ResourceProperties['skipScpValidation'];
 
   const solutionId = process.env['SOLUTION_ID'];
 
@@ -295,7 +296,11 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       //
       // Validate SCP count
       //
-      await validateServiceControlPolicyCount(organizationsClient, serviceControlPolicies, policyTagKey);
+      if (skipScpValidation.toLowerCase() === 'no') {
+        await validateServiceControlPolicyCount(organizationsClient, serviceControlPolicies, policyTagKey);
+      } else {
+        console.log('Skipping SCP count validation');
+      }
 
       console.log(`validationErrors: ${JSON.stringify(validationErrors)}`);
 
