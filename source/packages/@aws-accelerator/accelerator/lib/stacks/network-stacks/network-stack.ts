@@ -949,11 +949,19 @@ export abstract class NetworkStack extends AcceleratorStack {
     this.logger.info(`Adding Security Group ${securityGroupItem.name} in VPC ${vpcItem.name}`);
     let securityGroup;
     if (this.isManagedByAsea(AseaResourceType.EC2_SECURITY_GROUP, `${vpcItem.name}/${securityGroupItem.name}`)) {
-      const securityGroupId = this.getExternalResourceParameter(
-        this.getSsmPath(SsmResourceType.SECURITY_GROUP, [vpcItem.name, securityGroupItem.name]),
-      );
-      securityGroup = SecurityGroup.fromSecurityGroupId(this, securityGroupId);
-    } else {
+      const ssmPath = this.getSsmPath(SsmResourceType.SECURITY_GROUP, [vpcItem.name, securityGroupItem.name]);
+      const securityGroupId = this.getExternalResourceParameter(ssmPath);
+      if (securityGroupId) {
+        securityGroup = SecurityGroup.fromSecurityGroupId(this, securityGroupId);
+      } else {
+        this.logger.error(
+          `Security group ${ssmPath} for ${cdk.Stack.of(this).stackName}-${cdk.Stack.of(this).account}-${
+            cdk.Stack.of(this).region
+          } exists in resource mapping but does not have an ssm parameter. Skipping import. This error should only occur in the bootstrapping phase.`,
+        );
+      }
+    }
+    if (!securityGroup) {
       securityGroup = new SecurityGroup(
         this,
         pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${securityGroupItem.name}Sg`),
