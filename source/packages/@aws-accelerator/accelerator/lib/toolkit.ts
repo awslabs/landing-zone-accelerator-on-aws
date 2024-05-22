@@ -26,14 +26,7 @@ import { HotswapMode } from 'aws-cdk/lib/api/hotswap/common';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import {
-  AccountsConfig,
-  cdkOptionsConfig,
-  CustomizationsConfig,
-  GlobalConfig,
-  OrganizationConfig,
-} from '@aws-accelerator/config';
-import { getReplacementsConfig } from '../utils/app-utils';
+import { cdkOptionsConfig, GlobalConfig } from '@aws-accelerator/config';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { getCloudFormationTemplate } from '@aws-accelerator/utils/lib/get-template';
 import { getAllFilesInPattern, checkDiffFiles } from '@aws-accelerator/utils/lib/common-functions';
@@ -42,7 +35,6 @@ import { isBeforeBootstrapStage } from '../utils/app-utils';
 
 import { AcceleratorStackNames } from './accelerator';
 import { AcceleratorStage } from './accelerator-stage';
-import { isIncluded } from './stacks/custom-stack';
 
 const logger = createLogger(['toolkit']);
 process.on('unhandledRejection', err => {
@@ -65,11 +57,6 @@ interface Tag {
   readonly Key: string;
   readonly Value: string;
 }
-export type CustomStackRunOrder = {
-  stackName: string;
-  runOrder: number;
-};
-
 /**
  * Accelerator extended CDK toolkit properties
  */
@@ -168,6 +155,10 @@ export interface AcceleratorToolkitProps {
    * Accelerator qualifier used for external deployment
    */
   qualifier?: string;
+  /**
+   * Stack names for custom stack deployment
+   */
+  stackNames?: string[];
 }
 
 /**
@@ -581,126 +572,13 @@ export class AcceleratorToolkit {
   }
 
   /**
-   * Function to validate and get config directory path
-   * @param configDirPath
-   * @returns
-   */
-  private static validateAndGetConfigDirectory(configDirPath?: string): string {
-    if (configDirPath === undefined) {
-      logger.error('Customizations stage requires an argument for configuration directory path');
-      throw new Error('Customizations stage requires an argument for configuration directory path');
-    }
-
-    return configDirPath;
-  }
-
-  /**
-   * Function to get customizations stack names
-   * @param stackNames string[]
-   * @param options {@link AcceleratorToolkitProps}
-   * @returns customizationStackNames string[]
-   */
-  private static async getCustomizationsStackNames(
-    stackNames: string[],
-    options: AcceleratorToolkitProps,
-  ): Promise<string[]> {
-    const configDirPath = AcceleratorToolkit.validateAndGetConfigDirectory(options.configDirPath);
-
-    if (fs.existsSync(path.join(configDirPath, CustomizationsConfig.FILENAME))) {
-      const accountsConfig = AccountsConfig.load(configDirPath);
-      const homeRegion = GlobalConfig.loadRawGlobalConfig(configDirPath).homeRegion;
-      const isOrgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(configDirPath).enable;
-      const replacementsConfig = getReplacementsConfig(configDirPath, accountsConfig);
-      await replacementsConfig.loadReplacementValues({ region: homeRegion }, isOrgsEnabled);
-      const organizationConfig = OrganizationConfig.load(configDirPath, replacementsConfig);
-      await accountsConfig.loadAccountIds(
-        options.partition,
-        options.enableSingleAccountMode,
-        organizationConfig.enable,
-        accountsConfig,
-      );
-
-      const customizationsConfig = CustomizationsConfig.load(configDirPath, replacementsConfig);
-      const customStacks = customizationsConfig.getCustomStacks();
-      for (const stack of customStacks) {
-        const deploymentAccts = accountsConfig.getAccountIdsFromDeploymentTarget(stack.deploymentTargets);
-        const deploymentRegions = stack.regions.map(a => a.toString());
-        if (deploymentRegions.includes(options.region!) && deploymentAccts.includes(options.accountId!)) {
-          stackNames.push(`${stack.name}-${options.accountId}-${options.region}`);
-        }
-      }
-      const appStacks = customizationsConfig.getAppStacks();
-      for (const application of appStacks) {
-        if (
-          isIncluded(
-            application.deploymentTargets,
-            options.region!,
-            options.accountId!,
-            accountsConfig,
-            organizationConfig,
-          )
-        ) {
-          const applicationStackName = `${options.stackPrefix}-App-${
-            application.name
-          }-${options.accountId!}-${options.region!}`;
-          stackNames.push(applicationStackName);
-        }
-      }
-    }
-    return stackNames;
-  }
-
-  /**
-   * Function to get the runOrder of custom stacks
-   * @param options {@link AcceleratorToolkitProps}
-   * @returns customizationsStackRunOrderData CustomizationStackRunOrder[]
-   */
-  private static async getCustomStackRunOrder(options: AcceleratorToolkitProps): Promise<CustomStackRunOrder[]> {
-    const customizationsStackRunOrderData: CustomStackRunOrder[] = [];
-    const configDirPath = AcceleratorToolkit.validateAndGetConfigDirectory(options.configDirPath);
-
-    if (fs.existsSync(path.join(configDirPath, CustomizationsConfig.FILENAME))) {
-      const accountsConfig = AccountsConfig.load(configDirPath);
-      const homeRegion = GlobalConfig.loadRawGlobalConfig(configDirPath).homeRegion;
-      const isOrgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(configDirPath).enable;
-      const replacementsConfig = getReplacementsConfig(configDirPath, accountsConfig);
-      await replacementsConfig.loadReplacementValues({ region: homeRegion }, isOrgsEnabled);
-      const organizationConfig = OrganizationConfig.load(configDirPath, replacementsConfig);
-      await accountsConfig.loadAccountIds(
-        options.partition,
-        options.enableSingleAccountMode,
-        organizationConfig.enable,
-        accountsConfig,
-      );
-
-      const customizationsConfig = CustomizationsConfig.load(configDirPath, replacementsConfig);
-      const customStacks = customizationsConfig.getCustomStacks();
-      for (const stack of customStacks) {
-        const deploymentAccts = accountsConfig.getAccountIdsFromDeploymentTarget(stack.deploymentTargets);
-        const deploymentRegions = stack.regions.map(a => a.toString());
-        if (deploymentRegions.includes(options.region!) && deploymentAccts.includes(options.accountId!)) {
-          customizationsStackRunOrderData.push({
-            stackName: `${stack.name}-${options.accountId}-${options.region}`,
-            runOrder: stack.runOrder,
-          });
-        }
-      }
-    }
-    logger.debug(
-      `Sorted customization stack: ${JSON.stringify(
-        customizationsStackRunOrderData.sort((a, b) => a.runOrder - b.runOrder),
-      )}`,
-    );
-    return customizationsStackRunOrderData.sort((a, b) => a.runOrder - b.runOrder);
-  }
-  /**
    * Function to deploy stacks
    * @param cli {@link CdkToolkit}
    * @param toolkitStackName string
    * @param options {@link AcceleratorToolkitProps}
    */
   private static async deployStacks(context: string[], toolkitStackName: string, options: AcceleratorToolkitProps) {
-    let stackName = await AcceleratorToolkit.getStackNames(options);
+    const stackName = await AcceleratorToolkit.getStackNames(options);
     let roleArn;
     if (!isBeforeBootstrapStage(options.command, options.stage)) {
       roleArn = getDeploymentRoleArn({
@@ -711,61 +589,9 @@ export class AcceleratorToolkit {
       });
     }
 
-    if (options.stage === AcceleratorStage.CUSTOMIZATIONS) {
-      const getStackNameRunOrder = await AcceleratorToolkit.getCustomStackRunOrder(options);
-      if (getStackNameRunOrder.length > 0) {
-        // there are stacks in customizations which have runOrder
-        await AcceleratorToolkit.deployCustomStacksWithRunOrder(
-          getStackNameRunOrder,
-          context,
-          options,
-          toolkitStackName,
-          roleArn,
-        );
-      }
-      // custom stacks are already deployed in deployCustomStacksWithRunOrder(), so we filter them out here
-      stackName = stackName.filter(stack => stack.startsWith(options.stackPrefix));
-    }
     const deployPromises: Promise<void>[] = [];
     for (const stack of stackName) {
       deployPromises.push(AcceleratorToolkit.runDeployStackCli(context, options, stack, toolkitStackName, roleArn));
-    }
-    await Promise.all(deployPromises);
-  }
-
-  /**
-   * Function to deploy custom stacks with runOrder
-   * This function takes all the custom stacks for a particular account and region
-   * It finds the lowestRunOrder and deploys that first
-   * Repeats the above step recursively until no stacks are left to deploy
-   * @param stackData {@link CustomizationStackRunOrder[]}
-   * @param context string[]
-   * @param options {@link AcceleratorToolkitProps}
-   * @param toolkitStackName string
-   * @param roleArn string
-   * @returns Promise<void>
-   *
-   */
-  private static async deployCustomStacksWithRunOrder(
-    stackData: CustomStackRunOrder[],
-    context: string[],
-    options: AcceleratorToolkitProps,
-    toolkitStackName: string,
-    roleArn: string | undefined,
-  ) {
-    // set first run order index;
-    let runOrderIndex = stackData[0].runOrder;
-    const deployPromises: Promise<void>[] = [];
-    for (const stack of stackData) {
-      // If the run order has changed, deploy previous stacks.
-      if (runOrderIndex !== stack.runOrder) {
-        await Promise.all(deployPromises);
-        deployPromises.length = 0;
-        runOrderIndex = stack.runOrder;
-      }
-      deployPromises.push(
-        AcceleratorToolkit.runDeployStackCli(context, options, stack.stackName, toolkitStackName, roleArn),
-      );
     }
     await Promise.all(deployPromises);
   }
@@ -790,6 +616,9 @@ export class AcceleratorToolkit {
    * @param options {@link AcceleratorToolkitProps}
    */
   private static async getStackNames(options: AcceleratorToolkitProps): Promise<string[]> {
+    if (options.stackNames) {
+      return options.stackNames;
+    }
     const stageName = AcceleratorToolkit.validateAndGetDeployStage(options);
     let stackName = [`${AcceleratorStackNames[stageName]}-${options.accountId}-${options.region}`];
     switch (options.stage) {
@@ -842,7 +671,6 @@ export class AcceleratorToolkit {
             options.region
           }`,
         );
-        stackName = await AcceleratorToolkit.getCustomizationsStackNames(stackName, options);
         break;
       case AcceleratorStage.IMPORT_ASEA_RESOURCES:
       case AcceleratorStage.POST_IMPORT_ASEA_RESOURCES:
