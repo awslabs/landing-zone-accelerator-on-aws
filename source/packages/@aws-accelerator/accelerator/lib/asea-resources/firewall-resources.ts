@@ -54,10 +54,9 @@ export class FirewallResources extends AseaResource {
 
     for (const existingFirewallInstance of existingFirewallInstances) {
       const firewallInstanceName = this.getAseaFirewallInstanceNameFromTags(existingFirewallInstance);
-      //ASEA appends _az to each Firewall instance and creates one per az
-      const firewallInstanceNameWithoutAz = firewallInstanceName.split('_az')[0];
+
       const firewallInstanceConfig = firewallConfigInstances?.find(
-        firewallConfigInstance => firewallConfigInstance.name === firewallInstanceNameWithoutAz,
+        firewallConfigInstance => firewallConfigInstance.name === firewallInstanceName,
       );
 
       const firewallInstance = this.stack.getResource(
