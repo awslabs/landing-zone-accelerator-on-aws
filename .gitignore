@@ -74,3 +74,6 @@ viperlight*.zip
 ### Integ testing
 **/integ.*.ts.snapshot
 **/integ.*.ts.snapshot/**
+
+# ASEA Assets
+asea-assets
