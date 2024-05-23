@@ -893,7 +893,10 @@ export abstract class Accelerator {
       promises.length = 0;
 
       // check to see if customizations has stacks. If no stacks are specified then do nothing
-      if (fs.existsSync(path.join(toolkitProps.configDirPath!, CustomizationsConfig.FILENAME))) {
+      if (
+        toolkitProps.stage === AcceleratorStage.CUSTOMIZATIONS &&
+        fs.existsSync(path.join(toolkitProps.configDirPath!, CustomizationsConfig.FILENAME))
+      ) {
         this.executeCustomizationsStacks(
           toolkitProps,
           promises,
@@ -1376,7 +1379,6 @@ const customStackRunOrders: CustomStackRunOrder[] = [
 ];
 
 const groupedRunOrders = groupByRunOrder(customStackRunOrders);
-console.log(groupedRunOrders);
 
 Output:
 
