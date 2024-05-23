@@ -17,7 +17,7 @@ export type TargetGroupProtocolType = 'TCP' | 'TLS' | 'UDP' | 'TCP_UDP' | 'HTTP'
 
 export type TargetGroupProtocolVersionType = 'GRPC' | 'HTTP1' | 'HTTP2';
 
-export type TargetGroupType = 'instance' | 'ip' | 'alb';
+export type TargetGroupType = 'instance' | 'ip' | 'alb' | 'lambda';
 
 export type TargetGroupAttributeStickinessType =
   | 'lb_cookie'
