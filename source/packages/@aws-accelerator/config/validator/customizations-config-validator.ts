@@ -175,6 +175,91 @@ class CustomizationValidator {
 
     // Validate Service Catalog portfolio inputs
     this.validateServiceCatalogInputs(values, accountsConfig, errors, accountNames, ouIdNames);
+
+    /**
+     * @remarks
+     * Customizations require region validation for the following resources:
+     * - Custom CloudFormation Stacks
+     * - Custom CloudFormation StackSets
+     * - Service Catalog Portfolios
+     *
+     * Region validation is not required for:
+     * - Applications (region is already checked)
+     * - Firewalls (not an option)
+     */
+    this.validateCustomizationsConfigRegions(values, errors, globalConfig);
+  }
+
+  /**
+   * Validates the regions specified in the customizations configuration.
+   *
+   * This function iterates through the CloudFormation stacks, CloudFormation stack sets, and Service Catalog portfolios
+   * defined in the customizations configuration. For each of these, it calls the `validateCustomizationsRegions` function
+   * to validate the regions specified for that resource.
+   *
+   * @param values - The customizations configuration object.
+   * @param errors - An array to store any validation errors.
+   * @param globalConfig - The global configuration object.
+   */
+  private validateCustomizationsConfigRegions(
+    values: ICustomizationsConfig,
+    errors: string[],
+    globalConfig: GlobalConfig,
+  ) {
+    for (const stack of values.customizations?.cloudFormationStacks ?? []) {
+      this.validateCustomizationsRegions(
+        stack.name,
+        'CloudFormation Stack',
+        stack.regions,
+        globalConfig.enabledRegions,
+        errors,
+      );
+    }
+
+    for (const stackSet of values.customizations?.cloudFormationStackSets ?? []) {
+      this.validateCustomizationsRegions(
+        stackSet.name,
+        'CloudFormation StackSet',
+        stackSet.regions,
+        globalConfig.enabledRegions,
+        errors,
+      );
+    }
+
+    for (const serviceCatalogPortfolio of values.customizations?.serviceCatalogPortfolios ?? []) {
+      this.validateCustomizationsRegions(
+        serviceCatalogPortfolio.name,
+        'Service Catalog Portfolio',
+        serviceCatalogPortfolio.regions,
+        globalConfig.enabledRegions,
+        errors,
+      );
+    }
+  }
+
+  /**
+   * Validates the regions specified for a given resource against the enabled regions.
+   *
+   * @param resourceName - The name of the resource being validated.
+   * @param resourceType - The type of the resource being validated (e.g., CloudFormation Stack, CloudFormation StackSet, Service Catalog Portfolio).
+   * @param regions - An array of regions specified for the resource.
+   * @param enabledRegions - An array of enabled regions to validate against.
+   * @param errors - An array to store any error messages generated during validation.
+   */
+  private validateCustomizationsRegions(
+    resourceName: string,
+    resourceType: string,
+    regions: string[],
+    enabledRegions: Region[],
+    errors: string[],
+  ) {
+    for (const region of regions) {
+      if (!enabledRegions.includes(region as Region)) {
+        errors.push(
+          `Invalid region ${region} specified for ${resourceType} ${resourceName}. Region must be part of enabled regions: ${enabledRegions}.`,
+        );
+      }
+    }
   }
 
   /**
