@@ -22,7 +22,7 @@ const testNamePrefix = 'Construct(IdentityCenterStack): ';
  * IdentityCenter Stack
  */
 const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.IDENTITY_CENTER, 'aws', 'us-east-1');
-const stack = acceleratorTestStacks.stacks.get(`Audit-us-east-1`)!;
+const stack = acceleratorTestStacks.stacks.get(`Management-us-east-1`)!;
 
 describe('IdentityCenterStack', () => {
   snapShotTest(testNamePrefix, stack);

@@ -42,9 +42,7 @@ import {
   RegisterDelegatedAdministrator,
   ReportDefinition,
   SecurityHubOrganizationAdminAccount,
-  IdentityCenterInstance,
   IdentityCenterOrganizationAdminAccount,
-  PutSsmParameter,
 } from '@aws-accelerator/constructs';
 import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
 
@@ -723,18 +721,14 @@ export class OrganizationsStack extends AcceleratorStack {
       }));
     }
 
-    let identityCenterOrganizationAdminAccount: IdentityCenterOrganizationAdminAccount | undefined;
     if (this.props.partition === 'aws' || this.props.partition === 'aws-us-gov') {
-      identityCenterOrganizationAdminAccount = new IdentityCenterOrganizationAdminAccount(this, `IdentityCenterAdmin`, {
+      new IdentityCenterOrganizationAdminAccount(this, `IdentityCenterAdmin`, {
         adminAccountId: delegatedAdminAccountId,
         lzaManagedPermissionSets: lzaManagedPermissionSets,
         lzaManagedAssignments: assignmentList,
       });
       this.logger.info(`Delegated Admin account for Identity Center is: ${delegatedAdminAccountId}`);
     }
-
-    // Create Identity Center Id ssm parameter
-    this.createIdentityCenterIdSsmParameter(identityCenterOrganizationAdminAccount);
   }
 
   private configureOrganizationCloudTrail() {
@@ -837,60 +831,5 @@ export class OrganizationsStack extends AcceleratorStack {
     }
 
     organizationsTrail.node.addDependency(enableCloudtrailServiceAccess);
-  }
-
-  /**
-   * Function to create SSM parameter to store Identity Center ID
-   * SSM parameter will be created in Management account and Identity Center delegated admin account, if delegated admin account is different from management account
-   * @param identityCenterOrganizationAdminAccount
-   * @returns
-   */
-  private createIdentityCenterIdSsmParameter(
-    identityCenterOrganizationAdminAccount: IdentityCenterOrganizationAdminAccount | undefined,
-  ): void {
-    if (this.props.iamConfig.identityCenter) {
-      const delegatedAdminAccountId = this.props.iamConfig.identityCenter.delegatedAdminAccount
-        ? this.props.accountsConfig.getAccountId(this.props.iamConfig.identityCenter.delegatedAdminAccount)
-        : this.props.accountsConfig.getAccountId(
-            this.props.securityConfig.centralSecurityServices.delegatedAdminAccount,
-          );
-
-      const identityCenterInstance = new IdentityCenterInstance(this, 'IdentityCenterInstance', {
-        customResourceLambdaEnvironmentEncryptionKmsKey: this.lambdaKey!,
-        customResourceLambdaCloudWatchLogKmsKey: this.cloudwatchKey,
-        customResourceLambdaLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-      });
-
-      if (identityCenterOrganizationAdminAccount) {
-        identityCenterInstance.node.addDependency(identityCenterOrganizationAdminAccount);
-      }
-
-      const targetAccountIds: string[] = [this.props.accountsConfig.getManagementAccountId()];
-
-      if (this.props.accountsConfig.getManagementAccountId() !== delegatedAdminAccountId) {
-        targetAccountIds.push(delegatedAdminAccountId);
-      }
-
-      // Put Identity Center instance arn and instance store id SSM parameters
-      new PutSsmParameter(this, pascalCase(`${this.props.iamConfig.identityCenter.name}InstanceMetadataParameters`), {
-        accountIds: targetAccountIds,
-        region: cdk.Stack.of(this).region,
-        roleName: this.acceleratorResourceNames.roles.crossAccountSsmParameterShare,
-        kmsKey: this.cloudwatchKey,
-        logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-        parameters: [
-          {
-            name: this.acceleratorResourceNames.parameters.identityCenterInstanceArn,
-            value: identityCenterInstance.instanceArn,
-          },
-          {
-            name: this.acceleratorResourceNames.parameters.identityStoreId,
-            value: identityCenterInstance.instanceStoreId,
-          },
-        ],
-        invokingAccountId: cdk.Stack.of(this).account,
-        acceleratorPrefix: this.props.prefixes.accelerator,
-      });
-    }
   }
 }

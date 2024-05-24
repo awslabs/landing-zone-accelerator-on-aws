@@ -20,7 +20,7 @@ import {
   IdentityCenterConfig,
   IdentityCenterPermissionSetConfig,
 } from '@aws-accelerator/config';
-import { IdentityCenterAssignments } from '@aws-accelerator/constructs';
+import { IdentityCenterAssignments, IdentityCenterInstance } from '@aws-accelerator/constructs';
 import { AcceleratorKeyType, AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 interface PermissionSetMapping {
@@ -33,6 +33,18 @@ export class IdentityCenterStack extends AcceleratorStack {
    * KMS Key used to encrypt CloudWatch logs, when undefined default AWS managed key will be used
    */
   private cloudwatchKey: cdk.aws_kms.IKey | undefined;
+  /**
+   * KMS Key used to encrypt custom resource Lambda environment variables, when undefined default AWS managed key will be used
+   */
+  private lambdaKey: cdk.aws_kms.IKey | undefined;
+  /**
+   * Identity Center Instance ARN
+   */
+  private identityCenterInstanceArn: string | undefined;
+  /**
+   * Identity Center Identity Store Id
+   */
+  private identityCenterIdentityStoreId: string | undefined;
 
   /**
    * Constructor for Identity-Center Stack
@@ -45,6 +57,7 @@ export class IdentityCenterStack extends AcceleratorStack {
     super(scope, id, props);
 
     this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
+    this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
 
     //
     // Only deploy Identity Center resources into the home region
@@ -53,8 +66,7 @@ export class IdentityCenterStack extends AcceleratorStack {
       props.globalConfig.homeRegion === cdk.Stack.of(this).region &&
       cdk.Stack.of(this).account === props.accountsConfig.getManagementAccountId()
     ) {
-      // Identity Center
-      //
+      this.getIdentityCenterProperties();
       this.addIdentityCenterResources();
     }
 
@@ -246,11 +258,12 @@ export class IdentityCenterStack extends AcceleratorStack {
     permissionSetMap: PermissionSetMapping[],
   ) {
     for (const assignment of identityCenterItem.identityCenterAssignments ?? []) {
-      const identityStoreId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-        this,
-        this.acceleratorResourceNames.parameters.identityStoreId,
+      this.createAssignment(
+        assignment,
+        permissionSetMap,
+        identityCenterInstanceArn,
+        this.identityCenterIdentityStoreId!,
       );
-      this.createAssignment(assignment, permissionSetMap, identityCenterInstanceArn, identityStoreId);
     }
   }
 
@@ -291,21 +304,43 @@ export class IdentityCenterStack extends AcceleratorStack {
    */
   private addIdentityCenterResources() {
     if (this.props.iamConfig.identityCenter) {
-      const identityCenterInstanceArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
-        this,
-        this.acceleratorResourceNames.parameters.identityCenterInstanceArn,
-      );
-
       const permissionSetList = this.addIdentityCenterPermissionSets(
         this.props.iamConfig.identityCenter,
-        identityCenterInstanceArn,
+        this.identityCenterInstanceArn!,
       );
 
       this.addIdentityCenterAssignments(
         this.props.iamConfig.identityCenter,
-        identityCenterInstanceArn,
+        this.identityCenterInstanceArn!,
         permissionSetList,
       );
+    }
+  }
+
+  /**
+   * Function to retrieve IDC instance ARN
+   * @param securityAdminAccountId
+   */
+  private getIdentityCenterProperties() {
+    if (this.props.iamConfig.identityCenter) {
+      const identityCenterInstance = new IdentityCenterInstance(this, 'IdentityCenterInstance', {
+        customResourceLambdaEnvironmentEncryptionKmsKey: this.lambdaKey!,
+        customResourceLambdaCloudWatchLogKmsKey: this.cloudwatchKey,
+        customResourceLambdaLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+      });
+
+      this.identityCenterInstanceArn = identityCenterInstance.instanceArn;
+      this.identityCenterIdentityStoreId = identityCenterInstance.instanceStoreId;
+
+      new cdk.aws_ssm.StringParameter(this, 'IdentityCenterInstanceArnSsmParameter', {
+        parameterName: this.acceleratorResourceNames.parameters.identityCenterInstanceArn,
+        stringValue: this.identityCenterInstanceArn,
+      });
+
+      new cdk.aws_ssm.StringParameter(this, 'IdentityCenterIdentityStoreIdSsmParameter', {
+        parameterName: this.acceleratorResourceNames.parameters.identityStoreId,
+        stringValue: this.identityCenterIdentityStoreId,
+      });
     }
   }
 }
