@@ -1,0 +1,43 @@
+mandatoryAccounts:
+  - name: Management
+    description: The management (primary) account
+    email: alias+no-org-root@example.com
+    organizationalUnit: Root
+  - name: LogArchive
+    description: The log archive account
+    email: alias+no-org-log@example.com
+    organizationalUnit: Root
+  - name: Audit
+    description: The security audit account (also referred to as the audit account)
+    email: alias+no-org-audit@example.com
+    organizationalUnit: Root
+workloadAccounts:
+  - name: SharedServices
+    description: The shared services account
+    email: alias+no-org-shared@example.com
+    organizationalUnit: Root
+  - name: Network
+    description: The network account
+    email: alias+no-org-network@example.com
+    organizationalUnit: Root
+  - name: Tenant01
+    description: Tenant 01 Account
+    email: alias+no-org-tenant01@example.com
+    organizationalUnit: Root
+  - name: Tenant01Duplicate
+    description: Tenant 01 Account
+    email: alias+no-org-tenant01@example.com
+    organizationalUnit: Root
+accountIds:
+  - email: alias+no-org-root@example.com
+    accountId: '111111111111'
+  - email: alias+no-org-log@example.com
+    accountId: '222222222222'
+  - email: alias+no-org-audit@example.com
+    accountId: '333333333333'
+  - email: alias+no-org-shared@example.com
+    accountId: '444444444444'
+  - email: alias+no-org-network@example.com
+    accountId: '555555555555'
+  - email: alias+no-org-tenant01@example.com
+    accountId: '666666666666'

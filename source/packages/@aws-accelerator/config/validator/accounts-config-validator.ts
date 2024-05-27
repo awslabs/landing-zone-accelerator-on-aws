@@ -81,11 +81,39 @@ export class AccountsConfigValidator {
     // Check for duplicates altered to allow for single account deployment
     const singleAccountDeployment = process.env['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE']
       ? process.env['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE'] === 'true'
-      : true;
+      : false;
     if (singleAccountDeployment) {
       return;
-    } else if (new Set(emails).size !== emails.length) {
-      errors.push(`Duplicate emails defined [${emails}].`);
+    } else {
+      this.findDuplicateEmails(values, errors);
+    }
+  }
+
+  /**
+   * Finds duplicate emails in the given accounts configuration.
+   *
+   * @param values - The AccountsConfig object containing mandatory and workload accounts.
+   * @param errors - An array to store error messages for duplicate emails.
+   *
+   * @description This function iterates over the mandatory and workload accounts in the provided AccountsConfig object.
+   * It checks for duplicate emails by maintaining a Map of emails and their associated account names.
+   * If a duplicate email is found, it adds an error message to the `errors` array with the duplicate email
+   * and the associated account names.
+   * Adding account name will help find all affected accounts in arrays with over 100 objects.
+   */
+  private findDuplicateEmails(values: AccountsConfig, errors: string[]) {
+    const emailMap = new Map<string, string[]>();
+    const allAccounts = [...values.mandatoryAccounts, ...values.workloadAccounts];
+
+    for (const account of allAccounts) {
+      const { name, email } = account;
+      if (emailMap.has(email)) {
+        const accountNames = emailMap.get(email);
+        accountNames?.push(name);
+        errors.push(`Duplicate email: ${email}, associated with multiple accounts: ${accountNames?.join(', ')}`);
+      } else {
+        emailMap.set(email, [name]);
+      }
     }
   }
 
