@@ -67,6 +67,7 @@ export class IdentityCenterAssignments extends Construct {
     super(scope, id);
 
     const IDENTITY_CENTER_ASSIGNMENT_TYPE = 'Custom::IdentityCenterAssignments';
+    const partition = cdk.Stack.of(this).partition;
 
     //
     // Function definition for the custom resource
@@ -78,6 +79,8 @@ export class IdentityCenterAssignments extends Construct {
         {
           Effect: 'Allow',
           Action: [
+            'iam:ListRoles',
+            'iam:ListPolicies',
             'identitystore:ListGroups',
             'identitystore:ListUsers',
             'sso:CreateAccountAssignment',
@@ -85,6 +88,28 @@ export class IdentityCenterAssignments extends Construct {
             'sso:ListAccountAssignments',
           ],
           Resource: '*',
+        },
+        {
+          Effect: 'Allow',
+          Action: ['iam:GetSAMLProvider', 'iam:UpdateSAMLProvider'],
+          Resource: `arn:${partition}:iam::${cdk.Stack.of(this).account}:saml-provider/AWSSSO_*_DO_NOT_DELETE`,
+        },
+        {
+          Effect: 'Allow',
+          Action: [
+            'iam:AttachRolePolicy',
+            'iam:CreateRole',
+            'iam:DeleteRole',
+            'iam:DeleteRolePolicy',
+            'iam:DetachRolePolicy',
+            'iam:GetRole',
+            'iam:ListAttachedRolePolicies',
+            'iam:ListRolePolicies',
+            'iam:PutRolePolicy',
+            'iam:UpdateRole',
+            'iam:UpdateRoleDescription',
+          ],
+          Resource: `arn:${partition}:iam::*:role/aws-reserved/sso.amazonaws.com/*`,
         },
       ],
     });

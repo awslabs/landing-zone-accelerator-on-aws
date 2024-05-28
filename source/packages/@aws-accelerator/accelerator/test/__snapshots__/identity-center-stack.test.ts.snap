@@ -82,6 +82,8 @@ exports[`IdentityCenterStack Construct(IdentityCenterStack):  Snapshot Test 1`] 
               "Statement": [
                 {
                   "Action": [
+                    "iam:ListRoles",
+                    "iam:ListPolicies",
                     "identitystore:ListGroups",
                     "identitystore:ListUsers",
                     "sso:CreateAccountAssignment",
@@ -90,6 +92,53 @@ exports[`IdentityCenterStack Construct(IdentityCenterStack):  Snapshot Test 1`] 
                   ],
                   "Effect": "Allow",
                   "Resource": "*",
+                },
+                {
+                  "Action": [
+                    "iam:GetSAMLProvider",
+                    "iam:UpdateSAMLProvider",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":iam::111111111111:saml-provider/AWSSSO_*_DO_NOT_DELETE",
+                      ],
+                    ],
+                  },
+                },
+                {
+                  "Action": [
+                    "iam:AttachRolePolicy",
+                    "iam:CreateRole",
+                    "iam:DeleteRole",
+                    "iam:DeleteRolePolicy",
+                    "iam:DetachRolePolicy",
+                    "iam:GetRole",
+                    "iam:ListAttachedRolePolicies",
+                    "iam:ListRolePolicies",
+                    "iam:PutRolePolicy",
+                    "iam:UpdateRole",
+                    "iam:UpdateRoleDescription",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":iam::*:role/aws-reserved/sso.amazonaws.com/*",
+                      ],
+                    ],
+                  },
                 },
               ],
               "Version": "2012-10-17",
