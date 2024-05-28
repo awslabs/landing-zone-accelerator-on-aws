@@ -21,6 +21,7 @@ import {
   CreateAccountAssignmentCommand,
   DeleteAccountAssignmentCommand,
   PrincipalType,
+  CreateAccountAssignmentCommandInput,
 } from '@aws-sdk/client-sso-admin';
 import { Group, IdentitystoreClient, ListGroupsCommand, ListUsersCommand, User } from '@aws-sdk/client-identitystore';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
@@ -87,13 +88,8 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       idcClient,
     );
 
-    // Go through parameters
-    for (const parameter of assignmentCreationRequests) {
-      console.log(
-        `Creating account assignment for Principal ID: ${parameter.PrincipalId} for account ID: ${parameter.TargetId}`,
-      );
-      // Create Identity Center Assignments
-      await throttlingBackOff(() => ssoAdminClient.send(new CreateAccountAssignmentCommand(parameter)));
+    if (assignmentCreationRequests.length > 0) {
+      await createAssignment(assignmentCreationRequests, ssoAdminClient);
     }
     return {
       PhysicalResourceId: event.LogicalResourceId,
@@ -116,13 +112,8 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       idcClient,
     );
 
-    // Go through parameters
-    for (const parameter of assignmentCreationRequests) {
-      console.log(
-        `Creating account assignment for Principal ID: ${parameter.PrincipalId} for account ID: ${parameter.TargetId}`,
-      );
-      // Create Identity Center Assignments
-      await throttlingBackOff(() => ssoAdminClient.send(new CreateAccountAssignmentCommand(parameter)));
+    if (assignmentCreationRequests.length > 0) {
+      await createAssignment(assignmentCreationRequests, ssoAdminClient);
     }
 
     const assignmentDeletionRequests = await buildDeleteAssignmentsList(
@@ -274,7 +265,7 @@ async function buildDeleteAssignmentsList(
   idcClient: IdentitystoreClient,
 ): Promise<DeleteAccountAssignmentRequest[]> {
   const assignmentDeletionRequests: DeleteAccountAssignmentRequest[] = [];
-  for (const accountId in accountIds) {
+  for (const accountId of accountIds) {
     if (principals) {
       for (const principal of principals) {
         // If logic to check if the principal type is for USER
@@ -321,6 +312,31 @@ async function buildDeleteAssignmentsList(
 }
 
 /**
+ * Method processes list of create account Assignments
+ * @param assignmentCreationRequests
+ * @returns string[]
+ */
+async function createAssignment(
+  assignmentCreationRequests: CreateAccountAssignmentCommandInput[],
+  ssoAdminClient: SSOAdminClient,
+) {
+  for (const createParameter of assignmentCreationRequests ?? []) {
+    console.log(
+      `Creating account assignment for Principal ID ${createParameter.PrincipalId} for ${createParameter.TargetId}`,
+    );
+    const createEvent = await throttlingBackOff(() =>
+      ssoAdminClient.send(new CreateAccountAssignmentCommand(createParameter)),
+    );
+    if (createEvent.AccountAssignmentCreationStatus) {
+      console.log(
+        `Request Id ${createEvent.AccountAssignmentCreationStatus.RequestId} for account ${createParameter.TargetId} in status: ${createEvent.AccountAssignmentCreationStatus.Status}`,
+      );
+    }
+    console.log(`Processing create event: ${JSON.stringify(createEvent, null, 4)}`);
+  }
+}
+
+/**
  * Method processes list of delete account Assignments
  * @param assignmentDeletionRequests
  * @returns string[]
@@ -336,7 +352,11 @@ async function deleteAssignment(
     const deleteEvent = await throttlingBackOff(() =>
       ssoAdminClient.send(new DeleteAccountAssignmentCommand(deleteParameter)),
     );
-    console.log(`Processing delete event: ${deleteEvent}`);
+    if (deleteEvent.AccountAssignmentDeletionStatus) {
+      console.log(
+        `Request Id ${deleteEvent.AccountAssignmentDeletionStatus.RequestId} for account ${deleteParameter.TargetId} in status: ${deleteEvent.AccountAssignmentDeletionStatus.Status}`,
+      );
+    }
   }
 }
 
