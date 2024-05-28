@@ -1690,7 +1690,8 @@
       "enum": [
         "instance",
         "ip",
-        "alb"
+        "alb",
+        "lambda"
       ],
       "type": "string"
     }

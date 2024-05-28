@@ -15,9 +15,10 @@
 //import { CfnResourceType } from '@aws-accelerator/config';
 import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
 import { AseaResource, AseaResourceProps } from './resource';
-import { AseaResourceType } from '@aws-accelerator/config';
+import { AseaResourceType, CfnResourceType, VpcConfig } from '@aws-accelerator/config';
 
-const RESOURCE_TYPE = 'AWS::ElasticLoadBalancingV2::LoadBalancer';
+const LOAD_BALANCER_RESOURCE_TYPE = 'AWS::ElasticLoadBalancingV2::LoadBalancer';
+const TARGET_GROUP_RESOURCE_TYPE = 'AWS::ElasticLoadBalancingV2::TargetGroup';
 const ASEA_PHASE_NUMBER = 3;
 
 /**
@@ -27,23 +28,45 @@ export class ApplicationLoadBalancerResources extends AseaResource {
   constructor(scope: ImportAseaResourcesStack, props: AseaResourceProps) {
     super(scope, props);
     if (props.stackInfo.phase !== ASEA_PHASE_NUMBER) {
-      this.scope.addLogs(LogLevel.INFO, `No ${RESOURCE_TYPE}s to handle in stack ${props.stackInfo.stackName}`);
+      this.scope.addLogs(
+        LogLevel.INFO,
+        `No ${LOAD_BALANCER_RESOURCE_TYPE}s to handle in stack ${props.stackInfo.stackName}`,
+      );
       return;
     }
 
-    const existingAlbs = this.filterResourcesByType(props.stackInfo.resources, RESOURCE_TYPE);
+    const existingAlbs = this.filterResourcesByType(props.stackInfo.resources, LOAD_BALANCER_RESOURCE_TYPE);
+    const existingTargetGroups = this.filterResourcesByType(props.stackInfo.resources, TARGET_GROUP_RESOURCE_TYPE);
 
     for (const vpcItem of props.networkConfig.vpcs) {
-      if (!vpcItem.loadBalancers) continue;
-      if (!vpcItem.loadBalancers.applicationLoadBalancers) continue;
-      for (const albItem of vpcItem.loadBalancers.applicationLoadBalancers) {
-        const albResource = this.findResourceByName(existingAlbs, 'Name', albItem.name);
-        if (!albResource) continue;
-        // const alb = this.stack.getResource(
-        //   albResource.logicalResourceId,
-        // ) as cdk.aws_elasticloadbalancingv2.CfnLoadBalancer;
-        this.scope.addAseaResource(AseaResourceType.APPLICATION_LOAD_BALANCER, albItem.name);
-      }
+      this.processAlbs(existingAlbs, vpcItem);
+      this.processTargetGroups(existingTargetGroups, vpcItem);
+    }
+  }
+  private processAlbs(existingAlbs: CfnResourceType[], vpcItem: VpcConfig) {
+    if (!vpcItem.loadBalancers) return;
+    if (!vpcItem.loadBalancers.applicationLoadBalancers) return;
+    for (const albItem of vpcItem.loadBalancers.applicationLoadBalancers) {
+      const albResource = this.findResourceByName(existingAlbs, 'Name', albItem.name);
+      if (!albResource) continue;
+      // const alb = this.stack.getResource(
+      //   albResource.logicalResourceId,
+      // ) as cdk.aws_elasticloadbalancingv2.CfnLoadBalancer;
+      this.scope.addAseaResource(AseaResourceType.APPLICATION_LOAD_BALANCER, albItem.name);
+    }
+  }
+
+  private processTargetGroups(existingTargetGroups: CfnResourceType[], vpcItem: VpcConfig) {
+    if (!vpcItem.targetGroups) return;
+    for (const targetGroupItem of vpcItem.targetGroups) {
+      const targetGroupResource = existingTargetGroups.find(
+        existingTargetGroup => existingTargetGroup.resourceMetadata?.['Properties'].Name === targetGroupItem.name,
+      );
+      if (!targetGroupResource) continue;
+      // const targetGroup = this.stack.getResource(
+      //   targetGroupResource.logicalResourceId,
+      // ) as  cdk.elasticloadbalancingv2.TargetGroup;
+      this.scope.addAseaResource(AseaResourceType.EC2_TARGET_GROUP, targetGroupItem.name);
     }
   }
 }

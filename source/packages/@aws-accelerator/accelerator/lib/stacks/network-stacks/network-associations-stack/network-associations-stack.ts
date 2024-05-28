@@ -373,6 +373,10 @@ export class NetworkAssociationsStack extends NetworkStack {
     const albNames = vpcItem.loadBalancers?.applicationLoadBalancers?.map(alb => alb.name) ?? [];
 
     for (const targetGroupItem of albTargetGroups) {
+      if (this.isManagedByAsea(AseaResourceType.EC2_TARGET_GROUP, `${targetGroupItem.name}`)) {
+        this.logger.info(`Application Load Balancer Target Group ${targetGroupItem.name} is managed externally.`);
+        continue;
+      }
       const targetGroup = this.createApplicationLoadBalancerTargetGroup(
         vpcItem.name,
         vpcId,
