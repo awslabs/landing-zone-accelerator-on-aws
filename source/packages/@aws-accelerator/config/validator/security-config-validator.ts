@@ -1149,6 +1149,17 @@ export class SecurityConfigValidator {
     errors: string[],
   ) {
     if (!globalConfig.s3?.encryption?.deploymentTargets) {
+      if (globalConfig.s3?.encryption?.createCMK === false) {
+        for (const ruleSet of securityConfig.awsConfig.ruleSets) {
+          for (const rule of ruleSet.rules) {
+            if (this.isConfigRuleCmkDependent(rule)) {
+              errors.push(
+                `There is a parameter in the security-config.yaml file that refers to the solution created KMS encryption replacement ACCEL_LOOKUP::KMS for the remediation Lambda function for AWS Config rule ${rule.name}, however, global-config.yaml disables the creation of CMK.`,
+              );
+            }
+          }
+        }
+      }
       return;
     }
 
