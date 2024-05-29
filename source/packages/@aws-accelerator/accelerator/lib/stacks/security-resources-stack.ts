@@ -80,6 +80,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
   private snsKey: cdk.aws_kms.IKey | undefined;
 
   configRecorder: cdk.aws_config.CfnConfigurationRecorder | undefined;
+  configServiceUpdater: ConfigServiceRecorder | undefined;
   deliveryChannel: cdk.aws_config.CfnDeliveryChannel | undefined;
   accountTrailCloudWatchLogGroups: Map<string, cdk.aws_logs.LogGroup>;
 
@@ -501,7 +502,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
       }
 
       if (this.props.securityConfig.awsConfig.overrideExisting) {
-        const configServiceUpdater = new ConfigServiceRecorder(this, 'ConfigRecorderDeliveryChannel', {
+        this.configServiceUpdater = new ConfigServiceRecorder(this, 'ConfigRecorderDeliveryChannel', {
           s3BucketName: `${this.centralLogsBucketName}`,
           s3BucketKmsKey: this.centralLogsBucketKey,
           logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
@@ -513,8 +514,8 @@ export class SecurityResourcesStack extends AcceleratorStack {
         });
 
         if (this.configRecorder && this.deliveryChannel) {
-          configServiceUpdater.node.addDependency(this.configRecorder);
-          configServiceUpdater.node.addDependency(this.deliveryChannel);
+          this.configServiceUpdater.node.addDependency(this.configRecorder);
+          this.configServiceUpdater.node.addDependency(this.deliveryChannel);
         }
       }
       // AwsSolutions-IAM4
@@ -930,6 +931,9 @@ export class SecurityResourcesStack extends AcceleratorStack {
 
         if (this.configRecorder) {
           configRule.node.addDependency(this.configRecorder);
+        }
+        if (this.configServiceUpdater) {
+          configRule.node.addDependency(this.configServiceUpdater);
         }
       }
     }
