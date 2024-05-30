@@ -1,5 +1,6 @@
 site_name: Landing Zone Accelerator on AWS
-site_url: !ENV [SITE_URL, https://awslabs.github.io/landing-zone-accelerator-on-aws/]
+site_url:
+  !ENV [SITE_URL, https://awslabs.github.io/landing-zone-accelerator-on-aws/]
 site_author: Amazon Web Services
 site_description: Documentation for the Landing Zone Accelerator on AWS
 repo_url: https://github.com/awslabs/landing-zone-accelerator-on-aws/
@@ -8,33 +9,33 @@ nav:
   - Home: index.md
   - Installation: installation.md
   - User Guide:
-    - user-guide/index.md
-    - Services, Features, and Configuration References: user-guide/config.md
-    - Centralized Logging: user-guide/logging.md
-    - SecurityHub Findings: user-guide/securityhub-findings.md
+      - user-guide/index.md
+      - Services, Features, and Configuration References: user-guide/config.md
+      - Centralized Logging: user-guide/logging.md
+      - SecurityHub Findings: user-guide/securityhub-findings.md
   - Developer Guide:
-    - developer-guide/index.md
-    - Development Dependencies: developer-guide/dependencies.md
-    - Command Line Interface and Package Scripts: developer-guide/scripts.md
-    - Architecture and Design Philosophy: developer-guide/design.md
-    - Feature Development: developer-guide/features.md
-    - Documentation Guidelines: developer-guide/doc-guidelines.md
+      - developer-guide/index.md
+      - Development Dependencies: developer-guide/dependencies.md
+      - Command Line Interface and Package Scripts: developer-guide/scripts.md
+      - Architecture and Design Philosophy: developer-guide/design.md
+      - Feature Development: developer-guide/features.md
+      - Documentation Guidelines: developer-guide/doc-guidelines.md
   - Sample Configurations:
-    - sample-configurations/index.md
-    - Standard:
-      - sample-configurations/standard/index.md
-      - Overview: sample-configurations/standard/overview.md
-      - Organization and Account Structure: sample-configurations/standard/org-structure.md
-      - Authentication and Authorization: sample-configurations/standard/authn-authz.md
-      - Logging and Monitoring: sample-configurations/standard/logging-monitoring.md
-      - Networking: sample-configurations/standard/networking.md
-    - GovCloud (US):
-      - sample-configurations/govcloud-us/index.md
-      - Overview: sample-configurations/govcloud-us/overview.md
-      - Organization and Account Structure: sample-configurations/govcloud-us/org-structure.md
-      - Security Controls: sample-configurations/govcloud-us/security-controls.md
-      - Networking: sample-configurations/govcloud-us/networking.md
-      - Additional Considerations: sample-configurations/govcloud-us/considerations.md
+      - sample-configurations/index.md
+      - Standard:
+          - sample-configurations/standard/index.md
+          - Overview: sample-configurations/standard/overview.md
+          - Organization and Account Structure: sample-configurations/standard/org-structure.md
+          - Authentication and Authorization: sample-configurations/standard/authn-authz.md
+          - Logging and Monitoring: sample-configurations/standard/logging-monitoring.md
+          - Networking: sample-configurations/standard/networking.md
+      - GovCloud (US):
+          - sample-configurations/govcloud-us/index.md
+          - Overview: sample-configurations/govcloud-us/overview.md
+          - Organization and Account Structure: sample-configurations/govcloud-us/org-structure.md
+          - Security Controls: sample-configurations/govcloud-us/security-controls.md
+          - Networking: sample-configurations/govcloud-us/networking.md
+          - Additional Considerations: sample-configurations/govcloud-us/considerations.md
   - FAQ:
       - faq/index.md
       - General: faq/general.md
@@ -43,41 +44,46 @@ nav:
       - Customizations: faq/customizations.md
       - Operations: faq/operations.md
       - Networking:
-        - General: faq/networking/general.md
-        - Deep Packet Inspection: faq/networking/dpi.md
-        - AWS Direct Connect: faq/networking/direct-connect.md
-        - AWS Network Firewall: faq/networking/network-firewall.md
-        - AWS Gateway Load Balancer: faq/networking/gwlb.md
+          - General: faq/networking/general.md
+          - Deep Packet Inspection: faq/networking/dpi.md
+          - AWS Direct Connect: faq/networking/direct-connect.md
+          - AWS Network Firewall: faq/networking/network-firewall.md
+          - AWS Gateway Load Balancer: faq/networking/gwlb.md
       - Security: faq/security.md
       - Logging:
           - Amazon CloudWatch Log Group: faq/logging/cwl.md
   - TypeDocs:
-    - typedocs/index.md
-    - v1.0:
-      - v1.0.0: typedocs/v1.0.0/index.html
-      - v1.0.1: typedocs/v1.0.1/index.html
-    - v1.1:
-      - v1.1.0: typedocs/v1.1.0/index.html
-    - v1.2:
-      - v1.2.0: typedocs/v1.2.0/index.html
-      - v1.2.1: typedocs/v1.2.1/index.html
-      - v1.2.2: typedocs/v1.2.2/index.html
-    - v1.3:
-      - v1.3.0: typedocs/v1.3.0/index.html
-      - v1.3.1: typedocs/v1.3.1/index.html
-      - v1.3.2: typedocs/v1.3.2/index.html
-    - v1.4:
-      - v1.4.0: typedocs/v1.4.0/index.html
-      - v1.4.1: typedocs/v1.4.1/index.html
-      - v1.4.2: typedocs/v1.4.2/index.html
-      - v1.4.3: typedocs/v1.4.3/index.html
-    - v1.5:
-      - v1.5.0: typedocs/v1.5.0/index.html
-      - v1.5.1: typedocs/v1.5.1/index.html
-      - v1.5.2: typedocs/v1.5.2/index.html
-    - v1.6:
-      - v1.6.0: typedocs/v1.6.0/index.html
-
+      - typedocs/index.md
+      - v1.0:
+          - v1.0.0: typedocs/v1.0.0/index.html
+          - v1.0.1: typedocs/v1.0.1/index.html
+      - v1.1:
+          - v1.1.0: typedocs/v1.1.0/index.html
+      - v1.2:
+          - v1.2.0: typedocs/v1.2.0/index.html
+          - v1.2.1: typedocs/v1.2.1/index.html
+          - v1.2.2: typedocs/v1.2.2/index.html
+      - v1.3:
+          - v1.3.0: typedocs/v1.3.0/index.html
+          - v1.3.1: typedocs/v1.3.1/index.html
+          - v1.3.2: typedocs/v1.3.2/index.html
+      - v1.4:
+          - v1.4.0: typedocs/v1.4.0/index.html
+          - v1.4.1: typedocs/v1.4.1/index.html
+          - v1.4.2: typedocs/v1.4.2/index.html
+          - v1.4.3: typedocs/v1.4.3/index.html
+      - v1.5:
+          - v1.5.0: typedocs/v1.5.0/index.html
+          - v1.5.1: typedocs/v1.5.1/index.html
+          - v1.5.2: typedocs/v1.5.2/index.html
+      - v1.6:
+          - v1.6.0: typedocs/v1.6.0/index.html
+          - v1.6.1: typedocs/v1.6.1/index.html
+          - v1.6.2: typedocs/v1.6.2/index.html
+          - v1.6.3: typedocs/v1.6.3/index.html
+          - v1.6.4: typedocs/v1.6.4/index.html
+      - v1.7:
+          - v1.7.0: typedocs/latest/index.html
 
 theme:
   name: material
@@ -132,4 +138,3 @@ markdown_extensions:
       custom_checkbox: true
   - toc:
       permalink: ⚓︎
-
