@@ -1,9 +1,9 @@
 ---
 id: SO0199
 name: landing-zone-accelerator-on-aws
-version: v1.6.0
+version: v1.7.0
 cloudformation_templates:
   - template: AWSAccelerator-InstallerStack.template
     main_template: true
 build_environment:
-  build_image: 'aws/codebuild/standard:7.0'
+  build_image: "aws/codebuild/standard:7.0"

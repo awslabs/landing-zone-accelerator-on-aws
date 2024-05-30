@@ -5,50 +5,123 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.7.0]
+## [1.7.0] - 05-31-2024
 
 ### Added
 
-- feat(network): allow Route53 resolver endpoints and query logging to be defined in the VPC object.
-- feat(control-tower): integrate lz management api.
+- feat(control-tower): integrate lz management api
 - feat(control-tower): integrate lz baseline api
 - feat(control-tower): add global region into the Control Tower governed region list
-- feat(securityhub): allow custom cloudwatch log group for events
-- feat(iam): allow IAM Principal Arn as well as externalId for trust policy with IAM Roles
-- fix(organization): ou baseline operation should be skipped when Control Tower is not enabled
-- chore(documentation): update opt-in region requirement for Control Tower deployment
-- feat(control-tower) integrate lz management and baseline api for external account deployment
-- fix(control-tower): add validation to check incorrect landing zone version in global config
-- fix(organizations): unable to create ou with same name under different parent
+- feat(network): add IPv6 support for DHCP options sets
+- feat(network): Provide static IPv6 support for VPC and Subnets
+- feat(network): extend IPv6 support to VPC peering, ENI, and TGW static routes
+- feat(network): support vpc peering for vpcs created by vpcTemplates
+- feat(network): add resolver config to vpc object
+- feat(network): add tag property for interface endpoints
+- feat(network): add route53 query logging and resolver endpoint handlers
+- feat(logging): wildcards in dynamic partitioning
 - feat(logging): add cloudwatch log group data protection policy
-- chore(documentation): update merge request template to add unit test information
-- feat(control-tower): lz management api gov cloud support
-- chore(test): update all-enabled custom config rule lambda python version
-- fix(control-tower): exclude ignored ou from registering with control tower
-- fix(control-tower): manage ignored ou creation and registration
-- chore(logging): static code scan for logging
-- documentation(securityhub): security hub findings description with prescriptive guidance
-- feat(config): added deploymentTargets for awsConfig since configuration recorder cannot be turned off selectively
-- feat(guardduty): add deploymentTargets and autoEnableOrgMembers settings for guardduty
-- feat(networking): add tags property to interfaceEndpoints to tag private hosted zones for interface endpoints
-- feat(validation): add option to skip scp validation during prepare stage
+- feat(ssm): add targetType to documents
+- feat(config): update to use json schema
+- feat(replacements): add support for ACCOUNT_NAME in user data
+- feat(pipeline): move assets to local directory
+- feat(pipeline): validate accelerator version in build stage
+- feat(regions): add ca-west-1 support
+- feat(securityhub): add custom cloudwatch log group for security hub
+- feat(iam): allow IAM Principal Arn as well as externalId for trust policy with IAM Roles
+- feat(config): added deploymentTargets for awsConfig
+- feat(guardduty): added deploymentTargets for GuardDuty
 
 ### Changed
 
-- fix(logging): refactored Security Hub logging to use EventBridge
-- chore(lambda): upgraded runtime to Node18
-- chore(config): remove break glass user from the sample configurations
+- chore(lambda): upgrade to node18 runtime
+- chore(sdkv3): remove references to aws-lambda
+- chore(sdkv3): remove aws-lambda reference in batch enable standards
+- chore(package): tree shake util import to reduce package size
+- chore(docs): added docs for local zone subnet creation
+
+### Fixed
+
+- fix(replacements): retrieve mgmt credentials during every config validation
+- fix(replacements): throw error for undefined replacement
+- fix(replacements): updated logic for ignored replacements
+- fix(replacements): updated validation pattern
+- fix(replacements): updated EmailAddress type to support replacement strings
+- fix(route53): revert getHostedZoneNameForService changes
+- fix(identity-center): address identity center resource metadata lookup resources
+- fix(identity-center): added permission to create assignments for mgmt
+- fix(identity-center): removed custom resource for SSM parameters
+- fix(diagnostic-pack): assume role name prefix for external deployment
+- fix(logging): refactored logging of Security Hub events
+- fix(diff): customizations template lookup
+- fix(diff): dependent stack lookup
+- fix(diff): added error logging to detect file diff errors
+- fix(applications): only lookup shared subnet ids for apps in shared vpcs
+- fix(toolkit): fixed deployment behavior for non-customization stage
+- fix(toolkit): change asset copy files to syn
+- fix(toolkit): move asset processing into main
+- fix(organizations): unable to create ou with same name under different parent
+- fix(organizations): delete policies based on event
+- fix(organizations): Resolve issue where policies are not being updated
+- fix(pipeline): send UUID on exception of central logs bucket kms key
+- fix(config): Update SSM automation document match string
+- fix(config): validate regions in customizations
+- fix(service-quotas): check existing limit before request
+- fix(idc): explicitly set management account for CDK env
+- fix(move-accounts): retry strategy and increase timeout
+- fix(alb): Update target types to include lambda
+- fix(validation): check for duplicate emails in accounts-config
+- fix(validation) Update KMS key lookup validation in security-config
+
+### Configuration Changes
+
+- chore(sample-config): remove breakglass user from the sample configurations
+- chore(sample-config): add alerting for breakglass user account usage
+
+## [1.6.4] - 05-23-2024
+
+### Added
+
+- feat(validation): add option to skip scp validation during prepare stage
+
+### Fixed
+
+- fix(toolkit): move custom stack queue out of toolkit
+
+## [1.6.3] - 05-09-2024
+
+### Fixed
+
+- fix(organizations): ignore deletion for policies that do not exist
+- fix(organizations): resolve issue where existing policies were not being updated
+
+## [1.6.2] - 03-27-2024
+
+### Fixed
+
+- fix(replacements): throw error for undefined replacements
+- fix(diff): dependent CloudFormation stacks not included in diff review stage
+- fix(diff): customizations templates are not included in diff review stage
+- fix(networking): ca-central-1 physical AZ subnet incorrect
+- fix: metadata updates should execute on pipeline completion
+
+### Changed
+
+- chore(documentation): improvements to installation.md
+
+## [1.6.1] - 02-21-2024
 
 ### Fixed
 
 - fix(docs): resolve broken links to appropriate pages
 - fix(networking): resolve duplicate construct error for endpoint security groups
 - fix(networking): Fix Canada region physical AZ Subnet lookup
-- fix(organizations): resolve issue where existing policies were not being updated
-- fix(sample-config): root account cloudwatch metric filter name
-- fix(toolkit): move custom stack queue out of toolkit
+- fix(docs): broken links in documentation
+- fix(route53): associate hosted zones timeout
 
-### Configuration Changes
+### Changed
+
+- chore(diagnostics-pack): cleanup
 
 ## [1.6.0] - 01-10-2024
 
