@@ -12,7 +12,7 @@
  */
 
 import { Plugin, PluginHost } from 'aws-cdk/lib/api/plugin';
-import * as AWS from 'aws-sdk';
+import { Credentials } from '@aws-sdk/client-sts';
 
 import { AssumeRoleProviderSource } from './assume-role-provider-source';
 
@@ -24,7 +24,7 @@ export class AssumeProfilePlugin implements Plugin {
       region?: string;
       assumeRoleName?: string;
       assumeRoleDuration?: number;
-      credentials?: AWS.STS.Credentials;
+      credentials?: Credentials;
       partition?: string;
       caBundlePath?: string;
     } = {},
