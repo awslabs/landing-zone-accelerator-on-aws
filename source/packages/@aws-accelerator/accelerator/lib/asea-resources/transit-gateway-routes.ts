@@ -20,22 +20,35 @@ enum RESOURCE_TYPE {
   VPC = 'AWS::EC2::VPC',
   TGW_ATTACHMENT = 'AWS::EC2::TransitGatewayAttachment',
 }
-const ASEA_PHASE_NUMBER = 3;
+const ASEA_PHASE_NUMBERS = [0, 1, 3];
+
+type NestedAseaStackInfo = AseaStackInfo & { logicalResourceId: string };
+export interface TgwRoutesProps extends AseaResourceProps {
+  /**
+   * Nested Stacks of current phase stack
+   */
+  nestedStacksInfo: NestedAseaStackInfo[];
+}
 
 export class TransitGatewayRoutes extends AseaResource {
-  private readonly props: AseaResourceProps;
+  private readonly nestedStacksInfo: NestedAseaStackInfo[] = [];
+  private readonly props: TgwRoutesProps;
   private transitGatewayRouteTables: Map<string, string> = new Map<string, string>();
   private allRoutes!: CfnResourceType[];
   private allRouteTables!: CfnResourceType[];
   private tgwStackInfo: AseaStackInfo | undefined;
-  constructor(scope: ImportAseaResourcesStack, props: AseaResourceProps) {
+  constructor(scope: ImportAseaResourcesStack, props: TgwRoutesProps) {
     super(scope, props);
     this.props = props;
-    if (props.stackInfo.phase !== ASEA_PHASE_NUMBER) {
+    this.nestedStacksInfo = props.nestedStacksInfo;
+    if (!ASEA_PHASE_NUMBERS.includes(props.stackInfo.phase)) {
       this.scope.addLogs(LogLevel.INFO, `No Resources to handle in stack ${props.stackInfo.stackName}`);
       return;
     }
-    this.allRoutes = this.filterResourcesByType(props.stackInfo.resources, RESOURCE_TYPE.TGW_ROUTE);
+    const stackRoutes = this.filterResourcesByType(props.stackInfo.resources, RESOURCE_TYPE.TGW_ROUTE);
+    const nestedStackRoutes = this.getTgwRoutesFromNestedStacks();
+    this.allRoutes = [...stackRoutes, ...nestedStackRoutes];
+    this.scope.addLogs(LogLevel.INFO, `All routes: ${JSON.stringify(this.allRoutes)}`);
     if (this.allRoutes.length === 0) return;
     /**
      * Load tgw stack resources for current account at once
@@ -47,6 +60,7 @@ export class TransitGatewayRoutes extends AseaResource {
     );
     if (!this.tgwStackInfo) return;
     this.allRouteTables = this.filterResourcesByType(this.tgwStackInfo.resources, RESOURCE_TYPE.TGW_ROUTE_TABLE);
+    this.scope.addLogs(LogLevel.INFO, `All route tables: ${JSON.stringify(this.allRouteTables)}`);
     for (const tgwItem of props.networkConfig.transitGateways.filter(
       tgw => tgw.account === props.stackInfo.accountKey && tgw.region === props.stackInfo.region,
     ) ?? []) {
@@ -54,6 +68,14 @@ export class TransitGatewayRoutes extends AseaResource {
     }
     for (const tgwItem of props.networkConfig.transitGateways ?? []) {
       for (const routeTableItem of tgwItem.routeTables ?? []) {
+        this.scope.addLogs(
+          LogLevel.INFO,
+          `Creating static route items for tgw ${tgwItem.name} and route table ${routeTableItem.name}`,
+        );
+        this.scope.addLogs(
+          LogLevel.INFO,
+          `Routes identified in route table ${routeTableItem.name}: ${JSON.stringify(routeTableItem.routes)}`,
+        );
         this.createTransitGatewayStaticRouteItems(tgwItem, routeTableItem);
       }
     }
@@ -84,6 +106,7 @@ export class TransitGatewayRoutes extends AseaResource {
    * @returns
    */
   private getTgwAttachmentId(vpcName: string, accountKey: string, region: string) {
+    this.scope.addLogs(LogLevel.INFO, `Getting TGW attachment id for vpc ${vpcName} in account ${accountKey}`);
     if (!this.props.globalConfig.externalLandingZoneResources?.templateMap) {
       return;
     }
@@ -147,6 +170,17 @@ export class TransitGatewayRoutes extends AseaResource {
           routeItem.attachment.account,
           tgwItem.region,
         );
+        if (!transitGatewayAttachmentId) {
+          this.scope.addLogs(
+            LogLevel.INFO,
+            `TGW attachment not found in account ${routeItem.attachment.account}, looking in ${tgwItem.account}`,
+          );
+          transitGatewayAttachmentId = this.getTgwAttachmentId(
+            routeItem.attachment.vpcName,
+            tgwItem.account,
+            tgwItem.region,
+          );
+        }
       }
 
       // If route is for DX Gateway attachment
@@ -220,7 +254,10 @@ export class TransitGatewayRoutes extends AseaResource {
     }
 
     for (const routeItem of routeTableItem.routes ?? []) {
-      this.createTransitGatewayStaticRouteItem(routeItem, routeTableItem, tgwItem);
+      if (routeItem.blackhole) {
+        // Only process static blackhole routes
+        this.createTransitGatewayStaticRouteItem(routeItem, routeTableItem, tgwItem);
+      }
     }
   }
 
@@ -265,5 +302,21 @@ export class TransitGatewayRoutes extends AseaResource {
           (blackhole && resourceMetadata['Properties'].Blackhole)),
     );
     return route?.physicalResourceId;
+  }
+
+  private getTgwRoutesFromNestedStacks() {
+    const nestedRoutes = [];
+    for (const nestedStackInfo of this.nestedStacksInfo) {
+      this.scope.addLogs(LogLevel.INFO, `Looking for TGW routes in nested stack ${nestedStackInfo.stackName}`);
+      const tgwRoutes = nestedStackInfo.resources.filter(
+        cfnResource => cfnResource.resourceType === RESOURCE_TYPE.TGW_ROUTE,
+      );
+      this.scope.addLogs(
+        LogLevel.INFO,
+        `Found ${tgwRoutes.length} TGW routes in nested stack ${nestedStackInfo.stackName}`,
+      );
+      nestedRoutes.push(...tgwRoutes);
+    }
+    return nestedRoutes;
   }
 }

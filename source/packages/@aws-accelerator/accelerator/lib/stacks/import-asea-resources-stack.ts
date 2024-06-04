@@ -113,7 +113,7 @@ export class ImportAseaResourcesStack extends NetworkStack {
     new VpcPeeringConnection(this, props);
     new SharedSecurityGroups(this, { ...props, nestedStacksInfo });
     new TgwCrossAccountResources(this, props);
-    new TransitGatewayRoutes(this, props);
+    new TransitGatewayRoutes(this, { ...props, nestedStacksInfo });
     new VpcEndpoints(this, props);
     new SsmInventory(this, props);
     new FirewallResources(this, { ...props, nestedStacksInfo });
