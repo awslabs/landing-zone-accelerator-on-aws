@@ -1165,10 +1165,21 @@ export class SecurityConfigValidator {
 
     for (const ruleSet of securityConfig.awsConfig.ruleSets) {
       for (const rule of ruleSet.rules) {
+        let remediationDeploymentTargets: DeploymentTargets;
         if (this.isConfigRuleCmkDependent(rule)) {
+          if (rule.remediation.excludeRegions) {
+            remediationDeploymentTargets = {
+              accounts: ruleSet.deploymentTargets.accounts ?? [],
+              organizationalUnits: ruleSet.deploymentTargets.organizationalUnits ?? [],
+              excludedRegions: rule.remediation.excludeRegions ?? [],
+              excludedAccounts: ruleSet.deploymentTargets.excludedAccounts ?? [],
+            };
+          } else {
+            remediationDeploymentTargets = ruleSet.deploymentTargets;
+          }
           const ruleEnvFromDeploymentTarget = CommonValidatorFunctions.getEnvironmentsFromDeploymentTarget(
             accountConfig,
-            ruleSet.deploymentTargets,
+            remediationDeploymentTargets,
             globalConfig,
           );
           const s3EncryptionEnvFromDeploymentTarget = CommonValidatorFunctions.getEnvironmentsFromDeploymentTarget(
