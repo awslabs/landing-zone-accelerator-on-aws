@@ -100,6 +100,8 @@ export class TransitGatewayConfig implements i.ITransitGatewayConfig {
   readonly defaultRouteTablePropagation: t.EnableDisable = 'enable';
   readonly autoAcceptSharingAttachments: t.EnableDisable = 'disable';
   readonly routeTables: TransitGatewayRouteTableConfig[] = [];
+  readonly transitGatewayCidrBlocks: t.NonEmptyString[] | undefined = undefined;
+  readonly transitGatewayIpv6CidrBlocks: t.NonEmptyString[] | undefined = undefined;
   readonly tags: t.Tag[] | undefined = undefined;
 }
 
@@ -255,6 +257,25 @@ export class TransitGatewayAttachmentConfig implements i.ITransitGatewayAttachme
   readonly routeTablePropagations: string[] | undefined = undefined;
   readonly options: TransitGatewayAttachmentOptionsConfig | undefined = undefined;
   readonly tags: t.Tag[] | undefined = undefined;
+}
+
+export class TransitGatewayConnectConfig implements i.ITransitGatewayConnectConfig {
+  readonly name: string = '';
+  readonly region: string = '';
+  readonly transitGateway: TransitGatewayAttachmentTargetConfig = new TransitGatewayAttachmentTargetConfig();
+  readonly vpc?: i.ITransitGatewayConnectVpcConfig | undefined;
+  readonly directConnect?: string = '';
+  readonly options: TransitGatewayConnectOptionsConfig | undefined = undefined;
+  readonly tags: t.Tag[] | undefined = undefined;
+}
+
+export class TransitGatewayConnectOptionsConfig implements i.ITransitGatewayConnectOptionsConfig {
+  readonly protocol: i.TransitGatewayConnectProtocol = 'gre';
+}
+
+export class TransitGatewayConnectVpcConfig implements i.ITransitGatewayConnectVpcConfig {
+  readonly vpcName: string = '';
+  readonly vpcAttachment: string = '';
 }
 
 export class GatewayEndpointServiceConfig implements i.IGatewayEndpointServiceConfig {
@@ -835,6 +856,7 @@ export class NetworkConfig implements i.INetworkConfig {
 
   readonly defaultVpc: DefaultVpcsConfig = new DefaultVpcsConfig();
   readonly transitGateways: TransitGatewayConfig[] = [];
+  readonly transitGatewayConnects: TransitGatewayConnectConfig[] | undefined = undefined;
   readonly transitGatewayPeering: TransitGatewayPeeringConfig[] | undefined = undefined;
   readonly customerGateways: CustomerGatewayConfig[] | undefined = undefined;
   readonly endpointPolicies: EndpointPolicyConfig[] = [];

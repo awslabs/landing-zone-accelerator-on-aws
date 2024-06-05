@@ -2277,6 +2277,27 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       },
       "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
     },
+    "NetworkInspectionTransitGatewayConnectAttachmentNetworkInspectionTransitGatewayConnectAD31631B": {
+      "Properties": {
+        "Options": {
+          "Protocol": "gre",
+        },
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": "CentralInspection",
+          },
+          {
+            "Key": "Name",
+            "Value": "Network-Inspection",
+          },
+        ],
+        "TransportTransitGatewayAttachmentId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointstransitGatewayAttachmentNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayConnect",
+    },
     "NetworkInspectiondeployedtg2898BDF56": {
       "Properties": {
         "HealthCheckEnabled": true,

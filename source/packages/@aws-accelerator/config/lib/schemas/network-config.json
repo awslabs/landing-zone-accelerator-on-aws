@@ -1758,6 +1758,13 @@
           },
           "type": "array"
         },
+        "transitGatewayConnects": {
+          "description": "An array of Transit Gateway Connect configurations.",
+          "items": {
+            "$ref": "#/definitions/ITransitGatewayConnectConfig"
+          },
+          "type": "array"
+        },
         "transitGatewayPeering": {
           "description": "Transit Gateway peering configuration.",
           "items": {
@@ -3686,6 +3693,20 @@
           },
           "type": "array"
         },
+        "transitGatewayCidrBlocks": {
+          "description": "(OPTIONAL) A list of transit gateway IPv4 CIDR blocks.",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        },
+        "transitGatewayIpv6CidrBlocks": {
+          "description": "(OPTIONAL) A list of transit gateway IPv6 CIDR blocks.",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        },
         "vpnEcmpSupport": {
           "$ref": "#/definitions/EnableDisable",
           "description": "Equal Cost Multipath (ECMP) routing support between VPN tunnels."
@@ -3702,6 +3723,80 @@
         "defaultRouteTablePropagation",
         "autoAcceptSharingAttachments",
         "routeTables"
+      ],
+      "type": "object"
+    },
+    "ITransitGatewayConnectConfig": {
+      "additionalProperties": false,
+      "description": "Use this configuration to define a Transit Gateway Connect attachment to your Direct Connect Gateway.",
+      "properties": {
+        "directConnect": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "(OPTIONAL) The Direct Connect Gateway Attachment that belongs to the Transit Gateway that a Transit Gateway Connect Attachment is being made for."
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "A friendly name for the Transit Gateway Connect attachment."
+        },
+        "options": {
+          "$ref": "#/definitions/ITransitGatewayConnectOptionsConfig",
+          "description": "(OPTIONAL) Options around the Transit Gateway Connect"
+        },
+        "region": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The AWS Region for the attachment."
+        },
+        "tags": {
+          "description": "(OPTIONAL) An array of tag objects for the Transit Gateway attachment.",
+          "items": {
+            "$ref": "#/definitions/ITag"
+          },
+          "type": "array"
+        },
+        "transitGateway": {
+          "$ref": "#/definitions/ITransitGatewayAttachmentTargetConfig",
+          "description": "The Transit Gateway configuration object to set the Transit Gateway Connect."
+        },
+        "vpc": {
+          "$ref": "#/definitions/ITransitGatewayConnectVpcConfig",
+          "description": "The VPC Attachment that belongs to the Transit Gateway that a Transit Gateway Connect Attachment is being made for."
+        }
+      },
+      "required": [
+        "name",
+        "region",
+        "transitGateway"
+      ],
+      "type": "object"
+    },
+    "ITransitGatewayConnectOptionsConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol": {
+          "$ref": "#/definitions/TransitGatewayConnectProtocol",
+          "description": "The tunnel protocl for the Transit Gateway Connect"
+        }
+      },
+      "required": [
+        "protocol"
+      ],
+      "type": "object"
+    },
+    "ITransitGatewayConnectVpcConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "vpcAttachment": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The name of the VPC attachment"
+        },
+        "vpcName": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The name of the VPC"
+        }
+      },
+      "required": [
+        "vpcName",
+        "vpcAttachment"
       ],
       "type": "object"
     },
@@ -5067,6 +5162,10 @@
         "ACCEPT",
         "REJECT"
       ],
+      "type": "string"
+    },
+    "TransitGatewayConnectProtocol": {
+      "const": "gre",
       "type": "string"
     },
     "VpnLoggingOutputFormatType": {

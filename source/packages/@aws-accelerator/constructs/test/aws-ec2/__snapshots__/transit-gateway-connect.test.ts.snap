@@ -1,0 +1,23 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TransitGatewayConnectAttachment Construct(TransitGatewayStaticRoute):  Snapshot Test 1`] = `
+{
+  "Resources": {
+    "TransitGatewayConnectVpcAttachTestVpcTgwConnectTransitGatewayConnect442AF647": {
+      "Properties": {
+        "Options": {
+          "Protocol": "gre",
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "TestVpcTgwConnect",
+          },
+        ],
+        "TransportTransitGatewayAttachmentId": "tgw-attach-0123456789012",
+      },
+      "Type": "AWS::EC2::TransitGatewayConnect",
+    },
+  },
+}
+`;
