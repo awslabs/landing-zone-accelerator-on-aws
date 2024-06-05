@@ -3,10 +3,31 @@ defaultVpc:
   delete: true
   excludeAccounts: []
   excludeRegions: []
+
+transitGatewayConnects:
+  - name: Network-Inspection
+    region: *HOME_REGION
+    transitGateway:
+      name: Network-Main
+      account: Network
+    vpc:
+      vpcName: Network-Endpoints
+      vpcAttachment: Network-Endpoints
+    options:
+      protocol: gre
+    tags:
+      - key: Environment
+        value: CentralInspection
+
 transitGateways:
   - name: Network-Main
     account: Network
     region: *HOME_REGION
+    transitGatewayCidrBlocks:
+      - 10.0.0.0/20
+      - 10.5.0.0/20
+    transitGatewayIpv6CidrBlocks:
+      - 2001:db8::/64
     shareTargets:
       organizationalUnits:
         - Infrastructure

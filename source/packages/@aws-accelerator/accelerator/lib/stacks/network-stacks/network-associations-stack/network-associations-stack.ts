@@ -72,6 +72,7 @@ import {
   TargetGroup,
   TransitGatewayAttachment,
   TransitGatewayAttachmentType,
+  TransitGatewayConnect,
   TransitGatewayPrefixListReference,
   TransitGatewayRouteTableAssociation,
   TransitGatewayRouteTablePropagation,
@@ -228,6 +229,11 @@ export class NetworkAssociationsStack extends NetworkStack {
       // Create managed active directories
       //
       this.createManagedActiveDirectories();
+
+      //
+      // Create Transit Gateway Connect resources for Vpc Attachments
+      //
+      this.createTransitGatewayConnect(props);
 
       //
       // Create NagSuppressions
@@ -1302,6 +1308,38 @@ export class NetworkAssociationsStack extends NetworkStack {
             excludedAccountIds,
           );
         }
+      }
+    }
+  }
+
+  /**
+   * Create transit gateway connection resources
+   * @param props
+   */
+  private createTransitGatewayConnect(props: AcceleratorStackProps): void {
+    for (const connectItem of props.networkConfig.transitGatewayConnects ?? []) {
+      const accountId = this.props.accountsConfig.getAccountId(connectItem.transitGateway.account);
+      if (accountId === cdk.Stack.of(this).account && connectItem.region === cdk.Stack.of(this).region) {
+        const isVpcAttachment = connectItem.vpc;
+        const vpcAttachmentItem = props.networkConfig.vpcs.find(item => item.name === connectItem.vpc?.vpcName);
+        const attachmentKey = isVpcAttachment
+          ? `${connectItem.transitGateway.name}_${vpcAttachmentItem?.account}_${connectItem.vpc.vpcName}`
+          : `${connectItem.directConnect}_${connectItem.transitGateway.name}`;
+
+        const transitGatewayAttachmentId = this.transitGatewayAttachments.get(attachmentKey);
+
+        if (!transitGatewayAttachmentId) {
+          this.logger.error(`Transit Gateway attachment ${attachmentKey} not found`);
+          throw new Error(`Configuration validation failed at runtime.`);
+        }
+
+        this.logger.info(`Creating a TGW Connect for: ${connectItem.name}`);
+        new TransitGatewayConnect(this, pascalCase(`${connectItem.name}TransitGatewayConnectAttachment`), {
+          name: connectItem.name,
+          transitGatewayAttachmentId: transitGatewayAttachmentId,
+          options: connectItem.options!,
+          tags: connectItem.tags,
+        });
       }
     }
   }
