@@ -97,13 +97,13 @@ source/packages/@aws-accelerator/utils/lib/regions.ts:99
 
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:396
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:397
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1281
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1282
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1309
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1310
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/config/lib/global-config.ts:989
-source/packages/@aws-accelerator/config/lib/global-config.ts:990
+source/packages/@aws-accelerator/config/lib/global-config.ts:987
+source/packages/@aws-accelerator/config/lib/global-config.ts:988
 
 # Accelerator specific assume role declaration
 
@@ -226,3 +226,10 @@ source/packages/@aws-accelerator/utils/lib/evaluate-limits.ts:101
 # Assume role declaration for cross account
 source/packages/@aws-accelerator/constructs/lib/aws-servicecatalog/propagate-portfolio-associations/index.ts:268
 source/packages/@aws-accelerator/constructs/lib/aws-servicecatalog/propagate-portfolio-associations/index.ts:269
+
+# Assume role declaration for cross account
+source/packages/@aws-config-converter/config/global-config.ts:2305
+source/packages/@aws-config-converter/config/global-config.ts:2306
+
+source/packages/@aws-config-converter/src/config/global-config.ts:2305
+source/packages/@aws-config-converter/src/config/global-config.ts:2306

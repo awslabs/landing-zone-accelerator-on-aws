@@ -838,7 +838,10 @@ export class VpcResources {
       const parameters = this.setCrossAccountSsmParameters(crossAcctCgw, vpcResources, vpcMap);
 
       if (parameters.length > 0) {
-        console.log(`Putting cross-account/cross-region SSM parameters for VPC ${firewallVpcConfig.name}`);
+        this.stack.addLogs(
+          LogLevel.INFO,
+          `Putting cross-account/cross-region SSM parameters for VPC ${firewallVpcConfig.name}`,
+        );
         // Put SSM parameters
         new PutSsmParameter(this.stack, pascalCase(`${crossAcctCgw.name}VgwVpnSharedParameters`), {
           accountIds,

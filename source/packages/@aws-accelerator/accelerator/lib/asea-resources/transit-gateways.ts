@@ -9,7 +9,7 @@ const enum RESOURCE_TYPE {
   TRANSIT_GATEWAY = 'AWS::EC2::TransitGateway',
   TRANSIT_GATEWAY_ROUTE_TABLE = 'AWS::EC2::TransitGatewayRouteTable',
 }
-const ASEA_PHASE_NUMBER = 0;
+const ASEA_PHASE_NUMBER = '0';
 
 /**
  * Handles Transit Gateways created by ASEA.
@@ -26,14 +26,16 @@ export class TransitGateways extends AseaResource {
       return;
     }
     const tgwInAsea: string[] = [];
-    const existingTransitGatewaysResources = this.filterResourcesByType(
-      props.stackInfo.resources,
+    const existingTransitGatewaysResources = this.scope.importStackResources.getResourcesByType(
       RESOURCE_TYPE.TRANSIT_GATEWAY,
     );
     for (const tgwItem of props.networkConfig.transitGateways ?? []) {
-      const tgwResource = this.findResourceByTag(existingTransitGatewaysResources, tgwItem.name);
+      const tgwResource = this.scope.importStackResources.getResourceByTypeAndTag(
+        RESOURCE_TYPE.TRANSIT_GATEWAY,
+        tgwItem.name,
+      );
       if (!tgwResource) continue;
-      const transitGateway = this.stack.getResource(tgwResource.logicalResourceId) as cdk.aws_ec2.CfnTransitGateway;
+      const transitGateway = this.scope.getResource(tgwResource.logicalResourceId) as cdk.aws_ec2.CfnTransitGateway;
       transitGateway.amazonSideAsn = tgwItem.asn;
       transitGateway.autoAcceptSharedAttachments = tgwItem.autoAcceptSharingAttachments;
       transitGateway.defaultRouteTableAssociation = tgwItem.defaultRouteTableAssociation;
@@ -61,8 +63,7 @@ export class TransitGateways extends AseaResource {
   }
 
   private createTgwRouteTables(tgwItem: TransitGatewayConfig, tgwId: string) {
-    const allTgwRouteTables = this.filterResourcesByType(
-      this.stackInfo.resources,
+    const allTgwRouteTables = this.scope.importStackResources.getResourcesByType(
       RESOURCE_TYPE.TRANSIT_GATEWAY_ROUTE_TABLE,
     );
     const tgwRouteTables = this.filterResourcesByRef(allTgwRouteTables, 'TransitGatewayId', tgwId);

@@ -12,10 +12,14 @@
  */
 
 import {
+  ASEAMapping,
+  ASEAMappings,
   AccountsConfig,
+  CfnResourceType,
   CustomizationsConfig,
   GlobalConfig,
   IamConfig,
+  StackResources,
   NetworkConfig,
   OrganizationConfig,
   ReplacementsConfig,
@@ -36,6 +40,7 @@ import {
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import AWS from 'aws-sdk';
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 const logger = createLogger(['app-utils']);
 export interface AcceleratorContext {
   /**
@@ -431,7 +436,7 @@ export async function setAcceleratorStackProps(
   await organizationConfig.loadOrganizationalUnitIds(context.partition);
 
   if (globalConfig.externalLandingZoneResources?.importExternalLandingZoneResources) {
-    await globalConfig.loadExternalMapping(true);
+    await globalConfig.loadExternalMapping();
     await globalConfig.loadLzaResources(context.partition, prefixes.ssmParamName);
   }
   const centralizedLoggingRegion = globalConfig.logging.centralizedLoggingRegion ?? globalConfig.homeRegion;
@@ -890,4 +895,124 @@ async function getEc2ClientsByAccountAndRegions(
   );
 
   return ec2Clients;
+}
+
+export async function writeImportResources(props: {
+  credentials: AWS.STS.Credentials | undefined;
+  globalConfig: GlobalConfig;
+  mapping: ASEAMappings;
+  accountsConfig: AccountsConfig;
+}) {
+  const mappings = props.globalConfig.externalLandingZoneResources?.templateMap;
+  const mappingBucket = props.globalConfig.externalLandingZoneResources?.mappingFileBucket;
+  const credentials = setCredentials(props.credentials);
+  const s3Client = new S3Client({
+    credentials,
+    region: props.globalConfig.homeRegion,
+  });
+
+  const mappingPromises = [];
+  const s3Promises = [];
+  if (!mappings || !mappingBucket) {
+    return;
+  }
+  for (const [, mapping] of Object.entries(mappings)) {
+    mappingPromises.push(handleMapping(mapping));
+  }
+  const updatedMappings = await Promise.all(mappingPromises);
+  for (const updatedMapping of updatedMappings) {
+    if (updatedMapping) {
+      s3Promises.push(
+        writeMappingToS3({
+          resources: updatedMapping.resources,
+          mapping: updatedMapping.mapping,
+          stack: updatedMapping.stack,
+          s3Client: s3Client,
+          mappingBucket: mappingBucket!,
+        }),
+      );
+    }
+  }
+}
+
+async function handleMapping(mapping: ASEAMapping) {
+  let pathSuffix = 'template.json';
+  if (mapping.logicalResourceId) {
+    pathSuffix = 'nested.template.json';
+  }
+  const stackPath = `cdk.out/phase${mapping.phase}-${mapping.accountId}-${mapping.region}/${mapping.stackName}.${pathSuffix}`;
+  const resourcePath = path.join('asea-assets', mapping.resourcePath);
+  const resourceFile = (await fs.promises.readFile(resourcePath, 'utf8')).toString();
+  const stackFile = (await fs.promises.readFile(stackPath, 'utf-8')).toString();
+  const resources: CfnResourceType[] = JSON.parse(resourceFile);
+  // Turn into a hash map for faster processing
+  const resourceObj = resources.reduce((acc: { [key: string]: CfnResourceType }, resource) => {
+    acc[resource.logicalResourceId] = resource;
+    return acc;
+  }, {});
+  const stack = JSON.parse(stackFile);
+  const stackResources: StackResources = stack['Resources'];
+  if (!stackResources) {
+    return;
+  }
+  for (const [logicalId, stackResource] of Object.entries(stackResources)) {
+    if (!resourceObj[logicalId]) {
+      resourceObj[logicalId] = {
+        logicalResourceId: logicalId,
+        resourceType: stackResource['Type'],
+        resourceMetadata: {
+          Type: stackResource['Type'],
+          Properties: stackResource['Properties'],
+        },
+      };
+    } else {
+      resourceObj[logicalId].resourceMetadata['Properties'] = stackResource['Properties'];
+    }
+  }
+  const updatedResources = Object.keys(resourceObj).map(key => resourceObj[key]);
+  return {
+    resources: updatedResources,
+    stack: stack,
+    mapping,
+  };
+}
+
+async function writeMappingToS3(props: {
+  resources: CfnResourceType[];
+  mapping: ASEAMapping;
+  stack: unknown;
+  s3Client: S3Client;
+  mappingBucket: string;
+}) {
+  const writePromises = [];
+  const stackWriteRequest = new PutObjectCommand({
+    Bucket: props.mappingBucket,
+    Key: props.mapping.templatePath,
+    Body: JSON.stringify(props.stack),
+    ServerSideEncryption: 'AES256',
+  });
+
+  const resourceWriteRequest = new PutObjectCommand({
+    Bucket: props.mappingBucket,
+    Key: props.mapping.resourcePath,
+    Body: JSON.stringify(props.resources),
+    ServerSideEncryption: 'AES256',
+  });
+
+  writePromises.push(props.s3Client.send(stackWriteRequest));
+  writePromises.push(await props.s3Client.send(resourceWriteRequest));
+
+  return Promise.all(writePromises);
+}
+
+function setCredentials(stsCredentials: AWS.STS.Credentials | undefined) {
+  let credentials;
+  if (stsCredentials && stsCredentials.AccessKeyId && stsCredentials.SecretAccessKey && stsCredentials.SessionToken) {
+    credentials = {
+      accessKeyId: stsCredentials.AccessKeyId,
+      secretAccessKey: stsCredentials.SecretAccessKey,
+      sessionToken: stsCredentials.SessionToken,
+    };
+  }
+  return credentials;
 }

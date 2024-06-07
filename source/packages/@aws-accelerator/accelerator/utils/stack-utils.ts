@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { AseaResourceMapping, GlobalConfig } from '@aws-accelerator/config';
+import { ASEAMapping, AseaResourceMapping, GlobalConfig } from '@aws-accelerator/config';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import * as cdk from 'aws-cdk-lib';
 import { AwsSolutionsChecks, NagSuppressions } from 'cdk-nag';
@@ -1174,7 +1174,7 @@ export function createCustomizationsStacks(
  * @param enabledRegion
  * @returns
  */
-export function importAseaResourceStacks(
+export async function importAseaResourceStack(
   rootApp: cdk.App,
   rootContext: AcceleratorContext,
   props: AcceleratorStackProps,
@@ -1211,23 +1211,25 @@ export function importAseaResourceStacks(
     logger.error(`Could not load accelerator prefix from externalLandingZoneResources in global config`);
     throw new Error(`Configuration validation failed at runtime.`);
   }
-  /**
-   * Create one cdk.App for each account and region to avoid name conflicts
-   * Couldn't use cdk.Stage because of NestedStack naming
-   * CfnInclude.loadNestedStack prefixes stage name to existing stack name.
-   */
-  const app = new cdk.App({
-    outdir: `cdk.out/phase-${accountId}-${enabledRegion}`,
-  });
 
   const resourceMapping: AseaResourceMapping[] = [];
-
-  for (const phase of [-1, 0, 1, 2, 3, 4, 5]) {
-    const aseaStacks = aseaStackMap.filter(
-      stack => stack.accountId === accountId && stack.region === enabledRegion && stack.phase === phase,
-    );
-    if (aseaStacks.length === 0) {
-      logger.warn(`No ASEA stack found for account ${accountId} in region ${enabledRegion} for ${phase.toString()}`);
+  for (const phase of ['-1', '0', '1', '2', '3', '4', '5']) {
+    const app = new cdk.App({
+      outdir: `cdk.out/phase${phase}-${accountId}-${enabledRegion}`,
+    });
+    const importStackPromises = [];
+    const stacksByPhase: ASEAMapping[] = [];
+    Object.keys(aseaStackMap).forEach(key => {
+      if (
+        aseaStackMap[key].accountId === accountId &&
+        aseaStackMap[key].region === enabledRegion &&
+        aseaStackMap[key].phase === phase
+      ) {
+        stacksByPhase.push(aseaStackMap[key]);
+      }
+    });
+    if (stacksByPhase.length === 0) {
+      logger.warn(`No ASEA stack found for account ${accountId} in region ${enabledRegion} for ${phase}`);
       continue;
     }
     const synthesizer = getAseaStackSynthesizer({
@@ -1236,26 +1238,28 @@ export function importAseaResourceStacks(
       region: enabledRegion,
       roleName: props.globalConfig.cdkOptions.customDeploymentRole || `${acceleratorPrefix}-PipelineRole`,
     });
-
-    for (const aseaStack of aseaStacks.filter(stack => !stack.nestedStack)) {
-      const { resourceMapping: stackResourceMapping } = new ImportAseaResourcesStack(app, aseaStack.stackName, {
-        ...props,
-        stackName: aseaStack.stackName,
-        synthesizer,
-        terminationProtection: props.globalConfig.terminationProtection ?? true,
-        stackInfo: aseaStack,
-        nestedStacks: aseaStacks.filter(
-          stack => stack.nestedStack && stack.accountId === aseaStack.accountId && stack.region === aseaStack.region,
-        ),
-        env: {
-          account: accountId,
-          region: enabledRegion,
-        },
-        stage: rootContext.stage! as
-          | AcceleratorStage.IMPORT_ASEA_RESOURCES
-          | AcceleratorStage.POST_IMPORT_ASEA_RESOURCES,
-      });
-      resourceMapping.push(...stackResourceMapping);
+    for (const aseaStack of stacksByPhase) {
+      importStackPromises.push(
+        ImportAseaResourcesStack.init(app, aseaStack.stackName, {
+          ...props,
+          stackName: aseaStack.stackName,
+          synthesizer,
+          terminationProtection: props.globalConfig.terminationProtection ?? true,
+          stackInfo: aseaStack,
+          mapping: aseaStackMap,
+          env: {
+            account: accountId,
+            region: enabledRegion,
+          },
+          stage: rootContext.stage! as
+            | AcceleratorStage.IMPORT_ASEA_RESOURCES
+            | AcceleratorStage.POST_IMPORT_ASEA_RESOURCES,
+        }),
+      );
+    }
+    const resourceMappings = await Promise.all(importStackPromises);
+    for (const mapping of resourceMappings) {
+      resourceMapping.push(...mapping.resourceMapping);
     }
   }
   return resourceMapping;
@@ -1267,13 +1271,13 @@ export function importAseaResourceStacks(
  * @param props
  * @param resources
  */
-export function saveAseaResourceMapping(
+export async function saveAseaResourceMapping(
   context: AcceleratorContext,
   props: AcceleratorStackProps,
   resources: AseaResourceMapping[],
 ) {
   if (context.stage && context.stage === AcceleratorStage.IMPORT_ASEA_RESOURCES) {
-    props.globalConfig.saveAseaResourceMapping(resources);
+    await props.globalConfig.saveAseaResourceMapping(resources);
   }
 }
 

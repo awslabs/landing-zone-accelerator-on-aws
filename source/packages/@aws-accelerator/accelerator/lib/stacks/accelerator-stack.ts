@@ -232,7 +232,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * Accelerator SSM parameters
    * This array is used to store SSM parameters that are created per-stack.
    */
-  protected ssmParameters: { logicalId: string; parameterName: string; stringValue: string }[];
+  protected ssmParameters: { logicalId: string; parameterName: string; stringValue: string; scope?: string }[];
 
   protected centralLogsBucketName: string;
 
@@ -299,21 +299,23 @@ export abstract class AcceleratorStack extends cdk.Stack {
       props.globalConfig.externalLandingZoneResources?.resourceParameters?.[`${this.account}-${this.region}`];
 
     this.stackParameters = new Map<string, cdk.aws_ssm.StringParameter>();
-    this.stackParameters.set(
-      'StackId',
-      new cdk.aws_ssm.StringParameter(this, 'SsmParamStackId', {
-        parameterName: this.getSsmPath(SsmResourceType.STACK_ID, [cdk.Stack.of(this).stackName]),
-        stringValue: cdk.Stack.of(this).stackId,
-      }),
-    );
+    if (!this.stackName.includes('Phase')) {
+      this.stackParameters.set(
+        'StackId',
+        new cdk.aws_ssm.StringParameter(this, 'SsmParamStackId', {
+          parameterName: this.getSsmPath(SsmResourceType.STACK_ID, [cdk.Stack.of(this).stackName]),
+          stringValue: cdk.Stack.of(this).stackId,
+        }),
+      );
 
-    this.stackParameters.set(
-      'StackVersion',
-      new cdk.aws_ssm.StringParameter(this, 'SsmParamAcceleratorVersion', {
-        parameterName: this.getSsmPath(SsmResourceType.VERSION, [cdk.Stack.of(this).stackName]),
-        stringValue: version,
-      }),
-    );
+      this.stackParameters.set(
+        'StackVersion',
+        new cdk.aws_ssm.StringParameter(this, 'SsmParamAcceleratorVersion', {
+          parameterName: this.getSsmPath(SsmResourceType.VERSION, [cdk.Stack.of(this).stackName]),
+          stringValue: version,
+        }),
+      );
+    }
 
     //
     // Set if AWS KMS CMK is enabled for Lambda environment encryption
@@ -1831,11 +1833,12 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * Public accessor method to add SSM parameters
    * @param props
    */
-  public addSsmParameter(props: { logicalId: string; parameterName: string; stringValue: string }) {
+  public addSsmParameter(props: { logicalId: string; parameterName: string; stringValue: string; scope?: string }) {
     this.ssmParameters.push({
       logicalId: props.logicalId,
       parameterName: props.parameterName,
       stringValue: props.stringValue,
+      scope: props.scope,
     });
   }
 
@@ -1855,7 +1858,8 @@ export abstract class AcceleratorStack extends cdk.Stack {
         r.accountId === cdk.Stack.of(this).account &&
         r.region === cdk.Stack.of(this).region &&
         r.resourceType === resourceType &&
-        r.resourceIdentifier === resourceIdentifier,
+        r.resourceIdentifier === resourceIdentifier &&
+        !r.isDeleted,
     );
   }
 
@@ -1870,7 +1874,9 @@ export abstract class AcceleratorStack extends cdk.Stack {
   public isManagedByAseaGlobal(resourceType: string, resourceIdentifier: string): boolean {
     if (!this.props.globalConfig.externalLandingZoneResources?.importExternalLandingZoneResources) return false;
     const aseaResourceList = this.props.globalConfig.externalLandingZoneResources.resourceList;
-    return !!aseaResourceList.find(r => r.resourceType === resourceType && r.resourceIdentifier === resourceIdentifier);
+    return !!aseaResourceList.find(
+      r => r.resourceType === resourceType && r.resourceIdentifier === resourceIdentifier && !r.isDeleted,
+    );
   }
 
   public getExternalResourceParameter(name: string) {

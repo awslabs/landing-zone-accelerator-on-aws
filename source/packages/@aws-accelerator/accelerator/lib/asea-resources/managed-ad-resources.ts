@@ -18,25 +18,28 @@ import { pascalCase } from 'pascal-case';
 import { SsmResourceType } from '@aws-accelerator/utils';
 
 const MANAGED_AD_RESOURCE_TYPE = 'AWS::DirectoryService::MicrosoftAD';
-const ASEA_PHASE_NUMBER_MANAGED_AD = 2;
+const ASEA_PHASE_NUMBER_MANAGED_AD = '2';
 
 /**
  * Handles Managed Active Directories created by ASEA.
- * All Managed Active Direcories are deployed in Phase-2
+ * All Managed Active Directories are deployed in Phase-2
  */
 export class ManagedAdResources extends AseaResource {
   constructor(scope: ImportAseaResourcesStack, props: AseaResourceProps) {
     super(scope, props);
-    const existingManagedAds = this.filterResourcesByType(props.stackInfo.resources, MANAGED_AD_RESOURCE_TYPE);
-    this.processManagedAd(props, existingManagedAds);
+    const existingManagedAds = this.scope.importStackResources.getResourcesByType(MANAGED_AD_RESOURCE_TYPE);
+    this.updateManagedAD(props, existingManagedAds);
   }
 
-  private processManagedAd(props: AseaResourceProps, existingManagedAds: CfnResourceType[]) {
+  private updateManagedAD(props: AseaResourceProps, existingManagedAds: CfnResourceType[]) {
     if (props.stackInfo.phase !== ASEA_PHASE_NUMBER_MANAGED_AD) {
       this.scope.addLogs(
         LogLevel.INFO,
         `No ${MANAGED_AD_RESOURCE_TYPE}s to handle in stack ${props.stackInfo.stackName}`,
       );
+      return;
+    }
+    if (existingManagedAds.length === 0) {
       return;
     }
 
@@ -52,14 +55,15 @@ export class ManagedAdResources extends AseaResource {
       const matchedManagedAd = existingManagedAds.find(
         existingManagedAd => existingManagedAd.resourceMetadata['Properties'].Name === managedAdConfigName,
       );
-      if (matchedManagedAd) {
-        this.scope.addSsmParameter({
-          logicalId: pascalCase(`SsmParam${pascalCase(managedAdConfigName)}`),
-          parameterName: this.scope.getSsmPath(SsmResourceType.MANAGED_AD, [managedAdConfigName]),
-          stringValue: matchedManagedAd.physicalResourceId,
-        });
-        this.scope.addAseaResource(AseaResourceType.MANAGED_AD, managedAdConfigName);
+      if (!matchedManagedAd || !matchedManagedAd.physicalResourceId) {
+        continue;
       }
+      this.scope.addSsmParameter({
+        logicalId: pascalCase(`SsmParam${pascalCase(managedAdConfigName)}`),
+        parameterName: this.scope.getSsmPath(SsmResourceType.MANAGED_AD, [managedAdConfigName]),
+        stringValue: matchedManagedAd.physicalResourceId,
+      });
+      this.scope.addAseaResource(AseaResourceType.MANAGED_AD, managedAdConfigName);
     }
   }
 }

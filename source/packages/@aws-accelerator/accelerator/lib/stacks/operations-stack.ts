@@ -1115,6 +1115,17 @@ export class OperationsStack extends AcceleratorStack {
             },
           ],
         });
+        if (this.isManagedByAsea(AseaResourceType.IAM_ROLE, this.roles[role].roleName)) {
+          this.nagSuppressionInputs.push({
+            id: NagSuppressionRuleIds.IAM5,
+            details: [
+              {
+                path: `${this.stackName}/${this.roles[role].node.id}/Policy/Resource`,
+                reason: 'Access to read from the S3 bucket is required for this IAM instance profile',
+              },
+            ],
+          });
+        }
       }
       return firewallConfigBucket;
     }

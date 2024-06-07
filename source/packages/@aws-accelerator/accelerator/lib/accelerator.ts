@@ -46,7 +46,7 @@ import {
 import { setStsTokenPreferences } from '@aws-accelerator/utils/lib/set-token-preferences';
 
 import { AssumeProfilePlugin } from '@aws-cdk-extensions/cdk-plugin-assume-role';
-import { isBeforeBootstrapStage } from '../utils/app-utils';
+import { isBeforeBootstrapStage, writeImportResources } from '../utils/app-utils';
 import { AcceleratorStage } from './accelerator-stage';
 import { AcceleratorToolkit, AcceleratorToolkitProps } from './toolkit';
 import { v4 as uuidv4 } from 'uuid';
@@ -187,7 +187,7 @@ export abstract class Accelerator {
     const globalConfig = configDependentStage ? GlobalConfig.loadRawGlobalConfig(props.configDirPath) : undefined;
     if (globalConfig?.externalLandingZoneResources?.importExternalLandingZoneResources) {
       logger.info('Loading ASEA mapping for stacks list');
-      await globalConfig.loadExternalMapping(true);
+      await globalConfig.loadExternalMapping();
       logger.info('Loaded ASEA mapping');
     }
     await checkDiffStage(props);
@@ -894,8 +894,8 @@ export abstract class Accelerator {
 
       // check to see if customizations has stacks. If no stacks are specified then do nothing
       if (
-        toolkitProps.stage === AcceleratorStage.CUSTOMIZATIONS &&
-        fs.existsSync(path.join(toolkitProps.configDirPath!, CustomizationsConfig.FILENAME))
+        fs.existsSync(path.join(toolkitProps.configDirPath!, CustomizationsConfig.FILENAME)) &&
+        toolkitProps.stage === AcceleratorStage.CUSTOMIZATIONS
       ) {
         this.executeCustomizationsStacks(
           toolkitProps,
@@ -1076,46 +1076,74 @@ export abstract class Accelerator {
     }
     const aseaPrefix = globalConfig.externalLandingZoneResources.acceleratorPrefix;
     const aseaName = globalConfig.externalLandingZoneResources.acceleratorName;
-    let previousPhase = -1;
-    for (const phase of [-1, 0, 1, 2, 3, 4, 5]) {
+    const mapping = globalConfig.externalLandingZoneResources.templateMap;
+    let previousPhase = '-1';
+    for (const phase of ['-1', '0', '1', '2', '3', '4', '5']) {
       logger.info(`Deploying Stacks in Phase ${phase}`);
       if (previousPhase !== phase) {
-        await Promise.all(promises);
+        await Promise.all(promises).catch(err => {
+          logger.error(err);
+          throw new Error(`Configuration validation failed at runtime.`);
+        });
         previousPhase = phase;
       }
       for (const region of globalConfig.enabledRegions) {
         for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
           const accountId = accountsConfig.getAccountId(account.name);
-          const stacks = globalConfig.externalLandingZoneResources.templateMap.filter(
-            stack => stack.accountId === accountId && stack.region === region && stack.phase === phase,
-          );
-          stacks
-            .filter(stack => !stack.nestedStack)
-            .forEach(stack =>
-              promises.push(
-                AcceleratorToolkit.execute({
-                  ...toolkitProps,
-                  app: `cdk.out/phase-${accountId}-${region}`,
-                  stackPrefix: aseaPrefix,
-                  stack: stack.stackName,
-                  // ASEA Adds "AcceleratorName" tag to all stacks
-                  // Adding it to avoid updating all stacks
-                  tags: [
-                    {
-                      Key: 'AcceleratorName',
-                      Value: aseaName,
-                    },
-                  ],
-                }),
-              ),
+          const stackKeys: string[] = [];
+          Object.keys(mapping).forEach(key => {
+            if (
+              mapping[key].accountId === accountId &&
+              mapping[key].region === region &&
+              mapping[key].phase === phase &&
+              !mapping[key].parentStack
+            ) {
+              stackKeys.push(key);
+            }
+          });
+
+          for (const key of stackKeys) {
+            const stack = mapping[key];
+            promises.push(
+              AcceleratorToolkit.execute({
+                ...toolkitProps,
+                app: `cdk.out/phase${phase}-${accountId}-${region}`,
+                stackPrefix: aseaPrefix,
+                stack: stack.stackName,
+                // ASEA Adds "AcceleratorName" tag to all stacks
+                // Adding it to avoid updating all stacks
+                tags: [
+                  {
+                    Key: 'AcceleratorName',
+                    Value: aseaName,
+                  },
+                ],
+              }),
             );
+            if (promises.length >= maxStacks) {
+              await Promise.all(promises).catch(err => {
+                logger.error(err);
+                throw new Error(`Configuration validation failed at runtime.`);
+              });
+              promises.length = 0;
+            }
+          }
         }
       }
-      if (promises.length >= maxStacks) {
-        await Promise.all(promises);
-        promises = [];
-      }
     }
+    await Promise.all(promises).catch(err => {
+      logger.error(err);
+      throw new Error(`Configuration validation failed at runtime.`);
+    });
+    // Write resource mapping and stacks to s3
+    const managementCredentials = await this.getManagementAccountCredentials(toolkitProps.partition);
+
+    await writeImportResources({
+      credentials: managementCredentials,
+      accountsConfig: accountsConfig,
+      globalConfig: globalConfig,
+      mapping,
+    });
   }
 }
 

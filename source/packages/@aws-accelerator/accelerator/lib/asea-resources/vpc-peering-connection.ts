@@ -7,7 +7,7 @@ import { AseaResource, AseaResourceProps } from './resource';
 const enum RESOURCE_TYPE {
   PEERING_CONNECTION = 'AWS::EC2::VPCPeeringConnection',
 }
-const ASEA_PHASE_NUMBER = 2;
+const ASEA_PHASE_NUMBER = '2';
 
 export class VpcPeeringConnection extends AseaResource {
   constructor(scope: ImportAseaResourcesStack, props: AseaResourceProps) {
@@ -19,12 +19,14 @@ export class VpcPeeringConnection extends AseaResource {
       );
       return;
     }
-    const existingPerringConnectionResources = this.filterResourcesByType(
-      props.stackInfo.resources,
-      RESOURCE_TYPE.PEERING_CONNECTION,
-    );
-    for (const peering of props.networkConfig.vpcPeering ?? []) {
-      const peeringConnectionResource = this.findResourceByTag(existingPerringConnectionResources, peering.name);
+    if (!props.networkConfig.vpcPeering) {
+      return;
+    }
+    for (const peering of props.networkConfig.vpcPeering) {
+      const peeringConnectionResource = this.scope.importStackResources.getResourceByTypeAndTag(
+        RESOURCE_TYPE.PEERING_CONNECTION,
+        peering.name,
+      );
       if (!peeringConnectionResource) continue;
       const peeringConnection = this.stack.getResource(peeringConnectionResource.logicalResourceId);
       this.scope.addSsmParameter({
