@@ -13,13 +13,15 @@
 
 //import * as cdk from 'aws-cdk-lib';
 //import { CfnResourceType } from '@aws-accelerator/config';
+import { pascalCase } from 'pascal-case';
 import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
 import { AseaResource, AseaResourceProps } from './resource';
 import { AseaResourceType, CfnResourceType, VpcConfig } from '@aws-accelerator/config';
+import { SsmResourceType } from '@aws-accelerator/utils';
 
 const LOAD_BALANCER_RESOURCE_TYPE = 'AWS::ElasticLoadBalancingV2::LoadBalancer';
 const TARGET_GROUP_RESOURCE_TYPE = 'AWS::ElasticLoadBalancingV2::TargetGroup';
-const ASEA_PHASE_NUMBER = 3;
+const ASEA_PHASE_NUMBER = '3';
 
 /**
  * Handles ALBs created by ASEA.
@@ -35,24 +37,29 @@ export class ApplicationLoadBalancerResources extends AseaResource {
       return;
     }
 
-    const existingAlbs = this.filterResourcesByType(props.stackInfo.resources, LOAD_BALANCER_RESOURCE_TYPE);
-    const existingTargetGroups = this.filterResourcesByType(props.stackInfo.resources, TARGET_GROUP_RESOURCE_TYPE);
+    const existingTargetGroups = this.scope.importStackResources.getResourcesByType(TARGET_GROUP_RESOURCE_TYPE);
+    const vpcItemsInScope = this.getVpcsInScope(props.networkConfig.vpcs);
 
-    for (const vpcItem of props.networkConfig.vpcs) {
-      this.processAlbs(existingAlbs, vpcItem);
+    for (const vpcItem of vpcItemsInScope) {
+      this.processAlbs(vpcItem);
       this.processTargetGroups(existingTargetGroups, vpcItem);
     }
   }
-  private processAlbs(existingAlbs: CfnResourceType[], vpcItem: VpcConfig) {
+  private processAlbs(vpcItem: VpcConfig) {
     if (!vpcItem.loadBalancers) return;
     if (!vpcItem.loadBalancers.applicationLoadBalancers) return;
     for (const albItem of vpcItem.loadBalancers.applicationLoadBalancers) {
-      const albResource = this.findResourceByName(existingAlbs, 'Name', albItem.name);
+      const albResource = this.scope.importStackResources.getResourceByName('Name', albItem.name);
       if (!albResource) continue;
       // const alb = this.stack.getResource(
       //   albResource.logicalResourceId,
       // ) as cdk.aws_elasticloadbalancingv2.CfnLoadBalancer;
       this.scope.addAseaResource(AseaResourceType.APPLICATION_LOAD_BALANCER, albItem.name);
+      this.scope.addSsmParameter({
+        logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(albItem.name)}LoadBalancer`),
+        parameterName: this.scope.getSsmPath(SsmResourceType.ALB, [vpcItem.name, albItem.name]),
+        stringValue: albResource.physicalResourceId!,
+      });
     }
   }
 

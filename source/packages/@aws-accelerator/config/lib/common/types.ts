@@ -645,26 +645,34 @@ export type CfnResourceType = {
    * PhysicalId of a resource in Amazon CloudFormation Stack
    * Use the physical IDs to identify resources outside of AWS CloudFormation templates
    */
-  physicalResourceId: string;
+  physicalResourceId?: string;
   /**
    * The resource type identifies the type of resource that you are declaring
    */
   resourceType: string;
   /**
+   * The LZA resource identifier if available.
+   */
+  resourceIdentifier?: string;
+  /**
    * The resourceMetadata holds all resources and properties
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   resourceMetadata: { [key: string]: any };
+  /**
+   * Deletion marker for imported resources
+   */
+  isDeleted?: boolean;
 };
 
 export type AseaStackInfo = {
   accountId: string;
   accountKey: string;
   region: string;
-  phase: number;
+  phase: string;
   stackName: string;
   templatePath: string;
-  resources: CfnResourceType[];
+  resourcePath: CfnResourceType[];
   nestedStack?: boolean;
 };
 
@@ -718,6 +726,52 @@ export type AseaResourceMapping = {
   region: string;
   resourceType: string;
   resourceIdentifier: string;
+  isDeleted?: boolean;
+};
+
+export type ASEAMappings = {
+  [key: string]: ASEAMapping;
+};
+
+export type StackResources = {
+  [key: string]: {
+    Type: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Properties: { [key: string]: any };
+  };
+};
+
+export type ASEAMapping = {
+  stackName: string;
+  accountId: string;
+  accountKey: string;
+  region: string;
+  phase: string | undefined;
+  countVerified: boolean;
+  numberOfResources: number;
+  numberOfResourcesInTemplate: number;
+  templatePath: string;
+  resourcePath: string;
+  nestedStacks?: { [key: string]: NestedStack };
+  parentStack?: string;
+  cfnResources: CfnResourceType[];
+  logicalResourceId?: string;
+};
+
+export type NestedStack = {
+  stackName: string;
+  accountId: string;
+  accountKey: string;
+  region: string;
+  phase: string | undefined;
+  countVerified: boolean;
+  numberOfResources: number;
+  numberOfResourcesInTemplate: number;
+  templatePath: string;
+  resourcePath: string;
+  logicalResourceId: string;
+  stackKey: string;
+  cfnResources: CfnResourceType[];
 };
 
 export enum AseaResourceTypePaths {

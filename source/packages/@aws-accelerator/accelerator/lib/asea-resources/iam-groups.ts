@@ -21,7 +21,7 @@ import { pascalCase } from 'pascal-case';
 import { AseaResource, AseaResourceProps } from './resource';
 
 const RESOURCE_TYPE = 'AWS::IAM::Group';
-const ASEA_PHASE_NUMBER = 1;
+const ASEA_PHASE_NUMBER = '1';
 
 export interface GroupsProps extends AseaResourceProps {
   /**
@@ -44,34 +44,14 @@ export class Groups extends AseaResource {
       this.scope.addLogs(LogLevel.INFO, `No ${RESOURCE_TYPE}s to handle in stack ${props.stackInfo.stackName}`);
       return;
     }
-    const existingResources = this.filterResourcesByType(props.stackInfo.resources, RESOURCE_TYPE);
-    for (const groupSetItem of props.iamConfig.groupSets ?? []) {
-      if (!this.scope.isIncluded(groupSetItem.deploymentTargets)) {
-        this.scope.addLogs(LogLevel.INFO, `Groups excluded`);
-        continue;
-      }
-
-      for (const groupItem of groupSetItem.groups) {
-        const existingResource = existingResources.find(
-          (cfnResource: { resourceMetadata: { [x: string]: { GroupName: string } } }) =>
-            cfnResource.resourceMetadata['Properties'].GroupName === groupItem.name,
-        );
-        if (!existingResource) {
-          continue;
-        }
-        this.scope.addLogs(LogLevel.INFO, `Add IAM Group ${groupItem.name}`);
-        const resource = this.stack.getResource(existingResource.logicalResourceId) as CfnGroup;
-        resource.groupName = groupItem.name;
-        resource.managedPolicyArns = this.getManagedPolicies(groupItem);
-        this.groups[groupItem.name] = resource;
-        this.scope.addSsmParameter({
-          logicalId: pascalCase(`SsmParam${pascalCase(groupItem.name)}GroupArn`),
-          parameterName: this.scope.getSsmPath(SsmResourceType.IAM_GROUP, [groupItem.name]),
-          stringValue: resource.attrArn,
-        });
-        this.scope.addAseaResource(AseaResourceType.IAM_GROUP, groupItem.name);
-      }
+    if (props.globalConfig.homeRegion !== this.scope.region) {
+      return;
     }
+    const groupSets = props.iamConfig.groupSets ?? [];
+    const groupSetsInScope = groupSets.filter(groupSet => this.scope.isIncluded(groupSet.deploymentTargets));
+    const groupsInScope = groupSetsInScope.map(groupSet => groupSet.groups).flat();
+    this.addDeletionFlagsForGroups(groupsInScope, RESOURCE_TYPE);
+    this.updateGroups(groupsInScope);
   }
 
   private getManagedPolicies(groupItem: GroupConfig) {
@@ -90,5 +70,56 @@ export class Groups extends AseaResource {
       }
     }
     return managedPolicies;
+  }
+  private addDeletionFlagsForGroups(groupItems: GroupConfig[], resourceType: string) {
+    const importGroups = this.scope.importStackResources.getResourcesByType(resourceType);
+    for (const importGroup of importGroups) {
+      const groupResource = this.scope.getResource(importGroup.logicalResourceId) as cdk.aws_iam.CfnGroup;
+      const groupName = groupResource.groupName;
+      if (!groupName) {
+        continue;
+      }
+
+      const groupExistsInConfig = groupItems.find(item => item.name === groupName);
+      if (!groupExistsInConfig) {
+        importGroup.isDeleted = true;
+        this.scope.addDeleteFlagForAseaResource({
+          type: resourceType,
+          identifier: groupName,
+          logicalId: importGroup.logicalResourceId,
+        });
+      }
+      // Add the delete flag to the ssm parameter created with the role.
+      const ssmResource = this.scope.importStackResources.getSSMParameterByName(
+        this.scope.getSsmPath(SsmResourceType.IAM_GROUP, [groupName]),
+      );
+      if (ssmResource) {
+        ssmResource.isDeleted = true;
+      }
+    }
+  }
+
+  private updateGroups(groupItems: GroupConfig[]) {
+    if (groupItems.length === 0) {
+      this.scope.addLogs(LogLevel.INFO, `No ${RESOURCE_TYPE}s to handle in stack.`);
+      return;
+    }
+    for (const groupItem of groupItems) {
+      const existingResource = this.scope.importStackResources.getResourceByProperty('GroupName', groupItem.name);
+      if (!existingResource) {
+        continue;
+      }
+      this.scope.addLogs(LogLevel.INFO, `Add IAM Group ${groupItem.name}`);
+      const resource = this.stack.getResource(existingResource.logicalResourceId) as CfnGroup;
+      resource.groupName = groupItem.name;
+      resource.managedPolicyArns = this.getManagedPolicies(groupItem);
+      this.groups[groupItem.name] = resource;
+      this.scope.addSsmParameter({
+        logicalId: pascalCase(`SsmParam${pascalCase(groupItem.name)}GroupArn`),
+        parameterName: this.scope.getSsmPath(SsmResourceType.IAM_GROUP, [groupItem.name]),
+        stringValue: resource.attrArn,
+      });
+      this.scope.addAseaResource(AseaResourceType.IAM_GROUP, groupItem.name);
+    }
   }
 }

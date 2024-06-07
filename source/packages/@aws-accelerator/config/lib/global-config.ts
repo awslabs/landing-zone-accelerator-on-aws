@@ -12,15 +12,15 @@
  */
 
 import * as fs from 'fs';
-import * as os from 'os';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
 import * as AWS from 'aws-sdk';
-import { STSClient, AssumeRoleCommand, AssumeRoleCommandInput, AssumeRoleCommandOutput } from '@aws-sdk/client-sts';
+import { AssumeRoleCommandOutput } from '@aws-sdk/client-sts';
 import { SSMClient, GetParametersByPathCommand } from '@aws-sdk/client-ssm';
 
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+import { directoryExists, fileExists, getCrossAccountCredentials } from '@aws-accelerator/utils/lib/common-functions';
 
 import * as t from './common';
 import * as i from './models/global-config';
@@ -37,7 +37,7 @@ export class externalLandingZoneResourcesConfig implements i.IExternalLandingZon
   readonly acceleratorPrefix = 'ASEA';
   readonly acceleratorName = 'ASEA';
 
-  templateMap: t.AseaStackInfo[] = [];
+  templateMap: t.ASEAMappings = {};
   resourceList: t.AseaResourceMapping[] = [];
   /**
    * List of accountIds deployed using external Accelerator
@@ -672,29 +672,117 @@ export class GlobalConfig implements i.IGlobalConfig {
       .promise();
   }
 
-  public async loadExternalMapping(loadFromCache: boolean) {
-    if (!this.externalLandingZoneResources?.importExternalLandingZoneResources) return;
-    this.externalLandingZoneResources.accountsDeployedExternally = [];
-    const tempDirPath = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'asea-assets'));
-    const aseaMappingPath = path.join(tempDirPath, 'aseaMapping.json');
-    const aseaResourceListPath = path.join(tempDirPath, 'aseaResources.json');
-    if (!this.externalLandingZoneResources) {
+  public async loadExternalMapping() {
+    if (!this.externalLandingZoneResources?.importExternalLandingZoneResources) {
       return;
     }
-    if (loadFromCache && fs.existsSync(aseaMappingPath)) {
-      const mapping = this.readJsonFromDisk(aseaMappingPath);
-      this.externalLandingZoneResources.templateMap = await this.setTemplateMap(mapping);
-      this.externalLandingZoneResources.resourceList = this.readJsonFromDisk(aseaResourceListPath);
-    } else {
-      const s3Client = new AWS.S3({ region: this.homeRegion });
-      const mapping = await this.loadExternalMappingFromS3(s3Client);
-      this.externalLandingZoneResources.templateMap = await this.setTemplateMap(mapping);
-      this.externalLandingZoneResources.resourceList =
-        (await this.readJsonFromExternalS3<t.AseaResourceMapping[]>('aseaResources.json', s3Client)) || [];
-      fs.writeFileSync(aseaMappingPath, JSON.stringify(mapping, null, 2));
-      fs.writeFileSync(aseaResourceListPath, JSON.stringify(this.externalLandingZoneResources.resourceList, null, 2));
+    if (!this.externalLandingZoneResources.mappingFileBucket) {
+      throw new Error(
+        `externalLandingZoneResources/mappingFileBucket is required when importExternalLandingZoneResources is set to true`,
+      );
     }
-    return;
+    this.externalLandingZoneResources.accountsDeployedExternally = [];
+    const aseaAssetPath = 'asea-assets';
+    await fs.promises.mkdir(aseaAssetPath, { recursive: true });
+
+    if (!directoryExists('asea-assets')) {
+      throw new Error(`Could not create temp directory ${aseaAssetPath} for asea assets`);
+    }
+    const s3Client = new AWS.S3({ region: this.homeRegion });
+    const mappingFile = await this.downloadFile({
+      relativePath: 'mapping.json',
+      tempDirectory: aseaAssetPath,
+      bucket: this.externalLandingZoneResources.mappingFileBucket,
+      s3Client,
+    });
+    const resourceListFile = await this.downloadFile({
+      relativePath: 'aseaResources.json',
+      tempDirectory: aseaAssetPath,
+      bucket: this.externalLandingZoneResources.mappingFileBucket,
+      s3Client,
+    });
+
+    const mapping = (await this.readJsonFromDisk(mappingFile)) as t.ASEAMappings;
+    this.externalLandingZoneResources.resourceList = await this.readJsonFromDisk(resourceListFile);
+    await this.downloadASEAStacksAndResources({
+      s3Client,
+      mappingBucket: this.externalLandingZoneResources.mappingFileBucket,
+      tempDirectory: aseaAssetPath,
+      mapping,
+    });
+    this.externalLandingZoneResources.templateMap = mapping;
+    const accounts = Object.keys(mapping).map(key => mapping[key].accountId);
+    this.externalLandingZoneResources.accountsDeployedExternally = [...new Set(accounts)];
+  }
+
+  private async downloadASEAStacksAndResources(props: {
+    s3Client: AWS.S3;
+    mappingBucket: string;
+    tempDirectory: string;
+    mapping: t.ASEAMappings;
+  }): Promise<string[]> {
+    const downloads: Promise<string>[] = [];
+    Object.keys(props.mapping).forEach(key => {
+      downloads.push(
+        this.downloadFile({
+          bucket: props.mappingBucket,
+          s3Client: props.s3Client,
+          relativePath: props.mapping[key].templatePath,
+          tempDirectory: props.tempDirectory,
+        }),
+      );
+      downloads.push(
+        this.downloadFile({
+          bucket: props.mappingBucket,
+          s3Client: props.s3Client,
+          relativePath: props.mapping[key].resourcePath,
+          tempDirectory: props.tempDirectory,
+        }),
+      );
+      const nestedStacks = props.mapping[key].nestedStacks;
+      if (nestedStacks) {
+        Object.keys(nestedStacks).forEach(nestedStackKey => {
+          downloads.push(
+            this.downloadFile({
+              bucket: props.mappingBucket,
+              s3Client: props.s3Client,
+              relativePath: nestedStacks[nestedStackKey].templatePath,
+              tempDirectory: props.tempDirectory,
+            }),
+          );
+          downloads.push(
+            this.downloadFile({
+              bucket: props.mappingBucket,
+              s3Client: props.s3Client,
+              relativePath: nestedStacks[nestedStackKey].resourcePath,
+              tempDirectory: props.tempDirectory,
+            }),
+          );
+        });
+      }
+    });
+
+    return Promise.all(downloads);
+  }
+
+  private async downloadFile(props: { relativePath: string; tempDirectory: string; bucket: string; s3Client: AWS.S3 }) {
+    const filePath = path.join(props.tempDirectory, props.relativePath);
+    const directory = filePath.split('/').slice(0, -1).join('/');
+    if (!(await fileExists(filePath))) {
+      const s3Object = await this.getS3Object({
+        bucket: props.bucket,
+        objectKey: props.relativePath,
+        s3Client: props.s3Client,
+      });
+      await fs.promises.mkdir(directory, { recursive: true });
+      if (filePath === 'asea-assets/aseaResources.json' && !s3Object?.body) {
+        await fs.promises.writeFile(filePath, s3Object?.body || '[]');
+      } else {
+        await fs.promises.writeFile(filePath, s3Object?.body || '');
+      }
+    }
+
+    return filePath;
   }
 
   async loadLzaResources(partition: string, prefix: string) {
@@ -759,11 +847,12 @@ export class GlobalConfig implements i.IGlobalConfig {
   }> {
     let ssmClient = new SSMClient({ region });
     if (account !== managementAccountId) {
-      const crossAccountCredentials = await this.getCrossAccountCredentials(
+      const crossAccountCredentials = await getCrossAccountCredentials(
         account,
         region,
         partition,
         this.managementAccountAccessRole,
+        'acceleratorResourceMapping',
       );
       if (!crossAccountCredentials) {
         return {
@@ -790,11 +879,12 @@ export class GlobalConfig implements i.IGlobalConfig {
     const getSsmPath = (resourceType: t.AseaResourceTypePaths) => `${prefix}${resourceType}`;
     if (!this.externalLandingZoneResources?.importExternalLandingZoneResources) return;
     for (const accountId of accounts) {
-      const crossAccountCredentials = await this.getCrossAccountCredentials(
+      const crossAccountCredentials = await getCrossAccountCredentials(
         accountId,
         region,
         partition,
         this.managementAccountAccessRole,
+        'acceleratorResourceMapping',
       );
 
       if (!crossAccountCredentials) {
@@ -849,140 +939,48 @@ export class GlobalConfig implements i.IGlobalConfig {
     return parameters;
   }
 
-  private async loadExternalMappingFromS3(s3Client?: AWS.S3) {
-    if (
-      this.externalLandingZoneResources?.importExternalLandingZoneResources &&
-      this.externalLandingZoneResources.mappingFileBucket
-    ) {
-      if (!s3Client) {
-        s3Client = new AWS.S3({ region: this.homeRegion });
-      }
-      const mappingFile = await s3Client
-        .getObject({
-          Bucket: this.externalLandingZoneResources.mappingFileBucket,
-          Key: 'mapping.json',
-        })
-        .promise();
-      if (!mappingFile.Body) {
-        logger.error(
-          `Could not load mapping file from path s3://${this.externalLandingZoneResources.mappingFileBucket}/mapping.json`,
-        );
-        throw new Error('Runtime error');
-      }
-
-      return JSON.parse(mappingFile.Body.toString());
-    }
-  }
-
-  private async readJsonFromExternalS3<T>(objectKey: string, s3Client?: AWS.S3): Promise<T | undefined> {
-    if (
-      !this.externalLandingZoneResources?.importExternalLandingZoneResources ||
-      !this.externalLandingZoneResources.mappingFileBucket
-    ) {
-      throw new Error(
-        `readJsonFromExternalS3 can only be called when importExternalLandingZoneResources set as true and mappingFileBucket is provided`,
-      );
-    }
+  private async getS3Object(props: {
+    bucket: string;
+    objectKey: string;
+    s3Client?: AWS.S3;
+  }): Promise<{ body: string; path: string } | undefined> {
+    let s3Client = props.s3Client;
     if (!s3Client) {
       s3Client = new AWS.S3({ region: this.homeRegion });
     }
     try {
       const response = await s3Client
         .getObject({
-          Bucket: this.externalLandingZoneResources.mappingFileBucket,
-          Key: objectKey,
+          Bucket: props.bucket,
+          Key: props.objectKey,
         })
         .promise();
       if (!response.Body) {
-        logger.error(
-          `Could not load mapping file from path s3://${this.externalLandingZoneResources.mappingFileBucket}/${objectKey}`,
-        );
+        logger.error(`Could not load file from path s3://${props.bucket}/${props.objectKey}`);
         return;
       }
-      return JSON.parse(response.Body.toString());
+      return { body: response.Body.toString(), path: props.objectKey };
     } catch (e) {
       if ((e as AWS.AWSError).code === 'NoSuchKey') return;
       throw e;
     }
   }
 
-  private readJsonFromDisk(mappingFilePath: string) {
-    const mappingFile = fs.readFileSync(mappingFilePath).toString();
+  private async readJsonFromDisk(mappingFilePath: string) {
+    const mappingFile = (await fs.readFileSync(mappingFilePath)).toString();
     return JSON.parse(mappingFile);
   }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private async setTemplateMap(mappingJson: any): Promise<t.AseaStackInfo[]> {
-    const aseaStacks: t.AseaStackInfo[] = [];
-    for (const account of mappingJson) {
-      this.externalLandingZoneResources?.accountsDeployedExternally.push(account.accountId);
-      for (const stack of account.stacksAndResourceMapList) {
-        const phaseIdentifierIndex = stack.stackName.indexOf('Phase') + 5;
-        let phase = stack.stackName[phaseIdentifierIndex];
-        if (phase === '-') {
-          phase = -1;
-        }
-        phase = Number(phase);
-        const tempDirPath = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'asea-templates-'));
-        const templatePath = path.join(tempDirPath, `${stack.stackName}.json`);
-        // Delete outputs from template. IMPORT_ASEA_RESOURCES stage will write required information into SSM Parameter Store.
-        // delete stack.template.Outputs;
-        await fs.promises.writeFile(templatePath, JSON.stringify(stack.template, null, 2));
-        aseaStacks.push({
-          accountId: account.accountId,
-          accountKey: account.accountKey,
-          region: stack.region,
-          stackName: stack.stackName,
-          resources: stack.resourceMap as t.CfnResourceType[],
-          templatePath,
-          phase,
-          /**
-           * ASEA creates Nested stacks only for Phase1 and Phase2 and "stack.stackName.substring(phaseIdentifierIndex)" doesn't include accountName in it.
-           * It is safe to use string include to check if stack is nestedStack or not.
-           * Other option is to check for resource type in "Resources.physicalResourceId" using stackName
-           */
-          nestedStack: stack.stackName.substring(phaseIdentifierIndex).includes('NestedStack'),
-        });
-      }
-    }
-    return aseaStacks;
-  }
-
-  private async getCrossAccountCredentials(
-    accountId: string,
-    region: string,
-    partition: string,
-    managementAccountAccessRole: string,
-    sessionName = 'acceleratorResourceMapping',
-  ): Promise<AssumeRoleCommandOutput | undefined> {
-    const stsClient = new STSClient({ region: region });
-    const stsParams: AssumeRoleCommandInput = {
-      RoleArn: `arn:${partition}:iam::${accountId}:role/${managementAccountAccessRole}`,
-      RoleSessionName: sessionName,
-      DurationSeconds: 900,
-    };
-    let assumeRoleCredential: AssumeRoleCommandOutput | undefined = undefined;
+  public loadJsonFromDisk(filePath: string): any {
     try {
-      assumeRoleCredential = await throttlingBackOff(() => stsClient.send(new AssumeRoleCommand(stsParams)));
-      if (assumeRoleCredential) {
-        return assumeRoleCredential;
-      } else {
-        throw new Error(
-          `Error assuming role ${managementAccountAccessRole} in account ${accountId} for bootstrap checks`,
-        );
-      }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-      if (e.name === 'AccessDenied') {
-        logger.warn(e.name + ': ' + e.message);
-        logger.warn(`${stsParams.RoleArn} NOT FOUND in ${accountId} account`);
-        return undefined;
-      }
-
-      logger.error(JSON.stringify(e));
-      throw new Error(e.message);
+      const file = fs.readFileSync(filePath).toString();
+      return JSON.parse(file);
+    } catch (e) {
+      logger.error(`Failed to load file ${filePath}`);
+      throw e;
     }
   }
-
   private getCrossAccountSsmClient(region: string, assumeRoleCredential: AssumeRoleCommandOutput) {
     return new SSMClient({
       credentials: {

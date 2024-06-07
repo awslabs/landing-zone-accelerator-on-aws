@@ -16,7 +16,6 @@ import {
 import { NetworkFirewall } from '@aws-accelerator/constructs';
 import { CfnInclude } from 'aws-cdk-lib/cloudformation-include';
 import {
-  AseaStackInfo,
   VpcConfig,
   VpcTemplatesConfig,
   AseaResourceType,
@@ -34,6 +33,7 @@ import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resour
 import { AseaResource, AseaResourceProps } from './resource';
 import { getSubnetConfig, getVpcConfig } from '../stacks/network-stacks/utils/getter-utils';
 import { AcceleratorStage } from '../accelerator-stage';
+import { ImportStackResources } from '../../utils/import-stack-resources';
 
 const enum RESOURCE_TYPE {
   VPC = 'AWS::EC2::VPC',
@@ -81,22 +81,12 @@ const TCP_PROTOCOLS_PORT: { [key: string]: number } = {
   'ORACLE-RDS': 1521,
 };
 
-const ASEA_PHASE_NUMBER = 1;
-
-type NestedAseaStackInfo = AseaStackInfo & { logicalResourceId: string };
-
-export interface VpcResourcesProps extends AseaResourceProps {
-  /**
-   * Nested Stacks of current phase stack
-   */
-  nestedStacksInfo: NestedAseaStackInfo[];
-}
+const ASEA_PHASE_NUMBER = '1';
 
 export class VpcResources extends AseaResource {
-  private readonly nestedStacksInfo: NestedAseaStackInfo[] = [];
-  private readonly props: VpcResourcesProps;
-  private ssmParameters: { logicalId: string; parameterName: string; stringValue: string }[];
-  constructor(scope: ImportAseaResourcesStack, props: VpcResourcesProps) {
+  readonly props: AseaResourceProps;
+  ssmParameters: { logicalId: string; parameterName: string; stringValue: string; scope: CfnInclude }[];
+  constructor(scope: ImportAseaResourcesStack, props: AseaResourceProps) {
     super(scope, props);
     this.props = props;
     this.ssmParameters = [];
@@ -104,39 +94,37 @@ export class VpcResources extends AseaResource {
       this.scope.addLogs(LogLevel.INFO, `No ${RESOURCE_TYPE.VPC}s to handle in stack ${props.stackInfo.stackName}`);
       return;
     }
-    this.nestedStacksInfo = props.nestedStacksInfo;
     const vpcsInScope = this.scope.vpcsInScope;
     for (const vpcInScope of vpcsInScope) {
       // ASEA creates NestedStack for each VPC. All SSM Parameters related to VPC goes to nested stack
-      this.ssmParameters = [];
       const vpcResourceInfo = this.getVpcResourceByTag(vpcInScope.name);
-      if (!vpcResourceInfo) {
+      if (!vpcResourceInfo || !vpcResourceInfo.resource.physicalResourceId) {
         this.scope.addLogs(
           LogLevel.INFO,
           `Item Excluded: ${vpcInScope.name} in Account/Region ${props.stackInfo.accountKey}/${props.stackInfo.region}`,
         );
         continue;
       }
-      const { stackInfo: vpcStackInfo, resource } = vpcResourceInfo;
-      const nestedStack = this.stack.getNestedStack(vpcStackInfo.logicalResourceId);
-      const vpcPhysicalId = resource.physicalResourceId;
+      const nestedStack = vpcResourceInfo.nestedStack;
+      const nestedStackResources = vpcResourceInfo.nestedStackResources;
+      const vpcResource = vpcResourceInfo.resource;
+      const vpcPhysicalId = vpcResourceInfo.resource.physicalResourceId;
       // This is retrieved the specific VPC resource is loaded so we can modify attributes
-      const vpc = nestedStack.includedTemplate.getResource(resource.logicalResourceId) as CfnVPC;
+      const vpc = nestedStack.includedTemplate.getResource(vpcResource.logicalResourceId) as CfnVPC;
       this.addTagsToSharedEndpointVpcs(vpc, vpcPhysicalId, props);
-      this.setupInternetGateway(vpcStackInfo, nestedStack, vpcInScope);
-      this.setupVpnGateway(vpcStackInfo, nestedStack, vpcInScope);
+      this.setupInternetGateway(nestedStackResources, nestedStack, vpcInScope);
+      this.setupVpnGateway(nestedStackResources, nestedStack, vpcInScope);
       // This modifies ASEA vpc attributes to match LZA config
       vpc.cidrBlock = vpcInScope.cidrs![0]; // 0th index is always main cidr Block
       vpc.enableDnsHostnames = vpcInScope.enableDnsHostnames;
       vpc.enableDnsSupport = vpcInScope.enableDnsSupport;
       vpc.instanceTenancy = vpcInScope.instanceTenancy;
       if (vpcInScope.cidrs!.length > 1) {
-        const additionalCidrResources = this.getAdditionalCidrs(vpcStackInfo);
-        const existingAdditionalCidrBlocks: string[] = additionalCidrResources.map(
-          cfnResource => cfnResource.resourceMetadata['Properties'].CidrBlock,
-        );
+        const additionalCidrResources = nestedStackResources.getResourcesByType(RESOURCE_TYPE.CIDR_BLOCK);
+        const existingAdditionalCidrBlocks: string[] =
+          additionalCidrResources?.map(cfnResource => cfnResource.resourceMetadata['Properties'].CidrBlock) ?? [];
         vpcInScope.cidrs!.slice(1).forEach(cidr => {
-          const additionalCidrResource = additionalCidrResources.find(
+          const additionalCidrResource = additionalCidrResources?.find(
             cfnResource => cfnResource.resourceMetadata['Properties'].CidrBlock === cidr,
           );
           if (!additionalCidrResource) {
@@ -154,78 +142,42 @@ export class VpcResources extends AseaResource {
         this.scope.addLogs(LogLevel.INFO, `Removed Additional CIDR created by ASEA are ${removedAseaCidrs}`);
       }
       // Create Subnets takes in an LZA VPC Config as 'vpcInScope' object and Existing ASEA stack resource information as 'vpcStackInfo'
-      const subnets = this.createSubnets(vpcInScope, vpcStackInfo, nestedStack.includedTemplate);
-      this.createNatGateways(vpcStackInfo, nestedStack.includedTemplate, vpcInScope, subnets);
-      this.createSecurityGroups(vpcInScope, vpcStackInfo, nestedStack.includedTemplate);
+      const subnets = this.createSubnets(vpcInScope, nestedStackResources, nestedStack.includedTemplate);
+      this.createNatGateways(nestedStackResources, nestedStack.includedTemplate, vpcInScope, subnets);
+      this.createSecurityGroups(vpcInScope, nestedStackResources, nestedStack.includedTemplate);
       const tgwAttachmentMap = this.createTransitGatewayAttachments(
         vpcInScope,
-        vpcStackInfo,
+        nestedStackResources,
         nestedStack.includedTemplate,
         subnets,
       );
       this.createTransitGatewayRouteTablePropagation(
         vpcInScope,
-        vpcStackInfo,
+        nestedStackResources,
         nestedStack.includedTemplate,
         tgwAttachmentMap ?? {},
       );
       this.createTransitGatewayRouteTableAssociation(
         vpcInScope,
-        vpcStackInfo,
+        nestedStackResources,
         nestedStack.includedTemplate,
         tgwAttachmentMap ?? {},
       );
-      this.createNetworkFirewallResources(vpcInScope, vpcStackInfo, nestedStack.includedTemplate, vpc.ref, subnets);
-      this.gatewayEndpoints(vpcInScope, vpcStackInfo, nestedStack.includedTemplate);
-      this.addSsmParameter({
+      this.createNetworkFirewallResources(
+        vpcInScope,
+        nestedStackResources,
+        nestedStack.includedTemplate,
+        vpc.ref,
+        subnets,
+      );
+      this.gatewayEndpoints(vpcInScope, nestedStackResources, nestedStack.includedTemplate);
+      this.scope.addSsmParameter({
         logicalId: pascalCase(`SsmParam${pascalCase(vpcInScope.name)}VpcId`),
         parameterName: this.scope.getSsmPath(SsmResourceType.VPC, [vpcInScope.name]),
         stringValue: vpc.ref,
+        scope: nestedStackResources.getStackKey(),
       });
       this.scope.addAseaResource(AseaResourceType.EC2_VPC, vpcInScope.name);
-      this.createSsmParameters(nestedStack.includedTemplate);
-    }
-  }
-
-  private addSsmParameter(props: { logicalId: string; parameterName: string; stringValue: string }) {
-    this.ssmParameters.push({
-      logicalId: props.logicalId,
-      parameterName: props.parameterName,
-      stringValue: props.stringValue,
-    });
-  }
-
-  /**
-   * This method creates SSM parameters stored in the `NestedStack.ssmParameters` array.
-   * If more than five parameters are defined, the method adds a `dependsOn` statement
-   * to remaining parameters in order to avoid API throttling issues.
-   */
-  private createSsmParameters(scope: CfnInclude): void {
-    let index = 1;
-    const parameterMap = new Map<number, cdk.aws_ssm.StringParameter>();
-
-    for (const parameterItem of this.ssmParameters) {
-      // Create parameter
-      const parameter = new cdk.aws_ssm.StringParameter(scope, parameterItem.logicalId, {
-        parameterName: parameterItem.parameterName,
-        stringValue: parameterItem.stringValue,
-      });
-      parameterMap.set(index, parameter);
-
-      // Add a dependency for every 5 parameters
-      if (index > 5) {
-        const dependsOnParam = parameterMap.get(index - (index % 5));
-        if (!dependsOnParam) {
-          this.scope.addLogs(
-            LogLevel.ERROR,
-            `Error creating SSM parameter ${parameterItem.parameterName}: previous SSM parameter undefined`,
-          );
-          throw new Error(`Configuration validation failed at runtime.`);
-        }
-        parameter.node.addDependency(dependsOnParam);
-      }
-      // Increment index
-      index += 1;
     }
   }
 
@@ -233,16 +185,11 @@ export class VpcResources extends AseaResource {
     if (!this.props.globalConfig.externalLandingZoneResources?.templateMap) {
       return;
     }
-    const vpcStacksInfo = this.props.globalConfig.externalLandingZoneResources.templateMap.filter(
-      stack =>
-        stack.accountKey === this.stackInfo.accountKey &&
-        stack.phase === 1 &&
-        stack.region === this.stackInfo.region &&
-        stack.nestedStack,
-    );
+    const vpcStacksInfo = this.scope.nestedStackResources ?? {};
+
     let vpcId: string | undefined;
-    for (const vpcStackInfo of vpcStacksInfo) {
-      const vpcResource = this.findResourceByTypeAndTag(vpcStackInfo.resources, RESOURCE_TYPE.VPC, vpcName);
+    for (const [, vpcStackInfo] of Object.entries(vpcStacksInfo)) {
+      const vpcResource = this.findResourceByTypeAndTag(vpcStackInfo.cfnResources ?? [], RESOURCE_TYPE.VPC, vpcName);
       if (vpcResource) {
         vpcId = vpcResource.physicalResourceId;
         break;
@@ -251,7 +198,7 @@ export class VpcResources extends AseaResource {
     return vpcId;
   }
 
-  private addTagsToSharedEndpointVpcs(currentVpc: cdk.aws_ec2.CfnVPC, vpcPhysicalId: string, props: VpcResourcesProps) {
+  private addTagsToSharedEndpointVpcs(currentVpc: cdk.aws_ec2.CfnVPC, vpcPhysicalId: string, props: AseaResourceProps) {
     const vpcs = props.networkConfig.vpcs;
     const centralEndpointAccount = this.getCentralEndpointAccount(vpcs);
     const accountsConfig = props.accountsConfig;
@@ -278,32 +225,31 @@ export class VpcResources extends AseaResource {
   }
 
   private setupInternetGateway(
-    vpcStackInfo: NestedAseaStackInfo,
+    nestedStackResources: ImportStackResources,
     nestedStack: cdk.cloudformation_include.IncludedNestedStack,
     vpcConfig: VpcConfig | VpcTemplatesConfig,
   ) {
-    const internetGatewayInfo = vpcStackInfo.resources.filter(
-      cfnResource => cfnResource.resourceType === RESOURCE_TYPE.INTERNET_GATEWAY,
-    )?.[0];
+    const internetGatewayInfo = nestedStackResources.getResourcesByType(RESOURCE_TYPE.INTERNET_GATEWAY)?.[0];
     if (vpcConfig.internetGateway && internetGatewayInfo) {
       const internetGateway = nestedStack.includedTemplate.getResource(
         internetGatewayInfo.logicalResourceId,
       ) as CfnInternetGateway;
-      this.addSsmParameter({
+      this.scope.addSsmParameter({
         logicalId: pascalCase(`SsmParam${pascalCase(vpcConfig.name)}InternetGatewayId`),
         parameterName: this.scope.getSsmPath(SsmResourceType.IGW, [vpcConfig.name]),
         stringValue: internetGateway.ref,
+        scope: nestedStackResources.getStackKey(),
       });
       this.scope.addAseaResource(AseaResourceType.EC2_IGW, vpcConfig.name);
     }
   }
 
   private setupVpnGateway(
-    vpcStackInfo: NestedAseaStackInfo,
+    nestedStackResources: ImportStackResources,
     nestedStack: cdk.cloudformation_include.IncludedNestedStack,
     vpcConfig: VpcConfig | VpcTemplatesConfig,
   ) {
-    const virtualPrivateGatewayInfo = vpcStackInfo.resources.filter(
+    const virtualPrivateGatewayInfo = nestedStackResources.cfnResources?.filter(
       cfnResource => cfnResource.resourceType === RESOURCE_TYPE.VPN_GATEWAY,
     )?.[0];
     if (vpcConfig.virtualPrivateGateway && virtualPrivateGatewayInfo) {
@@ -311,28 +257,31 @@ export class VpcResources extends AseaResource {
         virtualPrivateGatewayInfo.logicalResourceId,
       ) as CfnVPNGateway;
       virtualPrivateGateway.amazonSideAsn = vpcConfig.virtualPrivateGateway.asn;
-      this.addSsmParameter({
+      this.scope.addSsmParameter({
         logicalId: pascalCase(`SsmParam${pascalCase(vpcConfig.name)}VirtualPrivateGatewayId`),
         parameterName: this.scope.getSsmPath(SsmResourceType.VPN_GW, [vpcConfig.name]),
         stringValue: virtualPrivateGateway.ref,
+        scope: nestedStackResources.getStackKey(),
       });
       this.scope.addAseaResource(AseaResourceType.EC2_VPN_GW, vpcConfig.name);
     }
   }
 
   private createNatGateways(
-    vpcStackInfo: NestedAseaStackInfo,
+    nestedStackResources: ImportStackResources,
     vpcStack: CfnInclude,
     vpcItem: VpcConfig | VpcTemplatesConfig,
     subnets: { [name: string]: CfnSubnet },
   ) {
-    const natGatewayResources = this.filterResourcesByType(vpcStackInfo.resources, RESOURCE_TYPE.NAT_GATEWAY);
-    if (vpcItem.natGateways?.length === 0 && natGatewayResources.length > 0) {
+    if (!vpcItem.natGateways || vpcItem.natGateways?.length === 0) {
       this.scope.addLogs(LogLevel.WARN, `NAT Gateways are removed from configuration.`);
       return;
     }
-    for (const natGatewayItem of vpcItem.natGateways ?? []) {
-      const natGatewayResource = this.findResourceByTag(natGatewayResources, natGatewayItem.name);
+    for (const natGatewayItem of vpcItem.natGateways) {
+      const natGatewayResource = nestedStackResources.getResourceByTypeAndTag(
+        RESOURCE_TYPE.NAT_GATEWAY,
+        natGatewayItem.name,
+      );
       if (!natGatewayResource) continue; // NAT Gateway is not managed by ASEA
       const natGateway = vpcStack.getResource(natGatewayResource.logicalResourceId) as CfnNatGateway;
       let subnetId = subnets[natGatewayItem.subnet].ref;
@@ -345,10 +294,11 @@ export class VpcResources extends AseaResource {
         // Update SubnetId only if subnet is created
         natGateway.subnetId = subnetId;
       }
-      this.addSsmParameter({
+      this.scope.addSsmParameter({
         logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(natGatewayItem.name)}NatGatewayId`),
         parameterName: this.scope.getSsmPath(SsmResourceType.NAT_GW, [vpcItem.name, natGatewayItem.name]),
         stringValue: natGateway.ref,
+        scope: nestedStackResources.getStackKey(),
       });
       this.scope.addAseaResource(AseaResourceType.NAT_GATEWAY, `${vpcItem.name}/${natGatewayItem.name}`);
     }
@@ -356,22 +306,23 @@ export class VpcResources extends AseaResource {
 
   private createSubnets(
     vpcItem: VpcConfig | VpcTemplatesConfig,
-    vpcStackInfo: NestedAseaStackInfo,
-    vpcStack: CfnInclude,
+    nestedStackResources: ImportStackResources,
+    nestedStack: CfnInclude,
   ) {
     const subnets: { [name: string]: CfnSubnet } = {};
     for (const subnetItem of vpcItem.subnets ?? []) {
-      const subnetResource = this.getSubnetResourceByTag(subnetItem.name, vpcStackInfo);
+      const subnetResource = nestedStackResources.getResourceByTypeAndTag(RESOURCE_TYPE.SUBNET, subnetItem.name);
       if (!subnetResource) continue;
-      const subnet = vpcStack.getResource(subnetResource.logicalResourceId) as CfnSubnet;
+      const subnet = nestedStack.getResource(subnetResource.logicalResourceId) as CfnSubnet;
       subnet.cidrBlock = subnetItem.ipv4CidrBlock;
       // LZA Config accepts only 'a' for 'us-east-1a' or integer
       subnet.availabilityZone = `${vpcItem.region}${subnetItem.availabilityZone}`;
       subnet.mapPublicIpOnLaunch = subnetItem.mapPublicIpOnLaunch;
-      this.addSsmParameter({
+      this.scope.addSsmParameter({
         logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(subnetItem.name)}SubnetId`),
         parameterName: this.scope.getSsmPath(SsmResourceType.SUBNET, [vpcItem.name, subnetItem.name]),
         stringValue: subnet.ref,
+        scope: nestedStackResources.getStackKey(),
       });
       this.scope.addAseaResource(AseaResourceType.EC2_SUBNET, `${vpcItem.name}/${subnetItem.name}`);
       subnets[subnetItem.name] = subnet;
@@ -381,29 +332,28 @@ export class VpcResources extends AseaResource {
 
   private createSecurityGroups(
     vpcItem: VpcConfig | VpcTemplatesConfig,
-    vpcStackInfo: NestedAseaStackInfo,
+    nestedStackResources: ImportStackResources,
     vpcStack: CfnInclude,
   ) {
     const securityGroupsMap = new Map<string, string>();
     const securityGroupPhysicalIdMap = new Map<string, string>();
     const securityGroupVpc = vpcItem.name;
     for (const securityGroupItem of vpcItem.securityGroups ?? []) {
-      const existingSecurityGroup = this.findResourceByName(
-        vpcStackInfo.resources,
-        'GroupName',
-        securityGroupItem.name,
-      );
-      if (!existingSecurityGroup) continue;
+      const existingSecurityGroup = nestedStackResources.getResourceByName('GroupName', securityGroupItem.name);
+      if (!existingSecurityGroup || !existingSecurityGroup.physicalResourceId) {
+        continue;
+      }
       const securityGroup = vpcStack.getResource(existingSecurityGroup.logicalResourceId) as CfnSecurityGroup;
       this.scope.addLogs(
         LogLevel.INFO,
         `Adding SSM Parameter for ${pascalCase(vpcItem.name) + pascalCase(securityGroupItem.name)}SecurityGroup`,
       );
 
-      this.addSsmParameter({
+      this.scope.addSsmParameter({
         logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(securityGroupItem.name)}SecurityGroup`),
         parameterName: this.scope.getSsmPath(SsmResourceType.SECURITY_GROUP, [vpcItem.name, securityGroupItem.name]),
         stringValue: securityGroup.ref,
+        scope: nestedStackResources.getStackKey(),
       });
       this.scope.addAseaResource(AseaResourceType.EC2_SECURITY_GROUP, `${vpcItem.name}/${securityGroupItem.name}`);
       securityGroupsMap.set(securityGroupItem.name, existingSecurityGroup.logicalResourceId);
@@ -839,21 +789,24 @@ export class VpcResources extends AseaResource {
 
   private createTransitGatewayAttachments(
     vpcItem: VpcConfig | VpcTemplatesConfig,
-    vpcStackInfo: NestedAseaStackInfo,
-    vpcStack: CfnInclude,
+    nestedStackResources: ImportStackResources,
+    nestedStack: CfnInclude,
     subnetRefs: { [name: string]: CfnSubnet },
   ) {
     const tgwAttachmentMap: { [name: string]: string } = {};
-    const tgwAttachmentResources = this.filterResourcesByType(vpcStackInfo.resources, RESOURCE_TYPE.TGW_ATTACHMENT);
+    const tgwAttachmentResources = nestedStackResources.getResourcesByType(RESOURCE_TYPE.TGW_ATTACHMENT);
     if (tgwAttachmentResources.length === 0) return;
     if (vpcItem.transitGatewayAttachments?.length === 0 && tgwAttachmentResources.length > 0) {
       this.scope.addLogs(LogLevel.WARN, `TGW Attachment is removed from VPC "${vpcItem.name}" configuration`);
       return;
     }
     for (const tgwAttachmentItem of vpcItem.transitGatewayAttachments ?? []) {
-      const tgwAttachmentResource = this.findResourceByTag(tgwAttachmentResources, `${tgwAttachmentItem.name}`);
+      const tgwAttachmentResource = nestedStackResources.getResourceByTypeAndTag(
+        RESOURCE_TYPE.TGW_ATTACHMENT,
+        `${tgwAttachmentItem.name}`,
+      );
       if (!tgwAttachmentResource) continue;
-      const tgwAttachment = vpcStack.getResource(
+      const tgwAttachment = nestedStack.getResource(
         tgwAttachmentResource.logicalResourceId,
       ) as CfnTransitGatewayAttachment;
       const subnetIds: string[] = [];
@@ -868,12 +821,13 @@ export class VpcResources extends AseaResource {
       });
       // Only Subnets can be updated in TGW Attachment.
       tgwAttachment.subnetIds = subnetIds;
-      this.addSsmParameter({
+      this.scope.addSsmParameter({
         logicalId: pascalCase(
           `SsmParam${pascalCase(vpcItem.name) + pascalCase(tgwAttachmentItem.name)}TransitGatewayAttachmentId`,
         ),
         parameterName: this.scope.getSsmPath(SsmResourceType.TGW_ATTACHMENT, [vpcItem.name, tgwAttachmentItem.name]),
         stringValue: tgwAttachment.ref,
+        scope: nestedStackResources.getStackKey(),
       });
       this.scope.addAseaResource(
         AseaResourceType.TRANSIT_GATEWAY_ATTACHMENT,
@@ -888,14 +842,18 @@ export class VpcResources extends AseaResource {
     if (!this.props.globalConfig.externalLandingZoneResources?.templateMap) {
       return;
     }
-    const tgwStackMapping = this.props.globalConfig.externalLandingZoneResources.templateMap.find(
-      stackInfo =>
-        stackInfo.phase === 0 &&
-        stackInfo.accountKey === this.stackInfo.accountKey &&
-        stackInfo.region === this.stackInfo.region,
+    const mapping = this.props.globalConfig.externalLandingZoneResources.templateMap;
+    const tgwStackMappingKey = Object.keys(mapping).find(
+      key =>
+        mapping[key].phase === '0' &&
+        mapping[key].accountKey === this.stackInfo.accountKey &&
+        mapping[key].region === this.stackInfo.region,
     );
+    if (!tgwStackMappingKey) {
+      return;
+    }
     const tgwRouteTableResources = this.filterResourcesByType(
-      tgwStackMapping?.resources ?? [],
+      mapping[tgwStackMappingKey].cfnResources,
       RESOURCE_TYPE.TRANSIT_GATEWAY_ROUTE_TABLE,
     );
     const tgwRouteTableResource = this.findResourceByTag(tgwRouteTableResources, routeTableName);
@@ -904,11 +862,11 @@ export class VpcResources extends AseaResource {
 
   private createTransitGatewayRouteTablePropagation(
     vpcItem: VpcConfig | VpcTemplatesConfig,
-    vpcStackInfo: NestedAseaStackInfo,
-    vpcStack: CfnInclude,
+    nestedStackResources: ImportStackResources,
+    nestedStack: CfnInclude,
     tgwAttachMap: { [name: string]: string },
   ) {
-    const tgwPropagations = this.filterResourcesByType(vpcStackInfo.resources, RESOURCE_TYPE.TGW_PROPAGATION);
+    const tgwPropagations = nestedStackResources.getResourcesByType(RESOURCE_TYPE.TGW_PROPAGATION);
     if (tgwPropagations.length === 0) return;
     const createPropagations = (tgwAttachmentItem: TransitGatewayAttachmentConfig) => {
       for (const routeTableItem of tgwAttachmentItem.routeTablePropagations ?? []) {
@@ -920,7 +878,7 @@ export class VpcResources extends AseaResource {
               this.getTgwRouteTableId(routeTableItem),
         );
         if (!tgwPropagationRes) continue;
-        const tgwPropagation = vpcStack.getResource(
+        const tgwPropagation = nestedStack.getResource(
           tgwPropagationRes.logicalResourceId,
         ) as cdk.aws_ec2.CfnTransitGatewayRouteTablePropagation;
         if (!tgwPropagation) {
@@ -945,11 +903,11 @@ export class VpcResources extends AseaResource {
 
   private createTransitGatewayRouteTableAssociation(
     vpcItem: VpcConfig | VpcTemplatesConfig,
-    vpcStackInfo: NestedAseaStackInfo,
-    vpcStack: CfnInclude,
+    nestedStackResources: ImportStackResources,
+    nestedStack: CfnInclude,
     tgwAttachMap: { [name: string]: string },
   ) {
-    const tgwAssociations = this.filterResourcesByType(vpcStackInfo.resources, RESOURCE_TYPE.TGW_ASSOCIATION);
+    const tgwAssociations = nestedStackResources.getResourcesByType(RESOURCE_TYPE.TGW_ASSOCIATION);
     if (tgwAssociations.length === 0) return;
     const createAssociations = (tgwAttachmentItem: TransitGatewayAttachmentConfig) => {
       for (const routeTableItem of tgwAttachmentItem.routeTableAssociations ?? []) {
@@ -961,7 +919,7 @@ export class VpcResources extends AseaResource {
               this.getTgwRouteTableId(routeTableItem),
         );
         if (!tgwAssociationRes) continue;
-        const tgwAssociation = vpcStack.getResource(
+        const tgwAssociation = nestedStack.getResource(
           tgwAssociationRes.logicalResourceId,
         ) as cdk.aws_ec2.CfnTransitGatewayRouteTableAssociation;
         if (!tgwAssociation) {
@@ -984,16 +942,21 @@ export class VpcResources extends AseaResource {
     (vpcItem.transitGatewayAttachments ?? []).map(createAssociations);
   }
 
-  createRouteTables(vpcItem: VpcConfig | VpcTemplatesConfig, vpcStackInfo: NestedAseaStackInfo, vpcStack: CfnInclude) {
-    const existingRouteTablesMapping = this.filterResourcesByType(vpcStackInfo.resources, RESOURCE_TYPE.ROUTE_TABLE);
+  createRouteTables(
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    nestedStackResources: ImportStackResources,
+    vpcStack: CfnInclude,
+  ) {
+    const existingRouteTablesMapping = nestedStackResources.getResourcesByType(RESOURCE_TYPE.ROUTE_TABLE);
     for (const routeTableItem of vpcItem.routeTables ?? []) {
       const routeTableResource = this.findResourceByTag(existingRouteTablesMapping, routeTableItem.name);
       if (!routeTableResource) continue;
       const routeTable = vpcStack.getResource(routeTableResource.logicalResourceId) as CfnRouteTable;
-      this.addSsmParameter({
+      this.scope.addSsmParameter({
         logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name)}${pascalCase(routeTableItem.name)}RouteTableId`),
         parameterName: this.scope.getSsmPath(SsmResourceType.ROUTE_TABLE, [vpcItem.name, routeTableItem.name]),
         stringValue: routeTable.ref,
+        scope: nestedStackResources.getStackKey(),
       });
       this.scope.addAseaResource(AseaResourceType.ROUTE_TABLE, `${vpcItem.name}/${routeTableItem.name}`);
     }
@@ -1005,18 +968,12 @@ export class VpcResources extends AseaResource {
    * @returns
    */
   private getVpcResourceByTag(vpcName: string) {
-    for (const nestedStackInfo of this.nestedStacksInfo) {
-      const vpcResources = nestedStackInfo.resources.filter(
-        cfnResource => cfnResource.resourceType === RESOURCE_TYPE.VPC,
-      );
-      const vpcResource = vpcResources.find(cfnResource =>
-        cfnResource.resourceMetadata['Properties'].Tags.find(
-          (tag: { Key: string; Value: string }) => tag.Key === 'Name' && tag.Value === vpcName,
-        ),
-      );
+    for (const [, nestedStackInfo] of Object.entries(this.scope.nestedStackResources ?? {})) {
+      const vpcResource = nestedStackInfo.getResourceByTypeAndTag(RESOURCE_TYPE.VPC, vpcName);
       if (vpcResource) {
         return {
-          stackInfo: nestedStackInfo,
+          nestedStackResources: nestedStackInfo,
+          nestedStack: this.scope.nestedStacks[nestedStackInfo.getStackKey()],
           resource: vpcResource,
         };
       }
@@ -1024,30 +981,9 @@ export class VpcResources extends AseaResource {
     return;
   }
 
-  /**
-   * Find Subnet Resource by tag and nestedStackInfo of VPC
-   * @param vpcName
-   * @returns
-   */
-  private getSubnetResourceByTag(subnetName: string, nestedStackInfo: NestedAseaStackInfo) {
-    const subnetResources = nestedStackInfo.resources.filter(
-      cfnResource => cfnResource.resourceType === RESOURCE_TYPE.SUBNET,
-    );
-    const subnetResource = this.findResourceByTag(subnetResources, subnetName);
-    if (subnetResource) {
-      return subnetResource;
-    }
-    return;
-  }
-
-  private getAdditionalCidrs(stackInfo: NestedAseaStackInfo) {
-    return stackInfo.resources.filter(cfnResource => cfnResource.resourceType === RESOURCE_TYPE.CIDR_BLOCK);
-  }
-
-  private deleteAseaNetworkFirewallRuleGroups(vpcStackInfo: NestedAseaStackInfo, vpcStack: CfnInclude) {
+  private deleteAseaNetworkFirewallRuleGroups(nestedStackResources: ImportStackResources) {
     const networkFirewallConfig = this.props.networkConfig.centralNetworkServices?.networkFirewall;
-    const firewallRuleGroupResources = this.filterResourcesByType(
-      vpcStackInfo.resources,
+    const firewallRuleGroupResources = nestedStackResources.getResourcesByType(
       RESOURCE_TYPE.NETWORK_FIREWALL_RULE_GROUP,
     );
     if (firewallRuleGroupResources.length === 0) {
@@ -1065,28 +1001,29 @@ export class VpcResources extends AseaResource {
       }
 
       this.scope.addLogs(LogLevel.INFO, `Removing NFW Rule Group: ${firewallRuleGroupResource.logicalResourceId}`);
-      vpcStack.node.tryRemoveChild(firewallRuleGroupResource.logicalResourceId);
+      this.scope.addDeleteFlagForNestedResource(
+        nestedStackResources.getStackKey(),
+        firewallRuleGroupResource.logicalResourceId,
+      );
     }
   }
 
-  private deleteAseaNetworkFirewallPolicy(vpcStackInfo: NestedAseaStackInfo, vpcStack: CfnInclude) {
-    const firewallResources = this.filterResourcesByType(vpcStackInfo.resources, RESOURCE_TYPE.NETWORK_FIREWALL_POLICY);
+  private deleteAseaNetworkFirewallPolicy(nestedStack: ImportStackResources) {
+    const firewallResources = nestedStack.getResourcesByType(RESOURCE_TYPE.NETWORK_FIREWALL_POLICY);
     if (firewallResources.length === 0) {
       return;
     }
     const aseaManagedPolicy = firewallResources[0];
 
     this.scope.addLogs(LogLevel.INFO, `Removing NFW Policy: ${aseaManagedPolicy.logicalResourceId}`);
-    vpcStack.node.tryRemoveChild(aseaManagedPolicy.logicalResourceId);
   }
 
   private addFirewallLoggingConfiguration(
-    vpcStackInfo: NestedAseaStackInfo,
+    nestedStackResources: ImportStackResources,
     vpcStack: CfnInclude,
     firewallItem: NfwFirewallConfig,
   ) {
-    const loggingConfigurationResource = this.filterResourcesByType(
-      vpcStackInfo.resources,
+    const loggingConfigurationResource = nestedStackResources.getResourcesByType(
       RESOURCE_TYPE.NETWORK_FIREWALL_LOGGING,
     );
     if (!loggingConfigurationResource) return;
@@ -1132,7 +1069,7 @@ export class VpcResources extends AseaResource {
 
   private createNetworkFirewall(
     vpcItem: VpcConfig | VpcTemplatesConfig,
-    vpcStackInfo: NestedAseaStackInfo,
+    nestedStackResources: ImportStackResources,
     vpcStack: CfnInclude,
     vpcId: string,
     subnets: { [name: string]: CfnSubnet },
@@ -1141,7 +1078,7 @@ export class VpcResources extends AseaResource {
     const firewallsConfig = networkFirewallConfig?.firewalls.filter(
       firewallConfig => firewallConfig && firewallConfig.vpc === vpcItem.name,
     );
-    const firewallResources = this.filterResourcesByType(vpcStackInfo.resources, RESOURCE_TYPE.NETWORK_FIREWALL);
+    const firewallResources = nestedStackResources.getResourcesByType(RESOURCE_TYPE.NETWORK_FIREWALL);
 
     // If there are not any ASEA managed firewalls in resource mapping continue
     if (firewallResources.length === 0) {
@@ -1153,7 +1090,10 @@ export class VpcResources extends AseaResource {
       this.scope.addLogs(LogLevel.INFO, `No Firewall found in configuration`);
       for (const firewallResource of firewallResources) {
         this.scope.addLogs(LogLevel.WARN, `Removing firewall ${firewallResource.physicalResourceId} from ASEA stack`);
-        this.scope.node.tryRemoveChild(firewallResource.logicalResourceId);
+        this.scope.addDeleteFlagForAseaResource({
+          logicalId: firewallResource.logicalResourceId,
+          type: RESOURCE_TYPE.NETWORK_FIREWALL,
+        });
       }
       return;
     }
@@ -1164,7 +1104,10 @@ export class VpcResources extends AseaResource {
       const firewallConfig = firewallsConfig.find(nfw => nfw.name === firewallName);
       if (!firewallConfig) {
         this.scope.addLogs(LogLevel.WARN, `Removing firewall ${firewallResource.physicalResourceId} from ASEA stack`);
-        vpcStack.node.tryRemoveChild(firewallResource.logicalResourceId);
+        this.scope.addDeleteFlagForNestedResource(
+          nestedStackResources.getStackKey(),
+          firewallResource.logicalResourceId,
+        );
         return;
       }
     }
@@ -1185,17 +1128,18 @@ export class VpcResources extends AseaResource {
 
       if (this.props.stage === AcceleratorStage.IMPORT_ASEA_RESOURCES) {
         const firewallResource = this.findResourceByName(firewallResources, 'FirewallName', firewallItem.name);
-        if (!firewallResource) continue;
-        this.ssmParameters.push({
+        if (!firewallResource || !firewallResource.physicalResourceId) continue;
+        this.scope.addSsmParameter({
           logicalId: pascalCase(`SsmParam${pascalCase(firewallItem.vpc) + pascalCase(firewallItem.name)}FirewallArn`),
           parameterName: this.scope.getSsmPath(SsmResourceType.NFW, [firewallItem.vpc, firewallItem.name]),
-          stringValue: firewallResource?.physicalResourceId,
+          stringValue: firewallResource.physicalResourceId,
+          scope: nestedStackResources.getStackKey(),
         });
       }
 
       this.scope.addAseaResource(AseaResourceType.NFW, firewallItem.name);
       if (this.props.stage === AcceleratorStage.POST_IMPORT_ASEA_RESOURCES) {
-        const region = vpcStackInfo.region;
+        const region = nestedStackResources.stackMapping.region;
         const partition = this.props.partition;
         const delegatedAdminAccountId = this.props.accountsConfig.getAccountId(
           this.props.networkConfig.centralNetworkServices?.delegatedAdminAccount ?? '',
@@ -1211,11 +1155,12 @@ export class VpcResources extends AseaResource {
           firewallPolicyChangeProtection: firewallItem.firewallPolicyChangeProtection,
           subnetChangeProtection: firewallItem.subnetChangeProtection,
         });
-        this.addFirewallLoggingConfiguration(vpcStackInfo, vpcStack, firewallItem);
-        this.ssmParameters.push({
+        this.addFirewallLoggingConfiguration(nestedStackResources, vpcStack, firewallItem);
+        this.scope.addSsmParameter({
           logicalId: pascalCase(`SsmParam${pascalCase(firewallItem.vpc) + pascalCase(firewallItem.name)}FirewallArn`),
           parameterName: this.scope.getSsmPath(SsmResourceType.NFW, [firewallItem.vpc, firewallItem.name]),
           stringValue: firewall.attrFirewallArn,
+          scope: nestedStackResources.getStackKey(),
         });
       }
     }
@@ -1251,24 +1196,24 @@ export class VpcResources extends AseaResource {
 
   private createNetworkFirewallResources(
     vpcItem: VpcConfig | VpcTemplatesConfig,
-    vpcStackInfo: NestedAseaStackInfo,
+    nestedStackResources: ImportStackResources,
     vpcStack: CfnInclude,
     vpcId: string,
     subnets: { [name: string]: CfnSubnet },
   ) {
     if (this.props.stage === AcceleratorStage.IMPORT_ASEA_RESOURCES) {
-      this.createNetworkFirewall(vpcItem, vpcStackInfo, vpcStack, vpcId, subnets);
+      this.createNetworkFirewall(vpcItem, nestedStackResources, vpcStack, vpcId, subnets);
     }
     if (this.props.stage === AcceleratorStage.POST_IMPORT_ASEA_RESOURCES) {
-      this.deleteAseaNetworkFirewallRuleGroups(vpcStackInfo, vpcStack);
-      this.deleteAseaNetworkFirewallPolicy(vpcStackInfo, vpcStack);
-      this.createNetworkFirewall(vpcItem, vpcStackInfo, vpcStack, vpcId, subnets);
+      this.deleteAseaNetworkFirewallRuleGroups(nestedStackResources);
+      this.deleteAseaNetworkFirewallPolicy(nestedStackResources);
+      this.createNetworkFirewall(vpcItem, nestedStackResources, vpcStack, vpcId, subnets);
     }
   }
 
   private gatewayEndpoints(
     vpcItem: VpcConfig | VpcTemplatesConfig,
-    vpcStackInfo: NestedAseaStackInfo,
+    nestedStackResources: ImportStackResources,
     vpcStack: CfnInclude,
   ) {
     /**
@@ -1308,7 +1253,7 @@ export class VpcResources extends AseaResource {
       getS3DynamoDbRouteTableIds(routeTableItem, routeTableId, s3EndpointRouteTables, dynamodbEndpointRouteTables);
     }
     // ASEA Only creates VPC Endpoints in VPC Nested Stack
-    const gatewayEndpointResources = this.filterResourcesByType(vpcStackInfo.resources, RESOURCE_TYPE.VPC_ENDPOINT);
+    const gatewayEndpointResources = nestedStackResources.getResourcesByType(RESOURCE_TYPE.VPC_ENDPOINT);
     if (gatewayEndpointResources.length === 0) {
       return;
     } else if (!vpcItem.gatewayEndpoints?.endpoints) {
@@ -1336,10 +1281,11 @@ export class VpcResources extends AseaResource {
         });
       }
       endpoint.routeTableIds = routeTableIds;
-      this.ssmParameters.push({
+      this.scope.addSsmParameter({
         logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(endpointItem.service)}EndpointId`),
         parameterName: this.scope.getSsmPath(SsmResourceType.VPC_ENDPOINT, [vpcItem.name, endpointItem.service]),
         stringValue: endpoint.ref,
+        scope: nestedStackResources.getStackKey(),
       });
       this.scope.addAseaResource(AseaResourceType.VPC_ENDPOINT, `${vpcItem.name}/${endpointItem.service}`);
     }

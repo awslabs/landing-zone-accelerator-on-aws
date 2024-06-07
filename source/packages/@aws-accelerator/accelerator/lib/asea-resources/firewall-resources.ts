@@ -14,35 +14,28 @@
 import { AseaResourceType, CfnResourceType } from '@aws-accelerator/config/lib/common/types';
 import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
 import { AseaResource, AseaResourceProps } from './resource';
-import { AseaStackInfo } from '@aws-accelerator/config';
 import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'pascal-case';
 import { SsmResourceType } from '@aws-accelerator/utils';
 
 const EC2_FIREWALL_INSTANCE_TYPE = 'AWS::EC2::Instance';
-const ASEA_PHASE_NUMBER_FIREWALL_INSTANCE = 2;
-
-type NestedAseaStackInfo = AseaStackInfo & { logicalResourceId: string };
-
-export interface FirewallResourcesProps extends AseaResourceProps {
-  /**
-   * Nested Stacks of current phase stack
-   */
-  nestedStacksInfo: NestedAseaStackInfo[];
-}
+const ASEA_PHASE_NUMBER_FIREWALL_INSTANCE = '2';
 
 /**
  * Handles EC2 Firewall Instances created by ASEA.
  * All EC2 Firewall Instances are deployed in Phase-2
  */
 export class FirewallResources extends AseaResource {
-  constructor(scope: ImportAseaResourcesStack, props: FirewallResourcesProps) {
+  constructor(scope: ImportAseaResourcesStack, props: AseaResourceProps) {
     super(scope, props);
-    const existingFirewallInstances = this.filterResourcesByType(props.stackInfo.resources, EC2_FIREWALL_INSTANCE_TYPE);
+    const existingFirewallInstances = this.scope.importStackResources.getResourcesByType(EC2_FIREWALL_INSTANCE_TYPE);
+    if (existingFirewallInstances.length === 0) {
+      return;
+    }
     this.processFirewallInstances(props, existingFirewallInstances);
   }
 
-  private processFirewallInstances(props: FirewallResourcesProps, existingFirewallInstances: CfnResourceType[]) {
+  private processFirewallInstances(props: AseaResourceProps, existingFirewallInstances: CfnResourceType[]) {
     if (props.stackInfo.phase !== ASEA_PHASE_NUMBER_FIREWALL_INSTANCE) {
       this.scope.addLogs(
         LogLevel.INFO,
@@ -56,12 +49,13 @@ export class FirewallResources extends AseaResource {
       const firewallInstanceName = this.getAseaFirewallInstanceNameFromTags(existingFirewallInstance);
 
       const firewallInstanceConfig = firewallConfigInstances?.find(
-        firewallConfigInstance => firewallConfigInstance.name === firewallInstanceName,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (firewallConfigInstance: { name: any }) => firewallConfigInstance.name === firewallInstanceName,
       );
 
       const firewallInstance = this.stack.getResource(
         existingFirewallInstance.logicalResourceId,
-      ) as unknown as cdk.aws_ec2.CfnInstance;
+      ) as cdk.aws_ec2.CfnInstance;
 
       //Leaving as temporary placeholder for deletion handler
       firewallInstanceConfig;
@@ -70,7 +64,7 @@ export class FirewallResources extends AseaResource {
       this.scope.addSsmParameter({
         logicalId: pascalCase(`SsmParam${pascalCase(firewallInstanceName)}`),
         parameterName: this.scope.getSsmPath(SsmResourceType.FIREWALL_INSTANCE, [firewallInstanceName]),
-        stringValue: existingFirewallInstance.physicalResourceId,
+        stringValue: existingFirewallInstance.physicalResourceId!,
       });
       this.scope.addAseaResource(AseaResourceType.FIREWALL_INSTANCE, firewallInstanceName);
     }
