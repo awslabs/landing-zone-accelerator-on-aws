@@ -491,6 +491,7 @@ export interface ISecurityHubStandardConfig {
    * Possible values are 'AWS Foundational Security Best Practices v1.0.0',
    * 'CIS AWS Foundations Benchmark v1.2.0',
    * 'CIS AWS Foundations Benchmark v1.4.0',
+   * 'CIS AWS Foundations Benchmark v3.0.0',
    * 'NIST Special Publication 800-53 Revision 5,
    * and 'PCI DSS v3.2.1'
    */
@@ -498,6 +499,7 @@ export interface ISecurityHubStandardConfig {
     | 'AWS Foundational Security Best Practices v1.0.0'
     | 'CIS AWS Foundations Benchmark v1.2.0'
     | 'CIS AWS Foundations Benchmark v1.4.0'
+    | 'CIS AWS Foundations Benchmark v3.0.0'
     | 'NIST Special Publication 800-53 Revision 5'
     | 'PCI DSS v3.2.1'
     | '';
@@ -862,6 +864,8 @@ export interface ISsmAutomationConfig {
  *           # https://docs.aws.amazon.com/securityhub/latest/userguide/cis-aws-foundations-benchmark.html#cis1v4-standard
  *           - Control1
  *           - Control2
+ *       - name: CIS AWS Foundations Benchmark v3.0.0
+ *         enable: true
  *       - name: NIST Special Publication 800-53 Revision 5
  *         enable: true
  *         controlsToDisable:
