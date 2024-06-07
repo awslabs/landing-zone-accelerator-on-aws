@@ -194,6 +194,24 @@ export class AcceleratorPipeline extends Construct {
 
     const enableAseaMigration = process.env['ENABLE_ASEA_MIGRATION']?.toLowerCase?.() === 'true';
 
+    let aseaMigrationModeEnvVariables: { [p: string]: codebuild.BuildEnvironmentVariable } | undefined;
+    if (enableAseaMigration) {
+      aseaMigrationModeEnvVariables = {
+        ENABLE_ASEA_MIGRATION: {
+          type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+          value: 'true',
+        },
+        ASEA_MAPPING_BUCKET: {
+          type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+          value: `${props.prefixes.accelerator}-lza-resource-mapping-${cdk.Stack.of(this).account}`.toLowerCase(),
+        },
+        ASEA_MAPPING_FILE: {
+          type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+          value: 'aseaMapping.json',
+        },
+      };
+    }
+
     // Get installer key
     this.installerKey = cdk.aws_kms.Key.fromKeyArn(
       this,
@@ -483,7 +501,10 @@ export class AcceleratorPipeline extends Construct {
               } --config-dir $CODEBUILD_SRC_DIR_Config && export LOG_LEVEL=${BuildLogLevel.ERROR} ; fi`,
               `if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && yarn run ts-node  packages/@aws-accelerator/accelerator/lib/prerequisites.ts --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION} --minimal; fi`,
               'cd packages/@aws-accelerator/accelerator',
-              `if [ -z "\${ACCELERATOR_STAGE}" ]; then for STAGE in "key" "logging" "organizations" "security-audit" "network-prep" "security" "operations" "identity-center" "network-vpc" "security-resources" "network-associations" "customizations" "finalize" "bootstrap"; do set -e && yarn run ts-node --transpile-only cdk.ts synth --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION} --stage $STAGE; done; fi`,
+              'export MAPPING_FILE_EXISTS="true"',
+              'aws s3api head-object --bucket $ASEA_MAPPING_BUCKET --key $ASEA_MAPPING_FILE || export MAPPING_FILE_EXISTS="false"',
+              `if [ -z "\${ACCELERATOR_STAGE}" ] && [ $CDK_OPTIONS = 'bootstrap' ] && [ $MAPPING_FILE_EXISTS = "true" ]; then for STAGE in "key" "logging" "organizations" "security-audit" "network-prep" "security" "operations" "identity-center" "network-vpc" "security-resources" "network-associations" "customizations" "finalize" "bootstrap"; do set -e && yarn run ts-node --transpile-only cdk.ts synth --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION} --stage $STAGE; done; fi`,
+              `if [ -z "\${ACCELERATOR_STAGE}" ] && [ $CDK_OPTIONS = 'bootstrap' ] && [ $MAPPING_FILE_EXISTS = "false" ]; then for STAGE in  "bootstrap"; do set -e && yarn run ts-node --transpile-only cdk.ts synth --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION} --stage $STAGE; done; fi`,
               `if [ ! -z "\${ACCELERATOR_STAGE}" ]; then yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION}; fi`,
               `if [ "diff" != "\${CDK_OPTIONS}" ]; then yarn run ts-node --transpile-only cdk.ts --require-approval never $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION} --app cdk.out; fi`,
               `if [ "diff" = "\${CDK_OPTIONS}" ]; then for STAGE in "key" "logging" "organizations" "security-audit" "network-prep" "security" "operations" "identity-center" "network-vpc" "security-resources" "network-associations" "customizations" "finalize" "bootstrap"; do set -e && yarn run ts-node --transpile-only cdk.ts --require-approval never $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION} --app cdk.out --stage $STAGE; done; find ./cdk.out -type f -name "*.diff" -exec cat "{}" \\;;  fi`,
@@ -571,6 +592,7 @@ export class AcceleratorPipeline extends Construct {
           },
           ...enableSingleAccountModeEnvVariables,
           ...pipelineAccountEnvVariables,
+          ...aseaMigrationModeEnvVariables,
         },
       },
       cache: codebuild.Cache.local(codebuild.LocalCacheMode.SOURCE),
