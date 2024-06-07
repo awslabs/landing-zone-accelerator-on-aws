@@ -322,6 +322,9 @@ exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
     },
     "TestAutoScalingServiceLinkedRoleCreateServiceLinkedRoleResourceC5B197D4": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "TestAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionLogGroup4DBD4D73",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [

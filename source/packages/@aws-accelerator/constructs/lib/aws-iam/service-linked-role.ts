@@ -76,7 +76,7 @@ export class ServiceLinkedRole extends Construct {
       environmentEncryption: props.environmentEncryptionKmsKey,
     });
 
-    new cdk.aws_logs.LogGroup(this, `${lambdaFunction.node.id}LogGroup`, {
+    const logGroup = new cdk.aws_logs.LogGroup(this, `${lambdaFunction.node.id}LogGroup`, {
       logGroupName: `/aws/lambda/${lambdaFunction.functionName}`,
       retention: props.cloudWatchLogRetentionInDays,
       encryptionKey: props.cloudWatchLogKmsKey,
@@ -97,6 +97,9 @@ export class ServiceLinkedRole extends Construct {
         uuid: uuidv4(), // Generates a new UUID to force the resource to update
       },
     });
+
+    // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
+    this.resource.node.addDependency(logGroup);
 
     this.roleArn = this.resource.getAtt('roleArn').toString();
     this.roleName = this.resource.getAtt('roleName').toString();

@@ -295,6 +295,9 @@ exports[`LaunchTemplate Construct(FirewallAutoScalingGroup):  Snapshot Test 1`] 
     },
     "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleResource1EB49BEA": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionLogGroupB0B4539B",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
