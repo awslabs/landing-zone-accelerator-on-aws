@@ -1245,6 +1245,10 @@ exports[`SecurityStack Construct(SecurityStack):  Snapshot Test 1`] = `
             "enable": true,
             "name": "CIS AWS Foundations Benchmark v1.4.0",
           },
+          {
+            "enable": true,
+            "name": "CIS AWS Foundations Benchmark v3.0.0",
+          },
         ],
       },
       "Type": "Custom::SecurityHubBatchEnableStandards",

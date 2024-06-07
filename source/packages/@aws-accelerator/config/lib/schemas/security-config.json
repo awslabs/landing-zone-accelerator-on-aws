@@ -1463,11 +1463,12 @@
           "type": "boolean"
         },
         "name": {
-          "description": "An enum value that specifies one of three security standards supported by Security Hub Possible values are 'AWS Foundational Security Best Practices v1.0.0', 'CIS AWS Foundations Benchmark v1.2.0', 'CIS AWS Foundations Benchmark v1.4.0', 'NIST Special Publication 800-53 Revision 5, and 'PCI DSS v3.2.1'",
+          "description": "An enum value that specifies one of three security standards supported by Security Hub Possible values are 'AWS Foundational Security Best Practices v1.0.0', 'CIS AWS Foundations Benchmark v1.2.0', 'CIS AWS Foundations Benchmark v1.4.0', 'CIS AWS Foundations Benchmark v3.0.0', 'NIST Special Publication 800-53 Revision 5, and 'PCI DSS v3.2.1'",
           "enum": [
             "AWS Foundational Security Best Practices v1.0.0",
             "CIS AWS Foundations Benchmark v1.2.0",
             "CIS AWS Foundations Benchmark v1.4.0",
+            "CIS AWS Foundations Benchmark v3.0.0",
             "NIST Special Publication 800-53 Revision 5",
             "PCI DSS v3.2.1",
             ""
