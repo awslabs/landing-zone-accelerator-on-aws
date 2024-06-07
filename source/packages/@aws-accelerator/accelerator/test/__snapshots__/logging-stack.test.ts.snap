@@ -261,6 +261,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
     },
     "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleResource5A765F9A": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunctionLogGroup3B94FCDE",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -1856,6 +1859,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
     },
     "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleResourceE203F878": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionLogGroupAF98D208",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -4902,6 +4908,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
     },
     "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleResource5A765F9A": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunctionLogGroup3B94FCDE",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -5459,6 +5468,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
     },
     "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleResourceE203F878": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionLogGroupAF98D208",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -9537,6 +9549,9 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
     },
     "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleResource5A765F9A": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunctionLogGroup3B94FCDE",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -10859,6 +10874,9 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
     },
     "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleResourceE203F878": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionLogGroupAF98D208",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
