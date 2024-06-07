@@ -1162,6 +1162,9 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
     },
     "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [

@@ -2195,6 +2195,9 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
     },
     "NetworkInspectiontestAsgFirewallAsgAutoScalingServiceLinkedRoleCreateServiceLinkedRoleResource284D5F40": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "NetworkInspectiontestAsgFirewallAsgAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunctionLogGroupF88900CB",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
