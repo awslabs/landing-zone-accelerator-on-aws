@@ -21,7 +21,6 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "aws-sdk": "2.1379.0",
     "@aws-sdk/client-service-catalog": "3.410.0",
     "@aws-sdk/client-iam": "3.410.0"
   },
