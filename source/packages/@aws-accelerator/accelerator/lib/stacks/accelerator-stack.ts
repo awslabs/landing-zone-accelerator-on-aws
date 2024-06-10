@@ -985,16 +985,18 @@ export abstract class AcceleratorStack extends cdk.Stack {
           : undefined;
         break;
       case AcceleratorKeyType.CLOUDWATCH_KEY:
-        key = this.isCloudWatchLogsGroupCMKEnabled
-          ? cdk.aws_kms.Key.fromKeyArn(
-              this,
-              'AcceleratorGetCloudWatchKey',
-              cdk.aws_ssm.StringParameter.valueForStringParameter(
+        if (!this.stackName.includes('Phase')) {
+          key = this.isCloudWatchLogsGroupCMKEnabled
+            ? cdk.aws_kms.Key.fromKeyArn(
                 this,
-                this.acceleratorResourceNames.parameters.cloudWatchLogCmkArn,
-              ),
-            )
-          : undefined;
+                'AcceleratorGetCloudWatchKey',
+                cdk.aws_ssm.StringParameter.valueForStringParameter(
+                  this,
+                  this.acceleratorResourceNames.parameters.cloudWatchLogCmkArn,
+                ),
+              )
+            : undefined;
+        }
         break;
       case AcceleratorKeyType.LAMBDA_KEY:
         key = this.isLambdaCMKEnabled
