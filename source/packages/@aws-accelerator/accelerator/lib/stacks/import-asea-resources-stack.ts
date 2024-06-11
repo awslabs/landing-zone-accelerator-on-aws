@@ -233,7 +233,10 @@ export class ImportAseaResourcesStack extends NetworkStack {
         continue;
       }
       let cfnParameter;
-      const parameter = this.importStackResources.getSSMParameterByName(parameterItem.parameterName);
+      const parameter = this.importStackResources.getResourceByPropertyIgnoreDeletionFlag(
+        'Name',
+        parameterItem.parameterName,
+      );
       if (parameter?.isDeleted) {
         continue;
       }

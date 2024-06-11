@@ -88,13 +88,13 @@ export class Groups extends AseaResource {
           identifier: groupName,
           logicalId: importGroup.logicalResourceId,
         });
-      }
-      // Add the delete flag to the ssm parameter created with the role.
-      const ssmResource = this.scope.importStackResources.getSSMParameterByName(
-        this.scope.getSsmPath(SsmResourceType.IAM_GROUP, [groupName]),
-      );
-      if (ssmResource) {
-        ssmResource.isDeleted = true;
+        // Add the delete flag to the ssm parameter created with the role.
+        const ssmResource = this.scope.importStackResources.getSSMParameterByName(
+          this.scope.getSsmPath(SsmResourceType.IAM_GROUP, [groupName]),
+        );
+        if (ssmResource) {
+          ssmResource.isDeleted = true;
+        }
       }
     }
   }
