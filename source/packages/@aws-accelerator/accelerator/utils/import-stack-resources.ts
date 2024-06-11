@@ -135,7 +135,13 @@ export class ImportStackResources {
   public getResourceByLogicalId(logicalId: string) {
     return this.cfnResources.find(cfnResource => cfnResource.logicalResourceId === logicalId && !cfnResource.isDeleted);
   }
-
+  public getResourceByPropertyIgnoreDeletionFlag(propertyName: string, propertyValue: string) {
+    return this.cfnResources.find(
+      cfnResource =>
+        cfnResource.resourceMetadata['Properties'][propertyName] &&
+        cfnResource.resourceMetadata['Properties'][propertyName] === propertyValue,
+    );
+  }
   public getResourceByProperty(propertyName: string, propertyValue: string) {
     return this.cfnResources.find(
       cfnResource =>
