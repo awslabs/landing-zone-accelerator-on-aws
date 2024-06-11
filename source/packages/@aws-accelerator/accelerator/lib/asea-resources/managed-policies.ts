@@ -83,7 +83,16 @@ export class ManagedPolicies extends AseaResource {
   private addDeletionFlagsForPolicies(policyItems: PolicyConfig[], resourceType: string) {
     const importPolicies = this.scope.importStackResources.getResourcesByType(resourceType);
     for (const importPolicy of importPolicies) {
-      const policyResource = this.scope.getResource(importPolicy.logicalResourceId) as cdk.aws_iam.CfnManagedPolicy;
+      let policyResource;
+      try {
+        policyResource = this.scope.getResource(importPolicy.logicalResourceId) as cdk.aws_iam.CfnManagedPolicy;
+      } catch (e) {
+        this.scope.addLogs(
+          LogLevel.WARN,
+          `Could not find resource ${importPolicy.logicalResourceId} in stack. No deletion flag needed.`,
+        );
+        continue;
+      }
       const policyName = policyResource.managedPolicyName;
       if (!policyName) {
         continue;
