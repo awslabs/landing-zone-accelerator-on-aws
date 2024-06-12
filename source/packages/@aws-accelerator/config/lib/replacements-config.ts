@@ -144,12 +144,25 @@ export class ReplacementsConfig implements i.IReplacementsConfig {
   }
 
   public preProcessBuffer(initialBuffer: string): string {
-    if (!this.validateOnly) {
-      if (this.accountsConfig) {
-        Handlebars.registerHelper('account', accountName => {
-          return this.accountsConfig?.getAccountId(accountName);
-        });
-      }
+    if (!this.validateOnly && this.accountsConfig) {
+      // Register the 'account' helper function with Handlebars
+      // only if 'validateOnly' is falsy and 'accountsConfig' is truthy
+      Handlebars.registerHelper('account', accountName => {
+        logger.debug(`Handlebars looking up account id for ${accountName}`);
+        // Get the account ID by calling the 'getAccountId' method on 'accountsConfig'
+        // with the provided 'accountName' if 'accountName' is truthy
+        // Otherwise, 'accountId' will be falsy (undefined)
+        const accountId = accountName && this.accountsConfig?.getAccountId(accountName);
+        logger.debug(
+          `Handlebars ${
+            accountId
+              ? `looking up account id for ${accountName}`
+              : 'account helper triggered by an undefined accountName'
+          }`,
+        );
+        // If 'accountId' is falsy, the function will implicitly return 'undefined'
+        return accountId;
+      });
     } else {
       Handlebars.registerHelper('account', accountName => {
         logger.debug(`Validating received account name ${accountName}, responding with generic account Id`);
