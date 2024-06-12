@@ -109,7 +109,7 @@ export function isIncluded(
 
 export function isRegionExcluded(regions: string[], currentRegion: string): boolean {
   if (regions?.includes(currentRegion)) {
-    logger.info(`[custom-stack] ${currentRegion} region explicitly excluded`);
+    logger.info(`${currentRegion} region explicitly excluded`);
     return true;
   }
   return false;
@@ -118,7 +118,7 @@ export function isRegionExcluded(regions: string[], currentRegion: string): bool
 export function isAccountExcluded(accounts: string[], currentAccount: string, accountsConfig: AccountsConfig): boolean {
   for (const account of accounts ?? []) {
     if (currentAccount === accountsConfig.getAccountId(account)) {
-      logger.info(`[custom-stack] ${account} account explicitly excluded`);
+      logger.info(`${account} account explicitly excluded`);
       return true;
     }
   }
@@ -135,12 +135,10 @@ export function isAccountIncluded(
     if (currentAccount === accountsConfig.getAccountId(account)) {
       const accountConfig = accountsConfig.getAccount(account);
       if (organizationConfig.isIgnored(accountConfig.organizationalUnit)) {
-        logger.info(
-          `[custom-stack] Account ${account} was not included as it is a member of an ignored organizational unit.`,
-        );
+        logger.info(`Account ${account} was not included as it is a member of an ignored organizational unit.`);
         return false;
       }
-      logger.info(`[custom-stack] ${account} account explicitly included`);
+      logger.info(`${account} account explicitly included`);
       return true;
     }
   }
@@ -164,9 +162,9 @@ export function isOrganizationalUnitIncluded(
       if (organizationalUnits.indexOf(account.organizationalUnit) != -1 || organizationalUnits.includes('Root')) {
         const ignored = organizationConfig.isIgnored(account.organizationalUnit);
         if (ignored) {
-          logger.info(`[custom-stack] ${account.organizationalUnit} is ignored and not included`);
+          logger.info(`${account.organizationalUnit} is ignored and not included`);
         }
-        logger.info(`[custom-stack] ${account.organizationalUnit} organizational unit included`);
+        logger.info(`${account.organizationalUnit} organizational unit included`);
         return true;
       }
     }
