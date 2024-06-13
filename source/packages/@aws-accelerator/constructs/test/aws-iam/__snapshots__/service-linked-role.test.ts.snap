@@ -295,6 +295,9 @@ exports[`ServiceLinkedRole Construct(ServiceLinkedRole):  Snapshot Test 1`] = `
     },
     "ServiceLinkedRoleCreateServiceLinkedRoleResource8BE1DC5C": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "ServiceLinkedRoleCreateServiceLinkedRoleFunctionLogGroupE011C075",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
