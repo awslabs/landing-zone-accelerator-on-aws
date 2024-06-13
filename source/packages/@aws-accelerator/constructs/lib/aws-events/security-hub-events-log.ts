@@ -73,7 +73,7 @@ export class SecurityHubEventsLog extends Construct {
         assetPath: path.join(__dirname, 'security-hub-event-log/dist'),
         description:
           'Creates a CloudWatch Logs Group to store SecurityHub findings and updates CW Log Group resource policy',
-        timeOut: cdk.Duration.seconds(60),
+        timeOut: cdk.Duration.minutes(3),
         environmentEncryptionKmsKey: props.lambdaKey,
         cloudWatchLogRetentionInDays: props.cloudWatchLogRetentionInDays,
         roleInitialPolicy: [

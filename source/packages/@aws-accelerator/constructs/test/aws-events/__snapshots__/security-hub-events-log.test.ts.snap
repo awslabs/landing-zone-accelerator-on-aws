@@ -101,7 +101,7 @@ exports[`SecurityHubEventsLog Construct(SecurityHubEventsLog):  Snapshot Test 1`
           ],
         },
         "Runtime": "nodejs18.x",
-        "Timeout": 60,
+        "Timeout": 180,
       },
       "Type": "AWS::Lambda::Function",
     },
