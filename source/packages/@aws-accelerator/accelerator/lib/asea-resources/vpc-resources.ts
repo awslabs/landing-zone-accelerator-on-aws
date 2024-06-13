@@ -1036,10 +1036,11 @@ export class VpcResources extends AseaResource {
         // Create log group and log configuration
         const logGroup = new cdk.aws_logs.LogGroup(
           vpcStack,
-          pascalCase(`${firewallItem.name}${logItem.type}LogGroup`),
+          pascalCase(`${this.scope.acceleratorPrefix}/Nfw/${firewallItem.name}/${logItem.type}`),
           {
             encryptionKey: this.scope.cloudwatchKey,
             retention: this.props.globalConfig.cloudwatchLogRetentionInDays,
+            logGroupName: `${this.scope.acceleratorPrefix}/Nfw/${firewallItem.name}/${logItem.type}`,
           },
         );
         destinationConfigs.push({
