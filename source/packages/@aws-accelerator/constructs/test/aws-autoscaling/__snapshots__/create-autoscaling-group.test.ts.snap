@@ -82,6 +82,7 @@ exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
           "LaunchTemplateId": "string",
           "Version": "string",
         },
+        "MaxInstanceLifetime": 86400,
         "MaxSize": "4",
         "MinSize": "1",
         "Tags": [

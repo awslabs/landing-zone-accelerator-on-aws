@@ -326,6 +326,7 @@ exports[`LaunchTemplate Construct(FirewallAutoScalingGroup):  Snapshot Test 1`] 
             ],
           },
         },
+        "MaxInstanceLifetime": 86400,
         "MaxSize": "4",
         "MinSize": "1",
         "Tags": [

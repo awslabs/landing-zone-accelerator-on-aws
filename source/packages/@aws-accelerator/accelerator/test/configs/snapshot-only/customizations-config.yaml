@@ -146,6 +146,7 @@ applications:
       subnets:
         - SharedServices-appVpc-PrivateSubnetA
         - SharedServices-appVpc-PrivateSubnetB
+      maxInstanceLifetime: 86400
 
     launchTemplate:
       name: appA-lt
@@ -253,6 +254,7 @@ applications:
       subnets:
         - SharedServices-appVpc-PrivateSubnetA
         - SharedServices-appVpc-PrivateSubnetB
+      maxInstanceLifetime: 86400
 
     launchTemplate:
       name: testTgAsg-lt
@@ -424,6 +426,7 @@ applications:
       subnets:
         - SharedServices-appVpc-PrivateSubnetA
         - SharedServices-appVpc-PrivateSubnetB
+      maxInstanceLifetime: 86400
   # target group, launch template and autoscaling added. Target group is tied to Autoscaling
   - name: appF
     # vpc name is taken from network-config.yaml under vpcs
@@ -582,6 +585,7 @@ applications:
       # target group names should match the names from targetGroup section
       subnets:
         - SharedServices-App-C
+      maxInstanceLifetime: 86400
 
     launchTemplate:
       name: appH-lt
@@ -708,6 +712,7 @@ firewalls:
         subnets:
           - Network-Inspection-A
           - Network-Inspection-B
+        maxInstanceLifetime: 86400
       configFile: asg-config.txt
       licenseFile: license.lic
       launchTemplate:

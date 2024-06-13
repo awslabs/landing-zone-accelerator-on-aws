@@ -35,6 +35,7 @@ new AutoscalingGroup(stack, 'Test', {
   lambdaKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
   cloudWatchLogKmsKey: new cdk.aws_kms.Key(stack, 'CustomKeyCloudWatch', {}),
   cloudWatchLogRetentionInDays: 3653,
+  maxInstanceLifetime: 86400,
   tags: [{ key: 'key', value: 'value' }],
 });
 

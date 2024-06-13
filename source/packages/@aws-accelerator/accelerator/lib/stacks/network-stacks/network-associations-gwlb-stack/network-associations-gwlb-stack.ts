@@ -707,6 +707,7 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
       healthCheckType: group.healthCheckType,
       targetGroups: group.targetGroups ? this.processTargetGroups(group.targetGroups) : undefined,
       subnets: this.processSubnets(group.subnets, vpc),
+      maxInstanceLifetime: group.maxInstanceLifetime,
     };
   }
 

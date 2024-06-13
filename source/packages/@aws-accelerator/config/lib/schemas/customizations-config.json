@@ -338,6 +338,10 @@
           "$ref": "#/definitions/NonEmptyString",
           "description": "Information used to specify the launch template and version to use to launch instances."
         },
+        "maxInstanceLifetime": {
+          "description": "The maximum instance lifetime specifies the maximum amount of time (in seconds) that an instance can be in service before it is terminated and replaced. A common use case might be a requirement to replace your instances on a schedule because of internal security policies or external compliance controls. You must specify a value of at least 86,400 seconds (one day). To clear a previously set value, specify a new value of 0. This setting applies to all current and future instances in your Auto Scaling group",
+          "type": "number"
+        },
         "maxSize": {
           "description": "The maximum size of the group.",
           "type": "number"
@@ -632,7 +636,7 @@
     },
     "IEc2FirewallAutoScalingGroupConfig": {
       "additionalProperties": false,
-      "description": "EC2 firewall autoscaling group configuration.\nUsed to define EC2-based firewall instances to be deployed in an autoscaling group.\n\n```\n- name: accelerator-firewall-asg\n  autoscaling:\n    name: firewall-asg\n    maxSize: 4\n    minSize: 1\n    desiredSize: 2\n    launchTemplate: firewall-lt\n    healthCheckGracePeriod: 300\n    healthCheckType: ELB\n    targetGroups:\n      - firewall-gwlb-tg\n    subnets:\n      - firewall-subnet-a\n      - firewall-subnet-b\n  launchTemplate:\n    name: firewall-lt\n    blockDeviceMappings:\n      - deviceName: /dev/xvda\n        ebs:\n          deleteOnTermination: true\n          encrypted: true\n          volumeSize: 20\n    enforceImdsv2: true\n    iamInstanceProfile: firewall-profile\n    imageId: ami-123xyz\n    instanceType: c6i.xlarge\n    networkInterfaces:\n      - deleteOnTermination: true\n        description: Primary interface\n        deviceIndex: 0\n        groups:\n          - firewall-data-sg\n      - deleteOnTermination: true\n        description: Management interface\n        deviceIndex: 1\n        groups:\n          - firewall-mgmt-sg\n    userData: path/to/userdata.txt\n  vpc: Network-Inspection\n  tags: []\n```",
+      "description": "EC2 firewall autoscaling group configuration.\nUsed to define EC2-based firewall instances to be deployed in an autoscaling group.\n\n```\n- name: accelerator-firewall-asg\n  autoscaling:\n    name: firewall-asg\n    maxSize: 4\n    minSize: 1\n    desiredSize: 2\n    launchTemplate: firewall-lt\n    healthCheckGracePeriod: 300\n    healthCheckType: ELB\n    targetGroups:\n      - firewall-gwlb-tg\n    subnets:\n      - firewall-subnet-a\n      - firewall-subnet-b\n    maxInstanceLifetime: 86400\n  launchTemplate:\n    name: firewall-lt\n    blockDeviceMappings:\n      - deviceName: /dev/xvda\n        ebs:\n          deleteOnTermination: true\n          encrypted: true\n          volumeSize: 20\n    enforceImdsv2: true\n    iamInstanceProfile: firewall-profile\n    imageId: ami-123xyz\n    instanceType: c6i.xlarge\n    networkInterfaces:\n      - deleteOnTermination: true\n        description: Primary interface\n        deviceIndex: 0\n        groups:\n          - firewall-data-sg\n      - deleteOnTermination: true\n        description: Management interface\n        deviceIndex: 1\n        groups:\n          - firewall-mgmt-sg\n    userData: path/to/userdata.txt\n  vpc: Network-Inspection\n  tags: []\n```",
       "properties": {
         "account": {
           "$ref": "#/definitions/NonEmptyString",

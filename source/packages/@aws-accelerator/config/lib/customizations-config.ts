@@ -270,6 +270,7 @@ export class AutoScalingConfig implements i.IAutoScalingConfig {
   readonly launchTemplate: string = '';
   readonly healthCheckGracePeriod: number | undefined = undefined;
   readonly healthCheckType: i.AutoScalingHealthCheckTypeEnum | undefined = undefined;
+  readonly maxInstanceLifetime: number | undefined = undefined;
   targetGroups: string[] | undefined = undefined;
   subnets: string[] = [];
 }

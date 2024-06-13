@@ -1920,6 +1920,7 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
             ],
           },
         },
+        "MaxInstanceLifetime": 86400,
         "MaxSize": "4",
         "MinSize": "1",
         "Tags": [

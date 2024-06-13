@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - feat(networking): Add transit gateway static CIDR blocks and Transit Gateway Connect attachments
+- feat(autoScalingGroup): Add option to set maxInstanceLifetime property for AutoScalingGroups
 
 ### Changed
 
