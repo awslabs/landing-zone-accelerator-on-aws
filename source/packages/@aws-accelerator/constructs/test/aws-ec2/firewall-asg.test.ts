@@ -64,6 +64,7 @@ const autoscaling: AutoScalingConfig = {
   healthCheckType: 'ELB',
   subnets: ['subnet-123xyz', 'subnet-456abc'],
   targetGroups: [],
+  maxInstanceLifetime: 86400,
 };
 
 new FirewallAutoScalingGroup(stack, 'TestFirewall', {

@@ -838,6 +838,7 @@ export type AutoScalingHealthCheckTypeEnum = 'EC2' | 'ELB';
  *  targetGroups:
  *   - appA-nlb-tg-1
  *   - appA-alb-tg-1
+ *  maxInstanceLifetime: 86400
  * ```
  */
 export interface IAutoScalingConfig {
@@ -882,6 +883,11 @@ export interface IAutoScalingConfig {
    * These subnets should  be created under the VPC in network-config.yaml.
    */
   readonly subnets: t.NonEmptyString[];
+  /**
+   * The maximum instance lifetime specifies the maximum amount of time (in seconds) that an instance can be in service before it is terminated and replaced. A common use case might be a requirement to replace your instances on a schedule because of internal security policies or external compliance controls.
+   * You must specify a value of at least 86,400 seconds (one day). To clear a previously set value, specify a new value of 0. This setting applies to all current and future instances in your Auto Scaling group
+   */
+  readonly maxInstanceLifetime?: number;
 }
 
 export type AlbRoutingHttpConfigMitigationModeEnum = 'monitor' | 'defensive' | 'strictest';
@@ -1275,6 +1281,7 @@ export interface IApplicationLoadBalancerConfig {
  *       subnets:
  *         - Private-Subnet-A
  *         - Private-Subnet-B
+ *       maxInstanceLifetime: 86400
  *     targetGroups:
  *       - name: appA-nlb-tg-1
  *         port: 80
@@ -2230,6 +2237,7 @@ export interface IEc2FirewallInstanceConfig {
  *     subnets:
  *       - firewall-subnet-a
  *       - firewall-subnet-b
+ *     maxInstanceLifetime: 86400
  *   launchTemplate:
  *     name: firewall-lt
  *     blockDeviceMappings:
@@ -2529,6 +2537,7 @@ export interface IEc2FirewallAutoScalingGroupConfig {
  *       subnets:
  *         - firewall-subnet-a
  *         - firewall-subnet-b
+ *       maxInstanceLifetime: 86400
  *     launchTemplate:
  *       name: firewall-lt
  *       blockDeviceMappings:

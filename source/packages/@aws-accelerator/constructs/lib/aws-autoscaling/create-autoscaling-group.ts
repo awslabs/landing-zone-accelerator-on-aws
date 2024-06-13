@@ -37,6 +37,7 @@ export interface AutoscalingGroupProps {
   readonly lambdaKey?: cdk.aws_kms.IKey;
   readonly cloudWatchLogKmsKey?: cdk.aws_kms.IKey;
   readonly cloudWatchLogRetentionInDays: number;
+  readonly maxInstanceLifetime?: number;
   /**
    * Prefix for nag suppression
    */
@@ -72,6 +73,7 @@ export class AutoscalingGroup extends cdk.Resource implements IAutoscalingGroupR
       healthCheckGracePeriod: props.healthCheckGracePeriod,
       targetGroupArns: props.targetGroups,
       vpcZoneIdentifier: props.subnets,
+      maxInstanceLifetime: props.maxInstanceLifetime,
       tags: props.tags ? this.processTags(props.tags) : undefined,
       // autoScalingGroupName: props.name,
     });
