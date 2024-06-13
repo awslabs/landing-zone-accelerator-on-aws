@@ -265,10 +265,7 @@ export class TransitGatewayRoutes extends AseaResource {
     }
 
     for (const routeItem of routeTableItem.routes ?? []) {
-      if (routeItem.blackhole) {
-        // Only process static blackhole routes
-        this.createTransitGatewayStaticRouteItem(routeItem, routeTableItem, tgwItem);
-      }
+      this.createTransitGatewayStaticRouteItem(routeItem, routeTableItem, tgwItem);
     }
   }
 
@@ -293,7 +290,7 @@ export class TransitGatewayRoutes extends AseaResource {
       routeItem.destinationCidrBlock,
       routeItem.blackhole,
     );
-    if (!routePhysicalId) {
+    if (!routePhysicalId || !routeId) {
       return;
     }
     this.scope.addAseaResource(AseaResourceType.TRANSIT_GATEWAY_ROUTE, routeId);
