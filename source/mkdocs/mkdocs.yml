@@ -83,7 +83,8 @@ nav:
           - v1.6.3: typedocs/v1.6.3/index.html
           - v1.6.4: typedocs/v1.6.4/index.html
       - v1.7:
-          - v1.7.0: typedocs/latest/index.html
+          - v1.7.0: typedocs/v1.7.0/index.html
+          - v1.7.1: typedocs/latest/index.html
 
 theme:
   name: material

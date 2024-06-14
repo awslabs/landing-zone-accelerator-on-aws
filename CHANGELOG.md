@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.1] - 06-14-2024
+
+### Added
+
+- feat(security-hub): enable cisv3 standard
+
+### Fixed
+
+- fix(logging): CreateServiceLinkedRole fails with LogGroup already exists
+- fix(organizations): Update number of retries when using SDKV3 retry strategy
+- fix(replacements): add check for undefined accountName
+
 ## [1.7.0] - 05-31-2024
 
 ### Added
