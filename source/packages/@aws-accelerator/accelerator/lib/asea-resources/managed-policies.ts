@@ -63,7 +63,17 @@ export class ManagedPolicies extends AseaResource {
         continue;
       }
       this.scope.addLogs(LogLevel.INFO, `Add customer managed policy ${policyItem.name}`);
-      const resource = this.stack.getResource(existingPolicy.logicalResourceId) as cdk.aws_iam.CfnManagedPolicy;
+      let resource;
+      try {
+        resource = this.stack.getResource(existingPolicy.logicalResourceId) as cdk.aws_iam.CfnManagedPolicy;
+      } catch (e) {
+        this.scope.addLogs(
+          LogLevel.WARN,
+          `Could not find resource ${existingPolicy.logicalResourceId} in stack. Skipping update managed policy.`,
+        );
+        continue;
+      }
+
       // Read in the policy document which should be properly formatted json
       const policyDocument = JSON.parse(
         this.scope.generatePolicyReplacements(path.join(configPath, policyItem.policy), false),
