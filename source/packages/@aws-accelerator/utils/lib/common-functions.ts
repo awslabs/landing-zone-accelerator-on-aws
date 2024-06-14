@@ -77,7 +77,8 @@ export async function getCurrentAccountId(partition: string, region: string): Pr
 }
 
 export function setRetryStrategy() {
-  return new ConfiguredRetryStrategy(10, (attempt: number) => 100 + attempt * 1000);
+  const numberOfRetries = Number(process.env['ACCELERATOR_SDK_MAX_ATTEMPTS'] ?? 800);
+  return new ConfiguredRetryStrategy(numberOfRetries, (attempt: number) => 100 + attempt * 1000);
 }
 
 export function getStsEndpoint(partition: string, region: string): string {
