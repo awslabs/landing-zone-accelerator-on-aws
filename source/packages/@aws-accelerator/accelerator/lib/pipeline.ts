@@ -207,7 +207,7 @@ export class AcceleratorPipeline extends Construct {
         },
         ASEA_MAPPING_FILE: {
           type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-          value: 'mapping.json',
+          value: 'aseaResources.json',
         },
       };
     }
