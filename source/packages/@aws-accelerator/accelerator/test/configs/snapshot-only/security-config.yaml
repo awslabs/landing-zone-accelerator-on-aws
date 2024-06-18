@@ -89,8 +89,9 @@ centralSecurityServices:
       cloudWatch:
         enable: true
         logLevel: MEDIUM
-    excludeRegions:
-      - us-west-2
+    deploymentTargets:
+      organizationalUnits:
+        - Root
     standards:
       - name: AWS Foundational Security Best Practices v1.0.0
         enable: true
@@ -163,6 +164,9 @@ iamPasswordPolicy:
 awsConfig:
   enableConfigurationRecorder: true
   enableDeliveryChannel: true
+  deploymentTargets:
+    organizationalUnits:
+      - Root
   ruleSets:
     - deploymentTargets:
         organizationalUnits:

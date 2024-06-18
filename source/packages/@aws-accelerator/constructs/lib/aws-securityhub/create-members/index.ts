@@ -12,9 +12,19 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
-import * as AWS from 'aws-sdk';
+import { OrganizationsClient, ListAccountsCommand, ListAccountsCommandOutput } from '@aws-sdk/client-organizations';
+import {
+  CreateMembersCommand,
+  DeleteMembersCommand,
+  DisassociateMembersCommand,
+  EnableSecurityHubCommand,
+  ListMembersCommand,
+  SecurityHubClient,
+  UpdateOrganizationConfigurationCommand,
+  AccountDetails,
+} from '@aws-sdk/client-securityhub';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-AWS.config.logger = console;
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 /**
  * enable-guardduty - lambda handler
@@ -31,28 +41,49 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 > {
   const region = event.ResourceProperties['region'];
   const partition = event.ResourceProperties['partition'];
+  const securityHubMemberAccountIds: string[] = event.ResourceProperties['securityHubMemberAccountIds'];
+  const autoEnableOrgMembers: boolean = event.ResourceProperties['autoEnableOrgMembers'] === 'true';
   const solutionId = process.env['SOLUTION_ID'];
 
-  let organizationsClient: AWS.Organizations;
+  let organizationsClient: OrganizationsClient;
   if (partition === 'aws-us-gov') {
-    organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1', customUserAgent: solutionId });
+    organizationsClient = new OrganizationsClient({
+      region: 'us-gov-west-1',
+      customUserAgent: solutionId,
+      retryStrategy: setRetryStrategy(),
+    });
   } else if (partition === 'aws-cn') {
-    organizationsClient = new AWS.Organizations({ region: 'cn-northwest-1', customUserAgent: solutionId });
+    organizationsClient = new OrganizationsClient({
+      region: 'cn-northwest-1',
+      customUserAgent: solutionId,
+      retryStrategy: setRetryStrategy(),
+    });
   } else {
-    organizationsClient = new AWS.Organizations({ region: 'us-east-1', customUserAgent: solutionId });
+    organizationsClient = new OrganizationsClient({
+      region: 'us-east-1',
+      customUserAgent: solutionId,
+      retryStrategy: setRetryStrategy(),
+    });
   }
-  const securityHubClient = new AWS.SecurityHub({ region: region, customUserAgent: solutionId });
+  const securityHubClient = new SecurityHubClient({
+    region: region,
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+  });
+
+  let nextToken: string | undefined = undefined;
+
+  let existingMemberAccountIds: string[] = [];
 
   // Enable security hub is admin account before creating delegation admin account, if this wasn't enabled by organization delegation
   await enableSecurityHub(securityHubClient);
 
-  const allAccounts: AWS.SecurityHub.AccountDetails[] = [];
-  let nextToken: string | undefined = undefined;
+  const allAccounts: AccountDetails[] = [];
   do {
-    const page = await throttlingBackOff(() => organizationsClient.listAccounts({ NextToken: nextToken }).promise());
-    for (const account of page.Accounts ?? []) {
-      allAccounts.push({ AccountId: account.Id!, Email: account.Email });
-    }
+    const page = await throttlingBackOff(() =>
+      organizationsClient.send(new ListAccountsCommand({ NextToken: nextToken })),
+    );
+    allAccounts.push(...getMembersToCreate(page, securityHubMemberAccountIds));
     nextToken = page.NextToken;
   } while (nextToken);
 
@@ -61,32 +92,42 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
     case 'Update':
       console.log('starting - CreateMembersCommand');
 
-      await throttlingBackOff(() => securityHubClient.createMembers({ AccountDetails: allAccounts }).promise());
+      let autoEnableStandards: 'NONE' | 'DEFAULT' = 'DEFAULT';
+      if (!autoEnableOrgMembers) {
+        autoEnableStandards = 'NONE';
+      }
+      await throttlingBackOff(() =>
+        securityHubClient.send(
+          new UpdateOrganizationConfigurationCommand({
+            AutoEnable: autoEnableOrgMembers,
+            AutoEnableStandards: autoEnableStandards,
+          }),
+        ),
+      );
 
-      await throttlingBackOff(() => securityHubClient.updateOrganizationConfiguration({ AutoEnable: true }).promise());
+      await throttlingBackOff(() => securityHubClient.send(new CreateMembersCommand({ AccountDetails: allAccounts })));
+
+      // Cleanup members removed from deploymentTarget
+      if (securityHubMemberAccountIds.length > 0) {
+        console.log('Inititating cleanup of members removed from deploymentTargets');
+        existingMemberAccountIds = await getExistingMembers(securityHubClient);
+
+        const memberAccountIdsToDelete: string[] = [];
+        for (const accountId of existingMemberAccountIds) {
+          if (!securityHubMemberAccountIds.includes(accountId)) {
+            memberAccountIdsToDelete.push(accountId);
+          }
+        }
+
+        await disassociateAndDeleteMembers(securityHubClient, memberAccountIdsToDelete);
+      }
 
       return { Status: 'Success', StatusCode: 200 };
 
     case 'Delete':
-      const existingMemberAccountIds: string[] = [];
-      do {
-        const page = await throttlingBackOff(() => securityHubClient.listMembers({ NextToken: nextToken }).promise());
-        for (const member of page.Members ?? []) {
-          console.log(member);
-          existingMemberAccountIds.push(member.AccountId!);
-        }
-        nextToken = page.NextToken;
-      } while (nextToken);
+      existingMemberAccountIds = await getExistingMembers(securityHubClient);
 
-      if (existingMemberAccountIds.length > 0) {
-        await throttlingBackOff(() =>
-          securityHubClient.disassociateMembers({ AccountIds: existingMemberAccountIds }).promise(),
-        );
-
-        await throttlingBackOff(() =>
-          securityHubClient.deleteMembers({ AccountIds: existingMemberAccountIds }).promise(),
-        );
-      }
+      await disassociateAndDeleteMembers(securityHubClient, existingMemberAccountIds);
 
       return { Status: 'Success', StatusCode: 200 };
   }
@@ -96,9 +137,11 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
  * Enable SecurityHub
  * @param securityHubClient
  */
-async function enableSecurityHub(securityHubClient: AWS.SecurityHub): Promise<void> {
+async function enableSecurityHub(securityHubClient: SecurityHubClient): Promise<void> {
   try {
-    await throttlingBackOff(() => securityHubClient.enableSecurityHub({ EnableDefaultStandards: false }).promise());
+    await throttlingBackOff(() =>
+      securityHubClient.send(new EnableSecurityHubCommand({ EnableDefaultStandards: false })),
+    );
   } catch (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     e: any
@@ -113,5 +156,64 @@ async function enableSecurityHub(securityHubClient: AWS.SecurityHub): Promise<vo
       return;
     }
     throw new Error(`SecurityHub enable issue error message - ${e}`);
+  }
+}
+
+/**
+ * Get accounts details for the SecurityHub members to create
+ * @param page
+ * @param securityHubMemberAccountIds
+ * @returns
+ */
+function getMembersToCreate(page: ListAccountsCommandOutput, securityHubMemberAccountIds: string[]): AccountDetails[] {
+  const allAccounts: AccountDetails[] = [];
+  for (const account of page.Accounts ?? []) {
+    if (securityHubMemberAccountIds.length > 0) {
+      if (securityHubMemberAccountIds.includes(account.Id!)) {
+        allAccounts.push({ AccountId: account.Id!, Email: account.Email! });
+      }
+    } else {
+      allAccounts.push({ AccountId: account.Id!, Email: account.Email! });
+    }
+  }
+  return allAccounts;
+}
+
+/**
+ * Function to get existing securityHub members
+ * @param securityHubClient
+ * @returns string[]
+ */
+async function getExistingMembers(securityHubClient: SecurityHubClient): Promise<string[]> {
+  const existingMemberAccountIds: string[] = [];
+  let nextToken: string | undefined = undefined;
+  do {
+    const page = await throttlingBackOff(() =>
+      securityHubClient.send(new ListMembersCommand({ NextToken: nextToken })),
+    );
+    for (const member of page.Members ?? []) {
+      console.log(member);
+      existingMemberAccountIds.push(member.AccountId!);
+    }
+    nextToken = page.NextToken;
+  } while (nextToken);
+
+  return existingMemberAccountIds;
+}
+
+/**
+ * Function to disassociate and delete securityHub members
+ * @param securityHubClient
+ * @param memberAccountIdsToDelete
+ */
+async function disassociateAndDeleteMembers(securityHubClient: SecurityHubClient, memberAccountIdsToDelete: string[]) {
+  if (memberAccountIdsToDelete.length > 0) {
+    await throttlingBackOff(() =>
+      securityHubClient.send(new DisassociateMembersCommand({ AccountIds: memberAccountIdsToDelete })),
+    );
+
+    await throttlingBackOff(() =>
+      securityHubClient.send(new DeleteMembersCommand({ AccountIds: memberAccountIdsToDelete })),
+    );
   }
 }

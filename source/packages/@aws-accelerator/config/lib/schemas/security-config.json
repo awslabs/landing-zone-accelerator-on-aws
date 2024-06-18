@@ -1369,8 +1369,17 @@
       "additionalProperties": false,
       "description": "Use this configuration to enable Amazon Security Hub for an AWS Organization along with it's auditing configuration.",
       "properties": {
+        "autoEnableOrgMembers": {
+          "default": true,
+          "description": "(OPTIONAL) Enables/disables the auto enabling of SecurityHub for any account including the new accounts joining the organization\n\nIt is recommended to set the value to `false` when using the `deploymentTargets` property to enable SecurityHub only on targeted accounts mentioned in the deploymentTargets. If you do not define or do not set it to `false` any new accounts joining the organization will automatically be enabled with SecurityHub.",
+          "type": "boolean"
+        },
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "(OPTIONAL) Deployment targets for SecurityHub\n\nWe highly recommend enabling SecurityHub across all accounts and enabled regions within your organization. `deploymentTargets` should only be used when more granular control is required, not as a default configuration Please only specify one of the `deploymentTargets` or `excludeRegions` properties."
+        },
         "enable": {
-          "description": "Indicates whether AWS Security Hub enabled.",
+          "description": "Indicates whether AWS Security Hub is enabled (AWSConfig is required for enabling SecurityHub)",
           "type": "boolean"
         },
         "excludeRegions": {

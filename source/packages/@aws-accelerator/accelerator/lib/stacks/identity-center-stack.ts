@@ -273,7 +273,7 @@ export class IdentityCenterStack extends AcceleratorStack {
     identityCenterInstanceArn: string,
     identityStoreId: string,
   ) {
-    const targetAccountIds = this.getAccountIdsFromDeploymentTarget(assignment.deploymentTargets);
+    const targetAccountIds = this.getAccountIdsFromDeploymentTargets(assignment.deploymentTargets);
     const permissionSetArnValue = this.getPermissionSetArn(permissionSetMap, assignment.permissionSetName);
     new IdentityCenterAssignments(this, `${pascalCase(`IdentityCenterAssignment-${assignment.name}`)}`, {
       identityStoreId: identityStoreId,

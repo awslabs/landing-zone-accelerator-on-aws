@@ -34,6 +34,7 @@ import {
   IsPublicSsmDoc,
   ConfigRule,
   GuardDutyConfig,
+  SecurityHubConfig,
 } from '../lib/security-config';
 import { CommonValidatorFunctions } from './common/common-validator-functions';
 
@@ -54,14 +55,13 @@ export class SecurityConfigValidator {
     const logger = createLogger(['security-config-validator']);
 
     logger.info(`${SecurityConfig.FILENAME} file validation started`);
-    //
+
     // SSM Document validations
     const ssmDocuments = this.getSsmDocuments(values);
-    //
+
     // Get list of OU ID names from organization config file
     ouIdNames.push(...this.getOuIdNames(organizationConfig));
 
-    //
     // Get list of Account names from account config file
     const accountNames = this.getAccountNames(accountsConfig);
 
@@ -77,20 +77,20 @@ export class SecurityConfigValidator {
     // Validate KMS key policy files
     this.validateKeyPolicyFiles(values, configDir, errors);
 
-    //
     // Create list of custom CMKs, any services to be validated against key list from keyManagementService
     const keyNames: string[] = [values.centralSecurityServices.ebsDefaultVolumeEncryption.kmsKey!];
 
     // Validate custom CMK names
     this.validateCustomKeyName(values, keyNames, errors);
 
-    //
     // Validate EBS default encryption configuration
     this.validateEbsEncryptionConfiguration(values.centralSecurityServices.ebsDefaultVolumeEncryption, errors);
 
     // Validate GuardDuty configuration
     this.validateGuardDutyConfiguration(values.centralSecurityServices.guardduty, errors);
-    //
+    // Validate SecurityHub configuration
+    this.validateSecurityHubConfiguration(values.centralSecurityServices.securityHub, errors);
+
     // Validate delegated admin account
     // Validate deployment targets against organization config file
     // validate deployment target OUs for security services
@@ -98,13 +98,17 @@ export class SecurityConfigValidator {
     this.validateDeploymentTargetOUs(values, ouIdNames, errors);
     this.validateDeploymentTargetAccountNames(values, accountNames, errors);
     this.validateConfigRuleDeploymentTargetsInConfigDeploymentTargets(values, accountsConfig, globalConfig, errors);
-    this.validateSecurityHubWhenConfigDeploymentTargetsExists(values, errors);
-
+    this.validateConfigDeloymentTargetsInSecurityHubDeploymentTargets(values, accountsConfig, globalConfig, errors);
+    this.validateSecurityHubStandardDeloymentTargetsInSecurityHubDeloymentTargets(
+      values,
+      accountsConfig,
+      globalConfig,
+      errors,
+    );
+    this.validateSecurityHubAndConfig(values, errors);
     // Validate expiration for Macie and GuardDuty Lifecycle Rules
     this.macieLifecycleRules(values, errors);
     this.guarddutyLifecycleRules(values, errors);
-
-    //
     // Validate Config rule assets
     for (const ruleSet of values.awsConfig.ruleSets ?? []) {
       this.validateConfigRuleAssets(configDir, ruleSet, errors);
@@ -113,7 +117,7 @@ export class SecurityConfigValidator {
       this.validateConfigRuleRemediationTargetAssets(configDir, ruleSet, ssmDocuments, errors);
     }
     this.validateConfigRuleNames(values.awsConfig, accountsConfig, globalConfig, errors);
-    //
+
     // Validate SNS Topics for CloudWatch Alarms
     const snsTopicNames = this.getSnsTopicNames(globalConfig);
     for (const alarm of values.cloudWatch.alarmSets ?? []) {
@@ -323,10 +327,34 @@ export class SecurityConfigValidator {
 
     if (
       guardDutyConfig.deploymentTargets &&
+      !guardDutyConfig.deploymentTargets.organizationalUnits?.includes('Root') &&
       (guardDutyConfig.autoEnableOrgMembers === undefined || guardDutyConfig.autoEnableOrgMembers)
     ) {
       errors.push(
-        `"autoEnableOrgMembers" should be disabled when using "deploymentTargets" property in GuardDuty configuration`,
+        `"autoEnableOrgMembers" should be set to "false" when using "deploymentTargets" property in guardDuty configuration`,
+      );
+    }
+  }
+
+  /**
+   * Validate SecurityHub configuration
+   * @param securityHubConfig SecurityHubConfig
+   * @param errors string[]
+   */
+  private validateSecurityHubConfiguration(securityHubConfig: SecurityHubConfig, errors: string[]) {
+    if (securityHubConfig.excludeRegions && securityHubConfig.deploymentTargets) {
+      errors.push(
+        `securityHub configuration cannot include both "deploymentTargets" and "excludeRegions" properties. Please use only one.`,
+      );
+    }
+
+    if (
+      securityHubConfig.deploymentTargets &&
+      !securityHubConfig.deploymentTargets.organizationalUnits?.includes('Root') &&
+      (securityHubConfig.autoEnableOrgMembers === undefined || securityHubConfig.autoEnableOrgMembers)
+    ) {
+      errors.push(
+        `"autoEnableOrgMembers" should be set to "false" when using "deploymentTargets" property in securityHub configuration`,
       );
     }
   }
@@ -427,23 +455,6 @@ export class SecurityConfigValidator {
   }
 
   /**
-   * Function to validate existence of securityHub when awsConfig deploymentTargets exist
-   * SecurityHub requires awsConfig to be running in all the accounts and hence securityHub
-   * cannot be enabled when awsConfig deploymentTargets exist
-   * @param values
-   * @param errors
-   */
-  private validateSecurityHubWhenConfigDeploymentTargetsExists(values: ISecurityConfig, errors: string[]) {
-    const configDeploymentTargets: t.IDeploymentTargets | undefined = values.awsConfig.deploymentTargets;
-    const securityHubEnabled: boolean = values.centralSecurityServices.securityHub.enable;
-    if (configDeploymentTargets && securityHubEnabled) {
-      errors.push(
-        `SecurityHub cannot be enabled with awsConfig deploymentTargets. Please disable SecurityHub or don't use awsConfig deploymentTargets`,
-      );
-    }
-  }
-
-  /**
    * Function to validate existence of Config Recorder and Delivery Channel in accounts where RuleSets are getting deployed
    * @param values
    * @param accountsConfig
@@ -457,51 +468,204 @@ export class SecurityConfigValidator {
     errors: string[],
   ) {
     const configDeploymentTargets = values.awsConfig.deploymentTargets;
-    if (configDeploymentTargets) {
-      const configAccounts = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
-        accountsConfig,
-        configDeploymentTargets as DeploymentTargets,
-      );
-      const configRegions = CommonValidatorFunctions.getRegionsFromDeploymentTarget(
-        configDeploymentTargets as DeploymentTargets,
-        globalConfig,
-      );
-      let configRuleSetAccounts: string[] = [];
-      let configRuleSetRegions: t.Region[] = [];
 
-      for (const ruleSet of values.awsConfig.ruleSets ?? []) {
-        configRuleSetAccounts.push(
+    if (!configDeploymentTargets || configDeploymentTargets?.organizationalUnits?.includes('Root')) return;
+
+    const configAccounts = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
+      accountsConfig,
+      configDeploymentTargets as DeploymentTargets,
+    );
+    const configRegions = CommonValidatorFunctions.getRegionsFromDeploymentTargets(
+      configDeploymentTargets as DeploymentTargets,
+      globalConfig,
+    );
+    let configRuleSetAccounts: string[] = [];
+    let configRuleSetRegions: t.Region[] = [];
+
+    for (const ruleSet of values.awsConfig.ruleSets ?? []) {
+      configRuleSetAccounts.push(
+        ...CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
+          accountsConfig,
+          ruleSet.deploymentTargets as DeploymentTargets,
+        ),
+      );
+      configRuleSetRegions.push(
+        ...CommonValidatorFunctions.getRegionsFromDeploymentTargets(
+          ruleSet.deploymentTargets as DeploymentTargets,
+          globalConfig,
+        ),
+      );
+    }
+
+    configRuleSetAccounts = [...new Set(configRuleSetAccounts)];
+    configRuleSetRegions = [...new Set(configRuleSetRegions)];
+
+    for (const account of configRuleSetAccounts) {
+      if (!configAccounts.includes(account)) {
+        errors.push(
+          `awsConfig RuleSets deployment target account: "${account}" not present in deployment targets for awsConfig : "${configAccounts}".`,
+        );
+      }
+    }
+
+    for (const region of configRuleSetRegions) {
+      if (!configRegions.includes(region)) {
+        errors.push(
+          `awsConfig RuleSets deployment target region: "${region}" not present in deployment targets for awsConfig : "${configRegions}".`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Function to validate SecurityHub Standard deploymentTargets in SecurityHub deploymentTargets
+   * @param values
+   * @param accountsConfig
+   * @param globalConfig
+   * @param errors
+   */
+  private validateSecurityHubStandardDeloymentTargetsInSecurityHubDeloymentTargets(
+    values: ISecurityConfig,
+    accountsConfig: AccountsConfig,
+    globalConfig: GlobalConfig,
+    errors: string[],
+  ) {
+    const securityHubDeploymentTargets = values.centralSecurityServices.securityHub.deploymentTargets;
+    const securityHubStandards = values.centralSecurityServices.securityHub.standards;
+
+    if (!securityHubDeploymentTargets || securityHubDeploymentTargets?.organizationalUnits?.includes('Root')) return;
+
+    const securityHubAccounts = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
+      accountsConfig,
+      securityHubDeploymentTargets as DeploymentTargets,
+    );
+    const securityHubRegions = CommonValidatorFunctions.getRegionsFromDeploymentTargets(
+      securityHubDeploymentTargets as DeploymentTargets,
+      globalConfig,
+    );
+    let securityHubStandardAccounts: string[] = [];
+    let securityHubStandardRegions: t.Region[] = [];
+
+    for (const securityHubStandard of securityHubStandards ?? []) {
+      if (securityHubStandard.deploymentTargets) {
+        securityHubStandardAccounts.push(
           ...CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
             accountsConfig,
-            ruleSet.deploymentTargets as DeploymentTargets,
+            securityHubStandard.deploymentTargets as DeploymentTargets,
           ),
         );
-        configRuleSetRegions.push(
-          ...CommonValidatorFunctions.getRegionsFromDeploymentTarget(
-            ruleSet.deploymentTargets as DeploymentTargets,
+        securityHubStandardRegions.push(
+          ...CommonValidatorFunctions.getRegionsFromDeploymentTargets(
+            securityHubStandard.deploymentTargets as DeploymentTargets,
             globalConfig,
           ),
         );
+      } else if (!securityHubStandard.deploymentTargets) {
+        errors.push(
+          `securityHub standard (${securityHubStandard.name}) "deploymentTargets" is required when "deploymentTargets" for securityHub is defined`,
+        );
       }
+    }
 
-      configRuleSetAccounts = [...new Set(configRuleSetAccounts)];
-      configRuleSetRegions = [...new Set(configRuleSetRegions)];
+    securityHubStandardAccounts = [...new Set(securityHubStandardAccounts)];
+    securityHubStandardRegions = [...new Set(securityHubStandardRegions)];
 
-      for (const account of configRuleSetAccounts) {
-        if (!configAccounts.includes(account)) {
+    for (const account of securityHubStandardAccounts) {
+      if (!securityHubAccounts.includes(account)) {
+        errors.push(
+          `securityHub standard deployment target account: "${account}" not present in deployment targets for securityHub : "${securityHubAccounts}".`,
+        );
+      }
+    }
+
+    for (const region of securityHubStandardRegions) {
+      if (!securityHubRegions.includes(region)) {
+        errors.push(
+          `securityHub standard deployment target region: "${region}" not present in deployment targets for securityHub : "${securityHubRegions}".`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Function to validate securityHub and awsConfig deploymentTargets
+   * SecurityHub requires awsConfig to be enabled
+   * @param values
+   * @param accountsConfig
+   * @param globalConfig
+   * @param errors
+   */
+  private validateConfigDeloymentTargetsInSecurityHubDeploymentTargets(
+    values: ISecurityConfig,
+    accountsConfig: AccountsConfig,
+    globalConfig: GlobalConfig,
+    errors: string[],
+  ) {
+    const awsConfig = values.awsConfig;
+    const securityHub = values.centralSecurityServices.securityHub;
+
+    if (
+      !awsConfig.enableConfigurationRecorder ||
+      !awsConfig.deploymentTargets ||
+      awsConfig.deploymentTargets.organizationalUnits?.includes('Root') ||
+      !securityHub.enable
+    )
+      return;
+
+    if (!securityHub.deploymentTargets) {
+      errors.push(
+        `Provide securityHub "deploymentTargets" when "deploymentTargets" for awsConfig is provided. awsConfig must be enabled for all "deploymentTargets" utilizing securityHub`,
+      );
+    } else if (securityHub.deploymentTargets) {
+      const securityHubAccounts = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
+        accountsConfig,
+        securityHub.deploymentTargets as DeploymentTargets,
+      );
+      const securityHubRegions = CommonValidatorFunctions.getRegionsFromDeploymentTargets(
+        securityHub.deploymentTargets as DeploymentTargets,
+        globalConfig,
+      );
+      const awsConfigAccounts = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
+        accountsConfig,
+        awsConfig.deploymentTargets as DeploymentTargets,
+      );
+      const awsConfigRegions = CommonValidatorFunctions.getRegionsFromDeploymentTargets(
+        awsConfig.deploymentTargets as DeploymentTargets,
+        globalConfig,
+      );
+
+      for (const account of securityHubAccounts) {
+        if (!awsConfigAccounts.includes(account)) {
           errors.push(
-            `awsConfig RuleSets deployment target account: "${account}" not present in deployment targets for awsConfig : "${configAccounts}".`,
+            `securityHub "deploymentTargets" account: "${account}" not present in "deploymentTargets" for awsConfig : "${awsConfigAccounts}". awsConfig must be enabled for all accounts utilizing securityHub.`,
           );
         }
       }
 
-      for (const region of configRuleSetRegions) {
-        if (!configRegions.includes(region)) {
+      for (const region of securityHubRegions) {
+        if (!awsConfigRegions.includes(region)) {
           errors.push(
-            `awsConfig RuleSets deployment target region: "${region}" not present in deployment targets for awsConfig : "${configRegions}".`,
+            `securityHub deploymentTargets region: "${region}" not present in deploymentTargets for awsConfig : "${awsConfigRegions}". awsConfig must be enabled for all regions utilizing securityHub.`,
           );
         }
       }
+    }
+  }
+
+  /**
+   * Function to validate securityHub and awsConfig
+   * SecurityHub requires awsConfig to be enabled
+   * @param values
+   * @param accountsConfig
+   * @param globalConfig
+   * @param errors
+   */
+  private validateSecurityHubAndConfig(values: ISecurityConfig, errors: string[]) {
+    const awsConfig = values.awsConfig;
+    const securityHub = values.centralSecurityServices.securityHub;
+
+    if (securityHub.enable && !awsConfig.enableConfigurationRecorder) {
+      errors.push(`securityHub requires awsConfig to be enabled.`);
     }
   }
 
@@ -645,6 +809,26 @@ export class SecurityConfigValidator {
   }
 
   /**
+   * Validate deployment target accounts for SecurityHub
+   * @param values SecurityConfig
+   * @param accountNames string[]
+   * @param errors string[]
+   */
+  private validateSecurityHubDeploymentTargetAccounts(
+    values: ISecurityConfig,
+    accountNames: string[],
+    errors: string[],
+  ) {
+    for (const account of values.centralSecurityServices.securityHub.deploymentTargets?.accounts ?? []) {
+      if (accountNames.indexOf(account) === -1) {
+        errors.push(
+          `Deployment target account ${account} for securityHub does not exist in accounts-config.yaml file.`,
+        );
+      }
+    }
+  }
+
+  /**
    * Function to validate Deployment targets account name for security services
    * @param values
    */
@@ -658,6 +842,7 @@ export class SecurityConfigValidator {
     this.validateKmsKeyConfigDeploymentTargetAccounts(values, accountNames, errors);
     this.validateEbsEncryptionDeploymentTargetAccounts(values, accountNames, errors);
     this.validateGuardDutyDeploymentTargetAccounts(values, accountNames, errors);
+    this.validateSecurityHubDeploymentTargetAccounts(values, accountNames, errors);
   }
 
   /**
@@ -792,6 +977,20 @@ export class SecurityConfigValidator {
   }
 
   /**
+   * Validate deployment target OUs for SecurityHub
+   * @param values SecurityConfig
+   * @param ouIdNames string[]
+   * @param errors string[]
+   */
+  private validateSecurityHubDeploymentTargetOUs(values: SecurityConfig, ouIdNames: string[], errors: string[]) {
+    for (const ou of values.centralSecurityServices.securityHub.deploymentTargets?.organizationalUnits ?? []) {
+      if (ouIdNames.indexOf(ou) === -1) {
+        errors.push(`Deployment target OU ${ou} for securityHub does not exist in organization-config.yaml file.`);
+      }
+    }
+  }
+
+  /**
    * Function to validate Deployment targets OU name for security services
    * @param values
    */
@@ -804,6 +1003,7 @@ export class SecurityConfigValidator {
     this.validateKmsKeyConfigDeploymentTargetOUs(values, ouIdNames, errors);
     this.validateEbsEncryptionDeploymentTargetOUs(values, ouIdNames, errors);
     this.validateGuardDutyDeploymentTargetOUs(values, ouIdNames, errors);
+    this.validateSecurityHubDeploymentTargetOUs(values, ouIdNames, errors);
   }
 
   /**
@@ -849,7 +1049,7 @@ export class SecurityConfigValidator {
       for (const ruleItem of ruleSetItem.rules ?? []) {
         configRuleMap.push({
           name: ruleItem.name,
-          environments: CommonValidatorFunctions.getEnvironmentsFromDeploymentTarget(
+          environments: CommonValidatorFunctions.getEnvironmentsFromDeploymentTargets(
             accountsConfig,
             ruleSetItem.deploymentTargets as DeploymentTargets,
             globalConfig,
@@ -1019,10 +1219,10 @@ export class SecurityConfigValidator {
     errors: string[],
   ) {
     if (snsTopicName && !notificationLevel) {
-      errors.push(`SecurityHub is configured with a snsTopicName and does not have a notificationLevel`);
+      errors.push(`securityHub is configured with a snsTopicName and does not have a notificationLevel`);
     }
     if (!snsTopicName && notificationLevel) {
-      errors.push(`SecurityHub is configured with a notificationLevel and does not have a snsTopicName`);
+      errors.push(`securityHub is configured with a notificationLevel and does not have a snsTopicName`);
     }
     if (notificationLevel) {
       switch (notificationLevel) {
@@ -1038,14 +1238,14 @@ export class SecurityConfigValidator {
           break;
         default:
           errors.push(
-            `SecurityHub has been configured with a notificationLevel of ${notificationLevel}. This is not a valid value.`,
+            `securityHub has been configured with a notificationLevel of ${notificationLevel}. This is not a valid value.`,
           );
       }
     }
     // validate topic exists in global config
     if (snsTopicName && !snsTopicNames.find(item => item === snsTopicName)) {
       errors.push(
-        `SecurityHub is configured to use snsTopicName ${snsTopicName} and the topic is not configured in the global config.`,
+        `securityHub is configured to use snsTopicName ${snsTopicName} and the topic is not configured in the global config.`,
       );
     }
   }
@@ -1177,12 +1377,12 @@ export class SecurityConfigValidator {
           } else {
             remediationDeploymentTargets = ruleSet.deploymentTargets;
           }
-          const ruleEnvFromDeploymentTarget = CommonValidatorFunctions.getEnvironmentsFromDeploymentTarget(
+          const ruleEnvFromDeploymentTarget = CommonValidatorFunctions.getEnvironmentsFromDeploymentTargets(
             accountConfig,
             remediationDeploymentTargets,
             globalConfig,
           );
-          const s3EncryptionEnvFromDeploymentTarget = CommonValidatorFunctions.getEnvironmentsFromDeploymentTarget(
+          const s3EncryptionEnvFromDeploymentTarget = CommonValidatorFunctions.getEnvironmentsFromDeploymentTargets(
             accountConfig,
             globalConfig.s3.encryption.deploymentTargets,
             globalConfig,

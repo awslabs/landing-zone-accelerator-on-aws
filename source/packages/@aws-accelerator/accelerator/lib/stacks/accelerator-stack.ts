@@ -45,6 +45,8 @@ import {
   VpcConfig,
   VpcTemplatesConfig,
   isNetworkType,
+  SecurityHubConfig,
+  GuardDutyConfig,
 } from '@aws-accelerator/config';
 import { KeyLookup, S3LifeCycleRule, ServiceLinkedRole } from '@aws-accelerator/constructs';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
@@ -338,6 +340,22 @@ export abstract class AcceleratorStack extends cdk.Stack {
     // Set if S3 access log bucket is enabled
     //
     this.isAccessLogsBucketEnabled = this.accessLogsBucketEnabled();
+  }
+
+  /**
+   * Evaluates if inputConfig is enabled and either excludeRegions or deploymentTargets is defined. Returns false if region is excluded
+   * @param inputConfig {@link SecurityHubConfig} | {@link GuardDutyConfig}
+   * @returns boolean
+   */
+  protected validateExcludeRegionsAndDeploymentTargets(inputConfig: SecurityHubConfig | GuardDutyConfig): boolean {
+    return (
+      inputConfig.enable &&
+      (inputConfig.excludeRegions
+        ? inputConfig.excludeRegions.indexOf(this.region as Region) === -1
+        : inputConfig.deploymentTargets?.excludedRegions
+        ? inputConfig.deploymentTargets?.excludedRegions?.indexOf(this.region as Region) === -1
+        : true)
+    );
   }
 
   /**
@@ -1264,7 +1282,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * @param accountIds - List where processed account ids from Accounts array of DeploymentTarget or ShareTargets to be appended to.
    * @returns Array of Account Ids
    *
-   * @remarks Used only in getAccountIdsFromDeploymentTarget function.
+   * @remarks Used only in getAccountIdsFromDeploymentTargets function.
    */
   private appendAccountIdsFromDeploymentTargetAccounts(
     deploymentTargets: DeploymentTargets | ShareTargets,
@@ -1283,7 +1301,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * @param accountIds - List where processed account ids from accountConfigs to be appended to.
    * @returns Array of Account Ids
    *
-   * @remarks Used only in getAccountIdsFromDeploymentTarget function.
+   * @remarks Used only in getAccountIdsFromDeploymentTargets function.
    */
   private appendAccountIdsFromAccountConfigs(
     ouName: string,
@@ -1308,9 +1326,9 @@ export abstract class AcceleratorStack extends cdk.Stack {
   /**
    * Function to get account ids from given DeploymentTarget
    * @param deploymentTargets
-   * @returns
+   * @returns string[]
    */
-  public getAccountIdsFromDeploymentTarget(deploymentTargets: DeploymentTargets): string[] {
+  public getAccountIdsFromDeploymentTargets(deploymentTargets: DeploymentTargets): string[] {
     const accountIds: string[] = [];
 
     for (const ou of deploymentTargets.organizationalUnits ?? []) {
@@ -1359,7 +1377,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
       vpcAccountIds = [this.props.accountsConfig.getAccountId(vpcItem.account)];
     } else {
       const excludedAccountIds = this.getExcludedAccountIds(vpcItem.deploymentTargets);
-      vpcAccountIds = this.getAccountIdsFromDeploymentTarget(vpcItem.deploymentTargets).filter(
+      vpcAccountIds = this.getAccountIdsFromDeploymentTargets(vpcItem.deploymentTargets).filter(
         item => !excludedAccountIds.includes(item),
       );
     }

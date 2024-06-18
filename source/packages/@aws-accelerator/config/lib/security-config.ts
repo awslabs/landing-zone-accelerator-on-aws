@@ -156,6 +156,8 @@ export class SecurityHubConfig implements i.ISecurityHubConfig {
   readonly snsTopicName = undefined;
   readonly notificationLevel = undefined;
   readonly excludeRegions: t.Region[] = [];
+  readonly deploymentTargets: t.DeploymentTargets | undefined = undefined;
+  readonly autoEnableOrgMembers: boolean | undefined = undefined;
   readonly standards: SecurityHubStandardConfig[] = [];
   readonly logging: SecurityHubLoggingConfig | undefined = undefined;
 }

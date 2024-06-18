@@ -303,7 +303,7 @@ export abstract class NetworkStack extends AcceleratorStack {
       );
     }
     if (prefixListItem.deploymentTargets) {
-      accountIds.push(...this.getAccountIdsFromDeploymentTarget(prefixListItem.deploymentTargets));
+      accountIds.push(...this.getAccountIdsFromDeploymentTargets(prefixListItem.deploymentTargets));
       regions.push(...this.getRegionsFromDeploymentTarget(prefixListItem.deploymentTargets));
     }
     if (accountIds.length === 0) {

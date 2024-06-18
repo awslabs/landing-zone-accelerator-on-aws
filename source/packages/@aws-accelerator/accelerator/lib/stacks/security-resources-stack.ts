@@ -1415,25 +1415,23 @@ export class SecurityResourcesStack extends AcceleratorStack {
   }
 
   private securityHubEventForwardToLogs() {
+    const securityHubConfig = this.props.securityConfig.centralSecurityServices.securityHub;
     // only forward events if Security Hub is enabled and logging is enabled. If logging is undefined, its assumed to be true.
-    if (
-      this.props.securityConfig.centralSecurityServices.securityHub.enable &&
-      (this.props.securityConfig.centralSecurityServices.securityHub.logging?.cloudWatch?.enable ?? true)
-    ) {
-      new SecurityHubEventsLog(this, 'SecurityHubEventsLog', {
-        acceleratorPrefix: this.props.prefixes.accelerator,
-        snsTopicArn: `arn:${cdk.Stack.of(this).partition}:sns:${cdk.Stack.of(this).region}:${
-          cdk.Stack.of(this).account
-        }:${this.props.prefixes.snsTopicName}-${
-          this.props.securityConfig.centralSecurityServices.securityHub.snsTopicName
-        }`,
-        snsKmsKey: this.snsKey,
-        notificationLevel: this.props.securityConfig.centralSecurityServices.securityHub.notificationLevel,
-        lambdaKey: this.lambdaKey,
-        cloudWatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-        logLevel: this.props.securityConfig.centralSecurityServices.securityHub.logging?.cloudWatch?.logLevel,
-        logGroupName: this.props.securityConfig.centralSecurityServices.securityHub.logging?.cloudWatch?.logGroupName,
-      });
+    if (securityHubConfig.enable && (securityHubConfig.logging?.cloudWatch?.enable ?? true)) {
+      if (!securityHubConfig.deploymentTargets || this.isIncluded(securityHubConfig.deploymentTargets)) {
+        new SecurityHubEventsLog(this, 'SecurityHubEventsLog', {
+          acceleratorPrefix: this.props.prefixes.accelerator,
+          snsTopicArn: `arn:${cdk.Stack.of(this).partition}:sns:${cdk.Stack.of(this).region}:${
+            cdk.Stack.of(this).account
+          }:${this.props.prefixes.snsTopicName}-${securityHubConfig.snsTopicName}`,
+          snsKmsKey: this.snsKey,
+          notificationLevel: securityHubConfig.notificationLevel,
+          lambdaKey: this.lambdaKey,
+          cloudWatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+          logLevel: securityHubConfig.logging?.cloudWatch?.logLevel,
+          logGroupName: securityHubConfig.logging?.cloudWatch?.logGroupName,
+        });
+      }
       this.nagSuppressionInputs.push({
         id: NagSuppressionRuleIds.IAM4,
         details: [

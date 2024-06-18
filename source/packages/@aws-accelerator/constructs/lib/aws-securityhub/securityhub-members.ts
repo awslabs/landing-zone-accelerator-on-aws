@@ -28,6 +28,14 @@ export interface SecurityHubMembersProps {
    * Custom resource lambda log retention in days
    */
   readonly logRetentionInDays: number;
+  /**
+   * List of SecurityHub member accountIds populated only when deploymentTargets are defined
+   */
+  readonly securityHubMemberAccountIds: string[];
+  /**
+   * Enable/disable autoEnableOrgMembers
+   */
+  readonly autoEnableOrgMembers: boolean;
 }
 
 /**
@@ -79,6 +87,8 @@ export class SecurityHubMembers extends Construct {
       properties: {
         region: cdk.Stack.of(this).region,
         partition: cdk.Aws.PARTITION,
+        securityHubMemberAccountIds: props.securityHubMemberAccountIds,
+        autoEnableOrgMembers: props.autoEnableOrgMembers,
       },
     });
 
