@@ -14,7 +14,7 @@
 import path from 'path';
 import * as cdk from 'aws-cdk-lib';
 import { CfnManagedPolicy } from 'aws-cdk-lib/aws-iam';
-import { AseaResourceType, PolicyConfig } from '@aws-accelerator/config';
+import { AseaResourceType, CfnResourceType, PolicyConfig } from '@aws-accelerator/config';
 import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
 import { pascalCase } from 'pascal-case';
@@ -93,37 +93,52 @@ export class ManagedPolicies extends AseaResource {
   private addDeletionFlagsForPolicies(policyItems: PolicyConfig[], resourceType: string) {
     const importPolicies = this.scope.importStackResources.getResourcesByType(resourceType);
     for (const importPolicy of importPolicies) {
-      let policyResource;
-      try {
-        policyResource = this.scope.getResource(importPolicy.logicalResourceId) as cdk.aws_iam.CfnManagedPolicy;
-      } catch (e) {
-        this.scope.addLogs(
-          LogLevel.WARN,
-          `Could not find resource ${importPolicy.logicalResourceId} in stack. No deletion flag needed.`,
-        );
+      const policyResource = this.getPolicyResource(importPolicy);
+      if (!policyResource) {
         continue;
       }
       const policyName = policyResource.managedPolicyName;
       if (!policyName) {
         continue;
       }
-
       const policyExistsInConfig = policyItems.find(item => policyName.includes(item.name));
       if (!policyExistsInConfig) {
-        importPolicy.isDeleted = true;
-        this.scope.addDeleteFlagForAseaResource({
+        this.addDeletionFlagForPolicy({
           type: resourceType,
           identifier: policyName,
           logicalId: importPolicy.logicalResourceId,
         });
-        // Add the delete flag to the ssm parameter created with the role.
-        const ssmResource = this.scope.importStackResources.getSSMParameterByName(
-          this.scope.getSsmPath(SsmResourceType.IAM_ROLE, [policyName]),
-        );
-        if (ssmResource) {
-          ssmResource.isDeleted = true;
-        }
       }
+    }
+  }
+  getPolicyResource(importPolicy: CfnResourceType) {
+    let policyResource;
+    try {
+      policyResource = this.scope.getResource(importPolicy.logicalResourceId) as cdk.aws_iam.CfnManagedPolicy;
+    } catch (e) {
+      this.scope.addLogs(LogLevel.WARN, `Could not find resource ${importPolicy.logicalResourceId}`);
+      const policyName = importPolicy.resourceMetadata['Properties']['ManagedPolicyName'];
+      this.addDeletionFlagForPolicy({
+        type: importPolicy.resourceType,
+        identifier: policyName,
+        logicalId: importPolicy.logicalResourceId,
+      });
+    }
+    return policyResource;
+  }
+  addDeletionFlagForPolicy(props: { type: string; identifier: string; logicalId: string }) {
+    this.scope.addDeleteFlagForAseaResource({
+      type: props.type,
+      identifier: props.identifier,
+      logicalId: props.logicalId,
+    });
+    const ssmResource = this.scope.importStackResources.getSSMParameterByName(
+      this.scope.getSsmPath(SsmResourceType.IAM_POLICY, [props.identifier]),
+    );
+    if (ssmResource) {
+      this.scope.addDeleteFlagForAseaResource({
+        logicalId: ssmResource.logicalResourceId,
+      });
     }
   }
 }
