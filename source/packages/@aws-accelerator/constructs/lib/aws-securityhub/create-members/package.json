@@ -21,7 +21,8 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "aws-sdk": "2.1379.0"
+    "@aws-sdk/client-organizations": "3.410.0",
+    "@aws-sdk/client-securityhub": "3.410.0"
   },
   "devDependencies": {
     "@types/jest": "29.4.0",

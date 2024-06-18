@@ -87,7 +87,7 @@ export class CustomizationsStack extends AcceleratorStack {
       const customStackSetList = this.props.customizationsConfig.customizations.cloudFormationStackSets;
       for (const stackSet of customStackSetList ?? []) {
         this.logger.info(`New stack set ${stackSet.name}`);
-        const deploymentTargetAccounts: string[] | undefined = this.getAccountIdsFromDeploymentTarget(
+        const deploymentTargetAccounts: string[] | undefined = this.getAccountIdsFromDeploymentTargets(
           stackSet.deploymentTargets,
         );
         const templateUrl = this.getAssetUrl(stackSet.name, stackSet.template);

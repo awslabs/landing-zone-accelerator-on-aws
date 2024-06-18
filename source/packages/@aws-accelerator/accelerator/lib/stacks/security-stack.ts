@@ -15,7 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 
-import { EbsDefaultVolumeEncryptionConfig, GuardDutyConfig, Region } from '@aws-accelerator/config';
+import { EbsDefaultVolumeEncryptionConfig, GuardDutyConfig, Region, SecurityHubConfig } from '@aws-accelerator/config';
 import {
   AcceleratorMetadata,
   EbsDefaultEncryption,
@@ -45,6 +45,7 @@ export class SecurityStack extends AcceleratorStack {
   readonly configAggregationAccountId: string;
   readonly cloudwatchKey?: cdk.aws_kms.IKey;
   readonly metadataRule: AcceleratorMetadata | undefined;
+  readonly securityHubConfig: SecurityHubConfig;
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
     const elbLogBucketName = this.getElbLogsBucketName();
@@ -62,6 +63,7 @@ export class SecurityStack extends AcceleratorStack {
     }
     this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
     this.centralLogsBucketKey = this.getCentralLogsBucketKey(this.cloudwatchKey);
+    this.securityHubConfig = this.props.securityConfig.centralSecurityServices.securityHub;
 
     //
     // MacieSession configuration
@@ -197,7 +199,7 @@ export class SecurityStack extends AcceleratorStack {
    */
   private initializeSecurityHubStandards(): { name: string; enable: boolean; controlsToDisable: string[] }[] {
     const standards: { name: string; enable: boolean; controlsToDisable: string[] }[] = [];
-    for (const standard of this.props.securityConfig.centralSecurityServices.securityHub.standards) {
+    for (const standard of this.securityHubConfig.standards) {
       if (standard.deploymentTargets) {
         if (!this.isIncluded(standard.deploymentTargets)) {
           this.logger.info(`Item excluded`);
@@ -219,12 +221,7 @@ export class SecurityStack extends AcceleratorStack {
    * Function to configure SecurityHub
    */
   private configureSecurityHub() {
-    if (
-      this.props.securityConfig.centralSecurityServices.securityHub.enable &&
-      this.props.securityConfig.centralSecurityServices.securityHub.excludeRegions.indexOf(
-        cdk.Stack.of(this).region as Region,
-      ) === -1
-    ) {
+    if (this.validateExcludeRegionsAndDeploymentTargets(this.securityHubConfig)) {
       // Validate Delegated Admin Account name is part of account config
       this.validateDelegatedAdminAccountName('SecurityHub');
 

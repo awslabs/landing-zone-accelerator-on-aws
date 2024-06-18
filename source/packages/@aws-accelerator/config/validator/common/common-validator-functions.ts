@@ -58,45 +58,6 @@ export class CommonValidatorFunctions {
   }
 
   /**
-   * Get account ids for a deployment target object
-   * @param targets
-   * @returns
-   */
-  public static getAccountIdsFromDeploymentTargets(
-    accountsConfig: AccountsConfig,
-    deploymentTargets: t.DeploymentTargets,
-  ): string[] {
-    const accountIds: string[] = [];
-
-    for (const ou of deploymentTargets.organizationalUnits ?? []) {
-      if (ou === 'Root') {
-        for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
-          accountIds.push(accountsConfig.getAccountId(account.name));
-        }
-      } else {
-        for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
-          if (ou === account.organizationalUnit) {
-            accountIds.push(accountsConfig.getAccountId(account.name));
-          }
-        }
-      }
-    }
-
-    for (const account of deploymentTargets.accounts ?? []) {
-      accountIds.push(accountsConfig.getAccountId(account));
-    }
-
-    const excludedAccountIds: string[] = [];
-    for (const account of deploymentTargets.excludedAccounts ?? []) {
-      excludedAccountIds.push(accountsConfig.getAccountId(account));
-    }
-
-    const filterAccountIds = accountIds.filter(item => !excludedAccountIds.includes(item));
-
-    return [...new Set(filterAccountIds)];
-  }
-
-  /**
    * Get account names for a share target or deployment target object
    * @param targets
    * @returns
@@ -138,7 +99,7 @@ export class CommonValidatorFunctions {
    * @param globalConfig {@link globalConfig}
    * @returns
    */
-  public static getRegionsFromDeploymentTarget(target: t.DeploymentTargets, global: GlobalConfig): t.Region[] {
+  public static getRegionsFromDeploymentTargets(target: t.DeploymentTargets, global: GlobalConfig): t.Region[] {
     const enabledRegions: t.Region[] = global.enabledRegions;
     if (target.excludedRegions) {
       return enabledRegions.filter(region => !target.excludedRegions.includes(region));
@@ -155,13 +116,13 @@ export class CommonValidatorFunctions {
    * @param global
    * @returns
    */
-  public static getEnvironmentsFromDeploymentTarget(
+  public static getEnvironmentsFromDeploymentTargets(
     accountsConfig: AccountsConfig,
     target: t.DeploymentTargets,
     globalConfig: GlobalConfig,
   ): string[] {
     const environments: string[] = [];
-    const enabledRegions = CommonValidatorFunctions.getRegionsFromDeploymentTarget(target, globalConfig);
+    const enabledRegions = CommonValidatorFunctions.getRegionsFromDeploymentTargets(target, globalConfig);
     const accountConfigs = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(accountsConfig, target);
 
     for (const accountConfig of accountConfigs) {

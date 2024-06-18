@@ -159,12 +159,14 @@ exports[`SecurityHubMembers Construct(SecurityHubMembers):  Snapshot Test 1`] = 
             "Arn",
           ],
         },
+        "autoEnableOrgMembers": true,
         "partition": {
           "Ref": "AWS::Partition",
         },
         "region": {
           "Ref": "AWS::Region",
         },
+        "securityHubMemberAccountIds": [],
       },
       "Type": "Custom::SecurityHubCreateMembers",
       "UpdateReplacePolicy": "Delete",

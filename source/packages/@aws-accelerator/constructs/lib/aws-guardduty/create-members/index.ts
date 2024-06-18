@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { chunkArray } from '@aws-accelerator/utils/lib/common-functions';
+import { chunkArray, setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import {
   GuardDutyClient,
@@ -53,14 +53,30 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 
   let organizationsClient: OrganizationsClient;
   if (partition === 'aws-us-gov') {
-    organizationsClient = new OrganizationsClient({ region: 'us-gov-west-1', customUserAgent: solutionId });
+    organizationsClient = new OrganizationsClient({
+      region: 'us-gov-west-1',
+      customUserAgent: solutionId,
+      retryStrategy: setRetryStrategy(),
+    });
   } else if (partition === 'aws-cn') {
-    organizationsClient = new OrganizationsClient({ region: 'cn-northwest-1', customUserAgent: solutionId });
+    organizationsClient = new OrganizationsClient({
+      region: 'cn-northwest-1',
+      customUserAgent: solutionId,
+      retryStrategy: setRetryStrategy(),
+    });
   } else {
-    organizationsClient = new OrganizationsClient({ region: 'us-east-1', customUserAgent: solutionId });
+    organizationsClient = new OrganizationsClient({
+      region: 'us-east-1',
+      customUserAgent: solutionId,
+      retryStrategy: setRetryStrategy(),
+    });
   }
 
-  const guardDutyClient = new GuardDutyClient({ region: region, customUserAgent: solutionId });
+  const guardDutyClient = new GuardDutyClient({
+    region: region,
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+  });
 
   const detectorId = await getDetectorId(guardDutyClient);
 

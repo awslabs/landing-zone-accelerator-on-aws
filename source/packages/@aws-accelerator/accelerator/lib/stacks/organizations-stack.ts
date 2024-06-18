@@ -17,6 +17,7 @@ import { pascalCase } from 'pascal-case';
 import * as path from 'path';
 
 import {
+  CentralSecurityServicesConfig,
   GuardDutyConfig,
   IdentityCenterAssignmentConfig,
   IdentityCenterPermissionSetConfig,
@@ -70,6 +71,7 @@ export class OrganizationsStack extends AcceleratorStack {
   private bucketReplicationProps: BucketReplicationProps;
   private logRetention: number;
   private stackProperties: AcceleratorStackProps;
+  private centralSecurityServices: CentralSecurityServicesConfig;
 
   /**
    * KMS Key used to encrypt custom resource Lambda environment variables, when undefined default AWS managed key will be used
@@ -85,6 +87,7 @@ export class OrganizationsStack extends AcceleratorStack {
     this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
     this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
     this.centralLogsBucketKey = this.getCentralLogsBucketKey(this.cloudwatchKey);
+    this.centralSecurityServices = this.stackProperties.securityConfig.centralSecurityServices;
     this.bucketReplicationProps = {
       destination: {
         bucketName: this.centralLogsBucketName,
@@ -485,12 +488,8 @@ export class OrganizationsStack extends AcceleratorStack {
    * @param adminAccountId
    */
   private enableMacieDelegatedAdminAccount(adminAccountId: string) {
-    if (this.stackProperties.securityConfig.centralSecurityServices.macie.enable) {
-      if (
-        this.stackProperties.securityConfig.centralSecurityServices.macie.excludeRegions.indexOf(
-          cdk.Stack.of(this).region as Region,
-        ) == -1
-      ) {
+    if (this.centralSecurityServices.macie.enable) {
+      if (this.centralSecurityServices.macie.excludeRegions.indexOf(cdk.Stack.of(this).region as Region) == -1) {
         this.logger.debug(
           `Starts macie admin account delegation to the account with email ${
             this.stackProperties.accountsConfig.getAuditAccount().email
@@ -518,15 +517,9 @@ export class OrganizationsStack extends AcceleratorStack {
    * @param adminAccountId
    */
   private enableGuardDutyDelegatedAdminAccount(adminAccountId: string) {
-    const guardDutyConfig: GuardDutyConfig = this.stackProperties.securityConfig.centralSecurityServices.guardduty;
+    const guardDutyConfig: GuardDutyConfig = this.centralSecurityServices.guardduty;
     if (guardDutyConfig.enable) {
-      if (
-        guardDutyConfig.excludeRegions
-          ? guardDutyConfig.excludeRegions.indexOf(this.region as Region) === -1
-          : guardDutyConfig.deploymentTargets?.excludedRegions
-          ? guardDutyConfig.deploymentTargets?.excludedRegions?.indexOf(this.region as Region) === -1
-          : true
-      ) {
+      if (this.validateExcludeRegionsAndDeploymentTargets(guardDutyConfig)) {
         this.logger.debug(
           `Starts guardduty admin account delegation to the account with email ${
             this.stackProperties.accountsConfig.getAuditAccount().email
@@ -554,11 +547,9 @@ export class OrganizationsStack extends AcceleratorStack {
    * @param adminAccountId
    */
   private enableAuditManagerDelegatedAdminAccount(adminAccountId: string) {
-    if (this.stackProperties.securityConfig.centralSecurityServices.auditManager?.enable) {
+    if (this.centralSecurityServices.auditManager?.enable) {
       if (
-        this.stackProperties.securityConfig.centralSecurityServices.auditManager?.excludeRegions.indexOf(
-          cdk.Stack.of(this).region as Region,
-        ) == -1
+        this.centralSecurityServices.auditManager?.excludeRegions.indexOf(cdk.Stack.of(this).region as Region) == -1
       ) {
         this.logger.debug(
           `Starts audit manager admin account delegation to the account with email ${
@@ -587,12 +578,8 @@ export class OrganizationsStack extends AcceleratorStack {
    * @param adminAccountId
    */
   private enableDetectiveDelegatedAdminAccount(adminAccountId: string) {
-    if (this.stackProperties.securityConfig.centralSecurityServices.detective?.enable) {
-      if (
-        this.stackProperties.securityConfig.centralSecurityServices.detective?.excludeRegions.indexOf(
-          cdk.Stack.of(this).region as Region,
-        ) == -1
-      ) {
+    if (this.centralSecurityServices.detective?.enable) {
+      if (this.centralSecurityServices.detective?.excludeRegions.indexOf(cdk.Stack.of(this).region as Region) == -1) {
         this.logger.debug(
           `Starts detective admin account delegation to the account with email ${
             this.stackProperties.accountsConfig.getAuditAccount().email
@@ -619,12 +606,8 @@ export class OrganizationsStack extends AcceleratorStack {
    * @param adminAccountId
    */
   private enableSecurityHubDelegatedAdminAccount(adminAccountId: string) {
-    if (this.stackProperties.securityConfig.centralSecurityServices.securityHub.enable) {
-      if (
-        this.stackProperties.securityConfig.centralSecurityServices.securityHub.excludeRegions.indexOf(
-          cdk.Stack.of(this).region as Region,
-        ) == -1
-      ) {
+    if (this.centralSecurityServices.securityHub.enable) {
+      if (this.validateExcludeRegionsAndDeploymentTargets(this.centralSecurityServices.securityHub)) {
         this.logger.debug(
           `Starts SecurityHub admin account delegation to the account with email ${
             this.stackProperties.accountsConfig.getAuditAccount().email
@@ -717,7 +700,7 @@ export class OrganizationsStack extends AcceleratorStack {
     if (this.props.iamConfig.identityCenter?.identityCenterAssignments) {
       lzaManagedAssignments = this.props.iamConfig.identityCenter.identityCenterAssignments;
       assignmentList = lzaManagedAssignments.map(assignment => ({
-        [assignment.permissionSetName]: this.getAccountIdsFromDeploymentTarget(assignment.deploymentTargets),
+        [assignment.permissionSetName]: this.getAccountIdsFromDeploymentTargets(assignment.deploymentTargets),
       }));
     }
 

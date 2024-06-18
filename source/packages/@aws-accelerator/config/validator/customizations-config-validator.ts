@@ -811,12 +811,12 @@ class CustomizationValidator {
       );
 
       if (listenerCert?.deploymentTargets) {
-        const listenerCertEnv = CommonValidatorFunctions.getEnvironmentsFromDeploymentTarget(
+        const listenerCertEnv = CommonValidatorFunctions.getEnvironmentsFromDeploymentTargets(
           configs.accountsConfig,
           listenerCert.deploymentTargets,
           configs.globalConfig,
         );
-        const listenerInputEnv = CommonValidatorFunctions.getEnvironmentsFromDeploymentTarget(
+        const listenerInputEnv = CommonValidatorFunctions.getEnvironmentsFromDeploymentTargets(
           configs.accountsConfig,
           listenerData.deploymentTargets,
           configs.globalConfig,
