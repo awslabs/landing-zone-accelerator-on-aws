@@ -661,15 +661,8 @@ export class GlobalConfig implements i.IGlobalConfig {
         `saveAseaResourceMapping can only be called when importExternalLandingZoneResources set as true and mappingFileBucket is provided`,
       );
     }
-    const s3Client = new AWS.S3({ region: this.homeRegion });
-    await s3Client
-      .putObject({
-        Bucket: this.externalLandingZoneResources.mappingFileBucket,
-        Key: 'aseaResources.json',
-        Body: JSON.stringify(resources),
-        ServerSideEncryption: 'AES256',
-      })
-      .promise();
+    const resourcesPath = path.join('asea-assets', 'new', 'aseaResources.json');
+    await fs.promises.writeFile(resourcesPath, JSON.stringify(resources, null, 2));
   }
 
   public async loadExternalMapping() {

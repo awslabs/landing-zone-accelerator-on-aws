@@ -1258,9 +1258,13 @@ export async function importAseaResourceStack(
       );
     }
     const resourceMappings = await Promise.all(importStackPromises);
+    const saveResourceMappingPromises = [];
     for (const mapping of resourceMappings) {
+      saveResourceMappingPromises.push(mapping.saveLocalResourceFile());
       resourceMapping.push(...mapping.resourceMapping);
     }
+    await Promise.all(saveResourceMappingPromises);
+    saveResourceMappingPromises.length = 0;
   }
   return resourceMapping;
 }

@@ -12,6 +12,7 @@
  */
 import { Construct } from 'constructs';
 import * as cdk from 'aws-cdk-lib';
+import * as fs from 'fs';
 import { AcceleratorStackProps } from './accelerator-stack';
 import {
   DeploymentTargets,
@@ -176,7 +177,7 @@ export class ImportAseaResourcesStack extends NetworkStack {
     });
   }
 
-  public addDeleteFlagForAseaResource(props: { type: string; identifier?: string; logicalId: string }) {
+  public addDeleteFlagForAseaResource(props: { type?: string; identifier?: string; logicalId: string }) {
     const mappingResource = this.resourceMapping.find(
       resource =>
         resource.resourceType === props.type &&
@@ -366,5 +367,39 @@ export class ImportAseaResourcesStack extends NetworkStack {
   }
   public getNestedStack(stackKey: string): cdk.cloudformation_include.IncludedNestedStack {
     return this.nestedStacks[stackKey];
+  }
+
+  public async saveLocalResourceFile() {
+    const resourcePathArr = this.stackInfo.resourcePath.split('/');
+    const resourceFileName = resourcePathArr.pop();
+    resourcePathArr.unshift('new');
+    resourcePathArr.unshift('asea-assets');
+    const newResourcePath = resourcePathArr.join('/');
+    await fs.promises.mkdir(newResourcePath, { recursive: true });
+    await fs.promises.writeFile(
+      path.join(newResourcePath, resourceFileName!),
+      JSON.stringify(this.importStackResources.cfnResources, null, 2),
+      'utf8',
+    );
+    if (this.stackInfo.nestedStacks) {
+      for (const nestedStackKey of Object.keys(this.stackInfo.nestedStacks)) {
+        const nestedStack = this.stackInfo.nestedStacks[nestedStackKey];
+        const nestedStackResources = this.nestedStackResources?.[nestedStackKey].cfnResources;
+        if (!nestedStackResources) {
+          continue;
+        }
+        const nestedResourcePathArr = nestedStack.resourcePath.split('/');
+        const nestedResourceFileName = nestedResourcePathArr.pop();
+        nestedResourcePathArr.unshift('new');
+        nestedResourcePathArr.unshift('asea-assets');
+        const newNestedResourcePath = nestedResourcePathArr.join('/');
+        await fs.promises.mkdir(newNestedResourcePath, { recursive: true });
+        await fs.promises.writeFile(
+          path.join(newNestedResourcePath, nestedResourceFileName!),
+          JSON.stringify(nestedStackResources, null, 2),
+          'utf8',
+        );
+      }
+    }
   }
 }
