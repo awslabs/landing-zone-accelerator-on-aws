@@ -1280,7 +1280,11 @@ export async function saveAseaResourceMapping(
   props: AcceleratorStackProps,
   resources: AseaResourceMapping[],
 ) {
-  if (context.stage && context.stage === AcceleratorStage.IMPORT_ASEA_RESOURCES) {
+  if (
+    context.stage &&
+    (context.stage === AcceleratorStage.IMPORT_ASEA_RESOURCES ||
+      context.stage === AcceleratorStage.POST_IMPORT_ASEA_RESOURCES)
+  ) {
     await props.globalConfig.saveAseaResourceMapping(resources);
   }
 }
