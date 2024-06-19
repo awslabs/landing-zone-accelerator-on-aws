@@ -349,7 +349,7 @@ export class ImportAseaResourcesStack extends NetworkStack {
         .filter(importResource => importResource.isDeleted)
         .map(importResource => importResource.logicalResourceId);
       for (const logicalId of logicalIdsToDelete) {
-        this.nestedStacks[nestedStackKey].stack.node.tryRemoveChild(logicalId);
+        this.nestedStacks[nestedStackKey].includedTemplate.node.tryRemoveChild(logicalId);
       }
     }
   }
