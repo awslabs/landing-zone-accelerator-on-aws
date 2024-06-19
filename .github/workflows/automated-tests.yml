@@ -1,0 +1,35 @@
+name: Automated Tests
+on:
+  pull_request_review:
+    types: [submitted, edited, dismissed]
+  pull_request_target:
+    types:
+      - edited
+      - opened
+      - synchronize
+      - reopened
+
+jobs:
+  test:
+    permissions:
+      contents: read
+      pull-requests: read
+      statuses: write
+      issues: read
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18.x
+          cache: 'yarn'
+      - name: 'Build and Test'
+        run: |
+          cd source
+          yarn install
+          yarn lerna run precommit --stream
+          yarn build
+          yarn test
+        env:
+          ACCELERATOR_PREFIX: AWSAccelerator
