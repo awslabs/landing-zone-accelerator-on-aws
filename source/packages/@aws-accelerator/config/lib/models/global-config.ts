@@ -239,6 +239,7 @@ export interface IControlTowerConfig {
 export interface IS3EncryptionConfig {
   /**
    * Flag indicates whether solution will create CMK for S3 bucket encryption.
+   * Note: This configuration is not applicable to the assets S3 bucket. This bucket will always have a key generated and applied.
    *
    * @remarks
    * When set to `true`, the solution will create AWS KMS CMK which will be used by the S3 for server-side encryption.
@@ -2353,6 +2354,7 @@ export interface IGlobalConfig {
    * You can use `deploymentTargets` to control target accounts and regions for the given `createCMK` configuration.
    * This configuration is not applicable to LogArchive's central logging region, because the solution deployed CentralLogs bucket always encrypted with AWS KMS CMK.
    * This configuration is not applicable to the Management account Asset bucket in the home region. This bucket will always have a key generated and applied to the bucket if it is created.
+   * This configuration is not applicable to the assets S3 bucket if the bucket is created. This bucket will always have a key generated and applied.
    *
    *  For more information please see [here](https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingEncryption.html)
    *
