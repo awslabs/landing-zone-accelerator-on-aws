@@ -18,6 +18,7 @@ import {
   NonEmptyString,
   VpcConfig,
   VpcTemplatesConfig,
+  AseaResourceType,
 } from '@aws-accelerator/config';
 import { NetworkAcl, Subnet, Vpc } from '@aws-accelerator/constructs';
 import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
@@ -101,9 +102,13 @@ export class NaclResources {
     subnetMap: Map<string, Subnet>,
   ) {
     for (const subnetItem of naclItem.subnetAssociations) {
+      const naclSubnetAssociation = `${vpcItem.name}/${naclItem.name}/${subnetItem}`;
+      if (this.stack.isManagedByAsea(AseaResourceType.EC2_NACL_SUBNET_ASSOCIATION, naclSubnetAssociation)) {
+        this.stack.addLogs(LogLevel.INFO, `Nacl Subnet Association ${naclSubnetAssociation} is managed by ASEA`);
+        continue;
+      }
       this.stack.addLogs(LogLevel.INFO, `Associate ${naclItem.name} to subnet ${subnetItem}`);
       const subnet = getSubnet(subnetMap, vpcItem.name, subnetItem) as Subnet;
-
       networkAcl.associateSubnet(
         `${pascalCase(vpcItem.name)}Vpc${pascalCase(naclItem.name)}NaclAssociate${pascalCase(subnetItem)}`,
         {
