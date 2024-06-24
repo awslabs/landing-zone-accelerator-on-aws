@@ -8,6 +8,7 @@ import {
   CfnRouteTable,
   CfnSecurityGroup,
   CfnSubnet,
+  CfnSubnetNetworkAclAssociation,
   CfnTransitGatewayAttachment,
   CfnVPC,
   CfnVPNGateway,
@@ -27,6 +28,8 @@ import {
   isNetworkType,
   SubnetSourceConfig,
   SecurityGroupSourceConfig,
+  CfnResourceType,
+  NetworkAclConfig,
 } from '@aws-accelerator/config';
 import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
@@ -50,6 +53,8 @@ const enum RESOURCE_TYPE {
   TGW_ASSOCIATION = 'AWS::EC2::TransitGatewayRouteTableAssociation',
   TGW_PROPAGATION = 'AWS::EC2::TransitGatewayRouteTablePropagation',
   TGW_ROUTE = 'AWS::EC2::TransitGatewayRoute',
+  NETWORK_ACL = 'AWS::EC2::NetworkAcl',
+  NETWORK_ACL_SUBNET_ASSOCIATION = 'AWS::EC2::SubnetNetworkAclAssociation',
   NETWORK_FIREWALL = 'AWS::NetworkFirewall::Firewall',
   NETWORK_FIREWALL_POLICY = 'AWS::NetworkFirewall::FirewallPolicy',
   NETWORK_FIREWALL_RULE_GROUP = 'AWS::NetworkFirewall::RuleGroup',
@@ -143,6 +148,7 @@ export class VpcResources extends AseaResource {
       }
       // Create Subnets takes in an LZA VPC Config as 'vpcInScope' object and Existing ASEA stack resource information as 'vpcStackInfo'
       const subnets = this.createSubnets(vpcInScope, nestedStackResources, nestedStack.includedTemplate);
+      this.createNaclSubnetAssociations(vpcInScope, nestedStackResources, nestedStack.includedTemplate);
       this.createNatGateways(nestedStackResources, nestedStack.includedTemplate, vpcInScope, subnets);
       this.createSecurityGroups(vpcInScope, nestedStackResources, nestedStack.includedTemplate);
       const tgwAttachmentMap = this.createTransitGatewayAttachments(
@@ -179,6 +185,93 @@ export class VpcResources extends AseaResource {
       });
       this.scope.addAseaResource(AseaResourceType.EC2_VPC, vpcInScope.name);
     }
+  }
+  private createNaclSubnetAssociations(
+    vpcInScope: VpcConfig | VpcTemplatesConfig,
+    nestedStackResources: ImportStackResources,
+    includedTemplate: cdk.cloudformation_include.CfnInclude,
+  ) {
+    const naclsConfig = vpcInScope.networkAcls;
+    for (const naclConfig of naclsConfig ?? []) {
+      this.processSubnetAssociations(vpcInScope, naclConfig, nestedStackResources, includedTemplate);
+    }
+  }
+
+  private processSubnetAssociations(
+    vpcInScope: VpcConfig | VpcTemplatesConfig,
+    naclConfig: NetworkAclConfig,
+    nestedStackResources: ImportStackResources,
+    includedTemplate: cdk.cloudformation_include.CfnInclude,
+  ) {
+    const naclName = naclConfig.name;
+    const naclId = nestedStackResources.getResourceByTypeAndTag(RESOURCE_TYPE.NETWORK_ACL, naclName);
+    for (const configSubnetAssociation of naclConfig.subnetAssociations) {
+      const subnetName = configSubnetAssociation;
+      const subnetId = nestedStackResources.getResourceByTypeAndTag(RESOURCE_TYPE.SUBNET, subnetName);
+      const naclSubnetAssociation = this.filterNaclSubnetAssocation(nestedStackResources, naclId, subnetId);
+
+      if (!naclSubnetAssociation) {
+        continue;
+      }
+      const cfnNaclSubnetAssociation = this.modifyNaclSubnetAssociation(
+        includedTemplate,
+        naclSubnetAssociation,
+        naclId,
+        subnetId,
+      );
+
+      this.scope.addSsmParameter({
+        logicalId: pascalCase(`SsmParam${pascalCase(naclConfig.name) + pascalCase(subnetName)}SubnetAssociation`),
+        parameterName: this.scope.getSsmPath(SsmResourceType.NETWORK_ACL_SUBNET_ASSOCIATION, [
+          vpcInScope.name,
+          naclConfig.name,
+          subnetName,
+        ]),
+        stringValue: cfnNaclSubnetAssociation.ref,
+        scope: nestedStackResources.getStackKey(),
+      });
+
+      this.scope.addAseaResource(
+        AseaResourceType.EC2_NACL_SUBNET_ASSOCIATION,
+        `${vpcInScope.name}/${naclConfig.name}/${subnetName}`,
+      );
+    }
+  }
+
+  private modifyNaclSubnetAssociation(
+    includedTemplate: cdk.cloudformation_include.CfnInclude,
+    naclSubnetAssociation: CfnResourceType,
+    naclId: CfnResourceType | undefined,
+    subnetId: CfnResourceType | undefined,
+  ) {
+    const cfnNaclSubnetAssociation = includedTemplate.getResource(
+      naclSubnetAssociation?.logicalResourceId,
+    ) as CfnSubnetNetworkAclAssociation;
+
+    if (naclId?.physicalResourceId) {
+      cfnNaclSubnetAssociation.networkAclId = naclId.physicalResourceId;
+    }
+    if (subnetId?.physicalResourceId) {
+      cfnNaclSubnetAssociation.subnetId = subnetId.physicalResourceId;
+    }
+    return cfnNaclSubnetAssociation;
+  }
+
+  private filterNaclSubnetAssocation(
+    nestedStackResources: ImportStackResources,
+    naclId: CfnResourceType | undefined,
+    subnetId: CfnResourceType | undefined,
+  ) {
+    const naclSubnetAssociations = nestedStackResources.getResourcesByType(
+      RESOURCE_TYPE.NETWORK_ACL_SUBNET_ASSOCIATION,
+    );
+
+    const naclSubnetAssociation = naclSubnetAssociations.find(
+      naclSubnetAssociations =>
+        naclSubnetAssociations.resourceMetadata['Properties'].NetworkAclId.Ref === naclId?.logicalResourceId &&
+        naclSubnetAssociations.resourceMetadata['Properties'].SubnetId.Ref === subnetId?.logicalResourceId,
+    );
+    return naclSubnetAssociation;
   }
 
   private getVPCId(vpcName: string) {
