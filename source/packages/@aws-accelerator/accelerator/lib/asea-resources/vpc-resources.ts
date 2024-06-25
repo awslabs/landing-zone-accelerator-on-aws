@@ -1109,6 +1109,7 @@ export class VpcResources extends AseaResource {
     const aseaManagedPolicy = firewallResources[0];
 
     this.scope.addLogs(LogLevel.INFO, `Removing NFW Policy: ${aseaManagedPolicy.logicalResourceId}`);
+    this.scope.addDeleteFlagForNestedResource(nestedStack.getStackKey(), aseaManagedPolicy.logicalResourceId);
   }
 
   private addFirewallLoggingConfiguration(
@@ -1129,11 +1130,11 @@ export class VpcResources extends AseaResource {
         // Create log group and log configuration
         const logGroup = new cdk.aws_logs.LogGroup(
           vpcStack,
-          pascalCase(`${this.scope.acceleratorPrefix}/Nfw/${firewallItem.name}/${logItem.type}`),
+          `${this.scope.acceleratorPrefix}/Nfw/${firewallItem.name}/${pascalCase(logItem.type)}`,
           {
             encryptionKey: this.scope.cloudwatchKey,
             retention: this.props.globalConfig.cloudwatchLogRetentionInDays,
-            logGroupName: `${this.scope.acceleratorPrefix}/Nfw/${firewallItem.name}/${logItem.type}`,
+            logGroupName: `${this.scope.acceleratorPrefix}/Nfw/${firewallItem.name}/${pascalCase(logItem.type)}`,
           },
         );
         destinationConfigs.push({
