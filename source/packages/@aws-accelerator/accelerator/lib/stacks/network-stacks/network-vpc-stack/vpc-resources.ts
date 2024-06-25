@@ -15,10 +15,10 @@ import {
   AseaResourceType,
   CustomerGatewayConfig,
   DefaultVpcsConfig,
-  Ec2FirewallInstanceConfig,
   isNetworkType,
   VpcConfig,
   VpcTemplatesConfig,
+  VpcPeeringConfig,
 } from '@aws-accelerator/config';
 import { VpcFlowLogsConfig } from '@aws-accelerator/config/dist/lib/common/types';
 import {
@@ -33,7 +33,6 @@ import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'pascal-case';
-import { AcceleratorStackProps } from '../../accelerator-stack';
 import { LogLevel, NetworkStack } from '../network-stack';
 import { getVpc, getVpcConfig } from '../utils/getter-utils';
 import { isIpv4 } from '../utils/validation-utils';
@@ -60,17 +59,46 @@ export class VpcResources {
     networkStack: NetworkStack,
     ipamPoolMap: Map<string, string>,
     dhcpOptionsIds: Map<string, string>,
-    props: AcceleratorStackProps,
+    vpcResources: (VpcConfig | VpcTemplatesConfig)[],
+    acceleratorData: { acceleratorPrefix: string; ssmParamName: string; partition: string; useExistingRoles: boolean },
+    configData: {
+      defaultVpcsConfig: DefaultVpcsConfig;
+      centralEndpointVpc: VpcConfig | undefined;
+      vpcFlowLogsConfig: VpcFlowLogsConfig | undefined;
+      customerGatewayConfigs: CustomerGatewayConfig[] | undefined;
+      vpcPeeringConfigs: VpcPeeringConfig[] | undefined;
+      firewalls: { accountId: string; firewallVpc: VpcConfig | VpcTemplatesConfig }[];
+    },
   ) {
     this.stack = networkStack;
+
     // Delete default VPC
-    this.deleteDefaultVpc = this.deleteDefaultVpcMethod(props.networkConfig.defaultVpc);
+    this.deleteDefaultVpc = this.deleteDefaultVpcMethod(configData.defaultVpcsConfig);
     // Create central endpoints role
-    this.centralEndpointRole = this.createCentralEndpointRole(props);
+    this.centralEndpointRole = this.createCentralEndpointRole(
+      acceleratorData.partition,
+      vpcResources,
+      configData.centralEndpointVpc,
+      acceleratorData.acceleratorPrefix,
+    );
     // Create VPCs
-    this.vpcMap = this.createVpcs(this.stack.vpcsInScope, ipamPoolMap, dhcpOptionsIds, props);
+
+    this.vpcMap = this.createVpcs(
+      this.stack.vpcsInScope,
+      ipamPoolMap,
+      dhcpOptionsIds,
+      configData.centralEndpointVpc,
+      configData.vpcFlowLogsConfig,
+      acceleratorData.useExistingRoles,
+      acceleratorData.acceleratorPrefix,
+    );
     // Create cross-account route role
-    this.createCrossAccountRouteRole(props);
+    this.createCrossAccountRouteRole(
+      configData.vpcPeeringConfigs,
+      acceleratorData.acceleratorPrefix,
+      acceleratorData.ssmParamName,
+      configData.firewalls,
+    );
     //
     // Create VPN custom resource handler if needed
     const customResourceHandler = this.stack.advancedVpnTypes.includes('vpc')
@@ -78,13 +106,13 @@ export class VpcResources {
       : undefined;
     //
     // Create VPN connections
-    this.vpnMap = this.createVpnConnections(this.vpcMap, props, customResourceHandler);
+    this.vpnMap = this.createVpnConnections(this.vpcMap, configData.customerGatewayConfigs, customResourceHandler);
     //
     // Create cross-account/cross-region SSM parameters
     this.sharedParameterMap = this.createSharedParameters(
       this.stack.vpcsInScope,
       this.vpcMap,
-      props.networkConfig.customerGateways,
+      configData.customerGatewayConfigs,
     );
   }
 
@@ -113,22 +141,25 @@ export class VpcResources {
    * @param props
    * @returns
    */
-  private createCentralEndpointRole(props: AcceleratorStackProps): cdk.aws_iam.Role | undefined {
-    if (this.useCentralEndpoints(this.stack.vpcsInScope, props.partition)) {
-      const centralEndpointVpc = this.getCentralEndpointVpc(props);
-
+  private createCentralEndpointRole(
+    partition: string,
+    vpcResources: (VpcConfig | VpcTemplatesConfig)[],
+    centralEndpointVpc: VpcConfig | undefined,
+    acceleratorPrefix: string,
+  ): cdk.aws_iam.Role | undefined {
+    if (this.useCentralEndpoints(vpcResources, partition)) {
       if (!centralEndpointVpc) {
         this.stack.addLogs(LogLevel.ERROR, `useCentralEndpoints set to true, but no central endpoint VPC detected`);
         throw new Error(`Configuration validation failed at runtime.`);
       } else {
-        const centralEndpointVpcAccountId = props.accountsConfig.getAccountId(centralEndpointVpc.account);
+        const centralEndpointVpcAccountId = this.stack.getVpcAccountIds(centralEndpointVpc).join();
         if (centralEndpointVpcAccountId !== cdk.Stack.of(this.stack).account) {
           this.stack.addLogs(
             LogLevel.INFO,
             'Central endpoints VPC is in an external account, create a role to enable central endpoints',
           );
           const role = new cdk.aws_iam.Role(this.stack, 'EnableCentralEndpointsRole', {
-            roleName: `${props.prefixes.accelerator}-EnableCentralEndpointsRole-${cdk.Stack.of(this.stack).region}`,
+            roleName: `${acceleratorPrefix}-EnableCentralEndpointsRole-${cdk.Stack.of(this.stack).region}`,
             assumedBy: new cdk.aws_iam.AccountPrincipal(centralEndpointVpcAccountId),
             inlinePolicies: {
               default: new cdk.aws_iam.PolicyDocument({
@@ -185,17 +216,6 @@ export class VpcResources {
   }
 
   /**
-   * Returns a central endpoint VPC config if one exists in this stack context
-   * @param props
-   * @returns
-   */
-  private getCentralEndpointVpc(props: AcceleratorStackProps): VpcConfig | undefined {
-    return props.networkConfig.vpcs.find(
-      vpc => vpc.interfaceEndpoints?.central && vpc.region === cdk.Stack.of(this.stack).region,
-    );
-  }
-
-  /**
    * Add necessary permissions to cross-account role if VPC peering is implemented
    * @param props
    */
@@ -238,10 +258,15 @@ export class VpcResources {
    * Create cross-account route role if target ENIs exist in external account(s) or peering connections defined
    * @param props
    */
-  private createCrossAccountRouteRole(props: AcceleratorStackProps): cdk.aws_iam.Role | undefined {
-    const crossAccountEniAccountIds = this.getCrossAccountEniAccountIds(props);
-    const vpcPeeringAccountIds = this.getVpcPeeringAccountIds(props);
-    const policyList = this.getCrossAccountRoutePolicies(vpcPeeringAccountIds, props.prefixes.ssmParamName);
+  private createCrossAccountRouteRole(
+    vpcPeeringConfig: VpcPeeringConfig[] | undefined,
+    acceleratorPrefix: string,
+    ssmParamNamePrefix: string,
+    firewallInfo: { accountId: string; firewallVpc: VpcConfig | VpcTemplatesConfig }[],
+  ): cdk.aws_iam.Role | undefined {
+    const crossAccountEniAccountIds = this.getCrossAccountEniAccountIds(firewallInfo);
+    const vpcPeeringAccountIds = this.getVpcPeeringAccountIds(vpcPeeringConfig);
+    const policyList = this.getCrossAccountRoutePolicies(vpcPeeringAccountIds, ssmParamNamePrefix);
 
     //
     // Create cross account route role
@@ -259,7 +284,7 @@ export class VpcResources {
       }
 
       const role = new cdk.aws_iam.Role(this.stack, 'VpcPeeringRole', {
-        roleName: `${props.prefixes.accelerator}-VpcPeeringRole-${cdk.Stack.of(this.stack).region}`,
+        roleName: `${acceleratorPrefix}-VpcPeeringRole-${cdk.Stack.of(this.stack).region}`,
         assumedBy: new cdk.aws_iam.CompositePrincipal(...principals),
         inlinePolicies: {
           default: new cdk.aws_iam.PolicyDocument({
@@ -280,53 +305,35 @@ export class VpcResources {
     }
     return undefined;
   }
-
   /**
-   * Return an array of cross-account ENI target account IDs
-   * if a VPC containing relevant route table exists in this account+region
+   * Return an array of cross-account account IDs for VPCs with firewall VPC endpoints
    * @param props
    * @returns
    */
-  private getCrossAccountEniAccountIds(props: AcceleratorStackProps): string[] {
-    const firewallTargetAccountIds: string[] = [];
+  private getCrossAccountEniAccountIds(
+    firewallInfo: { accountId: string; firewallVpc: VpcConfig | VpcTemplatesConfig }[],
+  ) {
+    const crossAccountEniAccountIds: string[] = [];
 
-    for (const firewallInstance of [
-      ...(props.customizationsConfig.firewalls?.instances ?? []),
-      ...(props.customizationsConfig.firewalls?.managerInstances ?? []),
-    ]) {
-      // check for potential targets
-      if (this.isFirewallOwnedByDifferentAccount(props, firewallInstance)) {
-        const vpcConfig = getVpcConfig(this.stack.vpcResources, firewallInstance.vpc);
-        for (const routeTable of vpcConfig.routeTables ?? []) {
-          for (const route of routeTable.routes ?? []) {
-            if (route.type === 'networkInterface' && route?.target?.includes(firewallInstance.name)) {
-              const firewallOwner = props.accountsConfig.getAccountId(firewallInstance.account!);
-              firewallTargetAccountIds.push(firewallOwner);
-            }
-          }
-        }
+    for (const firewallItem of firewallInfo) {
+      if (this.isFirewallOwnedByDifferentAccount(firewallItem)) {
+        crossAccountEniAccountIds.push(...firewallItem.accountId);
       }
     }
-    return firewallTargetAccountIds;
+    // firewalls can be deployed in same account across regions so removing duplicates.
+    return [...new Set(crossAccountEniAccountIds)];
   }
 
-  /**
-   * Check the account and vpc property of an EC2 firewall to determine if it is owned by a different account and deployed in a VPC owned by this account
-   * @param props
-   * @returns
-   */
-  private isFirewallOwnedByDifferentAccount(
-    props: AcceleratorStackProps,
-    firewallConfig: Ec2FirewallInstanceConfig,
-  ): boolean {
-    // Check that firewall has account specified that is not this account
-    if (firewallConfig.account && props.accountsConfig.getAccountId(firewallConfig.account) !== this.stack.account) {
-      // Check that the firewall's target VPC is deployed in this account
-      if (this.vpcMap.has(firewallConfig.vpc)) {
-        return true;
-      }
-    }
-    return false;
+  private isFirewallOwnedByDifferentAccount(firewallItem: {
+    accountId: string;
+    firewallVpc: VpcConfig | VpcTemplatesConfig;
+  }) {
+    // Check that firewall account is not this account
+
+    // Firewall can be deployed to same account but different region
+    // Check that the firewall's target VPC is deployed in this account
+
+    return firewallItem.accountId !== this.stack.account && this.vpcMap.has(firewallItem.firewallVpc.name);
   }
 
   /**
@@ -335,12 +342,12 @@ export class VpcResources {
    * @param props
    * @returns
    */
-  private getVpcPeeringAccountIds(props: AcceleratorStackProps): string[] {
+  private getVpcPeeringAccountIds(vpcPeering: VpcPeeringConfig[] | undefined): string[] {
     //
     // Loop through VPC peering entries. Determine if accepter VPC is in external account.
     //
     const vpcPeeringAccountIds: string[] = [];
-    for (const peering of props.networkConfig.vpcPeering ?? []) {
+    for (const peering of vpcPeering ?? []) {
       // Get requester and accepter VPC configurations
       const requesterVpc = this.stack.vpcResources.find(item => item.name === peering.vpcs[0])!;
       const accepterVpc = this.stack.vpcResources.find(item => item.name === peering.vpcs[1])!;
@@ -387,12 +394,23 @@ export class VpcResources {
     vpcResources: (VpcConfig | VpcTemplatesConfig)[],
     ipamPoolMap: Map<string, string>,
     dhcpOptionsIds: Map<string, string>,
-    props: AcceleratorStackProps,
+    centralEndpointVpc: VpcConfig | undefined,
+    vpcFlowLogsNetworkConfig: VpcFlowLogsConfig | undefined,
+    useExistingRoles: boolean,
+    acceleratorPrefix: string,
   ): Map<string, Vpc> {
     const vpcMap = new Map<string, Vpc>();
 
     for (const vpcItem of vpcResources) {
-      const vpc = this.createVpcItem(vpcItem, dhcpOptionsIds, ipamPoolMap, props);
+      const vpc = this.createVpcItem(
+        vpcItem,
+        dhcpOptionsIds,
+        ipamPoolMap,
+        centralEndpointVpc,
+        vpcFlowLogsNetworkConfig,
+        useExistingRoles,
+        acceleratorPrefix,
+      );
       vpcMap.set(vpcItem.name, vpc);
     }
     return vpcMap;
@@ -410,7 +428,10 @@ export class VpcResources {
     vpcItem: VpcConfig | VpcTemplatesConfig,
     dhcpOptionsIds: Map<string, string>,
     ipamPoolMap: Map<string, string>,
-    props: AcceleratorStackProps,
+    centralEndpointVpc: VpcConfig | undefined,
+    vpcFlowLogsNetworkConfig: VpcFlowLogsConfig | undefined,
+    useExistingRoles: boolean,
+    acceleratorPrefix: string,
   ): Vpc {
     this.stack.addLogs(LogLevel.INFO, `Adding VPC ${vpcItem.name}`);
     //
@@ -455,11 +476,11 @@ export class VpcResources {
     //
     // Add central endpoint tags
     //
-    this.addCentralEndpointTags(vpc, vpcItem, props);
+    this.addCentralEndpointTags(vpc, vpcItem, centralEndpointVpc);
     //
     // Add flow logs, if configured
     //
-    this.getVpcFlowLogConfig(vpc, vpcItem, props);
+    this.getVpcFlowLogConfig(vpc, vpcItem, vpcFlowLogsNetworkConfig, useExistingRoles, acceleratorPrefix);
     //
     // Delete default security group rules
     //
@@ -625,19 +646,23 @@ export class VpcResources {
   private addCentralEndpointTags(
     vpc: Vpc,
     vpcItem: VpcConfig | VpcTemplatesConfig,
-    props: AcceleratorStackProps,
+    centralEndpointVpc: VpcConfig | undefined,
   ): boolean {
     if (vpcItem.useCentralEndpoints) {
-      const centralEndpointVpc = this.getCentralEndpointVpc(props);
       if (!centralEndpointVpc) {
-        this.stack.addLogs(LogLevel.INFO, 'Attempting to use central endpoints with no Central Endpoints defined');
+        this.stack.addLogs(LogLevel.ERROR, 'Attempting to use central endpoints with no Central Endpoints defined');
+        throw new Error(`Configuration validation failed at runtime.`);
+      }
+      const centralEndpointVpcAccountId = this.stack.getVpcAccountIds(centralEndpointVpc).join();
+      if (!centralEndpointVpcAccountId) {
+        this.stack.addLogs(
+          LogLevel.ERROR,
+          'Attempting to use central endpoints without an account ID for the Central Endpoints defined',
+        );
         throw new Error(`Configuration validation failed at runtime.`);
       }
       cdk.Tags.of(vpc).add('accelerator:use-central-endpoints', 'true');
-      cdk.Tags.of(vpc).add(
-        'accelerator:central-endpoints-account-id',
-        props.accountsConfig.getAccountId(centralEndpointVpc.account),
-      );
+      cdk.Tags.of(vpc).add('accelerator:central-endpoints-account-id', centralEndpointVpcAccountId!);
       return true;
     }
     return false;
@@ -650,17 +675,23 @@ export class VpcResources {
    * @param props
    *
    */
-  private getVpcFlowLogConfig(vpc: Vpc, vpcItem: VpcConfig | VpcTemplatesConfig, props: AcceleratorStackProps) {
+  private getVpcFlowLogConfig(
+    vpc: Vpc,
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    vpcFlowLogsNetworkConfig: VpcFlowLogsConfig | undefined,
+    useExistingRoles: boolean,
+    acceleratorPrefix: string,
+  ) {
     let vpcFlowLogs: VpcFlowLogsConfig | undefined;
 
     if (vpcItem.vpcFlowLogs) {
       vpcFlowLogs = vpcItem.vpcFlowLogs;
     } else {
-      vpcFlowLogs = props.networkConfig.vpcFlowLogs;
+      vpcFlowLogs = vpcFlowLogsNetworkConfig;
     }
 
     if (vpcFlowLogs) {
-      this.createVpcFlowLogs(vpc, vpcFlowLogs, props.useExistingRoles, props.prefixes.accelerator);
+      this.createVpcFlowLogs(vpc, vpcFlowLogs, useExistingRoles, acceleratorPrefix);
     } else {
       NagSuppressions.addResourceSuppressions(vpc, [
         { id: 'AwsSolutions-VPC7', reason: 'VPC does not have flow logs configured' },
@@ -755,11 +786,11 @@ export class VpcResources {
    */
   private createVpnConnections(
     vpcMap: Map<string, Vpc>,
-    props: AcceleratorStackProps,
+    customerGatewayConfig: CustomerGatewayConfig[] | undefined,
     customResourceHandler?: cdk.aws_lambda.IFunction,
   ): Map<string, string> {
     const vpnMap = new Map<string, string>();
-    const ipv4Cgws = props.networkConfig.customerGateways?.filter(cgw => isIpv4(cgw.ipAddress));
+    const ipv4Cgws = customerGatewayConfig?.filter(cgw => isIpv4(cgw.ipAddress));
 
     for (const cgw of ipv4Cgws ?? []) {
       for (const vpnItem of cgw.vpnConnections ?? []) {

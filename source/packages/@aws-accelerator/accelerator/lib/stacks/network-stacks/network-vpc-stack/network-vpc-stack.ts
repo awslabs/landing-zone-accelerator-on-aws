@@ -13,7 +13,7 @@
 
 import { Construct } from 'constructs';
 
-import { OutpostsConfig, VpcConfig } from '@aws-accelerator/config';
+import { OutpostsConfig, VpcConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
 import {
   INatGateway,
   ITransitGatewayAttachment,
@@ -40,7 +40,7 @@ import { TgwResources } from './tgw-resources';
 import { VpcResources } from './vpc-resources';
 import { pascalCase } from 'pascal-case';
 import { SsmResourceType } from '@aws-accelerator/utils';
-
+import { getVpcConfig } from '../utils/getter-utils';
 export class NetworkVpcStack extends NetworkStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
@@ -60,7 +60,27 @@ export class NetworkVpcStack extends NetworkStack {
     // Create VPC resources
     //
     const ipamPoolMap = this.setIpamPoolMap(props);
-    const vpcResources = new VpcResources(this, ipamPoolMap, dhcpResources.dhcpOptionsIds, props);
+
+    const vpcResources = new VpcResources(
+      this,
+      ipamPoolMap,
+      dhcpResources.dhcpOptionsIds,
+      this.vpcResources,
+      {
+        acceleratorPrefix: props.prefixes.accelerator,
+        ssmParamName: props.prefixes.ssmParamName,
+        partition: props.partition,
+        useExistingRoles: props.useExistingRoles,
+      },
+      {
+        defaultVpcsConfig: props.networkConfig.defaultVpc,
+        centralEndpointVpc: props.networkConfig.vpcs.find(vpc => vpc.interfaceEndpoints?.central),
+        vpcFlowLogsConfig: props.networkConfig.vpcFlowLogs,
+        customerGatewayConfigs: props.networkConfig.customerGateways,
+        vpcPeeringConfigs: props.networkConfig.vpcPeering,
+        firewalls: this.getFirewallInfo(props, this.vpcResources),
+      },
+    );
     //
     // Create VPC and outpost route table resources
     //
@@ -283,5 +303,36 @@ export class NetworkVpcStack extends NetworkStack {
     }
 
     return outpostMap.get(key)!;
+  }
+
+  /**
+   * Return an array of cross-account ENI target account IDs
+   * if a VPC containing relevant route table exists in this account+region
+   * @param props
+   * @returns
+   */
+  private getFirewallInfo(
+    props: AcceleratorStackProps,
+    vpcResourcesToDeploy: (VpcConfig | VpcTemplatesConfig)[],
+  ): { accountId: string; firewallVpc: VpcConfig | VpcTemplatesConfig }[] {
+    const firewallAccountInfo: { accountId: string; firewallVpc: VpcConfig | VpcTemplatesConfig }[] = [];
+
+    for (const firewallInstance of [
+      ...(props.customizationsConfig.firewalls?.instances ?? []),
+      ...(props.customizationsConfig.firewalls?.managerInstances ?? []),
+    ]) {
+      // check for potential targets
+
+      const vpcConfig = getVpcConfig(vpcResourcesToDeploy, firewallInstance.vpc);
+      for (const routeTable of vpcConfig.routeTables ?? []) {
+        for (const route of routeTable.routes ?? []) {
+          if (route.type === 'networkInterface' && route?.target?.includes(firewallInstance.name)) {
+            const firewallOwner = this.getVpcAccountIds(vpcConfig).join();
+            firewallAccountInfo.push({ accountId: firewallOwner, firewallVpc: vpcConfig });
+          }
+        }
+      }
+    }
+    return firewallAccountInfo;
   }
 }

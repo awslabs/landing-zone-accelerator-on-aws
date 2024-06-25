@@ -27,3 +27,15 @@ const stack = acceleratorTestStacks.stacks.get(`Network-us-east-1`)!;
 describe('NetworkVpcStack', () => {
   snapShotTest(testNamePrefix, stack);
 });
+
+const noVpcFlowLogTestStack = new AcceleratorSynthStacks(
+  AcceleratorStage.NETWORK_VPC,
+  'aws',
+  'us-east-1',
+  'all-enabled-ou-targets',
+);
+const noVpcFlowLogStack = noVpcFlowLogTestStack.stacks.get(`Management-us-east-1`)!;
+
+describe('NoVpcFlowLogStack', () => {
+  snapShotTest(testNamePrefix, noVpcFlowLogStack);
+});
