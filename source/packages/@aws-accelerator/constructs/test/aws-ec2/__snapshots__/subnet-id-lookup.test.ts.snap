@@ -92,7 +92,6 @@ exports[`SubnetIdLookup Construct(SubnetIdLookup):  Snapshot Test 1`] = `
       "DependsOn": [
         "SubnetIdLookupSubnetIdLookupFunctionServiceRoleDefaultPolicy20F5ACD5",
         "SubnetIdLookupSubnetIdLookupFunctionServiceRoleD56D09B3",
-        "SubnetIdLookupSubnetIdLookupFunctionLogGroup2C86E34D",
       ],
       "Properties": {
         "Code": {
@@ -146,9 +145,6 @@ exports[`SubnetIdLookup Construct(SubnetIdLookup):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Retain",
     },
     "SubnetIdLookupSubnetIdLookupFunctionServiceRoleD56D09B3": {
-      "DependsOn": [
-        "SubnetIdLookupSubnetIdLookupFunctionLogGroup2C86E34D",
-      ],
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -180,9 +176,6 @@ exports[`SubnetIdLookup Construct(SubnetIdLookup):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Role",
     },
     "SubnetIdLookupSubnetIdLookupFunctionServiceRoleDefaultPolicy20F5ACD5": {
-      "DependsOn": [
-        "SubnetIdLookupSubnetIdLookupFunctionLogGroup2C86E34D",
-      ],
       "Properties": {
         "PolicyDocument": {
           "Statement": [

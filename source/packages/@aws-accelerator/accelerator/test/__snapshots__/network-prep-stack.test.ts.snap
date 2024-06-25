@@ -2749,7 +2749,6 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "VpnOnEventHandler05011160": {
       "DependsOn": [
-        "VpnOnEventHandlerResourceLogGroupBD9BBFBB",
         "VpnRoleD22FDF01",
       ],
       "Properties": {

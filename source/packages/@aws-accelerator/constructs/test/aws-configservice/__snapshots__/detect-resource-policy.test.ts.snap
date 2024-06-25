@@ -77,7 +77,6 @@ exports[`RevertScpChanges Construct(DetectResourcePolicy):  Snapshot Test 1`] = 
       "DependsOn": [
         "DetectResourcePolicyDetectResourcePolicyFunctionServiceRoleDefaultPolicy17595A0D",
         "DetectResourcePolicyDetectResourcePolicyFunctionServiceRoleE9AC0FD8",
-        "DetectResourcePolicyDetectResourcePolicyFunctionLogGroup68C3F428",
       ],
       "Properties": {
         "Code": {
@@ -140,9 +139,6 @@ exports[`RevertScpChanges Construct(DetectResourcePolicy):  Snapshot Test 1`] = 
       "UpdateReplacePolicy": "Delete",
     },
     "DetectResourcePolicyDetectResourcePolicyFunctionServiceRoleDefaultPolicy17595A0D": {
-      "DependsOn": [
-        "DetectResourcePolicyDetectResourcePolicyFunctionLogGroup68C3F428",
-      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -340,9 +336,6 @@ exports[`RevertScpChanges Construct(DetectResourcePolicy):  Snapshot Test 1`] = 
       "Type": "AWS::IAM::Policy",
     },
     "DetectResourcePolicyDetectResourcePolicyFunctionServiceRoleE9AC0FD8": {
-      "DependsOn": [
-        "DetectResourcePolicyDetectResourcePolicyFunctionLogGroup68C3F428",
-      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [

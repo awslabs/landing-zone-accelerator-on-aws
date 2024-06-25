@@ -5,9 +5,6 @@ exports[`Certificate Construct(Certificate):  Snapshot Test 1`] = `
   "Resources": {
     "ImportCertificate94B1FDBC": {
       "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "ImportCertificateFunctionLogGroup3FFC3061",
-      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -227,9 +224,6 @@ exports[`Certificate Construct(Certificate):  Snapshot Test 1`] = `
     },
     "RequestCertificate5D48D3DE": {
       "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "RequestCertificateFunctionLogGroup1921673C",
-      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -456,9 +450,6 @@ exports[`ImportCertificate Construct(Certificate):  Snapshot Test 1`] = `
   "Resources": {
     "ImportCertificate94B1FDBC": {
       "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "ImportCertificateFunctionLogGroup3FFC3061",
-      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -678,9 +669,6 @@ exports[`ImportCertificate Construct(Certificate):  Snapshot Test 1`] = `
     },
     "RequestCertificate5D48D3DE": {
       "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "RequestCertificateFunctionLogGroup1921673C",
-      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [

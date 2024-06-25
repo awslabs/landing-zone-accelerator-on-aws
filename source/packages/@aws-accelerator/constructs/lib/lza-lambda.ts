@@ -115,15 +115,13 @@ export class LzaLambda extends Construct {
       environment: this.prepareLambdaEnvironments(props),
     });
 
-    const logGroup = new cdk.aws_logs.LogGroup(this, `${this.resource.node.id}LogGroup`, {
+    new cdk.aws_logs.LogGroup(this, `${this.resource.node.id}LogGroup`, {
       logGroupName: `/aws/lambda/${this.resource.functionName}`,
       retention: props.cloudWatchLogRetentionInDays,
       encryptionKey: props.cloudWatchLogKmsKey,
       removalPolicy: props.cloudWatchLogRemovalPolicy ?? cdk.RemovalPolicy.DESTROY,
     });
 
-    // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
-    this.resource.node.addDependency(logGroup);
     this.addSuppression(scope, id, props.nagSuppressionPrefix);
   }
 

@@ -1033,8 +1033,6 @@ export class InstallerStack extends cdk.Stack {
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       },
     );
-    // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
-    updatePipelineGithubTokenFunction.node.addDependency(updatePipelineGithubTokenLogGroup);
 
     /**
      * Only create GitHub Pipeline Update Resources if it is a GitHub Sourced Pipeline.

@@ -77,7 +77,6 @@ exports[`RemediateResourcePolicy Construct(RemediateResourcePolicy):  Snapshot T
       "DependsOn": [
         "DetectResourcePolicyRemediateResourcePolicyFunctionServiceRoleDefaultPolicy6470C516",
         "DetectResourcePolicyRemediateResourcePolicyFunctionServiceRole269D8709",
-        "DetectResourcePolicyRemediateResourcePolicyFunctionLogGroup45217A8F",
       ],
       "Properties": {
         "Code": {
@@ -140,9 +139,6 @@ exports[`RemediateResourcePolicy Construct(RemediateResourcePolicy):  Snapshot T
       "UpdateReplacePolicy": "Delete",
     },
     "DetectResourcePolicyRemediateResourcePolicyFunctionServiceRole269D8709": {
-      "DependsOn": [
-        "DetectResourcePolicyRemediateResourcePolicyFunctionLogGroup45217A8F",
-      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -188,9 +184,6 @@ exports[`RemediateResourcePolicy Construct(RemediateResourcePolicy):  Snapshot T
       "Type": "AWS::IAM::Role",
     },
     "DetectResourcePolicyRemediateResourcePolicyFunctionServiceRoleDefaultPolicy6470C516": {
-      "DependsOn": [
-        "DetectResourcePolicyRemediateResourcePolicyFunctionLogGroup45217A8F",
-      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [

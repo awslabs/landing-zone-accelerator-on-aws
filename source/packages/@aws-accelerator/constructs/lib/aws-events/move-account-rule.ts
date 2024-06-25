@@ -131,14 +131,12 @@ export class MoveAccountRule extends Construct {
       }),
     );
 
-    const logGroup = new cdk.aws_logs.LogGroup(this, `${moveAccountTargetFunction.node.id}LogGroup`, {
+    new cdk.aws_logs.LogGroup(this, `${moveAccountTargetFunction.node.id}LogGroup`, {
       logGroupName: `/aws/lambda/${moveAccountTargetFunction.functionName}`,
       retention: props.logRetentionInDays,
       encryptionKey: props.kmsKey,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
-    // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
-    moveAccountTargetFunction.node.addDependency(logGroup);
 
     const moveAccountRule = new cdk.aws_events.Rule(this, 'MoveAccountRule', {
       description: 'CloudWatch Events rule to monitor for Organizations MoveAccount events',

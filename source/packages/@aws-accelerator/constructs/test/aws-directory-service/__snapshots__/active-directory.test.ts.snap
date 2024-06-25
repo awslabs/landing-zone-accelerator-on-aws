@@ -42,7 +42,6 @@ exports[`ActiveDirectory Construct(ActiveDirectory):  Snapshot Test 1`] = `
       "DependsOn": [
         "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionFunctionServiceRoleDefaultPolicy5A76EC10",
         "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionFunctionServiceRole2EF3FD57",
-        "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionFunctionLogGroupCCE84E08",
       ],
       "Properties": {
         "Code": {
@@ -96,9 +95,6 @@ exports[`ActiveDirectory Construct(ActiveDirectory):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionFunctionServiceRole2EF3FD57": {
-      "DependsOn": [
-        "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionFunctionLogGroupCCE84E08",
-      ],
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -130,9 +126,6 @@ exports[`ActiveDirectory Construct(ActiveDirectory):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Role",
     },
     "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionFunctionServiceRoleDefaultPolicy5A76EC10": {
-      "DependsOn": [
-        "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionFunctionLogGroupCCE84E08",
-      ],
       "Properties": {
         "PolicyDocument": {
           "Statement": [

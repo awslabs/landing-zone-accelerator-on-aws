@@ -300,7 +300,6 @@ exports[`MoveAccountRule Construct(MoveAccountRule):  Snapshot Test 1`] = `
       "DependsOn": [
         "MoveAccountRuleMoveAccountTargetFunctionServiceRoleDefaultPolicy142271D7",
         "MoveAccountRuleMoveAccountTargetFunctionServiceRoleF8A8BB3D",
-        "MoveAccountRuleMoveAccountTargetFunctionLogGroup0D1780CE",
       ],
       "Properties": {
         "Code": {
@@ -359,9 +358,6 @@ exports[`MoveAccountRule Construct(MoveAccountRule):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "MoveAccountRuleMoveAccountTargetFunctionServiceRoleDefaultPolicy142271D7": {
-      "DependsOn": [
-        "MoveAccountRuleMoveAccountTargetFunctionLogGroup0D1780CE",
-      ],
       "Properties": {
         "PolicyDocument": {
           "Statement": [
@@ -397,9 +393,6 @@ exports[`MoveAccountRule Construct(MoveAccountRule):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Policy",
     },
     "MoveAccountRuleMoveAccountTargetFunctionServiceRoleF8A8BB3D": {
-      "DependsOn": [
-        "MoveAccountRuleMoveAccountTargetFunctionLogGroup0D1780CE",
-      ],
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [

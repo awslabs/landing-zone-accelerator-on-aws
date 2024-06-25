@@ -126,7 +126,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
     "AcceleratorAttachEc2InstanceProfileFunction2F25082F": {
       "DependsOn": [
         "AcceleratorAttachEc2InstanceProfileFunctionServiceRoleF2BC24EC",
-        "AcceleratorAttachEc2InstanceProfileLogGroup19DCB538",
       ],
       "Properties": {
         "Code": {
@@ -147,9 +146,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Type": "AWS::Lambda::Function",
     },
     "AcceleratorAttachEc2InstanceProfileFunctionCustomRulePermissionBjrlLxHBU2q1eflzaT436qiq4Iu5pKu7iRO6toNI5AF7FE49": {
-      "DependsOn": [
-        "AcceleratorAttachEc2InstanceProfileLogGroup19DCB538",
-      ],
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
@@ -164,9 +160,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Type": "AWS::Lambda::Permission",
     },
     "AcceleratorAttachEc2InstanceProfileFunctionServiceRoleF2BC24EC": {
-      "DependsOn": [
-        "AcceleratorAttachEc2InstanceProfileLogGroup19DCB538",
-      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -872,7 +865,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
     "AcceleratorEc2InstanceProfilePermissionFunction65B8A331": {
       "DependsOn": [
         "AcceleratorEc2InstanceProfilePermissionFunctionServiceRoleAA6A6427",
-        "AcceleratorEc2InstanceProfilePermissionLogGroupE31085F3",
       ],
       "Properties": {
         "Code": {
@@ -893,9 +885,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Type": "AWS::Lambda::Function",
     },
     "AcceleratorEc2InstanceProfilePermissionFunctionCustomRulePermissionBjrlLxHBU2q1eflzaT436qiq4Iu5pKu7iRO6toNI407CB1D2": {
-      "DependsOn": [
-        "AcceleratorEc2InstanceProfilePermissionLogGroupE31085F3",
-      ],
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
@@ -910,9 +899,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Type": "AWS::Lambda::Permission",
     },
     "AcceleratorEc2InstanceProfilePermissionFunctionServiceRoleAA6A6427": {
-      "DependsOn": [
-        "AcceleratorEc2InstanceProfilePermissionLogGroupE31085F3",
-      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -2035,7 +2021,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
     "AcceleratorTargetDocument01Function89A6815D": {
       "DependsOn": [
         "AcceleratorTargetDocument01FunctionServiceRoleCDB753E0",
-        "AcceleratorTargetDocument01LogGroup196D5782",
       ],
       "Properties": {
         "Code": {
@@ -2056,9 +2041,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Type": "AWS::Lambda::Function",
     },
     "AcceleratorTargetDocument01FunctionCustomRulePermissionBjrlLxHBU2q1eflzaT436qiq4Iu5pKu7iRO6toNI866B82A5": {
-      "DependsOn": [
-        "AcceleratorTargetDocument01LogGroup196D5782",
-      ],
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
@@ -2073,9 +2055,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Type": "AWS::Lambda::Permission",
     },
     "AcceleratorTargetDocument01FunctionServiceRoleCDB753E0": {
-      "DependsOn": [
-        "AcceleratorTargetDocument01LogGroup196D5782",
-      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -2240,7 +2219,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
     },
     "AcceleratorTargetDocument01RemediationFunction15F7D4F0": {
       "DependsOn": [
-        "AcceleratorTargetDocument01RemediationLogGroupDCA10183",
         "AcceleratorTargetDocument01RemediationRoleDefaultPolicyD5AA3685",
         "AcceleratorTargetDocument01RemediationRoleB6FD3A5D",
       ],
@@ -2480,9 +2458,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Type": "AWS::Config::ConfigRule",
     },
     "AcceleratorWafLoggingEnabledFunctionCustomRulePermissionBjrlLxHBU2q1eflzaT436qiq4Iu5pKu7iRO6toNI742BC256": {
-      "DependsOn": [
-        "AcceleratorWafLoggingEnabledLogGroupBE48D40E",
-      ],
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
@@ -2499,7 +2474,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
     "AcceleratorWafLoggingEnabledFunctionE69C34AD": {
       "DependsOn": [
         "AcceleratorWafLoggingEnabledFunctionServiceRole3388E650",
-        "AcceleratorWafLoggingEnabledLogGroupBE48D40E",
       ],
       "Properties": {
         "Code": {
@@ -2520,9 +2494,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Type": "AWS::Lambda::Function",
     },
     "AcceleratorWafLoggingEnabledFunctionServiceRole3388E650": {
-      "DependsOn": [
-        "AcceleratorWafLoggingEnabledLogGroupBE48D40E",
-      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -4220,7 +4191,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "DependsOn": [
         "SecurityHubEventsLogSecurityHubEventsFunctionServiceRoleDefaultPolicy56E1474C",
         "SecurityHubEventsLogSecurityHubEventsFunctionServiceRole3A655D2A",
-        "SecurityHubEventsLogSecurityHubEventsFunctionResourceLogGroupB7A99902",
       ],
       "Properties": {
         "Code": {
@@ -4291,9 +4261,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "UpdateReplacePolicy": "Delete",
     },
     "SecurityHubEventsLogSecurityHubEventsFunctionServiceRole3A655D2A": {
-      "DependsOn": [
-        "SecurityHubEventsLogSecurityHubEventsFunctionResourceLogGroupB7A99902",
-      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -4335,9 +4302,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Type": "AWS::IAM::Role",
     },
     "SecurityHubEventsLogSecurityHubEventsFunctionServiceRoleDefaultPolicy56E1474C": {
-      "DependsOn": [
-        "SecurityHubEventsLogSecurityHubEventsFunctionResourceLogGroupB7A99902",
-      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -4908,7 +4872,6 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
     "AcceleratorAttachEc2InstanceProfileFunction2F25082F": {
       "DependsOn": [
         "AcceleratorAttachEc2InstanceProfileFunctionServiceRoleF2BC24EC",
-        "AcceleratorAttachEc2InstanceProfileLogGroup19DCB538",
       ],
       "Properties": {
         "Code": {
@@ -4929,9 +4892,6 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
       "Type": "AWS::Lambda::Function",
     },
     "AcceleratorAttachEc2InstanceProfileFunctionCustomRulePermissionBjrlLxHBU2q1eflzaT436qiq4Iu5pKu7iRO6toNI5AF7FE49": {
-      "DependsOn": [
-        "AcceleratorAttachEc2InstanceProfileLogGroup19DCB538",
-      ],
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
@@ -4946,9 +4906,6 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
       "Type": "AWS::Lambda::Permission",
     },
     "AcceleratorAttachEc2InstanceProfileFunctionServiceRoleF2BC24EC": {
-      "DependsOn": [
-        "AcceleratorAttachEc2InstanceProfileLogGroup19DCB538",
-      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -5434,7 +5391,6 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
     "AcceleratorEc2InstanceProfilePermissionFunction65B8A331": {
       "DependsOn": [
         "AcceleratorEc2InstanceProfilePermissionFunctionServiceRoleAA6A6427",
-        "AcceleratorEc2InstanceProfilePermissionLogGroupE31085F3",
       ],
       "Properties": {
         "Code": {
@@ -5455,9 +5411,6 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
       "Type": "AWS::Lambda::Function",
     },
     "AcceleratorEc2InstanceProfilePermissionFunctionCustomRulePermissionBjrlLxHBU2q1eflzaT436qiq4Iu5pKu7iRO6toNI407CB1D2": {
-      "DependsOn": [
-        "AcceleratorEc2InstanceProfilePermissionLogGroupE31085F3",
-      ],
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
@@ -5472,9 +5425,6 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
       "Type": "AWS::Lambda::Permission",
     },
     "AcceleratorEc2InstanceProfilePermissionFunctionServiceRoleAA6A6427": {
-      "DependsOn": [
-        "AcceleratorEc2InstanceProfilePermissionLogGroupE31085F3",
-      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -7487,7 +7437,6 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
       "DependsOn": [
         "SecurityHubEventsLogSecurityHubEventsFunctionServiceRoleDefaultPolicy56E1474C",
         "SecurityHubEventsLogSecurityHubEventsFunctionServiceRole3A655D2A",
-        "SecurityHubEventsLogSecurityHubEventsFunctionResourceLogGroupB7A99902",
       ],
       "Properties": {
         "Code": {
@@ -7558,9 +7507,6 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
       "UpdateReplacePolicy": "Delete",
     },
     "SecurityHubEventsLogSecurityHubEventsFunctionServiceRole3A655D2A": {
-      "DependsOn": [
-        "SecurityHubEventsLogSecurityHubEventsFunctionResourceLogGroupB7A99902",
-      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -7602,9 +7548,6 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
       "Type": "AWS::IAM::Role",
     },
     "SecurityHubEventsLogSecurityHubEventsFunctionServiceRoleDefaultPolicy56E1474C": {
-      "DependsOn": [
-        "SecurityHubEventsLogSecurityHubEventsFunctionResourceLogGroupB7A99902",
-      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [

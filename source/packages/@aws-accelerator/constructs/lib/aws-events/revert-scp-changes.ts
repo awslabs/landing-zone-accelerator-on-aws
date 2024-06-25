@@ -177,14 +177,12 @@ export class RevertScpChanges extends Construct {
       }),
     );
 
-    const logGroup = new cdk.aws_logs.LogGroup(this, `${revertScpChangesFunction.node.id}LogGroup`, {
+    new cdk.aws_logs.LogGroup(this, `${revertScpChangesFunction.node.id}LogGroup`, {
       logGroupName: `/aws/lambda/${revertScpChangesFunction.functionName}`,
       retention: props.logRetentionInDays,
       encryptionKey: props.kmsKeyCloudWatch,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
-    // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
-    revertScpChangesFunction.node.addDependency(logGroup);
   }
 
   // Copies Service Control Policy files to the Lambda directory for packaging

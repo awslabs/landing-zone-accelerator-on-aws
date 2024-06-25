@@ -78,14 +78,12 @@ export class NLBAddresses extends cdk.Resource implements INLBAddresses {
       onEventHandler: providerLambda,
     });
 
-    const logGroup = new cdk.aws_logs.LogGroup(this, `${providerLambda.node.id}LogGroup`, {
+    new cdk.aws_logs.LogGroup(this, `${providerLambda.node.id}LogGroup`, {
       logGroupName: `/aws/lambda/${providerLambda.functionName}`,
       retention: props.logRetentionInDays,
       encryptionKey: props.kmsKey,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
-    // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
-    providerLambda.node.addDependency(logGroup);
 
     const resource = new cdk.CustomResource(this, `Resource`, {
       serviceToken: provider.serviceToken,

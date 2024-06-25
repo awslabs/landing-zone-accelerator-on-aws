@@ -55,14 +55,12 @@ export class CreateControlTowerAccounts extends Construct {
       description: 'Create Control Tower Account onEvent handler',
       environmentEncryption: props.kmsKey,
     });
-    const onEventLogGroup = new cdk.aws_logs.LogGroup(this, `${this.onEvent.node.id}LogGroup`, {
+    new cdk.aws_logs.LogGroup(this, `${this.onEvent.node.id}LogGroup`, {
       logGroupName: `/aws/lambda/${this.onEvent.functionName}`,
       retention: props.logRetentionInDays,
       encryptionKey: props.kmsKey,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
-    // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
-    this.onEvent.node.addDependency(onEventLogGroup);
 
     const ddbPolicy = new cdk.aws_iam.PolicyStatement({
       sid: 'DynamoDb',
@@ -136,14 +134,12 @@ export class CreateControlTowerAccounts extends Construct {
       initialPolicy: [ddbPolicy, ddbKmsPolicy, ctPolicy, ssoPolicy],
       environmentEncryption: props.kmsKey,
     });
-    const isCompleteLogGroup = new cdk.aws_logs.LogGroup(this, `${this.isComplete.node.id}LogGroup`, {
+    new cdk.aws_logs.LogGroup(this, `${this.isComplete.node.id}LogGroup`, {
       logGroupName: `/aws/lambda/${this.isComplete.functionName}`,
       retention: props.logRetentionInDays,
       encryptionKey: props.kmsKey,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
-    // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
-    this.isComplete.node.addDependency(isCompleteLogGroup);
 
     this.isComplete.role?.addManagedPolicy(
       cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName('AWSServiceCatalogEndUserFullAccess'),

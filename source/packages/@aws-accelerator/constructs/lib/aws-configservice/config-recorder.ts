@@ -118,7 +118,7 @@ export class ConfigServiceRecorder extends Construct {
       role: lambdaRole,
     });
 
-    const logGroup = new cdk.aws_logs.LogGroup(this, `${lambdaFunction.node.id}LogGroup`, {
+    new cdk.aws_logs.LogGroup(this, `${lambdaFunction.node.id}LogGroup`, {
       logGroupName: `/aws/lambda/${lambdaFunction.functionName}`,
       retention: props.logRetentionInDays,
       encryptionKey: props.cloudwatchKmsKey,
@@ -139,8 +139,6 @@ export class ConfigServiceRecorder extends Construct {
       },
     });
 
-    // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
-    resource.node.addDependency(logGroup);
     this.id = resource.ref;
   }
 }

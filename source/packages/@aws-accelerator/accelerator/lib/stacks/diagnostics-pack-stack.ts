@@ -181,13 +181,11 @@ export class DiagnosticsPackStack extends cdk.Stack {
       },
     });
 
-    const logGroup = new cdk.aws_logs.LogGroup(this, `${diagnosticFunction.node.id}LogGroup`, {
+    new cdk.aws_logs.LogGroup(this, `${diagnosticFunction.node.id}LogGroup`, {
       logGroupName: `/aws/lambda/${diagnosticFunction.functionName}`,
       retention: 30,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
-    // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
-    diagnosticFunction.node.addDependency(logGroup);
 
     const key = cdk.aws_kms.Key.fromKeyArn(
       this,

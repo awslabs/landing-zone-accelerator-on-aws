@@ -86,14 +86,12 @@ export class RemediateResourcePolicy extends Construct {
 
     this.addPermissionToLambdaRole(this.lambdaFunction);
 
-    const logGroup = new cdk.aws_logs.LogGroup(this, `${this.lambdaFunction.node.id}LogGroup`, {
+    new cdk.aws_logs.LogGroup(this, `${this.lambdaFunction.node.id}LogGroup`, {
       logGroupName: `/aws/lambda/${this.lambdaFunction.functionName}`,
       retention: props.logRetentionInDays,
       encryptionKey: props.kmsKeyCloudWatch,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
-    // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
-    this.lambdaFunction.node.addDependency(logGroup);
   }
 
   private addPermissionToLambdaRole(lambdaFunction: cdk.aws_lambda.Function) {

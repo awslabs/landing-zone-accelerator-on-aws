@@ -91,7 +91,6 @@ exports[`VpcIdLookup Construct(VpcIdLookup):  Snapshot Test 1`] = `
       "DependsOn": [
         "VpcIdLookupVpcIdLookupFunctionServiceRoleDefaultPolicyE4E2B3D6",
         "VpcIdLookupVpcIdLookupFunctionServiceRoleB001E74A",
-        "VpcIdLookupVpcIdLookupFunctionLogGroup394AB6B3",
       ],
       "Properties": {
         "Code": {
@@ -145,9 +144,6 @@ exports[`VpcIdLookup Construct(VpcIdLookup):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "VpcIdLookupVpcIdLookupFunctionServiceRoleB001E74A": {
-      "DependsOn": [
-        "VpcIdLookupVpcIdLookupFunctionLogGroup394AB6B3",
-      ],
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -179,9 +175,6 @@ exports[`VpcIdLookup Construct(VpcIdLookup):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Role",
     },
     "VpcIdLookupVpcIdLookupFunctionServiceRoleDefaultPolicyE4E2B3D6": {
-      "DependsOn": [
-        "VpcIdLookupVpcIdLookupFunctionLogGroup394AB6B3",
-      ],
       "Properties": {
         "PolicyDocument": {
           "Statement": [

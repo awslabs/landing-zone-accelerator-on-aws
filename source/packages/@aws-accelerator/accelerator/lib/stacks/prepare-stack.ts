@@ -554,15 +554,12 @@ export class PrepareStack extends AcceleratorStack {
           ],
         });
 
-        const ouEventsLogGroup = new cdk.aws_logs.LogGroup(this, `${controlTowerOuEventsFunction.node.id}LogGroup`, {
+        new cdk.aws_logs.LogGroup(this, `${controlTowerOuEventsFunction.node.id}LogGroup`, {
           logGroupName: `/aws/lambda/${controlTowerOuEventsFunction.functionName}`,
           retention: options.props.globalConfig.cloudwatchLogRetentionInDays,
           encryptionKey: options.cloudwatchKey,
           removalPolicy: cdk.RemovalPolicy.DESTROY,
         });
-
-        // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
-        controlTowerOuEventsFunction.node.addDependency(ouEventsLogGroup);
 
         // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
         this.nagSuppressionInputs.push({
@@ -623,15 +620,12 @@ export class PrepareStack extends AcceleratorStack {
           },
         );
 
-        const logGroup = new cdk.aws_logs.LogGroup(this, `${controlTowerNotificationsFunction.node.id}LogGroup`, {
+        new cdk.aws_logs.LogGroup(this, `${controlTowerNotificationsFunction.node.id}LogGroup`, {
           logGroupName: `/aws/lambda/${controlTowerNotificationsFunction.functionName}`,
           retention: options.props.globalConfig.cloudwatchLogRetentionInDays,
           encryptionKey: options.cloudwatchKey,
           removalPolicy: cdk.RemovalPolicy.DESTROY,
         });
-
-        // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
-        controlTowerNotificationsFunction.node.addDependency(logGroup);
 
         controlTowerNotificationsFunction.addEventSource(new SnsEventSource(controlTowerNotificationTopic));
         controlTowerNotificationsFunction.addToRolePolicy(

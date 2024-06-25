@@ -53,14 +53,12 @@ export class CreateOrganizationAccounts extends Construct {
       description: 'Create Organization Accounts OnEvent handler',
       environmentEncryption: props.kmsKey,
     });
-    const onEventLogGroup = new cdk.aws_logs.LogGroup(this, `${this.onEvent.node.id}LogGroup`, {
+    new cdk.aws_logs.LogGroup(this, `${this.onEvent.node.id}LogGroup`, {
       logGroupName: `/aws/lambda/${this.onEvent.functionName}`,
       retention: props.logRetentionInDays,
       encryptionKey: props.kmsKey,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
-    // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
-    this.onEvent.node.addDependency(onEventLogGroup);
 
     const ddbPolicy = new cdk.aws_iam.PolicyStatement({
       sid: 'DynamoDb',
@@ -101,14 +99,12 @@ export class CreateOrganizationAccounts extends Construct {
       initialPolicy: [ddbPolicy, ddbKmsPolicy, orgPolicy],
       environmentEncryption: props.kmsKey,
     });
-    const isCompleteLogGroup = new cdk.aws_logs.LogGroup(this, `${this.isComplete.node.id}LogGroup`, {
+    new cdk.aws_logs.LogGroup(this, `${this.isComplete.node.id}LogGroup`, {
       logGroupName: `/aws/lambda/${this.isComplete.functionName}`,
       retention: props.logRetentionInDays,
       encryptionKey: props.kmsKey,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
-    // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
-    this.isComplete.node.addDependency(isCompleteLogGroup);
 
     if (props.govCloudAccountMappingTable) {
       const mappingTablePolicy = new cdk.aws_iam.PolicyStatement({

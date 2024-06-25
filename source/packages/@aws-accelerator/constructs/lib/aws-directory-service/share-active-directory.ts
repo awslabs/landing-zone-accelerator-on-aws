@@ -83,14 +83,12 @@ export class ShareActiveDirectory extends Construct {
     );
 
     // Custom resource lambda log group
-    const logGroup = new cdk.aws_logs.LogGroup(this, `${providerLambda.node.id}LogGroup`, {
+    new cdk.aws_logs.LogGroup(this, `${providerLambda.node.id}LogGroup`, {
       logGroupName: `/aws/lambda/${providerLambda.functionName}`,
       retention: props.cloudwatchLogRetentionInDays,
       encryptionKey: props.cloudwatchKey,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
-    // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
-    providerLambda.node.addDependency(logGroup);
 
     const provider = new cdk.custom_resources.Provider(this, 'ShareManageActiveDirectoryProvider', {
       onEventHandler: providerLambda,

@@ -488,7 +488,6 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
       "DependsOn": [
         "AttachQuarantineScpFunctionServiceRoleDefaultPolicyE25B3D06",
         "AttachQuarantineScpFunctionServiceRole7B57F1A9",
-        "AttachQuarantineScpFunctionLogGroup5CA6B914",
       ],
       "Properties": {
         "Code": {
@@ -539,9 +538,6 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
       "UpdateReplacePolicy": "Delete",
     },
     "AttachQuarantineScpFunctionServiceRole7B57F1A9": {
-      "DependsOn": [
-        "AttachQuarantineScpFunctionLogGroup5CA6B914",
-      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -583,9 +579,6 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
       "Type": "AWS::IAM::Role",
     },
     "AttachQuarantineScpFunctionServiceRoleDefaultPolicyE25B3D06": {
-      "DependsOn": [
-        "AttachQuarantineScpFunctionLogGroup5CA6B914",
-      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [

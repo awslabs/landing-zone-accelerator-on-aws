@@ -124,7 +124,7 @@ export class ValidateEnvironmentConfig extends Construct {
     providerLambda.addToRolePolicy(ssmPolicy);
 
     // Custom resource lambda log group
-    const logGroup = new cdk.aws_logs.LogGroup(this, `${providerLambda.node.id}LogGroup`, {
+    new cdk.aws_logs.LogGroup(this, `${providerLambda.node.id}LogGroup`, {
       logGroupName: `/aws/lambda/${providerLambda.functionName}`,
       retention: props.logRetentionInDays,
       encryptionKey: props.kmsKey,
@@ -154,9 +154,6 @@ export class ValidateEnvironmentConfig extends Construct {
         uuid: uuidv4(), // Generates a new UUID to force the resource to update
       },
     });
-
-    // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
-    resource.node.addDependency(logGroup);
 
     NagSuppressions.addResourceSuppressionsByPath(
       stack,

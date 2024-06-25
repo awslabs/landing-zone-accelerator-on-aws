@@ -32,7 +32,6 @@ exports[`CloudWatchLogDataProtection Construct(CloudWatchLogDataProtection):  Sn
       "DependsOn": [
         "CloudWatchLogDataProtectionCloudWatchDataProtectionFunctionServiceRoleDefaultPolicy4FB3E4E5",
         "CloudWatchLogDataProtectionCloudWatchDataProtectionFunctionServiceRole5D3C0EC2",
-        "CloudWatchLogDataProtectionCloudWatchDataProtectionFunctionResourceLogGroupFE66A616",
       ],
       "Properties": {
         "Code": {
@@ -87,9 +86,6 @@ exports[`CloudWatchLogDataProtection Construct(CloudWatchLogDataProtection):  Sn
       "UpdateReplacePolicy": "Delete",
     },
     "CloudWatchLogDataProtectionCloudWatchDataProtectionFunctionServiceRole5D3C0EC2": {
-      "DependsOn": [
-        "CloudWatchLogDataProtectionCloudWatchDataProtectionFunctionResourceLogGroupFE66A616",
-      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -131,9 +127,6 @@ exports[`CloudWatchLogDataProtection Construct(CloudWatchLogDataProtection):  Sn
       "Type": "AWS::IAM::Role",
     },
     "CloudWatchLogDataProtectionCloudWatchDataProtectionFunctionServiceRoleDefaultPolicy4FB3E4E5": {
-      "DependsOn": [
-        "CloudWatchLogDataProtectionCloudWatchDataProtectionFunctionResourceLogGroupFE66A616",
-      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [

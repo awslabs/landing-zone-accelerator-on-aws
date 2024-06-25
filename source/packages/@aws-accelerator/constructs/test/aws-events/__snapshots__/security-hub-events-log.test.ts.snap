@@ -77,7 +77,6 @@ exports[`SecurityHubEventsLog Construct(SecurityHubEventsLog):  Snapshot Test 1`
       "DependsOn": [
         "SecurityHubEventsLogSecurityHubEventsFunctionServiceRoleDefaultPolicy56E1474C",
         "SecurityHubEventsLogSecurityHubEventsFunctionServiceRole3A655D2A",
-        "SecurityHubEventsLogSecurityHubEventsFunctionResourceLogGroupB7A99902",
       ],
       "Properties": {
         "Code": {
@@ -161,9 +160,6 @@ exports[`SecurityHubEventsLog Construct(SecurityHubEventsLog):  Snapshot Test 1`
       "UpdateReplacePolicy": "Delete",
     },
     "SecurityHubEventsLogSecurityHubEventsFunctionServiceRole3A655D2A": {
-      "DependsOn": [
-        "SecurityHubEventsLogSecurityHubEventsFunctionResourceLogGroupB7A99902",
-      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -205,9 +201,6 @@ exports[`SecurityHubEventsLog Construct(SecurityHubEventsLog):  Snapshot Test 1`
       "Type": "AWS::IAM::Role",
     },
     "SecurityHubEventsLogSecurityHubEventsFunctionServiceRoleDefaultPolicy56E1474C": {
-      "DependsOn": [
-        "SecurityHubEventsLogSecurityHubEventsFunctionResourceLogGroupB7A99902",
-      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [

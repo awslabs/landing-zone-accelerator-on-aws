@@ -2802,7 +2802,6 @@ phases:
     "UpdatePipelineGithubTokenFunction29B64F2E": {
       "Condition": "UseGitHubCondition",
       "DependsOn": [
-        "UpdatePipelineGithubTokenFunctionLogGroupFCE3723A",
         "UpdatePipelineLambdaRole88CE0535",
       ],
       "Metadata": {
@@ -6227,7 +6226,6 @@ phases:
     "UpdatePipelineGithubTokenFunction29B64F2E": {
       "Condition": "UseGitHubCondition",
       "DependsOn": [
-        "UpdatePipelineGithubTokenFunctionLogGroupFCE3723A",
         "UpdatePipelineLambdaRole88CE0535",
       ],
       "Metadata": {
@@ -9726,7 +9724,6 @@ phases:
     "UpdatePipelineGithubTokenFunction29B64F2E": {
       "Condition": "UseGitHubCondition",
       "DependsOn": [
-        "UpdatePipelineGithubTokenFunctionLogGroupFCE3723A",
         "UpdatePipelineLambdaRole88CE0535",
       ],
       "Metadata": {
@@ -13200,7 +13197,6 @@ phases:
     "UpdatePipelineGithubTokenFunction29B64F2E": {
       "Condition": "UseGitHubCondition",
       "DependsOn": [
-        "UpdatePipelineGithubTokenFunctionLogGroupFCE3723A",
         "UpdatePipelineLambdaRole88CE0535",
       ],
       "Metadata": {
@@ -16679,7 +16675,6 @@ phases:
     "UpdatePipelineGithubTokenFunction29B64F2E": {
       "Condition": "UseGitHubCondition",
       "DependsOn": [
-        "UpdatePipelineGithubTokenFunctionLogGroupFCE3723A",
         "UpdatePipelineLambdaRole88CE0535",
       ],
       "Metadata": {
@@ -20108,7 +20103,6 @@ phases:
     "UpdatePipelineGithubTokenFunction29B64F2E": {
       "Condition": "UseGitHubCondition",
       "DependsOn": [
-        "UpdatePipelineGithubTokenFunctionLogGroupFCE3723A",
         "UpdatePipelineLambdaRole88CE0535",
       ],
       "Metadata": {
