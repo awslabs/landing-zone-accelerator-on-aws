@@ -337,6 +337,9 @@ exports[`ConfigServiceRecorder Construct(ConfigServiceDeliveryChannel):  Snapsho
     },
     "TestConfigServiceRecorderConfigServiceRecorderResource1FA3006B": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "TestConfigServiceRecorderConfigServiceRecorderFunctionLogGroupC69A3948",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [

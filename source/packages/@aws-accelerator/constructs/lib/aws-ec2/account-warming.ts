@@ -162,12 +162,14 @@ export class WarmAccount extends Construct {
       ],
     });
 
-    new cdk.aws_logs.LogGroup(this, `${this.onEvent.node.id}LogGroup`, {
+    const onEventLogGroup = new cdk.aws_logs.LogGroup(this, `${this.onEvent.node.id}LogGroup`, {
       logGroupName: `/aws/lambda/${this.onEvent.functionName}`,
       retention: props.logRetentionInDays,
       encryptionKey: props.cloudwatchKmsKey,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
+    // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
+    this.onEvent.node.addDependency(onEventLogGroup);
 
     this.isComplete = new cdk.aws_lambda.Function(this, 'WarmAccountStatusFunction', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'account-warming-status/dist')),
@@ -178,12 +180,14 @@ export class WarmAccount extends Construct {
       initialPolicy: [ec2Policy, ec2DeletePolicy, ssmPolicy],
     });
 
-    new cdk.aws_logs.LogGroup(this, `${this.isComplete.node.id}LogGroup`, {
+    const isCompleteLogGroup = new cdk.aws_logs.LogGroup(this, `${this.isComplete.node.id}LogGroup`, {
       logGroupName: `/aws/lambda/${this.isComplete.functionName}`,
       retention: props.logRetentionInDays,
       encryptionKey: props.cloudwatchKmsKey,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
+    // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
+    this.isComplete.node.addDependency(isCompleteLogGroup);
 
     this.provider = new cdk.custom_resources.Provider(this, 'WarmAccountProvider', {
       onEventHandler: this.onEvent,

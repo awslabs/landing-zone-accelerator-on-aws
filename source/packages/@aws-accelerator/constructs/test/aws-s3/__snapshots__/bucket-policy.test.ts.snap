@@ -124,6 +124,7 @@ exports[`BucketPolicy Construct(ValidateBucketKmsEncryption):  Snapshot Test 1`]
       "DependsOn": [
         "ValidateBucketKmsEncryptionBucketPolicyFunctionServiceRoleDefaultPolicy5E4996FF",
         "ValidateBucketKmsEncryptionBucketPolicyFunctionServiceRole16859A00",
+        "ValidateBucketKmsEncryptionBucketPolicyFunctionResourceLogGroup18E1F873",
       ],
       "Properties": {
         "Code": {
@@ -178,6 +179,9 @@ exports[`BucketPolicy Construct(ValidateBucketKmsEncryption):  Snapshot Test 1`]
       "UpdateReplacePolicy": "Delete",
     },
     "ValidateBucketKmsEncryptionBucketPolicyFunctionServiceRole16859A00": {
+      "DependsOn": [
+        "ValidateBucketKmsEncryptionBucketPolicyFunctionResourceLogGroup18E1F873",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -219,6 +223,9 @@ exports[`BucketPolicy Construct(ValidateBucketKmsEncryption):  Snapshot Test 1`]
       "Type": "AWS::IAM::Role",
     },
     "ValidateBucketKmsEncryptionBucketPolicyFunctionServiceRoleDefaultPolicy5E4996FF": {
+      "DependsOn": [
+        "ValidateBucketKmsEncryptionBucketPolicyFunctionResourceLogGroup18E1F873",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [

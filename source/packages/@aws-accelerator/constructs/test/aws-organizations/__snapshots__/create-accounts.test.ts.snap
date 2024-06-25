@@ -124,6 +124,7 @@ exports[`ReportDefinition Construct(ConfigServiceTags):  Snapshot Test 1`] = `
       "DependsOn": [
         "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRoleDefaultPolicy217D2441",
         "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B",
+        "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40",
       ],
       "Properties": {
         "Code": {
@@ -188,6 +189,9 @@ exports[`ReportDefinition Construct(ConfigServiceTags):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B": {
+      "DependsOn": [
+        "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40",
+      ],
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -219,6 +223,9 @@ exports[`ReportDefinition Construct(ConfigServiceTags):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Role",
     },
     "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRoleDefaultPolicy217D2441": {
+      "DependsOn": [
+        "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40",
+      ],
       "Properties": {
         "PolicyDocument": {
           "Statement": [
@@ -896,6 +903,7 @@ exports[`ReportDefinition Construct(ConfigServiceTags):  Snapshot Test 1`] = `
     "CreateOrganizationAccountsDDA8AFE1": {
       "DependsOn": [
         "CreateOrganizationAccountsServiceRole99CB3720",
+        "CreateOrganizationAccountsCreateOrganizationAccountsLogGroup00D93B3C",
       ],
       "Properties": {
         "Code": {
@@ -924,6 +932,9 @@ exports[`ReportDefinition Construct(ConfigServiceTags):  Snapshot Test 1`] = `
       "Type": "AWS::Lambda::Function",
     },
     "CreateOrganizationAccountsServiceRole99CB3720": {
+      "DependsOn": [
+        "CreateOrganizationAccountsCreateOrganizationAccountsLogGroup00D93B3C",
+      ],
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [

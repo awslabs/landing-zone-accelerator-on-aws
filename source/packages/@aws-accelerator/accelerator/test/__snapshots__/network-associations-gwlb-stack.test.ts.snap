@@ -237,6 +237,7 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
       "DependsOn": [
         "CrossAccountRouteFrameworkCrossAccountRouteFunctionServiceRoleDefaultPolicy2CB6E8A9",
         "CrossAccountRouteFrameworkCrossAccountRouteFunctionServiceRole0BC7B615",
+        "CrossAccountRouteFrameworkCrossAccountRouteFunctionLogGroupCFE2C9BD",
       ],
       "Properties": {
         "Code": {
@@ -276,6 +277,9 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
       "UpdateReplacePolicy": "Delete",
     },
     "CrossAccountRouteFrameworkCrossAccountRouteFunctionServiceRole0BC7B615": {
+      "DependsOn": [
+        "CrossAccountRouteFrameworkCrossAccountRouteFunctionLogGroupCFE2C9BD",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -317,6 +321,9 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
       "Type": "AWS::IAM::Role",
     },
     "CrossAccountRouteFrameworkCrossAccountRouteFunctionServiceRoleDefaultPolicy2CB6E8A9": {
+      "DependsOn": [
+        "CrossAccountRouteFrameworkCrossAccountRouteFunctionLogGroupCFE2C9BD",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -1090,6 +1097,9 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
       "Type": "AWS::EC2::Route",
     },
     "NetworkInspectionacceleratorFirewallConfigReplacementsFunctionA38B05D1": {
+      "DependsOn": [
+        "NetworkInspectionacceleratorFirewallConfigReplacementsFunctionResourceLogGroup8D00AAAF",
+      ],
       "Properties": {
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
@@ -1700,6 +1710,9 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
       "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
     },
     "NetworkInspectiontestAsgConfigReplacementsFunction8E5695D3": {
+      "DependsOn": [
+        "NetworkInspectiontestAsgConfigReplacementsFunctionResourceLogGroup72BE7636",
+      ],
       "Properties": {
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",

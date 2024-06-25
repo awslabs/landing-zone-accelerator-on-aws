@@ -738,12 +738,15 @@ export class SecurityResourcesStack extends AcceleratorStack {
     });
 
     // Configure lambda log file with encryption and log retention
-    new cdk.aws_logs.LogGroup(this, pascalCase(rule.name) + '-LogGroup', {
+    const logGroup = new cdk.aws_logs.LogGroup(this, pascalCase(rule.name) + '-LogGroup', {
       logGroupName: `/aws/lambda/${lambdaFunction.functionName}`,
       retention: this.props.globalConfig.cloudwatchLogRetentionInDays,
       encryptionKey: this.cloudwatchKey,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
+
+    // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
+    lambdaFunction.node.addDependency(logGroup);
 
     // Read in the policy document which should be properly formatted json
     const policyDocument = require(path.join(this.props.configDirPath, rule.customRule.lambda.rolePolicyFile));
@@ -847,12 +850,15 @@ export class SecurityResourcesStack extends AcceleratorStack {
       });
 
       // Configure lambda log file with encryption and log retention
-      new cdk.aws_logs.LogGroup(this, pascalCase(rule.name) + '-RemediationLogGroup', {
+      const logGroup = new cdk.aws_logs.LogGroup(this, pascalCase(rule.name) + '-RemediationLogGroup', {
         logGroupName: `/aws/lambda/${remediationLambdaFunction.functionName}`,
         retention: this.props.globalConfig.cloudwatchLogRetentionInDays,
         encryptionKey: this.cloudwatchKey,
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       });
+
+      // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
+      remediationLambdaFunction.node.addDependency(logGroup);
     }
 
     let remediationTargetId = `arn:${cdk.Stack.of(this).partition}:ssm:${cdk.Stack.of(this).region}:${

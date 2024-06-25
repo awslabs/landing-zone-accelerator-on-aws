@@ -36,6 +36,7 @@ exports[`ActiveDirectoryResolverRule Construct(ActiveDirectoryResolverRule):  Sn
       "DependsOn": [
         "ActiveDirectoryResolverRuleUpdateResolverRuleFunctionServiceRoleDefaultPolicyBD9D1C7C",
         "ActiveDirectoryResolverRuleUpdateResolverRuleFunctionServiceRole99253C93",
+        "ActiveDirectoryResolverRuleUpdateResolverRuleFunctionLogGroupDA0FD002",
       ],
       "Properties": {
         "Code": {
@@ -89,6 +90,9 @@ exports[`ActiveDirectoryResolverRule Construct(ActiveDirectoryResolverRule):  Sn
       "UpdateReplacePolicy": "Retain",
     },
     "ActiveDirectoryResolverRuleUpdateResolverRuleFunctionServiceRole99253C93": {
+      "DependsOn": [
+        "ActiveDirectoryResolverRuleUpdateResolverRuleFunctionLogGroupDA0FD002",
+      ],
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -120,6 +124,9 @@ exports[`ActiveDirectoryResolverRule Construct(ActiveDirectoryResolverRule):  Sn
       "Type": "AWS::IAM::Role",
     },
     "ActiveDirectoryResolverRuleUpdateResolverRuleFunctionServiceRoleDefaultPolicyBD9D1C7C": {
+      "DependsOn": [
+        "ActiveDirectoryResolverRuleUpdateResolverRuleFunctionLogGroupDA0FD002",
+      ],
       "Properties": {
         "PolicyDocument": {
           "Statement": [

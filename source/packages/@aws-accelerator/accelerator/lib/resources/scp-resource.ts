@@ -368,12 +368,15 @@ export class ScpResource {
         );
       }
 
-      new cdk.aws_logs.LogGroup(this.stack, `${attachQuarantineFunction.node.id}LogGroup`, {
+      const logGroup = new cdk.aws_logs.LogGroup(this.stack, `${attachQuarantineFunction.node.id}LogGroup`, {
         logGroupName: `/aws/lambda/${attachQuarantineFunction.functionName}`,
         retention: props.globalConfig.cloudwatchLogRetentionInDays,
         encryptionKey: this.cloudwatchKey,
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       });
+
+      // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
+      attachQuarantineFunction.node.addDependency(logGroup);
     }
   }
 

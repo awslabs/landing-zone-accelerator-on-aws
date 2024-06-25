@@ -11,6 +11,7 @@ exports[`DiagnosticsPackStack Construct(DiagnosticsPackStack):  Snapshot Test 1`
   "Resources": {
     "DiagnosticsFunctionF6482E72": {
       "DependsOn": [
+        "DiagnosticsFunctionLogGroup65B6B182",
         "DiagnosticsPackLambdaRoleDefaultPolicy93B3F548",
         "DiagnosticsPackLambdaRole5CC68755",
       ],

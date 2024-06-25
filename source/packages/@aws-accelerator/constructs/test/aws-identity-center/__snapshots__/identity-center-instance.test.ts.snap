@@ -42,6 +42,7 @@ exports[`IdentityCenterInstance Construct(IdentityCenterGetInstanceId):  Snapsho
       "DependsOn": [
         "IdentityCenterInstanceIdentityCenterGetInstanceIdFunctionServiceRoleDefaultPolicyF2FD593D",
         "IdentityCenterInstanceIdentityCenterGetInstanceIdFunctionServiceRoleC3631797",
+        "IdentityCenterInstanceIdentityCenterGetInstanceIdFunctionResourceLogGroup043D5A24",
       ],
       "Properties": {
         "Code": {
@@ -96,6 +97,9 @@ exports[`IdentityCenterInstance Construct(IdentityCenterGetInstanceId):  Snapsho
       "UpdateReplacePolicy": "Delete",
     },
     "IdentityCenterInstanceIdentityCenterGetInstanceIdFunctionServiceRoleC3631797": {
+      "DependsOn": [
+        "IdentityCenterInstanceIdentityCenterGetInstanceIdFunctionResourceLogGroup043D5A24",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -137,6 +141,9 @@ exports[`IdentityCenterInstance Construct(IdentityCenterGetInstanceId):  Snapsho
       "Type": "AWS::IAM::Role",
     },
     "IdentityCenterInstanceIdentityCenterGetInstanceIdFunctionServiceRoleDefaultPolicyF2FD593D": {
+      "DependsOn": [
+        "IdentityCenterInstanceIdentityCenterGetInstanceIdFunctionResourceLogGroup043D5A24",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [

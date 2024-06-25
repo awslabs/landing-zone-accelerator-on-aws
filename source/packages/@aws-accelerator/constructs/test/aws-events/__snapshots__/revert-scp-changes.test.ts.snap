@@ -206,6 +206,7 @@ exports[`RevertScpChanges Construct(RevertScpChanges):  Snapshot Test 1`] = `
       "DependsOn": [
         "RevertScpChanges2RevertScpChangesFunctionServiceRoleDefaultPolicy27A2A655",
         "RevertScpChanges2RevertScpChangesFunctionServiceRoleD920129A",
+        "RevertScpChanges2RevertScpChangesFunctionLogGroup6CD05851",
       ],
       "Properties": {
         "Code": {
@@ -286,6 +287,9 @@ exports[`RevertScpChanges Construct(RevertScpChanges):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "RevertScpChanges2RevertScpChangesFunctionServiceRoleD920129A": {
+      "DependsOn": [
+        "RevertScpChanges2RevertScpChangesFunctionLogGroup6CD05851",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -331,6 +335,9 @@ exports[`RevertScpChanges Construct(RevertScpChanges):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Role",
     },
     "RevertScpChanges2RevertScpChangesFunctionServiceRoleDefaultPolicy27A2A655": {
+      "DependsOn": [
+        "RevertScpChanges2RevertScpChangesFunctionLogGroup6CD05851",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -463,6 +470,7 @@ exports[`RevertScpChanges Construct(RevertScpChanges):  Snapshot Test 1`] = `
       "DependsOn": [
         "RevertScpChangesRevertScpChangesFunctionServiceRoleDefaultPolicyF3C3ECD9",
         "RevertScpChangesRevertScpChangesFunctionServiceRole4F571613",
+        "RevertScpChangesRevertScpChangesFunctionLogGroup92A9E8AA",
       ],
       "Properties": {
         "Code": {
@@ -543,6 +551,9 @@ exports[`RevertScpChanges Construct(RevertScpChanges):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "RevertScpChangesRevertScpChangesFunctionServiceRole4F571613": {
+      "DependsOn": [
+        "RevertScpChangesRevertScpChangesFunctionLogGroup92A9E8AA",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -588,6 +599,9 @@ exports[`RevertScpChanges Construct(RevertScpChanges):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Role",
     },
     "RevertScpChangesRevertScpChangesFunctionServiceRoleDefaultPolicyF3C3ECD9": {
+      "DependsOn": [
+        "RevertScpChangesRevertScpChangesFunctionLogGroup92A9E8AA",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [

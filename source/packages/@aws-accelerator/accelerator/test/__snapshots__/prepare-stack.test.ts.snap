@@ -413,6 +413,9 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
       "Type": "AWS::SNS::TopicPolicy",
     },
     "ControlTowerNotificationsFunctionAllowInvokeAWSAcceleratorPrepareStack111111111111useast1ControlTowerNotification2475DF555DE3539F": {
+      "DependsOn": [
+        "ControlTowerNotificationsFunctionLogGroup35144E50",
+      ],
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
@@ -429,6 +432,9 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
       "Type": "AWS::Lambda::Permission",
     },
     "ControlTowerNotificationsFunctionControlTowerNotification26E3C9B0": {
+      "DependsOn": [
+        "ControlTowerNotificationsFunctionLogGroup35144E50",
+      ],
       "Properties": {
         "Endpoint": {
           "Fn::GetAtt": [
@@ -447,6 +453,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "ControlTowerNotificationsFunctionServiceRoleDefaultPolicy44497F9E",
         "ControlTowerNotificationsFunctionServiceRoleB3D23260",
+        "ControlTowerNotificationsFunctionLogGroup35144E50",
       ],
       "Properties": {
         "Code": {
@@ -502,6 +509,9 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "ControlTowerNotificationsFunctionServiceRoleB3D23260": {
+      "DependsOn": [
+        "ControlTowerNotificationsFunctionLogGroup35144E50",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -543,6 +553,9 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Role",
     },
     "ControlTowerNotificationsFunctionServiceRoleDefaultPolicy44497F9E": {
+      "DependsOn": [
+        "ControlTowerNotificationsFunctionLogGroup35144E50",
+      ],
       "Properties": {
         "PolicyDocument": {
           "Statement": [
@@ -599,6 +612,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "ControlTowerOuEventsFunctionServiceRoleDefaultPolicy8188B90A",
         "ControlTowerOuEventsFunctionServiceRoleBC29C0C5",
+        "ControlTowerOuEventsFunctionLogGroupD5BA6F1F",
       ],
       "Properties": {
         "Code": {
@@ -651,6 +665,9 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "ControlTowerOuEventsFunctionServiceRoleBC29C0C5": {
+      "DependsOn": [
+        "ControlTowerOuEventsFunctionLogGroupD5BA6F1F",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -692,6 +709,9 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Role",
     },
     "ControlTowerOuEventsFunctionServiceRoleDefaultPolicy8188B90A": {
+      "DependsOn": [
+        "ControlTowerOuEventsFunctionLogGroupD5BA6F1F",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -1820,6 +1840,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
     "CreateCTAccountsCreateControlTowerAccount8636115B": {
       "DependsOn": [
         "CreateCTAccountsCreateControlTowerAccountServiceRoleAEFB3CA3",
+        "CreateCTAccountsCreateControlTowerAccountLogGroup7DD19087",
         "CreateOrganizationAccountsDDA8AFE1",
         "CreateOrganizationAccountsServiceRole99CB3720",
         "CreateOrganizationAccountsCreateOrganizationAccountsLogGroup00D93B3C",
@@ -1930,6 +1951,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
     },
     "CreateCTAccountsCreateControlTowerAccountServiceRoleAEFB3CA3": {
       "DependsOn": [
+        "CreateCTAccountsCreateControlTowerAccountLogGroup7DD19087",
         "CreateOrganizationAccountsDDA8AFE1",
         "CreateOrganizationAccountsServiceRole99CB3720",
         "CreateOrganizationAccountsCreateOrganizationAccountsLogGroup00D93B3C",
@@ -2003,6 +2025,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "CreateCTAccountsCreateControlTowerAccountStatusServiceRoleDefaultPolicy9BE6F791",
         "CreateCTAccountsCreateControlTowerAccountStatusServiceRole999B76C4",
+        "CreateCTAccountsCreateControlTowerAccountStatusLogGroup18D2531C",
         "CreateOrganizationAccountsDDA8AFE1",
         "CreateOrganizationAccountsServiceRole99CB3720",
         "CreateOrganizationAccountsCreateOrganizationAccountsLogGroup00D93B3C",
@@ -2120,6 +2143,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
     },
     "CreateCTAccountsCreateControlTowerAccountStatusServiceRole999B76C4": {
       "DependsOn": [
+        "CreateCTAccountsCreateControlTowerAccountStatusLogGroup18D2531C",
         "CreateOrganizationAccountsDDA8AFE1",
         "CreateOrganizationAccountsServiceRole99CB3720",
         "CreateOrganizationAccountsCreateOrganizationAccountsLogGroup00D93B3C",
@@ -2203,6 +2227,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
     },
     "CreateCTAccountsCreateControlTowerAccountStatusServiceRoleDefaultPolicy9BE6F791": {
       "DependsOn": [
+        "CreateCTAccountsCreateControlTowerAccountStatusLogGroup18D2531C",
         "CreateOrganizationAccountsDDA8AFE1",
         "CreateOrganizationAccountsServiceRole99CB3720",
         "CreateOrganizationAccountsCreateOrganizationAccountsLogGroup00D93B3C",
@@ -2411,6 +2436,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRoleDefaultPolicy217D2441",
         "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B",
+        "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40",
         "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
         "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
         "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
@@ -2492,6 +2518,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
     },
     "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B": {
       "DependsOn": [
+        "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40",
         "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
         "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
         "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
@@ -2543,6 +2570,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
     },
     "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRoleDefaultPolicy217D2441": {
       "DependsOn": [
+        "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40",
         "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
         "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
         "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
@@ -3417,6 +3445,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
     "CreateOrganizationAccountsDDA8AFE1": {
       "DependsOn": [
         "CreateOrganizationAccountsServiceRole99CB3720",
+        "CreateOrganizationAccountsCreateOrganizationAccountsLogGroup00D93B3C",
         "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
         "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
         "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
@@ -3452,6 +3481,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
     },
     "CreateOrganizationAccountsServiceRole99CB3720": {
       "DependsOn": [
+        "CreateOrganizationAccountsCreateOrganizationAccountsLogGroup00D93B3C",
         "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
         "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
         "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
@@ -4741,6 +4771,9 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
     },
     "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [

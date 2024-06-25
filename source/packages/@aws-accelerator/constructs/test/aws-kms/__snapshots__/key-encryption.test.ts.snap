@@ -42,6 +42,7 @@ exports[`KmsEncryption Construct(KmsEncryption):  Snapshot Test 1`] = `
       "DependsOn": [
         "KeyLookupKmsEncryptionFunctionServiceRoleDefaultPolicy45F17070",
         "KeyLookupKmsEncryptionFunctionServiceRole3CBF5633",
+        "KeyLookupKmsEncryptionFunctionResourceLogGroupDFD04BBA",
       ],
       "Properties": {
         "Code": {
@@ -96,6 +97,9 @@ exports[`KmsEncryption Construct(KmsEncryption):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "KeyLookupKmsEncryptionFunctionServiceRole3CBF5633": {
+      "DependsOn": [
+        "KeyLookupKmsEncryptionFunctionResourceLogGroupDFD04BBA",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -137,6 +141,9 @@ exports[`KmsEncryption Construct(KmsEncryption):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Role",
     },
     "KeyLookupKmsEncryptionFunctionServiceRoleDefaultPolicy45F17070": {
+      "DependsOn": [
+        "KeyLookupKmsEncryptionFunctionResourceLogGroupDFD04BBA",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [

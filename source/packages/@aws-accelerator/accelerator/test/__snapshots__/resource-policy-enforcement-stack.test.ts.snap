@@ -227,6 +227,7 @@ exports[`ResourcePolicyEnforcementStack Construct(ResourcePolicyEnforcementStack
       "DependsOn": [
         "DetectResourcePolicyDetectResourcePolicyFunctionServiceRoleDefaultPolicy17595A0D",
         "DetectResourcePolicyDetectResourcePolicyFunctionServiceRoleE9AC0FD8",
+        "DetectResourcePolicyDetectResourcePolicyFunctionLogGroup68C3F428",
       ],
       "Properties": {
         "Code": {
@@ -262,6 +263,9 @@ exports[`ResourcePolicyEnforcementStack Construct(ResourcePolicyEnforcementStack
       "Type": "AWS::Lambda::Function",
     },
     "DetectResourcePolicyDetectResourcePolicyFunctionCustomRulePermissionBjrlLxHBU2q1eflzaT436qiq4Iu5pKu7iRO6toNI1334F2B2": {
+      "DependsOn": [
+        "DetectResourcePolicyDetectResourcePolicyFunctionLogGroup68C3F428",
+      ],
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
@@ -298,6 +302,9 @@ exports[`ResourcePolicyEnforcementStack Construct(ResourcePolicyEnforcementStack
       "UpdateReplacePolicy": "Delete",
     },
     "DetectResourcePolicyDetectResourcePolicyFunctionServiceRoleDefaultPolicy17595A0D": {
+      "DependsOn": [
+        "DetectResourcePolicyDetectResourcePolicyFunctionLogGroup68C3F428",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -435,6 +442,9 @@ exports[`ResourcePolicyEnforcementStack Construct(ResourcePolicyEnforcementStack
       "Type": "AWS::IAM::Policy",
     },
     "DetectResourcePolicyDetectResourcePolicyFunctionServiceRoleE9AC0FD8": {
+      "DependsOn": [
+        "DetectResourcePolicyDetectResourcePolicyFunctionLogGroup68C3F428",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -495,6 +505,7 @@ exports[`ResourcePolicyEnforcementStack Construct(ResourcePolicyEnforcementStack
       "DependsOn": [
         "RemediateResourcePolicyRemediateResourcePolicyFunctionServiceRoleDefaultPolicyBB93B16A",
         "RemediateResourcePolicyRemediateResourcePolicyFunctionServiceRole83F5E0A5",
+        "RemediateResourcePolicyRemediateResourcePolicyFunctionLogGroupD8FEF036",
       ],
       "Properties": {
         "Code": {
@@ -552,6 +563,9 @@ exports[`ResourcePolicyEnforcementStack Construct(ResourcePolicyEnforcementStack
       "UpdateReplacePolicy": "Delete",
     },
     "RemediateResourcePolicyRemediateResourcePolicyFunctionServiceRole83F5E0A5": {
+      "DependsOn": [
+        "RemediateResourcePolicyRemediateResourcePolicyFunctionLogGroupD8FEF036",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -597,6 +611,9 @@ exports[`ResourcePolicyEnforcementStack Construct(ResourcePolicyEnforcementStack
       "Type": "AWS::IAM::Role",
     },
     "RemediateResourcePolicyRemediateResourcePolicyFunctionServiceRoleDefaultPolicyBB93B16A": {
+      "DependsOn": [
+        "RemediateResourcePolicyRemediateResourcePolicyFunctionLogGroupD8FEF036",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [

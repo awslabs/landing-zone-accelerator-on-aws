@@ -7,6 +7,7 @@ exports[`CrossAccountRoute Construct(CrossAccountRoute):  Snapshot Test 1`] = `
       "DependsOn": [
         "FrameworkCrossAccountRouteFunctionServiceRoleDefaultPolicyEFFA4FAA",
         "FrameworkCrossAccountRouteFunctionServiceRoleD3FBE736",
+        "FrameworkCrossAccountRouteFunctionLogGroup9B330ABE",
       ],
       "Properties": {
         "Code": {
@@ -54,6 +55,9 @@ exports[`CrossAccountRoute Construct(CrossAccountRoute):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "FrameworkCrossAccountRouteFunctionServiceRoleD3FBE736": {
+      "DependsOn": [
+        "FrameworkCrossAccountRouteFunctionLogGroup9B330ABE",
+      ],
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -85,6 +89,9 @@ exports[`CrossAccountRoute Construct(CrossAccountRoute):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Role",
     },
     "FrameworkCrossAccountRouteFunctionServiceRoleDefaultPolicyEFFA4FAA": {
+      "DependsOn": [
+        "FrameworkCrossAccountRouteFunctionLogGroup9B330ABE",
+      ],
       "Properties": {
         "PolicyDocument": {
           "Statement": [

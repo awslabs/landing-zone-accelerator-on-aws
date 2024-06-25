@@ -647,6 +647,7 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
     "TestCreateCTAccountsCreateControlTowerAccount8CC34F3C": {
       "DependsOn": [
         "TestCreateCTAccountsCreateControlTowerAccountServiceRoleCCD1613F",
+        "TestCreateCTAccountsCreateControlTowerAccountLogGroup92213B11",
       ],
       "Properties": {
         "Code": {
@@ -698,6 +699,9 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "TestCreateCTAccountsCreateControlTowerAccountServiceRoleCCD1613F": {
+      "DependsOn": [
+        "TestCreateCTAccountsCreateControlTowerAccountLogGroup92213B11",
+      ],
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -732,6 +736,7 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
       "DependsOn": [
         "TestCreateCTAccountsCreateControlTowerAccountStatusServiceRoleDefaultPolicy35D63657",
         "TestCreateCTAccountsCreateControlTowerAccountStatusServiceRole8C15A4DF",
+        "TestCreateCTAccountsCreateControlTowerAccountStatusLogGroupE10D1958",
       ],
       "Properties": {
         "Code": {
@@ -790,6 +795,9 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "TestCreateCTAccountsCreateControlTowerAccountStatusServiceRole8C15A4DF": {
+      "DependsOn": [
+        "TestCreateCTAccountsCreateControlTowerAccountStatusLogGroupE10D1958",
+      ],
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -833,6 +841,9 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Role",
     },
     "TestCreateCTAccountsCreateControlTowerAccountStatusServiceRoleDefaultPolicy35D63657": {
+      "DependsOn": [
+        "TestCreateCTAccountsCreateControlTowerAccountStatusLogGroupE10D1958",
+      ],
       "Properties": {
         "PolicyDocument": {
           "Statement": [

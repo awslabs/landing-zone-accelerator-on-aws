@@ -106,6 +106,7 @@ exports[`ShareActiveDirectory Construct(ShareActiveDirectory):  Snapshot Test 1`
       "DependsOn": [
         "ShareActiveDirectoryShareManageActiveDirectoryFunctionServiceRoleDefaultPolicyA7BEAEFF",
         "ShareActiveDirectoryShareManageActiveDirectoryFunctionServiceRole60F965A9",
+        "ShareActiveDirectoryShareManageActiveDirectoryFunctionLogGroupB93888CF",
       ],
       "Properties": {
         "Code": {
@@ -159,6 +160,9 @@ exports[`ShareActiveDirectory Construct(ShareActiveDirectory):  Snapshot Test 1`
       "UpdateReplacePolicy": "Delete",
     },
     "ShareActiveDirectoryShareManageActiveDirectoryFunctionServiceRole60F965A9": {
+      "DependsOn": [
+        "ShareActiveDirectoryShareManageActiveDirectoryFunctionLogGroupB93888CF",
+      ],
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -190,6 +194,9 @@ exports[`ShareActiveDirectory Construct(ShareActiveDirectory):  Snapshot Test 1`
       "Type": "AWS::IAM::Role",
     },
     "ShareActiveDirectoryShareManageActiveDirectoryFunctionServiceRoleDefaultPolicyA7BEAEFF": {
+      "DependsOn": [
+        "ShareActiveDirectoryShareManageActiveDirectoryFunctionLogGroupB93888CF",
+      ],
       "Properties": {
         "PolicyDocument": {
           "Statement": [

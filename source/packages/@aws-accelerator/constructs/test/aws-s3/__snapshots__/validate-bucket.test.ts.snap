@@ -157,6 +157,7 @@ exports[`ValidateBucketKmsEncryption Construct(ValidateBucketKmsEncryption):  Sn
       "DependsOn": [
         "ValidateBucketKmsEncryptionValidateBucketFunctionServiceRoleDefaultPolicy36876301",
         "ValidateBucketKmsEncryptionValidateBucketFunctionServiceRole1493FC5C",
+        "ValidateBucketKmsEncryptionValidateBucketFunctionResourceLogGroup0C70290F",
       ],
       "Properties": {
         "Code": {
@@ -211,6 +212,9 @@ exports[`ValidateBucketKmsEncryption Construct(ValidateBucketKmsEncryption):  Sn
       "UpdateReplacePolicy": "Delete",
     },
     "ValidateBucketKmsEncryptionValidateBucketFunctionServiceRole1493FC5C": {
+      "DependsOn": [
+        "ValidateBucketKmsEncryptionValidateBucketFunctionResourceLogGroup0C70290F",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -252,6 +256,9 @@ exports[`ValidateBucketKmsEncryption Construct(ValidateBucketKmsEncryption):  Sn
       "Type": "AWS::IAM::Role",
     },
     "ValidateBucketKmsEncryptionValidateBucketFunctionServiceRoleDefaultPolicy36876301": {
+      "DependsOn": [
+        "ValidateBucketKmsEncryptionValidateBucketFunctionResourceLogGroup0C70290F",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -440,6 +447,7 @@ exports[`ValidateBucketKmsEncryption Construct(ValidateBucketKmsEncryption):  Sn
       "DependsOn": [
         "ValidateBucketS3EncryptionValidateBucketFunctionServiceRoleDefaultPolicyB6CF9314",
         "ValidateBucketS3EncryptionValidateBucketFunctionServiceRole1CBF0D3D",
+        "ValidateBucketS3EncryptionValidateBucketFunctionResourceLogGroup9806F780",
       ],
       "Properties": {
         "Code": {
@@ -494,6 +502,9 @@ exports[`ValidateBucketKmsEncryption Construct(ValidateBucketKmsEncryption):  Sn
       "UpdateReplacePolicy": "Delete",
     },
     "ValidateBucketS3EncryptionValidateBucketFunctionServiceRole1CBF0D3D": {
+      "DependsOn": [
+        "ValidateBucketS3EncryptionValidateBucketFunctionResourceLogGroup9806F780",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -535,6 +546,9 @@ exports[`ValidateBucketKmsEncryption Construct(ValidateBucketKmsEncryption):  Sn
       "Type": "AWS::IAM::Role",
     },
     "ValidateBucketS3EncryptionValidateBucketFunctionServiceRoleDefaultPolicyB6CF9314": {
+      "DependsOn": [
+        "ValidateBucketS3EncryptionValidateBucketFunctionResourceLogGroup9806F780",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -880,6 +894,7 @@ exports[`ValidateBucketS3Encryption Construct(ValidateBucketS3Encryption):  Snap
       "DependsOn": [
         "ValidateBucketKmsEncryptionValidateBucketFunctionServiceRoleDefaultPolicy36876301",
         "ValidateBucketKmsEncryptionValidateBucketFunctionServiceRole1493FC5C",
+        "ValidateBucketKmsEncryptionValidateBucketFunctionResourceLogGroup0C70290F",
       ],
       "Properties": {
         "Code": {
@@ -934,6 +949,9 @@ exports[`ValidateBucketS3Encryption Construct(ValidateBucketS3Encryption):  Snap
       "UpdateReplacePolicy": "Delete",
     },
     "ValidateBucketKmsEncryptionValidateBucketFunctionServiceRole1493FC5C": {
+      "DependsOn": [
+        "ValidateBucketKmsEncryptionValidateBucketFunctionResourceLogGroup0C70290F",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -975,6 +993,9 @@ exports[`ValidateBucketS3Encryption Construct(ValidateBucketS3Encryption):  Snap
       "Type": "AWS::IAM::Role",
     },
     "ValidateBucketKmsEncryptionValidateBucketFunctionServiceRoleDefaultPolicy36876301": {
+      "DependsOn": [
+        "ValidateBucketKmsEncryptionValidateBucketFunctionResourceLogGroup0C70290F",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -1163,6 +1184,7 @@ exports[`ValidateBucketS3Encryption Construct(ValidateBucketS3Encryption):  Snap
       "DependsOn": [
         "ValidateBucketS3EncryptionValidateBucketFunctionServiceRoleDefaultPolicyB6CF9314",
         "ValidateBucketS3EncryptionValidateBucketFunctionServiceRole1CBF0D3D",
+        "ValidateBucketS3EncryptionValidateBucketFunctionResourceLogGroup9806F780",
       ],
       "Properties": {
         "Code": {
@@ -1217,6 +1239,9 @@ exports[`ValidateBucketS3Encryption Construct(ValidateBucketS3Encryption):  Snap
       "UpdateReplacePolicy": "Delete",
     },
     "ValidateBucketS3EncryptionValidateBucketFunctionServiceRole1CBF0D3D": {
+      "DependsOn": [
+        "ValidateBucketS3EncryptionValidateBucketFunctionResourceLogGroup9806F780",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -1258,6 +1283,9 @@ exports[`ValidateBucketS3Encryption Construct(ValidateBucketS3Encryption):  Snap
       "Type": "AWS::IAM::Role",
     },
     "ValidateBucketS3EncryptionValidateBucketFunctionServiceRoleDefaultPolicyB6CF9314": {
+      "DependsOn": [
+        "ValidateBucketS3EncryptionValidateBucketFunctionResourceLogGroup9806F780",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [

@@ -29,6 +29,7 @@ exports[`ConfigServiceTags Construct(NLBAddresses):  Snapshot Test 1`] = `
       "DependsOn": [
         "NLBAddressesNLBAddressesProviderLambdaServiceRoleDefaultPolicyFC32AE1C",
         "NLBAddressesNLBAddressesProviderLambdaServiceRole7334A8BA",
+        "NLBAddressesNLBAddressesProviderLambdaLogGroup90666151",
       ],
       "Properties": {
         "Code": {
@@ -73,6 +74,9 @@ exports[`ConfigServiceTags Construct(NLBAddresses):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "NLBAddressesNLBAddressesProviderLambdaServiceRole7334A8BA": {
+      "DependsOn": [
+        "NLBAddressesNLBAddressesProviderLambdaLogGroup90666151",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -114,6 +118,9 @@ exports[`ConfigServiceTags Construct(NLBAddresses):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Role",
     },
     "NLBAddressesNLBAddressesProviderLambdaServiceRoleDefaultPolicyFC32AE1C": {
+      "DependsOn": [
+        "NLBAddressesNLBAddressesProviderLambdaLogGroup90666151",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [

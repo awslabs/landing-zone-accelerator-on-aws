@@ -387,6 +387,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "DependsOn": [
         "CrossAccountRouteFrameworkCrossAccountRouteFunctionServiceRoleDefaultPolicy2CB6E8A9",
         "CrossAccountRouteFrameworkCrossAccountRouteFunctionServiceRole0BC7B615",
+        "CrossAccountRouteFrameworkCrossAccountRouteFunctionLogGroupCFE2C9BD",
       ],
       "Properties": {
         "Code": {
@@ -426,6 +427,9 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "UpdateReplacePolicy": "Delete",
     },
     "CrossAccountRouteFrameworkCrossAccountRouteFunctionServiceRole0BC7B615": {
+      "DependsOn": [
+        "CrossAccountRouteFrameworkCrossAccountRouteFunctionLogGroupCFE2C9BD",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -467,6 +471,9 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Type": "AWS::IAM::Role",
     },
     "CrossAccountRouteFrameworkCrossAccountRouteFunctionServiceRoleDefaultPolicy2CB6E8A9": {
+      "DependsOn": [
+        "CrossAccountRouteFrameworkCrossAccountRouteFunctionLogGroupCFE2C9BD",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -3286,6 +3293,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "DependsOn": [
         "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaServiceRoleDefaultPolicyD488029A",
         "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaServiceRole92332B48",
+        "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaLogGroup713C77F0",
       ],
       "Properties": {
         "Code": {
@@ -3324,6 +3332,9 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "UpdateReplacePolicy": "Delete",
     },
     "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaServiceRole92332B48": {
+      "DependsOn": [
+        "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaLogGroup713C77F0",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -3365,6 +3376,9 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Type": "AWS::IAM::Role",
     },
     "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaServiceRoleDefaultPolicyD488029A": {
+      "DependsOn": [
+        "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaLogGroup713C77F0",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [

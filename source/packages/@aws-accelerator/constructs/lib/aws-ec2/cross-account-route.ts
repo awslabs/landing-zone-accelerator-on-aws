@@ -59,12 +59,14 @@ export class CrossAccountRouteFramework extends cdk.Resource {
       description: 'Cross account EC2 route OnEvent handler',
       initialPolicy: [onEventStsPolicy, onEventRoutePolicy],
     });
-    new cdk.aws_logs.LogGroup(this, `${onEvent.node.id}LogGroup`, {
+    const logGroup = new cdk.aws_logs.LogGroup(this, `${onEvent.node.id}LogGroup`, {
       logGroupName: `/aws/lambda/${onEvent.functionName}`,
       retention: props.logRetentionInDays,
       encryptionKey: props.logGroupKmsKey,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
+    // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
+    onEvent.node.addDependency(logGroup);
 
     this.provider = new cdk.custom_resources.Provider(this, 'CrossAccountRouteProvider', {
       onEventHandler: onEvent,

@@ -769,6 +769,7 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "RevertScpChangesRevertScpChangesFunctionServiceRoleDefaultPolicyF3C3ECD9",
         "RevertScpChangesRevertScpChangesFunctionServiceRole4F571613",
+        "RevertScpChangesRevertScpChangesFunctionLogGroup92A9E8AA",
       ],
       "Properties": {
         "Code": {
@@ -837,6 +838,9 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "RevertScpChangesRevertScpChangesFunctionServiceRole4F571613": {
+      "DependsOn": [
+        "RevertScpChangesRevertScpChangesFunctionLogGroup92A9E8AA",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -882,6 +886,9 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Role",
     },
     "RevertScpChangesRevertScpChangesFunctionServiceRoleDefaultPolicyF3C3ECD9": {
+      "DependsOn": [
+        "RevertScpChangesRevertScpChangesFunctionLogGroup92A9E8AA",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [

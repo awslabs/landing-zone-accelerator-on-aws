@@ -406,6 +406,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "AcceleratorCloudWatchDataProtectionFunctionServiceRoleDefaultPolicy142CDDF6",
         "AcceleratorCloudWatchDataProtectionFunctionServiceRole84B1A0EF",
+        "AcceleratorCloudWatchDataProtectionFunctionResourceLogGroupBF7014C4",
       ],
       "Properties": {
         "Code": {
@@ -458,6 +459,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "AcceleratorCloudWatchDataProtectionFunctionServiceRole84B1A0EF": {
+      "DependsOn": [
+        "AcceleratorCloudWatchDataProtectionFunctionResourceLogGroupBF7014C4",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -499,6 +503,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Role",
     },
     "AcceleratorCloudWatchDataProtectionFunctionServiceRoleDefaultPolicy142CDDF6": {
+      "DependsOn": [
+        "AcceleratorCloudWatchDataProtectionFunctionResourceLogGroupBF7014C4",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -2899,6 +2906,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "ImportedaccessLogsBucketPolicyFunctionServiceRoleDefaultPolicyCDBB1EF9",
         "ImportedaccessLogsBucketPolicyFunctionServiceRole37C32A68",
+        "ImportedaccessLogsBucketPolicyFunctionResourceLogGroup665D22B3",
       ],
       "Properties": {
         "Code": {
@@ -2951,6 +2959,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "ImportedaccessLogsBucketPolicyFunctionServiceRole37C32A68": {
+      "DependsOn": [
+        "ImportedaccessLogsBucketPolicyFunctionResourceLogGroup665D22B3",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -2992,6 +3003,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Role",
     },
     "ImportedaccessLogsBucketPolicyFunctionServiceRoleDefaultPolicyCDBB1EF9": {
+      "DependsOn": [
+        "ImportedaccessLogsBucketPolicyFunctionResourceLogGroup665D22B3",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -3201,6 +3215,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "ImportedelbLogsBucketPolicyFunctionServiceRoleDefaultPolicy68485230",
         "ImportedelbLogsBucketPolicyFunctionServiceRoleEE26D2A8",
+        "ImportedelbLogsBucketPolicyFunctionResourceLogGroupDF83CD38",
       ],
       "Properties": {
         "Code": {
@@ -3253,6 +3268,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "ImportedelbLogsBucketPolicyFunctionServiceRoleDefaultPolicy68485230": {
+      "DependsOn": [
+        "ImportedelbLogsBucketPolicyFunctionResourceLogGroupDF83CD38",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -3295,6 +3313,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Policy",
     },
     "ImportedelbLogsBucketPolicyFunctionServiceRoleEE26D2A8": {
+      "DependsOn": [
+        "ImportedelbLogsBucketPolicyFunctionResourceLogGroupDF83CD38",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -4093,6 +4114,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "ValidateImportedaccessLogsBucketValidateBucketFunctionServiceRoleDefaultPolicyD5BFE6E0",
         "ValidateImportedaccessLogsBucketValidateBucketFunctionServiceRole622EF956",
+        "ValidateImportedaccessLogsBucketValidateBucketFunctionResourceLogGroupDA884B01",
       ],
       "Properties": {
         "Code": {
@@ -4145,6 +4167,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "ValidateImportedaccessLogsBucketValidateBucketFunctionServiceRole622EF956": {
+      "DependsOn": [
+        "ValidateImportedaccessLogsBucketValidateBucketFunctionResourceLogGroupDA884B01",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -4186,6 +4211,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Role",
     },
     "ValidateImportedaccessLogsBucketValidateBucketFunctionServiceRoleDefaultPolicyD5BFE6E0": {
+      "DependsOn": [
+        "ValidateImportedaccessLogsBucketValidateBucketFunctionResourceLogGroupDA884B01",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -4376,6 +4404,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "ValidateImportedelbLogsBucketValidateBucketFunctionServiceRoleDefaultPolicyFB76DBF7",
         "ValidateImportedelbLogsBucketValidateBucketFunctionServiceRole77EE6C35",
+        "ValidateImportedelbLogsBucketValidateBucketFunctionResourceLogGroup700806F5",
       ],
       "Properties": {
         "Code": {
@@ -4428,6 +4457,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "ValidateImportedelbLogsBucketValidateBucketFunctionServiceRole77EE6C35": {
+      "DependsOn": [
+        "ValidateImportedelbLogsBucketValidateBucketFunctionResourceLogGroup700806F5",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -4469,6 +4501,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Role",
     },
     "ValidateImportedelbLogsBucketValidateBucketFunctionServiceRoleDefaultPolicyFB76DBF7": {
+      "DependsOn": [
+        "ValidateImportedelbLogsBucketValidateBucketFunctionResourceLogGroup700806F5",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -6235,6 +6270,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       "DependsOn": [
         "ImportedLogBucketPrefixS3CreateBucketPrefixFunctionServiceRoleDefaultPolicy5FD96CEA",
         "ImportedLogBucketPrefixS3CreateBucketPrefixFunctionServiceRoleED050E0B",
+        "ImportedLogBucketPrefixS3CreateBucketPrefixFunctionResourceLogGroupDC741551",
       ],
       "Properties": {
         "Code": {
@@ -6275,6 +6311,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "ImportedLogBucketPrefixS3CreateBucketPrefixFunctionServiceRoleDefaultPolicy5FD96CEA": {
+      "DependsOn": [
+        "ImportedLogBucketPrefixS3CreateBucketPrefixFunctionResourceLogGroupDC741551",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -6310,6 +6349,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       "Type": "AWS::IAM::Policy",
     },
     "ImportedLogBucketPrefixS3CreateBucketPrefixFunctionServiceRoleED050E0B": {
+      "DependsOn": [
+        "ImportedLogBucketPrefixS3CreateBucketPrefixFunctionResourceLogGroupDC741551",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -6531,6 +6573,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       "DependsOn": [
         "ImportedaccessLogsBucketPolicyFunctionServiceRoleDefaultPolicyCDBB1EF9",
         "ImportedaccessLogsBucketPolicyFunctionServiceRole37C32A68",
+        "ImportedaccessLogsBucketPolicyFunctionResourceLogGroup665D22B3",
       ],
       "Properties": {
         "Code": {
@@ -6571,6 +6614,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "ImportedaccessLogsBucketPolicyFunctionServiceRole37C32A68": {
+      "DependsOn": [
+        "ImportedaccessLogsBucketPolicyFunctionResourceLogGroup665D22B3",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -6612,6 +6658,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       "Type": "AWS::IAM::Role",
     },
     "ImportedaccessLogsBucketPolicyFunctionServiceRoleDefaultPolicyCDBB1EF9": {
+      "DependsOn": [
+        "ImportedaccessLogsBucketPolicyFunctionResourceLogGroup665D22B3",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -6803,6 +6852,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       "DependsOn": [
         "ImportedcentralLogsBucketEncryptionFunctionServiceRoleDefaultPolicy7ED44A90",
         "ImportedcentralLogsBucketEncryptionFunctionServiceRole9CF8A4EB",
+        "ImportedcentralLogsBucketEncryptionFunctionResourceLogGroupE1CF6C47",
       ],
       "Properties": {
         "Code": {
@@ -6843,6 +6893,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       "UpdateReplacePolicy": "Retain",
     },
     "ImportedcentralLogsBucketEncryptionFunctionServiceRole9CF8A4EB": {
+      "DependsOn": [
+        "ImportedcentralLogsBucketEncryptionFunctionResourceLogGroupE1CF6C47",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -6884,6 +6937,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       "Type": "AWS::IAM::Role",
     },
     "ImportedcentralLogsBucketEncryptionFunctionServiceRoleDefaultPolicy7ED44A90": {
+      "DependsOn": [
+        "ImportedcentralLogsBucketEncryptionFunctionResourceLogGroupE1CF6C47",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -7310,6 +7366,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       "DependsOn": [
         "ImportedcentralLogsBucketPolicyFunctionServiceRoleDefaultPolicy215687F6",
         "ImportedcentralLogsBucketPolicyFunctionServiceRoleE52C0EF9",
+        "ImportedcentralLogsBucketPolicyFunctionResourceLogGroup2E16ACD3",
       ],
       "Properties": {
         "Code": {
@@ -7350,6 +7407,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "ImportedcentralLogsBucketPolicyFunctionServiceRoleDefaultPolicy215687F6": {
+      "DependsOn": [
+        "ImportedcentralLogsBucketPolicyFunctionResourceLogGroup2E16ACD3",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -7392,6 +7452,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       "Type": "AWS::IAM::Policy",
     },
     "ImportedcentralLogsBucketPolicyFunctionServiceRoleE52C0EF9": {
+      "DependsOn": [
+        "ImportedcentralLogsBucketPolicyFunctionResourceLogGroup2E16ACD3",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -7600,6 +7663,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       "DependsOn": [
         "ImportedelbLogsBucketPolicyFunctionServiceRoleDefaultPolicy68485230",
         "ImportedelbLogsBucketPolicyFunctionServiceRoleEE26D2A8",
+        "ImportedelbLogsBucketPolicyFunctionResourceLogGroupDF83CD38",
       ],
       "Properties": {
         "Code": {
@@ -7640,6 +7704,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "ImportedelbLogsBucketPolicyFunctionServiceRoleDefaultPolicy68485230": {
+      "DependsOn": [
+        "ImportedelbLogsBucketPolicyFunctionResourceLogGroupDF83CD38",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -7682,6 +7749,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       "Type": "AWS::IAM::Policy",
     },
     "ImportedelbLogsBucketPolicyFunctionServiceRoleEE26D2A8": {
+      "DependsOn": [
+        "ImportedelbLogsBucketPolicyFunctionResourceLogGroupDF83CD38",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -8475,6 +8545,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       "DependsOn": [
         "ValidateImportedaccessLogsBucketValidateBucketFunctionServiceRoleDefaultPolicyD5BFE6E0",
         "ValidateImportedaccessLogsBucketValidateBucketFunctionServiceRole622EF956",
+        "ValidateImportedaccessLogsBucketValidateBucketFunctionResourceLogGroupDA884B01",
       ],
       "Properties": {
         "Code": {
@@ -8515,6 +8586,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "ValidateImportedaccessLogsBucketValidateBucketFunctionServiceRole622EF956": {
+      "DependsOn": [
+        "ValidateImportedaccessLogsBucketValidateBucketFunctionResourceLogGroupDA884B01",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -8556,6 +8630,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       "Type": "AWS::IAM::Role",
     },
     "ValidateImportedaccessLogsBucketValidateBucketFunctionServiceRoleDefaultPolicyD5BFE6E0": {
+      "DependsOn": [
+        "ValidateImportedaccessLogsBucketValidateBucketFunctionResourceLogGroupDA884B01",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -8746,6 +8823,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       "DependsOn": [
         "ValidateImportedcentralLogsBucketValidateBucketFunctionServiceRoleDefaultPolicy04F8BB58",
         "ValidateImportedcentralLogsBucketValidateBucketFunctionServiceRole66C672FA",
+        "ValidateImportedcentralLogsBucketValidateBucketFunctionResourceLogGroupC510852F",
       ],
       "Properties": {
         "Code": {
@@ -8786,6 +8864,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "ValidateImportedcentralLogsBucketValidateBucketFunctionServiceRole66C672FA": {
+      "DependsOn": [
+        "ValidateImportedcentralLogsBucketValidateBucketFunctionResourceLogGroupC510852F",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -8827,6 +8908,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       "Type": "AWS::IAM::Role",
     },
     "ValidateImportedcentralLogsBucketValidateBucketFunctionServiceRoleDefaultPolicy04F8BB58": {
+      "DependsOn": [
+        "ValidateImportedcentralLogsBucketValidateBucketFunctionResourceLogGroupC510852F",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -9017,6 +9101,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       "DependsOn": [
         "ValidateImportedelbLogsBucketValidateBucketFunctionServiceRoleDefaultPolicyFB76DBF7",
         "ValidateImportedelbLogsBucketValidateBucketFunctionServiceRole77EE6C35",
+        "ValidateImportedelbLogsBucketValidateBucketFunctionResourceLogGroup700806F5",
       ],
       "Properties": {
         "Code": {
@@ -9057,6 +9142,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "ValidateImportedelbLogsBucketValidateBucketFunctionServiceRole77EE6C35": {
+      "DependsOn": [
+        "ValidateImportedelbLogsBucketValidateBucketFunctionResourceLogGroup700806F5",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -9098,6 +9186,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       "Type": "AWS::IAM::Role",
     },
     "ValidateImportedelbLogsBucketValidateBucketFunctionServiceRoleDefaultPolicyFB76DBF7": {
+      "DependsOn": [
+        "ValidateImportedelbLogsBucketValidateBucketFunctionResourceLogGroup700806F5",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [

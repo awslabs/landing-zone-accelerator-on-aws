@@ -40,6 +40,7 @@ exports[`FirewallConfigReplacements Construct(FirewallConfigReplacements):  Snap
     },
     "ConfigReplacementsFunction3B8BED87": {
       "DependsOn": [
+        "ConfigReplacementsFunctionResourceLogGroupA52DC796",
         "Role1ABCC5F0",
       ],
       "Properties": {

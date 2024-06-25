@@ -7,6 +7,7 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
       "DependsOn": [
         "AccountWarmingWarmAccountFunctionServiceRoleDefaultPolicy7A9A020A",
         "AccountWarmingWarmAccountFunctionServiceRoleF7AECCB8",
+        "AccountWarmingWarmAccountFunctionLogGroupF216C336",
       ],
       "Metadata": {
         "cdk_nag": {
@@ -66,6 +67,9 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Retain",
     },
     "AccountWarmingWarmAccountFunctionServiceRoleDefaultPolicy7A9A020A": {
+      "DependsOn": [
+        "AccountWarmingWarmAccountFunctionLogGroupF216C336",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -339,6 +343,9 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Policy",
     },
     "AccountWarmingWarmAccountFunctionServiceRoleF7AECCB8": {
+      "DependsOn": [
+        "AccountWarmingWarmAccountFunctionLogGroupF216C336",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -1115,6 +1122,7 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
       "DependsOn": [
         "AccountWarmingWarmAccountStatusFunctionServiceRoleDefaultPolicy9876CE7C",
         "AccountWarmingWarmAccountStatusFunctionServiceRole6BC3CAD6",
+        "AccountWarmingWarmAccountStatusFunctionLogGroupBD74C59F",
       ],
       "Metadata": {
         "cdk_nag": {
@@ -1174,6 +1182,9 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Retain",
     },
     "AccountWarmingWarmAccountStatusFunctionServiceRole6BC3CAD6": {
+      "DependsOn": [
+        "AccountWarmingWarmAccountStatusFunctionLogGroupBD74C59F",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -1219,6 +1230,9 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Role",
     },
     "AccountWarmingWarmAccountStatusFunctionServiceRoleDefaultPolicy9876CE7C": {
+      "DependsOn": [
+        "AccountWarmingWarmAccountStatusFunctionLogGroupBD74C59F",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [

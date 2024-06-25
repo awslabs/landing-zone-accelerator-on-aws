@@ -94,12 +94,14 @@ export class ActiveDirectoryLogSubscription extends Construct {
     );
 
     // Custom resource lambda log group
-    new cdk.aws_logs.LogGroup(this, `${providerLambda.node.id}LogGroup`, {
+    const logGroup = new cdk.aws_logs.LogGroup(this, `${providerLambda.node.id}LogGroup`, {
       logGroupName: `/aws/lambda/${providerLambda.functionName}`,
       retention: props.logRetentionInDays,
       encryptionKey: props.cloudWatchLogsKmsKey,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
+    // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
+    providerLambda.node.addDependency(logGroup);
 
     const provider = new cdk.custom_resources.Provider(this, 'ManageActiveDirectoryLogSubscriptionProvider', {
       onEventHandler: providerLambda,
