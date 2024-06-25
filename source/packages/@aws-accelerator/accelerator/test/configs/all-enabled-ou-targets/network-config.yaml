@@ -374,6 +374,7 @@ centralNetworkServices:
 prefixLists:
   - name: accelerator-prefix-list
     accounts:
+      - SharedServices
       - Network
     regions:
       - *HOME_REGION
@@ -434,6 +435,10 @@ vpcs:
             destination: 10.4.0.0/16
             type: vpcPeering
             target: CrossAccount
+          - name: VgwRoute
+            destination: 52.94.124.199/32
+            type: virtualPrivateGateway
+            target: Network-Main
       - name: Network-Endpoints-B
         routes:
           - name: TgwRoute
@@ -723,6 +728,21 @@ vpcs:
               protocol: HTTP
               targetGroup: appA-alb-tg-1
               type: forward
+        - name: appA-alb-02
+          subnets:
+            - 'Network-EndpointsTgwAttach-A'
+            - 'Network-EndpointsTgwAttach-B'
+          securityGroups:
+            - Management
+          listeners:
+            - name: appA-listener-alb-2
+              port: 80
+              protocol: HTTP
+              targetGroup: appA-alb-tg-2
+              type: forward
+          shareTargets:
+            accounts:
+              - SharedServices
       networkLoadBalancers:
         - name: appA-nlb-01
           scheme: internet-facing
@@ -758,7 +778,16 @@ vpcs:
           enabled: true
           port: 80
           protocol: HTTP
-
+      - name: appA-alb-tg-2
+        port: 80
+        protocol: HTTP
+        type: instance
+        connectionTermination: true
+        preserveClientIp: true
+        proxyProtocolV2: true
+        shareTargets:
+          accounts:
+            - SharedServices
   - name: Network-Inspection
     account: Network
     region: *HOME_REGION
@@ -947,6 +976,7 @@ vpcs:
       destinationsConfig:
         s3:
           lifecycleRules: []
+          overrideS3LogPath: 'somePath'
         cloudWatchLogs:
           retentionInDays: 3653
       defaultFormat: true
@@ -1041,45 +1071,5 @@ customerGateways:
           - tunnelInsideCidr: 169.254.100.0/30
           - tunnelInsideCidr: 169.254.100.100/30
 
-vpcFlowLogs:
-  trafficType: ALL
-  maxAggregationInterval: 60
-  destinations:
-    - s3
-    - cloud-watch-logs
-  destinationsConfig:
-    s3:
-      lifecycleRules: []
-    cloudWatchLogs:
-      retentionInDays: 3653
-  defaultFormat: true
-  customFields:
-    - version
-    - account-id
-    - interface-id
-    - srcaddr
-    - dstaddr
-    - srcport
-    - dstport
-    - protocol
-    - packets
-    - bytes
-    - start
-    - end
-    - action
-    - log-status
-    - vpc-id
-    - subnet-id
-    - instance-id
-    - tcp-flags
-    - type
-    - pkt-srcaddr
-    - pkt-dstaddr
-    - region
-    - az-id
-    - pkt-src-aws-service
-    - pkt-dst-aws-service
-    - flow-direction
-    - traffic-path
 firewallManagerService:
   delegatedAdminAccount: Audit

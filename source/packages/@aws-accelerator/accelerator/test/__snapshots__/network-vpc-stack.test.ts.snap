@@ -5592,3 +5592,206 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
   },
 }
 `;
+
+exports[`NoVpcFlowLogStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
+{
+  "Parameters": {
+    "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/kms/cloudwatch/key-arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/kms/lambda/key-arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "CustomDeleteDefaultVpcCustomResourceProviderHandler87E89F35": {
+      "DependsOn": [
+        "CustomDeleteDefaultVpcCustomResourceProviderRole80963EEF",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomDeleteDefaultVpcCustomResourceProviderRole80963EEF",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomDeleteDefaultVpcCustomResourceProviderLogGroup4113DA48": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomDeleteDefaultVpcCustomResourceProviderHandler87E89F35",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomDeleteDefaultVpcCustomResourceProviderRole80963EEF": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ec2:DeleteInternetGateway",
+                    "ec2:DetachInternetGateway",
+                    "ec2:DeleteNetworkAcl",
+                    "ec2:DeleteRoute",
+                    "ec2:DeleteSecurityGroup",
+                    "ec2:DeleteSubnet",
+                    "ec2:DeleteVpc",
+                    "ec2:DescribeInternetGateways",
+                    "ec2:DescribeNetworkAcls",
+                    "ec2:DescribeRouteTables",
+                    "ec2:DescribeSecurityGroups",
+                    "ec2:DescribeSubnets",
+                    "ec2:DescribeVpcs",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "DeleteDefaultVpc4DBAE36C": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomDeleteDefaultVpcCustomResourceProviderLogGroup4113DA48",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomDeleteDefaultVpcCustomResourceProviderHandler87E89F35",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::DeleteDefaultVpc",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "EnableCentralEndpointsRoleB69A8E04": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "EnableCentralEndpointsRole needs access to every describe every VPC in the account ",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::555555555555:root",
+                    ],
+                  ],
+                },
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ec2:DescribeVpcs",
+                    "route53:AssociateVPCWithHostedZone",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "default",
+          },
+        ],
+        "RoleName": "AWSAccelerator-EnableCentralEndpointsRole-us-east-1",
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "SsmParamAcceleratorVersionFF83282D": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-NetworkVpcStack-111111111111-us-east-1/version",
+        "Type": "String",
+        "Value": "1.7.0",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamStackId521A78D3": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-NetworkVpcStack-111111111111-us-east-1/stack-id",
+        "Type": "String",
+        "Value": {
+          "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+  },
+}
+`;
