@@ -89,7 +89,8 @@ async function getTemplate(client: CloudFormationClient, stackName: string, temp
     };
     const command = new GetTemplateCommand(input);
     const response = await throttlingBackOff(() => client.send(command));
-    return response.TemplateBody!;
+    const templateBody = isValidJsonObject(response.TemplateBody ?? '');
+    return templateBody;
   } catch (e) {
     if (e instanceof CloudFormationServiceException) {
       if (e.message === `Stack with id ${stackName} does not exist`) {
@@ -101,4 +102,31 @@ async function getTemplate(client: CloudFormationClient, stackName: string, temp
     }
   }
   return '{}';
+}
+
+/**
+ * Checks if the given string is a valid JSON object.
+ *
+ * @param {string} str - The input string to be checked.
+ * @returns {string} If the input string is a valid JSON object, it returns the original input string.
+ *                    If the input string is not a valid JSON object, it returns an empty JSON object string '{}'.
+ */
+function isValidJsonObject(str: string): string {
+  try {
+    // Attempt to parse the input string as JSON
+    const parsedJson = JSON.parse(str);
+
+    // Check if the parsed value is an object and not null
+    if (typeof parsedJson === 'object' && parsedJson !== null) {
+      // If it's a valid JSON object, return the original input string
+      return str;
+    } else {
+      // If it's not a valid JSON object, return an empty JSON object string
+      return '{}';
+    }
+  } catch (error) {
+    // If there's an error during parsing (e.g., the input string is not valid JSON),
+    // return an empty JSON object string
+    return '{}';
+  }
 }

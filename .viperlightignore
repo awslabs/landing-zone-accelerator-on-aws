@@ -233,3 +233,7 @@ source/packages/@aws-config-converter/config/global-config.ts:2306
 
 source/packages/@aws-config-converter/src/config/global-config.ts:2305
 source/packages/@aws-config-converter/src/config/global-config.ts:2306
+
+# Assume role declaration
+source/packages/@aws-accelerator/utils/test/get-template.test.ts:67
+source/packages/@aws-accelerator/utils/test/get-template.test.ts:74

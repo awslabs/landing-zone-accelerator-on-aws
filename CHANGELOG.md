@@ -21,7 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(organizations): throttling on ListAccounts call
 - fix(control-tower): The baseline 'AWSControlTowerBaseline' cannot be enabled on renamed OUs
 - fix(control-tower): change organizations module execution condition
-  
+- bug: diff fails on stacks with non-JSON template body
+- fix(diff): "Unexpected end of JSON input" error closes [#497](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/497)
+
 ## [1.7.0] - 05-31-2024
 
 ### Added
