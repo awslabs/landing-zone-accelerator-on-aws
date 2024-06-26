@@ -5,6 +5,9 @@ exports[`CloudWatchLogDataProtection Construct(CloudWatchLogDataProtection):  Sn
   "Resources": {
     "CloudWatchLogDataProtectionCloudWatchDataProtectionCloudWatchDataProtectionResource070294E0": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CloudWatchLogDataProtectionCloudWatchDataProtectionFunctionResourceLogGroupFE66A616",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [

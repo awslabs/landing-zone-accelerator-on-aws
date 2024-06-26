@@ -4235,6 +4235,9 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
     },
     "SecurityHubEventsLogSecurityHubEventsFunctionSecurityHubEventsFunctionResourceF6D56745": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "SecurityHubEventsLogSecurityHubEventsFunctionResourceLogGroupB7A99902",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -7481,6 +7484,9 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
     },
     "SecurityHubEventsLogSecurityHubEventsFunctionSecurityHubEventsFunctionResourceF6D56745": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "SecurityHubEventsLogSecurityHubEventsFunctionResourceLogGroupB7A99902",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [

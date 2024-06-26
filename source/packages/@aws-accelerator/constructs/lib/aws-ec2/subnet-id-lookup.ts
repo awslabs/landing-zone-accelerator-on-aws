@@ -69,7 +69,7 @@ export class SubnetIdLookup extends Construct {
     );
 
     // Custom resource lambda log group
-    new cdk.aws_logs.LogGroup(this, `${providerLambda.node.id}LogGroup`, {
+    const logGroup = new cdk.aws_logs.LogGroup(this, `${providerLambda.node.id}LogGroup`, {
       logGroupName: `/aws/lambda/${providerLambda.functionName}`,
       retention: props.cloudwatchLogRetentionInDays,
       encryptionKey: props.cloudwatchKey,
@@ -89,6 +89,8 @@ export class SubnetIdLookup extends Construct {
       },
     });
 
+    // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
+    resource.node.addDependency(logGroup);
     this.subnetId = resource.ref;
   }
 }

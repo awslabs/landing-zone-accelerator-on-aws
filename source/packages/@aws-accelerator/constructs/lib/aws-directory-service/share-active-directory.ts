@@ -83,7 +83,7 @@ export class ShareActiveDirectory extends Construct {
     );
 
     // Custom resource lambda log group
-    new cdk.aws_logs.LogGroup(this, `${providerLambda.node.id}LogGroup`, {
+    const logGroup = new cdk.aws_logs.LogGroup(this, `${providerLambda.node.id}LogGroup`, {
       logGroupName: `/aws/lambda/${providerLambda.functionName}`,
       retention: props.cloudwatchLogRetentionInDays,
       encryptionKey: props.cloudwatchKey,
@@ -107,7 +107,8 @@ export class ShareActiveDirectory extends Construct {
         uuid: uuidv4(), // Generates a new UUID to force the resource to update
       },
     });
-
+    // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
+    resource.node.addDependency(logGroup);
     this.id = resource.ref;
   }
 }

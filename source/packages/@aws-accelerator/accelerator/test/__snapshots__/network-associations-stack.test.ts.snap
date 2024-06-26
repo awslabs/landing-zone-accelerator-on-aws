@@ -3259,6 +3259,9 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
     },
     "appAnlbtg2ipLookupB24081DE": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaLogGroup713C77F0",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [

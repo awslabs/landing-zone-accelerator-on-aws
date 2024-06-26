@@ -379,6 +379,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
     },
     "AcceleratorCloudWatchDataProtectionCloudWatchDataProtectionResource62439E9B": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "AcceleratorCloudWatchDataProtectionFunctionResourceLogGroupBF7014C4",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -2864,6 +2867,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
     },
     "ImportedaccessLogsBucketPolicyBucketPolicyResource5390F048": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "ImportedaccessLogsBucketPolicyFunctionResourceLogGroup665D22B3",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -3161,6 +3167,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
     },
     "ImportedelbLogsBucketPolicyBucketPolicyResource2C3B688F": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "ImportedelbLogsBucketPolicyFunctionResourceLogGroupDF83CD38",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -4229,6 +4238,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
     },
     "ValidateImportedaccessLogsBucketValidateBucketValidateBucketResourceC9A0ADD2": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "ValidateImportedaccessLogsBucketValidateBucketFunctionResourceLogGroupDA884B01",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -4512,6 +4524,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
     },
     "ValidateImportedelbLogsBucketValidateBucketValidateBucketResourceD5022336": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "ValidateImportedelbLogsBucketValidateBucketFunctionResourceLogGroup700806F5",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -6352,6 +6367,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
     },
     "ImportedLogBucketPrefixS3CreateBucketPrefixS3CreateBucketPrefixResource2A2DF87D": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "ImportedLogBucketPrefixS3CreateBucketPrefixFunctionResourceLogGroupDC741551",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -6496,6 +6514,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
     },
     "ImportedaccessLogsBucketPolicyBucketPolicyResource5390F048": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "ImportedaccessLogsBucketPolicyFunctionResourceLogGroup665D22B3",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -6781,6 +6802,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
     },
     "ImportedcentralLogsBucketEncryptionBucketEncryptionResource27DEBA46": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "ImportedcentralLogsBucketEncryptionFunctionResourceLogGroupE1CF6C47",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -7249,6 +7273,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
     },
     "ImportedcentralLogsBucketPolicyBucketPolicyResourceB8A42F0A": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "ImportedcentralLogsBucketPolicyFunctionResourceLogGroup2E16ACD3",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -7560,6 +7587,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
     },
     "ImportedelbLogsBucketPolicyBucketPolicyResource2C3B688F": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "ImportedelbLogsBucketPolicyFunctionResourceLogGroupDF83CD38",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -8599,6 +8629,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
     },
     "ValidateImportedaccessLogsBucketValidateBucketValidateBucketResourceC9A0ADD2": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "ValidateImportedaccessLogsBucketValidateBucketFunctionResourceLogGroupDA884B01",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -8870,6 +8903,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
     },
     "ValidateImportedcentralLogsBucketValidateBucketValidateBucketResource409E29BE": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "ValidateImportedcentralLogsBucketValidateBucketFunctionResourceLogGroupC510852F",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -9141,6 +9177,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
     },
     "ValidateImportedelbLogsBucketValidateBucketValidateBucketResourceD5022336": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "ValidateImportedelbLogsBucketValidateBucketFunctionResourceLogGroup700806F5",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [

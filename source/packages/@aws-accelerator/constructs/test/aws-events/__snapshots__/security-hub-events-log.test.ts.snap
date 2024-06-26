@@ -126,6 +126,9 @@ exports[`SecurityHubEventsLog Construct(SecurityHubEventsLog):  Snapshot Test 1`
     },
     "SecurityHubEventsLogSecurityHubEventsFunctionSecurityHubEventsFunctionResourceF6D56745": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "SecurityHubEventsLogSecurityHubEventsFunctionResourceLogGroupB7A99902",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [

@@ -75,6 +75,9 @@ exports[`VpcIdLookup Construct(VpcIdLookup):  Snapshot Test 1`] = `
     },
     "VpcIdLookupD915DEA4": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "VpcIdLookupVpcIdLookupFunctionLogGroup394AB6B3",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [

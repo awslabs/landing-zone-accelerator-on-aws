@@ -1099,6 +1099,10 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
     },
     "AccountWarmingWarmAccountResourceA5323DBB": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "AccountWarmingWarmAccountFunctionLogGroupF216C336",
+        "AccountWarmingWarmAccountStatusFunctionLogGroupBD74C59F",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [

@@ -5,6 +5,9 @@ exports[`ConfigServiceTags Construct(NLBAddresses):  Snapshot Test 1`] = `
   "Resources": {
     "NLBAddresses5DBEA4ED": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "NLBAddressesNLBAddressesProviderLambdaLogGroup90666151",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [

@@ -231,12 +231,13 @@ export class LzaCustomResource extends Construct {
     }
 
     let providerLambdaFunction = props.resource.onEventHandler;
+    let lzaLambda: LzaLambda | undefined;
     const nagSuppressionPrefix = props.nagSuppressionPrefix
       ? `${props.nagSuppressionPrefix}/${props.resource.name}`
       : `${props.resource.parentId}/${props.resource.name}`;
 
     if (props.lambda) {
-      const lzaLambda = new LzaLambda(this, 'Function', {
+      lzaLambda = new LzaLambda(this, 'Function', {
         assetPath: props.lambda.assetPath,
         environmentEncryptionKmsKey: props.lambda.environmentEncryptionKmsKey,
         cloudWatchLogKmsKey: props.lambda.cloudWatchLogKmsKey,
@@ -264,7 +265,9 @@ export class LzaCustomResource extends Construct {
       serviceToken: this.provider.serviceToken,
       properties: this.prepareResourceProperties(props),
     });
-
+    if (props.lambda && lzaLambda?.logGroup) {
+      this.resource.node.addDependency(lzaLambda!.logGroup);
+    }
     this.addSuppression(scope, props);
   }
 

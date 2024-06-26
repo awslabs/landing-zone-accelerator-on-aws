@@ -118,6 +118,9 @@ exports[`BucketPrefix Construct(BucketPrefix):  Snapshot Test 1`] = `
     },
     "BucketPrefixS3CreateBucketPrefixS3CreateBucketPrefixResourceF5F00D3C": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "BucketPrefixS3CreateBucketPrefixFunctionResourceLogGroup54BAB5A2",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [

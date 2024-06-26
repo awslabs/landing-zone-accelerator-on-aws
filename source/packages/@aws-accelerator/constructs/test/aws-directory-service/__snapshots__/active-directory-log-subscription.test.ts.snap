@@ -21,6 +21,9 @@ exports[`ActiveDirectoryLogSubscription Construct(ActiveDirectoryLogSubscription
     },
     "ActiveDirectoryLogSubscription1BFCC309": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "ActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionFunctionLogGroupA268486C",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [

@@ -327,6 +327,9 @@ exports[`GetCloudFormationResourceType Construct(GetCloudFormationResourceType):
     },
     "TestGetCloudFormationResourceTypeGetCloudFormationResourceTypeResource41628DFB": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "TestGetCloudFormationResourceTypeGetCloudFormationResourceTypeFunctionLogGroup602C5B86",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
