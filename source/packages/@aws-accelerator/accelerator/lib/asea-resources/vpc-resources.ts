@@ -213,12 +213,13 @@ export class VpcResources extends AseaResource {
       if (!naclSubnetAssociation) {
         continue;
       }
-      const cfnNaclSubnetAssociation = this.modifyNaclSubnetAssociation(
-        includedTemplate,
-        naclSubnetAssociation,
-        naclId,
-        subnetId,
-      );
+      let cfnNaclSubnetAssociation = includedTemplate.getResource(
+        naclSubnetAssociation?.logicalResourceId,
+      ) as CfnSubnetNetworkAclAssociation;
+
+      if (this.props.stage === AcceleratorStage.POST_IMPORT_ASEA_RESOURCES) {
+        cfnNaclSubnetAssociation = this.modifyNaclSubnetAssociation(cfnNaclSubnetAssociation, naclId, subnetId);
+      }
 
       this.scope.addSsmParameter({
         logicalId: pascalCase(`SsmParam${pascalCase(naclConfig.name) + pascalCase(subnetName)}SubnetAssociation`),
@@ -239,15 +240,10 @@ export class VpcResources extends AseaResource {
   }
 
   private modifyNaclSubnetAssociation(
-    includedTemplate: cdk.cloudformation_include.CfnInclude,
-    naclSubnetAssociation: CfnResourceType,
+    cfnNaclSubnetAssociation: cdk.aws_ec2.CfnSubnetNetworkAclAssociation,
     naclId: CfnResourceType | undefined,
     subnetId: CfnResourceType | undefined,
   ) {
-    const cfnNaclSubnetAssociation = includedTemplate.getResource(
-      naclSubnetAssociation?.logicalResourceId,
-    ) as CfnSubnetNetworkAclAssociation;
-
     if (naclId?.physicalResourceId) {
       cfnNaclSubnetAssociation.networkAclId = naclId.physicalResourceId;
     }
@@ -268,8 +264,8 @@ export class VpcResources extends AseaResource {
 
     const naclSubnetAssociation = naclSubnetAssociations.find(
       naclSubnetAssociations =>
-        naclSubnetAssociations.resourceMetadata['Properties'].NetworkAclId.Ref === naclId?.logicalResourceId &&
-        naclSubnetAssociations.resourceMetadata['Properties'].SubnetId.Ref === subnetId?.logicalResourceId,
+        naclSubnetAssociations.resourceMetadata['Properties'].NetworkAclId === naclId?.physicalResourceId &&
+        naclSubnetAssociations.resourceMetadata['Properties'].SubnetId === subnetId?.physicalResourceId,
     );
     return naclSubnetAssociation;
   }
