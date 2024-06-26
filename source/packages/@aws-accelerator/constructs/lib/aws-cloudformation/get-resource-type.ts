@@ -59,7 +59,7 @@ export class GetCloudFormationResourceType extends Construct {
       initialPolicy: [cloudformationPolicy],
     });
 
-    new cdk.aws_logs.LogGroup(this, `${lambdaFunction.node.id}LogGroup`, {
+    const logGroup = new cdk.aws_logs.LogGroup(this, `${lambdaFunction.node.id}LogGroup`, {
       logGroupName: `/aws/lambda/${lambdaFunction.functionName}`,
       retention: props.logRetentionInDays,
       encryptionKey: props.cloudwatchKmsKey,
@@ -109,6 +109,8 @@ export class GetCloudFormationResourceType extends Construct {
       true,
     );
 
+    // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
+    resource.node.addDependency(logGroup);
     this.id = resource.ref;
   }
 }

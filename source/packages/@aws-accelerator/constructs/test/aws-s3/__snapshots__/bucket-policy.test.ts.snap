@@ -80,6 +80,9 @@ exports[`BucketPolicy Construct(ValidateBucketKmsEncryption):  Snapshot Test 1`]
     },
     "ValidateBucketKmsEncryptionBucketPolicyBucketPolicyResource6D974B64": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "ValidateBucketKmsEncryptionBucketPolicyFunctionResourceLogGroup18E1F873",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [

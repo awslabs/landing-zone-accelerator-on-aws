@@ -169,6 +169,9 @@ exports[`KmsEncryption Construct(KmsEncryption):  Snapshot Test 1`] = `
     },
     "KeyLookupKmsEncryptionKmsEncryptionResourceB1BDD1D0": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "KeyLookupKmsEncryptionFunctionResourceLogGroupDFD04BBA",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [

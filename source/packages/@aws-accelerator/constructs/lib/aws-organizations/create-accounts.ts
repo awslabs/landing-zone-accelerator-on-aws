@@ -53,7 +53,7 @@ export class CreateOrganizationAccounts extends Construct {
       description: 'Create Organization Accounts OnEvent handler',
       environmentEncryption: props.kmsKey,
     });
-    new cdk.aws_logs.LogGroup(this, `${this.onEvent.node.id}LogGroup`, {
+    const onEventLogGroup = new cdk.aws_logs.LogGroup(this, `${this.onEvent.node.id}LogGroup`, {
       logGroupName: `/aws/lambda/${this.onEvent.functionName}`,
       retention: props.logRetentionInDays,
       encryptionKey: props.kmsKey,
@@ -99,7 +99,7 @@ export class CreateOrganizationAccounts extends Construct {
       initialPolicy: [ddbPolicy, ddbKmsPolicy, orgPolicy],
       environmentEncryption: props.kmsKey,
     });
-    new cdk.aws_logs.LogGroup(this, `${this.isComplete.node.id}LogGroup`, {
+    const isCompleteLogGroup = new cdk.aws_logs.LogGroup(this, `${this.isComplete.node.id}LogGroup`, {
       logGroupName: `/aws/lambda/${this.isComplete.functionName}`,
       retention: props.logRetentionInDays,
       encryptionKey: props.kmsKey,
@@ -138,6 +138,9 @@ export class CreateOrganizationAccounts extends Construct {
       },
     });
 
+    // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
+    resource.node.addDependency(isCompleteLogGroup);
+    resource.node.addDependency(onEventLogGroup);
     this.id = resource.ref;
   }
 }

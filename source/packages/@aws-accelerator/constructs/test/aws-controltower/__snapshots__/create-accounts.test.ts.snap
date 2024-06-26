@@ -931,6 +931,10 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
     },
     "TestCreateCTAccountsEE75074E": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "TestCreateCTAccountsCreateControlTowerAccountLogGroup92213B11",
+        "TestCreateCTAccountsCreateControlTowerAccountStatusLogGroupE10D1958",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [

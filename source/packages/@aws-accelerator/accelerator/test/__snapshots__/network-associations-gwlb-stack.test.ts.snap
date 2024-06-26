@@ -1139,6 +1139,9 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
     },
     "NetworkInspectionacceleratorFirewallConfigReplacementsResourceResourceD705B19B": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "NetworkInspectionacceleratorFirewallConfigReplacementsFunctionResourceLogGroup8D00AAAF",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -1749,6 +1752,9 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
     },
     "NetworkInspectiontestAsgConfigReplacementsResourceResourceB393099D": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "NetworkInspectiontestAsgConfigReplacementsFunctionResourceLogGroup72BE7636",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [

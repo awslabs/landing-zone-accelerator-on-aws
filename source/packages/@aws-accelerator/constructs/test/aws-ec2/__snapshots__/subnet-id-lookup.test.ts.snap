@@ -75,6 +75,9 @@ exports[`SubnetIdLookup Construct(SubnetIdLookup):  Snapshot Test 1`] = `
     },
     "SubnetIdLookup5A070671": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "SubnetIdLookupSubnetIdLookupFunctionLogGroup2C86E34D",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [

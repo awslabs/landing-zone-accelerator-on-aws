@@ -65,7 +65,7 @@ export class VpcIdLookup extends Construct {
     );
 
     // Custom resource lambda log group
-    new cdk.aws_logs.LogGroup(this, `${providerLambda.node.id}LogGroup`, {
+    const logGroup = new cdk.aws_logs.LogGroup(this, `${providerLambda.node.id}LogGroup`, {
       logGroupName: `/aws/lambda/${providerLambda.functionName}`,
       retention: props.cloudwatchLogRetentionInDays,
       encryptionKey: props.cloudwatchKey,
@@ -83,7 +83,8 @@ export class VpcIdLookup extends Construct {
         vpcName: props.vpcName,
       },
     });
-
+    // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
+    resource.node.addDependency(logGroup);
     this.vpcId = resource.ref;
   }
 }

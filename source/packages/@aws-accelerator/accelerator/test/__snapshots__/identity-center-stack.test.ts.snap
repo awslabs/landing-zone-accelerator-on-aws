@@ -399,6 +399,9 @@ exports[`IdentityCenterStack Construct(IdentityCenterStack):  Snapshot Test 1`] 
     },
     "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdResourceE2BD9B5B": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "IdentityCenterInstanceIdentityCenterGetInstanceIdFunctionResourceLogGroup043D5A24",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [

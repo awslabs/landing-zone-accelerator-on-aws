@@ -98,6 +98,9 @@ exports[`MoveAccounts Construct(MoveAccounts):  Snapshot Test 1`] = `
     },
     "MoveAccounts99C70985": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "MoveAccountsMoveAccountsFunctionLogGroupFAEDB078",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [

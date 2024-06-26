@@ -808,6 +808,8 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
     "CreateCTAccounts3049A752": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
+        "CreateCTAccountsCreateControlTowerAccountLogGroup7DD19087",
+        "CreateCTAccountsCreateControlTowerAccountStatusLogGroup18D2531C",
         "CreateOrganizationAccountsDDA8AFE1",
         "CreateOrganizationAccountsServiceRole99CB3720",
         "CreateOrganizationAccountsCreateOrganizationAccountsLogGroup00D93B3C",
@@ -2386,6 +2388,8 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
     "CreateOrganizationAccounts49A5350C": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
+        "CreateOrganizationAccountsCreateOrganizationAccountsLogGroup00D93B3C",
+        "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40",
         "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
         "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
         "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
@@ -4741,6 +4745,9 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
     },
     "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [

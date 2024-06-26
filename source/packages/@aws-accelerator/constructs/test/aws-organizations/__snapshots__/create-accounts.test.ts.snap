@@ -108,6 +108,10 @@ exports[`ReportDefinition Construct(ConfigServiceTags):  Snapshot Test 1`] = `
   "Resources": {
     "CreateOrganizationAccounts49A5350C": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CreateOrganizationAccountsCreateOrganizationAccountsLogGroup00D93B3C",
+        "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [

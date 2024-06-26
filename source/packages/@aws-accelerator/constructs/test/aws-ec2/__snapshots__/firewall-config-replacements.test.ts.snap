@@ -96,6 +96,9 @@ exports[`FirewallConfigReplacements Construct(FirewallConfigReplacements):  Snap
     },
     "ConfigReplacementsResourceResource58F31BA3": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "ConfigReplacementsFunctionResourceLogGroupA52DC796",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [

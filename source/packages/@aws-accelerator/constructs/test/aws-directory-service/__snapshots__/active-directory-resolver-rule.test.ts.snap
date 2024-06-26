@@ -5,6 +5,9 @@ exports[`ActiveDirectoryResolverRule Construct(ActiveDirectoryResolverRule):  Sn
   "Resources": {
     "ActiveDirectoryResolverRule420E8011": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "ActiveDirectoryResolverRuleUpdateResolverRuleFunctionLogGroupDA0FD002",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
