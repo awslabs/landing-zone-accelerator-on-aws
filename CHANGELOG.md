@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - fix(organizations): throttling on ListAccounts call
 - fix(control-tower): The baseline 'AWSControlTowerBaseline' cannot be enabled on renamed OUs
+- fix(control-tower): change organizations module execution condition
   
 ## [1.7.0] - 05-31-2024
 
