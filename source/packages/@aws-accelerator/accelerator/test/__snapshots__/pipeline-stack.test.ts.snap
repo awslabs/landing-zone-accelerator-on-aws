@@ -2494,7 +2494,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                 {
                   "Ref": "AWS::Partition",
                 },
-                " --use-existing-role No --config-dir $CODEBUILD_SRC_DIR_Config && if [ ! -z \\"\${ACCELERATOR_NO_ORG_MODULE}\\" ]; then yarn run ts-node packages/@aws-accelerator/modules/bin/runner.ts --module aws-organizations --partition  ",
+                " --use-existing-role No --config-dir $CODEBUILD_SRC_DIR_Config && if [ -z \\"\${ACCELERATOR_NO_ORG_MODULE}\\" ]; then yarn run ts-node packages/@aws-accelerator/modules/bin/runner.ts --module aws-organizations --partition  ",
                 {
                   "Ref": "AWS::Partition",
                 },
