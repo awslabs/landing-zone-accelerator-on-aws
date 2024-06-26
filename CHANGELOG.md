@@ -14,12 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(networking): Add transit gateway static CIDR blocks and Transit Gateway Connect attachments
 - feat(autoScalingGroup): Add option to set maxInstanceLifetime property for AutoScalingGroups
 - feat(securityHub): Allow SecurityHub to be enabled when AwsConfig is enabled with deploymentTargets option
-- fix(organizations): throttling on ListAccounts call
 
 ### Changed
 
 ### Fixed
-
+- fix(organizations): throttling on ListAccounts call
+- fix(control-tower): The baseline 'AWSControlTowerBaseline' cannot be enabled on renamed OUs
+  
 ## [1.7.0] - 05-31-2024
 
 ### Added

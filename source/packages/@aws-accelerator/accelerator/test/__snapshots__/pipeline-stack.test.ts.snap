@@ -2494,11 +2494,11 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                 {
                   "Ref": "AWS::Partition",
                 },
-                " --use-existing-role No --config-dir $CODEBUILD_SRC_DIR_Config && yarn run ts-node packages/@aws-accelerator/modules/bin/runner.ts --module aws-organizations --partition ",
+                " --use-existing-role No --config-dir $CODEBUILD_SRC_DIR_Config && if [ ! -z \\"\${ACCELERATOR_NO_ORG_MODULE}\\" ]; then yarn run ts-node packages/@aws-accelerator/modules/bin/runner.ts --module aws-organizations --partition  ",
                 {
                   "Ref": "AWS::Partition",
                 },
-                " --use-existing-role No --config-dir $CODEBUILD_SRC_DIR_Config && export LOG_LEVEL=error ; fi",
+                " --use-existing-role No --config-dir $CODEBUILD_SRC_DIR_Config; else echo \\"Module aws-organizations execution skipped by environment settings.\\"; fi && export LOG_LEVEL=error ; fi",
         "if [ \\"prepare\\" = \\"\${ACCELERATOR_STAGE}\\" ]; then set -e && yarn run ts-node  packages/@aws-accelerator/accelerator/lib/prerequisites.ts --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
