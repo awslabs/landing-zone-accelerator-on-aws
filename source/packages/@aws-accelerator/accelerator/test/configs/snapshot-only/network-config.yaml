@@ -1576,6 +1576,8 @@ vpcs:
             destination: Network-InspectionTgwAttach-B
             type: gatewayLoadBalancerEndpoint
             target: Endpoint-B
+      - name: Network-Inspection-Local-Rt-A
+        routes: []
     subnets:
       - name: Network-Inspection-A
         availabilityZone: a
@@ -1593,6 +1595,10 @@ vpcs:
         availabilityZone: b
         routeTable: Network-Inspection-Tgw-B
         ipv4CidrBlock: 10.2.3.224/28
+      - name: Network-Inspection-Local-A
+        localZone: atl-2a
+        routeTable: Network-Inspection-Local-Rt-A
+        ipv4CidrBlock: 10.3.0.0/24
     securityGroups:
       - name: Data
         description: Firewall data

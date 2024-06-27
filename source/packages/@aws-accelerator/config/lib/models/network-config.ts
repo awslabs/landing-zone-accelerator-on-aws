@@ -1596,6 +1596,22 @@ export interface ISubnetConfig {
    */
   readonly assignIpv6OnCreation?: boolean;
   /**
+   * The Zone ID of the local zone.
+   *
+   * @remarks
+   * **CAUTION**: changing this property after initial deployment will cause a subnet recreation.
+   * Please be aware that any downstream dependencies may cause this property update to fail.
+   *
+   * This will be the identifier of the local zone (ie - 'den-1a' for 'us-west-2-den-1a')
+   *
+   * @remarks
+   * In order to use local zones, your account and region will have to opt-in. Steps to do so can be done through the {@link https://docs.aws.amazon.com/local-zones/latest/ug/getting-started.html | Getting Started documentation}.
+   *
+   * There are multiple use cases where local zones is not supported, see {@link https://docs.aws.amazon.com/local-zones/latest/ug/how-local-zones-work.html | use cases}.
+   * For more general information, see {@link https://docs.aws.amazon.com/local-zones/latest/ug/available-local-zones.html | Available Local Zones} in the AWS Local Zones User Guide.
+   */
+  readonly localZone?: t.NonEmptyString;
+  /**
    * The Availability Zone (AZ) the subnet resides in.
    *
    * @remarks

@@ -183,9 +183,16 @@ export class SubnetResources {
   private setAvailabilityZone(subnetItem: SubnetConfig, outpost?: OutpostsConfig): string {
     let availabilityZone = outpost?.availabilityZone ? outpost.availabilityZone : subnetItem.availabilityZone;
 
-    if (!availabilityZone) {
-      this.stack.addLogs(LogLevel.ERROR, `Error creating subnet ${subnetItem.name}: Availability Zone not defined.`);
+    if (!availabilityZone && !subnetItem.localZone) {
+      this.stack.addLogs(
+        LogLevel.ERROR,
+        `Error creating subnet ${subnetItem.name}: Neither Local Zone or Availability Zone are defined.`,
+      );
       throw new Error(`Configuration validation failed at runtime.`);
+    }
+
+    if (subnetItem.localZone) {
+      return (availabilityZone = `${cdk.Stack.of(this.stack).region}-${subnetItem.localZone}`);
     }
 
     return (availabilityZone =
