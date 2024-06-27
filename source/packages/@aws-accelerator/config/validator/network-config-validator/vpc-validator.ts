@@ -2502,14 +2502,18 @@ export class VpcValidator {
         );
       }
       // Validate an AZ is assigned
-      if (subnet.availabilityZone && subnet.outpost) {
+      if (
+        (subnet.availabilityZone && subnet.outpost) ||
+        (subnet.availabilityZone && subnet.localZone) ||
+        (subnet.localZone && subnet.outpost)
+      ) {
         errors.push(
-          `[VPC ${vpcItem.name} subnet ${subnet.name}]: cannot define both availabilityZone and outpost properties`,
+          `[VPC ${vpcItem.name} subnet ${subnet.name}]: can only define one of availabilityZone, localZone or outpost properties`,
         );
       }
-      if (!subnet.availabilityZone && !subnet.outpost) {
+      if (!subnet.availabilityZone && !subnet.outpost && !subnet.localZone) {
         errors.push(
-          `[VPC ${vpcItem.name} subnet ${subnet.name}]: must define either availabilityZone or outpost property`,
+          `[VPC ${vpcItem.name} subnet ${subnet.name}]: must define either availabilityZone, localZone or outpost property`,
         );
       }
     });
@@ -2602,6 +2606,13 @@ export class VpcValidator {
         if (!helpers.matchesRegex(subnet.availabilityZone.toString(), '^[0-9]{1}$')) {
           errors.push(
             `[VPC ${vpcItem.name} subnet ${subnet.name}]: Uses an incorrect value for ${subnet.availabilityZone} as the availabilityZone. Please use a single number.`,
+          );
+        }
+      }
+      if (subnet.localZone) {
+        if (!helpers.matchesRegex(subnet.localZone, '^[a-z]{3}[-][0-9]{1}[a-z]{1}')) {
+          errors.push(
+            `[VPC ${vpcItem.name} subnet ${subnet.name}]: The local zone input provided is malformed. Please use the correct format starting with a hyphen (e.g. lax-1a).`,
           );
         }
       }
@@ -2988,6 +2999,7 @@ export class VpcValidator {
   ) {
     const subnetAzs: (string | number)[] = [];
     const subnetNames: string[] = [];
+    const localZoneSubnets: string[] = [];
 
     attach.subnets.forEach(subnetName => {
       subnetNames.push(subnetName);
@@ -2998,6 +3010,9 @@ export class VpcValidator {
         );
       } else {
         subnetAzs.push(subnet.availabilityZone ? subnet.availabilityZone : '');
+      }
+      if (subnet?.localZone) {
+        localZoneSubnets.push(subnet.name);
       }
     });
 
@@ -3011,6 +3026,14 @@ export class VpcValidator {
     if (helpers.hasDuplicates(subnetAzs)) {
       errors.push(
         `[VPC ${vpcItem.name} TGW attachment ${attach.name}]: duplicate TGW attachment subnet AZs defined. Subnet AZs must be unique. AZs configured: ${subnetAzs}`,
+      );
+    }
+    // Check if any subnets that are created in local zones are attached to TGW
+    if (localZoneSubnets.length > 0) {
+      errors.push(
+        `[VPC ${vpcItem.name} TGW attachment ${attach.name}]: TGW attachment contains subnets: ${localZoneSubnets.join(
+          ', ',
+        )} that are created in local zones which is not valid. Please remove from tgw attachment config. `,
       );
     }
   }

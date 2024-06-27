@@ -205,6 +205,7 @@ export class SubnetConfig implements i.ISubnetConfig {
   readonly ipamAllocation: IpamAllocationConfig | undefined = undefined;
   readonly ipv4CidrBlock: string | undefined = undefined;
   readonly ipv6CidrBlock: string | undefined = undefined;
+  readonly localZone?: string | undefined = undefined;
   readonly mapPublicIpOnLaunch: boolean | undefined = undefined;
   readonly privateDnsOptions: SubnetPrivateDnsConfig | undefined = undefined;
   readonly shareTargets: t.ShareTargets | undefined = undefined;
