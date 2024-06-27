@@ -1123,19 +1123,10 @@ export class VpcResources extends AseaResource {
     const destinationConfigs: cdk.aws_networkfirewall.CfnLoggingConfiguration.LogDestinationConfigProperty[] = [];
     for (const logItem of firewallItem.loggingConfiguration ?? []) {
       if (logItem.destination === 'cloud-watch-logs') {
-        // Create log group and log configuration
-        const logGroup = new cdk.aws_logs.LogGroup(
-          vpcStack,
-          `${this.scope.acceleratorPrefix}/Nfw/${firewallItem.name}/${pascalCase(logItem.type)}`,
-          {
-            encryptionKey: this.scope.cloudwatchKey,
-            retention: this.props.globalConfig.cloudwatchLogRetentionInDays,
-            logGroupName: `${this.scope.acceleratorPrefix}/Nfw/${firewallItem.name}/${pascalCase(logItem.type)}`,
-          },
-        );
+        const firewallName = firewallItem.name.replace(`${this.scope.acceleratorPrefix}-`, '');
         destinationConfigs.push({
           logDestination: {
-            logGroup: logGroup.logGroupName,
+            logGroup: `/${this.scope.acceleratorPrefix}/Nfw/${firewallName}/${pascalCase(logItem.type)}`,
           },
           logDestinationType: 'CloudWatchLogs',
           logType: logItem.type,
