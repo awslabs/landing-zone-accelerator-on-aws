@@ -7,22 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Configuration Changes
 
-## [1.8.0] -
+## [1.8.0] - 06-28-2024
 
 ### Added
 
 - feat(networking): Add transit gateway static CIDR blocks and Transit Gateway Connect attachments
 - feat(autoScalingGroup): Add option to set maxInstanceLifetime property for AutoScalingGroups
 - feat(securityHub): Allow SecurityHub to be enabled when AwsConfig is enabled with deploymentTargets option
+- feat(customizations): Add option to set maxInstanceLifetime property for AutoScalingGroups
 
 ### Changed
 
+- chore(github): added automated testing to GitHub repo for external PRs
+- chore(networking): update function signatures for vpc resources in network vpc stack
+
 ### Fixed
+
 - fix(organizations): throttling on ListAccounts call
 - fix(control-tower): The baseline 'AWSControlTowerBaseline' cannot be enabled on renamed OUs
 - fix(control-tower): change organizations module execution condition
-- bug: diff fails on stacks with non-JSON template body
 - fix(diff): "Unexpected end of JSON input" error closes [#497](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/497)
+- fix(configrule): Update config rule remediation validation when using KMSMasterKey replacement value
+- fix(construct): LZA fails with AWS::Logs::LogGroup already exists
+
+## [1.7.1] - 06-14-2024
+
+### Added
+
+- feat(security-hub): enable cisv3 standard
+
+### Fixed
+
+- fix(logging): CreateServiceLinkedRole fails with LogGroup already exists
+- fix(organizations): Update number of retries when using SDKV3 retry strategy
+- fix(replacements): add check for undefined accountName
 
 ## [1.7.0] - 05-31-2024
 
