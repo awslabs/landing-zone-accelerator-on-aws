@@ -638,8 +638,8 @@ catch {
                   "Ref": "AWS::Region",
                 },
                 " 
- # Signal the status from cfn-init
- cfn-signal -e $? --stack Default --resource ActiveDirectoryConfigurationAcceleratorManagedActiveDirectoryInstanceCDCB7E02 --region ",
+ echo 'Signal the status from cfn-init'
+ cfn-signal -e $LASTEXITCODE --stack Default --resource ActiveDirectoryConfigurationAcceleratorManagedActiveDirectoryInstanceCDCB7E02 --region ",
                 {
                   "Ref": "AWS::Region",
                 },
