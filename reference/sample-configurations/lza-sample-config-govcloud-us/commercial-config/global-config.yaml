@@ -3,9 +3,10 @@ enabledRegions:
   - us-east-1
 managementAccountAccessRole: AWSControlTowerExecution
 cloudwatchLogRetentionInDays: 3653
-centralizeCdkBuckets:
-  enable: true
 terminationProtection: true
+cdkOptions:
+  centralizeBuckets: true
+  useManagementAccessRole: true
 snsTopics:
   deploymentTargets:
     organizationalUnits:
@@ -16,6 +17,14 @@ snsTopics:
         - <security-notifications>@example.com  <----- UPDATE EMAIL ADDRESS
 controlTower:
   enable: true
+  landingZone:
+    version: '3.3'
+    logging:
+      loggingBucketRetentionDays: 365
+      accessLoggingBucketRetentionDays: 365
+      organizationTrail: true
+    security:
+      enableIdentityCenterAccess: true
 logging:
   account: LogArchive
   cloudtrail:
