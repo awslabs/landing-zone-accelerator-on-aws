@@ -24,7 +24,7 @@ import {
   AccountDetails,
 } from '@aws-sdk/client-securityhub';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
+import { chunkArray, setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 /**
  * enable-guardduty - lambda handler
@@ -44,6 +44,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const securityHubMemberAccountIds: string[] = event.ResourceProperties['securityHubMemberAccountIds'];
   const autoEnableOrgMembers: boolean = event.ResourceProperties['autoEnableOrgMembers'] === 'true';
   const solutionId = process.env['SOLUTION_ID'];
+  const chunkSize = process.env['CHUNK_SIZE'] ? parseInt(process.env['CHUNK_SIZE']) : 50;
 
   let organizationsClient: OrganizationsClient;
   if (partition === 'aws-us-gov') {
@@ -105,11 +106,16 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
         ),
       );
 
-      await throttlingBackOff(() => securityHubClient.send(new CreateMembersCommand({ AccountDetails: allAccounts })));
+      const chunkedAccountsForCreate = chunkArray(allAccounts, chunkSize);
+
+      for (const accounts of chunkedAccountsForCreate) {
+        console.log(`Initiating createMembers request for ${accounts.length} accounts`);
+        await throttlingBackOff(() => securityHubClient.send(new CreateMembersCommand({ AccountDetails: accounts })));
+      }
 
       // Cleanup members removed from deploymentTarget
       if (securityHubMemberAccountIds.length > 0) {
-        console.log('Inititating cleanup of members removed from deploymentTargets');
+        console.log('Initiating cleanup of members removed from deploymentTargets');
         existingMemberAccountIds = await getExistingMembers(securityHubClient);
 
         const memberAccountIdsToDelete: string[] = [];
@@ -119,7 +125,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
           }
         }
 
-        await disassociateAndDeleteMembers(securityHubClient, memberAccountIdsToDelete);
+        await disassociateAndDeleteMembers(securityHubClient, memberAccountIdsToDelete, chunkSize);
       }
 
       return { Status: 'Success', StatusCode: 200 };
@@ -127,7 +133,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
     case 'Delete':
       existingMemberAccountIds = await getExistingMembers(securityHubClient);
 
-      await disassociateAndDeleteMembers(securityHubClient, existingMemberAccountIds);
+      await disassociateAndDeleteMembers(securityHubClient, existingMemberAccountIds, chunkSize);
 
       return { Status: 'Success', StatusCode: 200 };
   }
@@ -206,14 +212,19 @@ async function getExistingMembers(securityHubClient: SecurityHubClient): Promise
  * @param securityHubClient
  * @param memberAccountIdsToDelete
  */
-async function disassociateAndDeleteMembers(securityHubClient: SecurityHubClient, memberAccountIdsToDelete: string[]) {
+async function disassociateAndDeleteMembers(
+  securityHubClient: SecurityHubClient,
+  memberAccountIdsToDelete: string[],
+  chunkSize: number,
+) {
   if (memberAccountIdsToDelete.length > 0) {
-    await throttlingBackOff(() =>
-      securityHubClient.send(new DisassociateMembersCommand({ AccountIds: memberAccountIdsToDelete })),
-    );
+    const chunkedAccountsForDelete = chunkArray(memberAccountIdsToDelete, chunkSize);
 
-    await throttlingBackOff(() =>
-      securityHubClient.send(new DeleteMembersCommand({ AccountIds: memberAccountIdsToDelete })),
-    );
+    for (const accounts of chunkedAccountsForDelete) {
+      console.log(`Initiating disassociateMembers request for ${accounts.length} accounts`);
+      await throttlingBackOff(() => securityHubClient.send(new DisassociateMembersCommand({ AccountIds: accounts })));
+      console.log(`Initiating deleteMembers request for ${accounts.length} accounts`);
+      await throttlingBackOff(() => securityHubClient.send(new DeleteMembersCommand({ AccountIds: accounts })));
+    }
   }
 }
