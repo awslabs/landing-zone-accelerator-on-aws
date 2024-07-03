@@ -83,6 +83,16 @@ export class TgwResources {
         transitGatewayName: tgwItem.name,
       });
     } else {
+      // Handle case where partition doesn't support TGW Cidr Blocks
+      let transitGatewayCidrBlocks: string[] | undefined = undefined;
+      if (tgwItem.transitGatewayCidrBlocks || tgwItem.transitGatewayIpv6CidrBlocks) {
+        transitGatewayCidrBlocks = [
+          ...(tgwItem.transitGatewayCidrBlocks ?? []),
+          ...(tgwItem.transitGatewayIpv6CidrBlocks ?? []),
+        ];
+      } else {
+        transitGatewayCidrBlocks = undefined;
+      }
       // Create TGW
       tgw = new TransitGateway(this.stack, pascalCase(`${tgwItem.name}TransitGateway`), {
         name: tgwItem.name,
@@ -92,10 +102,7 @@ export class TgwResources {
         defaultRouteTablePropagation: tgwItem.defaultRouteTablePropagation,
         dnsSupport: tgwItem.dnsSupport,
         vpnEcmpSupport: tgwItem.vpnEcmpSupport,
-        transitGatewayCidrBlocks: [
-          ...(tgwItem.transitGatewayCidrBlocks ?? []),
-          ...(tgwItem.transitGatewayIpv6CidrBlocks ?? []),
-        ],
+        transitGatewayCidrBlocks: transitGatewayCidrBlocks,
         tags: tgwItem.tags,
       });
 

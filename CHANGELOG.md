@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Configuration Changes
 
-## [1.8.0] - 06-28-2024
+## [1.8.1] -
+
+### Fixed
+
+- fix(networking): Fix undefined condition for transitGatewayCidrBlocks property for Transit Gateway.
+
+## [1.8.0] -
 
 ### Added
 
