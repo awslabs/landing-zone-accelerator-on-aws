@@ -86,6 +86,8 @@ transitGateways:
   - name: Network-Main-2
     account: Network
     region: *HOME_REGION
+    transitGatewayCidrBlocks:
+      - 10.50.0.0/20
     shareTargets:
       organizationalUnits:
         - Infrastructure
@@ -117,6 +119,8 @@ transitGateways:
   - name: SharedServices-Main
     account: SharedServices
     region: *HOME_REGION
+    transitGatewayIpv6CidrBlocks:
+      - 5000:aaaa::/64
     shareTargets:
       organizationalUnits:
         - Infrastructure
@@ -142,6 +146,19 @@ transitGateways:
         routes:
           - destinationPrefixList: accelerator-prefix-list-001
             blackhole: true
+  - name: SharedServices-SecondaryTgw
+    account: SharedServices
+    region: *HOME_REGION
+    shareTargets:
+      organizationalUnits:
+        - Infrastructure
+    asn: 65524
+    dnsSupport: enable
+    vpnEcmpSupport: enable
+    defaultRouteTableAssociation: disable
+    defaultRouteTablePropagation: disable
+    autoAcceptSharingAttachments: disable
+    routeTables: []
 transitGatewayPeering:
   - name: Network-Main-And-SharedServices-Main-Peering
     requester:

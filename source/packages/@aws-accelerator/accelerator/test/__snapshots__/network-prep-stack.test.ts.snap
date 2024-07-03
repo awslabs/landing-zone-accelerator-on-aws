@@ -2092,7 +2092,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
             "Value": "Network-Main-2",
           },
         ],
-        "TransitGatewayCidrBlocks": [],
+        "TransitGatewayCidrBlocks": [
+          "10.50.0.0/20",
+        ],
         "VpnEcmpSupport": "enable",
       },
       "Type": "AWS::EC2::TransitGateway",
