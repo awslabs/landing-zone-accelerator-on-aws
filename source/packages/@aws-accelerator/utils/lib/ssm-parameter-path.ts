@@ -186,11 +186,9 @@ export enum SsmResourceType {
    *
    * `${0}` is replaced with the VPC name
    *
-   * `${1}` is replaced with the network ACL name
-   * *
-   * `${2}` is replaced with the subnet name
+   * `${1}` is replaced with the subnet name
    */
-  NETWORK_ACL_SUBNET_ASSOCIATION = '/network/vpc/${0}/networkAcl/${1}/subnet/${2}/id',
+  NETWORK_ACL_SUBNET_ASSOCIATION = '/network/vpc/${0}/subnet/${1}/naclAssociationId',
   /**
    * NAT gateway ID
    *

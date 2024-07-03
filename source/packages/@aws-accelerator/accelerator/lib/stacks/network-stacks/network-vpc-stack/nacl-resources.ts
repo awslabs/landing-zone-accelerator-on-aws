@@ -102,7 +102,7 @@ export class NaclResources {
     subnetMap: Map<string, Subnet>,
   ) {
     for (const subnetItem of naclItem.subnetAssociations) {
-      const naclSubnetAssociation = `${vpcItem.name}/${naclItem.name}/${subnetItem}`;
+      const naclSubnetAssociation = `${vpcItem.name}/${subnetItem}`;
       if (this.stack.isManagedByAsea(AseaResourceType.EC2_NACL_SUBNET_ASSOCIATION, naclSubnetAssociation)) {
         this.stack.addLogs(LogLevel.INFO, `Nacl Subnet Association ${naclSubnetAssociation} is managed by ASEA`);
         continue;

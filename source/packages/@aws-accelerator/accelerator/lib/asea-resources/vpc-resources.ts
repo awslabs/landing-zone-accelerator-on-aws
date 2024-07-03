@@ -100,6 +100,7 @@ export class VpcResources extends AseaResource {
       return;
     }
     const vpcsInScope = this.scope.vpcsInScope;
+
     for (const vpcInScope of vpcsInScope) {
       // ASEA creates NestedStack for each VPC. All SSM Parameters related to VPC goes to nested stack
       const vpcResourceInfo = this.getVpcResourceByTag(vpcInScope.name);
@@ -204,11 +205,18 @@ export class VpcResources extends AseaResource {
     includedTemplate: cdk.cloudformation_include.CfnInclude,
   ) {
     const naclName = naclConfig.name;
-    const naclId = nestedStackResources.getResourceByTypeAndTag(RESOURCE_TYPE.NETWORK_ACL, naclName);
+    const naclId = this.scope.getExternalResourceParameter(
+      this.scope.getSsmPath(SsmResourceType.NACL, [vpcInScope.name, naclName]),
+    );
     for (const configSubnetAssociation of naclConfig.subnetAssociations) {
       const subnetName = configSubnetAssociation;
+
       const subnetId = nestedStackResources.getResourceByTypeAndTag(RESOURCE_TYPE.SUBNET, subnetName);
-      const naclSubnetAssociation = this.filterNaclSubnetAssocation(nestedStackResources, naclId, subnetId);
+
+      if (!subnetId?.physicalResourceId) {
+        continue;
+      }
+      const naclSubnetAssociation = this.getNaclSubnetAssociationBySubnetId(nestedStackResources, subnetId);
 
       if (!naclSubnetAssociation) {
         continue;
@@ -218,44 +226,41 @@ export class VpcResources extends AseaResource {
       ) as CfnSubnetNetworkAclAssociation;
 
       if (this.props.stage === AcceleratorStage.POST_IMPORT_ASEA_RESOURCES) {
-        cfnNaclSubnetAssociation = this.modifyNaclSubnetAssociation(cfnNaclSubnetAssociation, naclId, subnetId);
+        cfnNaclSubnetAssociation = this.modifyNaclSubnetAssociation(
+          cfnNaclSubnetAssociation,
+          naclId,
+          subnetId?.physicalResourceId,
+        );
       }
 
-      this.scope.addSsmParameter({
-        logicalId: pascalCase(`SsmParam${pascalCase(naclConfig.name) + pascalCase(subnetName)}SubnetAssociation`),
-        parameterName: this.scope.getSsmPath(SsmResourceType.NETWORK_ACL_SUBNET_ASSOCIATION, [
-          vpcInScope.name,
-          naclConfig.name,
-          subnetName,
-        ]),
-        stringValue: cfnNaclSubnetAssociation.ref,
-        scope: nestedStackResources.getStackKey(),
-      });
+      if (cfnNaclSubnetAssociation) {
+        this.scope.addSsmParameter({
+          logicalId: pascalCase(`SsmParam${pascalCase(subnetName)}SubnetAssociation`),
+          parameterName: this.scope.getSsmPath(SsmResourceType.NETWORK_ACL_SUBNET_ASSOCIATION, [
+            vpcInScope.name,
+            subnetName,
+          ]),
+          stringValue: cfnNaclSubnetAssociation.ref,
+          scope: nestedStackResources.getStackKey(),
+        });
 
-      this.scope.addAseaResource(
-        AseaResourceType.EC2_NACL_SUBNET_ASSOCIATION,
-        `${vpcInScope.name}/${naclConfig.name}/${subnetName}`,
-      );
+        this.scope.addAseaResource(AseaResourceType.EC2_NACL_SUBNET_ASSOCIATION, `${vpcInScope.name}/${subnetName}`);
+      }
     }
   }
 
   private modifyNaclSubnetAssociation(
     cfnNaclSubnetAssociation: cdk.aws_ec2.CfnSubnetNetworkAclAssociation,
-    naclId: CfnResourceType | undefined,
-    subnetId: CfnResourceType | undefined,
+    naclId: string,
+    subnetId: string,
   ) {
-    if (naclId?.physicalResourceId) {
-      cfnNaclSubnetAssociation.networkAclId = naclId.physicalResourceId;
-    }
-    if (subnetId?.physicalResourceId) {
-      cfnNaclSubnetAssociation.subnetId = subnetId.physicalResourceId;
-    }
+    cfnNaclSubnetAssociation.networkAclId = naclId;
+    cfnNaclSubnetAssociation.subnetId = subnetId;
     return cfnNaclSubnetAssociation;
   }
 
-  private filterNaclSubnetAssocation(
+  private getNaclSubnetAssociationBySubnetId(
     nestedStackResources: ImportStackResources,
-    naclId: CfnResourceType | undefined,
     subnetId: CfnResourceType | undefined,
   ) {
     const naclSubnetAssociations = nestedStackResources.getResourcesByType(
@@ -264,7 +269,6 @@ export class VpcResources extends AseaResource {
 
     const naclSubnetAssociation = naclSubnetAssociations.find(
       naclSubnetAssociations =>
-        naclSubnetAssociations.resourceMetadata['Properties'].NetworkAclId === naclId?.physicalResourceId &&
         naclSubnetAssociations.resourceMetadata['Properties'].SubnetId === subnetId?.physicalResourceId,
     );
     return naclSubnetAssociation;
