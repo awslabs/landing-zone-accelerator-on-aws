@@ -5,9 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-### Configuration Changes
+## [1.8.1] -
 
-## [1.8.0] - 06-28-2024
+### Fixed
+
+- fix(networking): Fix undefined condition for transitGatewayCidrBlocks property for Transit Gateway.
+
+## [1.8.0] - 
 
 ### Added
 
@@ -22,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore(networking): update function signatures for vpc resources in network vpc stack
 
 ### Fixed
+
 
 - fix(organizations): throttling on ListAccounts call
 - fix(control-tower): The baseline 'AWSControlTowerBaseline' cannot be enabled on renamed OUs

@@ -7,6 +7,10 @@
         "HTTP",
         "HTTPS"
       ],
+      "enum": [
+        "HTTP",
+        "HTTPS"
+      ],
       "type": "string"
     },
     "AlbListenerTypeEnum": {
@@ -3260,6 +3264,10 @@
         "ipv6CidrBlock": {
           "$ref": "#/definitions/NonEmptyString",
           "description": "(OPTIONAL) The IPv6 CIDR block to associate with the subnet."
+        },
+        "localZone": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The Zone ID of the local zone."
         },
         "mapPublicIpOnLaunch": {
           "description": "(OPTIONAL) Configure automatic mapping of public IPs.",
