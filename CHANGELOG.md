@@ -5,13 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.8.1] -
+## [1.8.1] - 07-03-2024
 
 ### Fixed
 
 - fix(networking): Fix undefined condition for transitGatewayCidrBlocks property for Transit Gateway.
+- bug(pipeline): Suppress mapping bucket results from build log
+- fix(pipeline): "find: ‘./cdk.out’: No such file or directory" error in diff stage
+- fix(config): update global config cdkoptions and control tower settings
+- fix(security-hub): Fixed SecurityHub error "exceeds maximum number of members can be created in a single request"
 
-## [1.8.0] - 
+## [1.8.0] - 06-28-2024
 
 ### Added
 
@@ -27,13 +31,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-
 - fix(organizations): throttling on ListAccounts call
 - fix(control-tower): The baseline 'AWSControlTowerBaseline' cannot be enabled on renamed OUs
 - fix(control-tower): change organizations module execution condition
 - fix(diff): "Unexpected end of JSON input" error closes [#497](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/497)
 - fix(configrule): Update config rule remediation validation when using KMSMasterKey replacement value
 - fix(construct): LZA fails with AWS::Logs::LogGroup already exists
+
 
 ## [1.7.1] - 06-14-2024
 
