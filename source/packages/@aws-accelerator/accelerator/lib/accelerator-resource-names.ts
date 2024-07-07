@@ -65,6 +65,7 @@ interface ParameterNames {
   identityCenterInstanceArn: string;
   identityStoreId: string;
   firehoseRecordsProcessorFunctionName: string;
+  resourceTableName: string;
 }
 interface CmkDetails {
   orgTrailLog: { alias: string; description: string };
@@ -144,6 +145,7 @@ export class AcceleratorResourceNames {
     identityCenterInstanceArn: 'PLACE_HOLDER',
     identityStoreId: 'PLACE_HOLDER',
     firehoseRecordsProcessorFunctionName: 'PLACE_HOLDER',
+    resourceTableName: 'PLACE_HOLDER',
   };
   public customerManagedKeys: CmkDetails = {
     orgTrailLog: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
@@ -213,6 +215,7 @@ export class AcceleratorResourceNames {
     this.parameters.controlTowerLastDriftMessage = props.prefixes.ssmParamName + '/controltower/lastDriftMessage';
     this.parameters.configTableArn = props.prefixes.ssmParamName + '/prepare-stack/configTable/arn';
     this.parameters.configTableName = props.prefixes.ssmParamName + '/prepare-stack/configTable/name';
+    this.parameters.resourceTableName = props.prefixes.ssmParamName + '/prepare-stack/resourceTable/name';
     this.parameters.cloudTrailBucketName =
       props.prefixes.ssmParamName + '/organization/security/cloudtrail/log/bucket-name';
     this.parameters.flowLogsDestinationBucketArn =
