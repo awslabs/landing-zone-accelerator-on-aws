@@ -297,6 +297,22 @@ export class PrepareStack extends AcceleratorStack {
           cloudwatchKey,
         });
       }
+
+      // Resource Table for solution
+      const resourceTable = new cdk.aws_dynamodb.Table(this, 'AcceleratorResourceTable', {
+        partitionKey: { name: 'pk', type: cdk.aws_dynamodb.AttributeType.STRING },
+        sortKey: { name: 'sk', type: cdk.aws_dynamodb.AttributeType.STRING },
+        billingMode: cdk.aws_dynamodb.BillingMode.PAY_PER_REQUEST,
+        encryption: cdk.aws_dynamodb.TableEncryption.CUSTOMER_MANAGED,
+        encryptionKey: managementAccountKey,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+        pointInTimeRecovery: true,
+      });
+
+      new cdk.aws_ssm.StringParameter(this, 'ResourceTableNameParameter', {
+        parameterName: this.acceleratorResourceNames.parameters.resourceTableName,
+        stringValue: resourceTable.tableName,
+      });
     }
     //
     // Create SSM Parameters

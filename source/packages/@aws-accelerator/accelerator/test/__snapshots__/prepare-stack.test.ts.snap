@@ -339,6 +339,47 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Role",
     },
+    "AcceleratorResourceTable4013A9E6": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "pk",
+            "AttributeType": "S",
+          },
+          {
+            "AttributeName": "sk",
+            "AttributeType": "S",
+          },
+        ],
+        "BillingMode": "PAY_PER_REQUEST",
+        "KeySchema": [
+          {
+            "AttributeName": "pk",
+            "KeyType": "HASH",
+          },
+          {
+            "AttributeName": "sk",
+            "KeyType": "RANGE",
+          },
+        ],
+        "PointInTimeRecoverySpecification": {
+          "PointInTimeRecoveryEnabled": true,
+        },
+        "SSESpecification": {
+          "KMSMasterKeyId": {
+            "Fn::GetAtt": [
+              "ManagementKey0813A4D9",
+              "Arn",
+            ],
+          },
+          "SSEEnabled": true,
+          "SSEType": "KMS",
+        },
+      },
+      "Type": "AWS::DynamoDB::Table",
+      "UpdateReplacePolicy": "Delete",
+    },
     "ConfigTableArnParameter0395C8F4": {
       "Properties": {
         "Name": "/accelerator/prepare-stack/configTable/arn",
@@ -4371,6 +4412,16 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "Name": "/accelerator/prepare-stack/validate",
         "Type": "String",
         "Value": "value",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "ResourceTableNameParameter1A8224BE": {
+      "Properties": {
+        "Name": "/accelerator/prepare-stack/resourceTable/name",
+        "Type": "String",
+        "Value": {
+          "Ref": "AcceleratorResourceTable4013A9E6",
+        },
       },
       "Type": "AWS::SSM::Parameter",
     },
