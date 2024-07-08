@@ -5,20 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-### Configuration Changes
-
-## [1.8.1] -
+## [1.8.1] - 07-03-2024
 
 ### Fixed
 
 - fix(networking): Fix undefined condition for transitGatewayCidrBlocks property for Transit Gateway.
+- bug(pipeline): Suppress mapping bucket results from build log
+- fix(pipeline): "find: ‘./cdk.out’: No such file or directory" error in diff stage
+- fix(config): update global config cdkoptions and control tower settings
+- fix(security-hub): Fixed SecurityHub error "exceeds maximum number of members can be created in a single request"
 
-## [1.8.0] -
+## [1.8.0] - 06-28-2024
 
 ### Added
 
 - feat(networking): Add transit gateway static CIDR blocks and Transit Gateway Connect attachments
-- feat(networking): Add local zone property to subnet
 - feat(autoScalingGroup): Add option to set maxInstanceLifetime property for AutoScalingGroups
 - feat(securityHub): Allow SecurityHub to be enabled when AwsConfig is enabled with deploymentTargets option
 - feat(customizations): Add option to set maxInstanceLifetime property for AutoScalingGroups
