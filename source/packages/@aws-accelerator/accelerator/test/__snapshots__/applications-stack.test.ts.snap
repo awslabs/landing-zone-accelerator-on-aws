@@ -440,7 +440,7 @@ exports[`ApplicationsStack Construct(ApplicationsStack):  Snapshot Test 1`] = `
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-CustomizationsStack-444444444444-us-east-1/version",
         "Type": "String",
-        "Value": "1.8.0",
+        "Value": "1.8.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
