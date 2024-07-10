@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# Fail if any command fails.
+set -e
+
+. "$(dirname "$0")/_/husky.sh"
+
+cd source
+
+# Perform conventional commit check
+yarn commitlint --edit $1

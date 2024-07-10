@@ -72,6 +72,8 @@
   "devDependencies": {
     "@aws-cdk/integ-runner": "2.93.0-alpha.0",
     "@aws-cdk/integ-tests-alpha": "2.93.0-alpha.0",
+    "@commitlint/cli": "19.3.0",
+    "@commitlint/config-conventional": "19.2.2",
     "@types/jest": "29.4.0",
     "@types/node": "18.14.0",
     "@typescript-eslint/eslint-plugin": "5.53.0",
