@@ -184,12 +184,23 @@ export class WarmAccount extends Construct {
       encryptionKey: props.cloudwatchKmsKey,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
+    const waiterStateMachineLogGroup = new cdk.aws_logs.LogGroup(this, `${this.onEvent.node.id}WaiterLogGroup`, {
+      logGroupName: `/aws/vendedlogs/states/waiter-state-machine/${this.onEvent.node.id}`,
+      retention: props.logRetentionInDays,
+      encryptionKey: props.cloudwatchKmsKey,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
 
     this.provider = new cdk.custom_resources.Provider(this, 'WarmAccountProvider', {
       onEventHandler: this.onEvent,
       isCompleteHandler: this.isComplete,
       queryInterval: cdk.Duration.minutes(2),
       totalTimeout: cdk.Duration.hours(1),
+      waiterStateMachineLogOptions: {
+        destination: waiterStateMachineLogGroup,
+        includeExecutionData: true,
+        level: cdk.aws_stepfunctions.LogLevel.ERROR, // error is the default level that CDK auto-creates
+      },
     });
 
     const resource = new cdk.CustomResource(this, 'WarmAccountResource', {
@@ -241,12 +252,21 @@ export class WarmAccount extends Construct {
           id: 'AwsSolutions-IAM5',
           reason: 'CDK Generated Policy',
         },
+        {
+          id: 'AwsSolutions-SF1',
+          reason: 'CDK Generated StateMachine',
+        },
+        {
+          id: 'AwsSolutions-SF2',
+          reason: 'CDK Generated StateMachine',
+        },
       ],
       true,
     );
     // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
     resource.node.addDependency(isCompleteLogGroup);
     resource.node.addDependency(onEventLogGroup);
+    resource.node.addDependency(waiterStateMachineLogGroup);
     this.id = resource.ref;
   }
 }

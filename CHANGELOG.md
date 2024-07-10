@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - chore: add commitlint
+- chore: upgrade cdk to 2.148.0
 
 
 ## [1.8.1] - 07-03-2024

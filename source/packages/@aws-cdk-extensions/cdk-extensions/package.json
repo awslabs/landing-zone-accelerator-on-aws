@@ -20,13 +20,13 @@
     "watch": "tsc -w"
   },
   "dependencies": {
-    "aws-cdk-lib": "2.93.0"
+    "aws-cdk-lib": "2.148.0"
   },
   "devDependencies": {
     "@aws-cdk/assert": "2.68.0",
     "@types/jest": "29.4.0",
     "@types/node": "18.14.0",
-    "aws-cdk-lib": "2.93.0",
+    "aws-cdk-lib": "2.148.0",
     "constructs": "10.0.12",
     "eslint": "8.34.0",
     "eslint-config-prettier": "8.6.0",

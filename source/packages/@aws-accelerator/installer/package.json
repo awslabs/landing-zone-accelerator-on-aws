@@ -23,15 +23,15 @@
   "dependencies": {
     "@aws-accelerator/accelerator": "^0.0.0",
     "@aws-cdk-extensions/cdk-extensions": "^0.0.0",
-    "aws-cdk": "2.93.0",
-    "aws-cdk-lib": "2.93.0",
+    "aws-cdk": "2.148.0",
+    "aws-cdk-lib": "2.148.0",
     "cdk-nag": "2.5.2"
   },
   "devDependencies": {
     "@types/jest": "29.4.0",
     "@types/node": "18.14.0",
-    "aws-cdk": "2.93.0",
-    "aws-cdk-lib": "2.93.0",
+    "aws-cdk": "2.148.0",
+    "aws-cdk-lib": "2.148.0",
     "constructs": "10.0.12",
     "eslint": "8.34.0",
     "eslint-config-prettier": "8.6.0",

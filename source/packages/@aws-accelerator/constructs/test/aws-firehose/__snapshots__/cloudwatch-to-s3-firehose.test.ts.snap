@@ -1753,6 +1753,7 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
       "UpdateReplacePolicy": "Retain",
     },
     "CustomStreamBucketName9F2BF3F7": {
+      "DeletionPolicy": "Retain",
       "Properties": {
         "RetentionPeriodHours": 24,
         "ShardCount": 1,
@@ -1770,8 +1771,10 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
         },
       },
       "Type": "AWS::Kinesis::Stream",
+      "UpdateReplacePolicy": "Retain",
     },
     "CustomStreamE8E9158E": {
+      "DeletionPolicy": "Retain",
       "Properties": {
         "RetentionPeriodHours": 24,
         "ShardCount": 1,
@@ -1789,8 +1792,10 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
         },
       },
       "Type": "AWS::Kinesis::Stream",
+      "UpdateReplacePolicy": "Retain",
     },
     "CustomStreamExistingIamFE5F8092": {
+      "DeletionPolicy": "Retain",
       "Properties": {
         "RetentionPeriodHours": 24,
         "ShardCount": 1,
@@ -1808,6 +1813,7 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
         },
       },
       "Type": "AWS::Kinesis::Stream",
+      "UpdateReplacePolicy": "Retain",
     },
   },
 }
@@ -3566,6 +3572,7 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
       "UpdateReplacePolicy": "Retain",
     },
     "CustomStreamBucketName9F2BF3F7": {
+      "DeletionPolicy": "Retain",
       "Properties": {
         "RetentionPeriodHours": 24,
         "ShardCount": 1,
@@ -3583,8 +3590,10 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
         },
       },
       "Type": "AWS::Kinesis::Stream",
+      "UpdateReplacePolicy": "Retain",
     },
     "CustomStreamE8E9158E": {
+      "DeletionPolicy": "Retain",
       "Properties": {
         "RetentionPeriodHours": 24,
         "ShardCount": 1,
@@ -3602,8 +3611,10 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
         },
       },
       "Type": "AWS::Kinesis::Stream",
+      "UpdateReplacePolicy": "Retain",
     },
     "CustomStreamExistingIamFE5F8092": {
+      "DeletionPolicy": "Retain",
       "Properties": {
         "RetentionPeriodHours": 24,
         "ShardCount": 1,
@@ -3621,6 +3632,7 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
         },
       },
       "Type": "AWS::Kinesis::Stream",
+      "UpdateReplacePolicy": "Retain",
     },
   },
 }
@@ -5524,6 +5536,7 @@ exports[`CloudWatchToS3FirehoseExistingIam Construct(CloudWatchToS3Firehose):  S
       "UpdateReplacePolicy": "Retain",
     },
     "CustomStreamBucketErrorNameEE021D38": {
+      "DeletionPolicy": "Retain",
       "Properties": {
         "RetentionPeriodHours": 24,
         "ShardCount": 1,
@@ -5541,8 +5554,10 @@ exports[`CloudWatchToS3FirehoseExistingIam Construct(CloudWatchToS3Firehose):  S
         },
       },
       "Type": "AWS::Kinesis::Stream",
+      "UpdateReplacePolicy": "Retain",
     },
     "CustomStreamBucketName9F2BF3F7": {
+      "DeletionPolicy": "Retain",
       "Properties": {
         "RetentionPeriodHours": 24,
         "ShardCount": 1,
@@ -5560,8 +5575,10 @@ exports[`CloudWatchToS3FirehoseExistingIam Construct(CloudWatchToS3Firehose):  S
         },
       },
       "Type": "AWS::Kinesis::Stream",
+      "UpdateReplacePolicy": "Retain",
     },
     "CustomStreamE8E9158E": {
+      "DeletionPolicy": "Retain",
       "Properties": {
         "RetentionPeriodHours": 24,
         "ShardCount": 1,
@@ -5579,8 +5596,10 @@ exports[`CloudWatchToS3FirehoseExistingIam Construct(CloudWatchToS3Firehose):  S
         },
       },
       "Type": "AWS::Kinesis::Stream",
+      "UpdateReplacePolicy": "Retain",
     },
     "CustomStreamExistingIamFE5F8092": {
+      "DeletionPolicy": "Retain",
       "Properties": {
         "RetentionPeriodHours": 24,
         "ShardCount": 1,
@@ -5598,6 +5617,7 @@ exports[`CloudWatchToS3FirehoseExistingIam Construct(CloudWatchToS3Firehose):  S
         },
       },
       "Type": "AWS::Kinesis::Stream",
+      "UpdateReplacePolicy": "Retain",
     },
   },
 }

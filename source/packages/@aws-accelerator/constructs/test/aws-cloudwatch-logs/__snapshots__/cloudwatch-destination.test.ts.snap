@@ -267,6 +267,7 @@ exports[`CloudWatchDestination Construct(CloudWatchDestination):  Snapshot Test 
       "UpdateReplacePolicy": "Retain",
     },
     "CustomStreamE8E9158E": {
+      "DeletionPolicy": "Retain",
       "Properties": {
         "RetentionPeriodHours": 24,
         "ShardCount": 1,
@@ -284,8 +285,10 @@ exports[`CloudWatchDestination Construct(CloudWatchDestination):  Snapshot Test 
         },
       },
       "Type": "AWS::Kinesis::Stream",
+      "UpdateReplacePolicy": "Retain",
     },
     "CustomStreamExistingIamFE5F8092": {
+      "DeletionPolicy": "Retain",
       "Properties": {
         "RetentionPeriodHours": 24,
         "ShardCount": 1,
@@ -303,6 +306,7 @@ exports[`CloudWatchDestination Construct(CloudWatchDestination):  Snapshot Test 
         },
       },
       "Type": "AWS::Kinesis::Stream",
+      "UpdateReplacePolicy": "Retain",
     },
   },
 }
@@ -489,6 +493,7 @@ exports[`CloudWatchDestination Construct(CloudWatchDestination):  Snapshot Test 
       "UpdateReplacePolicy": "Retain",
     },
     "CustomStreamE8E9158E": {
+      "DeletionPolicy": "Retain",
       "Properties": {
         "RetentionPeriodHours": 24,
         "ShardCount": 1,
@@ -506,6 +511,7 @@ exports[`CloudWatchDestination Construct(CloudWatchDestination):  Snapshot Test 
         },
       },
       "Type": "AWS::Kinesis::Stream",
+      "UpdateReplacePolicy": "Retain",
     },
   },
 }

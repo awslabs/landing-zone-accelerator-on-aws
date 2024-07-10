@@ -3,6 +3,128 @@
 exports[`ReportDefinition Construct(ConfigServiceTags):  Snapshot Test 1`] = `
 {
   "Mappings": {
+    "LatestNodeRuntimeMap": {
+      "af-south-1": {
+        "value": "nodejs20.x",
+      },
+      "ap-east-1": {
+        "value": "nodejs20.x",
+      },
+      "ap-northeast-1": {
+        "value": "nodejs20.x",
+      },
+      "ap-northeast-2": {
+        "value": "nodejs20.x",
+      },
+      "ap-northeast-3": {
+        "value": "nodejs20.x",
+      },
+      "ap-south-1": {
+        "value": "nodejs20.x",
+      },
+      "ap-south-2": {
+        "value": "nodejs20.x",
+      },
+      "ap-southeast-1": {
+        "value": "nodejs20.x",
+      },
+      "ap-southeast-2": {
+        "value": "nodejs20.x",
+      },
+      "ap-southeast-3": {
+        "value": "nodejs20.x",
+      },
+      "ap-southeast-4": {
+        "value": "nodejs20.x",
+      },
+      "ap-southeast-5": {
+        "value": "nodejs20.x",
+      },
+      "ap-southeast-7": {
+        "value": "nodejs20.x",
+      },
+      "ca-central-1": {
+        "value": "nodejs20.x",
+      },
+      "ca-west-1": {
+        "value": "nodejs20.x",
+      },
+      "cn-north-1": {
+        "value": "nodejs18.x",
+      },
+      "cn-northwest-1": {
+        "value": "nodejs18.x",
+      },
+      "eu-central-1": {
+        "value": "nodejs20.x",
+      },
+      "eu-central-2": {
+        "value": "nodejs20.x",
+      },
+      "eu-isoe-west-1": {
+        "value": "nodejs18.x",
+      },
+      "eu-north-1": {
+        "value": "nodejs20.x",
+      },
+      "eu-south-1": {
+        "value": "nodejs20.x",
+      },
+      "eu-south-2": {
+        "value": "nodejs20.x",
+      },
+      "eu-west-1": {
+        "value": "nodejs20.x",
+      },
+      "eu-west-2": {
+        "value": "nodejs20.x",
+      },
+      "eu-west-3": {
+        "value": "nodejs20.x",
+      },
+      "il-central-1": {
+        "value": "nodejs20.x",
+      },
+      "me-central-1": {
+        "value": "nodejs20.x",
+      },
+      "me-south-1": {
+        "value": "nodejs20.x",
+      },
+      "mx-central-1": {
+        "value": "nodejs20.x",
+      },
+      "sa-east-1": {
+        "value": "nodejs20.x",
+      },
+      "us-east-1": {
+        "value": "nodejs20.x",
+      },
+      "us-east-2": {
+        "value": "nodejs20.x",
+      },
+      "us-gov-east-1": {
+        "value": "nodejs18.x",
+      },
+      "us-gov-west-1": {
+        "value": "nodejs18.x",
+      },
+      "us-iso-east-1": {
+        "value": "nodejs18.x",
+      },
+      "us-iso-west-1": {
+        "value": "nodejs18.x",
+      },
+      "us-isob-east-1": {
+        "value": "nodejs18.x",
+      },
+      "us-west-1": {
+        "value": "nodejs20.x",
+      },
+      "us-west-2": {
+        "value": "nodejs20.x",
+      },
+    },
     "ServiceprincipalMap": {
       "af-south-1": {
         "states": "states.af-south-1.amazonaws.com",
@@ -34,8 +156,20 @@ exports[`ReportDefinition Construct(ConfigServiceTags):  Snapshot Test 1`] = `
       "ap-southeast-3": {
         "states": "states.ap-southeast-3.amazonaws.com",
       },
+      "ap-southeast-4": {
+        "states": "states.ap-southeast-4.amazonaws.com",
+      },
+      "ap-southeast-5": {
+        "states": "states.ap-southeast-5.amazonaws.com",
+      },
+      "ap-southeast-7": {
+        "states": "states.ap-southeast-7.amazonaws.com",
+      },
       "ca-central-1": {
         "states": "states.ca-central-1.amazonaws.com",
+      },
+      "ca-west-1": {
+        "states": "states.ca-west-1.amazonaws.com",
       },
       "cn-north-1": {
         "states": "states.cn-north-1.amazonaws.com",
@@ -48,6 +182,9 @@ exports[`ReportDefinition Construct(ConfigServiceTags):  Snapshot Test 1`] = `
       },
       "eu-central-2": {
         "states": "states.eu-central-2.amazonaws.com",
+      },
+      "eu-isoe-west-1": {
+        "states": "states.eu-isoe-west-1.amazonaws.com",
       },
       "eu-north-1": {
         "states": "states.eu-north-1.amazonaws.com",
@@ -67,11 +204,17 @@ exports[`ReportDefinition Construct(ConfigServiceTags):  Snapshot Test 1`] = `
       "eu-west-3": {
         "states": "states.eu-west-3.amazonaws.com",
       },
+      "il-central-1": {
+        "states": "states.il-central-1.amazonaws.com",
+      },
       "me-central-1": {
         "states": "states.me-central-1.amazonaws.com",
       },
       "me-south-1": {
         "states": "states.me-south-1.amazonaws.com",
+      },
+      "mx-central-1": {
+        "states": "states.mx-central-1.amazonaws.com",
       },
       "sa-east-1": {
         "states": "states.sa-east-1.amazonaws.com",
@@ -111,6 +254,7 @@ exports[`ReportDefinition Construct(ConfigServiceTags):  Snapshot Test 1`] = `
       "DependsOn": [
         "CreateOrganizationAccountsCreateOrganizationAccountsLogGroup00D93B3C",
         "CreateOrganizationAccountsCreateOrganizationAccountStatusLogGroupD4DD5E40",
+        "CreateOrganizationAccountsCreateOrganizationAccountsWaiterLogGroup60891BB2",
       ],
       "Properties": {
         "ServiceToken": {
@@ -373,7 +517,15 @@ exports[`ReportDefinition Construct(ConfigServiceTags):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
-        "Runtime": "nodejs18.x",
+        "Runtime": {
+          "Fn::FindInMap": [
+            "LatestNodeRuntimeMap",
+            {
+              "Ref": "AWS::Region",
+            },
+            "value",
+          ],
+        },
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -516,7 +668,15 @@ exports[`ReportDefinition Construct(ConfigServiceTags):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
-        "Runtime": "nodejs18.x",
+        "Runtime": {
+          "Fn::FindInMap": [
+            "LatestNodeRuntimeMap",
+            {
+              "Ref": "AWS::Region",
+            },
+            "value",
+          ],
+        },
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -663,7 +823,15 @@ exports[`ReportDefinition Construct(ConfigServiceTags):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
-        "Runtime": "nodejs18.x",
+        "Runtime": {
+          "Fn::FindInMap": [
+            "LatestNodeRuntimeMap",
+            {
+              "Ref": "AWS::Region",
+            },
+            "value",
+          ],
+        },
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -795,6 +963,22 @@ exports[`ReportDefinition Construct(ConfigServiceTags):  Snapshot Test 1`] = `
             ],
           ],
         },
+        "LoggingConfiguration": {
+          "Destinations": [
+            {
+              "CloudWatchLogsLogGroup": {
+                "LogGroupArn": {
+                  "Fn::GetAtt": [
+                    "CreateOrganizationAccountsCreateOrganizationAccountsWaiterLogGroup60891BB2",
+                    "Arn",
+                  ],
+                },
+              },
+            },
+          ],
+          "IncludeExecutionData": true,
+          "Level": "ERROR",
+        },
         "RoleArn": {
           "Fn::GetAtt": [
             "CreateOrganizationAccountsCreateOrganizationAccountsProviderwaiterstatemachineRole22D85F30",
@@ -885,6 +1069,22 @@ exports[`ReportDefinition Construct(ConfigServiceTags):  Snapshot Test 1`] = `
                 },
               ],
             },
+            {
+              "Action": [
+                "logs:CreateLogDelivery",
+                "logs:CreateLogStream",
+                "logs:GetLogDelivery",
+                "logs:UpdateLogDelivery",
+                "logs:DeleteLogDelivery",
+                "logs:ListLogDeliveries",
+                "logs:PutLogEvents",
+                "logs:PutResourcePolicy",
+                "logs:DescribeResourcePolicies",
+                "logs:DescribeLogGroups",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -896,6 +1096,21 @@ exports[`ReportDefinition Construct(ConfigServiceTags):  Snapshot Test 1`] = `
         ],
       },
       "Type": "AWS::IAM::Policy",
+    },
+    "CreateOrganizationAccountsCreateOrganizationAccountsWaiterLogGroup60891BB2": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "CustomKey1E6D0D07",
+            "Arn",
+          ],
+        },
+        "LogGroupName": "/aws/vendedlogs/states/waiter-state-machine/CreateOrganizationAccounts",
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
     },
     "CreateOrganizationAccountsDDA8AFE1": {
       "DependsOn": [

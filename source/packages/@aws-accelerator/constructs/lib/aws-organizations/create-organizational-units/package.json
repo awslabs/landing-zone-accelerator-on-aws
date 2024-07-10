@@ -24,7 +24,7 @@
     "@aws-sdk/client-organizations": "3.410.0",
     "@aws-sdk/lib-dynamodb": "3.410.0",
     "@aws-sdk/util-retry": "3.374.0",
-    "aws-sdk": "2.1379.0"
+    "aws-sdk": "2.1639.0"
   },
   "devDependencies": {
     "@types/jest": "29.4.0",
