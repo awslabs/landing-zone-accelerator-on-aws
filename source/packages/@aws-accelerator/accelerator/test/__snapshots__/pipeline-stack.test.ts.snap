@@ -2460,6 +2460,11 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
               "Type": "PLAINTEXT",
               "Value": "",
             },
+            {
+              "Name": "ACCELERATOR_SKIP_PREREQUISITES",
+              "Type": "PLAINTEXT",
+              "Value": "false",
+            },
           ],
           "Image": "aws/codebuild/standard:7.0",
           "ImagePullCredentialsType": "CODEBUILD",
