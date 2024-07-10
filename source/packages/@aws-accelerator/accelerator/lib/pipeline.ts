@@ -488,19 +488,19 @@ export class AcceleratorPipeline extends Construct {
             commands: [
               'env',
               'cd source',
-              `if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && export LOG_LEVEL=${
+              `if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && LOG_LEVEL=${
                 BuildLogLevel.INFO
-              } && yarn run ts-node packages/@aws-accelerator/modules/bin/runner.ts --module control-tower --partition ${
+              } yarn run ts-node packages/@aws-accelerator/modules/bin/runner.ts --module control-tower --partition ${
                 cdk.Aws.PARTITION
               } --use-existing-role ${
                 this.props.useExistingRoles ? 'Yes' : 'No'
-              } --config-dir $CODEBUILD_SRC_DIR_Config && if [ -z "\${ACCELERATOR_NO_ORG_MODULE}" ]; then yarn run ts-node packages/@aws-accelerator/modules/bin/runner.ts --module aws-organizations --partition  ${
+              } --config-dir $CODEBUILD_SRC_DIR_Config && if [ -z "\${ACCELERATOR_NO_ORG_MODULE}" ]; then LOG_LEVEL=${
+                BuildLogLevel.INFO
+              } yarn run ts-node packages/@aws-accelerator/modules/bin/runner.ts --module aws-organizations --partition  ${
                 cdk.Aws.PARTITION
               } --use-existing-role ${
                 this.props.useExistingRoles ? 'Yes' : 'No'
-              } --config-dir $CODEBUILD_SRC_DIR_Config; else echo "Module aws-organizations execution skipped by environment settings."; fi && export LOG_LEVEL=${
-                BuildLogLevel.ERROR
-              } ; fi`,
+              } --config-dir $CODEBUILD_SRC_DIR_Config; else echo "Module aws-organizations execution skipped by environment settings."; fi ; fi`,
               `if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && yarn run ts-node  packages/@aws-accelerator/accelerator/lib/prerequisites.ts --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION} --minimal; fi`,
               'cd packages/@aws-accelerator/accelerator',
               'export FULL_SYNTH="true"',
