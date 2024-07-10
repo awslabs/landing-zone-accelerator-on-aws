@@ -132,7 +132,7 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
-        "Runtime": "nodejs18.x",
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -273,7 +273,7 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
-        "Runtime": "nodejs18.x",
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -418,7 +418,7 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
-        "Runtime": "nodejs18.x",
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -550,6 +550,22 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
             ],
           ],
         },
+        "LoggingConfiguration": {
+          "Destinations": [
+            {
+              "CloudWatchLogsLogGroup": {
+                "LogGroupArn": {
+                  "Fn::GetAtt": [
+                    "TestCreateCTAccountsCreateControlTowerAccountWaiterLogGroupB3F2D4BA",
+                    "Arn",
+                  ],
+                },
+              },
+            },
+          ],
+          "IncludeExecutionData": true,
+          "Level": "ERROR",
+        },
         "RoleArn": {
           "Fn::GetAtt": [
             "TestCreateCTAccountsCreateControlTowerAcccountsProviderwaiterstatemachineRoleC1F4B90C",
@@ -631,6 +647,22 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
                   ],
                 },
               ],
+            },
+            {
+              "Action": [
+                "logs:CreateLogDelivery",
+                "logs:CreateLogStream",
+                "logs:GetLogDelivery",
+                "logs:UpdateLogDelivery",
+                "logs:DeleteLogDelivery",
+                "logs:ListLogDeliveries",
+                "logs:PutLogEvents",
+                "logs:PutResourcePolicy",
+                "logs:DescribeResourcePolicies",
+                "logs:DescribeLogGroups",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
             },
           ],
           "Version": "2012-10-17",
@@ -929,11 +961,27 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Policy",
     },
+    "TestCreateCTAccountsCreateControlTowerAccountWaiterLogGroupB3F2D4BA": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "CustomKey1E6D0D07",
+            "Arn",
+          ],
+        },
+        "LogGroupName": "/aws/vendedlogs/states/waiter-state-machine/CreateControlTowerAccount",
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
     "TestCreateCTAccountsEE75074E": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
         "TestCreateCTAccountsCreateControlTowerAccountLogGroup92213B11",
         "TestCreateCTAccountsCreateControlTowerAccountStatusLogGroupE10D1958",
+        "TestCreateCTAccountsCreateControlTowerAccountWaiterLogGroupB3F2D4BA",
       ],
       "Properties": {
         "ServiceToken": {

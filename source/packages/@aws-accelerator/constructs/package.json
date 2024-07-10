@@ -24,12 +24,12 @@
     "@aws-accelerator/utils": "^0.0.0",
     "@aws-sdk/client-config-service": "3.410.0",
     "@types/uuid": "9.0.0",
-    "aws-cdk-lib": "2.93.0"
+    "aws-cdk-lib": "2.148.0"
   },
   "devDependencies": {
     "@types/jest": "29.4.0",
     "@types/node": "18.14.0",
-    "aws-cdk-lib": "2.93.0",
+    "aws-cdk-lib": "2.148.0",
     "constructs": "10.0.12",
     "eslint": "8.34.0",
     "eslint-config-prettier": "8.6.0",

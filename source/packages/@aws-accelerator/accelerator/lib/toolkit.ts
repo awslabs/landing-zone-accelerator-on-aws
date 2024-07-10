@@ -797,6 +797,7 @@ export class AcceleratorToolkit {
         false,
         3,
         false,
+        undefined,
         stream,
       );
       await stream.close();

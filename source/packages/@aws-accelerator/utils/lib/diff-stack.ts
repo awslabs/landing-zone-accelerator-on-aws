@@ -10,7 +10,13 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import * as cfnDiff from '@aws-cdk/cloudformation-diff';
+import {
+  type DescribeChangeSetOutput,
+  type FormatStream,
+  formatDifferences,
+  fullDiff,
+  mangleLikeCloudFormation,
+} from '@aws-cdk/cloudformation-diff';
 import * as fs from 'fs';
 import { createLogger } from './logger';
 
@@ -27,20 +33,22 @@ const logger = createLogger(['diff']);
  * @returns the count of differences that were rendered.
  */
 export function printStackDiff(
-  oldTemplate: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  oldTemplate: any,
   newTemplate: string,
   strict: boolean,
   context: number,
   quiet: boolean,
-  stream?: cfnDiff.FormatStream,
+  changeSet?: DescribeChangeSetOutput,
+  stream?: FormatStream,
 ): number {
-  let diff = cfnDiff.diffTemplate(readTemplate(oldTemplate), readTemplate(newTemplate));
+  let diff = fullDiff(readTemplate(oldTemplate), readTemplate(newTemplate));
 
   // detect and filter out mangled characters from the diff
   let filteredChangesCount = 0;
   if (diff.differenceCount && !strict) {
-    const mangledNewTemplate = JSON.stringify(readTemplate(newTemplate)).replace(/[\u{80}-\u{10ffff}]/gu, '?');
-    const mangledDiff = cfnDiff.diffTemplate(readTemplate(oldTemplate), JSON.parse(mangledNewTemplate));
+    const mangledNewTemplate = JSON.parse(mangleLikeCloudFormation(JSON.stringify(newTemplate)));
+    const mangledDiff = fullDiff(oldTemplate, mangledNewTemplate, changeSet);
     filteredChangesCount = Math.max(0, diff.differenceCount - mangledDiff.differenceCount);
     if (filteredChangesCount > 0) {
       diff = mangledDiff;
@@ -63,8 +71,24 @@ export function printStackDiff(
     });
   }
 
+  // filter out 'AWS::CDK::Metadata' resources from the template
+  if (diff.resources && !strict) {
+    diff.resources = diff.resources.filter(change => {
+      if (!change) {
+        return true;
+      }
+      if (change.newResourceType === 'AWS::CDK::Metadata') {
+        return false;
+      }
+      if (change.oldResourceType === 'AWS::CDK::Metadata') {
+        return false;
+      }
+      return true;
+    });
+  }
+
   if (!diff.isEmpty) {
-    cfnDiff.formatDifferences(
+    formatDifferences(
       stream || process.stderr,
       diff,
       {
@@ -76,7 +100,6 @@ export function printStackDiff(
   } else if (!quiet) {
     stream?.write('There were no differences');
   }
-  //
 
   return diff.differenceCount;
 }

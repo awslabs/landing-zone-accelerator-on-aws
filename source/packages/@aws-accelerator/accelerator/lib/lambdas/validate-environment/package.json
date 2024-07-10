@@ -26,7 +26,7 @@
     "@aws-sdk/client-ssm": "3.410.0",
     "@aws-sdk/lib-dynamodb": "3.410.0",
     "@aws-sdk/smithy-client": "3.374.0",
-    "aws-sdk": "2.1379.0"
+    "aws-sdk": "2.1639.0"
   },
   "devDependencies": {
     "@aws-sdk/types": "3.410.0",

@@ -117,6 +117,52 @@ exports[`CloudTrailExtension Snapshot Test 1`] = `
                 ],
               },
             },
+            {
+              "Action": "s3:PutObject",
+              "Condition": {
+                "StringEquals": {
+                  "aws:SourceArn": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":cloudtrail:",
+                        {
+                          "Ref": "AWS::Region",
+                        },
+                        ":",
+                        {
+                          "Ref": "AWS::AccountId",
+                        },
+                        ":trail/undefined",
+                      ],
+                    ],
+                  },
+                  "s3:x-amz-acl": "bucket-owner-full-control",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "cloudtrail.amazonaws.com",
+              },
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "SnapshotTestS30107570F",
+                        "Arn",
+                      ],
+                    },
+                    "/AWSLogs/undefined/*",
+                  ],
+                ],
+              },
+            },
           ],
           "Version": "2012-10-17",
         },
