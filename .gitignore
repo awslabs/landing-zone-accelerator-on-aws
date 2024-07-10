@@ -13,6 +13,7 @@ dist
 !source/lambda/**/*.js
 source/packages/@aws-accelerator/accelerator/lib/logger.js.map
 asea-assets
+!commitlint.config.js
 
 ### log files
 *.log
