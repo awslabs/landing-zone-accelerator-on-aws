@@ -168,7 +168,7 @@ logging:
 
   assetBucket:
     importedBucket:
-      name: aws-accelerator-imported-all-enabled
+      name: aws-accelerator-imported-all-enabled-${ACCOUNT_ID}-${REGION}
       applyAcceleratorManagedBucketPolicy: true
       createAcceleratorManagedKey: true
     s3ResourcePolicyAttachments:
@@ -213,7 +213,7 @@ logging:
           - Security
         excludedRegions:
           - us-west-2
-    dataProtection: 
+    dataProtection:
       overrideExisting: true
       deploymentTargets:
         accounts:
