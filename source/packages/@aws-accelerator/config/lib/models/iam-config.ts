@@ -682,24 +682,24 @@ export interface IIdentityCenterAssignmentConfig {
  * identityCenter:
  *  name: identityCenter1
  *  delegatedAdminAccount: Audit
- * identityCenterPermissionSets:
- *   - name: PermissionSet1
- *     policies:
- *       awsManaged:
- *         - arn:aws:iam::aws:policy/AdministratorAccess
- *         - PowerUserAccess
- *       customerManaged:
- *         - ResourceConfigurationCollectorPolicy
- *       acceleratorManaged:
- *         - AcceleratorManagedPolicy01
- *         - AcceleratorManagedPolicy02
- *       inlinePolicy: iam-policies/sso-permissionSet1-inline-policy.json
- *       permissionsBoundary:
- *         customerManagedPolicy:
- *           name: AcceleratorManagedPolicy
- *           path: /
- *         awsManagedPolicyName: PowerUserAccess
- *     sessionDuration: 60
+ *  identityCenterPermissionSets:
+ *    - name: PermissionSet1
+ *      policies:
+ *        awsManaged:
+ *          - arn:aws:iam::aws:policy/AdministratorAccess
+ *          - PowerUserAccess
+ *        customerManaged:
+ *          - ResourceConfigurationCollectorPolicy
+ *        acceleratorManaged:
+ *          - AcceleratorManagedPolicy01
+ *          - AcceleratorManagedPolicy02
+ *        inlinePolicy: iam-policies/sso-permissionSet1-inline-policy.json
+ *        permissionsBoundary:
+ *          customerManagedPolicy:
+ *            name: AcceleratorManagedPolicy
+ *            path: /
+ *          awsManagedPolicyName: PowerUserAccess
+ *       sessionDuration: 60
  *  identityCenterAssignments:
  *   - name: Assignment1
  *     permissionSetName: PermissionSet1
