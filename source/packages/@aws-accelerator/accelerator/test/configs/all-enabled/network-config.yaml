@@ -749,6 +749,18 @@ vpcs:
         ipamAllocation:
           ipamPoolName: west-region-pool
           netmaskLength: 28
+      - name: Network-West-Local-A
+        localZone: lax-1a
+        routeTable: Network-West-A-Rt
+        ipamAllocation:
+          ipamPoolName: west-region-pool
+          netmaskLength: 28
+      - name: Network-West-Local-B
+        localZone: lax-1b
+        routeTable: Network-West-B-Rt
+        ipamAllocation:
+          ipamPoolName: west-region-pool
+          netmaskLength: 28
     gatewayEndpoints:
       defaultPolicy: Default
       endpoints:
