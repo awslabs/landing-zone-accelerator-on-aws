@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - chore: add commitlint
 - chore: upgrade cdk to 2.148.0
+- docs: correct identation issue with Identity Center configuration documentation
 
 
 ## [1.8.1] - 07-03-2024
