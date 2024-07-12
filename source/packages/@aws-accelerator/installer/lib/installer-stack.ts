@@ -728,11 +728,11 @@ export class InstallerStack extends cdk.Stack {
       environment: {
         buildImage: cdk.aws_codebuild.LinuxBuildImage.STANDARD_7_0,
         privileged: false,
-        computeType: cdk.aws_codebuild.ComputeType.MEDIUM,
+        computeType: cdk.aws_codebuild.ComputeType.LARGE,
         environmentVariables: {
           NODE_OPTIONS: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: '--max_old_space_size=4096',
+            value: '--max_old_space_size=12288',
           },
           CDK_NEW_BOOTSTRAP: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,

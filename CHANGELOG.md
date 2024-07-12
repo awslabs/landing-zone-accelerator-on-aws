@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - fix: prepare stage not showing debug logs
+- fix(installer): change CodeBuild project configuration
 
 ### Changed
 

@@ -426,11 +426,11 @@ export class AcceleratorPipeline extends Construct {
       environment: {
         buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
         privileged: false,
-        computeType: codebuild.ComputeType.MEDIUM,
+        computeType: codebuild.ComputeType.LARGE,
         environmentVariables: {
           NODE_OPTIONS: {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: '--max_old_space_size=8192',
+            value: '--max_old_space_size=12288',
           },
           PARTITION: {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,

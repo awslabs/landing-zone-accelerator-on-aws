@@ -1573,12 +1573,12 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
           ],
         },
         "Environment": {
-          "ComputeType": "BUILD_GENERAL1_MEDIUM",
+          "ComputeType": "BUILD_GENERAL1_LARGE",
           "EnvironmentVariables": [
             {
               "Name": "NODE_OPTIONS",
               "Type": "PLAINTEXT",
-              "Value": "--max_old_space_size=4096",
+              "Value": "--max_old_space_size=12288",
             },
             {
               "Name": "CDK_NEW_BOOTSTRAP",
@@ -5007,12 +5007,12 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
           ],
         },
         "Environment": {
-          "ComputeType": "BUILD_GENERAL1_MEDIUM",
+          "ComputeType": "BUILD_GENERAL1_LARGE",
           "EnvironmentVariables": [
             {
               "Name": "NODE_OPTIONS",
               "Type": "PLAINTEXT",
-              "Value": "--max_old_space_size=4096",
+              "Value": "--max_old_space_size=12288",
             },
             {
               "Name": "CDK_NEW_BOOTSTRAP",
@@ -8461,12 +8461,12 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
           ],
         },
         "Environment": {
-          "ComputeType": "BUILD_GENERAL1_MEDIUM",
+          "ComputeType": "BUILD_GENERAL1_LARGE",
           "EnvironmentVariables": [
             {
               "Name": "NODE_OPTIONS",
               "Type": "PLAINTEXT",
-              "Value": "--max_old_space_size=4096",
+              "Value": "--max_old_space_size=12288",
             },
             {
               "Name": "CDK_NEW_BOOTSTRAP",
@@ -11944,12 +11944,12 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
           ],
         },
         "Environment": {
-          "ComputeType": "BUILD_GENERAL1_MEDIUM",
+          "ComputeType": "BUILD_GENERAL1_LARGE",
           "EnvironmentVariables": [
             {
               "Name": "NODE_OPTIONS",
               "Type": "PLAINTEXT",
-              "Value": "--max_old_space_size=4096",
+              "Value": "--max_old_space_size=12288",
             },
             {
               "Name": "CDK_NEW_BOOTSTRAP",
@@ -15417,12 +15417,12 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
           ],
         },
         "Environment": {
-          "ComputeType": "BUILD_GENERAL1_MEDIUM",
+          "ComputeType": "BUILD_GENERAL1_LARGE",
           "EnvironmentVariables": [
             {
               "Name": "NODE_OPTIONS",
               "Type": "PLAINTEXT",
-              "Value": "--max_old_space_size=4096",
+              "Value": "--max_old_space_size=12288",
             },
             {
               "Name": "CDK_NEW_BOOTSTRAP",
@@ -18877,12 +18877,12 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 6`] = `
           ],
         },
         "Environment": {
-          "ComputeType": "BUILD_GENERAL1_MEDIUM",
+          "ComputeType": "BUILD_GENERAL1_LARGE",
           "EnvironmentVariables": [
             {
               "Name": "NODE_OPTIONS",
               "Type": "PLAINTEXT",
-              "Value": "--max_old_space_size=4096",
+              "Value": "--max_old_space_size=12288",
             },
             {
               "Name": "CDK_NEW_BOOTSTRAP",

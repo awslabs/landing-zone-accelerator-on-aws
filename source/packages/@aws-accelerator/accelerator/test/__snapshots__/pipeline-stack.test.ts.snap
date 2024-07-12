@@ -1398,12 +1398,12 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
           "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "Environment": {
-          "ComputeType": "BUILD_GENERAL1_MEDIUM",
+          "ComputeType": "BUILD_GENERAL1_LARGE",
           "EnvironmentVariables": [
             {
               "Name": "NODE_OPTIONS",
               "Type": "PLAINTEXT",
-              "Value": "--max_old_space_size=8192",
+              "Value": "--max_old_space_size=12288",
             },
             {
               "Name": "PARTITION",
