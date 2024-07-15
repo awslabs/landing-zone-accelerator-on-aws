@@ -171,8 +171,8 @@ logging:
       name: aws-accelerator-imported-all-enabled-${ACCOUNT_ID}-${REGION}
       applyAcceleratorManagedBucketPolicy: true
       createAcceleratorManagedKey: true
-    s3ResourcePolicyAttachments:
-      - policy: bucket-policies/assets-bucket.json
+    # s3ResourcePolicyAttachments:
+    #   - policy: bucket-policies/assets-bucket.json
 
   accessLogBucket:
     enable: true
