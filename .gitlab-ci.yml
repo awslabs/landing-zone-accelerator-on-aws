@@ -1,4 +1,4 @@
-image: public.ecr.aws/docker/library/node:18
+image: public.ecr.aws/bitnami/node:18
 
 before_script:
   - rm -rf /var/lib/apt/lists/*
