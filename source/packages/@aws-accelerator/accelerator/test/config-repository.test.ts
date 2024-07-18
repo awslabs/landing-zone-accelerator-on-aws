@@ -11,14 +11,15 @@
  *  and limitations under the License.
  */
 
-import { ConfigRepository } from '../lib/config-repository';
+import { CodeCommitConfigRepository, S3ConfigRepository } from '../lib/config-repository';
 import * as cdk from 'aws-cdk-lib';
 import { describe, it, expect } from '@jest/globals';
 import { Repository } from 'aws-cdk-lib/aws-codecommit';
+import * as fs from 'fs';
 
-describe('accounts-config', () => {
+describe('configRepository', () => {
   const stack = new cdk.Stack();
-  const configRepository = new ConfigRepository(stack, 'ConfigRepository', {
+  const configRepository = new CodeCommitConfigRepository(stack, 'ConfigRepository', {
     repositoryName: 'aws-accelerator-config',
     repositoryBranchName: 'main',
     description: 'LZA config repo',
@@ -29,7 +30,7 @@ describe('accounts-config', () => {
     enableSingleAccountMode: false,
   });
 
-  const configRepository2 = new ConfigRepository(stack, 'ConfigRepository2', {
+  const configRepository2 = new CodeCommitConfigRepository(stack, 'ConfigRepository2', {
     repositoryName: 'aws-accelerator-config',
     repositoryBranchName: 'main',
     description: 'LZA config repo',
@@ -40,10 +41,30 @@ describe('accounts-config', () => {
     enableSingleAccountMode: false,
   });
 
-  describe('AccountIdConfig', () => {
-    it('is tested', () => {
+  const s3ConfigRepository = new S3ConfigRepository(stack, 'S3ConfigRepository', {
+    configBucketName: 'aws-accelerator-config',
+    description: 'LZA config repo',
+    managementAccountEmail: 'example1@example.com',
+    logArchiveAccountEmail: 'example2@example.com',
+    auditAccountEmail: 'example3@example.com',
+    controlTowerEnabled: 'no',
+    enableSingleAccountMode: false,
+    installerKey: new cdk.aws_kms.Key(stack, 'InstallerKey', {}),
+    serverAccessLogsBucketName: 'server-access-logging-bucket',
+  });
+
+  describe('createRepository', () => {
+    it('is created successfully', () => {
       expect(configRepository.getRepository()).toBeInstanceOf(Repository);
       expect(configRepository2.getRepository()).toBeInstanceOf(Repository);
+      expect(s3ConfigRepository.getRepository()).toBeInstanceOf(cdk.aws_s3.Bucket);
+    });
+
+    it('creates the correct number of files', () => {
+      const filesInCodeCommitRepo = fs.readdirSync(configRepository.tempDirPath).length;
+      const filesInS3Repo = fs.readdirSync(s3ConfigRepository.tempDirPath).length;
+      expect(filesInCodeCommitRepo).toEqual(6);
+      expect(filesInS3Repo).toEqual(7);
     });
   });
 });

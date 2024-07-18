@@ -69,7 +69,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
       "ParameterGroups": [
         {
           "Label": {
-            "default": "Git Repository Configuration",
+            "default": "Source Code Repository Configuration",
           },
           "Parameters": [
             "RepositorySource",
@@ -104,10 +104,18 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
           "Parameters": [
             "ControlTowerEnabled",
             "AcceleratorPrefix",
+            "EnableDiagnosticsPack",
+          ],
+        },
+        {
+          "Label": {
+            "default": "Config Repository Configuration",
+          },
+          "Parameters": [
+            "ConfigurationRepositoryLocation",
             "UseExistingConfigRepo",
             "ExistingConfigRepositoryName",
             "ExistingConfigRepositoryBranchName",
-            "EnableDiagnosticsPack",
           ],
         },
       ],
@@ -120,6 +128,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
         },
         "AuditAccountEmail": {
           "default": "Audit Account Email",
+        },
+        "ConfigurationRepositoryLocation": {
+          "default": "Configuration Repository Location",
         },
         "ControlTowerEnabled": {
           "default": "Control Tower Environment",
@@ -176,6 +187,14 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
       "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
       "ConstraintDescription": "Must be a valid email address matching "[^\\s@]+@[^\\s@]+\\.[^\\s@]+"",
       "Description": "The security audit account (also referred to as the audit account)",
+      "Type": "String",
+    },
+    "ConfigurationRepositoryLocation": {
+      "AllowedValues": [
+        "codecommit",
+        "s3",
+      ],
+      "Description": "Specify the location to use to host the LZA configuration files",
       "Type": "String",
     },
     "ControlTowerEnabled": {
@@ -250,7 +269,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
         "codecommit",
       ],
       "Default": "github",
-      "Description": "Specify the git host",
+      "Description": "Specify the location to use to host the LZA source code",
       "Type": "String",
     },
     "UseExistingConfigRepo": {
@@ -1611,6 +1630,13 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
               "Type": "PLAINTEXT",
               "Value": {
                 "Ref": "RepositoryBranchName",
+              },
+            },
+            {
+              "Name": "CONFIG_REPOSITORY_LOCATION",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ConfigurationRepositoryLocation",
               },
             },
             {
@@ -3310,6 +3336,9 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             "Arn",
           ],
         },
+        "configRepositoryLocation": {
+          "Ref": "ConfigurationRepositoryLocation",
+        },
         "existingConfigRepositoryBranchName": {
           "Ref": "ExistingConfigRepositoryBranchName",
         },
@@ -3362,12 +3391,20 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           console.log(JSON.stringify(event, null, 4)); 
 
           const useExistingConfigRepo=event.ResourceProperties.useExistingConfigRepo;
+          const configRepositoryLocation=event.ResourceProperties.configRepositoryLocation;
           const existingConfigRepositoryName=event.ResourceProperties.existingConfigRepositoryName;
           const existingConfigRepositoryBranchName=event.ResourceProperties.existingConfigRepositoryBranchName;
 
           if (useExistingConfigRepo === 'Yes') {
             if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName === ''){
                 await response.send(event, context, response.FAILED, {'FailureReason': 'UseExistingConfigRepo parameter set to Yes, but ExistingConfigRepositoryName or ExistingConfigRepositoryBranchName parameter value missing!!!'}, event.PhysicalResourceId);
+                return;
+            }
+          }
+
+          if (configRepositoryLocation === 's3') {
+            if (useExistingConfigRepo === 'Yes' || existingConfigRepositoryName !== '' || existingConfigRepositoryBranchName !== ''){
+                await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing configuration repository parameters are populated. Existing repositories can not be used with an S3 configuration repository.'}, event.PhysicalResourceId);
                 return;
             }
           }
@@ -3503,7 +3540,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
       "ParameterGroups": [
         {
           "Label": {
-            "default": "Git Repository Configuration",
+            "default": "Source Code Repository Configuration",
           },
           "Parameters": [
             "RepositorySource",
@@ -3538,10 +3575,18 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
           "Parameters": [
             "ControlTowerEnabled",
             "AcceleratorPrefix",
+            "EnableDiagnosticsPack",
+          ],
+        },
+        {
+          "Label": {
+            "default": "Config Repository Configuration",
+          },
+          "Parameters": [
+            "ConfigurationRepositoryLocation",
             "UseExistingConfigRepo",
             "ExistingConfigRepositoryName",
             "ExistingConfigRepositoryBranchName",
-            "EnableDiagnosticsPack",
           ],
         },
       ],
@@ -3554,6 +3599,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
         },
         "AuditAccountEmail": {
           "default": "Audit Account Email",
+        },
+        "ConfigurationRepositoryLocation": {
+          "default": "Configuration Repository Location",
         },
         "ControlTowerEnabled": {
           "default": "Control Tower Environment",
@@ -3610,6 +3658,14 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
       "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
       "ConstraintDescription": "Must be a valid email address matching "[^\\s@]+@[^\\s@]+\\.[^\\s@]+"",
       "Description": "The security audit account (also referred to as the audit account)",
+      "Type": "String",
+    },
+    "ConfigurationRepositoryLocation": {
+      "AllowedValues": [
+        "codecommit",
+        "s3",
+      ],
+      "Description": "Specify the location to use to host the LZA configuration files",
       "Type": "String",
     },
     "ControlTowerEnabled": {
@@ -3684,7 +3740,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
         "codecommit",
       ],
       "Default": "github",
-      "Description": "Specify the git host",
+      "Description": "Specify the location to use to host the LZA source code",
       "Type": "String",
     },
     "UseExistingConfigRepo": {
@@ -5045,6 +5101,13 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
               "Type": "PLAINTEXT",
               "Value": {
                 "Ref": "RepositoryBranchName",
+              },
+            },
+            {
+              "Name": "CONFIG_REPOSITORY_LOCATION",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ConfigurationRepositoryLocation",
               },
             },
             {
@@ -6734,6 +6797,9 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             "Arn",
           ],
         },
+        "configRepositoryLocation": {
+          "Ref": "ConfigurationRepositoryLocation",
+        },
         "existingConfigRepositoryBranchName": {
           "Ref": "ExistingConfigRepositoryBranchName",
         },
@@ -6786,12 +6852,20 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           console.log(JSON.stringify(event, null, 4)); 
 
           const useExistingConfigRepo=event.ResourceProperties.useExistingConfigRepo;
+          const configRepositoryLocation=event.ResourceProperties.configRepositoryLocation;
           const existingConfigRepositoryName=event.ResourceProperties.existingConfigRepositoryName;
           const existingConfigRepositoryBranchName=event.ResourceProperties.existingConfigRepositoryBranchName;
 
           if (useExistingConfigRepo === 'Yes') {
             if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName === ''){
                 await response.send(event, context, response.FAILED, {'FailureReason': 'UseExistingConfigRepo parameter set to Yes, but ExistingConfigRepositoryName or ExistingConfigRepositoryBranchName parameter value missing!!!'}, event.PhysicalResourceId);
+                return;
+            }
+          }
+
+          if (configRepositoryLocation === 's3') {
+            if (useExistingConfigRepo === 'Yes' || existingConfigRepositoryName !== '' || existingConfigRepositoryBranchName !== ''){
+                await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing configuration repository parameters are populated. Existing repositories can not be used with an S3 configuration repository.'}, event.PhysicalResourceId);
                 return;
             }
           }
@@ -6927,7 +7001,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
       "ParameterGroups": [
         {
           "Label": {
-            "default": "Git Repository Configuration",
+            "default": "Source Code Repository Configuration",
           },
           "Parameters": [
             "RepositorySource",
@@ -6962,10 +7036,18 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
           "Parameters": [
             "ControlTowerEnabled",
             "AcceleratorPrefix",
+            "EnableDiagnosticsPack",
+          ],
+        },
+        {
+          "Label": {
+            "default": "Config Repository Configuration",
+          },
+          "Parameters": [
+            "ConfigurationRepositoryLocation",
             "UseExistingConfigRepo",
             "ExistingConfigRepositoryName",
             "ExistingConfigRepositoryBranchName",
-            "EnableDiagnosticsPack",
           ],
         },
         {
@@ -6991,6 +7073,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
         },
         "AuditAccountEmail": {
           "default": "Audit Account Email",
+        },
+        "ConfigurationRepositoryLocation": {
+          "default": "Configuration Repository Location",
         },
         "ControlTowerEnabled": {
           "default": "Control Tower Environment",
@@ -7059,6 +7144,14 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
       "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
       "ConstraintDescription": "Must be a valid email address matching "[^\\s@]+@[^\\s@]+\\.[^\\s@]+"",
       "Description": "The security audit account (also referred to as the audit account)",
+      "Type": "String",
+    },
+    "ConfigurationRepositoryLocation": {
+      "AllowedValues": [
+        "codecommit",
+        "s3",
+      ],
+      "Description": "Specify the location to use to host the LZA configuration files",
       "Type": "String",
     },
     "ControlTowerEnabled": {
@@ -7141,7 +7234,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
         "codecommit",
       ],
       "Default": "github",
-      "Description": "Specify the git host",
+      "Description": "Specify the location to use to host the LZA source code",
       "Type": "String",
     },
     "UseExistingConfigRepo": {
@@ -8499,6 +8592,13 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
               "Type": "PLAINTEXT",
               "Value": {
                 "Ref": "RepositoryBranchName",
+              },
+            },
+            {
+              "Name": "CONFIG_REPOSITORY_LOCATION",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ConfigurationRepositoryLocation",
               },
             },
             {
@@ -10217,6 +10317,9 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             "Arn",
           ],
         },
+        "configRepositoryLocation": {
+          "Ref": "ConfigurationRepositoryLocation",
+        },
         "existingConfigRepositoryBranchName": {
           "Ref": "ExistingConfigRepositoryBranchName",
         },
@@ -10269,12 +10372,20 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           console.log(JSON.stringify(event, null, 4)); 
 
           const useExistingConfigRepo=event.ResourceProperties.useExistingConfigRepo;
+          const configRepositoryLocation=event.ResourceProperties.configRepositoryLocation;
           const existingConfigRepositoryName=event.ResourceProperties.existingConfigRepositoryName;
           const existingConfigRepositoryBranchName=event.ResourceProperties.existingConfigRepositoryBranchName;
 
           if (useExistingConfigRepo === 'Yes') {
             if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName === ''){
                 await response.send(event, context, response.FAILED, {'FailureReason': 'UseExistingConfigRepo parameter set to Yes, but ExistingConfigRepositoryName or ExistingConfigRepositoryBranchName parameter value missing!!!'}, event.PhysicalResourceId);
+                return;
+            }
+          }
+
+          if (configRepositoryLocation === 's3') {
+            if (useExistingConfigRepo === 'Yes' || existingConfigRepositoryName !== '' || existingConfigRepositoryBranchName !== ''){
+                await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing configuration repository parameters are populated. Existing repositories can not be used with an S3 configuration repository.'}, event.PhysicalResourceId);
                 return;
             }
           }
@@ -10410,7 +10521,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
       "ParameterGroups": [
         {
           "Label": {
-            "default": "Git Repository Configuration",
+            "default": "Source Code Repository Configuration",
           },
           "Parameters": [
             "RepositorySource",
@@ -10445,10 +10556,18 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
           "Parameters": [
             "ControlTowerEnabled",
             "AcceleratorPrefix",
+            "EnableDiagnosticsPack",
+          ],
+        },
+        {
+          "Label": {
+            "default": "Config Repository Configuration",
+          },
+          "Parameters": [
+            "ConfigurationRepositoryLocation",
             "UseExistingConfigRepo",
             "ExistingConfigRepositoryName",
             "ExistingConfigRepositoryBranchName",
-            "EnableDiagnosticsPack",
           ],
         },
         {
@@ -10474,6 +10593,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
         },
         "AuditAccountEmail": {
           "default": "Audit Account Email",
+        },
+        "ConfigurationRepositoryLocation": {
+          "default": "Configuration Repository Location",
         },
         "ControlTowerEnabled": {
           "default": "Control Tower Environment",
@@ -10542,6 +10664,14 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
       "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
       "ConstraintDescription": "Must be a valid email address matching "[^\\s@]+@[^\\s@]+\\.[^\\s@]+"",
       "Description": "The security audit account (also referred to as the audit account)",
+      "Type": "String",
+    },
+    "ConfigurationRepositoryLocation": {
+      "AllowedValues": [
+        "codecommit",
+        "s3",
+      ],
+      "Description": "Specify the location to use to host the LZA configuration files",
       "Type": "String",
     },
     "ControlTowerEnabled": {
@@ -10624,7 +10754,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
         "codecommit",
       ],
       "Default": "github",
-      "Description": "Specify the git host",
+      "Description": "Specify the location to use to host the LZA source code",
       "Type": "String",
     },
     "UseExistingConfigRepo": {
@@ -11982,6 +12112,13 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
               "Type": "PLAINTEXT",
               "Value": {
                 "Ref": "RepositoryBranchName",
+              },
+            },
+            {
+              "Name": "CONFIG_REPOSITORY_LOCATION",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ConfigurationRepositoryLocation",
               },
             },
             {
@@ -13690,6 +13827,9 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             "Arn",
           ],
         },
+        "configRepositoryLocation": {
+          "Ref": "ConfigurationRepositoryLocation",
+        },
         "existingConfigRepositoryBranchName": {
           "Ref": "ExistingConfigRepositoryBranchName",
         },
@@ -13742,12 +13882,20 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           console.log(JSON.stringify(event, null, 4)); 
 
           const useExistingConfigRepo=event.ResourceProperties.useExistingConfigRepo;
+          const configRepositoryLocation=event.ResourceProperties.configRepositoryLocation;
           const existingConfigRepositoryName=event.ResourceProperties.existingConfigRepositoryName;
           const existingConfigRepositoryBranchName=event.ResourceProperties.existingConfigRepositoryBranchName;
 
           if (useExistingConfigRepo === 'Yes') {
             if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName === ''){
                 await response.send(event, context, response.FAILED, {'FailureReason': 'UseExistingConfigRepo parameter set to Yes, but ExistingConfigRepositoryName or ExistingConfigRepositoryBranchName parameter value missing!!!'}, event.PhysicalResourceId);
+                return;
+            }
+          }
+
+          if (configRepositoryLocation === 's3') {
+            if (useExistingConfigRepo === 'Yes' || existingConfigRepositoryName !== '' || existingConfigRepositoryBranchName !== ''){
+                await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing configuration repository parameters are populated. Existing repositories can not be used with an S3 configuration repository.'}, event.PhysicalResourceId);
                 return;
             }
           }
@@ -13883,7 +14031,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
       "ParameterGroups": [
         {
           "Label": {
-            "default": "Git Repository Configuration",
+            "default": "Source Code Repository Configuration",
           },
           "Parameters": [
             "RepositorySource",
@@ -13918,10 +14066,18 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
           "Parameters": [
             "ControlTowerEnabled",
             "AcceleratorPrefix",
+            "EnableDiagnosticsPack",
+          ],
+        },
+        {
+          "Label": {
+            "default": "Config Repository Configuration",
+          },
+          "Parameters": [
+            "ConfigurationRepositoryLocation",
             "UseExistingConfigRepo",
             "ExistingConfigRepositoryName",
             "ExistingConfigRepositoryBranchName",
-            "EnableDiagnosticsPack",
           ],
         },
         {
@@ -13947,6 +14103,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
         },
         "AuditAccountEmail": {
           "default": "Audit Account Email",
+        },
+        "ConfigurationRepositoryLocation": {
+          "default": "Configuration Repository Location",
         },
         "ControlTowerEnabled": {
           "default": "Control Tower Environment",
@@ -14015,6 +14174,14 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
       "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
       "ConstraintDescription": "Must be a valid email address matching "[^\\s@]+@[^\\s@]+\\.[^\\s@]+"",
       "Description": "The security audit account (also referred to as the audit account)",
+      "Type": "String",
+    },
+    "ConfigurationRepositoryLocation": {
+      "AllowedValues": [
+        "codecommit",
+        "s3",
+      ],
+      "Description": "Specify the location to use to host the LZA configuration files",
       "Type": "String",
     },
     "ControlTowerEnabled": {
@@ -14097,7 +14264,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
         "codecommit",
       ],
       "Default": "github",
-      "Description": "Specify the git host",
+      "Description": "Specify the location to use to host the LZA source code",
       "Type": "String",
     },
     "UseExistingConfigRepo": {
@@ -15455,6 +15622,13 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
               "Type": "PLAINTEXT",
               "Value": {
                 "Ref": "RepositoryBranchName",
+              },
+            },
+            {
+              "Name": "CONFIG_REPOSITORY_LOCATION",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ConfigurationRepositoryLocation",
               },
             },
             {
@@ -17168,6 +17342,9 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             "Arn",
           ],
         },
+        "configRepositoryLocation": {
+          "Ref": "ConfigurationRepositoryLocation",
+        },
         "existingConfigRepositoryBranchName": {
           "Ref": "ExistingConfigRepositoryBranchName",
         },
@@ -17220,12 +17397,20 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           console.log(JSON.stringify(event, null, 4)); 
 
           const useExistingConfigRepo=event.ResourceProperties.useExistingConfigRepo;
+          const configRepositoryLocation=event.ResourceProperties.configRepositoryLocation;
           const existingConfigRepositoryName=event.ResourceProperties.existingConfigRepositoryName;
           const existingConfigRepositoryBranchName=event.ResourceProperties.existingConfigRepositoryBranchName;
 
           if (useExistingConfigRepo === 'Yes') {
             if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName === ''){
                 await response.send(event, context, response.FAILED, {'FailureReason': 'UseExistingConfigRepo parameter set to Yes, but ExistingConfigRepositoryName or ExistingConfigRepositoryBranchName parameter value missing!!!'}, event.PhysicalResourceId);
+                return;
+            }
+          }
+
+          if (configRepositoryLocation === 's3') {
+            if (useExistingConfigRepo === 'Yes' || existingConfigRepositoryName !== '' || existingConfigRepositoryBranchName !== ''){
+                await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing configuration repository parameters are populated. Existing repositories can not be used with an S3 configuration repository.'}, event.PhysicalResourceId);
                 return;
             }
           }
@@ -17361,7 +17546,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 6`] = `
       "ParameterGroups": [
         {
           "Label": {
-            "default": "Git Repository Configuration",
+            "default": "Source Code Repository Configuration",
           },
           "Parameters": [
             "RepositorySource",
@@ -17396,10 +17581,18 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 6`] = `
           "Parameters": [
             "ControlTowerEnabled",
             "AcceleratorPrefix",
+            "EnableDiagnosticsPack",
+          ],
+        },
+        {
+          "Label": {
+            "default": "Config Repository Configuration",
+          },
+          "Parameters": [
+            "ConfigurationRepositoryLocation",
             "UseExistingConfigRepo",
             "ExistingConfigRepositoryName",
             "ExistingConfigRepositoryBranchName",
-            "EnableDiagnosticsPack",
           ],
         },
         {
@@ -17420,6 +17613,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 6`] = `
         },
         "AuditAccountEmail": {
           "default": "Audit Account Email",
+        },
+        "ConfigurationRepositoryLocation": {
+          "default": "Configuration Repository Location",
         },
         "ControlTowerEnabled": {
           "default": "Control Tower Environment",
@@ -17476,6 +17672,14 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 6`] = `
       "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
       "ConstraintDescription": "Must be a valid email address matching "[^\\s@]+@[^\\s@]+\\.[^\\s@]+"",
       "Description": "The security audit account (also referred to as the audit account)",
+      "Type": "String",
+    },
+    "ConfigurationRepositoryLocation": {
+      "AllowedValues": [
+        "codecommit",
+        "s3",
+      ],
+      "Description": "Specify the location to use to host the LZA configuration files",
       "Type": "String",
     },
     "ControlTowerEnabled": {
@@ -17554,7 +17758,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 6`] = `
         "codecommit",
       ],
       "Default": "github",
-      "Description": "Specify the git host",
+      "Description": "Specify the location to use to host the LZA source code",
       "Type": "String",
     },
     "UseExistingConfigRepo": {
@@ -18915,6 +19119,13 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 6`] = `
               "Type": "PLAINTEXT",
               "Value": {
                 "Ref": "RepositoryBranchName",
+              },
+            },
+            {
+              "Name": "CONFIG_REPOSITORY_LOCATION",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ConfigurationRepositoryLocation",
               },
             },
             {
@@ -20611,6 +20822,9 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             "Arn",
           ],
         },
+        "configRepositoryLocation": {
+          "Ref": "ConfigurationRepositoryLocation",
+        },
         "existingConfigRepositoryBranchName": {
           "Ref": "ExistingConfigRepositoryBranchName",
         },
@@ -20663,12 +20877,20 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           console.log(JSON.stringify(event, null, 4)); 
 
           const useExistingConfigRepo=event.ResourceProperties.useExistingConfigRepo;
+          const configRepositoryLocation=event.ResourceProperties.configRepositoryLocation;
           const existingConfigRepositoryName=event.ResourceProperties.existingConfigRepositoryName;
           const existingConfigRepositoryBranchName=event.ResourceProperties.existingConfigRepositoryBranchName;
 
           if (useExistingConfigRepo === 'Yes') {
             if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName === ''){
                 await response.send(event, context, response.FAILED, {'FailureReason': 'UseExistingConfigRepo parameter set to Yes, but ExistingConfigRepositoryName or ExistingConfigRepositoryBranchName parameter value missing!!!'}, event.PhysicalResourceId);
+                return;
+            }
+          }
+
+          if (configRepositoryLocation === 's3') {
+            if (useExistingConfigRepo === 'Yes' || existingConfigRepositoryName !== '' || existingConfigRepositoryBranchName !== ''){
+                await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing configuration repository parameters are populated. Existing repositories can not be used with an S3 configuration repository.'}, event.PhysicalResourceId);
                 return;
             }
           }

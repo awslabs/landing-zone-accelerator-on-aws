@@ -126,6 +126,10 @@ export interface BucketProps {
    * Prefix for nag suppression
    */
   readonly nagSuppressionPrefix?: string;
+  /**
+   * Determines if objects are deleted from the bucket on destroy
+   */
+  autoDeleteObjects?: boolean;
 }
 
 /**
@@ -175,6 +179,7 @@ export class Bucket extends Construct {
       serverAccessLogsBucket: this.serverAccessLogBucket,
       // Trailing slash for folder-like prefix in S3
       serverAccessLogsPrefix: this.serverAccessLogsPrefix?.concat('/'),
+      autoDeleteObjects: props.autoDeleteObjects,
     });
     // Had to be removed to allow CloudTrail access
     // this.bucket.addToResourcePolicy(

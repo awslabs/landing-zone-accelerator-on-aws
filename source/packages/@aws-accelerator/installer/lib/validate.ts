@@ -17,6 +17,7 @@ import { NagSuppressions } from 'cdk-nag';
 
 export interface ValidateProps {
   readonly useExistingConfigRepo: string;
+  readonly configRepositoryLocation: string;
   readonly existingConfigRepositoryName?: string;
   readonly existingConfigRepositoryBranchName?: string;
 }
@@ -38,12 +39,20 @@ export class Validate extends Construct {
           console.log(JSON.stringify(event, null, 4)); 
 
           const useExistingConfigRepo=event.ResourceProperties.useExistingConfigRepo;
+          const configRepositoryLocation=event.ResourceProperties.configRepositoryLocation;
           const existingConfigRepositoryName=event.ResourceProperties.existingConfigRepositoryName;
           const existingConfigRepositoryBranchName=event.ResourceProperties.existingConfigRepositoryBranchName;
 
           if (useExistingConfigRepo === 'Yes') {
             if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName === ''){
                 await response.send(event, context, response.FAILED, {'FailureReason': 'UseExistingConfigRepo parameter set to Yes, but ExistingConfigRepositoryName or ExistingConfigRepositoryBranchName parameter value missing!!!'}, event.PhysicalResourceId);
+                return;
+            }
+          }
+
+          if (configRepositoryLocation === 's3') {
+            if (useExistingConfigRepo === 'Yes' || existingConfigRepositoryName !== '' || existingConfigRepositoryBranchName !== ''){
+                await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing configuration repository parameters are populated. Existing repositories can not be used with an S3 configuration repository.'}, event.PhysicalResourceId);
                 return;
             }
           }
@@ -69,6 +78,7 @@ export class Validate extends Construct {
       serviceToken: lambdaFunction.functionArn,
       properties: {
         useExistingConfigRepo: props.useExistingConfigRepo,
+        configRepositoryLocation: props.configRepositoryLocation,
         existingConfigRepositoryName: props.existingConfigRepositoryName,
         existingConfigRepositoryBranchName: props.existingConfigRepositoryBranchName,
         resourceType: 'Custom::ValidateInstallerStack',
