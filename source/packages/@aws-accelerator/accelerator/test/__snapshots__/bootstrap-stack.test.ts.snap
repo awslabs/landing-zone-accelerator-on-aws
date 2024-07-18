@@ -5,7 +5,7 @@ exports[`BootstrapStack Construct(BootstrapStack):  Snapshot Test 1`] = `
   "Outputs": {
     "BootstrapVersionOutput": {
       "Description": "The version of the bootstrap resources that are currently mastered in this stack",
-      "Value": "18",
+      "Value": "20",
     },
     "BucketDomainNameOutput": {
       "Description": "The domain name of the S3 bucket owned by the CDK toolkit stack",
@@ -256,7 +256,7 @@ exports[`BootstrapStack Construct(BootstrapStack):  Snapshot Test 1`] = `
       "Properties": {
         "Name": "/cdk-bootstrap/accel/version",
         "Type": "String",
-        "Value": "18",
+        "Value": "20",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -587,7 +587,10 @@ exports[`BootstrapStack Construct(BootstrapStack):  Snapshot Test 1`] = `
                   "Sid": "CliStagingBucket",
                 },
                 {
-                  "Action": "ssm:GetParameter",
+                  "Action": [
+                    "ssm:GetParameter",
+                    "ssm:GetParameters",
+                  ],
                   "Effect": "Allow",
                   "Resource": {
                     "Fn::Join": [

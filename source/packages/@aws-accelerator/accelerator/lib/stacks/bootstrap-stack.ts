@@ -212,7 +212,7 @@ export class BootstrapStack extends AcceleratorStack {
             new cdk.aws_iam.PolicyStatement({
               sid: 'ReadVersion',
               effect: cdk.aws_iam.Effect.ALLOW,
-              actions: ['ssm:GetParameter'],
+              actions: ['ssm:GetParameter', 'ssm:GetParameters'],
               resources: [
                 `arn:${this.partition}:ssm:${this.region}:${this.account}:parameter${bootstrapParameterName}`,
               ],

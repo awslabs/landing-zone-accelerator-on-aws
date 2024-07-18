@@ -93,7 +93,7 @@ process.on('uncaughtException', err => {
   throw new Error('Synthesis failed');
 });
 
-export const BootstrapVersion = 18;
+export const BootstrapVersion = 20;
 
 //
 // The accelerator stack prefix value
