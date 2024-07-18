@@ -21,7 +21,6 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 
 import { Bucket, BucketEncryptionType, ServiceLinkedRole } from '@aws-accelerator/constructs';
-
 import { AcceleratorStage } from './accelerator-stage';
 import * as config_repository from './config-repository';
 import { AcceleratorToolkitCommand } from './toolkit';
@@ -52,6 +51,10 @@ export interface AcceleratorPipelineProps {
    */
   readonly approvalStageNotifyEmailList?: string;
   readonly partition: string;
+  /**
+   * Indicates location of the LZA configuration files
+   */
+  readonly configRepositoryLocation: 'codecommit' | 's3';
   /**
    * Flag indicating installer using existing CodeCommit repository
    */
@@ -139,6 +142,8 @@ export class AcceleratorPipeline extends Construct {
   private readonly pipeline: codepipeline.Pipeline;
   private readonly props: AcceleratorPipelineProps;
   private readonly installerKey: cdk.aws_kms.Key;
+  private readonly configBucketName: string;
+  private readonly serverAccessLogsBucketNameSsmParam: string;
 
   constructor(scope: Construct, id: string, props: AcceleratorPipelineProps) {
     super(scope, id);
@@ -151,7 +156,10 @@ export class AcceleratorPipeline extends Construct {
     let secureBucketName = `${props.prefixes.bucketName}-pipeline-${cdk.Stack.of(this).account}-${
       cdk.Stack.of(this).region
     }`;
-    let serverAccessLogsBucketNameSsmParam = `${props.prefixes.ssmParamName}/installer-access-logs-bucket-name`;
+    this.configBucketName = `${props.prefixes.bucketName}-config-${cdk.Stack.of(this).account}-${
+      cdk.Stack.of(this).region
+    }`;
+    this.serverAccessLogsBucketNameSsmParam = `${props.prefixes.ssmParamName}/installer-access-logs-bucket-name`;
     let pipelineName = `${props.prefixes.accelerator}-Pipeline`;
     let buildProjectName = `${props.prefixes.accelerator}-BuildProject`;
     let toolkitProjectName = `${props.prefixes.accelerator}-ToolkitProject`;
@@ -161,7 +169,10 @@ export class AcceleratorPipeline extends Construct {
     if (this.props.qualifier) {
       acceleratorKeyArnSsmParameterName = `${props.prefixes.ssmParamName}/${this.props.qualifier}/installer/kms/key-arn`;
       secureBucketName = `${this.props.qualifier}-pipeline-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`;
-      serverAccessLogsBucketNameSsmParam = `${props.prefixes.ssmParamName}/${this.props.qualifier}/installer-access-logs-bucket-name`;
+      this.configBucketName = `${this.props.qualifier}-config-${cdk.Stack.of(this).account}-${
+        cdk.Stack.of(this).region
+      }`;
+      this.serverAccessLogsBucketNameSsmParam = `${props.prefixes.ssmParamName}/${this.props.qualifier}/installer-access-logs-bucket-name`;
       pipelineName = `${this.props.qualifier}-pipeline`;
       buildProjectName = `${this.props.qualifier}-build-project`;
       toolkitProjectName = `${this.props.qualifier}-toolkit-project`;
@@ -225,49 +236,9 @@ export class AcceleratorPipeline extends Construct {
       kmsKey: this.installerKey,
       serverAccessLogsBucketName: cdk.aws_ssm.StringParameter.valueForStringParameter(
         this,
-        serverAccessLogsBucketNameSsmParam,
+        this.serverAccessLogsBucketNameSsmParam,
       ),
     });
-
-    // When non default config repository name provided
-    let configRepository: cdk.aws_codecommit.IRepository | Repository;
-    let configRepositoryBranchName = 'main';
-
-    if (props.useExistingConfigRepo) {
-      configRepository = cdk.aws_codecommit.Repository.fromRepositoryName(
-        this,
-        'ConfigRepository',
-        props.configRepositoryName,
-      );
-      configRepositoryBranchName = props.configRepositoryBranchName ?? 'main';
-    } else {
-      configRepository = new config_repository.ConfigRepository(this, 'ConfigRepository', {
-        repositoryName: props.configRepositoryName,
-        repositoryBranchName: configRepositoryBranchName,
-        description:
-          'AWS Accelerator configuration repository, created and initialized with default config file by pipeline',
-        managementAccountEmail: this.props.managementAccountEmail,
-        logArchiveAccountEmail: this.props.logArchiveAccountEmail,
-        auditAccountEmail: this.props.auditAccountEmail,
-        controlTowerEnabled: this.props.controlTowerEnabled,
-        controlTowerLandingZoneConfig:
-          this.props.controlTowerEnabled.toLocaleLowerCase() === 'yes'
-            ? {
-                version: CONTROL_TOWER_LANDING_ZONE_VERSION,
-                logging: {
-                  loggingBucketRetentionDays: 365,
-                  accessLoggingBucketRetentionDays: 3650,
-                  organizationTrail: true,
-                },
-                security: { enableIdentityCenterAccess: true },
-              }
-            : undefined,
-        enableSingleAccountMode: this.props.enableSingleAccountMode,
-      }).getRepository();
-
-      const cfnRepository = configRepository.node.defaultChild as codecommit.CfnRepository;
-      cfnRepository.applyRemovalPolicy(cdk.RemovalPolicy.RETAIN, { applyToUpdateReplacePolicy: true });
-    }
 
     /**
      * Pipeline
@@ -309,20 +280,42 @@ export class AcceleratorPipeline extends Construct {
       });
     }
 
-    this.pipeline.addStage({
-      stageName: 'Source',
-      actions: [
-        sourceAction,
-        new codepipeline_actions.CodeCommitSourceAction({
-          actionName: 'Configuration',
-          repository: configRepository,
-          branch: configRepositoryBranchName,
-          output: this.configRepoArtifact,
-          trigger: codepipeline_actions.CodeCommitTrigger.NONE,
-          variablesNamespace: 'Config-Vars',
-        }),
-      ],
-    });
+    if (this.props.configRepositoryLocation === 's3') {
+      const s3ConfigRepository = this.getS3ConfigRepository();
+      this.pipeline.addStage({
+        stageName: 'Source',
+        actions: [
+          sourceAction,
+          new codepipeline_actions.S3SourceAction({
+            actionName: 'Configuration',
+            bucket: s3ConfigRepository,
+            bucketKey: 'zipped/aws-accelerator-config.zip',
+            output: this.configRepoArtifact,
+            trigger: codepipeline_actions.S3Trigger.NONE,
+            variablesNamespace: 'Config-Vars',
+          }),
+        ],
+      });
+    } else {
+      const configRepositoryBranchName = this.props.useExistingConfigRepo
+        ? this.props.configRepositoryBranchName ?? 'main'
+        : 'main';
+      const codecommitConfigRepository = this.getCodeCommitConfigRepository(configRepositoryBranchName);
+      this.pipeline.addStage({
+        stageName: 'Source',
+        actions: [
+          sourceAction,
+          new codepipeline_actions.CodeCommitSourceAction({
+            actionName: 'Configuration',
+            repository: codecommitConfigRepository,
+            branch: configRepositoryBranchName,
+            output: this.configRepoArtifact,
+            trigger: codepipeline_actions.CodeCommitTrigger.NONE,
+            variablesNamespace: 'Config-Vars',
+          }),
+        ],
+      });
+    }
 
     /**
      * Build Stage
@@ -829,7 +822,7 @@ export class AcceleratorPipeline extends Construct {
       },
       CONFIG_COMMIT_ID: {
         type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-        value: '#{Config-Vars.CommitId}',
+        value: this.props.configRepositoryLocation === 's3' ? '#{Config-Vars.VersionId}' : '#{Config-Vars.CommitId}',
       },
     };
 
@@ -927,5 +920,81 @@ export class AcceleratorPipeline extends Construct {
           alarmDescription: 'AWS Accelerator pipeline failure alarm, created by accelerator',
         });
     }
+  }
+
+  /**
+   * Returns a codecommit configuration repository
+   */
+  private getCodeCommitConfigRepository(branchName: string) {
+    let configRepository: cdk.aws_codecommit.IRepository | Repository;
+
+    if (this.props.useExistingConfigRepo) {
+      configRepository = cdk.aws_codecommit.Repository.fromRepositoryName(
+        this,
+        'ConfigRepository',
+        this.props.configRepositoryName,
+      );
+    } else {
+      configRepository = new config_repository.CodeCommitConfigRepository(this, 'ConfigRepository', {
+        repositoryName: this.props.configRepositoryName,
+        repositoryBranchName: branchName,
+        description:
+          'AWS Accelerator configuration repository, created and initialized with default config file by pipeline',
+        managementAccountEmail: this.props.managementAccountEmail,
+        logArchiveAccountEmail: this.props.logArchiveAccountEmail,
+        auditAccountEmail: this.props.auditAccountEmail,
+        controlTowerEnabled: this.props.controlTowerEnabled,
+        controlTowerLandingZoneConfig:
+          this.props.controlTowerEnabled.toLocaleLowerCase() === 'yes'
+            ? {
+                version: CONTROL_TOWER_LANDING_ZONE_VERSION,
+                logging: {
+                  loggingBucketRetentionDays: 365,
+                  accessLoggingBucketRetentionDays: 3650,
+                  organizationTrail: true,
+                },
+                security: { enableIdentityCenterAccess: true },
+              }
+            : undefined,
+        enableSingleAccountMode: this.props.enableSingleAccountMode,
+      }).getRepository();
+
+      const cfnRepository = configRepository.node.defaultChild as codecommit.CfnRepository;
+      cfnRepository.applyRemovalPolicy(cdk.RemovalPolicy.RETAIN, { applyToUpdateReplacePolicy: true });
+    }
+    return configRepository;
+  }
+  /**
+   * Returns an S3 configuration repository
+   */
+  private getS3ConfigRepository() {
+    const configRepository = new config_repository.S3ConfigRepository(this, 'ConfigRepository', {
+      configBucketName: this.configBucketName,
+      description:
+        'AWS Accelerator configuration repository bucket, created and initialized with default config file by pipeline',
+      managementAccountEmail: this.props.managementAccountEmail,
+      logArchiveAccountEmail: this.props.logArchiveAccountEmail,
+      auditAccountEmail: this.props.auditAccountEmail,
+      controlTowerEnabled: this.props.controlTowerEnabled,
+      controlTowerLandingZoneConfig:
+        this.props.controlTowerEnabled.toLocaleLowerCase() === 'yes'
+          ? {
+              version: CONTROL_TOWER_LANDING_ZONE_VERSION,
+              logging: {
+                loggingBucketRetentionDays: 365,
+                accessLoggingBucketRetentionDays: 3650,
+                organizationTrail: true,
+              },
+              security: { enableIdentityCenterAccess: true },
+            }
+          : undefined,
+      enableSingleAccountMode: this.props.enableSingleAccountMode,
+      installerKey: this.installerKey,
+      serverAccessLogsBucketName: cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        this.serverAccessLogsBucketNameSsmParam,
+      ),
+    }).getRepository();
+    return configRepository;
   }
 }

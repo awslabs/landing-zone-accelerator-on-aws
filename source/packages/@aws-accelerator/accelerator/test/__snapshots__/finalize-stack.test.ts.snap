@@ -19,7 +19,7 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
   "Resources": {
     "AcceleratorCommitIdParameterEF286FB9": {
       "Properties": {
-        "Description": "The commit hash of the latest aws-accelerator-config commit to deploy successfully",
+        "Description": "The hash of the latest aws-accelerator-config version of the LZA configuration files to deploy successfully. If you use S3 as a location for LZA config files, this will be an S3 version Id.",
         "Name": "/accelerator/configuration/configCommitId",
         "Type": "String",
         "Value": "e3cdaecaa6073ad9e4721344cd109eb6de351cfb",

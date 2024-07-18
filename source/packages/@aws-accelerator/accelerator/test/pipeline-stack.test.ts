@@ -42,6 +42,7 @@ const stack = new PipelineStack(app, 'PipelineStack', {
     region: 'us-east-1',
   },
   useExistingConfigRepo: false,
+  configRepositoryLocation: 'codecommit',
   configRepositoryName: 'aws-accelerator-config',
   configRepositoryBranchName: 'main',
   prefixes: {

@@ -27,6 +27,7 @@ import { Validate } from './validate';
 export enum RepositorySources {
   GITHUB = 'github',
   CODECOMMIT = 'codecommit',
+  S3 = 's3',
 }
 
 export interface InstallerStackProps extends cdk.StackProps {
@@ -56,7 +57,7 @@ export interface InstallerStackProps extends cdk.StackProps {
 export class InstallerStack extends cdk.Stack {
   private readonly repositorySource = new cdk.CfnParameter(this, 'RepositorySource', {
     type: 'String',
-    description: 'Specify the git host',
+    description: 'Specify the location to use to host the LZA source code',
     allowedValues: [RepositorySources.GITHUB, RepositorySources.CODECOMMIT],
     default: RepositorySources.GITHUB,
   });
@@ -129,6 +130,12 @@ export class InstallerStack extends cdk.Stack {
     default: 'AWSAccelerator',
     allowedPattern: '[A-Za-z0-9-]+',
     maxLength: 15,
+  });
+
+  private readonly configurationRepositoryLocation = new cdk.CfnParameter(this, 'ConfigurationRepositoryLocation', {
+    type: 'String',
+    description: 'Specify the location to use to host the LZA configuration files',
+    allowedValues: [RepositorySources.CODECOMMIT, RepositorySources.S3],
   });
 
   /**
@@ -233,7 +240,7 @@ export class InstallerStack extends cdk.Stack {
 
     const parameterGroups: { Label: { default: string }; Parameters: string[] }[] = [
       {
-        Label: { default: 'Git Repository Configuration' },
+        Label: { default: 'Source Code Repository Configuration' },
         Parameters: [
           this.repositorySource.logicalId,
           this.repositoryOwner.logicalId,
@@ -258,10 +265,16 @@ export class InstallerStack extends cdk.Stack {
         Parameters: [
           this.controlTowerEnabled.logicalId,
           this.acceleratorPrefix.logicalId,
+          this.enableDiagnosticsPack.logicalId,
+        ],
+      },
+      {
+        Label: { default: 'Config Repository Configuration' },
+        Parameters: [
+          this.configurationRepositoryLocation.logicalId,
           this.useExistingConfigRepo.logicalId,
           this.existingConfigRepositoryName.logicalId,
           this.existingConfigRepositoryBranchName.logicalId,
-          this.enableDiagnosticsPack.logicalId,
         ],
       },
     ];
@@ -271,6 +284,7 @@ export class InstallerStack extends cdk.Stack {
       [this.repositoryOwner.logicalId]: { default: 'Repository Owner' },
       [this.repositoryName.logicalId]: { default: 'Repository Name' },
       [this.repositoryBranchName.logicalId]: { default: 'Branch Name' },
+      [this.configurationRepositoryLocation.logicalId]: { default: 'Configuration Repository Location' },
       [this.useExistingConfigRepo.logicalId]: { default: 'Use Existing Config Repository' },
       [this.existingConfigRepositoryName.logicalId]: { default: 'Existing Config Repository Name' },
       [this.existingConfigRepositoryBranchName.logicalId]: { default: 'Existing Config Repository Branch Name' },
@@ -361,6 +375,7 @@ export class InstallerStack extends cdk.Stack {
 
     const validatorFunction = new Validate(this, 'ValidateInstaller', {
       useExistingConfigRepo: this.useExistingConfigRepo.valueAsString,
+      configRepositoryLocation: this.configurationRepositoryLocation.valueAsString,
       existingConfigRepositoryName: this.existingConfigRepositoryName.valueAsString,
       existingConfigRepositoryBranchName: this.existingConfigRepositoryBranchName.valueAsString,
     });
@@ -753,6 +768,10 @@ export class InstallerStack extends cdk.Stack {
           ACCELERATOR_REPOSITORY_BRANCH_NAME: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: this.repositoryBranchName.valueAsString,
+          },
+          CONFIG_REPOSITORY_LOCATION: {
+            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: this.configurationRepositoryLocation.valueAsString,
           },
           USE_EXISTING_CONFIG_REPO: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,

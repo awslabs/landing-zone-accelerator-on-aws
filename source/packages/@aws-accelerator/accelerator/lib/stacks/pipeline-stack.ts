@@ -38,6 +38,10 @@ export interface PipelineStackProps extends cdk.StackProps {
   readonly approvalStageNotifyEmailList?: string;
   readonly partition: string;
   /**
+   * Location used to host LZA configuration files
+   */
+  readonly configRepositoryLocation: 's3' | 'codecommit';
+  /**
    * Flag indicating installer using existing CodeCommit repository
    */
   readonly useExistingConfigRepo: boolean;

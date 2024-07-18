@@ -43,7 +43,7 @@ export class FinalizeStack extends AcceleratorStack {
         new cdk.aws_ssm.StringParameter(this, 'AcceleratorCommitIdParameter', {
           parameterName: `${props.prefixes.ssmParamName}/configuration/configCommitId`,
           stringValue: process.env['CONFIG_COMMIT_ID'],
-          description: `The commit hash of the latest ${props.configRepositoryName} commit to deploy successfully`,
+          description: `The hash of the latest ${props.configRepositoryName} version of the LZA configuration files to deploy successfully. If you use S3 as a location for LZA config files, this will be an S3 version Id.`,
         });
       }
 
