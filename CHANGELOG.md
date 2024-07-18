@@ -9,17 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- feat(network): allow Route53 resolver endpoints and query logging to be defined in the VPC object.
+- feat(control-tower): integrate lz management api.
+- feat(control-tower): integrate lz baseline api
+- feat(control-tower): add global region into the Control Tower governed region list
+- feat(securityhub): allow custom cloudwatch log group for events
+- feat(control-tower) integrate lz management and baseline api for external account deployment
+- feat(logging): add cloudwatch log group data protection policy
+- feat(control-tower): lz management api gov cloud support
+
 ### Fixed
 
-- fix: prepare stage not showing debug logs
-- fix(installer): change CodeBuild project configuration
+- fix(bootstrap): Failed to publish asset when cdkOptions.centralizeBuckets: true
+- fix(control-tower): add validation to check incorrect landing zone version in global config
+- fix(organizations): unable to create ou with same name under different parent
+- fix(organization): ou baseline operation should be skipped when Control Tower is not enabled
 
 ### Changed
 
 - chore: add commitlint
 - chore: upgrade cdk to 2.148.0
-- chore: add local zones to testing environment
-- docs: correct identation issue with Identity Center configuration documentation
+- chore(documentation): update opt-in region requirement for Control Tower deployment
+- chore(documentation): update merge request template to add unit test information
+- chore(test): update all-enabled custom config rule lambda python version
+- chore: bump cdk bootstrap to 20
 
 ## [1.8.1] - 07-03-2024
 
