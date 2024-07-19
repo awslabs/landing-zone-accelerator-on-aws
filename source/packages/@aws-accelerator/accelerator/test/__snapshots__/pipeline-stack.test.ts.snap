@@ -2584,7 +2584,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
       "Properties": {
         "Name": "/accelerator/PipelineStack/version",
         "Type": "String",
-        "Value": "1.8.1",
+        "Value": "1.9.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
