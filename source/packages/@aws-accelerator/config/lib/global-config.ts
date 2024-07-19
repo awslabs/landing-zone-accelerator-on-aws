@@ -665,7 +665,7 @@ export class GlobalConfig implements i.IGlobalConfig {
     await fs.promises.writeFile(resourcesPath, JSON.stringify(resources, null, 2));
   }
 
-  public async loadExternalMapping() {
+  public async loadExternalMapping(accountsConfig: AccountsConfig) {
     if (!this.externalLandingZoneResources?.importExternalLandingZoneResources) {
       return;
     }
@@ -705,7 +705,35 @@ export class GlobalConfig implements i.IGlobalConfig {
     });
     this.externalLandingZoneResources.templateMap = mapping;
     const accounts = Object.keys(mapping).map(key => mapping[key].accountId);
-    this.externalLandingZoneResources.accountsDeployedExternally = [...new Set(accounts)];
+    const uniqueAccountsFromMapping = [...new Set(accounts)];
+    const uniqueNonSuspendedAccounts = await this.findUniqueNonSuspendedAccounts(
+      accountsConfig,
+      uniqueAccountsFromMapping,
+    );
+
+    this.externalLandingZoneResources.accountsDeployedExternally = uniqueNonSuspendedAccounts;
+  }
+
+  // Function to filter out suspended sccounts and non-ASEA created accounts
+  private async findUniqueNonSuspendedAccounts(
+    accountsConfig: AccountsConfig,
+    uniqueAccountsFromMapping: string[],
+  ): Promise<string[]> {
+    let uniqueNonSuspendedAccounts: string[] = [];
+    let nonSuspendedAccounts: string[] = [];
+    const accountIds = accountsConfig.accountIds;
+    if (accountIds) {
+      // From Accounts Config, only get accounts which are ACTIVE (not suspended)
+      nonSuspendedAccounts = accountIds
+        .filter(account => account.status === 'ACTIVE')
+        .map(account => account.accountId);
+      // Compare and make sure list is both in resource mapping and an active account in Accounts Config
+      // This will also filter out accounts created by LZA natively and not ASEA
+      uniqueNonSuspendedAccounts = nonSuspendedAccounts.filter(nonSuspendedAccount =>
+        uniqueAccountsFromMapping.includes(nonSuspendedAccount),
+      );
+    }
+    return uniqueNonSuspendedAccounts;
   }
 
   private async downloadASEAStacksAndResources(props: {
