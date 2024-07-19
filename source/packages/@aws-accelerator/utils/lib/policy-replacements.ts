@@ -14,9 +14,11 @@
 import { AccountConfig, AccountsConfig, GovCloudAccountConfig, NetworkConfig } from '@aws-accelerator/config';
 
 // ACCEL_LOOKUP::VPC_ID:ACCOUNT|OU|ORG:{accountId}|{ouId}
+// ACCEL_LOOKUP::ACCOUNT_ID:ACCOUNT|OU|ORG:{accountId}|{ouId}
 export enum POLICY_LOOKUP_TYPE {
   VPC_ID = 'VPC_ID',
   VPCE_ID = 'VPCE_ID',
+  ACCOUNT_ID = 'ACCOUNT_ID',
   CUSTOM = 'CUSTOM',
 }
 
@@ -79,7 +81,6 @@ export function policyReplacements(props: {
       content = content.replace(lookupPattern, stringifiedValue);
     }
   }
-
   return content;
 }
 
@@ -132,6 +133,12 @@ function getPolicyReplacementValue(
       }
       returnValue = getScopeVpcEndpointIds(networkConfig, accountsConfig, lookupScope, replacementArray);
       break;
+    case POLICY_LOOKUP_TYPE.ACCOUNT_ID:
+      if (!accountsConfig) {
+        throw new Error('Missing accountConfig for policy statement with ACCOUNT parameters');
+      }
+      returnValue = getScopeAccountIds(accountsConfig, lookupScope, replacementArray);
+      break;
     case POLICY_LOOKUP_TYPE.CUSTOM:
       // Return the parameter itself for custom parameter. The parameter will be replacement with value from replacement config
       // The only exception will be ACCEL_LOOKUP::CUSTOM:ATTACHED_RESOURCE_ARN whose value will only be available during lambda runtime
@@ -151,7 +158,11 @@ function getPolicyReplacementValue(
  */
 function validatePolicyLookupData(lookupType: string, lookupScope: string, replacementArray: string[]) {
   let isError = false;
-  if (lookupType === POLICY_LOOKUP_TYPE.VPC_ID || lookupType === POLICY_LOOKUP_TYPE.VPCE_ID) {
+  if (
+    lookupType === POLICY_LOOKUP_TYPE.VPC_ID ||
+    lookupType === POLICY_LOOKUP_TYPE.VPCE_ID ||
+    lookupType === POLICY_LOOKUP_TYPE.ACCOUNT_ID
+  ) {
     if (lookupScope === POLICY_LOOKUP_SCOPE.ACCOUNT && replacementArray.length !== 3) {
       // VPC_ID:ACCOUNT:{accountId}
       isError = true;
@@ -175,6 +186,28 @@ function getAccountsForOrgUnit(
 ): (AccountConfig | GovCloudAccountConfig)[] {
   const accounts = accountsConfig.getAccounts(false);
   return accounts.filter(account => account.organizationalUnit === organizationUnit);
+}
+
+function getScopeAccountIds(accountsConfig: AccountsConfig, lookupScope: string, replacementArray: string[]): string[] {
+  if (lookupScope === POLICY_LOOKUP_SCOPE.ORG) {
+    return accountsConfig.getAccountIds();
+  } else if (lookupScope === POLICY_LOOKUP_SCOPE.ACCOUNT) {
+    const accountName = replacementArray[2];
+    const accountId = accountsConfig.getAccountId(accountName);
+    return [accountId];
+  } else if (lookupScope === POLICY_LOOKUP_SCOPE.OU) {
+    const organizationUnit = replacementArray[2];
+    const accounts = getAccountsForOrgUnit(accountsConfig, organizationUnit);
+    return accounts.reduce((accountIds: string[], account) => {
+      const accountId = accountsConfig.getAccountId(account.name);
+      if (accountId) {
+        accountIds.push(accountId);
+      }
+      return accountIds;
+    }, []);
+  }
+
+  return [];
 }
 
 function getScopeVpcIds(
