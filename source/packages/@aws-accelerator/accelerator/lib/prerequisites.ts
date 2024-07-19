@@ -147,7 +147,7 @@ export async function main(
 }
 
 (async () => {
-  const skipPrerequisites = process.env['ACCELERATOR_SKIP_PREREQUISITES'] ?? 'false';
+  const skipPrerequisites = process.env['ACCELERATOR_SKIP_PREREQUISITES'] ?? 'true';
   logger.debug(`ACCELERATOR_SKIP_PREREQUISITES is ${skipPrerequisites}`);
   if (skipPrerequisites.toLowerCase().trim() === 'true') {
     logger.warn(`Skipping prerequisites since environment variable ACCELERATOR_SKIP_PREREQUISITES was set to true`);

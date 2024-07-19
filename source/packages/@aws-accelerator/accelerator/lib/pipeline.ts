@@ -588,7 +588,7 @@ export class AcceleratorPipeline extends Construct {
           },
           ACCELERATOR_SKIP_PREREQUISITES: {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: 'false',
+            value: 'true',
           },
           ...enableSingleAccountModeEnvVariables,
           ...pipelineAccountEnvVariables,
