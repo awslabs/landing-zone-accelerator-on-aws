@@ -441,7 +441,7 @@ export async function setAcceleratorStackProps(
   await organizationConfig.loadOrganizationalUnitIds(context.partition);
 
   if (globalConfig.externalLandingZoneResources?.importExternalLandingZoneResources) {
-    await globalConfig.loadExternalMapping();
+    await globalConfig.loadExternalMapping(accountsConfig);
     await globalConfig.loadLzaResources(context.partition, prefixes.ssmParamName);
   }
   const centralizedLoggingRegion = globalConfig.logging.centralizedLoggingRegion ?? globalConfig.homeRegion;

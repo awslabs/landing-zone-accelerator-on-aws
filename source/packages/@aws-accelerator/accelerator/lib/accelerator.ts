@@ -186,8 +186,11 @@ export abstract class Accelerator {
       : undefined;
     const globalConfig = configDependentStage ? GlobalConfig.loadRawGlobalConfig(props.configDirPath) : undefined;
     if (globalConfig?.externalLandingZoneResources?.importExternalLandingZoneResources) {
+      const orgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(props.configDirPath).enable;
+      const accountsConfig = AccountsConfig.load(props.configDirPath);
+      await accountsConfig.loadAccountIds(props.partition, props.enableSingleAccountMode, orgsEnabled, accountsConfig);
       logger.info('Loading ASEA mapping for stacks list');
-      await globalConfig.loadExternalMapping();
+      await globalConfig.loadExternalMapping(accountsConfig);
       logger.info('Loaded ASEA mapping');
     }
     await checkDiffStage(props);
