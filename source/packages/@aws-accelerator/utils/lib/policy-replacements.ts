@@ -78,7 +78,7 @@ export function policyReplacements(props: {
       // If the value of the parameter is empty, we need to remove any heading comma with space if there is any
       content = content.replace(new RegExp(`,?\\s*${escapeRegExp(lookupPattern)}`, 'g'), stringifiedValue);
     } else {
-      content = content.replace(lookupPattern, stringifiedValue);
+      content = content.replace(new RegExp(escapeRegExp(lookupPattern), 'g'), stringifiedValue);
     }
   }
   return content;

@@ -137,4 +137,19 @@ describe('ACCOUNT_ID lookup test ', () => {
     });
     expect(result).toBe('"444444444444","555555555555"');
   });
+
+  it('should replace all the occurrences of Network ACCOUNT_ID LOOKUP in the content', () => {
+    const content = '${ACCEL_LOOKUP::ACCOUNT_ID:ACCOUNT:Network}\n${ACCEL_LOOKUP::ACCOUNT_ID:ACCOUNT:Network}';
+    const result = policyReplacements({
+      content,
+      acceleratorPrefix,
+      managementAccountAccessRole,
+      partition,
+      additionalReplacements,
+      acceleratorName,
+      accountsConfig,
+    });
+    expect(result).toBe(`"555555555555"
+"555555555555"`);
+  });
 });
