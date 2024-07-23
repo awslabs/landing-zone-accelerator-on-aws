@@ -36,6 +36,8 @@ exports[`AcceleratorMetadata Construct(AcceleratorMetadata):  Snapshot Test 1`] 
             "ACCELERATOR_PREFIX": "AWSAccelerator",
             "ACCELERATOR_VERSION_SSM_PATH": "/accelerator/AWSAccelerator-InstallerStack/version",
             "CENTRAL_LOG_BUCKET": "centralLogBucketTest",
+            "CONFIG_BUCKET_NAME": "aws-accelerator-config-111111111111-us-east-1",
+            "CONFIG_REPOSITORY_LOCATION": "codecommit",
             "CONFIG_REPOSITORY_NAME": "aws-config-test",
             "CROSS_ACCOUNT_ROLE": "testRole",
             "ELB_LOGGING_BUCKET": "elbLogBucketNameTest",
@@ -247,6 +249,30 @@ exports[`AcceleratorMetadata Construct(AcceleratorMetadata):  Snapshot Test 1`] 
                         "Ref": "AWS::Partition",
                       },
                       ":s3:::testMetadataLogBucket/*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::aws-accelerator-config-111111111111-us-east-1",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::aws-accelerator-config-111111111111-us-east-1/*",
                     ],
                   ],
                 },

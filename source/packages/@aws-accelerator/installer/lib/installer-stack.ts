@@ -371,19 +371,6 @@ export class InstallerStack extends cdk.Stack {
       };
     }
 
-    // Validate Installer Parameters
-
-    const validatorFunction = new Validate(this, 'ValidateInstaller', {
-      useExistingConfigRepo: this.useExistingConfigRepo.valueAsString,
-      configRepositoryLocation: this.configurationRepositoryLocation.valueAsString,
-      existingConfigRepositoryName: this.existingConfigRepositoryName.valueAsString,
-      existingConfigRepositoryBranchName: this.existingConfigRepositoryBranchName.valueAsString,
-    });
-    // cfn-nag suppression
-    const validatorFunctionResource = validatorFunction.node.findChild('ValidationFunction').node
-      .defaultChild as cdk.CfnResource;
-    this.addLambdaNagMetadata(validatorFunctionResource);
-
     const resourceNamePrefixes = new ResourceNamePrefixes(this, 'ResourceNamePrefixes', {
       acceleratorPrefix: this.acceleratorPrefix.valueAsString,
       acceleratorQualifier: this.acceleratorQualifier?.valueAsString,
@@ -449,6 +436,20 @@ export class InstallerStack extends cdk.Stack {
         this.acceleratorQualifier!.valueAsString
       }-*`;
     }
+
+    // Validate Installer Parameters
+
+    const validatorFunction = new Validate(this, 'ValidateInstaller', {
+      useExistingConfigRepo: this.useExistingConfigRepo.valueAsString,
+      acceleratorPipelineName: acceleratorPipelineName,
+      configRepositoryLocation: this.configurationRepositoryLocation.valueAsString,
+      existingConfigRepositoryName: this.existingConfigRepositoryName.valueAsString,
+      existingConfigRepositoryBranchName: this.existingConfigRepositoryBranchName.valueAsString,
+    });
+    // cfn-nag suppression
+    const validatorFunctionResource = validatorFunction.node.findChild('ValidationFunction').node
+      .defaultChild as cdk.CfnResource;
+    this.addLambdaNagMetadata(validatorFunctionResource);
 
     if (props.enableSingleAccountMode) {
       targetAcceleratorEnvVariables['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE'] = {

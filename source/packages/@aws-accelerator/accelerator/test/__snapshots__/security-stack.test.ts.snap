@@ -71,6 +71,8 @@ exports[`SecurityStack Construct(SecurityStack):  Snapshot Test 1`] = `
             "ACCELERATOR_PREFIX": "AWSAccelerator",
             "ACCELERATOR_VERSION_SSM_PATH": "/accelerator/AWSAccelerator-InstallerStack/version",
             "CENTRAL_LOG_BUCKET": "existing-central-log-bucket",
+            "CONFIG_BUCKET_NAME": "undefined-config-111111111111-us-east-1",
+            "CONFIG_REPOSITORY_LOCATION": "codecommit",
             "CONFIG_REPOSITORY_NAME": "aws-accelerator-config",
             "CROSS_ACCOUNT_ROLE": "AWSControlTowerExecution",
             "ELB_LOGGING_BUCKET": "existing-elb-logs-bucket-111111111111-us-east-1",
@@ -263,6 +265,30 @@ exports[`SecurityStack Construct(SecurityStack):  Snapshot Test 1`] = `
                         "Ref": "AWS::Partition",
                       },
                       ":s3:::aws-accelerator-metadata-333333333333-us-east-1/*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::undefined-config-111111111111-us-east-1",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::undefined-config-111111111111-us-east-1/*",
                     ],
                   ],
                 },
@@ -1351,6 +1377,8 @@ exports[`delegatedAdminStack Construct(SecurityStack):  Snapshot Test 1`] = `
             "ACCELERATOR_PREFIX": "AWSAccelerator",
             "ACCELERATOR_VERSION_SSM_PATH": "/accelerator/AWSAccelerator-InstallerStack/version",
             "CENTRAL_LOG_BUCKET": "aws-accelerator-central-logs-333333333333-us-west-2",
+            "CONFIG_BUCKET_NAME": "undefined-config-111111111111-us-east-1",
+            "CONFIG_REPOSITORY_LOCATION": "codecommit",
             "CONFIG_REPOSITORY_NAME": "aws-accelerator-config",
             "CROSS_ACCOUNT_ROLE": "AWSControlTowerExecution",
             "ELB_LOGGING_BUCKET": "aws-accelerator-elb-access-logs-333333333333-us-east-1",
@@ -1543,6 +1571,30 @@ exports[`delegatedAdminStack Construct(SecurityStack):  Snapshot Test 1`] = `
                         "Ref": "AWS::Partition",
                       },
                       ":s3:::aws-accelerator-metadata-333333333333-us-east-1/*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::undefined-config-111111111111-us-east-1",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::undefined-config-111111111111-us-east-1/*",
                     ],
                   ],
                 },

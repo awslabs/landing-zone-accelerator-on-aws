@@ -113,6 +113,7 @@ export class AcceleratorSynthStacks {
       globalRegion: this.globalRegion,
       centralizedLoggingRegion: globalConfig.logging.centralizedLoggingRegion ?? globalConfig.homeRegion,
       configRepositoryName: 'aws-accelerator-config',
+      configRepositoryLocation: 'codecommit',
       prefixes: {
         accelerator: 'AWSAccelerator',
         kmsAlias: 'alias/accelerator',

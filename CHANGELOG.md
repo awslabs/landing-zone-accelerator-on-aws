@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- feat(s3): added validation around S3 configuration repository 
 - feat(network): allow Route53 resolver endpoints and query logging to be defined in the VPC object.
 - feat(control-tower): integrate lz management api.
 - feat(control-tower): integrate lz baseline api

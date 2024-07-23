@@ -33,6 +33,8 @@ new AcceleratorMetadata(stack, 'AcceleratorMetadata', {
   logRetentionInDays: 3653,
   acceleratorSsmParamPrefix: '/accelerator',
   globalRegion: 'us-east-1',
+  configRepositoryLocation: 'codecommit',
+  configBucketName: 'aws-accelerator-config-111111111111-us-east-1',
 });
 
 /**
