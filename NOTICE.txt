@@ -66,6 +66,7 @@ This software includes third party software subject to the following copyrights:
 @typescript-eslint/eslint-plugin - MIT
 @typescript-eslint/parser - BSD-2-Clause
 ajv - MIT
+adm-zip - MIT
 aws-cdk - Apache-2.0
 aws-cdk-lib - Apache-2.0
 aws-lambda - MIT

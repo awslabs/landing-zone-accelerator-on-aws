@@ -3336,6 +3336,20 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             "Arn",
           ],
         },
+        "acceleratorPipelineName": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "acceleratorPrefix",
+                ],
+              },
+              "-Pipeline",
+            ],
+          ],
+        },
         "configRepositoryLocation": {
           "Ref": "ConfigurationRepositoryLocation",
         },
@@ -3355,6 +3369,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
     },
     "ValidateInstallerValidationFunction21674768": {
       "DependsOn": [
+        "ValidateInstallerValidationFunctionServiceRoleDefaultPolicyAA8D9A47",
         "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B",
       ],
       "Metadata": {
@@ -3387,6 +3402,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
         "Code": {
           "ZipFile": "
           const response = require('cfn-response'); 
+          const { CodePipelineClient, GetPipelineCommand } = require("@aws-sdk/client-codepipeline");
           exports.handler = async function (event, context) { 
           console.log(JSON.stringify(event, null, 4)); 
 
@@ -3394,6 +3410,11 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           const configRepositoryLocation=event.ResourceProperties.configRepositoryLocation;
           const existingConfigRepositoryName=event.ResourceProperties.existingConfigRepositoryName;
           const existingConfigRepositoryBranchName=event.ResourceProperties.existingConfigRepositoryBranchName;
+
+          if (event.RequestType === 'Delete') {
+            await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+            return;
+          }
 
           if (useExistingConfigRepo === 'Yes') {
             if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName === ''){
@@ -3405,6 +3426,25 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           if (configRepositoryLocation === 's3') {
             if (useExistingConfigRepo === 'Yes' || existingConfigRepositoryName !== '' || existingConfigRepositoryBranchName !== ''){
                 await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing configuration repository parameters are populated. Existing repositories can not be used with an S3 configuration repository.'}, event.PhysicalResourceId);
+                return;
+            }
+
+            try {
+                const pipelineName = event.ResourceProperties.acceleratorPipelineName;
+                const client = new CodePipelineClient();
+                const input = { name: pipelineName };
+                const command = new GetPipelineCommand(input);
+                const pipelineResponse = await client.send(command);
+                const sourceStage = pipelineResponse.pipeline.stages.find(stage => stage.name === 'Source');
+                const configAction = sourceStage?.actions.find(action => action.name === 'Configuration');
+                if (configAction.actionTypeId.provider === 'CodeCommit') {
+                    await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing deployment using CodeCommit was detected. This value cannot be changed for existing deployments. Please set ConfigRepositoryLocation to CodeCommit and try again.'}, event.PhysicalResourceId);
+                    return;
+                }
+            } catch (err) {
+                console.log('Encountered error finding existing pipeline, continuing')
+                console.log(err);
+                await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId); 
                 return;
             }
           }
@@ -3425,6 +3465,64 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
         "Runtime": "nodejs18.x",
       },
       "Type": "AWS::Lambda::Function",
+    },
+    "ValidateInstallerValidationFunctionServiceRoleDefaultPolicyAA8D9A47": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "codepipeline:GetPipeline",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":codepipeline:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":",
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "acceleratorPrefix",
+                      ],
+                    },
+                    "-Pipeline",
+                  ],
+                ],
+              },
+              "Sid": "ReadCodePipeline",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ValidateInstallerValidationFunctionServiceRoleDefaultPolicyAA8D9A47",
+        "Roles": [
+          {
+            "Ref": "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B": {
       "Metadata": {
@@ -6797,6 +6895,20 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             "Arn",
           ],
         },
+        "acceleratorPipelineName": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "acceleratorPrefix",
+                ],
+              },
+              "-Pipeline",
+            ],
+          ],
+        },
         "configRepositoryLocation": {
           "Ref": "ConfigurationRepositoryLocation",
         },
@@ -6816,6 +6928,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
     },
     "ValidateInstallerValidationFunction21674768": {
       "DependsOn": [
+        "ValidateInstallerValidationFunctionServiceRoleDefaultPolicyAA8D9A47",
         "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B",
       ],
       "Metadata": {
@@ -6848,6 +6961,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
         "Code": {
           "ZipFile": "
           const response = require('cfn-response'); 
+          const { CodePipelineClient, GetPipelineCommand } = require("@aws-sdk/client-codepipeline");
           exports.handler = async function (event, context) { 
           console.log(JSON.stringify(event, null, 4)); 
 
@@ -6855,6 +6969,11 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           const configRepositoryLocation=event.ResourceProperties.configRepositoryLocation;
           const existingConfigRepositoryName=event.ResourceProperties.existingConfigRepositoryName;
           const existingConfigRepositoryBranchName=event.ResourceProperties.existingConfigRepositoryBranchName;
+
+          if (event.RequestType === 'Delete') {
+            await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+            return;
+          }
 
           if (useExistingConfigRepo === 'Yes') {
             if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName === ''){
@@ -6866,6 +6985,25 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           if (configRepositoryLocation === 's3') {
             if (useExistingConfigRepo === 'Yes' || existingConfigRepositoryName !== '' || existingConfigRepositoryBranchName !== ''){
                 await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing configuration repository parameters are populated. Existing repositories can not be used with an S3 configuration repository.'}, event.PhysicalResourceId);
+                return;
+            }
+
+            try {
+                const pipelineName = event.ResourceProperties.acceleratorPipelineName;
+                const client = new CodePipelineClient();
+                const input = { name: pipelineName };
+                const command = new GetPipelineCommand(input);
+                const pipelineResponse = await client.send(command);
+                const sourceStage = pipelineResponse.pipeline.stages.find(stage => stage.name === 'Source');
+                const configAction = sourceStage?.actions.find(action => action.name === 'Configuration');
+                if (configAction.actionTypeId.provider === 'CodeCommit') {
+                    await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing deployment using CodeCommit was detected. This value cannot be changed for existing deployments. Please set ConfigRepositoryLocation to CodeCommit and try again.'}, event.PhysicalResourceId);
+                    return;
+                }
+            } catch (err) {
+                console.log('Encountered error finding existing pipeline, continuing')
+                console.log(err);
+                await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId); 
                 return;
             }
           }
@@ -6886,6 +7024,64 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
         "Runtime": "nodejs18.x",
       },
       "Type": "AWS::Lambda::Function",
+    },
+    "ValidateInstallerValidationFunctionServiceRoleDefaultPolicyAA8D9A47": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "codepipeline:GetPipeline",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":codepipeline:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":",
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "acceleratorPrefix",
+                      ],
+                    },
+                    "-Pipeline",
+                  ],
+                ],
+              },
+              "Sid": "ReadCodePipeline",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ValidateInstallerValidationFunctionServiceRoleDefaultPolicyAA8D9A47",
+        "Roles": [
+          {
+            "Ref": "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B": {
       "Metadata": {
@@ -10317,6 +10513,17 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             "Arn",
           ],
         },
+        "acceleratorPipelineName": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "AcceleratorQualifier",
+              },
+              "-pipeline",
+            ],
+          ],
+        },
         "configRepositoryLocation": {
           "Ref": "ConfigurationRepositoryLocation",
         },
@@ -10336,6 +10543,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
     },
     "ValidateInstallerValidationFunction21674768": {
       "DependsOn": [
+        "ValidateInstallerValidationFunctionServiceRoleDefaultPolicyAA8D9A47",
         "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B",
       ],
       "Metadata": {
@@ -10368,6 +10576,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
         "Code": {
           "ZipFile": "
           const response = require('cfn-response'); 
+          const { CodePipelineClient, GetPipelineCommand } = require("@aws-sdk/client-codepipeline");
           exports.handler = async function (event, context) { 
           console.log(JSON.stringify(event, null, 4)); 
 
@@ -10375,6 +10584,11 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           const configRepositoryLocation=event.ResourceProperties.configRepositoryLocation;
           const existingConfigRepositoryName=event.ResourceProperties.existingConfigRepositoryName;
           const existingConfigRepositoryBranchName=event.ResourceProperties.existingConfigRepositoryBranchName;
+
+          if (event.RequestType === 'Delete') {
+            await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+            return;
+          }
 
           if (useExistingConfigRepo === 'Yes') {
             if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName === ''){
@@ -10386,6 +10600,25 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           if (configRepositoryLocation === 's3') {
             if (useExistingConfigRepo === 'Yes' || existingConfigRepositoryName !== '' || existingConfigRepositoryBranchName !== ''){
                 await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing configuration repository parameters are populated. Existing repositories can not be used with an S3 configuration repository.'}, event.PhysicalResourceId);
+                return;
+            }
+
+            try {
+                const pipelineName = event.ResourceProperties.acceleratorPipelineName;
+                const client = new CodePipelineClient();
+                const input = { name: pipelineName };
+                const command = new GetPipelineCommand(input);
+                const pipelineResponse = await client.send(command);
+                const sourceStage = pipelineResponse.pipeline.stages.find(stage => stage.name === 'Source');
+                const configAction = sourceStage?.actions.find(action => action.name === 'Configuration');
+                if (configAction.actionTypeId.provider === 'CodeCommit') {
+                    await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing deployment using CodeCommit was detected. This value cannot be changed for existing deployments. Please set ConfigRepositoryLocation to CodeCommit and try again.'}, event.PhysicalResourceId);
+                    return;
+                }
+            } catch (err) {
+                console.log('Encountered error finding existing pipeline, continuing')
+                console.log(err);
+                await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId); 
                 return;
             }
           }
@@ -10406,6 +10639,61 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
         "Runtime": "nodejs18.x",
       },
       "Type": "AWS::Lambda::Function",
+    },
+    "ValidateInstallerValidationFunctionServiceRoleDefaultPolicyAA8D9A47": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "codepipeline:GetPipeline",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":codepipeline:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":",
+                    {
+                      "Ref": "AcceleratorQualifier",
+                    },
+                    "-pipeline",
+                  ],
+                ],
+              },
+              "Sid": "ReadCodePipeline",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ValidateInstallerValidationFunctionServiceRoleDefaultPolicyAA8D9A47",
+        "Roles": [
+          {
+            "Ref": "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B": {
       "Metadata": {
@@ -13827,6 +14115,17 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             "Arn",
           ],
         },
+        "acceleratorPipelineName": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "AcceleratorQualifier",
+              },
+              "-pipeline",
+            ],
+          ],
+        },
         "configRepositoryLocation": {
           "Ref": "ConfigurationRepositoryLocation",
         },
@@ -13846,6 +14145,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
     },
     "ValidateInstallerValidationFunction21674768": {
       "DependsOn": [
+        "ValidateInstallerValidationFunctionServiceRoleDefaultPolicyAA8D9A47",
         "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B",
       ],
       "Metadata": {
@@ -13878,6 +14178,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
         "Code": {
           "ZipFile": "
           const response = require('cfn-response'); 
+          const { CodePipelineClient, GetPipelineCommand } = require("@aws-sdk/client-codepipeline");
           exports.handler = async function (event, context) { 
           console.log(JSON.stringify(event, null, 4)); 
 
@@ -13885,6 +14186,11 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           const configRepositoryLocation=event.ResourceProperties.configRepositoryLocation;
           const existingConfigRepositoryName=event.ResourceProperties.existingConfigRepositoryName;
           const existingConfigRepositoryBranchName=event.ResourceProperties.existingConfigRepositoryBranchName;
+
+          if (event.RequestType === 'Delete') {
+            await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+            return;
+          }
 
           if (useExistingConfigRepo === 'Yes') {
             if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName === ''){
@@ -13896,6 +14202,25 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           if (configRepositoryLocation === 's3') {
             if (useExistingConfigRepo === 'Yes' || existingConfigRepositoryName !== '' || existingConfigRepositoryBranchName !== ''){
                 await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing configuration repository parameters are populated. Existing repositories can not be used with an S3 configuration repository.'}, event.PhysicalResourceId);
+                return;
+            }
+
+            try {
+                const pipelineName = event.ResourceProperties.acceleratorPipelineName;
+                const client = new CodePipelineClient();
+                const input = { name: pipelineName };
+                const command = new GetPipelineCommand(input);
+                const pipelineResponse = await client.send(command);
+                const sourceStage = pipelineResponse.pipeline.stages.find(stage => stage.name === 'Source');
+                const configAction = sourceStage?.actions.find(action => action.name === 'Configuration');
+                if (configAction.actionTypeId.provider === 'CodeCommit') {
+                    await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing deployment using CodeCommit was detected. This value cannot be changed for existing deployments. Please set ConfigRepositoryLocation to CodeCommit and try again.'}, event.PhysicalResourceId);
+                    return;
+                }
+            } catch (err) {
+                console.log('Encountered error finding existing pipeline, continuing')
+                console.log(err);
+                await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId); 
                 return;
             }
           }
@@ -13916,6 +14241,61 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
         "Runtime": "nodejs18.x",
       },
       "Type": "AWS::Lambda::Function",
+    },
+    "ValidateInstallerValidationFunctionServiceRoleDefaultPolicyAA8D9A47": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "codepipeline:GetPipeline",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":codepipeline:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":",
+                    {
+                      "Ref": "AcceleratorQualifier",
+                    },
+                    "-pipeline",
+                  ],
+                ],
+              },
+              "Sid": "ReadCodePipeline",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ValidateInstallerValidationFunctionServiceRoleDefaultPolicyAA8D9A47",
+        "Roles": [
+          {
+            "Ref": "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B": {
       "Metadata": {
@@ -17342,6 +17722,17 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             "Arn",
           ],
         },
+        "acceleratorPipelineName": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "AcceleratorQualifier",
+              },
+              "-pipeline",
+            ],
+          ],
+        },
         "configRepositoryLocation": {
           "Ref": "ConfigurationRepositoryLocation",
         },
@@ -17361,6 +17752,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
     },
     "ValidateInstallerValidationFunction21674768": {
       "DependsOn": [
+        "ValidateInstallerValidationFunctionServiceRoleDefaultPolicyAA8D9A47",
         "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B",
       ],
       "Metadata": {
@@ -17393,6 +17785,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
         "Code": {
           "ZipFile": "
           const response = require('cfn-response'); 
+          const { CodePipelineClient, GetPipelineCommand } = require("@aws-sdk/client-codepipeline");
           exports.handler = async function (event, context) { 
           console.log(JSON.stringify(event, null, 4)); 
 
@@ -17400,6 +17793,11 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           const configRepositoryLocation=event.ResourceProperties.configRepositoryLocation;
           const existingConfigRepositoryName=event.ResourceProperties.existingConfigRepositoryName;
           const existingConfigRepositoryBranchName=event.ResourceProperties.existingConfigRepositoryBranchName;
+
+          if (event.RequestType === 'Delete') {
+            await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+            return;
+          }
 
           if (useExistingConfigRepo === 'Yes') {
             if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName === ''){
@@ -17411,6 +17809,25 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           if (configRepositoryLocation === 's3') {
             if (useExistingConfigRepo === 'Yes' || existingConfigRepositoryName !== '' || existingConfigRepositoryBranchName !== ''){
                 await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing configuration repository parameters are populated. Existing repositories can not be used with an S3 configuration repository.'}, event.PhysicalResourceId);
+                return;
+            }
+
+            try {
+                const pipelineName = event.ResourceProperties.acceleratorPipelineName;
+                const client = new CodePipelineClient();
+                const input = { name: pipelineName };
+                const command = new GetPipelineCommand(input);
+                const pipelineResponse = await client.send(command);
+                const sourceStage = pipelineResponse.pipeline.stages.find(stage => stage.name === 'Source');
+                const configAction = sourceStage?.actions.find(action => action.name === 'Configuration');
+                if (configAction.actionTypeId.provider === 'CodeCommit') {
+                    await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing deployment using CodeCommit was detected. This value cannot be changed for existing deployments. Please set ConfigRepositoryLocation to CodeCommit and try again.'}, event.PhysicalResourceId);
+                    return;
+                }
+            } catch (err) {
+                console.log('Encountered error finding existing pipeline, continuing')
+                console.log(err);
+                await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId); 
                 return;
             }
           }
@@ -17431,6 +17848,61 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
         "Runtime": "nodejs18.x",
       },
       "Type": "AWS::Lambda::Function",
+    },
+    "ValidateInstallerValidationFunctionServiceRoleDefaultPolicyAA8D9A47": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "codepipeline:GetPipeline",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":codepipeline:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":",
+                    {
+                      "Ref": "AcceleratorQualifier",
+                    },
+                    "-pipeline",
+                  ],
+                ],
+              },
+              "Sid": "ReadCodePipeline",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ValidateInstallerValidationFunctionServiceRoleDefaultPolicyAA8D9A47",
+        "Roles": [
+          {
+            "Ref": "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B": {
       "Metadata": {
@@ -20822,6 +21294,20 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             "Arn",
           ],
         },
+        "acceleratorPipelineName": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "acceleratorPrefix",
+                ],
+              },
+              "-Pipeline",
+            ],
+          ],
+        },
         "configRepositoryLocation": {
           "Ref": "ConfigurationRepositoryLocation",
         },
@@ -20841,6 +21327,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
     },
     "ValidateInstallerValidationFunction21674768": {
       "DependsOn": [
+        "ValidateInstallerValidationFunctionServiceRoleDefaultPolicyAA8D9A47",
         "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B",
       ],
       "Metadata": {
@@ -20873,6 +21360,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
         "Code": {
           "ZipFile": "
           const response = require('cfn-response'); 
+          const { CodePipelineClient, GetPipelineCommand } = require("@aws-sdk/client-codepipeline");
           exports.handler = async function (event, context) { 
           console.log(JSON.stringify(event, null, 4)); 
 
@@ -20880,6 +21368,11 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           const configRepositoryLocation=event.ResourceProperties.configRepositoryLocation;
           const existingConfigRepositoryName=event.ResourceProperties.existingConfigRepositoryName;
           const existingConfigRepositoryBranchName=event.ResourceProperties.existingConfigRepositoryBranchName;
+
+          if (event.RequestType === 'Delete') {
+            await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+            return;
+          }
 
           if (useExistingConfigRepo === 'Yes') {
             if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName === ''){
@@ -20891,6 +21384,25 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           if (configRepositoryLocation === 's3') {
             if (useExistingConfigRepo === 'Yes' || existingConfigRepositoryName !== '' || existingConfigRepositoryBranchName !== ''){
                 await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing configuration repository parameters are populated. Existing repositories can not be used with an S3 configuration repository.'}, event.PhysicalResourceId);
+                return;
+            }
+
+            try {
+                const pipelineName = event.ResourceProperties.acceleratorPipelineName;
+                const client = new CodePipelineClient();
+                const input = { name: pipelineName };
+                const command = new GetPipelineCommand(input);
+                const pipelineResponse = await client.send(command);
+                const sourceStage = pipelineResponse.pipeline.stages.find(stage => stage.name === 'Source');
+                const configAction = sourceStage?.actions.find(action => action.name === 'Configuration');
+                if (configAction.actionTypeId.provider === 'CodeCommit') {
+                    await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing deployment using CodeCommit was detected. This value cannot be changed for existing deployments. Please set ConfigRepositoryLocation to CodeCommit and try again.'}, event.PhysicalResourceId);
+                    return;
+                }
+            } catch (err) {
+                console.log('Encountered error finding existing pipeline, continuing')
+                console.log(err);
+                await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId); 
                 return;
             }
           }
@@ -20911,6 +21423,64 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
         "Runtime": "nodejs18.x",
       },
       "Type": "AWS::Lambda::Function",
+    },
+    "ValidateInstallerValidationFunctionServiceRoleDefaultPolicyAA8D9A47": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "codepipeline:GetPipeline",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":codepipeline:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":",
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "acceleratorPrefix",
+                      ],
+                    },
+                    "-Pipeline",
+                  ],
+                ],
+              },
+              "Sid": "ReadCodePipeline",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ValidateInstallerValidationFunctionServiceRoleDefaultPolicyAA8D9A47",
+        "Roles": [
+          {
+            "Ref": "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B": {
       "Metadata": {

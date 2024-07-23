@@ -32,7 +32,6 @@ export interface AcceleratorMetadataProps {
   /**
    * Central logging Bucket name
    */
-
   readonly centralLogBucketName: string;
   /**
    * ELB log bucket name
@@ -50,6 +49,14 @@ export interface AcceleratorMetadataProps {
    * Accelerator SSM parameter Prefix
    */
   readonly acceleratorSsmParamPrefix: string;
+  /**
+   * The service used to store LZA config files
+   */
+  readonly configRepositoryLocation: 's3' | 'codecommit';
+  /**
+   * Config bucket name
+   */
+  readonly configBucketName: string;
   /**
    * The Accelerator Organization Id
    */
@@ -88,13 +95,25 @@ export class AcceleratorMetadata extends Construct {
     const functionName = `${props.acceleratorPrefix}-metadata-collection`;
 
     const lambdaCode = cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'get-accelerator-metadata/dist'));
-    this.role = this.createLambdaRole(props.acceleratorPrefix, account, region, props.metadataLogBucketName);
+    this.role = this.createLambdaRole(
+      props.acceleratorPrefix,
+      account,
+      region,
+      props.metadataLogBucketName,
+      props.configBucketName,
+    );
     this.lambdaFunction = this.createLambdaFunction(functionName, stack, lambdaCode, this.role, props);
     this.rule = this.createMetadataCloudwatchRule(stack, props.acceleratorPrefix, this.lambdaFunction.lambda);
     this.setCdkNagSuppressions(stack, id, this.role);
   }
 
-  private createLambdaRole(acceleratorPrefix: string, account: string, region: string, metadataLogBucketName: string) {
+  private createLambdaRole(
+    acceleratorPrefix: string,
+    account: string,
+    region: string,
+    metadataLogBucketName: string,
+    configBucketName: string,
+  ) {
     const lambdaRole = new cdk.aws_iam.Role(this, 'MetadataLambda', {
       assumedBy: new cdk.aws_iam.ServicePrincipal('lambda.amazonaws.com'),
       roleName: `${acceleratorPrefix}-${account}-${region}-metadata-lambda-role`,
@@ -149,6 +168,8 @@ export class AcceleratorMetadata extends Construct {
         resources: [
           `arn:${cdk.Stack.of(this).partition}:s3:::${metadataLogBucketName}`,
           `arn:${cdk.Stack.of(this).partition}:s3:::${metadataLogBucketName}/*`,
+          `arn:${cdk.Stack.of(this).partition}:s3:::${configBucketName}`,
+          `arn:${cdk.Stack.of(this).partition}:s3:::${configBucketName}/*`,
         ],
       }),
     );
@@ -174,6 +195,8 @@ export class AcceleratorMetadata extends Construct {
         LOG_ACCOUNT_ID: props.loggingAccountId,
         PARTITION: cdk.Stack.of(this).partition,
         CONFIG_REPOSITORY_NAME: props.acceleratorConfigRepositoryName,
+        CONFIG_REPOSITORY_LOCATION: props.configRepositoryLocation,
+        CONFIG_BUCKET_NAME: props.configBucketName,
         ORGANIZATION_ID: props.organizationId,
         CENTRAL_LOG_BUCKET: props.centralLogBucketName,
         ELB_LOGGING_BUCKET: props.elbLogBucketName,

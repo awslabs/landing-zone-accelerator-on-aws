@@ -455,6 +455,8 @@ export class SecurityStack extends AcceleratorStack {
       acceleratorSsmParamPrefix: this.props.prefixes.ssmParamName,
       assumeRole: acceleratorProps.globalConfig.managementAccountAccessRole,
       centralLogBucketName,
+      configRepositoryLocation: acceleratorProps.configRepositoryLocation,
+      configBucketName: `${this.props.qualifier}-config-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
       elbLogBucketName,
       cloudwatchKmsKey,
       loggingAccountId: acceleratorProps.accountsConfig.getAccountId(

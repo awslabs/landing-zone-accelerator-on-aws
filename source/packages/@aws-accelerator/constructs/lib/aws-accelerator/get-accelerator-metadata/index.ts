@@ -13,8 +13,42 @@
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-import * as AWS from 'aws-sdk';
-AWS.config.logger = console;
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
+import {
+  CodeCommitClient,
+  File,
+  GetFileCommand,
+  GetFolderCommand,
+  GetFolderCommandOutput,
+} from '@aws-sdk/client-codecommit';
+import {
+  CodePipelineClient,
+  ListPipelineExecutionsCommand,
+  GetPipelineExecutionCommand,
+  ListPipelineExecutionsCommandOutput,
+  PipelineExecutionSummary,
+} from '@aws-sdk/client-codepipeline';
+import {
+  ListObjectsV2Command,
+  PutObjectCommand,
+  GetBucketLocationCommand,
+  GetBucketEncryptionCommand,
+  GetObjectCommand,
+  DeleteObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
+import { AssumeRoleCommand, Credentials, STSClient } from '@aws-sdk/client-sts';
+import { KMSClient, DescribeKeyCommand, ListAliasesCommand } from '@aws-sdk/client-kms';
+import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
+import {
+  DescribeAccountCommand,
+  OrganizationsClient,
+  ListChildrenCommand,
+  ListRootsCommand,
+  DescribeOrganizationalUnitCommand,
+} from '@aws-sdk/client-organizations';
+import AdmZip from 'adm-zip';
+import * as fs from 'fs';
 
 /**
  * get-accelerator-metadata - lambda handler
@@ -43,24 +77,48 @@ export async function handler(_event: CloudFormationCustomResourceEvent): Promis
   const centralLoggingBucket = process.env['CENTRAL_LOG_BUCKET']!;
   const elbLogBucket = process.env['ELB_LOGGING_BUCKET']!;
   const metadataBucket = process.env['METADATA_BUCKET']!;
+  const configRepositoryLocation = process.env['CONFIG_REPOSITORY_LOCATION']!;
+  const configBucketName = process.env['CONFIG_BUCKET_NAME']!;
   const pipelineName = `${acceleratorPrefix}-Pipeline`;
-  const codeCommitClient = new AWS.CodeCommit({ customUserAgent: solutionId });
-  const s3Client = new AWS.S3({ customUserAgent: solutionId });
-  const ssmClient = new AWS.SSM({ customUserAgent: solutionId });
-  const organizationsClient = new AWS.Organizations({ customUserAgent: solutionId, region: globalRegion });
-  const codePipelineClient = new AWS.CodePipeline({ customUserAgent: solutionId });
-  const stsClient = new AWS.STS({ customUserAgent: solutionId, region: globalRegion });
+  const s3ConfigObjectKey = 'zipped/aws-accelerator-config.zip';
+
+  const codeCommitClient = new CodeCommitClient({ customUserAgent: solutionId, retryStrategy: setRetryStrategy() });
+  const s3Client = new S3Client({ customUserAgent: solutionId, retryStrategy: setRetryStrategy() });
+  const ssmClient = new SSMClient({ customUserAgent: solutionId, retryStrategy: setRetryStrategy() });
+  const organizationsClient = new OrganizationsClient({
+    customUserAgent: solutionId,
+    region: globalRegion,
+    retryStrategy: setRetryStrategy(),
+  });
+  const codePipelineClient = new CodePipelineClient({ customUserAgent: solutionId, retryStrategy: setRetryStrategy() });
+  const stsClient = new STSClient({ customUserAgent: solutionId, retryStrategy: setRetryStrategy() });
   const assumeRoleCredentials = await assumeRole(stsClient, crossAccountRole, logAccountId, partition);
-  const s3ClientLoggingAccount = new AWS.S3({ credentials: assumeRoleCredentials });
-  const kmsClientLoggingAccount = new AWS.KMS({ credentials: assumeRoleCredentials });
+  const loggingAccountCredentials = {
+    accessKeyId: assumeRoleCredentials.AccessKeyId!,
+    secretAccessKey: assumeRoleCredentials.SecretAccessKey!,
+    sessionToken: assumeRoleCredentials.SessionToken!,
+  };
+  const s3ClientLoggingAccount = new S3Client({
+    credentials: loggingAccountCredentials,
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+  });
+  const kmsClientLoggingAccount = new KMSClient({
+    credentials: loggingAccountCredentials,
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+  });
   const lastSuccessfulExecution = await getLastSuccessfulPipelineExecution(codePipelineClient, pipelineName);
   if (!lastSuccessfulExecution) {
     throw new Error('No successful Accelerator CodePipeline executions found. Exiting...');
   }
   const pipelineExecutionInfo = await throttlingBackOff(() =>
-    codePipelineClient
-      .getPipelineExecution({ pipelineExecutionId: lastSuccessfulExecution.pipelineExecutionId!, pipelineName })
-      .promise(),
+    codePipelineClient.send(
+      new GetPipelineExecutionCommand({
+        pipelineExecutionId: lastSuccessfulExecution.pipelineExecutionId!,
+        pipelineName,
+      }),
+    ),
   );
 
   const sourceConfigArtifact = pipelineExecutionInfo.pipelineExecution?.artifactRevisions
@@ -68,10 +126,18 @@ export async function handler(_event: CloudFormationCustomResourceEvent): Promis
     .pop();
 
   if (!sourceConfigArtifact?.revisionId) {
-    throw new Error('No commitId found for config artifact in CodePipeline stage source. Exiting');
+    throw new Error('No revisionId found for config artifact in CodePipeline stage source. Exiting');
   }
   const commitId = sourceConfigArtifact.revisionId;
-  const codeCommitFiles = await getAllCodeCommitFiles({ codeCommitClient, commitId, repositoryName });
+  const configFiles = await getAllConfigFiles({
+    codeCommitClient,
+    commitId,
+    repositoryName,
+    configRepositoryLocation,
+    s3Client,
+    s3ConfigObjectKey,
+    configBucketName,
+  });
   const version = await getSsmParameterValue(ssmClient, ssmAcceleratorVersionPath);
   const ous = await getAllOusWithPaths(organizationsClient);
   const accounts = await getAllOrgAccountsWithPaths(organizationsClient, ous);
@@ -101,71 +167,76 @@ export async function handler(_event: CloudFormationCustomResourceEvent): Promis
   const bucketItems = await listBucketObjects(s3ClientLoggingAccount, metadataBucket);
 
   for (const item of bucketItems) {
-    await s3ClientLoggingAccount.deleteObject({ Bucket: metadataBucket, Key: item.Key! }).promise();
+    await s3ClientLoggingAccount.send(new DeleteObjectCommand({ Bucket: metadataBucket, Key: item.Key! }));
   }
 
-  await s3Client
-    .putObject({ Bucket: metadataBucket, Key: 'metadata.json', Body: metadata, ACL: 'bucket-owner-full-control' })
-    .promise();
+  await s3Client.send(
+    new PutObjectCommand({
+      Bucket: metadataBucket,
+      Key: 'metadata.json',
+      Body: metadata,
+      ACL: 'bucket-owner-full-control',
+    }),
+  );
 
-  for (const file of codeCommitFiles) {
-    await s3Client
-      .putObject({
+  for (const file of configFiles) {
+    await s3Client.send(
+      new PutObjectCommand({
         Bucket: metadataBucket,
         Key: `config/${file.filePath}`,
         Body: file.fileContents,
         ACL: 'bucket-owner-full-control',
-      })
-      .promise();
+      }),
+    );
   }
 
   return;
 }
 
 async function getRepositoryFolder(props: {
-  codeCommitClient: AWS.CodeCommit;
+  codeCommitClient: CodeCommitClient;
   repositoryName: string;
   folderPath: string;
   commitId: string | undefined;
-}): Promise<AWS.CodeCommit.GetFolderOutput> {
+}): Promise<GetFolderCommandOutput> {
   return throttlingBackOff(() =>
-    props.codeCommitClient
-      .getFolder({
+    props.codeCommitClient.send(
+      new GetFolderCommand({
         folderPath: props.folderPath,
         repositoryName: props.repositoryName,
         commitSpecifier: props.commitId,
-      })
-      .promise(),
+      }),
+    ),
   );
 }
 async function downloadRepositoryFile(props: {
-  codeCommitClient: AWS.CodeCommit;
+  codeCommitClient: CodeCommitClient;
   repositoryName: string;
   commitSpecifier: string;
   filePath: string;
 }): Promise<{ fileContents: string; filePath: string }> {
   const file = await throttlingBackOff(() =>
-    props.codeCommitClient
-      .getFile({
+    props.codeCommitClient.send(
+      new GetFileCommand({
         filePath: props.filePath,
         repositoryName: props.repositoryName,
         commitSpecifier: props.commitSpecifier,
-      })
-      .promise(),
+      }),
+    ),
   );
   return {
-    fileContents: file.fileContent.toString(),
-    filePath: file.filePath,
+    fileContents: file.fileContent!.toString(),
+    filePath: file.filePath!,
   };
 }
 
 async function getAllCodeCommitFilePaths(props: {
-  codeCommitClient: AWS.CodeCommit;
+  codeCommitClient: CodeCommitClient;
   repositoryName: string;
   commitId: string;
 }) {
   const folderPaths = ['/'];
-  const files: AWS.CodeCommit.FileList = [];
+  const files: File[] = [];
 
   do {
     const folderPath = folderPaths.pop();
@@ -191,8 +262,79 @@ async function getAllCodeCommitFilePaths(props: {
   return files;
 }
 
+async function getAllConfigFiles(props: {
+  codeCommitClient: CodeCommitClient;
+  repositoryName: string;
+  commitId: string;
+  configRepositoryLocation: string;
+  s3Client: S3Client;
+  s3ConfigObjectKey: string;
+  configBucketName: string;
+}) {
+  if (props.configRepositoryLocation === 'codecommit') {
+    return await getAllCodeCommitFiles(props);
+  } else if (props.configRepositoryLocation === 's3') {
+    return await getAllS3Files(props);
+  } else {
+    throw new Error(`Invalid config repository location ${props.configRepositoryLocation}, exiting`);
+  }
+}
+
+async function getFileFromS3(props: {
+  s3Client: S3Client;
+  configBucketName: string;
+  commitId: string;
+  s3ConfigObjectKey: string;
+}) {
+  const response = await throttlingBackOff(() =>
+    props.s3Client.send(
+      new GetObjectCommand({
+        Bucket: props.configBucketName,
+        Key: props.s3ConfigObjectKey,
+        VersionId: props.commitId,
+      }),
+    ),
+  );
+  const zipFile = response.Body;
+
+  if (!zipFile) {
+    throw new Error('Failed to download the configuration file from S3.');
+  }
+  const tempFilePath = `/tmp/${props.s3ConfigObjectKey.split('/').pop()}`;
+  await fs.promises.writeFile(tempFilePath, await zipFile.transformToByteArray());
+
+  return tempFilePath;
+}
+
+async function getAllS3Files(props: {
+  s3Client: S3Client;
+  configBucketName: string;
+  commitId: string;
+  s3ConfigObjectKey: string;
+}) {
+  const files: { fileContents: string; filePath: string }[] = [];
+  const tempFilePath = await getFileFromS3(props);
+
+  const admZipInstance = new AdmZip(tempFilePath);
+  const zipEntries = admZipInstance.getEntries();
+
+  zipEntries.forEach(zipEntry => {
+    if (!zipEntry.isDirectory) {
+      const fileContent = admZipInstance.readAsText(zipEntry);
+      console.log(`Reading file: ${zipEntry.entryName}`);
+      files.push({
+        filePath: zipEntry.entryName,
+        fileContents: fileContent,
+      });
+    }
+  });
+  fs.unlinkSync(tempFilePath);
+
+  return files;
+}
+
 async function getAllCodeCommitFiles(props: {
-  codeCommitClient: AWS.CodeCommit;
+  codeCommitClient: CodeCommitClient;
   repositoryName: string;
   commitId: string;
 }) {
@@ -218,13 +360,15 @@ async function getAllCodeCommitFiles(props: {
   return files;
 }
 
-async function getSsmParameterValue(ssmClient: AWS.SSM, parameterPath: string) {
-  const getParamResponse = await throttlingBackOff(() => ssmClient.getParameter({ Name: parameterPath }).promise());
+async function getSsmParameterValue(ssmClient: SSMClient, parameterPath: string) {
+  const getParamResponse = await throttlingBackOff(() =>
+    ssmClient.send(new GetParameterCommand({ Name: parameterPath })),
+  );
   return getParamResponse.Parameter?.Value;
 }
 
 async function listAllOuChildren(
-  organizationsClient: AWS.Organizations,
+  organizationsClient: OrganizationsClient,
   parentId: string,
   childType: 'ORGANIZATIONAL_UNIT' | 'ACCOUNT',
 ) {
@@ -232,7 +376,7 @@ async function listAllOuChildren(
   let nextToken;
   do {
     const childrenResponse = await throttlingBackOff(() =>
-      organizationsClient.listChildren({ ChildType: childType, ParentId: parentId }).promise(),
+      organizationsClient.send(new ListChildrenCommand({ ChildType: childType, ParentId: parentId })),
     );
     nextToken = childrenResponse.NextToken;
     if (childrenResponse.Children && childrenResponse.Children.length > 0) {
@@ -269,8 +413,8 @@ function getOrgPath(
 
   return getOrgPath(ous, filteredOus[0].parentId, path);
 }
-async function getAllOusWithPaths(organizationsClient: AWS.Organizations) {
-  const rootResponse = await throttlingBackOff(() => organizationsClient.listRoots({}).promise());
+async function getAllOusWithPaths(organizationsClient: OrganizationsClient) {
+  const rootResponse = await throttlingBackOff(() => organizationsClient.send(new ListRootsCommand({})));
   const ouIdLookups: { id: string; parentId: string }[] = [];
   const ouIds: string[] = [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -297,7 +441,7 @@ async function getAllOusWithPaths(organizationsClient: AWS.Organizations) {
   for (const ou of ouIdLookups) {
     if (!ou.id.startsWith('r-')) {
       const ouInfo = await throttlingBackOff(() =>
-        organizationsClient.describeOrganizationalUnit({ OrganizationalUnitId: ou.id }).promise(),
+        organizationsClient.send(new DescribeOrganizationalUnitCommand({ OrganizationalUnitId: ou.id })),
       );
       ous.push({
         id: ou.id,
@@ -319,7 +463,7 @@ async function getAllOusWithPaths(organizationsClient: AWS.Organizations) {
 }
 
 async function getAllOrgAccountsWithPaths(
-  organizationsClient: AWS.Organizations,
+  organizationsClient: OrganizationsClient,
   ous: {
     id: string;
     parentId: string;
@@ -337,7 +481,7 @@ async function getAllOrgAccountsWithPaths(
 
   for (const account of accounts) {
     const accountInfo = await throttlingBackOff(() =>
-      organizationsClient.describeAccount({ AccountId: account.id }).promise(),
+      organizationsClient.send(new DescribeAccountCommand({ AccountId: account.id })),
     );
     orgAccounts.push({
       id: accountInfo.Account!.Id!,
@@ -356,8 +500,8 @@ async function getAllOrgAccountsWithPaths(
 }
 
 function findSuccessfulPipelineExecution(
-  executions: AWS.CodePipeline.ListPipelineExecutionsOutput,
-): AWS.CodePipeline.PipelineExecutionSummary | undefined {
+  executions: ListPipelineExecutionsCommandOutput,
+): PipelineExecutionSummary | undefined {
   for (const execution of executions.pipelineExecutionSummaries ?? []) {
     if (execution.status === 'Succeeded') {
       return execution;
@@ -367,12 +511,12 @@ function findSuccessfulPipelineExecution(
   return;
 }
 
-async function getLastSuccessfulPipelineExecution(codePipelineClient: AWS.CodePipeline, pipelineName: string) {
+async function getLastSuccessfulPipelineExecution(codePipelineClient: CodePipelineClient, pipelineName: string) {
   let nextToken: string | undefined;
-  let lastSuccessfulExecution: AWS.CodePipeline.PipelineExecutionSummary | undefined;
+  let lastSuccessfulExecution: PipelineExecutionSummary | undefined;
   do {
     const executions = await throttlingBackOff(() =>
-      codePipelineClient.listPipelineExecutions({ pipelineName, nextToken }).promise(),
+      codePipelineClient.send(new ListPipelineExecutionsCommand({ pipelineName, nextToken })),
     );
     lastSuccessfulExecution = findSuccessfulPipelineExecution(executions);
     nextToken = executions.nextToken;
@@ -382,14 +526,16 @@ async function getLastSuccessfulPipelineExecution(codePipelineClient: AWS.CodePi
 }
 
 async function getBucketInfo(
-  s3client: AWS.S3,
-  kmsClient: AWS.KMS,
+  s3client: S3Client,
+  kmsClient: KMSClient,
   bucketName: string,
   type: 'LogBucket' | 'AesBucket',
 ) {
-  const bucketRegion = await throttlingBackOff(() => s3client.getBucketLocation({ Bucket: bucketName }).promise());
+  const bucketRegion = await throttlingBackOff(() =>
+    s3client.send(new GetBucketLocationCommand({ Bucket: bucketName })),
+  );
   const bucketEncryption = await throttlingBackOff(() =>
-    s3client.getBucketEncryption({ Bucket: bucketName }).promise(),
+    s3client.send(new GetBucketEncryptionCommand({ Bucket: bucketName })),
   );
   let encryptionKeyId: string | undefined;
   let encryptionKeyArn: string | undefined;
@@ -400,9 +546,9 @@ async function getBucketInfo(
     }
   }
   if (encryptionKeyId) {
-    const keyInfo = await kmsClient.describeKey({ KeyId: encryptionKeyId }).promise();
+    const keyInfo = await kmsClient.send(new DescribeKeyCommand({ KeyId: encryptionKeyId }));
     encryptionKeyArn = keyInfo.KeyMetadata?.Arn;
-    const aliasResponse = await kmsClient.listAliases({ KeyId: encryptionKeyId }).promise();
+    const aliasResponse = await kmsClient.send(new ListAliasesCommand({ KeyId: encryptionKeyId }));
     if (aliasResponse.Aliases && aliasResponse.Aliases.length > 0) {
       alias = aliasResponse.Aliases.pop()?.AliasName;
     }
@@ -440,28 +586,29 @@ async function getBucketInfo(
   return logBucket;
 }
 async function assumeRole(
-  stsClient: AWS.STS,
+  stsClient: STSClient,
   assumeRoleName: string,
   accountId: string,
   partition: string,
-): Promise<AWS.Credentials> {
+): Promise<Credentials> {
   const roleArn = `arn:${partition}:iam::${accountId}:role/${assumeRoleName}`;
   const assumeRole = await throttlingBackOff(() =>
-    stsClient.assumeRole({ RoleArn: roleArn, RoleSessionName: 'MetadataAssumeRoleSession' }).promise(),
+    stsClient.send(new AssumeRoleCommand({ RoleArn: roleArn, RoleSessionName: 'MetadataAssumeRoleSession' })),
   );
-  return new AWS.Credentials({
-    accessKeyId: assumeRole.Credentials!.AccessKeyId,
-    secretAccessKey: assumeRole.Credentials!.SecretAccessKey,
-    sessionToken: assumeRole.Credentials!.SessionToken,
-  });
+  return {
+    AccessKeyId: assumeRole.Credentials!.AccessKeyId,
+    SecretAccessKey: assumeRole.Credentials!.SecretAccessKey,
+    SessionToken: assumeRole.Credentials!.SessionToken,
+    Expiration: assumeRole.Credentials!.Expiration,
+  };
 }
 
-async function listBucketObjects(s3Client: AWS.S3, bucket: string) {
+async function listBucketObjects(s3Client: S3Client, bucket: string) {
   let nextToken: string | undefined;
   const bucketObjects = [];
   do {
     const listObjectsResponse = await throttlingBackOff(() =>
-      s3Client.listObjectsV2({ Bucket: bucket, ContinuationToken: nextToken }).promise(),
+      s3Client.send(new ListObjectsV2Command({ Bucket: bucket, ContinuationToken: nextToken })),
     );
     nextToken = listObjectsResponse.ContinuationToken;
     if (listObjectsResponse.Contents && listObjectsResponse.Contents.length > 0) {
