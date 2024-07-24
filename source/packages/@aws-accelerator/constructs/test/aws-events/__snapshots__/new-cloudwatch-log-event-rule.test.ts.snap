@@ -212,6 +212,7 @@ exports[`NewCloudWatchLogEvent Construct(NewCloudWatchLogEvent):  Snapshot Test 
         },
         "Environment": {
           "Variables": {
+            "AcceleratorPrefix": "AWSAccelerator",
             "LogDestination": "LogRetentionArn",
             "LogKmsKeyArn": {
               "Fn::GetAtt": [
@@ -449,6 +450,7 @@ exports[`NewCloudWatchLogEvent Construct(NewCloudWatchLogEvent):  Snapshot Test 
         },
         "Environment": {
           "Variables": {
+            "AcceleratorPrefix": "AWSAccelerator",
             "LogDestination": "LogRetentionArn",
             "LogKmsKeyArn": {
               "Fn::GetAtt": [

@@ -3757,6 +3757,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         },
         "Environment": {
           "Variables": {
+            "AcceleratorPrefix": "AWSAccelerator",
             "LogDestination": "arn:aws:logs:us-east-1:333333333333:destination:AWSAcceleratorCloudWatchToS3",
             "LogExclusion": "{"account":"333333333333","region":"us-east-1","logGroupNames":["test1/*","/aws/lambda/AWSAccelerator-FirehoseRecordsProcessor"]}",
             "LogKmsKeyArn": {
@@ -8159,6 +8160,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         },
         "Environment": {
           "Variables": {
+            "AcceleratorPrefix": "AWSAccelerator",
             "LogDestination": "arn:aws:logs:us-west-2:333333333333:destination:AWSAcceleratorCloudWatchToS3",
             "LogExclusion": "{"account":"333333333333","region":"us-west-2","logGroupNames":["test1/*","/aws/lambda/AWSAccelerator-FirehoseRecordsProcessor"]}",
             "LogRetention": "3653",
@@ -12664,6 +12666,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
         },
         "Environment": {
           "Variables": {
+            "AcceleratorPrefix": "AWSAccelerator",
             "LogDestination": "arn:aws:logs:us-east-1:333333333333:destination:AWSAcceleratorCloudWatchToS3",
             "LogExclusion": "{"account":"333333333333","region":"us-east-1","logGroupNames":["/aws/lambda/AWSAccelerator-FirehoseRecordsProcessor"]}",
             "LogKmsKeyArn": {
