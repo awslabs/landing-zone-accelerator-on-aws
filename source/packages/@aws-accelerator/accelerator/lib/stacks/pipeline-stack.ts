@@ -82,6 +82,10 @@ export interface PipelineStackProps extends cdk.StackProps {
    * Flag indicating existing role
    */
   readonly useExistingRoles: boolean;
+  /**
+   * AWS Control Tower Landing Zone identifier
+   */
+  readonly landingZoneIdentifier?: string;
 }
 
 export class PipelineStack extends cdk.Stack {

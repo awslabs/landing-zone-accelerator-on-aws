@@ -50,6 +50,10 @@ import { AcceleratorAspects, PermissionsBoundaryAspect } from '../lib/accelerato
 import { ResourcePolicyEnforcementStack } from '../lib/stacks/resource-policy-enforcement-stack';
 import { DiagnosticsPackStack } from '../lib/stacks/diagnostics-pack-stack';
 import { AcceleratorToolkit } from '../lib/toolkit';
+import { AssumeRoleCommand, GetCallerIdentityCommand, STSClient } from '@aws-sdk/client-sts';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+import { ControlTowerClient, ListLandingZonesCommand } from '@aws-sdk/client-controltower';
 
 const logger = createLogger(['stack-utils']);
 /**
@@ -233,7 +237,7 @@ export function includeStage(
  * @param acceleratorEnv
  * @param resourcePrefixes
  */
-export function createPipelineStack(
+export async function createPipelineStack(
   app: cdk.App,
   context: AcceleratorContext,
   acceleratorEnv: AcceleratorEnvironment,
@@ -246,6 +250,24 @@ export function createPipelineStack(
       accountId: context.account!,
       region: context.region!,
     });
+    // get existing CT details
+
+    //
+    // Get Management account credentials
+    //
+    const solutionId = `AwsSolution/SO0199/${version}`;
+    const managementAccountCredentials = await getManagementAccountCredentials(
+      context.partition,
+      context.region!,
+      solutionId,
+    );
+
+    const landingZoneIdentifier = await getLandingZoneIdentifier(undefined, {
+      homeRegion: context.region!,
+      solutionId,
+      credentials: managementAccountCredentials,
+    });
+
     const pipelineStack = new PipelineStack(app, pipelineStackName, {
       env: { account: context.account, region: context.region },
       description: `(SO0199-pipeline) Landing Zone Accelerator on AWS. Version ${version}.`,
@@ -254,6 +276,7 @@ export function createPipelineStack(
       prefixes: resourcePrefixes,
       useExistingRoles,
       ...acceleratorEnv,
+      landingZoneIdentifier,
     });
     cdk.Aspects.of(pipelineStack).add(new AwsSolutionsChecks());
     cdk.Aspects.of(pipelineStack).add(new PermissionsBoundaryAspect(context.account!, context.partition));
@@ -1400,4 +1423,180 @@ function checkRootApp(rootApp: cdk.App): cdk.App | cdk.Stack {
   } else {
     return rootApp;
   }
+}
+
+/**
+ * Cross Account assume role credential type
+ */
+type AssumeRoleCredentialType = {
+  accessKeyId: string;
+  secretAccessKey: string;
+  sessionToken: string;
+  expiration?: Date;
+};
+
+/**
+ * Function to get management account credential.
+ *
+ * @remarks
+ * When solution deployed from external account management account credential will be provided
+ * @param partition string
+ * @param region string
+ * @param solutionId string
+ * @returns credential {@AssumeRoleCredentialType} | undefined
+ */
+async function getManagementAccountCredentials(
+  partition: string,
+  region: string,
+  solutionId: string,
+): Promise<AssumeRoleCredentialType | undefined> {
+  if (process.env['MANAGEMENT_ACCOUNT_ID'] && process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']) {
+    logger.info('set management account credentials');
+    logger.info(`managementAccountId => ${process.env['MANAGEMENT_ACCOUNT_ID']}`);
+    logger.info(`management account role name => ${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`);
+
+    const assumeRoleArn = `arn:${partition}:iam::${process.env['MANAGEMENT_ACCOUNT_ID']}:role/${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`;
+
+    return getCredentials({
+      accountId: process.env['MANAGEMENT_ACCOUNT_ID'],
+      region,
+      solutionId,
+      assumeRoleArn,
+      sessionName: 'ManagementAccountAssumeSession',
+    });
+  }
+
+  return undefined;
+}
+
+/**
+ * Function to get cross account assume role credential
+ * @param options
+ * @returns credentials {@link Credentials}
+ */
+async function getCredentials(options: {
+  accountId: string;
+  region: string;
+  solutionId: string;
+  partition?: string;
+  assumeRoleName?: string;
+  assumeRoleArn?: string;
+  sessionName?: string;
+  credentials?: AssumeRoleCredentialType;
+}): Promise<AssumeRoleCredentialType | undefined> {
+  if (options.assumeRoleName && options.assumeRoleArn) {
+    throw new Error(`Either assumeRoleName or assumeRoleArn can be provided not both`);
+  }
+
+  if (!options.assumeRoleName && !options.assumeRoleArn) {
+    throw new Error(`Either assumeRoleName or assumeRoleArn must provided`);
+  }
+
+  if (options.assumeRoleName && !options.partition) {
+    throw new Error(`When assumeRoleName provided partition must be provided`);
+  }
+
+  const roleArn =
+    options.assumeRoleArn ?? `arn:${options.partition}:iam::${options.accountId}:role/${options.assumeRoleName}`;
+
+  const client: STSClient = new STSClient({
+    region: options.region,
+    customUserAgent: options.solutionId,
+    retryStrategy: setRetryStrategy(),
+    credentials: options.credentials,
+  });
+
+  const currentSessionResponse = await throttlingBackOff(() => client.send(new GetCallerIdentityCommand({})));
+
+  if (currentSessionResponse.Arn === roleArn) {
+    logger.info(`Already in target environment assume role credential not required`);
+    return undefined;
+  }
+
+  const response = await throttlingBackOff(() =>
+    client.send(
+      new AssumeRoleCommand({ RoleArn: roleArn, RoleSessionName: options.sessionName ?? 'AcceleratorAssumeRole' }),
+    ),
+  );
+
+  if (!response.Credentials) {
+    throw new Error(`Credentials undefined from AssumeRole command`);
+  }
+
+  //
+  // Validate response
+  if (!response.Credentials.AccessKeyId) {
+    throw new Error(`Access key ID not returned from AssumeRole command`);
+  }
+  if (!response.Credentials.SecretAccessKey) {
+    throw new Error(`Secret access key not returned from AssumeRole command`);
+  }
+  if (!response.Credentials.SessionToken) {
+    throw new Error(`Session token not returned from AssumeRole command`);
+  }
+
+  return {
+    accessKeyId: response.Credentials.AccessKeyId,
+    secretAccessKey: response.Credentials.SecretAccessKey,
+    sessionToken: response.Credentials.SessionToken,
+    expiration: response.Credentials.Expiration,
+  };
+}
+
+/**
+ * Function to get the landing zone identifier.
+ *
+ * @remarks
+ * Function returns undefined when there is no landing zone configured, otherwise returns arn for the landing zone.
+ * If there are multiple landing zone deployment found, function will return error.
+ * @returns landingZoneIdentifier string | undefined
+ *
+ * @param client {@link ControlTowerClient}
+ * @returns landingZoneIdentifier string | undefined
+ */
+async function getLandingZoneIdentifier(
+  client?: ControlTowerClient,
+  clientProps?: {
+    homeRegion: string;
+    solutionId: string;
+    credentials?: AssumeRoleCredentialType;
+  },
+): Promise<string | undefined> {
+  if (!client && !clientProps) {
+    throw new Error(`It is necessary to provide either AWS Control Tower client or client configuration properties.`);
+  }
+  if (client && clientProps) {
+    throw new Error(
+      `It is not possible to provide both AWS Control Tower client and client configuration properties at the same time.`,
+    );
+  }
+
+  let controlTowerClient: ControlTowerClient;
+
+  if (!client) {
+    controlTowerClient = new ControlTowerClient({
+      region: clientProps!.homeRegion,
+      customUserAgent: clientProps!.solutionId,
+      retryStrategy: setRetryStrategy(),
+      credentials: clientProps!.credentials,
+    });
+  } else {
+    controlTowerClient = client;
+  }
+
+  const response = await throttlingBackOff(() => controlTowerClient.send(new ListLandingZonesCommand({})));
+
+  if (response.landingZones!.length > 1) {
+    throw new Error(
+      `Multiple AWS Control Tower Landing Zone configuration found, list of Landing Zone arns are - ${response.landingZones?.join(
+        ',',
+      )}`,
+    );
+  }
+
+  if (response.landingZones?.length === 1 && response.landingZones[0].arn) {
+    return response.landingZones[0].arn;
+  }
+
+  return undefined;
 }

@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(control-tower): add validation to check incorrect landing zone version in global config
 - fix(organizations): unable to create ou with same name under different parent
 - fix(organization): ou baseline operation should be skipped when Control Tower is not enabled
+- fix(control-tower): new lza installation overrides existing control tower settings
 
 ### Changed
 
