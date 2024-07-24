@@ -102,6 +102,7 @@ export class NewCloudWatchLogEvent extends Construct {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           [key: string]: any;
         }[] = [
+      { AcceleratorPrefix: props.acceleratorPrefix },
       { LogRetention: props.logsRetentionInDaysValue },
       { LogDestination: props.logDestinationArn },
       { LogSubscriptionRole: LogSubscriptionRole },

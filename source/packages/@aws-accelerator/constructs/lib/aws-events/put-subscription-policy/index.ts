@@ -13,8 +13,18 @@
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { wildcardMatch } from '@aws-accelerator/utils/lib/common-functions';
 import { ScheduledEvent } from '@aws-accelerator/utils/lib/common-types';
-import * as AWS from 'aws-sdk';
-AWS.config.logger = console;
+import {
+  AssociateKmsKeyCommand,
+  CloudWatchLogsClient,
+  DeleteSubscriptionFilterCommand,
+  DescribeSubscriptionFiltersCommand,
+  LogGroup,
+  paginateDescribeLogGroups,
+  PutRetentionPolicyCommand,
+  PutSubscriptionFilterCommand,
+  SubscriptionFilter,
+} from '@aws-sdk/client-cloudwatch-logs';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 export type cloudwatchExclusionProcessedItem = {
   account: string;
@@ -23,6 +33,7 @@ export type cloudwatchExclusionProcessedItem = {
   logGroupNames?: string[];
 };
 
+const acceleratorPrefix = process.env['AcceleratorPrefix'];
 const logSubscriptionRoleArn = process.env['LogSubscriptionRole']!;
 const logDestinationArn = process.env['LogDestination']!;
 const logRetention = process.env['LogRetention']!;
@@ -30,7 +41,10 @@ const logKmsKeyArn = process.env['LogKmsKeyArn'];
 const logExclusionSetting = process.env['LogExclusion']!;
 const solutionId = process.env['SOLUTION_ID'];
 
-const logsClient = new AWS.CloudWatchLogs({ customUserAgent: solutionId });
+const logsClient = new CloudWatchLogsClient({
+  customUserAgent: solutionId,
+  retryStrategy: setRetryStrategy(),
+});
 let logExclusionParse: cloudwatchExclusionProcessedItem | undefined;
 if (logExclusionSetting) {
   logExclusionParse = JSON.parse(logExclusionSetting);
@@ -39,22 +53,28 @@ if (logExclusionSetting) {
 }
 export async function handler(event: ScheduledEvent) {
   const logGroupName = event.detail.requestParameters.logGroupName as string;
+  const username = event.detail.userIdentity.sessionContext.sessionIssuer.userName as string;
 
-  let nextToken: string | undefined = undefined;
-  do {
-    const page = await throttlingBackOff(() =>
-      logsClient.describeLogGroups({ nextToken, logGroupNamePrefix: logGroupName }).promise(),
+  if (!username.startsWith('cdk-accel-cfn-exec') && !username.startsWith(acceleratorPrefix!)) {
+    const paginatedLogGroups = paginateDescribeLogGroups(
+      { client: logsClient, pageSize: 50 },
+      { logGroupNamePrefix: logGroupName },
     );
-    for (const logGroup of page.logGroups ?? []) {
-      await updateRetentionPolicy(logRetention, logGroup);
-      await updateSubscriptionPolicy(logGroup, logExclusionParse);
-      await updateKmsKey(logGroup, logKmsKeyArn);
+    for await (const page of paginatedLogGroups) {
+      if (page.logGroups && page.logGroups.every(lg => !!lg)) {
+        for (const logGroup of page.logGroups ?? []) {
+          await updateRetentionPolicy(logRetention, logGroup);
+          await updateSubscriptionPolicy(logGroup, logExclusionParse);
+          await updateKmsKey(logGroup, logKmsKeyArn);
+        }
+      }
     }
-    nextToken = page.nextToken;
-  } while (nextToken);
+  } else {
+    console.log(`Log group created by LZA-managed identity ${username} , skipping update`);
+  }
 }
 
-export async function updateRetentionPolicy(logRetentionValue: string, logGroupValue: AWS.CloudWatchLogs.LogGroup) {
+export async function updateRetentionPolicy(logRetentionValue: string, logGroupValue: LogGroup) {
   // filter out logGroups that already have retention set
   if (logGroupValue.retentionInDays === parseInt(logRetentionValue)) {
     console.log('Log Group: ' + logGroupValue.logGroupName! + ' has the right retention period');
@@ -65,18 +85,18 @@ export async function updateRetentionPolicy(logRetentionValue: string, logGroupV
   } else {
     console.log(`Setting retention of ${logRetentionValue} for log group ${logGroupValue.logGroupName}`);
     await throttlingBackOff(() =>
-      logsClient
-        .putRetentionPolicy({
+      logsClient.send(
+        new PutRetentionPolicyCommand({
           logGroupName: logGroupValue.logGroupName!,
           retentionInDays: parseInt(logRetentionValue),
-        })
-        .promise(),
+        }),
+      ),
     );
   }
 }
 
 export async function updateSubscriptionPolicy(
-  logGroup: AWS.CloudWatchLogs.LogGroup,
+  logGroup: LogGroup,
   logExclusionSetting: cloudwatchExclusionProcessedItem | undefined,
 ) {
   let isGroupExcluded = false;
@@ -96,10 +116,7 @@ export async function updateSubscriptionPolicy(
   }
 }
 
-export async function hasAcceleratorSubscriptionFilter(
-  filters: AWS.CloudWatchLogs.SubscriptionFilter[],
-  logGroupName: string,
-) {
+export async function hasAcceleratorSubscriptionFilter(filters: SubscriptionFilter[], logGroupName: string) {
   if (filters.length < 1) {
     return false;
   } else if (filters.some(filter => filter.filterName === logGroupName)) {
@@ -115,7 +132,7 @@ export async function getExistingSubscriptionFilters(logGroupName: string) {
   let nextToken: string | undefined = undefined;
   do {
     const page = await throttlingBackOff(() =>
-      logsClient.describeSubscriptionFilters({ logGroupName: logGroupName, nextToken }).promise(),
+      logsClient.send(new DescribeSubscriptionFiltersCommand({ logGroupName: logGroupName, nextToken })),
     );
     for (const subFilter of page.subscriptionFilters ?? []) {
       subscriptionFilters.push(subFilter);
@@ -144,7 +161,7 @@ export async function deleteSubscription(logGroupName: string) {
   console.log(`Deleting subscription for log group ${logGroupName}`);
   try {
     await throttlingBackOff(() =>
-      logsClient.deleteSubscriptionFilter({ logGroupName: logGroupName, filterName: logGroupName }).promise(),
+      logsClient.send(new DeleteSubscriptionFilterCommand({ logGroupName: logGroupName, filterName: logGroupName })),
     );
   } catch (e) {
     console.warn(`Failed to delete subscription filter ${logGroupName} for log group ${logGroupName}`);
@@ -154,19 +171,19 @@ export async function deleteSubscription(logGroupName: string) {
 export async function setupSubscription(logGroupName: string) {
   console.log(`Setting destination ${logDestinationArn} for log group ${logGroupName}`);
   await throttlingBackOff(() =>
-    logsClient
-      .putSubscriptionFilter({
+    logsClient.send(
+      new PutSubscriptionFilterCommand({
         destinationArn: logDestinationArn,
         logGroupName: logGroupName,
         roleArn: logSubscriptionRoleArn,
         filterName: logGroupName,
         filterPattern: '',
-      })
-      .promise(),
+      }),
+    ),
   );
 }
 
-export async function updateKmsKey(logGroupValue: AWS.CloudWatchLogs.LogGroup, logKmsKeyArn?: string) {
+export async function updateKmsKey(logGroupValue: LogGroup, logKmsKeyArn?: string) {
   // check kmsKey on existing logGroup.
   if (logGroupValue.kmsKeyId) {
     // if there is a KMS do nothing
@@ -183,11 +200,11 @@ export async function updateKmsKey(logGroupValue: AWS.CloudWatchLogs.LogGroup, l
   // there is no KMS set one
   console.log(`Setting KMS for log group ${logGroupValue.logGroupName}`);
   await throttlingBackOff(() =>
-    logsClient
-      .associateKmsKey({
+    logsClient.send(
+      new AssociateKmsKeyCommand({
         logGroupName: logGroupValue.logGroupName!,
         kmsKeyId: logKmsKeyArn,
-      })
-      .promise(),
+      }),
+    ),
   );
 }
