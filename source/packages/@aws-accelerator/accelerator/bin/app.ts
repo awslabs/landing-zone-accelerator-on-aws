@@ -64,7 +64,7 @@ const logger = createLogger(['app']);
  * @param acceleratorEnv
  * @param resourcePrefixes
  */
-function createPipelineStacks(
+async function createPipelineStacks(
   app: cdk.App,
   context: AcceleratorContext,
   acceleratorEnv: AcceleratorEnvironment,
@@ -73,7 +73,7 @@ function createPipelineStacks(
 ) {
   //
   // PIPELINE Stack
-  createPipelineStack(app, context, acceleratorEnv, resourcePrefixes, useExistingRoles);
+  await createPipelineStack(app, context, acceleratorEnv, resourcePrefixes, useExistingRoles);
   //
   // TESTER Stack
   createTesterStack(app, context, acceleratorEnv, resourcePrefixes);
@@ -230,7 +230,7 @@ async function main() {
 
   //
   // PIPELINE and TESTER Stacks
-  createPipelineStacks(app, context, acceleratorEnv, resourcePrefixes, useExistingRoles);
+  await createPipelineStacks(app, context, acceleratorEnv, resourcePrefixes, useExistingRoles);
   //
   // Set accelerator stack props
   const props = await setAcceleratorStackProps(context, acceleratorEnv, resourcePrefixes, globalRegion);

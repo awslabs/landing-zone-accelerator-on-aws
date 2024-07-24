@@ -26,6 +26,7 @@ import * as config_repository from './config-repository';
 import { AcceleratorToolkitCommand } from './toolkit';
 import { Repository } from '@aws-cdk-extensions/cdk-extensions';
 import { CONTROL_TOWER_LANDING_ZONE_VERSION } from '@aws-accelerator/utils/lib/control-tower';
+import { ControlTowerLandingZoneConfig } from '@aws-accelerator/config';
 
 /**
  *
@@ -122,6 +123,10 @@ export interface AcceleratorPipelineProps {
    * Flag indicating existing role
    */
   readonly useExistingRoles: boolean;
+  /**
+   * AWS Control Tower Landing Zone identifier
+   */
+  readonly landingZoneIdentifier?: string;
 }
 
 enum BuildLogLevel {
@@ -144,11 +149,17 @@ export class AcceleratorPipeline extends Construct {
   private readonly installerKey: cdk.aws_kms.Key;
   private readonly configBucketName: string;
   private readonly serverAccessLogsBucketNameSsmParam: string;
+  private readonly controlTowerLandingZoneConfig?: ControlTowerLandingZoneConfig;
 
   constructor(scope: Construct, id: string, props: AcceleratorPipelineProps) {
     super(scope, id);
 
     this.props = props;
+
+    //
+    // Get default AWS Control Tower Landing Zone configuration
+    //
+    this.controlTowerLandingZoneConfig = this.getControlTowerLandingZoneConfiguration();
 
     //
     // Fields can be changed based on qualifier property
@@ -948,18 +959,7 @@ export class AcceleratorPipeline extends Construct {
         logArchiveAccountEmail: this.props.logArchiveAccountEmail,
         auditAccountEmail: this.props.auditAccountEmail,
         controlTowerEnabled: this.props.controlTowerEnabled,
-        controlTowerLandingZoneConfig:
-          this.props.controlTowerEnabled.toLocaleLowerCase() === 'yes'
-            ? {
-                version: CONTROL_TOWER_LANDING_ZONE_VERSION,
-                logging: {
-                  loggingBucketRetentionDays: 365,
-                  accessLoggingBucketRetentionDays: 3650,
-                  organizationTrail: true,
-                },
-                security: { enableIdentityCenterAccess: true },
-              }
-            : undefined,
+        controlTowerLandingZoneConfig: this.controlTowerLandingZoneConfig,
         enableSingleAccountMode: this.props.enableSingleAccountMode,
       }).getRepository();
 
@@ -980,18 +980,7 @@ export class AcceleratorPipeline extends Construct {
       logArchiveAccountEmail: this.props.logArchiveAccountEmail,
       auditAccountEmail: this.props.auditAccountEmail,
       controlTowerEnabled: this.props.controlTowerEnabled,
-      controlTowerLandingZoneConfig:
-        this.props.controlTowerEnabled.toLocaleLowerCase() === 'yes'
-          ? {
-              version: CONTROL_TOWER_LANDING_ZONE_VERSION,
-              logging: {
-                loggingBucketRetentionDays: 365,
-                accessLoggingBucketRetentionDays: 3650,
-                organizationTrail: true,
-              },
-              security: { enableIdentityCenterAccess: true },
-            }
-          : undefined,
+      controlTowerLandingZoneConfig: this.controlTowerLandingZoneConfig,
       enableSingleAccountMode: this.props.enableSingleAccountMode,
       installerKey: this.installerKey,
       serverAccessLogsBucketName: cdk.aws_ssm.StringParameter.valueForStringParameter(
@@ -1000,5 +989,38 @@ export class AcceleratorPipeline extends Construct {
       ),
     }).getRepository();
     return configRepository;
+  }
+
+  /**
+   * Function to construct default AWS Control Tower Landing Zone configuration
+   * @returns controlTowerLandingZoneConfig {@link ControlTowerLandingZoneConfig} | undefined
+   */
+  private getControlTowerLandingZoneConfiguration(): ControlTowerLandingZoneConfig | undefined {
+    const controlTowerEnabled = this.props.controlTowerEnabled.toLocaleLowerCase() === 'yes';
+
+    if (!controlTowerEnabled && this.props.landingZoneIdentifier) {
+      throw new Error(
+        `It is not possible to deploy Accelerator when there is an existing AWS Control Tower and the ControlTowerEnabled parameter of the Accelerator installer stack is set to "No".`,
+      );
+    }
+
+    if (!controlTowerEnabled) {
+      return undefined;
+    }
+
+    // The CT configuration object should not be set if CT is already configured - this prevents overwriting the existing CT LZ configuration
+    if (this.props.landingZoneIdentifier) {
+      return undefined;
+    }
+
+    return {
+      version: CONTROL_TOWER_LANDING_ZONE_VERSION,
+      logging: {
+        loggingBucketRetentionDays: 365,
+        accessLoggingBucketRetentionDays: 3650,
+        organizationTrail: true,
+      },
+      security: { enableIdentityCenterAccess: true },
+    };
   }
 }

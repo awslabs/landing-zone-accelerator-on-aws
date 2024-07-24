@@ -26,6 +26,7 @@
     "@aws-cdk-extensions/cdk-plugin-assume-role": "^0.0.0",
     "@aws-cdk/cloud-assembly-schema": "2.148.0",
     "@aws-sdk/client-config-service": "3.410.0",
+    "@aws-sdk/client-controltower": "3.556.0",
     "@aws-sdk/client-service-quotas": "3.410.0",
     "@aws-sdk/client-ssm": "3.410.0",
     "@aws-sdk/client-sts": "3.410.0",
