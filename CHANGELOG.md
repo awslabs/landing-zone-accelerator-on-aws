@@ -5,36 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.9.0] -
+## [1.9.0] - 07-25-2024
 
 ### Added
 
-- feat(s3): added validation around S3 configuration repository 
+- feat(s3): added use of S3 as a configuration repository location
 - feat(network): allow Route53 resolver endpoints and query logging to be defined in the VPC object.
-- feat(control-tower): integrate lz management api.
-- feat(control-tower): integrate lz baseline api
-- feat(control-tower): add global region into the Control Tower governed region list
-- feat(securityhub): allow custom cloudwatch log group for events
+- feat(control-tower): integrate lz management and lz baseline api
 - feat(control-tower) integrate lz management and baseline api for external account deployment
-- feat(logging): add cloudwatch log group data protection policy
 - feat(control-tower): lz management api gov cloud support
+- feat(control-tower): add global region into the Control Tower governed region list
+- feat(logging): add cloudwatch log group data protection policy
+- feat(securityhub): allow custom cloudwatch log group for events
 
 ### Fixed
 
 - fix(bootstrap): Failed to publish asset when cdkOptions.centralizeBuckets: true
 - fix(control-tower): add validation to check incorrect landing zone version in global config
+- fix(control-tower): new lza installation overrides existing control tower settings
 - fix(organizations): unable to create ou with same name under different parent
 - fix(organization): ou baseline operation should be skipped when Control Tower is not enabled
-- fix(control-tower): new lza installation overrides existing control tower settings
 
 ### Changed
 
-- chore: add commitlint
+- chore: add commitlint to precommit hook
 - chore: upgrade cdk to 2.148.0
+- chore: bump cdk bootstrap to 20
 - chore(documentation): update opt-in region requirement for Control Tower deployment
 - chore(documentation): update merge request template to add unit test information
 - chore(test): update all-enabled custom config rule lambda python version
-- chore: bump cdk bootstrap to 20
 
 ## [1.8.1] - 07-03-2024
 
