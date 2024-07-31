@@ -97,10 +97,11 @@ export async function main(
 
   const currentAccountId = await getCurrentAccountId(partitionArgs, globalConfig.homeRegion);
   logger.debug(`Current account id is ${currentAccountId}`);
+  const homeRegion = globalConfig.homeRegion;
 
   if (minimalArgs) {
     // minimal will only check for management account in homeRegion and globalRegion
-    const homeRegion = globalConfig.homeRegion;
+
     const globalRegion = getGlobalRegion(partitionArgs);
     logger.debug(`Checking limits in account ${accountsConfig.getManagementAccountId()} in region ${homeRegion}`);
     await evaluateLimits(
@@ -109,6 +110,7 @@ export async function main(
       partitionArgs,
       globalConfig.managementAccountAccessRole,
       currentAccountId,
+      homeRegion,
     );
     logger.debug(`Checking limits in account ${accountsConfig.getManagementAccountId()} in region ${globalRegion}`);
     await evaluateLimits(
@@ -117,6 +119,7 @@ export async function main(
       partitionArgs,
       globalConfig.managementAccountAccessRole,
       currentAccountId,
+      homeRegion,
     );
   } else if (accountArgs && regionArgs) {
     // account and region is specified then only check for that account and region
@@ -127,6 +130,7 @@ export async function main(
       partitionArgs,
       globalConfig.managementAccountAccessRole,
       currentAccountId,
+      homeRegion,
     );
   } else {
     // check all accounts and all regions
@@ -140,6 +144,7 @@ export async function main(
           partitionArgs,
           globalConfig.managementAccountAccessRole,
           currentAccountId,
+          homeRegion,
         );
       }
     }
