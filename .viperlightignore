@@ -226,8 +226,8 @@ source/packages/@aws-accelerator/accelerator/lib/lambdas/diagnostic-pack/resourc
 
 # Assume role declaration for cross account
 
-source/packages/@aws-accelerator/utils/lib/evaluate-limits.ts:100
-source/packages/@aws-accelerator/utils/lib/evaluate-limits.ts:101
+source/packages/@aws-accelerator/utils/lib/evaluate-limits.ts:106
+source/packages/@aws-accelerator/utils/lib/evaluate-limits.ts:107
 
 # Assume role declaration for cross account
 source/packages/@aws-accelerator/constructs/lib/aws-servicecatalog/propagate-portfolio-associations/index.ts:268

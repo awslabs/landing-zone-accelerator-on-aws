@@ -38,7 +38,7 @@ test('evaluateLimits everything works in same account', async () => {
   serviceQuotasMock.on(GetServiceQuotaCommand, { QuotaCode: 'L-B99A9384', ServiceCode: 'lambda' }).resolves({
     Quota: { Value: 1000 },
   });
-  const result = await evaluateLimits('us-east-1', '111111111111', 'aws', 'test', '111111111111');
+  const result = await evaluateLimits('us-east-1', '111111111111', 'aws', 'test', '111111111111', 'us-east-1');
   expect(result).toBeUndefined();
 });
 
@@ -50,7 +50,9 @@ test('evaluateLimits low limits in same account', async () => {
   serviceQuotasMock.on(GetServiceQuotaCommand, { QuotaCode: 'L-B99A9384', ServiceCode: 'lambda' }).resolves({
     Quota: { Value: 10 },
   });
-  await expect(evaluateLimits('us-east-1', '111111111111', 'aws', 'test', '111111111111')).rejects.toThrowError();
+  await expect(
+    evaluateLimits('us-east-1', '111111111111', 'aws', 'test', '111111111111', 'us-east-1'),
+  ).rejects.toThrowError();
 });
 
 test('evaluateLimits serviceQuota api error in same account', async () => {
@@ -61,7 +63,9 @@ test('evaluateLimits serviceQuota api error in same account', async () => {
   serviceQuotasMock.on(GetServiceQuotaCommand, { QuotaCode: 'L-B99A9384', ServiceCode: 'lambda' }).resolves({
     Quota: { Value: 10 },
   });
-  await expect(evaluateLimits('us-east-1', '111111111111', 'aws', 'test', '111111111111')).rejects.toThrowError();
+  await expect(
+    evaluateLimits('us-east-1', '111111111111', 'aws', 'test', '111111111111', 'us-east-1'),
+  ).rejects.toThrowError();
 });
 
 test('evaluateLimits everything works in cross account', async () => {
@@ -82,6 +86,6 @@ test('evaluateLimits everything works in cross account', async () => {
       Expiration: new Date(Date.now() + 3600 * 1000),
     },
   });
-  const result = await evaluateLimits('us-east-1', '222222222222', 'aws', 'test', '111111111111');
+  const result = await evaluateLimits('us-east-1', '222222222222', 'aws', 'test', '111111111111', 'us-east-1');
   expect(result).toBeUndefined();
 });

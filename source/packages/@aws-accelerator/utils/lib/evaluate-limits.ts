@@ -22,14 +22,20 @@ export async function evaluateLimits(
   partition: string,
   roleName: string,
   currentAccountId: string,
+  homeRegion: string,
 ) {
-  const codebuildParallelLimit = await getLimits('L-2DC20C30', 'codebuild', {
-    region,
-    accountId,
-    partition,
-    roleName,
-    currentAccountId,
-  });
+  let codebuildParallelLimit = 3;
+  // only check for codebuild limit in pipeline account of homeRegion other regions/accounts does not need codebuild
+  if (accountId === process.env['PIPELINE_ACCOUNT_ID'] && region === homeRegion) {
+    codebuildParallelLimit = await getLimits('L-2DC20C30', 'codebuild', {
+      region,
+      accountId,
+      partition,
+      roleName,
+      currentAccountId,
+    });
+    logger.debug(`CodeBuild limit in account ${accountId} region ${region} is ${codebuildParallelLimit}`);
+  }
   const lambdaConcurrencyLimit = await getLimits('L-B99A9384', 'lambda', {
     region,
     accountId,
@@ -37,7 +43,7 @@ export async function evaluateLimits(
     roleName,
     currentAccountId,
   });
-  logger.debug(`CodeBuild limit in account ${accountId} region ${region} is ${codebuildParallelLimit}`);
+
   logger.debug(`Lambda limit in account ${accountId} region ${region} is ${lambdaConcurrencyLimit}`);
 
   // setting this from environment variables to make changes in runtime easier
