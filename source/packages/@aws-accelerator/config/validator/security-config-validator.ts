@@ -105,7 +105,7 @@ export class SecurityConfigValidator {
       globalConfig,
       errors,
     );
-    this.validateSecurityHubAndConfig(values, errors);
+    this.validateSecurityHubAndConfig(values, globalConfig.controlTower.enable, errors);
     // Validate expiration for Macie and GuardDuty Lifecycle Rules
     this.macieLifecycleRules(values, errors);
     this.guarddutyLifecycleRules(values, errors);
@@ -660,11 +660,11 @@ export class SecurityConfigValidator {
    * @param globalConfig
    * @param errors
    */
-  private validateSecurityHubAndConfig(values: ISecurityConfig, errors: string[]) {
+  private validateSecurityHubAndConfig(values: ISecurityConfig, controlTower: boolean, errors: string[]) {
     const awsConfig = values.awsConfig;
     const securityHub = values.centralSecurityServices.securityHub;
 
-    if (securityHub.enable && !awsConfig.enableConfigurationRecorder) {
+    if (securityHub.enable && !awsConfig.enableConfigurationRecorder && !controlTower) {
       errors.push(`securityHub requires awsConfig to be enabled.`);
     }
   }
