@@ -197,9 +197,11 @@ export class AcceleratorTool {
       actions: [
         { order: 7, name: 'Finalize', stackPrefix: '-FinalizeStack' },
         { order: 6, name: 'Customizations', stackPrefix: '-CustomizationsStack' },
+        { order: 6, name: 'Customizations', stackPrefix: '-ResourcePolicyEnforcementStack' },
         { order: 5, name: 'Network_Associations', stackPrefix: '-NetworkAssociationsStack' },
         { order: 5, name: 'Network_Associations', stackPrefix: '-NetworkAssociationsGwlbStack' },
         { order: 2, name: 'Security_Resources', stackPrefix: '-SecurityResourcesStack' },
+        { order: 2, name: 'Identity_Center', stackPrefix: '-IdentityCenterStack' },
         { order: 4, name: 'Network_VPCs', stackPrefix: '-NetworkVpcDnsStack' },
         { order: 3, name: 'Network_VPCs', stackPrefix: '-NetworkVpcEndpointsStack' },
         { order: 2, name: 'Network_VPCs', stackPrefix: '-NetworkVpcStack' },
@@ -705,16 +707,14 @@ export class AcceleratorTool {
 
     for (const stage of this.pipelineStageActions) {
       for (const action of stage.actions) {
-        // for (const account of this.organizationAccounts) {
         pipelineCloudFormationStacks.push({
           stageOrder: stage.order,
           order: action.order,
           stackName: `${acceleratorPrefix}${action.stackPrefix}`,
         });
-
-        // }
       }
     }
+
     return pipelineCloudFormationStacks;
   }
 
@@ -1444,13 +1444,13 @@ export class AcceleratorTool {
    */
   private async deletePipelineAccountStack(stackNamePrefix: string): Promise<void> {
     const cloudFormationClient = new CloudFormationClient({});
-    const testerStackName = `${stackNamePrefix}-${
+    const stackName = `${stackNamePrefix}-${
       this.externalPipelineAccount.isUsed
         ? this.externalPipelineAccount.accountId!
         : this.pipelineManagementAccount!.accountId
     }-${this.globalConfig?.homeRegion}`;
 
-    await this.deleteStack(cloudFormationClient, testerStackName);
+    await this.deleteStack(cloudFormationClient, stackName);
   }
 
   /**
