@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - fix: configuration validation failure when SecurityHub was enabled with Control Tower
+- fix(uninstaller): include deletion of IdentityCenter and ResourcePolicyEnforcement stacks
 
 ### Changed
 
