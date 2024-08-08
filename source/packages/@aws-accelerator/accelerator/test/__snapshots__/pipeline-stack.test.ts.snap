@@ -3171,7 +3171,7 @@ artifacts:
       "Properties": {
         "Name": "/accelerator/PipelineStack/version",
         "Type": "String",
-        "Value": "1.11.0",
+        "Value": "1.9.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
