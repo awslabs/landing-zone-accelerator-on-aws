@@ -1,4 +1,4 @@
-package.Cdk-solution-init-pkg = {
+package.Landing-zone-accelerator-on-aws = {
     interfaces = (1.0);
 
     # Use NoOpBuild. See https://w.amazon.com/index.php/BrazilBuildSystem/NoOpBuild
