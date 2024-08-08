@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - chore: upgrade github action to node20
 
+### Configuration Changes
+
+- chore(lza-sample-config): enhance SCP statements for invocation of Lambda functions
+
 ## [1.9.0] - 07-25-2024
 
 ### Added
