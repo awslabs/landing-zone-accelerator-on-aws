@@ -87,7 +87,10 @@ nav:
           - v1.7.1: typedocs/v1.7.1/index.html
       - v1.8:
           - v1.8.0: typedocs/v1.8.0/index.html
-          - v1.8.1: typedocs/latest/index.html
+          - v1.8.1: typedocs/v1.8.1/index.html
+      - v1.9:
+          - v1.9.0: typedocs/v1.9.0/index.html
+          - v1.9.1: typedocs/latest/index.html
 
 theme:
   name: material

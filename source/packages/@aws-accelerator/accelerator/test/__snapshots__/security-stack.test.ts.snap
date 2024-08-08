@@ -1284,7 +1284,7 @@ exports[`SecurityStack Construct(SecurityStack):  Snapshot Test 1`] = `
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-SecurityStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.9.0",
+        "Value": "1.9.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -2396,7 +2396,7 @@ exports[`delegatedAdminStack Construct(SecurityStack):  Snapshot Test 1`] = `
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-SecurityStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.9.0",
+        "Value": "1.9.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
