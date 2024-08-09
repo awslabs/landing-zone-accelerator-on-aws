@@ -13,7 +13,7 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { MoveAccountRule } from '@aws-accelerator/constructs';
+import { MoveAccountRule, OptInRegions } from '@aws-accelerator/constructs';
 import { AcceleratorStack, AcceleratorStackProps, NagSuppressionRuleIds } from './accelerator-stack';
 import { ScpResource } from '../resources/scp-resource';
 import { KmsKeyResource } from '../resources/kms-key-resource';
@@ -29,6 +29,10 @@ export class AccountsStack extends AcceleratorStack {
     super(scope, id, props);
 
     this.keyResource = new KmsKeyResource(this, props);
+
+    if (props.globalConfig.enableOptInRegions) {
+      this.enableOptInRegions(props);
+    }
 
     //
     // Create MoveAccountRule
@@ -160,5 +164,65 @@ export class AccountsStack extends AcceleratorStack {
       }
     }
     return moveAccountRule;
+  }
+
+  /**
+   * Function to enable opt-in regions for all accounts
+   * @param props {@link AccountsStackProps}
+   */
+
+  private enableOptInRegions(props: AccountsStackProps) {
+    this.logger.info(`Enable opt-in regions`);
+    new OptInRegions(this, 'OptInRegions', {
+      kmsKey: this.keyResource.cloudwatchKey,
+      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+      managementAccountId: props.accountsConfig.getManagementAccountId(),
+      accountIds: props.accountsConfig.getAccountIds(),
+      homeRegion: props.globalConfig.homeRegion,
+      enabledRegions: props.globalConfig.enabledRegions,
+      globalRegion: props.globalRegion,
+    });
+
+    const optInRegionsIam4SuppressionPaths = [
+      'OptInRegions/OptInRegionsOnEvent/ServiceRole/Resource',
+      'OptInRegions/OptInRegionsIsComplete/ServiceRole/Resource',
+      'OptInRegions/OptInRegionsProvider/framework-onEvent/ServiceRole/Resource',
+      'OptInRegions/OptInRegionsProvider/framework-isComplete/ServiceRole/Resource',
+      'OptInRegions/OptInRegionsProvider/framework-onTimeout/ServiceRole/Resource',
+    ];
+
+    const optInRegionsIam5SuppressionPaths = [
+      'OptInRegions/OptInRegionsOnEvent/ServiceRole/DefaultPolicy/Resource',
+      'OptInRegions/OptInRegionsIsComplete/ServiceRole/DefaultPolicy/Resource',
+      'OptInRegions/OptInRegionsProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource',
+      'OptInRegions/OptInRegionsProvider/framework-isComplete/ServiceRole/DefaultPolicy/Resource',
+      'OptInRegions/OptInRegionsProvider/framework-onTimeout/ServiceRole/DefaultPolicy/Resource',
+      'OptInRegions/OptInRegionsProvider/waiter-state-machine/Role/DefaultPolicy/Resource',
+    ];
+
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+    this.createNagSuppressionsInputs(NagSuppressionRuleIds.IAM4, optInRegionsIam4SuppressionPaths);
+
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
+    this.createNagSuppressionsInputs(NagSuppressionRuleIds.IAM5, optInRegionsIam5SuppressionPaths);
+  }
+
+  /**
+   * Create NagSuppressions inputs
+   * @param inputs
+   */
+  private createNagSuppressionsInputs(type: NagSuppressionRuleIds, inputs: string[]) {
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+    for (const input of inputs) {
+      this.nagSuppressionInputs.push({
+        id: type,
+        details: [
+          {
+            path: `${this.stackName}/${input}`,
+            reason: 'AWS Custom resource provider role created by cdk.',
+          },
+        ],
+      });
+    }
   }
 }

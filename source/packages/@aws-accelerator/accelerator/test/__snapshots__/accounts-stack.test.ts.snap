@@ -1627,6 +1627,958 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
       "Type": "Custom::CreateServiceLinkedRole",
       "UpdateReplacePolicy": "Delete",
     },
+    "OptInRegions8611CE24": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "OptInRegionsOptInRegionsIsCompleteLogGroupF6E1E28E",
+        "OptInRegionsOptInRegionsOnEventLogGroupC61703D9",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "OptInRegionsOptInRegionsProviderframeworkonEventA805CEDE",
+            "Arn",
+          ],
+        },
+        "props": {
+          "accountIds": [
+            "111111111111",
+            "222222222222",
+            "333333333333",
+            "444444444444",
+            "555555555555",
+            "666666666666",
+          ],
+          "enabledRegions": [
+            "us-east-1",
+            "us-west-2",
+          ],
+          "globalRegion": "us-east-1",
+          "homeRegion": "us-east-1",
+          "managementAccountId": "111111111111",
+        },
+      },
+      "Type": "Custom::OptInRegions",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "OptInRegionsOptInRegionsIsComplete20A899A2": {
+      "DependsOn": [
+        "OptInRegionsOptInRegionsIsCompleteServiceRoleDefaultPolicy5BCB1377",
+        "OptInRegionsOptInRegionsIsCompleteServiceRole88C6992C",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Opt-in Regions isComplete handler",
+        "Handler": "index.handler",
+        "KmsKeyArn": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "OptInRegionsOptInRegionsIsCompleteServiceRole88C6992C",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 300,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "OptInRegionsOptInRegionsIsCompleteLogGroupF6E1E28E": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "OptInRegionsOptInRegionsIsComplete20A899A2",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "OptInRegionsOptInRegionsIsCompleteServiceRole88C6992C": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "OptInRegionsOptInRegionsIsCompleteServiceRoleDefaultPolicy5BCB1377": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "AWS Custom resource provider role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "account:ListRegions",
+                "account:EnableRegion",
+                "account:GetRegionOptStatus",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "AccountOperations",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "OptInRegionsOptInRegionsIsCompleteServiceRoleDefaultPolicy5BCB1377",
+        "Roles": [
+          {
+            "Ref": "OptInRegionsOptInRegionsIsCompleteServiceRole88C6992C",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "OptInRegionsOptInRegionsOnEventDF9D2B80": {
+      "DependsOn": [
+        "OptInRegionsOptInRegionsOnEventServiceRoleDefaultPolicy3F5DA2D9",
+        "OptInRegionsOptInRegionsOnEventServiceRoleD4B35886",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Opt-in Regions onEvent handler",
+        "Handler": "index.handler",
+        "KmsKeyArn": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "OptInRegionsOptInRegionsOnEventServiceRoleD4B35886",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 60,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "OptInRegionsOptInRegionsOnEventLogGroupC61703D9": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "OptInRegionsOptInRegionsOnEventDF9D2B80",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "OptInRegionsOptInRegionsOnEventServiceRoleD4B35886": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "OptInRegionsOptInRegionsOnEventServiceRoleDefaultPolicy3F5DA2D9": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "AWS Custom resource provider role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "organizations:EnableAWSServiceAccess",
+                "iam:GetAccountSummary",
+                "iam:SetSecurityTokenServicePreferences",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "serviceAccessAndToken",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "OptInRegionsOptInRegionsOnEventServiceRoleDefaultPolicy3F5DA2D9",
+        "Roles": [
+          {
+            "Ref": "OptInRegionsOptInRegionsOnEventServiceRoleD4B35886",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "OptInRegionsOptInRegionsProviderframeworkisCompleteA55ADDD8": {
+      "DependsOn": [
+        "OptInRegionsOptInRegionsProviderframeworkisCompleteServiceRoleDefaultPolicyFC3390B1",
+        "OptInRegionsOptInRegionsProviderframeworkisCompleteServiceRole3768088A",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - isComplete (AWSAccelerator-AccountsStack-111111111111-us-east-1/OptInRegions/OptInRegionsProvider)",
+        "Environment": {
+          "Variables": {
+            "USER_IS_COMPLETE_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "OptInRegionsOptInRegionsIsComplete20A899A2",
+                "Arn",
+              ],
+            },
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "OptInRegionsOptInRegionsOnEventDF9D2B80",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.isComplete",
+        "Role": {
+          "Fn::GetAtt": [
+            "OptInRegionsOptInRegionsProviderframeworkisCompleteServiceRole3768088A",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "OptInRegionsOptInRegionsProviderframeworkisCompleteServiceRole3768088A": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "OptInRegionsOptInRegionsProviderframeworkisCompleteServiceRoleDefaultPolicyFC3390B1": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "AWS Custom resource provider role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "OptInRegionsOptInRegionsOnEventDF9D2B80",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "OptInRegionsOptInRegionsOnEventDF9D2B80",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "OptInRegionsOptInRegionsIsComplete20A899A2",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "OptInRegionsOptInRegionsIsComplete20A899A2",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "OptInRegionsOptInRegionsProviderframeworkisCompleteServiceRoleDefaultPolicyFC3390B1",
+        "Roles": [
+          {
+            "Ref": "OptInRegionsOptInRegionsProviderframeworkisCompleteServiceRole3768088A",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "OptInRegionsOptInRegionsProviderframeworkonEventA805CEDE": {
+      "DependsOn": [
+        "OptInRegionsOptInRegionsProviderframeworkonEventServiceRoleDefaultPolicy6A8AF090",
+        "OptInRegionsOptInRegionsProviderframeworkonEventServiceRoleE512B52D",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-AccountsStack-111111111111-us-east-1/OptInRegions/OptInRegionsProvider)",
+        "Environment": {
+          "Variables": {
+            "USER_IS_COMPLETE_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "OptInRegionsOptInRegionsIsComplete20A899A2",
+                "Arn",
+              ],
+            },
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "OptInRegionsOptInRegionsOnEventDF9D2B80",
+                "Arn",
+              ],
+            },
+            "WAITER_STATE_MACHINE_ARN": {
+              "Ref": "OptInRegionsOptInRegionsProviderwaiterstatemachine380C9833",
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "OptInRegionsOptInRegionsProviderframeworkonEventServiceRoleE512B52D",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "OptInRegionsOptInRegionsProviderframeworkonEventServiceRoleDefaultPolicy6A8AF090": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "AWS Custom resource provider role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "OptInRegionsOptInRegionsOnEventDF9D2B80",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "OptInRegionsOptInRegionsOnEventDF9D2B80",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "OptInRegionsOptInRegionsIsComplete20A899A2",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "OptInRegionsOptInRegionsIsComplete20A899A2",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "states:StartExecution",
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "OptInRegionsOptInRegionsProviderwaiterstatemachine380C9833",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "OptInRegionsOptInRegionsProviderframeworkonEventServiceRoleDefaultPolicy6A8AF090",
+        "Roles": [
+          {
+            "Ref": "OptInRegionsOptInRegionsProviderframeworkonEventServiceRoleE512B52D",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "OptInRegionsOptInRegionsProviderframeworkonEventServiceRoleE512B52D": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "OptInRegionsOptInRegionsProviderframeworkonTimeout2FB7EB0E": {
+      "DependsOn": [
+        "OptInRegionsOptInRegionsProviderframeworkonTimeoutServiceRoleDefaultPolicyC43EC700",
+        "OptInRegionsOptInRegionsProviderframeworkonTimeoutServiceRoleC3734E22",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onTimeout (AWSAccelerator-AccountsStack-111111111111-us-east-1/OptInRegions/OptInRegionsProvider)",
+        "Environment": {
+          "Variables": {
+            "USER_IS_COMPLETE_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "OptInRegionsOptInRegionsIsComplete20A899A2",
+                "Arn",
+              ],
+            },
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "OptInRegionsOptInRegionsOnEventDF9D2B80",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onTimeout",
+        "Role": {
+          "Fn::GetAtt": [
+            "OptInRegionsOptInRegionsProviderframeworkonTimeoutServiceRoleC3734E22",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "OptInRegionsOptInRegionsProviderframeworkonTimeoutServiceRoleC3734E22": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "OptInRegionsOptInRegionsProviderframeworkonTimeoutServiceRoleDefaultPolicyC43EC700": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "AWS Custom resource provider role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "OptInRegionsOptInRegionsOnEventDF9D2B80",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "OptInRegionsOptInRegionsOnEventDF9D2B80",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "OptInRegionsOptInRegionsIsComplete20A899A2",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "OptInRegionsOptInRegionsIsComplete20A899A2",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "OptInRegionsOptInRegionsProviderframeworkonTimeoutServiceRoleDefaultPolicyC43EC700",
+        "Roles": [
+          {
+            "Ref": "OptInRegionsOptInRegionsProviderframeworkonTimeoutServiceRoleC3734E22",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "OptInRegionsOptInRegionsProviderwaiterstatemachine380C9833": {
+      "DependsOn": [
+        "OptInRegionsOptInRegionsProviderwaiterstatemachineRoleDefaultPolicy551C77D5",
+        "OptInRegionsOptInRegionsProviderwaiterstatemachineRoleB3284282",
+      ],
+      "Properties": {
+        "DefinitionString": {
+          "Fn::Join": [
+            "",
+            [
+              "{"StartAt":"framework-isComplete-task","States":{"framework-isComplete-task":{"End":true,"Retry":[{"ErrorEquals":["States.ALL"],"IntervalSeconds":120,"MaxAttempts":15,"BackoffRate":1}],"Catch":[{"ErrorEquals":["States.ALL"],"Next":"framework-onTimeout-task"}],"Type":"Task","Resource":"",
+              {
+                "Fn::GetAtt": [
+                  "OptInRegionsOptInRegionsProviderframeworkisCompleteA55ADDD8",
+                  "Arn",
+                ],
+              },
+              ""},"framework-onTimeout-task":{"End":true,"Type":"Task","Resource":"",
+              {
+                "Fn::GetAtt": [
+                  "OptInRegionsOptInRegionsProviderframeworkonTimeout2FB7EB0E",
+                  "Arn",
+                ],
+              },
+              ""}}}",
+            ],
+          ],
+        },
+        "LoggingConfiguration": {
+          "Destinations": [
+            {
+              "CloudWatchLogsLogGroup": {
+                "LogGroupArn": {
+                  "Fn::GetAtt": [
+                    "OptInRegionsOptInRegionsProviderwaiterstatemachineLogGroupDDB06910",
+                    "Arn",
+                  ],
+                },
+              },
+            },
+          ],
+          "IncludeExecutionData": false,
+          "Level": "ERROR",
+        },
+        "RoleArn": {
+          "Fn::GetAtt": [
+            "OptInRegionsOptInRegionsProviderwaiterstatemachineRoleB3284282",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::StepFunctions::StateMachine",
+    },
+    "OptInRegionsOptInRegionsProviderwaiterstatemachineLogGroupDDB06910": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/vendedlogs/states/waiter-state-machine-",
+              {
+                "Ref": "OptInRegionsOptInRegionsProviderframeworkisCompleteA55ADDD8",
+              },
+              "-c89b2dfca3e059f2ded794f91a23ea9a1d3a777a0d",
+            ],
+          ],
+        },
+        "RetentionInDays": 731,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "OptInRegionsOptInRegionsProviderwaiterstatemachineRoleB3284282": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "states.us-east-1.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "OptInRegionsOptInRegionsProviderwaiterstatemachineRoleDefaultPolicy551C77D5": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "AWS Custom resource provider role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "OptInRegionsOptInRegionsProviderframeworkisCompleteA55ADDD8",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "OptInRegionsOptInRegionsProviderframeworkisCompleteA55ADDD8",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "OptInRegionsOptInRegionsProviderframeworkonTimeout2FB7EB0E",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "OptInRegionsOptInRegionsProviderframeworkonTimeout2FB7EB0E",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "logs:CreateLogDelivery",
+                "logs:CreateLogStream",
+                "logs:GetLogDelivery",
+                "logs:UpdateLogDelivery",
+                "logs:DeleteLogDelivery",
+                "logs:ListLogDeliveries",
+                "logs:PutLogEvents",
+                "logs:PutResourcePolicy",
+                "logs:DescribeResourcePolicies",
+                "logs:DescribeLogGroups",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "OptInRegionsOptInRegionsProviderwaiterstatemachineRoleDefaultPolicy551C77D5",
+        "Roles": [
+          {
+            "Ref": "OptInRegionsOptInRegionsProviderwaiterstatemachineRoleB3284282",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
     "Quarantine23FF09FE": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
@@ -1978,6 +2930,946 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
 exports[`AccountsStack us-west-2 Construct(AccountsStackUsWest2):  Snapshot Test 1`] = `
 {
   "Resources": {
+    "OptInRegions8611CE24": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "OptInRegionsOptInRegionsIsCompleteLogGroupF6E1E28E",
+        "OptInRegionsOptInRegionsOnEventLogGroupC61703D9",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "OptInRegionsOptInRegionsProviderframeworkonEventA805CEDE",
+            "Arn",
+          ],
+        },
+        "props": {
+          "accountIds": [
+            "111111111111",
+            "222222222222",
+            "333333333333",
+            "444444444444",
+            "555555555555",
+            "666666666666",
+          ],
+          "enabledRegions": [
+            "us-east-1",
+            "us-west-2",
+          ],
+          "globalRegion": "us-east-1",
+          "homeRegion": "us-east-1",
+          "managementAccountId": "111111111111",
+        },
+      },
+      "Type": "Custom::OptInRegions",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "OptInRegionsOptInRegionsIsComplete20A899A2": {
+      "DependsOn": [
+        "OptInRegionsOptInRegionsIsCompleteServiceRoleDefaultPolicy5BCB1377",
+        "OptInRegionsOptInRegionsIsCompleteServiceRole88C6992C",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-west-2",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Opt-in Regions isComplete handler",
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "OptInRegionsOptInRegionsIsCompleteServiceRole88C6992C",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 300,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "OptInRegionsOptInRegionsIsCompleteLogGroupF6E1E28E": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "OptInRegionsOptInRegionsIsComplete20A899A2",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "OptInRegionsOptInRegionsIsCompleteServiceRole88C6992C": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "OptInRegionsOptInRegionsIsCompleteServiceRoleDefaultPolicy5BCB1377": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "AWS Custom resource provider role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "account:ListRegions",
+                "account:EnableRegion",
+                "account:GetRegionOptStatus",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "AccountOperations",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "OptInRegionsOptInRegionsIsCompleteServiceRoleDefaultPolicy5BCB1377",
+        "Roles": [
+          {
+            "Ref": "OptInRegionsOptInRegionsIsCompleteServiceRole88C6992C",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "OptInRegionsOptInRegionsOnEventDF9D2B80": {
+      "DependsOn": [
+        "OptInRegionsOptInRegionsOnEventServiceRoleDefaultPolicy3F5DA2D9",
+        "OptInRegionsOptInRegionsOnEventServiceRoleD4B35886",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-west-2",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Opt-in Regions onEvent handler",
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "OptInRegionsOptInRegionsOnEventServiceRoleD4B35886",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 60,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "OptInRegionsOptInRegionsOnEventLogGroupC61703D9": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "OptInRegionsOptInRegionsOnEventDF9D2B80",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "OptInRegionsOptInRegionsOnEventServiceRoleD4B35886": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "OptInRegionsOptInRegionsOnEventServiceRoleDefaultPolicy3F5DA2D9": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "AWS Custom resource provider role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "organizations:EnableAWSServiceAccess",
+                "iam:GetAccountSummary",
+                "iam:SetSecurityTokenServicePreferences",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "serviceAccessAndToken",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "OptInRegionsOptInRegionsOnEventServiceRoleDefaultPolicy3F5DA2D9",
+        "Roles": [
+          {
+            "Ref": "OptInRegionsOptInRegionsOnEventServiceRoleD4B35886",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "OptInRegionsOptInRegionsProviderframeworkisCompleteA55ADDD8": {
+      "DependsOn": [
+        "OptInRegionsOptInRegionsProviderframeworkisCompleteServiceRoleDefaultPolicyFC3390B1",
+        "OptInRegionsOptInRegionsProviderframeworkisCompleteServiceRole3768088A",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-west-2",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - isComplete (AWSAccelerator-AccountsStack-111111111111-us-west-2/OptInRegions/OptInRegionsProvider)",
+        "Environment": {
+          "Variables": {
+            "USER_IS_COMPLETE_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "OptInRegionsOptInRegionsIsComplete20A899A2",
+                "Arn",
+              ],
+            },
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "OptInRegionsOptInRegionsOnEventDF9D2B80",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.isComplete",
+        "Role": {
+          "Fn::GetAtt": [
+            "OptInRegionsOptInRegionsProviderframeworkisCompleteServiceRole3768088A",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "OptInRegionsOptInRegionsProviderframeworkisCompleteServiceRole3768088A": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "OptInRegionsOptInRegionsProviderframeworkisCompleteServiceRoleDefaultPolicyFC3390B1": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "AWS Custom resource provider role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "OptInRegionsOptInRegionsOnEventDF9D2B80",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "OptInRegionsOptInRegionsOnEventDF9D2B80",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "OptInRegionsOptInRegionsIsComplete20A899A2",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "OptInRegionsOptInRegionsIsComplete20A899A2",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "OptInRegionsOptInRegionsProviderframeworkisCompleteServiceRoleDefaultPolicyFC3390B1",
+        "Roles": [
+          {
+            "Ref": "OptInRegionsOptInRegionsProviderframeworkisCompleteServiceRole3768088A",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "OptInRegionsOptInRegionsProviderframeworkonEventA805CEDE": {
+      "DependsOn": [
+        "OptInRegionsOptInRegionsProviderframeworkonEventServiceRoleDefaultPolicy6A8AF090",
+        "OptInRegionsOptInRegionsProviderframeworkonEventServiceRoleE512B52D",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-west-2",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-AccountsStack-111111111111-us-west-2/OptInRegions/OptInRegionsProvider)",
+        "Environment": {
+          "Variables": {
+            "USER_IS_COMPLETE_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "OptInRegionsOptInRegionsIsComplete20A899A2",
+                "Arn",
+              ],
+            },
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "OptInRegionsOptInRegionsOnEventDF9D2B80",
+                "Arn",
+              ],
+            },
+            "WAITER_STATE_MACHINE_ARN": {
+              "Ref": "OptInRegionsOptInRegionsProviderwaiterstatemachine380C9833",
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": {
+          "Fn::GetAtt": [
+            "OptInRegionsOptInRegionsProviderframeworkonEventServiceRoleE512B52D",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "OptInRegionsOptInRegionsProviderframeworkonEventServiceRoleDefaultPolicy6A8AF090": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "AWS Custom resource provider role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "OptInRegionsOptInRegionsOnEventDF9D2B80",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "OptInRegionsOptInRegionsOnEventDF9D2B80",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "OptInRegionsOptInRegionsIsComplete20A899A2",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "OptInRegionsOptInRegionsIsComplete20A899A2",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "states:StartExecution",
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "OptInRegionsOptInRegionsProviderwaiterstatemachine380C9833",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "OptInRegionsOptInRegionsProviderframeworkonEventServiceRoleDefaultPolicy6A8AF090",
+        "Roles": [
+          {
+            "Ref": "OptInRegionsOptInRegionsProviderframeworkonEventServiceRoleE512B52D",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "OptInRegionsOptInRegionsProviderframeworkonEventServiceRoleE512B52D": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "OptInRegionsOptInRegionsProviderframeworkonTimeout2FB7EB0E": {
+      "DependsOn": [
+        "OptInRegionsOptInRegionsProviderframeworkonTimeoutServiceRoleDefaultPolicyC43EC700",
+        "OptInRegionsOptInRegionsProviderframeworkonTimeoutServiceRoleC3734E22",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-west-2",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onTimeout (AWSAccelerator-AccountsStack-111111111111-us-west-2/OptInRegions/OptInRegionsProvider)",
+        "Environment": {
+          "Variables": {
+            "USER_IS_COMPLETE_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "OptInRegionsOptInRegionsIsComplete20A899A2",
+                "Arn",
+              ],
+            },
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "OptInRegionsOptInRegionsOnEventDF9D2B80",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onTimeout",
+        "Role": {
+          "Fn::GetAtt": [
+            "OptInRegionsOptInRegionsProviderframeworkonTimeoutServiceRoleC3734E22",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "OptInRegionsOptInRegionsProviderframeworkonTimeoutServiceRoleC3734E22": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "OptInRegionsOptInRegionsProviderframeworkonTimeoutServiceRoleDefaultPolicyC43EC700": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "AWS Custom resource provider role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "OptInRegionsOptInRegionsOnEventDF9D2B80",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "OptInRegionsOptInRegionsOnEventDF9D2B80",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "OptInRegionsOptInRegionsIsComplete20A899A2",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "OptInRegionsOptInRegionsIsComplete20A899A2",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "OptInRegionsOptInRegionsProviderframeworkonTimeoutServiceRoleDefaultPolicyC43EC700",
+        "Roles": [
+          {
+            "Ref": "OptInRegionsOptInRegionsProviderframeworkonTimeoutServiceRoleC3734E22",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "OptInRegionsOptInRegionsProviderwaiterstatemachine380C9833": {
+      "DependsOn": [
+        "OptInRegionsOptInRegionsProviderwaiterstatemachineRoleDefaultPolicy551C77D5",
+        "OptInRegionsOptInRegionsProviderwaiterstatemachineRoleB3284282",
+      ],
+      "Properties": {
+        "DefinitionString": {
+          "Fn::Join": [
+            "",
+            [
+              "{"StartAt":"framework-isComplete-task","States":{"framework-isComplete-task":{"End":true,"Retry":[{"ErrorEquals":["States.ALL"],"IntervalSeconds":120,"MaxAttempts":15,"BackoffRate":1}],"Catch":[{"ErrorEquals":["States.ALL"],"Next":"framework-onTimeout-task"}],"Type":"Task","Resource":"",
+              {
+                "Fn::GetAtt": [
+                  "OptInRegionsOptInRegionsProviderframeworkisCompleteA55ADDD8",
+                  "Arn",
+                ],
+              },
+              ""},"framework-onTimeout-task":{"End":true,"Type":"Task","Resource":"",
+              {
+                "Fn::GetAtt": [
+                  "OptInRegionsOptInRegionsProviderframeworkonTimeout2FB7EB0E",
+                  "Arn",
+                ],
+              },
+              ""}}}",
+            ],
+          ],
+        },
+        "LoggingConfiguration": {
+          "Destinations": [
+            {
+              "CloudWatchLogsLogGroup": {
+                "LogGroupArn": {
+                  "Fn::GetAtt": [
+                    "OptInRegionsOptInRegionsProviderwaiterstatemachineLogGroupDDB06910",
+                    "Arn",
+                  ],
+                },
+              },
+            },
+          ],
+          "IncludeExecutionData": false,
+          "Level": "ERROR",
+        },
+        "RoleArn": {
+          "Fn::GetAtt": [
+            "OptInRegionsOptInRegionsProviderwaiterstatemachineRoleB3284282",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::StepFunctions::StateMachine",
+    },
+    "OptInRegionsOptInRegionsProviderwaiterstatemachineLogGroupDDB06910": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/vendedlogs/states/waiter-state-machine-",
+              {
+                "Ref": "OptInRegionsOptInRegionsProviderframeworkisCompleteA55ADDD8",
+              },
+              "-c85034ab39f34991f85f596b311352eee576ba4356",
+            ],
+          ],
+        },
+        "RetentionInDays": 731,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "OptInRegionsOptInRegionsProviderwaiterstatemachineRoleB3284282": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "states.us-west-2.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "OptInRegionsOptInRegionsProviderwaiterstatemachineRoleDefaultPolicy551C77D5": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "AWS Custom resource provider role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "OptInRegionsOptInRegionsProviderframeworkisCompleteA55ADDD8",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "OptInRegionsOptInRegionsProviderframeworkisCompleteA55ADDD8",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "OptInRegionsOptInRegionsProviderframeworkonTimeout2FB7EB0E",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "OptInRegionsOptInRegionsProviderframeworkonTimeout2FB7EB0E",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "logs:CreateLogDelivery",
+                "logs:CreateLogStream",
+                "logs:GetLogDelivery",
+                "logs:UpdateLogDelivery",
+                "logs:DeleteLogDelivery",
+                "logs:ListLogDeliveries",
+                "logs:PutLogEvents",
+                "logs:PutResourcePolicy",
+                "logs:DescribeResourcePolicies",
+                "logs:DescribeLogGroups",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "OptInRegionsOptInRegionsProviderwaiterstatemachineRoleDefaultPolicy551C77D5",
+        "Roles": [
+          {
+            "Ref": "OptInRegionsOptInRegionsProviderwaiterstatemachineRoleB3284282",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
     "SsmParamAcceleratorVersionFF83282D": {
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-AccountsStack-111111111111-us-west-2/version",

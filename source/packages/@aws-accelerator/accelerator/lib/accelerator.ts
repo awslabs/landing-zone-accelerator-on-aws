@@ -43,7 +43,6 @@ import {
   getGlobalRegion,
   getCurrentAccountId,
 } from '@aws-accelerator/utils/lib/common-functions';
-import { setStsTokenPreferences } from '@aws-accelerator/utils/lib/set-token-preferences';
 
 import { AssumeProfilePlugin } from '@aws-cdk-extensions/cdk-plugin-assume-role';
 import { isBeforeBootstrapStage, writeImportResources } from '../utils/app-utils';
@@ -770,14 +769,6 @@ export abstract class Accelerator {
         regionDetails.enabledRegions,
         maxStacks,
       );
-
-      //
-      // Set STS token to version 2 in home region of every account
-      // STS token is vended in homeRegion and queried at globalRegion to ensure v1Token can be used
-      if (toolkitProps.region === regionDetails.homeRegion) {
-        logger.info(`Setting STS token preferences for ${toolkitProps.accountId} in region ${toolkitProps.region}`);
-        await setStsTokenPreferences(toolkitProps.accountId!, regionDetails.globalRegion);
-      }
     }
   }
 

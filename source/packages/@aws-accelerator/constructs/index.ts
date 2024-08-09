@@ -99,6 +99,7 @@ export * from './lib/aws-macie/macie-session';
 export * from './lib/aws-networkfirewall/firewall';
 export * from './lib/aws-networkfirewall/policy';
 export * from './lib/aws-networkfirewall/rule-group';
+export * from './lib/aws-opt-in-regions/enable-opt-in-regions';
 export * from './lib/aws-organizations/account';
 export * from './lib/aws-organizations/create-accounts';
 export * from './lib/aws-organizations/enable-aws-service-access';

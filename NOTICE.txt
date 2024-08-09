@@ -112,6 +112,7 @@ mri - MIT
 newtype-ts - MIT
 node - MIT
 pascal-case - MIT
+p-limit - MIT
 prettier - MIT
 promptly - MIT
 proxy-agent - MIT
