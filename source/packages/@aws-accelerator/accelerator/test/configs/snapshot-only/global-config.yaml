@@ -18,6 +18,7 @@ snsTopics:
       emailAddresses:
         - notify-security@example.com
 terminationProtection: true
+enableOptInRegions: true
 lambda:
   encryption:
     useCMK: true

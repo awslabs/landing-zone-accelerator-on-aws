@@ -2368,4 +2368,8 @@ export interface IGlobalConfig {
    * ```
    */
   readonly s3?: IS3GlobalConfig;
+  /**
+   * Whether to automatically enable opt-in regions configured for all LZA managed accounts.
+   */
+  readonly enableOptInRegions?: boolean;
 }
