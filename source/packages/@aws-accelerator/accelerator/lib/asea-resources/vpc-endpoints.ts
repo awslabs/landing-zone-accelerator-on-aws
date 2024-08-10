@@ -49,6 +49,108 @@ export class VpcEndpoints extends AseaResource {
       if (!this.findResourceByName(existingVpcEndpointResources, 'VpcId', vpcId!)) {
         continue;
       }
+
+      // remove endpoints that are not in config
+      const configuredEndpoints: { service: string; serviceName: string }[] = [];
+      for (const endpointItem of vpcItem.interfaceEndpoints?.endpoints ?? []) {
+        configuredEndpoints.push({
+          service: endpointItem.service,
+          serviceName: this.interfaceVpcEndpointForRegionAndEndpointName(endpointItem.service),
+        });
+      }
+
+      for (const endpoint of existingVpcEndpointResources) {
+        const configuredEndpoint = configuredEndpoints.find(
+          ep => ep.serviceName === endpoint.resourceMetadata['Properties'].ServiceName,
+        );
+        if (!configuredEndpoint) {
+          this.scope.addLogs(
+            LogLevel.WARN,
+            `VPC Endpoint "${vpcItem.name}/${endpoint.resourceMetadata['Properties'].ServiceName}" is managed by ASEA but no Endpoint found in config`,
+          );
+          const configEndpointName = this.interfaceVpcEndpointConfigNameFromServiceName(
+            endpoint.resourceMetadata['Properties'].ServiceName,
+          );
+          this.scope.addDeleteFlagForAseaResource({
+            type: RESOURCE_TYPE.VPC_ENDPOINT_TYPE,
+            identifier: configEndpointName,
+            logicalId: endpoint.logicalResourceId,
+          });
+
+          const ssmResource = this.scope.importStackResources.getSSMParameterByName(
+            this.scope.getSsmPath(SsmResourceType.VPC_ENDPOINT, [vpcItem.name, configEndpointName]),
+          );
+          if (ssmResource) {
+            ssmResource.isDeleted = true;
+          }
+
+          // delete security group
+          const epSecurityGroupName = `ep_${configEndpointName}_sg`;
+          const epSecurityGroup = this.scope.importStackResources.getResourceByName('GroupName', epSecurityGroupName);
+          if (epSecurityGroup) {
+            this.scope.addDeleteFlagForAseaResource({
+              type: AseaResourceType.EC2_SECURITY_GROUP,
+              identifier: epSecurityGroupName,
+              logicalId: epSecurityGroup?.logicalResourceId,
+            });
+          }
+
+          // remove route53 hosted zone for endpoint
+          let hostedZoneName = HostedZone.getHostedZoneNameForService(configEndpointName, this.stackInfo.region);
+          if (!hostedZoneName.endsWith('.')) {
+            hostedZoneName += '.';
+          }
+          const hostedZoneCfnName = this.getCfnHostedZoneName(hostedZoneName);
+
+          const hostedZoneCfn = this.findResourceByName(existingHostedZoneResources, 'Name', hostedZoneCfnName);
+          if (!hostedZoneCfn) {
+            continue;
+          }
+
+          // route53 hosted zone
+          this.scope.addDeleteFlagForAseaResource({
+            type: RESOURCE_TYPE.HOSTED_ZONE,
+            identifier: hostedZoneCfnName,
+            logicalId: hostedZoneCfn.logicalResourceId,
+          });
+
+          const ssmResourcePhz = this.scope.importStackResources.getSSMParameterByName(
+            this.scope.getSsmPath(SsmResourceType.PHZ_ID, [vpcItem.name, configEndpointName]),
+          );
+          if (ssmResourcePhz) {
+            ssmResourcePhz.isDeleted = true;
+          }
+
+          // route53 recordset
+          const recordSetName = this.getRecordSetName(hostedZoneName);
+          const recordSetCfn = this.findResourceByName(existingRecordSetResources, 'Name', recordSetName);
+          if (recordSetCfn) {
+            this.scope.addDeleteFlagForAseaResource({
+              type: RESOURCE_TYPE.RECORD_SET,
+              identifier: recordSetName,
+              logicalId: recordSetCfn.logicalResourceId,
+            });
+          }
+
+          const ssmResourceDns = this.scope.importStackResources.getSSMParameterByName(
+            this.scope.getSsmPath(SsmResourceType.ENDPOINT_DNS, [vpcItem.name, configEndpointName]),
+          );
+          if (ssmResourceDns) {
+            ssmResourceDns.isDeleted = true;
+          }
+
+          const ssmResourceEndpointZone = this.scope.importStackResources.getSSMParameterByName(
+            this.scope.getSsmPath(SsmResourceType.ENDPOINT_ZONE_ID, [vpcItem.name, configEndpointName]),
+          );
+          if (ssmResourceEndpointZone) {
+            ssmResourceEndpointZone.isDeleted = true;
+          }
+
+          continue;
+        }
+      }
+
+      // updating existing configured endpoints
       for (const endpointItem of vpcItem.interfaceEndpoints?.endpoints ?? []) {
         const endpointCfn = this.findResourceByName(
           existingVpcEndpointResources,
@@ -142,6 +244,13 @@ export class VpcEndpoints extends AseaResource {
       return `aws.sagemaker.${this.stackInfo.region}.${name}`;
     }
     return `com.amazonaws.${this.stackInfo.region}.${name}`;
+  }
+
+  private interfaceVpcEndpointConfigNameFromServiceName(name: string): string {
+    if (name.startsWith('aws.sagemaker')) {
+      return 'notebook';
+    }
+    return name.split(/[.]+/).pop() ?? '';
   }
 
   private getCfnHostedZoneName(hostedZoneName: string): string {
