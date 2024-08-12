@@ -205,6 +205,16 @@ export class AccountsStack extends AcceleratorStack {
 
     // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
     this.createNagSuppressionsInputs(NagSuppressionRuleIds.IAM5, optInRegionsIam5SuppressionPaths);
+
+    // AwsSolutions-SF1: The Step Function does not log "ALL" events to CloudWatch Logs.
+    this.createNagSuppressionsInputs(NagSuppressionRuleIds.SF1, [
+      'OptInRegions/OptInRegionsProvider/waiter-state-machine/Resource',
+    ]);
+
+    // AwsSolutions-SF2: The Step Function does not have X-Ray tracing enabled.
+    this.createNagSuppressionsInputs(NagSuppressionRuleIds.SF2, [
+      'OptInRegions/OptInRegionsProvider/waiter-state-machine/Resource',
+    ]);
   }
 
   /**
