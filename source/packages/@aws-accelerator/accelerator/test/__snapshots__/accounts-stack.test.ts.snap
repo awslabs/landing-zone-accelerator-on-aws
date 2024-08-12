@@ -2400,6 +2400,20 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
         "OptInRegionsOptInRegionsProviderwaiterstatemachineRoleDefaultPolicy551C77D5",
         "OptInRegionsOptInRegionsProviderwaiterstatemachineRoleB3284282",
       ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-SF1",
+              "reason": "AWS Custom resource provider role created by cdk.",
+            },
+            {
+              "id": "AwsSolutions-SF2",
+              "reason": "AWS Custom resource provider role created by cdk.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "DefinitionString": {
           "Fn::Join": [
@@ -3691,6 +3705,20 @@ exports[`AccountsStack us-west-2 Construct(AccountsStackUsWest2):  Snapshot Test
         "OptInRegionsOptInRegionsProviderwaiterstatemachineRoleDefaultPolicy551C77D5",
         "OptInRegionsOptInRegionsProviderwaiterstatemachineRoleB3284282",
       ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-SF1",
+              "reason": "AWS Custom resource provider role created by cdk.",
+            },
+            {
+              "id": "AwsSolutions-SF2",
+              "reason": "AWS Custom resource provider role created by cdk.",
+            },
+          ],
+        },
+      },
       "Properties": {
         "DefinitionString": {
           "Fn::Join": [

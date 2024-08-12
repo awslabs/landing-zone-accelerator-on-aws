@@ -535,7 +535,7 @@ export class GlobalConfig implements i.IGlobalConfig {
   readonly centralizeCdkBuckets: centralizeCdkBucketsConfig | undefined = undefined;
   readonly cdkOptions = new cdkOptionsConfig();
   readonly terminationProtection = true;
-  readonly enableOptInRegions = true;
+  readonly enableOptInRegions = false;
   readonly externalLandingZoneResources: externalLandingZoneResourcesConfig | undefined = undefined;
   readonly controlTower: ControlTowerConfig = new ControlTowerConfig();
   readonly logging: LoggingConfig = new LoggingConfig();
