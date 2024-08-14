@@ -900,11 +900,7 @@ export class PrepareStack extends AcceleratorStack {
     }
   }
 
-  private createScpListsForValidation(): {
-    name: string;
-    targetType: scpTargetType;
-    targets: { name: string; id: string }[];
-  }[] {
+  private createScpListsForValidation(): serviceControlPolicyType[] {
     const serviceControlPolicies: serviceControlPolicyType[] = [];
 
     for (const scpItem of this.props.organizationConfig.serviceControlPolicies) {
