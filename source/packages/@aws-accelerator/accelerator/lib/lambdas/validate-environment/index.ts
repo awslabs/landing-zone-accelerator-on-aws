@@ -33,6 +33,7 @@ type scpTargetType = 'ou' | 'account';
 type serviceControlPolicyType = {
   name: string;
   targetType: scpTargetType;
+  strategy: string;
   targets: { name: string; id: string }[];
 };
 
@@ -349,7 +350,7 @@ async function validateServiceControlPolicyCount(
           response.Policies.forEach(item => existingAttachedScps.push(item.Name!));
         }
 
-        const totalScps = await getTotalScps(
+        const [totalScps, allowListStrategyAndFullAWSAccessPolicyFlag] = await getTotalScps(
           target.name,
           scpItem.targetType,
           existingAttachedScps,
@@ -357,12 +358,20 @@ async function validateServiceControlPolicyCount(
           policyTagKey,
         );
 
-        const totalScpCount = totalScps.length;
+        let totalScpCount = totalScps.length;
 
         console.log(`Scp count validation started for target ${target.name}, target type is ${scpItem.targetType}`);
         console.log(`${target.name} ${scpItem.targetType} existing attached scps are - ${existingAttachedScps}`);
         console.log(`${target.name} ${scpItem.targetType} updated list of scps for attachment - ${totalScps}`);
         console.log(`${target.name} ${scpItem.targetType} total scp count is ${totalScpCount}`);
+
+        if (allowListStrategyAndFullAWSAccessPolicyFlag) {
+          console.log(
+            `Since the provided SCPs for ${scpItem.targetType} "${target.name}" has ${scpItem.strategy} strategy, the totalSCP count will be reduced by 1 because for ${scpItem.strategy} strategy 'FullAWSAccess' policy is detached`,
+          );
+          totalScpCount = totalScpCount - 1;
+          console.log(`${target.name} ${scpItem.targetType} new total scp count is ${totalScpCount}`);
+        }
 
         if (totalScpCount > 5) {
           console.log(
@@ -397,9 +406,14 @@ async function getTotalScps(
   existingScps: string[],
   serviceControlPolicies: serviceControlPolicyType[],
   policyTagKey: string,
-): Promise<string[]> {
-  const totalScps: string[] = getNewScps(targetName, targetType, existingScps, serviceControlPolicies);
-
+): Promise<[string[], boolean]> {
+  const [totalScps, allowListStrategyFlag]: [string[], boolean] = getNewScps(
+    targetName,
+    targetType,
+    existingScps,
+    serviceControlPolicies,
+  );
+  let allowListStrategyAndFullAWSAccessPolicyFlag = false;
   for (const existingScp of existingScps) {
     // check for control tower drift
     let nextToken: string | undefined = undefined;
@@ -420,6 +434,10 @@ async function getTotalScps(
 
           // When attached policy is AWS managed, add to list of policies
           if (isAwsManaged) {
+            // If the provided SCPs have 'allow-list' strategy and FullAWSAccess Policy is already attached to the TargetType then set allowListStrategyAndFullAWSAccessPolicyFlag to true
+            // This flag will be used to reduce the Total SCP count by 1 because when allow-list strategy is defined for a particular TargetType then FullAWSAccessPolicy is detached
+            if (allowListStrategyFlag && policy.Id === 'p-FullAWSAccess')
+              allowListStrategyAndFullAWSAccessPolicyFlag = true;
             totalScps.push(existingScp);
             break;
           }
@@ -447,7 +465,7 @@ async function getTotalScps(
     } while (nextToken);
   }
 
-  return totalScps;
+  return [totalScps, allowListStrategyAndFullAWSAccessPolicyFlag];
 }
 
 /**
@@ -490,17 +508,20 @@ function getNewScps(
   targetType: scpTargetType,
   existingScps: string[],
   serviceControlPolicies: serviceControlPolicyType[],
-): string[] {
+): [string[], boolean] {
   const configScps: string[] = [];
+  let allowListStrategyFlag = true;
 
   for (const scpItem of serviceControlPolicies) {
     for (const target of scpItem.targets ?? []) {
       if (scpItem.targetType === targetType && target.name === targetName) {
+        if (scpItem.strategy === 'deny-list') allowListStrategyFlag = false;
         configScps.push(scpItem.name);
       }
     }
   }
-  return configScps.filter(x => existingScps.indexOf(x) === -1);
+
+  return [configScps.filter(x => existingScps.indexOf(x) === -1), allowListStrategyFlag];
 }
 
 async function validateControlTower() {
