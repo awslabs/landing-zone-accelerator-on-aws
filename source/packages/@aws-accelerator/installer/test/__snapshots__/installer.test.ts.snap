@@ -2185,7 +2185,6 @@ phases:
                         Type: 'String',
                       };
                   await ssm.send(new PutParameterCommand(newParams));
-                  console.log('LZA prefix parameter ' + paramName  + ' created successfully.');
                   await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
               }
               catch (error) {
@@ -2201,7 +2200,6 @@ phases:
             };
             try {
               await ssm.send(new DeleteParameterCommand(deleteParams));
-              console.log('LZA prefix parameter ' + paramName  + ' deleted successfully.');
             }
             catch (error) {
               console.log(error);
@@ -5744,7 +5742,6 @@ phases:
                         Type: 'String',
                       };
                   await ssm.send(new PutParameterCommand(newParams));
-                  console.log('LZA prefix parameter ' + paramName  + ' created successfully.');
                   await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
               }
               catch (error) {
@@ -5760,7 +5757,6 @@ phases:
             };
             try {
               await ssm.send(new DeleteParameterCommand(deleteParams));
-              console.log('LZA prefix parameter ' + paramName  + ' deleted successfully.');
             }
             catch (error) {
               console.log(error);
@@ -9370,7 +9366,6 @@ phases:
                         Type: 'String',
                       };
                   await ssm.send(new PutParameterCommand(newParams));
-                  console.log('LZA prefix parameter ' + paramName  + ' created successfully.');
                   await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
               }
               catch (error) {
@@ -9386,7 +9381,6 @@ phases:
             };
             try {
               await ssm.send(new DeleteParameterCommand(deleteParams));
-              console.log('LZA prefix parameter ' + paramName  + ' deleted successfully.');
             }
             catch (error) {
               console.log(error);
@@ -12972,7 +12966,6 @@ phases:
                         Type: 'String',
                       };
                   await ssm.send(new PutParameterCommand(newParams));
-                  console.log('LZA prefix parameter ' + paramName  + ' created successfully.');
                   await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
               }
               catch (error) {
@@ -12988,7 +12981,6 @@ phases:
             };
             try {
               await ssm.send(new DeleteParameterCommand(deleteParams));
-              console.log('LZA prefix parameter ' + paramName  + ' deleted successfully.');
             }
             catch (error) {
               console.log(error);
@@ -16579,7 +16571,6 @@ phases:
                         Type: 'String',
                       };
                   await ssm.send(new PutParameterCommand(newParams));
-                  console.log('LZA prefix parameter ' + paramName  + ' created successfully.');
                   await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
               }
               catch (error) {
@@ -16595,7 +16586,6 @@ phases:
             };
             try {
               await ssm.send(new DeleteParameterCommand(deleteParams));
-              console.log('LZA prefix parameter ' + paramName  + ' deleted successfully.');
             }
             catch (error) {
               console.log(error);
@@ -20143,7 +20133,6 @@ phases:
                         Type: 'String',
                       };
                   await ssm.send(new PutParameterCommand(newParams));
-                  console.log('LZA prefix parameter ' + paramName  + ' created successfully.');
                   await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
               }
               catch (error) {
@@ -20159,7 +20148,6 @@ phases:
             };
             try {
               await ssm.send(new DeleteParameterCommand(deleteParams));
-              console.log('LZA prefix parameter ' + paramName  + ' deleted successfully.');
             }
             catch (error) {
               console.log(error);
