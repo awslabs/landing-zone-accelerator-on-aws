@@ -128,7 +128,6 @@ export class ResourceNamePrefixes extends Construct {
                         Type: 'String',
                       };
                   await ssm.send(new PutParameterCommand(newParams));
-                  console.log('LZA prefix parameter ' + paramName  + ' created successfully.');
                   await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
               }
               catch (error) {
@@ -144,7 +143,6 @@ export class ResourceNamePrefixes extends Construct {
             };
             try {
               await ssm.send(new DeleteParameterCommand(deleteParams));
-              console.log('LZA prefix parameter ' + paramName  + ' deleted successfully.');
             }
             catch (error) {
               console.log(error);
