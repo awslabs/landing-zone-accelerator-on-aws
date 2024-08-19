@@ -28,6 +28,8 @@ const stack = new PipelineStack(app, 'PipelineStack', {
   sourceRepositoryOwner: 'awslabs',
   sourceRepositoryName: 'accelerator-source',
   sourceBranchName: 'main',
+  sourceBucketName: 'my-accelerator-source-bucket',
+  sourceBucketObject: 'release/v9.8.7.zip',
   enableApprovalStage: true,
   qualifier: 'aws-accelerator',
   managementAccountId: app.account,

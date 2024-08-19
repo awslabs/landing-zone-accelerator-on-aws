@@ -29,6 +29,7 @@ async function main() {
 
   const useExternalPipelineAccount = app.node.tryGetContext('use-external-pipeline-account') === 'true';
   const enableTester = app.node.tryGetContext('enable-tester') === 'true';
+  const useS3Source = app.node.tryGetContext('use-s3-source') === 'true';
   const managementCrossAccountRoleName = app.node.tryGetContext('management-cross-account-role-name');
   const enableSingleAccountMode = app.node.tryGetContext('enable-single-account-mode') === 'true';
   const usePermissionBoundary = app.node.tryGetContext('use-permission-boundary') === 'true';
@@ -47,6 +48,7 @@ async function main() {
     }),
     useExternalPipelineAccount: useExternalPipelineAccount,
     enableTester: enableTester,
+    useS3Source: useS3Source,
     managementCrossAccountRoleName: managementCrossAccountRoleName,
     enableSingleAccountMode,
     usePermissionBoundary,

@@ -38,6 +38,8 @@ export interface AcceleratorPipelineProps {
   readonly sourceRepositoryOwner: string;
   readonly sourceRepositoryName: string;
   readonly sourceBranchName: string;
+  readonly sourceBucketName: string;
+  readonly sourceBucketObject: string;
   readonly enableApprovalStage: boolean;
   readonly qualifier?: string;
   readonly managementAccountId?: string;
@@ -269,6 +271,7 @@ export class AcceleratorPipeline extends Construct {
 
     let sourceAction:
       | cdk.aws_codepipeline_actions.CodeCommitSourceAction
+      | cdk.aws_codepipeline_actions.S3SourceAction
       | cdk.aws_codepipeline_actions.GitHubSourceAction;
 
     if (this.props.sourceRepository === 'codecommit') {
@@ -278,6 +281,15 @@ export class AcceleratorPipeline extends Construct {
         branch: this.props.sourceBranchName,
         output: this.acceleratorRepoArtifact,
         trigger: codepipeline_actions.CodeCommitTrigger.NONE,
+      });
+    } else if (this.props.sourceBucketName && this.props.sourceBucketName.length > 0) {
+      // hidden parameter to use S3 for source code via cdk context
+      sourceAction = new codepipeline_actions.S3SourceAction({
+        actionName: 'Source',
+        bucket: cdk.aws_s3.Bucket.fromBucketName(this, 'ExistingBucket', this.props.sourceBucketName),
+        bucketKey: this.props.sourceBucketObject,
+        output: this.acceleratorRepoArtifact,
+        trigger: codepipeline_actions.S3Trigger.NONE,
       });
     } else {
       sourceAction = new cdk.aws_codepipeline_actions.GitHubSourceAction({

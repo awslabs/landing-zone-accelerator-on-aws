@@ -172,6 +172,14 @@ export interface AcceleratorEnvironment {
    */
   sourceBranchName: string;
   /**
+   * Source code repository branch name
+   */
+  sourceBucketName: string;
+  /**
+   * Source code repository branch name
+   */
+  sourceBucketObject: string;
+  /**
    * Source code repository location
    *
    * @default 'github'
@@ -362,6 +370,8 @@ export function setAcceleratorEnvironment(
     logArchiveAccountEmail: env['LOG_ARCHIVE_ACCOUNT_EMAIL'] ?? '',
     managementAccountEmail: env['MANAGEMENT_ACCOUNT_EMAIL'] ?? '',
     sourceBranchName: env['ACCELERATOR_REPOSITORY_BRANCH_NAME'] ?? '',
+    sourceBucketName: env['ACCELERATOR_REPOSITORY_BUCKET_NAME'] ?? '',
+    sourceBucketObject: env['ACCELERATOR_REPOSITORY_BUCKET_OBJECT'] ?? '',
     sourceRepository: env['ACCELERATOR_REPOSITORY_SOURCE'] ?? 'github',
     sourceRepositoryName: env['ACCELERATOR_REPOSITORY_NAME'] ?? 'landing-zone-accelerator-on-aws',
     sourceRepositoryOwner: env['ACCELERATOR_REPOSITORY_OWNER'] ?? 'awslabs',
