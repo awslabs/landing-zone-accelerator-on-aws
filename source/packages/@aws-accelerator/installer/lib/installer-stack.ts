@@ -39,7 +39,10 @@ export interface InstallerStackProps extends cdk.StackProps {
    * Enable tester flag
    */
   readonly enableTester: boolean;
-
+  /**
+   * Use existing S3 bucket for LZA source code
+   */
+  readonly useS3Source: boolean;
   /**
    * Management Cross account role name
    */
@@ -55,7 +58,7 @@ export interface InstallerStackProps extends cdk.StackProps {
 }
 
 export class InstallerStack extends cdk.Stack {
-  private readonly repositorySource = new cdk.CfnParameter(this, 'RepositorySource', {
+  private repositorySource = new cdk.CfnParameter(this, 'RepositorySource', {
     type: 'String',
     description: 'Specify the location to use to host the LZA source code',
     allowedValues: [RepositorySources.GITHUB, RepositorySources.CODECOMMIT],
@@ -206,6 +209,18 @@ export class InstallerStack extends cdk.Stack {
   private readonly acceleratorQualifier: cdk.CfnParameter | undefined;
 
   /**
+   * Existing S3 bucket for LZA source code
+   * @private
+   */
+  private readonly repositoryBucketName: cdk.CfnParameter | undefined;
+
+  /**
+   * S3 object key for LZA source code
+   * @private
+   */
+  private readonly repositoryBucketObject: cdk.CfnParameter | undefined;
+
+  /**
    * Permission boundary SSM Parameter Path
    * @private
    */
@@ -280,7 +295,7 @@ export class InstallerStack extends cdk.Stack {
     ];
 
     const repositoryParameterLabels: { [p: string]: { default: string } } = {
-      [this.repositorySource.logicalId]: { default: 'Source' },
+      [this.repositorySource.logicalId]: { default: 'Source Location' },
       [this.repositoryOwner.logicalId]: { default: 'Repository Owner' },
       [this.repositoryName.logicalId]: { default: 'Repository Name' },
       [this.repositoryBranchName.logicalId]: { default: 'Branch Name' },
@@ -300,6 +315,7 @@ export class InstallerStack extends cdk.Stack {
 
     let targetAcceleratorParameterLabels: { [p: string]: { default: string } } = {};
     let targetAcceleratorEnvVariables: { [p: string]: cdk.aws_codebuild.BuildEnvironmentVariable } = {};
+    let s3EnvVariables: { [p: string]: cdk.aws_codebuild.BuildEnvironmentVariable } = {};
 
     if (props.usePermissionBoundary) {
       this.acceleratorPermissionBoundary = new cdk.CfnParameter(this, 'AcceleratorPermissionBoundary', {
@@ -369,6 +385,53 @@ export class InstallerStack extends cdk.Stack {
           value: this.acceleratorQualifier.valueAsString,
         },
       };
+    }
+
+    // cdk context feature flag to use S3 for LZA source code
+    if (props.useS3Source) {
+      this.repositorySource.allowedValues?.push(RepositorySources.S3);
+      this.repositorySource.default = RepositorySources.S3;
+
+      this.repositoryBucketName = new cdk.CfnParameter(this, 'RepositoryBucketName', {
+        type: 'String',
+        description: 'The versioned S3 bucket containing the accelerator code. (S3 Only)',
+      });
+
+      this.repositoryBucketObject = new cdk.CfnParameter(this, 'RepositoryBucketObject', {
+        type: 'String',
+        description: 'The full path to the accelerator code zip S3 Object. (S3 Only)',
+        default: `release/v${version}.zip`,
+      });
+
+      s3EnvVariables = {
+        ACCELERATOR_REPOSITORY_BUCKET_NAME: {
+          type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+          value: this.repositoryBucketName.valueAsString,
+        },
+        ACCELERATOR_REPOSITORY_BUCKET_OBJECT: {
+          type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+          value: this.repositoryBucketObject.valueAsString,
+        },
+      };
+
+      // replace template Source Code parameterGroup
+      parameterGroups[0] = {
+        Label: { default: 'Source Code Repository Configuration' },
+        Parameters: [
+          this.repositorySource.logicalId,
+          this.repositoryBucketName.logicalId,
+          this.repositoryBucketObject.logicalId,
+        ],
+      };
+
+      parameterGroups.push({
+        Label: { default: 'Git Repository Configuration (not used with S3)' },
+        Parameters: [
+          this.repositoryOwner.logicalId,
+          this.repositoryName.logicalId,
+          this.repositoryBranchName.logicalId,
+        ],
+      });
     }
 
     const resourceNamePrefixes = new ResourceNamePrefixes(this, 'ResourceNamePrefixes', {
@@ -828,6 +891,7 @@ export class InstallerStack extends cdk.Stack {
           },
           ...targetAcceleratorEnvVariables,
           ...targetAcceleratorTestEnvVariables,
+          ...s3EnvVariables,
         },
       },
     });
@@ -1077,6 +1141,80 @@ export class InstallerStack extends cdk.Stack {
       .defaultChild as cdk.aws_logs.CfnLogGroup;
     cfnUpdatePipelineGithubTokenLogGroup.cfnOptions.condition = useGitHubCondition;
 
+    /**
+     * S3 Pipeline, available with useS3Source cdk context feature flag
+     */
+    let s3PipelinePaths: string[] = [];
+
+    if (props.useS3Source && this.repositoryBucketName && this.repositoryBucketObject) {
+      const s3PipelineRole = new cdk.aws_iam.Role(this, 'S3PipelineRole', {
+        assumedBy: new cdk.aws_iam.ServicePrincipal('codepipeline.amazonaws.com'),
+      });
+
+      s3PipelinePaths = [
+        'S3PipelineRole/DefaultPolicy/Resource',
+        'S3Pipeline/Source/Source/CodePipelineActionRole/DefaultPolicy/Resource',
+      ];
+
+      const s3Pipeline = new cdk.aws_codepipeline.Pipeline(this, 'S3Pipeline', {
+        pipelineName: installerPipelineName,
+        artifactBucket: bucket.getS3Bucket(),
+        restartExecutionOnUpdate: true,
+        role: s3PipelineRole,
+      });
+
+      s3Pipeline.addStage({
+        stageName: 'Source',
+        actions: [
+          new cdk.aws_codepipeline_actions.S3SourceAction({
+            actionName: 'Source',
+            bucket: cdk.aws_s3.Bucket.fromBucketName(this, 'ExistingBucket', this.repositoryBucketName.valueAsString),
+            bucketKey: this.repositoryBucketObject.valueAsString,
+            output: acceleratorRepoArtifact,
+            trigger: cdk.aws_codepipeline_actions.S3Trigger.NONE,
+          }),
+        ],
+      });
+
+      s3Pipeline.addStage({
+        stageName: 'Install',
+        actions: [
+          new cdk.aws_codepipeline_actions.CodeBuildAction({
+            actionName: 'Install',
+            project: installerProject,
+            input: acceleratorRepoArtifact,
+            role: s3PipelineRole,
+          }),
+        ],
+      });
+
+      const useS3Condition = new cdk.CfnCondition(this, 'UseS3Condition', {
+        expression: cdk.Fn.conditionNot(cdk.Fn.conditionEquals('', this.repositoryBucketName?.valueAsString)),
+      });
+
+      const cfnS3PipelinePolicy = s3PipelineRole.node.findChild('DefaultPolicy').node
+        .defaultChild as cdk.aws_iam.CfnPolicy;
+      cfnS3PipelinePolicy.cfnOptions.condition = useS3Condition;
+
+      const cfnS3PipelineRole = s3PipelineRole.node.defaultChild as cdk.aws_iam.CfnRole;
+      cfnS3PipelineRole.cfnOptions.condition = useS3Condition;
+
+      const cfnS3Pipeline = s3Pipeline.node.defaultChild as cdk.aws_codepipeline.CfnPipeline;
+      cfnS3Pipeline.cfnOptions.condition = useS3Condition;
+
+      const cfnS3PipelineSource = s3Pipeline.node
+        .findChild('Source')
+        .node.findChild('Source')
+        .node.findChild('CodePipelineActionRole').node;
+      (cfnS3PipelineSource.defaultChild as cdk.CfnResource).cfnOptions.condition = useS3Condition;
+      (cfnS3PipelineSource.findChild('DefaultPolicy').node.defaultChild as cdk.CfnResource).cfnOptions.condition =
+        useS3Condition;
+    }
+
+    /**
+     * cfn-nag suppressions
+     */
+
     // Suppressing due to missing field in aws-us-gov CFN spec
     cfnUpdatePipelineGithubTokenLogGroup.cfnOptions.metadata = {
       cfn_nag: {
@@ -1089,9 +1227,6 @@ export class InstallerStack extends cdk.Stack {
       },
     };
 
-    //
-    // cfn-nag suppressions
-    //
     // W12 IAM Policy allows * on KMS decrypt because Secrets Manager key can be encrypted with user selected key.
     const cfnLambdaFunctionPolicy = updatePipelineLambdaPolicy.node.defaultChild as cdk.aws_iam.CfnPolicy;
     cfnLambdaFunctionPolicy.cfnOptions.metadata = {
@@ -1126,6 +1261,7 @@ export class InstallerStack extends cdk.Stack {
       'CodeCommitPipeline/Source/Source/CodePipelineActionRole/DefaultPolicy/Resource',
       'UpdatePipelineLambdaPolicy/Resource',
       'GitHubPipelineRole/DefaultPolicy/Resource',
+      ...s3PipelinePaths,
     ];
 
     const cb3SuppressionPaths = ['InstallerProject/Resource'];
