@@ -252,7 +252,7 @@ export async function createPipelineStack(
     });
     // get existing CT details only when Control Tower is enabled
     let landingZoneIdentifier: string | undefined;
-    if (acceleratorEnv.controlTowerEnabled === 'Yes' && !acceleratorEnv.enableSingleAccountMode) {
+    if (acceleratorEnv.controlTowerEnabled) {
       //
       // Get Management account credentials
       //
