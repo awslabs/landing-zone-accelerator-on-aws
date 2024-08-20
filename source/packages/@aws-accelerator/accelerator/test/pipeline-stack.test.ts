@@ -47,6 +47,7 @@ const stack = new PipelineStack(app, 'PipelineStack', {
   configRepositoryLocation: 'codecommit',
   configRepositoryName: 'aws-accelerator-config',
   configRepositoryBranchName: 'main',
+  configRepositoryOwner: '',
   prefixes: {
     accelerator: 'AWSAccelerator',
     kmsAlias: 'alias/accelerator',
@@ -61,6 +62,7 @@ const stack = new PipelineStack(app, 'PipelineStack', {
   enableSingleAccountMode: false,
   pipelineAccountId: '000000000000',
   useExistingRoles: false,
+  codeconnectionArn: '',
   // installerStackName: 'InstallerStack',
 });
 

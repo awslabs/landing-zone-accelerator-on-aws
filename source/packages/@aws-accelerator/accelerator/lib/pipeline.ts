@@ -57,7 +57,11 @@ export interface AcceleratorPipelineProps {
   /**
    * Indicates location of the LZA configuration files
    */
-  readonly configRepositoryLocation: 'codecommit' | 's3';
+  readonly configRepositoryLocation: string;
+  /**
+   * Optional CodeConnection ARN to specify a 3rd-party configuration repository
+   */
+  readonly codeconnectionArn: string;
   /**
    * Flag indicating installer using existing CodeCommit repository
    */
@@ -70,6 +74,10 @@ export interface AcceleratorPipelineProps {
    * User defined pre-existing config repository branch name
    */
   readonly configRepositoryBranchName: string;
+  /**
+   * Accelerator configuration repository owner (CodeConnection only)
+   */
+  readonly configRepositoryOwner: string;
   /**
    * Accelerator resource name prefixes
    */
@@ -315,6 +323,22 @@ export class AcceleratorPipeline extends Construct {
             bucketKey: 'zipped/aws-accelerator-config.zip',
             output: this.configRepoArtifact,
             trigger: codepipeline_actions.S3Trigger.NONE,
+            variablesNamespace: 'Config-Vars',
+          }),
+        ],
+      });
+    } else if (this.props.configRepositoryLocation === 'codeconnection' && this.props.codeconnectionArn !== '') {
+      this.pipeline.addStage({
+        stageName: 'Source',
+        actions: [
+          sourceAction,
+          new codepipeline_actions.CodeStarConnectionsSourceAction({
+            actionName: 'Configuration',
+            branch: this.props.configRepositoryBranchName,
+            connectionArn: this.props.codeconnectionArn,
+            owner: this.props.configRepositoryOwner,
+            repo: this.props.configRepositoryName,
+            output: this.configRepoArtifact,
             variablesNamespace: 'Config-Vars',
           }),
         ],
