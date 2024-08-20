@@ -134,7 +134,11 @@ export interface AcceleratorEnvironment {
   /**
    * Location of the LZA configuration files
    */
-  configRepositoryLocation: 'codecommit' | 's3';
+  configRepositoryLocation: string;
+  /**
+   * Optional CodeConnection ARN to specify a 3rd-party configuration repository
+   */
+  codeconnectionArn: string;
   /**
    * Accelerator configuration repository name
    */
@@ -145,6 +149,10 @@ export interface AcceleratorEnvironment {
    * @default 'main'
    */
   configRepositoryBranchName: string;
+  /**
+   * Accelerator configuration repository owner (CodeConnection only)
+   */
+  configRepositoryOwner: string;
   /**
    * Whether or not Control Tower is enabled in the accelerator environment
    */
@@ -361,7 +369,9 @@ export function setAcceleratorEnvironment(
     auditAccountEmail: env['AUDIT_ACCOUNT_EMAIL'] ?? '',
     configRepositoryName,
     configRepositoryBranchName: env['EXISTING_CONFIG_REPOSITORY_BRANCH_NAME'] ?? 'main',
-    configRepositoryLocation: env['CONFIG_REPOSITORY_LOCATION'] === 's3' ? 's3' : 'codecommit',
+    configRepositoryLocation: env['CONFIG_REPOSITORY_LOCATION'] ?? 'codecommit',
+    configRepositoryOwner: env['EXISTING_CONFIG_REPOSITORY_OWNER'] ?? '',
+    codeconnectionArn: env['CODECONNECTION_ARN'] ?? '',
     controlTowerEnabled: env['CONTROL_TOWER_ENABLED'] ?? '',
     enableApprovalStage: env['ACCELERATOR_ENABLE_APPROVAL_STAGE']
       ? env['ACCELERATOR_ENABLE_APPROVAL_STAGE'] === 'Yes'

@@ -52,7 +52,7 @@ export interface AcceleratorMetadataProps {
   /**
    * The service used to store LZA config files
    */
-  readonly configRepositoryLocation: 's3' | 'codecommit';
+  readonly configRepositoryLocation: string;
   /**
    * Config bucket name
    */

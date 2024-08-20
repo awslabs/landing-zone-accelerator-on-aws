@@ -183,7 +183,7 @@ export interface AcceleratorStackProps extends cdk.StackProps {
   readonly replacementsConfig: ReplacementsConfig;
   readonly partition: string;
   readonly configRepositoryName: string;
-  readonly configRepositoryLocation: 's3' | 'codecommit';
+  readonly configRepositoryLocation: string;
   readonly qualifier?: string;
   readonly configCommitId?: string;
   readonly globalRegion: string;

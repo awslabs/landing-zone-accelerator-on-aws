@@ -28,6 +28,7 @@ export enum RepositorySources {
   GITHUB = 'github',
   CODECOMMIT = 'codecommit',
   S3 = 's3',
+  CODECONNECTION = 'codeconnection',
 }
 
 export interface InstallerStackProps extends cdk.StackProps {
@@ -138,7 +139,7 @@ export class InstallerStack extends cdk.Stack {
   private readonly configurationRepositoryLocation = new cdk.CfnParameter(this, 'ConfigurationRepositoryLocation', {
     type: 'String',
     description: 'Specify the location to use to host the LZA configuration files',
-    allowedValues: [RepositorySources.CODECOMMIT, RepositorySources.S3],
+    allowedValues: [RepositorySources.CODECOMMIT, RepositorySources.S3, RepositorySources.CODECONNECTION],
   });
 
   /**
@@ -150,7 +151,29 @@ export class InstallerStack extends cdk.Stack {
     allowedValues: ['Yes', 'No'],
     default: 'No',
     description:
-      'Select Yes if deploying the solution with an existing CodeCommit configuration repository. Leave the default value if using the solution-deployed repository. If the AcceleratorPrefix parameter is set to the default value, the solution will deploy a repository named "aws-accelerator-config." Otherwise, the solution-deployed repository will be named "AcceleratorPrefix-config." Note: Updating this value after initial installation may cause adverse affects.',
+      'Select Yes if deploying the solution with an existing configuration repository. Leave the default value if using the solution-deployed repository. If the AcceleratorPrefix parameter is set to the default value, the solution will deploy a repository named "aws-accelerator-config." Otherwise, the solution-deployed repository will be named "AcceleratorPrefix-config." Note: Updating this value after initial installation may cause adverse affects.',
+  });
+
+  /**
+   * Existing AWS Code Connection ARN
+   * @private
+   */
+  private readonly configCodeConnectionArn = new cdk.CfnParameter(this, 'ConfigCodeConnectionArn', {
+    type: 'String',
+    description:
+      'The ARN of an AWS CodeConnection referencing your existing LZA configuration repository. To use this parameter, useExistingConfigRepo must be set to Yes and ConfigurationRepositoryLocation must be set to codeconnection.',
+    default: '',
+  });
+
+  /**
+   * Existing LZ Accelerator configuration repository owner
+   * @private
+   */
+  private readonly existingConfigRepositoryOwner = new cdk.CfnParameter(this, 'ExistingConfigRepositoryOwner', {
+    type: 'String',
+    description:
+      'The owner ID or namespace of the LZA configuration repository accessed through CodeConnection, such as the owner ID in GitHub. (CodeConnection only)',
+    default: '',
   });
 
   /**
@@ -159,7 +182,7 @@ export class InstallerStack extends cdk.Stack {
    */
   private readonly existingConfigRepositoryName = new cdk.CfnParameter(this, 'ExistingConfigRepositoryName', {
     type: 'String',
-    description: 'The name of an existing CodeCommit repository hosting the accelerator configuration.',
+    description: 'The name of an existing LZA configuration repository hosting the accelerator configuration.',
     default: '',
   });
 
@@ -173,7 +196,7 @@ export class InstallerStack extends cdk.Stack {
     {
       type: 'String',
       description:
-        'Specify the branch name of existing CodeCommit repository to pull the accelerator configuration from.',
+        'Specify the branch name of the existing LZA configuration repository to pull the accelerator configuration from.',
       default: '',
     },
   );
@@ -290,6 +313,8 @@ export class InstallerStack extends cdk.Stack {
           this.useExistingConfigRepo.logicalId,
           this.existingConfigRepositoryName.logicalId,
           this.existingConfigRepositoryBranchName.logicalId,
+          this.existingConfigRepositoryOwner.logicalId,
+          this.configCodeConnectionArn.logicalId,
         ],
       },
     ];
@@ -303,6 +328,8 @@ export class InstallerStack extends cdk.Stack {
       [this.useExistingConfigRepo.logicalId]: { default: 'Use Existing Config Repository' },
       [this.existingConfigRepositoryName.logicalId]: { default: 'Existing Config Repository Name' },
       [this.existingConfigRepositoryBranchName.logicalId]: { default: 'Existing Config Repository Branch Name' },
+      [this.existingConfigRepositoryOwner.logicalId]: { default: 'Existing Config Repository Owner' },
+      [this.configCodeConnectionArn.logicalId]: { default: 'Existing Config Repository CodeConnection ARN' },
       [this.enableDiagnosticsPack.logicalId]: { default: 'Enable Diagnostics Pack' },
       [this.enableApprovalStage.logicalId]: { default: 'Enable Approval Stage' },
       [this.approvalStageNotifyEmailList.logicalId]: { default: 'Manual Approval Stage notification email list' },
@@ -501,6 +528,77 @@ export class InstallerStack extends cdk.Stack {
     }
 
     // Validate Installer Parameters
+
+    // Add CFN Rule Assertions
+    const codeConnectionArnRequiredForCodeConnection = new cdk.CfnRule(
+      this,
+      'CodeConnectionArnRequiredForCodeConnection',
+    );
+
+    codeConnectionArnRequiredForCodeConnection.addAssertion(
+      cdk.Fn.conditionOr(
+        cdk.Fn.conditionNot(
+          cdk.Fn.conditionEquals('codeconnection', this.configurationRepositoryLocation.valueAsString),
+        ),
+        cdk.Fn.conditionNot(cdk.Fn.conditionEquals('', this.configCodeConnectionArn.valueAsString)),
+      ),
+      'codeconnectionArn parameter must be provided when configRepositoryLocation is set to codeconnection',
+    );
+
+    const useExistingIsYesForCodeConnection = new cdk.CfnRule(this, 'UseExistingIsYesForCodeConnection');
+
+    useExistingIsYesForCodeConnection.addAssertion(
+      cdk.Fn.conditionOr(
+        cdk.Fn.conditionNot(
+          cdk.Fn.conditionEquals('codeconnection', this.configurationRepositoryLocation.valueAsString),
+        ),
+        cdk.Fn.conditionNot(cdk.Fn.conditionEquals('No', this.useExistingConfigRepo.valueAsString)),
+      ),
+      'useExistingConfigRepo parameter must be set to "Yes" when configRepositoryLocation is set to codeconnection',
+    );
+
+    const existingBranchRequiredForCodeConnection = new cdk.CfnRule(this, 'ExistingBranchRequiredForCodeConnection');
+
+    existingBranchRequiredForCodeConnection.addAssertion(
+      cdk.Fn.conditionOr(
+        cdk.Fn.conditionNot(
+          cdk.Fn.conditionEquals('codeconnection', this.configurationRepositoryLocation.valueAsString),
+        ),
+        cdk.Fn.conditionNot(cdk.Fn.conditionEquals('', this.existingConfigRepositoryBranchName.valueAsString)),
+      ),
+      'existingConfigRepositoryBranchName parameter must be provided when configRepositoryLocation is set to codeconnection',
+    );
+
+    const existingRepoNameRequiredForCodeConnection = new cdk.CfnRule(
+      this,
+      'ExistingRepoNameRequiredForCodeConnection',
+    );
+
+    existingRepoNameRequiredForCodeConnection.addAssertion(
+      cdk.Fn.conditionOr(
+        cdk.Fn.conditionNot(
+          cdk.Fn.conditionEquals('codeconnection', this.configurationRepositoryLocation.valueAsString),
+        ),
+        cdk.Fn.conditionNot(cdk.Fn.conditionEquals('', this.existingConfigRepositoryName.valueAsString)),
+      ),
+      'existingConfigRepositoryName parameter must be provided when configRepositoryLocation is set to codeconnection',
+    );
+
+    const existingRepoOwnerRequiredForCodeConnection = new cdk.CfnRule(
+      this,
+      'ExistingRepoOwnerRequiredForCodeConnection',
+    );
+
+    existingRepoOwnerRequiredForCodeConnection.addAssertion(
+      cdk.Fn.conditionOr(
+        cdk.Fn.conditionNot(
+          cdk.Fn.conditionEquals('codeconnection', this.configurationRepositoryLocation.valueAsString),
+        ),
+        cdk.Fn.conditionNot(cdk.Fn.conditionEquals('', this.existingConfigRepositoryOwner.valueAsString)),
+      ),
+
+      'existingConfigRepositoryOwner parameter must be populated when configRepositoryLocation is set to codeconnection',
+    );
 
     const validatorFunction = new Validate(this, 'ValidateInstaller', {
       useExistingConfigRepo: this.useExistingConfigRepo.valueAsString,
@@ -837,6 +935,10 @@ export class InstallerStack extends cdk.Stack {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: this.configurationRepositoryLocation.valueAsString,
           },
+          CODECONNECTION_ARN: {
+            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: this.configCodeConnectionArn.valueAsString,
+          },
           USE_EXISTING_CONFIG_REPO: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: this.useExistingConfigRepo.valueAsString,
@@ -848,6 +950,10 @@ export class InstallerStack extends cdk.Stack {
           EXISTING_CONFIG_REPOSITORY_BRANCH_NAME: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: this.existingConfigRepositoryBranchName.valueAsString,
+          },
+          EXISTING_CONFIG_REPOSITORY_OWNER: {
+            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: this.existingConfigRepositoryOwner.valueAsString,
           },
           ACCELERATOR_ENABLE_APPROVAL_STAGE: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,

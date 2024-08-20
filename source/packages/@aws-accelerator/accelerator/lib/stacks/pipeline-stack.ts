@@ -42,7 +42,11 @@ export interface PipelineStackProps extends cdk.StackProps {
   /**
    * Location used to host LZA configuration files
    */
-  readonly configRepositoryLocation: 's3' | 'codecommit';
+  readonly configRepositoryLocation: string;
+  /**
+   * Optional CodeConnection ARN to specify a 3rd-party configuration repository
+   */
+  readonly codeconnectionArn: string;
   /**
    * Flag indicating installer using existing CodeCommit repository
    */
@@ -55,6 +59,10 @@ export interface PipelineStackProps extends cdk.StackProps {
    * User defined pre-existing config repository branch name
    */
   readonly configRepositoryBranchName: string;
+  /**
+   * Accelerator configuration repository owner (CodeConnection only)
+   */
+  readonly configRepositoryOwner: string;
   /**
    * Accelerator resource name prefixes
    */

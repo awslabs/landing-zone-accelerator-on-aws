@@ -116,6 +116,8 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
             "UseExistingConfigRepo",
             "ExistingConfigRepositoryName",
             "ExistingConfigRepositoryBranchName",
+            "ExistingConfigRepositoryOwner",
+            "ConfigCodeConnectionArn",
           ],
         },
       ],
@@ -128,6 +130,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
         },
         "AuditAccountEmail": {
           "default": "Audit Account Email",
+        },
+        "ConfigCodeConnectionArn": {
+          "default": "Existing Config Repository CodeConnection ARN",
         },
         "ConfigurationRepositoryLocation": {
           "default": "Configuration Repository Location",
@@ -146,6 +151,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
         },
         "ExistingConfigRepositoryName": {
           "default": "Existing Config Repository Name",
+        },
+        "ExistingConfigRepositoryOwner": {
+          "default": "Existing Config Repository Owner",
         },
         "LogArchiveAccountEmail": {
           "default": "Log Archive Account Email",
@@ -189,10 +197,16 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
       "Description": "The security audit account (also referred to as the audit account)",
       "Type": "String",
     },
+    "ConfigCodeConnectionArn": {
+      "Default": "",
+      "Description": "The ARN of an AWS CodeConnection referencing your existing LZA configuration repository. To use this parameter, useExistingConfigRepo must be set to Yes and ConfigurationRepositoryLocation must be set to codeconnection.",
+      "Type": "String",
+    },
     "ConfigurationRepositoryLocation": {
       "AllowedValues": [
         "codecommit",
         "s3",
+        "codeconnection",
       ],
       "Description": "Specify the location to use to host the LZA configuration files",
       "Type": "String",
@@ -226,12 +240,17 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
     },
     "ExistingConfigRepositoryBranchName": {
       "Default": "",
-      "Description": "Specify the branch name of existing CodeCommit repository to pull the accelerator configuration from.",
+      "Description": "Specify the branch name of the existing LZA configuration repository to pull the accelerator configuration from.",
       "Type": "String",
     },
     "ExistingConfigRepositoryName": {
       "Default": "",
-      "Description": "The name of an existing CodeCommit repository hosting the accelerator configuration.",
+      "Description": "The name of an existing LZA configuration repository hosting the accelerator configuration.",
+      "Type": "String",
+    },
+    "ExistingConfigRepositoryOwner": {
+      "Default": "",
+      "Description": "The owner ID or namespace of the LZA configuration repository accessed through CodeConnection, such as the owner ID in GitHub. (CodeConnection only)",
       "Type": "String",
     },
     "LogArchiveAccountEmail": {
@@ -278,7 +297,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
         "No",
       ],
       "Default": "No",
-      "Description": "Select Yes if deploying the solution with an existing CodeCommit configuration repository. Leave the default value if using the solution-deployed repository. If the AcceleratorPrefix parameter is set to the default value, the solution will deploy a repository named "aws-accelerator-config." Otherwise, the solution-deployed repository will be named "AcceleratorPrefix-config." Note: Updating this value after initial installation may cause adverse affects.",
+      "Description": "Select Yes if deploying the solution with an existing configuration repository. Leave the default value if using the solution-deployed repository. If the AcceleratorPrefix parameter is set to the default value, the solution will deploy a repository named "aws-accelerator-config." Otherwise, the solution-deployed repository will be named "AcceleratorPrefix-config." Note: Updating this value after initial installation may cause adverse affects.",
       "Type": "String",
     },
   },
@@ -1640,6 +1659,13 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
               },
             },
             {
+              "Name": "CODECONNECTION_ARN",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ConfigCodeConnectionArn",
+              },
+            },
+            {
               "Name": "USE_EXISTING_CONFIG_REPO",
               "Type": "PLAINTEXT",
               "Value": {
@@ -1658,6 +1684,13 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
               "Type": "PLAINTEXT",
               "Value": {
                 "Ref": "ExistingConfigRepositoryBranchName",
+              },
+            },
+            {
+              "Name": "EXISTING_CONFIG_REPOSITORY_OWNER",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ExistingConfigRepositoryOwner",
               },
             },
             {
@@ -3562,6 +3595,183 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
         ],
       },
       "Type": "AWS::IAM::Role",
+    },
+  },
+  "Rules": {
+    "CodeConnectionArnRequiredForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "",
+                      {
+                        "Ref": "ConfigCodeConnectionArn",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "codeconnectionArn parameter must be provided when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+    "ExistingBranchRequiredForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "",
+                      {
+                        "Ref": "ExistingConfigRepositoryBranchName",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "existingConfigRepositoryBranchName parameter must be provided when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+    "ExistingRepoNameRequiredForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "",
+                      {
+                        "Ref": "ExistingConfigRepositoryName",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "existingConfigRepositoryName parameter must be provided when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+    "ExistingRepoOwnerRequiredForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "",
+                      {
+                        "Ref": "ExistingConfigRepositoryOwner",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "existingConfigRepositoryOwner parameter must be populated when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+    "UseExistingIsYesForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "No",
+                      {
+                        "Ref": "UseExistingConfigRepo",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "useExistingConfigRepo parameter must be set to "Yes" when configRepositoryLocation is set to codeconnection",
+        },
+      ],
     },
   },
 }
@@ -3683,6 +3893,8 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
             "UseExistingConfigRepo",
             "ExistingConfigRepositoryName",
             "ExistingConfigRepositoryBranchName",
+            "ExistingConfigRepositoryOwner",
+            "ConfigCodeConnectionArn",
           ],
         },
       ],
@@ -3695,6 +3907,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
         },
         "AuditAccountEmail": {
           "default": "Audit Account Email",
+        },
+        "ConfigCodeConnectionArn": {
+          "default": "Existing Config Repository CodeConnection ARN",
         },
         "ConfigurationRepositoryLocation": {
           "default": "Configuration Repository Location",
@@ -3713,6 +3928,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
         },
         "ExistingConfigRepositoryName": {
           "default": "Existing Config Repository Name",
+        },
+        "ExistingConfigRepositoryOwner": {
+          "default": "Existing Config Repository Owner",
         },
         "LogArchiveAccountEmail": {
           "default": "Log Archive Account Email",
@@ -3756,10 +3974,16 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
       "Description": "The security audit account (also referred to as the audit account)",
       "Type": "String",
     },
+    "ConfigCodeConnectionArn": {
+      "Default": "",
+      "Description": "The ARN of an AWS CodeConnection referencing your existing LZA configuration repository. To use this parameter, useExistingConfigRepo must be set to Yes and ConfigurationRepositoryLocation must be set to codeconnection.",
+      "Type": "String",
+    },
     "ConfigurationRepositoryLocation": {
       "AllowedValues": [
         "codecommit",
         "s3",
+        "codeconnection",
       ],
       "Description": "Specify the location to use to host the LZA configuration files",
       "Type": "String",
@@ -3793,12 +4017,17 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
     },
     "ExistingConfigRepositoryBranchName": {
       "Default": "",
-      "Description": "Specify the branch name of existing CodeCommit repository to pull the accelerator configuration from.",
+      "Description": "Specify the branch name of the existing LZA configuration repository to pull the accelerator configuration from.",
       "Type": "String",
     },
     "ExistingConfigRepositoryName": {
       "Default": "",
-      "Description": "The name of an existing CodeCommit repository hosting the accelerator configuration.",
+      "Description": "The name of an existing LZA configuration repository hosting the accelerator configuration.",
+      "Type": "String",
+    },
+    "ExistingConfigRepositoryOwner": {
+      "Default": "",
+      "Description": "The owner ID or namespace of the LZA configuration repository accessed through CodeConnection, such as the owner ID in GitHub. (CodeConnection only)",
       "Type": "String",
     },
     "LogArchiveAccountEmail": {
@@ -3845,7 +4074,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
         "No",
       ],
       "Default": "No",
-      "Description": "Select Yes if deploying the solution with an existing CodeCommit configuration repository. Leave the default value if using the solution-deployed repository. If the AcceleratorPrefix parameter is set to the default value, the solution will deploy a repository named "aws-accelerator-config." Otherwise, the solution-deployed repository will be named "AcceleratorPrefix-config." Note: Updating this value after initial installation may cause adverse affects.",
+      "Description": "Select Yes if deploying the solution with an existing configuration repository. Leave the default value if using the solution-deployed repository. If the AcceleratorPrefix parameter is set to the default value, the solution will deploy a repository named "aws-accelerator-config." Otherwise, the solution-deployed repository will be named "AcceleratorPrefix-config." Note: Updating this value after initial installation may cause adverse affects.",
       "Type": "String",
     },
   },
@@ -5207,6 +5436,13 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
               },
             },
             {
+              "Name": "CODECONNECTION_ARN",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ConfigCodeConnectionArn",
+              },
+            },
+            {
               "Name": "USE_EXISTING_CONFIG_REPO",
               "Type": "PLAINTEXT",
               "Value": {
@@ -5225,6 +5461,13 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
               "Type": "PLAINTEXT",
               "Value": {
                 "Ref": "ExistingConfigRepositoryBranchName",
+              },
+            },
+            {
+              "Name": "EXISTING_CONFIG_REPOSITORY_OWNER",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ExistingConfigRepositoryOwner",
               },
             },
             {
@@ -7121,6 +7364,183 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       "Type": "AWS::IAM::Role",
     },
   },
+  "Rules": {
+    "CodeConnectionArnRequiredForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "",
+                      {
+                        "Ref": "ConfigCodeConnectionArn",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "codeconnectionArn parameter must be provided when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+    "ExistingBranchRequiredForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "",
+                      {
+                        "Ref": "ExistingConfigRepositoryBranchName",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "existingConfigRepositoryBranchName parameter must be provided when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+    "ExistingRepoNameRequiredForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "",
+                      {
+                        "Ref": "ExistingConfigRepositoryName",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "existingConfigRepositoryName parameter must be provided when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+    "ExistingRepoOwnerRequiredForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "",
+                      {
+                        "Ref": "ExistingConfigRepositoryOwner",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "existingConfigRepositoryOwner parameter must be populated when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+    "UseExistingIsYesForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "No",
+                      {
+                        "Ref": "UseExistingConfigRepo",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "useExistingConfigRepo parameter must be set to "Yes" when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+  },
 }
 `;
 
@@ -7240,6 +7660,8 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
             "UseExistingConfigRepo",
             "ExistingConfigRepositoryName",
             "ExistingConfigRepositoryBranchName",
+            "ExistingConfigRepositoryOwner",
+            "ConfigCodeConnectionArn",
           ],
         },
         {
@@ -7266,6 +7688,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
         "AuditAccountEmail": {
           "default": "Audit Account Email",
         },
+        "ConfigCodeConnectionArn": {
+          "default": "Existing Config Repository CodeConnection ARN",
+        },
         "ConfigurationRepositoryLocation": {
           "default": "Configuration Repository Location",
         },
@@ -7283,6 +7708,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
         },
         "ExistingConfigRepositoryName": {
           "default": "Existing Config Repository Name",
+        },
+        "ExistingConfigRepositoryOwner": {
+          "default": "Existing Config Repository Owner",
         },
         "LogArchiveAccountEmail": {
           "default": "Log Archive Account Email",
@@ -7338,10 +7766,16 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
       "Description": "The security audit account (also referred to as the audit account)",
       "Type": "String",
     },
+    "ConfigCodeConnectionArn": {
+      "Default": "",
+      "Description": "The ARN of an AWS CodeConnection referencing your existing LZA configuration repository. To use this parameter, useExistingConfigRepo must be set to Yes and ConfigurationRepositoryLocation must be set to codeconnection.",
+      "Type": "String",
+    },
     "ConfigurationRepositoryLocation": {
       "AllowedValues": [
         "codecommit",
         "s3",
+        "codeconnection",
       ],
       "Description": "Specify the location to use to host the LZA configuration files",
       "Type": "String",
@@ -7375,12 +7809,17 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
     },
     "ExistingConfigRepositoryBranchName": {
       "Default": "",
-      "Description": "Specify the branch name of existing CodeCommit repository to pull the accelerator configuration from.",
+      "Description": "Specify the branch name of the existing LZA configuration repository to pull the accelerator configuration from.",
       "Type": "String",
     },
     "ExistingConfigRepositoryName": {
       "Default": "",
-      "Description": "The name of an existing CodeCommit repository hosting the accelerator configuration.",
+      "Description": "The name of an existing LZA configuration repository hosting the accelerator configuration.",
+      "Type": "String",
+    },
+    "ExistingConfigRepositoryOwner": {
+      "Default": "",
+      "Description": "The owner ID or namespace of the LZA configuration repository accessed through CodeConnection, such as the owner ID in GitHub. (CodeConnection only)",
       "Type": "String",
     },
     "LogArchiveAccountEmail": {
@@ -7435,7 +7874,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
         "No",
       ],
       "Default": "No",
-      "Description": "Select Yes if deploying the solution with an existing CodeCommit configuration repository. Leave the default value if using the solution-deployed repository. If the AcceleratorPrefix parameter is set to the default value, the solution will deploy a repository named "aws-accelerator-config." Otherwise, the solution-deployed repository will be named "AcceleratorPrefix-config." Note: Updating this value after initial installation may cause adverse affects.",
+      "Description": "Select Yes if deploying the solution with an existing configuration repository. Leave the default value if using the solution-deployed repository. If the AcceleratorPrefix parameter is set to the default value, the solution will deploy a repository named "aws-accelerator-config." Otherwise, the solution-deployed repository will be named "AcceleratorPrefix-config." Note: Updating this value after initial installation may cause adverse affects.",
       "Type": "String",
     },
   },
@@ -8794,6 +9233,13 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
               },
             },
             {
+              "Name": "CODECONNECTION_ARN",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ConfigCodeConnectionArn",
+              },
+            },
+            {
               "Name": "USE_EXISTING_CONFIG_REPO",
               "Type": "PLAINTEXT",
               "Value": {
@@ -8812,6 +9258,13 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
               "Type": "PLAINTEXT",
               "Value": {
                 "Ref": "ExistingConfigRepositoryBranchName",
+              },
+            },
+            {
+              "Name": "EXISTING_CONFIG_REPOSITORY_OWNER",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ExistingConfigRepositoryOwner",
               },
             },
             {
@@ -10731,6 +11184,183 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       "Type": "AWS::IAM::Role",
     },
   },
+  "Rules": {
+    "CodeConnectionArnRequiredForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "",
+                      {
+                        "Ref": "ConfigCodeConnectionArn",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "codeconnectionArn parameter must be provided when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+    "ExistingBranchRequiredForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "",
+                      {
+                        "Ref": "ExistingConfigRepositoryBranchName",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "existingConfigRepositoryBranchName parameter must be provided when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+    "ExistingRepoNameRequiredForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "",
+                      {
+                        "Ref": "ExistingConfigRepositoryName",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "existingConfigRepositoryName parameter must be provided when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+    "ExistingRepoOwnerRequiredForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "",
+                      {
+                        "Ref": "ExistingConfigRepositoryOwner",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "existingConfigRepositoryOwner parameter must be populated when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+    "UseExistingIsYesForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "No",
+                      {
+                        "Ref": "UseExistingConfigRepo",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "useExistingConfigRepo parameter must be set to "Yes" when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+  },
 }
 `;
 
@@ -10850,6 +11480,8 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
             "UseExistingConfigRepo",
             "ExistingConfigRepositoryName",
             "ExistingConfigRepositoryBranchName",
+            "ExistingConfigRepositoryOwner",
+            "ConfigCodeConnectionArn",
           ],
         },
         {
@@ -10876,6 +11508,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
         "AuditAccountEmail": {
           "default": "Audit Account Email",
         },
+        "ConfigCodeConnectionArn": {
+          "default": "Existing Config Repository CodeConnection ARN",
+        },
         "ConfigurationRepositoryLocation": {
           "default": "Configuration Repository Location",
         },
@@ -10893,6 +11528,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
         },
         "ExistingConfigRepositoryName": {
           "default": "Existing Config Repository Name",
+        },
+        "ExistingConfigRepositoryOwner": {
+          "default": "Existing Config Repository Owner",
         },
         "LogArchiveAccountEmail": {
           "default": "Log Archive Account Email",
@@ -10948,10 +11586,16 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
       "Description": "The security audit account (also referred to as the audit account)",
       "Type": "String",
     },
+    "ConfigCodeConnectionArn": {
+      "Default": "",
+      "Description": "The ARN of an AWS CodeConnection referencing your existing LZA configuration repository. To use this parameter, useExistingConfigRepo must be set to Yes and ConfigurationRepositoryLocation must be set to codeconnection.",
+      "Type": "String",
+    },
     "ConfigurationRepositoryLocation": {
       "AllowedValues": [
         "codecommit",
         "s3",
+        "codeconnection",
       ],
       "Description": "Specify the location to use to host the LZA configuration files",
       "Type": "String",
@@ -10985,12 +11629,17 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
     },
     "ExistingConfigRepositoryBranchName": {
       "Default": "",
-      "Description": "Specify the branch name of existing CodeCommit repository to pull the accelerator configuration from.",
+      "Description": "Specify the branch name of the existing LZA configuration repository to pull the accelerator configuration from.",
       "Type": "String",
     },
     "ExistingConfigRepositoryName": {
       "Default": "",
-      "Description": "The name of an existing CodeCommit repository hosting the accelerator configuration.",
+      "Description": "The name of an existing LZA configuration repository hosting the accelerator configuration.",
+      "Type": "String",
+    },
+    "ExistingConfigRepositoryOwner": {
+      "Default": "",
+      "Description": "The owner ID or namespace of the LZA configuration repository accessed through CodeConnection, such as the owner ID in GitHub. (CodeConnection only)",
       "Type": "String",
     },
     "LogArchiveAccountEmail": {
@@ -11045,7 +11694,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
         "No",
       ],
       "Default": "No",
-      "Description": "Select Yes if deploying the solution with an existing CodeCommit configuration repository. Leave the default value if using the solution-deployed repository. If the AcceleratorPrefix parameter is set to the default value, the solution will deploy a repository named "aws-accelerator-config." Otherwise, the solution-deployed repository will be named "AcceleratorPrefix-config." Note: Updating this value after initial installation may cause adverse affects.",
+      "Description": "Select Yes if deploying the solution with an existing configuration repository. Leave the default value if using the solution-deployed repository. If the AcceleratorPrefix parameter is set to the default value, the solution will deploy a repository named "aws-accelerator-config." Otherwise, the solution-deployed repository will be named "AcceleratorPrefix-config." Note: Updating this value after initial installation may cause adverse affects.",
       "Type": "String",
     },
   },
@@ -12404,6 +13053,13 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
               },
             },
             {
+              "Name": "CODECONNECTION_ARN",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ConfigCodeConnectionArn",
+              },
+            },
+            {
               "Name": "USE_EXISTING_CONFIG_REPO",
               "Type": "PLAINTEXT",
               "Value": {
@@ -12422,6 +13078,13 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
               "Type": "PLAINTEXT",
               "Value": {
                 "Ref": "ExistingConfigRepositoryBranchName",
+              },
+            },
+            {
+              "Name": "EXISTING_CONFIG_REPOSITORY_OWNER",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ExistingConfigRepositoryOwner",
               },
             },
             {
@@ -14331,6 +14994,183 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       "Type": "AWS::IAM::Role",
     },
   },
+  "Rules": {
+    "CodeConnectionArnRequiredForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "",
+                      {
+                        "Ref": "ConfigCodeConnectionArn",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "codeconnectionArn parameter must be provided when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+    "ExistingBranchRequiredForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "",
+                      {
+                        "Ref": "ExistingConfigRepositoryBranchName",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "existingConfigRepositoryBranchName parameter must be provided when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+    "ExistingRepoNameRequiredForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "",
+                      {
+                        "Ref": "ExistingConfigRepositoryName",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "existingConfigRepositoryName parameter must be provided when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+    "ExistingRepoOwnerRequiredForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "",
+                      {
+                        "Ref": "ExistingConfigRepositoryOwner",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "existingConfigRepositoryOwner parameter must be populated when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+    "UseExistingIsYesForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "No",
+                      {
+                        "Ref": "UseExistingConfigRepo",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "useExistingConfigRepo parameter must be set to "Yes" when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+  },
 }
 `;
 
@@ -14450,6 +15290,8 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
             "UseExistingConfigRepo",
             "ExistingConfigRepositoryName",
             "ExistingConfigRepositoryBranchName",
+            "ExistingConfigRepositoryOwner",
+            "ConfigCodeConnectionArn",
           ],
         },
         {
@@ -14476,6 +15318,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
         "AuditAccountEmail": {
           "default": "Audit Account Email",
         },
+        "ConfigCodeConnectionArn": {
+          "default": "Existing Config Repository CodeConnection ARN",
+        },
         "ConfigurationRepositoryLocation": {
           "default": "Configuration Repository Location",
         },
@@ -14493,6 +15338,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
         },
         "ExistingConfigRepositoryName": {
           "default": "Existing Config Repository Name",
+        },
+        "ExistingConfigRepositoryOwner": {
+          "default": "Existing Config Repository Owner",
         },
         "LogArchiveAccountEmail": {
           "default": "Log Archive Account Email",
@@ -14548,10 +15396,16 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
       "Description": "The security audit account (also referred to as the audit account)",
       "Type": "String",
     },
+    "ConfigCodeConnectionArn": {
+      "Default": "",
+      "Description": "The ARN of an AWS CodeConnection referencing your existing LZA configuration repository. To use this parameter, useExistingConfigRepo must be set to Yes and ConfigurationRepositoryLocation must be set to codeconnection.",
+      "Type": "String",
+    },
     "ConfigurationRepositoryLocation": {
       "AllowedValues": [
         "codecommit",
         "s3",
+        "codeconnection",
       ],
       "Description": "Specify the location to use to host the LZA configuration files",
       "Type": "String",
@@ -14585,12 +15439,17 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
     },
     "ExistingConfigRepositoryBranchName": {
       "Default": "",
-      "Description": "Specify the branch name of existing CodeCommit repository to pull the accelerator configuration from.",
+      "Description": "Specify the branch name of the existing LZA configuration repository to pull the accelerator configuration from.",
       "Type": "String",
     },
     "ExistingConfigRepositoryName": {
       "Default": "",
-      "Description": "The name of an existing CodeCommit repository hosting the accelerator configuration.",
+      "Description": "The name of an existing LZA configuration repository hosting the accelerator configuration.",
+      "Type": "String",
+    },
+    "ExistingConfigRepositoryOwner": {
+      "Default": "",
+      "Description": "The owner ID or namespace of the LZA configuration repository accessed through CodeConnection, such as the owner ID in GitHub. (CodeConnection only)",
       "Type": "String",
     },
     "LogArchiveAccountEmail": {
@@ -14645,7 +15504,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
         "No",
       ],
       "Default": "No",
-      "Description": "Select Yes if deploying the solution with an existing CodeCommit configuration repository. Leave the default value if using the solution-deployed repository. If the AcceleratorPrefix parameter is set to the default value, the solution will deploy a repository named "aws-accelerator-config." Otherwise, the solution-deployed repository will be named "AcceleratorPrefix-config." Note: Updating this value after initial installation may cause adverse affects.",
+      "Description": "Select Yes if deploying the solution with an existing configuration repository. Leave the default value if using the solution-deployed repository. If the AcceleratorPrefix parameter is set to the default value, the solution will deploy a repository named "aws-accelerator-config." Otherwise, the solution-deployed repository will be named "AcceleratorPrefix-config." Note: Updating this value after initial installation may cause adverse affects.",
       "Type": "String",
     },
   },
@@ -16004,6 +16863,13 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
               },
             },
             {
+              "Name": "CODECONNECTION_ARN",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ConfigCodeConnectionArn",
+              },
+            },
+            {
               "Name": "USE_EXISTING_CONFIG_REPO",
               "Type": "PLAINTEXT",
               "Value": {
@@ -16022,6 +16888,13 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
               "Type": "PLAINTEXT",
               "Value": {
                 "Ref": "ExistingConfigRepositoryBranchName",
+              },
+            },
+            {
+              "Name": "EXISTING_CONFIG_REPOSITORY_OWNER",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ExistingConfigRepositoryOwner",
               },
             },
             {
@@ -17936,6 +18809,183 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       "Type": "AWS::IAM::Role",
     },
   },
+  "Rules": {
+    "CodeConnectionArnRequiredForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "",
+                      {
+                        "Ref": "ConfigCodeConnectionArn",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "codeconnectionArn parameter must be provided when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+    "ExistingBranchRequiredForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "",
+                      {
+                        "Ref": "ExistingConfigRepositoryBranchName",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "existingConfigRepositoryBranchName parameter must be provided when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+    "ExistingRepoNameRequiredForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "",
+                      {
+                        "Ref": "ExistingConfigRepositoryName",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "existingConfigRepositoryName parameter must be provided when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+    "ExistingRepoOwnerRequiredForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "",
+                      {
+                        "Ref": "ExistingConfigRepositoryOwner",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "existingConfigRepositoryOwner parameter must be populated when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+    "UseExistingIsYesForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "No",
+                      {
+                        "Ref": "UseExistingConfigRepo",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "useExistingConfigRepo parameter must be set to "Yes" when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+  },
 }
 `;
 
@@ -18055,6 +19105,8 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 6`] = `
             "UseExistingConfigRepo",
             "ExistingConfigRepositoryName",
             "ExistingConfigRepositoryBranchName",
+            "ExistingConfigRepositoryOwner",
+            "ConfigCodeConnectionArn",
           ],
         },
         {
@@ -18076,6 +19128,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 6`] = `
         "AuditAccountEmail": {
           "default": "Audit Account Email",
         },
+        "ConfigCodeConnectionArn": {
+          "default": "Existing Config Repository CodeConnection ARN",
+        },
         "ConfigurationRepositoryLocation": {
           "default": "Configuration Repository Location",
         },
@@ -18093,6 +19148,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 6`] = `
         },
         "ExistingConfigRepositoryName": {
           "default": "Existing Config Repository Name",
+        },
+        "ExistingConfigRepositoryOwner": {
+          "default": "Existing Config Repository Owner",
         },
         "LogArchiveAccountEmail": {
           "default": "Log Archive Account Email",
@@ -18136,10 +19194,16 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 6`] = `
       "Description": "The security audit account (also referred to as the audit account)",
       "Type": "String",
     },
+    "ConfigCodeConnectionArn": {
+      "Default": "",
+      "Description": "The ARN of an AWS CodeConnection referencing your existing LZA configuration repository. To use this parameter, useExistingConfigRepo must be set to Yes and ConfigurationRepositoryLocation must be set to codeconnection.",
+      "Type": "String",
+    },
     "ConfigurationRepositoryLocation": {
       "AllowedValues": [
         "codecommit",
         "s3",
+        "codeconnection",
       ],
       "Description": "Specify the location to use to host the LZA configuration files",
       "Type": "String",
@@ -18173,12 +19237,17 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 6`] = `
     },
     "ExistingConfigRepositoryBranchName": {
       "Default": "",
-      "Description": "Specify the branch name of existing CodeCommit repository to pull the accelerator configuration from.",
+      "Description": "Specify the branch name of the existing LZA configuration repository to pull the accelerator configuration from.",
       "Type": "String",
     },
     "ExistingConfigRepositoryName": {
       "Default": "",
-      "Description": "The name of an existing CodeCommit repository hosting the accelerator configuration.",
+      "Description": "The name of an existing LZA configuration repository hosting the accelerator configuration.",
+      "Type": "String",
+    },
+    "ExistingConfigRepositoryOwner": {
+      "Default": "",
+      "Description": "The owner ID or namespace of the LZA configuration repository accessed through CodeConnection, such as the owner ID in GitHub. (CodeConnection only)",
       "Type": "String",
     },
     "LogArchiveAccountEmail": {
@@ -18229,7 +19298,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 6`] = `
         "No",
       ],
       "Default": "No",
-      "Description": "Select Yes if deploying the solution with an existing CodeCommit configuration repository. Leave the default value if using the solution-deployed repository. If the AcceleratorPrefix parameter is set to the default value, the solution will deploy a repository named "aws-accelerator-config." Otherwise, the solution-deployed repository will be named "AcceleratorPrefix-config." Note: Updating this value after initial installation may cause adverse affects.",
+      "Description": "Select Yes if deploying the solution with an existing configuration repository. Leave the default value if using the solution-deployed repository. If the AcceleratorPrefix parameter is set to the default value, the solution will deploy a repository named "aws-accelerator-config." Otherwise, the solution-deployed repository will be named "AcceleratorPrefix-config." Note: Updating this value after initial installation may cause adverse affects.",
       "Type": "String",
     },
   },
@@ -19591,6 +20660,13 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 6`] = `
               },
             },
             {
+              "Name": "CODECONNECTION_ARN",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ConfigCodeConnectionArn",
+              },
+            },
+            {
               "Name": "USE_EXISTING_CONFIG_REPO",
               "Type": "PLAINTEXT",
               "Value": {
@@ -19609,6 +20685,13 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 6`] = `
               "Type": "PLAINTEXT",
               "Value": {
                 "Ref": "ExistingConfigRepositoryBranchName",
+              },
+            },
+            {
+              "Name": "EXISTING_CONFIG_REPOSITORY_OWNER",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ExistingConfigRepositoryOwner",
               },
             },
             {
@@ -21512,6 +22595,183 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       "Type": "AWS::IAM::Role",
     },
   },
+  "Rules": {
+    "CodeConnectionArnRequiredForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "",
+                      {
+                        "Ref": "ConfigCodeConnectionArn",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "codeconnectionArn parameter must be provided when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+    "ExistingBranchRequiredForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "",
+                      {
+                        "Ref": "ExistingConfigRepositoryBranchName",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "existingConfigRepositoryBranchName parameter must be provided when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+    "ExistingRepoNameRequiredForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "",
+                      {
+                        "Ref": "ExistingConfigRepositoryName",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "existingConfigRepositoryName parameter must be provided when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+    "ExistingRepoOwnerRequiredForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "",
+                      {
+                        "Ref": "ExistingConfigRepositoryOwner",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "existingConfigRepositoryOwner parameter must be populated when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+    "UseExistingIsYesForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "No",
+                      {
+                        "Ref": "UseExistingConfigRepo",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "useExistingConfigRepo parameter must be set to "Yes" when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+  },
 }
 `;
 
@@ -21642,6 +22902,8 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 7`] = `
             "UseExistingConfigRepo",
             "ExistingConfigRepositoryName",
             "ExistingConfigRepositoryBranchName",
+            "ExistingConfigRepositoryOwner",
+            "ConfigCodeConnectionArn",
           ],
         },
         {
@@ -21665,6 +22927,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 7`] = `
         "AuditAccountEmail": {
           "default": "Audit Account Email",
         },
+        "ConfigCodeConnectionArn": {
+          "default": "Existing Config Repository CodeConnection ARN",
+        },
         "ConfigurationRepositoryLocation": {
           "default": "Configuration Repository Location",
         },
@@ -21682,6 +22947,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 7`] = `
         },
         "ExistingConfigRepositoryName": {
           "default": "Existing Config Repository Name",
+        },
+        "ExistingConfigRepositoryOwner": {
+          "default": "Existing Config Repository Owner",
         },
         "LogArchiveAccountEmail": {
           "default": "Log Archive Account Email",
@@ -21725,10 +22993,16 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 7`] = `
       "Description": "The security audit account (also referred to as the audit account)",
       "Type": "String",
     },
+    "ConfigCodeConnectionArn": {
+      "Default": "",
+      "Description": "The ARN of an AWS CodeConnection referencing your existing LZA configuration repository. To use this parameter, useExistingConfigRepo must be set to Yes and ConfigurationRepositoryLocation must be set to codeconnection.",
+      "Type": "String",
+    },
     "ConfigurationRepositoryLocation": {
       "AllowedValues": [
         "codecommit",
         "s3",
+        "codeconnection",
       ],
       "Description": "Specify the location to use to host the LZA configuration files",
       "Type": "String",
@@ -21762,12 +23036,17 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 7`] = `
     },
     "ExistingConfigRepositoryBranchName": {
       "Default": "",
-      "Description": "Specify the branch name of existing CodeCommit repository to pull the accelerator configuration from.",
+      "Description": "Specify the branch name of the existing LZA configuration repository to pull the accelerator configuration from.",
       "Type": "String",
     },
     "ExistingConfigRepositoryName": {
       "Default": "",
-      "Description": "The name of an existing CodeCommit repository hosting the accelerator configuration.",
+      "Description": "The name of an existing LZA configuration repository hosting the accelerator configuration.",
+      "Type": "String",
+    },
+    "ExistingConfigRepositoryOwner": {
+      "Default": "",
+      "Description": "The owner ID or namespace of the LZA configuration repository accessed through CodeConnection, such as the owner ID in GitHub. (CodeConnection only)",
       "Type": "String",
     },
     "LogArchiveAccountEmail": {
@@ -21824,7 +23103,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 7`] = `
         "No",
       ],
       "Default": "No",
-      "Description": "Select Yes if deploying the solution with an existing CodeCommit configuration repository. Leave the default value if using the solution-deployed repository. If the AcceleratorPrefix parameter is set to the default value, the solution will deploy a repository named "aws-accelerator-config." Otherwise, the solution-deployed repository will be named "AcceleratorPrefix-config." Note: Updating this value after initial installation may cause adverse affects.",
+      "Description": "Select Yes if deploying the solution with an existing configuration repository. Leave the default value if using the solution-deployed repository. If the AcceleratorPrefix parameter is set to the default value, the solution will deploy a repository named "aws-accelerator-config." Otherwise, the solution-deployed repository will be named "AcceleratorPrefix-config." Note: Updating this value after initial installation may cause adverse affects.",
       "Type": "String",
     },
   },
@@ -23186,6 +24465,13 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 7`] = `
               },
             },
             {
+              "Name": "CODECONNECTION_ARN",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ConfigCodeConnectionArn",
+              },
+            },
+            {
               "Name": "USE_EXISTING_CONFIG_REPO",
               "Type": "PLAINTEXT",
               "Value": {
@@ -23204,6 +24490,13 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 7`] = `
               "Type": "PLAINTEXT",
               "Value": {
                 "Ref": "ExistingConfigRepositoryBranchName",
+              },
+            },
+            {
+              "Name": "EXISTING_CONFIG_REPOSITORY_OWNER",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ExistingConfigRepositoryOwner",
               },
             },
             {
@@ -25511,6 +26804,183 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
         ],
       },
       "Type": "AWS::IAM::Role",
+    },
+  },
+  "Rules": {
+    "CodeConnectionArnRequiredForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "",
+                      {
+                        "Ref": "ConfigCodeConnectionArn",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "codeconnectionArn parameter must be provided when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+    "ExistingBranchRequiredForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "",
+                      {
+                        "Ref": "ExistingConfigRepositoryBranchName",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "existingConfigRepositoryBranchName parameter must be provided when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+    "ExistingRepoNameRequiredForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "",
+                      {
+                        "Ref": "ExistingConfigRepositoryName",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "existingConfigRepositoryName parameter must be provided when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+    "ExistingRepoOwnerRequiredForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "",
+                      {
+                        "Ref": "ExistingConfigRepositoryOwner",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "existingConfigRepositoryOwner parameter must be populated when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+    },
+    "UseExistingIsYesForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "codeconnection",
+                      {
+                        "Ref": "ConfigurationRepositoryLocation",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      "No",
+                      {
+                        "Ref": "UseExistingConfigRepo",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "useExistingConfigRepo parameter must be set to "Yes" when configRepositoryLocation is set to codeconnection",
+        },
+      ],
     },
   },
 }
