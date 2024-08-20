@@ -250,23 +250,25 @@ export async function createPipelineStack(
       accountId: context.account!,
       region: context.region!,
     });
-    // get existing CT details
+    // get existing CT details only when Control Tower is enabled
+    let landingZoneIdentifier: string | undefined;
+    if (acceleratorEnv.controlTowerEnabled) {
+      //
+      // Get Management account credentials
+      //
+      const solutionId = `AwsSolution/SO0199/${version}`;
+      const managementAccountCredentials = await getManagementAccountCredentials(
+        context.partition,
+        context.region!,
+        solutionId,
+      );
 
-    //
-    // Get Management account credentials
-    //
-    const solutionId = `AwsSolution/SO0199/${version}`;
-    const managementAccountCredentials = await getManagementAccountCredentials(
-      context.partition,
-      context.region!,
-      solutionId,
-    );
-
-    const landingZoneIdentifier = await getLandingZoneIdentifier(undefined, {
-      homeRegion: context.region!,
-      solutionId,
-      credentials: managementAccountCredentials,
-    });
+      landingZoneIdentifier = await getLandingZoneIdentifier(undefined, {
+        homeRegion: context.region!,
+        solutionId,
+        credentials: managementAccountCredentials,
+      });
+    }
 
     const pipelineStack = new PipelineStack(app, pipelineStackName, {
       env: { account: context.account, region: context.region },
