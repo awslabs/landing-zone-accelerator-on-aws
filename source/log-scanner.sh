@@ -5,7 +5,7 @@ RED='\033[0;31m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 cd ../
-files=$(git diff --staged --name-only)
+files=$(git diff --staged --diff-filter=AM --name-only)
 for file in $files; do
     lines=$(awk '/console.log\(/{ print NR; }' $file)
     for line in $lines; do
