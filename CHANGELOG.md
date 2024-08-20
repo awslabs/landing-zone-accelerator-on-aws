@@ -16,6 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - chore(lambda): remove debug console log statements
 
+## [1.9.2] -
+
+### Fixed
+
+- fix(control-tower): skip existing ct identifier check when ct is not enabled
+
+
 ## [1.9.1] - 08-09-2024
 
 ### Changed
