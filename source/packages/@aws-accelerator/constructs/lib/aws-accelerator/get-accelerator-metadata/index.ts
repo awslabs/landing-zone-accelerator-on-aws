@@ -215,6 +215,7 @@ async function downloadRepositoryFile(props: {
   commitSpecifier: string;
   filePath: string;
 }): Promise<{ fileContents: string; filePath: string }> {
+  const decoder = new TextDecoder();
   const file = await throttlingBackOff(() =>
     props.codeCommitClient.send(
       new GetFileCommand({
@@ -225,7 +226,7 @@ async function downloadRepositoryFile(props: {
     ),
   );
   return {
-    fileContents: file.fileContent!.toString(),
+    fileContents: decoder.decode(file.fileContent!),
     filePath: file.filePath!,
   };
 }
