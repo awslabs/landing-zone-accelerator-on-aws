@@ -243,3 +243,6 @@ source/packages/@aws-config-converter/src/config/global-config.ts:2306
 # Assume role declaration
 source/packages/@aws-accelerator/utils/test/get-template.test.ts:67
 source/packages/@aws-accelerator/utils/test/get-template.test.ts:74
+
+# Security Email Address in Security.md file
+SECURITY.md:10
