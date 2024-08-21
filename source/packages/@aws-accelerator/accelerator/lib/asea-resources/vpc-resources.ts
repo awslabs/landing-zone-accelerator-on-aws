@@ -229,7 +229,7 @@ export class VpcResources extends AseaResource {
         cfnNaclSubnetAssociation = this.modifyNaclSubnetAssociation(
           cfnNaclSubnetAssociation,
           naclId,
-          subnetId?.physicalResourceId,
+          cfnNaclSubnetAssociation.subnetId,
         );
       }
 
@@ -269,7 +269,7 @@ export class VpcResources extends AseaResource {
 
     const naclSubnetAssociation = naclSubnetAssociations.find(
       naclSubnetAssociations =>
-        naclSubnetAssociations.resourceMetadata['Properties'].SubnetId === subnetId?.physicalResourceId,
+        naclSubnetAssociations.resourceMetadata['Properties'].SubnetId.Ref === subnetId?.logicalResourceId,
     );
     return naclSubnetAssociation;
   }
