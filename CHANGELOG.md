@@ -5,18 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.9.2] - 
+## [1.9.2] - 08-26-2024
 
 ### Fixed
 
-- fix: configuration validation failure when SecurityHub was enabled with Control Tower
-
-## [1.9.2] -
-
-### Fixed
-
+- fix(metadata): fixed config file writes with codecommit
+- fix(validation): configuration validation failure when SecurityHub was enabled with Control Tower
 - fix(control-tower): skip existing ct identifier check when ct is not enabled
 
+### Changed
+
+- chore: add security.md file to repo
 
 ## [1.9.1] - 08-09-2024
 
