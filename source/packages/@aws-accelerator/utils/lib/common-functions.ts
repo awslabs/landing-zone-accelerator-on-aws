@@ -178,6 +178,8 @@ export function getGlobalRegion(partition: string): string {
   switch (partition) {
     case 'aws-us-gov':
       return 'us-gov-west-1';
+    case 'aws-iso-f':
+      return 'us-isof-south-1';
     case 'aws-iso-b':
       return 'us-isob-east-1';
     case 'aws-iso':

@@ -264,6 +264,9 @@ export class InstallerStack extends cdk.Stack {
         'aws-us-gov': {
           regionName: 'us-gov-west-1',
         },
+        'aws-iso-f': {
+          regionName: 'us-isof-south-1',
+        },
         'aws-iso-b': {
           regionName: 'us-isob-east-1',
         },

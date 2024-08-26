@@ -90,8 +90,8 @@ source/packages/@aws-accelerator/utils/lib/regions.ts:94
 source/packages/@aws-accelerator/utils/lib/regions.ts:95
 source/packages/@aws-accelerator/utils/lib/regions.ts:96
 source/packages/@aws-accelerator/utils/lib/regions.ts:97
-source/packages/@aws-accelerator/utils/lib/regions.ts:98
-source/packages/@aws-accelerator/utils/lib/regions.ts:99
+source/packages/@aws-accelerator/utils/lib/regions.ts:102
+source/packages/@aws-accelerator/utils/lib/regions.ts:103
 
 # Accelerator specific assume role declaration
 
