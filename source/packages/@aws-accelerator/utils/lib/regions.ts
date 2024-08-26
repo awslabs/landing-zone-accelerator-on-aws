@@ -56,6 +56,8 @@ export enum RegionName {
   'us-iso-east-1',
   'us-isob-east-1',
   'us-iso-west-1',
+  'us-isof-south-1',
+  'us-isof-east-1',
   'us-west-1',
   'us-west-2',
 }
@@ -95,6 +97,8 @@ const regionsInfo: Record<keyof typeof RegionName, RegionInfo> = {
   'us-iso-east-1': { azId: undefined, elbAccount: undefined, optIn: false },
   'us-isob-east-1': { azId: undefined, elbAccount: undefined, optIn: false },
   'us-iso-west-1': { azId: undefined, elbAccount: undefined, optIn: false },
+  'us-isof-south-1': { azId: undefined, elbAccount: undefined, optIn: false },
+  'us-isof-east-1': { azId: undefined, elbAccount: undefined, optIn: false },
   'us-west-1': { azId: 'usw1-az', elbAccount: '027434742980', optIn: false },
   'us-west-2': { azId: 'usw2-az', elbAccount: '797873946194', optIn: false },
 };

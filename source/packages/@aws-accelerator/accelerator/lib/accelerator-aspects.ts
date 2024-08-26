@@ -39,6 +39,23 @@ class GovCloudOverrides implements cdk.IAspect {
 }
 
 /**
+ * Property overrides for ISO-F environments
+ */
+class IsofOverrides implements cdk.IAspect {
+  public visit(node: IConstruct): void {
+    if (node instanceof cdk.aws_iam.CfnRole) {
+      const trustPolicyDoc = node.assumeRolePolicyDocument as cdk.aws_iam.SamlConsolePrincipal;
+      if (JSON.stringify(trustPolicyDoc).includes('signin.aws.amazon.com')) {
+        node.addPropertyOverride(
+          'AssumeRolePolicyDocument.Statement.0.Condition.StringEquals.SAML:aud',
+          'https://signin.csphome.hci.ic.gov/saml',
+        );
+      }
+    }
+  }
+}
+
+/**
  * Property overrides for ISO-B environments
  */
 class IsobOverrides implements cdk.IAspect {
@@ -304,6 +321,10 @@ export class AcceleratorAspects {
       case 'aws-iso-b':
         globalRegion = 'us-isob-east-1';
         cdk.Aspects.of(app).add(new IsobOverrides());
+        break;
+      case 'aws-iso-f':
+        globalRegion = 'us-isof-south-1';
+        cdk.Aspects.of(app).add(new IsofOverrides());
         break;
       case 'aws-cn':
         globalRegion = 'cn-northwest-1';

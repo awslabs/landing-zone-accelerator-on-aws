@@ -54,6 +54,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
       "aws-iso-b": {
         "regionName": "us-isob-east-1",
       },
+      "aws-iso-f": {
+        "regionName": "us-isof-south-1",
+      },
       "aws-us-gov": {
         "regionName": "us-gov-west-1",
       },
@@ -3831,6 +3834,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
       "aws-iso-b": {
         "regionName": "us-isob-east-1",
       },
+      "aws-iso-f": {
+        "regionName": "us-isof-south-1",
+      },
       "aws-us-gov": {
         "regionName": "us-gov-west-1",
       },
@@ -7597,6 +7603,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
       },
       "aws-iso-b": {
         "regionName": "us-isob-east-1",
+      },
+      "aws-iso-f": {
+        "regionName": "us-isof-south-1",
       },
       "aws-us-gov": {
         "regionName": "us-gov-west-1",
@@ -11418,6 +11427,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
       "aws-iso-b": {
         "regionName": "us-isob-east-1",
       },
+      "aws-iso-f": {
+        "regionName": "us-isof-south-1",
+      },
       "aws-us-gov": {
         "regionName": "us-gov-west-1",
       },
@@ -15227,6 +15239,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
       },
       "aws-iso-b": {
         "regionName": "us-isob-east-1",
+      },
+      "aws-iso-f": {
+        "regionName": "us-isof-south-1",
       },
       "aws-us-gov": {
         "regionName": "us-gov-west-1",
@@ -19043,6 +19058,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 6`] = `
       "aws-iso-b": {
         "regionName": "us-isob-east-1",
       },
+      "aws-iso-f": {
+        "regionName": "us-isof-south-1",
+      },
       "aws-us-gov": {
         "regionName": "us-gov-west-1",
       },
@@ -22840,6 +22858,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 7`] = `
       },
       "aws-iso-b": {
         "regionName": "us-isob-east-1",
+      },
+      "aws-iso-f": {
+        "regionName": "us-isof-south-1",
       },
       "aws-us-gov": {
         "regionName": "us-gov-west-1",
