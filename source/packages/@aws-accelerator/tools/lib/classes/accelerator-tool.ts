@@ -56,6 +56,7 @@ import { ListAccountsCommand, OrganizationsClient } from '@aws-sdk/client-organi
 import {
   DeleteBucketCommand,
   DeleteObjectsCommand,
+  GetObjectCommand,
   ListBucketsCommand,
   ListObjectVersionsCommand,
   ListObjectVersionsCommandOutput,
@@ -69,6 +70,7 @@ import {
   STSClient,
 } from '@aws-sdk/client-sts';
 import { ConfigServiceClient, DescribeConfigRulesCommand } from '@aws-sdk/client-config-service';
+import AdmZip, { IZipEntry } from 'adm-zip';
 
 /**
  * Type for pipeline stage action information with order and action name
@@ -127,6 +129,17 @@ export interface AcceleratorToolProps {
 }
 
 /**
+ * LZARepository Properties
+ */
+export interface LzaRepositoryProps {
+  repositoryName?: string;
+  branch?: string;
+  bucketName?: string;
+  objectKey?: string;
+  provider: string;
+}
+
+/**
  * AcceleratorTool Class
  */
 export class AcceleratorTool {
@@ -158,7 +171,7 @@ export class AcceleratorTool {
    * Pipeline Source Config repository details
    * @private
    */
-  private pipelineConfigSourceRepo: { repositoryName: string; branch: string; provider: string } | undefined;
+  private pipelineConfigSourceRepo: LzaRepositoryProps | undefined;
 
   /**
    * bootstrapBuildEnvironmentVariables
@@ -347,7 +360,6 @@ export class AcceleratorTool {
       this.debugLog(`${installerPipeline.pipelineName}`, 'info');
       return false;
     }
-
     const getPipelineNameResponse = await throttlingBackOff(() =>
       new CodePipelineClient({}).send(new GetPipelineCommand({ name: installerPipeline.pipelineName })),
     );
@@ -586,10 +598,7 @@ export class AcceleratorTool {
       acceleratorPipeline.status &&
       (await AcceleratorTool.isConfigRepositoryCreatedByAccelerator(acceleratorPipelineStackName))
     ) {
-      await this.deleteCodecommitRepository(
-        new CodeCommitClient({}),
-        `${this.pipelineConfigSourceRepo?.repositoryName}`,
-      );
+      await this.deleteLzaRepository(this.pipelineConfigSourceRepo!);
 
       const codeBuildClient = new CodeBuildClient({});
       const response = await throttlingBackOff(() =>
@@ -767,18 +776,44 @@ export class AcceleratorTool {
    * @private
    */
   private async getGlobalConfig(): Promise<GlobalConfig> {
-    const codeCommitClient = new CodeCommitClient({});
-    const response = await throttlingBackOff(() =>
-      codeCommitClient.send(
-        new GetFileCommand({
-          repositoryName: this.pipelineConfigSourceRepo!.repositoryName,
-          filePath: 'global-config.yaml',
-        }),
-      ),
-    );
+    let fileContent: string;
+    if (this.pipelineConfigSourceRepo?.provider === 'codecommit') {
+      const codeCommitClient = new CodeCommitClient({});
+      const response = await throttlingBackOff(() =>
+        codeCommitClient.send(
+          new GetFileCommand({
+            repositoryName: this.pipelineConfigSourceRepo!.repositoryName,
+            filePath: 'global-config.yaml',
+          }),
+        ),
+      );
+      if (response.fileContent) {
+        fileContent = new TextDecoder().decode(response.fileContent);
+      } else {
+        throw new Error('Error retrieving global-config.yaml from the CodeCommit repository');
+      }
+    } else {
+      const tempFilePath = await this.getZipFileFromS3(
+        new S3Client({}),
+        this.pipelineConfigSourceRepo!.bucketName!,
+        this.pipelineConfigSourceRepo!.objectKey!,
+      );
+      const admZipInstance = new AdmZip(tempFilePath);
+      const zipEntries = admZipInstance.getEntries();
+
+      zipEntries.forEach((zipEntry: IZipEntry) => {
+        if (!zipEntry.isDirectory) {
+          this.debugLog(`Reading file: ${zipEntry.entryName}`, 'info');
+          if (zipEntry.entryName === 'global-config.yaml') {
+            fileContent = admZipInstance.readAsText(zipEntry);
+          }
+        }
+      });
+      fs.unlinkSync(tempFilePath);
+    }
 
     const tempDirPath = fs.mkdtempSync(path.join(os.tmpdir(), 'accel-config'));
-    fs.writeFileSync(path.join(tempDirPath, 'global-config.yaml'), response.fileContent!, 'utf8');
+    fs.writeFileSync(path.join(tempDirPath, 'global-config.yaml'), fileContent!, 'utf8');
     return GlobalConfig.load(tempDirPath);
   }
 
@@ -890,6 +925,33 @@ export class AcceleratorTool {
       }
     }
     return true;
+  }
+
+  /**
+   * Function to retrieve the zip repo from S3
+   * @param s3Client
+   * @param stackName
+   * @param bucketName
+   * @private
+   */
+  private async getZipFileFromS3(s3Client: S3Client, configBucketName: string, s3ConfigObjectKey: string) {
+    const response = await throttlingBackOff(() =>
+      s3Client.send(
+        new GetObjectCommand({
+          Bucket: configBucketName,
+          Key: s3ConfigObjectKey,
+        }),
+      ),
+    );
+    const zipFile = response.Body;
+
+    if (!zipFile) {
+      throw new Error('Failed to download the configuration file from S3.');
+    }
+    const tempFilePath = `/tmp/${s3ConfigObjectKey.split('/').pop()}`;
+    await fs.promises.writeFile(tempFilePath, await zipFile.transformToByteArray());
+
+    return tempFilePath;
   }
 
   /**
@@ -1536,6 +1598,21 @@ export class AcceleratorTool {
   }
 
   /**
+   * Function to delete LZA configuration repository
+   * @param repositoryProps
+   * @private
+   */
+  private async deleteLzaRepository(repositoryProps: LzaRepositoryProps): Promise<void> {
+    //Delete config repository
+    if (repositoryProps.provider === 'codecommit') {
+      await this.deleteCodecommitRepository(new CodeCommitClient({}), repositoryProps.repositoryName!);
+    } else {
+      // await this.deleteS3Repository();
+      await this.deleteBucket(new S3Client({}), 'Prepare', repositoryProps.bucketName!);
+    }
+  }
+
+  /**
    * Function to delete code commit repository
    * @param codeCommitClient
    * @param repositoryName
@@ -1643,6 +1720,8 @@ export class AcceleratorTool {
       for (const action of stage.actions!) {
         if (action.name! === 'Configuration') {
           this.pipelineConfigSourceRepo = {
+            bucketName: action.configuration!['S3Bucket'],
+            objectKey: action.configuration!['S3ObjectKey'],
             repositoryName: action.configuration!['RepositoryName'],
             branch: action.configuration!['BranchName'],
             provider: action.actionTypeId!.provider!,
