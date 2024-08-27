@@ -34,6 +34,7 @@
     "@aws-sdk/client-kms": "3.410.0",
     "@aws-sdk/client-organizations": "3.410.0",
     "@aws-sdk/client-s3": "3.412.0",
+    "adm-zip": "0.5.15",
     "yargs": "17.7.1"
   },
   "devDependencies": {
