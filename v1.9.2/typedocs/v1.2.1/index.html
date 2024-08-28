@@ -1,0 +1,240 @@
+<!DOCTYPE html><html class="default"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>Landing Zone Accelerator on AWS - v1.2.1</title><meta name="description" content="Documentation for Landing Zone Accelerator on AWS - v1.2.1"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="assets/style.css"/><link rel="stylesheet" href="assets/highlight.css"/><script async src="assets/search.js" id="search-script"></script></head><body><script>document.body.classList.add(localStorage.getItem("tsd-theme") || "os")</script><header><div class="tsd-page-toolbar"><div class="container"><div class="table-wrap"><div class="table-cell" id="tsd-search" data-base="."><div class="field"><label for="tsd-search-field" class="tsd-widget search no-caption">Search</label><input type="text" id="tsd-search-field"/></div><ul class="results"><li class="state loading">Preparing search index...</li><li class="state failure">The search index is not available</li></ul><a href="index.html" class="title">Landing Zone Accelerator on AWS - v1.2.1</a></div><div class="table-cell" id="tsd-widgets"><div id="tsd-filter"><a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a><div class="tsd-filter-group"><div class="tsd-select" id="tsd-filter-visibility"><span class="tsd-select-label">All</span><ul class="tsd-select-list"><li data-value="public">Public</li><li data-value="protected">Public/Protected</li><li data-value="private" class="selected">All</li></ul></div> <input type="checkbox" id="tsd-filter-inherited" checked/><label class="tsd-widget" for="tsd-filter-inherited">Inherited</label><input type="checkbox" id="tsd-filter-externals" checked/><label class="tsd-widget" for="tsd-filter-externals">Externals</label></div></div><a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a></div></div></div></div><div class="tsd-page-title"><div class="container"><h1> Landing Zone Accelerator on AWS - v1.2.1</h1></div></div></header><div class="container container-main"><div class="row"><div class="col-8 col-content"><div class="tsd-panel tsd-typography">
+<a href="#landing-zone-accelerator-on-aws" id="landing-zone-accelerator-on-aws" style="color: inherit; text-decoration: none;">
+  <h1>Landing Zone Accelerator on AWS</h1>
+</a>
+<p>The Landing Zone Accelerator on AWS solution helps you quickly deploy a secure,
+resilient, scalable, and fully automated cloud foundation that accelerates your
+readiness for your cloud compliance program. A landing zone is a cloud
+environment that offers a recommended starting point, including default
+accounts, account structure, network and security layouts, and so forth. From a
+landing zone, you can deploy workloads that utilize your solutions and
+applications.</p>
+<p>The Landing Zone Accelerator (LZA) is architected to align with AWS best
+practices and in conformance with multiple, global compliance frameworks. When
+used in coordination with services such as AWS Control Tower, the Landing Zone
+Accelerator provides a comprehensive no-code solution across 35+ AWS services to
+manage and govern a multi-account environment built to support customers with
+highly-regulated workloads and complex compliance requirements. The LZA helps
+you establish platform readiness with security, compliance, and operational
+capabilities.</p>
+<p>This solution is provided as an open-source project that is built using the AWS
+Cloud Development Kit (CDK). You install directly into your environment giving
+you full access to the infrastructure as code (IaC) solution. Through a
+simplified set of configuration files, you are able to configure additional
+functionality, guardrails and security services (eg. AWS Managed Config Rules,
+and AWS SecurityHub), manage your foundational networking topology (eg. VPCs,
+Transit Gateways, and Network Firewall), and generate additional workload
+accounts using the AWS Control Tower Account Factory.</p>
+<p>There are no additional charges or upfront commitments required to use Landing
+Zone Accelerator on AWS. You pay only for AWS services enabled in order to set
+up your platform and operate your guardrails. This solution can also support
+non-standard AWS partitions, including AWS GovCloud (US), and the US Secret and
+Top Secret regions.</p>
+<p>For an overview and solution deployment guide, please visit
+<a href="https://aws.amazon.com/solutions/implementations/landing-zone-accelerator-on-aws/">Landing Zone Accelerator on AWS</a></p>
+<hr>
+<p>IMPORTANT: This solution will not, by itself, make you compliant. It provides
+the foundational infrastructure from which additional complementary solutions
+can be integrated. The information contained in this solution implementation
+guide is not exhaustive. You must be review, evaluate, assess, and approve the
+solution in compliance with your organization’s particular security features,
+tools, and configurations. It is the sole responsibility of you and your
+organization to determine which regulatory requirements are applicable and to
+ensure that you comply with all requirements. Although this solution discusses
+both the technical and administrative requirements, this solution does not help
+you comply with the non-technical administrative requirements.</p>
+<hr>
+<p>This solution collects anonymous operational metrics to help AWS improve the
+quality of features of the solution. For more information, including how to
+disable this capability, please see the <a href="https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/collection-of-operational-metrics.html">implementation guide</a>.</p>
+<hr>
+
+<a href="#package-structure" id="package-structure" style="color: inherit; text-decoration: none;">
+  <h2>Package Structure</h2>
+</a>
+
+<a href="#aws-acceleratoraccelerator" id="aws-acceleratoraccelerator" style="color: inherit; text-decoration: none;">
+  <h3>@aws-accelerator/accelerator</h3>
+</a>
+<p>A CDK Application. The core of the accelerator solution. Contains all the stack
+definitions and deployment pipeline for the accelerator. This also includes the
+CDK Toolkit orchestration.</p>
+
+<a href="#aws-acceleratorconfig" id="aws-acceleratorconfig" style="color: inherit; text-decoration: none;">
+  <h3>@aws-accelerator/config</h3>
+</a>
+<p>A pure typescript library containing modules to manage the accelerator config
+files.</p>
+
+<a href="#aws-acceleratorconstructs" id="aws-acceleratorconstructs" style="color: inherit; text-decoration: none;">
+  <h3>@aws-accelerator/constructs</h3>
+</a>
+<p>Contains L2/L3 constructs that have been built to support accelerator actions,
+such as creating an AWS Organizational Unit or VPC. These constructs are
+intended to be fully reusable, independent of the accelerator, and do not
+directly access the accelerator configuration files. Example: CentralLogsBucket,
+an S3 bucket that is configured with a CMK with the proper key and bucket
+policies to allow services and accounts in the organization to publish logs to
+the bucket.</p>
+
+<a href="#aws-acceleratorinstaller" id="aws-acceleratorinstaller" style="color: inherit; text-decoration: none;">
+  <h3>@aws-accelerator/installer</h3>
+</a>
+<p>Contains a CDK Application that defines the accelerator Installer stack.</p>
+
+<a href="#aws-acceleratorui-future" id="aws-acceleratorui-future" style="color: inherit; text-decoration: none;">
+  <h3>@aws-accelerator/ui (future)</h3>
+</a>
+<p>A web application that utilizes the aws-ui-components library to present a
+console to configure the accelerator</p>
+
+<a href="#aws-acceleratorutils" id="aws-acceleratorutils" style="color: inherit; text-decoration: none;">
+  <h3>@aws-accelerator/utils</h3>
+</a>
+<p>Contains common utilities and types that are needed by @aws-accelerator/*
+packages. For example, throttling and backoff for AWS SDK calls</p>
+
+<a href="#aws-cdk-extensionscdk-extensions" id="aws-cdk-extensionscdk-extensions" style="color: inherit; text-decoration: none;">
+  <h3>@aws-cdk-extensions/cdk-extensions</h3>
+</a>
+<p>Contains L2 constructs that extend the functionality of the CDK repo. The CDK
+repo is an actively developed project. As the accelerator team identifies
+missing features of the CDK, those features will be initially developed locally
+within this repo and submitted to the CDK project as a pull request.</p>
+
+<a href="#aws-cdk-extensionstester" id="aws-cdk-extensionstester" style="color: inherit; text-decoration: none;">
+  <h3>@aws-cdk-extensions/tester</h3>
+</a>
+<p>Accelerator tester CDK app. This package creates AWS Config custom rules for every test cases defined in test case manifest file.</p>
+<hr>
+
+<a href="#included-features" id="included-features" style="color: inherit; text-decoration: none;">
+  <h2>Included Features</h2>
+</a>
+<table>
+<thead>
+<tr>
+<th>Service / Feature</th>
+<th>Resource</th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>AWS Control Tower</td>
+<td>Control Tower</td>
+<td>Enabled in the global-config.yaml. It is recommended that AWS Control Tower is enabled, if available, in the desired home region for your environment prior to installing the accelerator. When enabled, the accelerator will integrate with resources and guardrails deployed by AWS Control Tower.</td>
+</tr>
+<tr>
+<td>AWS Config</td>
+<td>Config Recorder</td>
+<td>The accelerator configures AWS Config Recorders in all specified accounts and regions</td>
+</tr>
+<tr>
+<td>AWS Config</td>
+<td>Config Rules</td>
+<td>Defined in the security-config.yaml and deployed to all specified accounts and regions as individual account Config Rules. Support for Organizations Config Rules is planned for a future version</td>
+</tr>
+<tr>
+<td>AWS Organizations</td>
+<td>Organizational Units</td>
+<td>Defined in the organization-config.yaml and deployed through the management (root) in the home region</td>
+</tr>
+<tr>
+<td>AWS Organizations</td>
+<td>Service Control Policies</td>
+<td>Defined in the organization-config.yaml and deployed through the management (root) in the home region</td>
+</tr>
+<tr>
+<td>AWS SecurityHub</td>
+<td>SecurityHub</td>
+<td>Defined in the security-config.yaml and deployed to all specified accounts and regions. Additionally, the accelerator will designate a service administrator account, commonly this is the security audit account</td>
+</tr>
+<tr>
+<td>Amazon Macie</td>
+<td>Macie Session</td>
+<td>Defined in the security-config.yaml and deployed to all specified accounts and regions. Additionally, the accelerator will designate a service administrator account, commonly this is the security audit account</td>
+</tr>
+<tr>
+<td>Amazon GuardDuty</td>
+<td>GuardDuty</td>
+<td>Defined in the security-config.yaml and deployed to all specified accounts and regions. Additionally, the accelerator will designate a service administrator account, commonly this is the security audit account</td>
+</tr>
+<tr>
+<td>AWS Cloudtrail</td>
+<td>Organizations Trail</td>
+<td>Defined in the global-config.yaml. When specified, an Organizations trail is deployed through the management (root) account to cover all regions, and all trails are recorded to the central-logging-bucket defined in the log-archive account.</td>
+</tr>
+<tr>
+<td>Centralized Logging</td>
+<td>S3</td>
+<td>Defined in the global-config.yaml, integrates with AWS Control Tower, if enabled, to centralize logs from AWS services, such as AWS CloudTrail, AWS Config and VPC FlowLogs</td>
+</tr>
+<tr>
+<td>AWS IAM</td>
+<td>Policies / Roles / Groups / Users</td>
+<td>Defined in the iam-config.yaml and deployed to all specified accounts and regions. The accelerator will integrate an identity provider (IdP) metadata document can be stored in AWS CUsers that are specified in the configuration are created with AWS Secrets Manager generated passwords and stored locally in the account where the user was created.</td>
+</tr>
+<tr>
+<td>AWS IAM</td>
+<td>SAML Federation</td>
+<td>Defined in the iam-config.yaml and deployed to all specified accounts and regions. The accelerator will integrate the specified identity provider (IdP) metadata document with AWS IAM.</td>
+</tr>
+<tr>
+<td>Core Networking</td>
+<td>VPC / Subnets / Route Tables / Security Groups/ NACLs</td>
+<td>Defined in the network-config.yaml and deployed to all specified accounts and regions</td>
+</tr>
+<tr>
+<td>Core Networking</td>
+<td>Transit Gateway</td>
+<td>Defined in the network-config.yaml and deployed to all specified accounts and regions. The accelerator will automatically attach VPCs to specified Transit Gateways</td>
+</tr>
+<tr>
+<td>Core Networking</td>
+<td>VPC Endpoints</td>
+<td>Defined in the network-config.yaml and deployed to all specified accounts and regions. The accelerator will also deploy AWS Route53 Hosted Zones to specified VPCs to support centralized VPC endpoint usage</td>
+</tr>
+<tr>
+<td>Core Networking</td>
+<td>VPC Flow Logs</td>
+<td>Defined in the network-config.yaml and deployed to all specified accounts and regions. VPC Flow Logs can be configured on all defined VPCs to send to S3 for centralized logging and/or CloudWatch Logs</td>
+</tr>
+</tbody></table>
+
+<a href="#creating-an-installer-stack" id="creating-an-installer-stack" style="color: inherit; text-decoration: none;">
+  <h2>Creating an Installer Stack</h2>
+</a>
+<p>The Installer Stack, a CDK Application, can be deployed through a CloudFormation template produced by your CLI by
+navigating to the directory for the installer and running a CDK synthesis. The template can either be deployed
+directly via the AWS CLI or console. Below are the commands for completing the deployment of the Installer stack.</p>
+
+<a href="#1-build-the-installer-stack-for-deployment" id="1-build-the-installer-stack-for-deployment" style="color: inherit; text-decoration: none;">
+  <h3>1. Build the Installer stack for deployment</h3>
+</a>
+<ul>
+<li>To run the CDK synthesis</li>
+</ul>
+<pre><code><span class="hl-0">cd</span><span class="hl-1"> &lt;</span><span class="hl-0">rootDir</span><span class="hl-1">&gt;/</span><span class="hl-0">source</span><span class="hl-1">/</span><span class="hl-0">packages</span><span class="hl-1">/@</span><span class="hl-0">aws</span><span class="hl-1">-</span><span class="hl-0">accelerator</span><span class="hl-1">/</span><span class="hl-0">installer</span><br/><span class="hl-0">yarn</span><span class="hl-1"> </span><span class="hl-0">cdk</span><span class="hl-1"> </span><span class="hl-0">synth</span>
+</code></pre>
+<ul>
+<li>Configure the AWS CLI CloudFormation command for the Installer stack</li>
+</ul>
+<pre><code><span class="hl-0">aws</span><span class="hl-1"> </span><span class="hl-0">cloudformation</span><span class="hl-1"> </span><span class="hl-0">create</span><span class="hl-1">-</span><span class="hl-0">stack</span><span class="hl-1"> --</span><span class="hl-0">stack</span><span class="hl-1">-</span><span class="hl-0">name</span><span class="hl-1"> </span><span class="hl-0">AWSAccelerator</span><span class="hl-1">-</span><span class="hl-0">InstallerStack</span><span class="hl-1"> --</span><span class="hl-0">template</span><span class="hl-1">-</span><span class="hl-0">body</span><span class="hl-1"> </span><span class="hl-2">file</span><span class="hl-1">:</span><span class="hl-3">//cdk.out/AWSAccelerator-InstallerStack.template.json \</span><br/><span class="hl-1">--</span><span class="hl-0">parameters</span><span class="hl-1"> </span><span class="hl-0">ParameterKey</span><span class="hl-1">=</span><span class="hl-0">RepositoryName</span><span class="hl-1">,</span><span class="hl-0">ParameterValue</span><span class="hl-1">=&lt;</span><span class="hl-4">Repository_Name</span><span class="hl-1">&gt; \</span><br/><span class="hl-0">ParameterKey</span><span class="hl-1">=</span><span class="hl-0">RepositoryBranchName</span><span class="hl-1">,</span><span class="hl-0">ParameterValue</span><span class="hl-1">=&lt;</span><span class="hl-4">Branch_Name</span><span class="hl-1">&gt; \</span><br/><span class="hl-0">ParameterKey</span><span class="hl-1">=</span><span class="hl-0">AcceleratorQualifier</span><span class="hl-1">,</span><span class="hl-0">ParameterValue</span><span class="hl-1">=&lt;</span><span class="hl-4">Accelerator_Qualifier</span><span class="hl-1">&gt; \</span><br/><span class="hl-0">ParameterKey</span><span class="hl-1">=</span><span class="hl-0">ManagementAccountId</span><span class="hl-1">,</span><span class="hl-0">ParameterValue</span><span class="hl-1">=&lt;</span><span class="hl-4">Management_Id</span><span class="hl-1">&gt; \</span><br/><span class="hl-0">ParameterKey</span><span class="hl-1">=</span><span class="hl-0">ManagementAccountEmail</span><span class="hl-1">,</span><span class="hl-0">ParameterValue</span><span class="hl-1">=&lt;</span><span class="hl-4">Management_Email</span><span class="hl-1">&gt; \</span><br/><span class="hl-0">ParameterKey</span><span class="hl-1">=</span><span class="hl-0">ManagementAccountRoleName</span><span class="hl-1">,</span><span class="hl-0">ParameterValue</span><span class="hl-1">= \</span><br/><span class="hl-0">ParameterKey</span><span class="hl-1">=</span><span class="hl-0">LogArchiveAccountEmail</span><span class="hl-1">,</span><span class="hl-0">ParameterValue</span><span class="hl-1">=&lt;</span><span class="hl-4">LogArchive_Email</span><span class="hl-1">&gt; \</span><br/><span class="hl-0">ParameterKey</span><span class="hl-1">=</span><span class="hl-0">AuditAccountEmail</span><span class="hl-1">,</span><span class="hl-0">ParameterValue</span><span class="hl-1">=&lt;</span><span class="hl-4">Audit_Email</span><span class="hl-1">&gt; \</span><br/><span class="hl-0">ParameterKey</span><span class="hl-1">=</span><span class="hl-0">EnableApprovalStage</span><span class="hl-1">,</span><span class="hl-0">ParameterValue</span><span class="hl-1">=</span><span class="hl-0">Yes</span><br/><span class="hl-0">ParameterKey</span><span class="hl-1">=</span><span class="hl-0">ApprovalStageNotifyEmailList</span><span class="hl-1">,</span><span class="hl-0">ParameterValue</span><span class="hl-1">=</span><span class="hl-0">comma</span><span class="hl-1">-</span><span class="hl-0">delimited</span><span class="hl-1">-</span><span class="hl-0">notify</span><span class="hl-1">-</span><span class="hl-0">emails</span><br/><span class="hl-1">--</span><span class="hl-0">capabilities</span><span class="hl-1"> </span><span class="hl-5">CAPABILITY_IAM</span>
+</code></pre>
+<ul>
+<li>Alternate deployment of CloudFormation via AWS console:</li>
+</ul>
+<pre><code><span class="hl-1">- </span><span class="hl-0">Navigate</span><span class="hl-1"> </span><span class="hl-0">to</span><span class="hl-1"> </span><span class="hl-0">CloudFormation</span><span class="hl-1"> </span><span class="hl-0">page</span><span class="hl-1"> </span><span class="hl-6">in</span><span class="hl-1"> </span><span class="hl-0">the</span><span class="hl-1"> </span><span class="hl-5">AWS</span><span class="hl-1"> </span><span class="hl-0">console</span><br/><span class="hl-1">- </span><span class="hl-0">Select</span><span class="hl-1"> ‘</span><span class="hl-0">Create</span><span class="hl-1"> </span><span class="hl-0">Stack</span><span class="hl-1">’ </span><span class="hl-0">and</span><span class="hl-1"> </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-0">the</span><span class="hl-1"> </span><span class="hl-0">dropdown</span><span class="hl-1"> </span><span class="hl-0">pick</span><span class="hl-1"> ‘</span><span class="hl-7">with</span><span class="hl-1"> </span><span class="hl-6">new</span><span class="hl-1"> </span><span class="hl-8">resources</span><span class="hl-1"> (</span><span class="hl-0">standard</span><span class="hl-1">)’</span><br/><span class="hl-1">- </span><span class="hl-0">For</span><span class="hl-1"> </span><span class="hl-0">the</span><span class="hl-1"> </span><span class="hl-0">prerequisite</span><span class="hl-1"> </span><span class="hl-0">template</span><span class="hl-1">, </span><span class="hl-0">select</span><span class="hl-1"> ‘</span><span class="hl-0">Template</span><span class="hl-1"> </span><span class="hl-0">is</span><span class="hl-1"> </span><span class="hl-0">ready</span><span class="hl-1">’</span><br/><span class="hl-1">- </span><span class="hl-0">When</span><span class="hl-1"> </span><span class="hl-0">specifying</span><span class="hl-1"> </span><span class="hl-0">the</span><span class="hl-1"> </span><span class="hl-0">template</span><span class="hl-1">, </span><span class="hl-0">select</span><span class="hl-1"> ‘</span><span class="hl-0">Upload</span><span class="hl-1"> </span><span class="hl-0">a</span><span class="hl-1"> </span><span class="hl-0">template</span><span class="hl-1"> </span><span class="hl-0">file</span><span class="hl-1">’</span><br/><span class="hl-1">- </span><span class="hl-0">Ensure</span><span class="hl-1"> </span><span class="hl-0">that</span><span class="hl-1"> </span><span class="hl-0">you</span><span class="hl-1"> </span><span class="hl-0">select</span><span class="hl-1"> </span><span class="hl-0">the</span><span class="hl-1"> </span><span class="hl-0">correct</span><span class="hl-1"> </span><span class="hl-0">file</span><span class="hl-1"> ‘</span><span class="hl-0">AWSLandingZoneAccelerator</span><span class="hl-1">-</span><span class="hl-0">InstallerStack</span><span class="hl-1">.</span><span class="hl-0">template</span><span class="hl-1">.</span><span class="hl-0">json</span><span class="hl-1">’</span><br/><span class="hl-1">- </span><span class="hl-0">Fill</span><span class="hl-1"> </span><span class="hl-0">out</span><span class="hl-1"> </span><span class="hl-0">the</span><span class="hl-1"> </span><span class="hl-0">required</span><span class="hl-1"> </span><span class="hl-0">parameters</span><span class="hl-1"> </span><span class="hl-6">in</span><span class="hl-1"> </span><span class="hl-0">the</span><span class="hl-1"> </span><span class="hl-5">UI</span><span class="hl-1">, </span><span class="hl-0">and</span><span class="hl-1"> </span><span class="hl-0">create</span><span class="hl-1"> </span><span class="hl-0">the</span><span class="hl-1"> </span><span class="hl-0">stack</span><span class="hl-1"> </span><span class="hl-0">once</span><span class="hl-1"> </span><span class="hl-0">the</span><span class="hl-1"> </span><span class="hl-0">parameters</span><span class="hl-1"> </span><span class="hl-0">are</span><span class="hl-1"> </span><span class="hl-0">inputted</span><span class="hl-1">.</span>
+</code></pre>
+<ul>
+<li>Dependencies for the Installer stack</li>
+</ul>
+<pre><code><span class="hl-1">- [</span><span class="hl-0">Node</span><span class="hl-1">](</span><span class="hl-0">https</span><span class="hl-1">:</span><span class="hl-3">//nodejs.org/en/)</span><br/><span class="hl-1">- [</span><span class="hl-5">AWS</span><span class="hl-1"> </span><span class="hl-5">CDK</span><span class="hl-1">](</span><span class="hl-0">https</span><span class="hl-1">:</span><span class="hl-3">//aws.amazon.com/cdk/)</span><br/><span class="hl-1">- [</span><span class="hl-0">Yarn</span><span class="hl-1">](</span><span class="hl-0">https</span><span class="hl-1">:</span><span class="hl-3">//yarnpkg.com/)</span><br/><span class="hl-1">- [</span><span class="hl-5">AWS</span><span class="hl-1"> </span><span class="hl-5">CLI</span><span class="hl-1">](</span><span class="hl-0">https</span><span class="hl-1">:</span><span class="hl-3">//docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)</span>
+</code></pre>
+<hr>
+<p>Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.</p>
+<p>Licensed under the Apache License Version 2.0 (the &quot;License&quot;). You may not use this file except in compliance with the License. A copy of the License is located at</p>
+<pre><code><span class="hl-2">http</span><span class="hl-1">:</span><span class="hl-3">//www.apache.org/licenses/</span>
+</code></pre>
+<p>or in the &quot;license&quot; file accompanying this file. This file is distributed on an &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions and limitations under the License.</p>
+</div></div><div class="col-4 col-menu menu-sticky-wrap menu-highlight"><nav class="tsd-navigation primary"><ul><li class="current"><a href="modules.html">Modules</a></li><li class=" tsd-kind-module"><a href="modules/_aws_accelerator_config.html">@aws-<wbr/>accelerator/config</a></li><li class=" tsd-kind-module"><a href="modules/_aws_accelerator_constructs.html">@aws-<wbr/>accelerator/constructs</a></li><li class=" tsd-kind-module"><a href="modules/_aws_accelerator_tester.html">@aws-<wbr/>accelerator/tester</a></li><li class=" tsd-kind-module"><a href="modules/_aws_accelerator_utils.html">@aws-<wbr/>accelerator/utils</a></li><li class=" tsd-kind-module"><a href="modules/_aws_cdk_extensions_cdk_extensions.html">@aws-<wbr/>cdk-<wbr/>extensions/cdk-<wbr/>extensions</a></li><li class=" tsd-kind-module"><a href="modules/_aws_cdk_extensions_cdk_plugin_assume_role.html">@aws-<wbr/>cdk-<wbr/>extensions/cdk-<wbr/>plugin-<wbr/>assume-<wbr/>role</a></li></ul></nav></div></div></div><footer class="with-border-bottom"><div class="container"><h2>Legend</h2><div class="tsd-legend-group"><ul class="tsd-legend"><li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li><li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li><li class="tsd-kind-function tsd-has-type-parameter"><span class="tsd-kind-icon">Function with type parameter</span></li><li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li><li class="tsd-kind-type-alias tsd-has-type-parameter"><span class="tsd-kind-icon">Type alias with type parameter</span></li></ul><ul class="tsd-legend"><li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li><li class="tsd-kind-class tsd-has-type-parameter"><span class="tsd-kind-icon">Class with type parameter</span></li></ul><ul class="tsd-legend"><li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li></ul><ul class="tsd-legend"><li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li></ul></div><h2>Settings</h2><p>Theme <select id="theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></p></div></footer><div class="container tsd-generator"><p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></div><div class="overlay"></div><script src="assets/main.js"></script></body></html>
