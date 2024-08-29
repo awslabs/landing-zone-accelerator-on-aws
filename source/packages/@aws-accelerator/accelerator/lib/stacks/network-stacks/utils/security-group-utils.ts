@@ -623,7 +623,6 @@ function processTypeSources(
       );
     }
   }
-  logger.info(`****************** `);
   return typeRules;
 }
 

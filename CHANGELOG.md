@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.10.0] -
 
+### Added
+
+- feat(networking): add support for TLS1.3 security policy for ALB and NLB listener
+
 ### Fixed
 
 - fix(uninstaller): include deletion of IdentityCenter and ResourcePolicyEnforcement stacks
@@ -22,7 +26,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(metadata): fixed config file writes with codecommit
 - fix(validation): configuration validation failure when SecurityHub was enabled with Control Tower
 - fix(control-tower): skip existing ct identifier check when ct is not enabled
-
 ### Changed
 
 - chore: add security.md file to repo

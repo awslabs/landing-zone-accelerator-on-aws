@@ -1784,7 +1784,27 @@ vpcs:
           shareTargets:
             organizationalUnits:
               - Infrastructure
+        - name: appA-alb-test-02
+          scheme: internal
+          subnets:
+            - SharedServices-App-A
+            - SharedServices-App-B
+          securityGroups:
+            - InternalHTTP-SG
+          listeners:
+            - name: appA-listener-4
+              port: 443
+              protocol: HTTPS
+              targetGroup: deployed-tg-3
+              order: 3
+              type: forward
+              certificate: cert1
+              sslPolicy: ELBSecurityPolicy-TLS13-1-2-2021-06
     targetGroups:
+      - name: deployed-tg-3
+        port: 443
+        protocol: HTTPS
+        type: instance
       - name: deployed-tg-2
         port: 443
         protocol: HTTPS
