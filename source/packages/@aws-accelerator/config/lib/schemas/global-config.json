@@ -3,7 +3,11 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
     "ComparisonOperator": {
-      "enum": ["GREATER_THAN", "LESS_THAN", "EQUAL_TO"],
+      "enum": [
+        "GREATER_THAN",
+        "LESS_THAN",
+        "EQUAL_TO"
+      ],
       "type": "string"
     },
     "CustomS3ResourceAndKmsPolicyOverridesConfig": {
@@ -46,7 +50,11 @@
           "type": "array"
         }
       },
-      "required": ["enable", "account", "readOnlyAccessRoleArns"],
+      "required": [
+        "enable",
+        "account",
+        "readOnlyAccessRoleArns"
+      ],
       "type": "object"
     },
     "IAcceleratorSettingsConfig": {
@@ -123,7 +131,12 @@
           "description": "Settings for the CloudTrail log"
         }
       },
-      "required": ["name", "regions", "deploymentTargets", "settings"],
+      "required": [
+        "name",
+        "regions",
+        "deploymentTargets",
+        "settings"
+      ],
       "type": "object"
     },
     "IAssetBucketConfig": {
@@ -169,7 +182,9 @@
           "type": "array"
         }
       },
-      "required": ["vaults"],
+      "required": [
+        "vaults"
+      ],
       "type": "object"
     },
     "IBudgetReportConfig": {
@@ -275,7 +290,12 @@
           "type": "boolean"
         }
       },
-      "required": ["amount", "name", "timeUnit", "type"],
+      "required": [
+        "amount",
+        "name",
+        "timeUnit",
+        "type"
+      ],
       "type": "object"
     },
     "ICdkOptionsConfig": {
@@ -299,7 +319,10 @@
           "type": "boolean"
         }
       },
-      "required": ["centralizeBuckets", "useManagementAccessRole"],
+      "required": [
+        "centralizeBuckets",
+        "useManagementAccessRole"
+      ],
       "type": "object"
     },
     "ICentralLogBucketConfig": {
@@ -349,7 +372,9 @@
           "type": "boolean"
         }
       },
-      "required": ["enable"],
+      "required": [
+        "enable"
+      ],
       "type": "object"
     },
     "ICloudTrailConfig": {
@@ -383,7 +408,10 @@
           "description": "Optional configuration of the organization trail.  OrganizationTrail must be enabled in order to use these settings"
         }
       },
-      "required": ["enable", "organizationTrail"],
+      "required": [
+        "enable",
+        "organizationTrail"
+      ],
       "type": "object"
     },
     "ICloudTrailSettingsConfig": {
@@ -454,7 +482,9 @@
           "type": "boolean"
         }
       },
-      "required": ["managedDataIdentifiers"],
+      "required": [
+        "managedDataIdentifiers"
+      ],
       "type": "object"
     },
     "ICloudWatchLogsConfig": {
@@ -544,7 +574,9 @@
           "type": "array"
         }
       },
-      "required": ["categories"],
+      "required": [
+        "categories"
+      ],
       "type": "object"
     },
     "IControlTowerConfig": {
@@ -567,7 +599,9 @@
           "description": "AWS Control Tower Landing Zone configuration"
         }
       },
-      "required": ["enable"],
+      "required": [
+        "enable"
+      ],
       "type": "object"
     },
     "IControlTowerControlConfig": {
@@ -594,7 +628,11 @@
           "type": "array"
         }
       },
-      "required": ["identifier", "enable", "deploymentTargets"],
+      "required": [
+        "identifier",
+        "enable",
+        "deploymentTargets"
+      ],
       "type": "object"
     },
     "IControlTowerLandingZoneConfig": {
@@ -614,7 +652,11 @@
           "type": "string"
         }
       },
-      "required": ["version", "logging", "security"],
+      "required": [
+        "version",
+        "logging",
+        "security"
+      ],
       "type": "object"
     },
     "IControlTowerLandingZoneLoggingConfig": {
@@ -637,7 +679,11 @@
           "type": "boolean"
         }
       },
-      "required": ["loggingBucketRetentionDays", "accessLoggingBucketRetentionDays", "organizationTrail"],
+      "required": [
+        "loggingBucketRetentionDays",
+        "accessLoggingBucketRetentionDays",
+        "organizationTrail"
+      ],
       "type": "object"
     },
     "IControlTowerLandingZoneSecurityConfig": {
@@ -650,7 +696,9 @@
           "type": "boolean"
         }
       },
-      "required": ["enableIdentityCenterAccess"],
+      "required": [
+        "enableIdentityCenterAccess"
+      ],
       "type": "object"
     },
     "ICostAndUsageReportConfig": {
@@ -823,7 +871,11 @@
           "type": "string"
         }
       },
-      "required": ["importExternalLandingZoneResources", "acceleratorPrefix", "acceleratorName"],
+      "required": [
+        "importExternalLandingZoneResources",
+        "acceleratorPrefix",
+        "acceleratorName"
+      ],
       "type": "object"
     },
     "IGlobalConfig": {
@@ -857,6 +909,10 @@
         "controlTower": {
           "$ref": "#/definitions/IControlTowerConfig",
           "description": "AWS Control Tower Landing Zone configuration\n\nTo indicate environment has control tower enabled, you need to provide below value for this parameter."
+        },
+        "enableOptInRegions": {
+          "description": "Whether to automatically enable opt-in regions configured for all LZA managed accounts.",
+          "type": "boolean"
         },
         "enabledRegions": {
           "description": "List of AWS Region names where accelerator will be deployed. Home region must be part of this list.\n\nTo add us-west-2 along with home region for accelerator deployment, you need to provide below value for this parameter.",
@@ -925,10 +981,6 @@
         "terminationProtection": {
           "description": "Whether to enable termination protection for this stack.",
           "type": "boolean"
-        },
-        "enableOptInRegions": {
-          "description": "Whether to automatically enable opt-in regions configured for all LZA managed accounts",
-          "type": "boolean"
         }
       },
       "required": [
@@ -959,7 +1011,9 @@
           "description": "Imported bucket name"
         }
       },
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "type": "object"
     },
     "IImportedS3ManagedEncryptionKeyBucketConfig": {
@@ -975,7 +1029,9 @@
           "description": "Imported bucket name"
         }
       },
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "type": "object"
     },
     "ILambdaConfig": {
@@ -1080,7 +1136,11 @@
           "description": "SessionManager logging configuration"
         }
       },
-      "required": ["account", "cloudtrail", "sessionManager"],
+      "required": [
+        "account",
+        "cloudtrail",
+        "sessionManager"
+      ],
       "type": "object"
     },
     "INotificationConfig": {
@@ -1148,7 +1208,12 @@
           "description": "The comparison that's used for the notification that's associated with a budget."
         }
       },
-      "required": ["type", "thresholdType", "comparisonOperator", "subscriptionType"],
+      "required": [
+        "type",
+        "thresholdType",
+        "comparisonOperator",
+        "subscriptionType"
+      ],
       "type": "object"
     },
     "IReportConfig": {
@@ -1176,7 +1241,9 @@
           "type": "string"
         }
       },
-      "required": ["policy"],
+      "required": [
+        "policy"
+      ],
       "type": "object"
     },
     "IS3EncryptionConfig": {
@@ -1193,7 +1260,9 @@
           "description": "To control target environments (AWS Account and Region) for the given `createCMK` setting, you may optionally specify deployment targets. Leaving `deploymentTargets` undefined will apply `createCMK` setting to all accounts and enabled regions."
         }
       },
-      "required": ["createCMK"],
+      "required": [
+        "createCMK"
+      ],
       "type": "object"
     },
     "IS3GlobalConfig": {
@@ -1222,7 +1291,9 @@
           "type": "boolean"
         }
       },
-      "required": ["useCMK"],
+      "required": [
+        "useCMK"
+      ],
       "type": "object"
     },
     "IServiceQuotaLimitsConfig": {
@@ -1253,7 +1324,12 @@
           "type": "string"
         }
       },
-      "required": ["serviceCode", "quotaCode", "desiredValue", "deploymentTargets"],
+      "required": [
+        "serviceCode",
+        "quotaCode",
+        "desiredValue",
+        "deploymentTargets"
+      ],
       "type": "object"
     },
     "ISessionManagerConfig": {
@@ -1297,7 +1373,10 @@
           "type": "boolean"
         }
       },
-      "required": ["sendToCloudWatchLogs", "sendToS3"],
+      "required": [
+        "sendToCloudWatchLogs",
+        "sendToS3"
+      ],
       "type": "object"
     },
     "ISnsConfig": {
@@ -1334,7 +1413,10 @@
           "description": "SNS Topic Name"
         }
       },
-      "required": ["name", "emailAddresses"],
+      "required": [
+        "name",
+        "emailAddresses"
+      ],
       "type": "object"
     },
     "ISsmInventoryConfig": {
@@ -1350,7 +1432,10 @@
           "type": "boolean"
         }
       },
-      "required": ["enable", "deploymentTargets"],
+      "required": [
+        "enable",
+        "deploymentTargets"
+      ],
       "type": "object"
     },
     "ISsmParameterConfig": {
@@ -1370,7 +1455,11 @@
           "description": "The value of the SSM Parameter"
         }
       },
-      "required": ["name", "path", "value"],
+      "required": [
+        "name",
+        "path",
+        "value"
+      ],
       "type": "object"
     },
     "ISsmParametersConfig": {
@@ -1389,7 +1478,10 @@
           "type": "array"
         }
       },
-      "required": ["parameters", "deploymentTargets"],
+      "required": [
+        "parameters",
+        "deploymentTargets"
+      ],
       "type": "object"
     },
     "ITag": {
@@ -1402,7 +1494,10 @@
           "type": "string"
         }
       },
-      "required": ["key", "value"],
+      "required": [
+        "key",
+        "value"
+      ],
       "type": "object"
     },
     "ITransition": {
@@ -1415,7 +1510,10 @@
           "type": "number"
         }
       },
-      "required": ["storageClass", "transitionAfter"],
+      "required": [
+        "storageClass",
+        "transitionAfter"
+      ],
       "type": "object"
     },
     "IVaultConfig": {
@@ -1435,7 +1533,10 @@
           "description": "The path to a JSON file defining Backup Vault access policy"
         }
       },
-      "required": ["name", "deploymentTargets"],
+      "required": [
+        "name",
+        "deploymentTargets"
+      ],
       "type": "object"
     },
     "NonEmptyString": {
@@ -1444,7 +1545,10 @@
       "type": "string"
     },
     "NotificationType": {
-      "enum": ["ACTUAL", "FORECASTED"],
+      "enum": [
+        "ACTUAL",
+        "FORECASTED"
+      ],
       "type": "string"
     },
     "Region": {
@@ -1482,25 +1586,38 @@
         "us-gov-west-1",
         "us-gov-east-1",
         "us-iso-east-1",
-        "us-isof-south-1",
-        "us-isof-east-1",
         "us-isob-east-1",
         "us-iso-west-1",
+        "us-isof-south-1",
+        "us-isof-east-1",
         "us-west-1",
         "us-west-2"
       ],
       "type": "string"
     },
     "StorageClass": {
-      "enum": ["DEEP_ARCHIVE", "GLACIER", "GLACIER_IR", "STANDARD_IA", "INTELLIGENT_TIERING", "ONEZONE_IA"],
+      "enum": [
+        "DEEP_ARCHIVE",
+        "GLACIER",
+        "GLACIER_IR",
+        "STANDARD_IA",
+        "INTELLIGENT_TIERING",
+        "ONEZONE_IA"
+      ],
       "type": "string"
     },
     "SubscriptionType": {
-      "enum": ["EMAIL", "SNS"],
+      "enum": [
+        "EMAIL",
+        "SNS"
+      ],
       "type": "string"
     },
     "ThresholdType": {
-      "enum": ["PERCENTAGE", "ABSOLUTE_VALUE"],
+      "enum": [
+        "PERCENTAGE",
+        "ABSOLUTE_VALUE"
+      ],
       "type": "string"
     }
   }
