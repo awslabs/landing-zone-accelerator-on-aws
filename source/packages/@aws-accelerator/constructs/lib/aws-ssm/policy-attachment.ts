@@ -176,9 +176,9 @@ export class SsmSessionManagerPolicy extends Construct {
       new cdk.aws_iam.PolicyStatement({
         effect: cdk.aws_iam.Effect.ALLOW,
         actions: ['kms:Decrypt'],
-        resources: [
-          `arn:${cdk.Stack.of(this).partition}:kms:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:key/*`,
-        ],
+        resources: props.enabledRegions.map(
+          region => `arn:${cdk.Stack.of(this).partition}:kms:${region}:${cdk.Stack.of(this).account}:key/*`,
+        ),
         conditions: {
           Null: {
             'kms:ResourceAliases': 'false',
