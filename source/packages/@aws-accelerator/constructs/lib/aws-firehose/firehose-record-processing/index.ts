@@ -41,7 +41,7 @@ export async function handler(event: FirehoseTransformationEvent) {
   // Parse records
   for (const firehoseRecordInput of event.records) {
     try {
-      const processedFirehoseRecord = await processFirehoseInputRecord(firehoseRecordInput);
+      const processedFirehoseRecord = await processFirehoseInputRecord(firehoseRecordInput, event.region);
       firehoseRecordsOutput.records.push(processedFirehoseRecord);
     } catch (err) {
       console.warn(err);
@@ -57,7 +57,7 @@ export async function handler(event: FirehoseTransformationEvent) {
   return await checkFirehoseRecords(firehoseRecordsOutput);
 }
 
-async function processFirehoseInputRecord(firehoseRecord: FirehoseTransformationEventRecord) {
+async function processFirehoseInputRecord(firehoseRecord: FirehoseTransformationEventRecord, region: string) {
   const payload = Buffer.from(firehoseRecord.data, 'base64');
   const unzippedPayload = zlib.gunzipSync(payload).toString('utf-8');
   const jsonParsedPayload = JSON.parse(unzippedPayload);
@@ -65,7 +65,7 @@ async function processFirehoseInputRecord(firehoseRecord: FirehoseTransformation
   // only process payload that has logGroup prefix
   if ('logGroup' in jsonParsedPayload) {
     // check for dynamic partition
-    const serviceName = await checkDynamicPartition(jsonParsedPayload);
+    const serviceName = await checkDynamicPartition(jsonParsedPayload, region);
 
     // parse record to have year/month/date prefix
     const firehoseTimestamp = new Date(firehoseRecord.approximateArrivalTimestamp);
@@ -98,7 +98,7 @@ async function processFirehoseInputRecord(firehoseRecord: FirehoseTransformation
   }
 }
 
-async function checkDynamicPartition(firehoseRecordDynamicPartition: CloudWatchLogsToFirehoseRecord) {
+async function checkDynamicPartition(firehoseRecordDynamicPartition: CloudWatchLogsToFirehoseRecord, region: string) {
   // data pattern for firehose dynamic mapping
   type S3LogPartitionType = {
     logGroupPattern: string;
@@ -120,7 +120,11 @@ async function checkDynamicPartition(firehoseRecordDynamicPartition: CloudWatchL
   if (mappings) {
     for (const mapping of mappings) {
       if (wildcardMatch(firehoseRecordDynamicPartition.logGroup, mapping.logGroupPattern)) {
-        serviceName = mapping.s3Prefix;
+        serviceName = mapping.s3Prefix
+          .replace('{{AWS::AccountId}}', firehoseRecordDynamicPartition.owner)
+          .replace('{{AWS::Region}}', region)
+          .replace('{{AWS::LogGroup}}', firehoseRecordDynamicPartition.logGroup.replace(/^\//, ''))
+          .replace(/\/$/, '');
         break; // Take the first match
       }
     }
