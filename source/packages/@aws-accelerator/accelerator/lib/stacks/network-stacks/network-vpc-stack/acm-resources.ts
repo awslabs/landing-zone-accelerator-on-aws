@@ -74,9 +74,7 @@ export class AcmResources {
       san: certificate.san,
       homeRegion: props.globalConfig.homeRegion,
       assetFunctionRoleName: this.stack.acceleratorResourceNames.roles.assetFunctionRoleName,
-      assetBucketName: `${
-        this.stack.acceleratorResourceNames.bucketPrefixes.assets
-      }-${props.accountsConfig.getManagementAccountId()}-${props.globalConfig.homeRegion}`,
+      assetBucketName: this.stack.getAssetBucketName(),
       cloudWatchLogsKmsKey: this.stack.cloudwatchKey,
       logRetentionInDays: this.stack.logRetention,
     });

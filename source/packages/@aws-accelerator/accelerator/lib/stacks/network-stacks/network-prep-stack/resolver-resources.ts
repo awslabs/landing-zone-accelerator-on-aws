@@ -229,9 +229,7 @@ export class ResolverResources {
     const centralLogsBucket = cdk.aws_s3.Bucket.fromBucketName(
       this.stack,
       'CentralLogsBucket',
-      `${
-        this.stack.acceleratorResourceNames.bucketPrefixes.centralLogs
-      }-${props.accountsConfig.getLogArchiveAccountId()}-${props.centralizedLoggingRegion}`,
+      this.stack.getCentralLogBucketName(),
     );
 
     if (logItem && delegatedAdminAccountId === cdk.Stack.of(this.stack).account) {

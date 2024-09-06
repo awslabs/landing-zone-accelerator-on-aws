@@ -300,9 +300,7 @@ export class LoadBalancerResources {
     props: AcceleratorStackProps,
   ): Map<string, ApplicationLoadBalancer> {
     const albMap = new Map<string, ApplicationLoadBalancer>();
-    const accessLogsBucketName = `${
-      this.stack.acceleratorResourceNames.bucketPrefixes.elbLogs
-    }-${props.accountsConfig.getLogArchiveAccountId()}-${cdk.Stack.of(this.stack).region}`;
+    const accessLogsBucketName = this.stack.getElbAccessLogBucketName();
 
     for (const vpcItem of vpcResources) {
       for (const albItem of vpcItem.loadBalancers?.applicationLoadBalancers || []) {
@@ -406,10 +404,7 @@ export class LoadBalancerResources {
   ) {
     const nlbMap = new Map<string, NetworkLoadBalancer>();
 
-    const accessLogsBucketName = `${
-      this.stack.acceleratorResourceNames.bucketPrefixes.elbLogs
-    }-${props.accountsConfig.getLogArchiveAccountId()}-${cdk.Stack.of(this.stack).region}`;
-
+    const accessLogsBucketName = this.stack.getElbAccessLogBucketName();
     for (const vpcItem of vpcResources) {
       // Set account IDs
       const principals = this.setNlbPrincipalIds(vpcItem, props);

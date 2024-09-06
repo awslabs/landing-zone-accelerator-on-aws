@@ -177,7 +177,7 @@ exports[`NetworkPrepStack Construct(NetworkPrepStack):  Snapshot Test 1`] = `
               {
                 "Ref": "AWS::Partition",
               },
-              ":s3:::aws-accelerator-central-logs-333333333333-us-west-2",
+              ":s3:::existing-central-log-bucket",
             ],
           ],
         },
@@ -2016,7 +2016,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
               {
                 "Ref": "AWS::Partition",
               },
-              ":s3:::aws-accelerator-central-logs-333333333333-us-west-2",
+              ":s3:::existing-central-log-bucket",
             ],
           ],
         },

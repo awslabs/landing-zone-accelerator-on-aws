@@ -101,9 +101,8 @@ export class SharedResources {
     const albMap = new Map<string, ApplicationLoadBalancer>();
     const sharedSubnets: string[] = [];
     const sharedSubnetMap = new Map<string, string>();
-    const accessLogsBucketName = `${
-      this.stack.acceleratorResourceNames.bucketPrefixes.elbLogs
-    }-${props.accountsConfig.getLogArchiveAccountId()}-${cdk.Stack.of(this.stack).region}`;
+    const accessLogsBucketName = this.stack.getElbAccessLogBucketName();
+
     for (const vpcItem of this.stack.vpcResources) {
       const subnets = vpcItem.subnets?.filter(subnetItem => subnetItem.shareTargets) ?? [];
       for (const subnetItem of subnets) {
