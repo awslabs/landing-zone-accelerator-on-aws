@@ -452,7 +452,7 @@ export class AcceleratorPipeline extends Construct {
                   sed -i "s#registry.yarnpkg.com#registry.npmmirror.com#g" yarn.lock;
                   yarn config set registry https://registry.npmmirror.com
                fi`,
-              'yarn install',
+              'if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi',
               'yarn build',
               'yarn validate-config $CODEBUILD_SRC_DIR_Config',
             ],

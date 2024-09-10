@@ -1445,7 +1445,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   "Ref": "AWS::Partition",
                 },
                 "\\" = \\"aws-cn\\" ]; then\\n                  sed -i \\"s#registry.yarnpkg.com#registry.npmmirror.com#g\\" yarn.lock;\\n                  yarn config set registry https://registry.npmmirror.com\\n               fi",
-        "yarn install",
+        "if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi",
         "yarn build",
         "yarn validate-config $CODEBUILD_SRC_DIR_Config"
       ]

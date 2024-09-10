@@ -855,7 +855,7 @@ export class InstallerStack extends cdk.Stack {
                   sed -i "s#registry.yarnpkg.com#registry.npmmirror.com#g" yarn.lock;
                   set -e && yarn config set registry https://registry.npmmirror.com
                fi`,
-              'yarn install',
+              'if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi',
               'yarn build',
               'cd packages/@aws-accelerator/installer',
               `set -e && if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ${acceleratorPrefix}-CDKToolkit aws://${cdk.Aws.ACCOUNT_ID}/${cdk.Aws.REGION} --qualifier accel; fi`,
