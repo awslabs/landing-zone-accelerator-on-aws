@@ -19,5 +19,6 @@
     "lib": ["ES2019", "ES2020.Promise"],
     "target": "ES2019",
     "composite": false
-  }
+  },
+  "ts-node": { "swc": true }
 }
