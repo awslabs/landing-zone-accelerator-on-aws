@@ -28,7 +28,7 @@
     "schema:network": "ts-json-schema-generator --path lib/models/network-config.ts --type INetworkConfig -o lib/schemas/network-config.json"
   },
   "devDependencies": {
-    "@types/jest": "29.4.0",
+    "@types/jest": "29.5.12",
     "@types/node": "18.14.0",
     "@typescript-eslint/eslint-plugin": "5.53.0",
     "@typescript-eslint/parser": "5.53.0",

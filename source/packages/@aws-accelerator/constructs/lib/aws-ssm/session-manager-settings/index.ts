@@ -13,14 +13,15 @@
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-import { CreateDocumentRequest, UpdateDocumentRequest } from 'aws-sdk/clients/ssm';
 import {
-  SSMClient,
-  DescribeDocumentCommand,
-  UpdateDocumentCommand,
   CreateDocumentCommand,
+  CreateDocumentCommandInput,
+  DescribeDocumentCommand,
   DuplicateDocumentContent,
   InvalidDocument,
+  SSMClient,
+  UpdateDocumentCommand,
+  UpdateDocumentCommandInput,
 } from '@aws-sdk/client-ssm';
 import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
@@ -64,7 +65,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       };
       try {
         await throttlingBackOff(() => ssm.send(new DescribeDocumentCommand({ Name: documentName })));
-        const updateDocumentRequest: UpdateDocumentRequest = {
+        const updateDocumentRequest: UpdateDocumentCommandInput = {
           Content: JSON.stringify(settings),
           Name: documentName,
           DocumentVersion: '$LATEST',
@@ -77,7 +78,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
         if (e instanceof DuplicateDocumentContent) {
           console.log(`SSM Document is Already latest :${documentName}`);
         } else if (e instanceof InvalidDocument) {
-          const createDocumentRequest: CreateDocumentRequest = {
+          const createDocumentRequest: CreateDocumentCommandInput = {
             Content: JSON.stringify(settings),
             Name: documentName,
             DocumentType: `Session`,

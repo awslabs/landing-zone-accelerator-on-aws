@@ -28,7 +28,7 @@
     "cdk-nag": "2.5.2"
   },
   "devDependencies": {
-    "@types/jest": "29.4.0",
+    "@types/jest": "29.5.12",
     "@types/node": "18.14.0",
     "aws-cdk": "2.148.0",
     "aws-cdk-lib": "2.148.0",

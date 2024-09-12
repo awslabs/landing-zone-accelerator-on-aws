@@ -193,8 +193,8 @@ source/packages/@aws-accelerator/constructs/test/aws-iam/password-policy.test.ts
 
 # Assume role declaration for cross account
 
-source/packages/@aws-accelerator/utils/lib/get-template.ts:73
 source/packages/@aws-accelerator/utils/lib/get-template.ts:74
+source/packages/@aws-accelerator/utils/lib/get-template.ts:75
 
 # Masked email address
 

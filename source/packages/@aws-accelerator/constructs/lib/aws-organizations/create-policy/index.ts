@@ -24,6 +24,7 @@ import {
   CreatePolicyCommand,
   UpdatePolicyCommand,
   DuplicatePolicyException,
+  PolicyType,
 } from '@aws-sdk/client-organizations';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
@@ -47,7 +48,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const key: string = event.ResourceProperties['key'];
   const name: string = event.ResourceProperties['name'];
   const description = event.ResourceProperties['description'] || '';
-  const type: string = event.ResourceProperties['type'];
+  const type: PolicyType = event.ResourceProperties['type'];
   const tags: Tag[] = event.ResourceProperties['tags'] || [];
   const partition: string = event.ResourceProperties['partition'];
   const policyTagKey: string = event.ResourceProperties['policyTagKey'];
@@ -134,7 +135,7 @@ async function deletePolicy(policyId: string, organizationsClient: Organizations
 async function getPolicyId(
   organizationsClient: OrganizationsClient,
   policyName: string,
-  type: string,
+  type: PolicyType,
 ): Promise<string | undefined> {
   for await (const page of paginateListPolicies({ client: organizationsClient }, { Filter: type })) {
     for (const policy of page.Policies ?? []) {
@@ -213,7 +214,7 @@ async function detachTargetFromSpecificTarget(
 async function createPolicy(
   policyMetadata: {
     name: string;
-    type: string;
+    type: PolicyType;
     content: string;
     description: string;
     tags: Tag[];
@@ -228,7 +229,7 @@ async function createPolicy(
           Content: policyMetadata.content,
           Description: policyMetadata.description,
           Name: policyMetadata.name,
-          Type: policyMetadata.type,
+          Type: policyMetadata.type as PolicyType,
           Tags: [...policyMetadata.tags, { Key: policyMetadata.policyTagKey, Value: 'Yes' }],
         }),
       ),

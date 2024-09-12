@@ -21,11 +21,11 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-sdk/client-ec2": "3.411.0",
+    "@aws-sdk/client-ec2": "3.641.0",
     "ip-num": "1.5.0"
   },
   "devDependencies": {
-    "@types/jest": "29.4.0",
+    "@types/jest": "29.5.12",
     "@types/node": "18.14.0",
     "esbuild": "0.17.10",
     "eslint": "8.34.0",

@@ -20,7 +20,7 @@
     "testreport": ""
   },
   "devDependencies": {
-    "@types/jest": "29.4.0",
+    "@types/jest": "29.5.12",
     "@types/node": "18.14.0",
     "eslint": "8.34.0",
     "eslint-config-prettier": "8.6.0",
@@ -38,6 +38,6 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-sdk/client-kinesis": "3.410.0"
+    "@aws-sdk/client-kinesis": "3.637.0"
   }
 }

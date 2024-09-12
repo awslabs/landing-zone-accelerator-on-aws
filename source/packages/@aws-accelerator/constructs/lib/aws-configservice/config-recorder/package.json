@@ -20,11 +20,11 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-sdk/client-config-service": "3.410.0"
+    "@aws-sdk/client-config-service": "3.637.0"
   },
   "devDependencies": {
-    "@aws-sdk/types": "3.410.0",
-    "@types/jest": "29.4.0",
+    "@aws-sdk/types": "3.609.0",
+    "@types/jest": "29.5.12",
     "@types/node": "18.14.0",
     "aws-sdk-client-mock": "2.1.0",
     "esbuild": "0.17.10",

@@ -20,18 +20,18 @@
     "testreport": ""
   },
   "dependencies": {
-    "@aws-sdk/client-cloudformation": "3.410.0",
-    "@aws-sdk/client-cloudwatch-logs": "3.410.0",
-    "@aws-sdk/client-codebuild": "3.410.0",
-    "@aws-sdk/client-codecommit": "3.410.0",
-    "@aws-sdk/client-codepipeline": "3.410.0",
-    "@aws-sdk/client-organizations": "3.410.0",
-    "@aws-sdk/client-s3": "3.412.0",
-    "@aws-sdk/client-ssm": "3.410.0",
-    "@aws-sdk/client-sts": "3.410.0"
+    "@aws-sdk/client-cloudformation": "3.637.0",
+    "@aws-sdk/client-cloudwatch-logs": "3.643.0",
+    "@aws-sdk/client-codebuild": "3.638.0",
+    "@aws-sdk/client-codecommit": "3.637.0",
+    "@aws-sdk/client-codepipeline": "3.637.0",
+    "@aws-sdk/client-organizations": "3.638.0",
+    "@aws-sdk/client-s3": "3.637.0",
+    "@aws-sdk/client-ssm": "3.637.0",
+    "@aws-sdk/client-sts": "3.637.0"
   },
   "devDependencies": {
-    "@types/jest": "29.4.0",
+    "@types/jest": "29.5.12",
     "@types/js-yaml": "4.0.5",
     "@types/node": "18.14.0",
     "eslint": "8.34.0",
