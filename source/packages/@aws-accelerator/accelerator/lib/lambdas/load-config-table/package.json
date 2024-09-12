@@ -22,16 +22,15 @@
   "dependencies": {
     "@aws-accelerator/config": "^0.0.0",
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-sdk/client-cloudformation": "3.410.0",
-    "@aws-sdk/client-dynamodb": "3.410.0",
-    "@aws-sdk/client-s3": "3.412.0",
-    "@aws-sdk/lib-dynamodb": "3.410.0",
-    "@aws-sdk/smithy-client": "3.374.0",
-    "@aws-sdk/types": "3.410.0",
+    "@aws-sdk/client-cloudformation": "3.637.0",
+    "@aws-sdk/client-dynamodb": "3.637.0",
+    "@aws-sdk/client-s3": "3.637.0",
+    "@aws-sdk/lib-dynamodb": "3.637.0",
+    "@aws-sdk/types": "3.609.0",
     "js-yaml": "4.1.0"
   },
   "devDependencies": {
-    "@types/jest": "29.4.0",
+    "@types/jest": "29.5.12",
     "@types/node": "18.14.0",
     "eslint": "8.34.0",
     "eslint-config-prettier": "8.6.0",

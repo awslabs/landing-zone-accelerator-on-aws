@@ -23,7 +23,7 @@
     "watch": "tsc -w"
   },
   "dependencies": {
-    "@aws-sdk/client-config-service": "3.410.0",
+    "@aws-sdk/client-config-service": "3.637.0",
     "@types/js-yaml": "4.0.5",
     "@types/semver": "7.5.0",
     "aws-cdk": "2.148.0",
@@ -39,9 +39,9 @@
   },
   "devDependencies": {
     "@aws-cdk/cx-api": "2.148.0",
-    "@aws-cdk/region-info": "2.148.0",
+    "@aws-cdk/region-info": "2.155.0",
     "@types/fs-extra": "11.0.1",
-    "@types/jest": "29.4.0",
+    "@types/jest": "29.5.12",
     "@types/mri": "1.1.1",
     "@types/node": "18.14.0",
     "@types/promptly": "3.0.2",

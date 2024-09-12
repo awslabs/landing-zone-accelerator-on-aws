@@ -23,6 +23,7 @@ import {
   paginateListPolicies,
   AttachPolicyCommand,
   DuplicatePolicyAttachmentException,
+  PolicyType,
 } from '@aws-sdk/client-organizations';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 
@@ -120,7 +121,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 }
 
 async function isPolicyInOrg(policyId: string, type: string, organizationsClient: OrganizationsClient) {
-  for await (const page of paginateListPolicies({ client: organizationsClient }, { Filter: type })) {
+  for await (const page of paginateListPolicies({ client: organizationsClient }, { Filter: type as PolicyType })) {
     for (const policy of page.Policies ?? []) {
       if (policy.Id === policyId) {
         return true;
@@ -169,7 +170,7 @@ async function getListPoliciesForTarget(organizationsClient: OrganizationsClient
   const attachedPolicies: { name: string; id: string }[] = [];
   for await (const page of paginateListPoliciesForTarget(
     { client: organizationsClient },
-    { Filter: type, TargetId: targetId },
+    { Filter: type as PolicyType, TargetId: targetId },
   )) {
     attachedPolicies.push(...(page.Policies! ?? []).map(p => ({ name: p.Name!, id: p.Id! })));
   }

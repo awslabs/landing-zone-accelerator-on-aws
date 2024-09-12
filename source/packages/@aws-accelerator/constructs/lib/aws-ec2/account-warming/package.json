@@ -20,12 +20,12 @@
     "testreport": ""
   },
   "dependencies": {
-    "@aws-sdk/client-ec2": "3.411.0",
-    "@aws-sdk/client-ssm": "3.410.0",
+    "@aws-sdk/client-ec2": "3.641.0",
+    "@aws-sdk/client-ssm": "3.637.0",
     "@aws-sdk/util-retry": "3.374.0"
   },
   "devDependencies": {
-    "@types/jest": "29.4.0",
+    "@types/jest": "29.5.12",
     "@types/node": "18.14.0",
     "eslint": "8.34.0",
     "eslint-config-prettier": "8.6.0",

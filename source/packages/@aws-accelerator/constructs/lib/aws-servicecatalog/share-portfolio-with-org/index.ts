@@ -23,6 +23,7 @@ import {
   DescribePortfolioShareStatusCommand,
   ServiceCatalogClient,
   UpdatePortfolioShareCommand,
+  OrganizationNodeType,
 } from '@aws-sdk/client-service-catalog';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
@@ -91,7 +92,7 @@ export async function createPortfolioShare(
         new CreatePortfolioShareCommand({
           PortfolioId: portfolioId,
           OrganizationNode: {
-            Type: nodeType,
+            Type: nodeType as OrganizationNodeType,
             Value: orgResourceId,
           },
           ShareTagOptions: tagShareOptions,
@@ -119,7 +120,7 @@ export async function updatePortfolioShare(
         new UpdatePortfolioShareCommand({
           PortfolioId: portfolioId,
           OrganizationNode: {
-            Type: nodeType,
+            Type: nodeType as OrganizationNodeType,
             Value: orgResourceId,
           },
           ShareTagOptions: tagShareOptions,
@@ -145,7 +146,7 @@ export async function deletePortfolioShare(
         new DeletePortfolioShareCommand({
           PortfolioId: portfolioId,
           OrganizationNode: {
-            Type: nodeType,
+            Type: nodeType as OrganizationNodeType,
             Value: orgResourceId,
           },
         }),

@@ -11,7 +11,8 @@
  *  and limitations under the License.
  */
 
-import { OrganizationFeatureSet } from '@aws-sdk/client-organizations';
+import { KeySpec, KeyUsageType } from '@aws-sdk/client-kms';
+import { AccountStatus, OrganizationFeatureSet } from '@aws-sdk/client-organizations';
 
 import { mockClient } from 'aws-sdk-client-mock';
 import path from 'path';
@@ -63,8 +64,8 @@ export const SolutionId = ' AwsSolution/SO0199';
  */
 export const CreateKeyParams = {
   Description: 'AWS Control Tower Landing Zone encryption key',
-  KeyUsage: 'ENCRYPT_DECRYPT',
-  KeySpec: 'SYMMETRIC_DEFAULT',
+  KeyUsage: 'ENCRYPT_DECRYPT' as KeyUsageType,
+  KeySpec: 'SYMMETRIC_DEFAULT' as KeySpec,
 };
 
 /**
@@ -118,7 +119,7 @@ export const ManagementAccount = {
   Arn: 'ManagementAccount-Arn',
   Email: 'all-enabled-management-account@example.com',
   Name: 'Management',
-  Status: 'Active',
+  Status: 'Active' as AccountStatus,
 };
 
 /**
@@ -129,7 +130,7 @@ export const AuditAccount = {
   Arn: 'AuditAccount-Arn',
   Email: 'all-enabled-audit-account@example.com',
   Name: 'Audit',
-  Status: 'Active',
+  Status: 'Active' as AccountStatus,
 };
 
 /**
@@ -140,7 +141,7 @@ export const LogArchiveAccount = {
   Arn: 'LogArchiveAccount-Arn',
   Email: 'all-enabled-logarchive-account@example.com',
   Name: 'LogArchive',
-  Status: 'Active',
+  Status: 'Active' as AccountStatus,
 };
 
 /**

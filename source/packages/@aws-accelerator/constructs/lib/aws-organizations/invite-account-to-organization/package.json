@@ -21,15 +21,14 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-sdk/client-dynamodb": "3.410.0",
-    "@aws-sdk/client-organizations": "3.410.0",
-    "@aws-sdk/client-sts": "3.410.0",
-    "@aws-sdk/lib-dynamodb": "3.410.0",
-    "@aws-sdk/smithy-client": "3.374.0",
-    "@aws-sdk/types": "3.410.0"
+    "@aws-sdk/client-dynamodb": "3.637.0",
+    "@aws-sdk/client-organizations": "3.638.0",
+    "@aws-sdk/client-sts": "3.637.0",
+    "@aws-sdk/lib-dynamodb": "3.637.0",
+    "@aws-sdk/types": "3.609.0"
   },
   "devDependencies": {
-    "@types/jest": "29.4.0",
+    "@types/jest": "29.5.12",
     "@types/node": "18.14.0",
     "esbuild": "0.17.10",
     "eslint": "8.34.0",

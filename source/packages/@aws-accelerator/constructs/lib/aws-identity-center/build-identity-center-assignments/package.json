@@ -20,7 +20,7 @@
     "testreport": ""
   },
   "devDependencies": {
-    "@types/jest": "29.4.0",
+    "@types/jest": "29.5.12",
     "@types/node": "18.14.0",
     "esbuild": "0.17.10",
     "eslint": "8.34.0",
@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-sdk/client-sso-admin": "3.410.0",
-    "@aws-sdk/client-identitystore": "3.410.0"
+    "@aws-sdk/client-sso-admin": "3.637.0",
+    "@aws-sdk/client-identitystore": "3.637.0"
   }
 }

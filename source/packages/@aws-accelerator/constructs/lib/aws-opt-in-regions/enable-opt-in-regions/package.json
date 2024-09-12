@@ -20,10 +20,10 @@
     "testreport": ""
   },
   "dependencies": {
-    "@aws-sdk/client-organizations": "3.410.0"
+    "@aws-sdk/client-organizations": "3.638.0"
   },
   "devDependencies": {
-    "@types/jest": "29.4.0",
+    "@types/jest": "29.5.12",
     "@types/node": "18.14.0",
     "eslint": "8.34.0",
     "eslint-config-prettier": "8.6.0",

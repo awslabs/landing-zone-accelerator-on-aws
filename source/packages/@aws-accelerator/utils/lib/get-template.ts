@@ -3,6 +3,7 @@ import {
   GetTemplateCommand,
   GetTemplateCommandInput,
   CloudFormationServiceException,
+  TemplateStage,
 } from '@aws-sdk/client-cloudformation';
 import { ConfiguredRetryStrategy } from '@aws-sdk/util-retry';
 import { getCrossAccountCredentials, getCurrentAccountId, setRetryStrategy } from './common-functions';
@@ -85,7 +86,7 @@ async function getTemplate(client: CloudFormationClient, stackName: string, temp
     }
     const input: GetTemplateCommandInput = {
       StackName: stackName,
-      TemplateStage: templateStage,
+      TemplateStage: templateStage as TemplateStage,
     };
     const command = new GetTemplateCommand(input);
     const response = await throttlingBackOff(() => client.send(command));

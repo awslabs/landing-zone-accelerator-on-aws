@@ -32,12 +32,18 @@ beforeEach(() => {
   s3Client.reset();
 });
 
+/**
+ * Resolved sdk stream issue based on
+ * https://github.com/m-radzikowski/aws-sdk-client-mock/issues/234#issuecomment-2271857802
+ */
+
 describe('Create Event', () => {
   test('Create a policy that does not exist', async () => {
     const event = AcceleratorUnitTest.getEvent(EventType.CREATE, { new: [StaticInput.newProps] });
     s3Client
       .on(GetObjectCommand, { Bucket: StaticInput.newProps.bucket, Key: StaticInput.newProps.key })
-      .resolves({ Body: stringToStream(StaticInput.policyContent) });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .resolves({ Body: stringToStream(StaticInput.policyContent) as any });
     orgClient.on(CreatePolicyCommand).resolves({ Policy: { PolicySummary: { Id: 'Id' } } });
     const response = await handler(event);
     expect(response?.Status).toStrictEqual('SUCCESS');
@@ -46,7 +52,8 @@ describe('Create Event', () => {
     const event = AcceleratorUnitTest.getEvent(EventType.CREATE, { new: [StaticInput.newProps] });
     s3Client
       .on(GetObjectCommand, { Bucket: StaticInput.newProps.bucket, Key: StaticInput.newProps.key })
-      .resolves({ Body: stringToStream(StaticInput.policyContent) });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .resolves({ Body: stringToStream(StaticInput.policyContent) as any });
     orgClient
       .on(CreatePolicyCommand)
       .rejects(new DuplicatePolicyException({ $metadata: { httpStatusCode: 400 }, message: 'Duplicate policy' }));
@@ -63,7 +70,8 @@ describe('Update Event', () => {
     const event = AcceleratorUnitTest.getEvent(EventType.UPDATE, { new: [StaticInput.newProps] });
     s3Client
       .on(GetObjectCommand, { Bucket: StaticInput.newProps.bucket, Key: StaticInput.newProps.key })
-      .resolves({ Body: stringToStream(StaticInput.policyContent) });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .resolves({ Body: stringToStream(StaticInput.policyContent) as any });
     orgClient.on(CreatePolicyCommand).rejects({});
     await expect(handler(event)).rejects.toThrowError(
       `Error in creating policy ${StaticInput.newProps.name} in AWS Organizations. Exception: {}`,
