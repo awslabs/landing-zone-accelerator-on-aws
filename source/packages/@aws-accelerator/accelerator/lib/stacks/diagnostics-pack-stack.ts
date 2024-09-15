@@ -37,7 +37,7 @@ export class DiagnosticsPackStack extends cdk.Stack {
 
     const diagnosticsPackLambdaRole = new cdk.aws_iam.Role(this, 'DiagnosticsPackLambdaRole', {
       roleName: `${diagnosticsPackLambdaRoleNamePrefix}-DiagnosticsPackLambdaRole`,
-      assumedBy: new cdk.aws_iam.ServicePrincipal(`lambda.${this.urlSuffix}`),
+      assumedBy: new cdk.aws_iam.ServicePrincipal(`lambda.amazonaws.com`),
       managedPolicies: [cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole')],
     });
 

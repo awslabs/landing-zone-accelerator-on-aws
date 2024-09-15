@@ -139,7 +139,7 @@ export class CloudWatchDestination extends Construct {
     });
     // Create a role for CloudWatch Logs destination
     const logsKinesisRole = new cdk.aws_iam.Role(this, 'LogsKinesisRole', {
-      assumedBy: new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.${cdk.Stack.of(this).urlSuffix}`),
+      assumedBy: new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.amazonaws.com`),
       // this needs to be inline to ensure role is created with proper access
       // if not, CloudWatch destination creation fails with no permission to access Kinesis or KMS (generateDataKey access error)
       inlinePolicies: {

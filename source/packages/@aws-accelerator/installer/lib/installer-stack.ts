@@ -717,7 +717,7 @@ export class InstallerStack extends cdk.Stack {
           Sid: 'Allow Cloudwatch Logs service to use the encryption key',
           Effect: 'Allow',
           Principal: {
-            Service: `logs.${cdk.Stack.of(this).region}.${cdk.Stack.of(this).urlSuffix}`,
+            Service: `logs.${cdk.Stack.of(this).region}.amazonaws.com`,
           },
           Action: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
           Resource: '*',

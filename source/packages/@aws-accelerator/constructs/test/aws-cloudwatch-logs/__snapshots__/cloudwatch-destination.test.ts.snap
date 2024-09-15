@@ -130,10 +130,7 @@ exports[`CloudWatchDestination Construct(CloudWatchDestination):  Snapshot Test 
                       {
                         "Ref": "AWS::Region",
                       },
-                      ".",
-                      {
-                        "Ref": "AWS::URLSuffix",
-                      },
+                      ".amazonaws.com",
                     ],
                   ],
                 },
@@ -391,10 +388,7 @@ exports[`CloudWatchDestination Construct(CloudWatchDestination):  Snapshot Test 
                       {
                         "Ref": "AWS::Region",
                       },
-                      ".",
-                      {
-                        "Ref": "AWS::URLSuffix",
-                      },
+                      ".amazonaws.com",
                     ],
                   ],
                 },

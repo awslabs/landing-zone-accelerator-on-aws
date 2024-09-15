@@ -1143,7 +1143,7 @@ export abstract class NetworkStack extends AcceleratorStack {
     //
     // Create event handler role
     const vpnRole = new cdk.aws_iam.Role(this, 'VpnRole', {
-      assumedBy: new cdk.aws_iam.ServicePrincipal(`lambda.${this.urlSuffix}`),
+      assumedBy: new cdk.aws_iam.ServicePrincipal(`lambda.amazonaws.com`),
       description: 'Landing Zone Accelerator site-to-site VPN custom resource access role',
       managedPolicies: [managedVpnPolicy, lambdaExecutionPolicy],
     });

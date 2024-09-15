@@ -48,7 +48,7 @@ export class NewCloudWatchLogEventDemoStack extends cdk.Stack {
     key.addToResourcePolicy(
       new PolicyStatement({
         sid: `Allow Cloudwatch logs to use the encryption key`,
-        principals: [new ServicePrincipal(`logs.${cdk.Stack.of(this).region}.${cdk.Stack.of(this).urlSuffix}`)],
+        principals: [new ServicePrincipal(`logs.${cdk.Stack.of(this).region}.amazonaws.com`)],
         actions: ['kms:Encrypt*', 'kms:Decrypt*', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:Describe*'],
         resources: ['*'],
         conditions: {
@@ -88,7 +88,7 @@ export class NewCloudWatchLogEventDemoStack extends cdk.Stack {
     });
 
     const subscriptionFilterRole = new cdk.aws_iam.Role(this, 'SubscriptionFilterRole', {
-      assumedBy: new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.${cdk.Stack.of(this).urlSuffix}`),
+      assumedBy: new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.amazonaws.com`),
       description: 'Role used by Subscription Filter to allow access to CloudWatch Destination',
       inlinePolicies: {
         accessLogEvents: new cdk.aws_iam.PolicyDocument({
