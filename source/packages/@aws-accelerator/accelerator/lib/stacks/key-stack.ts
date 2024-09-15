@@ -74,9 +74,7 @@ export class KeyStack extends AcceleratorStack {
     key.addToResourcePolicy(
       new cdk.aws_iam.PolicyStatement({
         sid: `Allow Cloudwatch logs to use the encryption key`,
-        principals: [
-          new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.${cdk.Stack.of(this).urlSuffix}`),
-        ],
+        principals: [new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.amazonaws.com`)],
         actions: ['kms:Encrypt*', 'kms:Decrypt*', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:Describe*'],
         resources: ['*'],
         conditions: {

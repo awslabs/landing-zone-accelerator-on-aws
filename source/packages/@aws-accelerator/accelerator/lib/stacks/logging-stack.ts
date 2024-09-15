@@ -564,9 +564,7 @@ export class LoggingStack extends AcceleratorStack {
       cloudwatchKey.addToResourcePolicy(
         new cdk.aws_iam.PolicyStatement({
           sid: `Allow Cloudwatch logs to use the encryption key`,
-          principals: [
-            new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.${cdk.Stack.of(this).urlSuffix}`),
-          ],
+          principals: [new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.amazonaws.com`)],
           actions: ['kms:Encrypt*', 'kms:Decrypt*', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:Describe*'],
           resources: ['*'],
           conditions: {
@@ -1064,7 +1062,7 @@ export class LoggingStack extends AcceleratorStack {
     // Since this is deployed organization wide, this role is required
     // https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CreateSubscriptionFilter-IAMrole.html
     const subscriptionFilterRole = new cdk.aws_iam.Role(this, 'SubscriptionFilterRole', {
-      assumedBy: new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.${cdk.Stack.of(this).urlSuffix}`),
+      assumedBy: new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.amazonaws.com`),
       description: 'Role used by Subscription Filter to allow access to CloudWatch Destination',
       inlinePolicies: {
         accessLogEvents: new cdk.aws_iam.PolicyDocument({

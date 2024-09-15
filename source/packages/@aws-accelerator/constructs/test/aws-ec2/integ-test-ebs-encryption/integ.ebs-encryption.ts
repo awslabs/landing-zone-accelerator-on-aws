@@ -97,7 +97,7 @@ export class EbsEncryptionDemoStack extends Stack {
     cloudWatchKey.addToResourcePolicy(
       new PolicyStatement({
         sid: `Allow Cloudwatch logs to use the encryption key`,
-        principals: [new ServicePrincipal(`logs.${this.region}.${this.urlSuffix}`)],
+        principals: [new ServicePrincipal(`logs.${this.region}.amazonaws.com`)],
         actions: ['kms:Encrypt*', 'kms:Decrypt*', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:Describe*'],
         resources: ['*'],
         conditions: {
@@ -165,7 +165,7 @@ export class EbsEncryptionDemoStack extends Stack {
         conditions: {
           StringEquals: {
             'kms:CallerAccount': this.account,
-            'kms:ViaService': `ec2.${this.region}.${this.urlSuffix}`,
+            'kms:ViaService': `ec2.${this.region}.amazonaws.com`,
           },
         },
       }),

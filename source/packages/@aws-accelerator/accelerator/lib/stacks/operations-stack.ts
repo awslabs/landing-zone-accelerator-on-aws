@@ -1256,7 +1256,7 @@ export class OperationsStack extends AcceleratorStack {
     });
 
     const firewallConfigRole = new cdk.aws_iam.Role(this, 'FirewallConfigRole', {
-      assumedBy: new cdk.aws_iam.ServicePrincipal(`lambda.${this.urlSuffix}`),
+      assumedBy: new cdk.aws_iam.ServicePrincipal(`lambda.amazonaws.com`),
       description: 'Landing Zone Accelerator firewall configuration custom resource access role',
       managedPolicies: [firewallConfigPolicy, lambdaExecutionPolicy],
       roleName: this.acceleratorResourceNames.roles.firewallConfigFunctionRoleName,

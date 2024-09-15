@@ -81,7 +81,7 @@ export class SecurityHubEventsLogDemoStack extends cdk.Stack {
     lambdaKey.addToResourcePolicy(
       new cdk.aws_iam.PolicyStatement({
         sid: `Allow Lambda to use the encryption key`,
-        principals: [new cdk.aws_iam.ServicePrincipal(`lambda.${this.urlSuffix}`)],
+        principals: [new cdk.aws_iam.ServicePrincipal(`lambda.amazonaws.com`)],
         actions: ['kms:Encrypt*', 'kms:Decrypt*', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:Describe*'],
         resources: ['*'],
       }),
@@ -100,7 +100,7 @@ export class SecurityHubEventsLogDemoStack extends cdk.Stack {
     snsKey.addToResourcePolicy(
       new cdk.aws_iam.PolicyStatement({
         sid: `Allow SNS to use the encryption key`,
-        principals: [new cdk.aws_iam.ServicePrincipal(`sns.${this.urlSuffix}`)],
+        principals: [new cdk.aws_iam.ServicePrincipal(`sns.amazonaws.com`)],
         actions: ['kms:Encrypt*', 'kms:Decrypt*', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:Describe*'],
         resources: ['*'],
       }),

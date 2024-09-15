@@ -1510,10 +1510,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
                       {
                         "Ref": "AWS::Region",
                       },
-                      ".",
-                      {
-                        "Ref": "AWS::URLSuffix",
-                      },
+                      ".amazonaws.com",
                     ],
                   ],
                 },
@@ -5290,10 +5287,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
                       {
                         "Ref": "AWS::Region",
                       },
-                      ".",
-                      {
-                        "Ref": "AWS::URLSuffix",
-                      },
+                      ".amazonaws.com",
                     ],
                   ],
                 },
@@ -9086,10 +9080,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
                       {
                         "Ref": "AWS::Region",
                       },
-                      ".",
-                      {
-                        "Ref": "AWS::URLSuffix",
-                      },
+                      ".amazonaws.com",
                     ],
                   ],
                 },
@@ -12909,10 +12900,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
                       {
                         "Ref": "AWS::Region",
                       },
-                      ".",
-                      {
-                        "Ref": "AWS::URLSuffix",
-                      },
+                      ".amazonaws.com",
                     ],
                   ],
                 },
@@ -16722,10 +16710,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
                       {
                         "Ref": "AWS::Region",
                       },
-                      ".",
-                      {
-                        "Ref": "AWS::URLSuffix",
-                      },
+                      ".amazonaws.com",
                     ],
                   ],
                 },
@@ -20526,10 +20511,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 6`] = `
                       {
                         "Ref": "AWS::Region",
                       },
-                      ".",
-                      {
-                        "Ref": "AWS::URLSuffix",
-                      },
+                      ".amazonaws.com",
                     ],
                   ],
                 },
@@ -24334,10 +24316,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 7`] = `
                       {
                         "Ref": "AWS::Region",
                       },
-                      ".",
-                      {
-                        "Ref": "AWS::URLSuffix",
-                      },
+                      ".amazonaws.com",
                     ],
                   ],
                 },
