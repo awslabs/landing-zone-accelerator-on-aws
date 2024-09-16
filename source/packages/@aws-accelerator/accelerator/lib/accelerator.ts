@@ -274,6 +274,7 @@ export abstract class Accelerator {
       //
       const accountsConfig = AccountsConfig.load(props.configDirPath);
       const organizationsConfig = OrganizationConfig.load(props.configDirPath);
+      const homeRegion = GlobalConfig.loadRawGlobalConfig(props.configDirPath).homeRegion;
       await accountsConfig.loadAccountIds(
         props.partition,
         props.enableSingleAccountMode,
@@ -281,6 +282,7 @@ export abstract class Accelerator {
         accountsConfig,
       );
       const replacementsConfig = getReplacementsConfig(props.configDirPath, accountsConfig);
+      replacementsConfig.loadReplacementValues({ region: homeRegion }, organizationsConfig.enable);
 
       //
       // Set details about mandatory accounts

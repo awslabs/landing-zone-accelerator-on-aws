@@ -95,10 +95,10 @@ source/packages/@aws-accelerator/utils/lib/regions.ts:103
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:398
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:399
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1286
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1287
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:400
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:401
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1288
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1289
 
 # Accelerator specific assume role declaration
 
