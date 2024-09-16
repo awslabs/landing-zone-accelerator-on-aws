@@ -482,6 +482,13 @@
           },
           "type": "array"
         },
+        "dependsOn": {
+          "description": "The other StackSets this StackSet depends on. For stackset names you define here, a CloudFormation DependsOn attribute will be added between the resources. Please note this does not guarantee the deployment order of the stack instances within the StackSet.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "deploymentTargets": {
           "$ref": "#/definitions/IDeploymentTargets",
           "description": "CloudFormation StackSet deployment targets"
