@@ -17,32 +17,33 @@ import * as path from 'path';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 
 import { AccountsConfig } from '../lib/accounts-config';
+import { DeploymentTargets, Region, ShareTargets, isCustomizationsType, isNetworkType } from '../lib/common';
 import {
   AppConfigItem,
-  CustomizationsConfig,
-  NlbTargetTypeConfig,
   ApplicationLoadBalancerConfig,
-  TargetGroupItemConfig,
-  NetworkLoadBalancerConfig,
-  Ec2FirewallInstanceConfig,
+  CustomizationsConfig,
   Ec2FirewallAutoScalingGroupConfig,
+  Ec2FirewallInstanceConfig,
+  NetworkLoadBalancerConfig,
+  NlbTargetTypeConfig,
+  TargetGroupItemConfig,
 } from '../lib/customizations-config';
 import { GlobalConfig } from '../lib/global-config';
 import { IamConfig } from '../lib/iam-config';
-import { NetworkConfig, VpcConfig, VpcTemplatesConfig } from '../lib/network-config';
-import { OrganizationConfig } from '../lib/organization-config';
-import { SecurityConfig } from '../lib/security-config';
-import { CommonValidatorFunctions } from './common/common-validator-functions';
-import { INetworkConfig, ISubnetConfig } from '../lib/models/network-config';
 import {
   IBlockDeviceMappingItem,
+  ICloudFormationStackSet,
   ICustomizationsConfig,
   IEc2FirewallAutoScalingGroupConfig,
   IEc2FirewallInstanceConfig,
   INetworkInterfaceItem,
   ITargetGroupItem,
 } from '../lib/models/customizations-config';
-import { DeploymentTargets, Region, ShareTargets, isCustomizationsType, isNetworkType } from '../lib/common';
+import { INetworkConfig, ISubnetConfig } from '../lib/models/network-config';
+import { NetworkConfig, VpcConfig, VpcTemplatesConfig } from '../lib/network-config';
+import { OrganizationConfig } from '../lib/organization-config';
+import { SecurityConfig } from '../lib/security-config';
+import { CommonValidatorFunctions } from './common/common-validator-functions';
 
 /**
  * Customizations Configuration validator.
@@ -156,6 +157,9 @@ class CustomizationValidator {
     // Validate stack names are unique
     this.validateStackNameForUniqueness(values, errors);
 
+    // Validate circular dependencies between stacksets
+    this.validateCircularDependencies(values, errors);
+
     // Validate presence of template file
     this.validateTemplateFile(configDir, values, errors);
 
@@ -188,6 +192,75 @@ class CustomizationValidator {
      * - Firewalls (not an option)
      */
     this.validateCustomizationsConfigRegions(values, errors, globalConfig);
+  }
+
+  /**
+   * Validates that there are no circular dependencies between stacksets.
+   *
+   * This function is getting all the circular dependencies and checks that there are no circular dependencies between StackSets, i.e.
+   * StackSet A depends on StackSet B and StackSet B depends on StackSet A. Circular dependency between StackSets can lead to infinite loop.
+   *
+   * @param values - The customizations configuration object.
+   * @param errors - An array to store any validation errors.
+   */
+  private validateCircularDependencies(values: ICustomizationsConfig, errors: string[]) {
+    for (const stackSet of values.customizations?.cloudFormationStackSets ?? []) {
+      const stackSetDependencyChain: string[] = [];
+      this.findCircularDependencyInSingleStack(
+        stackSet,
+        stackSetDependencyChain,
+        values.customizations?.cloudFormationStackSets,
+        errors,
+      );
+    }
+  }
+
+  /**
+   * this function is checking the dependencies for a given stackSet. If the given stackSet is part of ciruclar dependency,
+   * a validation error will be added into the errors array.
+   * @param stackSet - The stackSet's dependencies to check
+   * @param stackSetDependencyChain - parameter that contains all the stackset names of the dependency chain, i.e. Stackset A depends on StackSet B,
+   * stackSetDependencyChain will be [stackSet A, stackSet B] accordingly
+   * @param errors - An array to store any validation errors.
+   */
+  private findCircularDependencyInSingleStack(
+    stackSet: ICloudFormationStackSet,
+    stackSetDependencyChain: string[],
+    cloudFormationStackSets: ICloudFormationStackSet[] | undefined,
+    errors: string[],
+  ) {
+    if (stackSet?.dependsOn?.length == 0) {
+      return;
+    }
+
+    for (const dependency of stackSet.dependsOn ?? []) {
+      if (stackSetDependencyChain.includes(dependency)) {
+        errors.push(`Found circular dependency between the stacks '${stackSet.name}' and '${dependency}'`);
+        return;
+      }
+    }
+
+    for (const dependency of stackSet.dependsOn ?? []) {
+      const currentStackSetDependencyChain: string[] = Object.assign([], stackSetDependencyChain);
+      currentStackSetDependencyChain.push(dependency);
+
+      // pull the stackSet Obj to call the func in recusrsion with it
+      const stacksetObjDependency: ICloudFormationStackSet | undefined = cloudFormationStackSets?.find(
+        stackSet => stackSet.name == dependency,
+      );
+
+      if (stacksetObjDependency == undefined) {
+        errors.push(`Dependency '${dependency}' defined in stackSet '${stackSet.name}' is not found!`);
+        return;
+      }
+
+      this.findCircularDependencyInSingleStack(
+        stacksetObjDependency as ICloudFormationStackSet,
+        currentStackSetDependencyChain,
+        cloudFormationStackSets,
+        errors,
+      );
+    }
   }
 
   /**

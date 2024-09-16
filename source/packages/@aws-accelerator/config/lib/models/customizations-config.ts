@@ -1583,6 +1583,12 @@ export interface ICloudFormationStackSet {
    * The parameters to be passed to the stackset.
    */
   readonly parameters?: t.ICfnParameter[];
+  /**
+   * The other StackSets this StackSet depends on.
+   * For stackset names you define here, a CloudFormation DependsOn attribute will be added between the resources.
+   * Please note this does not guarantee the deployment order of the stack instances within the StackSet.
+   */
+  readonly dependsOn?: string[];
 }
 
 export type PortfolioAssociationType = 'User' | 'Group' | 'Role' | 'PermissionSet';

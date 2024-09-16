@@ -11,11 +11,6 @@
  *  and limitations under the License.
  */
 
-import * as cdk from 'aws-cdk-lib';
-import { pascalCase } from 'change-case';
-import { Construct } from 'constructs';
-import * as path from 'path';
-import { AcceleratorKeyType, AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import {
   PortfolioAssociationConfig,
   PortfolioConfig,
@@ -25,9 +20,14 @@ import {
 import {
   IdentityCenterGetPermissionRoleArn,
   IdentityCenterGetPermissionRoleArnProvider,
-  SharePortfolioWithOrg,
   PropagatePortfolioAssociations,
+  SharePortfolioWithOrg,
 } from '@aws-accelerator/constructs';
+import * as cdk from 'aws-cdk-lib';
+import { pascalCase } from 'change-case';
+import { Construct } from 'constructs';
+import * as path from 'path';
+import { AcceleratorKeyType, AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 export class CustomizationsStack extends AcceleratorStack {
   /**
@@ -85,6 +85,7 @@ export class CustomizationsStack extends AcceleratorStack {
       this.props.customizationsConfig?.customizations?.cloudFormationStackSets
     ) {
       const customStackSetList = this.props.customizationsConfig.customizations.cloudFormationStackSets;
+      const stackSetObjList: cdk.aws_cloudformation.CfnStackSet[] = [];
       for (const stackSet of customStackSetList ?? []) {
         this.logger.info(`New stack set ${stackSet.name}`);
         const deploymentTargetAccounts: string[] | undefined = this.getAccountIdsFromDeploymentTargets(
@@ -95,8 +96,7 @@ export class CustomizationsStack extends AcceleratorStack {
         const parameters = stackSet.parameters?.map(parameter => {
           return { parameterKey: parameter.name, parameterValue: parameter.value };
         });
-
-        new cdk.aws_cloudformation.CfnStackSet(
+        const stackSetObj = new cdk.aws_cloudformation.CfnStackSet(
           this,
           pascalCase(`${this.props.prefixes.accelerator}-Custom-${stackSet.name}`),
           {
@@ -121,6 +121,22 @@ export class CustomizationsStack extends AcceleratorStack {
             parameters,
           },
         );
+
+        // // add the stackObj to its list in order to populate all the dependencies later
+        stackSetObjList.push(stackSetObj);
+      }
+
+      // Defining dependencies between StackSets cdk objects
+      for (const stackSet of customStackSetList ?? []) {
+        if (stackSet.dependsOn?.length > 0) {
+          const stackSetObjDependencies: cdk.aws_cloudformation.CfnStackSet[] = stackSetObjList.filter(stackSetObj =>
+            stackSet.dependsOn?.includes(stackSetObj.stackSetName),
+          );
+          const currentStackSetObj = stackSetObjList.find(
+            currentStackSet => stackSet.name === currentStackSet.stackSetName,
+          );
+          stackSetObjDependencies.forEach(stackSetObjDepen => currentStackSetObj?.addDependency(stackSetObjDepen));
+        }
       }
     }
   }
