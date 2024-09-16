@@ -1553,6 +1553,11 @@ export interface ICloudFormationStackSet {
    * The parameters to be passed to the stackset.
    */
   readonly parameters?: t.ICfnParameter[];
+  /**
+   * The order to deploy the stack relative to the other stacks. Must be a positive integer.
+   * To deploy stacks in parallel, set runOrder of each stack to 1.
+   */
+  readonly dependsOn: string[];
 }
 
 export type PortfolioAssociationType = 'User' | 'Group' | 'Role' | 'PermissionSet';
