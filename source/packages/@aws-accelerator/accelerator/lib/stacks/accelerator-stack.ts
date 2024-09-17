@@ -431,7 +431,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
     }
     return `${
       this.acceleratorResourceNames.bucketPrefixes.assets
-    }-${this.props.accountsConfig.getManagementAccountId()}-${cdk.Stack.of(this).region}`;
+    }-${this.props.accountsConfig.getManagementAccountId()}-${this.props.globalConfig.homeRegion}`;
   }
 
   /**
