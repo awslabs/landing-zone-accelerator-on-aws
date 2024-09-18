@@ -98,12 +98,6 @@ import { AcceleratorToolkit } from './lib/toolkit';
     ? process.env['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE'] === 'true'
     : false;
 
-  /**
-   * If command is deploy then before command run process to rename all asset.json files
-   */
-  if (commands[0] === 'deploy') {
-    await AcceleratorToolkit.assetFiles('render', configDirPath);
-  }
   //
   // Execute the Accelerator engine
   //
@@ -125,11 +119,4 @@ import { AcceleratorToolkit } from './lib/toolkit';
     console.log(err.message);
     process.exit(1);
   });
-
-  /**
-   * If command is synth then post command run process to rename all asset.json files
-   */
-  if (commands[0] === 'synth') {
-    await AcceleratorToolkit.assetFiles('parse', configDirPath);
-  }
 })();
