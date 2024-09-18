@@ -25,6 +25,7 @@ import {
 import { DynamoDBDocumentClient, paginateQuery, DynamoDBDocumentPaginationConfiguration } from '@aws-sdk/lib-dynamodb';
 import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
+import { getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
 
 const marshallOptions = {
   convertEmptyValues: false,
@@ -69,6 +70,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const assumeRoleName = event.ResourceProperties['assumeRoleName'];
   const partition = event.ResourceProperties['partition'];
   const solutionId = process.env['SOLUTION_ID'];
+  const globalRegion = getGlobalRegion(partition);
 
   dynamodbClient = new DynamoDBClient({ customUserAgent: solutionId });
   documentClient = DynamoDBDocumentClient.from(dynamodbClient, translateConfig);
@@ -77,14 +79,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
     pageSize: 100,
   };
 
-  let organizationsClient: OrganizationsClient;
-  if (partition === 'aws-us-gov') {
-    organizationsClient = new OrganizationsClient({ region: 'us-gov-west-1', customUserAgent: solutionId });
-  } else if (partition === 'aws-cn') {
-    organizationsClient = new OrganizationsClient({ region: 'cn-northwest-1', customUserAgent: solutionId });
-  } else {
-    organizationsClient = new OrganizationsClient({ region: 'us-east-1', customUserAgent: solutionId });
-  }
+  const organizationsClient = new OrganizationsClient({ customUserAgent: solutionId, region: globalRegion });
 
   if (partition !== 'aws-us-gov') {
     return {

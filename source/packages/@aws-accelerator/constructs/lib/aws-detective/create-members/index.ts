@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { chunkArray } from '@aws-accelerator/utils/lib/common-functions';
+import { chunkArray, getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 import * as AWS from 'aws-sdk';
@@ -32,17 +32,13 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 > {
   const region = event.ResourceProperties['region'];
   const partition = event.ResourceProperties['partition'];
-  const solutionId = process.env['SOLUTION_ID'];
+  const globalRegion = getGlobalRegion(partition);
   const chunkSize = process.env['CHUNK_SIZE'] ? parseInt(process.env['CHUNK_SIZE']) : 50;
-
-  let organizationsClient: AWS.Organizations;
-  if (partition === 'aws-us-gov') {
-    organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1', customUserAgent: solutionId });
-  } else {
-    organizationsClient = new AWS.Organizations({ region: 'us-east-1', customUserAgent: solutionId });
-  }
-
-  const detectiveClient = new AWS.Detective({ region: region, customUserAgent: solutionId });
+  const organizationsClient = new AWS.Organizations({
+    region: globalRegion,
+    customUserAgent: process.env['SOLUTION_ID'],
+  });
+  const detectiveClient = new AWS.Detective({ region: region, customUserAgent: process.env['SOLUTION_ID'] });
 
   const graphArn = await getGraphArn(detectiveClient);
 

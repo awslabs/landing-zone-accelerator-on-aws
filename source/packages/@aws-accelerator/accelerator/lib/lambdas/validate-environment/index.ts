@@ -26,6 +26,7 @@ import { CloudFormationClient, DescribeStacksCommand } from '@aws-sdk/client-clo
 import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
+import { getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
 
 type scpTargetType = 'ou' | 'account';
 
@@ -122,21 +123,18 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   driftDetectionParameterName = event.ResourceProperties['driftDetectionParameterName'];
   driftDetectionMessageParameterName = event.ResourceProperties['driftDetectionMessageParameterName'];
   const skipScpValidation = event.ResourceProperties['skipScpValidation'];
-
   const solutionId = process.env['SOLUTION_ID'];
-
-  if (partition === 'aws-us-gov') {
-    organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1' });
-  } else if (partition === 'aws-cn') {
-    organizationsClient = new AWS.Organizations({ region: 'cn-northwest-1' });
-  } else {
-    organizationsClient = new AWS.Organizations({ region: 'us-east-1', customUserAgent: solutionId });
-  }
-
   dynamodbClient = new DynamoDBClient({ customUserAgent: solutionId });
   documentClient = DynamoDBDocumentClient.from(dynamodbClient, translateConfig);
   serviceCatalogClient = new AWS.ServiceCatalog({ customUserAgent: solutionId });
   cloudformationClient = new CloudFormationClient({ customUserAgent: solutionId });
+  const globalRegion = getGlobalRegion(partition);
+  // Move to setOrganizationsClient method after refactoring to SDK v3
+  organizationsClient = new AWS.Organizations({
+    customUserAgent: solutionId,
+    region: globalRegion,
+  });
+
   ssmClient = new SSMClient({});
   paginationConfig = {
     client: documentClient,

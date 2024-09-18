@@ -65,7 +65,7 @@ export class AccountWarmingDemoStack extends Stack {
     key.addToResourcePolicy(
       new PolicyStatement({
         sid: `Allow Cloudwatch logs to use the encryption key`,
-        principals: [new ServicePrincipal(`logs.${Stack.of(this).region}.${Stack.of(this).urlSuffix}`)],
+        principals: [new ServicePrincipal(`logs.${Stack.of(this).region}.amazonaws.com`)],
         actions: ['kms:Encrypt*', 'kms:Decrypt*', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:Describe*'],
         resources: ['*'],
         conditions: {

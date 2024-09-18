@@ -15,6 +15,7 @@ import * as AWS from 'aws-sdk';
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
+import { getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
 
 AWS.config.logger = console;
 
@@ -73,16 +74,9 @@ export async function handler(
     throw new Error('Budget definition is missing from Resource Properties.');
   }
 
-  let budgetClient = new AWS.Budgets();
   const partition = event.ResourceProperties['partition'];
-  if (partition === 'aws-us-gov') {
-    console.log(`AWS GovCloud does not have an AWS Budgets endpoints.`);
-    return;
-  } else if (partition === 'aws-cn') {
-    budgetClient = new AWS.Budgets({ region: 'cn-northwest-1' });
-  } else {
-    budgetClient = new AWS.Budgets({ region: 'us-east-1' });
-  }
+  const globalRegion = getGlobalRegion(partition);
+  const budgetClient = new AWS.Budgets({ region: globalRegion });
 
   //AccountId retrieved from context
   const awsAccountId = context.invokedFunctionArn.split(':')[4];
@@ -97,7 +91,7 @@ export async function handler(
   const includeOtherSubscription = JSON.parse(budgetDefinition.includeOtherSubscription);
   const includeRecurring = JSON.parse(budgetDefinition.includeRecurring);
   const includeRefund = JSON.parse(budgetDefinition.includeRefund);
-  const inscludeSubscription = JSON.parse(budgetDefinition.includeCredit);
+  const includeSubscription = JSON.parse(budgetDefinition.includeCredit);
   const includeSupport = JSON.parse(budgetDefinition.includeSupport);
   const includeUpfront = JSON.parse(budgetDefinition.includeUpfront);
   const includeTax = JSON.parse(budgetDefinition.includeTax);
@@ -137,7 +131,7 @@ export async function handler(
             IncludeOtherSubscription: includeOtherSubscription,
             IncludeRecurring: includeRecurring,
             IncludeRefund: includeRefund,
-            IncludeSubscription: inscludeSubscription,
+            IncludeSubscription: includeSubscription,
             IncludeSupport: includeSupport,
             IncludeTax: includeTax,
             IncludeUpfront: includeUpfront,
@@ -176,7 +170,7 @@ export async function handler(
             IncludeOtherSubscription: includeOtherSubscription,
             IncludeRecurring: includeRecurring,
             IncludeRefund: includeRefund,
-            IncludeSubscription: inscludeSubscription,
+            IncludeSubscription: includeSubscription,
             IncludeSupport: includeSupport,
             IncludeTax: includeTax,
             IncludeUpfront: includeUpfront,

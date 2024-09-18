@@ -19,25 +19,26 @@ import { AccountsConfig } from '@aws-accelerator/config/lib/accounts-config';
 import { OrganizationConfig } from '@aws-accelerator/config/lib/organization-config';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { ScheduledEvent } from '@aws-accelerator/utils/lib/common-types';
-
-let organizationsClient: AWS.Organizations;
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
+import { setOrganizationsClient } from '@aws-accelerator/utils/lib/set-organizations-client';
+import {
+  DescribePolicyCommand,
+  UpdatePolicyCommand,
+  AttachPolicyCommand,
+  DetachPolicyCommand,
+} from '@aws-sdk/client-organizations';
+import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
 
 const acceleratorRolePrefix = process.env['ACCELERATOR_PREFIX'] ?? 'AWSAccelerator';
 const snsTopicArn = process.env['SNS_TOPIC_ARN'];
 const partition = process.env['AWS_PARTITION']!;
 const homeRegion = process.env['HOME_REGION']!;
+const solutionId: string = process.env['SOLUTION_ID'] ?? '';
 const isOrgsEnabled = process.env['ORGANIZATIONS_ENABLED'] === 'true';
 const singleAccountMode = process.env['SINGLE_ACCOUNT_MODE'] === 'true';
+const organizationsClient = setOrganizationsClient(partition, solutionId);
 
-const snsClient = new AWS.SNS({ region: homeRegion });
-
-if (partition === 'aws-us-gov') {
-  organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1' });
-} else if (partition === 'aws-cn') {
-  organizationsClient = new AWS.Organizations({ region: 'cn-northwest-1' });
-} else {
-  organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
-}
+const snsClient = new SNSClient({ customUserAgent: solutionId, region: homeRegion, retryStrategy: setRetryStrategy() });
 
 /**
  * revert-scp-changes - lambda handler
@@ -121,7 +122,7 @@ export async function handler(event: ScheduledEvent): Promise<{ statusCode: numb
 async function reattachScp(policyId: string, target: string): Promise<void> {
   console.log(`Reattaching policy ${policyId} to target ${target}`);
   const attachPolicyParams = { PolicyId: policyId, TargetId: target };
-  await throttlingBackOff(() => organizationsClient.attachPolicy(attachPolicyParams).promise());
+  await throttlingBackOff(() => organizationsClient.send(new AttachPolicyCommand(attachPolicyParams)));
   await publishSuccessToSns(
     `A manual SCP modification was automatically reverted by the Landing Zone Accelerator. Policy ${policyId} was reattached to ${target}.`,
   );
@@ -130,7 +131,7 @@ async function reattachScp(policyId: string, target: string): Promise<void> {
 async function detachScp(policyId: string, target: string): Promise<void> {
   console.log(`Detaching policy ${policyId} from target ${target}`);
   const detachPolicyParams = { PolicyId: policyId, TargetId: target };
-  await throttlingBackOff(() => organizationsClient.detachPolicy(detachPolicyParams).promise());
+  await throttlingBackOff(() => organizationsClient.send(new DetachPolicyCommand(detachPolicyParams)));
   await publishSuccessToSns(
     `A manual SCP modification was automatically reverted by the Landing Zone Accelerator. Policy ${policyId} was detached from ${target}.`,
   );
@@ -151,7 +152,7 @@ async function revertScpModification(
   console.log(`Original policy document: \n${originalPolicy}`);
   console.log('Performing update to revert policy to accelerator configuration');
   const updatePolicyParams = { Content: originalPolicy, PolicyId: policyId };
-  await throttlingBackOff(() => organizationsClient.updatePolicy(updatePolicyParams).promise());
+  await throttlingBackOff(() => organizationsClient.send(new UpdatePolicyCommand(updatePolicyParams)));
   await publishSuccessToSns(
     `A manual SCP modification was automatically reverted by the Landing Zone Accelerator. Policy ${policyId} was updated to match the configuration provided in the aws-accelerator-config repository.`,
   );
@@ -162,7 +163,9 @@ async function getPolicyDetails(policyId: string): Promise<AWS.Organizations.Pol
   const getPolicyParams = { PolicyId: policyId };
 
   try {
-    const response = await throttlingBackOff(() => organizationsClient.describePolicy(getPolicyParams).promise());
+    const response = await throttlingBackOff(() =>
+      organizationsClient.send(new DescribePolicyCommand(getPolicyParams)),
+    );
     return response.Policy!;
   } catch (e) {
     console.error(e);
@@ -268,7 +271,7 @@ async function publishErrorToSns(errorMessage: string): Promise<void> {
     return;
   }
   try {
-    await throttlingBackOff(() => snsClient.publish(publishParams).promise());
+    await throttlingBackOff(() => snsClient.send(new PublishCommand(publishParams)));
   } catch (e) {
     console.error(e);
   }
@@ -287,7 +290,7 @@ async function publishSuccessToSns(successMessage: string): Promise<void> {
     return;
   }
   try {
-    await throttlingBackOff(() => snsClient.publish(publishParams).promise());
+    await throttlingBackOff(() => snsClient.send(new PublishCommand(publishParams)));
   } catch (e) {
     console.error(e);
   }

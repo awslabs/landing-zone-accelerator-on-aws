@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as path from 'path';
+import { getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
 
 export interface IReportDefinition extends cdk.IResource {
   /**
@@ -137,12 +138,7 @@ export class ReportDefinition extends cdk.Resource implements IReportDefinition 
     });
 
     this.reportName = this.physicalName;
-
-    if (props.partition === 'aws-cn') {
-      this.globalRegion = 'cn-northwest-1';
-    } else {
-      this.globalRegion = 'us-east-1';
-    }
+    this.globalRegion = getGlobalRegion(props.partition);
 
     // Cfn resource AWS::CUR::ReportDefinition is available in region us-east-1 only.
     if (cdk.Stack.of(this).region === 'us-east-1') {

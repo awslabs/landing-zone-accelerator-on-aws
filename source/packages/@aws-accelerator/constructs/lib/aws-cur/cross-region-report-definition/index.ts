@@ -15,6 +15,7 @@ import * as AWS from 'aws-sdk';
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent, Context } from '@aws-accelerator/utils/lib/common-types';
+import { getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
 
 AWS.config.logger = console;
 
@@ -52,10 +53,7 @@ export async function handler(
 
   const partition = context.invokedFunctionArn.split(':')[1];
 
-  let globalRegion = 'us-east-1';
-  if (partition === 'aws-cn') {
-    globalRegion = 'cn-northwest-1';
-  }
+  const globalRegion = getGlobalRegion(partition);
 
   const reportDefinition: ReportDefinition = event.ResourceProperties['reportDefinition'];
   const solutionId = process.env['SOLUTION_ID'];

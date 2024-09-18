@@ -13,6 +13,7 @@
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
+import { getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
 import * as AWS from 'aws-sdk';
 AWS.config.logger = console;
 
@@ -25,7 +26,6 @@ AWS.config.logger = console;
 export async function handler(event: CloudFormationCustomResourceEvent) {
   console.log(JSON.stringify(event, null, 4));
   const fmsClient = new AWS.FMS({ region: 'us-east-1' });
-  const organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
   const fmsServicePrincipal = 'fms.amazonaws.com';
   const currentFMSAdminAccount = await throttlingBackOff(() => fmsClient.getAdminAccount({}).promise()).catch(err => {
     console.log(err);
@@ -35,8 +35,10 @@ export async function handler(event: CloudFormationCustomResourceEvent) {
   const assumeRoleName = event.ResourceProperties['assumeRoleName'];
   const partition = event.ResourceProperties['partition'];
   const region = event.ResourceProperties['region'];
-
   const solutionId = process.env['SOLUTION_ID'];
+
+  const globalRegion = getGlobalRegion(partition);
+  const organizationsClient = new AWS.Organizations({ customUserAgent: solutionId, region: globalRegion });
 
   console.log(`Current FMS Account: ${currentFMSAdminAccount?.AdminAccount || 'No account found'}`);
   console.log(`New FMS Account: ${newFMSAdminAccount}`);

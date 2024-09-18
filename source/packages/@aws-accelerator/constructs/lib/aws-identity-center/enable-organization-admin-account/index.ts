@@ -13,6 +13,7 @@
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
+import { getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
 import * as AWS from 'aws-sdk';
 import { PermissionSet } from 'aws-sdk/clients/ssoadmin';
 import { IdentityCenterPermissionSetConfig } from '@aws-accelerator/config/lib/iam-config';
@@ -33,21 +34,17 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   | undefined
 > {
   console.log(JSON.stringify(event, null, 4));
-  let organizationsClient = new AWS.Organizations({ customUserAgent: process.env['SOLUTION_ID'] });
   const identityCenterClient = new AWS.SSOAdmin({ customUserAgent: process.env['SOLUTION_ID'] });
   const identityCenterServicePrincipal = 'sso.amazonaws.com';
-  const partition = event.ResourceProperties['partition'];
-  if (partition === 'aws-us-gov') {
-    organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1' });
-  } else if (partition === 'aws-cn') {
-    organizationsClient = new AWS.Organizations({ region: 'cn-northwest-1' });
-  } else {
-    organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
-  }
-
   const newIdentityCenterDelegatedAdminAccount = event.ResourceProperties['adminAccountId'];
   const lzaManagedPermissionSets = event.ResourceProperties['lzaManagedPermissionSets'];
   const lzaManagedAssignments = event.ResourceProperties['lzaManagedAssignments'];
+  const partition = event.ResourceProperties['partition'];
+  const globalRegion = getGlobalRegion(partition);
+  const organizationsClient = new AWS.Organizations({
+    customUserAgent: process.env['SOLUTION_ID'],
+    region: globalRegion,
+  });
 
   const currentIdentityCenterDelegatedAdmin = await getCurrentDelegatedAdminAccount(
     organizationsClient,
