@@ -207,6 +207,11 @@ export class AccountsConfig implements i.IAccountsConfig {
             region: 'cn-northwest-1',
             credentials: managementAccountCredentials,
           });
+        } else if (partition === 'aws-iso-f') {
+          organizationsClient = new AWS.Organizations({
+            region: 'us-isof-south-1',
+            credentials: managementAccountCredentials,
+          });
         } else {
           organizationsClient = new AWS.Organizations({
             region: 'us-east-1',

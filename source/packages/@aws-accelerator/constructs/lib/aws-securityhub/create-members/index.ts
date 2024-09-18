@@ -12,7 +12,7 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
-import { OrganizationsClient, ListAccountsCommand, ListAccountsCommandOutput } from '@aws-sdk/client-organizations';
+import { ListAccountsCommand, ListAccountsCommandOutput } from '@aws-sdk/client-organizations';
 import {
   CreateMembersCommand,
   DeleteMembersCommand,
@@ -25,6 +25,7 @@ import {
 } from '@aws-sdk/client-securityhub';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 import { chunkArray, setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
+import { setOrganizationsClient } from '@aws-accelerator/utils/lib/set-organizations-client';
 
 /**
  * enable-guardduty - lambda handler
@@ -39,33 +40,14 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
     }
   | undefined
 > {
-  const region = event.ResourceProperties['region'];
   const partition = event.ResourceProperties['partition'];
+  const region = event.ResourceProperties['region'];
   const securityHubMemberAccountIds: string[] = event.ResourceProperties['securityHubMemberAccountIds'];
   const autoEnableOrgMembers: boolean = event.ResourceProperties['autoEnableOrgMembers'] === 'true';
   const solutionId = process.env['SOLUTION_ID'];
   const chunkSize = process.env['CHUNK_SIZE'] ? parseInt(process.env['CHUNK_SIZE']) : 50;
+  const organizationsClient = setOrganizationsClient(partition, solutionId);
 
-  let organizationsClient: OrganizationsClient;
-  if (partition === 'aws-us-gov') {
-    organizationsClient = new OrganizationsClient({
-      region: 'us-gov-west-1',
-      customUserAgent: solutionId,
-      retryStrategy: setRetryStrategy(),
-    });
-  } else if (partition === 'aws-cn') {
-    organizationsClient = new OrganizationsClient({
-      region: 'cn-northwest-1',
-      customUserAgent: solutionId,
-      retryStrategy: setRetryStrategy(),
-    });
-  } else {
-    organizationsClient = new OrganizationsClient({
-      region: 'us-east-1',
-      customUserAgent: solutionId,
-      retryStrategy: setRetryStrategy(),
-    });
-  }
   const securityHubClient = new SecurityHubClient({
     region: region,
     customUserAgent: solutionId,

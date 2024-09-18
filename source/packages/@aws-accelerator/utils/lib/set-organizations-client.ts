@@ -27,15 +27,26 @@ export function setOrganizationsClient(partition: string, solutionId?: string): 
       customUserAgent: solutionId,
       retryStrategy: setRetryStrategy(),
     });
+  } else if (partition === 'aws-iso-f') {
+    return new OrganizationsClient({
+      region: 'us-isof-south-1',
+      customUserAgent: solutionId,
+      retryStrategy: setRetryStrategy(),
+    });
   } else if (partition === 'aws-cn') {
     return new OrganizationsClient({
       region: 'cn-northwest-1',
       customUserAgent: solutionId,
       retryStrategy: setRetryStrategy(),
     });
-  } else {
+  } else if (partition === 'aws') {
     return new OrganizationsClient({
       region: 'us-east-1',
+      customUserAgent: solutionId,
+      retryStrategy: setRetryStrategy(),
+    });
+  } else {
+    return new OrganizationsClient({
       customUserAgent: solutionId,
       retryStrategy: setRetryStrategy(),
     });

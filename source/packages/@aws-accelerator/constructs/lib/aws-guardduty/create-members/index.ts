@@ -25,8 +25,9 @@ import {
   OrganizationFeatureConfiguration,
   BadRequestException,
 } from '@aws-sdk/client-guardduty';
-import { OrganizationsClient, ListAccountsCommand, ListAccountsCommandOutput } from '@aws-sdk/client-organizations';
+import { ListAccountsCommand, ListAccountsCommandOutput } from '@aws-sdk/client-organizations';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
+import { setOrganizationsClient } from '@aws-accelerator/utils/lib/set-organizations-client';
 
 /**
  * enable-guardduty - lambda handler
@@ -41,8 +42,8 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
     }
   | undefined
 > {
-  const region = event.ResourceProperties['region'];
   const partition = event.ResourceProperties['partition'];
+  const region = event.ResourceProperties['region'];
   const guardDutyMemberAccountIds: string[] = event.ResourceProperties['guardDutyMemberAccountIds'];
   const enableS3Protection: boolean = event.ResourceProperties['enableS3Protection'] === 'true';
   const enableEksProtection: boolean = event.ResourceProperties['enableEksProtection'] === 'true';
@@ -50,27 +51,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 
   const solutionId = process.env['SOLUTION_ID'];
   const chunkSize = process.env['CHUNK_SIZE'] ? parseInt(process.env['CHUNK_SIZE']) : 50;
-
-  let organizationsClient: OrganizationsClient;
-  if (partition === 'aws-us-gov') {
-    organizationsClient = new OrganizationsClient({
-      region: 'us-gov-west-1',
-      customUserAgent: solutionId,
-      retryStrategy: setRetryStrategy(),
-    });
-  } else if (partition === 'aws-cn') {
-    organizationsClient = new OrganizationsClient({
-      region: 'cn-northwest-1',
-      customUserAgent: solutionId,
-      retryStrategy: setRetryStrategy(),
-    });
-  } else {
-    organizationsClient = new OrganizationsClient({
-      region: 'us-east-1',
-      customUserAgent: solutionId,
-      retryStrategy: setRetryStrategy(),
-    });
-  }
+  const organizationsClient = setOrganizationsClient(partition, solutionId);
 
   const guardDutyClient = new GuardDutyClient({
     region: region,
@@ -132,7 +113,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 
       // Cleanup members removed from deploymentTarget
       if (guardDutyMemberAccountIds.length > 0) {
-        console.log('Inititating cleanup of members removed from deploymentTargets');
+        console.log('Initiating cleanup of members removed from deploymentTargets');
         existingMemberAccountIds = await getExistingMembers(guardDutyClient, detectorId!);
 
         const memberAccountIdsToDelete: string[] = [];

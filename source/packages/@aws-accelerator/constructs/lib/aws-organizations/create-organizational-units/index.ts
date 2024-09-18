@@ -12,6 +12,7 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+import { setOrganizationsClient } from '@aws-accelerator/utils/lib/set-organizations-client';
 import * as AWS from 'aws-sdk';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import {
@@ -30,8 +31,7 @@ import {
   ListRootsCommandOutput,
   CreateOrganizationalUnitCommand,
 } from '@aws-sdk/client-organizations';
-import { ConfiguredRetryStrategy } from '@aws-sdk/util-retry';
-import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
+import { CloudFormationCustomResourceEvent, Context } from '@aws-accelerator/utils/lib/common-types';
 AWS.config.logger = console;
 let organizationsClient: OrganizationsClient;
 const marshallOptions = {
@@ -62,7 +62,10 @@ type OrganizationConfigRecords = Array<OrganizationConfigRecord>;
  * @param event
  * @returns
  */
-export async function handler(event: CloudFormationCustomResourceEvent): Promise<
+export async function handler(
+  event: CloudFormationCustomResourceEvent,
+  context: Context,
+): Promise<
   | {
       Status: string;
     }
@@ -71,9 +74,9 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const configTableName = event.ResourceProperties['configTableName'];
   const commitId = event.ResourceProperties['commitId'];
   const organizationsEnabled = event.ResourceProperties['organizationsEnabled'];
-  const partition = event.ResourceProperties['partition'];
   const organizationalUnitsToCreate: OrganizationConfigRecords = [];
   const solutionId = process.env['SOLUTION_ID'];
+  const partition = context.invokedFunctionArn.split(':')[1];
 
   dynamodbClient = new DynamoDBClient({ customUserAgent: solutionId });
   documentClient = DynamoDBDocumentClient.from(dynamodbClient, translateConfig);
@@ -91,22 +94,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
           Status: 'SUCCESS',
         };
       }
-      if (partition === 'aws-us-gov') {
-        organizationsClient = new OrganizationsClient({
-          retryStrategy: new ConfiguredRetryStrategy(10, (attempt: number) => 100 + attempt * 1000),
-          region: 'us-gov-west-1',
-        });
-      } else if (partition === 'aws-cn') {
-        organizationsClient = new OrganizationsClient({
-          retryStrategy: new ConfiguredRetryStrategy(10, (attempt: number) => 100 + attempt * 1000),
-          region: 'cn-northwest-1',
-        });
-      } else {
-        organizationsClient = new OrganizationsClient({
-          retryStrategy: new ConfiguredRetryStrategy(10, (attempt: number) => 100 + attempt * 1000),
-          region: 'us-east-1',
-        });
-      }
+      organizationsClient = setOrganizationsClient(partition, solutionId);
       //read config from table
       const organizationalUnitList = await getConfigFromTable(configTableName, commitId);
       console.log(`Organizational Units retrieved from config table: ${JSON.stringify(organizationalUnitList)}`);

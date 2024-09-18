@@ -12,6 +12,7 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+import { getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 import * as AWS from 'aws-sdk';
 AWS.config.logger = console;
@@ -29,18 +30,11 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
     }
   | undefined
 > {
-  const servicePrincipal: string = event.ResourceProperties['servicePrincipal'];
   const partition = event.ResourceProperties['partition'];
+  const servicePrincipal: string = event.ResourceProperties['servicePrincipal'];
   const solutionId = process.env['SOLUTION_ID'];
-
-  let organizationsClient: AWS.Organizations;
-  if (partition === 'aws-us-gov') {
-    organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1', customUserAgent: solutionId });
-  } else if (partition === 'aws-cn') {
-    organizationsClient = new AWS.Organizations({ region: 'cn-northwest-1', customUserAgent: solutionId });
-  } else {
-    organizationsClient = new AWS.Organizations({ region: 'us-east-1', customUserAgent: solutionId });
-  }
+  const globalRegion = getGlobalRegion(partition);
+  const organizationsClient = new AWS.Organizations({ customUserAgent: solutionId, region: globalRegion });
 
   switch (event.RequestType) {
     case 'Create':

@@ -20,6 +20,7 @@
 import * as AWS from 'aws-sdk';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CreateAccountResponse } from 'aws-sdk/clients/organizations';
+import { getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
 import { CloudFormationCustomResourceEvent, Context } from '@aws-accelerator/utils/lib/common-types';
 const documentClient = new AWS.DynamoDB.DocumentClient();
 const newOrgAccountsTableName = process.env['NewOrgAccountsTableName'] ?? '';
@@ -48,15 +49,11 @@ export async function handler(
     }
   | undefined
 > {
-  const partition = context.invokedFunctionArn.split(':')[1];
-
-  if (partition === 'aws-cn') {
-    organizationsClient = new AWS.Organizations({ region: 'cn-northwest-1', customUserAgent: solutionId });
-  } else {
-    organizationsClient = new AWS.Organizations({ region: 'us-east-1', customUserAgent: solutionId });
-  }
-
   console.log(event);
+  const partition = context.invokedFunctionArn.split(':')[1];
+  const globalRegion = getGlobalRegion(partition);
+  organizationsClient = new AWS.Organizations({ customUserAgent: solutionId, region: globalRegion });
+
   // get a single accountConfig from table and attempt to create
   // if no record is returned then all new accounts are provisioned
   try {
