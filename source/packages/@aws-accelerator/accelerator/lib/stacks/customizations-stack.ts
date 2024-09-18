@@ -85,7 +85,7 @@ export class CustomizationsStack extends AcceleratorStack {
       this.props.customizationsConfig?.customizations?.cloudFormationStackSets
     ) {
       const customStackSetList = this.props.customizationsConfig.customizations.cloudFormationStackSets;
-
+      const stackSetObjList: cdk.aws_cloudformation.CfnStackSet[] = [];
       for (const stackSet of customStackSetList ?? []) {
         this.logger.info(`New stack set ${stackSet.name}`);
         const deploymentTargetAccounts: string[] | undefined = this.getAccountIdsFromDeploymentTargets(
@@ -96,10 +96,9 @@ export class CustomizationsStack extends AcceleratorStack {
         const parameters = stackSet.parameters?.map(parameter => {
           return { parameterKey: parameter.name, parameterValue: parameter.value };
         });
-        const currentStackSetId = pascalCase(`${this.props.prefixes.accelerator}-Custom-${stackSet.name}`)
-        let stackSetObj = new cdk.aws_cloudformation.CfnStackSet(
+        const stackSetObj = new cdk.aws_cloudformation.CfnStackSet(
           this,
-          currentStackSetId,
+          pascalCase(`${this.props.prefixes.accelerator}-Custom-${stackSet.name}`),
           {
             permissionModel: 'SELF_MANAGED',
             stackSetName: stackSet.name,
@@ -122,7 +121,22 @@ export class CustomizationsStack extends AcceleratorStack {
             parameters,
           },
         );
-        stackSetObj.node.addDependency(pascalCase(`${this.props.prefixes.accelerator}-Custom-${stackSetObj.dependsOn}`))
+
+        // // add the stackObj to its list in order to populate all the dependencies later
+        stackSetObjList.push(stackSetObj);
+      }
+
+      // Defining dependencies between StackSets cdk objects
+      for (const stackSet of customStackSetList ?? []) {
+        if (stackSet.dependsOn.length > 0) {
+          const stackSetObjDependencies: cdk.aws_cloudformation.CfnStackSet[] = stackSetObjList.filter(stackSetObj =>
+            stackSet.dependsOn.includes(stackSetObj.stackSetName),
+          );
+          const currentStackSetObj = stackSetObjList.find(
+            currentStackSet => stackSet.name === currentStackSet.stackSetName,
+          );
+          currentStackSetObj?.node.addDependency(stackSetObjDependencies);
+        }
       }
     }
   }

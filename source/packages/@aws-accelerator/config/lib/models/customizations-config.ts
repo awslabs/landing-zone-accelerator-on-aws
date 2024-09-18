@@ -1554,8 +1554,8 @@ export interface ICloudFormationStackSet {
    */
   readonly parameters?: t.ICfnParameter[];
   /**
-   * The order to deploy the stack relative to the other stacks. Must be a positive integer.
-   * To deploy stacks in parallel, set runOrder of each stack to 1.
+   * The order to deploy the stack relative to the other stacks. Can contain multiple stack names.
+   * For any stackset name you define here, the stackset defined will be deployed before the current one.
    */
   readonly dependsOn: string[];
 }
