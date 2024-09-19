@@ -5098,6 +5098,13 @@
     "@types/node" "*"
     "@types/responselike" "^1.0.0"
 
+"@types/cfn-response@^1.0.8":
+  version "1.0.8"
+  resolved "https://registry.npmjs.org/@types/cfn-response/-/cfn-response-1.0.8.tgz"
+  integrity sha512-b9YttPRwTVcn/r65BcxrXqrVXpBtns3IlwPgE5XfzFoXBSBhimw7ZTbpvdsP39nsxVTmvV7IUN34/9FBQyfe2w==
+  dependencies:
+    "@types/aws-lambda" "*"
+
 "@types/conventional-commits-parser@^5.0.0":
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/@types/conventional-commits-parser/-/conventional-commits-parser-5.0.0.tgz#8c9d23e0b415b24b91626d07017303755d542dc8"
@@ -6274,6 +6281,11 @@ cdk-nag@2.5.2:
   version "2.5.2"
   resolved "https://registry.yarnpkg.com/cdk-nag/-/cdk-nag-2.5.2.tgz#b7a03dde19abb92eee5b001f7e5b0a638cfa70ae"
   integrity sha512-tIqIunchUtqP8a7efOtgutyfnJzimpTRtMfE8+4CcEm6Ze4CisJ+4qRPoVH1rmOxqHMNvjZh5TSTxrhRCEBwjw==
+
+cfn-response@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/cfn-response/-/cfn-response-1.0.1.tgz"
+  integrity sha512-mHfgHUcGpIbmioV/gQ//5V+b8em/ZKFwAgzmbycflJ1q0AU66wlhIgarkYc4JXGgIca+0lxg+XEKO4ZwyZedaw==
 
 chalk@4.1.0:
   version "4.1.0"

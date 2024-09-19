@@ -144,6 +144,12 @@ export class AccountsConfig implements i.IAccountsConfig {
    * @returns
    */
   static load(dir: string): AccountsConfig {
+    if (!fs.existsSync(path.join(dir, AccountsConfig.FILENAME))) {
+      throw new Error(
+        `Error loading accounts-config.yaml. Please verify this file is at the root of the configuration repository or archive. If you are using S3, this may indicate your zip archive includes a nested aws-accelerator-config directory.`,
+      );
+    }
+
     const buffer = fs.readFileSync(path.join(dir, AccountsConfig.FILENAME), 'utf8');
     const values = parseAccountsConfig(yaml.load(buffer));
     const managementAccountEmail =
