@@ -88,6 +88,8 @@ export function getStsEndpoint(partition: string, region: string): string {
     return `https://sts.${region}.sc2s.sgov.gov`;
   } else if (partition === 'aws-cn') {
     return `https://sts.${region}.amazonaws.com.cn`;
+  } else if (partition === 'aws-iso-f') {
+    return `https://sts.${region}.csp.hci.ic.gov`;
   }
   // both commercial and govCloud return this pattern
   return `https://sts.${region}.amazonaws.com`;
