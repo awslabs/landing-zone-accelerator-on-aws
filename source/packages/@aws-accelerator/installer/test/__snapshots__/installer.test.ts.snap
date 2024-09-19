@@ -3384,16 +3384,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
         "configRepositoryLocation": {
           "Ref": "ConfigurationRepositoryLocation",
         },
-        "existingConfigRepositoryBranchName": {
-          "Ref": "ExistingConfigRepositoryBranchName",
-        },
-        "existingConfigRepositoryName": {
-          "Ref": "ExistingConfigRepositoryName",
-        },
         "resourceType": "Custom::ValidateInstallerStack",
-        "useExistingConfigRepo": {
-          "Ref": "UseExistingConfigRepo",
-        },
       },
       "Type": "AWS::CloudFormation::CustomResource",
       "UpdateReplacePolicy": "Delete",
@@ -3431,59 +3422,53 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       },
       "Properties": {
         "Code": {
-          "ZipFile": "
-          const response = require('cfn-response'); 
-          const { CodePipelineClient, GetPipelineCommand } = require("@aws-sdk/client-codepipeline");
-          exports.handler = async function (event, context) { 
-          console.log(JSON.stringify(event, null, 4)); 
+          "ZipFile": "const response = require('cfn-response');
+const { CodePipelineClient, GetPipelineCommand } = require('@aws-sdk/client-codepipeline');
+exports.handler = async function (event, context) {
+  console.log(JSON.stringify(event, null, 4));
 
-          const useExistingConfigRepo=event.ResourceProperties.useExistingConfigRepo;
-          const configRepositoryLocation=event.ResourceProperties.configRepositoryLocation;
-          const existingConfigRepositoryName=event.ResourceProperties.existingConfigRepositoryName;
-          const existingConfigRepositoryBranchName=event.ResourceProperties.existingConfigRepositoryBranchName;
+  const configRepositoryLocation = event.ResourceProperties.configRepositoryLocation;
 
-          if (event.RequestType === 'Delete') {
-            await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
-            return;
-          }
+  if (event.RequestType === 'Delete') {
+    await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+    return;
+  }
 
-          if (useExistingConfigRepo === 'Yes') {
-            if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName === ''){
-                await response.send(event, context, response.FAILED, {'FailureReason': 'UseExistingConfigRepo parameter set to Yes, but ExistingConfigRepositoryName or ExistingConfigRepositoryBranchName parameter value missing!!!'}, event.PhysicalResourceId);
-                return;
-            }
-          }
+  if (configRepositoryLocation === 's3') {
+    try {
+      const pipelineName = event.ResourceProperties.acceleratorPipelineName;
+      const client = new CodePipelineClient();
+      const input = { name: pipelineName };
+      const command = new GetPipelineCommand(input);
+      const pipelineResponse = await client.send(command);
+      const sourceStage = pipelineResponse.pipeline.stages.find(stage => stage.name === 'Source');
+      const configAction = sourceStage?.actions.find(action => action.name === 'Configuration');
+      if (configAction.actionTypeId.provider === 'CodeCommit') {
+        await response.send(
+          event,
+          context,
+          response.FAILED,
+          {
+            FailureReason:
+              'ConfigRepositoryLocation parameter set to s3, but existing deployment using CodeCommit was detected. This value cannot be changed for existing deployments. Please set ConfigRepositoryLocation to CodeCommit and try again.',
+          },
+          event.PhysicalResourceId,
+        );
+        return;
+      }
+    } catch (err) {
+      console.log('Encountered error finding existing pipeline, continuing');
+      console.log(err);
+      await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+      return;
+    }
+  }
 
-          if (configRepositoryLocation === 's3') {
-            if (useExistingConfigRepo === 'Yes' || existingConfigRepositoryName !== '' || existingConfigRepositoryBranchName !== ''){
-                await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing configuration repository parameters are populated. Existing repositories can not be used with an S3 configuration repository.'}, event.PhysicalResourceId);
-                return;
-            }
-
-            try {
-                const pipelineName = event.ResourceProperties.acceleratorPipelineName;
-                const client = new CodePipelineClient();
-                const input = { name: pipelineName };
-                const command = new GetPipelineCommand(input);
-                const pipelineResponse = await client.send(command);
-                const sourceStage = pipelineResponse.pipeline.stages.find(stage => stage.name === 'Source');
-                const configAction = sourceStage?.actions.find(action => action.name === 'Configuration');
-                if (configAction.actionTypeId.provider === 'CodeCommit') {
-                    await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing deployment using CodeCommit was detected. This value cannot be changed for existing deployments. Please set ConfigRepositoryLocation to CodeCommit and try again.'}, event.PhysicalResourceId);
-                    return;
-                }
-            } catch (err) {
-                console.log('Encountered error finding existing pipeline, continuing')
-                console.log(err);
-                await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId); 
-                return;
-            }
-          }
-
-          // End of Validation
-          await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
-          return;
-      }",
+  // End of Validation
+  await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+  return;
+};
+",
         },
         "Description": "This function validates installer parameters",
         "Handler": "index.handler",
@@ -3598,32 +3583,16 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
     },
   },
   "Rules": {
-    "CodeConnectionArnRequiredForCodeConnection": {
+    "RequiredParametersForCodeConnection": {
       "Assertions": [
         {
           "Assert": {
-            "Fn::Or": [
+            "Fn::Not": [
               {
-                "Fn::Not": [
+                "Fn::Equals": [
+                  "",
                   {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "",
-                      {
-                        "Ref": "ConfigCodeConnectionArn",
-                      },
-                    ],
+                    "Ref": "ConfigCodeConnectionArn",
                   },
                 ],
               },
@@ -3631,104 +3600,29 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           },
           "AssertDescription": "codeconnectionArn parameter must be provided when configRepositoryLocation is set to codeconnection",
         },
-      ],
-    },
-    "ExistingBranchRequiredForCodeConnection": {
-      "Assertions": [
         {
           "Assert": {
-            "Fn::Or": [
+            "Fn::Not": [
               {
-                "Fn::Not": [
+                "Fn::Equals": [
+                  "No",
                   {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "",
-                      {
-                        "Ref": "ExistingConfigRepositoryBranchName",
-                      },
-                    ],
+                    "Ref": "UseExistingConfigRepo",
                   },
                 ],
               },
             ],
           },
-          "AssertDescription": "existingConfigRepositoryBranchName parameter must be provided when configRepositoryLocation is set to codeconnection",
+          "AssertDescription": "useExistingConfigRepo parameter must be set to "Yes" when configRepositoryLocation is set to codeconnection",
         },
-      ],
-    },
-    "ExistingRepoNameRequiredForCodeConnection": {
-      "Assertions": [
         {
           "Assert": {
-            "Fn::Or": [
+            "Fn::Not": [
               {
-                "Fn::Not": [
+                "Fn::Equals": [
+                  "",
                   {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "",
-                      {
-                        "Ref": "ExistingConfigRepositoryName",
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-          "AssertDescription": "existingConfigRepositoryName parameter must be provided when configRepositoryLocation is set to codeconnection",
-        },
-      ],
-    },
-    "ExistingRepoOwnerRequiredForCodeConnection": {
-      "Assertions": [
-        {
-          "Assert": {
-            "Fn::Or": [
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "",
-                      {
-                        "Ref": "ExistingConfigRepositoryOwner",
-                      },
-                    ],
+                    "Ref": "ExistingConfigRepositoryOwner",
                   },
                 ],
               },
@@ -3737,41 +3631,99 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           "AssertDescription": "existingConfigRepositoryOwner parameter must be populated when configRepositoryLocation is set to codeconnection",
         },
       ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          "codeconnection",
+          {
+            "Ref": "ConfigurationRepositoryLocation",
+          },
+        ],
+      },
     },
-    "UseExistingIsYesForCodeConnection": {
+    "RequiredParametersForExistingRepo": {
       "Assertions": [
         {
           "Assert": {
-            "Fn::Or": [
+            "Fn::Not": [
               {
-                "Fn::Not": [
+                "Fn::Equals": [
+                  "",
                   {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "No",
-                      {
-                        "Ref": "UseExistingConfigRepo",
-                      },
-                    ],
+                    "Ref": "ExistingConfigRepositoryBranchName",
                   },
                 ],
               },
             ],
           },
-          "AssertDescription": "useExistingConfigRepo parameter must be set to "Yes" when configRepositoryLocation is set to codeconnection",
+          "AssertDescription": "existingConfigRepositoryBranchName parameter must be provided when useExistingRepository is set to Yes",
+        },
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Equals": [
+                  "",
+                  {
+                    "Ref": "ExistingConfigRepositoryName",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "existingConfigRepositoryName parameter must be provided when useExistingRepository is set to Yes",
         },
       ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          "Yes",
+          {
+            "Ref": "UseExistingConfigRepo",
+          },
+        ],
+      },
+    },
+    "RequiredParametersForS3Repo": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::And": [
+              {
+                "Fn::Equals": [
+                  "",
+                  {
+                    "Ref": "ExistingConfigRepositoryName",
+                  },
+                ],
+              },
+              {
+                "Fn::Equals": [
+                  "",
+                  {
+                    "Ref": "ExistingConfigRepositoryBranchName",
+                  },
+                ],
+              },
+              {
+                "Fn::Equals": [
+                  "No",
+                  {
+                    "Ref": "UseExistingConfigRepo",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "Existing configuration repository parameters cannot be provided when configurationRepositoryLocation is set to s3",
+        },
+      ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          "s3",
+          {
+            "Ref": "ConfigurationRepositoryLocation",
+          },
+        ],
+      },
     },
   },
 }
@@ -7151,16 +7103,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
         "configRepositoryLocation": {
           "Ref": "ConfigurationRepositoryLocation",
         },
-        "existingConfigRepositoryBranchName": {
-          "Ref": "ExistingConfigRepositoryBranchName",
-        },
-        "existingConfigRepositoryName": {
-          "Ref": "ExistingConfigRepositoryName",
-        },
         "resourceType": "Custom::ValidateInstallerStack",
-        "useExistingConfigRepo": {
-          "Ref": "UseExistingConfigRepo",
-        },
       },
       "Type": "AWS::CloudFormation::CustomResource",
       "UpdateReplacePolicy": "Delete",
@@ -7198,59 +7141,53 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       },
       "Properties": {
         "Code": {
-          "ZipFile": "
-          const response = require('cfn-response'); 
-          const { CodePipelineClient, GetPipelineCommand } = require("@aws-sdk/client-codepipeline");
-          exports.handler = async function (event, context) { 
-          console.log(JSON.stringify(event, null, 4)); 
+          "ZipFile": "const response = require('cfn-response');
+const { CodePipelineClient, GetPipelineCommand } = require('@aws-sdk/client-codepipeline');
+exports.handler = async function (event, context) {
+  console.log(JSON.stringify(event, null, 4));
 
-          const useExistingConfigRepo=event.ResourceProperties.useExistingConfigRepo;
-          const configRepositoryLocation=event.ResourceProperties.configRepositoryLocation;
-          const existingConfigRepositoryName=event.ResourceProperties.existingConfigRepositoryName;
-          const existingConfigRepositoryBranchName=event.ResourceProperties.existingConfigRepositoryBranchName;
+  const configRepositoryLocation = event.ResourceProperties.configRepositoryLocation;
 
-          if (event.RequestType === 'Delete') {
-            await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
-            return;
-          }
+  if (event.RequestType === 'Delete') {
+    await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+    return;
+  }
 
-          if (useExistingConfigRepo === 'Yes') {
-            if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName === ''){
-                await response.send(event, context, response.FAILED, {'FailureReason': 'UseExistingConfigRepo parameter set to Yes, but ExistingConfigRepositoryName or ExistingConfigRepositoryBranchName parameter value missing!!!'}, event.PhysicalResourceId);
-                return;
-            }
-          }
+  if (configRepositoryLocation === 's3') {
+    try {
+      const pipelineName = event.ResourceProperties.acceleratorPipelineName;
+      const client = new CodePipelineClient();
+      const input = { name: pipelineName };
+      const command = new GetPipelineCommand(input);
+      const pipelineResponse = await client.send(command);
+      const sourceStage = pipelineResponse.pipeline.stages.find(stage => stage.name === 'Source');
+      const configAction = sourceStage?.actions.find(action => action.name === 'Configuration');
+      if (configAction.actionTypeId.provider === 'CodeCommit') {
+        await response.send(
+          event,
+          context,
+          response.FAILED,
+          {
+            FailureReason:
+              'ConfigRepositoryLocation parameter set to s3, but existing deployment using CodeCommit was detected. This value cannot be changed for existing deployments. Please set ConfigRepositoryLocation to CodeCommit and try again.',
+          },
+          event.PhysicalResourceId,
+        );
+        return;
+      }
+    } catch (err) {
+      console.log('Encountered error finding existing pipeline, continuing');
+      console.log(err);
+      await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+      return;
+    }
+  }
 
-          if (configRepositoryLocation === 's3') {
-            if (useExistingConfigRepo === 'Yes' || existingConfigRepositoryName !== '' || existingConfigRepositoryBranchName !== ''){
-                await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing configuration repository parameters are populated. Existing repositories can not be used with an S3 configuration repository.'}, event.PhysicalResourceId);
-                return;
-            }
-
-            try {
-                const pipelineName = event.ResourceProperties.acceleratorPipelineName;
-                const client = new CodePipelineClient();
-                const input = { name: pipelineName };
-                const command = new GetPipelineCommand(input);
-                const pipelineResponse = await client.send(command);
-                const sourceStage = pipelineResponse.pipeline.stages.find(stage => stage.name === 'Source');
-                const configAction = sourceStage?.actions.find(action => action.name === 'Configuration');
-                if (configAction.actionTypeId.provider === 'CodeCommit') {
-                    await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing deployment using CodeCommit was detected. This value cannot be changed for existing deployments. Please set ConfigRepositoryLocation to CodeCommit and try again.'}, event.PhysicalResourceId);
-                    return;
-                }
-            } catch (err) {
-                console.log('Encountered error finding existing pipeline, continuing')
-                console.log(err);
-                await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId); 
-                return;
-            }
-          }
-
-          // End of Validation
-          await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
-          return;
-      }",
+  // End of Validation
+  await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+  return;
+};
+",
         },
         "Description": "This function validates installer parameters",
         "Handler": "index.handler",
@@ -7365,32 +7302,16 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
     },
   },
   "Rules": {
-    "CodeConnectionArnRequiredForCodeConnection": {
+    "RequiredParametersForCodeConnection": {
       "Assertions": [
         {
           "Assert": {
-            "Fn::Or": [
+            "Fn::Not": [
               {
-                "Fn::Not": [
+                "Fn::Equals": [
+                  "",
                   {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "",
-                      {
-                        "Ref": "ConfigCodeConnectionArn",
-                      },
-                    ],
+                    "Ref": "ConfigCodeConnectionArn",
                   },
                 ],
               },
@@ -7398,104 +7319,29 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           },
           "AssertDescription": "codeconnectionArn parameter must be provided when configRepositoryLocation is set to codeconnection",
         },
-      ],
-    },
-    "ExistingBranchRequiredForCodeConnection": {
-      "Assertions": [
         {
           "Assert": {
-            "Fn::Or": [
+            "Fn::Not": [
               {
-                "Fn::Not": [
+                "Fn::Equals": [
+                  "No",
                   {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "",
-                      {
-                        "Ref": "ExistingConfigRepositoryBranchName",
-                      },
-                    ],
+                    "Ref": "UseExistingConfigRepo",
                   },
                 ],
               },
             ],
           },
-          "AssertDescription": "existingConfigRepositoryBranchName parameter must be provided when configRepositoryLocation is set to codeconnection",
+          "AssertDescription": "useExistingConfigRepo parameter must be set to "Yes" when configRepositoryLocation is set to codeconnection",
         },
-      ],
-    },
-    "ExistingRepoNameRequiredForCodeConnection": {
-      "Assertions": [
         {
           "Assert": {
-            "Fn::Or": [
+            "Fn::Not": [
               {
-                "Fn::Not": [
+                "Fn::Equals": [
+                  "",
                   {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "",
-                      {
-                        "Ref": "ExistingConfigRepositoryName",
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-          "AssertDescription": "existingConfigRepositoryName parameter must be provided when configRepositoryLocation is set to codeconnection",
-        },
-      ],
-    },
-    "ExistingRepoOwnerRequiredForCodeConnection": {
-      "Assertions": [
-        {
-          "Assert": {
-            "Fn::Or": [
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "",
-                      {
-                        "Ref": "ExistingConfigRepositoryOwner",
-                      },
-                    ],
+                    "Ref": "ExistingConfigRepositoryOwner",
                   },
                 ],
               },
@@ -7504,41 +7350,99 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           "AssertDescription": "existingConfigRepositoryOwner parameter must be populated when configRepositoryLocation is set to codeconnection",
         },
       ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          "codeconnection",
+          {
+            "Ref": "ConfigurationRepositoryLocation",
+          },
+        ],
+      },
     },
-    "UseExistingIsYesForCodeConnection": {
+    "RequiredParametersForExistingRepo": {
       "Assertions": [
         {
           "Assert": {
-            "Fn::Or": [
+            "Fn::Not": [
               {
-                "Fn::Not": [
+                "Fn::Equals": [
+                  "",
                   {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "No",
-                      {
-                        "Ref": "UseExistingConfigRepo",
-                      },
-                    ],
+                    "Ref": "ExistingConfigRepositoryBranchName",
                   },
                 ],
               },
             ],
           },
-          "AssertDescription": "useExistingConfigRepo parameter must be set to "Yes" when configRepositoryLocation is set to codeconnection",
+          "AssertDescription": "existingConfigRepositoryBranchName parameter must be provided when useExistingRepository is set to Yes",
+        },
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Equals": [
+                  "",
+                  {
+                    "Ref": "ExistingConfigRepositoryName",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "existingConfigRepositoryName parameter must be provided when useExistingRepository is set to Yes",
         },
       ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          "Yes",
+          {
+            "Ref": "UseExistingConfigRepo",
+          },
+        ],
+      },
+    },
+    "RequiredParametersForS3Repo": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::And": [
+              {
+                "Fn::Equals": [
+                  "",
+                  {
+                    "Ref": "ExistingConfigRepositoryName",
+                  },
+                ],
+              },
+              {
+                "Fn::Equals": [
+                  "",
+                  {
+                    "Ref": "ExistingConfigRepositoryBranchName",
+                  },
+                ],
+              },
+              {
+                "Fn::Equals": [
+                  "No",
+                  {
+                    "Ref": "UseExistingConfigRepo",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "Existing configuration repository parameters cannot be provided when configurationRepositoryLocation is set to s3",
+        },
+      ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          "s3",
+          {
+            "Ref": "ConfigurationRepositoryLocation",
+          },
+        ],
+      },
     },
   },
 }
@@ -10974,16 +10878,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
         "configRepositoryLocation": {
           "Ref": "ConfigurationRepositoryLocation",
         },
-        "existingConfigRepositoryBranchName": {
-          "Ref": "ExistingConfigRepositoryBranchName",
-        },
-        "existingConfigRepositoryName": {
-          "Ref": "ExistingConfigRepositoryName",
-        },
         "resourceType": "Custom::ValidateInstallerStack",
-        "useExistingConfigRepo": {
-          "Ref": "UseExistingConfigRepo",
-        },
       },
       "Type": "AWS::CloudFormation::CustomResource",
       "UpdateReplacePolicy": "Delete",
@@ -11021,59 +10916,53 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       },
       "Properties": {
         "Code": {
-          "ZipFile": "
-          const response = require('cfn-response'); 
-          const { CodePipelineClient, GetPipelineCommand } = require("@aws-sdk/client-codepipeline");
-          exports.handler = async function (event, context) { 
-          console.log(JSON.stringify(event, null, 4)); 
+          "ZipFile": "const response = require('cfn-response');
+const { CodePipelineClient, GetPipelineCommand } = require('@aws-sdk/client-codepipeline');
+exports.handler = async function (event, context) {
+  console.log(JSON.stringify(event, null, 4));
 
-          const useExistingConfigRepo=event.ResourceProperties.useExistingConfigRepo;
-          const configRepositoryLocation=event.ResourceProperties.configRepositoryLocation;
-          const existingConfigRepositoryName=event.ResourceProperties.existingConfigRepositoryName;
-          const existingConfigRepositoryBranchName=event.ResourceProperties.existingConfigRepositoryBranchName;
+  const configRepositoryLocation = event.ResourceProperties.configRepositoryLocation;
 
-          if (event.RequestType === 'Delete') {
-            await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
-            return;
-          }
+  if (event.RequestType === 'Delete') {
+    await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+    return;
+  }
 
-          if (useExistingConfigRepo === 'Yes') {
-            if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName === ''){
-                await response.send(event, context, response.FAILED, {'FailureReason': 'UseExistingConfigRepo parameter set to Yes, but ExistingConfigRepositoryName or ExistingConfigRepositoryBranchName parameter value missing!!!'}, event.PhysicalResourceId);
-                return;
-            }
-          }
+  if (configRepositoryLocation === 's3') {
+    try {
+      const pipelineName = event.ResourceProperties.acceleratorPipelineName;
+      const client = new CodePipelineClient();
+      const input = { name: pipelineName };
+      const command = new GetPipelineCommand(input);
+      const pipelineResponse = await client.send(command);
+      const sourceStage = pipelineResponse.pipeline.stages.find(stage => stage.name === 'Source');
+      const configAction = sourceStage?.actions.find(action => action.name === 'Configuration');
+      if (configAction.actionTypeId.provider === 'CodeCommit') {
+        await response.send(
+          event,
+          context,
+          response.FAILED,
+          {
+            FailureReason:
+              'ConfigRepositoryLocation parameter set to s3, but existing deployment using CodeCommit was detected. This value cannot be changed for existing deployments. Please set ConfigRepositoryLocation to CodeCommit and try again.',
+          },
+          event.PhysicalResourceId,
+        );
+        return;
+      }
+    } catch (err) {
+      console.log('Encountered error finding existing pipeline, continuing');
+      console.log(err);
+      await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+      return;
+    }
+  }
 
-          if (configRepositoryLocation === 's3') {
-            if (useExistingConfigRepo === 'Yes' || existingConfigRepositoryName !== '' || existingConfigRepositoryBranchName !== ''){
-                await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing configuration repository parameters are populated. Existing repositories can not be used with an S3 configuration repository.'}, event.PhysicalResourceId);
-                return;
-            }
-
-            try {
-                const pipelineName = event.ResourceProperties.acceleratorPipelineName;
-                const client = new CodePipelineClient();
-                const input = { name: pipelineName };
-                const command = new GetPipelineCommand(input);
-                const pipelineResponse = await client.send(command);
-                const sourceStage = pipelineResponse.pipeline.stages.find(stage => stage.name === 'Source');
-                const configAction = sourceStage?.actions.find(action => action.name === 'Configuration');
-                if (configAction.actionTypeId.provider === 'CodeCommit') {
-                    await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing deployment using CodeCommit was detected. This value cannot be changed for existing deployments. Please set ConfigRepositoryLocation to CodeCommit and try again.'}, event.PhysicalResourceId);
-                    return;
-                }
-            } catch (err) {
-                console.log('Encountered error finding existing pipeline, continuing')
-                console.log(err);
-                await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId); 
-                return;
-            }
-          }
-
-          // End of Validation
-          await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
-          return;
-      }",
+  // End of Validation
+  await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+  return;
+};
+",
         },
         "Description": "This function validates installer parameters",
         "Handler": "index.handler",
@@ -11185,32 +11074,16 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
     },
   },
   "Rules": {
-    "CodeConnectionArnRequiredForCodeConnection": {
+    "RequiredParametersForCodeConnection": {
       "Assertions": [
         {
           "Assert": {
-            "Fn::Or": [
+            "Fn::Not": [
               {
-                "Fn::Not": [
+                "Fn::Equals": [
+                  "",
                   {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "",
-                      {
-                        "Ref": "ConfigCodeConnectionArn",
-                      },
-                    ],
+                    "Ref": "ConfigCodeConnectionArn",
                   },
                 ],
               },
@@ -11218,104 +11091,29 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           },
           "AssertDescription": "codeconnectionArn parameter must be provided when configRepositoryLocation is set to codeconnection",
         },
-      ],
-    },
-    "ExistingBranchRequiredForCodeConnection": {
-      "Assertions": [
         {
           "Assert": {
-            "Fn::Or": [
+            "Fn::Not": [
               {
-                "Fn::Not": [
+                "Fn::Equals": [
+                  "No",
                   {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "",
-                      {
-                        "Ref": "ExistingConfigRepositoryBranchName",
-                      },
-                    ],
+                    "Ref": "UseExistingConfigRepo",
                   },
                 ],
               },
             ],
           },
-          "AssertDescription": "existingConfigRepositoryBranchName parameter must be provided when configRepositoryLocation is set to codeconnection",
+          "AssertDescription": "useExistingConfigRepo parameter must be set to "Yes" when configRepositoryLocation is set to codeconnection",
         },
-      ],
-    },
-    "ExistingRepoNameRequiredForCodeConnection": {
-      "Assertions": [
         {
           "Assert": {
-            "Fn::Or": [
+            "Fn::Not": [
               {
-                "Fn::Not": [
+                "Fn::Equals": [
+                  "",
                   {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "",
-                      {
-                        "Ref": "ExistingConfigRepositoryName",
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-          "AssertDescription": "existingConfigRepositoryName parameter must be provided when configRepositoryLocation is set to codeconnection",
-        },
-      ],
-    },
-    "ExistingRepoOwnerRequiredForCodeConnection": {
-      "Assertions": [
-        {
-          "Assert": {
-            "Fn::Or": [
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "",
-                      {
-                        "Ref": "ExistingConfigRepositoryOwner",
-                      },
-                    ],
+                    "Ref": "ExistingConfigRepositoryOwner",
                   },
                 ],
               },
@@ -11324,41 +11122,99 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           "AssertDescription": "existingConfigRepositoryOwner parameter must be populated when configRepositoryLocation is set to codeconnection",
         },
       ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          "codeconnection",
+          {
+            "Ref": "ConfigurationRepositoryLocation",
+          },
+        ],
+      },
     },
-    "UseExistingIsYesForCodeConnection": {
+    "RequiredParametersForExistingRepo": {
       "Assertions": [
         {
           "Assert": {
-            "Fn::Or": [
+            "Fn::Not": [
               {
-                "Fn::Not": [
+                "Fn::Equals": [
+                  "",
                   {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "No",
-                      {
-                        "Ref": "UseExistingConfigRepo",
-                      },
-                    ],
+                    "Ref": "ExistingConfigRepositoryBranchName",
                   },
                 ],
               },
             ],
           },
-          "AssertDescription": "useExistingConfigRepo parameter must be set to "Yes" when configRepositoryLocation is set to codeconnection",
+          "AssertDescription": "existingConfigRepositoryBranchName parameter must be provided when useExistingRepository is set to Yes",
+        },
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Equals": [
+                  "",
+                  {
+                    "Ref": "ExistingConfigRepositoryName",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "existingConfigRepositoryName parameter must be provided when useExistingRepository is set to Yes",
         },
       ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          "Yes",
+          {
+            "Ref": "UseExistingConfigRepo",
+          },
+        ],
+      },
+    },
+    "RequiredParametersForS3Repo": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::And": [
+              {
+                "Fn::Equals": [
+                  "",
+                  {
+                    "Ref": "ExistingConfigRepositoryName",
+                  },
+                ],
+              },
+              {
+                "Fn::Equals": [
+                  "",
+                  {
+                    "Ref": "ExistingConfigRepositoryBranchName",
+                  },
+                ],
+              },
+              {
+                "Fn::Equals": [
+                  "No",
+                  {
+                    "Ref": "UseExistingConfigRepo",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "Existing configuration repository parameters cannot be provided when configurationRepositoryLocation is set to s3",
+        },
+      ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          "s3",
+          {
+            "Ref": "ConfigurationRepositoryLocation",
+          },
+        ],
+      },
     },
   },
 }
@@ -14784,16 +14640,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
         "configRepositoryLocation": {
           "Ref": "ConfigurationRepositoryLocation",
         },
-        "existingConfigRepositoryBranchName": {
-          "Ref": "ExistingConfigRepositoryBranchName",
-        },
-        "existingConfigRepositoryName": {
-          "Ref": "ExistingConfigRepositoryName",
-        },
         "resourceType": "Custom::ValidateInstallerStack",
-        "useExistingConfigRepo": {
-          "Ref": "UseExistingConfigRepo",
-        },
       },
       "Type": "AWS::CloudFormation::CustomResource",
       "UpdateReplacePolicy": "Delete",
@@ -14831,59 +14678,53 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       },
       "Properties": {
         "Code": {
-          "ZipFile": "
-          const response = require('cfn-response'); 
-          const { CodePipelineClient, GetPipelineCommand } = require("@aws-sdk/client-codepipeline");
-          exports.handler = async function (event, context) { 
-          console.log(JSON.stringify(event, null, 4)); 
+          "ZipFile": "const response = require('cfn-response');
+const { CodePipelineClient, GetPipelineCommand } = require('@aws-sdk/client-codepipeline');
+exports.handler = async function (event, context) {
+  console.log(JSON.stringify(event, null, 4));
 
-          const useExistingConfigRepo=event.ResourceProperties.useExistingConfigRepo;
-          const configRepositoryLocation=event.ResourceProperties.configRepositoryLocation;
-          const existingConfigRepositoryName=event.ResourceProperties.existingConfigRepositoryName;
-          const existingConfigRepositoryBranchName=event.ResourceProperties.existingConfigRepositoryBranchName;
+  const configRepositoryLocation = event.ResourceProperties.configRepositoryLocation;
 
-          if (event.RequestType === 'Delete') {
-            await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
-            return;
-          }
+  if (event.RequestType === 'Delete') {
+    await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+    return;
+  }
 
-          if (useExistingConfigRepo === 'Yes') {
-            if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName === ''){
-                await response.send(event, context, response.FAILED, {'FailureReason': 'UseExistingConfigRepo parameter set to Yes, but ExistingConfigRepositoryName or ExistingConfigRepositoryBranchName parameter value missing!!!'}, event.PhysicalResourceId);
-                return;
-            }
-          }
+  if (configRepositoryLocation === 's3') {
+    try {
+      const pipelineName = event.ResourceProperties.acceleratorPipelineName;
+      const client = new CodePipelineClient();
+      const input = { name: pipelineName };
+      const command = new GetPipelineCommand(input);
+      const pipelineResponse = await client.send(command);
+      const sourceStage = pipelineResponse.pipeline.stages.find(stage => stage.name === 'Source');
+      const configAction = sourceStage?.actions.find(action => action.name === 'Configuration');
+      if (configAction.actionTypeId.provider === 'CodeCommit') {
+        await response.send(
+          event,
+          context,
+          response.FAILED,
+          {
+            FailureReason:
+              'ConfigRepositoryLocation parameter set to s3, but existing deployment using CodeCommit was detected. This value cannot be changed for existing deployments. Please set ConfigRepositoryLocation to CodeCommit and try again.',
+          },
+          event.PhysicalResourceId,
+        );
+        return;
+      }
+    } catch (err) {
+      console.log('Encountered error finding existing pipeline, continuing');
+      console.log(err);
+      await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+      return;
+    }
+  }
 
-          if (configRepositoryLocation === 's3') {
-            if (useExistingConfigRepo === 'Yes' || existingConfigRepositoryName !== '' || existingConfigRepositoryBranchName !== ''){
-                await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing configuration repository parameters are populated. Existing repositories can not be used with an S3 configuration repository.'}, event.PhysicalResourceId);
-                return;
-            }
-
-            try {
-                const pipelineName = event.ResourceProperties.acceleratorPipelineName;
-                const client = new CodePipelineClient();
-                const input = { name: pipelineName };
-                const command = new GetPipelineCommand(input);
-                const pipelineResponse = await client.send(command);
-                const sourceStage = pipelineResponse.pipeline.stages.find(stage => stage.name === 'Source');
-                const configAction = sourceStage?.actions.find(action => action.name === 'Configuration');
-                if (configAction.actionTypeId.provider === 'CodeCommit') {
-                    await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing deployment using CodeCommit was detected. This value cannot be changed for existing deployments. Please set ConfigRepositoryLocation to CodeCommit and try again.'}, event.PhysicalResourceId);
-                    return;
-                }
-            } catch (err) {
-                console.log('Encountered error finding existing pipeline, continuing')
-                console.log(err);
-                await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId); 
-                return;
-            }
-          }
-
-          // End of Validation
-          await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
-          return;
-      }",
+  // End of Validation
+  await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+  return;
+};
+",
         },
         "Description": "This function validates installer parameters",
         "Handler": "index.handler",
@@ -14995,32 +14836,16 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
     },
   },
   "Rules": {
-    "CodeConnectionArnRequiredForCodeConnection": {
+    "RequiredParametersForCodeConnection": {
       "Assertions": [
         {
           "Assert": {
-            "Fn::Or": [
+            "Fn::Not": [
               {
-                "Fn::Not": [
+                "Fn::Equals": [
+                  "",
                   {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "",
-                      {
-                        "Ref": "ConfigCodeConnectionArn",
-                      },
-                    ],
+                    "Ref": "ConfigCodeConnectionArn",
                   },
                 ],
               },
@@ -15028,104 +14853,29 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           },
           "AssertDescription": "codeconnectionArn parameter must be provided when configRepositoryLocation is set to codeconnection",
         },
-      ],
-    },
-    "ExistingBranchRequiredForCodeConnection": {
-      "Assertions": [
         {
           "Assert": {
-            "Fn::Or": [
+            "Fn::Not": [
               {
-                "Fn::Not": [
+                "Fn::Equals": [
+                  "No",
                   {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "",
-                      {
-                        "Ref": "ExistingConfigRepositoryBranchName",
-                      },
-                    ],
+                    "Ref": "UseExistingConfigRepo",
                   },
                 ],
               },
             ],
           },
-          "AssertDescription": "existingConfigRepositoryBranchName parameter must be provided when configRepositoryLocation is set to codeconnection",
+          "AssertDescription": "useExistingConfigRepo parameter must be set to "Yes" when configRepositoryLocation is set to codeconnection",
         },
-      ],
-    },
-    "ExistingRepoNameRequiredForCodeConnection": {
-      "Assertions": [
         {
           "Assert": {
-            "Fn::Or": [
+            "Fn::Not": [
               {
-                "Fn::Not": [
+                "Fn::Equals": [
+                  "",
                   {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "",
-                      {
-                        "Ref": "ExistingConfigRepositoryName",
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-          "AssertDescription": "existingConfigRepositoryName parameter must be provided when configRepositoryLocation is set to codeconnection",
-        },
-      ],
-    },
-    "ExistingRepoOwnerRequiredForCodeConnection": {
-      "Assertions": [
-        {
-          "Assert": {
-            "Fn::Or": [
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "",
-                      {
-                        "Ref": "ExistingConfigRepositoryOwner",
-                      },
-                    ],
+                    "Ref": "ExistingConfigRepositoryOwner",
                   },
                 ],
               },
@@ -15134,41 +14884,99 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           "AssertDescription": "existingConfigRepositoryOwner parameter must be populated when configRepositoryLocation is set to codeconnection",
         },
       ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          "codeconnection",
+          {
+            "Ref": "ConfigurationRepositoryLocation",
+          },
+        ],
+      },
     },
-    "UseExistingIsYesForCodeConnection": {
+    "RequiredParametersForExistingRepo": {
       "Assertions": [
         {
           "Assert": {
-            "Fn::Or": [
+            "Fn::Not": [
               {
-                "Fn::Not": [
+                "Fn::Equals": [
+                  "",
                   {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "No",
-                      {
-                        "Ref": "UseExistingConfigRepo",
-                      },
-                    ],
+                    "Ref": "ExistingConfigRepositoryBranchName",
                   },
                 ],
               },
             ],
           },
-          "AssertDescription": "useExistingConfigRepo parameter must be set to "Yes" when configRepositoryLocation is set to codeconnection",
+          "AssertDescription": "existingConfigRepositoryBranchName parameter must be provided when useExistingRepository is set to Yes",
+        },
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Equals": [
+                  "",
+                  {
+                    "Ref": "ExistingConfigRepositoryName",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "existingConfigRepositoryName parameter must be provided when useExistingRepository is set to Yes",
         },
       ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          "Yes",
+          {
+            "Ref": "UseExistingConfigRepo",
+          },
+        ],
+      },
+    },
+    "RequiredParametersForS3Repo": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::And": [
+              {
+                "Fn::Equals": [
+                  "",
+                  {
+                    "Ref": "ExistingConfigRepositoryName",
+                  },
+                ],
+              },
+              {
+                "Fn::Equals": [
+                  "",
+                  {
+                    "Ref": "ExistingConfigRepositoryBranchName",
+                  },
+                ],
+              },
+              {
+                "Fn::Equals": [
+                  "No",
+                  {
+                    "Ref": "UseExistingConfigRepo",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "Existing configuration repository parameters cannot be provided when configurationRepositoryLocation is set to s3",
+        },
+      ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          "s3",
+          {
+            "Ref": "ConfigurationRepositoryLocation",
+          },
+        ],
+      },
     },
   },
 }
@@ -18599,16 +18407,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
         "configRepositoryLocation": {
           "Ref": "ConfigurationRepositoryLocation",
         },
-        "existingConfigRepositoryBranchName": {
-          "Ref": "ExistingConfigRepositoryBranchName",
-        },
-        "existingConfigRepositoryName": {
-          "Ref": "ExistingConfigRepositoryName",
-        },
         "resourceType": "Custom::ValidateInstallerStack",
-        "useExistingConfigRepo": {
-          "Ref": "UseExistingConfigRepo",
-        },
       },
       "Type": "AWS::CloudFormation::CustomResource",
       "UpdateReplacePolicy": "Delete",
@@ -18646,59 +18445,53 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       },
       "Properties": {
         "Code": {
-          "ZipFile": "
-          const response = require('cfn-response'); 
-          const { CodePipelineClient, GetPipelineCommand } = require("@aws-sdk/client-codepipeline");
-          exports.handler = async function (event, context) { 
-          console.log(JSON.stringify(event, null, 4)); 
+          "ZipFile": "const response = require('cfn-response');
+const { CodePipelineClient, GetPipelineCommand } = require('@aws-sdk/client-codepipeline');
+exports.handler = async function (event, context) {
+  console.log(JSON.stringify(event, null, 4));
 
-          const useExistingConfigRepo=event.ResourceProperties.useExistingConfigRepo;
-          const configRepositoryLocation=event.ResourceProperties.configRepositoryLocation;
-          const existingConfigRepositoryName=event.ResourceProperties.existingConfigRepositoryName;
-          const existingConfigRepositoryBranchName=event.ResourceProperties.existingConfigRepositoryBranchName;
+  const configRepositoryLocation = event.ResourceProperties.configRepositoryLocation;
 
-          if (event.RequestType === 'Delete') {
-            await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
-            return;
-          }
+  if (event.RequestType === 'Delete') {
+    await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+    return;
+  }
 
-          if (useExistingConfigRepo === 'Yes') {
-            if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName === ''){
-                await response.send(event, context, response.FAILED, {'FailureReason': 'UseExistingConfigRepo parameter set to Yes, but ExistingConfigRepositoryName or ExistingConfigRepositoryBranchName parameter value missing!!!'}, event.PhysicalResourceId);
-                return;
-            }
-          }
+  if (configRepositoryLocation === 's3') {
+    try {
+      const pipelineName = event.ResourceProperties.acceleratorPipelineName;
+      const client = new CodePipelineClient();
+      const input = { name: pipelineName };
+      const command = new GetPipelineCommand(input);
+      const pipelineResponse = await client.send(command);
+      const sourceStage = pipelineResponse.pipeline.stages.find(stage => stage.name === 'Source');
+      const configAction = sourceStage?.actions.find(action => action.name === 'Configuration');
+      if (configAction.actionTypeId.provider === 'CodeCommit') {
+        await response.send(
+          event,
+          context,
+          response.FAILED,
+          {
+            FailureReason:
+              'ConfigRepositoryLocation parameter set to s3, but existing deployment using CodeCommit was detected. This value cannot be changed for existing deployments. Please set ConfigRepositoryLocation to CodeCommit and try again.',
+          },
+          event.PhysicalResourceId,
+        );
+        return;
+      }
+    } catch (err) {
+      console.log('Encountered error finding existing pipeline, continuing');
+      console.log(err);
+      await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+      return;
+    }
+  }
 
-          if (configRepositoryLocation === 's3') {
-            if (useExistingConfigRepo === 'Yes' || existingConfigRepositoryName !== '' || existingConfigRepositoryBranchName !== ''){
-                await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing configuration repository parameters are populated. Existing repositories can not be used with an S3 configuration repository.'}, event.PhysicalResourceId);
-                return;
-            }
-
-            try {
-                const pipelineName = event.ResourceProperties.acceleratorPipelineName;
-                const client = new CodePipelineClient();
-                const input = { name: pipelineName };
-                const command = new GetPipelineCommand(input);
-                const pipelineResponse = await client.send(command);
-                const sourceStage = pipelineResponse.pipeline.stages.find(stage => stage.name === 'Source');
-                const configAction = sourceStage?.actions.find(action => action.name === 'Configuration');
-                if (configAction.actionTypeId.provider === 'CodeCommit') {
-                    await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing deployment using CodeCommit was detected. This value cannot be changed for existing deployments. Please set ConfigRepositoryLocation to CodeCommit and try again.'}, event.PhysicalResourceId);
-                    return;
-                }
-            } catch (err) {
-                console.log('Encountered error finding existing pipeline, continuing')
-                console.log(err);
-                await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId); 
-                return;
-            }
-          }
-
-          // End of Validation
-          await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
-          return;
-      }",
+  // End of Validation
+  await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+  return;
+};
+",
         },
         "Description": "This function validates installer parameters",
         "Handler": "index.handler",
@@ -18810,32 +18603,16 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
     },
   },
   "Rules": {
-    "CodeConnectionArnRequiredForCodeConnection": {
+    "RequiredParametersForCodeConnection": {
       "Assertions": [
         {
           "Assert": {
-            "Fn::Or": [
+            "Fn::Not": [
               {
-                "Fn::Not": [
+                "Fn::Equals": [
+                  "",
                   {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "",
-                      {
-                        "Ref": "ConfigCodeConnectionArn",
-                      },
-                    ],
+                    "Ref": "ConfigCodeConnectionArn",
                   },
                 ],
               },
@@ -18843,104 +18620,29 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           },
           "AssertDescription": "codeconnectionArn parameter must be provided when configRepositoryLocation is set to codeconnection",
         },
-      ],
-    },
-    "ExistingBranchRequiredForCodeConnection": {
-      "Assertions": [
         {
           "Assert": {
-            "Fn::Or": [
+            "Fn::Not": [
               {
-                "Fn::Not": [
+                "Fn::Equals": [
+                  "No",
                   {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "",
-                      {
-                        "Ref": "ExistingConfigRepositoryBranchName",
-                      },
-                    ],
+                    "Ref": "UseExistingConfigRepo",
                   },
                 ],
               },
             ],
           },
-          "AssertDescription": "existingConfigRepositoryBranchName parameter must be provided when configRepositoryLocation is set to codeconnection",
+          "AssertDescription": "useExistingConfigRepo parameter must be set to "Yes" when configRepositoryLocation is set to codeconnection",
         },
-      ],
-    },
-    "ExistingRepoNameRequiredForCodeConnection": {
-      "Assertions": [
         {
           "Assert": {
-            "Fn::Or": [
+            "Fn::Not": [
               {
-                "Fn::Not": [
+                "Fn::Equals": [
+                  "",
                   {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "",
-                      {
-                        "Ref": "ExistingConfigRepositoryName",
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-          "AssertDescription": "existingConfigRepositoryName parameter must be provided when configRepositoryLocation is set to codeconnection",
-        },
-      ],
-    },
-    "ExistingRepoOwnerRequiredForCodeConnection": {
-      "Assertions": [
-        {
-          "Assert": {
-            "Fn::Or": [
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "",
-                      {
-                        "Ref": "ExistingConfigRepositoryOwner",
-                      },
-                    ],
+                    "Ref": "ExistingConfigRepositoryOwner",
                   },
                 ],
               },
@@ -18949,41 +18651,99 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           "AssertDescription": "existingConfigRepositoryOwner parameter must be populated when configRepositoryLocation is set to codeconnection",
         },
       ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          "codeconnection",
+          {
+            "Ref": "ConfigurationRepositoryLocation",
+          },
+        ],
+      },
     },
-    "UseExistingIsYesForCodeConnection": {
+    "RequiredParametersForExistingRepo": {
       "Assertions": [
         {
           "Assert": {
-            "Fn::Or": [
+            "Fn::Not": [
               {
-                "Fn::Not": [
+                "Fn::Equals": [
+                  "",
                   {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "No",
-                      {
-                        "Ref": "UseExistingConfigRepo",
-                      },
-                    ],
+                    "Ref": "ExistingConfigRepositoryBranchName",
                   },
                 ],
               },
             ],
           },
-          "AssertDescription": "useExistingConfigRepo parameter must be set to "Yes" when configRepositoryLocation is set to codeconnection",
+          "AssertDescription": "existingConfigRepositoryBranchName parameter must be provided when useExistingRepository is set to Yes",
+        },
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Equals": [
+                  "",
+                  {
+                    "Ref": "ExistingConfigRepositoryName",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "existingConfigRepositoryName parameter must be provided when useExistingRepository is set to Yes",
         },
       ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          "Yes",
+          {
+            "Ref": "UseExistingConfigRepo",
+          },
+        ],
+      },
+    },
+    "RequiredParametersForS3Repo": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::And": [
+              {
+                "Fn::Equals": [
+                  "",
+                  {
+                    "Ref": "ExistingConfigRepositoryName",
+                  },
+                ],
+              },
+              {
+                "Fn::Equals": [
+                  "",
+                  {
+                    "Ref": "ExistingConfigRepositoryBranchName",
+                  },
+                ],
+              },
+              {
+                "Fn::Equals": [
+                  "No",
+                  {
+                    "Ref": "UseExistingConfigRepo",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "Existing configuration repository parameters cannot be provided when configurationRepositoryLocation is set to s3",
+        },
+      ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          "s3",
+          {
+            "Ref": "ConfigurationRepositoryLocation",
+          },
+        ],
+      },
     },
   },
 }
@@ -22382,16 +22142,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
         "configRepositoryLocation": {
           "Ref": "ConfigurationRepositoryLocation",
         },
-        "existingConfigRepositoryBranchName": {
-          "Ref": "ExistingConfigRepositoryBranchName",
-        },
-        "existingConfigRepositoryName": {
-          "Ref": "ExistingConfigRepositoryName",
-        },
         "resourceType": "Custom::ValidateInstallerStack",
-        "useExistingConfigRepo": {
-          "Ref": "UseExistingConfigRepo",
-        },
       },
       "Type": "AWS::CloudFormation::CustomResource",
       "UpdateReplacePolicy": "Delete",
@@ -22429,59 +22180,53 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       },
       "Properties": {
         "Code": {
-          "ZipFile": "
-          const response = require('cfn-response'); 
-          const { CodePipelineClient, GetPipelineCommand } = require("@aws-sdk/client-codepipeline");
-          exports.handler = async function (event, context) { 
-          console.log(JSON.stringify(event, null, 4)); 
+          "ZipFile": "const response = require('cfn-response');
+const { CodePipelineClient, GetPipelineCommand } = require('@aws-sdk/client-codepipeline');
+exports.handler = async function (event, context) {
+  console.log(JSON.stringify(event, null, 4));
 
-          const useExistingConfigRepo=event.ResourceProperties.useExistingConfigRepo;
-          const configRepositoryLocation=event.ResourceProperties.configRepositoryLocation;
-          const existingConfigRepositoryName=event.ResourceProperties.existingConfigRepositoryName;
-          const existingConfigRepositoryBranchName=event.ResourceProperties.existingConfigRepositoryBranchName;
+  const configRepositoryLocation = event.ResourceProperties.configRepositoryLocation;
 
-          if (event.RequestType === 'Delete') {
-            await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
-            return;
-          }
+  if (event.RequestType === 'Delete') {
+    await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+    return;
+  }
 
-          if (useExistingConfigRepo === 'Yes') {
-            if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName === ''){
-                await response.send(event, context, response.FAILED, {'FailureReason': 'UseExistingConfigRepo parameter set to Yes, but ExistingConfigRepositoryName or ExistingConfigRepositoryBranchName parameter value missing!!!'}, event.PhysicalResourceId);
-                return;
-            }
-          }
+  if (configRepositoryLocation === 's3') {
+    try {
+      const pipelineName = event.ResourceProperties.acceleratorPipelineName;
+      const client = new CodePipelineClient();
+      const input = { name: pipelineName };
+      const command = new GetPipelineCommand(input);
+      const pipelineResponse = await client.send(command);
+      const sourceStage = pipelineResponse.pipeline.stages.find(stage => stage.name === 'Source');
+      const configAction = sourceStage?.actions.find(action => action.name === 'Configuration');
+      if (configAction.actionTypeId.provider === 'CodeCommit') {
+        await response.send(
+          event,
+          context,
+          response.FAILED,
+          {
+            FailureReason:
+              'ConfigRepositoryLocation parameter set to s3, but existing deployment using CodeCommit was detected. This value cannot be changed for existing deployments. Please set ConfigRepositoryLocation to CodeCommit and try again.',
+          },
+          event.PhysicalResourceId,
+        );
+        return;
+      }
+    } catch (err) {
+      console.log('Encountered error finding existing pipeline, continuing');
+      console.log(err);
+      await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+      return;
+    }
+  }
 
-          if (configRepositoryLocation === 's3') {
-            if (useExistingConfigRepo === 'Yes' || existingConfigRepositoryName !== '' || existingConfigRepositoryBranchName !== ''){
-                await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing configuration repository parameters are populated. Existing repositories can not be used with an S3 configuration repository.'}, event.PhysicalResourceId);
-                return;
-            }
-
-            try {
-                const pipelineName = event.ResourceProperties.acceleratorPipelineName;
-                const client = new CodePipelineClient();
-                const input = { name: pipelineName };
-                const command = new GetPipelineCommand(input);
-                const pipelineResponse = await client.send(command);
-                const sourceStage = pipelineResponse.pipeline.stages.find(stage => stage.name === 'Source');
-                const configAction = sourceStage?.actions.find(action => action.name === 'Configuration');
-                if (configAction.actionTypeId.provider === 'CodeCommit') {
-                    await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing deployment using CodeCommit was detected. This value cannot be changed for existing deployments. Please set ConfigRepositoryLocation to CodeCommit and try again.'}, event.PhysicalResourceId);
-                    return;
-                }
-            } catch (err) {
-                console.log('Encountered error finding existing pipeline, continuing')
-                console.log(err);
-                await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId); 
-                return;
-            }
-          }
-
-          // End of Validation
-          await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
-          return;
-      }",
+  // End of Validation
+  await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+  return;
+};
+",
         },
         "Description": "This function validates installer parameters",
         "Handler": "index.handler",
@@ -22596,32 +22341,16 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
     },
   },
   "Rules": {
-    "CodeConnectionArnRequiredForCodeConnection": {
+    "RequiredParametersForCodeConnection": {
       "Assertions": [
         {
           "Assert": {
-            "Fn::Or": [
+            "Fn::Not": [
               {
-                "Fn::Not": [
+                "Fn::Equals": [
+                  "",
                   {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "",
-                      {
-                        "Ref": "ConfigCodeConnectionArn",
-                      },
-                    ],
+                    "Ref": "ConfigCodeConnectionArn",
                   },
                 ],
               },
@@ -22629,104 +22358,29 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           },
           "AssertDescription": "codeconnectionArn parameter must be provided when configRepositoryLocation is set to codeconnection",
         },
-      ],
-    },
-    "ExistingBranchRequiredForCodeConnection": {
-      "Assertions": [
         {
           "Assert": {
-            "Fn::Or": [
+            "Fn::Not": [
               {
-                "Fn::Not": [
+                "Fn::Equals": [
+                  "No",
                   {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "",
-                      {
-                        "Ref": "ExistingConfigRepositoryBranchName",
-                      },
-                    ],
+                    "Ref": "UseExistingConfigRepo",
                   },
                 ],
               },
             ],
           },
-          "AssertDescription": "existingConfigRepositoryBranchName parameter must be provided when configRepositoryLocation is set to codeconnection",
+          "AssertDescription": "useExistingConfigRepo parameter must be set to "Yes" when configRepositoryLocation is set to codeconnection",
         },
-      ],
-    },
-    "ExistingRepoNameRequiredForCodeConnection": {
-      "Assertions": [
         {
           "Assert": {
-            "Fn::Or": [
+            "Fn::Not": [
               {
-                "Fn::Not": [
+                "Fn::Equals": [
+                  "",
                   {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "",
-                      {
-                        "Ref": "ExistingConfigRepositoryName",
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-          "AssertDescription": "existingConfigRepositoryName parameter must be provided when configRepositoryLocation is set to codeconnection",
-        },
-      ],
-    },
-    "ExistingRepoOwnerRequiredForCodeConnection": {
-      "Assertions": [
-        {
-          "Assert": {
-            "Fn::Or": [
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "",
-                      {
-                        "Ref": "ExistingConfigRepositoryOwner",
-                      },
-                    ],
+                    "Ref": "ExistingConfigRepositoryOwner",
                   },
                 ],
               },
@@ -22735,41 +22389,99 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           "AssertDescription": "existingConfigRepositoryOwner parameter must be populated when configRepositoryLocation is set to codeconnection",
         },
       ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          "codeconnection",
+          {
+            "Ref": "ConfigurationRepositoryLocation",
+          },
+        ],
+      },
     },
-    "UseExistingIsYesForCodeConnection": {
+    "RequiredParametersForExistingRepo": {
       "Assertions": [
         {
           "Assert": {
-            "Fn::Or": [
+            "Fn::Not": [
               {
-                "Fn::Not": [
+                "Fn::Equals": [
+                  "",
                   {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "No",
-                      {
-                        "Ref": "UseExistingConfigRepo",
-                      },
-                    ],
+                    "Ref": "ExistingConfigRepositoryBranchName",
                   },
                 ],
               },
             ],
           },
-          "AssertDescription": "useExistingConfigRepo parameter must be set to "Yes" when configRepositoryLocation is set to codeconnection",
+          "AssertDescription": "existingConfigRepositoryBranchName parameter must be provided when useExistingRepository is set to Yes",
+        },
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Equals": [
+                  "",
+                  {
+                    "Ref": "ExistingConfigRepositoryName",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "existingConfigRepositoryName parameter must be provided when useExistingRepository is set to Yes",
         },
       ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          "Yes",
+          {
+            "Ref": "UseExistingConfigRepo",
+          },
+        ],
+      },
+    },
+    "RequiredParametersForS3Repo": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::And": [
+              {
+                "Fn::Equals": [
+                  "",
+                  {
+                    "Ref": "ExistingConfigRepositoryName",
+                  },
+                ],
+              },
+              {
+                "Fn::Equals": [
+                  "",
+                  {
+                    "Ref": "ExistingConfigRepositoryBranchName",
+                  },
+                ],
+              },
+              {
+                "Fn::Equals": [
+                  "No",
+                  {
+                    "Ref": "UseExistingConfigRepo",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "Existing configuration repository parameters cannot be provided when configurationRepositoryLocation is set to s3",
+        },
+      ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          "s3",
+          {
+            "Ref": "ConfigurationRepositoryLocation",
+          },
+        ],
+      },
     },
   },
 }
@@ -26593,16 +26305,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
         "configRepositoryLocation": {
           "Ref": "ConfigurationRepositoryLocation",
         },
-        "existingConfigRepositoryBranchName": {
-          "Ref": "ExistingConfigRepositoryBranchName",
-        },
-        "existingConfigRepositoryName": {
-          "Ref": "ExistingConfigRepositoryName",
-        },
         "resourceType": "Custom::ValidateInstallerStack",
-        "useExistingConfigRepo": {
-          "Ref": "UseExistingConfigRepo",
-        },
       },
       "Type": "AWS::CloudFormation::CustomResource",
       "UpdateReplacePolicy": "Delete",
@@ -26640,59 +26343,53 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       },
       "Properties": {
         "Code": {
-          "ZipFile": "
-          const response = require('cfn-response'); 
-          const { CodePipelineClient, GetPipelineCommand } = require("@aws-sdk/client-codepipeline");
-          exports.handler = async function (event, context) { 
-          console.log(JSON.stringify(event, null, 4)); 
+          "ZipFile": "const response = require('cfn-response');
+const { CodePipelineClient, GetPipelineCommand } = require('@aws-sdk/client-codepipeline');
+exports.handler = async function (event, context) {
+  console.log(JSON.stringify(event, null, 4));
 
-          const useExistingConfigRepo=event.ResourceProperties.useExistingConfigRepo;
-          const configRepositoryLocation=event.ResourceProperties.configRepositoryLocation;
-          const existingConfigRepositoryName=event.ResourceProperties.existingConfigRepositoryName;
-          const existingConfigRepositoryBranchName=event.ResourceProperties.existingConfigRepositoryBranchName;
+  const configRepositoryLocation = event.ResourceProperties.configRepositoryLocation;
 
-          if (event.RequestType === 'Delete') {
-            await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
-            return;
-          }
+  if (event.RequestType === 'Delete') {
+    await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+    return;
+  }
 
-          if (useExistingConfigRepo === 'Yes') {
-            if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName === ''){
-                await response.send(event, context, response.FAILED, {'FailureReason': 'UseExistingConfigRepo parameter set to Yes, but ExistingConfigRepositoryName or ExistingConfigRepositoryBranchName parameter value missing!!!'}, event.PhysicalResourceId);
-                return;
-            }
-          }
+  if (configRepositoryLocation === 's3') {
+    try {
+      const pipelineName = event.ResourceProperties.acceleratorPipelineName;
+      const client = new CodePipelineClient();
+      const input = { name: pipelineName };
+      const command = new GetPipelineCommand(input);
+      const pipelineResponse = await client.send(command);
+      const sourceStage = pipelineResponse.pipeline.stages.find(stage => stage.name === 'Source');
+      const configAction = sourceStage?.actions.find(action => action.name === 'Configuration');
+      if (configAction.actionTypeId.provider === 'CodeCommit') {
+        await response.send(
+          event,
+          context,
+          response.FAILED,
+          {
+            FailureReason:
+              'ConfigRepositoryLocation parameter set to s3, but existing deployment using CodeCommit was detected. This value cannot be changed for existing deployments. Please set ConfigRepositoryLocation to CodeCommit and try again.',
+          },
+          event.PhysicalResourceId,
+        );
+        return;
+      }
+    } catch (err) {
+      console.log('Encountered error finding existing pipeline, continuing');
+      console.log(err);
+      await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+      return;
+    }
+  }
 
-          if (configRepositoryLocation === 's3') {
-            if (useExistingConfigRepo === 'Yes' || existingConfigRepositoryName !== '' || existingConfigRepositoryBranchName !== ''){
-                await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing configuration repository parameters are populated. Existing repositories can not be used with an S3 configuration repository.'}, event.PhysicalResourceId);
-                return;
-            }
-
-            try {
-                const pipelineName = event.ResourceProperties.acceleratorPipelineName;
-                const client = new CodePipelineClient();
-                const input = { name: pipelineName };
-                const command = new GetPipelineCommand(input);
-                const pipelineResponse = await client.send(command);
-                const sourceStage = pipelineResponse.pipeline.stages.find(stage => stage.name === 'Source');
-                const configAction = sourceStage?.actions.find(action => action.name === 'Configuration');
-                if (configAction.actionTypeId.provider === 'CodeCommit') {
-                    await response.send(event, context, response.FAILED, {'FailureReason': 'ConfigRepositoryLocation parameter set to s3, but existing deployment using CodeCommit was detected. This value cannot be changed for existing deployments. Please set ConfigRepositoryLocation to CodeCommit and try again.'}, event.PhysicalResourceId);
-                    return;
-                }
-            } catch (err) {
-                console.log('Encountered error finding existing pipeline, continuing')
-                console.log(err);
-                await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId); 
-                return;
-            }
-          }
-
-          // End of Validation
-          await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
-          return;
-      }",
+  // End of Validation
+  await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+  return;
+};
+",
         },
         "Description": "This function validates installer parameters",
         "Handler": "index.handler",
@@ -26807,32 +26504,16 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
     },
   },
   "Rules": {
-    "CodeConnectionArnRequiredForCodeConnection": {
+    "RequiredParametersForCodeConnection": {
       "Assertions": [
         {
           "Assert": {
-            "Fn::Or": [
+            "Fn::Not": [
               {
-                "Fn::Not": [
+                "Fn::Equals": [
+                  "",
                   {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "",
-                      {
-                        "Ref": "ConfigCodeConnectionArn",
-                      },
-                    ],
+                    "Ref": "ConfigCodeConnectionArn",
                   },
                 ],
               },
@@ -26840,104 +26521,29 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           },
           "AssertDescription": "codeconnectionArn parameter must be provided when configRepositoryLocation is set to codeconnection",
         },
-      ],
-    },
-    "ExistingBranchRequiredForCodeConnection": {
-      "Assertions": [
         {
           "Assert": {
-            "Fn::Or": [
+            "Fn::Not": [
               {
-                "Fn::Not": [
+                "Fn::Equals": [
+                  "No",
                   {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "",
-                      {
-                        "Ref": "ExistingConfigRepositoryBranchName",
-                      },
-                    ],
+                    "Ref": "UseExistingConfigRepo",
                   },
                 ],
               },
             ],
           },
-          "AssertDescription": "existingConfigRepositoryBranchName parameter must be provided when configRepositoryLocation is set to codeconnection",
+          "AssertDescription": "useExistingConfigRepo parameter must be set to "Yes" when configRepositoryLocation is set to codeconnection",
         },
-      ],
-    },
-    "ExistingRepoNameRequiredForCodeConnection": {
-      "Assertions": [
         {
           "Assert": {
-            "Fn::Or": [
+            "Fn::Not": [
               {
-                "Fn::Not": [
+                "Fn::Equals": [
+                  "",
                   {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "",
-                      {
-                        "Ref": "ExistingConfigRepositoryName",
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-          "AssertDescription": "existingConfigRepositoryName parameter must be provided when configRepositoryLocation is set to codeconnection",
-        },
-      ],
-    },
-    "ExistingRepoOwnerRequiredForCodeConnection": {
-      "Assertions": [
-        {
-          "Assert": {
-            "Fn::Or": [
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "",
-                      {
-                        "Ref": "ExistingConfigRepositoryOwner",
-                      },
-                    ],
+                    "Ref": "ExistingConfigRepositoryOwner",
                   },
                 ],
               },
@@ -26946,41 +26552,99 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           "AssertDescription": "existingConfigRepositoryOwner parameter must be populated when configRepositoryLocation is set to codeconnection",
         },
       ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          "codeconnection",
+          {
+            "Ref": "ConfigurationRepositoryLocation",
+          },
+        ],
+      },
     },
-    "UseExistingIsYesForCodeConnection": {
+    "RequiredParametersForExistingRepo": {
       "Assertions": [
         {
           "Assert": {
-            "Fn::Or": [
+            "Fn::Not": [
               {
-                "Fn::Not": [
+                "Fn::Equals": [
+                  "",
                   {
-                    "Fn::Equals": [
-                      "codeconnection",
-                      {
-                        "Ref": "ConfigurationRepositoryLocation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Not": [
-                  {
-                    "Fn::Equals": [
-                      "No",
-                      {
-                        "Ref": "UseExistingConfigRepo",
-                      },
-                    ],
+                    "Ref": "ExistingConfigRepositoryBranchName",
                   },
                 ],
               },
             ],
           },
-          "AssertDescription": "useExistingConfigRepo parameter must be set to "Yes" when configRepositoryLocation is set to codeconnection",
+          "AssertDescription": "existingConfigRepositoryBranchName parameter must be provided when useExistingRepository is set to Yes",
+        },
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Equals": [
+                  "",
+                  {
+                    "Ref": "ExistingConfigRepositoryName",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "existingConfigRepositoryName parameter must be provided when useExistingRepository is set to Yes",
         },
       ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          "Yes",
+          {
+            "Ref": "UseExistingConfigRepo",
+          },
+        ],
+      },
+    },
+    "RequiredParametersForS3Repo": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::And": [
+              {
+                "Fn::Equals": [
+                  "",
+                  {
+                    "Ref": "ExistingConfigRepositoryName",
+                  },
+                ],
+              },
+              {
+                "Fn::Equals": [
+                  "",
+                  {
+                    "Ref": "ExistingConfigRepositoryBranchName",
+                  },
+                ],
+              },
+              {
+                "Fn::Equals": [
+                  "No",
+                  {
+                    "Ref": "UseExistingConfigRepo",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "Existing configuration repository parameters cannot be provided when configurationRepositoryLocation is set to s3",
+        },
+      ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          "s3",
+          {
+            "Ref": "ConfigurationRepositoryLocation",
+          },
+        ],
+      },
     },
   },
 }

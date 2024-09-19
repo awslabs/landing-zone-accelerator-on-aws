@@ -530,85 +530,58 @@ export class InstallerStack extends cdk.Stack {
       }-*`;
     }
 
-    // Validate Installer Parameters
+    // Validate Installer Parameters with CFN Rule Assertions
+    const requiredParametersForCodeConnection = new cdk.CfnRule(this, 'RequiredParametersForCodeConnection', {
+      ruleCondition: cdk.Fn.conditionEquals('codeconnection', this.configurationRepositoryLocation.valueAsString),
+    });
 
-    // Add CFN Rule Assertions
-    const codeConnectionArnRequiredForCodeConnection = new cdk.CfnRule(
-      this,
-      'CodeConnectionArnRequiredForCodeConnection',
-    );
-
-    codeConnectionArnRequiredForCodeConnection.addAssertion(
-      cdk.Fn.conditionOr(
-        cdk.Fn.conditionNot(
-          cdk.Fn.conditionEquals('codeconnection', this.configurationRepositoryLocation.valueAsString),
-        ),
-        cdk.Fn.conditionNot(cdk.Fn.conditionEquals('', this.configCodeConnectionArn.valueAsString)),
-      ),
+    requiredParametersForCodeConnection.addAssertion(
+      cdk.Fn.conditionNot(cdk.Fn.conditionEquals('', this.configCodeConnectionArn.valueAsString)),
       'codeconnectionArn parameter must be provided when configRepositoryLocation is set to codeconnection',
     );
 
-    const useExistingIsYesForCodeConnection = new cdk.CfnRule(this, 'UseExistingIsYesForCodeConnection');
-
-    useExistingIsYesForCodeConnection.addAssertion(
-      cdk.Fn.conditionOr(
-        cdk.Fn.conditionNot(
-          cdk.Fn.conditionEquals('codeconnection', this.configurationRepositoryLocation.valueAsString),
-        ),
-        cdk.Fn.conditionNot(cdk.Fn.conditionEquals('No', this.useExistingConfigRepo.valueAsString)),
-      ),
+    requiredParametersForCodeConnection.addAssertion(
+      cdk.Fn.conditionNot(cdk.Fn.conditionEquals('No', this.useExistingConfigRepo.valueAsString)),
       'useExistingConfigRepo parameter must be set to "Yes" when configRepositoryLocation is set to codeconnection',
     );
 
-    const existingBranchRequiredForCodeConnection = new cdk.CfnRule(this, 'ExistingBranchRequiredForCodeConnection');
-
-    existingBranchRequiredForCodeConnection.addAssertion(
-      cdk.Fn.conditionOr(
-        cdk.Fn.conditionNot(
-          cdk.Fn.conditionEquals('codeconnection', this.configurationRepositoryLocation.valueAsString),
-        ),
-        cdk.Fn.conditionNot(cdk.Fn.conditionEquals('', this.existingConfigRepositoryBranchName.valueAsString)),
-      ),
-      'existingConfigRepositoryBranchName parameter must be provided when configRepositoryLocation is set to codeconnection',
-    );
-
-    const existingRepoNameRequiredForCodeConnection = new cdk.CfnRule(
-      this,
-      'ExistingRepoNameRequiredForCodeConnection',
-    );
-
-    existingRepoNameRequiredForCodeConnection.addAssertion(
-      cdk.Fn.conditionOr(
-        cdk.Fn.conditionNot(
-          cdk.Fn.conditionEquals('codeconnection', this.configurationRepositoryLocation.valueAsString),
-        ),
-        cdk.Fn.conditionNot(cdk.Fn.conditionEquals('', this.existingConfigRepositoryName.valueAsString)),
-      ),
-      'existingConfigRepositoryName parameter must be provided when configRepositoryLocation is set to codeconnection',
-    );
-
-    const existingRepoOwnerRequiredForCodeConnection = new cdk.CfnRule(
-      this,
-      'ExistingRepoOwnerRequiredForCodeConnection',
-    );
-
-    existingRepoOwnerRequiredForCodeConnection.addAssertion(
-      cdk.Fn.conditionOr(
-        cdk.Fn.conditionNot(
-          cdk.Fn.conditionEquals('codeconnection', this.configurationRepositoryLocation.valueAsString),
-        ),
-        cdk.Fn.conditionNot(cdk.Fn.conditionEquals('', this.existingConfigRepositoryOwner.valueAsString)),
-      ),
-
+    requiredParametersForCodeConnection.addAssertion(
+      cdk.Fn.conditionNot(cdk.Fn.conditionEquals('', this.existingConfigRepositoryOwner.valueAsString)),
       'existingConfigRepositoryOwner parameter must be populated when configRepositoryLocation is set to codeconnection',
     );
 
+    // Add assertions for customers using a pre-existing config repo
+    const requiredParametersForExistingRepo = new cdk.CfnRule(this, 'RequiredParametersForExistingRepo', {
+      ruleCondition: cdk.Fn.conditionEquals('Yes', this.useExistingConfigRepo.valueAsString),
+    });
+
+    requiredParametersForExistingRepo.addAssertion(
+      cdk.Fn.conditionNot(cdk.Fn.conditionEquals('', this.existingConfigRepositoryBranchName.valueAsString)),
+      'existingConfigRepositoryBranchName parameter must be provided when useExistingRepository is set to Yes',
+    );
+
+    requiredParametersForExistingRepo.addAssertion(
+      cdk.Fn.conditionNot(cdk.Fn.conditionEquals('', this.existingConfigRepositoryName.valueAsString)),
+      'existingConfigRepositoryName parameter must be provided when useExistingRepository is set to Yes',
+    );
+
+    // Add assertions for customers using S3 as a config repo
+    const requiredParametersForS3Repo = new cdk.CfnRule(this, 'RequiredParametersForS3Repo', {
+      ruleCondition: cdk.Fn.conditionEquals('s3', this.configurationRepositoryLocation.valueAsString),
+    });
+
+    requiredParametersForS3Repo.addAssertion(
+      cdk.Fn.conditionAnd(
+        cdk.Fn.conditionEquals('', this.existingConfigRepositoryName.valueAsString),
+        cdk.Fn.conditionEquals('', this.existingConfigRepositoryBranchName.valueAsString),
+        cdk.Fn.conditionEquals('No', this.useExistingConfigRepo.valueAsString),
+      ),
+      'Existing configuration repository parameters cannot be provided when configurationRepositoryLocation is set to s3',
+    );
+
     const validatorFunction = new Validate(this, 'ValidateInstaller', {
-      useExistingConfigRepo: this.useExistingConfigRepo.valueAsString,
       acceleratorPipelineName: acceleratorPipelineName,
       configRepositoryLocation: this.configurationRepositoryLocation.valueAsString,
-      existingConfigRepositoryName: this.existingConfigRepositoryName.valueAsString,
-      existingConfigRepositoryBranchName: this.existingConfigRepositoryBranchName.valueAsString,
     });
     // cfn-nag suppression
     const validatorFunctionResource = validatorFunction.node.findChild('ValidationFunction').node

@@ -28,10 +28,12 @@
     "cdk-nag": "2.5.2"
   },
   "devDependencies": {
+    "@types/cfn-response": "1.0.8",
     "@types/jest": "29.5.12",
     "@types/node": "18.14.0",
     "aws-cdk": "2.158.0",
     "aws-cdk-lib": "2.158.0",
+    "cfn-response": "1.0.1",
     "constructs": "10.0.12",
     "eslint": "8.34.0",
     "eslint-config-prettier": "8.6.0",
