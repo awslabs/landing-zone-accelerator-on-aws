@@ -19,7 +19,7 @@
     "test": "jest --coverage --ci --passWithNoTests"
   },
   "dependencies": {
-    "aws-sdk": "2.1639.0"
+    "aws-sdk": "2.1691.0"
   },
   "devDependencies": {
     "@types/jest": "29.5.12",
