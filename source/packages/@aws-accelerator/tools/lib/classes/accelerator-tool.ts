@@ -522,6 +522,7 @@ export class AcceleratorTool {
    * @private
    */
   private async initPipeline(acceleratorPrefix: string, pipelineName: string): Promise<void> {
+    this.logger.info('Pipeline name:', pipelineName);
     try {
       const response = await throttlingBackOff(() =>
         new CodePipelineClient({}).send(new GetPipelineCommand({ name: pipelineName })),
@@ -776,8 +777,9 @@ export class AcceleratorTool {
    * @private
    */
   private async getGlobalConfig(): Promise<GlobalConfig> {
+    this.logger.info('Config Repository Name: ', this.pipelineConfigSourceRepo?.repositoryName);
     let fileContent: string;
-    if (this.pipelineConfigSourceRepo?.provider === 'codecommit') {
+    if (this.pipelineConfigSourceRepo?.provider.toLocaleLowerCase() === 'codecommit') {
       const codeCommitClient = new CodeCommitClient({});
       const response = await throttlingBackOff(() =>
         codeCommitClient.send(
@@ -935,15 +937,23 @@ export class AcceleratorTool {
    * @private
    */
   private async getZipFileFromS3(s3Client: S3Client, configBucketName: string, s3ConfigObjectKey: string) {
-    const response = await throttlingBackOff(() =>
-      s3Client.send(
-        new GetObjectCommand({
-          Bucket: configBucketName,
-          Key: s3ConfigObjectKey,
-        }),
-      ),
-    );
-    const zipFile = response.Body;
+    let zipFile;
+    try {
+      const response = await throttlingBackOff(() =>
+        s3Client.send(
+          new GetObjectCommand({
+            Bucket: configBucketName,
+            Key: s3ConfigObjectKey,
+          }),
+        ),
+      );
+      zipFile = response.Body;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      this.logger.error('Failed to retreive configuration from S3', e.message);
+      this.logger.error('ConfigBucketName:', configBucketName);
+      this.logger.error('s3ConfigObjectKey:', s3ConfigObjectKey);
+    }
 
     if (!zipFile) {
       throw new Error('Failed to download the configuration file from S3.');
