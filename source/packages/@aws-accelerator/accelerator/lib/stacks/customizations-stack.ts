@@ -128,14 +128,14 @@ export class CustomizationsStack extends AcceleratorStack {
 
       // Defining dependencies between StackSets cdk objects
       for (const stackSet of customStackSetList ?? []) {
-        if (stackSet.dependsOn.length > 0) {
+        if (stackSet.dependsOn?.length > 0) {
           const stackSetObjDependencies: cdk.aws_cloudformation.CfnStackSet[] = stackSetObjList.filter(stackSetObj =>
-            stackSet.dependsOn.includes(stackSetObj.stackSetName),
+            stackSet.dependsOn?.includes(stackSetObj.stackSetName),
           );
           const currentStackSetObj = stackSetObjList.find(
             currentStackSet => stackSet.name === currentStackSet.stackSetName,
           );
-          currentStackSetObj?.node.addDependency(stackSetObjDependencies);
+          stackSetObjDependencies.forEach(stackSetObjDepen => currentStackSetObj?.addDependency(stackSetObjDepen));
         }
       }
     }
