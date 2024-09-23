@@ -1557,7 +1557,7 @@ export interface ICloudFormationStackSet {
    * The order to deploy the stack relative to the other stacks. Can contain multiple stack names.
    * For any stackset name you define here, the stackset defined will be deployed before the current one.
    */
-  readonly dependsOn: string[];
+  readonly dependsOn?: string[];
 }
 
 export type PortfolioAssociationType = 'User' | 'Group' | 'Role' | 'PermissionSet';

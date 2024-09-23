@@ -76,7 +76,7 @@ export class CloudFormationStackSetConfig implements i.ICloudFormationStackSet {
   readonly regions: t.Region[] = ['us-east-1'];
   readonly template: string = '';
   readonly parameters: t.CfnParameter[] | undefined = undefined;
-  readonly dependsOn: string[] = []
+  readonly dependsOn: string[] = [];
 }
 
 export class AlbListenerFixedResponseConfig implements i.IAlbListenerFixedResponseConfig {
