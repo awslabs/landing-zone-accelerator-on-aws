@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(uninstaller): include deletion of IdentityCenter and ResourcePolicyEnforcement stacks
 - fix(ssm): updated session manager role to allow kms permissions in all enabled regions
 - fix(s3): fix s3 bucket name constructs for imported buckets
+- fix(iam): add cdk feature flag to minimize iam policy
 
 ### Changed
 

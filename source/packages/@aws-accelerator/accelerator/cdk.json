@@ -2,6 +2,7 @@
   "app": "npx ts-node --prefer-ts-exts bin/app.ts",
   "context": {
     "@aws-cdk/core:bootstrapQualifier": "accel",
-    "@aws-cdk/core:newStyleStackSynthesis": "true"
+    "@aws-cdk/core:newStyleStackSynthesis": "true",
+    "@aws-cdk/aws-iam:minimizePolicies": "true"
   }
 }
