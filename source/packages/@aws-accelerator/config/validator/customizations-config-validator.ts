@@ -235,7 +235,8 @@ class CustomizationValidator {
 
     for (const dependency of stackSet.dependsOn ?? []) {
       if (stackSetDependencyChain.includes(dependency)) {
-        errors.push(`Found circular dependency between stack '${stackSet.name}' and ${dependency}`);
+        errors.push(`Found circular dependency between the stacks '${stackSet.name}' and '${dependency}'`);
+        return;
       }
     }
 
@@ -249,7 +250,8 @@ class CustomizationValidator {
       );
 
       if (stacksetObjDependency == undefined) {
-        errors.push(`Dependency ${dependency} defined in stackSet ${stackSet.name} is not found!`);
+        errors.push(`Dependency '${dependency}' defined in stackSet '${stackSet.name}' is not found!`);
+        return;
       }
 
       this.findCircularDependencyInSingleStack(
