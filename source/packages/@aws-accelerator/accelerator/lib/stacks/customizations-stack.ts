@@ -11,11 +11,6 @@
  *  and limitations under the License.
  */
 
-import * as cdk from 'aws-cdk-lib';
-import { pascalCase } from 'change-case';
-import { Construct } from 'constructs';
-import * as path from 'path';
-import { AcceleratorKeyType, AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import {
   PortfolioAssociationConfig,
   PortfolioConfig,
@@ -25,9 +20,14 @@ import {
 import {
   IdentityCenterGetPermissionRoleArn,
   IdentityCenterGetPermissionRoleArnProvider,
-  SharePortfolioWithOrg,
   PropagatePortfolioAssociations,
+  SharePortfolioWithOrg,
 } from '@aws-accelerator/constructs';
+import * as cdk from 'aws-cdk-lib';
+import { pascalCase } from 'change-case';
+import { Construct } from 'constructs';
+import * as path from 'path';
+import { AcceleratorKeyType, AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 export class CustomizationsStack extends AcceleratorStack {
   /**
@@ -96,6 +96,15 @@ export class CustomizationsStack extends AcceleratorStack {
           return { parameterKey: parameter.name, parameterValue: parameter.value };
         });
 
+        const operationPreferences: cdk.CfnStackSet.OperationPreferencesProperty = {
+          failureToleranceCount: stackSet.operationPreferences?.failureToleranceCount,
+          failureTolerancePercentage: stackSet.operationPreferences?.failureTolerancePercentage,
+          maxConcurrentCount: stackSet.operationPreferences?.maxConcurrentCount,
+          maxConcurrentPercentage: stackSet.operationPreferences?.maxConcurrentPercentage,
+          regionConcurrencyType: stackSet.operationPreferences?.regionConcurrencyType,
+          regionOrder: stackSet.operationPreferences?.regionOrder,
+        };
+
         new cdk.aws_cloudformation.CfnStackSet(
           this,
           pascalCase(`${this.props.prefixes.accelerator}-Custom-${stackSet.name}`),
@@ -104,11 +113,7 @@ export class CustomizationsStack extends AcceleratorStack {
             stackSetName: stackSet.name,
             capabilities: stackSet.capabilities,
             description: stackSet.description,
-            operationPreferences: {
-              failureTolerancePercentage: 25,
-              maxConcurrentPercentage: 35,
-              regionConcurrencyType: 'PARALLEL',
-            },
+            operationPreferences: operationPreferences,
             stackInstancesGroup: [
               {
                 deploymentTargets: {

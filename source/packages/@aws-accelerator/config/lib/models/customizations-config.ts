@@ -1553,6 +1553,10 @@ export interface ICloudFormationStackSet {
    * The parameters to be passed to the stackset.
    */
   readonly parameters?: t.ICfnParameter[];
+  /**
+   * The operational preferences of current stackset
+   */
+  readonly operationPreferences?: t.IOperationPreferences;
 }
 
 export type PortfolioAssociationType = 'User' | 'Group' | 'Role' | 'PermissionSet';
