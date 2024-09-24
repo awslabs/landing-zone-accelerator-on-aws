@@ -501,6 +501,10 @@
           "$ref": "#/definitions/NonEmptyString",
           "description": "The friendly name that will be used as a base for the created CloudFormation StackSet Name. The name should not contain any spaces as this isn't supported by the Accelerator."
         },
+        "operationPreferences": {
+          "$ref": "#/definitions/IOperationPreferences",
+          "description": "The operational preferences of current stackset"
+        },
         "parameters": {
           "description": "The parameters to be passed to the stackset.",
           "items": {
@@ -1050,6 +1054,33 @@
         "region",
         "nlbName"
       ],
+      "type": "object"
+    },
+    "IOperationPreferences": {
+      "additionalProperties": false,
+      "properties": {
+        "failureToleranceCount": {
+          "type": "number"
+        },
+        "failureTolerancePercentage": {
+          "type": "number"
+        },
+        "maxConcurrentCount": {
+          "type": "number"
+        },
+        "maxConcurrentPercentage": {
+          "type": "number"
+        },
+        "regionConcurrencyType": {
+          "type": "string"
+        },
+        "regionOrder": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
       "type": "object"
     },
     "IPortfolioAssociatoinConfig": {

@@ -1584,6 +1584,10 @@ export interface ICloudFormationStackSet {
    */
   readonly parameters?: t.ICfnParameter[];
   /**
+   * The operational preferences of current stackset
+   */
+  readonly operationPreferences?: t.IOperationPreferences;
+  /**
    * The other StackSets this StackSet depends on.
    * For stackset names you define here, a CloudFormation DependsOn attribute will be added between the resources.
    * Please note this does not guarantee the deployment order of the stack instances within the StackSet.

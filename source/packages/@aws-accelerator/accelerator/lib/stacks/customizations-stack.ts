@@ -96,6 +96,16 @@ export class CustomizationsStack extends AcceleratorStack {
         const parameters = stackSet.parameters?.map(parameter => {
           return { parameterKey: parameter.name, parameterValue: parameter.value };
         });
+
+        const operationPreferences: cdk.CfnStackSet.OperationPreferencesProperty = {
+          failureToleranceCount: stackSet.operationPreferences?.failureToleranceCount,
+          failureTolerancePercentage: stackSet.operationPreferences?.failureTolerancePercentage,
+          maxConcurrentCount: stackSet.operationPreferences?.maxConcurrentCount,
+          maxConcurrentPercentage: stackSet.operationPreferences?.maxConcurrentPercentage,
+          regionConcurrencyType: stackSet.operationPreferences?.regionConcurrencyType,
+          regionOrder: stackSet.operationPreferences?.regionOrder,
+        };
+
         const stackSetObj = new cdk.aws_cloudformation.CfnStackSet(
           this,
           pascalCase(`${this.props.prefixes.accelerator}-Custom-${stackSet.name}`),
@@ -104,11 +114,7 @@ export class CustomizationsStack extends AcceleratorStack {
             stackSetName: stackSet.name,
             capabilities: stackSet.capabilities,
             description: stackSet.description,
-            operationPreferences: {
-              failureTolerancePercentage: 25,
-              maxConcurrentPercentage: 35,
-              regionConcurrencyType: 'PARALLEL',
-            },
+            operationPreferences: operationPreferences,
             stackInstancesGroup: [
               {
                 deploymentTargets: {

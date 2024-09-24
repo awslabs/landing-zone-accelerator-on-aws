@@ -76,6 +76,7 @@ export class CloudFormationStackSetConfig implements i.ICloudFormationStackSet {
   readonly regions: t.Region[] = ['us-east-1'];
   readonly template: string = '';
   readonly parameters: t.CfnParameter[] | undefined = undefined;
+  readonly operationPreferences: t.OperationPreferences | undefined = undefined;
   readonly dependsOn: string[] = [];
 }
 
