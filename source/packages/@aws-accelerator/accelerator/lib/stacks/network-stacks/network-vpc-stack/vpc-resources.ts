@@ -317,7 +317,7 @@ export class VpcResources {
 
     for (const firewallItem of firewallInfo) {
       if (this.isFirewallOwnedByDifferentAccount(firewallItem)) {
-        crossAccountEniAccountIds.push(...firewallItem.accountId);
+        crossAccountEniAccountIds.push(firewallItem.accountId);
       }
     }
     // firewalls can be deployed in same account across regions so removing duplicates.
@@ -332,7 +332,6 @@ export class VpcResources {
 
     // Firewall can be deployed to same account but different region
     // Check that the firewall's target VPC is deployed in this account
-
     return firewallItem.accountId !== this.stack.account && this.vpcMap.has(firewallItem.firewallVpc.name);
   }
 
