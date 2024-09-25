@@ -1616,7 +1616,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
             {
               "Name": "NODE_OPTIONS",
               "Type": "PLAINTEXT",
-              "Value": "--max_old_space_size=12288",
+              "Value": "--max_old_space_size=12288 --no-warnings",
             },
             {
               "Name": "CDK_NEW_BOOTSTRAP",
@@ -5345,7 +5345,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
             {
               "Name": "NODE_OPTIONS",
               "Type": "PLAINTEXT",
-              "Value": "--max_old_space_size=12288",
+              "Value": "--max_old_space_size=12288 --no-warnings",
             },
             {
               "Name": "CDK_NEW_BOOTSTRAP",
@@ -9094,7 +9094,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
             {
               "Name": "NODE_OPTIONS",
               "Type": "PLAINTEXT",
-              "Value": "--max_old_space_size=12288",
+              "Value": "--max_old_space_size=12288 --no-warnings",
             },
             {
               "Name": "CDK_NEW_BOOTSTRAP",
@@ -12866,7 +12866,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
             {
               "Name": "NODE_OPTIONS",
               "Type": "PLAINTEXT",
-              "Value": "--max_old_space_size=12288",
+              "Value": "--max_old_space_size=12288 --no-warnings",
             },
             {
               "Name": "CDK_NEW_BOOTSTRAP",
@@ -16628,7 +16628,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
             {
               "Name": "NODE_OPTIONS",
               "Type": "PLAINTEXT",
-              "Value": "--max_old_space_size=12288",
+              "Value": "--max_old_space_size=12288 --no-warnings",
             },
             {
               "Name": "CDK_NEW_BOOTSTRAP",
@@ -20377,7 +20377,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 6`] = `
             {
               "Name": "NODE_OPTIONS",
               "Type": "PLAINTEXT",
-              "Value": "--max_old_space_size=12288",
+              "Value": "--max_old_space_size=12288 --no-warnings",
             },
             {
               "Name": "CDK_NEW_BOOTSTRAP",
@@ -24134,7 +24134,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 7`] = `
             {
               "Name": "NODE_OPTIONS",
               "Type": "PLAINTEXT",
-              "Value": "--max_old_space_size=12288",
+              "Value": "--max_old_space_size=12288 --no-warnings",
             },
             {
               "Name": "CDK_NEW_BOOTSTRAP",
