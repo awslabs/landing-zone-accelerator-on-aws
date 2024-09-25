@@ -1554,8 +1554,9 @@ export interface ICloudFormationStackSet {
    */
   readonly parameters?: t.ICfnParameter[];
   /**
-   * The order to deploy the stack relative to the other stacks. Can contain multiple stack names.
-   * For any stackset name you define here, the stackset defined will be deployed before the current one.
+   * The other StackSets this StackSet depends on.
+   * For stackset names you define here, a CloudFormation DependsOn attribute will be added between the resources.
+   * Please note this does not guarantee the deployment order of the stack instances within the StackSet.
    */
   readonly dependsOn?: string[];
 }
