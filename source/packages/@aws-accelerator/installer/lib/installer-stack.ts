@@ -885,7 +885,7 @@ export class InstallerStack extends cdk.Stack {
         environmentVariables: {
           NODE_OPTIONS: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: '--max_old_space_size=12288',
+            value: '--max_old_space_size=12288 --no-warnings',
           },
           CDK_NEW_BOOTSTRAP: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,

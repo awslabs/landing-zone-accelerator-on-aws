@@ -1403,7 +1403,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
             {
               "Name": "NODE_OPTIONS",
               "Type": "PLAINTEXT",
-              "Value": "--max_old_space_size=12288",
+              "Value": "--max_old_space_size=12288 --no-warnings",
             },
             {
               "Name": "PARTITION",
@@ -2378,7 +2378,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
             {
               "Name": "NODE_OPTIONS",
               "Type": "PLAINTEXT",
-              "Value": "--max_old_space_size=12288",
+              "Value": "--max_old_space_size=12288 --no-warnings",
             },
             {
               "Name": "CDK_METHOD",
