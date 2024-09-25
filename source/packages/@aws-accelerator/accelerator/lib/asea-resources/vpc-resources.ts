@@ -152,6 +152,9 @@ export class VpcResources extends AseaResource {
       this.createNaclSubnetAssociations(vpcInScope, nestedStackResources, nestedStack.includedTemplate);
       this.createNatGateways(nestedStackResources, nestedStack.includedTemplate, vpcInScope, subnets);
       this.createSecurityGroups(vpcInScope, nestedStackResources, nestedStack.includedTemplate);
+      if (this.props.stage === AcceleratorStage.POST_IMPORT_ASEA_RESOURCES) {
+        this.deleteSecurityGroups(vpcInScope, nestedStackResources);
+      }
       const tgwAttachmentMap = this.createTransitGatewayAttachments(
         vpcInScope,
         nestedStackResources,
@@ -1374,6 +1377,35 @@ export class VpcResources extends AseaResource {
         scope: nestedStackResources.getStackKey(),
       });
       this.scope.addAseaResource(AseaResourceType.VPC_ENDPOINT, `${vpcItem.name}/${endpointItem.service}`);
+    }
+  }
+
+  private deleteSecurityGroups(vpcItem: VpcConfig | VpcTemplatesConfig, nestedStackResources: ImportStackResources) {
+    const configSecurityGroups: string[] = [];
+    for (const securityGroupItem of vpcItem.securityGroups ?? []) {
+      configSecurityGroups.push(securityGroupItem.name);
+    }
+    const existingSecurityGroups = nestedStackResources.getResourcesByType(RESOURCE_TYPE.SECURITY_GROUP);
+    for (const existingSecurityGroup of existingSecurityGroups) {
+      const securityGroupConfig = configSecurityGroups.find(
+        item => item === existingSecurityGroup.resourceMetadata['Properties'].GroupName,
+      );
+      if (securityGroupConfig) continue;
+      this.scope.addLogs(LogLevel.WARN, `Deleting Security Group: ${existingSecurityGroup.logicalResourceId}`);
+      this.scope.addDeleteFlagForNestedResource(
+        nestedStackResources.getStackKey(),
+        existingSecurityGroup.logicalResourceId,
+      );
+      const ssmResource = this.scope.importStackResources.getSSMParameterByName(
+        this.scope.getSsmPath(SsmResourceType.SECURITY_GROUP, [
+          vpcItem.name,
+          existingSecurityGroup.resourceMetadata['Properties'].GroupName,
+        ]),
+      );
+      if (ssmResource) {
+        this.scope.addLogs(LogLevel.WARN, `Deleting SSM Parameter: ${ssmResource.logicalResourceId}`);
+        this.scope.addDeleteFlagForNestedResource(ssmResource.logicalResourceId, ssmResource.logicalResourceId);
+      }
     }
   }
 }
