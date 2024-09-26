@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - feat(networking): add support for TLS1.3 security policy for ALB and NLB listener
+- feat(regions): add support for the ap-southeast-5 opt-in region
 
 ### Fixed
 

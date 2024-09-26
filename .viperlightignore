@@ -56,9 +56,6 @@ development
 
 # ELB Root Account References https://docs.aws.amazon.com/elasticloadbalancing/latest/application/enable-access-logging.html#attach-bucket-policy
 
-source/packages/@aws-accelerator/utils/lib/regions.ts:64
-source/packages/@aws-accelerator/utils/lib/regions.ts:65
-source/packages/@aws-accelerator/utils/lib/regions.ts:66
 source/packages/@aws-accelerator/utils/lib/regions.ts:67
 source/packages/@aws-accelerator/utils/lib/regions.ts:68
 source/packages/@aws-accelerator/utils/lib/regions.ts:69
@@ -90,8 +87,14 @@ source/packages/@aws-accelerator/utils/lib/regions.ts:94
 source/packages/@aws-accelerator/utils/lib/regions.ts:95
 source/packages/@aws-accelerator/utils/lib/regions.ts:96
 source/packages/@aws-accelerator/utils/lib/regions.ts:97
+source/packages/@aws-accelerator/utils/lib/regions.ts:98
+source/packages/@aws-accelerator/utils/lib/regions.ts:99
+source/packages/@aws-accelerator/utils/lib/regions.ts:100
+source/packages/@aws-accelerator/utils/lib/regions.ts:101
 source/packages/@aws-accelerator/utils/lib/regions.ts:102
 source/packages/@aws-accelerator/utils/lib/regions.ts:103
+source/packages/@aws-accelerator/utils/lib/regions.ts:104
+source/packages/@aws-accelerator/utils/lib/regions.ts:105
 
 # Accelerator specific assume role declaration
 
