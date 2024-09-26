@@ -76,7 +76,7 @@
     {
       "Sid": "EbsEncryptionStatement",
       "Effect": "Deny",
-      "Action": ["ec2:DisableEbsEncryptionByDefault"],
+      "Action": ["ec2:DisableEbsEncryptionByDefault", "ec2:ModifyEbsDefaultKmsKeyId"],
       "Resource": "*",
       "Condition": {
         "ArnNotLike": {
