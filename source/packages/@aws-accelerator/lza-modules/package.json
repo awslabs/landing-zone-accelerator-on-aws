@@ -1,5 +1,5 @@
 {
-  "name": "@aws-accelerator/modules",
+  "name": "@aws-accelerator/lza-modules",
   "version": "0.0.0",
   "description": "The core of the accelerator solution.",
   "license": "Apache-2.0",
@@ -7,8 +7,8 @@
     "name": "Amazon Web Services",
     "url": "https://aws.amazon.com/solutions"
   },
-  "main": "dist/packages/@aws-accelerator/modules/bin/runner.js",
-  "types": "dist/packages/@aws-accelerator/modules/bin/runner.d.ts",
+  "main": "dist/packages/@aws-accelerator/lza-modules/bin/runner.js",
+  "types": "dist/packages/@aws-accelerator/lza-modules/bin/runner.d.ts",
   "private": true,
   "scripts": {
     "cleanup": "tsc --build ./ --clean && rm -rf node_modules && rm -rf dist",
