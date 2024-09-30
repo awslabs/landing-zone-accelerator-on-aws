@@ -53,19 +53,20 @@ import { AccountIdConfig, AccountsConfig, GlobalConfig, OrganizationConfig } fro
 import {
   OuRelationType,
   delay,
-  getAllOusInOrganization,
   getCredentials,
   getLandingZoneDetails,
   getLandingZoneIdentifier,
   getManagementAccountCredentials,
   getOrganizationsRoot,
   getOuRelationsFromConfig,
+  getOrganizationalUnitKeys,
 } from '../../common/functions';
 import {
   AssumeRoleCredentialType,
   ControlTowerLandingZoneDetailsType,
   ModuleOptionsType,
   OrganizationalUnitDetailsType,
+  OrganizationalUnitKeysType,
 } from '../../common/resources';
 import { AcceleratorModule } from '../accelerator-module';
 import { setRetryStrategy } from '@aws-accelerator/utils/dist/lib/common-functions';
@@ -85,6 +86,7 @@ type ConfigInviteAccountDetailsType = { ouConfigItem: OuRelationType; inviteAcco
  * Organizational unit details type
  */
 type OuDetailsType = {
+  completePath: string;
   /**
    * The flag indicates whether an organizational unit exists within AWS Organizations.
    */
@@ -136,6 +138,8 @@ export class AWSOrganization implements AcceleratorModule {
    * @param props {@link ModuleOptionsType}
    * @returns status string
    */
+  private ouKeys: OrganizationalUnitKeysType | undefined = undefined;
+
   public async handler(module: string, props: ModuleOptionsType): Promise<string> {
     const statuses: string[] = [];
     const globalConfig = GlobalConfig.load(props.configDirPath);
@@ -189,9 +193,10 @@ export class AWSOrganization implements AcceleratorModule {
 
     const orgAccounts = await this.getOrganizationAccounts(organizationsClient);
 
+    this.ouKeys = await getOrganizationalUnitKeys(organizationsClient);
+
     const ouItems = await this.prepareOuList(
       props,
-      organizationsClient,
       ouRelationsFromConfig,
       enabledBaselines,
       orgAccounts,
@@ -205,7 +210,7 @@ export class AWSOrganization implements AcceleratorModule {
       // OU baseline only when CT is enabled and OU is not ignored
       if (globalConfig.controlTower.enable && !ouItem.ou.isIgnored) {
         // If applicable, enable or update baseline for the AWS organizational unit
-        await this.manageOuRegistration(controlTowerClient, organizationsClient, ouItem, statuses, landingZoneDetails);
+        await this.manageOuRegistration(controlTowerClient, ouItem, statuses, landingZoneDetails);
       }
 
       // If applicable invite any AWS Accounts for the AWS organizational unit
@@ -238,7 +243,6 @@ export class AWSOrganization implements AcceleratorModule {
    */
   private async manageOuRegistration(
     controlTowerClient: ControlTowerClient,
-    organizationsClient: OrganizationsClient,
     ouItem: OuDetailsType,
     statuses: string[],
     landingZoneDetails?: ControlTowerLandingZoneDetailsType,
@@ -285,7 +289,6 @@ export class AWSOrganization implements AcceleratorModule {
         statuses.push(
           await this.updateExistingRegistration(
             controlTowerClient,
-            organizationsClient,
             ouItem,
             baselineVersion,
             awsControlTowerBaselineIdentifier,
@@ -305,7 +308,6 @@ export class AWSOrganization implements AcceleratorModule {
       statuses.push(
         await this.registerOrganizationalUnit(
           controlTowerClient,
-          organizationsClient,
           ouItem.ou,
           awsControlTowerBaselineIdentifier,
           baselineVersion,
@@ -331,10 +333,8 @@ export class AWSOrganization implements AcceleratorModule {
     if (!ouItem.isExistsInOrg) {
       let parentId = organizationRoot.Id!;
       if (ouItem.ou.parentName) {
-        // reload organization unit details to reflect newly created ou
-        const existingOusInOrganization = await getAllOusInOrganization(client);
-        const parentDetails = existingOusInOrganization.find(
-          item => item.name.toLowerCase() === ouItem.ou.parentName?.toLowerCase() && item.level === ouItem.ou.level - 1,
+        const parentDetails = this.ouKeys!.find(
+          item => item.acceleratorKey.toLowerCase() === ouItem.ou.parentName?.toLowerCase(),
         );
 
         if (!parentDetails) {
@@ -347,7 +347,7 @@ export class AWSOrganization implements AcceleratorModule {
           `The organizational unit "${ouItem.ou.completePath}" not found in AWS Organizations. It will be created and register if not ignored.`,
         );
 
-        parentId = parentDetails.id;
+        parentId = parentDetails.awsKey;
       }
 
       statuses.push(await this.createOrganizationUnit(client, ouItem.ou, parentId));
@@ -370,7 +370,6 @@ export class AWSOrganization implements AcceleratorModule {
    */
   private async updateExistingRegistration(
     controlTowerClient: ControlTowerClient,
-    organizationsClient: OrganizationsClient,
     ouItem: OuDetailsType,
     baselineVersion: string,
     awsControlTowerBaselineIdentifier: string,
@@ -378,7 +377,6 @@ export class AWSOrganization implements AcceleratorModule {
   ): Promise<string> {
     return this.registerOrganizationalUnit(
       controlTowerClient,
-      organizationsClient,
       ouItem.ou,
       awsControlTowerBaselineIdentifier,
       baselineVersion,
@@ -457,15 +455,12 @@ export class AWSOrganization implements AcceleratorModule {
    */
   private async prepareOuList(
     props: ModuleOptionsType,
-    client: OrganizationsClient,
     ouRelationsFromConfig: OuRelationType[],
     enabledBaselines: EnabledBaselineSummary[],
     orgAccounts: Account[],
     landingZoneDetails?: ControlTowerLandingZoneDetailsType,
   ): Promise<OuDetailsType[]> {
     const ouItems: OuDetailsType[] = [];
-
-    const existingOusInOrganization = await getAllOusInOrganization(client);
 
     let filteredOuRelationsFromConfig = ouRelationsFromConfig;
 
@@ -484,29 +479,38 @@ export class AWSOrganization implements AcceleratorModule {
     const configInviteAccountsDetails = await Promise.all(promises);
 
     for (const configInviteAccountDetails of configInviteAccountsDetails) {
-      const existingOu = existingOusInOrganization.find(
-        item =>
-          item.name.toLowerCase() === configInviteAccountDetails.ouConfigItem.name.toLowerCase() &&
-          item.level === configInviteAccountDetails.ouConfigItem.level,
+      const existingOu = this.ouKeys!.find(
+        item => item.acceleratorKey === configInviteAccountDetails.ouConfigItem.completePath,
       );
 
       let isRegisteredInCt = false;
       let isExistsInOrg = false;
 
+      let foo: OrganizationalUnitDetailsType | undefined = undefined;
       if (existingOu) {
         isExistsInOrg = true;
         if (landingZoneDetails) {
           isRegisteredInCt = this.isOuRegisteredInControlTower(existingOu.arn, enabledBaselines);
         }
+
+        foo = {
+          name: existingOu.acceleratorKey.split('/').pop() ?? existingOu.acceleratorKey,
+          id: existingOu.awsKey,
+          arn: existingOu.arn,
+          level: existingOu.level,
+          parentName: existingOu.parentPath,
+          parentId: existingOu.parentId,
+        };
       }
 
       ouItems.push({
+        completePath: configInviteAccountDetails.ouConfigItem.completePath,
         isExistsInOrg,
         isRegisteredInCt,
         hasAccountsToInvite: configInviteAccountDetails.inviteAccountDetails.hasAccountsToInvite,
         accountsToInvite: configInviteAccountDetails.inviteAccountDetails.accountsToInvite,
         ou: configInviteAccountDetails.ouConfigItem,
-        existingOu,
+        existingOu: foo,
       });
     }
 
@@ -557,6 +561,16 @@ export class AWSOrganization implements AcceleratorModule {
 
       this.logger.info(`AWS Organizations organizational unit "${ouItem.completePath}" created successfully.`);
 
+      // add new ou to list of ouKeys
+      this.ouKeys?.push({
+        acceleratorKey: ouItem.completePath,
+        awsKey: response.OrganizationalUnit.Id!,
+        arn: response.OrganizationalUnit.Arn!,
+        level: ouItem.level,
+        parentId: parentId,
+        parentPath: ouItem.parentName!,
+      });
+
       return `AWS Organizations organizational unit "${ouItem.completePath}" created successfully.`;
     } catch (
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -583,20 +597,14 @@ export class AWSOrganization implements AcceleratorModule {
    */
   private async registerOrganizationalUnit(
     controlTowerClient: ControlTowerClient,
-    organizationsClient: OrganizationsClient,
     ouItem: OuRelationType,
     baselineIdentifier: string,
     baselineVersion: string,
     identityCenterEnabledBaselineArn?: string,
   ): Promise<string> {
-    // reload organization unit details to reflect newly created ou
-    const existingOusInOrganization = await getAllOusInOrganization(organizationsClient);
+    const existingOuDetails = this.ouKeys!.find(item => item.acceleratorKey === ouItem.completePath);
 
-    const targetOuItem = existingOusInOrganization.find(
-      item => item.name === ouItem.name && item.level === ouItem.level,
-    );
-
-    if (!targetOuItem) {
+    if (!existingOuDetails) {
       throw new Error(
         `Organizational unit "${ouItem.completePath}" not found in existing organization list failed to register the organization unit.`,
       );
@@ -610,6 +618,15 @@ export class AWSOrganization implements AcceleratorModule {
         value: identityCenterEnabledBaselineArn,
       });
     }
+
+    const targetOuItem: OrganizationalUnitDetailsType = {
+      name: existingOuDetails.acceleratorKey.split('/').pop() ?? existingOuDetails.acceleratorKey,
+      id: existingOuDetails.awsKey,
+      arn: existingOuDetails.arn,
+      level: existingOuDetails.level,
+      parentName: existingOuDetails.parentPath,
+      parentId: existingOuDetails.parentId,
+    };
 
     return this.enableBaseline(
       controlTowerClient,
@@ -712,11 +729,8 @@ export class AWSOrganization implements AcceleratorModule {
     sourceParentName: string,
     sourceParentId: string,
     destinationOuItem: OuRelationType,
-    existingOusInOrganization: OrganizationalUnitDetailsType[],
   ): Promise<string> {
-    const destinationOu = existingOusInOrganization.find(
-      item => item.name === destinationOuItem.name && item.level === destinationOuItem.level,
-    );
+    const destinationOu = this.ouKeys!.find(item => item.acceleratorKey === destinationOuItem.completePath);
 
     if (!destinationOu) {
       throw new Error(
@@ -729,7 +743,7 @@ export class AWSOrganization implements AcceleratorModule {
         new MoveAccountCommand({
           AccountId: accountToInvite.accountId,
           SourceParentId: sourceParentId,
-          DestinationParentId: destinationOu.id,
+          DestinationParentId: destinationOu.awsKey,
         }),
       ),
     );
@@ -763,8 +777,6 @@ export class AWSOrganization implements AcceleratorModule {
     const localStatuses: string[] = [];
     if (ouItem.hasAccountsToInvite) {
       this.logger.info(`The organizational unit "${ouItem.ou.name}" has accounts to invite.`);
-
-      const existingOusInOrganization = await getAllOusInOrganization(client);
 
       const promises: Promise<InviteAccountOrgDetailsType>[] = [];
 
@@ -801,7 +813,6 @@ export class AWSOrganization implements AcceleratorModule {
               organizationRoot.Name!,
               organizationRoot.Id!,
               ouItem.ou,
-              existingOusInOrganization,
             ),
           );
 

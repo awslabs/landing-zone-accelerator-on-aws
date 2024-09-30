@@ -77,7 +77,20 @@ export type OrganizationalUnitDetailsType = {
   level: number;
   parentName?: string | undefined;
   parentId?: string | undefined;
+  parentPath?: string | undefined;
 };
+
+/**
+ * Type for organizational unit keys
+ */
+export type OrganizationalUnitKeysType = {
+  acceleratorKey: string;
+  awsKey: string;
+  arn: string;
+  parentId: string;
+  parentPath: string;
+  level: number;
+}[];
 
 /**
  * Cross Account assume role credential type
