@@ -30,7 +30,7 @@ function validateAndGetRunnerParameters(): ModuleRunnerParametersType {
    * Module runner command with option to execute the command.
    */
   const scriptUsage =
-    'Usage: yarn run ts-node packages/@aws-accelerator/modules/bin/runner.ts --module <MODULE_NAME> --partition <PARTITION> --account-id <ACCOUNT_ID> --region <REGION> --use-existing-role <Yes/No> --config-dir <CONFIG_DIR_PATH> ';
+    'Usage: yarn run ts-node packages/@aws-accelerator/lza-modules/bin/runner.ts --module <MODULE_NAME> --partition <PARTITION> --account-id <ACCOUNT_ID> --region <REGION> --use-existing-role <Yes/No> --config-dir <CONFIG_DIR_PATH> ';
 
   const argv = yargs(process.argv.slice(2))
     .options({

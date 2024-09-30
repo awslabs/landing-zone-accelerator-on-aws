@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - chore(lambda): remove debug console log statements
+- chore(modules): renamed modules to lza-modules
 
 ## [1.9.2] -
 
