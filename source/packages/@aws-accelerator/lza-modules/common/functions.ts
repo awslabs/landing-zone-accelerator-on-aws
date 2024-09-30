@@ -12,8 +12,7 @@
  */
 
 import {
-  ChildType,
-  ListChildrenCommand,
+  ListOrganizationalUnitsForParentCommand,
   ListRootsCommand,
   OrganizationalUnit,
   OrganizationsClient,
@@ -36,6 +35,7 @@ import {
   AssumeRoleCredentialType,
   ControlTowerLandingZoneDetailsType,
   OrganizationalUnitDetailsType,
+  OrganizationalUnitKeysType,
 } from './resources';
 
 /**
@@ -75,156 +75,6 @@ export async function getOrganizationsRoot(client: OrganizationsClient): Promise
   }
 
   return response.Roots[0];
-}
-
-/**
- * Function to retrieve every AWS organizations OUs with parent information
- * @param client {@link OrganizationsClient}
- * @returns accounts {@link Account}[]
- */
-export async function getAllOusInOrganization(client: OrganizationsClient): Promise<OrganizationalUnitDetailsType[]> {
-  const organizationUnits: OrganizationalUnitDetailsType[] = [];
-
-  const organizationRoot = await getOrganizationsRoot(client);
-  const rootChildren = await getOrganizationalUnitsForParent(client, organizationRoot.Id!);
-
-  for (const rootChild of rootChildren) {
-    organizationUnits.push({
-      name: rootChild.Name!,
-      id: rootChild.Id!,
-      arn: rootChild.Arn!,
-      level: 1,
-      parentName: organizationRoot.Name!,
-      parentId: organizationRoot.Id!,
-    });
-
-    await getAllLevelChildrenOus(client, rootChild, organizationUnits);
-  }
-
-  // sort by level
-  return organizationUnits.sort((item1, item2) => item1.level - item2.level);
-}
-
-/**
- * Function to get every level of ou details
- * @param client {@link OrganizationsClient}
- * @param parentOu {@link OrganizationalUnit}
- * @param organizationUnits {@link OrganizationalUnitDetailsType}[]
- */
-async function getAllLevelChildrenOus(
-  client: OrganizationsClient,
-  parentOu: OrganizationalUnit,
-  organizationUnits: OrganizationalUnitDetailsType[],
-) {
-  const level2Children = await getOrganizationalUnitsForParent(client, parentOu.Id!);
-
-  for (const level2Child of level2Children) {
-    organizationUnits.push({
-      name: level2Child.Name!,
-      id: level2Child.Id!,
-      arn: level2Child.Arn!,
-      level: 2,
-      parentName: parentOu.Name!,
-      parentId: parentOu.Id!,
-    });
-
-    await getLevel3ChildrenOus(client, level2Child, organizationUnits);
-  }
-}
-
-/**
- * Function to get level 3 onwards ou details
- * @param client {@link OrganizationsClient}
- * @param parentOu {@link OrganizationalUnit}
- * @param organizationUnits {@link OrganizationalUnitDetailsType}[]
- */
-async function getLevel3ChildrenOus(
-  client: OrganizationsClient,
-  parentOu: OrganizationalUnit,
-  organizationUnits: OrganizationalUnitDetailsType[],
-) {
-  const level3Children = await getOrganizationalUnitsForParent(client, parentOu.Id!);
-
-  for (const level3Child of level3Children) {
-    organizationUnits.push({
-      name: level3Child.Name!,
-      id: level3Child.Id!,
-      arn: level3Child.Arn!,
-      level: 3,
-      parentName: parentOu.Name!,
-      parentId: parentOu.Id!,
-    });
-
-    await getLevel4ChildrenOus(client, level3Child, organizationUnits);
-  }
-}
-
-/**
- * Function to get level 4 onwards ou details
- * @param client {@link OrganizationsClient}
- * @param parentOu {@link OrganizationalUnit}
- * @param organizationUnits {@link OrganizationalUnitDetailsType}[]
- */
-async function getLevel4ChildrenOus(
-  client: OrganizationsClient,
-  parentOu: OrganizationalUnit,
-  organizationUnits: OrganizationalUnitDetailsType[],
-) {
-  const level4Children = await getOrganizationalUnitsForParent(client, parentOu.Id!);
-
-  for (const level4Child of level4Children) {
-    organizationUnits.push({
-      name: level4Child.Name!,
-      id: level4Child.Id!,
-      arn: level4Child.Arn!,
-      level: 4,
-      parentName: parentOu.Name!,
-      parentId: parentOu.Id!,
-    });
-
-    await getLevel5ChildrenOus(client, level4Child, organizationUnits);
-  }
-}
-
-/**
- * Function to get level 5 ou details
- * @param client {@link OrganizationsClient}
- * @param parentOu {@link OrganizationalUnit}
- * @param organizationUnits {@link OrganizationalUnitDetailsType}[]
- */
-async function getLevel5ChildrenOus(
-  client: OrganizationsClient,
-  parentOu: OrganizationalUnit,
-  organizationUnits: OrganizationalUnitDetailsType[],
-) {
-  const children = await getOrganizationalUnitsForParent(client, parentOu.Id!);
-
-  for (const child of children) {
-    organizationUnits.push({
-      name: child.Name!,
-      id: child.Id!,
-      arn: child.Arn!,
-      level: 5,
-      parentName: parentOu.Name!,
-      parentId: parentOu.Id!,
-    });
-  }
-}
-
-export async function hasChildOus(client: OrganizationsClient, parentId: string): Promise<boolean> {
-  const response = await throttlingBackOff(() =>
-    client.send(new ListChildrenCommand({ ParentId: parentId, ChildType: ChildType.ORGANIZATIONAL_UNIT })),
-  );
-
-  if (!response.Children) {
-    throw new Error(`AWS Organizations children for parent ${parentId} undefined`);
-  }
-
-  if (response.Children.length > 0) {
-    return true;
-  }
-
-  return false;
 }
 
 /**
@@ -379,7 +229,8 @@ export function getOuRelationsFromConfig(organizationConfig: OrganizationConfig)
       ouRelations.push({
         level: pathLength,
         name: isParentChildPath[pathLength - 1],
-        parentName: isParentChildPath[pathLength - 2],
+        //parentName: isParentChildPath[pathLength - 1],
+        parentName: organizationalUnit.name.substr(0, organizationalUnit.name.lastIndexOf('/')),
         completePath: organizationalUnit.name,
         isIgnored,
       });
@@ -501,4 +352,73 @@ export async function getManagementAccountCredentials(
   }
 
   return undefined;
+}
+
+export function getOrganizationalUnit(
+  organizationalUnitName: string,
+  organizationalUnits: OrganizationalUnitDetailsType[],
+): OrganizationalUnitDetailsType {
+  const organizationalUnit = organizationalUnits.find(
+    organizationalUnit => organizationalUnit.name === organizationalUnitName,
+  );
+
+  if (!organizationalUnit) {
+    throw new Error(`Organizational Unit ${organizationalUnitName} not found`);
+  }
+
+  return organizationalUnit;
+}
+
+export async function getOrganizationalUnitKeys(
+  organizationsClient: OrganizationsClient,
+): Promise<OrganizationalUnitKeysType> {
+  const awsOuKeys: OrganizationalUnitKeysType = [];
+  await getAwsOrganizationalUnitKeys(organizationsClient, awsOuKeys, await getRootId(organizationsClient), '');
+  return awsOuKeys;
+}
+
+async function getAwsOrganizationalUnitKeys(
+  organizationsClient: OrganizationsClient,
+  awsOuKeys: OrganizationalUnitKeysType,
+  ouId: string,
+  path: string,
+) {
+  let nextToken: string | undefined = undefined;
+  do {
+    const page = await throttlingBackOff(() =>
+      organizationsClient.send(new ListOrganizationalUnitsForParentCommand({ ParentId: ouId, NextToken: nextToken })),
+    );
+    let parentPath = path.substr(0, path.lastIndexOf('/'));
+    for (const ou of page.OrganizationalUnits ?? []) {
+      if (path.length === 0) parentPath = 'Root';
+      awsOuKeys.push({
+        acceleratorKey: `${path}${ou.Name!}`,
+        awsKey: ou.Id!,
+        parentId: ouId,
+        level: path.split('/').length,
+        arn: ou.Arn!,
+        parentPath: parentPath,
+      });
+      await getAwsOrganizationalUnitKeys(organizationsClient, awsOuKeys, ou.Id!, `${path}${ou.Name!}/`);
+    }
+    nextToken = page.NextToken;
+  } while (nextToken);
+}
+
+async function getRootId(organizationsClient: OrganizationsClient): Promise<string> {
+  // get root ou id
+  let rootId = '';
+  let nextToken: string | undefined = undefined;
+  do {
+    const page = await throttlingBackOff(() =>
+      organizationsClient.send(new ListRootsCommand({ NextToken: nextToken })),
+    );
+    for (const item of page.Roots ?? []) {
+      if (item.Name === 'Root' && item.Id && item.Arn) {
+        rootId = item.Id;
+      }
+    }
+    nextToken = page.NextToken;
+  } while (nextToken);
+  return rootId;
 }
