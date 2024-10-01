@@ -256,7 +256,7 @@ export class FirewallVpnResources {
     //
     // Create event handler role
     const cgwRole = new cdk.aws_iam.Role(this.stack, 'CgwRole', {
-      assumedBy: new cdk.aws_iam.ServicePrincipal(`lambda.${this.stack.urlSuffix}`),
+      assumedBy: new cdk.aws_iam.ServicePrincipal(`lambda.amazonaws.com`),
       description: 'Landing Zone Accelerator site-to-site VPN customer gateway access role',
       managedPolicies: [managedCgwPolicy, lambdaExecutionPolicy],
     });
@@ -576,7 +576,7 @@ export class FirewallVpnResources {
     //
     // Create event handler role
     const tgwAssociationRole = new cdk.aws_iam.Role(this.stack, 'TgwAssociationRole', {
-      assumedBy: new cdk.aws_iam.ServicePrincipal(`lambda.${this.stack.urlSuffix}`),
+      assumedBy: new cdk.aws_iam.ServicePrincipal(`lambda.amazonaws.com`),
       description: 'Landing Zone Accelerator TGW route table association access role',
       managedPolicies: [managedTgwAssociationPolicy, lambdaExecutionPolicy],
     });
@@ -653,7 +653,7 @@ export class FirewallVpnResources {
     //
     // Create event handler role
     const tgwPropagationRole = new cdk.aws_iam.Role(this.stack, 'TgwPropagationRole', {
-      assumedBy: new cdk.aws_iam.ServicePrincipal(`lambda.${this.stack.urlSuffix}`),
+      assumedBy: new cdk.aws_iam.ServicePrincipal(`lambda.amazonaws.com`),
       description: 'Landing Zone Accelerator TGW route table propagation access role',
       managedPolicies: [managedTgwPropagationPolicy, lambdaExecutionPolicy],
     });
@@ -727,7 +727,7 @@ export class FirewallVpnResources {
     //
     // Create event handler role
     const tgwStaticRouteRole = new cdk.aws_iam.Role(this.stack, 'TgwStaticRouteRole', {
-      assumedBy: new cdk.aws_iam.ServicePrincipal(`lambda.${this.stack.urlSuffix}`),
+      assumedBy: new cdk.aws_iam.ServicePrincipal(`lambda.amazonaws.com`),
       description: 'Landing Zone Accelerator TGW static route access role',
       managedPolicies: [managedTgwStaticRoutePolicy, lambdaExecutionPolicy],
     });

@@ -1069,17 +1069,7 @@ exports[`SecurityStack Construct(SecurityStack):  Snapshot Test 1`] = `
               "Condition": {
                 "StringEquals": {
                   "kms:CallerAccount": "111111111111",
-                  "kms:ViaService": {
-                    "Fn::Join": [
-                      "",
-                      [
-                        "ec2.us-east-1.",
-                        {
-                          "Ref": "AWS::URLSuffix",
-                        },
-                      ],
-                    ],
-                  },
+                  "kms:ViaService": "ec2.us-east-1.amazonaws.com",
                 },
               },
               "Effect": "Allow",
