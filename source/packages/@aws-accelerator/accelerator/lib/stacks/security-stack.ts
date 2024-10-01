@@ -339,7 +339,7 @@ export class SecurityStack extends AcceleratorStack {
           conditions: {
             StringEquals: {
               'kms:CallerAccount': cdk.Stack.of(this).account,
-              'kms:ViaService': `ec2.${cdk.Stack.of(this).region}.${cdk.Aws.URL_SUFFIX}`,
+              'kms:ViaService': `ec2.${cdk.Stack.of(this).region}.amazonaws.com`,
             },
           },
         }),
