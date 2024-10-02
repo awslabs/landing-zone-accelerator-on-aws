@@ -33,6 +33,12 @@ export function setOrganizationsClient(partition: string, solutionId?: string): 
       customUserAgent: solutionId,
       retryStrategy: setRetryStrategy(),
     });
+  } else if (partition === 'aws-iso-e') {
+    return new OrganizationsClient({
+      region: 'eu-isoe-west-1',
+      customUserAgent: solutionId,
+      retryStrategy: setRetryStrategy(),
+    });
   } else if (partition === 'aws-cn') {
     return new OrganizationsClient({
       region: 'cn-northwest-1',
