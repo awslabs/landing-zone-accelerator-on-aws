@@ -85,6 +85,8 @@ async function getRegion(partition: string): Promise<string> {
     region = 'cn-northwest-1';
   } else if (partition === 'aws-iso-f') {
     region = 'us-isof-south-1';
+  } else if (partition === 'aws-iso-e') {
+    region = 'eu-isoe-west-1';
   } else {
     region = 'us-east-1';
   }
