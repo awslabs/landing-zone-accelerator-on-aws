@@ -1134,7 +1134,7 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
   private isNetworkInterfaceTargetLookup(routeTarget: string | undefined, routeTableEntryName: string): boolean {
     if (routeTarget?.startsWith('eni-')) {
       return false;
-    } else if (routeTarget?.match('\\${ACCEL_LOOKUP::EC2:ENI_([a-zA-Z0-9-/:]*)}')) {
+    } else if (routeTarget?.match('\\${ACCEL_LOOKUP::EC2:ENI_([a-zA-Z0-9-/:_]*)}')) {
       return true;
     } else {
       this.logger.error(`Unable to retrieve target ${routeTarget} for route table entry ${routeTableEntryName}`);

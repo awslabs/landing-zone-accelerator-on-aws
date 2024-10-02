@@ -559,7 +559,7 @@ export class VpcValidator {
     }
 
     if (
-      !helpers.matchesRegex(routeTableEntryItem.target!, '\\${ACCEL_LOOKUP::EC2:ENI_([a-zA-Z0-9-/:]*)}') &&
+      !helpers.matchesRegex(routeTableEntryItem.target!, '\\${ACCEL_LOOKUP::EC2:ENI_([a-zA-Z0-9-/:_]*)}') &&
       !helpers.matchesRegex(routeTableEntryItem.target!, '^eni-(\\d|[a-f]){17}$')
     ) {
       errors.push(
@@ -567,7 +567,7 @@ export class VpcValidator {
       );
     }
 
-    if (helpers.matchesRegex(routeTableEntryItem.target!, '\\${ACCEL_LOOKUP::EC2:ENI_([a-zA-Z0-9-/:]*)}')) {
+    if (helpers.matchesRegex(routeTableEntryItem.target!, '\\${ACCEL_LOOKUP::EC2:ENI_([a-zA-Z0-9-/:_]*)}')) {
       if (!this.isValidFirewallReference(routeTableEntryItem, vpcItem.name, errors)) {
         errors.push(
           `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} has invalid lookup target. Accepted pattern: "^\\$\{ACCEL_LOOKUP::EC2:ENI_([a-zA-Z0-9-/:]*)}" Value entered: ${routeTableEntryItem.target}`,
