@@ -8,6 +8,7 @@
         "iam:DeleteAccountPasswordPolicy",
         "iam:UpdateAccountPasswordPolicy",
         "iam:CreateAccountAlias",
+        "iam:CreateUser",
         "iam:DeleteAccountAlias"
       ],
       "Resource": "*",
