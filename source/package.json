@@ -72,8 +72,8 @@
     "swc": "1.0.11"
   },
   "devDependencies": {
-    "@aws-cdk/integ-runner": "2.148.0-alpha.0",
-    "@aws-cdk/integ-tests-alpha": "2.148.0-alpha.0",
+    "@aws-cdk/integ-runner": "2.158.0-alpha.0",
+    "@aws-cdk/integ-tests-alpha": "2.158.0-alpha.0",
     "@commitlint/cli": "19.3.0",
     "@commitlint/config-conventional": "19.2.2",
     "@types/adm-zip": "^0.5.5",
