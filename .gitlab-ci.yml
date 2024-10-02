@@ -20,7 +20,7 @@ accelerator-workshop-session:
     - size:xlarge
   when: manual
   script:
-    - "export NODE_OPTIONS=--max_old_space_size=16384"
+    - "export NODE_OPTIONS=--max_old_space_size=28672"
     - "cd source"
     - "npm install yarn@1.22.22"
     - "yarn install"
@@ -43,11 +43,12 @@ accelerator-build:
     - arch:amd64
     - size:xlarge
   script:
-    - "export NODE_OPTIONS=--max_old_space_size=16384"
+    - "export NODE_OPTIONS=--max_old_space_size=28672"
     - "cd source"
     - "npm install yarn@1.22.22"
     - "yarn install"
     - "yarn lint"
+    - "yarn lerna run precommit --stream" # running pre-commit here once instead of tests
     - "yarn build"
     - "cd packages/@aws-accelerator/installer"
     - "yarn cdk synth"
@@ -57,13 +58,13 @@ accelerator-build:
     when: on_success
     paths:
       - AWSAccelerator-InstallerStack.template.json
-accelerator-test:
+test-constructs:
   stage: build-test
   tags:
     - arch:amd64
     - size:xlarge
   script:
-    - "export NODE_OPTIONS=--max_old_space_size=16384"
+    - "export NODE_OPTIONS=--max_old_space_size=28672"
     - "wget -v 'https://s3.amazonaws.com/viperlight-scanner/latest/viperlight.zip'"
     - "unzip -qo viperlight.zip -d ../viperlight"
     - "rm -r ./viperlight.zip"
@@ -71,11 +72,54 @@ accelerator-test:
     - "npm install yarn@1.22.22"
     - "cd source"
     - "yarn install"
-    - "yarn lerna run precommit --stream"
-    - "yarn build"
+    - "yarn build" 
+    - "yarn test --scope=@aws-accelerator/constructs"
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - source/test-reports/*.xml
+    expire_in: 1 day
+test-accelerator:
+  stage: build-test
+  tags:
+    - arch:amd64
+    - size:xlarge
+  script:
+    - "export NODE_OPTIONS=--max_old_space_size=28672"
+    - "wget -v 'https://s3.amazonaws.com/viperlight-scanner/latest/viperlight.zip'"
+    - "unzip -qo viperlight.zip -d ../viperlight"
+    - "rm -r ./viperlight.zip"
+    - "../viperlight/bin/viperlight scan"
+    - "npm install yarn@1.22.22"
+    - "cd source"
+    - "yarn install"
+    - "yarn build" 
+    - "yarn test --scope=@aws-accelerator/accelerator"
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - source/test-reports/*.xml
+    expire_in: 1 day
+test-remaining-packages:
+  stage: build-test
+  tags:
+    - arch:amd64
+    - size:xlarge
+  script:
+    - "export NODE_OPTIONS=--max_old_space_size=28672"
+    - "wget -v 'https://s3.amazonaws.com/viperlight-scanner/latest/viperlight.zip'"
+    - "unzip -qo viperlight.zip -d ../viperlight"
+    - "rm -r ./viperlight.zip"
+    - "../viperlight/bin/viperlight scan"
+    - "npm install yarn@1.22.22"
+    - "cd source"
+    - "yarn install"
+    - "yarn build" 
+    - "yarn test --ignore=@aws-accelerator/accelerator --ignore=@aws-accelerator/constructs"
     - "export ACCELERATOR_PREFIX=AWSAccelerator"
     - "yarn validate-config packages/@aws-accelerator/accelerator/test/configs/all-enabled/" # Validate all enabled config files
-    - "yarn test"
     - "yarn validate-config packages/@aws-accelerator/accelerator/test/configs/no-org-config/" # Validate no-org config files"
     - "cd packages/@aws-accelerator/accelerator"
     - "yarn run ts-node --transpile-only cdk.ts synth --require-approval never --config-dir test/configs/no-org-config --partition aws-us-gov" # ensure no-org config can synth without AWS credentials
@@ -91,7 +135,7 @@ pages:
     - arch:amd64
     - size:xlarge
   script:
-    - "export NODE_OPTIONS=--max_old_space_size=16384"
+    - "export NODE_OPTIONS=--max_old_space_size=28672"
     - "cd source"
     - "yarn install"
     - "yarn build"
@@ -131,7 +175,7 @@ release-docs:
     - "aws s3 cp ${BUILD_S3_PATH} /tmp"
     - "unzip -q /tmp/typedocs.zip -d ./source/typedocs"
     # Build LZA
-    - "export NODE_OPTIONS=--max_old_space_size=16384"
+    - "export NODE_OPTIONS=--max_old_space_size=28672"
     - "cd source"
     - "yarn install"
     - "yarn build"
