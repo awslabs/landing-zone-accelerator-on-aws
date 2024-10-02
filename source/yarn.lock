@@ -32,12 +32,12 @@
   resolved "https://registry.yarnpkg.com/@aws-cdk/asset-node-proxy-agent-v6/-/asset-node-proxy-agent-v6-2.1.0.tgz#6d3c7860354d4856a7e75375f2f0ecab313b4989"
   integrity sha512-7bY3J8GCVxLupn/kNmpPc5VJz8grx+4RKfnnJiO1LG+uxkZfANZG3RMHhE+qQxxwkyQ9/MfPtTpf748UhR425A==
 
-"@aws-cdk/aws-service-spec@0.1.9":
-  version "0.1.9"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-service-spec/-/aws-service-spec-0.1.9.tgz#ac3f434c81e23fd8fb09272eb661cadc9f6ac8f4"
-  integrity sha512-j0Tx5HCt5857YvnnBDIexf7UcdB7GJ0aFxXbTk38oxN3RPEKf4ReiRuM5jAEnCIUv/Mj5QU6Nnf4WjztUSL5eQ==
+"@aws-cdk/aws-service-spec@0.1.23":
+  version "0.1.23"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-service-spec/-/aws-service-spec-0.1.23.tgz#88ac3ef86a3412eefa7f3e2dbc6642959bf2530a"
+  integrity sha512-AR31T//3HTyU1jshiYV+fI6cb7JxwDbcBP0Lb2ruQTYEviLK0j+BVrG5F1R4kQ4e1d/TMPujCzXoOSs2TcHCvw==
   dependencies:
-    "@aws-cdk/service-spec-types" "^0.0.77"
+    "@aws-cdk/service-spec-types" "^0.0.90"
     "@cdklabs/tskb" "^0.0.3"
 
 "@aws-cdk/aws-service-spec@^0.1.23":
@@ -104,39 +104,25 @@
   dependencies:
     semver "^7.6.3"
 
-"@aws-cdk/cx-api@^2.158.0":
-  version "2.159.1"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/cx-api/-/cx-api-2.159.1.tgz#3cd98aea40a6cca2885548b34d9c9d3385e818df"
-  integrity sha512-H8zFHDslgMBflMdj/nN0yCe+7TdGlZPJd+ghtT4glWH2mf14/P3Du0SNjEeILlqcvxHJ4ouebwCjTVXzAaw3xQ==
+"@aws-cdk/integ-runner@2.158.0-alpha.0":
+  version "2.158.0-alpha.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/integ-runner/-/integ-runner-2.158.0-alpha.0.tgz#dc06f6bbb34ceb220c32a3873c084cf86b6ff259"
+  integrity sha512-0/u/DitWKGlA8YGTh+d2MTWFZUFXx903Au8kWrmo7tXFUGdWXq6vHmDMbuZ7Cdmzyyvys0lJsjIvl9kvq4OzEQ==
   dependencies:
-    semver "^7.6.3"
-
-"@aws-cdk/integ-runner@2.148.0-alpha.0":
-  version "2.148.0-alpha.0"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/integ-runner/-/integ-runner-2.148.0-alpha.0.tgz#f36cc3e57d370c2b0e7eea498a6950415596aeac"
-  integrity sha512-oWjggL0tWGoOTM5Sfg2PbYM7vxk28bw84HJGy3zNo3u7Fvg74STXZV541SbdxJV+FpJD+hSKyCx572sjYDda+w==
-  dependencies:
-    "@aws-cdk/aws-service-spec" "0.1.9"
-    aws-cdk "2.148.0"
+    "@aws-cdk/aws-service-spec" "0.1.23"
+    aws-cdk "2.158.0"
   optionalDependencies:
     fsevents "2.3.2"
 
-"@aws-cdk/integ-tests-alpha@2.148.0-alpha.0":
-  version "2.148.0-alpha.0"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/integ-tests-alpha/-/integ-tests-alpha-2.148.0-alpha.0.tgz#d2264c0a5795367be597f470a5cb845ca88a5b11"
-  integrity sha512-hPwiXMgJAuqcZ9iZG5E+/2CPDcyZZAa9bL7tFyv4N8x4tfWRE4Y2mxNnNDfKpIqLeE04XEJkR2Tm+lRa/r20Sg==
+"@aws-cdk/integ-tests-alpha@2.158.0-alpha.0":
+  version "2.158.0-alpha.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/integ-tests-alpha/-/integ-tests-alpha-2.158.0-alpha.0.tgz#4eeb47c7a89b4f2b24e900bb6e45f1f9423992b3"
+  integrity sha512-lyyu0xpPrqVNRTV8gjXkbaGNXYbAWW5IEcneJ+EfMRYOIl3g3IxWOU5Qs9puEDNuUWzwA6B4++DRqutjSaRqGg==
 
 "@aws-cdk/region-info@2.158.0":
   version "2.158.0"
   resolved "https://registry.yarnpkg.com/@aws-cdk/region-info/-/region-info-2.158.0.tgz#99e6c3f8c1f8bcedd172241d5ffad881273090c5"
   integrity sha512-0gWrZRppgRmAhbeylZickHRhHsc+/ishJbitmBdAl1D1W2fpyV3v2sQoPhfDgUWDNbJuWNa9hvcngqI7yQPwpQ==
-
-"@aws-cdk/service-spec-types@^0.0.77":
-  version "0.0.77"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/service-spec-types/-/service-spec-types-0.0.77.tgz#cec807eeb4f2a43038a44b85a980a76b047cd226"
-  integrity sha512-+EQT4wuB6Icyi5q/0TV02JrIRXHI7430yl/58CbL8pPOjLSPcP+3xbAk6w27mklsB3eOIwp3VdAA3ZRH8pJwAQ==
-  dependencies:
-    "@cdklabs/tskb" "^0.0.3"
 
 "@aws-cdk/service-spec-types@^0.0.90":
   version "0.0.90"
@@ -5841,13 +5827,6 @@ aws-cdk-lib@2.158.0:
     semver "^7.6.3"
     table "^6.8.2"
     yaml "1.10.2"
-
-aws-cdk@2.148.0:
-  version "2.148.0"
-  resolved "https://registry.yarnpkg.com/aws-cdk/-/aws-cdk-2.148.0.tgz#f4302b3bba7f3ed98f2d89ad3f096faad0eb76a3"
-  integrity sha512-nuCWY8I0xkIz7B2LjIL4h/xLHWTFhINL8i2fdA0BPq8t0byhLaNw5wggvztDjWH5xq5I1DM3laiv4/q5S21Xrg==
-  optionalDependencies:
-    fsevents "2.3.2"
 
 aws-cdk@2.158.0:
   version "2.158.0"
