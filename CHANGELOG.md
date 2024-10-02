@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - chore(lambda): remove debug console log statements
 - chore(modules): renamed modules to lza-modules
+- chore(config): add iam user create prevention control in sample config
 
 ## [1.9.2] -
 
