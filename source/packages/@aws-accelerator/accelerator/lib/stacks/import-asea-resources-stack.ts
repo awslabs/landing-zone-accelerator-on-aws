@@ -132,6 +132,13 @@ export class ImportAseaResourcesStack extends NetworkStack {
     new Route53ResolverQueryLoggingAssociation(this, props);
     new Route53ResolverEndpoint(this, props);
     new ApplicationLoadBalancerResources(this, props);
+
+    this.addSsmParameter({
+      logicalId: `SSMParamLZAUpgrade`,
+      parameterName: `/${this.acceleratorPrefix}/LZAUpgrade`,
+      stringValue: 'true',
+    });
+
     this.createSsmParameters();
     this.deleteResources();
   }
