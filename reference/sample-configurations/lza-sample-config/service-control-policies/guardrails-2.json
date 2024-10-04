@@ -52,6 +52,7 @@
         "guardduty:StopMonitoringMembers",
         "guardduty:Disassociate*",
         "securityhub:BatchDisableStandards",
+        "securityhub:DisableImportFindingsForProduct",
         "securityhub:DisableSecurityHub",
         "securityhub:DeleteMembers",
         "securityhub:Disassociate*"
