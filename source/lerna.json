@@ -19,6 +19,5 @@
     "packages/@aws-cdk-extensions/cdk-extensions",
     "packages/@aws-cdk-extensions/cdk-plugin-assume-role"
   ],
-  "npmClient": "yarn",
-  "useNx": true
+  "npmClient": "yarn"
 }
