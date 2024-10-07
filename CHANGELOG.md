@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - fix: configuration validation failure when SecurityHub was enabled with Control Tower
-- fix(uninstaller): include deletion of IdentityCenter and ResourcePolicyEnforcement stacks
+- fix(uninstaller): include deletion of IdentityCenter and ResourcePolicyEnforcement stacks 
 - fix(ssm): updated session manager role to allow kms permissions in all enabled regions
 - fix(s3): fix s3 bucket name constructs for imported buckets
 - fix(iam): add cdk feature flag to minimize iam policy
@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore(config): add iam user create prevention control in sample config
 - chore(config): add kms modification protection to preventative controls in sample config
 - chore(config): add disable import findings integration to scp
+- chore(uninstaller): improved performance for deployments with many regions
 
 ## [1.9.2] -
 
