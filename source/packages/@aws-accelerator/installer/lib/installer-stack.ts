@@ -101,7 +101,8 @@ export class InstallerStack extends cdk.Stack {
 
   private readonly managementAccountEmail = new cdk.CfnParameter(this, 'ManagementAccountEmail', {
     type: 'String',
-    description: 'The management (primary) account email',
+    description:
+      'The management (primary) account email - NOTE: This must match the address of the management account email as listed in AWS Organizations > AWS accounts.',
     allowedPattern: '[^\\s@]+@[^\\s@]+\\.[^\\s@]+',
     constraintDescription: 'Must be a valid email address matching "[^\\s@]+@[^\\s@]+\\.[^\\s@]+"',
   });
@@ -122,7 +123,8 @@ export class InstallerStack extends cdk.Stack {
 
   private readonly controlTowerEnabled = new cdk.CfnParameter(this, 'ControlTowerEnabled', {
     type: 'String',
-    description: 'Select yes if you deploying to a Control Tower environment.  Select no if using just Organizations',
+    description:
+      'Select yes if deploying to a Control Tower environment.  Select no if using just Organizations. If no, you must first set up mandatory accounts.',
     allowedValues: ['Yes', 'No'],
     default: 'Yes',
   });
