@@ -47,8 +47,8 @@ export function printStackDiff(
   // detect and filter out mangled characters from the diff
   let filteredChangesCount = 0;
   if (diff.differenceCount && !strict) {
-    const mangledNewTemplate = JSON.parse(mangleLikeCloudFormation(JSON.stringify(newTemplate)));
-    const mangledDiff = fullDiff(oldTemplate, mangledNewTemplate, changeSet);
+    const mangledNewTemplate = JSON.parse(mangleLikeCloudFormation(JSON.stringify(readTemplate(newTemplate))));
+    const mangledDiff = fullDiff(readTemplate(oldTemplate), mangledNewTemplate, changeSet);
     filteredChangesCount = Math.max(0, diff.differenceCount - mangledDiff.differenceCount);
     if (filteredChangesCount > 0) {
       diff = mangledDiff;
