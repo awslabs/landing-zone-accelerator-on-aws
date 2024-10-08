@@ -223,7 +223,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
         "No",
       ],
       "Default": "Yes",
-      "Description": "Select yes if you deploying to a Control Tower environment.  Select no if using just Organizations",
+      "Description": "Select yes if deploying to a Control Tower environment.  Select no if using just Organizations. If no, you must first set up mandatory accounts.",
       "Type": "String",
     },
     "EnableApprovalStage": {
@@ -268,7 +268,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
     "ManagementAccountEmail": {
       "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
       "ConstraintDescription": "Must be a valid email address matching "[^\\s@]+@[^\\s@]+\\.[^\\s@]+"",
-      "Description": "The management (primary) account email",
+      "Description": "The management (primary) account email - NOTE: This must match the address of the management account email as listed in AWS Organizations > AWS accounts.",
       "Type": "String",
     },
     "RepositoryBranchName": {
@@ -3955,7 +3955,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
         "No",
       ],
       "Default": "Yes",
-      "Description": "Select yes if you deploying to a Control Tower environment.  Select no if using just Organizations",
+      "Description": "Select yes if deploying to a Control Tower environment.  Select no if using just Organizations. If no, you must first set up mandatory accounts.",
       "Type": "String",
     },
     "EnableApprovalStage": {
@@ -4000,7 +4000,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
     "ManagementAccountEmail": {
       "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
       "ConstraintDescription": "Must be a valid email address matching "[^\\s@]+@[^\\s@]+\\.[^\\s@]+"",
-      "Description": "The management (primary) account email",
+      "Description": "The management (primary) account email - NOTE: This must match the address of the management account email as listed in AWS Organizations > AWS accounts.",
       "Type": "String",
     },
     "RepositoryBranchName": {
@@ -7702,7 +7702,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
         "No",
       ],
       "Default": "Yes",
-      "Description": "Select yes if you deploying to a Control Tower environment.  Select no if using just Organizations",
+      "Description": "Select yes if deploying to a Control Tower environment.  Select no if using just Organizations. If no, you must first set up mandatory accounts.",
       "Type": "String",
     },
     "EnableApprovalStage": {
@@ -7747,7 +7747,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
     "ManagementAccountEmail": {
       "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
       "ConstraintDescription": "Must be a valid email address matching "[^\\s@]+@[^\\s@]+\\.[^\\s@]+"",
-      "Description": "The management (primary) account email",
+      "Description": "The management (primary) account email - NOTE: This must match the address of the management account email as listed in AWS Organizations > AWS accounts.",
       "Type": "String",
     },
     "ManagementAccountId": {
@@ -11477,7 +11477,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
         "No",
       ],
       "Default": "Yes",
-      "Description": "Select yes if you deploying to a Control Tower environment.  Select no if using just Organizations",
+      "Description": "Select yes if deploying to a Control Tower environment.  Select no if using just Organizations. If no, you must first set up mandatory accounts.",
       "Type": "String",
     },
     "EnableApprovalStage": {
@@ -11522,7 +11522,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
     "ManagementAccountEmail": {
       "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
       "ConstraintDescription": "Must be a valid email address matching "[^\\s@]+@[^\\s@]+\\.[^\\s@]+"",
-      "Description": "The management (primary) account email",
+      "Description": "The management (primary) account email - NOTE: This must match the address of the management account email as listed in AWS Organizations > AWS accounts.",
       "Type": "String",
     },
     "ManagementAccountId": {
@@ -15242,7 +15242,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
         "No",
       ],
       "Default": "Yes",
-      "Description": "Select yes if you deploying to a Control Tower environment.  Select no if using just Organizations",
+      "Description": "Select yes if deploying to a Control Tower environment.  Select no if using just Organizations. If no, you must first set up mandatory accounts.",
       "Type": "String",
     },
     "EnableApprovalStage": {
@@ -15287,7 +15287,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
     "ManagementAccountEmail": {
       "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
       "ConstraintDescription": "Must be a valid email address matching "[^\\s@]+@[^\\s@]+\\.[^\\s@]+"",
-      "Description": "The management (primary) account email",
+      "Description": "The management (primary) account email - NOTE: This must match the address of the management account email as listed in AWS Organizations > AWS accounts.",
       "Type": "String",
     },
     "ManagementAccountId": {
@@ -18995,7 +18995,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 6`] = `
         "No",
       ],
       "Default": "Yes",
-      "Description": "Select yes if you deploying to a Control Tower environment.  Select no if using just Organizations",
+      "Description": "Select yes if deploying to a Control Tower environment.  Select no if using just Organizations. If no, you must first set up mandatory accounts.",
       "Type": "String",
     },
     "EnableApprovalStage": {
@@ -19040,7 +19040,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 6`] = `
     "ManagementAccountEmail": {
       "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
       "ConstraintDescription": "Must be a valid email address matching "[^\\s@]+@[^\\s@]+\\.[^\\s@]+"",
-      "Description": "The management (primary) account email",
+      "Description": "The management (primary) account email - NOTE: This must match the address of the management account email as listed in AWS Organizations > AWS accounts.",
       "Type": "String",
     },
     "PermissionBoundaryPolicyName": {
@@ -22749,7 +22749,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 7`] = `
         "No",
       ],
       "Default": "Yes",
-      "Description": "Select yes if you deploying to a Control Tower environment.  Select no if using just Organizations",
+      "Description": "Select yes if deploying to a Control Tower environment.  Select no if using just Organizations. If no, you must first set up mandatory accounts.",
       "Type": "String",
     },
     "EnableApprovalStage": {
@@ -22794,7 +22794,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 7`] = `
     "ManagementAccountEmail": {
       "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
       "ConstraintDescription": "Must be a valid email address matching "[^\\s@]+@[^\\s@]+\\.[^\\s@]+"",
-      "Description": "The management (primary) account email",
+      "Description": "The management (primary) account email - NOTE: This must match the address of the management account email as listed in AWS Organizations > AWS accounts.",
       "Type": "String",
     },
     "RepositoryBranchName": {
