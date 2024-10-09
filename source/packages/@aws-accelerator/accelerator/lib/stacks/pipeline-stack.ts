@@ -25,6 +25,7 @@ export interface PipelineStackProps extends cdk.StackProps {
   readonly sourceBranchName: string;
   readonly sourceBucketName: string;
   readonly sourceBucketObject: string;
+  readonly sourceBucketKmsKeyArn?: string;
   readonly enableApprovalStage: boolean;
   readonly qualifier?: string;
   readonly managementAccountId?: string;

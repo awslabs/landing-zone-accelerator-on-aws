@@ -45,6 +45,10 @@ export interface InstallerStackProps extends cdk.StackProps {
    */
   readonly useS3Source: boolean;
   /**
+   * KMS key ARN associated with an encrypted S3 bucket containing LZA source code
+   */
+  readonly s3SourceKmsKeyArn?: string;
+  /**
    * Management Cross account role name
    */
   readonly managementCrossAccountRoleName?: string;
@@ -244,6 +248,12 @@ export class InstallerStack extends cdk.Stack {
    * @private
    */
   private readonly repositoryBucketObject: cdk.CfnParameter | undefined;
+
+  /**
+   * Existing S3 bucket KMS encryption key for LZA source code
+   * @private
+   */
+  private readonly repositoryBucketKmsKeyArn: cdk.CfnParameter | undefined;
 
   /**
    * Permission boundary SSM Parameter Path
@@ -448,6 +458,21 @@ export class InstallerStack extends cdk.Stack {
           value: this.repositoryBucketObject.valueAsString,
         },
       };
+
+      /**
+       * Optional context flag "s3-source-kms-key-arn" required to specify KMS key for encrypted LZA source buckets
+       */
+      if (props.s3SourceKmsKeyArn) {
+        this.repositoryBucketKmsKeyArn = new cdk.CfnParameter(this, 'RepositoryBucketKmsKeyArn', {
+          type: 'String',
+          description: 'The KMS key used for encrypted S3 bucket containing accelerator code. (S3 Only)',
+          default: props.s3SourceKmsKeyArn,
+        });
+        s3EnvVariables['ACCELERATOR_REPOSITORY_BUCKET_KMS_KEY_ARN'] = {
+          type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+          value: this.repositoryBucketKmsKeyArn.valueAsString,
+        };
+      }
 
       // replace template Source Code parameterGroup
       parameterGroups[0] = {
@@ -874,7 +899,7 @@ export class InstallerStack extends cdk.Stack {
           post_build: {
             commands: [
               `if [ $CODEBUILD_BUILD_SUCCEEDING -eq 1 ]; then
-                inprogress_status_count=$(aws codepipeline get-pipeline-state --name "${acceleratorPipelineName}" | grep '"status": "InProgress"' | grep -v grep | wc -l) && 
+                inprogress_status_count=$(aws codepipeline get-pipeline-state --name "${acceleratorPipelineName}" | grep '"status": "InProgress"' | grep -v grep | wc -l) &&
                 if [ $inprogress_status_count -eq 0 ]; then
                 set -e && aws codepipeline start-pipeline-execution --name "${acceleratorPipelineName}";
                   fi
@@ -1238,6 +1263,19 @@ export class InstallerStack extends cdk.Stack {
         assumedBy: new cdk.aws_iam.ServicePrincipal('codepipeline.amazonaws.com'),
       });
 
+      /**
+       * Optional context flag "s3-source-kms-key-arn" for encrypted S3 buckets containing LZA source code
+       * requires pipeline roles to have additional KMS key access permissions
+       */
+      if (props.s3SourceKmsKeyArn) {
+        s3PipelineRole.addToPolicy(
+          new cdk.aws_iam.PolicyStatement({
+            actions: ['kms:Decrypt', 'kms:GenerateDataKey'],
+            resources: [props.s3SourceKmsKeyArn],
+          }),
+        );
+      }
+
       s3PipelinePaths = [
         'S3PipelineRole/DefaultPolicy/Resource',
         'S3Pipeline/Source/Source/CodePipelineActionRole/DefaultPolicy/Resource',
@@ -1259,6 +1297,7 @@ export class InstallerStack extends cdk.Stack {
             bucketKey: this.repositoryBucketObject.valueAsString,
             output: acceleratorRepoArtifact,
             trigger: cdk.aws_codepipeline_actions.S3Trigger.NONE,
+            role: s3PipelineRole,
           }),
         ],
       });
@@ -1288,14 +1327,6 @@ export class InstallerStack extends cdk.Stack {
 
       const cfnS3Pipeline = s3Pipeline.node.defaultChild as cdk.aws_codepipeline.CfnPipeline;
       cfnS3Pipeline.cfnOptions.condition = useS3Condition;
-
-      const cfnS3PipelineSource = s3Pipeline.node
-        .findChild('Source')
-        .node.findChild('Source')
-        .node.findChild('CodePipelineActionRole').node;
-      (cfnS3PipelineSource.defaultChild as cdk.CfnResource).cfnOptions.condition = useS3Condition;
-      (cfnS3PipelineSource.findChild('DefaultPolicy').node.defaultChild as cdk.CfnResource).cfnOptions.condition =
-        useS3Condition;
     }
 
     /**
