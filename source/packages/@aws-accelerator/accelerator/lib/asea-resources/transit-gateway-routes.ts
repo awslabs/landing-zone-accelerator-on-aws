@@ -3,6 +3,7 @@ import {
   AseaResourceType,
   CfnResourceType,
   TransitGatewayConfig,
+  TransitGatewayPeeringConfig,
   TransitGatewayRouteEntryConfig,
   TransitGatewayRouteTableConfig,
   TransitGatewayRouteTableDxGatewayEntryConfig,
@@ -20,14 +21,19 @@ enum RESOURCE_TYPE {
   TGW_ROUTE_TABLE = 'AWS::EC2::TransitGatewayRouteTable',
   VPC = 'AWS::EC2::VPC',
   TGW_ATTACHMENT = 'AWS::EC2::TransitGatewayAttachment',
+  TGW_PEERING_ATTACHMENT = 'Custom::TGWCreatePeeringAttachment',
 }
 const ASEA_PHASE_NUMBERS = ['0', '1', '3'];
 
 export class TransitGatewayRoutes extends AseaResource {
   props: AseaResourceProps;
   private transitGatewayRouteTables: Map<string, string> = new Map<string, string>();
+  private transitGatewayGlobalRouteTables: Map<string, string> = new Map<string, string>();
+  private transitGatewayPeeringAttachments: Map<string, string> = new Map<string, string>();
   private allRoutes!: CfnResourceType[];
   private allRouteTables!: CfnResourceType[];
+  private allGlobalRouteTables!: CfnResourceType[];
+  private allGlobalTgwPeeringAttachments!: CfnResourceType[];
   constructor(scope: ImportAseaResourcesStack, props: AseaResourceProps) {
     super(scope, props);
     this.props = props;
@@ -36,7 +42,10 @@ export class TransitGatewayRoutes extends AseaResource {
       return;
     }
     const stackRoutes = this.scope.importStackResources.getResourcesByType(RESOURCE_TYPE.TGW_ROUTE);
-    const nestedStackRoutes = this.getTgwRoutesFromNestedStacks();
+    const nestedstackResources = this.scope.nestedStackResources;
+    const nestedStackRoutes = this.getTgwRoutesFromNestedStacks(nestedstackResources);
+    this.allGlobalRouteTables = [];
+    this.allGlobalTgwPeeringAttachments = [];
     this.allRoutes = [...stackRoutes, ...nestedStackRoutes];
     this.scope.addLogs(LogLevel.INFO, `All routes: ${JSON.stringify(this.allRoutes)}`);
     if (this.allRoutes.length === 0) return;
@@ -55,10 +64,22 @@ export class TransitGatewayRoutes extends AseaResource {
       return;
     }
     const tgwStackMapping = mappings[tgwStackKey];
+
+    //If TGW Peering Exists Cross Region we need to create Cross Region Route Table Lookup
+    if (this.props.networkConfig.transitGatewayPeering) {
+      const tgwPeeringConfigs = this.props.networkConfig.transitGatewayPeering;
+      const aseaPrefix = this.props.globalConfig.externalLandingZoneResources?.acceleratorPrefix;
+      for (const tgwPeeringConfig of tgwPeeringConfigs) {
+        this.setGlobalTgwPeeringResourceMaps(tgwPeeringConfig, aseaPrefix!, mappings, props);
+      }
+    }
+
     const tgwResources = ImportStackResources.initSync({ stackMapping: tgwStackMapping });
 
     this.allRouteTables = tgwResources.getResourcesByType(RESOURCE_TYPE.TGW_ROUTE_TABLE);
+
     this.scope.addLogs(LogLevel.INFO, `All route tables: ${JSON.stringify(this.allRouteTables)}`);
+
     for (const tgwItem of props.networkConfig.transitGateways.filter(
       tgw => tgw.account === props.stackInfo.accountKey && tgw.region === props.stackInfo.region,
     ) ?? []) {
@@ -77,6 +98,54 @@ export class TransitGatewayRoutes extends AseaResource {
         this.createTransitGatewayStaticRouteItems(tgwItem, routeTableItem);
       }
     }
+  }
+  /**
+   * Sets Global TGW Peering Mapping Resource Maps for TGW Attachment Ids and Route Tables Ids
+   * @param tgwPeeringConfig
+   * @returns
+   */
+  private setGlobalTgwPeeringResourceMaps(
+    tgwPeeringConfig: TransitGatewayPeeringConfig,
+    aseaPrefix: string,
+    mappings: ASEAMappings,
+    props: AseaResourceProps,
+  ) {
+    const tgwRequesterAccountId = this.props.accountsConfig.getAccountId(tgwPeeringConfig.requester.account);
+    const tgwRequesterStackMapping = `${tgwRequesterAccountId}|${tgwPeeringConfig.requester.region}|${aseaPrefix}-SharedNetwork-Phase0`;
+    const tgwPeeringAttachmentStackMapping = `${props.stackInfo.accountId}|${tgwPeeringConfig.requester.region}|${aseaPrefix}-SharedNetwork-Phase1`;
+    const tgwRequesterMapping = mappings[tgwRequesterStackMapping];
+    const tgwPeeringAttachmentMapping = mappings[tgwPeeringAttachmentStackMapping];
+    const tgwRequesterResources = ImportStackResources.initSync({ stackMapping: tgwRequesterMapping });
+    const tgwPeeringAttachmentResources = ImportStackResources.initSync({
+      stackMapping: tgwPeeringAttachmentMapping,
+    });
+    const tgwRequesterRouteTables = tgwRequesterResources.getResourcesByType(RESOURCE_TYPE.TGW_ROUTE_TABLE);
+    const tgwPeeringAttachments = tgwPeeringAttachmentResources.getResourcesByType(
+      RESOURCE_TYPE.TGW_PEERING_ATTACHMENT,
+    );
+    this.allGlobalRouteTables.push(...tgwRequesterRouteTables);
+    this.allGlobalTgwPeeringAttachments.push(...tgwPeeringAttachments);
+
+    const tgwAccepterAccountId = this.props.accountsConfig.getAccountId(tgwPeeringConfig.accepter.account);
+    const tgwAccepterStackMapping = `${tgwAccepterAccountId}|${tgwPeeringConfig.accepter.region}|${aseaPrefix}-SharedNetwork-Phase0`;
+    const tgwAccepterMapping = mappings[tgwAccepterStackMapping];
+    const tgwAccepterResources = ImportStackResources.initSync({ stackMapping: tgwAccepterMapping });
+    const tgwAccepterRouteTables = tgwAccepterResources.getResourcesByType(RESOURCE_TYPE.TGW_ROUTE_TABLE);
+    this.allGlobalRouteTables.push(...tgwAccepterRouteTables);
+
+    this.allGlobalRouteTables.map(allGlobalRouteTable => {
+      const tags = allGlobalRouteTable.resourceMetadata['Properties'].Tags;
+      const name = tags.find((tag: { Key: string; Value: string }) => tag.Key === 'Name').Value;
+      this.transitGatewayGlobalRouteTables.set(name, allGlobalRouteTable.physicalResourceId!);
+    });
+
+    this.allGlobalTgwPeeringAttachments.map(allGlobalTgwPeeringAttachment => {
+      const tgwAttachmentId = allGlobalTgwPeeringAttachment.physicalResourceId;
+      const tgwAttachmentName = allGlobalTgwPeeringAttachment.resourceMetadata['Properties'].tagValue;
+      if (tgwAttachmentId) {
+        this.transitGatewayPeeringAttachments.set(tgwAttachmentName, tgwAttachmentId);
+      }
+    });
   }
 
   /**
@@ -99,6 +168,17 @@ export class TransitGatewayRoutes extends AseaResource {
         routeTableResource.physicalResourceId,
       );
     }
+  }
+
+  /**
+   * Retrieves TGW Attachment ID from Global TGW Peering Attachment Map
+   * @param attachment
+   * @returns
+   */
+  private getTgwAttachmentIdForTgwPeer(attachment: TransitGatewayRouteTableTgwPeeringEntryConfig) {
+    const tgwAttachmentIdName = attachment?.transitGatewayPeeringName;
+    const tgwAttachmentId = this.transitGatewayPeeringAttachments.get(tgwAttachmentIdName);
+    return tgwAttachmentId;
   }
 
   /**
@@ -233,7 +313,8 @@ export class TransitGatewayRoutes extends AseaResource {
           LogLevel.INFO,
           `Adding route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
         );
-        // routeId = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-${routeItem.attachment.transitGatewayPeeringName}`;
+        transitGatewayAttachmentId = this.getTgwAttachmentIdForTgwPeer(routeItem.attachment);
+        routeId = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-${routeItem.attachment.transitGatewayPeeringName}`;
       }
     }
 
@@ -258,7 +339,12 @@ export class TransitGatewayRoutes extends AseaResource {
   ): void {
     // Get TGW route table ID
     const routeTableKey = `${tgwItem.name}_${routeTableItem.name}`;
-    const transitGatewayRouteTableId = this.transitGatewayRouteTables.get(routeTableKey);
+    // Here we need to lookup RouteTableId differently if its a TGW Peering Attachment so we look
+    // up in the transitGatewayGlobalRouteTables Map
+    const transitGatewayRouteTableId =
+      this.transitGatewayRouteTables.get(routeTableKey) ??
+      this.transitGatewayGlobalRouteTables.get(routeTableItem.name);
+
     if (!transitGatewayRouteTableId) {
       this.scope.addLogs(LogLevel.ERROR, `Transit Gateway route table ${routeTableKey} not found`);
       throw new Error(`Configuration validation failed at runtime.`);
@@ -312,9 +398,9 @@ export class TransitGatewayRoutes extends AseaResource {
     return route?.physicalResourceId;
   }
 
-  private getTgwRoutesFromNestedStacks() {
+  private getTgwRoutesFromNestedStacks(nestedStackResourcesMap: { [key: string]: ImportStackResources } | undefined) {
     const nestedRoutes = [];
-    for (const [, nestedStackResources] of Object.entries(this.scope.nestedStackResources ?? {})) {
+    for (const [, nestedStackResources] of Object.entries(nestedStackResourcesMap ?? {})) {
       this.scope.addLogs(
         LogLevel.INFO,
         `Looking for TGW routes in nested stack ${nestedStackResources.stackMapping.stackName}`,
