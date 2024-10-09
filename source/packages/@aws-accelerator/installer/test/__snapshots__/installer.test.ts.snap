@@ -2041,7 +2041,7 @@ phases:
                     "acceleratorPrefix",
                   ],
                 },
-                "-Pipeline" | grep '"status": "InProgress"' | grep -v grep | wc -l) && 
+                "-Pipeline" | grep '"status": "InProgress"' | grep -v grep | wc -l) &&
                         if [ $inprogress_status_count -eq 0 ]; then
                         set -e && aws codepipeline start-pipeline-execution --name "",
                 {
@@ -5763,7 +5763,7 @@ phases:
                     "acceleratorPrefix",
                   ],
                 },
-                "-Pipeline" | grep '"status": "InProgress"' | grep -v grep | wc -l) && 
+                "-Pipeline" | grep '"status": "InProgress"' | grep -v grep | wc -l) &&
                         if [ $inprogress_status_count -eq 0 ]; then
                         set -e && aws codepipeline start-pipeline-execution --name "",
                 {
@@ -9540,7 +9540,7 @@ phases:
                 {
                   "Ref": "AcceleratorQualifier",
                 },
-                "-pipeline" | grep '"status": "InProgress"' | grep -v grep | wc -l) && 
+                "-pipeline" | grep '"status": "InProgress"' | grep -v grep | wc -l) &&
                         if [ $inprogress_status_count -eq 0 ]; then
                         set -e && aws codepipeline start-pipeline-execution --name "",
                 {
@@ -13305,7 +13305,7 @@ phases:
                 {
                   "Ref": "AcceleratorQualifier",
                 },
-                "-pipeline" | grep '"status": "InProgress"' | grep -v grep | wc -l) && 
+                "-pipeline" | grep '"status": "InProgress"' | grep -v grep | wc -l) &&
                         if [ $inprogress_status_count -eq 0 ]; then
                         set -e && aws codepipeline start-pipeline-execution --name "",
                 {
@@ -17075,7 +17075,7 @@ phases:
                 {
                   "Ref": "AcceleratorQualifier",
                 },
-                "-pipeline" | grep '"status": "InProgress"' | grep -v grep | wc -l) && 
+                "-pipeline" | grep '"status": "InProgress"' | grep -v grep | wc -l) &&
                         if [ $inprogress_status_count -eq 0 ]; then
                         set -e && aws codepipeline start-pipeline-execution --name "",
                 {
@@ -20814,7 +20814,7 @@ phases:
                     "acceleratorPrefix",
                   ],
                 },
-                "-Pipeline" | grep '"status": "InProgress"' | grep -v grep | wc -l) && 
+                "-Pipeline" | grep '"status": "InProgress"' | grep -v grep | wc -l) &&
                         if [ $inprogress_status_count -eq 0 ]; then
                         set -e && aws codepipeline start-pipeline-execution --name "",
                 {
@@ -22804,6 +22804,11 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 7`] = `
       "Description": "The name of the git branch to use for installation. To determine the branch name, navigate to the Landing Zone Accelerator GitHub branches page and choose the release branch you would like to deploy. Release branch names will align with the semantic versioning of our GitHub releases. New release branches will be available as the open source project is updated with new features.",
       "Type": "String",
     },
+    "RepositoryBucketKmsKeyArn": {
+      "Default": "arn:aws:kms:us-east-1:000000000000:key/aaaaaaaa-1111-bbbb-2222-cccccc333333",
+      "Description": "The KMS key used for encrypted S3 bucket containing accelerator code. (S3 Only)",
+      "Type": "String",
+    },
     "RepositoryBucketName": {
       "Description": "The versioned S3 bucket containing the accelerator code. (S3 Only)",
       "Type": "String",
@@ -24322,6 +24327,13 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 7`] = `
                 "Ref": "RepositoryBucketObject",
               },
             },
+            {
+              "Name": "ACCELERATOR_REPOSITORY_BUCKET_KMS_KEY_ARN",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "RepositoryBucketKmsKeyArn",
+              },
+            },
           ],
           "Image": "aws/codebuild/standard:7.0",
           "ImagePullCredentialsType": "CODEBUILD",
@@ -24581,7 +24593,7 @@ phases:
                     "acceleratorPrefix",
                   ],
                 },
-                "-Pipeline" | grep '"status": "InProgress"' | grep -v grep | wc -l) && 
+                "-Pipeline" | grep '"status": "InProgress"' | grep -v grep | wc -l) &&
                         if [ $inprogress_status_count -eq 0 ]; then
                         set -e && aws codepipeline start-pipeline-execution --name "",
                 {
@@ -25014,7 +25026,7 @@ phases:
                 ],
                 "RoleArn": {
                   "Fn::GetAtt": [
-                    "S3PipelineSourceCodePipelineActionRole18A52897",
+                    "S3PipelineRole6AAD3BD6",
                     "Arn",
                   ],
                 },
@@ -25093,6 +25105,14 @@ phases:
           "Statement": [
             {
               "Action": [
+                "kms:Decrypt",
+                "kms:GenerateDataKey",
+              ],
+              "Effect": "Allow",
+              "Resource": "arn:aws:kms:us-east-1:000000000000:key/aaaaaaaa-1111-bbbb-2222-cccccc333333",
+            },
+            {
+              "Action": [
                 "s3:GetObject*",
                 "s3:GetBucket*",
                 "s3:List*",
@@ -25149,95 +25169,11 @@ phases:
               "Effect": "Allow",
               "Resource": {
                 "Fn::GetAtt": [
-                  "S3PipelineSourceCodePipelineActionRole18A52897",
-                  "Arn",
-                ],
-              },
-            },
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
                   "S3PipelineRole6AAD3BD6",
                   "Arn",
                 ],
               },
             },
-            {
-              "Action": [
-                "codebuild:BatchGetBuilds",
-                "codebuild:StartBuild",
-                "codebuild:StopBuild",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "InstallerProject879FF821",
-                  "Arn",
-                ],
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "S3PipelineRoleDefaultPolicyC2B43EF9",
-        "Roles": [
-          {
-            "Ref": "S3PipelineRole6AAD3BD6",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "S3PipelineSourceCodePipelineActionRole18A52897": {
-      "Condition": "UseS3Condition",
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "AWS": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:",
-                      {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::",
-                      {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":root",
-                    ],
-                  ],
-                },
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "S3PipelineSourceCodePipelineActionRoleDefaultPolicy6237DB95": {
-      "Condition": "UseS3Condition",
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM5",
-              "reason": "IAM role requires wildcard permissions.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
             {
               "Action": [
                 "s3:GetObject*",
@@ -25331,13 +25267,27 @@ phases:
                 ],
               },
             },
+            {
+              "Action": [
+                "codebuild:BatchGetBuilds",
+                "codebuild:StartBuild",
+                "codebuild:StopBuild",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "InstallerProject879FF821",
+                  "Arn",
+                ],
+              },
+            },
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "S3PipelineSourceCodePipelineActionRoleDefaultPolicy6237DB95",
+        "PolicyName": "S3PipelineRoleDefaultPolicyC2B43EF9",
         "Roles": [
           {
-            "Ref": "S3PipelineSourceCodePipelineActionRole18A52897",
+            "Ref": "S3PipelineRole6AAD3BD6",
           },
         ],
       },

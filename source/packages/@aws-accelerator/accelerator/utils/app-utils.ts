@@ -180,13 +180,17 @@ export interface AcceleratorEnvironment {
    */
   sourceBranchName: string;
   /**
-   * Source code repository branch name
+   * Source code repository bucket name
    */
   sourceBucketName: string;
   /**
-   * Source code repository branch name
+   * Source code repository bucket object name
    */
   sourceBucketObject: string;
+  /**
+   * Source code repository bucket encryption key ARN
+   */
+  sourceBucketKmsKeyArn?: string;
   /**
    * Source code repository location
    *
@@ -381,6 +385,7 @@ export function setAcceleratorEnvironment(
     managementAccountEmail: env['MANAGEMENT_ACCOUNT_EMAIL'] ?? '',
     sourceBranchName: env['ACCELERATOR_REPOSITORY_BRANCH_NAME'] ?? '',
     sourceBucketName: env['ACCELERATOR_REPOSITORY_BUCKET_NAME'] ?? '',
+    sourceBucketKmsKeyArn: env['ACCELERATOR_REPOSITORY_BUCKET_KMS_KEY_ARN'],
     sourceBucketObject: env['ACCELERATOR_REPOSITORY_BUCKET_OBJECT'] ?? '',
     sourceRepository: env['ACCELERATOR_REPOSITORY_SOURCE'] ?? 'github',
     sourceRepositoryName: env['ACCELERATOR_REPOSITORY_NAME'] ?? 'landing-zone-accelerator-on-aws',

@@ -1727,6 +1727,14 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
           "Statement": [
             {
               "Action": [
+                "kms:Decrypt",
+                "kms:GenerateDataKey",
+              ],
+              "Effect": "Allow",
+              "Resource": "REPLACED-UUID",
+            },
+            {
+              "Action": [
                 "s3:GetObject*",
                 "s3:GetBucket*",
                 "s3:List*",

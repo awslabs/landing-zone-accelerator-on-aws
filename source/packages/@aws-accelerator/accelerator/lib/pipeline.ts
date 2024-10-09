@@ -40,6 +40,7 @@ export interface AcceleratorPipelineProps {
   readonly sourceBranchName: string;
   readonly sourceBucketName: string;
   readonly sourceBucketObject: string;
+  readonly sourceBucketKmsKeyArn?: string;
   readonly enableApprovalStage: boolean;
   readonly qualifier?: string;
   readonly managementAccountId?: string;
@@ -268,6 +269,19 @@ export class AcceleratorPipeline extends Construct {
       assumedBy: new iam.ServicePrincipal('codepipeline.amazonaws.com'),
     });
 
+    /**
+     * Optional context flag "s3-source-kms-key-arn" for encrypted S3 buckets containing LZA source code
+     * requires pipeline roles to have additional KMS key access permissions
+     */
+    if (this.props.sourceBucketKmsKeyArn) {
+      this.pipelineRole.addToPolicy(
+        new cdk.aws_iam.PolicyStatement({
+          actions: ['kms:Decrypt', 'kms:GenerateDataKey'],
+          resources: [this.props.sourceBucketKmsKeyArn],
+        }),
+      );
+    }
+
     this.pipeline = new codepipeline.Pipeline(this, 'Resource', {
       pipelineName: pipelineName,
       artifactBucket: bucket.getS3Bucket(),
@@ -292,12 +306,20 @@ export class AcceleratorPipeline extends Construct {
       });
     } else if (this.props.sourceBucketName && this.props.sourceBucketName.length > 0) {
       // hidden parameter to use S3 for source code via cdk context
+      const bucket = cdk.aws_s3.Bucket.fromBucketAttributes(this, 'ExistingBucket', {
+        bucketName: this.props.sourceBucketName,
+        ...(this.props.sourceBucketKmsKeyArn && {
+          encryptionKey: cdk.aws_kms.Key.fromKeyArn(this, 'S3SourceKmsKey', this.props.sourceBucketKmsKeyArn),
+        }),
+      });
+
       sourceAction = new codepipeline_actions.S3SourceAction({
         actionName: 'Source',
-        bucket: cdk.aws_s3.Bucket.fromBucketName(this, 'ExistingBucket', this.props.sourceBucketName),
+        bucket: bucket,
         bucketKey: this.props.sourceBucketObject,
         output: this.acceleratorRepoArtifact,
         trigger: codepipeline_actions.S3Trigger.NONE,
+        role: this.pipelineRole,
       });
     } else {
       sourceAction = new cdk.aws_codepipeline_actions.GitHubSourceAction({
@@ -436,7 +458,7 @@ export class AcceleratorPipeline extends Construct {
           pre_build: {
             commands: [
               `export PACKAGE_VERSION=$(cat source/package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[:space:]')`,
-              `if [ "$ACCELERATOR_CHECK_VERSION" = "yes" ]; then 
+              `if [ "$ACCELERATOR_CHECK_VERSION" = "yes" ]; then
                 if [ "$PACKAGE_VERSION" != "$ACCELERATOR_PIPELINE_VERSION" ]; then
                   echo "ERROR: Accelerator package version in Source does not match currently installed LZA version. Please ensure that the Installer stack has been updated prior to updating the Source code in CodePipeline."
                   exit 1

@@ -30,6 +30,7 @@ const stack = new PipelineStack(app, 'PipelineStack', {
   sourceBranchName: 'main',
   sourceBucketName: 'my-accelerator-source-bucket',
   sourceBucketObject: 'release/v9.8.7.zip',
+  sourceBucketKmsKeyArn: 'arn:aws:kms:us-east-1:000000000000:key/aaaaaaaa-1111-bbbb-2222-cccccc333333',
   enableApprovalStage: true,
   qualifier: 'aws-accelerator',
   managementAccountId: app.account,
