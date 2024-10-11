@@ -4210,8 +4210,11 @@ export interface IVpcConfig {
    * Please be aware that any downstream dependencies may cause this property update to fail.
    * You can add additional CIDRs to the VPC without this recreation occurring.
    *
-   * NOTE: Expanding a VPC with additional CIDRs is subject to {@link https://docs.aws.amazon.com/vpc/latest/userguide/vpc-cidr-blocks.html#add-cidr-block-restrictions | these restrictions}.
    *
+   * **WARNING**: Adding a secondary CIDR anywhere except the end of the list will cause the VPC to be recreated.
+   *
+   *
+   * NOTE: Expanding a VPC with additional CIDRs is subject to {@link https://docs.aws.amazon.com/vpc/latest/userguide/vpc-cidr-blocks.html#add-cidr-block-restrictions | these restrictions}.
    * At least one CIDR should be
    * provided if not using `ipamAllocations`.
    *
