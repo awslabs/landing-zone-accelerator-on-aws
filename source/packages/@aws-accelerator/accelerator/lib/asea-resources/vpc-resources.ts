@@ -151,10 +151,11 @@ export class VpcResources extends AseaResource {
       const subnets = this.createSubnets(vpcInScope, nestedStackResources, nestedStack.includedTemplate);
       this.createNaclSubnetAssociations(vpcInScope, nestedStackResources, nestedStack.includedTemplate);
       this.createNatGateways(nestedStackResources, nestedStack.includedTemplate, vpcInScope, subnets);
-      this.createSecurityGroups(vpcInScope, nestedStackResources, nestedStack.includedTemplate);
       if (this.props.stage === AcceleratorStage.POST_IMPORT_ASEA_RESOURCES) {
         this.deleteSecurityGroups(vpcInScope, nestedStackResources);
       }
+      this.createSecurityGroups(vpcInScope, nestedStackResources, nestedStack.includedTemplate);
+
       const tgwAttachmentMap = this.createTransitGatewayAttachments(
         vpcInScope,
         nestedStackResources,
@@ -1385,7 +1386,15 @@ export class VpcResources extends AseaResource {
     for (const securityGroupItem of vpcItem.securityGroups ?? []) {
       configSecurityGroups.push(securityGroupItem.name);
     }
+
     const existingSecurityGroups = nestedStackResources.getResourcesByType(RESOURCE_TYPE.SECURITY_GROUP);
+    const existingSecurityGroupIngressRules = nestedStackResources.getResourcesByType(
+      RESOURCE_TYPE.SECURITY_GROUP_INGRESS,
+    );
+    const existingSecurityGroupEgressRules = nestedStackResources.getResourcesByType(
+      RESOURCE_TYPE.SECURITY_GROUP_EGRESS,
+    );
+
     for (const existingSecurityGroup of existingSecurityGroups) {
       const securityGroupConfig = configSecurityGroups.find(
         item => item === existingSecurityGroup.resourceMetadata['Properties'].GroupName,
@@ -1396,7 +1405,8 @@ export class VpcResources extends AseaResource {
         nestedStackResources.getStackKey(),
         existingSecurityGroup.logicalResourceId,
       );
-      const ssmResource = this.scope.importStackResources.getSSMParameterByName(
+
+      const ssmResource = nestedStackResources.getSSMParameterByName(
         this.scope.getSsmPath(SsmResourceType.SECURITY_GROUP, [
           vpcItem.name,
           existingSecurityGroup.resourceMetadata['Properties'].GroupName,
@@ -1404,7 +1414,58 @@ export class VpcResources extends AseaResource {
       );
       if (ssmResource) {
         this.scope.addLogs(LogLevel.WARN, `Deleting SSM Parameter: ${ssmResource.logicalResourceId}`);
-        this.scope.addDeleteFlagForNestedResource(ssmResource.logicalResourceId, ssmResource.logicalResourceId);
+        this.scope.addDeleteFlagForNestedResource(nestedStackResources.getStackKey(), ssmResource.logicalResourceId);
+      }
+
+      for (const ingressRule of existingSecurityGroupIngressRules) {
+        try {
+          if (ingressRule.resourceMetadata['Properties'].GroupId['Ref'] === existingSecurityGroup.logicalResourceId) {
+            this.scope.addLogs(LogLevel.WARN, `Deleting Ingress Rule: ${ingressRule.logicalResourceId}`);
+            this.scope.addDeleteFlagForNestedResource(
+              nestedStackResources.getStackKey(),
+              ingressRule.logicalResourceId,
+            );
+          }
+        } catch (error) {
+          // continue the ref may not exits
+        }
+
+        try {
+          if (
+            ingressRule.resourceMetadata['Properties'].SourceSecurityGroupId['Ref'] ===
+            existingSecurityGroup.logicalResourceId
+          ) {
+            this.scope.addLogs(LogLevel.WARN, `Deleting Ingress Rule: ${ingressRule.logicalResourceId}`);
+            this.scope.addDeleteFlagForNestedResource(
+              nestedStackResources.getStackKey(),
+              ingressRule.logicalResourceId,
+            );
+          }
+        } catch (error) {
+          // the ref may not exist
+        }
+      }
+
+      for (const egressRule of existingSecurityGroupEgressRules) {
+        try {
+          if (egressRule.resourceMetadata['Properties'].GroupId['Ref'] === existingSecurityGroup.logicalResourceId) {
+            this.scope.addLogs(LogLevel.WARN, `Deleting Egress Rule: ${egressRule.logicalResourceId}`);
+            this.scope.addDeleteFlagForNestedResource(nestedStackResources.getStackKey(), egressRule.logicalResourceId);
+          }
+        } catch (error) {
+          // continue the ref may not exist
+        }
+        try {
+          if (
+            egressRule.resourceMetadata['Properties'].DestinationSecurityGroupId['Ref'] ===
+            existingSecurityGroup.logicalResourceId
+          ) {
+            this.scope.addLogs(LogLevel.WARN, `Deleting Egress Rule: ${egressRule.logicalResourceId}`);
+            this.scope.addDeleteFlagForNestedResource(nestedStackResources.getStackKey(), egressRule.logicalResourceId);
+          }
+        } catch (error) {
+          // continue the ref may not exist
+        }
       }
     }
   }
