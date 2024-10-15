@@ -1,6 +1,6 @@
 {
   "name": "landing-zone-accelerator-on-aws",
-  "version": "v1.10.0-rc.1",
+  "version": "1.10.0",
   "private": true,
   "description": "Landing Zone Accelerator on AWS",
   "license": "Apache-2.0",
