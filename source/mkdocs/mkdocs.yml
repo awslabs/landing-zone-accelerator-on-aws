@@ -20,6 +20,7 @@ nav:
       - Architecture and Design Philosophy: developer-guide/design.md
       - Feature Development: developer-guide/features.md
       - Documentation Guidelines: developer-guide/doc-guidelines.md
+      - JSON Schema: developer-guide/json-schema.md
   - Sample Configurations:
       - sample-configurations/index.md
       - Standard:
