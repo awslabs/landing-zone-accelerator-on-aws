@@ -935,8 +935,8 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
                 },
                 {
                   "Action": [
-                    "GuardDuty:EnableOrganizationAdminAccount",
-                    "GuardDuty:ListOrganizationAdminAccounts",
+                    "guardduty:EnableOrganizationAdminAccount",
+                    "guardduty:ListOrganizationAdminAccounts",
                     "guardduty:DisableOrganizationAdminAccount",
                   ],
                   "Effect": "Allow",
@@ -4253,8 +4253,8 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
                 },
                 {
                   "Action": [
-                    "GuardDuty:EnableOrganizationAdminAccount",
-                    "GuardDuty:ListOrganizationAdminAccounts",
+                    "guardduty:EnableOrganizationAdminAccount",
+                    "guardduty:ListOrganizationAdminAccounts",
                     "guardduty:DisableOrganizationAdminAccount",
                   ],
                   "Effect": "Allow",
@@ -7553,8 +7553,8 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
                 },
                 {
                   "Action": [
-                    "GuardDuty:EnableOrganizationAdminAccount",
-                    "GuardDuty:ListOrganizationAdminAccounts",
+                    "guardduty:EnableOrganizationAdminAccount",
+                    "guardduty:ListOrganizationAdminAccounts",
                     "guardduty:DisableOrganizationAdminAccount",
                   ],
                   "Effect": "Allow",

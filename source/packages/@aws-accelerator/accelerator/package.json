@@ -16,7 +16,8 @@
     "cleanup:tsc": "tsc --build ./ --clean",
     "lint": "eslint --fix  --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}'",
     "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}'",
-    "test": "export ACCELERATOR_PREFIX=AWSAccelerator && jest --coverage --ci",
+    "test:unit": "export ACCELERATOR_PREFIX=AWSAccelerator && jest --coverage --ci",
+    "test:clean": "rm -f ./test-reports/*.xml",
     "watch": "tsc -w"
   },
   "dependencies": {

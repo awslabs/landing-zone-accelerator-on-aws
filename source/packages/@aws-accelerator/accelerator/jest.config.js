@@ -1,4 +1,9 @@
 const packageJson = require('./package.json');
+//
+// Suppress maintenance mode message [Ref](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/)
+//
+process.env['AWS_SDK_JS_SUPPRESS_MAINTENANCE_MODE_MESSAGE'] = '1';
+
 module.exports = {
   // Automatically clear mock calls and instances between every test
   clearMocks: false,
@@ -66,12 +71,12 @@ module.exports = {
       'jest-junit',
       {
         suiteName: packageJson.name,
-        outputDirectory: '../../../test-reports',
+        outputDirectory: './test-reports',
         uniqueOutputName: 'true',
-        addFileAttribute: 'true',
-        suiteNameTemplate: '{filename}',
-        classNameTemplate: packageJson.name,
+        classNameTemplate: '{classname}',
         titleTemplate: '{title}',
+        usePathForSuiteName: 'true',
+        addFileAttribute: 'true',
       },
     ],
   ],
