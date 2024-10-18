@@ -41,7 +41,7 @@ do
     cd $dir
     shw_succ "Updating snapshots for $dir"
     # Updating snapshots
-    yarn test -u
+    yarn test:unit -u
 
     # Switch back to source directory
     shw_succ "######################################################"

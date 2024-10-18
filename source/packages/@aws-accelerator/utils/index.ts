@@ -26,3 +26,14 @@ export * from './lib/set-token-preferences';
 export * from './lib/evaluate-limits';
 export * from './lib/common-types';
 export * from './lib/control-tower';
+
+//
+// Common integration test utilities
+//
+export * from './lib/test-util/common/resources';
+export * from './lib/test-util/common/integration-test';
+
+//
+// Security integration test suite
+//
+export * from './lib/test-util/common/test-suite';

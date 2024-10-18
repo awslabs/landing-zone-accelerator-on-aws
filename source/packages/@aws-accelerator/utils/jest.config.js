@@ -64,7 +64,7 @@ module.exports = {
       'jest-junit',
       {
         suiteName: packageJson.name,
-        outputDirectory: '../../../test-reports',
+        outputDirectory: './test-reports',
         uniqueOutputName: 'true',
         addFileAttribute: 'true',
         suiteNameTemplate: '{filename}',

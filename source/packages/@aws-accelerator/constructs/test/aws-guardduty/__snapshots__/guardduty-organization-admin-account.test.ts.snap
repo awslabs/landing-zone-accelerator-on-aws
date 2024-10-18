@@ -124,8 +124,8 @@ exports[`GuardDutyOrganizationAdminAccount Construct(GuardDutyOrganizationAdminA
                 },
                 {
                   "Action": [
-                    "GuardDuty:EnableOrganizationAdminAccount",
-                    "GuardDuty:ListOrganizationAdminAccounts",
+                    "guardduty:EnableOrganizationAdminAccount",
+                    "guardduty:ListOrganizationAdminAccounts",
                     "guardduty:DisableOrganizationAdminAccount",
                   ],
                   "Effect": "Allow",
