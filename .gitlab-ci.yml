@@ -37,6 +37,7 @@ accelerator:build:
     - "export ACCELERATOR_PREFIX=AWSAccelerator"
     - "yarn validate-config packages/@aws-accelerator/accelerator/test/configs/all-enabled/" # Validate all enabled config files
     - "yarn validate-config packages/@aws-accelerator/accelerator/test/configs/no-org-config/" # Validate no-org config files"
+    # will enable in future change
     # - "cd packages/@aws-accelerator/accelerator"
     # - "yarn run ts-node --transpile-only cdk.ts synth --require-approval never --config-dir test/configs/no-org-config --partition aws-us-gov" # ensure no-org config can synth without AWS credentials
   artifacts:
@@ -48,7 +49,7 @@ accelerator:build:
     expire_in: 3 hrs
 accelerator:accelerator:
   stage: unit-test
-  needs: ["accelerator:build"]
+  needs: [ "accelerator:build" ]
   tags:
     - arch:amd64
     - size:xlarge
@@ -63,10 +64,10 @@ accelerator:accelerator:
         - source/packages/@aws-accelerator/accelerator/test-reports/*.xml
     expire_in: 1 day
   rules:
-    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "integ" || $EXECUTE_TEST == "Yes"
+    - if: $EXECUTE_TEST == "Yes" || $CI_COMMIT_BRANCH == "integ"
 accelerator:config:
   stage: unit-test
-  needs: ["accelerator:build"]
+  needs: [ "accelerator:build" ]
   tags:
     - arch:amd64
     - size:medium
@@ -81,10 +82,10 @@ accelerator:config:
         - source/packages/@aws-accelerator/config/test-reports/*.xml
     expire_in: 1 day
   rules:
-    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "integ" || $EXECUTE_TEST == "Yes"
+    - if: $EXECUTE_TEST == "Yes" || $CI_COMMIT_BRANCH == "integ"
 accelerator:constructs:
   stage: unit-test
-  needs: ["accelerator:build"]
+  needs: [ "accelerator:build" ]
   tags:
     - arch:amd64
     - size:xlarge
@@ -99,10 +100,10 @@ accelerator:constructs:
         - source/packages/@aws-accelerator/constructs/test-reports/*.xml
     expire_in: 1 day
   rules:
-    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "integ" || $EXECUTE_TEST == "Yes"
+    - if: $EXECUTE_TEST == "Yes" || $CI_COMMIT_BRANCH == "integ"
 accelerator:govcloud-account-vending:
   stage: unit-test
-  needs: ["accelerator:build"]
+  needs: [ "accelerator:build" ]
   tags:
     - arch:amd64
     - size:medium
@@ -117,10 +118,10 @@ accelerator:govcloud-account-vending:
         - source/packages/@aws-accelerator/govcloud-account-vending/test-reports/*.xml
     expire_in: 1 day
   rules:
-    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "integ" || $EXECUTE_TEST == "Yes"
+    - if: $EXECUTE_TEST == "Yes" || $CI_COMMIT_BRANCH == "integ"
 accelerator:installer:
   stage: unit-test
-  needs: ["accelerator:build"]
+  needs: [ "accelerator:build" ]
   tags:
     - arch:amd64
     - size:medium
@@ -135,10 +136,10 @@ accelerator:installer:
         - source/packages/@aws-accelerator/installer/test-reports/*.xml
     expire_in: 1 day
   rules:
-    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "integ" || $EXECUTE_TEST == "Yes"
+    - if: $EXECUTE_TEST == "Yes" || $CI_COMMIT_BRANCH == "integ"
 accelerator:modules:
   stage: unit-test
-  needs: ["accelerator:build"]
+  needs: [ "accelerator:build" ]
   tags:
     - arch:amd64
     - size:medium
@@ -153,10 +154,10 @@ accelerator:modules:
         - source/packages/@aws-accelerator/lza-modules/test-reports/*.xml
     expire_in: 1 day
   rules:
-    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "integ" || $EXECUTE_TEST == "Yes"
+    - if: $EXECUTE_TEST == "Yes" || $CI_COMMIT_BRANCH == "integ"
 accelerator:tools:
   stage: unit-test
-  needs: ["accelerator:build"]
+  needs: [ "accelerator:build" ]
   tags:
     - arch:amd64
     - size:medium
@@ -170,10 +171,10 @@ accelerator:tools:
         - source/packages/@aws-accelerator/tools/test-reports/*.xml
     expire_in: 1 day
   rules:
-    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "integ" || $EXECUTE_TEST == "Yes"
+    - if: $EXECUTE_TEST == "Yes" || $CI_COMMIT_BRANCH == "integ"
 macie:aws:us-east-1:
   stage: test
-  needs: ["accelerator:build"]
+  needs: [ "accelerator:build" ]
   variables:
     ENV_NAME: sampleConfig
     ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
@@ -189,7 +190,7 @@ macie:aws:us-east-1:
     - "yarn test:unit"
     - "yarn test:integration"
   rules:
-    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "integ" || $EXECUTE_TEST == "Yes"
+    - if: $EXECUTE_TEST == "Yes" || $CI_COMMIT_BRANCH == "integ"
   artifacts:
     when: always
     reports:
@@ -198,7 +199,7 @@ macie:aws:us-east-1:
     expire_in: 1 day
 macie:aws:us-west-2:
   stage: test
-  needs: ["accelerator:build"]
+  needs: [ "accelerator:build" ]
   variables:
     ENV_NAME: sampleConfig
     ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
@@ -213,7 +214,7 @@ macie:aws:us-west-2:
     - "yarn test:unit"
     - "yarn test:integration"
   rules:
-    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "integ" || $EXECUTE_TEST == "Yes"
+    - if: $EXECUTE_TEST == "Yes" || $CI_COMMIT_BRANCH == "integ"
   artifacts:
     when: always
     reports:
@@ -222,7 +223,7 @@ macie:aws:us-west-2:
     expire_in: 1 day    
 guardduty:aws:us-east-1:
   stage: test
-  needs: ["accelerator:build"]
+  needs: [ "accelerator:build" ]
   variables:
     ENV_NAME: sampleConfig
     ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
@@ -237,7 +238,7 @@ guardduty:aws:us-east-1:
     - "yarn test:unit"
     - "yarn test:integration"
   rules:
-    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "integ" || $EXECUTE_TEST == "Yes"
+    - if: $EXECUTE_TEST == "Yes" || $CI_COMMIT_BRANCH == "integ"
   artifacts:
     when: always
     reports:
@@ -246,7 +247,7 @@ guardduty:aws:us-east-1:
     expire_in: 1 day
 guardduty:aws:us-west-2:
   stage: test
-  needs: ["accelerator:build"]
+  needs: [ "accelerator:build" ]
   variables:
     ENV_NAME: sampleConfig
     ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
@@ -261,7 +262,7 @@ guardduty:aws:us-west-2:
     - "yarn test:unit"
     - "yarn test:integration"
   rules:
-    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "integ" || $EXECUTE_TEST == "Yes"
+    - if: $EXECUTE_TEST == "Yes" || $CI_COMMIT_BRANCH == "integ"
   artifacts:
     when: always
     reports:
@@ -270,7 +271,7 @@ guardduty:aws:us-west-2:
     expire_in: 1 day    
 installer:
   stage: assets
-  needs: ["accelerator:build"]
+  needs: [ "accelerator:build" ]
   tags:
     - arch:amd64
     - size:large
@@ -286,7 +287,7 @@ installer:
       - AWSAccelerator-InstallerStack.template.json    
 workshop:
   stage: assets
-  needs: ["accelerator:build"]
+  needs: [ "accelerator:build" ]
   tags:
     - arch:amd64
     - size:large
@@ -307,7 +308,7 @@ workshop:
       - AWSAccelerator-InstallerStack-Workshop.template.json
 accelerator:pages:
   stage: create-documents
-  needs: ["accelerator:build"]
+  needs: [ "accelerator:build" ]
   tags:
     - arch:amd64
     - size:large
@@ -324,10 +325,10 @@ accelerator:pages:
     paths:
       - public
   rules:
-    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
+    - if: $CI_COMMIT_BRANCH == "main"
 accelerator:release-docs:
   stage: release-prep
-  needs: ["accelerator:pages"]
+  needs: [ "accelerator:pages" ]
   tags:
     - arch:amd64
     - size:xlarge
