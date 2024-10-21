@@ -37,7 +37,7 @@ const integrationTest = new IntegrationTest({
   executorRolePolicyStatements: MacieEnableOrganizationAdminAccountPolicyStatements,
 });
 
-RegionalTestSuite['sampleConfig:us-east-1'].suite(RegionalTestSuite['sampleConfig:us-east-1'].suiteName, () => {
+RegionalTestSuite['sampleConfig:us-east-1']!.suite(RegionalTestSuite['sampleConfig:us-east-1']!.suiteName, () => {
   beforeAll(async () => {
     //
     // Setup Integration account environment
@@ -82,7 +82,7 @@ RegionalTestSuite['sampleConfig:us-east-1'].suite(RegionalTestSuite['sampleConfi
   });
 });
 
-RegionalTestSuite['sampleConfig:us-west-2'].suite(RegionalTestSuite['sampleConfig:us-west-2'].suiteName, () => {
+RegionalTestSuite['sampleConfig:us-west-2']!.suite(RegionalTestSuite['sampleConfig:us-west-2']!.suiteName, () => {
   beforeAll(async () => {
     //
     // Setup Integration account environment

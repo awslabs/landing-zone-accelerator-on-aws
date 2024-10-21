@@ -32,13 +32,16 @@ const region = process.env['AWS_DEFAULT_REGION'];
  * Accelerator regional security environment test suite
  *
  */
-export const RegionalTestSuite = {
-  ['sampleConfig:us-east-1']: {
-    suite: environmentName === 'sampleConfig' && region === 'us-east-1' ? describe : describe.skip,
-    suiteName: '[sampleConfig:us-east-1]',
-  },
-  ['sampleConfig:us-west-2']: {
-    suite: environmentName === 'sampleConfig' && region === 'us-west-2' ? describe : describe.skip,
-    suiteName: '[sampleConfig:us-west-2]',
-  },
-};
+export const RegionalTestSuite =
+  typeof jest !== 'undefined' // Only export the RegionalTestSuite object if the file is being executed as part of a Jest test
+    ? {
+        ['sampleConfig:us-east-1']: {
+          suite: environmentName === 'sampleConfig' && region === 'us-east-1' ? describe : describe.skip,
+          suiteName: '[sampleConfig:us-east-1]',
+        },
+        ['sampleConfig:us-west-2']: {
+          suite: environmentName === 'sampleConfig' && region === 'us-west-2' ? describe : describe.skip,
+          suiteName: '[sampleConfig:us-west-2]',
+        },
+      }
+    : {};
