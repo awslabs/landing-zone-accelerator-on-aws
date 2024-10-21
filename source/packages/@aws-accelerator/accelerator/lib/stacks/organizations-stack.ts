@@ -800,15 +800,23 @@ export class OrganizationsStack extends AcceleratorStack {
     });
 
     if (this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.s3DataEvents ?? true) {
-      organizationsTrail.addEventSelector(cdk.aws_cloudtrail.DataResourceType.S3_OBJECT, [
-        `arn:${cdk.Stack.of(this).partition}:s3:::`,
-      ]);
+      organizationsTrail.addEventSelector(
+        cdk.aws_cloudtrail.DataResourceType.S3_OBJECT,
+        [`arn:${cdk.Stack.of(this).partition}:s3:::`],
+        {
+          includeManagementEvents: false,
+        },
+      );
     }
 
     if (this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.lambdaDataEvents ?? true) {
-      organizationsTrail.addEventSelector(cdk.aws_cloudtrail.DataResourceType.LAMBDA_FUNCTION, [
-        `arn:${cdk.Stack.of(this).partition}:lambda`,
-      ]);
+      organizationsTrail.addEventSelector(
+        cdk.aws_cloudtrail.DataResourceType.LAMBDA_FUNCTION,
+        [`arn:${cdk.Stack.of(this).partition}:lambda`],
+        {
+          includeManagementEvents: false,
+        },
+      );
     }
 
     organizationsTrail.node.addDependency(enableCloudtrailServiceAccess);
