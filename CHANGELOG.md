@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - fix(bootstrap): batched bootstrap checks
+- fix(control-tower): skip existing ct identifier check when ct is not enabled
 - fix(control-tower): updated boolean logic to get LZ identifier
 - fix(custom-stacks): loaded replacement values during custom stack deployment
 - fix(diff): parse error during diff
