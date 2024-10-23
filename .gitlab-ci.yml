@@ -7,18 +7,30 @@ before_script:
   - apt-get install -y zip
   - apt-get install -y jq
 
+
 stages:
-  - build
-  - unit-test
-  - test
-  - assets
-  - create-documents
-  - release-prep
-  - release-build
-  - release-upload
-  - release
+  - pipeline
 accelerator:build:
-  stage: build
+  stage: pipeline
+  tags:
+    - arch:amd64
+    - size:xlarge
+  script:
+    - "export NODE_OPTIONS=--max_old_space_size=28672"
+    - "npm install yarn@1.22.22"
+    - "cd source"
+    - "yarn install"
+    - "yarn build"
+  artifacts:
+    name:  solution-build
+    untracked: true
+    when: on_success
+    paths:
+      - source
+    expire_in: 3 hrs
+accelerator:lint:
+  stage: pipeline
+  needs: [ "accelerator:build" ]
   tags:
     - arch:amd64
     - size:xlarge
@@ -33,22 +45,13 @@ accelerator:build:
     - "yarn install"
     - "yarn lint"
     - "yarn lerna run precommit --stream"
-    - "yarn build"
     - "export ACCELERATOR_PREFIX=AWSAccelerator"
     - "yarn validate-config packages/@aws-accelerator/accelerator/test/configs/all-enabled/" # Validate all enabled config files
     - "yarn validate-config packages/@aws-accelerator/accelerator/test/configs/no-org-config/" # Validate no-org config files"
-    # will enable in future change
-    # - "cd packages/@aws-accelerator/accelerator"
-    # - "yarn run ts-node --transpile-only cdk.ts synth --require-approval never --config-dir test/configs/no-org-config --partition aws-us-gov" # ensure no-org config can synth without AWS credentials
-  artifacts:
-    name:  solution-build
-    untracked: true
-    when: on_success
-    paths:
-      - source
-    expire_in: 3 hrs
-accelerator:accelerator:
-  stage: unit-test
+    - "cd packages/@aws-accelerator/accelerator"
+    - "yarn run ts-node --transpile-only cdk.ts synth --require-approval never --config-dir test/configs/no-org-config --partition aws-us-gov" # ensure no-org config can synth without AWS credentials
+unit-test:accelerator:
+  stage: pipeline
   needs: [ "accelerator:build" ]
   tags:
     - arch:amd64
@@ -63,10 +66,8 @@ accelerator:accelerator:
       junit:
         - source/packages/@aws-accelerator/accelerator/test-reports/*.xml
     expire_in: 1 day
-  rules:
-    - if: $EXECUTE_TEST == "Yes" || $CI_COMMIT_BRANCH == "integ"
-accelerator:config:
-  stage: unit-test
+unit-test:config:
+  stage: pipeline
   needs: [ "accelerator:build" ]
   tags:
     - arch:amd64
@@ -81,10 +82,8 @@ accelerator:config:
       junit:
         - source/packages/@aws-accelerator/config/test-reports/*.xml
     expire_in: 1 day
-  rules:
-    - if: $EXECUTE_TEST == "Yes" || $CI_COMMIT_BRANCH == "integ"
-accelerator:constructs:
-  stage: unit-test
+unit-test:constructs:
+  stage: pipeline
   needs: [ "accelerator:build" ]
   tags:
     - arch:amd64
@@ -99,10 +98,8 @@ accelerator:constructs:
       junit:
         - source/packages/@aws-accelerator/constructs/test-reports/*.xml
     expire_in: 1 day
-  rules:
-    - if: $EXECUTE_TEST == "Yes" || $CI_COMMIT_BRANCH == "integ"
-accelerator:govcloud-account-vending:
-  stage: unit-test
+unit-test:govcloud-account-vending:
+  stage: pipeline
   needs: [ "accelerator:build" ]
   tags:
     - arch:amd64
@@ -117,10 +114,8 @@ accelerator:govcloud-account-vending:
       junit:
         - source/packages/@aws-accelerator/govcloud-account-vending/test-reports/*.xml
     expire_in: 1 day
-  rules:
-    - if: $EXECUTE_TEST == "Yes" || $CI_COMMIT_BRANCH == "integ"
-accelerator:installer:
-  stage: unit-test
+unit-test:installer:
+  stage: pipeline
   needs: [ "accelerator:build" ]
   tags:
     - arch:amd64
@@ -135,10 +130,8 @@ accelerator:installer:
       junit:
         - source/packages/@aws-accelerator/installer/test-reports/*.xml
     expire_in: 1 day
-  rules:
-    - if: $EXECUTE_TEST == "Yes" || $CI_COMMIT_BRANCH == "integ"
-accelerator:modules:
-  stage: unit-test
+unit-test:modules:
+  stage: pipeline
   needs: [ "accelerator:build" ]
   tags:
     - arch:amd64
@@ -153,15 +146,14 @@ accelerator:modules:
       junit:
         - source/packages/@aws-accelerator/lza-modules/test-reports/*.xml
     expire_in: 1 day
-  rules:
-    - if: $EXECUTE_TEST == "Yes" || $CI_COMMIT_BRANCH == "integ"
-accelerator:tools:
-  stage: unit-test
+unit-test:tools:
+  stage: pipeline
   needs: [ "accelerator:build" ]
   tags:
     - arch:amd64
     - size:medium
   script:
+    - "export NODE_OPTIONS=--max_old_space_size=6144"
     - "cd source/packages/@aws-accelerator/tools"
     - "yarn test:unit"
   artifacts:
@@ -170,10 +162,8 @@ accelerator:tools:
       junit:
         - source/packages/@aws-accelerator/tools/test-reports/*.xml
     expire_in: 1 day
-  rules:
-    - if: $EXECUTE_TEST == "Yes" || $CI_COMMIT_BRANCH == "integ"
 macie:aws:us-east-1:
-  stage: test
+  stage: pipeline
   needs: [ "accelerator:build" ]
   variables:
     ENV_NAME: sampleConfig
@@ -198,7 +188,7 @@ macie:aws:us-east-1:
         - 'source/packages/@aws-accelerator/constructs/lib/aws-macie/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.xml'
     expire_in: 1 day
 macie:aws:us-west-2:
-  stage: test
+  stage: pipeline
   needs: [ "accelerator:build" ]
   variables:
     ENV_NAME: sampleConfig
@@ -222,7 +212,7 @@ macie:aws:us-west-2:
         - 'source/packages/@aws-accelerator/constructs/lib/aws-macie/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.*'
     expire_in: 1 day    
 guardduty:aws:us-east-1:
-  stage: test
+  stage: pipeline
   needs: [ "accelerator:build" ]
   variables:
     ENV_NAME: sampleConfig
@@ -246,7 +236,7 @@ guardduty:aws:us-east-1:
         - 'source/packages/@aws-accelerator/constructs/lib/aws-guardduty/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.*'
     expire_in: 1 day
 guardduty:aws:us-west-2:
-  stage: test
+  stage: pipeline
   needs: [ "accelerator:build" ]
   variables:
     ENV_NAME: sampleConfig
@@ -270,7 +260,7 @@ guardduty:aws:us-west-2:
         - 'source/packages/@aws-accelerator/constructs/lib/aws-guardduty/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.xml'
     expire_in: 1 day    
 installer:
-  stage: assets
+  stage: pipeline
   needs: [ "accelerator:build" ]
   tags:
     - arch:amd64
@@ -284,9 +274,12 @@ installer:
     name: "installer-template"
     when: on_success
     paths:
-      - AWSAccelerator-InstallerStack.template.json    
+      - AWSAccelerator-InstallerStack.template.json
+  rules:
+    - if: $CI_COMMIT_BRANCH == "integ"
+    - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
 workshop:
-  stage: assets
+  stage: pipeline
   needs: [ "accelerator:build" ]
   tags:
     - arch:amd64
@@ -306,8 +299,11 @@ workshop:
     paths:
       - lza-on-aws-workshop.zip
       - AWSAccelerator-InstallerStack-Workshop.template.json
+  rules:
+    - if: $CI_COMMIT_BRANCH == "integ"
+    - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
 accelerator:pages:
-  stage: create-documents
+  stage: pipeline
   needs: [ "accelerator:build" ]
   tags:
     - arch:amd64
@@ -325,10 +321,9 @@ accelerator:pages:
     paths:
       - public
   rules:
-    - if: $CI_COMMIT_BRANCH == "main"
     - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
 accelerator:release-docs:
-  stage: release-prep
+  stage: pipeline
   needs: [ "accelerator:pages" ]
   tags:
     - arch:amd64
@@ -374,10 +369,11 @@ accelerator:release-docs:
     - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
 # make a zip file upon commit tag
 release-artifact-al2023-prep:
-  stage: release-prep
+  stage: pipeline
+  needs: [ "accelerator:build" ]
   tags:
     - arch:amd64
-    - size:xlarge
+    - size:large
   before_script:
     # package needed to unzip code archive
     - "dnf install -y zip"
@@ -408,7 +404,8 @@ release-artifact-al2023-prep:
 
 # use created context to build 
 release-artifact-al2023-build:
-  stage: release-build
+  stage: pipeline
+  needs: [ "release-artifact-al2023-prep" ]
   tags:
     - arch:amd64
     - size:xlarge
@@ -430,10 +427,11 @@ release-artifact-al2023-build:
 
 # upload artifact into package for release
 release-artifact-al2023-upload:
-  stage: release-upload
+  stage: pipeline
+  needs: [ "release-artifact-al2023-build" ]
   tags:
     - arch:amd64
-    - size:xlarge
+    - size:large
   variables:
     TOKEN: 
   before_script:
@@ -456,7 +454,11 @@ release-artifact-al2023-upload:
 
 # release based on commit tag
 release-artifact-al2023-release:
-  stage: release
+  stage: pipeline
+  needs: [ "release-artifact-al2023-upload" ]
+  tags:
+    - arch:amd64
+    - size:large
   image: registry.gitlab.com/gitlab-org/release-cli:latest
   rules:
     - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
