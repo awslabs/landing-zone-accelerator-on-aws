@@ -135,7 +135,7 @@ export class ImportAseaResourcesStack extends NetworkStack {
 
     this.addSsmParameter({
       logicalId: `SSMParamLZAUpgrade`,
-      parameterName: `/${this.acceleratorPrefix}/LZAUpgrade`,
+      parameterName: `/${this.acceleratorPrefix}/LZAUpgrade/${cdk.Stack.of(this).stackName}`,
       stringValue: 'true',
     });
 
