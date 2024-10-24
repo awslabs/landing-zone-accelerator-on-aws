@@ -12,9 +12,24 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
-import * as AWS from 'aws-sdk';
+import {
+  Macie2Client,
+  EnableMacieCommand,
+  UpdateMacieSessionCommand,
+  PutFindingsPublicationConfigurationCommand,
+  PutClassificationExportConfigurationCommand,
+  GetMacieSessionCommand,
+} from '@aws-sdk/client-macie2';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-AWS.config.logger = console;
+
+import { Logger } from '@aws-sdk/types';
+
+const consoleLogger: Logger = {
+  debug: console.debug,
+  info: console.info,
+  warn: console.warn,
+  error: console.error,
+};
 
 /**
  * maciePutClassificationExportConfigurationFunction - lambda handler
@@ -35,19 +50,51 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const kmsKeyArn = event.ResourceProperties['kmsKeyArn'];
   const solutionId = process.env['SOLUTION_ID'];
 
-  const macie2Client = new AWS.Macie2({ region: region, customUserAgent: solutionId });
+  const publishClassificationFindings = event.ResourceProperties['publishClassificationFindings'] === 'true';
+  const publishPolicyFindings = event.ResourceProperties['publishPolicyFindings'] === 'true';
+  const findingPublishingFrequency = event.ResourceProperties['findingPublishingFrequency'];
+
+  const macie2Client = new Macie2Client({ region: region, customUserAgent: solutionId, logger: consoleLogger });
 
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
       if (!(await isMacieEnable(macie2Client))) {
         console.log('start enable of macie');
-        await throttlingBackOff(() => macie2Client.enableMacie({ status: 'ENABLED' }).promise());
+        await throttlingBackOff(() =>
+          macie2Client.send(
+            new EnableMacieCommand({
+              findingPublishingFrequency: findingPublishingFrequency,
+              status: 'ENABLED',
+            }),
+          ),
+        );
       }
+      console.log('start update of macie');
+      await throttlingBackOff(() =>
+        macie2Client.send(
+          new UpdateMacieSessionCommand({
+            findingPublishingFrequency: findingPublishingFrequency,
+            status: 'ENABLED',
+          }),
+        ),
+      );
+
+      console.log('start putFindingsPublicationConfiguration of macie');
+      await throttlingBackOff(() =>
+        macie2Client.send(
+          new PutFindingsPublicationConfigurationCommand({
+            securityHubConfiguration: {
+              publishClassificationFindings: publishClassificationFindings,
+              publishPolicyFindings: publishPolicyFindings,
+            },
+          }),
+        ),
+      );
 
       await throttlingBackOff(() =>
-        macie2Client
-          .putClassificationExportConfiguration({
+        macie2Client.send(
+          new PutClassificationExportConfigurationCommand({
             configuration: {
               s3Destination: {
                 bucketName: bucketName,
@@ -55,12 +102,13 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
                 kmsKeyArn: kmsKeyArn,
               },
             },
-          })
-          .promise(),
+          }),
+        ),
       );
       return { Status: 'Success', StatusCode: 200 };
 
     case 'Delete':
+      // As discussed, Macie remains enabled even after LZA stacks are deleted
       return { Status: 'Success', StatusCode: 200 };
   }
 }
@@ -69,31 +117,22 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
  * Function to check if macie is enabled
  * @param macie2Client
  */
-async function isMacieEnable(macie2Client: AWS.Macie2): Promise<boolean> {
+async function isMacieEnable(macie2Client: Macie2Client): Promise<boolean> {
   try {
-    const response = await throttlingBackOff(() => macie2Client.getMacieSession({}).promise());
+    const response = await throttlingBackOff(() => macie2Client.send(new GetMacieSessionCommand({})));
     return response.status === 'ENABLED';
   } catch (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     e: any
   ) {
-    if (
-      // SDKv2 Error Structure
-      e.code === 'ResourceConflictException' ||
-      // SDKv3 Error Structure
-      e.name === 'ResourceConflictException'
-    ) {
+    if (e.name === 'ResourceConflictException') {
       console.warn(e.name + ': ' + e.message);
       return false;
     }
 
     // This is required when macie is not enabled AccessDeniedException exception issues
-    if (
-      // SDKv2 Error Structure
-      e.code === 'AccessDeniedException' ||
-      // SDKv3 Error Structure
-      e.name === 'AccessDeniedException'
-    ) {
+    // TODO if access is denied why do we want to say it's not enabled, leading the caller to want to enable it?
+    if (e.name === 'AccessDeniedException') {
       console.warn(e.name + ': ' + e.message);
       return false;
     }

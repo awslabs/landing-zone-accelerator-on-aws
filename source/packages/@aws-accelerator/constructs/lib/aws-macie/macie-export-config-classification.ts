@@ -40,6 +40,20 @@ export interface MacieExportConfigClassificationProps {
    * Custom resource lambda log retention in days
    */
   readonly logRetentionInDays: number;
+  /**
+   * Macie value for how frequently you want to publish the findings
+   */
+  readonly findingPublishingFrequency: 'FIFTEEN_MINUTES' | 'ONE_HOUR' | 'SIX_HOURS';
+
+  /**
+   * Macie value to determine if we publish classifications to Security Hub
+   */
+  readonly publishClassificationFindings: boolean;
+
+  /**
+   * Macie value to determine if we publish findings at all
+   */
+  readonly publishPolicyFindings: boolean;
 }
 
 /**
@@ -63,8 +77,10 @@ export class MacieExportConfigClassification extends Construct {
           Action: [
             'macie2:EnableMacie',
             'macie2:GetClassificationExportConfiguration',
+            'macie2:UpdateMacieSession',
             'macie2:GetMacieSession',
             'macie2:PutClassificationExportConfiguration',
+            'macie2:PutFindingsPublicationConfiguration',
           ],
           Resource: '*',
         },
@@ -79,6 +95,9 @@ export class MacieExportConfigClassification extends Construct {
         bucketName: props.bucketName,
         keyPrefix: props.keyPrefix,
         kmsKeyArn: props.bucketKmsKey.keyArn,
+        findingPublishingFrequency: props.findingPublishingFrequency,
+        publishClassificationFindings: props.publishClassificationFindings,
+        publishPolicyFindings: props.publishPolicyFindings,
       },
     });
 

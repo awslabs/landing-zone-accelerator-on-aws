@@ -16,6 +16,7 @@ exports[`MacieExportConfigClassification Construct(MacieExportConfigClassificati
           ],
         },
         "bucketName": "bucketName",
+        "findingPublishingFrequency": "ONE_HOUR",
         "keyPrefix": "111111111111-aws-macie-export-config",
         "kmsKeyArn": {
           "Fn::GetAtt": [
@@ -23,6 +24,8 @@ exports[`MacieExportConfigClassification Construct(MacieExportConfigClassificati
             "Arn",
           ],
         },
+        "publishClassificationFindings": true,
+        "publishPolicyFindings": true,
         "region": {
           "Ref": "AWS::Region",
         },
@@ -141,8 +144,10 @@ exports[`MacieExportConfigClassification Construct(MacieExportConfigClassificati
                   "Action": [
                     "macie2:EnableMacie",
                     "macie2:GetClassificationExportConfiguration",
+                    "macie2:UpdateMacieSession",
                     "macie2:GetMacieSession",
                     "macie2:PutClassificationExportConfiguration",
+                    "macie2:PutFindingsPublicationConfiguration",
                   ],
                   "Effect": "Allow",
                   "Resource": "*",

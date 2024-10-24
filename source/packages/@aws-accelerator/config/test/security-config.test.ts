@@ -46,6 +46,16 @@ describe('SecurityConfig', () => {
       expect(securityConfigFromFile.getDelegatedAccountName()).toBe('Audit');
     });
 
+    it('has expected macie configuration', () => {
+      expect(securityConfigFromFile.centralSecurityServices.macie.enable).toBe(true);
+      // that field is missing, so it's undefined. Ideally, it should be false as indicated by the code
+      expect(securityConfigFromFile.centralSecurityServices.macie.publishPolicyFindings).toBe(undefined);
+      expect(securityConfigFromFile.centralSecurityServices.macie.publishSensitiveDataFindings).toBe(true);
+      expect(securityConfigFromFile.centralSecurityServices.macie.policyFindingsPublishingFrequency).toBe(
+        'FIFTEEN_MINUTES',
+      );
+    });
+
     expect(new KeyConfig().name).toEqual('');
 
     expect(new GuardDutyEksProtectionConfig().enable).toBe(false);

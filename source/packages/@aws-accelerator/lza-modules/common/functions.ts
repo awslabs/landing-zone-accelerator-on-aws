@@ -243,7 +243,7 @@ export function getOuRelationsFromConfig(organizationConfig: OrganizationConfig)
 
 /**
  * Function to sleep process
- * @param ms
+ * @param minutes
  * @returns
  */
 export function delay(minutes: number) {

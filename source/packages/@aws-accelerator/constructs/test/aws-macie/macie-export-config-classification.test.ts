@@ -21,6 +21,9 @@ const testNamePrefix = 'Construct(MacieExportConfigClassification): ';
 const stack = new cdk.Stack();
 
 new MacieExportConfigClassification(stack, 'AwsMacieUpdateExportConfigClassification', {
+  publishPolicyFindings: true,
+  findingPublishingFrequency: 'ONE_HOUR',
+  publishClassificationFindings: true,
   bucketName: 'bucketName',
   keyPrefix: `111111111111-aws-macie-export-config`,
   logRetentionInDays: 3653,

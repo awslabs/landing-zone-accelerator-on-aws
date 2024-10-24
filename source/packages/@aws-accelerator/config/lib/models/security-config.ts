@@ -208,6 +208,10 @@ export interface IMacieConfig {
    */
   readonly publishSensitiveDataFindings: boolean;
   /**
+   * Specifies whether to publish findings at all
+   */
+  readonly publishPolicyFindings?: boolean;
+  /**
    * (OPTIONAL) Declaration of a S3 Lifecycle rule.
    */
   readonly lifecycleRules?: t.ILifecycleRule[] | undefined;

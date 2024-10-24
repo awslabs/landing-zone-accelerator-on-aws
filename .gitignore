@@ -58,10 +58,7 @@ docs
 test-reports
 source/lerna-debug.log
 
-### Logger files
-*.log
-
-### Debugging 
+### Debugging
 development
 .vscode
 
@@ -72,11 +69,6 @@ viperlight*.zip
 ### Sonarqube
 .scannerwork
 
-*.js.map
-
 ### Integ testing
 **/integ.*.ts.snapshot
 **/integ.*.ts.snapshot/**
-
-# ASEA Assets
-asea-assets

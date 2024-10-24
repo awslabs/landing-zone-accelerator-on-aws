@@ -83,7 +83,8 @@ export class MacieConfig implements i.IMacieConfig {
   readonly enable = false;
   readonly excludeRegions: t.Region[] = [];
   readonly policyFindingsPublishingFrequency = 'FIFTEEN_MINUTES';
-  readonly publishSensitiveDataFindings = true;
+  readonly publishSensitiveDataFindings = false;
+  readonly publishPolicyFindings: boolean | undefined = undefined;
   readonly lifecycleRules: t.LifeCycleRule[] | undefined = undefined;
 }
 
@@ -140,6 +141,7 @@ export class SecurityHubStandardConfig implements i.ISecurityHubStandardConfig {
   readonly enable = true;
   readonly controlsToDisable: string[] = [];
 }
+
 export class SecurityHubLoggingCloudwatchConfig implements i.ISecurityHubLoggingCloudwatchConfig {
   readonly enable = true;
   readonly logGroupName? = undefined;
@@ -360,8 +362,6 @@ export class SecurityConfig implements i.ISecurityConfig {
   /**
    *
    * @param values
-   * @param configDir
-   * @param validateConfig
    */
   constructor(values?: i.ISecurityConfig) {
     if (values) {
@@ -408,8 +408,7 @@ export class SecurityConfig implements i.ISecurityConfig {
 
 /**
  * Function to validate remediation rule name in security-config
- * @param remediationRule: SecurityConfigTypes.configRuleRemediationType
- * @param errors
+ * @param documentName
  * @returns boolean
  */
 export function IsPublicSsmDoc(documentName: string) {
@@ -420,8 +419,5 @@ export function IsPublicSsmDoc(documentName: string) {
   // - amazon
   // - amzn
   const reservedPrefix = [/^AWS-/i, /^AMZN-/i, /^AMAZON-/i, /^AWSEC2-/i, /^AWSConfigRemediation-/i, /^AWSSupport-/i];
-  if (reservedPrefix.some(obj => obj.test(documentName))) {
-    return true;
-  }
-  return false;
+  return reservedPrefix.some(obj => obj.test(documentName));
 }

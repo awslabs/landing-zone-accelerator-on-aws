@@ -20,7 +20,8 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "aws-sdk": "2.1691.0"
+    "@aws-sdk/client-macie2": "3.637.0",
+    "@aws-sdk/types": "3.609.0"
   },
   "devDependencies": {
     "@types/jest": "29.5.12",

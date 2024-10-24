@@ -53,6 +53,7 @@ centralSecurityServices:
       - us-west-2
     policyFindingsPublishingFrequency: FIFTEEN_MINUTES
     publishSensitiveDataFindings: true
+    publishPolicyFindings: true
   guardduty:
     enable: true
     deploymentTargets:

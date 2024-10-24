@@ -5,7 +5,7 @@
     - [@aws-accelerator/config](#aws-acceleratorconfig)
     - [@aws-accelerator/constructs](#aws-acceleratorconstructs)
     - [@aws-accelerator/installer](#aws-acceleratorinstaller)
-    - [@aws-accelerator/modules](#aws-acceleratormodules)
+    - [@aws-accelerator/lza_modules](#aws-acceleratorlza-modules)
     - [@aws-accelerator/ui (future)](#aws-acceleratorui-future)
     - [@aws-accelerator/utils](#aws-acceleratorutils)
     - [@aws-cdk-extensions/cdk-extensions](#aws-cdk-extensionscdk-extensions)
@@ -26,8 +26,8 @@ Landing Zone Accelerator is provided as an open-source project that is built usi
 Cloud Development Kit (CDK). You install directly into your environment to
 get full access to the infrastructure as code (IaC) solution. Through a
 simplified set of configuration files, you are able to configure additional
-functionality, controls and security services (eg. AWS Managed Config Rules,
-and AWS Security Hub), manage your foundational networking topology (eg. VPCs,
+functionality, controls and security services (e.g. AWS Managed Config Rules,
+and AWS Security Hub), manage your foundational networking topology (e.g. VPCs,
 Transit Gateways, and Network Firewall), and generate additional workload
 accounts using the AWS Control Tower Account Factory.
 
@@ -92,7 +92,7 @@ the bucket.
 
 Contains a CDK Application that defines the accelerator Installer stack.
 
-### @aws-accelerator/modules
+### @aws-accelerator/lza-modules
 
 Contains various accelerator modules, deployed by the solution.
 
