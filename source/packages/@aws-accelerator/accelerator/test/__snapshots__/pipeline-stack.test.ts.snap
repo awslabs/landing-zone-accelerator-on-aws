@@ -188,6 +188,56 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                 "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
               },
             },
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "PipelineSecureBucketB3EEB324",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "PipelineSecureBucketB3EEB324",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+              },
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -347,7 +397,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   "Version": "1",
                 },
                 "Configuration": {
-                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage prepare"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"prepare"}]",
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage prepare"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"prepare"}]",
                   "PrimarySource": "Build",
                   "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
@@ -383,7 +433,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   "Version": "1",
                 },
                 "Configuration": {
-                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage accounts"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"accounts"}]",
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage accounts"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"accounts"}]",
                   "PrimarySource": "Build",
                   "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
@@ -419,7 +469,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   "Version": "1",
                 },
                 "Configuration": {
-                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"bootstrap"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"}]",
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"bootstrap"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"bootstrap"}]",
                   "PrimarySource": "Build",
                   "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
@@ -434,6 +484,479 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   },
                 ],
                 "Name": "Bootstrap",
+                "OutputArtifacts": [
+                  {
+                    "Name": "Bootstrap",
+                  },
+                ],
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "PipelinePipelineRole6D983AD5",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+              {
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"bootstrap"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"key"}]",
+                  "PrimarySource": "Build",
+                  "ProjectName": {
+                    "Ref": "PipelineToolkitProjectBCBD6910",
+                  },
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "Build",
+                  },
+                  {
+                    "Name": "Config",
+                  },
+                ],
+                "Name": "Key",
+                "OutputArtifacts": [
+                  {
+                    "Name": "Key",
+                  },
+                ],
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "PipelinePipelineRole6D983AD5",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+              {
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"bootstrap"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"logging"}]",
+                  "PrimarySource": "Build",
+                  "ProjectName": {
+                    "Ref": "PipelineToolkitProjectBCBD6910",
+                  },
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "Build",
+                  },
+                  {
+                    "Name": "Config",
+                  },
+                ],
+                "Name": "Logging",
+                "OutputArtifacts": [
+                  {
+                    "Name": "Logging",
+                  },
+                ],
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "PipelinePipelineRole6D983AD5",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+              {
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"bootstrap"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"organizations"}]",
+                  "PrimarySource": "Build",
+                  "ProjectName": {
+                    "Ref": "PipelineToolkitProjectBCBD6910",
+                  },
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "Build",
+                  },
+                  {
+                    "Name": "Config",
+                  },
+                ],
+                "Name": "Organizations",
+                "OutputArtifacts": [
+                  {
+                    "Name": "Organizations",
+                  },
+                ],
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "PipelinePipelineRole6D983AD5",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+              {
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"bootstrap"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"security-audit"}]",
+                  "PrimarySource": "Build",
+                  "ProjectName": {
+                    "Ref": "PipelineToolkitProjectBCBD6910",
+                  },
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "Build",
+                  },
+                  {
+                    "Name": "Config",
+                  },
+                ],
+                "Name": "Security_Audit",
+                "OutputArtifacts": [
+                  {
+                    "Name": "Security_Audit",
+                  },
+                ],
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "PipelinePipelineRole6D983AD5",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+              {
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"bootstrap"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"network-prep"}]",
+                  "PrimarySource": "Build",
+                  "ProjectName": {
+                    "Ref": "PipelineToolkitProjectBCBD6910",
+                  },
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "Build",
+                  },
+                  {
+                    "Name": "Config",
+                  },
+                ],
+                "Name": "Network_Prepare",
+                "OutputArtifacts": [
+                  {
+                    "Name": "Network_Prep",
+                  },
+                ],
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "PipelinePipelineRole6D983AD5",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+              {
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"bootstrap"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"security"}]",
+                  "PrimarySource": "Build",
+                  "ProjectName": {
+                    "Ref": "PipelineToolkitProjectBCBD6910",
+                  },
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "Build",
+                  },
+                  {
+                    "Name": "Config",
+                  },
+                ],
+                "Name": "Security",
+                "OutputArtifacts": [
+                  {
+                    "Name": "Security",
+                  },
+                ],
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "PipelinePipelineRole6D983AD5",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+              {
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"bootstrap"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"operations"}]",
+                  "PrimarySource": "Build",
+                  "ProjectName": {
+                    "Ref": "PipelineToolkitProjectBCBD6910",
+                  },
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "Build",
+                  },
+                  {
+                    "Name": "Config",
+                  },
+                ],
+                "Name": "Operations",
+                "OutputArtifacts": [
+                  {
+                    "Name": "Operations",
+                  },
+                ],
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "PipelinePipelineRole6D983AD5",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+              {
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"bootstrap"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"network-vpc"}]",
+                  "PrimarySource": "Build",
+                  "ProjectName": {
+                    "Ref": "PipelineToolkitProjectBCBD6910",
+                  },
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "Build",
+                  },
+                  {
+                    "Name": "Config",
+                  },
+                ],
+                "Name": "Network_VPCs",
+                "OutputArtifacts": [
+                  {
+                    "Name": "Network_Vpc",
+                  },
+                ],
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "PipelinePipelineRole6D983AD5",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+              {
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"bootstrap"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"security-resources"}]",
+                  "PrimarySource": "Build",
+                  "ProjectName": {
+                    "Ref": "PipelineToolkitProjectBCBD6910",
+                  },
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "Build",
+                  },
+                  {
+                    "Name": "Config",
+                  },
+                ],
+                "Name": "Security_Resources",
+                "OutputArtifacts": [
+                  {
+                    "Name": "Security_Resources",
+                  },
+                ],
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "PipelinePipelineRole6D983AD5",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+              {
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"bootstrap"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"identity-center"}]",
+                  "PrimarySource": "Build",
+                  "ProjectName": {
+                    "Ref": "PipelineToolkitProjectBCBD6910",
+                  },
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "Build",
+                  },
+                  {
+                    "Name": "Config",
+                  },
+                ],
+                "Name": "Identity_Center",
+                "OutputArtifacts": [
+                  {
+                    "Name": "Identity_Center",
+                  },
+                ],
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "PipelinePipelineRole6D983AD5",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+              {
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"bootstrap"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"network-associations"}]",
+                  "PrimarySource": "Build",
+                  "ProjectName": {
+                    "Ref": "PipelineToolkitProjectBCBD6910",
+                  },
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "Build",
+                  },
+                  {
+                    "Name": "Config",
+                  },
+                ],
+                "Name": "Network_Associations",
+                "OutputArtifacts": [
+                  {
+                    "Name": "Network_Associations",
+                  },
+                ],
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "PipelinePipelineRole6D983AD5",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+              {
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"bootstrap"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"customizations"}]",
+                  "PrimarySource": "Build",
+                  "ProjectName": {
+                    "Ref": "PipelineToolkitProjectBCBD6910",
+                  },
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "Build",
+                  },
+                  {
+                    "Name": "Config",
+                  },
+                ],
+                "Name": "Customizations",
+                "OutputArtifacts": [
+                  {
+                    "Name": "Customizations",
+                  },
+                ],
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "PipelinePipelineRole6D983AD5",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+              {
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"bootstrap"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"finalize"}]",
+                  "PrimarySource": "Build",
+                  "ProjectName": {
+                    "Ref": "PipelineToolkitProjectBCBD6910",
+                  },
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "Build",
+                  },
+                  {
+                    "Name": "Config",
+                  },
+                ],
+                "Name": "Finalize",
+                "OutputArtifacts": [
+                  {
+                    "Name": "Finalize",
+                  },
+                ],
                 "RoleArn": {
                   "Fn::GetAtt": [
                     "PipelinePipelineRole6D983AD5",
@@ -449,44 +972,16 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
             "Actions": [
               {
                 "ActionTypeId": {
-                  "Category": "Build",
-                  "Owner": "AWS",
-                  "Provider": "CodeBuild",
-                  "Version": "1",
-                },
-                "Configuration": {
-                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"diff"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"}]",
-                  "PrimarySource": "Build",
-                  "ProjectName": {
-                    "Ref": "PipelineToolkitProjectBCBD6910",
-                  },
-                },
-                "InputArtifacts": [
-                  {
-                    "Name": "Build",
-                  },
-                  {
-                    "Name": "Config",
-                  },
-                ],
-                "Name": "Diff",
-                "RoleArn": {
-                  "Fn::GetAtt": [
-                    "PipelinePipelineRole6D983AD5",
-                    "Arn",
-                  ],
-                },
-                "RunOrder": 1,
-              },
-              {
-                "ActionTypeId": {
                   "Category": "Approval",
                   "Owner": "AWS",
                   "Provider": "Manual",
                   "Version": "1",
                 },
                 "Configuration": {
-                  "CustomData": "See previous stage (Diff) for changes.",
+                  "CustomData": "
+              Changes for this execution can be found in accelerator pipeline S3 bucket under Diffs/#{codepipeline.PipelineExecutionId}. 
+              Use cli command for download: "aws s3 sync s3://aws-accelerator-pipeline-000000000000-us-east-1/AWSAccelerator-Pipel/Diffs/#{codepipeline.PipelineExecutionId} diffs" or follow the link bellow.",
+                  "ExternalEntityLink": "https://us-east-1.console.aws.amazon.com/s3/buckets/aws-accelerator-pipeline-000000000000-us-east-1?prefix=AWSAccelerator-Pipel/Diffs/#{codepipeline.PipelineExecutionId}/&region=us-east-1&bucketType=general",
                   "NotificationArn": {
                     "Ref": "PipelineManualApprovalActionTopicB55612D2",
                   },
@@ -513,7 +1008,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   "Version": "1",
                 },
                 "Configuration": {
-                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage key"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"key"}]",
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage key"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"key"}]",
                   "PrimarySource": "Build",
                   "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
@@ -525,6 +1020,9 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   },
                   {
                     "Name": "Config",
+                  },
+                  {
+                    "Name": "Key",
                   },
                 ],
                 "Name": "Key",
@@ -544,7 +1042,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   "Version": "1",
                 },
                 "Configuration": {
-                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage logging"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"logging"}]",
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage logging"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"logging"}]",
                   "PrimarySource": "Build",
                   "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
@@ -556,6 +1054,9 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   },
                   {
                     "Name": "Config",
+                  },
+                  {
+                    "Name": "Logging",
                   },
                 ],
                 "Name": "Logging",
@@ -580,7 +1081,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   "Version": "1",
                 },
                 "Configuration": {
-                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage organizations"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"organizations"}]",
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage organizations"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"organizations"}]",
                   "PrimarySource": "Build",
                   "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
@@ -592,6 +1093,9 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   },
                   {
                     "Name": "Config",
+                  },
+                  {
+                    "Name": "Organizations",
                   },
                 ],
                 "Name": "Organizations",
@@ -616,7 +1120,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   "Version": "1",
                 },
                 "Configuration": {
-                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage security-audit"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"security-audit"}]",
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage security-audit"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"security-audit"}]",
                   "PrimarySource": "Build",
                   "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
@@ -629,8 +1133,11 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   {
                     "Name": "Config",
                   },
+                  {
+                    "Name": "Security_Audit",
+                  },
                 ],
-                "Name": "SecurityAudit",
+                "Name": "Security_Audit",
                 "RoleArn": {
                   "Fn::GetAtt": [
                     "PipelinePipelineRole6D983AD5",
@@ -652,7 +1159,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   "Version": "1",
                 },
                 "Configuration": {
-                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage network-prep"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"network-prep"}]",
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage network-prep"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"network-prep"}]",
                   "PrimarySource": "Build",
                   "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
@@ -664,6 +1171,9 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   },
                   {
                     "Name": "Config",
+                  },
+                  {
+                    "Name": "Network_Prep",
                   },
                 ],
                 "Name": "Network_Prepare",
@@ -683,7 +1193,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   "Version": "1",
                 },
                 "Configuration": {
-                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage security"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"security"}]",
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage security"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"security"}]",
                   "PrimarySource": "Build",
                   "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
@@ -695,6 +1205,9 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   },
                   {
                     "Name": "Config",
+                  },
+                  {
+                    "Name": "Security",
                   },
                 ],
                 "Name": "Security",
@@ -714,7 +1227,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   "Version": "1",
                 },
                 "Configuration": {
-                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage operations"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"operations"}]",
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage operations"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"operations"}]",
                   "PrimarySource": "Build",
                   "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
@@ -726,6 +1239,9 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   },
                   {
                     "Name": "Config",
+                  },
+                  {
+                    "Name": "Operations",
                   },
                 ],
                 "Name": "Operations",
@@ -745,7 +1261,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   "Version": "1",
                 },
                 "Configuration": {
-                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage network-vpc"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"network-vpc"}]",
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage network-vpc"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"network-vpc"}]",
                   "PrimarySource": "Build",
                   "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
@@ -757,6 +1273,9 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   },
                   {
                     "Name": "Config",
+                  },
+                  {
+                    "Name": "Network_Vpc",
                   },
                 ],
                 "Name": "Network_VPCs",
@@ -776,7 +1295,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   "Version": "1",
                 },
                 "Configuration": {
-                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage security-resources"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"security-resources"}]",
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage security-resources"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"security-resources"}]",
                   "PrimarySource": "Build",
                   "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
@@ -788,6 +1307,9 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   },
                   {
                     "Name": "Config",
+                  },
+                  {
+                    "Name": "Security_Resources",
                   },
                 ],
                 "Name": "Security_Resources",
@@ -807,7 +1329,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   "Version": "1",
                 },
                 "Configuration": {
-                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage identity-center"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"identity-center"}]",
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage identity-center"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"identity-center"}]",
                   "PrimarySource": "Build",
                   "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
@@ -819,6 +1341,9 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   },
                   {
                     "Name": "Config",
+                  },
+                  {
+                    "Name": "Identity_Center",
                   },
                 ],
                 "Name": "Identity_Center",
@@ -838,7 +1363,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   "Version": "1",
                 },
                 "Configuration": {
-                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage network-associations"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"network-associations"}]",
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage network-associations"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"network-associations"}]",
                   "PrimarySource": "Build",
                   "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
@@ -850,6 +1375,9 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   },
                   {
                     "Name": "Config",
+                  },
+                  {
+                    "Name": "Network_Associations",
                   },
                 ],
                 "Name": "Network_Associations",
@@ -869,7 +1397,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   "Version": "1",
                 },
                 "Configuration": {
-                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage customizations"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"customizations"}]",
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage customizations"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"customizations"}]",
                   "PrimarySource": "Build",
                   "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
@@ -881,6 +1409,9 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   },
                   {
                     "Name": "Config",
+                  },
+                  {
+                    "Name": "Customizations",
                   },
                 ],
                 "Name": "Customizations",
@@ -900,7 +1431,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   "Version": "1",
                 },
                 "Configuration": {
-                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage finalize"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"finalize"}]",
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage finalize"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"finalize"}]",
                   "PrimarySource": "Build",
                   "ProjectName": {
                     "Ref": "PipelineToolkitProjectBCBD6910",
@@ -912,6 +1443,9 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   },
                   {
                     "Name": "Config",
+                  },
+                  {
+                    "Name": "Finalize",
                   },
                 ],
                 "Name": "Finalize",
@@ -2478,6 +3012,11 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
               "Type": "PLAINTEXT",
               "Value": "true",
             },
+            {
+              "Name": "ACCELERATOR_ENABLE_APPROVAL_STAGE",
+              "Type": "PLAINTEXT",
+              "Value": "Yes",
+            },
           ],
           "Image": "aws/codebuild/standard:7.0",
           "ImagePullCredentialsType": "CODEBUILD",
@@ -2496,74 +3035,94 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
             "Fn::Join": [
               "",
               [
-                "{
-  "version": "0.2",
-  "phases": {
-    "install": {
-      "runtime-versions": {
-        "nodejs": 18
-      }
-    },
-    "build": {
-      "commands": [
-        "env",
-        "cd source",
-        "if [ \\"prepare\\" = \\"\${ACCELERATOR_STAGE}\\" ]; then set -e && LOG_LEVEL=info yarn run ts-node packages/@aws-accelerator/lza-modules/bin/runner.ts --module control-tower --partition ",
+                "version: 0.2
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+  pre_build:
+    commands:
+      - "export WORK_DIR=source/packages/@aws-accelerator/accelerator
+
+        \\               export ARCHIVE_NAME=\\"\${ACCELERATOR_STAGE}.tgz\\"
+
+        \\               export DIFFS_DIR=\\"s3://aws-accelerator-pipeline-000000000000-us-east-1/AWSAccelerator-Pipel/Diffs\\"
+
+        \\               export STAGE_ARTIFACT=$(echo \\"$ACCELERATOR_STAGE\\" | sed 's/-/ /g' | awk '{for (i=1; i<=NF; ++i) $i=toupper(substr($i,1,1))tolower(substr($i,2))}1' | sed 's/ /_/g')
+
+        \\              "
+  build:
+    commands:
+      - env
+      - cd $WORK_DIR
+      - if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && LOG_LEVEL=info yarn run ts-node ../lza-modules/bin/runner.ts --module control-tower --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
-                " --use-existing-role No --config-dir $CODEBUILD_SRC_DIR_Config && if [ -z \\"\${ACCELERATOR_NO_ORG_MODULE}\\" ]; then LOG_LEVEL=info yarn run ts-node packages/@aws-accelerator/lza-modules/bin/runner.ts --module aws-organizations --partition  ",
+                " --use-existing-role No --config-dir $CODEBUILD_SRC_DIR_Config && if [ -z "\${ACCELERATOR_NO_ORG_MODULE}" ]; then LOG_LEVEL=info yarn run ts-node ../lza-modules/bin/runner.ts --module aws-organizations --partition  ",
                 {
                   "Ref": "AWS::Partition",
                 },
-                " --use-existing-role No --config-dir $CODEBUILD_SRC_DIR_Config; else echo \\"Module aws-organizations execution skipped by environment settings.\\"; fi ; fi",
-        "if [ \\"prepare\\" = \\"\${ACCELERATOR_STAGE}\\" ]; then set -e && yarn run ts-node  packages/@aws-accelerator/accelerator/lib/prerequisites.ts --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                " --use-existing-role No --config-dir $CODEBUILD_SRC_DIR_Config; else echo "Module aws-organizations execution skipped by environment settings."; fi ; fi
+      - if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && yarn run ts-node  ./lib/prerequisites.ts --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
-                " --minimal; fi",
-        "cd packages/@aws-accelerator/accelerator",
-        "export FULL_SYNTH=\\"true\\"",
-        "if [ $ASEA_MAPPING_BUCKET ]; then aws s3api head-object --bucket $ASEA_MAPPING_BUCKET --key $ASEA_MAPPING_FILE >/dev/null 2>&1 || export FULL_SYNTH=\\"false\\"; fi;",
-        "if [ -z \\"\${ACCELERATOR_STAGE}\\" ] && [ $CDK_OPTIONS = 'bootstrap' ] && [ $FULL_SYNTH = \\"true\\" ]; then for STAGE in \\"key\\" \\"logging\\" \\"organizations\\" \\"security-audit\\" \\"network-prep\\" \\"security\\" \\"operations\\" \\"identity-center\\" \\"network-vpc\\" \\"security-resources\\" \\"network-associations\\" \\"customizations\\" \\"finalize\\" \\"bootstrap\\"; do set -e && yarn run ts-node --transpile-only cdk.ts synth --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                " --minimal; fi
+      - export FULL_SYNTH="true"
+      - if [ $ASEA_MAPPING_BUCKET ]; then aws s3api head-object --bucket $ASEA_MAPPING_BUCKET --key $ASEA_MAPPING_FILE >/dev/null 2>&1 || export FULL_SYNTH="false"; fi;
+      - |-
+        if [ "\${CDK_OPTIONS}" = "bootstrap" ]; then
+                          set -e && yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
-                " --stage $STAGE; done; fi",
-        "if [ -z \\"\${ACCELERATOR_STAGE}\\" ] && [ $CDK_OPTIONS = 'diff' ] && [ $FULL_SYNTH = \\"true\\" ]; then for STAGE in \\"key\\" \\"logging\\" \\"organizations\\" \\"security-audit\\" \\"network-prep\\" \\"security\\" \\"operations\\" \\"identity-center\\" \\"network-vpc\\" \\"security-resources\\" \\"network-associations\\" \\"customizations\\" \\"finalize\\" \\"bootstrap\\"; do set -e && yarn run ts-node --transpile-only cdk.ts synth --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                ";
+                          if [ "\${ACCELERATOR_STAGE}" = "bootstrap" ]; then set -e && yarn run ts-node --transpile-only cdk.ts $CDK_OPTIONS --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
-                " --stage $STAGE; done; fi",
-        "if [ -z \\"\${ACCELERATOR_STAGE}\\" ] && [ $CDK_OPTIONS = 'bootstrap' ] && [ $FULL_SYNTH = \\"false\\" ]; then for STAGE in  \\"bootstrap\\"; do set -e && yarn run ts-node --transpile-only cdk.ts synth --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                " --app cdk.out; fi
+                          tar -czf cf_$ARCHIVE_NAME -C cdk.out .
+                          if [ "\${ACCELERATOR_ENABLE_APPROVAL_STAGE}" = "Yes" ] && [ "$ACCELERATOR_STAGE" != "bootstrap" ]; then
+                            set -e && yarn run ts-node --transpile-only cdk.ts diff --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
-                " --stage $STAGE; done; fi",
-        "if [ ! -z \\"\${ACCELERATOR_STAGE}\\" ]; then yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                " --app cdk.out;
+                            tar -czf diff_cdk_out_$ARCHIVE_NAME -C cdk.out .
+                            find cdk.out -type f -name "*.diff" -print0 | tar --transform='s|.*/||' -czf diff_$ARCHIVE_NAME --null -T -
+                            aws s3 cp diff_$ARCHIVE_NAME $DIFFS_DIR/$CODEPIPELINE_EXECUTION_ID/
+                          fi
+                       else
+                       eval ARTIFACTS='$'CODEBUILD_SRC_DIR_$STAGE_ARTIFACT
+                       if [ -f "\${ARTIFACTS}/cf_\${ARCHIVE_NAME}" ]; then
+                             mkdir -p cdk.out
+                             tar -xzf $ARTIFACTS/cf_$ARCHIVE_NAME -C cdk.out;
+                         else
+                            set -e && yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
-                "; fi",
-        "if [ \\"diff\\" != \\"\${CDK_OPTIONS}\\" ]; then yarn run ts-node --transpile-only cdk.ts --require-approval never $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                ";
+                         fi
+                         set -e && yarn run ts-node --transpile-only cdk.ts $CDK_OPTIONS --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
-                " --app cdk.out; fi",
-        "if [ \\"diff\\" = \\"\${CDK_OPTIONS}\\" ]; then for STAGE in \\"key\\" \\"logging\\" \\"organizations\\" \\"security-audit\\" \\"network-prep\\" \\"security\\" \\"operations\\" \\"identity-center\\" \\"network-vpc\\" \\"security-resources\\" \\"network-associations\\" \\"customizations\\" \\"finalize\\" \\"bootstrap\\"; do set -e && yarn run ts-node --transpile-only cdk.ts --require-approval never $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                " --app cdk.out;
+                       fi
+      - if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && yarn run ts-node  ./lib/prerequisites.ts --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
-                " --app cdk.out --stage $STAGE; done; find ./cdk.out -type f -name \\"*.diff\\" -exec cat \\"{}\\" \\\\;;  fi",
-        "if [ \\"prepare\\" = \\"\${ACCELERATOR_STAGE}\\" ]; then cd ../../../ && set -e && yarn run ts-node  packages/@aws-accelerator/accelerator/lib/prerequisites.ts --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                "; fi"
-      ]
-    }
-  }
-}",
+                "; fi
+artifacts:
+  base-directory: $WORK_DIR
+  files:
+    - cf_$ARCHIVE_NAME
+    - diff_cdk_out_$ARCHIVE_NAME
+",
               ],
             ],
           },
