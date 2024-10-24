@@ -60,6 +60,7 @@ export class OrganizationConfigValidator {
       appliedScpName: string[];
     };
     const validateScpCountForOrg: validateScpItem[] = [];
+    const validateScpCountForAcc: validateScpItem[] = [];
     for (const serviceControlPolicy of values.serviceControlPolicies ?? []) {
       if (!fs.existsSync(path.join(configDir, serviceControlPolicy.policy))) {
         errors.push(
@@ -82,11 +83,11 @@ export class OrganizationConfigValidator {
       }
       for (const accUnitScp of serviceControlPolicy.deploymentTargets.accounts ?? []) {
         //check in array to see if account is already there
-        const index = validateScpCountForOrg.map(object => object.orgEntity).indexOf(accUnitScp);
+        const index = validateScpCountForAcc.map(object => object.orgEntity).indexOf(accUnitScp);
         if (index > -1) {
-          validateScpCountForOrg[index].appliedScpName.push(serviceControlPolicy.name);
+          validateScpCountForAcc[index].appliedScpName.push(serviceControlPolicy.name);
         } else {
-          validateScpCountForOrg.push({
+          validateScpCountForAcc.push({
             orgEntity: accUnitScp,
             orgEntityType: 'Account',
             appliedScpName: [serviceControlPolicy.name],
@@ -94,7 +95,8 @@ export class OrganizationConfigValidator {
         }
       }
     }
-    for (const validateOrgEntity of validateScpCountForOrg) {
+    const validateScpCountForEntities = validateScpCountForOrg.concat(validateScpCountForAcc);
+    for (const validateOrgEntity of validateScpCountForEntities) {
       if (validateOrgEntity.appliedScpName.length > 5) {
         errors.push(
           `${validateOrgEntity.orgEntityType} - ${validateOrgEntity.orgEntity} has ${validateOrgEntity.appliedScpName.length} out of 5 allowed scps`,
