@@ -1039,6 +1039,10 @@
           ],
           "type": "string"
         },
+        "publishPolicyFindings": {
+          "description": "Specifies whether to publish findings at all",
+          "type": "boolean"
+        },
         "publishSensitiveDataFindings": {
           "description": "Specifies whether to publish sensitive data findings to Security Hub. If you set this value to true, Amazon Macie automatically publishes all sensitive data findings that weren't suppressed by a findings filter. The default value is false.",
           "type": "boolean"

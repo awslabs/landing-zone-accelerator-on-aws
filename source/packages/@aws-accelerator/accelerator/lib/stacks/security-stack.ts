@@ -46,6 +46,7 @@ export class SecurityStack extends AcceleratorStack {
   readonly cloudwatchKey?: cdk.aws_kms.IKey;
   readonly metadataRule: AcceleratorMetadata | undefined;
   readonly securityHubConfig: SecurityHubConfig;
+
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
     const elbLogBucketName = this.getElbLogsBucketName();
@@ -152,6 +153,12 @@ export class SecurityStack extends AcceleratorStack {
         logKmsKey: this.cloudwatchKey,
         keyPrefix: `macie/${cdk.Stack.of(this).account}/`,
         logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+        findingPublishingFrequency:
+          this.props.securityConfig.centralSecurityServices.macie.policyFindingsPublishingFrequency ??
+          'FIFTEEN_MINUTES',
+        publishClassificationFindings:
+          this.props.securityConfig.centralSecurityServices.macie.publishSensitiveDataFindings ?? false,
+        publishPolicyFindings: this.props.securityConfig.centralSecurityServices.macie.publishPolicyFindings ?? true,
       });
     }
   }

@@ -117,6 +117,7 @@ type OuDetailsType = {
  * Invite account details type
  */
 type InviteAccountDetailsType = { hasAccountsToInvite: boolean; accountsToInvite: AccountIdConfig[] };
+
 /**
  * AWSOrganization class to manage AWS Organizations operation.
  */
@@ -236,7 +237,6 @@ export class AWSOrganization implements AcceleratorModule {
   /**
    * Function to manage the organizational unit registration to AWS Control Tower
    * @param controlTowerClient {@link ControlTowerClient}
-   * @param organizationsClient {@link OrganizationsClient}
    * @param ouItem {@link OuDetailsType}
    * @param statuses string[]
    * @param landingZoneDetails {@link ControlTowerLandingZoneDetailsType} | undefined
@@ -361,7 +361,6 @@ export class AWSOrganization implements AcceleratorModule {
   /**
    * Function to update organizational unit registration
    * @param controlTowerClient {@link ControlTowerClient}
-   * @param organizationsClient {@link OrganizationsClient}
    * @param ouItem {@link OuDetailsType}
    * @param baselineVersion string
    * @param awsControlTowerBaselineIdentifier string
@@ -447,9 +446,9 @@ export class AWSOrganization implements AcceleratorModule {
   /**
    * Function to prepare the organizational unit list
    * @param props {@link ModuleOptionsType}
-   * @param client {@link OrganizationsClient}
    * @param ouRelationsFromConfig {@link OuRelationType}[]
    * @param enabledBaselines {@link EnabledBaselineSummary}[]
+   * @param orgAccounts {@link Account}[]
    * @param landingZoneDetails {@link ControlTowerLandingZoneDetailsType}
    * @returns ous {@link OuDetailsType}[]
    */
@@ -588,7 +587,6 @@ export class AWSOrganization implements AcceleratorModule {
   /**
    * Function to register the AWS Organizations organizational unit into AWS Control Tower
    * @param controlTowerClient {@link ControlTowerClient}
-   * @param organizationsClient {@link OrganizationsClient}
    * @param ouItem {@link OuRelationType}
    * @param baselineIdentifier string
    * @param baselineVersion string
@@ -645,7 +643,6 @@ export class AWSOrganization implements AcceleratorModule {
    * @param targetOuItem {@link OrganizationalUnitDetailsType}
    * @param baselineIdentifier string
    * @param baselineVersion string
-   * @param targetIdentifier string
    * @param parameters {@link EnabledBaselineParameter}[]
    * @returns status string
    */
@@ -720,7 +717,6 @@ export class AWSOrganization implements AcceleratorModule {
    * @param sourceParentName string
    * @param sourceParentId string
    * @param destinationOuItem ${@link OuRelationType}
-   * @param existingOusInOrganization {@link OrganizationalUnitDetailsType}[]
    * @returns status string
    */
   private async moveAccountToOu(
@@ -1079,11 +1075,7 @@ export class AWSOrganization implements AcceleratorModule {
   private async isAccountInOrganization(accountId: string, orgAccounts: Account[]): Promise<boolean> {
     const accountFound = orgAccounts.find(item => item.Id === accountId);
 
-    if (accountFound) {
-      return true;
-    }
-
-    return false;
+    return !!accountFound;
   }
 
   /**
