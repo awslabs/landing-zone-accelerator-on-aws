@@ -26,7 +26,8 @@
   },
   "devDependencies": {
     "@types/jest": "29.5.12",
-    "@types/node": "18.14.0",
+    "@types/lodash": "4.17.0",
+    "@types/node": "18.14.0",    
     "@aws-cdk/cloudformation-diff": "2.158.0",
     "eslint": "8.34.0",
     "eslint-config-prettier": "8.6.0",

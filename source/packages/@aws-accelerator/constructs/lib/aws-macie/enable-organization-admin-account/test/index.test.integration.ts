@@ -11,11 +11,14 @@
  *  and limitations under the License.
  */
 
-import { CreateEvent, DeleteEvent, UpdateEvent } from '@aws-accelerator/utils/lib/test-util/common/resources';
+import { Macie2Client, ListOrganizationAdminAccountsCommand } from '@aws-sdk/client-macie2';
 
 import { beforeAll, expect, test } from '@jest/globals';
 
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { IntegrationTest } from '@aws-accelerator/utils/lib/test-util/common/integration-test';
+import { CreateEvent, DeleteEvent, UpdateEvent } from '@aws-accelerator/utils/lib/test-util/common/resources';
+import { AssertPropsType } from '@aws-accelerator/utils/lib/test-util/common/assertion';
 import { RegionalTestSuite } from '@aws-accelerator/utils/lib/test-util/common/test-suite';
 
 import { MacieEnableOrganizationAdminAccountPolicyStatements } from '../../macie-organization-admin-account';
@@ -59,6 +62,14 @@ RegionalTestSuite['sampleConfig:us-east-1']!.suite(RegionalTestSuite['sampleConf
     event.ResourceProperties['adminAccountId'] = auditAccountId;
 
     expect(await handler(event)).toEqual(successStatus);
+
+    const assertProps = await getAssertProperties();
+    expect(
+      await integrationTest.assertion.assertApiCall({
+        expectedResponse: { adminAccounts: [{ accountId: auditAccountId, status: 'ENABLED' }] },
+        ...assertProps,
+      }),
+    ).toBeTruthy();
   });
 
   test('[UPDATE event]: Should pass when trying to update delegated admin account to the same value', async () => {
@@ -70,6 +81,14 @@ RegionalTestSuite['sampleConfig:us-east-1']!.suite(RegionalTestSuite['sampleConf
     event.OldResourceProperties['adminAccountId'] = auditAccountId;
 
     expect(await handler(event)).toEqual(successStatus);
+
+    const assertProps = await getAssertProperties();
+    expect(
+      await integrationTest.assertion.assertApiCall({
+        expectedResponse: { adminAccounts: [{ accountId: auditAccountId, status: 'ENABLED' }] },
+        ...assertProps,
+      }),
+    ).toBeTruthy();
   });
 
   test('[DELETE event]: Should pass when deleting the delegated admin account', async () => {
@@ -79,6 +98,14 @@ RegionalTestSuite['sampleConfig:us-east-1']!.suite(RegionalTestSuite['sampleConf
     event.ResourceProperties['adminAccountId'] = auditAccountId;
 
     expect(await handler(event)).toEqual(successStatus);
+
+    const assertProps = await getAssertProperties();
+    expect(
+      await integrationTest.assertion.assertApiCall({
+        expectedResponse: { adminAccounts: [] },
+        ...assertProps,
+      }),
+    ).toBeTruthy();
   });
 });
 
@@ -104,6 +131,14 @@ RegionalTestSuite['sampleConfig:us-west-2']!.suite(RegionalTestSuite['sampleConf
     event.ResourceProperties['adminAccountId'] = auditAccountId;
 
     expect(await handler(event)).toEqual(successStatus);
+
+    const assertProps = await getAssertProperties();
+    expect(
+      await integrationTest.assertion.assertApiCall({
+        expectedResponse: { adminAccounts: [{ accountId: auditAccountId, status: 'ENABLED' }] },
+        ...assertProps,
+      }),
+    ).toBeTruthy();
   });
 
   test('[UPDATE event]: Should pass when trying to update delegated admin account to the same value', async () => {
@@ -115,6 +150,14 @@ RegionalTestSuite['sampleConfig:us-west-2']!.suite(RegionalTestSuite['sampleConf
     event.OldResourceProperties['adminAccountId'] = auditAccountId;
 
     expect(await handler(event)).toEqual(successStatus);
+
+    const assertProps = await getAssertProperties();
+    expect(
+      await integrationTest.assertion.assertApiCall({
+        expectedResponse: { adminAccounts: [{ accountId: auditAccountId, status: 'ENABLED' }] },
+        ...assertProps,
+      }),
+    ).toBeTruthy();
   });
 
   test('[DELETE event]: Should pass when deleting the delegated admin account', async () => {
@@ -124,6 +167,14 @@ RegionalTestSuite['sampleConfig:us-west-2']!.suite(RegionalTestSuite['sampleConf
     event.ResourceProperties['adminAccountId'] = auditAccountId;
 
     expect(await handler(event)).toEqual(successStatus);
+
+    const assertProps = await getAssertProperties();
+    expect(
+      await integrationTest.assertion.assertApiCall({
+        expectedResponse: { adminAccounts: [] },
+        ...assertProps,
+      }),
+    ).toBeTruthy();
   });
 });
 
@@ -138,4 +189,22 @@ async function cleanup(): Promise<void> {
   // Cleanup integration test environment
   //
   await integrationTest.cleanup();
+}
+
+/**
+ * Function to get assert API properties
+ * @returns {@link AssertPropsType}
+ */
+async function getAssertProperties(delayInMinutes?: number): Promise<AssertPropsType> {
+  if (delayInMinutes) {
+    // Since some API might take time to change the status hence a delay is introduces here, adjust delay time accordingly
+    await integrationTest.delay(delayInMinutes * 60000);
+  }
+
+  const client = new Macie2Client({ credentials: integrationTest.environment.integrationAccountStsCredentials });
+  return {
+    serviceName: 'Macie',
+    apiName: 'ListOrganizationAdminAccounts',
+    actualResponse: await throttlingBackOff(() => client.send(new ListOrganizationAdminAccountsCommand({}))),
+  };
 }
