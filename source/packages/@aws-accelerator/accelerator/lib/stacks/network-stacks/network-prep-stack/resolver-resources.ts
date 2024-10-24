@@ -137,7 +137,7 @@ export class ResolverResources {
         domainListType = ResolverFirewallDomainListType.CUSTOM;
         filePath = path.join(props.configDirPath, ruleItem.customDomainList);
         try {
-          listName = ruleItem.customDomainList.split('/')[1].split('.')[0];
+          listName = path.basename(ruleItem.customDomainList, path.extname(ruleItem.customDomainList));
           message = `Creating DNS firewall custom domain list ${listName}`;
         } catch (e) {
           this.stack.addLogs(LogLevel.ERROR, `Error creating DNS firewall domain list: ${e}`);
@@ -183,7 +183,7 @@ export class ResolverResources {
       // Check the type of domain list
       if (ruleItem.customDomainList) {
         try {
-          domainListName = ruleItem.customDomainList.split('/')[1].split('.')[0];
+          domainListName = path.basename(ruleItem.customDomainList, path.extname(ruleItem.customDomainList));
         } catch (e) {
           this.stack.addLogs(LogLevel.ERROR, `Error parsing list name from ${ruleItem.customDomainList}`);
           throw new Error(`Configuration validation failed at runtime.`);
