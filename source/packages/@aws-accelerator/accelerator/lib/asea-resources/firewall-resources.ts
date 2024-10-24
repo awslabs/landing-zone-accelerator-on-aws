@@ -56,7 +56,15 @@ export class FirewallResources extends AseaResource {
       const firewallInstance = this.stack.getResource(
         existingFirewallInstance.logicalResourceId,
       ) as cdk.aws_ec2.CfnInstance;
+      const enis = firewallInstance.networkInterfaces as cdk.aws_ec2.CfnInstance.NetworkInterfaceProperty[];
 
+      for (const eni of enis ?? []) {
+        this.scope.addSsmParameter({
+          logicalId: pascalCase(`SsmParam${pascalCase(firewallInstanceName)}Eni${eni.deviceIndex}`),
+          parameterName: this.scope.getSsmPath(SsmResourceType.FIREWALL_ENI, [firewallInstanceName, eni.deviceIndex]),
+          stringValue: eni.networkInterfaceId!,
+        });
+      }
       //Leaving as temporary placeholder for deletion handler
       firewallInstanceConfig;
       firewallInstance;
