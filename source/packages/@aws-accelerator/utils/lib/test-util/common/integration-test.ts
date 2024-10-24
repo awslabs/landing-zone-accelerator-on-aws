@@ -38,6 +38,8 @@ import {
   TestEnvironmentType,
 } from './resources';
 
+import { Assertion } from './assertion';
+
 /**
  * Accelerator integration test props interface
  */
@@ -60,6 +62,11 @@ export class IntegrationTest {
    */
   public environment: TestEnvironmentType;
 
+  /**
+   * Assertion
+   */
+  public assertion: Assertion;
+
   private props: IntegrationTestProps;
 
   private environmentManifest: ManifestType;
@@ -72,6 +79,11 @@ export class IntegrationTest {
     // Initialize properties
     //
     this.props = props;
+
+    //
+    // Initialize assertion
+    //
+    this.assertion = new Assertion();
 
     //
     // Get test environment
@@ -341,5 +353,9 @@ export class IntegrationTest {
       );
     }
     this.logger.info(`Executor IAM role ${this.executorRoleName} cleanup completed.`);
+  }
+
+  public async delay(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
