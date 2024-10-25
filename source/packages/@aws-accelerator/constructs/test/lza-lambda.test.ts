@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 
+import { describe, expect, test } from '@jest/globals';
 import * as cdk from 'aws-cdk-lib';
 import { LzaLambda, LzaLambdaProps } from '../lib/lza-lambda';
 
