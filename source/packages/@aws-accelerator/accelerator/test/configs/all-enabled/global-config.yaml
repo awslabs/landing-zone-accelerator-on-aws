@@ -168,7 +168,7 @@ logging:
 
   assetBucket:
     importedBucket:
-      name: aws-accelerator-imported-all-enabled-${ACCOUNT_ID}-${REGION}
+      name: aws-accelerator-imported-all-enabled-${ASSET_BUCKET_ACCOUNT_ID}-${ASSET_BUCKET_REGION}
       applyAcceleratorManagedBucketPolicy: true
       createAcceleratorManagedKey: true
     # s3ResourcePolicyAttachments:
