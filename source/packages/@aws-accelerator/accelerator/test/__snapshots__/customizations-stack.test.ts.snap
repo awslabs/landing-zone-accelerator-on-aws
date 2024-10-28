@@ -17,11 +17,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] 
           "CAPABILITY_AUTO_EXPAND",
         ],
         "Description": "Sample stackset description",
-        "OperationPreferences": {
-          "FailureTolerancePercentage": 25,
-          "MaxConcurrentPercentage": 35,
-          "RegionConcurrencyType": "PARALLEL",
-        },
+        "OperationPreferences": {},
         "PermissionModel": "SELF_MANAGED",
         "StackInstancesGroup": [
           {
