@@ -5,6 +5,91 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.0] - 
+
+### Added
+
+- feat(pipeline): add feature to parallelise synth and diff operations
+- feat(pipeline): add feature to reuse synth to all deploy actions
+- feat(piepline): add feature to consolidate all diffs and generate URL for review in Review stage
+
+### Fixed
+
+- fix(config): adjust all-enabled config for asset bucket name
+- fix(metadata): accelerator lambda times out without error
+
+### Changed
+
+
+### Configuration Changes
+
+
+## [1.10.0] - 10-16-2024
+
+### Added
+
+- feat(networking): add support for TLS1.3 security policy for ALB and NLB listener
+- feat(performance): changed transpiler to swc
+- feat(pipeline): add codeconnection as configuration source
+- feat(regions): add support for the ap-southeast-5 opt-in region
+- feat(regions): add feature to enable opt-in regions programmatically
+- feat(s3): add error handling and validation for s3 config
+- feat(s3): add feature flag parameter use-s3-source for S3 as LZA source code location
+- feat(stacksets): added support for dependencies between stacksets
+- feat(uninstaller): deleted s3 repo in uninstaller
+- feat(yarn): add ability to use .yarnrc to use custom package registry and ca-certs
+
+### Fixed
+
+- fix(bootstrap): batched bootstrap checks
+- fix(control-tower): skip existing ct identifier check when ct is not enabled
+- fix(control-tower): updated boolean logic to get LZ identifier
+- fix(custom-stacks): loaded replacement values during custom stack deployment
+- fix(diff): parse error during diff
+- fix(firewalls): fix firewall owner lookup when deployed in shared VPC
+- fix(iam): add cdk feature flag to minimize iam policy
+- fix(iam): use same form of service principal in all partitions: <service>.amazonaws.com
+- fix(logs): refactored NewCloudWatchLogEvent to ignore LZA-managed log groups
+- fix(metadata): fixed config file writes with codecommit
+- fix(organizations): failure when 5 SCPs with allow-list strategy option is defined
+- fix(organizations): update organizations module to handle nested ou's correctly
+- fix(prerequisites): checks forces child accounts to have CodeBuild parallel executions
+- fix(replacements): accel_lookup variable not getting replaced for all the occurrences
+- fix(s3): fix s3 bucket name constructs for imported buckets
+- fix(s3): fixed issue where s3 bucket as source did not support a KMS-encrypted bucket
+- fix(s3): default asset bucket name to home region
+- fix(s3): add methods to construct imported bucket
+- fix(ssm): updated session manager role to allow kms permissions in all enabled regions
+- fix(validation): configuration validation failure when SecurityHub was enabled with Control Tower
+- fix(uninstaller): include deletion of IdentityCenter and ResourcePolicyEnforcement stacks 
+
+### Changed
+
+- chore: remove cdk 2.148.0 dependencies
+- chore: suppress node warnings on synth
+- chore: update typedoc to v0.26.7
+- chore: updated cdk version
+- chore: updated deps @types/jest v29.5.12 aws-sdk v3.637.0 
+- chore: upgrade aws sdk to v2.1691.0
+- chore: upgrade lerna to v8.1.8
+- chore(cfn-nag): added suppressions
+- chore(documentation): add security.md file to repo
+- chore(documentation): added json-schema page
+- chore(documentation): update config.md Control Tower OU guidance
+- chore(documentation): updating typedoc for vpc cidrs to include caveat about cidr list
+- chore(installer): added clarification to CF template
+- chore(lambda): remove debug console log statements
+- chore(modules): renamed modules to lza-modules
+- chore(organizations): use global region in AWS Organizations client
+- chore(regions): update global region map
+- chore(sample-config): add iam user create prevention control in sample config
+- chore(sample-config): add kms modification protection to preventative controls in sample config
+- chore(sample-config): add disable import findings integration to scp
+- chore(sample-config): update s3 service control policy
+- chore(sts): updated sts endpoints
+- chore(uninstaller): improved performance for deployments with many regions
+- chore(validation): extending validation on ENI lookups to allow for _ character
+
 ## [1.9.2] - 08-26-2024
 
 ### Fixed
