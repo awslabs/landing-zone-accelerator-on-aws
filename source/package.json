@@ -56,7 +56,7 @@
     "test:clean": "lerna run test:clean --stream",
     "update-snapshots": "../deployment/update-snapshots.sh",
     "validate-config": "ts-node ./packages/@aws-accelerator/accelerator/lib/config-validator.ts",
-    "viper-scan": "cd .. && aws s3 cp s3://viperlight-scanner/latest/viperlight.zip . && unzip -qo viperlight.zip -d ../viperlight && rm -r ./viperlight.zip && ../viperlight/bin/viperlight scan",
+    "viper-scan": "cd .. && wget -v 'https://s3.amazonaws.com/viperlight-scanner/latest/viperlight.zip' && unzip -qo viperlight.zip -d ../viperlight && rm -r ./viperlight.zip && ../viperlight/bin/viperlight scan",
     "scan-logging": "chmod +x ./log-scanner.sh && ./log-scanner.sh"
   },
   "lint-staged": {
