@@ -23,10 +23,10 @@ import {
 } from '@aws-sdk/client-codecommit';
 import {
   CodePipelineClient,
-  ListPipelineExecutionsCommand,
   GetPipelineExecutionCommand,
   ListPipelineExecutionsCommandOutput,
   PipelineExecutionSummary,
+  paginateListPipelineExecutions,
 } from '@aws-sdk/client-codepipeline';
 import {
   ListObjectsV2Command,
@@ -513,15 +513,12 @@ function findSuccessfulPipelineExecution(
 }
 
 async function getLastSuccessfulPipelineExecution(codePipelineClient: CodePipelineClient, pipelineName: string) {
-  let nextToken: string | undefined;
   let lastSuccessfulExecution: PipelineExecutionSummary | undefined;
-  do {
-    const executions = await throttlingBackOff(() =>
-      codePipelineClient.send(new ListPipelineExecutionsCommand({ pipelineName, nextToken })),
-    );
-    lastSuccessfulExecution = findSuccessfulPipelineExecution(executions);
-    nextToken = executions.nextToken;
-  } while (nextToken || !lastSuccessfulExecution);
+  const paginator = paginateListPipelineExecutions({ client: codePipelineClient }, { pipelineName });
+
+  for await (const page of paginator) {
+    lastSuccessfulExecution = findSuccessfulPipelineExecution(page) ?? lastSuccessfulExecution;
+  }
 
   return lastSuccessfulExecution;
 }

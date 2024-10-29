@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - fix(config): adjust all-enabled config for asset bucket name
+- fix(metadata): accelerator lambda times out without error
 
 ### Changed
 
