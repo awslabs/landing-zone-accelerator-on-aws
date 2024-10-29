@@ -28,6 +28,14 @@ accelerator:build:
     paths:
       - source
     expire_in: 3 hrs
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: never
+    - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
+      when: never
+    - if: $CI_MERGE_REQUEST_IID != null  
+      when: never
+    - when: always    
 accelerator:lint:
   stage: pipeline
   needs: [ "accelerator:build" ]
@@ -36,10 +44,6 @@ accelerator:lint:
     - size:xlarge
   script:
     - "export NODE_OPTIONS=--max_old_space_size=28672"
-    - "wget -v 'https://s3.amazonaws.com/viperlight-scanner/latest/viperlight.zip'"
-    - "unzip -qo viperlight.zip -d ../viperlight"
-    - "rm -r ./viperlight.zip"
-    - "../viperlight/bin/viperlight scan"
     - "npm install yarn@1.22.22"
     - "cd source"
     - "yarn install"
@@ -50,6 +54,19 @@ accelerator:lint:
     - "yarn validate-config packages/@aws-accelerator/accelerator/test/configs/no-org-config/" # Validate no-org config files"
     - "cd packages/@aws-accelerator/accelerator"
     - "yarn run ts-node --transpile-only cdk.ts synth --require-approval never --config-dir test/configs/no-org-config --partition aws-us-gov" # ensure no-org config can synth without AWS credentials
+    - "cd ../../../"
+    - "yarn git-clean"
+    - "yarn run viper-scan"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: never
+    - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
+      when: never
+    - if:  $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: never
+    - if: $CI_MERGE_REQUEST_IID != null
+      when: never
+    - when: always 
 unit-test:accelerator:
   stage: pipeline
   needs: [ "accelerator:build" ]
@@ -66,6 +83,16 @@ unit-test:accelerator:
       junit:
         - source/packages/@aws-accelerator/accelerator/test-reports/*.xml
     expire_in: 1 day
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: never
+    - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
+      when: never
+    - if:  $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: never
+    - if: $CI_MERGE_REQUEST_IID != null
+      when: never
+    - when: always    
 unit-test:config:
   stage: pipeline
   needs: [ "accelerator:build" ]
@@ -82,6 +109,16 @@ unit-test:config:
       junit:
         - source/packages/@aws-accelerator/config/test-reports/*.xml
     expire_in: 1 day
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: never
+    - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
+      when: never
+    - if:  $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: never
+    - if: $CI_MERGE_REQUEST_IID != null
+      when: never
+    - when: always   
 unit-test:constructs:
   stage: pipeline
   needs: [ "accelerator:build" ]
@@ -98,6 +135,16 @@ unit-test:constructs:
       junit:
         - source/packages/@aws-accelerator/constructs/test-reports/*.xml
     expire_in: 1 day
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: never
+    - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
+      when: never
+    - if:  $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: never
+    - if: $CI_MERGE_REQUEST_IID != null
+      when: never
+    - when: always     
 unit-test:govcloud-account-vending:
   stage: pipeline
   needs: [ "accelerator:build" ]
@@ -114,6 +161,16 @@ unit-test:govcloud-account-vending:
       junit:
         - source/packages/@aws-accelerator/govcloud-account-vending/test-reports/*.xml
     expire_in: 1 day
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: never
+    - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
+      when: never
+    - if:  $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: never
+    - if: $CI_MERGE_REQUEST_IID != null
+      when: never
+    - when: always      
 unit-test:installer:
   stage: pipeline
   needs: [ "accelerator:build" ]
@@ -130,6 +187,16 @@ unit-test:installer:
       junit:
         - source/packages/@aws-accelerator/installer/test-reports/*.xml
     expire_in: 1 day
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: never
+    - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
+      when: never
+    - if:  $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: never
+    - if: $CI_MERGE_REQUEST_IID != null
+      when: never
+    - when: always     
 unit-test:modules:
   stage: pipeline
   needs: [ "accelerator:build" ]
@@ -146,6 +213,16 @@ unit-test:modules:
       junit:
         - source/packages/@aws-accelerator/lza-modules/test-reports/*.xml
     expire_in: 1 day
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: never
+    - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
+      when: never
+    - if:  $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: never
+    - if: $CI_MERGE_REQUEST_IID != null
+      when: never
+    - when: always   
 unit-test:tools:
   stage: pipeline
   needs: [ "accelerator:build" ]
@@ -161,7 +238,17 @@ unit-test:tools:
     reports:
       junit:
         - source/packages/@aws-accelerator/tools/test-reports/*.xml
-    expire_in: 1 day
+    expire_in: 1 day 
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: never
+    - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
+      when: never
+    - if:  $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: never
+    - if: $CI_MERGE_REQUEST_IID != null
+      when: never
+    - when: always
 macie:aws:us-east-1:
   stage: pipeline
   needs: [ "accelerator:build" ]
@@ -180,7 +267,11 @@ macie:aws:us-east-1:
     - "yarn test:unit"
     - "yarn test:integration"
   rules:
-    - if: $EXECUTE_INTEGRATION_TEST == "Yes" || $CI_COMMIT_BRANCH == "integ"
+    - if: $EXECUTE_INTEGRATION_TEST == "Yes"
+      when: always
+    - if: $CI_COMMIT_BRANCH == "integ"
+      when: always
+    - when: never
   artifacts:
     when: always
     reports:
@@ -204,7 +295,11 @@ macie:aws:us-west-2:
     - "yarn test:unit"
     - "yarn test:integration"
   rules:
-    - if: $EXECUTE_INTEGRATION_TEST == "Yes" || $CI_COMMIT_BRANCH == "integ"
+    - if: $EXECUTE_INTEGRATION_TEST == "Yes"
+      when: always
+    - if: $CI_COMMIT_BRANCH == "integ"
+      when: always
+    - when: never
   artifacts:
     when: always
     reports:
@@ -228,7 +323,11 @@ guardduty:aws:us-east-1:
     - "yarn test:unit"
     - "yarn test:integration"
   rules:
-    - if: $EXECUTE_INTEGRATION_TEST == "Yes" || $CI_COMMIT_BRANCH == "integ"
+    - if: $EXECUTE_INTEGRATION_TEST == "Yes"
+      when: always
+    - if: $CI_COMMIT_BRANCH == "integ"
+      when: always
+    - when: never
   artifacts:
     when: always
     reports:
@@ -252,7 +351,11 @@ guardduty:aws:us-west-2:
     - "yarn test:unit"
     - "yarn test:integration"
   rules:
-    - if: $EXECUTE_INTEGRATION_TEST == "Yes" || $CI_COMMIT_BRANCH == "integ"
+    - if: $EXECUTE_INTEGRATION_TEST == "Yes"
+      when: always
+    - if: $CI_COMMIT_BRANCH == "integ"
+      when: always
+    - when: never
   artifacts:
     when: always
     reports:
@@ -277,7 +380,10 @@ installer:
       - AWSAccelerator-InstallerStack.template.json
   rules:
     - if: $CI_COMMIT_BRANCH == "integ"
+      when: always
     - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: always
+    - when: never
 workshop:
   stage: pipeline
   needs: [ "accelerator:build" ]
@@ -301,7 +407,10 @@ workshop:
       - AWSAccelerator-InstallerStack-Workshop.template.json
   rules:
     - if: $CI_COMMIT_BRANCH == "integ"
+      when: always
     - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: always
+    - when: never
 accelerator:pages:
   stage: pipeline
   needs: [ "accelerator:build" ]
@@ -322,7 +431,10 @@ accelerator:pages:
       - public
   rules:
     - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: always
     - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_BRANCH == "integ"
+      when: always
+    - when: never
 accelerator:release-docs:
   stage: pipeline
   needs: 
@@ -372,6 +484,8 @@ accelerator:release-docs:
       - typedocs.zip
   rules:
     - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: always
+    - when: never
 
 # make a zip file upon commit tag
 release-artifact-al2023-prep:
@@ -407,6 +521,8 @@ release-artifact-al2023-prep:
       - $CI_PROJECT_DIR/deployment/build/context_dir/
   rules:
     - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: always
+    - when: never
 
 # use created context to build 
 release-artifact-al2023-build:
@@ -429,6 +545,8 @@ release-artifact-al2023-build:
       - $CI_PROJECT_DIR/deployment/build/context_dir/lza-$CI_COMMIT_TAG-al2023.tar.gz
   rules:
     - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: always
+    - when: never
 
 
 # upload artifact into package for release
@@ -457,6 +575,8 @@ release-artifact-al2023-upload:
       curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file $CI_PROJECT_DIR/lza-$CI_COMMIT_TAG-al2023.tar.gz.sha1sum "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lza-container/${CI_COMMIT_TAG}/lza-${CI_COMMIT_TAG}-al2023.tar.gz.sha1sum"
   rules:
     - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: always
+    - when: never
 
 # release based on commit tag
 release-artifact-al2023-release:
@@ -477,3 +597,5 @@ release-artifact-al2023-release:
         --description "Landing Zone Accelerator on AWS container version $CI_COMMIT_TAG built on AL2023" 
   rules:
     - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: always
+    - when: never
