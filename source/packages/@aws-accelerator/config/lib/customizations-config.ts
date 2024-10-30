@@ -77,6 +77,8 @@ export class CloudFormationStackSetConfig implements i.ICloudFormationStackSet {
   readonly template: string = '';
   readonly parameters: t.CfnParameter[] | undefined = undefined;
   readonly dependsOn: string[] = [];
+  readonly administrationRoleArn?: string;
+  readonly executionRoleName?: string;
 }
 
 export class AlbListenerFixedResponseConfig implements i.IAlbListenerFixedResponseConfig {
