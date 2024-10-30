@@ -470,6 +470,10 @@
       "additionalProperties": false,
       "description": "Defines a custom CloudFormation StackSet to be deployed to the environment.",
       "properties": {
+        "administrationRoleArn": {
+          "description": "The Amazon Resource Number (ARN) of the IAM role to use to create this stack set.",
+          "type": "string"
+        },
         "capabilities": {
           "description": "The CloudFormation capabilities enabled to deploy the stackset.",
           "items": {
@@ -496,6 +500,10 @@
         "description": {
           "$ref": "#/definitions/NonEmptyString",
           "description": "The description is to used to provide more information about the stackset."
+        },
+        "executionRoleName": {
+          "description": "The name of the IAM execution role to use to create the stack set.",
+          "type": "string"
         },
         "name": {
           "$ref": "#/definitions/NonEmptyString",
