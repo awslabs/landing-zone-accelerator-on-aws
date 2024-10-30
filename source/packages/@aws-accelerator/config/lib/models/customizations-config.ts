@@ -1589,6 +1589,14 @@ export interface ICloudFormationStackSet {
    * Please note this does not guarantee the deployment order of the stack instances within the StackSet.
    */
   readonly dependsOn?: string[];
+  /**
+   * The Amazon Resource Number (ARN) of the IAM role to use to create this stack set.
+   */
+  readonly administrationRoleArn?: string;
+  /**
+   * The name of the IAM execution role to use to create the stack set.
+   */
+  readonly executionRoleName?: string;
 }
 
 export type PortfolioAssociationType = 'User' | 'Group' | 'Role' | 'PermissionSet';

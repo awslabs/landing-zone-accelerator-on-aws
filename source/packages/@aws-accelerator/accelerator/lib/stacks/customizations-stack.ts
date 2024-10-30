@@ -118,7 +118,9 @@ export class CustomizationsStack extends AcceleratorStack {
               },
             ],
             templateUrl: templateUrl,
-            parameters,
+            administrationRoleArn: stackSet.administrationRoleArn,
+            executionRoleName: stackSet.executionRoleName,
+            parameters: parameters,
           },
         );
 
