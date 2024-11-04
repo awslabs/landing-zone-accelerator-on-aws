@@ -321,6 +321,7 @@ exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
               "Action": [
                 "iam:CreateServiceLinkedRole",
                 "iam:GetRole",
+                "lambda:GetFunction",
               ],
               "Effect": "Allow",
               "Resource": "*",

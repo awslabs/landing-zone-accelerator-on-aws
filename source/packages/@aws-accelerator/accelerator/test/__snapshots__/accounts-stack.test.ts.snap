@@ -173,6 +173,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
               "Action": [
                 "iam:CreateServiceLinkedRole",
                 "iam:GetRole",
+                "lambda:GetFunction",
               ],
               "Effect": "Allow",
               "Resource": "*",
@@ -1196,6 +1197,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
               "Action": [
                 "iam:CreateServiceLinkedRole",
                 "iam:GetRole",
+                "lambda:GetFunction",
               ],
               "Effect": "Allow",
               "Resource": "*",
@@ -1466,6 +1468,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
               "Action": [
                 "iam:CreateServiceLinkedRole",
                 "iam:GetRole",
+                "lambda:GetFunction",
               ],
               "Effect": "Allow",
               "Resource": "*",
@@ -2727,6 +2730,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
               "Action": [
                 "iam:CreateServiceLinkedRole",
                 "iam:GetRole",
+                "lambda:GetFunction",
               ],
               "Effect": "Allow",
               "Resource": "*",

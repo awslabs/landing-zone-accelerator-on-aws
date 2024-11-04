@@ -2065,6 +2065,7 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
               "Action": [
                 "iam:CreateServiceLinkedRole",
                 "iam:GetRole",
+                "lambda:GetFunction",
               ],
               "Effect": "Allow",
               "Resource": "*",
