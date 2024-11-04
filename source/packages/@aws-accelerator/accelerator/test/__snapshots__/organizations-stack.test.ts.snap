@@ -2328,6 +2328,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
               "Action": [
                 "iam:CreateServiceLinkedRole",
                 "iam:GetRole",
+                "lambda:GetFunction",
               ],
               "Effect": "Allow",
               "Resource": "*",
@@ -5752,6 +5753,7 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
               "Action": [
                 "iam:CreateServiceLinkedRole",
                 "iam:GetRole",
+                "lambda:GetFunction",
               ],
               "Effect": "Allow",
               "Resource": "*",
@@ -9069,6 +9071,7 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
               "Action": [
                 "iam:CreateServiceLinkedRole",
                 "iam:GetRole",
+                "lambda:GetFunction",
               ],
               "Effect": "Allow",
               "Resource": "*",

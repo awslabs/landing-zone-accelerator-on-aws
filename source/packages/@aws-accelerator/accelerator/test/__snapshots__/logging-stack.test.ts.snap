@@ -117,6 +117,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
               "Action": [
                 "iam:CreateServiceLinkedRole",
                 "iam:GetRole",
+                "lambda:GetFunction",
               ],
               "Effect": "Allow",
               "Resource": "*",
@@ -1667,6 +1668,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
               "Action": [
                 "iam:CreateServiceLinkedRole",
                 "iam:GetRole",
+                "lambda:GetFunction",
               ],
               "Effect": "Allow",
               "Resource": "*",
@@ -4773,6 +4775,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
               "Action": [
                 "iam:CreateServiceLinkedRole",
                 "iam:GetRole",
+                "lambda:GetFunction",
               ],
               "Effect": "Allow",
               "Resource": "*",
@@ -5305,6 +5308,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
               "Action": [
                 "iam:CreateServiceLinkedRole",
                 "iam:GetRole",
+                "lambda:GetFunction",
               ],
               "Effect": "Allow",
               "Resource": "*",
@@ -9491,6 +9495,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
               "Action": [
                 "iam:CreateServiceLinkedRole",
                 "iam:GetRole",
+                "lambda:GetFunction",
               ],
               "Effect": "Allow",
               "Resource": "*",
@@ -10765,6 +10770,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
               "Action": [
                 "iam:CreateServiceLinkedRole",
                 "iam:GetRole",
+                "lambda:GetFunction",
               ],
               "Effect": "Allow",
               "Resource": "*",
