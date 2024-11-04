@@ -69,7 +69,7 @@ export class ServiceLinkedRole extends Construct {
       initialPolicy: [
         new cdk.aws_iam.PolicyStatement({
           effect: cdk.aws_iam.Effect.ALLOW,
-          actions: ['iam:CreateServiceLinkedRole', 'iam:GetRole'],
+          actions: ['iam:CreateServiceLinkedRole', 'iam:GetRole', 'lambda:GetFunction'],
           resources: ['*'],
         }),
       ],
