@@ -658,6 +658,8 @@ export interface IAssetBucketConfig {
    * Policy statements from these files will be added to the bucket encryption key policy.
    * This property can not be used when customPolicyOverrides.kmsPolicy property has value.
    * When imported CentralLogs bucket used with createAcceleratorManagedKey set to false, this property can not have any value.
+   *
+   * Note: The Assets Bucket will allow customers to have SSE-S3 (Amazon S3 managed keys) or SSE-KMS keys. Only SSE-KMS keys can adopt the KMS resource policy files.
    */
   readonly kmsResourcePolicyAttachments?: t.IResourcePolicyStatement[];
   /**
@@ -673,6 +675,8 @@ export interface IAssetBucketConfig {
    *    applyAcceleratorManagedBucketPolicy: true
    *    createAcceleratorManagedKey: true
    * ```
+   * Note: When importing your own Assets S3 Bucket, be sure to create it in the `Management` account in the `home` region.
+   *
    *
    * @default
    * undefined
@@ -882,6 +886,8 @@ export interface ICentralLogBucketConfig {
    * Policy statements from these files will be added to the bucket encryption key policy.
    * This property can not be used when customPolicyOverrides.kmsPolicy property has value.
    * When imported CentralLogs bucket used with createAcceleratorManagedKey set to false, this property can not have any value.
+   *
+   * Note: The Central Logs Bucket will allow customers to have SSE-S3 (Amazon S3 managed keys) or SSE-KMS keys. Only SSE-KMS keys can adopt the KMS resource policy files.
    */
   readonly kmsResourcePolicyAttachments?: t.IResourcePolicyStatement[];
   /**
@@ -1015,6 +1021,7 @@ export interface IElbLogBucketConfig {
    * customPolicyOverrides:
    *   s3Policy: path/to/policy.json
    * ```
+   * Note: If importing your own ELB Log buckets, be sure to create the buckets in the `LogArchive` account and a bucket within each operating region that LZA is configured in.
    *
    * @default
    * undefined

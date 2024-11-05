@@ -192,12 +192,12 @@ logging:
     lifecycleRules: []
   elbLogBucket:
     importedBucket:
-      name: existing-elb-logs-bucket-${ACCOUNT_ID}-${REGION}
+      name: existing-elb-logs-bucket-${ELB_LOG_BUCKET_ACCOUNT_ID}-${REGION}
       applyAcceleratorManagedBucketPolicy: true
     # customPolicyOverrides:
     #   policy: bucket-policies/full-elb-log-bucket.json
-    # s3ResourcePolicyAttachments:
-    #   - policy: bucket-policies/elb-logs-bucket.json
+    s3ResourcePolicyAttachments:
+      - policy: bucket-policies/elb-logs-bucket.json
     lifecycleRules: []
 
   sessionManager:
