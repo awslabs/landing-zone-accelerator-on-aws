@@ -28,3 +28,9 @@ describe('CustomizationsStack', () => {
 describe('CustomizationsStack', () => {
   snapShotTest(testNamePrefix, sharedServicesStack);
 });
+
+describe('CustomizationsStack', () => {
+  const stack = new AcceleratorSynthStacks(AcceleratorStage.CUSTOMIZATIONS, 'aws', 'us-east-1', 'all-enabled');
+  snapShotTest(testNamePrefix, stack.stacks.get('Management-us-east-1')!);
+  snapShotTest(testNamePrefix, stack.stacks.get('SharedServices-us-east-1')!);
+});
