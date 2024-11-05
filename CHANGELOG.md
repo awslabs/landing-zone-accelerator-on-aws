@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- feat(customizations): add feature to set custom admin and execution roles for custom stacksets
 - feat(operations): add feature to create users without console access.
 - feat(pipeline): add feature to parallelise synth and diff operations
 - feat(pipeline): add feature to reuse synth to all deploy actions
