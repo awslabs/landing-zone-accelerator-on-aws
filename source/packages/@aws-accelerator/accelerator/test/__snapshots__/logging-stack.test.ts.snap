@@ -4925,6 +4925,19 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "AcceleratorImportedCentralLogsBucketKmsArnParameterAD2B8044": {
+      "Properties": {
+        "Name": "/accelerator/imported-resources/logging/central-bucket/kms/arn",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "ImportedcentralLogsBucketKey7AB36134",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "AcceleratorKmsArnParameterAppEbsKey9D12461F": {
       "Properties": {
         "Name": "/accelerator/kms/appEbsKey/key-arn",
@@ -7071,6 +7084,42 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
                 },
               },
               "Resource": "*",
+            },
+            {
+              "Action": [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
+              "Condition": {
+                "ArnLike": {
+                  "aws:PrincipalARN": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::*:role/AWSAccelerator-AssetsAccessRole",
+                        ],
+                      ],
+                    },
+                  ],
+                },
+                "StringEquals": {
+                  "aws:PrincipalOrgID": "o-asdf123456",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "Allow Accelerator and Assets Role to use the encryption key",
             },
             {
               "Action": "kms:*",

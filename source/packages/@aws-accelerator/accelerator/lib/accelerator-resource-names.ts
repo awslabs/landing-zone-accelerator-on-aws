@@ -43,6 +43,7 @@ interface RoleNames {
 }
 interface ParameterNames {
   importedCentralLogBucketCmkArn: string;
+  importedAssetBucket: string;
   centralLogBucketCmkArn: string;
   controlTowerDriftDetection: string;
   controlTowerLastDriftMessage: string;
@@ -71,6 +72,7 @@ interface CmkDetails {
   orgTrailLog: { alias: string; description: string };
   centralLogsBucket: { alias: string; description: string };
   importedCentralLogsBucket: { alias: string; description: string };
+  importedAssetBucket: { alias: string; description: string };
   metadataBucket: { alias: string; description: string };
   ebsDefault: { alias: string; description: string };
   s3: { alias: string; description: string };
@@ -123,6 +125,7 @@ export class AcceleratorResourceNames {
   };
   public parameters: ParameterNames = {
     importedCentralLogBucketCmkArn: 'PLACE_HOLDER',
+    importedAssetBucket: 'PLACE_HOLDER',
     centralLogBucketCmkArn: 'PLACE_HOLDER',
     controlTowerDriftDetection: 'PLACE_HOLDER',
     controlTowerLastDriftMessage: 'PLACE_HOLDER',
@@ -151,6 +154,7 @@ export class AcceleratorResourceNames {
     orgTrailLog: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
     centralLogsBucket: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
     importedCentralLogsBucket: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
+    importedAssetBucket: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
     metadataBucket: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
     ebsDefault: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
     s3: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
@@ -210,6 +214,7 @@ export class AcceleratorResourceNames {
     // SSM Parameter initializations
     this.parameters.importedCentralLogBucketCmkArn =
       props.prefixes.importResourcesSsmParamName + '/logging/central-bucket/kms/arn';
+    this.parameters.importedAssetBucket = props.prefixes.ssmParamName + '/imported-bucket/assets/s3';
     this.parameters.centralLogBucketCmkArn = props.prefixes.ssmParamName + '/logging/central-bucket/kms/arn';
     this.parameters.controlTowerDriftDetection = props.prefixes.ssmParamName + '/controltower/driftDetected';
     this.parameters.controlTowerLastDriftMessage = props.prefixes.ssmParamName + '/controltower/lastDriftMessage';
@@ -230,7 +235,8 @@ export class AcceleratorResourceNames {
     this.parameters.snsTopicCmkArn = props.prefixes.ssmParamName + '/kms/snstopic/key-arn';
     this.parameters.lambdaCmkArn = props.prefixes.ssmParamName + '/kms/lambda/key-arn';
     this.parameters.managementCmkArn = props.prefixes.ssmParamName + '/management/kms/key-arn';
-    this.parameters.importedAssetsBucketCmkArn = props.prefixes.importResourcesSsmParamName + '/assets/kms/key';
+    this.parameters.importedAssetsBucketCmkArn =
+      props.prefixes.importResourcesSsmParamName + '/imported/assets/kms/key';
     this.parameters.assetsBucketCmkArn = props.prefixes.ssmParamName + '/assets/kms/key';
     this.parameters.identityCenterInstanceArn =
       props.prefixes.ssmParamName + '/organization/security/identity-center/instance-arn';
@@ -250,6 +256,10 @@ export class AcceleratorResourceNames {
     this.customerManagedKeys.importedCentralLogsBucket = {
       alias: props.prefixes.kmsAlias + '/imported-bucket/central-logs/s3',
       description: 'AWS Accelerator Imported Central Logs Bucket CMK',
+    };
+    this.customerManagedKeys.importedAssetBucket = {
+      alias: props.prefixes.kmsAlias + '/imported-bucket/assets/s3',
+      description: 'AWS Accelerator Imported Asset Bucket CMK',
     };
     this.customerManagedKeys.metadataBucket = {
       alias: props.prefixes.kmsAlias + '/kms/metadata/key',
@@ -300,7 +310,7 @@ export class AcceleratorResourceNames {
       description: 'AWS Accelerator Management Account Kms Key',
     };
     this.customerManagedKeys.importedAssetsBucketCmkArn = {
-      alias: props.prefixes.kmsAlias + '/assets/kms/key',
+      alias: props.prefixes.kmsAlias + '/imported/assets/kms/key',
       description: 'Key used to encrypt solution assets',
     };
     this.customerManagedKeys.assetsBucket = {
