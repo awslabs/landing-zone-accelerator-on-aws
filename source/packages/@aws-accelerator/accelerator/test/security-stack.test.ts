@@ -12,30 +12,24 @@
  */
 
 import { AcceleratorStage } from '../lib/accelerator-stage';
-import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
 import { describe } from '@jest/globals';
 import { snapShotTest } from './snapshot-test';
+import { Create } from './accelerator-test-helpers';
 
 const testNamePrefix = 'Construct(SecurityStack): ';
 
-/**
- * SecurityStack
- */
-const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.SECURITY, 'aws', 'us-east-1');
-const stack = acceleratorTestStacks.stacks.get(`Management-us-east-1`)!;
-
 describe('SecurityStack', () => {
-  snapShotTest(testNamePrefix, stack);
+  snapShotTest(testNamePrefix, Create.stackProvider(`Management-us-east-1`, AcceleratorStage.SECURITY));
 });
 
-const delegatedAdminTestStacks = new AcceleratorSynthStacks(
-  AcceleratorStage.SECURITY,
-  'aws',
-  'us-east-1',
-  'all-enabled-delegated-admin',
-);
-const delegatedAdminStack = delegatedAdminTestStacks.stacks.get(`Management-us-east-1`)!;
-
 describe('delegatedAdminStack', () => {
-  snapShotTest(testNamePrefix, delegatedAdminStack);
+  snapShotTest(
+    testNamePrefix,
+    Create.stackProvider(`Management-us-east-1`, [
+      AcceleratorStage.SECURITY,
+      'aws',
+      'us-east-1',
+      'all-enabled-delegated-admin',
+    ]),
+  );
 });

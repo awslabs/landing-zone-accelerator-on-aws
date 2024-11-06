@@ -22,20 +22,22 @@ const testNamePrefix = 'Construct(DiagnosticsPackStack): ';
 /**
  * DiagnosticsPack Stack
  */
-const app = new cdk.App();
-const stack = new DiagnosticsPackStack(app, 'DiagnosticsPackStack', {
-  acceleratorPrefix: 'AWSAccelerator',
-  ssmParamPrefix: '/accelerator',
-  bucketNamePrefix: 'aws-accelerator',
-  installerStackName: 'AWSAccelerator-InstallerStack',
-  configRepositoryName: 'aws-accelerator-config',
-  qualifier: 'aws-accelerator',
-  env: {
-    account: '000000000000',
-    region: 'us-east-1',
-  },
-});
-
+const getStack = () => {
+  const app = new cdk.App();
+  const stack = new DiagnosticsPackStack(app, 'DiagnosticsPackStack', {
+    acceleratorPrefix: 'AWSAccelerator',
+    ssmParamPrefix: '/accelerator',
+    bucketNamePrefix: 'aws-accelerator',
+    installerStackName: 'AWSAccelerator-InstallerStack',
+    configRepositoryName: 'aws-accelerator-config',
+    qualifier: 'aws-accelerator',
+    env: {
+      account: '000000000000',
+      region: 'us-east-1',
+    },
+  });
+  return stack;
+};
 describe('DiagnosticsPackStack', () => {
-  snapShotTest(testNamePrefix, stack);
+  snapShotTest(testNamePrefix, getStack);
 });

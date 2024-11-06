@@ -12,34 +12,31 @@
  */
 
 import { AcceleratorStage } from '../lib/accelerator-stage';
-import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
 import { describe } from '@jest/globals';
 import { snapShotTest } from './snapshot-test';
+import { Create } from './accelerator-test-helpers';
 
 const testNamePrefix = 'Construct(LoggingStack): ';
 
-const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.LOGGING, 'aws', 'us-east-1');
-const stack = acceleratorTestStacks.stacks.get(`LogArchive-us-east-1`)!;
-
 describe('LoggingStack', () => {
-  snapShotTest(testNamePrefix, stack);
+  snapShotTest(testNamePrefix, Create.stackProvider(`LogArchive-us-east-1`, AcceleratorStage.LOGGING));
 });
-
-const acceleratorTestStacksOuTargets = new AcceleratorSynthStacks(
-  AcceleratorStage.LOGGING,
-  'aws',
-  'us-east-1',
-  'all-enabled-ou-targets',
-);
-const stackOuTargets = acceleratorTestStacksOuTargets.stacks.get(`LogArchive-us-east-1`)!;
 
 describe('LoggingStackOuTargets', () => {
-  snapShotTest('Construct(LoggingStackOuTargets): ', stackOuTargets);
+  snapShotTest(
+    'Construct(LoggingStackOuTargets): ',
+    Create.stackProvider(`LogArchive-us-east-1`, [
+      AcceleratorStage.LOGGING,
+      'aws',
+      'us-east-1',
+      'all-enabled-ou-targets',
+    ]),
+  );
 });
 
-const centralizedRegionTestStacks = new AcceleratorSynthStacks(AcceleratorStage.LOGGING, 'aws', 'us-west-2');
-const centralizedRegionTestStack = centralizedRegionTestStacks.stacks.get(`LogArchive-us-west-2`)!;
-
 describe('LoggingStack', () => {
-  snapShotTest(testNamePrefix, centralizedRegionTestStack);
+  snapShotTest(
+    testNamePrefix,
+    Create.stackProvider(`LogArchive-us-west-2`, [AcceleratorStage.LOGGING, 'aws', 'us-west-2']),
+  );
 });

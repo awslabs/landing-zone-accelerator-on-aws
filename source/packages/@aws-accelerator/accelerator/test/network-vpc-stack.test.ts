@@ -12,30 +12,24 @@
  */
 
 import { AcceleratorStage } from '../lib/accelerator-stage';
-import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
 import { describe } from '@jest/globals';
 import { snapShotTest } from './snapshot-test';
+import { Create } from './accelerator-test-helpers';
 
 const testNamePrefix = 'Construct(NetworkVpcStack): ';
 
-/**
- * NetworkVpcStack
- */
-const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.NETWORK_VPC, 'aws', 'us-east-1');
-const stack = acceleratorTestStacks.stacks.get(`Network-us-east-1`)!;
-
 describe('NetworkVpcStack', () => {
-  snapShotTest(testNamePrefix, stack);
+  snapShotTest(testNamePrefix, Create.stackProvider(`Network-us-east-1`, AcceleratorStage.NETWORK_VPC));
 });
 
-const noVpcFlowLogTestStack = new AcceleratorSynthStacks(
-  AcceleratorStage.NETWORK_VPC,
-  'aws',
-  'us-east-1',
-  'all-enabled-ou-targets',
-);
-const noVpcFlowLogStack = noVpcFlowLogTestStack.stacks.get(`Management-us-east-1`)!;
-
 describe('NoVpcFlowLogStack', () => {
-  snapShotTest(testNamePrefix, noVpcFlowLogStack);
+  snapShotTest(
+    testNamePrefix,
+    Create.stackProvider(`Management-us-east-1`, [
+      AcceleratorStage.NETWORK_VPC,
+      'aws',
+      'us-east-1',
+      'all-enabled-ou-targets',
+    ]),
+  );
 });

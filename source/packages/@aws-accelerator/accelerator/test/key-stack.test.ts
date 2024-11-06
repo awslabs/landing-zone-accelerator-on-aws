@@ -11,16 +11,11 @@
  *  and limitations under the License.
  */
 
-import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
 import { AcceleratorStage } from '../lib/accelerator-stage';
 import { describe } from '@jest/globals';
 import { snapShotTest } from './snapshot-test';
-
-const testNamePrefix = 'Construct(KeyStack): ';
-
-const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.KEY, 'aws', 'us-east-1');
-const stack = acceleratorTestStacks.stacks.get(`Audit-us-east-1`)!;
+import { Create } from './accelerator-test-helpers';
 
 describe('KeyStack', () => {
-  snapShotTest(testNamePrefix, stack);
+  snapShotTest('Construct(KeyStack): ', Create.stackProvider(`Audit-us-east-1`, AcceleratorStage.KEY));
 });

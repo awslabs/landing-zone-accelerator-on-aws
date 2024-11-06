@@ -12,22 +12,13 @@
  */
 
 import { AcceleratorStage } from '../lib/accelerator-stage';
-import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
 import { describe } from '@jest/globals';
 import { snapShotTest } from './snapshot-test';
-
-const testNamePrefix = 'Construct(ResourcePolicyEnforcementStack): ';
-
-/**
- * ResourcePolicyEnforcementStack
- */
-const acceleratorTestStacks = new AcceleratorSynthStacks(
-  AcceleratorStage.RESOURCE_POLICY_ENFORCEMENT,
-  'aws',
-  'us-east-1',
-);
-const stack = acceleratorTestStacks.stacks.get(`Management-us-east-1`)!;
+import { Create } from './accelerator-test-helpers';
 
 describe('ResourcePolicyEnforcementStack', () => {
-  snapShotTest(testNamePrefix, stack);
+  snapShotTest(
+    'Construct(ResourcePolicyEnforcementStack): ',
+    Create.stackProvider(`Management-us-east-1`, AcceleratorStage.RESOURCE_POLICY_ENFORCEMENT),
+  );
 });

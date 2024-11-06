@@ -11,22 +11,17 @@
  *  and limitations under the License.
  */
 
-import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
 import { AcceleratorStage } from '../lib/accelerator-stage';
 import { describe } from '@jest/globals';
 import { snapShotTest } from './snapshot-test';
+import { Create, memoize } from './accelerator-test-helpers';
 
-const testNamePrefix = 'Construct(AccountsStack): ';
+const getStacks = memoize(Create.stacksProvider(AcceleratorStage.ACCOUNTS));
 
 describe('AccountsStack us-east-1', () => {
-  const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.ACCOUNTS, 'aws', 'us-east-1');
-  const stack = acceleratorTestStacks.stacks.get(`Management-us-east-1`)!;
-  snapShotTest(testNamePrefix, stack);
+  snapShotTest('Construct(AccountsStack): ', Create.stackProviderFromStacks(`Management-us-east-1`, getStacks));
 });
 
 describe('AccountsStack us-west-2', () => {
-  const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.ACCOUNTS, 'aws', 'us-east-1');
-
-  const stack = acceleratorTestStacks.stacks.get(`Management-us-west-2`)!;
-  snapShotTest('Construct(AccountsStackUsWest2): ', stack);
+  snapShotTest('Construct(AccountsStackUsWest2): ', Create.stackProviderFromStacks(`Management-us-west-2`, getStacks));
 });

@@ -12,15 +12,13 @@
  */
 
 import { AcceleratorStage } from '../lib/accelerator-stage';
-import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
 import { describe } from '@jest/globals';
 import { snapShotTest } from './snapshot-test';
-
-const testNamePrefix = 'Construct(ApplicationsStack): ';
-
-const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.CUSTOMIZATIONS, 'aws', 'us-east-1');
-const stack = acceleratorTestStacks.stacks.get(`SharedServices-us-east-1`)!;
+import { Create } from './accelerator-test-helpers';
 
 describe('ApplicationsStack', () => {
-  snapShotTest(testNamePrefix, stack);
+  snapShotTest(
+    'Construct(ApplicationsStack): ',
+    Create.stackProvider(`SharedServices-us-east-1`, AcceleratorStage.CUSTOMIZATIONS),
+  );
 });

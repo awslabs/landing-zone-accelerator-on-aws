@@ -12,25 +12,23 @@
  */
 
 import { AcceleratorStage } from '../lib/accelerator-stage';
-import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
 import { describe } from '@jest/globals';
 import { snapShotTest } from './snapshot-test';
+import { Create, memoize } from './accelerator-test-helpers';
 
 const testNamePrefix = 'Construct(CustomizationsStack): ';
 
-const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.CUSTOMIZATIONS, 'aws', 'us-east-1');
-const stack = acceleratorTestStacks.stacks.get(`Management-us-east-1`)!;
-const sharedServicesStack = acceleratorTestStacks.stacks.get(`SharedServices-us-east-1`)!;
+const getStacks = memoize(Create.stacksProvider(AcceleratorStage.CUSTOMIZATIONS));
 
 describe('CustomizationsStack', () => {
-  snapShotTest(testNamePrefix, stack);
+  snapShotTest(testNamePrefix, Create.stackProviderFromStacks(`Management-us-east-1`, getStacks));
 });
 describe('CustomizationsStack', () => {
-  snapShotTest(testNamePrefix, sharedServicesStack);
+  snapShotTest(testNamePrefix, Create.stackProviderFromStacks(`SharedServices-us-east-1`, getStacks));
 });
 
 describe('CustomizationsStack', () => {
-  const stack = new AcceleratorSynthStacks(AcceleratorStage.CUSTOMIZATIONS, 'aws', 'us-east-1', 'all-enabled');
-  snapShotTest(testNamePrefix, stack.stacks.get('Management-us-east-1')!);
-  snapShotTest(testNamePrefix, stack.stacks.get('SharedServices-us-east-1')!);
+  const stacksProvider = Create.stacksProvider([AcceleratorStage.CUSTOMIZATIONS, 'aws', 'us-east-1', 'all-enabled']);
+  snapShotTest(testNamePrefix, Create.stackProviderFromStacks('Management-us-east-1', stacksProvider));
+  snapShotTest(testNamePrefix, Create.stackProviderFromStacks('SharedServices-us-east-1', stacksProvider));
 });

@@ -12,18 +12,13 @@
  */
 
 import { AcceleratorStage } from '../lib/accelerator-stage';
-import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
 import { describe } from '@jest/globals';
 import { snapShotTest } from './snapshot-test';
-
-const testNamePrefix = 'Construct(IdentityCenterStack): ';
-
-/**
- * IdentityCenter Stack
- */
-const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.IDENTITY_CENTER, 'aws', 'us-east-1');
-const stack = acceleratorTestStacks.stacks.get(`Management-us-east-1`)!;
+import { Create } from './accelerator-test-helpers';
 
 describe('IdentityCenterStack', () => {
-  snapShotTest(testNamePrefix, stack);
+  snapShotTest(
+    'Construct(IdentityCenterStack): ',
+    Create.stackProvider(`Management-us-east-1`, AcceleratorStage.IDENTITY_CENTER),
+  );
 });

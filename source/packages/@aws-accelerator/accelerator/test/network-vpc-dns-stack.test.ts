@@ -12,18 +12,13 @@
  */
 
 import { AcceleratorStage } from '../lib/accelerator-stage';
-import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
 import { describe } from '@jest/globals';
 import { snapShotTest } from './snapshot-test';
-
-const testNamePrefix = 'Construct(NetworkVpcDnsStack): ';
-
-/**
- * NetworkVpcEndpointsStack
- */
-const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.NETWORK_VPC_DNS, 'aws', 'us-east-1');
-const stack = acceleratorTestStacks.stacks.get(`Network-us-east-1`)!;
+import { Create } from './accelerator-test-helpers';
 
 describe('NetworkVpcDnsStack', () => {
-  snapShotTest(testNamePrefix, stack);
+  snapShotTest(
+    'Construct(NetworkVpcDnsStack): ',
+    Create.stackProvider(`Network-us-east-1`, AcceleratorStage.NETWORK_VPC_DNS),
+  );
 });

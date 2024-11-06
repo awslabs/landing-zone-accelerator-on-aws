@@ -13,25 +13,23 @@
 
 import { describe } from '@jest/globals';
 import { AcceleratorStage } from '../lib/accelerator-stage';
-import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
 import { snapShotTest } from './snapshot-test';
+import { Create } from './accelerator-test-helpers';
 
 const testNamePrefix = 'Construct(NetworkAssociationsStack): ';
 
-const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.NETWORK_ASSOCIATIONS, 'aws', 'us-east-1');
-const stack = acceleratorTestStacks.stacks.get(`Network-us-east-1`)!;
-
 describe('NetworkAssociationsStack', () => {
-  snapShotTest(testNamePrefix, stack);
+  snapShotTest(testNamePrefix, Create.stackProvider(`Network-us-east-1`, AcceleratorStage.NETWORK_ASSOCIATIONS));
 });
-const noVpcFlowLogTestStack = new AcceleratorSynthStacks(
-  AcceleratorStage.NETWORK_ASSOCIATIONS,
-  'aws',
-  'us-east-1',
-  'all-enabled-ou-targets',
-);
-const noVpcFlowLogStack = noVpcFlowLogTestStack.stacks.get(`Network-us-east-1`)!;
 
 describe('NoVpcFlowLogStack', () => {
-  snapShotTest(testNamePrefix, noVpcFlowLogStack);
+  snapShotTest(
+    testNamePrefix,
+    Create.stackProvider(`Network-us-east-1`, [
+      AcceleratorStage.NETWORK_ASSOCIATIONS,
+      'aws',
+      'us-east-1',
+      'all-enabled-ou-targets',
+    ]),
+  );
 });
