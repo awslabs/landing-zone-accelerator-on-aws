@@ -20,14 +20,14 @@ import path from 'path';
 import { DEFAULT_LAMBDA_RUNTIME } from '../../../utils/lib/lambda';
 
 import {
+  AccessLogBucketConfig,
+  AseaResourceType,
+  AssetBucketConfig,
+  CentralLogBucketConfig,
+  CloudWatchLogsExclusionConfig,
+  ElbLogBucketConfig,
   SnsTopicConfig,
   VpcFlowLogsConfig,
-  CloudWatchLogsExclusionConfig,
-  CentralLogBucketConfig,
-  ElbLogBucketConfig,
-  AccessLogBucketConfig,
-  AssetBucketConfig,
-  AseaResourceType,
 } from '@aws-accelerator/config';
 import * as t from '@aws-accelerator/config/lib/common/types';
 import {
@@ -35,22 +35,22 @@ import {
   BucketEncryption,
   BucketEncryptionType,
   BucketPolicy,
+  BucketPolicyProps,
   BucketPrefix,
   BucketPrefixProps,
   BucketReplicationProps,
   CentralLogsBucket,
   CloudWatchDestination,
+  CloudWatchLogDataProtection,
   CloudWatchLogsSubscriptionFilter,
   CloudWatchToS3Firehose,
   KmsEncryption,
   NewCloudWatchLogEvent,
+  PutSsmParameter,
   S3PublicAccessBlock,
+  ServiceLinkedRole,
   SsmParameterLookup,
   ValidateBucket,
-  PutSsmParameter,
-  BucketPolicyProps,
-  ServiceLinkedRole,
-  CloudWatchLogDataProtection,
 } from '@aws-accelerator/constructs';
 
 import {
@@ -1592,6 +1592,16 @@ export class LoggingStack extends AcceleratorStack {
         principal: 'macie.amazonaws.com',
         accessType: BucketAccessType.READWRITE,
       });
+
+      for (const region of this.props.globalConfig.enabledRegions) {
+        if (OptInRegions.includes(region)) {
+          awsPrincipalAccesses.push({
+            name: `Macie-${region}`,
+            principal: `macie.${region}.amazonaws.com`,
+            accessType: BucketAccessType.READWRITE,
+          });
+        }
+      }
     }
 
     if (this.props.securityConfig.centralSecurityServices.guardduty.enable) {
