@@ -12,15 +12,13 @@
  */
 
 import { AcceleratorStage } from '../lib/accelerator-stage';
-import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
 import { describe } from '@jest/globals';
 import { snapShotTest } from './snapshot-test';
-
-const testNamePrefix = 'Construct(NetworkPrepStack): ';
-
-const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.NETWORK_PREP, 'aws', 'us-east-1');
-const stack = acceleratorTestStacks.stacks.get(`Network-us-east-1`)!;
+import { Create } from './accelerator-test-helpers';
 
 describe('NetworkPrepStack', () => {
-  snapShotTest(testNamePrefix, stack);
+  snapShotTest(
+    'Construct(NetworkPrepStack): ',
+    Create.stackProvider(`Network-us-east-1`, AcceleratorStage.NETWORK_PREP),
+  );
 });

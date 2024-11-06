@@ -14,50 +14,57 @@ import * as cdk from 'aws-cdk-lib';
 import { SynthUtils } from '@aws-cdk/assert';
 import { expect, test } from '@jest/globals';
 
-export function snapShotTest(testNamePrefix: string, stack: cdk.Stack) {
+export function snapShotTest(testNamePrefix: string, stackProvider: () => cdk.Stack | undefined) {
   test(`${testNamePrefix} Snapshot Test`, () => {
-    // greedy implementation: eg, because "/path/home/temp.json" matches on
-    // temp.json, replace the whole string to "replaced-json-path.json".
-    const greedyJsonRegex = /[a-z0-9]+.json/;
+    const stack = stackProvider();
 
-    // limited: only match length of generated zip file or UUID spec lengths.
-    const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/;
-    const zipRegex = /[0-9a-f]{64}\.zip/;
-    const md5Regex = /^[0-9a-f]{32}$/; // limited: only match length of md5 hash.
+    expect(stack).toBeDefined();
+    if (!stack) return;
 
-    // test each serialized object - if any part of string matches regex
-    // replace with value of print()
-    expect.addSnapshotSerializer({
-      test: (
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        val: any,
-      ) => typeof val === 'string' && val.match(uuidRegex) != null,
-      print: () => '"REPLACED-UUID"',
-    });
+    configureSnapshotSeriliazers();
 
-    expect.addSnapshotSerializer({
-      test: (
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        val: any,
-      ) => typeof val === 'string' && val.match(zipRegex) != null,
-      print: () => '"REPLACED-GENERATED-NAME.zip"',
-    });
-
-    expect.addSnapshotSerializer({
-      test: (
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        val: any,
-      ) => typeof val === 'string' && val.match(greedyJsonRegex) != null,
-      print: () => '"REPLACED-JSON-PATH.json"',
-    });
-
-    expect.addSnapshotSerializer({
-      test: (
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        val: any,
-      ) => typeof val === 'string' && val.match(md5Regex) != null && !val.startsWith('REPLACED'),
-      print: () => '"REPLACED-MD5"',
-    });
     expect(SynthUtils.toCloudFormation(stack)).toMatchSnapshot();
+  });
+}
+
+const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/;
+const isUuid = (val: unknown) => typeof val === 'string' && val.match(uuidRegex) != null;
+
+const zipRegex = /[0-9a-f]{64}\.zip/;
+
+const isZip = (val: unknown) => typeof val === 'string' && val.match(zipRegex) != null;
+
+// greedy implementation: eg, because "/path/home/temp.json" matches on
+// temp.json, replace the whole string to "replaced-json-path.json".
+const greedyJsonRegex = /[a-z0-9]+.json/;
+
+const isGreedyJson = (val: unknown) => typeof val === 'string' && val.match(greedyJsonRegex) != null;
+
+// limited: only match length of generated zip file or UUID spec lengths.
+const md5Regex = /^[0-9a-f]{32}$/; // limited: only match length of md5 hash.
+
+const isMd5 = (val: unknown) => typeof val === 'string' && val.match(md5Regex) != null && !val.startsWith('REPLACED');
+
+function configureSnapshotSeriliazers() {
+  // test each serialized object - if any part of string matches regex
+  // replace with value of print()
+  expect.addSnapshotSerializer({
+    test: isUuid,
+    print: () => '"REPLACED-UUID"',
+  });
+
+  expect.addSnapshotSerializer({
+    test: isZip,
+    print: () => '"REPLACED-GENERATED-NAME.zip"',
+  });
+
+  expect.addSnapshotSerializer({
+    test: isGreedyJson,
+    print: () => '"REPLACED-JSON-PATH.json"',
+  });
+
+  expect.addSnapshotSerializer({
+    test: isMd5,
+    print: () => '"REPLACED-MD5"',
   });
 }

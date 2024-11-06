@@ -12,21 +12,16 @@
  */
 
 import { AcceleratorStage } from '../lib/accelerator-stage';
-import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
 import { describe } from '@jest/globals';
 import { snapShotTest } from './snapshot-test';
-
-const testNamePrefix = 'Construct(NetworkVpcEndpointsStack): ';
-
-/**
- * NetworkVpcEndpointsStack
- */
-const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.NETWORK_VPC_ENDPOINTS, 'aws', 'us-east-1');
-const stack = acceleratorTestStacks.stacks.get(`Network-us-east-1`)!;
+import { Create } from './accelerator-test-helpers';
 
 /**
  * NetworkVpcStack construct test
  */
 describe('NetworkVpcEndpointsStack', () => {
-  snapShotTest(testNamePrefix, stack);
+  snapShotTest(
+    'Construct(NetworkVpcEndpointsStack): ',
+    Create.stackProvider(`Network-us-east-1`, AcceleratorStage.NETWORK_VPC_ENDPOINTS),
+  );
 });

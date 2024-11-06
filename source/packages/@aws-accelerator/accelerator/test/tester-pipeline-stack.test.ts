@@ -21,23 +21,25 @@ const testNamePrefix = 'Construct(TesterPipelineStack): ';
 /**
  * TesterPipelineStack
  */
-const app = new cdk.App();
-const stack = new TesterPipelineStack(app, 'TesterPipelineStack', {
-  sourceRepositoryName: 'accelerator-source',
-  sourceBranchName: 'main',
-  qualifier: 'aws-accelerator',
-  managementCrossAccountRoleName: 'AWSControlTowerExecution',
-  managementAccountId: app.account,
-  managementAccountRoleName: 'AcceleratorAccountAccessRole',
-  prefixes: {
-    accelerator: 'AWSAccelerator',
-    repoName: 'aws-accelerator',
-    bucketName: 'aws-accelerator',
-    ssmParamName: '/accelerator',
-    kmsAlias: 'alias/accelerator',
-  },
-});
-
+const getStack = () => {
+  const app = new cdk.App();
+  const stack = new TesterPipelineStack(app, 'TesterPipelineStack', {
+    sourceRepositoryName: 'accelerator-source',
+    sourceBranchName: 'main',
+    qualifier: 'aws-accelerator',
+    managementCrossAccountRoleName: 'AWSControlTowerExecution',
+    managementAccountId: app.account,
+    managementAccountRoleName: 'AcceleratorAccountAccessRole',
+    prefixes: {
+      accelerator: 'AWSAccelerator',
+      repoName: 'aws-accelerator',
+      bucketName: 'aws-accelerator',
+      ssmParamName: '/accelerator',
+      kmsAlias: 'alias/accelerator',
+    },
+  });
+  return stack;
+};
 describe('TesterPipelineStack', () => {
-  snapShotTest(testNamePrefix, stack);
+  snapShotTest(testNamePrefix, getStack);
 });
