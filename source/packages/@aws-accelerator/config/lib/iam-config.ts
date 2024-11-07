@@ -18,9 +18,9 @@ import * as path from 'path';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 
 import { AccountsConfig } from './accounts-config';
-import { ReplacementsConfig } from './replacements-config';
 import * as t from './common';
 import * as i from './models/iam-config';
+import { ReplacementsConfig } from './replacements-config';
 
 const logger = createLogger(['iam-config']);
 
@@ -112,6 +112,7 @@ export class UserConfig implements i.IUserConfig {
   readonly username: string = '';
   readonly boundaryPolicy: string = '';
   readonly group: string = '';
+  readonly disableConsoleAccess?: boolean | undefined = undefined;
 }
 
 export class UserSetConfig implements i.IUserSetConfig {
