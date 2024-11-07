@@ -41,11 +41,12 @@
     ]
   },
   "scripts": {
+    "prebuild":"cd packages/@aws-lza && yarn cleanup && yarn install && yarn build",
     "build": "lerna run build --stream",
     "build-clean": "yarn run git-clean && yarn install && yarn run build",
     "cleanup": "lerna run cleanup --stream && rm -rf node_modules",
     "cleanup:tsc": "lerna run cleanup:tsc --stream",
-    "docs": "yarn run typedoc --entryPointStrategy expand './packages/@aws-accelerator/*' './packages/@aws-cdk-extensions/*' --includeVersion --disableSources --logLevel Verbose --basePath typedocs --excludeReferences --excludeNotDocumented --skipErrorChecking",
+    "docs": "yarn run typedoc --entryPointStrategy expand './packages/@aws-accelerator/*' './packages/@aws-cdk-extensions/*' './packages/@aws-lza/*' --includeVersion --disableSources --logLevel Verbose --basePath typedocs --excludeReferences --excludeNotDocumented --skipErrorChecking",
     "generate-all-docs": "../deployment/build-docs.sh",
     "git-clean": "cd .. && git clean -Xfd -e !development -e !development/** -e !.vscode -e !.vscode/**",
     "postinstall": "cd ../ && husky install source/.husky && cd source",
