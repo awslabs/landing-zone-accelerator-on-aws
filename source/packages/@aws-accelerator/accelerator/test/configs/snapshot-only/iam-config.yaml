@@ -144,6 +144,11 @@ userSets:
       - username: breakGlassUser02
         group: Administrators
         boundaryPolicy: Default-Boundary-Policy
+        disableConsoleAccess: false
+      - username: noConsoleUser01
+        group: Administrators
+        boundaryPolicy: Default-Boundary-Policy
+        disableConsoleAccess: true
 secretSets:
   - deploymentTargets:
       accounts:

@@ -988,6 +988,20 @@ exports[`OperationsStack Construct(OperationsStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::InstanceProfile",
     },
+    "NoConsoleUser017069731E": {
+      "Properties": {
+        "Groups": [
+          {
+            "Ref": "AdministratorsA37EF73A",
+          },
+        ],
+        "PermissionsBoundary": {
+          "Ref": "DefaultBoundaryPolicy489A8D26",
+        },
+        "UserName": "noConsoleUser01",
+      },
+      "Type": "AWS::IAM::User",
+    },
     "ServiceCatalogPropagationRole17EC5FCF": {
       "Metadata": {
         "cdk_nag": {
@@ -1212,6 +1226,22 @@ exports[`OperationsStack Construct(OperationsStack):  Snapshot Test 1`] = `
         "Value": {
           "Fn::GetAtt": [
             "NetworkSecurityRoleC82A0DA7",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNoConsoleUser01UserArn99E76B42": {
+      "DependsOn": [
+        "SsmParamAdministratorsGroupArn1018D83B",
+      ],
+      "Properties": {
+        "Name": "/accelerator/iam/user/noConsoleUser01/arn",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "NoConsoleUser017069731E",
             "Arn",
           ],
         },

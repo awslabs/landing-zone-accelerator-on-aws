@@ -102,6 +102,13 @@ export interface IUserConfig {
    * Permission boundary is derived from iam-policies/boundary-policy.json file in config repository
    */
   readonly boundaryPolicy?: t.NonEmptyString;
+
+  /**
+   * A boolean value to define if the user should have access to the AWS console.
+   * True will disable console access, False will enable it.
+   * defaults to False.
+   */
+  readonly disableConsoleAccess?: boolean;
 }
 
 /**
@@ -134,10 +141,10 @@ export interface IUserSetConfig {
 
 /**
  * *{@link IamConfig} / {@link IdentityCenterConfig} / {@link PermissionsBoundaryConfig} / {@link CustomerManagedPolicyReferenceConfig}*
- * 
+ *
  * @description
  * Customer Managed Policy Reference Config
- * 
+ *
  * @example
  * ```
  * permissionsBoundary:

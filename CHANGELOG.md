@@ -5,10 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.11.0] - 
+## [1.11.0] -
 
 ### Added
 
+- feat(operations): add feature to create users without console access.
 - feat(pipeline): add feature to parallelise synth and diff operations
 - feat(pipeline): add feature to reuse synth to all deploy actions
 - feat(piepline): add feature to consolidate all diffs and generate URL for review in Review stage
@@ -61,7 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(s3): add methods to construct imported bucket
 - fix(ssm): updated session manager role to allow kms permissions in all enabled regions
 - fix(validation): configuration validation failure when SecurityHub was enabled with Control Tower
-- fix(uninstaller): include deletion of IdentityCenter and ResourcePolicyEnforcement stacks 
+- fix(uninstaller): include deletion of IdentityCenter and ResourcePolicyEnforcement stacks
 
 ### Changed
 
@@ -69,7 +70,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore: suppress node warnings on synth
 - chore: update typedoc to v0.26.7
 - chore: updated cdk version
-- chore: updated deps @types/jest v29.5.12 aws-sdk v3.637.0 
+- chore: updated deps @types/jest v29.5.12 aws-sdk v3.637.0
 - chore: upgrade aws sdk to v2.1691.0
 - chore: upgrade lerna to v8.1.8
 - chore(cfn-nag): added suppressions

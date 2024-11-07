@@ -12,13 +12,13 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import * as fs from 'fs';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import * as winston from 'winston';
-import { NagSuppressions } from 'cdk-nag';
 
 import { PrincipalOrgIdConditionType } from '@aws-accelerator/utils/lib/common-resources';
 
@@ -26,13 +26,15 @@ import {
   AccountConfig,
   AccountsConfig,
   BlockDeviceMappingItem,
-  CustomizationsConfig,
   CloudWatchLogDataProtectionCategories,
+  CustomizationsConfig,
   DeploymentTargets,
   EbsItemConfig,
   GlobalConfig,
   GovCloudAccountConfig,
+  GuardDutyConfig,
   IamConfig,
+  isNetworkType,
   LifeCycleRule,
   NetworkConfig,
   OrganizationConfig,
@@ -40,22 +42,20 @@ import {
   ReplacementsConfig,
   S3EncryptionConfig,
   SecurityConfig,
+  SecurityHubConfig,
   ServiceEncryptionConfig,
   ShareTargets,
   VpcConfig,
   VpcTemplatesConfig,
-  isNetworkType,
-  SecurityHubConfig,
-  GuardDutyConfig,
 } from '@aws-accelerator/config';
 import { KeyLookup, S3LifeCycleRule, ServiceLinkedRole } from '@aws-accelerator/constructs';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
-import { SsmParameterPath, SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 import { policyReplacements } from '@aws-accelerator/utils/lib/policy-replacements';
+import { SsmParameterPath, SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 
 import { version } from '../../../../../package.json';
-import { AcceleratorResourceNames } from '../accelerator-resource-names';
 import { AcceleratorResourcePrefixes } from '../../utils/app-utils';
+import { AcceleratorResourceNames } from '../accelerator-resource-names';
 
 /**
  * Accelerator Key type enum
@@ -1876,6 +1876,15 @@ export abstract class AcceleratorStack extends cdk.Stack {
     } else {
       return imageId;
     }
+  }
+
+  /**
+   * Check if the specified regions is the home region for this stack
+   * @param region e.g. eu-west-1
+   * @returns boolean
+   */
+  protected isHomeRegion(region: string): boolean {
+    return region === cdk.Stack.of(this).region;
   }
 
   /**
