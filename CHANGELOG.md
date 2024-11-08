@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- fix(networking): fixes hosted zone dns for sagemaker and eks-auth endpoints
 - fix(config): adjust all-enabled config for asset bucket name
 - fix(logging): updated kms key for imported asset bucket
 

@@ -91,6 +91,9 @@ export class HostedZone extends cdk.Resource implements IHostedZone {
       case 'ecs-telemetry':
         hostedZoneName = `ecs-t.${region}.amazonaws.com`;
         break;
+      case 'eks-auth':
+        hostedZoneName = `eks-auth.${region}.api.aws`;
+        break;
       case 'codeartifact.api':
         hostedZoneName = `codeartifact.${region}.amazonaws.com`;
         break;
@@ -122,6 +125,7 @@ export class HostedZone extends cdk.Resource implements IHostedZone {
       's3-global.accesspoint',
       'ecs-agent',
       'ecs-telemetry',
+      'eks-auth',
       'notebook',
       'studio',
       'codeartifact.api',
