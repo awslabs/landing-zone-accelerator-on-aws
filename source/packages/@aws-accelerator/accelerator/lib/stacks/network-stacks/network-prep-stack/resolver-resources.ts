@@ -51,7 +51,7 @@ export class ResolverResources {
     [this.domainListMap, this.ruleGroupMap] = this.createDnsFirewallRuleGroups(
       delegatedAdminAccountId,
       centralConfig,
-      props,
+      props.configDirPath,
     );
     // Create Resolver query logs
     this.queryLogsMap = this.createResolverQueryLogs(
@@ -66,11 +66,12 @@ export class ResolverResources {
    * Create DNS firewall rule groups
    * @param accountId
    * @param firewallItem
+   * @param configDirPath
    */
   private createDnsFirewallRuleGroups(
     accountId: string,
     centralConfig: CentralNetworkServicesConfig,
-    props: AcceleratorStackProps,
+    configDirPath: string,
   ): Map<string, string>[] {
     const domainMap = new Map<string, string>();
     const ruleGroupMap = new Map<string, string>();
@@ -83,7 +84,7 @@ export class ResolverResources {
       // Create regional rule groups in the delegated admin account
       if (this.stack.isTargetStack([accountId], regions)) {
         // Create domain lists for the rule group
-        const ruleItemDomainMap = this.createDomainLists(firewallItem, domainMap, props);
+        const ruleItemDomainMap = this.createDomainLists(firewallItem, domainMap, configDirPath);
         ruleItemDomainMap.forEach((value, key) => domainMap.set(key, value));
 
         // Build new rule list with domain list ID
@@ -119,13 +120,13 @@ export class ResolverResources {
    * Create/look up domain lists as needed for a rule group
    * @param firewallItem
    * @param domainMap
-   * @param props
+   * @param configDirPath
    * @returns
    */
   private createDomainLists(
     firewallItem: DnsFirewallRuleGroupConfig,
     domainMap: Map<string, string>,
-    props: AcceleratorStackProps,
+    configDirPath: string,
   ): Map<string, string> {
     for (const ruleItem of firewallItem.rules) {
       let domainListType: ResolverFirewallDomainListType;
@@ -135,7 +136,7 @@ export class ResolverResources {
       // Check to ensure both types aren't defined
       if (ruleItem.customDomainList) {
         domainListType = ResolverFirewallDomainListType.CUSTOM;
-        filePath = path.join(props.configDirPath, ruleItem.customDomainList);
+        filePath = path.join(configDirPath, ruleItem.customDomainList);
         try {
           listName = path.basename(ruleItem.customDomainList, path.extname(ruleItem.customDomainList));
           message = `Creating DNS firewall custom domain list ${listName}`;
