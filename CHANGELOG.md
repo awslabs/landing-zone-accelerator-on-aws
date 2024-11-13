@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(config): adjust all-enabled config for asset bucket name
 - fix(logging): updated kms key for imported asset bucket
 - fix(pipeline): fix account bootstrap failed silently
+- fix(installer): fix management account bootstrap failed when using external pipeline
 
 ### Changed
 

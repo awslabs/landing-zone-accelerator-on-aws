@@ -860,7 +860,14 @@ export class InstallerStack extends cdk.Stack {
       serverAccessLogsBucket: installerServerAccessLogsBucket.getS3Bucket(),
     });
 
+    let roleName: string | undefined = undefined;
+
+    if (props.useExternalPipelineAccount) {
+      roleName = `${this.acceleratorQualifier!.valueAsString}-installer-admin-role`;
+    }
+
     const installerRole = new cdk.aws_iam.Role(this, 'InstallerAdminRole', {
+      roleName,
       assumedBy: new cdk.aws_iam.ServicePrincipal('codebuild.amazonaws.com'),
       managedPolicies: [cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess')],
     });
