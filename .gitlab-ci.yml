@@ -1,3 +1,110 @@
+# GitLab CI/CD Rules Documentation
+# ==============================
+#
+# Rule Patterns and Their Meanings
+# -----------------------------
+#
+# 1. Skip Main Branch Rule
+# ---------------------
+# if: $CI_COMMIT_BRANCH == "main"
+# when: never
+# Meaning: Skip the job when the pipeline runs on the main branch
+#
+# 2. Skip Version Branch Rule
+# ------------------------
+# if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
+# when: never
+# Meaning: Skip the job when the branch name ends with a version pattern
+# Example matches: release-v1.0.0, feature-v2.3.4, hotfix-v10.2.1
+#
+# 3. Skip Merge Request Rule
+# -----------------------
+# if: $CI_MERGE_REQUEST_IID != null
+# when: never
+# Meaning: Skip the job when the pipeline runs in context of a merge request
+#
+# 4. Integration Test Execution Rules
+# -------------------------------
+# if: $EXECUTE_INTEGRATION_TEST == "Yes"
+# when: always
+# Meaning: Execute the job when the EXECUTE_INTEGRATION_TEST variable is set to "Yes"
+#
+# 5. Integration Branch Rules
+# -----------------------
+# if: $CI_COMMIT_BRANCH == "integ"
+# when: always
+# Meaning: Execute the job when the pipeline runs on the "integ" branch
+#
+# 6. Version Tag Rules
+# -----------------
+# if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+# when: always
+# Meaning: Execute the job when the pipeline runs on a tag matching version pattern
+# Example matches: v1.0.0, v2.3.4, v10.2.1
+#
+# 7. Project-Specific Version Tag Rules
+# --------------------------------
+# if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+# when: always
+# Meaning: Execute the job only on specific project (11925) and when tag matches version pattern
+#
+# 8. Project-Specific Integration Branch Rules
+# ---------------------------------------
+# if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_BRANCH == "integ"
+# when: always
+# Meaning: Execute the job only on specific project (11925) and on the "integ" branch
+#
+# 9. Default Skip Rule
+# -----------------
+# when: never
+# Meaning: Skip the job if none of the above conditions match
+#
+# Rule Keywords Explained
+# --------------------
+# - if: Condition that must be true for the rule to apply
+# - when: Defines job behavior
+#   * always: Run job when conditions match
+#   * never: Skip job (prevent execution)
+#   * manual: Require manual intervention to run
+#
+# Variables Used in Rules
+# --------------------
+# CI_MERGE_REQUEST_IID:
+#   - ID of the merge request if pipeline runs in MR context
+#   - null when pipeline runs in other contexts
+#
+# CI_PROJECT_ID: 
+#   - GitLab's internal project identifier
+#   - "11925" represents specific project
+#
+# CI_COMMIT_TAG: 
+#   - The tag name for which the pipeline is running
+#   - Pattern v(\d.+){2}\d matches semantic versioning
+#
+# CI_COMMIT_BRANCH:
+#   - The branch name for which the pipeline is running
+#   - Special values: "main", "integ"
+#   - Can match version pattern for release branches
+#
+# EXECUTE_INTEGRATION_TEST:
+#   - Custom variable to control integration test execution
+#   - "Yes" enables integration tests
+#
+# Regular Expression Patterns
+# ------------------------
+# 1. Version Tag Pattern: v(\d.+){2}\d
+#    - v: Literal 'v' at start
+#    - (\d.+){2}: Two groups of digits followed by any characters
+#    - \d: Final digit
+#    - Examples: v1.0.0, v2.3.4, v10.2.1
+#
+# 2. Version Branch Pattern: .*v(\d.+){2}\d$
+#    - .*: Any characters at start
+#    - v(\d.+){2}\d: Same version pattern as above
+#    - $: End of string
+#    - Examples: release-v1.0.0, feature-v2.3.4
+
+
 image: public.ecr.aws/bitnami/node:18
 
 before_script:
@@ -249,6 +356,32 @@ unit-test:tools:
     - if: $CI_MERGE_REQUEST_IID != null
       when: never
     - when: always
+unit-test:aws-lza:
+  stage: pipeline
+  needs: [ "accelerator:build" ]
+  tags:
+    - arch:amd64
+    - size:medium
+  script:
+    - "export NODE_OPTIONS=--max_old_space_size=6144"
+    - "cd source/packages/@aws-lza"
+    - "yarn test:unit"
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - source/packages/@aws-lza/test-reports/*.xml
+    expire_in: 1 day 
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: never
+    - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
+      when: never
+    - if:  $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: never
+    - if: $CI_MERGE_REQUEST_IID != null
+      when: never
+    - when: always     
 macie:aws:us-east-1:
   stage: pipeline
   needs: [ "accelerator:build" ]
