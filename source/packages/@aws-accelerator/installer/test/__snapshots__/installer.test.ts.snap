@@ -8683,6 +8683,17 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
             ],
           },
         ],
+        "RoleName": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "AcceleratorQualifier",
+              },
+              "-installer-admin-role",
+            ],
+          ],
+        },
       },
       "Type": "AWS::IAM::Role",
     },
@@ -12462,6 +12473,17 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
             ],
           },
         ],
+        "RoleName": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "AcceleratorQualifier",
+              },
+              "-installer-admin-role",
+            ],
+          ],
+        },
       },
       "Type": "AWS::IAM::Role",
     },
@@ -16231,6 +16253,17 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
             ],
           },
         ],
+        "RoleName": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "AcceleratorQualifier",
+              },
+              "-installer-admin-role",
+            ],
+          ],
+        },
       },
       "Type": "AWS::IAM::Role",
     },
