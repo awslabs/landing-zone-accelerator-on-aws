@@ -116,7 +116,7 @@ function setOptions(resourceProperties: { [key: string]: any }, serviceToken: st
     props: {
       PrefixListId: resourceProperties['prefixListReference']['PrefixListId'],
       TransitGatewayRouteTableId: resourceProperties['prefixListReference']['TransitGatewayRouteTableId'],
-      Blackhole: resourceProperties['prefixListReference']['Blackhole'] === 'true' ?? undefined,
+      Blackhole: resourceProperties['prefixListReference']['Blackhole'] === 'true',
       TransitGatewayAttachmentId: resourceProperties['prefixListReference']['TransitGatewayAttachmentId'],
     },
     invokingAccountId: serviceToken.split(':')[4],
