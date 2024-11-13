@@ -60,6 +60,10 @@ export interface InstallerStackProps extends cdk.StackProps {
    * Accelerator Permission boundary usage flag
    */
   readonly usePermissionBoundary: boolean;
+  /**
+   * Region by region deployment usage flag
+   */
+  readonly enableRegionByRegionDeployment: boolean;
 }
 
 export class InstallerStack extends cdk.Stack {
@@ -261,6 +265,12 @@ export class InstallerStack extends cdk.Stack {
    */
   private readonly acceleratorPermissionBoundary: cdk.CfnParameter | undefined;
 
+  /**
+   * Deploy order for LZA region by region deployment
+   * @private
+   */
+  private readonly regionByRegionDeployOrder: cdk.CfnParameter | undefined;
+
   constructor(scope: Construct, id: string, props: InstallerStackProps) {
     super(scope, id, props);
 
@@ -361,6 +371,39 @@ export class InstallerStack extends cdk.Stack {
     let targetAcceleratorParameterLabels: { [p: string]: { default: string } } = {};
     let targetAcceleratorEnvVariables: { [p: string]: cdk.aws_codebuild.BuildEnvironmentVariable } = {};
     let s3EnvVariables: { [p: string]: cdk.aws_codebuild.BuildEnvironmentVariable } = {};
+
+    if (props.enableRegionByRegionDeployment) {
+      this.regionByRegionDeployOrder = new cdk.CfnParameter(this, 'RegionByRegionDeployOrder', {
+        type: 'String',
+        description: 'Provide comma(,) separated list of aws regions as order of LZA region by region deployment',
+      });
+
+      const regionByRegionDeploymentNotifyEmailSetting = new cdk.CfnRule(this, 'RequiredEmailNotification', {
+        ruleCondition: cdk.Fn.conditionNot(cdk.Fn.conditionEquals(this.regionByRegionDeployOrder.valueAsString, '')),
+      });
+
+      regionByRegionDeploymentNotifyEmailSetting.addAssertion(
+        cdk.Fn.conditionEquals(this.enableApprovalStage, 'Yes'),
+        'Review notification setting is required when region by region deployment is enabled',
+      );
+
+      parameterGroups.push({
+        Label: { default: 'Region By Region Deployment Configuration' },
+        Parameters: [this.regionByRegionDeployOrder.logicalId],
+      });
+
+      repositoryParameterLabels[this.regionByRegionDeployOrder.logicalId] = {
+        default: 'Region by Region Deployment Order',
+      };
+
+      targetAcceleratorEnvVariables = {
+        ...targetAcceleratorEnvVariables,
+        REGION_BY_REGION_DEPLOYMENT_ORDER: {
+          type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+          value: this.regionByRegionDeployOrder.valueAsString,
+        },
+      };
+    }
 
     if (props.usePermissionBoundary) {
       this.acceleratorPermissionBoundary = new cdk.CfnParameter(this, 'AcceleratorPermissionBoundary', {

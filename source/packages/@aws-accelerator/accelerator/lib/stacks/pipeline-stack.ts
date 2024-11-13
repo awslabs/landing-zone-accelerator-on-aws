@@ -97,6 +97,10 @@ export interface PipelineStackProps extends cdk.StackProps {
    * AWS Control Tower Landing Zone identifier
    */
   readonly landingZoneIdentifier?: string;
+  /**
+   * Accelerator region by region deploy order
+   */
+  readonly regionByRegionDeploymentOrder?: string;
 }
 
 export class PipelineStack extends cdk.Stack {

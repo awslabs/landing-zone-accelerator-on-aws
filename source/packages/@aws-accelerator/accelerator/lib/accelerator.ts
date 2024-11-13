@@ -51,6 +51,7 @@ import { AcceleratorToolkit, AcceleratorToolkitProps } from './toolkit';
 import { v4 as uuidv4 } from 'uuid';
 import { getReplacementsConfig } from '../utils/app-utils';
 import * as path from 'path';
+import { Regions } from '@aws-accelerator/utils/lib/regions';
 
 export type CustomStackRunOrder = {
   /**
@@ -345,6 +346,16 @@ export abstract class Accelerator {
         regionDetails,
         maxStacks,
       );
+
+      let enabledRegions = globalConfig.enabledRegions;
+
+      if (props.region) {
+        if (!Regions.includes(props.region)) {
+          throw Error(`Provided region: ${props.region} is not a valid aws region.`);
+        }
+
+        enabledRegions = [props.region as Region];
+      }
       //
       // Execute all remaining stages
       //
@@ -353,7 +364,7 @@ export abstract class Accelerator {
         promises,
         accountsConfig,
         managementAccountDetails,
-        globalConfig.enabledRegions,
+        enabledRegions,
         maxStacks,
         replacementsConfig,
       );
@@ -448,7 +459,8 @@ export abstract class Accelerator {
 
   private static isSingleStackAction(props: AcceleratorProps) {
     return (
-      props.account || props.region || [Command.SYNTH.toString(), Command.SYNTHESIZE.toString()].includes(props.command)
+      (props.account && props.region) ||
+      [Command.SYNTH.toString(), Command.SYNTHESIZE.toString()].includes(props.command)
     );
   }
 
@@ -903,7 +915,7 @@ export abstract class Accelerator {
       // get accounts where custom stack is deployed to
       const deploymentAccts = accountsConfig.getAccountIdsFromDeploymentTarget(stack.deploymentTargets);
       // get regions where custom stack is deployed to
-      const deploymentRegions = stack.regions.map(a => a.toString());
+      const deploymentRegions = stack.regions.map(a => a.toString()).filter(r => enabledRegions.includes(r));
       customizationsStackRunOrderData.push({
         stackName: stack.name,
         runOrder: stack.runOrder,
