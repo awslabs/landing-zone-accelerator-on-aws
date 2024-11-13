@@ -111,7 +111,7 @@ function setOptions(resourceProperties: { [key: string]: any }, serviceToken: st
   return {
     props: {
       TransitGatewayRouteTableId: resourceProperties['transitGatewayRouteTableId'],
-      Blackhole: resourceProperties['blackhole'] === 'true' ?? undefined,
+      Blackhole: resourceProperties['blackhole'] === 'true',
       DestinationCidrBlock: resourceProperties['destinationCidrBlock'],
       TransitGatewayAttachmentId: resourceProperties['transitGatewayAttachmentId'],
     },
