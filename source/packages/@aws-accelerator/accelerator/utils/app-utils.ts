@@ -247,6 +247,12 @@ export interface AcceleratorEnvironment {
    * Only applies if that SSM is present in the account
    */
   acceleratorPermissionBoundary?: string;
+
+  /**
+   * Accelerator region by region deploy order
+   * All the regions set here need to be in the enabled regions in config file.
+   */
+  regionByRegionDeploymentOrder?: string;
 }
 
 /**
@@ -398,6 +404,7 @@ export function setAcceleratorEnvironment(
     managementCrossAccountRoleName: env['MANAGEMENT_CROSS_ACCOUNT_ROLE_NAME'],
     qualifier: env['ACCELERATOR_QUALIFIER'],
     acceleratorPermissionBoundary: env['ACCELERATOR_PERMISSION_BOUNDARY'],
+    regionByRegionDeploymentOrder: env['REGION_BY_REGION_DEPLOYMENT_ORDER'],
   };
 }
 

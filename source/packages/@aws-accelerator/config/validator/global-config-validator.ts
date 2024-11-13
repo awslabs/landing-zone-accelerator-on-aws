@@ -22,7 +22,7 @@ import { IamConfig } from '../lib/iam-config';
 import { SecurityConfig } from '../lib/security-config';
 import { OrganizationConfig } from '../lib/organization-config';
 import { CommonValidatorFunctions } from './common/common-validator-functions';
-import { DeploymentTargets } from '../lib/common';
+import { DeploymentTargets, Region } from '../lib/common';
 
 export class GlobalConfigValidator {
   constructor(
@@ -32,6 +32,7 @@ export class GlobalConfigValidator {
     organizationConfig: OrganizationConfig,
     securityConfig: SecurityConfig,
     configDir: string,
+    regionByRegionDeployOrder?: string,
   ) {
     const ouIdNames: string[] = ['Root'];
 
@@ -169,6 +170,11 @@ export class GlobalConfigValidator {
     //
     this.validateS3ConfigDeploymentTargetOUs(values, ouIdNames, errors);
     this.validateS3ConfigDeploymentTargetAccounts(values, accountNames, errors);
+
+    //
+    // Validate region by region deploy order doesn't conflict with enabledRegions
+    //
+    this.validateRegionByRegionDeployOrderMatchesEnabledRegionsConfiguration(values, regionByRegionDeployOrder, errors);
 
     if (errors.length) {
       throw new Error(`${GlobalConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
@@ -1276,6 +1282,34 @@ export class GlobalConfigValidator {
         errors.push(
           `Deployment target OU ${ou} for CloudWatch logs encryption does not exist in organization-config.yaml file.`,
         );
+      }
+    }
+  }
+
+  /**
+   * Function to validate that if region by region deployment is activated that
+   * the deploy order is correctly setup.
+   */
+  private validateRegionByRegionDeployOrderMatchesEnabledRegionsConfiguration(
+    values: GlobalConfig,
+    regionByRegionDeployOrder: string | undefined,
+    errors: string[],
+  ) {
+    if (!regionByRegionDeployOrder?.trim()) {
+      return;
+    }
+    const deployOrder = regionByRegionDeployOrder.split(',').map(region => region.trim());
+    // Ensure region from deploy order exists in enabledRegions
+    for (const deployOrderRegion of deployOrder) {
+      if (!values.enabledRegions.includes(deployOrderRegion as Region)) {
+        errors.push(`Region ${deployOrderRegion} is not part of enabled regions.`);
+      }
+    }
+
+    // Ensure that each enabled region is listed in the region by region deploy order
+    for (const enabledRegion of values.enabledRegions) {
+      if (!deployOrder.includes(enabledRegion)) {
+        errors.push(`Region ${enabledRegion} is missing in the region by region deploy order.`);
       }
     }
   }

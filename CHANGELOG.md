@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(pipeline): add feature to reuse synth to all deploy actions
 - feat(piepline): add feature to consolidate all diffs and generate URL for review in Review stage
 - chore(modules): add modules package with ct module
+- feat(pipeline): add feature to deploy LZA solution region by region
 
 ### Fixed
 

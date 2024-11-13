@@ -135,6 +135,10 @@ export interface AcceleratorPipelineProps {
    * AWS Control Tower Landing Zone identifier
    */
   readonly landingZoneIdentifier?: string;
+  /**
+   * Accelerator region by region deploy order
+   */
+  readonly regionByRegionDeploymentOrder?: string;
 }
 
 enum BuildLogLevel {
@@ -746,6 +750,12 @@ export class AcceleratorPipeline extends Construct {
           extraInputs: [this.configRepoArtifact],
           outputs: [this.buildOutput],
           role: this.pipelineRole,
+          environmentVariables: {
+            REGION_BY_REGION_DEPLOYMENT_ORDER: {
+              type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+              value: this.props.regionByRegionDeploymentOrder ?? '',
+            },
+          },
         }),
       ],
     });
@@ -794,7 +804,7 @@ export class AcceleratorPipeline extends Construct {
 
     //
     // Add review stage based on parameter
-    this.addReviewStage();
+    const notificationTopic = this.addReviewStage();
 
     /**
      * The Logging stack establishes all the logging assets that are needed in
@@ -858,65 +868,26 @@ export class AcceleratorPipeline extends Construct {
       ],
     });
 
-    this.pipeline.addStage({
-      stageName: 'Deploy',
-      actions: [
-        this.createToolkitStage({
-          actionName: actionNames[AcceleratorStage.NETWORK_PREP],
-          command: 'deploy',
-          stage: AcceleratorStage.NETWORK_PREP,
-          runOrder: 1,
-        }),
-        this.createToolkitStage({
-          actionName: actionNames[AcceleratorStage.SECURITY],
-          command: 'deploy',
-          stage: AcceleratorStage.SECURITY,
-          runOrder: 1,
-        }),
-        this.createToolkitStage({
-          actionName: actionNames[AcceleratorStage.OPERATIONS],
-          command: 'deploy',
-          stage: AcceleratorStage.OPERATIONS,
-          runOrder: 1,
-        }),
-        this.createToolkitStage({
-          actionName: actionNames[AcceleratorStage.NETWORK_VPC],
-          command: 'deploy',
-          stage: AcceleratorStage.NETWORK_VPC,
-          runOrder: 2,
-        }),
-        this.createToolkitStage({
-          actionName: actionNames[AcceleratorStage.SECURITY_RESOURCES],
-          command: 'deploy',
-          stage: AcceleratorStage.SECURITY_RESOURCES,
-          runOrder: 2,
-        }),
-        this.createToolkitStage({
-          actionName: actionNames[AcceleratorStage.IDENTITY_CENTER],
-          command: 'deploy',
-          stage: AcceleratorStage.IDENTITY_CENTER,
-          runOrder: 2,
-        }),
-        this.createToolkitStage({
-          actionName: actionNames[AcceleratorStage.NETWORK_ASSOCIATIONS],
-          command: 'deploy',
-          stage: AcceleratorStage.NETWORK_ASSOCIATIONS,
-          runOrder: 3,
-        }),
-        this.createToolkitStage({
-          actionName: actionNames[AcceleratorStage.CUSTOMIZATIONS],
-          command: 'deploy',
-          stage: AcceleratorStage.CUSTOMIZATIONS,
-          runOrder: 4,
-        }),
-        this.createToolkitStage({
-          actionName: actionNames[AcceleratorStage.FINALIZE],
-          command: 'deploy',
-          stage: AcceleratorStage.FINALIZE,
-          runOrder: 5,
-        }),
-      ],
-    });
+    if (this.props.regionByRegionDeploymentOrder) {
+      const regions = this.props.regionByRegionDeploymentOrder.split(',').map(r => r.trim());
+
+      for (const region of regions) {
+        this.addDeployStage(region, notificationTopic);
+      }
+
+      this.pipeline.addStage({
+        stageName: 'Finalize',
+        actions: [
+          this.createToolkitStage({
+            actionName: 'Finalize',
+            command: 'deploy',
+            stage: AcceleratorStage.FINALIZE,
+          }),
+        ],
+      });
+    } else {
+      this.addDeployStage();
+    }
 
     // Add ASEA Import Resources
     if (enableAseaMigration) {
@@ -959,7 +930,7 @@ export class AcceleratorPipeline extends Construct {
   /**
    * Add review stage based on parameter
    */
-  private addReviewStage() {
+  private addReviewStage(): cdk.aws_sns.Topic | undefined {
     if (this.props.enableApprovalStage) {
       const notificationTopic = new cdk.aws_sns.Topic(this, 'ManualApprovalActionTopic', {
         topicName:
@@ -1004,7 +975,96 @@ export class AcceleratorPipeline extends Construct {
           }),
         ],
       });
+
+      return notificationTopic;
     }
+
+    return undefined;
+  }
+
+  private addDeployStage(region?: string, notificationTopic?: cdk.aws_sns.Topic) {
+    const actions: codepipeline.IAction[] = [
+      this.createToolkitStage({
+        actionName: actionNames[AcceleratorStage.NETWORK_PREP],
+        command: 'deploy',
+        stage: AcceleratorStage.NETWORK_PREP,
+        runOrder: 1,
+        region,
+      }),
+      this.createToolkitStage({
+        actionName: actionNames[AcceleratorStage.SECURITY],
+        command: 'deploy',
+        stage: AcceleratorStage.SECURITY,
+        runOrder: 1,
+        region,
+      }),
+      this.createToolkitStage({
+        actionName: actionNames[AcceleratorStage.OPERATIONS],
+        command: 'deploy',
+        stage: AcceleratorStage.OPERATIONS,
+        runOrder: 1,
+        region,
+      }),
+      this.createToolkitStage({
+        actionName: actionNames[AcceleratorStage.NETWORK_VPC],
+        command: 'deploy',
+        stage: AcceleratorStage.NETWORK_VPC,
+        runOrder: 2,
+        region,
+      }),
+      this.createToolkitStage({
+        actionName: actionNames[AcceleratorStage.SECURITY_RESOURCES],
+        command: 'deploy',
+        stage: AcceleratorStage.SECURITY_RESOURCES,
+        runOrder: 2,
+        region,
+      }),
+      this.createToolkitStage({
+        actionName: actionNames[AcceleratorStage.IDENTITY_CENTER],
+        command: 'deploy',
+        stage: AcceleratorStage.IDENTITY_CENTER,
+        runOrder: 2,
+        region,
+      }),
+      this.createToolkitStage({
+        actionName: actionNames[AcceleratorStage.NETWORK_ASSOCIATIONS],
+        command: 'deploy',
+        stage: AcceleratorStage.NETWORK_ASSOCIATIONS,
+        runOrder: 3,
+        region,
+      }),
+      this.createToolkitStage({
+        actionName: actionNames[AcceleratorStage.CUSTOMIZATIONS],
+        command: 'deploy',
+        stage: AcceleratorStage.CUSTOMIZATIONS,
+        runOrder: 4,
+        region,
+      }),
+    ];
+
+    if (!region) {
+      actions.push(
+        this.createToolkitStage({
+          actionName: actionNames[AcceleratorStage.FINALIZE],
+          command: 'deploy',
+          stage: AcceleratorStage.FINALIZE,
+          runOrder: 5,
+        }),
+      );
+    } else {
+      actions.push(
+        new codepipeline_actions.ManualApprovalAction({
+          actionName: 'Approve',
+          runOrder: 5,
+          notificationTopic,
+        }),
+      );
+    }
+
+    this.pipeline.addStage({
+      stageName: region ? `Deploy-${region}` : 'Deploy',
+      actions,
+    });
   }
 
   private createToolkitStage(stageProps: {
@@ -1012,16 +1072,19 @@ export class AcceleratorPipeline extends Construct {
     command: string;
     stage?: string;
     runOrder?: number;
+    region?: string;
   }): codepipeline_actions.CodeBuildAction {
-    let cdkOptions;
+    const cdkOptionsParts = [stageProps.command];
     if (
-      stageProps.command === AcceleratorToolkitCommand.BOOTSTRAP.toString() ||
-      stageProps.command === AcceleratorToolkitCommand.DIFF.toString()
+      stageProps.command !== AcceleratorToolkitCommand.BOOTSTRAP.toString() &&
+      stageProps.command !== AcceleratorToolkitCommand.DIFF.toString()
     ) {
-      cdkOptions = stageProps.command;
-    } else {
-      cdkOptions = `${stageProps.command} --stage ${stageProps.stage}`;
+      cdkOptionsParts.push(`--stage ${stageProps.stage}`);
     }
+    if (stageProps.region?.trim()) {
+      cdkOptionsParts.push(`--region ${stageProps.region}`);
+    }
+    const cdkOptions = cdkOptionsParts.join(' ');
 
     const environmentVariables: {
       [name: string]: cdk.aws_codebuild.BuildEnvironmentVariable;

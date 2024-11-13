@@ -57,12 +57,15 @@ const enableSingleAccountMode = process.env['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_M
   ? process.env['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE'] === 'true'
   : false;
 
+const regionByRegionDeployOrder = process.env['REGION_BY_REGION_DEPLOYMENT_ORDER'] ?? '';
+
 const props = {
   partition: process.env['PARTITION'] ?? 'aws',
   region: process.env['AWS_REGION'],
   account: process.env['ACCOUNT_ID'],
   enableSingleAccountMode: enableSingleAccountMode,
   replacementsPresent: areReplacementsPresent(),
+  regionByRegionDeployOrder,
 };
 
 if (configDirPath) {
@@ -111,6 +114,7 @@ async function validateConfig(props: {
   enableSingleAccountMode: boolean;
   account: string | undefined;
   replacementsPresent: boolean;
+  regionByRegionDeployOrder: string | undefined;
 }) {
   await Accelerator.getManagementAccountCredentials(props.partition);
   const orgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(configDirPath).enable;
@@ -198,6 +202,7 @@ async function validateConfig(props: {
     organizationConfig,
     securityConfig,
     replacementsConfig,
+    props.regionByRegionDeployOrder,
   );
 
   //
@@ -215,6 +220,8 @@ async function validateConfig(props: {
  * @param iamConfig
  * @param organizationConfig
  * @param securityConfig
+ * @param replacementConfig
+ * @param regionByRegionDeployOrder
  */
 function runValidators(
   configDirPath: string,
@@ -227,6 +234,7 @@ function runValidators(
   organizationConfig?: OrganizationConfig,
   securityConfig?: SecurityConfig,
   replacementsConfig?: ReplacementsConfig,
+  regionByRegionDeployOrder?: string,
 ) {
   // Accounts config validator
   if (accountsConfig && organizationConfig) {
@@ -273,6 +281,7 @@ function runValidators(
         organizationConfig,
         securityConfig,
         configDirPath,
+        regionByRegionDeployOrder,
       );
     } catch (e) {
       configErrors.push(e);

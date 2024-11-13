@@ -26648,3 +26648,4172 @@ exports.handler = async function (event, context) {
   },
 }
 `;
+
+exports[`InstallerStack Stack(installer):  Snapshot Test 8`] = `
+{
+  "Conditions": {
+    "IsCommercialCondition": {
+      "Fn::Equals": [
+        {
+          "Ref": "AWS::Partition",
+        },
+        "aws",
+      ],
+    },
+    "SolutionHelperAnonymousDataToAWS62E4FDE2": {
+      "Fn::Equals": [
+        {
+          "Fn::FindInMap": [
+            "SolutionHelperAnonymousData14B64A81",
+            "SendAnonymizedData",
+            "Data",
+          ],
+        },
+        "Yes",
+      ],
+    },
+    "UseCodeCommitCondition": {
+      "Fn::Equals": [
+        {
+          "Ref": "RepositorySource",
+        },
+        "codecommit",
+      ],
+    },
+    "UseGitHubCondition": {
+      "Fn::Equals": [
+        {
+          "Ref": "RepositorySource",
+        },
+        "github",
+      ],
+    },
+    "UseS3Condition": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            "",
+            {
+              "Ref": "RepositoryBucketName",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  "Mappings": {
+    "GlobalRegionMap": {
+      "aws": {
+        "regionName": "us-east-1",
+      },
+      "aws-cn": {
+        "regionName": "cn-northwest-1",
+      },
+      "aws-iso": {
+        "regionName": "us-iso-east-1",
+      },
+      "aws-iso-b": {
+        "regionName": "us-isob-east-1",
+      },
+      "aws-iso-e": {
+        "regionName": "eu-isoe-west-1",
+      },
+      "aws-iso-f": {
+        "regionName": "us-isof-south-1",
+      },
+      "aws-us-gov": {
+        "regionName": "us-gov-west-1",
+      },
+    },
+    "SolutionHelperAnonymousData14B64A81": {
+      "SendAnonymizedData": {
+        "Data": "Yes",
+      },
+    },
+  },
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Label": {
+            "default": "Source Code Repository Configuration",
+          },
+          "Parameters": [
+            "RepositorySource",
+            "RepositoryBucketName",
+            "RepositoryBucketObject",
+          ],
+        },
+        {
+          "Label": {
+            "default": "Pipeline Configuration",
+          },
+          "Parameters": [
+            "EnableApprovalStage",
+            "ApprovalStageNotifyEmailList",
+          ],
+        },
+        {
+          "Label": {
+            "default": "Mandatory Accounts Configuration",
+          },
+          "Parameters": [
+            "ManagementAccountEmail",
+            "LogArchiveAccountEmail",
+            "AuditAccountEmail",
+          ],
+        },
+        {
+          "Label": {
+            "default": "Environment Configuration",
+          },
+          "Parameters": [
+            "ControlTowerEnabled",
+            "AcceleratorPrefix",
+            "EnableDiagnosticsPack",
+          ],
+        },
+        {
+          "Label": {
+            "default": "Config Repository Configuration",
+          },
+          "Parameters": [
+            "ConfigurationRepositoryLocation",
+            "UseExistingConfigRepo",
+            "ExistingConfigRepositoryName",
+            "ExistingConfigRepositoryBranchName",
+            "ExistingConfigRepositoryOwner",
+            "ConfigCodeConnectionArn",
+          ],
+        },
+        {
+          "Label": {
+            "default": "Region By Region Deployment Configuration",
+          },
+          "Parameters": [
+            "RegionByRegionDeployOrder",
+          ],
+        },
+        {
+          "Label": {
+            "default": "Git Repository Configuration (not used with S3)",
+          },
+          "Parameters": [
+            "RepositoryOwner",
+            "RepositoryName",
+            "RepositoryBranchName",
+          ],
+        },
+      ],
+      "ParameterLabels": {
+        "AcceleratorPrefix": {
+          "default": "Accelerator Resource name prefix",
+        },
+        "ApprovalStageNotifyEmailList": {
+          "default": "Manual Approval Stage notification email list",
+        },
+        "AuditAccountEmail": {
+          "default": "Audit Account Email",
+        },
+        "ConfigCodeConnectionArn": {
+          "default": "Existing Config Repository CodeConnection ARN",
+        },
+        "ConfigurationRepositoryLocation": {
+          "default": "Configuration Repository Location",
+        },
+        "ControlTowerEnabled": {
+          "default": "Control Tower Environment",
+        },
+        "EnableApprovalStage": {
+          "default": "Enable Approval Stage",
+        },
+        "EnableDiagnosticsPack": {
+          "default": "Enable Diagnostics Pack",
+        },
+        "ExistingConfigRepositoryBranchName": {
+          "default": "Existing Config Repository Branch Name",
+        },
+        "ExistingConfigRepositoryName": {
+          "default": "Existing Config Repository Name",
+        },
+        "ExistingConfigRepositoryOwner": {
+          "default": "Existing Config Repository Owner",
+        },
+        "LogArchiveAccountEmail": {
+          "default": "Log Archive Account Email",
+        },
+        "ManagementAccountEmail": {
+          "default": "Management Account Email",
+        },
+        "RegionByRegionDeployOrder": {
+          "default": "Region by Region Deployment Order",
+        },
+        "RepositoryBranchName": {
+          "default": "Branch Name",
+        },
+        "RepositoryName": {
+          "default": "Repository Name",
+        },
+        "RepositoryOwner": {
+          "default": "Repository Owner",
+        },
+        "RepositorySource": {
+          "default": "Source Location",
+        },
+        "UseExistingConfigRepo": {
+          "default": "Use Existing Config Repository",
+        },
+      },
+    },
+  },
+  "Parameters": {
+    "AcceleratorPrefix": {
+      "AllowedPattern": "[A-Za-z0-9-]+",
+      "Default": "AWSAccelerator",
+      "Description": "The prefix value for accelerator deployed resources. Leave the default value if using solution defined resource name prefix, the solution will use AWSAccelerator as resource name prefix. Note: Updating this value after initial installation will cause stack failure. Non-default value can not start with keyword "aws" or "ssm". Trailing dash (-) in non-default value will be ignored.",
+      "MaxLength": 15,
+      "Type": "String",
+    },
+    "ApprovalStageNotifyEmailList": {
+      "Description": "Provide comma(,) separated list of email ids to receive manual approval stage notification email",
+      "Type": "CommaDelimitedList",
+    },
+    "AuditAccountEmail": {
+      "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
+      "ConstraintDescription": "Must be a valid email address matching "[^\\s@]+@[^\\s@]+\\.[^\\s@]+"",
+      "Description": "The security audit account (also referred to as the audit account)",
+      "Type": "String",
+    },
+    "ConfigCodeConnectionArn": {
+      "Default": "",
+      "Description": "The ARN of an AWS CodeConnection referencing your existing LZA configuration repository. To use this parameter, useExistingConfigRepo must be set to Yes and ConfigurationRepositoryLocation must be set to codeconnection.",
+      "Type": "String",
+    },
+    "ConfigurationRepositoryLocation": {
+      "AllowedValues": [
+        "codecommit",
+        "s3",
+        "codeconnection",
+      ],
+      "Description": "Specify the location to use to host the LZA configuration files",
+      "Type": "String",
+    },
+    "ControlTowerEnabled": {
+      "AllowedValues": [
+        "Yes",
+        "No",
+      ],
+      "Default": "Yes",
+      "Description": "Select yes if deploying to a Control Tower environment.  Select no if using just Organizations. If no, you must first set up mandatory accounts.",
+      "Type": "String",
+    },
+    "EnableApprovalStage": {
+      "AllowedValues": [
+        "Yes",
+        "No",
+      ],
+      "Default": "Yes",
+      "Description": "Select yes to add a Manual Approval stage to accelerator pipeline",
+      "Type": "String",
+    },
+    "EnableDiagnosticsPack": {
+      "AllowedValues": [
+        "Yes",
+        "No",
+      ],
+      "Default": "Yes",
+      "Description": "Select Yes if deploying the solution with diagnostics pack enabled. Diagnostics pack enables you to generate root cause reports to potentially diagnose pipeline failures.",
+      "Type": "String",
+    },
+    "ExistingConfigRepositoryBranchName": {
+      "Default": "",
+      "Description": "Specify the branch name of the existing LZA configuration repository to pull the accelerator configuration from.",
+      "Type": "String",
+    },
+    "ExistingConfigRepositoryName": {
+      "Default": "",
+      "Description": "The name of an existing LZA configuration repository hosting the accelerator configuration.",
+      "Type": "String",
+    },
+    "ExistingConfigRepositoryOwner": {
+      "Default": "",
+      "Description": "The owner ID or namespace of the LZA configuration repository accessed through CodeConnection, such as the owner ID in GitHub. (CodeConnection only)",
+      "Type": "String",
+    },
+    "LogArchiveAccountEmail": {
+      "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
+      "ConstraintDescription": "Must be a valid email address matching "[^\\s@]+@[^\\s@]+\\.[^\\s@]+"",
+      "Description": "The log archive account email",
+      "Type": "String",
+    },
+    "ManagementAccountEmail": {
+      "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
+      "ConstraintDescription": "Must be a valid email address matching "[^\\s@]+@[^\\s@]+\\.[^\\s@]+"",
+      "Description": "The management (primary) account email - NOTE: This must match the address of the management account email as listed in AWS Organizations > AWS accounts.",
+      "Type": "String",
+    },
+    "RegionByRegionDeployOrder": {
+      "Description": "Provide comma(,) separated list of aws regions as order of LZA region by region deployment",
+      "Type": "String",
+    },
+    "RepositoryBranchName": {
+      "AllowedPattern": ".+",
+      "ConstraintDescription": "The repository branch name must not be empty",
+      "Default": "release/v1.11.0",
+      "Description": "The name of the git branch to use for installation. To determine the branch name, navigate to the Landing Zone Accelerator GitHub branches page and choose the release branch you would like to deploy. Release branch names will align with the semantic versioning of our GitHub releases. New release branches will be available as the open source project is updated with new features.",
+      "Type": "String",
+    },
+    "RepositoryBucketKmsKeyArn": {
+      "Default": "arn:aws:kms:us-east-1:000000000000:key/aaaaaaaa-1111-bbbb-2222-cccccc333333",
+      "Description": "The KMS key used for encrypted S3 bucket containing accelerator code. (S3 Only)",
+      "Type": "String",
+    },
+    "RepositoryBucketName": {
+      "Description": "The versioned S3 bucket containing the accelerator code. (S3 Only)",
+      "Type": "String",
+    },
+    "RepositoryBucketObject": {
+      "Default": "release/v1.11.0.zip",
+      "Description": "The full path to the accelerator code zip S3 Object. (S3 Only)",
+      "Type": "String",
+    },
+    "RepositoryName": {
+      "Default": "landing-zone-accelerator-on-aws",
+      "Description": "The name of the git repository hosting the accelerator code",
+      "Type": "String",
+    },
+    "RepositoryOwner": {
+      "Default": "awslabs",
+      "Description": "The owner of the repository containing the accelerator code. (GitHub Only)",
+      "Type": "String",
+    },
+    "RepositorySource": {
+      "AllowedValues": [
+        "github",
+        "codecommit",
+        "s3",
+      ],
+      "Default": "s3",
+      "Description": "Specify the location to use to host the LZA source code",
+      "Type": "String",
+    },
+    "UseExistingConfigRepo": {
+      "AllowedValues": [
+        "Yes",
+        "No",
+      ],
+      "Default": "No",
+      "Description": "Select Yes if deploying the solution with an existing configuration repository. Leave the default value if using the solution-deployed repository. If the AcceleratorPrefix parameter is set to the default value, the solution will deploy a repository named "aws-accelerator-config." Otherwise, the solution-deployed repository will be named "AcceleratorPrefix-config." Note: Updating this value after initial installation may cause adverse affects.",
+      "Type": "String",
+    },
+  },
+  "Resources": {
+    "AcceleratorManagementKmsArnParameter1E6975BF": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/installer/kms/key-arn",
+            ],
+          ],
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "InstallerKey2A6A8C6D",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "CodeCommitPipeline2208527B": {
+      "Condition": "UseCodeCommitCondition",
+      "DependsOn": [
+        "CodeCommitPipelineRoleDefaultPolicyDE8B332B",
+        "CodeCommitPipelineRole5C35E76C",
+      ],
+      "Properties": {
+        "ArtifactStore": {
+          "EncryptionKey": {
+            "Id": {
+              "Fn::GetAtt": [
+                "InstallerKey2A6A8C6D",
+                "Arn",
+              ],
+            },
+            "Type": "KMS",
+          },
+          "Location": {
+            "Ref": "SecureBucket747CD8C0",
+          },
+          "Type": "S3",
+        },
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "acceleratorPrefix",
+                ],
+              },
+              "-Installer",
+            ],
+          ],
+        },
+        "RestartExecutionOnUpdate": true,
+        "RoleArn": {
+          "Fn::GetAtt": [
+            "CodeCommitPipelineRole5C35E76C",
+            "Arn",
+          ],
+        },
+        "Stages": [
+          {
+            "Actions": [
+              {
+                "ActionTypeId": {
+                  "Category": "Source",
+                  "Owner": "AWS",
+                  "Provider": "CodeCommit",
+                  "Version": "1",
+                },
+                "Configuration": {
+                  "BranchName": {
+                    "Ref": "RepositoryBranchName",
+                  },
+                  "PollForSourceChanges": false,
+                  "RepositoryName": {
+                    "Ref": "RepositoryName",
+                  },
+                },
+                "Name": "Source",
+                "OutputArtifacts": [
+                  {
+                    "Name": "Source",
+                  },
+                ],
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+            ],
+            "Name": "Source",
+          },
+          {
+            "Actions": [
+              {
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": {
+                  "ProjectName": {
+                    "Ref": "InstallerProject879FF821",
+                  },
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "Source",
+                  },
+                ],
+                "Name": "Install",
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "CodeCommitPipelineRole5C35E76C",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+            ],
+            "Name": "Install",
+          },
+        ],
+      },
+      "Type": "AWS::CodePipeline::Pipeline",
+    },
+    "CodeCommitPipelineRole5C35E76C": {
+      "Condition": "UseCodeCommitCondition",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "codepipeline.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CodeCommitPipelineRoleDefaultPolicyDE8B332B": {
+      "Condition": "UseCodeCommitCondition",
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "IAM role requires wildcard permissions.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "SecureBucket747CD8C0",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "SecureBucket747CD8C0",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "InstallerKey2A6A8C6D",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "CodeCommitPipelineRole5C35E76C",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "codebuild:BatchGetBuilds",
+                "codebuild:StartBuild",
+                "codebuild:StopBuild",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "InstallerProject879FF821",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "CodeCommitPipelineRoleDefaultPolicyDE8B332B",
+        "Roles": [
+          {
+            "Ref": "CodeCommitPipelineRole5C35E76C",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D": {
+      "Condition": "UseCodeCommitCondition",
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "IAM role requires wildcard permissions.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "SecureBucket747CD8C0",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "SecureBucket747CD8C0",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "InstallerKey2A6A8C6D",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "codecommit:GetBranch",
+                "codecommit:GetCommit",
+                "codecommit:UploadArchive",
+                "codecommit:GetUploadArchiveStatus",
+                "codecommit:CancelUploadArchive",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":codecommit:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":",
+                    {
+                      "Ref": "RepositoryName",
+                    },
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D",
+        "Roles": [
+          {
+            "Ref": "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "CodeCommitPipelineSourceCodePipelineActionRoleFB176191": {
+      "Condition": "UseCodeCommitCondition",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "GitHubPipeline7B79E906": {
+      "Condition": "UseGitHubCondition",
+      "DependsOn": [
+        "GitHubPipelineRoleDefaultPolicyD82457D6",
+        "GitHubPipelineRole6F4DEF1B",
+      ],
+      "Properties": {
+        "ArtifactStore": {
+          "EncryptionKey": {
+            "Id": {
+              "Fn::GetAtt": [
+                "InstallerKey2A6A8C6D",
+                "Arn",
+              ],
+            },
+            "Type": "KMS",
+          },
+          "Location": {
+            "Ref": "SecureBucket747CD8C0",
+          },
+          "Type": "S3",
+        },
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "acceleratorPrefix",
+                ],
+              },
+              "-Installer",
+            ],
+          ],
+        },
+        "RestartExecutionOnUpdate": true,
+        "RoleArn": {
+          "Fn::GetAtt": [
+            "GitHubPipelineRole6F4DEF1B",
+            "Arn",
+          ],
+        },
+        "Stages": [
+          {
+            "Actions": [
+              {
+                "ActionTypeId": {
+                  "Category": "Source",
+                  "Owner": "ThirdParty",
+                  "Provider": "GitHub",
+                  "Version": "1",
+                },
+                "Configuration": {
+                  "Branch": {
+                    "Ref": "RepositoryBranchName",
+                  },
+                  "OAuthToken": "{{resolve:secretsmanager:accelerator/github-token:SecretString:::}}",
+                  "Owner": {
+                    "Ref": "RepositoryOwner",
+                  },
+                  "PollForSourceChanges": false,
+                  "Repo": {
+                    "Ref": "RepositoryName",
+                  },
+                },
+                "Name": "Source",
+                "OutputArtifacts": [
+                  {
+                    "Name": "Source",
+                  },
+                ],
+                "RunOrder": 1,
+              },
+            ],
+            "Name": "Source",
+          },
+          {
+            "Actions": [
+              {
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": {
+                  "ProjectName": {
+                    "Ref": "InstallerProject879FF821",
+                  },
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "Source",
+                  },
+                ],
+                "Name": "Install",
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "GitHubPipelineRole6F4DEF1B",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+            ],
+            "Name": "Install",
+          },
+        ],
+      },
+      "Type": "AWS::CodePipeline::Pipeline",
+    },
+    "GitHubPipelineRole6F4DEF1B": {
+      "Condition": "UseGitHubCondition",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "codepipeline.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "GitHubPipelineRoleDefaultPolicyD82457D6": {
+      "Condition": "UseGitHubCondition",
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "IAM role requires wildcard permissions.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "SecureBucket747CD8C0",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "SecureBucket747CD8C0",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "InstallerKey2A6A8C6D",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "GitHubPipelineRole6F4DEF1B",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "codebuild:BatchGetBuilds",
+                "codebuild:StartBuild",
+                "codebuild:StopBuild",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "InstallerProject879FF821",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "GitHubPipelineRoleDefaultPolicyD82457D6",
+        "Roles": [
+          {
+            "Ref": "GitHubPipelineRole6F4DEF1B",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "InstallerAccessLogsBucket647700E9": {
+      "DeletionPolicy": "Retain",
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-S1",
+              "reason": "AccessLogsBucket has server access logs disabled till the task for access logging completed.",
+            },
+          ],
+        },
+        "cfn_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "W35",
+              "reason": "This is an access logging bucket.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AccessControl": "LogDeliveryWrite",
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256",
+              },
+            },
+          ],
+        },
+        "BucketName": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "lowerCasePrefix",
+                ],
+              },
+              "-s3-logs-",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              "-",
+              {
+                "Ref": "AWS::Region",
+              },
+            ],
+          ],
+        },
+        "LifecycleConfiguration": {
+          "Rules": [
+            {
+              "AbortIncompleteMultipartUpload": {
+                "DaysAfterInitiation": 1,
+              },
+              "ExpirationInDays": 1825,
+              "ExpiredObjectDeleteMarker": false,
+              "Id": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "LifecycleRule",
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "lowerCasePrefix",
+                      ],
+                    },
+                    "-s3-logs-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                  ],
+                ],
+              },
+              "NoncurrentVersionExpiration": {
+                "NoncurrentDays": 1825,
+              },
+              "NoncurrentVersionTransitions": [
+                {
+                  "StorageClass": "DEEP_ARCHIVE",
+                  "TransitionInDays": 366,
+                },
+              ],
+              "Status": "Enabled",
+              "Transitions": [
+                {
+                  "StorageClass": "DEEP_ARCHIVE",
+                  "TransitionInDays": 365,
+                },
+              ],
+            },
+          ],
+        },
+        "OwnershipControls": {
+          "Rules": [
+            {
+              "ObjectOwnership": "BucketOwnerPreferred",
+            },
+          ],
+        },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true,
+        },
+        "VersioningConfiguration": {
+          "Status": "Enabled",
+        },
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "InstallerAccessLogsBucketName4F700F48": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/installer-access-logs-bucket-name",
+            ],
+          ],
+        },
+        "Type": "String",
+        "Value": {
+          "Ref": "InstallerAccessLogsBucket647700E9",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "InstallerAccessLogsBucketPolicy20D4E285": {
+      "Properties": {
+        "Bucket": {
+          "Ref": "InstallerAccessLogsBucket647700E9",
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:*",
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "InstallerAccessLogsBucket647700E9",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "InstallerAccessLogsBucket647700E9",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+              "Sid": "deny-insecure-connections",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::S3::BucketPolicy",
+    },
+    "InstallerAdminRole7DEE4AC8": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Managed policies required for IAM role.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "codebuild.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/AdministratorAccess",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "InstallerAdminRoleDefaultPolicy7EEE1AAB": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Managed policies required for IAM role.",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "IAM role requires wildcard permissions.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":logs:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":log-group:/aws/codebuild/",
+                      {
+                        "Ref": "InstallerProject879FF821",
+                      },
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":logs:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":log-group:/aws/codebuild/",
+                      {
+                        "Ref": "InstallerProject879FF821",
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "codebuild:CreateReportGroup",
+                "codebuild:CreateReport",
+                "codebuild:UpdateReport",
+                "codebuild:BatchPutTestCases",
+                "codebuild:BatchPutCodeCoverages",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":codebuild:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":report-group/",
+                    {
+                      "Ref": "InstallerProject879FF821",
+                    },
+                    "-*",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "kms:Decrypt",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "InstallerKey2A6A8C6D",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "SecureBucket747CD8C0",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "SecureBucket747CD8C0",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "InstallerKey2A6A8C6D",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "InstallerAdminRoleDefaultPolicy7EEE1AAB",
+        "Roles": [
+          {
+            "Ref": "InstallerAdminRole7DEE4AC8",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "InstallerKey2A6A8C6D": {
+      "DeletionPolicy": "Retain",
+      "Metadata": {
+        "cfn_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "F76",
+              "reason": "KMS key using * principal with added arn condition",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Description": "AWS Accelerator Management Account Kms Key",
+        "EnableKeyRotation": true,
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+            {
+              "Action": [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
+              "Condition": {
+                "ArnLike": {
+                  "aws:PrincipalARN": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":iam::",
+                        {
+                          "Ref": "AWS::AccountId",
+                        },
+                        ":role/",
+                        {
+                          "Fn::GetAtt": [
+                            "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                            "acceleratorPrefix",
+                          ],
+                        },
+                        "-*",
+                      ],
+                    ],
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "Allow Accelerator Role to use the encryption key",
+            },
+            {
+              "Action": [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "sns.amazonaws.com",
+              },
+              "Resource": "*",
+              "Sid": "Allow SNS service to use the encryption key",
+            },
+            {
+              "Action": [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
+              "Condition": {
+                "ArnLike": {
+                  "kms:EncryptionContext:aws:logs:arn": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":logs:",
+                        {
+                          "Ref": "AWS::Region",
+                        },
+                        ":",
+                        {
+                          "Ref": "AWS::AccountId",
+                        },
+                        ":log-group:*",
+                      ],
+                    ],
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "Service": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "logs.",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ".amazonaws.com",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+              "Sid": "Allow Cloudwatch Logs service to use the encryption key",
+            },
+            {
+              "Fn::If": [
+                "IsCommercialCondition",
+                {
+                  "Action": [
+                    "kms:GenerateDataKey*",
+                    "kms:Decrypt",
+                  ],
+                  "Condition": {
+                    "StringEquals": {
+                      "kms:ViaService": {
+                        "Fn::Join": [
+                          "",
+                          [
+                            "sns.",
+                            {
+                              "Ref": "AWS::Region",
+                            },
+                            ".amazonaws.com",
+                          ],
+                        ],
+                      },
+                    },
+                  },
+                  "Effect": "Allow",
+                  "Principal": {
+                    "Service": "codestar-notifications.amazonaws.com",
+                  },
+                  "Resource": "*",
+                  "Sid": "KMS key access to codestar-notifications",
+                },
+                {
+                  "Ref": "AWS::NoValue",
+                },
+              ],
+            },
+          ],
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "InstallerKeyAliasD5C174F0": {
+      "Properties": {
+        "AliasName": {
+          "Fn::Join": [
+            "",
+            [
+              "alias/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/installer/kms/key",
+            ],
+          ],
+        },
+        "TargetKeyId": {
+          "Fn::GetAtt": [
+            "InstallerKey2A6A8C6D",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::KMS::Alias",
+    },
+    "InstallerProject879FF821": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-CB3",
+              "reason": "Project requires access to the Docker daemon.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Artifacts": {
+          "Type": "CODEPIPELINE",
+        },
+        "Cache": {
+          "Type": "NO_CACHE",
+        },
+        "EncryptionKey": {
+          "Fn::GetAtt": [
+            "InstallerKey2A6A8C6D",
+            "Arn",
+          ],
+        },
+        "Environment": {
+          "ComputeType": "BUILD_GENERAL1_LARGE",
+          "EnvironmentVariables": [
+            {
+              "Name": "NODE_OPTIONS",
+              "Type": "PLAINTEXT",
+              "Value": "--max_old_space_size=12288 --no-warnings",
+            },
+            {
+              "Name": "CDK_NEW_BOOTSTRAP",
+              "Type": "PLAINTEXT",
+              "Value": "1",
+            },
+            {
+              "Name": "ACCELERATOR_REPOSITORY_SOURCE",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "RepositorySource",
+              },
+            },
+            {
+              "Name": "ACCELERATOR_REPOSITORY_OWNER",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "RepositoryOwner",
+              },
+            },
+            {
+              "Name": "ACCELERATOR_REPOSITORY_NAME",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "RepositoryName",
+              },
+            },
+            {
+              "Name": "ACCELERATOR_REPOSITORY_BRANCH_NAME",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "RepositoryBranchName",
+              },
+            },
+            {
+              "Name": "CONFIG_REPOSITORY_LOCATION",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ConfigurationRepositoryLocation",
+              },
+            },
+            {
+              "Name": "CODECONNECTION_ARN",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ConfigCodeConnectionArn",
+              },
+            },
+            {
+              "Name": "USE_EXISTING_CONFIG_REPO",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "UseExistingConfigRepo",
+              },
+            },
+            {
+              "Name": "EXISTING_CONFIG_REPOSITORY_NAME",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ExistingConfigRepositoryName",
+              },
+            },
+            {
+              "Name": "EXISTING_CONFIG_REPOSITORY_BRANCH_NAME",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ExistingConfigRepositoryBranchName",
+              },
+            },
+            {
+              "Name": "EXISTING_CONFIG_REPOSITORY_OWNER",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ExistingConfigRepositoryOwner",
+              },
+            },
+            {
+              "Name": "ACCELERATOR_ENABLE_APPROVAL_STAGE",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "EnableApprovalStage",
+              },
+            },
+            {
+              "Name": "APPROVAL_STAGE_NOTIFY_EMAIL_LIST",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Fn::Join": [
+                  ",",
+                  {
+                    "Ref": "ApprovalStageNotifyEmailList",
+                  },
+                ],
+              },
+            },
+            {
+              "Name": "MANAGEMENT_ACCOUNT_EMAIL",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ManagementAccountEmail",
+              },
+            },
+            {
+              "Name": "LOG_ARCHIVE_ACCOUNT_EMAIL",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "LogArchiveAccountEmail",
+              },
+            },
+            {
+              "Name": "AUDIT_ACCOUNT_EMAIL",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "AuditAccountEmail",
+              },
+            },
+            {
+              "Name": "CONTROL_TOWER_ENABLED",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ControlTowerEnabled",
+              },
+            },
+            {
+              "Name": "ACCELERATOR_PREFIX",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "acceleratorPrefix",
+                ],
+              },
+            },
+            {
+              "Name": "INSTALLER_STACK_NAME",
+              "Type": "PLAINTEXT",
+              "Value": "AWSAccelerator-Test-InstallerStack",
+            },
+            {
+              "Name": "ENABLE_DIAGNOSTICS_PACK",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "EnableDiagnosticsPack",
+              },
+            },
+            {
+              "Name": "PIPELINE_ACCOUNT_ID",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "AWS::AccountId",
+              },
+            },
+            {
+              "Name": "REGION_BY_REGION_DEPLOYMENT_ORDER",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "RegionByRegionDeployOrder",
+              },
+            },
+            {
+              "Name": "ACCELERATOR_REPOSITORY_BUCKET_NAME",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "RepositoryBucketName",
+              },
+            },
+            {
+              "Name": "ACCELERATOR_REPOSITORY_BUCKET_OBJECT",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "RepositoryBucketObject",
+              },
+            },
+            {
+              "Name": "ACCELERATOR_REPOSITORY_BUCKET_KMS_KEY_ARN",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "RepositoryBucketKmsKeyArn",
+              },
+            },
+          ],
+          "Image": "aws/codebuild/standard:7.0",
+          "ImagePullCredentialsType": "CODEBUILD",
+          "PrivilegedMode": false,
+          "Type": "LINUX_CONTAINER",
+        },
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "acceleratorPrefix",
+                ],
+              },
+              "-InstallerProject",
+            ],
+          ],
+        },
+        "ServiceRole": {
+          "Fn::GetAtt": [
+            "InstallerAdminRole7DEE4AC8",
+            "Arn",
+          ],
+        },
+        "Source": {
+          "BuildSpec": {
+            "Fn::Join": [
+              "",
+              [
+                "version: "0.2"
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+  pre_build:
+    commands:
+      - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
+      - if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; fi
+      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                "; then BOOTSTRAPPED_HOME="no"; fi
+      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit --region ",
+                {
+                  "Fn::FindInMap": [
+                    "GlobalRegionMap",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    "regionName",
+                  ],
+                },
+                "; then BOOTSTRAPPED_GLOBAL="no"; fi
+      - ENABLE_DIAGNOSTICS_PACK=",
+                {
+                  "Ref": "EnableDiagnosticsPack",
+                },
+                "
+  build:
+    commands:
+      - cd source
+      - |-
+        if [ "",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "" = "aws-cn" ]; then
+                          sed -i "s#registry.yarnpkg.com#registry.npmmirror.com#g" yarn.lock;
+                          set -e && yarn config set registry https://registry.npmmirror.com
+                       fi
+      - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
+      - yarn build
+      - cd packages/@aws-accelerator/installer
+      - set -e && if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit aws://",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                "/",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --qualifier accel; fi
+      - set -e &&  if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit aws://",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                "/",
+                {
+                  "Fn::FindInMap": [
+                    "GlobalRegionMap",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    "regionName",
+                  ],
+                },
+                " --qualifier accel; fi
+      - |-
+        set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
+                          if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::"$MANAGEMENT_ACCOUNT_ID":role/"$MANAGEMENT_ACCOUNT_ROLE_NAME" --role-session-name acceleratorAssumeRoleSession --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" --output text); then
+                            echo "Failed to assume $MANAGEMENT_ACCOUNT_ROLE_NAME role in management account $MANAGEMENT_ACCOUNT_ID"
+                            exit 1
+                          fi
+                          export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $MANAGEMENT_ACCOUNT_CREDENTIAL);
+                          if ! aws cloudformation describe-stacks --stack-name ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                "; then MGMT_BOOTSTRAPPED_HOME="no"; fi;
+                          if ! aws cloudformation describe-stacks --stack-name ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit --region ",
+                {
+                  "Fn::FindInMap": [
+                    "GlobalRegionMap",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    "regionName",
+                  ],
+                },
+                "; then MGMT_BOOTSTRAPPED_GLOBAL="no"; fi;
+                          if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --qualifier accel; fi;
+                          if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
+                {
+                  "Fn::FindInMap": [
+                    "GlobalRegionMap",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    "regionName",
+                  ],
+                },
+                " --qualifier accel; fi;
+                          unset AWS_ACCESS_KEY_ID;
+                          unset AWS_SECRET_ACCESS_KEY;
+                          unset AWS_SESSION_TOKEN;
+                       fi
+      - cd ../accelerator
+      - |-
+        aws ssm get-parameter --name /accelerator/migration --query "Parameter.Value" 2> /dev/null
+                          status=$?
+                          if [ $status -ne 0 ]; then
+                            echo "No SSM Parameter found, setting ENABLE_ASEA_MIGRATION to false";
+                            export ENABLE_ASEA_MIGRATION=false
+                          else
+                            echo "SSM Parameter Found, setting ENABLE_ASEA_MIGRATION to true"
+                            export ENABLE_ASEA_MIGRATION=true
+                          fi;
+      - |-
+        set -e && if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
+                        yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage diagnostics-pack --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+                      fi
+      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                "; fi
+  post_build:
+    commands:
+      - |-
+        if [ $CODEBUILD_BUILD_SUCCEEDING -eq 1 ]; then
+                        inprogress_status_count=$(aws codepipeline get-pipeline-state --name "",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-Pipeline" | grep '"status": "InProgress"' | grep -v grep | wc -l) &&
+                        if [ $inprogress_status_count -eq 0 ]; then
+                        set -e && aws codepipeline start-pipeline-execution --name "",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-Pipeline";
+                          fi
+                       fi
+",
+              ],
+            ],
+          },
+          "Type": "CODEPIPELINE",
+        },
+      },
+      "Type": "AWS::CodeBuild::Project",
+    },
+    "ResourceNamePrefixesGetPrefixResource96A10E6E": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "ResourceNamePrefixesResourceNamePrefixesFunction138C66F1",
+            "Arn",
+          ],
+        },
+        "pipelineStackVersionSsmParamName": {
+          "Fn::Join": [
+            "",
+            [
+              "/accelerator/AWSAccelerator-PipelineStack-",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              "-",
+              {
+                "Ref": "AWS::Region",
+              },
+              "/version",
+            ],
+          ],
+        },
+        "prefix": {
+          "Ref": "AcceleratorPrefix",
+        },
+        "prefixParameterName": "/accelerator/lza-prefix",
+      },
+      "Type": "Custom::GetPrefixes",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ResourceNamePrefixesResourceNamePrefixesFunction138C66F1": {
+      "DependsOn": [
+        "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRoleDefaultPolicyDC1CC159",
+        "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRole17DDBBF2",
+      ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Needed to create SSM parameter for prefix",
+            },
+          ],
+        },
+        "cfn_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "W58",
+              "reason": "CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole",
+            },
+            {
+              "id": "W89",
+              "reason": "This function supports infrastructure deployment and is not deployed inside a VPC.",
+            },
+            {
+              "id": "W92",
+              "reason": "This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Code": {
+          "ZipFile": "
+          const response = require('cfn-response'); 
+          const { SSMClient, DeleteParameterCommand, GetParameterCommand, ParameterNotFound, PutParameterCommand } = require("@aws-sdk/client-ssm");
+          const { ConfiguredRetryStrategy } = require("@aws-sdk/util-retry");
+          exports.handler = async function (event, context) { 
+          console.log(JSON.stringify(event, null, 4)); 
+          const prefix=event.ResourceProperties.prefix;
+          const pipelineStackVersionSsmParamName=event.ResourceProperties.pipelineStackVersionSsmParamName;
+          const lowerCasePrefix=prefix.toLowerCase();
+          
+          const ssm = new SSMClient({retryStrategy: new ConfiguredRetryStrategy(10, (attempt) => 100 + attempt * 1000)});
+          
+          let data = {};
+          
+          let paramName = event.ResourceProperties.prefixParameterName;
+          
+          if (lowerCasePrefix === 'awsaccelerator') {
+              data['acceleratorPrefix'] = 'AWSAccelerator';
+              data['lowerCasePrefix'] = 'aws-accelerator'; 
+              data['oneWordPrefix'] = 'accelerator';               
+          } else {
+              data['acceleratorPrefix'] = prefix;
+              data['lowerCasePrefix'] = lowerCasePrefix; 
+              data['oneWordPrefix'] = prefix; 
+          }
+                  
+
+          if (event.RequestType === 'Update'){
+
+              var params = {
+                Name: paramName,
+              };
+              try {
+                  const ssmResponse = await ssm.send(new GetParameterCommand(params));
+                  // Fail stack if prefix was changed during update
+                  if (ssmResponse.Parameter.Value !== prefix) {
+                      await response.send(event, context, response.FAILED, {'FailureReason': 'LZA does not allow changing AcceleratorPrefix parameter value after initial deploy !!! Existing prefix: ' + event.OldResourceProperties.prefix + ' New prefix: ' + prefix + '.' }, event.PhysicalResourceId);
+                      return;
+                  }
+                  await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
+              } catch (error) {
+                  console.log(error);
+                  if (error instanceof ParameterNotFound){
+                      await response.send(event, context, response.FAILED, {'FailureReason': 'LZA prefix ssm parameter ' + paramName + ' not found!!! Recreate the parameter with existing AcceleratorPrefix parameter value to fix the issue'}, event.PhysicalResourceId);
+                      return;
+                  }
+                  else {
+                      await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while accessing LZA prefix ssm parameter ' + paramName }, event.PhysicalResourceId);
+                      return;
+                  }
+              }          
+          } 
+          
+          if (event.RequestType === 'Create') {
+          
+              if (lowerCasePrefix !== 'awsaccelerator') {
+                  // Fail stack if prefix starts with aws or ssm
+                  if (lowerCasePrefix.startsWith('aws') || lowerCasePrefix.startsWith('ssm')) { 
+                      await response.send(event, context, response.FAILED, {'FailureReason': 'Accelerator prefix ' + prefix + ' can not be started with aws or ssm !!!'}, event.PhysicalResourceId);
+                      return;
+                  }
+
+                  // Check if this is an existing deployment and prefix changed with initial deployment of custom resource
+                  var versionParams = {
+                    Name: pipelineStackVersionSsmParamName,
+                  };
+                  try {
+                    await ssm.send(new GetParameterCommand(versionParams));
+                    await response.send(event, context, response.FAILED, {'FailureReason': 'Can not change AcceleratorPrefix parameter for existing deployment, existing prefix value is AWSAccelerator, keep AcceleratorPrefix parameter value to default value for successfully stack update !!!'}, event.PhysicalResourceId);
+                    return;
+                  }
+                  catch (error) {
+                    console.log(error);
+                    if (!(error instanceof ParameterNotFound)){
+                      await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while accessing LZA ssm parameter ' + pipelineStackVersionSsmParamName }, event.PhysicalResourceId);
+                      return;
+                    }
+                  }
+              }
+          
+              // Create /accelerator/lza-prefix SSM parameter to store prefix value to protect updating prefix
+              try {
+                  var newParams = {
+                        Name: paramName,
+                        Value: prefix,
+                        Description: 'LZA created SSM parameter for Accelerator prefix value, DO NOT MODIFY/DELETE this parameter',
+                        Type: 'String',
+                      };
+                  await ssm.send(new PutParameterCommand(newParams));
+                  await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
+              }
+              catch (error) {
+                  console.log(error);
+                  await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while creating LZA prefix ssm parameter ' + paramName }, event.PhysicalResourceId);
+                  return;
+              }
+          }
+          if (event.RequestType === 'Delete') {
+
+            var deleteParams = {
+              Name: paramName,
+            };
+            try {
+              await ssm.send(new DeleteParameterCommand(deleteParams));
+            }
+            catch (error) {
+              console.log(error);
+              if (!(error instanceof ParameterNotFound)){
+                await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while deleting LZA ssm parameter ' + paramName }, event.PhysicalResourceId);
+                return;
+              }
+            }
+            await response.send(event, context, response.SUCCESS, {'Status': 'Custom resource deleted successfully' }, event.PhysicalResourceId);
+          }
+          
+          return;
+      }",
+        },
+        "Description": "This function converts accelerator prefix parameter to lower case to name s3 buckets in installer stack",
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRole17DDBBF2",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRole17DDBBF2": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Needed to create SSM parameter for prefix",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRoleDefaultPolicyDC1CC159": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Needed to create SSM parameter for prefix",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "ssm:GetParameters",
+                "ssm:GetParameter",
+                "ssm:PutParameter",
+                "ssm:DeleteParameter",
+              ],
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalAccount": {
+                    "Ref": "AWS::AccountId",
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":ssm:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":parameter/accelerator/lza-prefix",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":ssm:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":parameter/accelerator/AWSAccelerator-PipelineStack-",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      "-",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      "/version",
+                    ],
+                  ],
+                },
+              ],
+              "Sid": "SsmReadParameterAccess",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRoleDefaultPolicyDC1CC159",
+        "Roles": [
+          {
+            "Ref": "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRole17DDBBF2",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "S3Pipeline01611002": {
+      "Condition": "UseS3Condition",
+      "DependsOn": [
+        "S3PipelineRoleDefaultPolicyC2B43EF9",
+        "S3PipelineRole6AAD3BD6",
+      ],
+      "Properties": {
+        "ArtifactStore": {
+          "EncryptionKey": {
+            "Id": {
+              "Fn::GetAtt": [
+                "InstallerKey2A6A8C6D",
+                "Arn",
+              ],
+            },
+            "Type": "KMS",
+          },
+          "Location": {
+            "Ref": "SecureBucket747CD8C0",
+          },
+          "Type": "S3",
+        },
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "acceleratorPrefix",
+                ],
+              },
+              "-Installer",
+            ],
+          ],
+        },
+        "RestartExecutionOnUpdate": true,
+        "RoleArn": {
+          "Fn::GetAtt": [
+            "S3PipelineRole6AAD3BD6",
+            "Arn",
+          ],
+        },
+        "Stages": [
+          {
+            "Actions": [
+              {
+                "ActionTypeId": {
+                  "Category": "Source",
+                  "Owner": "AWS",
+                  "Provider": "S3",
+                  "Version": "1",
+                },
+                "Configuration": {
+                  "PollForSourceChanges": false,
+                  "S3Bucket": {
+                    "Ref": "RepositoryBucketName",
+                  },
+                  "S3ObjectKey": {
+                    "Ref": "RepositoryBucketObject",
+                  },
+                },
+                "Name": "Source",
+                "OutputArtifacts": [
+                  {
+                    "Name": "Source",
+                  },
+                ],
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "S3PipelineRole6AAD3BD6",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+            ],
+            "Name": "Source",
+          },
+          {
+            "Actions": [
+              {
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": {
+                  "ProjectName": {
+                    "Ref": "InstallerProject879FF821",
+                  },
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "Source",
+                  },
+                ],
+                "Name": "Install",
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "S3PipelineRole6AAD3BD6",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+            ],
+            "Name": "Install",
+          },
+        ],
+      },
+      "Type": "AWS::CodePipeline::Pipeline",
+    },
+    "S3PipelineRole6AAD3BD6": {
+      "Condition": "UseS3Condition",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "codepipeline.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "S3PipelineRoleDefaultPolicyC2B43EF9": {
+      "Condition": "UseS3Condition",
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "IAM role requires wildcard permissions.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "kms:Decrypt",
+                "kms:GenerateDataKey",
+              ],
+              "Effect": "Allow",
+              "Resource": "arn:aws:kms:us-east-1:000000000000:key/aaaaaaaa-1111-bbbb-2222-cccccc333333",
+            },
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "SecureBucket747CD8C0",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "SecureBucket747CD8C0",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "InstallerKey2A6A8C6D",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "S3PipelineRole6AAD3BD6",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "RepositoryBucketName",
+                      },
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "RepositoryBucketName",
+                      },
+                      "/",
+                      {
+                        "Ref": "RepositoryBucketObject",
+                      },
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "SecureBucket747CD8C0",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "SecureBucket747CD8C0",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:Decrypt",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "InstallerKey2A6A8C6D",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "codebuild:BatchGetBuilds",
+                "codebuild:StartBuild",
+                "codebuild:StopBuild",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "InstallerProject879FF821",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "S3PipelineRoleDefaultPolicyC2B43EF9",
+        "Roles": [
+          {
+            "Ref": "S3PipelineRole6AAD3BD6",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "SecureBucket747CD8C0": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "KMSMasterKeyID": {
+                  "Fn::GetAtt": [
+                    "InstallerKey2A6A8C6D",
+                    "Arn",
+                  ],
+                },
+                "SSEAlgorithm": "aws:kms",
+              },
+            },
+          ],
+        },
+        "BucketName": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "lowerCasePrefix",
+                ],
+              },
+              "-installer-",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              "-",
+              {
+                "Ref": "AWS::Region",
+              },
+            ],
+          ],
+        },
+        "LifecycleConfiguration": {
+          "Rules": [
+            {
+              "AbortIncompleteMultipartUpload": {
+                "DaysAfterInitiation": 1,
+              },
+              "ExpirationInDays": 1825,
+              "ExpiredObjectDeleteMarker": false,
+              "Id": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "LifecycleRule",
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "lowerCasePrefix",
+                      ],
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                  ],
+                ],
+              },
+              "NoncurrentVersionExpiration": {
+                "NoncurrentDays": 1825,
+              },
+              "NoncurrentVersionTransitions": [
+                {
+                  "StorageClass": "DEEP_ARCHIVE",
+                  "TransitionInDays": 366,
+                },
+              ],
+              "Status": "Enabled",
+              "Transitions": [
+                {
+                  "StorageClass": "DEEP_ARCHIVE",
+                  "TransitionInDays": 365,
+                },
+              ],
+            },
+          ],
+        },
+        "LoggingConfiguration": {
+          "DestinationBucketName": {
+            "Ref": "InstallerAccessLogsBucket647700E9",
+          },
+          "LogFilePrefix": {
+            "Fn::Join": [
+              "",
+              [
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "lowerCasePrefix",
+                  ],
+                },
+                "-installer-",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                "-",
+                {
+                  "Ref": "AWS::Region",
+                },
+                "/",
+              ],
+            ],
+          },
+        },
+        "OwnershipControls": {
+          "Rules": [
+            {
+              "ObjectOwnership": "BucketOwnerPreferred",
+            },
+          ],
+        },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true,
+        },
+        "VersioningConfiguration": {
+          "Status": "Enabled",
+        },
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "SecureBucketPolicy6374AC61": {
+      "Properties": {
+        "Bucket": {
+          "Ref": "SecureBucket747CD8C0",
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:*",
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "SecureBucket747CD8C0",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "SecureBucket747CD8C0",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+              "Sid": "deny-insecure-connections",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::S3::BucketPolicy",
+    },
+    "SolutionHelper4825923B": {
+      "Condition": "SolutionHelperAnonymousDataToAWS62E4FDE2",
+      "DependsOn": [
+        "SolutionHelperServiceRoleF70C0E2A",
+      ],
+      "Metadata": {
+        "cfn_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "W58",
+              "reason": "CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole",
+            },
+            {
+              "id": "W89",
+              "reason": "This function supports infrastructure deployment and is not deployed inside a VPC.",
+            },
+            {
+              "id": "W92",
+              "reason": "This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Code": {
+          "ZipFile": "
+        const response = require('cfn-response');
+        const https = require('https');
+
+        async function post(url, data) {
+          const dataString = JSON.stringify(data)
+          const options = {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+              timeout: 1000, // in ms
+          }
+          
+          return new Promise((resolve, reject) => {
+              const req = https.request(url, options, (res) => {
+                  if (res.statusCode < 200 || res.statusCode > 299) {
+                      return reject(new Error('HTTP status code: ', res.statusCode))
+                  }
+                  const body = []
+                  res.on('data', (chunk) => body.push(chunk))
+                  res.on('end', () => {
+                      const resString = Buffer.concat(body).toString()
+                      resolve(resString)
+                  })
+              })
+              req.on('error', (err) => {
+                  reject(err)
+              })
+              req.on('timeout', () => {
+                  req.destroy()
+                  reject(new Error('Request time out'))
+              })
+              req.write(dataString)
+              req.end()
+          })
+        }
+
+        function uuidv4() {
+          return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+              var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+              return v.toString(16);
+          });
+        }
+
+
+        function sanitizeData(resourceProperties) {
+          const keysToExclude = ['ServiceToken', 'Resource', 'SolutionId', 'UUID'];
+          return Object.keys(resourceProperties).reduce((sanitizedData, key) => {
+              if (!keysToExclude.includes(key)) {
+                  sanitizedData[key] = resourceProperties[key];
+              }
+              return sanitizedData;
+          }, {})
+        }
+
+        exports.handler = async function (event, context) {
+          console.log(JSON.stringify(event, null, 4));
+          const requestType = event.RequestType;
+          const resourceProperties = event.ResourceProperties;
+          const resource = resourceProperties.Resource;
+          let data = {};
+          try {
+              if (resource === 'UUID' && requestType === 'Create') {
+                  data['UUID'] = uuidv4();
+              }
+              if (resource === 'AnonymousMetric') {
+                  const currentDate = new Date()
+                  data = sanitizeData(resourceProperties);
+                  data['RequestType'] = requestType;
+                  const payload = {
+                      Solution: resourceProperties.SolutionId,
+                      UUID: resourceProperties.UUID,
+                      TimeStamp: currentDate.toISOString(),
+                      Data: data
+                  }
+
+                  console.log('Sending metrics data: ', JSON.stringify(payload, null, 2));
+                  await post('https://metrics.awssolutionsbuilder.com/generic', payload);
+                  console.log('Sent Data');
+              }
+          } catch (error) {
+              console.log(error);
+          }
+      
+          if (requestType === 'Create') {
+            await response.send(event, context, response.SUCCESS, data);
+          }
+          else {
+            await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
+          }
+          return;
+        } 
+      ",
+        },
+        "Description": "This function generates UUID for each deployment and sends anonymous data to the AWS Solutions team",
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "SolutionHelperServiceRoleF70C0E2A",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 30,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "SolutionHelperServiceRoleF70C0E2A": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "SolutionHelperSolutionCreateUniqueID070ED802": {
+      "Condition": "SolutionHelperAnonymousDataToAWS62E4FDE2",
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "Resource": "UUID",
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "SolutionHelper4825923B",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::CreateUUID",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SolutionHelperSolutionSendAnonymousData271B3D26": {
+      "Condition": "SolutionHelperAnonymousDataToAWS62E4FDE2",
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "BranchName": {
+          "Ref": "RepositoryBranchName",
+        },
+        "Region": {
+          "Ref": "AWS::Region",
+        },
+        "RepositoryName": {
+          "Ref": "RepositoryName",
+        },
+        "RepositoryOwner": {
+          "Ref": "RepositoryOwner",
+        },
+        "RepositorySource": {
+          "Ref": "RepositorySource",
+        },
+        "Resource": "AnonymousMetric",
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "SolutionHelper4825923B",
+            "Arn",
+          ],
+        },
+        "SolutionId": "SO0199",
+        "UUID": {
+          "Fn::GetAtt": [
+            "SolutionHelperSolutionCreateUniqueID070ED802",
+            "UUID",
+          ],
+        },
+      },
+      "Type": "Custom::AnonymousData",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SsmParamAcceleratorVersionFF83282D": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/AWSAccelerator-Test-InstallerStack/version",
+            ],
+          ],
+        },
+        "Type": "String",
+        "Value": "1.11.0",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamStackId521A78D3": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/AWSAccelerator-Test-InstallerStack/stack-id",
+            ],
+          ],
+        },
+        "Type": "String",
+        "Value": {
+          "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "UpdatePipelineGithubTokenFunction29B64F2E": {
+      "Condition": "UseGitHubCondition",
+      "DependsOn": [
+        "UpdatePipelineLambdaRole88CE0535",
+      ],
+      "Metadata": {
+        "cfn_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "W58",
+              "reason": "CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole",
+            },
+            {
+              "id": "W89",
+              "reason": "This function supports infrastructure deployment and is not deployed inside a VPC.",
+            },
+            {
+              "id": "W92",
+              "reason": "This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Code": {
+          "ZipFile": "/**
+ *  Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance
+ *  with the License. A copy of the License is located at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  or in the 'license' file accompanying this file. This file is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES
+ *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
+ *  and limitations under the License.
+ */
+
+const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
+const { CodePipelineClient, GetPipelineCommand, UpdatePipelineCommand } = require('@aws-sdk/client-codepipeline');
+const { ConfiguredRetryStrategy } = require('@aws-sdk/util-retry');
+
+const secretsManager = new SecretsManagerClient({
+  retryStrategy: new ConfiguredRetryStrategy(10, attempt => 100 + attempt * 1000),
+});
+const codePipeline = new CodePipelineClient({
+  retryStrategy: new ConfiguredRetryStrategy(10, attempt => 100 + attempt * 1000),
+});
+const installerPipelineName = process.env['INSTALLER_PIPELINE_NAME'] ?? '';
+const acceleratorPipelineName = process.env['ACCELERATOR_PIPELINE_NAME'] ?? '';
+const pipelineArray = [installerPipelineName, acceleratorPipelineName];
+
+/**
+ * update-pipeline-github-token - lambda handler
+ *
+ * @param event
+ * @returns
+ */
+
+exports.handler = async (event, context) => {
+  const secretDetails = event.detail.requestParameters;
+  const secretArn = secretDetails.secretId;
+  const secretValue = await getSecretValue(secretArn);
+  await updatePipelineDetailsForBothPipelines(secretValue);
+  return {
+    statusCode: 200,
+  };
+};
+
+async function getSecretValue(secretName) {
+  try {
+    const data = await secretsManager.send(
+      new GetSecretValueCommand({
+        SecretId: secretName,
+      }),
+    );
+    if (!data || !data.SecretString) {
+      throw new Error(\`Secret \${secretName} didn't exist.\`);
+    }
+    console.log(\`Retrieved secret: \${secretName}...\`);
+    return data.SecretString;
+  } catch (error) {
+    console.log(error);
+    throw new Error(\`Error retrieving secret: \${secretName}.\`);
+  }
+}
+
+async function updateCodePipelineSourceStage(pipelineDetails, secretValue) {
+  const pipelineStages = pipelineDetails.pipeline.stages;
+  const sourceStage = pipelineStages.find(o => o.name == 'Source');
+  const sourceAction = sourceStage.actions.find(a => a.name == 'Source');
+  if (sourceAction.actionTypeId.provider !== 'GitHub') {
+    console.log('Pipeline source is not GitHub, no action will be taken.');
+    return;
+  }
+  sourceAction.configuration.OAuthToken = secretValue;
+
+  return pipelineDetails;
+}
+
+async function getPipelineDetails(pipelineName) {
+  //This function retrieves the original Code Pipeline structure, so we can update it.
+  const getPipelineParams = {
+    name: pipelineName,
+  };
+  console.log(\`Retrieving existing pipeline configuration for: \${pipelineName}...\`);
+  const pipelineObject = await codePipeline.send(new GetPipelineCommand(getPipelineParams));
+  console.log(JSON.stringify(pipelineObject));
+  return pipelineObject;
+}
+
+async function updatePipeline(updatedPipelineDetails) {
+  //Remove metadata from getPipelineOutput to use as updatePipelineInput
+  delete updatedPipelineDetails.metadata;
+  console.log(\`Updating pipeline with new OAuth Token...\`);
+  return codePipeline.send(new UpdatePipelineCommand(updatedPipelineDetails));
+}
+
+async function updatePipelineDetailsForBothPipelines(secretValue) {
+  for (const pipeline of pipelineArray) {
+    try {
+      const pipelineDetails = await getPipelineDetails(pipeline);
+      const updatedPipelineDetails = await updateCodePipelineSourceStage(pipelineDetails, secretValue);
+      if (updatedPipelineDetails) {
+        await updatePipeline(updatedPipelineDetails);
+      }
+    } catch (error) {
+      console.error(error);
+      throw new Error(\`Error occurred while updating pipeline \${pipeline}\`);
+    }
+  }
+}
+",
+        },
+        "Description": "Lambda function to update CodePipeline OAuth Token",
+        "Environment": {
+          "Variables": {
+            "ACCELERATOR_PIPELINE_NAME": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Fn::GetAtt": [
+                      "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                      "acceleratorPrefix",
+                    ],
+                  },
+                  "-Pipeline",
+                ],
+              ],
+            },
+            "INSTALLER_PIPELINE_NAME": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Fn::GetAtt": [
+                      "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                      "acceleratorPrefix",
+                    ],
+                  },
+                  "-Installer",
+                ],
+              ],
+            },
+          },
+        },
+        "Handler": "index.handler",
+        "KmsKeyArn": {
+          "Fn::GetAtt": [
+            "InstallerKey2A6A8C6D",
+            "Arn",
+          ],
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "UpdatePipelineLambdaRole88CE0535",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 60,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "UpdatePipelineGithubTokenFunctionLogGroupFCE3723A": {
+      "Condition": "UseGitHubCondition",
+      "DeletionPolicy": "Delete",
+      "Metadata": {
+        "cfn_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "W84",
+              "reason": "CloudWatchLogs LogGroup should specify a KMS Key Id to encrypt the log data",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "UpdatePipelineGithubTokenFunction29B64F2E",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 731,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "UpdatePipelineGithubTokenRule79D83132": {
+      "Condition": "UseGitHubCondition",
+      "Properties": {
+        "Description": "Rule to trigger Lambda Function when the Github Accelerator Token has been updated.",
+        "EventPattern": {
+          "detail": {
+            "eventName": [
+              "UpdateSecret",
+              "PutSecretValue",
+            ],
+            "eventSource": [
+              "secretsmanager.amazonaws.com",
+            ],
+            "requestParameters": {
+              "secretId": [
+                {
+                  "prefix": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":secretsmanager:",
+                        {
+                          "Ref": "AWS::Region",
+                        },
+                        ":",
+                        {
+                          "Ref": "AWS::AccountId",
+                        },
+                        ":secret:accelerator/github-token",
+                      ],
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          "detail-type": [
+            "AWS API Call via CloudTrail",
+          ],
+        },
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Fn::GetAtt": [
+                "UpdatePipelineGithubTokenFunction29B64F2E",
+                "Arn",
+              ],
+            },
+            "Id": "Target0",
+            "RetryPolicy": {
+              "MaximumEventAgeInSeconds": 14400,
+              "MaximumRetryAttempts": 2,
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "UpdatePipelineGithubTokenRuleAllowEventRuleAWSAcceleratorTestInstallerStackUpdatePipelineGithubTokenFunction78C173C279CEF0A3": {
+      "Condition": "UseGitHubCondition",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "UpdatePipelineGithubTokenFunction29B64F2E",
+            "Arn",
+          ],
+        },
+        "Principal": "events.amazonaws.com",
+        "SourceArn": {
+          "Fn::GetAtt": [
+            "UpdatePipelineGithubTokenRule79D83132",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "UpdatePipelineLambdaPolicy284ABC36": {
+      "Condition": "UseGitHubCondition",
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "IAM role requires wildcard permissions.",
+            },
+          ],
+        },
+        "cfn_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "W12",
+              "reason": "IAM policy should not allow * resource.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "codepipeline:GetPipeline",
+                "codepipeline:UpdatePipeline",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":codepipeline:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":",
+                      {
+                        "Fn::GetAtt": [
+                          "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                          "acceleratorPrefix",
+                        ],
+                      },
+                      "-Installer*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":codepipeline:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":",
+                      {
+                        "Fn::GetAtt": [
+                          "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                          "acceleratorPrefix",
+                        ],
+                      },
+                      "-Pipeline*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "secretsmanager:GetResourcePolicy",
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+                "secretsmanager:ListSecretVersionIds",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":secret:accelerator/github-token*",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": "kms:Decrypt",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            {
+              "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            {
+              "Action": "iam:PassRole",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":role/",
+                      {
+                        "Fn::GetAtt": [
+                          "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                          "acceleratorPrefix",
+                        ],
+                      },
+                      "-*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::GetAtt": [
+                    "GitHubPipelineRole6F4DEF1B",
+                    "Arn",
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "UpdatePipelineLambdaPolicy284ABC36",
+        "Roles": [
+          {
+            "Ref": "UpdatePipelineLambdaRole88CE0535",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "UpdatePipelineLambdaRole88CE0535": {
+      "Condition": "UseGitHubCondition",
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Managed policies required for IAM role.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ValidateInstallerValidateResource24181D5D": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "ValidateInstallerValidationFunction21674768",
+            "Arn",
+          ],
+        },
+        "acceleratorPipelineName": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "acceleratorPrefix",
+                ],
+              },
+              "-Pipeline",
+            ],
+          ],
+        },
+        "configRepositoryLocation": {
+          "Ref": "ConfigurationRepositoryLocation",
+        },
+        "resourceType": "Custom::ValidateInstallerStack",
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ValidateInstallerValidationFunction21674768": {
+      "DependsOn": [
+        "ValidateInstallerValidationFunctionServiceRoleDefaultPolicyAA8D9A47",
+        "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B",
+      ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+          ],
+        },
+        "cfn_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "W58",
+              "reason": "CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole",
+            },
+            {
+              "id": "W89",
+              "reason": "This function supports infrastructure deployment and is not deployed inside a VPC.",
+            },
+            {
+              "id": "W92",
+              "reason": "This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Code": {
+          "ZipFile": "const response = require('cfn-response');
+const { CodePipelineClient, GetPipelineCommand } = require('@aws-sdk/client-codepipeline');
+exports.handler = async function (event, context) {
+  console.log(JSON.stringify(event, null, 4));
+
+  const configRepositoryLocation = event.ResourceProperties.configRepositoryLocation;
+
+  if (event.RequestType === 'Delete') {
+    await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+    return;
+  }
+
+  if (configRepositoryLocation === 's3') {
+    try {
+      const pipelineName = event.ResourceProperties.acceleratorPipelineName;
+      const client = new CodePipelineClient();
+      const input = { name: pipelineName };
+      const command = new GetPipelineCommand(input);
+      const pipelineResponse = await client.send(command);
+      const sourceStage = pipelineResponse.pipeline.stages.find(stage => stage.name === 'Source');
+      const configAction = sourceStage?.actions.find(action => action.name === 'Configuration');
+      if (configAction.actionTypeId.provider === 'CodeCommit') {
+        await response.send(
+          event,
+          context,
+          response.FAILED,
+          {
+            FailureReason:
+              'ConfigRepositoryLocation parameter set to s3, but existing deployment using CodeCommit was detected. This value cannot be changed for existing deployments. Please set ConfigRepositoryLocation to CodeCommit and try again.',
+          },
+          event.PhysicalResourceId,
+        );
+        return;
+      }
+    } catch (err) {
+      console.log('Encountered error finding existing pipeline, continuing');
+      console.log(err);
+      await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+      return;
+    }
+  }
+
+  // End of Validation
+  await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+  return;
+};
+",
+        },
+        "Description": "This function validates installer parameters",
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs18.x",
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ValidateInstallerValidationFunctionServiceRoleDefaultPolicyAA8D9A47": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "codepipeline:GetPipeline",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":codepipeline:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":",
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "acceleratorPrefix",
+                      ],
+                    },
+                    "-Pipeline",
+                  ],
+                ],
+              },
+              "Sid": "ReadCodePipeline",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ValidateInstallerValidationFunctionServiceRoleDefaultPolicyAA8D9A47",
+        "Roles": [
+          {
+            "Ref": "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+  },
+  "Rules": {
+    "RequiredEmailNotification": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Equals": [
+              {
+                "Ref": "EnableApprovalStage",
+              },
+              "Yes",
+            ],
+          },
+          "AssertDescription": "Review notification setting is required when region by region deployment is enabled",
+        },
+      ],
+      "RuleCondition": {
+        "Fn::Not": [
+          {
+            "Fn::Equals": [
+              {
+                "Ref": "RegionByRegionDeployOrder",
+              },
+              "",
+            ],
+          },
+        ],
+      },
+    },
+    "RequiredParametersForCodeConnection": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Equals": [
+                  "",
+                  {
+                    "Ref": "ConfigCodeConnectionArn",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "codeconnectionArn parameter must be provided when configRepositoryLocation is set to codeconnection",
+        },
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Equals": [
+                  "No",
+                  {
+                    "Ref": "UseExistingConfigRepo",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "useExistingConfigRepo parameter must be set to "Yes" when configRepositoryLocation is set to codeconnection",
+        },
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Equals": [
+                  "",
+                  {
+                    "Ref": "ExistingConfigRepositoryOwner",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "existingConfigRepositoryOwner parameter must be populated when configRepositoryLocation is set to codeconnection",
+        },
+      ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          "codeconnection",
+          {
+            "Ref": "ConfigurationRepositoryLocation",
+          },
+        ],
+      },
+    },
+    "RequiredParametersForExistingRepo": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Equals": [
+                  "",
+                  {
+                    "Ref": "ExistingConfigRepositoryBranchName",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "existingConfigRepositoryBranchName parameter must be provided when useExistingRepository is set to Yes",
+        },
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Equals": [
+                  "",
+                  {
+                    "Ref": "ExistingConfigRepositoryName",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "existingConfigRepositoryName parameter must be provided when useExistingRepository is set to Yes",
+        },
+      ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          "Yes",
+          {
+            "Ref": "UseExistingConfigRepo",
+          },
+        ],
+      },
+    },
+    "RequiredParametersForS3Repo": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::And": [
+              {
+                "Fn::Equals": [
+                  "",
+                  {
+                    "Ref": "ExistingConfigRepositoryName",
+                  },
+                ],
+              },
+              {
+                "Fn::Equals": [
+                  "",
+                  {
+                    "Ref": "ExistingConfigRepositoryBranchName",
+                  },
+                ],
+              },
+              {
+                "Fn::Equals": [
+                  "No",
+                  {
+                    "Ref": "UseExistingConfigRepo",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "Existing configuration repository parameters cannot be provided when configurationRepositoryLocation is set to s3",
+        },
+      ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          "s3",
+          {
+            "Ref": "ConfigurationRepositoryLocation",
+          },
+        ],
+      },
+    },
+  },
+}
+`;

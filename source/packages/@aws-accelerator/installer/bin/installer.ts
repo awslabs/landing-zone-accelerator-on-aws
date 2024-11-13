@@ -34,6 +34,7 @@ async function main() {
   const managementCrossAccountRoleName = app.node.tryGetContext('management-cross-account-role-name');
   const enableSingleAccountMode = app.node.tryGetContext('enable-single-account-mode') === 'true';
   const usePermissionBoundary = app.node.tryGetContext('use-permission-boundary') === 'true';
+  const enableRegionByRegionDeployment = app.node.tryGetContext('enable-region-by-region-deployment') === 'true';
 
   if (enableTester && managementCrossAccountRoleName === undefined) {
     console.log(`Invalid --management-cross-account-role-name ${managementCrossAccountRoleName}`);
@@ -54,6 +55,7 @@ async function main() {
     managementCrossAccountRoleName: managementCrossAccountRoleName,
     enableSingleAccountMode,
     usePermissionBoundary,
+    enableRegionByRegionDeployment,
   });
   if (usePermissionBoundary) {
     cdk.Aspects.of(app).add(new installerPermissionBoundary());
