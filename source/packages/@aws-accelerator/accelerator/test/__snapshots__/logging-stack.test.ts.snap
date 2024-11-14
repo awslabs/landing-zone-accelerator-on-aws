@@ -2263,6 +2263,28 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
               "Statement": [
                 {
                   "Action": [
+                    "kms:Encrypt",
+                    "kms:GenerateDataKey",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":kms:us-east-1:333333333333:key:*",
+                        ],
+                      ],
+                    },
+                  ],
+                  "Sid": "AllowEncryption",
+                },
+                {
+                  "Action": [
                     "logs:PutRetentionPolicy",
                     "logs:AssociateKmsKey",
                     "logs:DescribeLogGroups",
@@ -5642,6 +5664,28 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
           {
             "PolicyDocument": {
               "Statement": [
+                {
+                  "Action": [
+                    "kms:Encrypt",
+                    "kms:GenerateDataKey",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":kms:us-west-2:333333333333:key:*",
+                        ],
+                      ],
+                    },
+                  ],
+                  "Sid": "AllowEncryption",
+                },
                 {
                   "Action": [
                     "logs:PutRetentionPolicy",
@@ -11354,6 +11398,28 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
           {
             "PolicyDocument": {
               "Statement": [
+                {
+                  "Action": [
+                    "kms:Encrypt",
+                    "kms:GenerateDataKey",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":kms:us-east-1:333333333333:key:*",
+                        ],
+                      ],
+                    },
+                  ],
+                  "Sid": "AllowEncryption",
+                },
                 {
                   "Action": [
                     "logs:PutRetentionPolicy",
