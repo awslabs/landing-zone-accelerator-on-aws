@@ -2714,11 +2714,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
                         {
                           "Ref": "AWS::Partition",
                         },
-                        ":ssm:",
-                        {
-                          "Ref": "AWS::Region",
-                        },
-                        ":",
+                        ":ssm:*:",
                         {
                           "Ref": "AWS::AccountId",
                         },

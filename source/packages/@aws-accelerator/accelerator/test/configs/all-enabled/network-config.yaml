@@ -142,6 +142,27 @@ transitGateways:
         routes:
           - destinationPrefixList: accelerator-prefix-list-001
             blackhole: true
+  - name: SharedServices-West
+    account: SharedServices
+    region: us-west-2
+    shareTargets:
+      organizationalUnits:
+        - Infrastructure
+    asn: 65522
+    dnsSupport: enable
+    vpnEcmpSupport: enable
+    defaultRouteTableAssociation: disable
+    defaultRouteTablePropagation: disable
+    autoAcceptSharingAttachments: enable
+    routeTables:
+      - name: SharedServices-West-Core
+        routes: []
+      - name: SharedServices-West-Segregated
+        routes: []
+      - name: SharedServices-West-Shared
+        routes: []
+      - name: SharedServices-Main-Standalone
+        routes: []
   - name: Network-Main-Us-West-2
     account: Network
     region: us-west-2
@@ -190,6 +211,30 @@ transitGatewayPeering:
       account: Network
       region: *HOME_REGION
       routeTableAssociations: Network-Main-Shared
+      autoAccept: true
+      applyTags: true
+  - name: SharedServices-West-And-SharedServices-Main-Peering
+    requester:
+      transitGatewayName: SharedServices-Main
+      account: SharedServices
+      region: *HOME_REGION
+      routeTableAssociations: SharedServices-Main-Shared
+      tags:
+        - key: Name
+          value: Network-West-And-SharedServices-Main-Peering
+        - key: CostCenter
+          value: TSD-LZA
+        - key: Company
+          value: AWS
+        - key: Organization
+          value: WWPS
+        - key: Team
+          value: Development
+    accepter:
+      transitGatewayName: SharedServices-West
+      account: SharedServices
+      region: us-west-2
+      routeTableAssociations: SharedServices-West-Core
       autoAccept: true
       applyTags: true
   - name: Network-Main-2-And-SharedServices-Main-Peering

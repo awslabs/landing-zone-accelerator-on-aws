@@ -80,22 +80,20 @@ exports[`TransitGatewayPeering Construct(TransitGatewayPrefixListReference):  Sn
                     "sts:AssumeRole",
                   ],
                   "Effect": "Allow",
-                  "Resource": {
-                    "Fn::Join": [
-                      "",
-                      [
-                        "arn:",
-                        {
-                          "Ref": "AWS::Partition",
-                        },
-                        ":iam::",
-                        {
-                          "Ref": "AWS::AccountId",
-                        },
-                        ":role/ABC",
+                  "Resource": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::111111111111:role/ABC",
+                        ],
                       ],
-                    ],
-                  },
+                    },
+                  ],
                   "Sid": "AllowAssumeRole",
                 },
                 {

@@ -323,11 +323,21 @@ export class TgwResources {
     }
   }
 
+  private createAcceptorList(props: AcceleratorStackProps): string[] {
+    const principals: string[] = [];
+    for (const transitGatewayPeeringItem of props.networkConfig.transitGatewayPeering ?? []) {
+      const accepterAccountId = props.accountsConfig.getAccountId(transitGatewayPeeringItem.accepter.account);
+      principals.push(accepterAccountId);
+    }
+    return principals;
+  }
+
   /**
    * Function to create TGW peering
    */
   private createTransitGatewayPeering(props: AcceleratorStackProps): Map<string, string> {
     const tgwPeeringMap = new Map<string, string>();
+    const principals = this.createAcceptorList(props);
 
     for (const transitGatewayPeeringItem of props.networkConfig.transitGatewayPeering ?? []) {
       // Get account IDs
@@ -397,6 +407,7 @@ export class TgwResources {
           {
             requester: {
               accountName: transitGatewayPeeringItem.requester.account,
+              principals: principals,
               transitGatewayId: cdk.aws_ssm.StringParameter.valueForStringParameter(
                 this.stack,
                 this.stack.getSsmPath(SsmResourceType.TGW, [transitGatewayPeeringItem.requester.transitGatewayName]),
