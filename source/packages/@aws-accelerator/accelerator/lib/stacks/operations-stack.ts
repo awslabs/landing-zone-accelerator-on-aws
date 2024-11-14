@@ -1033,6 +1033,12 @@ export class OperationsStack extends AcceleratorStack {
         actions: ['ssm:PutParameter', 'ssm:DeleteParameter', 'ssm:GetParameter'],
       }),
     );
+    assetsAccessRole.addToPolicy(
+      new cdk.aws_iam.PolicyStatement({
+        resources: [`arn:${this.props.partition}:ssm:*:${accountId}:parameter/*`],
+        actions: ['ssm:PutParameter', 'ssm:DeleteParameter', 'ssm:GetParameter'],
+      }),
+    );
 
     if (
       props.globalConfig.logging.assetBucket?.importedBucket?.createAcceleratorManagedKey &&
