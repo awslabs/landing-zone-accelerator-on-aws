@@ -230,5 +230,9 @@ source/packages/@aws-config-converter/src/config/global-config.ts:2306
 source/packages/@aws-accelerator/utils/test/get-template.test.ts:67
 source/packages/@aws-accelerator/utils/test/get-template.test.ts:74
 
+# Unit Test Ignores
+source/packages/@aws-accelerator/accelerator/test/unit-tests/network/tgw-resources.test.unit.ts:37
+source/packages/@aws-accelerator/accelerator/test/unit-tests/network/tgw-resources.test.unit.ts:139
+
 # Security Email Address in Security.md file
 SECURITY.md:10

@@ -67,6 +67,10 @@ export interface TransitGatewayPeeringProps {
      */
     readonly accountName: string;
     /**
+     * List of principals
+     */
+    readonly principals: string[];
+    /**
      * Requester Transit Gateway ID.
      */
     readonly transitGatewayId: string;
@@ -100,6 +104,11 @@ export class TransitGatewayPeering extends Construct {
   public readonly peeringAttachmentId: string;
   constructor(scope: Construct, id: string, props: TransitGatewayPeeringProps) {
     super(scope, id);
+    const principalList =
+      props.requester.principals?.map(
+        principal =>
+          `arn:${cdk.Stack.of(this).partition}:iam::${principal}:role/${props.accepter.accountAccessRoleName}`,
+      ) || [];
 
     const cfnTransitGatewayPeeringAttachment = new cdk.aws_ec2.CfnTransitGatewayPeeringAttachment(
       this,
@@ -125,9 +134,7 @@ export class TransitGatewayPeering extends Construct {
           Sid: 'AllowAssumeRole',
           Effect: 'Allow',
           Action: ['sts:AssumeRole'],
-          Resource: `arn:${cdk.Stack.of(this).partition}:iam::${props.accepter.accountId}:role/${
-            props.accepter.accountAccessRoleName
-          }`,
+          Resource: principalList,
         },
         {
           Sid: 'AllowModifyPeeringReferences',

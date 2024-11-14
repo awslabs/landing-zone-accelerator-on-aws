@@ -200,7 +200,7 @@ export class TgwResources {
                   effect: cdk.aws_iam.Effect.ALLOW,
                   actions: ['ssm:GetParameters', 'ssm:GetParameter'],
                   resources: [
-                    `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter${props.prefixes.ssmParamName}/network/transitGateways/*`,
+                    `arn:${cdk.Aws.PARTITION}:ssm:*:${cdk.Aws.ACCOUNT_ID}:parameter${props.prefixes.ssmParamName}/network/transitGateways/*`,
                   ],
                 }),
                 new cdk.aws_iam.PolicyStatement({

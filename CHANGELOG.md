@@ -12,17 +12,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(operations): add feature to create users without console access.
 - feat(pipeline): add feature to parallelise synth and diff operations
 - feat(pipeline): add feature to reuse synth to all deploy actions
-- feat(piepline): add feature to consolidate all diffs and generate URL for review in Review stage
+- feat(pipeline): add feature to consolidate all diffs and generate URL for review in Review stage
 - chore(modules): add modules package with ct module
 - feat(pipeline): add feature to deploy LZA solution region by region
 
 ### Fixed
 
 - fix(networking): fixes hosted zone dns for sagemaker and eks-auth endpoints
+- fix(networking): trust policy for tgw peering multiple acceptors to single requestor account
 - fix(config): adjust all-enabled config for asset bucket name
 - fix(logging): updated kms key for imported asset bucket
 - fix(pipeline): fix account bootstrap failed silently
 - fix(installer): fix management account bootstrap failed when using external pipeline
+- fix(metadata): accelerator lambda times out without error
 
 ### Changed
 

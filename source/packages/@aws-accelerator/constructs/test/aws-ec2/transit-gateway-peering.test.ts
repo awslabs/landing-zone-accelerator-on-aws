@@ -33,6 +33,7 @@ new TransitGatewayPeering(stack, 'TransitGatewayPeering', {
   },
   requester: {
     accountName: 'SharedServices',
+    principals: ['111111111111'],
     transitGatewayId: 'tgw-0002',
     transitGatewayName: 'SharedServices-TGW',
     transitGatewayRouteTableId: 'tgw-0002',
