@@ -257,6 +257,36 @@ exports[`CloudWatchLogsSubscriptionFilter Construct(CloudWatchLogsSubscriptionFi
               "Statement": [
                 {
                   "Action": [
+                    "kms:Encrypt",
+                    "kms:GenerateDataKey",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":kms:",
+                          {
+                            "Ref": "AWS::Region",
+                          },
+                          ":",
+                          {
+                            "Ref": "AWS::AccountId",
+                          },
+                          ":key:*",
+                        ],
+                      ],
+                    },
+                  ],
+                  "Sid": "AllowEncryption",
+                },
+                {
+                  "Action": [
                     "logs:PutRetentionPolicy",
                     "logs:AssociateKmsKey",
                     "logs:DescribeLogGroups",
