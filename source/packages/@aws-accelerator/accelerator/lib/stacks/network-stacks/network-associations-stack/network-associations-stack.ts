@@ -49,7 +49,7 @@ import {
   VpnConnectionConfig,
   isNetworkType,
 } from '@aws-accelerator/config';
-import { ShareTargets } from '@aws-accelerator/config/dist/lib/common/types';
+import { ShareTargets } from '@aws-accelerator/config';
 import {
   ActiveDirectory,
   ActiveDirectoryConfiguration,

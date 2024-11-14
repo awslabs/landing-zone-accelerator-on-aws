@@ -20,7 +20,7 @@ import {
   VpcTemplatesConfig,
   VpcPeeringConfig,
 } from '@aws-accelerator/config';
-import { VpcFlowLogsConfig } from '@aws-accelerator/config/dist/lib/common/types';
+import { VpcFlowLogsConfig } from '@aws-accelerator/config';
 import {
   DeleteDefaultSecurityGroupRules,
   DeleteDefaultVpc,

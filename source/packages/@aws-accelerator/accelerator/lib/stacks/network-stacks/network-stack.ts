@@ -74,6 +74,7 @@ import {
   processSecurityGroupSgIngressSources,
 } from './utils/security-group-utils';
 import { hasAdvancedVpnOptions, isIpv4 } from './utils/validation-utils';
+import { isArn } from '@aws-accelerator/utils/lib/is-arn';
 
 /**
  * Resource share type for RAM resource shares
@@ -572,7 +573,9 @@ export abstract class NetworkStack extends AcceleratorStack {
         // Get firewall policy ARN
         let policyArn: string;
 
-        if (delegatedAdminAccountId === cdk.Stack.of(this).account) {
+        if (isArn(firewallItem.firewallPolicy)) {
+          policyArn = firewallItem.firewallPolicy;
+        } else if (delegatedAdminAccountId === cdk.Stack.of(this).account) {
           policyArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
             this,
             this.getSsmPath(SsmResourceType.NFW_POLICY, [firewallItem.firewallPolicy]),

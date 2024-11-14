@@ -30,7 +30,7 @@ import {
 import { NetworkValidatorFunctions } from './network-validator-functions';
 import { isNetworkType } from '../../lib/common';
 import { NfwStatelessRuleActionType } from '../../lib/models/network-config';
-
+import { isArn } from '../../../utils/lib/is-arn';
 /**
  * Class to validate network firewall
  */
@@ -1402,28 +1402,35 @@ export class NetworkFirewallValidator {
   ) {
     // Validate policy exists
     const firewallPolicy = allPolicies.get(firewall.firewallPolicy);
+    // If `firewallPolicy` is an arn, it is not managed by LZA, so we don't need
+    // to check if it exists
+    const shouldValidatePolicy = !isArn(firewall.firewallPolicy);
+    if (!shouldValidatePolicy) {
+      return;
+    }
     if (!firewallPolicy) {
       errors.push(
         `[Network Firewall firewall ${firewall.name}]: firewall policy "${firewall.firewallPolicy}" does not exist`,
       );
-    } else {
-      // Validate RAM shares exist in desired accounts
-      const vpc = helpers.getVpc(firewall.vpc)!;
-      const vpcAccountNames = helpers.getVpcAccountNames(vpc);
-      const policyAccountNames = helpers.getDelegatedAdminShareTargets(firewallPolicy.shareTargets);
-      const targetComparison = helpers.compareTargetAccounts(vpcAccountNames, policyAccountNames);
+      return;
+    }
+    // Only add validations for firewallPolicy if it exists (eg. is managed by LZA)
+    // Validate RAM shares exist in desired accounts
+    const vpc = helpers.getVpc(firewall.vpc)!;
+    const vpcAccountNames = helpers.getVpcAccountNames(vpc);
+    const policyAccountNames = helpers.getDelegatedAdminShareTargets(firewallPolicy.shareTargets);
+    const targetComparison = helpers.compareTargetAccounts(vpcAccountNames, policyAccountNames);
 
-      if (targetComparison.length > 0) {
-        errors.push(
-          `[Network Firewall firewall ${firewall.name}]: firewall policy "${firewall.firewallPolicy}" is not shared with one or more target OU(s)/account(s) for VPC "${vpc.name}." Missing accounts: ${targetComparison}`,
-        );
-      }
-      // Validate regions match
-      if (!firewallPolicy.regions.includes(vpc.region)) {
-        errors.push(
-          `[Network Firewall firewall ${firewall.name}]: firewall policy "${firewall.firewallPolicy}" target region(s) do not match region for VPC "${vpc.name}." Policy regions: ${firewallPolicy.regions}; VPC region: ${vpc.region}`,
-        );
-      }
+    if (targetComparison.length > 0) {
+      errors.push(
+        `[Network Firewall firewall ${firewall.name}]: firewall policy "${firewall.firewallPolicy}" is not shared with one or more target OU(s)/account(s) for VPC "${vpc.name}." Missing accounts: ${targetComparison}`,
+      );
+    }
+    // Validate regions match
+    if (!firewallPolicy.regions.includes(vpc.region)) {
+      errors.push(
+        `[Network Firewall firewall ${firewall.name}]: firewall policy "${firewall.firewallPolicy}" target region(s) do not match region for VPC "${vpc.name}." Policy regions: ${firewallPolicy.regions}; VPC region: ${vpc.region}`,
+      );
     }
   }
 

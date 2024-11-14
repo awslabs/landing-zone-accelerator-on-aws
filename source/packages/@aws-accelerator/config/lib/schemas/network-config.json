@@ -1901,7 +1901,7 @@
         },
         "firewallPolicy": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "The friendly name of the Network Firewall policy."
+          "description": "The friendly name of the Network Firewall policy or ARN for an existing network firewall policy."
         },
         "firewallPolicyChangeProtection": {
           "description": "(OPTIONAL) Enable to disallow firewall policy changes.",
