@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'pascal-case';
 import { IPv4CidrRange, IPv6CidrRange } from 'ip-num';
+import { isArn } from '@aws-accelerator/utils/lib/is-arn';
 
 import {
   CfnInternetGateway,
@@ -1234,7 +1235,12 @@ export class VpcResources extends AseaResource {
         const delegatedAdminAccountId = this.props.accountsConfig.getAccountId(
           this.props.networkConfig.centralNetworkServices?.delegatedAdminAccount ?? '',
         );
-        const firewallPolicyArn = `arn:${partition}:network-firewall:${region}:${delegatedAdminAccountId}:firewall-policy/${firewallItem.firewallPolicy}`;
+        const firewallPolicyArn = this.getFirewallPolicyArn(
+          partition,
+          region,
+          delegatedAdminAccountId,
+          firewallItem.firewallPolicy,
+        );
         const firewall = NetworkFirewall.includedCfnResource(vpcStack, firewallResource.logicalResourceId, {
           firewallPolicyArn: firewallPolicyArn,
           name: firewallItem.name,
@@ -1254,6 +1260,17 @@ export class VpcResources extends AseaResource {
         });
       }
     }
+  }
+
+  private getFirewallPolicyArn(
+    partition: string,
+    region: string,
+    delegatedAdminAccountId: string,
+    firewallPolicy: string,
+  ): string {
+    return isArn(firewallPolicy)
+      ? firewallPolicy
+      : `arn:${partition}:network-firewall:${region}:${delegatedAdminAccountId}:firewall-policy/${firewallPolicy}`;
   }
 
   /**

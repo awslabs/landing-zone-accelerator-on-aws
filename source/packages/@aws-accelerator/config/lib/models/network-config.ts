@@ -6635,7 +6635,7 @@ export interface INfwFirewallConfig {
    */
   readonly name: t.NonEmptyString;
   /**
-   * The friendly name of the Network Firewall policy.
+   * The friendly name of the Network Firewall policy or ARN for an existing network firewall policy.
    *
    * @remarks
    * This is the logical `name` property of the policy as defined in network-config.yaml.

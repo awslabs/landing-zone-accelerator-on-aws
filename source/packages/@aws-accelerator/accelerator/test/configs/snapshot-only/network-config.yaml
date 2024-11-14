@@ -383,7 +383,7 @@ centralNetworkServices:
           - destination: cloud-watch-logs
             type: FLOW
       - name: az-id-firewall
-        firewallPolicy: accelerator-policy
+        firewallPolicy: "arn:aws:network-firewall:ap-southeast-2:123456789012:firewall-policy/central-egress-nfw-policy"
         subnets:
           - Network-Secondary-C
           - Network-Secondary-D

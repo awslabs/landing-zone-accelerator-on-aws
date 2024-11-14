@@ -1994,9 +1994,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
     "NetworkSecondaryazIdFirewallNetworkFirewall7A5509D1": {
       "Properties": {
         "FirewallName": "az-id-firewall",
-        "FirewallPolicyArn": {
-          "Ref": "SsmParameterValueacceleratornetworknetworkFirewallpoliciesacceleratorpolicyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
+        "FirewallPolicyArn": "arn:aws:network-firewall:ap-southeast-2:123456789012:firewall-policy/central-egress-nfw-policy",
         "SubnetMappings": [
           {
             "SubnetId": {
