@@ -95,6 +95,16 @@ export class CloudWatchLogsSubscriptionFilter extends Construct {
       codeDirectory: path.join(__dirname, 'update-subscription-filter/dist'),
       runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
       policyStatements: [
+        // Required when global-config.yaml::logging::cloudwatchLogs::encryption is configured
+        {
+          Sid: 'AllowEncryption',
+          Effect: 'Allow',
+          Action: ['kms:Encrypt', 'kms:GenerateDataKey'],
+          Resource: [
+            `arn:${cdk.Stack.of(this).partition}:kms:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:key:*`,
+          ],
+        },
+
         {
           Effect: 'Allow',
           Action: [

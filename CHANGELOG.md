@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(pipeline): fix account bootstrap failed silently
 - fix(installer): fix management account bootstrap failed when using external pipeline
 - fix(metadata): accelerator lambda times out without error
+- fix(logging): fixed permissions on custom resource for when cloudwatch encryption is enabled in global-config
 
 ### Changed
 
