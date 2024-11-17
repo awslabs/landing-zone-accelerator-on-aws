@@ -23,5 +23,6 @@ By exploring each LZA configuration file using the schema, you will be able to d
 ## Getting Started
 
 This feature is designed to enhance the experience of working with the LZA configuration files and is immediately available. To take advantage of this, open up any of the LZA configuration files in an editor that supports JSON Schema. A few popular IDEs are listed below that have been validated:
-* VSCode: requires the YAML extension
+
+* VSCode: requires the YAML extension: `code --install-extension redhat.vscode-yaml`
 * IntelliJ
