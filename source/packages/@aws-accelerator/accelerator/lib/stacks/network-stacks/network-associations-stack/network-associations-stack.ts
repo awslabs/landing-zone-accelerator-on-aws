@@ -145,8 +145,8 @@ export class NetworkAssociationsStack extends NetworkStack {
       //
       this.routeTableMap = this.setRouteTableMap(this.vpcsInScope);
       // Get cross-account prefix list IDs as needed
-      const crossAcctRouteTables = this.setCrossAcctRouteTables();
-      crossAcctRouteTables.forEach((value, key) => this.routeTableMap.set(key, value));
+      const crossAcctCrossRegionRouteTables = this.setCrossEnvironmentRouteTables();
+      crossAcctCrossRegionRouteTables.forEach((value, key) => this.routeTableMap.set(key, value));
 
       //
       // Create transit gateway route table associations, propagations,
@@ -895,9 +895,9 @@ export class NetworkAssociationsStack extends NetworkStack {
   }
 
   /**
-   * Get cross-account route tables
+   * Get cross environment route tables
    */
-  private setCrossAcctRouteTables(): Map<string, string> {
+  private setCrossEnvironmentRouteTables(): Map<string, string> {
     const routeTableMap = new Map<string, string>();
     for (const peering of this.peeringList) {
       // Get account IDs
@@ -910,7 +910,7 @@ export class NetworkAssociationsStack extends NetworkStack {
               routeTableEntry.type === 'vpcPeering' &&
               routeTableEntry.target === peering.name &&
               peering.crossAccount &&
-              this.account !== accepterAccountId &&
+              (this.account !== accepterAccountId || peering.requester.region !== peering.accepter.region) &&
               !routeTableMap.has(`${peering.accepter.name}_${accepterAccountId}_${routeTable.name}`)
             ) {
               const routeTableId = new SsmParameterLookup(
@@ -1845,7 +1845,7 @@ export class NetworkAssociationsStack extends NetworkStack {
       for (const accepterAccountId of accepterAccountIds) {
         let accepterVpcId: string;
         let accepterRoleName: string | undefined = undefined;
-        if (peering.crossAccount && accepterAccountId !== this.account) {
+        if (peering.crossAccount) {
           accepterVpcId = new SsmParameterLookup(this, pascalCase(`SsmParamLookup${peering.name}`), {
             name: this.getSsmPath(SsmResourceType.VPC, [peering.accepter.name]),
             accountId: accepterAccountId,
