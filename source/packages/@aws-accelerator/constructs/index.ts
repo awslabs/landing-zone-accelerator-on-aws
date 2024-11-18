@@ -25,6 +25,7 @@ export * from './lib/data-perimeter/detect-resource-policy';
 export * from './lib/data-perimeter/remediate-resource-policy';
 export * from './lib/data-perimeter/remediation-ssm-document';
 export * from './lib/aws-controltower/create-accounts';
+export * from './lib/aws-controltower/create-enabled-controls';
 export * from './lib/aws-cur/report-definition';
 export * from './lib/aws-detective/detective-graph-config';
 export * from './lib/aws-detective/detective-members';
