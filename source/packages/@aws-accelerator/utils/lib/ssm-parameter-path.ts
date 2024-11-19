@@ -128,6 +128,13 @@ export enum SsmResourceType {
    */
   VPC_PEERING = '/network/vpcPeering/${0}/id',
   /**
+   * CIDRs that have been deployed in a VPC.
+   *
+   * `${0}` is replaced with the account name
+   * `${1}` is replaced with the vpc name
+   */
+  VALIDATION_VPC_CIDRS = '/validation/${0}/network/vpc/${0}/deployedCidrs',
+  /**
    * Internet gateway ID
    *
    * `${0}` is replaced with the VPC name

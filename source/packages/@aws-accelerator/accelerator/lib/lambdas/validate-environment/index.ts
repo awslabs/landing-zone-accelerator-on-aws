@@ -124,6 +124,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   driftDetectionParameterName = event.ResourceProperties['driftDetectionParameterName'];
   driftDetectionMessageParameterName = event.ResourceProperties['driftDetectionMessageParameterName'];
   const skipScpValidation = event.ResourceProperties['skipScpValidation'];
+  const vpcCidrs = event.ResourceProperties['vpcCidrs'];
   const solutionId = process.env['SOLUTION_ID'];
   dynamodbClient = new DynamoDBClient({ customUserAgent: solutionId });
   documentClient = DynamoDBDocumentClient.from(dynamodbClient, translateConfig);
@@ -175,6 +176,12 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 
       if (controlTowerEnabled === 'true') {
         await validateControlTower();
+      }
+
+      if (isCIDRConfigArray(vpcCidrs)) {
+        await validateCidrOrder(vpcCidrs, validationErrors);
+      } else {
+        console.log('No vpcCidrs provided', vpcCidrs);
       }
 
       const allOuInConfigErrors = await validateAllOuInConfig();
@@ -947,4 +954,113 @@ async function getRootId(): Promise<string> {
     nextToken = page.NextToken;
   } while (nextToken);
   return rootId;
+}
+
+type CIDRConfig = {
+  vpcName: string;
+  cidrs: string[];
+  logicalId: string;
+  parameterName: string;
+};
+
+function isArrayOfType<TItem>(value: unknown, guard: (value: unknown) => value is TItem): value is TItem[] {
+  if (!Array.isArray(value)) return false;
+
+  for (const child of value) {
+    if (!guard(child)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+const isString = (value: unknown): value is string => typeof value === 'string';
+export function isCIDRConfigArray(value: unknown): value is CIDRConfig[] {
+  return isArrayOfType(value, isCIDRConfig);
+}
+export function isCIDRConfig(value: unknown): value is CIDRConfig {
+  return (
+    typeof value === 'object' &&
+    typeof (value as CIDRConfig).vpcName === 'string' &&
+    typeof (value as CIDRConfig).logicalId === 'string' &&
+    typeof (value as CIDRConfig).parameterName === 'string' &&
+    isArrayOfType((value as CIDRConfig).cidrs, isString)
+  );
+}
+
+async function validateCidrOrder(existingCidrs: CIDRConfig[], errors: string[]) {
+  console.log('Validating cidr order', existingCidrs);
+  for (const config of existingCidrs) {
+    console.log(`Validating cidrs for vpc ${config.vpcName}`);
+    const currentCidrs = config.cidrs;
+    const deployedCidrs = await getLastDeployedCIDRsFor(config);
+    console.log(`CIDRS: ${deployedCidrs?.join(',') ?? '-'} -> ${config.cidrs.join(',')}`);
+    if (!isCidrOrderValid(config.vpcName, deployedCidrs, currentCidrs)) {
+      const message = `Configuration of VPC ${config.vpcName} changes the order of already deployed CIDRs. This will cause a recreation of said resources!`;
+      console.log(message);
+      errors.push(message);
+    }
+  }
+}
+
+export function isCidrOrderValid(vpcName: string, deployedCidrs: string[], toBeDeployedCidrs: string[]) {
+  if (!deployedCidrs?.length) {
+    console.log(`There is no information on former deployments of cidrs for vpc ${vpcName}.`);
+    return true;
+  }
+
+  if (areArrayContentsEqual(toBeDeployedCidrs, deployedCidrs)) {
+    console.log('There is no change in the cidrs configuration.');
+    return true;
+  }
+
+  let mismatchFound = false;
+  const commonSize = Math.max(deployedCidrs.length, toBeDeployedCidrs.length);
+  for (let index = 0; index < commonSize; index++) {
+    const matches = deployedCidrs[index] === toBeDeployedCidrs[index];
+    if (matches) {
+      // Once a mismatch has been found each further match is invalid
+      if (mismatchFound) {
+        return false;
+      }
+    } else {
+      mismatchFound = true;
+      // See if the deployed cidr is part of toBeDeployedCidrs. If yes then config is invalid
+      if (toBeDeployedCidrs.includes(deployedCidrs[index])) {
+        return false;
+      }
+    }
+  }
+
+  // Valid if all checks pass
+  return true;
+}
+
+async function getLastDeployedCIDRsFor(config: CIDRConfig): Promise<string[]> {
+  try {
+    const cidrsString = await throttlingBackOff(() =>
+      ssmClient.send(
+        new GetParameterCommand({
+          Name: config.parameterName,
+        }),
+      ),
+    );
+
+    return cidrsString.Parameter?.Value?.split(',') ?? [];
+  } catch (error) {
+    console.error('Unabled to load ssm parameter with deployed cidr config', error);
+    return [];
+  }
+}
+
+function areArrayContentsEqual<T>(a1: T[], a2: T[]) {
+  if (a1.length !== a2.length) return false;
+
+  for (let index = 0; index < a1.length; index++) {
+    if (a1[index] !== a2[index]) {
+      return false;
+    }
+  }
+  return true;
 }

@@ -35,6 +35,9 @@ import {
   ReplacementsConfig,
   ServiceControlPolicyConfig,
 } from '@aws-accelerator/config';
+import { pascalCase } from 'pascal-case';
+import { SsmResourceType } from '@aws-accelerator/utils';
+import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 
 type scpTargetType = 'ou' | 'account';
 
@@ -419,6 +422,15 @@ export class PrepareStack extends AcceleratorStack {
         stringValue: newOrgAccountsTable.tableName,
       });
 
+      const vpcsCidrs = this.props.networkConfig.vpcs
+        ?.filter(vpc => vpc.cidrs?.length)
+        .map(vpc => ({
+          vpcName: `${vpc.account}/${vpc.name}`,
+          cidrs: vpc.cidrs || [],
+          parameterName: this.getSsmPath(SsmResourceType.VALIDATION_VPC_CIDRS, [vpc.account, vpc.name]),
+          logicalId: pascalCase(`SsmParam${pascalCase(vpc.account)}Vpc${pascalCase(vpc.name)}DeployedCidrs`),
+        }));
+
       this.logger.info(`Validate Environment`);
       const validation = new ValidateEnvironmentConfig(this, 'ValidateEnvironmentConfig', {
         acceleratorConfigTable: options.configTable,
@@ -437,9 +449,18 @@ export class PrepareStack extends AcceleratorStack {
         logRetentionInDays: options.props.globalConfig.cloudwatchLogRetentionInDays,
         driftDetectionParameter: options.driftDetectedParameter,
         driftDetectionMessageParameter: options.driftMessageParameter,
+        vpcsCidrs,
       });
 
       validation.node.addDependency(options.moveAccounts);
+
+      for (const vpcCidrs of vpcsCidrs) {
+        const parameter = new StringParameter(this, vpcCidrs.logicalId, {
+          parameterName: vpcCidrs.parameterName,
+          stringValue: vpcCidrs.cidrs.join(','),
+        });
+        parameter.node.addDependency(validation);
+      }
 
       this.logger.info(`Create new organization accounts`);
       options.organizationAccounts = new CreateOrganizationAccounts(this, 'CreateOrganizationAccounts', {
