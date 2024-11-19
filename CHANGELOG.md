@@ -5,27 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.11.0] - 
-
-### Added
-
-- feat(pipeline): add feature to parallelise synth and diff operations
-- feat(pipeline): add feature to reuse synth to all deploy actions
-- feat(piepline): add feature to consolidate all diffs and generate URL for review in Review stage
+## [1.10.1] - 11-18-2024
 
 ### Fixed
 
-- fix(networking): fixes hosted zone dns for sagemaker and eks-auth endpoints
-- fix(config): adjust all-enabled config for asset bucket name
-- fix(logging): updated kms key for imported asset bucket
-- fix(pipeline): fix account bootstrap failed silently
-- fix(metadata): accelerator lambda times out without error
-
-### Changed
-
-
-### Configuration Changes
-
+- fix(metadata): accelerator metadata lambda times out without error
+- fix(docs): resolve broken links in mkdocs
+- fix(route53): fix hosted zone DNS for Sagemaker VPC Endpoints 
+- fix(route53): fix hosted zone DNS for EKS-Auth VPC Endpoints
+- fix(pipeline): bootstrap stage failed silently
+- fix(organizations): fix enabled controls cfn throttling
 
 ## [1.10.0] - 10-16-2024
 
