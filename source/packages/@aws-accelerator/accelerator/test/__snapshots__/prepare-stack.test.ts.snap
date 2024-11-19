@@ -4599,6 +4599,60 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "SsmParamNetworkVpcNetworkInspectionDeployedCidrs81BCF58C": {
+      "DependsOn": [
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
+      ],
+      "Properties": {
+        "Name": "/accelerator/validation/Network/network/vpc/Network/deployedCidrs",
+        "Type": "String",
+        "Value": "10.2.0.0/22,10.3.0.0/16",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamSharedServicesVpcSharedServicesAppVpcDeployedCidrs7BF2BF03": {
+      "DependsOn": [
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
+      ],
+      "Properties": {
+        "Name": "/accelerator/validation/SharedServices/network/vpc/SharedServices/deployedCidrs",
+        "Type": "String",
+        "Value": "10.1.0.0/16",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamSharedServicesVpcSharedServicesMainDeployedCidrs0F5DC317": {
+      "DependsOn": [
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEvent4F574CF7",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRoleDefaultPolicyA669E020",
+        "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
+        "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRoleDefaultPolicy9ACA86A8",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionServiceRole09865D4C",
+        "ValidateEnvironmentConfigValidateEnvironmentFunctionLogGroup632317CC",
+        "ValidateEnvironmentConfigValidateEnvironmentResourceD10DC179",
+      ],
+      "Properties": {
+        "Name": "/accelerator/validation/SharedServices/network/vpc/SharedServices/deployedCidrs",
+        "Type": "String",
+        "Value": "10.4.0.0/16",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "SsmParamStackId521A78D3": {
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-PrepareStack-111111111111-us-east-1/stack-id",
@@ -4945,6 +4999,8 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
                     ],
                   ],
                 },
+                "arn:aws:ssm:us-east-1:111111111111:parameter/accelerator/validation/Network/network/vpc/Network/deployedCidrs",
+                "arn:aws:ssm:us-east-1:111111111111:parameter/accelerator/validation/SharedServices/network/vpc/SharedServices/deployedCidrs",
               ],
               "Sid": "sms",
             },
@@ -5042,6 +5098,33 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "skipScpValidation": "no",
         "stackName": "AWSAccelerator-PrepareStack-111111111111-us-east-1",
         "uuid": "REPLACED-UUID",
+        "vpcCidrs": [
+          {
+            "cidrs": [
+              "10.2.0.0/22",
+              "10.3.0.0/16",
+            ],
+            "logicalId": "SsmParamNetworkVpcNetworkInspectionDeployedCidrs",
+            "parameterName": "/accelerator/validation/Network/network/vpc/Network/deployedCidrs",
+            "vpcName": "Network/Network-Inspection",
+          },
+          {
+            "cidrs": [
+              "10.4.0.0/16",
+            ],
+            "logicalId": "SsmParamSharedServicesVpcSharedServicesMainDeployedCidrs",
+            "parameterName": "/accelerator/validation/SharedServices/network/vpc/SharedServices/deployedCidrs",
+            "vpcName": "SharedServices/SharedServices-Main",
+          },
+          {
+            "cidrs": [
+              "10.1.0.0/16",
+            ],
+            "logicalId": "SsmParamSharedServicesVpcSharedServicesAppVpcDeployedCidrs",
+            "parameterName": "/accelerator/validation/SharedServices/network/vpc/SharedServices/deployedCidrs",
+            "vpcName": "SharedServices/SharedServices-appVpc",
+          },
+        ],
       },
       "Type": "Custom::ValidateEnvironmentConfiguration",
       "UpdateReplacePolicy": "Delete",

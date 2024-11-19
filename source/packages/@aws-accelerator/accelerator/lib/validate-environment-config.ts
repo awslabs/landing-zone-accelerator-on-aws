@@ -44,6 +44,7 @@ export interface ValidateEnvironmentConfigProps {
    * Custom resource lambda log retention in days
    */
   readonly logRetentionInDays: number;
+  readonly vpcsCidrs: { vpcName: string; logicalId: string; cidrs: string[]; parameterName: string }[];
 }
 
 /**
@@ -101,11 +102,18 @@ export class ValidateEnvironmentConfig extends Construct {
         `arn:${props.partition}:cloudformation:${props.region}:${props.managementAccountId}:stack/${props.stackName}*`,
       ],
     });
+    const validationParameters = props.vpcsCidrs.map(
+      p => `arn:${props.partition}:ssm:${props.region}:${props.managementAccountId}:parameter${p.parameterName}`,
+    );
     const ssmPolicy = new cdk.aws_iam.PolicyStatement({
       sid: 'sms',
       effect: cdk.aws_iam.Effect.ALLOW,
       actions: ['ssm:GetParameter'],
-      resources: [props.driftDetectionParameter.parameterArn, props.driftDetectionMessageParameter.parameterArn],
+      resources: [
+        props.driftDetectionParameter.parameterArn,
+        props.driftDetectionMessageParameter.parameterArn,
+        ...validationParameters,
+      ],
     });
 
     const providerLambda = new cdk.aws_lambda.Function(this, 'ValidateEnvironmentFunction', {
@@ -151,7 +159,8 @@ export class ValidateEnvironmentConfig extends Construct {
         driftDetectionMessageParameterName: props.driftDetectionMessageParameter.parameterName,
         serviceControlPolicies: props.serviceControlPolicies,
         skipScpValidation: process.env['ACCELERATOR_SKIP_SCP_VALIDATION'] ?? 'no',
-        uuid: uuidv4(), // Generates a new UUID to force the resource to update
+        uuid: uuidv4(), // Generates a new UUID to force the resource to update,
+        vpcCidrs: props.vpcsCidrs,
       },
     });
     // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
