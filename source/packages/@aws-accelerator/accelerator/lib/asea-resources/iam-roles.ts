@@ -15,6 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 
 import {
   AccountPrincipal,
+  ArnPrincipal,
   CfnInstanceProfile,
   CfnManagedPolicy,
   Effect,
@@ -89,6 +90,15 @@ export class Roles extends AseaResource {
             actions: ['sts:AssumeRole'],
             effect: Effect.ALLOW,
             principals: [new ServicePrincipal(assumedByItem.principal)],
+          }),
+        );
+      }
+      if (assumedByItem.type === 'principalArn') {
+        statements.push(
+          new PolicyStatement({
+            actions: ['sts:AssumeRole'],
+            effect: Effect.ALLOW,
+            principals: [new ArnPrincipal(assumedByItem.principal)],
           }),
         );
       }
