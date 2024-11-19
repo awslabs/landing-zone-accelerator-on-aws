@@ -514,7 +514,7 @@ export class VpcResources extends AseaResource {
         });
       }
       if (isNetworkType<SubnetSourceConfig>('ISubnetSourceConfig', sourceItem)) {
-        const sourceVpcItem = getVpcConfig(this.scope.vpcsInScope, sourceItem.vpc);
+        const sourceVpcItem = getVpcConfig(this.scope.vpcResources, sourceItem.vpc);
         sourceItem.subnets.forEach(subnet =>
           securityGroupRules.push({
             ...ruleProps,
