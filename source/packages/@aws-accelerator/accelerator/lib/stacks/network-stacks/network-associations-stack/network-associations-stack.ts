@@ -3803,7 +3803,7 @@ export class NetworkAssociationsStack extends NetworkStack {
     this.logger.info(
       `Retrieve VPC CIDR for account:${vpcAccountId} vpc:${vpcItem.name} in region:[${cdk.Stack.of(this).region}]`,
     );
-    if (this.account === vpcAccountId) {
+    if (this.account === vpcAccountId && cdk.Stack.of(this).region === vpcItem.region) {
       return cdk.aws_ssm.StringParameter.valueForStringParameter(
         this,
         this.getSsmPath(SsmResourceType.VPC_IPV4_CIDR_BLOCK, [vpcItem.name]),

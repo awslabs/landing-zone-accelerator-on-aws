@@ -215,10 +215,6 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Default": "/accelerator/network/vpc/Network-Inspection/transitGatewayAttachment/Network-Inspection/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkIpamWestcidripv4C96584B6F00A464EAD1953AFF4B05118Parameter": {
-      "Default": "/accelerator/network/vpc/Network-Ipam-West/cidr/ipv4",
-      "Type": "AWS::SSM::Parameter::Value<String>",
-    },
     "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Secondary/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -2903,7 +2899,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
     "SameAccountDifferentRegionVpcPeeringNetworkEndpointsVpcNetworkEndpointsARouteTablePeeringSameAccountDifferentRegionCDF9D2FC": {
       "Properties": {
         "DestinationCidrBlock": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkIpamWestcidripv4C96584B6F00A464EAD1953AFF4B05118Parameter",
+          "Ref": "SsmParamLookupNetworkIpamWest555555555555E22BE7FE",
         },
         "RouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsrouteTableNetworkEndpointsAidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -3232,6 +3228,40 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "invokingRegion": "us-east-1",
         "parameterAccountID": "444444444444",
         "parameterName": "/accelerator/network/vpc/SharedServices-Ipam-West/id",
+        "parameterRegion": "us-west-2",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::SsmGetParameterValue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SsmParamLookupNetworkIpamWest555555555555E22BE7FE": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
+            "Arn",
+          ],
+        },
+        "assumeRoleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::555555555555:role/AWSAccelerator-VpcPeeringRole-us-west-2",
+            ],
+          ],
+        },
+        "invokingAccountID": "555555555555",
+        "invokingRegion": "us-east-1",
+        "parameterAccountID": "555555555555",
+        "parameterName": "/accelerator/network/vpc/Network-Ipam-West/cidr/ipv4",
         "parameterRegion": "us-west-2",
         "uuid": "REPLACED-UUID",
       },
