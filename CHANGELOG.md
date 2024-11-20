@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(logging): provide file extension to CloudWatch log replicated files in S3
 - chore(modules): add modules package with ct module
 - feat(pipeline): add feature to deploy LZA solution region by region
+- feat(eventbus): add support for default event bus resource policy
 
 ### Fixed
 

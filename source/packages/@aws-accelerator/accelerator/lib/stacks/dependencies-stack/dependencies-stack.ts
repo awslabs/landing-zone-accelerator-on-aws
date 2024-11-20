@@ -17,6 +17,7 @@ import { Construct } from 'constructs';
 import { AcceleratorStack, AcceleratorStackProps } from '../accelerator-stack';
 import { IdentityCenter } from './identity-center';
 import { DiagnosticsPack } from './diagnostics-pack';
+import * as path from 'path';
 
 /**
  * Enum for log level
@@ -36,6 +37,9 @@ export class DependenciesStack extends AcceleratorStack {
       this.logger.info('Creating cross-account/cross-region put SSM parameter role in home region');
       this.createPutSsmParameterRole(props.prefixes.ssmParamName, props.partition, this.organizationId);
     }
+
+    this.addDefaultEventBusLzaManagedPolicy(props);
+    this.addDefaultEventBusCustomPolicy(props);
 
     //
     // Create Identity Center dependent resources
@@ -103,5 +107,102 @@ export class DependenciesStack extends AcceleratorStack {
       },
     ]);
     return role;
+  }
+
+  /**
+   * Function to provide the LZA provided resource-based policy for the default Event Bus
+   */
+  private addDefaultEventBusLzaManagedPolicy(props: AcceleratorStackProps) {
+    if (
+      props.globalConfig.defaultEventBus?.applyDefaultEventBusPolicy &&
+      this.isIncluded(props.globalConfig.defaultEventBus.deploymentTargets)
+    ) {
+      const defaultEventBus = cdk.aws_events.EventBus.fromEventBusName(this, 'EventBus', 'default');
+      const roleArns = [
+        `arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:role/${
+          this.props.globalConfig.managementAccountAccessRole
+        }`,
+        `arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:role/${props.prefixes.accelerator}*`,
+      ];
+
+      // Rule modification policy
+      new cdk.aws_events.CfnEventBusPolicy(this, 'DenyRuleModificationPolicy', {
+        eventBusName: defaultEventBus.eventBusName,
+        statementId: 'DenyRuleModification',
+        statement: {
+          Effect: 'Deny',
+          Principal: { AWS: '*' },
+          Action: ['events:DisableRule', 'events:DeleteRule', 'events:PutRule'],
+          Resource: `arn:${cdk.Stack.of(this).partition}:events:${cdk.Stack.of(this).region}:${
+            cdk.Stack.of(this).account
+          }:rule/*`,
+          Condition: {
+            ArnNotLike: {
+              'aws:PrincipalARN': roleArns,
+            },
+          },
+        },
+      });
+
+      // Event modification policy
+      new cdk.aws_events.CfnEventBusPolicy(this, 'DenyEventModificationPolicy', {
+        eventBusName: defaultEventBus.eventBusName,
+        statementId: 'DenyEventModification',
+        statement: {
+          Effect: 'Deny',
+          Principal: { AWS: '*' },
+          Action: ['events:PutEvents', 'events:PutTargets', 'events:RemoveTargets'],
+          Resource: defaultEventBus.eventBusArn,
+          Condition: {
+            ArnNotLike: {
+              'aws:PrincipalARN': roleArns,
+            },
+          },
+        },
+      });
+    }
+  }
+
+  /**
+   * Function to provide end-user defined resource-based policy.
+   */
+  private addDefaultEventBusCustomPolicy(props: AcceleratorStackProps) {
+    if (
+      props.globalConfig.defaultEventBus?.customPolicyOverride?.policy &&
+      this.isIncluded(props.globalConfig.defaultEventBus.deploymentTargets)
+    ) {
+      const defaultEventBus = cdk.aws_events.EventBus.fromEventBusName(this, 'EventBus', 'default');
+      const policyDocument = JSON.parse(
+        this.generatePolicyReplacements(
+          path.join(this.props.configDirPath, props.globalConfig.defaultEventBus?.customPolicyOverride.policy),
+          false,
+          this.organizationId,
+        ),
+      );
+      // Create a statements list using the PolicyStatement factory
+      const statements: cdk.aws_iam.PolicyStatement[] = [];
+      for (const statement of policyDocument.Statement) {
+        statements.push(cdk.aws_iam.PolicyStatement.fromJson(statement));
+      }
+      statements.forEach((statement, index) => {
+        const statementId = statement.sid;
+
+        // Normalize the resource ARNs
+        const resources = statement.resources;
+
+        // Create the policy
+        new cdk.aws_events.CfnEventBusPolicy(this, `EventBusPolicy-${index}`, {
+          eventBusName: defaultEventBus.eventBusName,
+          statementId: statementId!,
+          statement: {
+            Effect: statement.effect,
+            Action: statement.actions,
+            Resource: resources,
+            Principal: '*',
+            Condition: statement.conditions || undefined,
+          },
+        });
+      });
+    }
   }
 }

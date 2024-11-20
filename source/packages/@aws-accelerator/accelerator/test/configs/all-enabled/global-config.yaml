@@ -37,6 +37,11 @@ acceleratorMetadata:
   account: LogArchive
   readOnlyAccessRoleArns:
     - arn:aws:iam::111111111111:role/test-access-role
+defaultEventBus:
+  applyDefaultEventBusPolicy: true
+  deploymentTargets:
+    accounts:
+      - Management
 snsTopics:
   deploymentTargets:
     organizationalUnits:
