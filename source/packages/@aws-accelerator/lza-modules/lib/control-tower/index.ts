@@ -367,6 +367,7 @@ abstract class LandingZoneOperation {
       landingZoneConfiguration,
       'UPDATE',
       landingZoneDetails.kmsKeyArn,
+      landingZoneDetails.securityOuName,
       landingZoneDetails.sandboxOuName,
     );
 
