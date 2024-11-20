@@ -781,6 +781,17 @@
       ],
       "type": "object"
     },
+    "ICustomEventBusResourcePolicyOverrideConfig": {
+      "additionalProperties": false,
+      "description": "Custom policy overrides configuration for the default Event Bus resource policy",
+      "properties": {
+        "policy": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Event Bus resource policy file"
+        }
+      },
+      "type": "object"
+    },
     "ICustomS3ResourceAndKmsPolicyOverridesConfig": {
       "additionalProperties": false,
       "description": "Custom policy overrides configuration for S3 resource and KMS",
@@ -805,6 +816,28 @@
           "description": "S3 resource policy file"
         }
       },
+      "type": "object"
+    },
+    "IDefaultEventBusConfig": {
+      "additionalProperties": false,
+      "description": "Default Event Bus Configuration",
+      "properties": {
+        "applyDefaultEventBusPolicy": {
+          "description": "Apply the default Event Bus resource-based policy.",
+          "type": "boolean"
+        },
+        "customPolicyOverride": {
+          "$ref": "#/definitions/ICustomEventBusResourcePolicyOverrideConfig",
+          "description": "JSON policy files."
+        },
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "Default Event Bus Policy deployment targets."
+        }
+      },
+      "required": [
+        "deploymentTargets"
+      ],
       "type": "object"
     },
     "IDeploymentTargets": {
@@ -924,6 +957,10 @@
         "controlTower": {
           "$ref": "#/definitions/IControlTowerConfig",
           "description": "AWS Control Tower Landing Zone configuration\n\nTo indicate environment has control tower enabled, you need to provide below value for this parameter."
+        },
+        "defaultEventBus": {
+          "$ref": "#/definitions/IDefaultEventBusConfig",
+          "description": "Configuration for the Default Event Bus\n\nWhen not providing this configuration, the default event bus policy is not provided by LZA. If the `applyDefaultEventBusPolicy` is set to `true`, LZA will create a default event bus policy that prevents publishing events as well as enabling and disabling rules on the default event bridge. If end-users provide a custom policy, via the `customPolicyOverrides` property, LZA will apply the custom policy to the default event bus policy, which will overwrite any existing policy."
         },
         "enableOptInRegions": {
           "description": "Whether to automatically enable opt-in regions configured for all LZA managed accounts.",

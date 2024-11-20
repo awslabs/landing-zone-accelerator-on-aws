@@ -12,13 +12,33 @@
  */
 
 import { AcceleratorStage } from '../lib/accelerator-stage';
-import { describe } from '@jest/globals';
+import { describe, test } from '@jest/globals';
 import { snapShotTest } from './snapshot-test';
-import { Create } from './accelerator-test-helpers';
+import { Template } from 'aws-cdk-lib/assertions';
+import { Create, memoize } from './accelerator-test-helpers';
 
 describe('DependenciesStack', () => {
   snapShotTest(
     'Construct(DependenciesStack): ',
     Create.stackProvider('Management-us-east-1', AcceleratorStage.DEPENDENCIES),
   );
+});
+
+const getMultiOuStack = memoize(
+  Create.stackProvider('Management-us-east-1', [
+    AcceleratorStage.DEPENDENCIES,
+    'aws',
+    'us-east-1',
+    'all-enabled-ou-targets',
+  ]),
+);
+
+describe('default event bus policy', () => {
+  test('default event bus policy is created', () => {
+    const multiOuStack = getMultiOuStack()!;
+    const template = Template.fromStack(multiOuStack);
+
+    template.hasResourceProperties('AWS::Events::EventBusPolicy', { EventBusName: 'default' });
+    template.resourceCountIs('AWS::Events::EventBusPolicy', 2);
+  });
 });

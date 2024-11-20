@@ -2059,6 +2059,47 @@ export interface ISsmParameterConfig {
 }
 
 /**
+ * *{@link GlobalConfig} / {@link defaultEventBusConfig}*
+ *
+ * @description
+ * Default Event Bus Configuration
+ *
+ * @example
+ * ```
+ * defaultEventBus:
+ *   applyDefaultEventBusPolicy: true
+ *   eventBusResourcePolicyAttachments:
+ *     - policy: path-to-my-policy
+ * ```
+ *
+ */
+export interface IDefaultEventBusConfig {
+  /**
+   * Apply the default Event Bus resource-based policy.
+   */
+  readonly applyDefaultEventBusPolicy?: boolean;
+  /**
+   * JSON policy files.
+   *
+   * @remarks
+   * Policy statements from these files will be applied to the default event bus policy. This will overwrite any existing policies in place.
+   *
+   * Note: Please be aware that overly restrictive custom policies may interfere with standard LZA operations.
+   * This property cannot be used in conjunction with the `applyDefaultEventBusPolicy` being set to `true`.
+   */
+  readonly customPolicyOverride?: t.ICustomEventBusResourcePolicyOverrideConfig | undefined;
+
+  /**
+   * Default Event Bus Policy deployment targets.
+   *
+   * @remarks
+   * With this configuration, LZA will deploy the LZA Managed or cust policy provided via the `customPolicyOverride` property to the
+   * default event bus resource-based policy for the respective account(s).
+   */
+  readonly deploymentTargets: t.IDeploymentTargets;
+}
+
+/**
  * Accelerator global configuration
  */
 export interface IGlobalConfig {
@@ -2410,4 +2451,26 @@ export interface IGlobalConfig {
    * Whether to automatically enable opt-in regions configured for all LZA managed accounts.
    */
   readonly enableOptInRegions?: boolean;
+  /**
+   * Configuration for the Default Event Bus
+   *
+   * When not providing this configuration, the default event bus policy is not provided by LZA.
+   * If the `applyDefaultEventBusPolicy` is set to `true`, LZA will create a default event bus policy
+   * that prevents publishing events as well as enabling and disabling rules on the default event bridge.
+   * If end-users provide a custom policy, via the `customPolicyOverrides` property, LZA will apply the
+   * custom policy to the default event bus policy, which will overwrite any existing policy.
+   *
+   * @example
+   * ```
+   * defaultEventBus:
+   *   applyDefaultEventBusPolicy: false
+   *   customPolicyOverrides:
+   *     - policy: path-to-my-policy.json
+   *   deploymentTargets:
+   *     accounts:
+   *       - Management
+   * }
+   * ```
+   */
+  readonly defaultEventBus?: IDefaultEventBusConfig;
 }

@@ -181,6 +181,11 @@ export class GlobalConfigValidator {
     //
     this.validateRegionByRegionDeployOrderMatchesEnabledRegionsConfiguration(values, regionByRegionDeployOrder, errors);
 
+    //
+    // Validate event bus policy configuration
+    //
+    this.validateEventBusPolicyConfiguration(values, configDir, errors);
+
     if (errors.length) {
       throw new Error(`${GlobalConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
     }
@@ -1191,6 +1196,7 @@ export class GlobalConfigValidator {
   private validateDeploymentTargetAccountNames(values: GlobalConfig, accountNames: string[], errors: string[]) {
     this.validateLambdaEncryptionConfigDeploymentTargetAccounts(values, accountNames, errors);
     this.validateCloudWatchLogsEncryptionConfigDeploymentTargetAccounts(values, accountNames, errors);
+    this.validateDefaultEventBusDeploymentTargetAccounts(values, accountNames, errors);
   }
 
   /**
@@ -1200,6 +1206,7 @@ export class GlobalConfigValidator {
   private validateDeploymentTargetOUs(values: GlobalConfig, ouIdNames: string[], errors: string[]) {
     this.validateLambdaEncryptionConfigDeploymentTargetOUs(values, ouIdNames, errors);
     this.validateCloudWatchLogsEncryptionDeploymentTargetOUs(values, ouIdNames, errors);
+    this.validateDefaultEventBusDeploymentTargetOUs(values, ouIdNames, errors);
   }
 
   /**
@@ -1330,6 +1337,76 @@ export class GlobalConfigValidator {
     for (const enabledRegion of values.enabledRegions) {
       if (!deployOrder.includes(enabledRegion)) {
         errors.push(`Region ${enabledRegion} is missing in the region by region deploy order.`);
+      }
+    }
+  }
+
+  /**
+   * Function to validate existence of default event bus configuration
+   * @param values
+   */
+  private validateEventBusPolicyConfiguration(values: GlobalConfig, configDir: string, errors: string[]) {
+    if (!values.defaultEventBus) {
+      return;
+    }
+
+    if (values.defaultEventBus.applyDefaultEventBusPolicy && values.defaultEventBus.customPolicyOverride) {
+      errors.push(`customPolicyOverrides can only be specified when applyDefaultEventBusPolicy is set to false`);
+    }
+    if (values.defaultEventBus.customPolicyOverride?.policy) {
+      const errorMessage = 'Please make sure this file is in valid JSON format.';
+      if (!fs.existsSync(path.join(configDir, values.defaultEventBus.customPolicyOverride?.policy))) {
+        errors.push(
+          `Default event bus policy override file ${values.defaultEventBus.customPolicyOverride?.policy} not found !!!`,
+        );
+      }
+      const eventBridgePolicyFile = fs.readFileSync(
+        path.join(configDir, values.defaultEventBus.customPolicyOverride?.policy),
+        'utf-8',
+      );
+      if (JSON.parse(eventBridgePolicyFile)) {
+        this.checkForArray(JSON.parse(eventBridgePolicyFile), errorMessage, errors);
+      } else {
+        errors.push(`Not valid Json for default event bridge resource-based policy. ${errorMessage}`);
+      }
+    }
+  }
+  /**
+   * Function to validate existence of default event bus deployment target Accounts
+   * Make sure deployment target Accounts are part of account config file
+   * @param values
+   */
+  private validateDefaultEventBusDeploymentTargetAccounts(
+    values: GlobalConfig,
+    accountNames: string[],
+    errors: string[],
+  ) {
+    if (!values.defaultEventBus) {
+      return;
+    }
+    for (const account of values.defaultEventBus.deploymentTargets?.accounts ?? []) {
+      if (accountNames.indexOf(account) === -1) {
+        errors.push(
+          `Deployment target account ${account} for default event bus configuration does not exists in accounts-config.yaml file.`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Function to validate existence of default event bus deployment target OUs
+   * Make sure deployment target OUs are part of Organization config file
+   * @param values
+   */
+  private validateDefaultEventBusDeploymentTargetOUs(values: GlobalConfig, ouIdNames: string[], errors: string[]) {
+    if (!values.defaultEventBus) {
+      return;
+    }
+    for (const ou of values.defaultEventBus.deploymentTargets?.organizationalUnits ?? []) {
+      if (ouIdNames.indexOf(ou) === -1) {
+        errors.push(
+          `Deployment target OU ${ou} for default event bus configuration does not exist in organization-config.yaml file.`,
+        );
       }
     }
   }

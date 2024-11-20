@@ -3,6 +3,126 @@
 exports[`DependenciesStack Construct(DependenciesStack):  Snapshot Test 1`] = `
 {
   "Resources": {
+    "DenyEventModificationPolicy": {
+      "Properties": {
+        "EventBusName": "default",
+        "Statement": {
+          "Action": [
+            "events:PutEvents",
+            "events:PutTargets",
+            "events:RemoveTargets",
+          ],
+          "Condition": {
+            "ArnNotLike": {
+              "aws:PrincipalARN": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::111111111111:role/AWSControlTowerExecution",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::111111111111:role/AWSAccelerator*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          },
+          "Effect": "Deny",
+          "Principal": {
+            "AWS": "*",
+          },
+          "Resource": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":events:us-east-1:111111111111:event-bus/default",
+              ],
+            ],
+          },
+        },
+        "StatementId": "DenyEventModification",
+      },
+      "Type": "AWS::Events::EventBusPolicy",
+    },
+    "DenyRuleModificationPolicy": {
+      "Properties": {
+        "EventBusName": "default",
+        "Statement": {
+          "Action": [
+            "events:DisableRule",
+            "events:DeleteRule",
+            "events:PutRule",
+          ],
+          "Condition": {
+            "ArnNotLike": {
+              "aws:PrincipalARN": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::111111111111:role/AWSControlTowerExecution",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::111111111111:role/AWSAccelerator*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          },
+          "Effect": "Deny",
+          "Principal": {
+            "AWS": "*",
+          },
+          "Resource": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":events:us-east-1:111111111111:rule/*",
+              ],
+            ],
+          },
+        },
+        "StatementId": "DenyRuleModification",
+      },
+      "Type": "AWS::Events::EventBusPolicy",
+    },
     "LzaManagedPolicy01FDAB5303": {
       "Metadata": {
         "cdk_nag": {

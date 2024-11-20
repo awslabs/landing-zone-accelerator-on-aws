@@ -522,6 +522,12 @@ export class SsmParametersConfig implements i.ISsmParametersConfig {
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
 }
 
+export class DefaultEventBusConfig implements i.IDefaultEventBusConfig {
+  readonly applyDefaultEventBusPolicy: boolean | undefined = undefined;
+  readonly customPolicyOverride: t.ICustomEventBusResourcePolicyOverrideConfig | undefined = undefined;
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
+}
+
 export class SsmParameterConfig implements i.ISsmParameterConfig {
   readonly name = '';
   readonly path = '';
@@ -555,6 +561,7 @@ export class GlobalConfig implements i.IGlobalConfig {
   readonly acceleratorSettings: AcceleratorSettingsConfig | undefined = undefined;
   readonly lambda: LambdaConfig | undefined = undefined;
   readonly s3: S3GlobalConfig | undefined = undefined;
+  readonly defaultEventBus: DefaultEventBusConfig | undefined = undefined;
 
   /**
    * SSM IAM Role Parameters to be loaded for session manager policy attachments

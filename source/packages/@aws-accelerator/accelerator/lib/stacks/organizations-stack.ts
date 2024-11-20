@@ -15,7 +15,6 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { pascalCase } from 'pascal-case';
 import * as path from 'path';
-
 import {
   CentralSecurityServicesConfig,
   ControlTowerConfig,
@@ -48,7 +47,6 @@ import {
   IdentityCenterOrganizationAdminAccount,
 } from '@aws-accelerator/constructs';
 import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
-
 import {
   AcceleratorKeyType,
   AcceleratorStack,
