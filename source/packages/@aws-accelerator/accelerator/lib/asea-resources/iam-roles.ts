@@ -84,7 +84,7 @@ export class Roles extends AseaResource {
   private getAssumeRolePolicy(roleItem: RoleConfig) {
     const statements: PolicyStatement[] = [];
     for (const assumedByItem of roleItem.assumedBy ?? []) {
-      if (assumedByItem.type === 'service' || assumedByItem.type === 'account') {
+      if (assumedByItem.type === 'service') {
         statements.push(
           new PolicyStatement({
             actions: ['sts:AssumeRole'],
