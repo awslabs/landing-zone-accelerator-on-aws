@@ -641,6 +641,15 @@ export class LoggingStack extends AcceleratorStack {
       return key;
     }
   }
+  /***
+   * Function to normalize extension for firehose generated logs
+   */
+  private normalizeExtension(extension: string | undefined): string | undefined {
+    if (!extension) {
+      return undefined;
+    }
+    return extension.startsWith('.') ? extension : `.${extension}`;
+  }
 
   /**
    * Function to configure block S3 public access
@@ -1040,6 +1049,9 @@ export class LoggingStack extends AcceleratorStack {
         this.acceleratorResourceNames.parameters.firehoseRecordsProcessorFunctionName,
       logsKmsKey: this.cloudwatchKey,
       logsRetentionInDaysValue: this.props.globalConfig.cloudwatchLogRetentionInDays.toString(),
+      firehoseLogExtension: this.normalizeExtension(
+        this.props.globalConfig.logging.cloudwatchLogs?.firehose?.fileExtension,
+      ),
     });
 
     if (this.centralLogsBucket) {

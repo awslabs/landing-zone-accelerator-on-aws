@@ -172,6 +172,11 @@ export class GlobalConfigValidator {
     this.validateS3ConfigDeploymentTargetAccounts(values, accountNames, errors);
 
     //
+    // Validate File Extensions
+    //
+    this.validateFileExtensions(values);
+
+    //
     // Validate region by region deploy order doesn't conflict with enabledRegions
     //
     this.validateRegionByRegionDeployOrderMatchesEnabledRegionsConfiguration(values, regionByRegionDeployOrder, errors);
@@ -1283,6 +1288,21 @@ export class GlobalConfigValidator {
           `Deployment target OU ${ou} for CloudWatch logs encryption does not exist in organization-config.yaml file.`,
         );
       }
+    }
+  }
+
+  /**
+   * Function to validate file extensions for firehose
+   * @param values
+   */
+  private validateFileExtensions(values: GlobalConfig) {
+    if (!values.logging.cloudwatchLogs?.firehose?.fileExtension) {
+      return;
+    }
+    const fileExtension = values.logging.cloudwatchLogs?.firehose?.fileExtension;
+    if (fileExtension.startsWith('.')) {
+      const logger = createLogger(['global-config-validator-file-extension']);
+      logger.warn(`Found file extension ${fileExtension} that starts with a dot.`);
     }
   }
 

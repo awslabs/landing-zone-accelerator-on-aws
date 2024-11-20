@@ -90,6 +90,11 @@ export interface CloudWatchToS3FirehoseProps {
    * CloudWatch Logs Retention in days from global config
    */
   logsRetentionInDaysValue: string;
+  /**
+   *
+   * Log Extension type for firehose-delivered log files in S3 bucket
+   */
+  firehoseLogExtension?: string;
 }
 /**
  * Class to configure CloudWatch replication on logs receiving account
@@ -205,6 +210,7 @@ export class CloudWatchToS3Firehose extends Construct {
         dynamicPartitioningConfiguration: {
           enabled: true,
         },
+        fileExtension: props.firehoseLogExtension,
         errorOutputPrefix: `CloudWatchLogs/processing-failed`,
         encryptionConfiguration: {
           kmsEncryptionConfig: {

@@ -21,10 +21,10 @@ import { memoize } from './accelerator-test-helpers';
 const testNamePrefix = 'Construct(PipelineStack): ';
 
 const getStacks = memoize(() => {
-/**
- * Pipeline Stack
- */
-const app = new cdk.App();
+  /**
+   * Pipeline Stack
+   */
+  const app = new cdk.App();
   const stacks = [
     new PipelineStack(app, 'PipelineStack', {
       sourceRepository: 'codecommit',
