@@ -200,6 +200,8 @@ logging:
       managedDataIdentifiers:
         categories:
           - Credentials
+    firehose:
+      fileExtension: json.gz
     enable: true
     replaceLogDestinationArn: arn:aws:logs:us-east-1:111111111111:destination/log-destination
     dynamicPartitioning: dynamic-partitioning/log-filters.json

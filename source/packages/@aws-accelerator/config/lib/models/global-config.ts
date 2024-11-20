@@ -1083,6 +1083,37 @@ export interface ICloudWatchLogsExclusionConfig {
 }
 
 /**
+ * *{@link GlobalConfig} / {@link LoggingConfig} / {@link CloudWatchLogsConfig}/ {@link CloudWatchFirehoseConfig}*
+ *
+ * @description
+ * Accelerator global CloudWatch Logs firehose configuration
+ *
+ * @example
+ * ```
+ * logging:
+ *  - cloudwatchLogs:
+ *  - firehose:
+ *     - fileExtension: undefined | 'json.gz'
+ *
+ * ```
+ */
+export interface ICloudWatchFirehoseConfig {
+  /**
+   * Configuration that will be applicable for firehose delivery of logs in LogArchive
+   *
+   * @remarks
+   * If this property is undefined, firehose delivery will be store logs in MimeType as application/octet-stream
+   *
+   * @example
+   * ```
+   * - fileExtension: 'json.gz'
+   * ```
+   *
+   */
+  readonly fileExtension?: t.NonEmptyString;
+}
+
+/**
  * *{@link IGlobalConfig} / {@link ILoggingConfig} / {@link ICloudWatchLogsConfig}*
  *
  * @description

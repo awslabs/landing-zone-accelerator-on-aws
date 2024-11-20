@@ -270,6 +270,8 @@ logging:
       managedDataIdentifiers:
         categories:
           - Credentials
+    firehose:
+      fileExtension: json.gz
     enable: true
     dynamicPartitioning: dynamic-partitioning/log-filters.json
     replaceLogDestinationArn: replaceLogDestinationArn

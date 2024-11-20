@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(pipeline): add feature to parallelise synth and diff operations
 - feat(pipeline): add feature to reuse synth to all deploy actions
 - feat(pipeline): add feature to consolidate all diffs and generate URL for review in Review stage
+- feat(logging): provide file extension to CloudWatch log replicated files in S3
 - chore(modules): add modules package with ct module
 - feat(pipeline): add feature to deploy LZA solution region by region
 

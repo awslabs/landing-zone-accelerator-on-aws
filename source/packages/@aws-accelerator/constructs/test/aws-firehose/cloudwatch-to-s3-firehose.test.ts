@@ -105,3 +105,61 @@ describe('CloudWatchToS3FirehoseExistingIam', () => {
   });
   snapShotTest(testNamePrefix, stack);
 });
+
+describe('File Extension Tests', () => {
+  test('should verify file has correct extension when extension is provided', () => {
+    const testStack = new cdk.Stack();
+    new CloudWatchToS3Firehose(testStack, 'CloudWatchToS3FirehoseWithExt', {
+      firehoseKmsKey: new cdk.aws_kms.Key(testStack, 'CustomKeyWithExt', {}),
+      lambdaKey: new cdk.aws_kms.Key(testStack, 'CustomLambdaKeyWithExt', {}),
+      kinesisStream: new cdk.aws_kinesis.Stream(testStack, 'CustomStreamWithExt', {}),
+      kinesisKmsKey: new cdk.aws_kms.Key(testStack, 'CustomKinesisKeyWithExt', {}),
+      bucket: new cdk.aws_s3.Bucket(testStack, 'XXXXXXXXXXXXXXXXXXX', {}),
+      dynamicPartitioningValue: 'dynamic-partitioning/log-filters.json',
+      homeRegion: 'someregion',
+      configDir: `${__dirname}/../../../accelerator/test/configs/snapshot-only`,
+      acceleratorPrefix: 'AWSAccelerator',
+      useExistingRoles: false,
+      firehoseRecordsProcessorFunctionName: 'test',
+      logsKmsKey: new cdk.aws_kms.Key(testStack, 'CustomLogsKeyWithExt', {}),
+      logsRetentionInDaysValue: '7',
+      firehoseLogExtension: '.json.gz',
+    });
+
+    const template = cdk.assertions.Template.fromStack(testStack);
+
+    template.hasResourceProperties('AWS::KinesisFirehose::DeliveryStream', {
+      ExtendedS3DestinationConfiguration: {
+        CompressionFormat: 'UNCOMPRESSED',
+        FileExtension: '.json.gz',
+      },
+    });
+  });
+
+  test('should verify file has no extension when none is provided', () => {
+    const testStack = new cdk.Stack();
+    new CloudWatchToS3Firehose(testStack, 'CloudWatchToS3FirehoseNoExt', {
+      firehoseKmsKey: new cdk.aws_kms.Key(testStack, 'CustomKeyNoExt', {}),
+      lambdaKey: new cdk.aws_kms.Key(testStack, 'CustomLambdaKeyNoExt', {}),
+      kinesisStream: new cdk.aws_kinesis.Stream(testStack, 'CustomStreamNoExt', {}),
+      kinesisKmsKey: new cdk.aws_kms.Key(testStack, 'CustomKinesisKeyNoExt', {}),
+      bucket: new cdk.aws_s3.Bucket(testStack, 'XXXXXXXXXXXXXXXXX', {}),
+      dynamicPartitioningValue: 'dynamic-partitioning/log-filters.json',
+      homeRegion: 'someregion',
+      configDir: `${__dirname}/../../../accelerator/test/configs/snapshot-only`,
+      acceleratorPrefix: 'AWSAccelerator',
+      useExistingRoles: false,
+      firehoseRecordsProcessorFunctionName: 'test',
+      logsKmsKey: new cdk.aws_kms.Key(testStack, 'CustomLogsKeyNoExt', {}),
+      logsRetentionInDaysValue: '7',
+    });
+    const template = cdk.assertions.Template.fromStack(testStack);
+
+    template.hasResourceProperties('AWS::KinesisFirehose::DeliveryStream', {
+      ExtendedS3DestinationConfiguration: {
+        CompressionFormat: 'UNCOMPRESSED',
+        FileExtension: cdk.assertions.Match.absent(),
+      },
+    });
+  });
+});

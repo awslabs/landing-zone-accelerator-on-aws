@@ -2799,6 +2799,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
             },
           },
           "ErrorOutputPrefix": "CloudWatchLogs/processing-failed",
+          "FileExtension": ".json.gz",
           "Prefix": "!{partitionKeyFromLambda:dynamicPrefix}",
           "ProcessingConfiguration": {
             "Enabled": true,
@@ -6174,6 +6175,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
             },
           },
           "ErrorOutputPrefix": "CloudWatchLogs/processing-failed",
+          "FileExtension": ".json.gz",
           "Prefix": "!{partitionKeyFromLambda:dynamicPrefix}",
           "ProcessingConfiguration": {
             "Enabled": true,
