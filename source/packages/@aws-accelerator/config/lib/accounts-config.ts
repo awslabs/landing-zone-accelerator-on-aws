@@ -242,7 +242,7 @@ export class AccountsConfig implements i.IAccountsConfig {
           });
         }
   
-        logger.info(`SATHYA: Initialized Organizations client for partition: ${partition}`);
+        logger.info(`SATHYA: Initialized Organizations client for partition: ${partition} `);
   
         let nextToken: string | undefined = undefined;
   
