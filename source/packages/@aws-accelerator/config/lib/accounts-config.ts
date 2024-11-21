@@ -189,20 +189,32 @@ export class AccountsConfig implements i.IAccountsConfig {
      */
     managementAccountCredentials?: AWS.Credentials,
   ): Promise<void> {
+    logger.info(`SATHYA: In loadAccountIds :: partition: ${partition}, enableSingleAccountMode: ${enableSingleAccountMode}, isOrgsEnabled: ${isOrgsEnabled}`);
+  
     if (this.accountIds === undefined) {
+      logger.info(`SATHYA: accountIds is undefined, initializing to empty array`);
       this.accountIds = [];
     }
+  
     if (this.accountIds.length == 0) {
+      logger.info(`SATHYA: accountIds is empty, loading account IDs`);
+  
       if (enableSingleAccountMode) {
+        logger.info(`SATHYA: Single account mode enabled`);
         const stsClient = new AWS.STS({ region: process.env['AWS_REGION'] });
         const stsCallerIdentity = await throttlingBackOff(() => stsClient.getCallerIdentity({}).promise());
         const currentAccountId = stsCallerIdentity.Account!;
+        logger.info(`SATHYA: Retrieved current account ID: ${currentAccountId}`);
+  
         this.mandatoryAccounts.forEach(item => {
           this.accountIds?.push({ email: item.email, accountId: currentAccountId });
+          logger.info(`SATHYA: Added mandatory account with email: ${item.email}, accountId: ${currentAccountId}`);
         });
-        // orgs are enabled
+  
       } else if (isOrgsEnabled) {
+        logger.info(`SATHYA: Organizations enabled`);
         let organizationsClient: AWS.Organizations;
+  
         if (partition === 'aws-us-gov') {
           organizationsClient = new AWS.Organizations({
             region: 'us-gov-west-1',
@@ -229,42 +241,56 @@ export class AccountsConfig implements i.IAccountsConfig {
             credentials: managementAccountCredentials,
           });
         }
-
+  
+        logger.info(`SATHYA: Initialized Organizations client for partition: ${partition}`);
+  
         let nextToken: string | undefined = undefined;
-
+  
         do {
           const page = await throttlingBackOff(() =>
             organizationsClient.listAccounts({ NextToken: nextToken }).promise(),
           );
-
+  
           page.Accounts?.forEach(item => {
             if (item.Email && item.Id) {
               this.accountIds?.push({ email: item.Email, accountId: item.Id, status: item.Status });
+              logger.info(`SATHYA: Added account with email: ${item.Email}, accountId: ${item.Id}, status: ${item.Status}`);
             }
           });
           nextToken = page.NextToken;
+          logger.info(`SATHYA: NextToken: ${nextToken}`);
         } while (nextToken);
-
-        // if orgs is disabled, the accountId is read from accounts config.
-        //There should be 3 or more accounts in accounts config.
+  
       } else if (!isOrgsEnabled && (accountsConfig.accountIds ?? []).length > 2) {
+        logger.info(`SATHYA: Organizations disabled, loading account IDs from accountsConfig`);
+  
         for (const account of accountsConfig.accountIds ?? []) {
           this.accountIds?.push({ email: account.email, accountId: account.accountId });
+          logger.info(`SATHYA: Added account from config with email: ${account.email}, accountId: ${account.accountId}`);
         }
-        // if orgs is disabled, the accountId is read from accounts config.
-        //But less than 3 account Ids are provided then throw an error
+  
       } else if (!isOrgsEnabled && (accountsConfig.accountIds ?? []).length < 3) {
+        logger.error(`SATHYA: Organization is disabled, but the number of accounts in the accounts config is less than 3`);
         throw new Error(`Organization is disabled, but the number of accounts in the accounts config is less than 3.`);
       }
     }
   }
 
   public getAccountId(name: string): string {
+    logger.info(`SATHYA: In getAccountId :: invoked with name:{name}`)
     const email = this.getAccount(name).email;
+
+    logger.info(`SATHYA: Current accountIds: ${JSON.stringify(this.accountIds)}`);
+
+    logger.info(`SATHYA: In getAccountId :: getAccount email:{email} for name:{name}`)
     const accountId = this.accountIds?.find(item => item.email === email)?.accountId;
     if (accountId) {
+
+      logger.info(`SATHYA: In getAccountId :: returned  accountId:{accountId} for name:{name}`)
       return accountId;
     }
+
+    logger.info(`SATHYA: In getAccountId :: accountId is null `)
     logger.error(
       `Account ID not found for ${name}. Validate that the emails in the parameter ManagementAccountEmail of the AWSAccelerator-InstallerStack and account configs (accounts-config.yaml) match the correct account emails shown in AWS Organizations.`,
     );
