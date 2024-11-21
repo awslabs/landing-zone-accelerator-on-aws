@@ -1028,6 +1028,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
               "Action": [
                 "iam:CreateServiceLinkedRole",
                 "iam:GetRole",
+                "lambda:GetFunction",
               ],
               "Effect": "Allow",
               "Resource": "*",
