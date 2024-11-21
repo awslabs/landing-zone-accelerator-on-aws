@@ -158,9 +158,14 @@ export class OrganizationConfig implements i.IOrganizationConfig {
 
   /**
    * Load from string content
-   * @param partition
+   * @param partition string
+   * @param managementAccountCredentials {@link AWS.Credentials}
+   * @returns
    */
-  public async loadOrganizationalUnitIds(partition: string): Promise<void> {
+  public async loadOrganizationalUnitIds(
+    partition: string,
+    managementAccountCredentials?: AWS.Credentials,
+  ): Promise<void> {
     if (!this.enable) {
       // do nothing
       return;
@@ -168,7 +173,11 @@ export class OrganizationConfig implements i.IOrganizationConfig {
       this.organizationalUnitIds = [];
     }
     if (this.organizationalUnitIds?.length == 0) {
-      this.organizationalUnitIds = await loadOrganizationalUnits(partition, this.organizationalUnits);
+      this.organizationalUnitIds = await loadOrganizationalUnits(
+        partition,
+        this.organizationalUnits,
+        managementAccountCredentials,
+      );
     }
   }
 

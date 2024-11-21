@@ -236,3 +236,9 @@ source/packages/@aws-accelerator/accelerator/test/unit-tests/network/tgw-resourc
 
 # Security Email Address in Security.md file
 SECURITY.md:10
+
+
+# Lza Modules unit test files
+source/packages/@aws-accelerator/lza-modules/test/config/functions.test.ts:46
+source/packages/@aws-accelerator/lza-modules/test/config/functions.test.ts:73
+source/packages/@aws-accelerator/lza-modules/test/config/index.test.ts:47
