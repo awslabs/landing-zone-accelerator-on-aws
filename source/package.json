@@ -46,7 +46,7 @@
     "build-clean": "yarn run git-clean && yarn install && yarn run build",
     "cleanup": "lerna run cleanup --stream && rm -rf node_modules",
     "cleanup:tsc": "lerna run cleanup:tsc --stream",
-    "docs": "yarn run typedoc --entryPointStrategy expand './packages/@aws-accelerator/*' './packages/@aws-cdk-extensions/*' './packages/@aws-lza/*' --includeVersion --disableSources --logLevel Verbose --basePath typedocs --excludeReferences --excludeNotDocumented --skipErrorChecking",
+    "docs": "yarn run typedoc --entryPointStrategy expand './packages/@aws-accelerator/*' './packages/@aws-cdk-extensions/*' './packages/@aws-lza/*' --includeVersion --disableSources --logLevel Verbose --basePath typedocs --excludeReferences --excludeNotDocumented --skipErrorChecking && yarn generate-diagram @aws-accelerator,@aws-cdk-extensions",
     "generate-all-docs": "../deployment/build-docs.sh",
     "git-clean": "cd .. && git clean -Xfd -e !development -e !development/** -e !.vscode -e !.vscode/**",
     "postinstall": "cd ../ && husky install source/.husky && cd source",
@@ -58,7 +58,8 @@
     "update-snapshots": "../deployment/update-snapshots.sh",
     "validate-config": "ts-node ./packages/@aws-accelerator/accelerator/lib/config-validator.ts",
     "viper-scan": "cd .. && wget -v 'https://s3.amazonaws.com/viperlight-scanner/latest/viperlight.zip' && unzip -qo viperlight.zip -d ../viperlight && rm -r ./viperlight.zip && ../viperlight/bin/viperlight scan",
-    "scan-logging": "chmod +x ./log-scanner.sh && ./log-scanner.sh"
+    "scan-logging": "chmod +x ./log-scanner.sh && ./log-scanner.sh",
+    "generate-diagram": "ts-node ./mkdocs/scripts/generate-package-dependency-diagram.ts"
   },
   "lint-staged": {
     "*.{ts,tsx}": "eslint --fix --max-warnings 0 -c .eslintrc.json --ignore-pattern \"*.d.ts\""
@@ -93,7 +94,7 @@
     "husky-init": "8.0.0",
     "jest": "29.4.3",
     "jest-junit": "15.0.0",
-    "jest-html-reporter":"3.10.2",
+    "jest-html-reporter": "3.10.2",
     "lerna": "8.1.8",
     "lint-staged": "15.2.10",
     "prettier": "2.8.4",

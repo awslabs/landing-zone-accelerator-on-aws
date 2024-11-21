@@ -4,6 +4,7 @@ This section contains guidance about installing Landing Zone Accelerator package
 
 !!! info "Subpages"
     - [Development Dependencies](./dependencies.md)
+    - [Package Dependencies](./package-dependencies.generated.md)
     - [Command Line Interface and Package Scripts](./scripts.md)
     - [Architecture and Design Philosophy](./design.md)
     - [Feature Development](./features.md)
