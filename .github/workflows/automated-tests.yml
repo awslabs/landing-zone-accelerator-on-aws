@@ -2,7 +2,7 @@ name: Automated Tests
 on:
   pull_request_review:
     types: [submitted, edited, dismissed]
-  pull_request_target:
+  pull_request:
     types:
       - edited
       - opened
