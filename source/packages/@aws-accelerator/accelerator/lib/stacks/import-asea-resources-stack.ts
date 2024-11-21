@@ -234,8 +234,7 @@ export class ImportAseaResourcesStack extends NetworkStack {
   protected createMainSsmParameters(
     parameterItems: { logicalId: string; parameterName: string; stringValue: string; scope?: string }[],
   ): void {
-    let index = 1;
-    const parameterMap = new Map<number, cdk.aws_ssm.StringParameter | cdk.aws_ssm.CfnParameter>();
+    const parameters: (cdk.aws_ssm.StringParameter | cdk.aws_ssm.CfnParameter)[] = [];
     for (const parameterItem of parameterItems) {
       if (parameterItem.scope) {
         continue;
@@ -271,17 +270,16 @@ export class ImportAseaResourcesStack extends NetworkStack {
       }
 
       if (cfnParameter) {
-        parameterMap.set(index, cfnParameter);
+        parameters.push(cfnParameter);
       }
-      // Increment index
-      index += 1;
     }
+    this.setSSMDependencies(parameters as cdk.CfnResource[], 2);
   }
+
   private createNestedStackSSMParameters(
     parameterItems: { logicalId: string; parameterName: string; stringValue: string; scope?: string }[],
   ) {
-    let index = 1;
-    const parameterMap = new Map<number, cdk.aws_ssm.StringParameter | cdk.aws_ssm.CfnParameter>();
+    const parameters: (cdk.aws_ssm.StringParameter | cdk.aws_ssm.CfnParameter)[] = [];
     for (const parameterItem of parameterItems) {
       if (!parameterItem.scope || !this.nestedStackResources) {
         continue;
@@ -317,12 +315,35 @@ export class ImportAseaResourcesStack extends NetworkStack {
         }
       }
       if (cfnParameter) {
-        parameterMap.set(index, cfnParameter);
+        parameters.push(cfnParameter);
       }
-      // Increment index
-      index += 1;
+      this.setSSMDependencies(parameters as cdk.CfnResource[], 2);
     }
   }
+
+  private setSSMDependencies(resources: cdk.CfnResource[], dependencyFrequency: number) {
+    if (resources.length === 0) {
+      return;
+    }
+
+    if (dependencyFrequency === 0) {
+      return;
+    }
+
+    let dependency: cdk.CfnResource = resources[0];
+    for (let i = 0; i < resources.length; i++) {
+      if (i === 0) {
+        continue;
+      }
+      if (i % dependencyFrequency === 0) {
+        resources[i].addDependency(dependency);
+        dependency = resources[i];
+      } else {
+        resources[i].addDependency(dependency);
+      }
+    }
+  }
+
   private loadNestedStacks(nestedStacks: { [key: string]: NestedStack } | undefined) {
     if (nestedStacks) {
       Object.keys(nestedStacks).forEach(key => {
