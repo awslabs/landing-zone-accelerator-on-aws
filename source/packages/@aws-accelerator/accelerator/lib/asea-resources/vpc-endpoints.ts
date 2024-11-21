@@ -3,7 +3,6 @@ import { AseaResource, AseaResourceProps } from './resource';
 import { pascalCase } from 'pascal-case';
 import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 import { ASEAMappings, AseaResourceType, NestedStack } from '@aws-accelerator/config';
-import { HostedZone } from '@aws-accelerator/constructs';
 import { CfnHostedZone } from 'aws-cdk-lib/aws-route53';
 const ASEA_PHASE_NUMBER = '2';
 const enum RESOURCE_TYPE {
@@ -96,7 +95,7 @@ export class VpcEndpoints extends AseaResource {
           }
 
           // remove route53 hosted zone for endpoint
-          let hostedZoneName = HostedZone.getHostedZoneNameForService(configEndpointName, this.stackInfo.region);
+          let hostedZoneName = this.getHostedZoneNameForService(configEndpointName, this.stackInfo.region);
           if (!hostedZoneName.endsWith('.')) {
             hostedZoneName += '.';
           }
@@ -166,7 +165,7 @@ export class VpcEndpoints extends AseaResource {
           stringValue: endpointCfn.physicalResourceId,
         });
         this.scope.addAseaResource(AseaResourceType.VPC_ENDPOINT, `${vpcItem.name}/${endpointItem.service}`);
-        let hostedZoneName = HostedZone.getHostedZoneNameForService(endpointItem.service, this.stackInfo.region);
+        let hostedZoneName = this.getHostedZoneNameForService(endpointItem.service, this.stackInfo.region);
         if (!hostedZoneName.endsWith('.')) {
           hostedZoneName += '.';
         }
@@ -267,6 +266,9 @@ export class VpcEndpoints extends AseaResource {
       case 'ecs-a':
         hostedZoneNameArr.unshift('ecs-agent');
         break;
+      case 'sms-voice':
+        hostedZoneNameArr.unshift('pinpoint-sms-voice-v2');
+        break;
       default:
         hostedZoneNameArr.unshift(hostedZonePrefix);
     }
@@ -292,9 +294,74 @@ export class VpcEndpoints extends AseaResource {
       case 'ecs-t':
         hostedZoneNameArr.unshift('ecs-telemetry');
         break;
+      case 'sms-voice':
+        hostedZoneNameArr.unshift('pinpoint-sms-voice-v2');
+        break;
       default:
         hostedZoneNameArr.unshift(hostedZonePrefix);
     }
     return hostedZoneNameArr.join('.');
+  }
+
+  // This code needs to be maintained separately from the hosted zone class due to compatibility issues with ca-central-1
+  private getHostedZoneNameForService(service: string, region: string): string {
+    let hostedZoneName = `${service}.${region}.amazonaws.com`;
+
+    if (service.indexOf('.') > 0 && !this.ignoreServiceEndpoint(service)) {
+      const tmp = service.split('.').reverse().join('.');
+      hostedZoneName = `${tmp}.${region}.amazonaws.com.`;
+    }
+    switch (service) {
+      case 'appstream.api':
+        hostedZoneName = `appstream2.${region}.amazonaws.com`;
+        break;
+      case 'deviceadvisor.iot':
+        hostedZoneName = `deviceadvisor.iot.${region}.amazonaws.com`;
+        break;
+      case 'pinpoint-sms-voice-v2':
+        hostedZoneName = `sms-voice.${region}.amazonaws.com`;
+        break;
+      case 'rum-dataplane':
+        hostedZoneName = `dataplane.rum.${region}.amazonaws.com`;
+        break;
+      case 's3-global.accesspoint':
+        hostedZoneName = `${service}.amazonaws.com`;
+        break;
+      case 'ecs-agent':
+        hostedZoneName = `ecs-a.${region}.amazonaws.com`;
+        break;
+      case 'ecs-telemetry':
+        hostedZoneName = `ecs-t.${region}.amazonaws.com`;
+        break;
+      case 'codeartifact.api':
+        hostedZoneName = `codeartifact.${region}.amazonaws.com`;
+        break;
+      case 'codeartifact.repositories':
+        hostedZoneName = `d.codeartifact.${region}.amazonaws.com`;
+        break;
+      case 'notebook':
+        hostedZoneName = `${service}.${region}.sagemaker.aws`;
+        break;
+      case 'studio':
+        hostedZoneName = `${service}.${region}.sagemaker.aws`;
+        break;
+    }
+    return hostedZoneName;
+  }
+
+  private ignoreServiceEndpoint(service: string): boolean {
+    const ignoreServicesArray = [
+      'appstream.api',
+      'deviceadvisor.iot',
+      'rum-dataplane',
+      's3-global.accesspoint',
+      'ecs-agent',
+      'ecs-telemetry',
+      'notebook',
+      'studio',
+      'codeartifact.api',
+      'codeartifact.repositories',
+    ];
+    return ignoreServicesArray.includes(service);
   }
 }
