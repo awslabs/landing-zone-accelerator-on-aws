@@ -96,13 +96,20 @@ export class ReplacementsConfig implements i.IReplacementsConfig {
 
   /**
    * Loads replacement values by utilizing the systems manager client
+   * @param props {@link ReplacementsConfigProps}
+   * @param orgsEnabled boolean
+   * @param managementAccountCredentials {@link AWS.Credentials}
    */
-  public async loadReplacementValues(props: ReplacementsConfigProps, orgsEnabled: boolean): Promise<void> {
+  public async loadReplacementValues(
+    props: ReplacementsConfigProps,
+    orgsEnabled: boolean,
+    managementAccountCredentials?: AWS.Credentials,
+  ): Promise<void> {
     const errors: string[] = [];
 
     if (!this.validateOnly && orgsEnabled) {
       logger.info('Loading replacements config substitution values');
-      const ssmClient = new AWS.SSM({ region: props.region });
+      const ssmClient = new AWS.SSM({ region: props.region, credentials: managementAccountCredentials });
 
       for (const item of this.globalReplacements) {
         if (item.path || (item as ParameterReplacementConfigV2).type === 'SSM') {

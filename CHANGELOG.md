@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(pipeline): add feature to deploy LZA solution region by region
 - feat(eventbus): add support for default event bus resource policy
 - feat(doc): add package dependency section in typedoc
+- chore(module): add config parsing module
 
 ### Fixed
 
@@ -33,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- chore(module): add config parsing module lza-config
 
 ### Configuration Changes
 

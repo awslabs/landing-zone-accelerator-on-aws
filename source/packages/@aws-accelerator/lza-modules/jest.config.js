@@ -1,4 +1,8 @@
 const packageJson = require('./package.json');
+//
+// Suppress maintenance mode message [Ref](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/)
+//
+process.env['AWS_SDK_JS_SUPPRESS_MAINTENANCE_MODE_MESSAGE'] = '1';
 module.exports = {
   // Automatically clear mock calls and instances between every test
   clearMocks: false,
