@@ -207,6 +207,12 @@ export class ControlTowerLandingZone implements AcceleratorModule {
       );
     }
 
+    if (landingZoneDetails?.status === LandingZoneStatus.FAILED) {
+      throw new Error(
+        `Module - ${module} The Landing Zone has status of 'FAILED'. Before continuing, proceed to AWS Control Tower and evaluate the status`,
+      );
+    }
+
     if (landingZoneDetails) {
       const landingZoneUpdateOrResetStatus = isLandingZoneUpdateOrResetRequired(
         landingZoneConfiguration,
