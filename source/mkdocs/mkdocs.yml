@@ -16,6 +16,7 @@ nav:
   - Developer Guide:
       - developer-guide/index.md
       - Development Dependencies: developer-guide/dependencies.md
+      - Package Dependencies: developer-guide/package-dependencies.generated.md
       - Command Line Interface and Package Scripts: developer-guide/scripts.md
       - Architecture and Design Philosophy: developer-guide/design.md
       - Feature Development: developer-guide/features.md
