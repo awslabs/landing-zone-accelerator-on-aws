@@ -864,9 +864,13 @@ export class InstallerStack extends cdk.Stack {
               `set -e && if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ${acceleratorPrefix}-CDKToolkit aws://${cdk.Aws.ACCOUNT_ID}/${cdk.Aws.REGION} --qualifier accel; fi`,
               `set -e &&  if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ${acceleratorPrefix}-CDKToolkit aws://${cdk.Aws.ACCOUNT_ID}/${globalRegion} --qualifier accel; fi`,
               `set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
-                  export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:${
+                  if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:${
                     cdk.Stack.of(this).partition
-                  }:iam::"$MANAGEMENT_ACCOUNT_ID":role/"$MANAGEMENT_ACCOUNT_ROLE_NAME" --role-session-name acceleratorAssumeRoleSession --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" --output text));
+                  }:iam::"$MANAGEMENT_ACCOUNT_ID":role/"$MANAGEMENT_ACCOUNT_ROLE_NAME" --role-session-name acceleratorAssumeRoleSession --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" --output text); then
+                    echo "Failed to assume $MANAGEMENT_ACCOUNT_ROLE_NAME role in management account $MANAGEMENT_ACCOUNT_ID"
+                    exit 1
+                  fi
+                  export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $MANAGEMENT_ACCOUNT_CREDENTIAL);
                   if ! aws cloudformation describe-stacks --stack-name ${acceleratorPrefix}-CDKToolkit --region ${
                 cdk.Aws.REGION
               }; then MGMT_BOOTSTRAPPED_HOME="no"; fi;

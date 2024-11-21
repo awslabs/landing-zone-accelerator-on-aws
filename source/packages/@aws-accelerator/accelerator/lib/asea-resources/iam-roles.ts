@@ -15,6 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 
 import {
   AccountPrincipal,
+  ArnPrincipal,
   CfnInstanceProfile,
   CfnManagedPolicy,
   Effect,
@@ -83,7 +84,7 @@ export class Roles extends AseaResource {
   private getAssumeRolePolicy(roleItem: RoleConfig) {
     const statements: PolicyStatement[] = [];
     for (const assumedByItem of roleItem.assumedBy ?? []) {
-      if (assumedByItem.type === 'service') {
+      if (assumedByItem.type === 'service' || assumedByItem.type === 'account') {
         statements.push(
           new PolicyStatement({
             actions: ['sts:AssumeRole'],
@@ -92,7 +93,16 @@ export class Roles extends AseaResource {
           }),
         );
       }
-      if (assumedByItem.type === 'account') {
+      if (assumedByItem.type === 'principalArn') {
+        statements.push(
+          new PolicyStatement({
+            actions: ['sts:AssumeRole'],
+            effect: Effect.ALLOW,
+            principals: [new ArnPrincipal(assumedByItem.principal)],
+          }),
+        );
+      }
+      if (assumedByItem.type === 'account' && assumedByItem.principal) {
         const partition = this.props.partition;
         const accountIdRegex = /^\d{12}$/;
         const accountArnRegex = new RegExp('^arn:' + partition + ':iam::(\\d{12}):root$');

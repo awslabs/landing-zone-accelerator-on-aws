@@ -422,6 +422,12 @@ export enum SsmResourceType {
    */
   FIREWALL_INSTANCE = '/network/ec2/firewall/instanceName/${0}/instanceId',
   /**
+   * Firewall ENI
+   * `${0}` is replaced with the Firewall Instance Name
+   * ``${1}` is replaced with the Firewall ENI Index
+   */
+  FIREWALL_ENI = '/network/ec2/firewall/instanceName/${0}/eni/${1}',
+  /**
    *  Managed AD Directory Id
    * `${0}` is replaced with the Directory Friendly Name
    */

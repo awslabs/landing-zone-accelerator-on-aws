@@ -91,6 +91,9 @@ export class HostedZone extends cdk.Resource implements IHostedZone {
       case 'ecs-telemetry':
         hostedZoneName = `ecs-t.${region}.amazonaws.com`;
         break;
+      case 'eks-auth':
+        hostedZoneName = `eks-auth.${region}.api.aws`;
+        break;
       case 'codeartifact.api':
         hostedZoneName = `codeartifact.${region}.amazonaws.com`;
         break;
@@ -102,6 +105,12 @@ export class HostedZone extends cdk.Resource implements IHostedZone {
         break;
       case 'studio':
         hostedZoneName = `${service}.${region}.sagemaker.aws`;
+        break;
+      case 'sagemaker.api':
+        hostedZoneName = `api.sagemaker.${region}.sagemaker.aws`;
+        break;
+      case 'sagemaker.runtime':
+        hostedZoneName = `runtime.sagemaker.${region}.sagemaker.aws`;
         break;
     }
     return hostedZoneName;
@@ -116,10 +125,13 @@ export class HostedZone extends cdk.Resource implements IHostedZone {
       's3-global.accesspoint',
       'ecs-agent',
       'ecs-telemetry',
+      'eks-auth',
       'notebook',
       'studio',
       'codeartifact.api',
       'codeartifact.repositories',
+      'sagemaker.api',
+      'sagemaker.runtime',
     ];
     return ignoreServicesArray.includes(service);
   }

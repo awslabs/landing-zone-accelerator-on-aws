@@ -1,0 +1,131 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TestCreateCTControls Construct(TestCreateCTControls):  Snapshot Test 1`] = `
+{
+  "Resources": {
+    "AwsGrAuditBucketPolicyChangesProhibitedExampleOu": {
+      "DependsOn": [
+        "AwsGrCtAuditBucketPolicyChangesProhibitedExampleOu",
+      ],
+      "Properties": {
+        "ControlIdentifier": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":controltower:us-east-1::control/AWS-GR_AUDIT_BUCKET_POLICY_CHANGES_PROHIBITED",
+            ],
+          ],
+        },
+        "TargetIdentifier": "arn:aws:organizations::123456789012:ou/o-a1b2c3d4e5/ou-ab12-c3d4e5f6",
+      },
+      "Type": "AWS::ControlTower::EnabledControl",
+    },
+    "AwsGrCloudtrailValidationEnabledExampleOu": {
+      "DependsOn": [
+        "AwsGrDisallowCrossRegionNetworkingExampleOu",
+      ],
+      "Properties": {
+        "ControlIdentifier": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":controltower:us-east-1::control/AWS-GR_CLOUDTRAIL_VALIDATION_ENABLED",
+            ],
+          ],
+        },
+        "TargetIdentifier": "arn:aws:organizations::123456789012:ou/o-a1b2c3d4e5/ou-ab12-c3d4e5f6",
+      },
+      "Type": "AWS::ControlTower::EnabledControl",
+    },
+    "AwsGrCtAuditBucketPolicyChangesProhibitedExampleOu": {
+      "Properties": {
+        "ControlIdentifier": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":controltower:us-east-1::control/AWS-GR_CT_AUDIT_BUCKET_POLICY_CHANGES_PROHIBITED",
+            ],
+          ],
+        },
+        "TargetIdentifier": "arn:aws:organizations::123456789012:ou/o-a1b2c3d4e5/ou-ab12-c3d4e5f6",
+      },
+      "Type": "AWS::ControlTower::EnabledControl",
+    },
+    "AwsGrDisallowCrossRegionNetworkingExampleOu": {
+      "DependsOn": [
+        "AwsGrAuditBucketPolicyChangesProhibitedExampleOu",
+      ],
+      "Properties": {
+        "ControlIdentifier": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":controltower:us-east-1::control/AWS-GR_DISALLOW_CROSS_REGION_NETWORKING",
+            ],
+          ],
+        },
+        "TargetIdentifier": "arn:aws:organizations::123456789012:ou/o-a1b2c3d4e5/ou-ab12-c3d4e5f6",
+      },
+      "Type": "AWS::ControlTower::EnabledControl",
+    },
+    "AwsGrLambdaChangeProhibitedExampleOu": {
+      "DependsOn": [
+        "AwsGrAuditBucketPolicyChangesProhibitedExampleOu",
+      ],
+      "Properties": {
+        "ControlIdentifier": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":controltower:us-east-1::control/AWS-GR_LAMBDA_CHANGE_PROHIBITED",
+            ],
+          ],
+        },
+        "TargetIdentifier": "arn:aws:organizations::123456789012:ou/o-a1b2c3d4e5/ou-ab12-c3d4e5f6",
+      },
+      "Type": "AWS::ControlTower::EnabledControl",
+    },
+    "AwsGrSnsChangeProhibitedExampleOu": {
+      "DependsOn": [
+        "AwsGrCtAuditBucketPolicyChangesProhibitedExampleOu",
+      ],
+      "Properties": {
+        "ControlIdentifier": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":controltower:us-east-1::control/AWS-GR_SNS_CHANGE_PROHIBITED",
+            ],
+          ],
+        },
+        "TargetIdentifier": "arn:aws:organizations::123456789012:ou/o-a1b2c3d4e5/ou-ab12-c3d4e5f6",
+      },
+      "Type": "AWS::ControlTower::EnabledControl",
+    },
+  },
+}
+`;

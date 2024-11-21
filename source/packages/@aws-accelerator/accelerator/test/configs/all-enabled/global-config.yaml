@@ -68,16 +68,60 @@ controlTower:
     security:
       enableIdentityCenterAccess: true
   controls:
+    - identifier: AWS-GR_RDS_INSTANCE_PUBLIC_ACCESS_CHECK
+      enable: true
+      deploymentTargets:
+        organizationalUnits:
+          - SecureWorkloads
+          - Devops
+          - Infrastructure
+          - Security
+          - Level1
+    - identifier: AWS-GR_ELASTICSEARCH_IN_VPC_ONLY
+      enable: true
+      deploymentTargets:
+        organizationalUnits:
+          - SecureWorkloads
+          - Devops
+          - Infrastructure
+          - Security
+          - Level1
+    - identifier: AWS-GR_EC2_VOLUME_INUSE_CHECK
+      enable: true
+      deploymentTargets:
+        organizationalUnits:
+          - SecureWorkloads
+          - Devops
+          - Infrastructure
+          - Security
+          - Level1
+    - identifier: AWS-GR_EBS_SNAPSHOT_PUBLIC_RESTORABLE_CHECK
+      enable: true
+      deploymentTargets:
+        organizationalUnits:
+          - SecureWorkloads
+          - Devops
+          - Infrastructure
+          - Security
+          - Level1
     - identifier: AWS-GR_RESTRICT_ROOT_USER_ACCESS_KEYS
       enable: true
       deploymentTargets:
         organizationalUnits:
           - SecureWorkloads
+          - Devops
+          - Infrastructure
+          - Security
+          - Level1
     - identifier: AWS-GR_EBS_OPTIMIZED_INSTANCE
       enable: true
       deploymentTargets:
         organizationalUnits:
           - SecureWorkloads
+          - Devops
+          - Infrastructure
+          - Security
+          - Level1
     - identifier: AWS-GR_RESTRICTED_COMMON_PORTS
       enable: false
       deploymentTargets:

@@ -973,10 +973,31 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
     for (const route of this.networkInterfaceRouteArray) {
       if (route.vpcOwnedByAccount) {
         this.createNetworkInterfaceRouteForOwnedVpc(route);
-      } else if (route.firewallOwnedByAccount) {
+      } else if (route.firewallOwnedByAccount || this.isAseaFirewallOwnedByAccount(route)) {
         this.createNetworkInterfaceRouteForOwnedFirewall(route, crossAccountRouteTableMap);
       }
     }
+  }
+
+  private isAseaFirewallOwnedByAccount(route: networkInterfaceRouteDetails) {
+    if (!route.firewallName) {
+      return false;
+    }
+    if (!this.isManagedByAsea(AseaResourceType.FIREWALL_INSTANCE, route.firewallName)) {
+      return false;
+    }
+    const firewallInstances = [
+      ...(this.props.customizationsConfig.firewalls?.instances ?? []),
+      ...(this.props.customizationsConfig.firewalls?.managerInstances ?? []),
+    ];
+
+    const firewallInstance = firewallInstances.find(instance => instance.name === route.firewallName);
+
+    if (!firewallInstance) {
+      return false;
+    }
+
+    return route.vpcName === firewallInstance.vpc;
   }
 
   /**
@@ -1014,10 +1035,7 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
     crossAccountRouteTableMap: Map<string, string>,
   ): void {
     if (routeDetails.firewallName && routeDetails.eniIndex !== undefined) {
-      const networkInterfaceId = this.getNetworkInterfaceIdFromFirewall(
-        routeDetails.firewallName,
-        routeDetails.eniIndex!,
-      );
+      const networkInterfaceId = this.getNetworkInterfaceIdFromFirewall(routeDetails);
       this.logger.info(
         `Creating cross-account route targeting ENI of firewall ${routeDetails.firewallName} owned by this account in VPC ${routeDetails.vpcName}`,
       );
@@ -1037,12 +1055,21 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
    */
   private createNetworkInterfaceRouteForOwnedVpc(routeDetails: networkInterfaceRouteDetails): void {
     let networkInterfaceId: string;
+    const aseaFirewallOwnedByAccount = this.isAseaFirewallOwnedByAccount(routeDetails);
     if (routeDetails.firewallName && routeDetails.firewallOwnedByAccount) {
       this.logger.info(
         `Creating route targeting ENI of firewall ${routeDetails.firewallName} in VPC ${routeDetails.vpcName}`,
       );
-      networkInterfaceId = this.getNetworkInterfaceIdFromFirewall(routeDetails.firewallName, routeDetails.eniIndex!);
-    } else if (routeDetails.firewallName && !routeDetails.firewallOwnedByAccount) {
+      networkInterfaceId = this.getNetworkInterfaceIdFromFirewall(routeDetails);
+    } else if (routeDetails.firewallName && aseaFirewallOwnedByAccount && routeDetails.eniIndex) {
+      this.logger.info(
+        `Creating route targeting ENI of firewall ${routeDetails.firewallName} in VPC ${routeDetails.vpcName}`,
+      );
+      networkInterfaceId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        this.getSsmPath(SsmResourceType.FIREWALL_ENI, [routeDetails.firewallName, routeDetails.eniIndex.toString()]),
+      );
+    } else if (routeDetails.firewallName && !routeDetails.firewallOwnedByAccount && !aseaFirewallOwnedByAccount) {
       this.logger.debug(
         `Skipping route targeting ENI of firewall ${routeDetails.firewallName} owned by different account in VPC ${routeDetails.vpcName}`,
       );
@@ -1147,17 +1174,36 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
    * @param firewallName
    * @param deviceIndex
    */
-  private getNetworkInterfaceIdFromFirewall(firewallName: string, deviceIndex: number): string {
-    const firewall = this.instanceMap.get(firewallName);
-    const eni = firewall!.getNetworkInterface(deviceIndex);
-
-    if (!eni.networkInterfaceId) {
+  private getNetworkInterfaceIdFromFirewall(routeDetails: networkInterfaceRouteDetails): string {
+    if (!routeDetails.firewallName) {
+      this.logger.error(`Firewall name is not defined for route ${routeDetails.routeEntry.name}`);
+      throw new Error(`Configuration validation failed at runtime.`);
+    }
+    if (routeDetails.eniIndex === undefined) {
+      this.logger.error(`ENI index for firewall ${routeDetails.firewallName} is not defined`);
+      throw new Error(`Configuration validation failed at runtime.`);
+    }
+    let eni;
+    const firewall = this.instanceMap.get(routeDetails.firewallName);
+    const aseaFirewallOwnedByAccount = this.isAseaFirewallOwnedByAccount(routeDetails);
+    if (firewall) {
+      eni = firewall.getNetworkInterface(routeDetails.eniIndex).networkInterfaceId;
+    }
+    if (aseaFirewallOwnedByAccount) {
+      eni = this.getSsmPath(SsmResourceType.FIREWALL_ENI, [
+        routeDetails.firewallName,
+        routeDetails.eniIndex.toString(),
+      ]);
+    }
+    if (!eni) {
       this.logger.error(
-        `Could not retrieve network interface id for eni at index ${deviceIndex.toString()} from firewall ${firewallName}`,
+        `Could not retrieve network interface id for eni at index ${routeDetails.eniIndex.toString()} from firewall ${
+          routeDetails.firewallName
+        }`,
       );
       throw new Error(`Configuration validation failed at runtime.`);
     }
-    return eni.networkInterfaceId;
+    return eni;
   }
 
   /**

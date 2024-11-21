@@ -18,6 +18,7 @@ import * as path from 'path';
 
 import {
   CentralSecurityServicesConfig,
+  ControlTowerConfig,
   GuardDutyConfig,
   IdentityCenterAssignmentConfig,
   IdentityCenterPermissionSetConfig,
@@ -28,6 +29,7 @@ import {
   Bucket,
   BucketEncryptionType,
   BucketReplicationProps,
+  CreateControlTowerEnabledControls,
   DetectiveOrganizationAdminAccount,
   EnableAwsServiceAccess,
   EnablePolicyType,
@@ -163,7 +165,7 @@ export class OrganizationsStack extends AcceleratorStack {
       this.enableConfigRecorderDelegatedAdminAccount();
 
       // Enable Control Tower controls
-      this.enableControlTowerControls();
+      this.enableControlTowerControls(this.props.globalConfig.controlTower);
     }
 
     // Macie Configuration
@@ -199,28 +201,63 @@ export class OrganizationsStack extends AcceleratorStack {
   }
 
   /**
-   * Function to enable Control Tower Controls
+   * Enables Control Tower controls based on the provided configuration.
+   * This method filters enabled controls, creates them, and sets up their dependencies.
    * Only optional controls are supported (both Strongly Recommended and Elective)
    * https://docs.aws.amazon.com/controltower/latest/userguide/optional-controls.html
+   *
+   * @param controlTowerConfig - The Control Tower configuration object containing control settings
+   * @returns void
+   * @private
    */
-  private enableControlTowerControls() {
-    if (this.stackProperties.globalConfig.controlTower.enable) {
-      for (const control of this.stackProperties.globalConfig.controlTower.controls ?? []) {
-        this.logger.info(`Control ${control.identifier} status: ${control.enable}`);
 
-        if (control.enable) {
-          for (const orgUnit of control.deploymentTargets.organizationalUnits) {
-            const orgUnitArn = this.stackProperties.organizationConfig.getOrganizationalUnitArn(orgUnit);
-            const controlArn = `arn:${this.props.partition}:controltower:${this.region}::control/${control.identifier}`;
-
-            new cdk.aws_controltower.CfnEnabledControl(this, pascalCase(`${control.identifier}-${orgUnit}`), {
-              controlIdentifier: controlArn,
-              targetIdentifier: orgUnitArn,
-            });
-          }
-        }
-      }
+  private enableControlTowerControls(controlTowerConfig: ControlTowerConfig) {
+    if (!controlTowerConfig.enable) {
+      return;
     }
+    if (!controlTowerConfig.controls) {
+      return;
+    }
+    const controlsToEnable = controlTowerConfig.controls.filter(control => control.enable);
+    if (controlsToEnable.length === 0) {
+      return;
+    }
+    //  Creates a flat array of control targets mapped to their organizational units.
+    const enabledControlsTargets = controlsToEnable
+      .map(control => {
+        const ous = control.deploymentTargets.organizationalUnits;
+        return this.getEnabledControlTargetsFromOUs({ ouNames: ous, enabledControlIdentifier: control.identifier });
+      })
+      .flat();
+
+    new CreateControlTowerEnabledControls(this, 'CTEnabledControls', { controls: enabledControlsTargets });
+  }
+
+  /**
+   * Sets enabled control targets for specified organizational units.
+   *
+   * @param props - Configuration object for enabled control targets
+   * @param props.ouNames - Array of organizational unit names to process
+   * @param props.enabledControlIdentifier - The identifier of the control to be enabled
+   * @returns Array of objects containing OU details and control identifier mapping
+   * @private
+   */
+
+  private getEnabledControlTargetsFromOUs(props: { ouNames: string[]; enabledControlIdentifier: string }): {
+    ouName: string;
+    ouArn: string;
+    enabledControlIdentifier: string;
+  }[] {
+    const enabledControlTargets = [];
+    for (const ouName of props.ouNames) {
+      const ouArn = this.stackProperties.organizationConfig.getOrganizationalUnitArn(ouName);
+      enabledControlTargets.push({
+        ouName,
+        ouArn,
+        enabledControlIdentifier: props.enabledControlIdentifier,
+      });
+    }
+    return enabledControlTargets;
   }
 
   /**
@@ -688,9 +725,9 @@ export class OrganizationsStack extends AcceleratorStack {
     let assignmentList: { [x: string]: string[] }[] = [];
     let delegatedAdminAccountId = adminAccountId;
 
-    const identityCenterDelgatedAdminOverrideId = this.props.iamConfig.identityCenter?.delegatedAdminAccount;
-    if (identityCenterDelgatedAdminOverrideId) {
-      delegatedAdminAccountId = this.props.accountsConfig.getAccountId(identityCenterDelgatedAdminOverrideId);
+    const identityCenterDelegatedAdminOverrideId = this.props.iamConfig.identityCenter?.delegatedAdminAccount;
+    if (identityCenterDelegatedAdminOverrideId) {
+      delegatedAdminAccountId = this.props.accountsConfig.getAccountId(identityCenterDelegatedAdminOverrideId);
     }
 
     if (this.props.iamConfig.identityCenter?.identityCenterPermissionSets) {

@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.1] - 11-18-2024
+
+### Fixed
+
+- fix(metadata): accelerator metadata lambda times out without error
+- fix(docs): resolve broken links in mkdocs
+- fix(route53): fix hosted zone DNS for Sagemaker VPC Endpoints 
+- fix(route53): fix hosted zone DNS for EKS-Auth VPC Endpoints
+- fix(pipeline): bootstrap stage failed silently
+- fix(organizations): fix enabled controls cfn throttling
+
 ## [1.10.0] - 10-16-2024
 
 ### Added
@@ -23,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - fix(bootstrap): batched bootstrap checks
+- fix(control-tower): skip existing ct identifier check when ct is not enabled
 - fix(control-tower): updated boolean logic to get LZ identifier
 - fix(custom-stacks): loaded replacement values during custom stack deployment
 - fix(diff): parse error during diff

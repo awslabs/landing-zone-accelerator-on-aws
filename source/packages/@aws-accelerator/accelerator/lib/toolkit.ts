@@ -383,6 +383,7 @@ export class AcceleratorToolkit {
           `Credentials expired for account ${options.accountId} in region ${options.region} running command ${options.command}`,
         );
       }
+      throw new Error(`Bootstrap for account ${options.accountId} in region ${options.region} failed.`);
     }
   }
 

@@ -3203,7 +3203,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-OrganizationsStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.10.0",
+        "Value": "1.10.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -3467,15 +3467,40 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
       "UpdateReplacePolicy": "Delete",
     },
     "AwsGrEbsOptimizedInstanceSecureWorkloads": {
+      "DependsOn": [
+        "AwsGrRestrictRootUserAccessKeysSecureWorkloads",
+      ],
       "Properties": {
-        "ControlIdentifier": "arn:aws:controltower:us-east-1::control/AWS-GR_EBS_OPTIMIZED_INSTANCE",
+        "ControlIdentifier": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":controltower:us-east-1::control/AWS-GR_EBS_OPTIMIZED_INSTANCE",
+            ],
+          ],
+        },
         "TargetIdentifier": "arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-33333333",
       },
       "Type": "AWS::ControlTower::EnabledControl",
     },
     "AwsGrRestrictRootUserAccessKeysSecureWorkloads": {
       "Properties": {
-        "ControlIdentifier": "arn:aws:controltower:us-east-1::control/AWS-GR_RESTRICT_ROOT_USER_ACCESS_KEYS",
+        "ControlIdentifier": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":controltower:us-east-1::control/AWS-GR_RESTRICT_ROOT_USER_ACCESS_KEYS",
+            ],
+          ],
+        },
         "TargetIdentifier": "arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-33333333",
       },
       "Type": "AWS::ControlTower::EnabledControl",
@@ -6574,7 +6599,7 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-OrganizationsStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.10.0",
+        "Value": "1.10.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -9849,7 +9874,7 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-OrganizationsStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.10.0",
+        "Value": "1.10.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
