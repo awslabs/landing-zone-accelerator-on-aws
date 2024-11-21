@@ -130,6 +130,31 @@
           ]
         }
       }
+    },
+    {
+      "Sid": "PreventKeyModification",
+      "Effect": "Deny",
+      "Action": [
+        "kms:DisableKeyRotation",
+        "kms:CancelKeyDeletion",
+        "kms:ScheduleKeyDeletion",
+        "kms:DisableKey"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ForAllValues:StringLike": {
+          "kms:ResourceAliases": [
+            "alias/accelerator*"
+          ]
+        },
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
+            "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
     }
   ]
 }
