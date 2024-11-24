@@ -3074,17 +3074,30 @@ phases:
       - if [ $ASEA_MAPPING_BUCKET ]; then aws s3api head-object --bucket $ASEA_MAPPING_BUCKET --key $ASEA_MAPPING_FILE >/dev/null 2>&1 || export FULL_SYNTH="false"; fi;
       - |-
         if [ "\${CDK_OPTIONS}" = "bootstrap" ]; then
-                          set -e && yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                          if [ $FULL_SYNTH = "true" ]; then 
+                            set -e && yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
                 ";
-                          if [ "\${ACCELERATOR_STAGE}" = "bootstrap" ]; then set -e && yarn run ts-node --transpile-only cdk.ts $CDK_OPTIONS --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                          fi
+                          if [ "\${ACCELERATOR_STAGE}" = "bootstrap" ]; then
+                            yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
-                " --app cdk.out; fi
-                          tar -czf cf_$ARCHIVE_NAME -C cdk.out .
+                ";
+                            yarn run ts-node --transpile-only cdk.ts $CDK_OPTIONS --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                " --app cdk.out;
+                          fi
+                          if [ $FULL_SYNTH = "true" ]; then
+                            set -e && tar -czf cf_$ARCHIVE_NAME -C cdk.out .;
+                          else
+                            touch full-synth-false.txt;
+                          fi
                           if [ "\${ACCELERATOR_ENABLE_APPROVAL_STAGE}" = "Yes" ] && [ "$ACCELERATOR_STAGE" != "bootstrap" ]; then
                             set -e && yarn run ts-node --transpile-only cdk.ts diff --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
@@ -3096,8 +3109,8 @@ phases:
                             aws s3 cp diff_$ARCHIVE_NAME $DIFFS_DIR/$CODEPIPELINE_EXECUTION_ID/
                           fi
                        else
-                       eval ARTIFACTS='$'CODEBUILD_SRC_DIR_$STAGE_ARTIFACT
-                       if [ -f "\${ARTIFACTS}/cf_\${ARCHIVE_NAME}" ]; then
+                        eval ARTIFACTS='$'CODEBUILD_SRC_DIR_$STAGE_ARTIFACT
+                        if [ -f "\${ARTIFACTS}/cf_\${ARCHIVE_NAME}" ]; then
                              mkdir -p cdk.out
                              tar -xzf $ARTIFACTS/cf_$ARCHIVE_NAME -C cdk.out;
                          else
@@ -3123,6 +3136,7 @@ artifacts:
   files:
     - cf_$ARCHIVE_NAME
     - diff_cdk_out_$ARCHIVE_NAME
+    - full-synth-false.txt
 ",
               ],
             ],
@@ -6735,17 +6749,30 @@ phases:
       - if [ $ASEA_MAPPING_BUCKET ]; then aws s3api head-object --bucket $ASEA_MAPPING_BUCKET --key $ASEA_MAPPING_FILE >/dev/null 2>&1 || export FULL_SYNTH="false"; fi;
       - |-
         if [ "\${CDK_OPTIONS}" = "bootstrap" ]; then
-                          set -e && yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                          if [ $FULL_SYNTH = "true" ]; then 
+                            set -e && yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
                 ";
-                          if [ "\${ACCELERATOR_STAGE}" = "bootstrap" ]; then set -e && yarn run ts-node --transpile-only cdk.ts $CDK_OPTIONS --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                          fi
+                          if [ "\${ACCELERATOR_STAGE}" = "bootstrap" ]; then
+                            yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
-                " --app cdk.out; fi
-                          tar -czf cf_$ARCHIVE_NAME -C cdk.out .
+                ";
+                            yarn run ts-node --transpile-only cdk.ts $CDK_OPTIONS --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                " --app cdk.out;
+                          fi
+                          if [ $FULL_SYNTH = "true" ]; then
+                            set -e && tar -czf cf_$ARCHIVE_NAME -C cdk.out .;
+                          else
+                            touch full-synth-false.txt;
+                          fi
                           if [ "\${ACCELERATOR_ENABLE_APPROVAL_STAGE}" = "Yes" ] && [ "$ACCELERATOR_STAGE" != "bootstrap" ]; then
                             set -e && yarn run ts-node --transpile-only cdk.ts diff --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
@@ -6757,8 +6784,8 @@ phases:
                             aws s3 cp diff_$ARCHIVE_NAME $DIFFS_DIR/$CODEPIPELINE_EXECUTION_ID/
                           fi
                        else
-                       eval ARTIFACTS='$'CODEBUILD_SRC_DIR_$STAGE_ARTIFACT
-                       if [ -f "\${ARTIFACTS}/cf_\${ARCHIVE_NAME}" ]; then
+                        eval ARTIFACTS='$'CODEBUILD_SRC_DIR_$STAGE_ARTIFACT
+                        if [ -f "\${ARTIFACTS}/cf_\${ARCHIVE_NAME}" ]; then
                              mkdir -p cdk.out
                              tar -xzf $ARTIFACTS/cf_$ARCHIVE_NAME -C cdk.out;
                          else
@@ -6784,6 +6811,7 @@ artifacts:
   files:
     - cf_$ARCHIVE_NAME
     - diff_cdk_out_$ARCHIVE_NAME
+    - full-synth-false.txt
 ",
               ],
             ],
