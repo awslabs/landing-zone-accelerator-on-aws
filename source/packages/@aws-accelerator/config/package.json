@@ -8,7 +8,6 @@
     "name": "Amazon Web Services",
     "url": "https://aws.amazon.com/solutions"
   },
-  "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "yarn schema:accounts && yarn schema:global && yarn schema:iam && yarn schema:organization && yarn schema:security && yarn schema:replacements && yarn schema:customizations && yarn schema:network && tsc",
