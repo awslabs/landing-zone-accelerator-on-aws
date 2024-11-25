@@ -895,6 +895,11 @@ export abstract class NetworkStack extends AcceleratorStack {
     securityGroupMap: Map<string, SecurityGroup>,
   ) {
     for (const securityGroupItem of vpcItem.securityGroups ?? []) {
+      // skip if managed by asea
+      if (this.isManagedByAsea(AseaResourceType.EC2_SECURITY_GROUP, `${vpcItem.name}/${securityGroupItem.name}`)) {
+        this.logger.info(`Skipping security group ${securityGroupItem.name} in VPC ${vpcItem.name}`);
+        continue;
+      }
       const securityGroup = getSecurityGroup(securityGroupMap, vpcItem.name, securityGroupItem.name) as SecurityGroup;
       const ingressRules = processSecurityGroupSgIngressSources(
         this.vpcResources,
