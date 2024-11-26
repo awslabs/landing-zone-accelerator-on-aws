@@ -1,0 +1,71 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyNetworkSecurityControls",
+      "Effect": "Deny",
+      "Action": [
+        "ec2:AssignPrivateNatGatewayAddress",
+        "ec2:AssociateNatGatewayAddress",
+        "ec2:AssociateTransitGatewayRouteTable",
+        "ec2:AttachInternetGateway",
+        "ec2:CreateTags",
+        "ec2:CreateVpc",
+        "ec2:CreateEgressOnlyInternetGateway",
+        "ec2:CreateInternetGateway",
+        "ec2:CreateNatGateway",
+        "ec2:DeleteEgressOnlyInternetGateway",
+        "ec2:DeleteInternetGateway",
+        "ec2:DeleteNatGateway",
+        "ec2:DeleteRouteTable",
+        "ec2:DeleteTags",
+        "ec2:DeleteTransitGateway",
+        "ec2:DeleteTransitGatewayVpcAttachment",
+        "ec2:DeleteTransitGatewayPeeringAttachment",
+        "ec2:DeleteTransitGatewayRouteTable",
+        "ec2:DetachInternetGateway",
+        "ec2:DisassociateNatGatewayAddress",
+        "ec2:DisassociateRouteTable",
+        "ec2:DisassociateTransitGatewayRouteTable",
+        "ec2:ModifyTransitGateway",
+        "ec2:UnassignPrivateNatGatewayAddress"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "ec2:ResourceTag/Accelerator": "${ACCELERATOR_PREFIX}"
+        },
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+              "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*",
+              "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+              "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "DenyRAMShareModification",
+      "Effect": "Deny",
+      "Action": [
+          "ram:AssociateResourceShare",
+          "ram:DisassociateResourceShare",
+          "ram:DeleteResourceShare",
+          "ram:UpdateResourceShare"
+      ],
+      "Resource": "*",
+      "Condition": {
+          "StringEquals": {
+              "ram:ResourceTag/Accelerator": "${ACCELERATOR_PREFIX}"
+          },
+          "ArnNotLike": {
+            "aws:PrincipalARN": [
+                "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*",
+                "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+                "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+        ]
+      }
+    }
+  }
+]
+}

@@ -28,6 +28,14 @@ serviceControlPolicies:
       organizationalUnits:
         - Infrastructure
         - Security
+  - name: AcceleratorGuardrails3
+    description: >
+      Accelerator GuardRails 3
+    policy: service-control-policies/guardrails-3.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
   - name: Quarantine
     description: >
       This SCP is used to prevent changes to new accounts until the Accelerator
