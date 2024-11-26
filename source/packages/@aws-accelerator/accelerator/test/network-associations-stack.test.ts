@@ -11,31 +11,15 @@
  *  and limitations under the License.
  */
 
-import { describe, expect } from '@jest/globals';
+import { describe } from '@jest/globals';
 import { AcceleratorStage } from '../lib/accelerator-stage';
 import { snapShotTest } from './snapshot-test';
 import { Create } from './accelerator-test-helpers';
-import { NetworkAssociationsStack } from '../lib/stacks/network-stacks/network-associations-stack/network-associations-stack';
 
 const testNamePrefix = 'Construct(NetworkAssociationsStack): ';
 
 describe('NetworkAssociationsStack', () => {
-  const acceleratorTestStacks = Create.stacks(AcceleratorStage.NETWORK_ASSOCIATIONS);
-  const stackNames = ['Network-us-east-1', 'SharedServices-us-east-1', 'Network-us-west-2', 'SharedServices-us-west-2'];
-
-  stackNames.forEach(n => snapShotTest(testNamePrefix, () => acceleratorTestStacks.stacks.get(n)));
-
-  test('Route Table Lookup', () => {
-    const stackPdx = acceleratorTestStacks.stacks.get(`Network-us-east-1`)! as unknown as NetworkAssociationsStack;
-
-    expect(Array.from(stackPdx['routeTableMap'].keys())).toEqual(
-      expect.arrayContaining([
-        'SharedServices-Main_444444444444_SharedServices-App-A',
-        'Network-Ipam-West_555555555555_Network-West-A-Rt', // same account, cross region lookup
-        'Network-Endpoints_Network-Endpoints-A',
-      ]),
-    );
-  });
+  snapShotTest(testNamePrefix, Create.stackProvider(`Network-us-east-1`, AcceleratorStage.NETWORK_ASSOCIATIONS));
 });
 
 describe('NoVpcFlowLogStack', () => {
