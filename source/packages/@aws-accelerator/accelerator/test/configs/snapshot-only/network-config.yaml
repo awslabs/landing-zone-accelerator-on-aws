@@ -638,10 +638,7 @@ vpcs:
     instanceTenancy: default
     routeTables:
       - name: SharedServices-A-Rt
-        routes:
-          - name: PeeringDifferentAccountDifferentRegion
-            type: vpcPeering
-            target: DifferentAccountDifferentRegion
+        routes: []
       - name: SharedServices-B-Rt
         routes: []
     subnets:
@@ -709,10 +706,7 @@ vpcs:
     instanceTenancy: default
     routeTables:
       - name: Network-West-A-Rt
-        routes: 
-          - name: PeeringSameAccountDifferentRegion
-            type: vpcPeering
-            target: SameAccountDifferentRegion
+        routes: []
       - name: Network-West-B-Rt
         routes: []
     subnets:
@@ -1094,12 +1088,6 @@ vpcs:
             ipv6Destination: fd00::/8
             type: vpcPeering
             target: CrossAccount
-          - name: PeeringSameAccountDifferentRegion
-            type: vpcPeering
-            target: SameAccountDifferentRegion
-          - name: PeeringDifferentAccountDifferentRegion
-            type: vpcPeering
-            target: DifferentAccountDifferentRegion
       - name: Network-Endpoints-B
         routes:
           - name: TgwRoute
@@ -2112,14 +2100,6 @@ vpcPeering:
     vpcs:
       - Workload-Template
       - Network-Endpoints
-  - name: SameAccountDifferentRegion
-    vpcs:
-      - Network-Endpoints
-      - Network-Ipam-West
-  - name: DifferentAccountDifferentRegion
-    vpcs:
-      - Network-Endpoints
-      - SharedServices-Ipam-West
 
 customerGateways:
   - name: accelerator-cgw
