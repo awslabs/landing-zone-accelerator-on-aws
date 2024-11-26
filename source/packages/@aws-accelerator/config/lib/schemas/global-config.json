@@ -518,10 +518,6 @@
           "$ref": "#/definitions/NonEmptyString",
           "default": "undefined",
           "description": "Customer defined log subscription filter destination arn, that is associated with with the existing log group. Accelerator solution needs to disassociate this destination before configuring solution defined subscription filter destination."
-        },
-        "firehose": {
-          "$ref": "#/definitions/ICloudWatchLogsFirehoseConfig",
-          "description": "CloudWatch Log Firehose configuration"
         }
       },
       "type": "object"
@@ -581,17 +577,6 @@
       "required": [
         "categories"
       ],
-      "type": "object"
-    },
-    "ICloudWatchLogsFirehoseConfig":{
-      "additionalProperties": false,
-      "description": "Accelerator global CloudWatch Logs Firehose configuration",
-      "properties": {
-        "fileExtension": {
-          "description": "Add a fileExtension to firehose generated logs",
-          "$ref": "#/definitions/NonEmptyString"
-        }
-      },
       "type": "object"
     },
     "IControlTowerConfig": {
