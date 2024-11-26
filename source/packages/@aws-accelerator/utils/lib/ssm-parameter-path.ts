@@ -133,7 +133,7 @@ export enum SsmResourceType {
    * `${0}` is replaced with the account name
    * `${1}` is replaced with the vpc name
    */
-  VALIDATION_VPC_CIDRS = '/validation/${0}/network/vpc/${0}/deployedCidrs',
+  VALIDATION_VPC_CIDRS = '/validation/${0}/network/vpc/${1}/deployedCidrs',
   /**
    * Internet gateway ID
    *
