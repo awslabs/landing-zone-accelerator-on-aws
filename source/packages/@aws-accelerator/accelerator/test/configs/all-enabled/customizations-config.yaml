@@ -52,8 +52,6 @@ customizations:
         - us-east-1
       runOrder: 1
       template: cloudformation-templates/custom-s3-bucket.yaml
-      administrationRoleArn: arn:aws:iam::12345678:role/CustomStackSetsAdminRole
-      executionRoleName: CustomStackSetsExecutionRole
 
   serviceCatalogPortfolios:
     - name: My-Portfolio

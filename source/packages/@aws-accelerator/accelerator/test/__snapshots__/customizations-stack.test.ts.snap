@@ -11,12 +11,14 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] 
   "Resources": {
     "AwsAcceleratorCustomCustomS3Stackset": {
       "Properties": {
+        "AdministrationRoleARN": "arn:aws:iam::12345678:role/CustomStackSetsAdminRole",
         "Capabilities": [
           "CAPABILITY_IAM",
           "CAPABILITY_NAMED_IAM",
           "CAPABILITY_AUTO_EXPAND",
         ],
         "Description": "Sample stackset description",
+        "ExecutionRoleName": "CustomStackSetsExecutionRole",
         "OperationPreferences": {
           "FailureTolerancePercentage": 25,
           "MaxConcurrentPercentage": 35,
@@ -1143,14 +1145,12 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 3`] 
   "Resources": {
     "AwsAcceleratorCustomCustomS3Stackset": {
       "Properties": {
-        "AdministrationRoleARN": "arn:aws:iam::12345678:role/CustomStackSetsAdminRole",
         "Capabilities": [
           "CAPABILITY_IAM",
           "CAPABILITY_NAMED_IAM",
           "CAPABILITY_AUTO_EXPAND",
         ],
         "Description": "Sample stackset description",
-        "ExecutionRoleName": "CustomStackSetsExecutionRole",
         "OperationPreferences": {
           "FailureTolerancePercentage": 25,
           "MaxConcurrentPercentage": 35,
