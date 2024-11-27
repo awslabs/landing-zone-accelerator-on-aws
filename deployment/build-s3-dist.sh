@@ -129,10 +129,11 @@ create_template_installer_json()
     do_cmd mv $staging_dist_dir/*.template.json $template_dist_dir/
 
     # Rename all *.template.json files to *.template
-    echo "Rename all *.template.json to *.template"
+    echo "Rename all *.template.json*.template.json to **.template"
     echo "copy templates and rename"
-    for f in $template_dist_dir/*.template.json; do
-        mv -- "$f" "${f%.template.json}.template"
+    for f in $template_dist_dir/*.template.json*.template.json; do
+        newname=$(echo "$f" | sed -E 's/\.template\.json-/-/; s/\.json$//')
+        mv -- "$f" "$newname"
     done
 }
 
