@@ -16,7 +16,7 @@
     "cleanup:tsc": "tsc --build ./ --clean",
     "lint": "eslint --fix  --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
     "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
-    "test": "jest --coverage --ci --passWithNoTests",
+    "test:unit": "jest --coverage --ci --passWithNoTests",
     "watch": "tsc -w"
   },
   "dependencies": {
