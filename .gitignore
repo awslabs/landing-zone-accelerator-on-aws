@@ -4,6 +4,7 @@
 !**/create-govcloud-account/index.js
 package-lock.json
 !jest.config.js
+!create-jest-config.js
 !setEnvVars.js
 *.d.ts
 *.tsbuildinfo
