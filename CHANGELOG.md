@@ -544,6 +544,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(validation): Add config rule name validation
 - fix(validation): validate certificate deployment target
 - fix(validation): undefined Config remediation target account name causes false positive
+- fix(logging): incorrect managed policy for imported elb access log bucket
 
 ### Configuration Changes
 
