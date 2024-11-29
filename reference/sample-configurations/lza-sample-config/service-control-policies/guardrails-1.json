@@ -138,7 +138,8 @@
         "kms:DisableKeyRotation",
         "kms:CancelKeyDeletion",
         "kms:ScheduleKeyDeletion",
-        "kms:DisableKey"
+        "kms:DisableKey",
+        "kms:DeleteAlias"
       ],
       "Resource": "*",
       "Condition": {
