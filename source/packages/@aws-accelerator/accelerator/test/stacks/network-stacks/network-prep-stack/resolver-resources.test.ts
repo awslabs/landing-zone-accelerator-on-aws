@@ -1,4 +1,3 @@
-/* eslint @typescript-eslint/no-explicit-any: 0 */
 /**
  *  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -11,27 +10,20 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
+/* eslint @typescript-eslint/no-explicit-any: 0 */
 
 import {
-  AccountsConfig,
   CentralNetworkServicesConfig,
   DnsFirewallRuleGroupConfig,
   DnsFirewallRulesConfig,
-  GlobalConfig,
-  GroupSetConfig,
-  IamConfig,
-  LoggingConfig,
-  NetworkConfig,
-  OrganizationConfig,
-  UserSetConfig,
 } from '@aws-accelerator/config';
 import { ResolverFirewallDomainList } from '@aws-accelerator/constructs/lib/aws-route-53-resolver/firewall-domain-list';
-import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals';
+import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 import * as cdk from 'aws-cdk-lib';
 import { AcceleratorStackProps } from '../../../../lib/stacks/accelerator-stack';
 import { NetworkPrepStack } from '../../../../lib/stacks/network-stacks/network-prep-stack/network-prep-stack';
 import { ResolverResources } from '../../../../lib/stacks/network-stacks/network-prep-stack/resolver-resources';
-import { AcceleratorResourcePrefixes } from '../../../../utils/app-utils';
+import { createAcceleratorStackProps } from '../../stack-props-test-helper';
 
 describe('ResolverResources', () => {
   let app: cdk.App;
@@ -39,6 +31,7 @@ describe('ResolverResources', () => {
   let networkStack: NetworkPrepStack;
 
   beforeEach(() => {
+    jest.resetAllMocks();
     jest.spyOn(NetworkPrepStack.prototype, 'getCentralLogBucketName').mockReturnValue('unitTestLogBucket');
     jest.spyOn(NetworkPrepStack.prototype, 'getSsmPath').mockReturnValue('/test/ssm-path/');
     jest.spyOn(NetworkPrepStack.prototype, 'getAcceleratorKey').mockReturnValue(undefined);
@@ -54,12 +47,8 @@ describe('ResolverResources', () => {
     }));
 
     app = new cdk.App();
-    props = createProps('us-east-1');
+    props = createAcceleratorStackProps();
     networkStack = new NetworkPrepStack(app, 'unit-test-network-prep-stack', props);
-  });
-
-  afterEach(() => {
-    jest.resetAllMocks();
   });
 
   describe('ResolverResources', () => {
@@ -147,52 +136,4 @@ describe('ResolverResources', () => {
       expect(result[0].firewallDomainListId).toEqual(expected);
     });
   });
-  function createProps(homeRegion: string): AcceleratorStackProps {
-    const mockOrganizationConfig = {
-      getOrganizationId: jest.fn().mockReturnValue('1234567890'),
-    } as unknown as OrganizationConfig;
-    const mockAccountsConfig = {
-      getAccountId: jest.fn().mockReturnValue('100000'),
-      getAccountIds: jest.fn().mockReturnValue(['100000']),
-      getManagementAccountId: jest.fn().mockReturnValue('200000'),
-      getLogArchiveAccountId: jest.fn().mockReturnValue('300000'),
-      mandatoryAccounts: [],
-      workloadAccounts: [],
-    } as unknown as AccountsConfig;
-    const mockLoggingConfig = {
-      sessionManager: {
-        sendToCloudWatchLogs: false,
-        sendToS3: false,
-      },
-    } as LoggingConfig;
-    const mockNetworkConfig = {
-      vpcs: [],
-      transitGateways: [],
-    } as unknown as NetworkConfig;
-
-    const props = {
-      accountsConfig: mockAccountsConfig,
-      configDirPath: '../configs',
-      globalConfig: {
-        logging: mockLoggingConfig,
-        homeRegion: homeRegion,
-      } as GlobalConfig,
-      iamConfig: {
-        userSets: [new UserSetConfig()],
-        groupSets: [new GroupSetConfig()],
-      } as IamConfig,
-      networkConfig: mockNetworkConfig,
-      organizationConfig: mockOrganizationConfig,
-      globalRegion: 'us-east-1',
-      centralizedLoggingRegion: 'us-east-1',
-      prefixes: {} as AcceleratorResourcePrefixes,
-      pipelineAccountId: '1234567890',
-      env: {
-        region: 'us-east-1',
-        account: '100000',
-      },
-    } as unknown as AcceleratorStackProps;
-
-    return props;
-  }
 });
