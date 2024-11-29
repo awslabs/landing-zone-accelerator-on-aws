@@ -95,7 +95,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   }
 }
 
-function generateBucketPolicy(
+export function generateBucketPolicy(
   firewallRoles: string[],
   applyAcceleratorManagedPolicy: string,
   partition: string,
@@ -290,7 +290,7 @@ function generateBucketPolicy(
 
         if (elbAccountId) {
           elbPrincipal = {
-            AWS: [`arn:${partition}:iam::${sourceAccount}:root`],
+            AWS: [`arn:${partition}:iam::${elbAccountId}:root`],
           };
         }
 
