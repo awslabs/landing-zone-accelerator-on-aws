@@ -11,58 +11,45 @@
  *  and limitations under the License.
  */
 
-import {
-  AccountsConfig,
-  ControlTowerConfig,
-  CustomizationsConfig,
-  GlobalConfig,
-  GroupSetConfig,
-  IamConfig,
-  LoggingConfig,
-  NetworkConfig,
-  OrganizationConfig,
-  ReplacementsConfig,
-  SecurityConfig,
-  UserSetConfig,
-} from '@aws-accelerator/config';
-import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals';
+/* eslint @typescript-eslint/no-explicit-any: 0 */
+
+import { CloudWatchLogsConfig, ControlTowerConfig, GlobalConfig, LoggingConfig } from '@aws-accelerator/config';
+import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 import * as cdk from 'aws-cdk-lib';
 import { Capture, Template } from 'aws-cdk-lib/assertions';
-import { OrganizationsStack, OrganizationsStackProps } from '../../lib/stacks/organizations-stack';
-import { AcceleratorResourcePrefixes } from '../../utils/app-utils';
 import { IKey } from 'aws-cdk-lib/aws-kms';
+import { AcceleratorStackProps } from '../../lib/stacks/accelerator-stack';
+import { OrganizationsStack } from '../../lib/stacks/organizations-stack';
+import { createAcceleratorStackProps } from './stack-props-test-helper';
 
 let app: cdk.App;
-let organizationsStackDefault: OrganizationsStack;
-let organizationsStackCT: OrganizationsStack;
 
 beforeEach(() => {
+  jest.resetAllMocks();
   jest.spyOn(OrganizationsStack.prototype, 'getCentralLogBucketName').mockImplementation(() => 'unitTestLogBucket');
   jest.spyOn(OrganizationsStack.prototype, 'getSsmPath').mockImplementation(() => '/test/ssm-path/');
   jest.spyOn(OrganizationsStack.prototype, 'getAcceleratorKey').mockReturnValue({} as IKey);
   jest.spyOn(OrganizationsStack.prototype, 'isIncluded').mockImplementation(() => true);
 
   app = new cdk.App();
-  organizationsStackDefault = new OrganizationsStack(app, 'unit-test-Organizations-stack', createProps('us-east-1'));
-  organizationsStackCT = createStackWithControlTower();
-});
-
-afterEach(() => {
-  jest.resetAllMocks();
 });
 
 describe('OrganizationsStack cdk assert tests', () => {
   test('Default stack has no AWS Control Tower Enabled Controls', () => {
+    const props = createAcceleratorStackProps();
+    const organizationsStackDefault = new OrganizationsStack(app, 'unit-test-Organizations-stack', props);
     const template = Template.fromStack(organizationsStackDefault);
     template.resourceCountIs('AWS::ControlTower::EnabledControl', 0);
   });
 
   test('Stack contains 6 Control Tower enabled controls', () => {
+    const organizationsStackCT = createStackWithControlTower();
     const template = Template.fromStack(organizationsStackCT);
     template.resourceCountIs('AWS::ControlTower::EnabledControl', 6);
   });
 
   test('Stack contains 5 dependsOn properties for AWS::ControlTower::EnabledControl', () => {
+    const organizationsStackCT = createStackWithControlTower();
     const template = Template.fromStack(organizationsStackCT);
     const dependsOnCapture = new Capture();
     template.findResources('AWS::ControlTower::EnabledControl', {
@@ -75,97 +62,6 @@ describe('OrganizationsStack cdk assert tests', () => {
     expect(dependsOnCount).toBe(5);
   });
 });
-
-function createProps(homeRegion: string, controlTowerConfig?: ControlTowerConfig): OrganizationsStackProps {
-  const mockOrganizationConfig = {
-    getOrganizationId: jest.fn().mockImplementation(() => '1234567890'),
-    getOrganizationalUnitArn: jest
-      .fn()
-      .mockImplementation(ouName => `arn:aws:organizations::123456789012:ou/o-a1b2c3d4e5/${ouName}`),
-    enable: true,
-    backupPolicies: [],
-    taggingPolicies: [],
-  } as unknown as OrganizationConfig;
-  const mockAccountsConfig = {
-    getAccountId: jest.fn().mockImplementation(() => '100000'),
-    getAccountIds: jest.fn().mockImplementation(() => ['100000']),
-    getManagementAccountId: jest.fn().mockImplementation(() => '200000'),
-    getLogArchiveAccountId: jest.fn().mockImplementation(() => '300000'),
-    mandatoryAccounts: [],
-    workloadAccounts: [],
-  } as unknown as AccountsConfig;
-  const mockLoggingConfig = {
-    cloudwatchLogs: undefined,
-    sessionManager: {
-      sendToCloudWatchLogs: false,
-      sendToS3: false,
-    },
-    cloudtrail: {
-      enable: false,
-    },
-  } as LoggingConfig;
-  const mockNetworkConfig = {
-    vpcs: [],
-  } as unknown as NetworkConfig;
-
-  const props: OrganizationsStackProps = {
-    accountsConfig: mockAccountsConfig,
-    configDirPath: '../configs',
-    globalConfig: {
-      logging: mockLoggingConfig,
-      homeRegion: homeRegion,
-      controlTower: controlTowerConfig ?? new ControlTowerConfig(),
-    } as GlobalConfig,
-    iamConfig: {
-      userSets: [new UserSetConfig()],
-      groupSets: [new GroupSetConfig()],
-    } as IamConfig,
-    networkConfig: mockNetworkConfig,
-    organizationConfig: mockOrganizationConfig,
-    securityConfig: {
-      centralSecurityServices: {
-        delegatedAdminAccount: 'account1',
-        auditManager: {},
-        detective: {},
-        macie: {
-          enable: false,
-        },
-        guardduty: {
-          enable: false,
-        },
-        securityHub: {
-          enable: false,
-        },
-      },
-      accessAnalyzer: {
-        enable: false,
-      },
-      awsConfig: {
-        aggregation: {
-          enable: false,
-        },
-      },
-    } as unknown as SecurityConfig,
-    customizationsConfig: {} as CustomizationsConfig,
-    replacementsConfig: {} as ReplacementsConfig,
-    partition: 'unit-test',
-    configRepositoryName: 'unit-test',
-    configRepositoryLocation: 's3',
-    globalRegion: 'us-east-1',
-    centralizedLoggingRegion: 'us-east-1',
-    prefixes: {} as AcceleratorResourcePrefixes,
-    enableSingleAccountMode: true,
-    useExistingRoles: false,
-    isDiagnosticsPackEnabled: 'false',
-    pipelineAccountId: '1234567890',
-    env: {
-      region: 'us-east-1',
-      account: '100000',
-    },
-  };
-
-  return props;
-}
 
 function createStackWithControlTower() {
   const controlTowerConfig: ControlTowerConfig = {
@@ -223,5 +119,23 @@ function createStackWithControlTower() {
     ],
   };
 
-  return new OrganizationsStack(app, 'unit-test-Organizations-stack-CT', createProps('us-east-1', controlTowerConfig));
+  const overrideProps = {
+    globalConfig: {
+      homeRegion: 'us-east-1',
+      controlTower: controlTowerConfig,
+      logging: {
+        cloudwatchLogs: {} as CloudWatchLogsConfig,
+        sessionManager: {
+          sendToCloudWatchLogs: false,
+          sendToS3: false,
+        },
+        cloudtrail: {
+          enable: false,
+        },
+      } as LoggingConfig,
+    } as GlobalConfig,
+  } as AcceleratorStackProps;
+  const props = createAcceleratorStackProps(overrideProps);
+
+  return new OrganizationsStack(app, 'unit-test-Organizations-stack-CT', props);
 }

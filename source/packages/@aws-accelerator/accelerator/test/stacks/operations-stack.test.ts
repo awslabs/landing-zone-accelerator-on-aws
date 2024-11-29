@@ -11,42 +11,37 @@
  *  and limitations under the License.
  */
 
+/* eslint @typescript-eslint/no-explicit-any: 0 */
+
 import {
-  AccountsConfig,
-  CustomizationsConfig,
+  CloudWatchLogsConfig,
   GlobalConfig,
   GroupConfig,
   GroupSetConfig,
-  IamConfig,
   LoggingConfig,
-  NetworkConfig,
-  OrganizationConfig,
-  ReplacementsConfig,
-  SecurityConfig,
   UserConfig,
   UserSetConfig,
 } from '@aws-accelerator/config';
-import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals';
+import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 import * as cdk from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
+import { AcceleratorStackProps } from '../../lib/stacks/accelerator-stack';
 import { OperationsStack, OperationsStackProps } from '../../lib/stacks/operations-stack';
-import { AcceleratorResourcePrefixes } from '../../utils/app-utils';
+import { createAcceleratorStackProps } from './stack-props-test-helper';
 
 let app: cdk.App;
 let operationsStack: OperationsStack;
 
 beforeEach(() => {
+  jest.resetAllMocks();
   jest.spyOn(OperationsStack.prototype, 'getCentralLogBucketName').mockImplementation(() => 'unitTestLogBucket');
   jest.spyOn(OperationsStack.prototype, 'getSsmPath').mockImplementation(() => '/test/ssm-path/');
   jest.spyOn(OperationsStack.prototype, 'getAcceleratorKey').mockImplementation(() => undefined);
   jest.spyOn(OperationsStack.prototype, 'isIncluded').mockImplementation(() => true);
 
   app = new cdk.App();
-  operationsStack = new OperationsStack(app, 'unit-test-operations-stack', createProps('us-east-1'));
-});
-
-afterEach(() => {
-  jest.resetAllMocks();
+  const props = createAcceleratorStackProps();
+  operationsStack = new OperationsStack(app, 'unit-test-operations-stack', props as OperationsStackProps);
 });
 
 describe('OperationsStack unit tests', () => {
@@ -147,69 +142,6 @@ describe('OperationsStack cdk assert tests', () => {
   });
 });
 
-function createProps(
-  homeRegion: string,
-  userSetConfig?: UserSetConfig,
-  groupSetConfig?: GroupSetConfig,
-): OperationsStackProps {
-  const mockOrganizationConfig = {
-    getOrganizationId: jest.fn().mockImplementation(() => '1234567890'),
-  } as unknown as OrganizationConfig;
-  const mockAccountsConfig = {
-    getAccountId: jest.fn().mockImplementation(() => '100000'),
-    getAccountIds: jest.fn().mockImplementation(() => ['100000']),
-    getManagementAccountId: jest.fn().mockImplementation(() => '200000'),
-    getLogArchiveAccountId: jest.fn().mockImplementation(() => '300000'),
-    mandatoryAccounts: [],
-    workloadAccounts: [],
-  } as unknown as AccountsConfig;
-  const mockLoggingConfig = {
-    cloudwatchLogs: undefined,
-    sessionManager: {
-      sendToCloudWatchLogs: false,
-      sendToS3: false,
-    },
-  } as LoggingConfig;
-  const mockNetworkConfig = {
-    vpcs: [],
-  } as unknown as NetworkConfig;
-
-  const props: OperationsStackProps = {
-    accountsConfig: mockAccountsConfig,
-    accountWarming: false,
-    configDirPath: '../configs',
-    globalConfig: {
-      logging: mockLoggingConfig,
-      homeRegion: homeRegion,
-    } as GlobalConfig,
-    iamConfig: {
-      userSets: [userSetConfig ?? new UserSetConfig()],
-      groupSets: [groupSetConfig ?? new GroupSetConfig()],
-    } as IamConfig,
-    networkConfig: mockNetworkConfig,
-    organizationConfig: mockOrganizationConfig,
-    securityConfig: {} as SecurityConfig,
-    customizationsConfig: {} as CustomizationsConfig,
-    replacementsConfig: {} as ReplacementsConfig,
-    partition: 'unit-test',
-    configRepositoryName: 'unit-test',
-    configRepositoryLocation: 's3',
-    globalRegion: 'us-east-1',
-    centralizedLoggingRegion: 'us-east-1',
-    prefixes: {} as AcceleratorResourcePrefixes,
-    enableSingleAccountMode: true,
-    useExistingRoles: false,
-    isDiagnosticsPackEnabled: 'false',
-    pipelineAccountId: '1234567890',
-    env: {
-      region: 'us-east-1',
-      account: '100000',
-    },
-  };
-
-  return props;
-}
-
 function createStackWithUsers(
   userName: string,
   userGroup: string,
@@ -230,10 +162,31 @@ function createStackWithUsers(
     deploymentTargets: deploymentTargets,
   } as UserSetConfig;
 
+  const overrideProps = {
+    globalConfig: {
+      homeRegion: homeRegion,
+      logging: {
+        cloudwatchLogs: {} as CloudWatchLogsConfig,
+        sessionManager: {
+          sendToCloudWatchLogs: false,
+          sendToS3: false,
+        },
+        cloudtrail: {
+          enable: false,
+        },
+      } as LoggingConfig,
+    } as GlobalConfig,
+    iamConfig: {
+      userSets: [userConfig],
+      groupSets: [groupSetConfig],
+    },
+  } as AcceleratorStackProps;
+  const props = createAcceleratorStackProps(overrideProps);
+
   const operationsStack = new OperationsStack(
     app,
     'unit-test-operations-stack-with-user',
-    createProps(homeRegion, userConfig, groupSetConfig),
+    props as OperationsStackProps,
   );
   return operationsStack;
 }
