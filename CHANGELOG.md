@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - chore(module): add config parsing module lza-config
 - chore(sample-config): add kms key disable rotation prevention control in sample config
+- chore(sample-config): add kms delete policy to scp in sample config
 
 ### Configuration Changes
 
