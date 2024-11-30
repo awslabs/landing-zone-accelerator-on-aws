@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - fix(networking): fixes hosted zone dns for sagemaker and eks-auth endpoints
 - fix(networking): trust policy for tgw peering multiple acceptors to single requestor account
+- fix(networking): add conditions to trust policy for DescribeTgwAttach IAM Role
 - fix(config): adjust all-enabled config for asset bucket name
 - fix(logging): updated kms key for imported asset bucket
 - fix(pipeline): fix account bootstrap failed silently
