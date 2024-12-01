@@ -68,6 +68,7 @@ export class NetworkVpcStack extends NetworkStack {
       this.vpcResources,
       {
         acceleratorPrefix: props.prefixes.accelerator,
+        managementAccountAccessRole: props.globalConfig.managementAccountAccessRole,
         ssmParamName: props.prefixes.ssmParamName,
         partition: props.partition,
         useExistingRoles: props.useExistingRoles,
