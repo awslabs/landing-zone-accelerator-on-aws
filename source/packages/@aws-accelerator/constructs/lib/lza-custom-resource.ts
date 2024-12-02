@@ -75,6 +75,10 @@ export interface LzaCustomResourceProps {
      */
     readonly assetPath: string;
     /**
+     * LZA Custom resource custom hash for the lambda asset
+     */
+    readonly customAssetHash?: string;
+    /**
      * Custom resource lambda environment encryption key, when undefined default AWS managed key will be used
      */
     readonly environmentEncryptionKmsKey?: cdk.aws_kms.IKey;
@@ -239,6 +243,7 @@ export class LzaCustomResource extends Construct {
     if (props.lambda) {
       lzaLambda = new LzaLambda(this, 'Function', {
         assetPath: props.lambda.assetPath,
+        customAssetHash: props.lambda.customAssetHash,
         environmentEncryptionKmsKey: props.lambda.environmentEncryptionKmsKey,
         cloudWatchLogKmsKey: props.lambda.cloudWatchLogKmsKey,
         cloudWatchLogRetentionInDays: props.lambda.cloudWatchLogRetentionInDays,

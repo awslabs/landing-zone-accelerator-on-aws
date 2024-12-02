@@ -245,8 +245,8 @@ logging:
       applyAcceleratorManagedBucketPolicy: true
     # customPolicyOverrides:
     #   policy: bucket-policies/full-elb-log-bucket.json
-    # s3ResourcePolicyAttachments:
-    #   - policy: bucket-policies/elb-logs-bucket.json
+    s3ResourcePolicyAttachments:
+      - policy: bucket-policies/elb-logs-bucket.json
     lifecycleRules: []
 
   sessionManager:

@@ -30,6 +30,10 @@ export interface LzaLambdaProps {
    */
   readonly assetPath: string;
   /**
+   * LZA Custom resource custom hash for the lambda asset
+   */
+  readonly customAssetHash?: string;
+  /**
    * Custom resource lambda environment encryption key, when undefined default AWS managed key will be used
    */
   readonly environmentEncryptionKmsKey?: cdk.aws_kms.IKey;
@@ -110,7 +114,7 @@ export class LzaLambda extends Construct {
     this.resource = new cdk.aws_lambda.Function(this, 'Resource', {
       functionName: props.functionName,
       description: props.description ?? `Accelerator deployed lambda function.`,
-      code: cdk.aws_lambda.Code.fromAsset(props.assetPath),
+      code: cdk.aws_lambda.Code.fromAsset(props.assetPath, { assetHash: props.customAssetHash }),
       runtime: props.lambdaRuntime ?? LzaLambda.DEFAULT_RUNTIME,
       memorySize: props.memorySize ?? 512,
       timeout: props.timeOut,
