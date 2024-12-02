@@ -160,7 +160,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 }
 
 /**
- * Method to create account assignments list
+ * Method to create account assignments list. The method will fail if a user or group does not exist.
  * @param accountIds List of accounts that are in event
  * @param principals The principal object that requires a lookup
  * @param identityStoreId
@@ -195,30 +195,32 @@ async function buildCreateAssignmentsList(
         // If logic to check if the principal type is for USER
         if (principal.type === 'USER') {
           const principalId = await throttlingBackOff(() => getUserPrincipalId(principal, identityStoreId, idcClient));
-          if (principalId) {
-            assignmentCreationRequests.push({
-              InstanceArn: instanceArn,
-              TargetId: accountId,
-              TargetType: 'AWS_ACCOUNT',
-              PermissionSetArn: permissionSetArnValue,
-              PrincipalType: principal.type,
-              PrincipalId: principalId,
-            });
+          if (!principalId) {
+            throw new Error(`USER not found ${principal} ${identityStoreId} ${idcClient}`);
           }
+          assignmentCreationRequests.push({
+            InstanceArn: instanceArn,
+            TargetId: accountId,
+            TargetType: 'AWS_ACCOUNT',
+            PermissionSetArn: permissionSetArnValue,
+            PrincipalType: principal.type,
+            PrincipalId: principalId,
+          });
         }
         // If logic to check if the principal type is for GROUP
         else if (principal.type === 'GROUP') {
           const principalId = await throttlingBackOff(() => getGroupPrincipalId(principal, identityStoreId, idcClient));
-          if (principalId) {
-            assignmentCreationRequests.push({
-              InstanceArn: instanceArn,
-              TargetId: accountId,
-              TargetType: 'AWS_ACCOUNT',
-              PermissionSetArn: permissionSetArnValue,
-              PrincipalType: principal.type,
-              PrincipalId: principalId,
-            });
+          if (!principalId) {
+            throw new Error(`USER not found ${principal} ${identityStoreId} ${idcClient}`);
           }
+          assignmentCreationRequests.push({
+            InstanceArn: instanceArn,
+            TargetId: accountId,
+            TargetType: 'AWS_ACCOUNT',
+            PermissionSetArn: permissionSetArnValue,
+            PrincipalType: principal.type,
+            PrincipalId: principalId,
+          });
         }
       }
     } else {
