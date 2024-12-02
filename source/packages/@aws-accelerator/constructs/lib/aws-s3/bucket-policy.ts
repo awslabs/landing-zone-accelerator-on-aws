@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { FileSystem } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -98,6 +99,8 @@ export class BucketPolicy extends Construct {
       bucketPolicyFilePaths.push(`${policyFolderName}/${policyFileName}`);
     }
 
+    const assetHash = FileSystem.fingerprint(this.assetPath);
+
     const lzaCustomResource = new LzaCustomResource(this, resourceName, {
       resource: {
         name: resourceName,
@@ -121,6 +124,7 @@ export class BucketPolicy extends Construct {
       },
       lambda: {
         assetPath: this.assetPath,
+        customAssetHash: assetHash,
         environmentEncryptionKmsKey: props.customResourceLambdaEnvironmentEncryptionKmsKey,
         cloudWatchLogKmsKey: props.customResourceLambdaCloudWatchLogKmsKey,
         cloudWatchLogRetentionInDays: props.customResourceLambdaLogRetentionInDays,
