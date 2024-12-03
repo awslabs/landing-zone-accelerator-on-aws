@@ -485,11 +485,15 @@ export class SecurityResourcesStack extends AcceleratorStack {
        * 3/30/2023
        */
       if (!this.props.securityConfig.awsConfig.overrideExisting) {
+        let includeGlobalResourceTypes = false;
+        if (cdk.Stack.of(this).region === this.props.globalConfig.homeRegion) {
+          includeGlobalResourceTypes = true;
+        }
         this.configRecorder = new cdk.aws_config.CfnConfigurationRecorder(this, 'ConfigRecorder', {
           roleArn: configRecorderRoleArn,
           recordingGroup: {
             allSupported: true,
-            includeGlobalResourceTypes: true,
+            includeGlobalResourceTypes: includeGlobalResourceTypes,
           },
         });
 
@@ -511,6 +515,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
           lambdaKmsKey: this.lambdaKey,
           partition: this.partition,
           acceleratorPrefix: this.props.prefixes.accelerator,
+          homeRegion: this.props.globalConfig.homeRegion,
         });
 
         if (this.configRecorder && this.deliveryChannel) {

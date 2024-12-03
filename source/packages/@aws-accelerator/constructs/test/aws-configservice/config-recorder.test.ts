@@ -32,6 +32,7 @@ new ConfigServiceRecorder(stack, 'TestConfigServiceRecorder', {
   lambdaKmsKey: new cdk.aws_kms.Key(stack, 'LambdaKey', {}),
   partition: 'aws',
   acceleratorPrefix: 'AWSAccelerator',
+  homeRegion: 'us-west-2',
 });
 
 /**

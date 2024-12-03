@@ -120,7 +120,7 @@ exports[`ConfigServiceRecorder Construct(ConfigServiceDeliveryChannel):  Snapsho
           ],
         },
         "Runtime": "nodejs18.x",
-        "Timeout": 300,
+        "Timeout": 600,
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -347,6 +347,7 @@ exports[`ConfigServiceRecorder Construct(ConfigServiceDeliveryChannel):  Snapsho
             "Arn",
           ],
         },
+        "includeGlobalResourceTypes": false,
         "recorderRoleArn": "arn:aws:iam::123456789012:role/TestRole",
         "s3BucketKmsKeyArn": {
           "Fn::GetAtt": [
