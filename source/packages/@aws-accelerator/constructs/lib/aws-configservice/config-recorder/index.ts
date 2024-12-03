@@ -62,6 +62,7 @@ export async function onCreate(event: CloudFormationCustomResourceCreateEvent) {
   const s3BucketName = event.ResourceProperties['s3BucketName'];
   const s3BucketKmsKeyArn = event.ResourceProperties['s3BucketKmsKeyArn'];
   const recorderRoleArn = event.ResourceProperties['recorderRoleArn'];
+  const includeGlobalResourceTypes = JSON.parse(event.ResourceProperties['includeGlobalResourceTypes']);
 
   console.log('check config recorders');
   const configRecorders = await throttlingBackOff(() =>
@@ -85,7 +86,7 @@ export async function onCreate(event: CloudFormationCustomResourceCreateEvent) {
 
   let configRecorderName = existingConfigRecorderName;
 
-  configRecorderName = await createUpdateRecorder(recorderRoleArn);
+  configRecorderName = await createUpdateRecorder(recorderRoleArn, includeGlobalResourceTypes);
 
   await createUpdateDeliveryChannel(s3BucketName, s3BucketKmsKeyArn);
 
@@ -105,6 +106,7 @@ async function onUpdate(event: CloudFormationCustomResourceUpdateEvent) {
   const s3BucketName = event.ResourceProperties['s3BucketName'];
   const s3BucketKmsKeyArn = event.ResourceProperties['s3BucketKmsKeyArn'];
   const recorderRoleArn = event.ResourceProperties['recorderRoleArn'];
+  const includeGlobalResourceTypes = event.ResourceProperties['includeGlobalResourceTypes'];
 
   const configRecorders = await throttlingBackOff(() =>
     configClient.send(new DescribeConfigurationRecordersCommand({})),
@@ -125,7 +127,7 @@ async function onUpdate(event: CloudFormationCustomResourceUpdateEvent) {
   }
 
   let configRecorderName = existingConfigRecorderName;
-  configRecorderName = await createUpdateRecorder(recorderRoleArn);
+  configRecorderName = await createUpdateRecorder(recorderRoleArn, includeGlobalResourceTypes);
 
   await createUpdateDeliveryChannel(s3BucketName, s3BucketKmsKeyArn);
 
@@ -255,7 +257,7 @@ async function deleteDeliveryChannel() {
   }
 }
 
-async function createUpdateRecorder(recorderRoleArn: string): Promise<string> {
+async function createUpdateRecorder(recorderRoleArn: string, includeGlobalResourceTypes: boolean): Promise<string> {
   console.log('In create update recorder');
   const configRecorders = await throttlingBackOff(() =>
     configClient.send(new DescribeConfigurationRecordersCommand({})),
@@ -271,7 +273,7 @@ async function createUpdateRecorder(recorderRoleArn: string): Promise<string> {
       roleARN: recorderRoleArn,
       recordingGroup: {
         allSupported: true,
-        includeGlobalResourceTypes: true,
+        includeGlobalResourceTypes: includeGlobalResourceTypes,
       },
     },
   };

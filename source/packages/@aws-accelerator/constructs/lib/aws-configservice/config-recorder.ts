@@ -48,6 +48,10 @@ export interface ConfigServiceRecorderProps {
    * Accelerator prefix
    */
   readonly acceleratorPrefix: string;
+  //**
+  // * Home Region
+  // */
+  readonly homeRegion: string;
 }
 
 /**
@@ -112,7 +116,7 @@ export class ConfigServiceRecorder extends Construct {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'config-recorder/dist')),
       runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
       handler: 'index.handler',
-      timeout: cdk.Duration.minutes(5),
+      timeout: cdk.Duration.minutes(10),
       description: 'Create/Update Config Recorder',
       environmentEncryption: props.lambdaKmsKey,
       role: lambdaRole,
@@ -129,6 +133,10 @@ export class ConfigServiceRecorder extends Construct {
       onEventHandler: lambdaFunction,
     });
 
+    let includeGlobalResourceTypes = false;
+    if (props.homeRegion === cdk.Stack.of(this).region) {
+      includeGlobalResourceTypes = true;
+    }
     const resource = new cdk.CustomResource(this, 'ConfigServiceRecorderResource', {
       resourceType: CONFIGSERVICE_RECORDER,
       serviceToken: provider.serviceToken,
@@ -136,6 +144,7 @@ export class ConfigServiceRecorder extends Construct {
         s3BucketName: props.s3BucketName,
         s3BucketKmsKeyArn: props.s3BucketKmsKey.keyArn,
         recorderRoleArn: props.configRecorderRoleArn,
+        includeGlobalResourceTypes,
       },
     });
 
