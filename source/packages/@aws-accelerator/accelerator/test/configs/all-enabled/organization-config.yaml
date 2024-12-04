@@ -85,6 +85,14 @@ backupPolicies:
     deploymentTargets:
       organizationalUnits:
         - Root
+chatbotPolicies:
+  - name: ChatbotPolicy
+    description: Organization Chatbot Policy
+    policy: chatbot-policies/default-chatbot-policy.json
+    deploymentTargets:
+        organizationalUnits:
+          - Security
+          - Infrastructure
 organizationalUnitIds:
   - name: Root
     id: r-asdf

@@ -73,9 +73,9 @@ describe('tagging policies', () => {
     template.hasResourceProperties('Custom::CreatePolicy', { name: 'TagPolicy01', type: 'TAG_POLICY' });
     template.hasResourceProperties('Custom::AttachPolicy', { targetId: 'r-asdf', type: 'TAG_POLICY' });
 
-    // 4 policies for backup and tagging policies, 1 target -> 2 attachments
-    template.resourceCountIs('Custom::CreatePolicy', 4);
-    template.resourceCountIs('Custom::AttachPolicy', 4);
+    // 5 policies for backup, tagging and chatbot policies, 2 targets -> 2 attachments each
+    template.resourceCountIs('Custom::CreatePolicy', 5);
+    template.resourceCountIs('Custom::AttachPolicy', 6);
   });
 });
 

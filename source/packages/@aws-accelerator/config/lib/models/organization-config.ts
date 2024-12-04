@@ -193,6 +193,46 @@ export interface ITaggingPolicyConfig {
 }
 
 /**
+ * *{@link OrganizationConfig} / {@link TaggingPolicyConfig}*
+ *
+ * @description
+ * Chatbot policy.
+ *
+ * Chatbot policies allow you to control access to an organization's accounts
+ * from chat applications such as Slack and Microsoft Teams.
+ *
+ * @example
+ * ```
+ * chatbotPolicies:
+ *   - name: ChatbotPolicy
+ *     description: Organization Chatbot Policy
+ *     policy: chatbot-policies/org-chatbot-policy.json
+ *     deploymentTargets:
+ *         organizationalUnits:
+ *           - Root
+ * ```
+ */
+export interface IChatbotPolicyConfig {
+  /**
+   * The friendly name to assign to the policy.
+   * The regex pattern that is used to validate this parameter is a string of any of the characters in the ASCII character range.
+   */
+  readonly name: t.NonEmptyString;
+  /**
+   * A description to assign to the policy.
+   */
+  readonly description: t.NonEmptyString;
+  /**
+   * Chatbot policy definition json file. This file must be present in config repository
+   */
+  readonly policy: t.NonEmptyString;
+  /**
+   * Chatbot policy deployment targets
+   */
+  readonly deploymentTargets: t.IDeploymentTargets;
+}
+
+/**
  * *{@link OrganizationConfig} / {@link BackupPolicyConfig}*
  *
  * @description
@@ -315,6 +355,25 @@ export interface IOrganizationConfig {
    * ```
    */
   readonly taggingPolicies: ITaggingPolicyConfig[];
+  /**
+   * A list of Chatbot Policy configurations
+   *
+   * @see ChatbotPolicyConfig
+   *
+   * To create chatbot policy named ChatbotPolicy from chatbot-policies/org-chatbot-policy.json file in config repository, you need to provide following values for this parameter.
+   *
+   * @example
+   * ```
+   * chatbotPolicies:
+   *   - name: ChatbotPolicy
+   *     description: Organization Chatbot Policy
+   *     policy: chatbot-policies/org-chatbot-policy.json
+   *     deploymentTargets:
+   *         organizationalUnits:
+   *           - Root
+   * ```
+   */
+  readonly chatbotPolicies?: IChatbotPolicyConfig[];
   /**
    * A Record of Backup Policy configurations
    *

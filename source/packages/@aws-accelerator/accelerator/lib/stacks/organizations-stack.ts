@@ -164,6 +164,11 @@ export class OrganizationsStack extends AcceleratorStack {
 
       // Enable Control Tower controls
       this.enableControlTowerControls(this.props.globalConfig.controlTower);
+
+      //
+      // Chatbot Policies Config
+      //
+      this.addChatbotPolicies();
     }
 
     // Macie Configuration
@@ -708,6 +713,54 @@ export class OrganizationsStack extends AcceleratorStack {
           );
           tagPolicyAttachment.node.addDependency(policy);
         }
+      }
+    }
+  }
+
+  /**
+   * Function to add Chatbot policies
+   */
+  private addChatbotPolicies() {
+    if (!this.stackProperties.organizationConfig.chatbotPolicies?.length) {
+      return;
+    }
+    this.logger.info(`Adding Chatbot Policies`);
+    const enablePolicyTypeTag = new EnablePolicyType(this, 'enablePolicyTypeChatbot', {
+      policyType: PolicyTypeEnum.CHATBOT_POLICY,
+      kmsKey: this.cloudwatchKey,
+      logRetentionInDays: this.logRetention,
+    });
+    for (const chatbotPolicy of this.stackProperties.organizationConfig.chatbotPolicies) {
+      const policy = new Policy(this, `${chatbotPolicy.name}`, {
+        description: chatbotPolicy.description,
+        name: `${chatbotPolicy.name}`,
+        partition: this.props.partition,
+        path: this.generatePolicyReplacements(
+          path.join(this.stackProperties.configDirPath, chatbotPolicy.policy),
+          true,
+          this.organizationId,
+        ),
+        type: PolicyType.CHATBOT_POLICY,
+        acceleratorPrefix: this.props.prefixes.accelerator,
+        kmsKey: this.cloudwatchKey,
+        logRetentionInDays: this.logRetention,
+      });
+      policy.node.addDependency(enablePolicyTypeTag);
+      for (const orgUnit of chatbotPolicy.deploymentTargets.organizationalUnits ?? []) {
+        const tagPolicyAttachment = new PolicyAttachment(
+          this,
+          pascalCase(`Attach_CBP_${chatbotPolicy.name}_${orgUnit}`),
+          {
+            policyId: policy.id,
+            targetId: this.stackProperties.organizationConfig.getOrganizationalUnitId(orgUnit),
+            type: PolicyType.CHATBOT_POLICY,
+            configPolicyNames: this.getScpNamesForTarget(orgUnit, 'ou'),
+            acceleratorPrefix: this.props.prefixes.accelerator,
+            kmsKey: this.cloudwatchKey,
+            logRetentionInDays: this.logRetention,
+          },
+        );
+        tagPolicyAttachment.node.addDependency(policy);
       }
     }
   }

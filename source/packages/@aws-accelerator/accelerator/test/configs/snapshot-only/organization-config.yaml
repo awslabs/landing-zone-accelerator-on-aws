@@ -67,6 +67,14 @@ taggingPolicies:
     deploymentTargets:
       organizationalUnits:
         - Root
+chatbotPolicies:
+  - name: ChatbotPolicy
+    description: Organization Chatbot Policy
+    policy: chatbot-policies/default-chatbot-policy.json
+    deploymentTargets:
+        organizationalUnits:
+          - Security
+          - Infrastructure
 backupPolicies:
   - name: BackupPolicy
     description: Organization Backup Policy
