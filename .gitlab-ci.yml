@@ -164,6 +164,17 @@ accelerator:lint:
     - "cd ../../../"
     - "yarn git-clean"
     - "yarn run viper-scan"
+    # Check if build  has changed any of the 
+    - git add -A
+    - |
+      if [[ -n $(git status --porcelain | grep -E 'source/packages/@aws-accelerator/config/lib/schemas/') ]]; then
+        echo "Uncommitted changes or untracked files detected in schema folder listed below. Please run yarn build-clean locally, then commit and push the updated schema file to resolve."
+        git status --porcelain | grep -E 'source/packages/@aws-accelerator/config/lib/schemas/'
+        exit 1
+      else
+        echo "No changes or untracked files detected in schema folder"
+      fi
+    - git reset
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
       when: never
