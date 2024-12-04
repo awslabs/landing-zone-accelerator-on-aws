@@ -57,6 +57,13 @@ export abstract class TaggingPolicyConfig implements i.ITaggingPolicyConfig {
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
 }
 
+export abstract class ChatbotPolicyConfig implements i.IChatbotPolicyConfig {
+  readonly name: string = '';
+  readonly description: string = '';
+  readonly policy: string = '';
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
+}
+
 export abstract class BackupPolicyConfig implements i.IBackupPolicyConfig {
   readonly name: string = '';
   readonly description: string = '';
@@ -88,6 +95,7 @@ export class OrganizationConfig implements i.IOrganizationConfig {
   readonly quarantineNewAccounts: QuarantineNewAccountsConfig | undefined = undefined;
   readonly serviceControlPolicies: ServiceControlPolicyConfig[] = [];
   readonly taggingPolicies: TaggingPolicyConfig[] = [];
+  readonly chatbotPolicies?: ChatbotPolicyConfig[] = [];
   readonly backupPolicies: BackupPolicyConfig[] = [];
 
   /**

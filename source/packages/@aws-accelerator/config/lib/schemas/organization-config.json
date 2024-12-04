@@ -31,6 +31,35 @@
       ],
       "type": "object"
     },
+    "IChatbotPolicyConfig": {
+      "additionalProperties": false,
+      "description": "Chatbot policy.\n\nChatbot policies allow you to control access to an organization's accounts\nfrom chat applications such as Slack and Microsoft Teams.",
+      "properties": {
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "Chatbot policy deployment targets"
+        },
+        "description": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "A description to assign to the policy."
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The friendly name to assign to the policy. The regex pattern that is used to validate this parameter is a string of any of the characters in the ASCII character range."
+        },
+        "policy": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Chatbot policy definition json file. This file must be present in config repository"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "policy",
+        "deploymentTargets"
+      ],
+      "type": "object"
+    },
     "IDeploymentTargets": {
       "additionalProperties": false,
       "properties": {
@@ -69,6 +98,13 @@
           "description": "A Record of Backup Policy configurations",
           "items": {
             "$ref": "#/definitions/IBackupPolicyConfig"
+          },
+          "type": "array"
+        },
+        "chatbotPolicies": {
+          "description": "A list of Chatbot Policy configurations",
+          "items": {
+            "$ref": "#/definitions/IChatbotPolicyConfig"
           },
           "type": "array"
         },

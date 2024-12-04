@@ -3385,6 +3385,65 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
       "Type": "Custom::AttachPolicy",
       "UpdateReplacePolicy": "Delete",
     },
+    "AttachCbpChatbotPolicyInfrastructureB6DACE71": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "ChatbotPolicy5FDA677A",
+        "CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomOrganizationsAttachPolicyCustomResourceProviderHandlerB3233202",
+            "Arn",
+          ],
+        },
+        "configPolicyNames": [
+          "AcceleratorGuardrails1",
+          "DataPerimeter",
+        ],
+        "partition": {
+          "Ref": "AWS::Partition",
+        },
+        "policyId": {
+          "Ref": "ChatbotPolicy5FDA677A",
+        },
+        "policyTagKey": "AWSAcceleratorManaged",
+        "targetId": "ou-asdf-22222222",
+        "type": "CHATBOT_POLICY",
+        "uuid": "REPLACED-MD5",
+      },
+      "Type": "Custom::AttachPolicy",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AttachCbpChatbotPolicySecurity4F5DC1ED": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "ChatbotPolicy5FDA677A",
+        "CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomOrganizationsAttachPolicyCustomResourceProviderHandlerB3233202",
+            "Arn",
+          ],
+        },
+        "configPolicyNames": [],
+        "partition": {
+          "Ref": "AWS::Partition",
+        },
+        "policyId": {
+          "Ref": "ChatbotPolicy5FDA677A",
+        },
+        "policyTagKey": "AWSAcceleratorManaged",
+        "targetId": "ou-asdf-11111111",
+        "type": "CHATBOT_POLICY",
+        "uuid": "REPLACED-MD5",
+      },
+      "Type": "Custom::AttachPolicy",
+      "UpdateReplacePolicy": "Delete",
+    },
     "AttachTagPolicy01RootD3F4B8AF": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
@@ -3546,6 +3605,31 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
         "partition": "aws",
         "policyTagKey": "AWSAcceleratorManaged",
         "type": "BACKUP_POLICY",
+        "uuid": "REPLACED-MD5",
+      },
+      "Type": "Custom::CreatePolicy",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ChatbotPolicy5FDA677A": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomOrganizationsCreatePolicyCustomResourceProviderLogGroup019B74A9",
+        "enablePolicyTypeChatbotFE7C7953",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomOrganizationsCreatePolicyCustomResourceProviderHandler7A188619",
+            "Arn",
+          ],
+        },
+        "bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+        "description": "Organization Chatbot Policy",
+        "key": "REPLACED-JSON-PATH.json",
+        "name": "ChatbotPolicy",
+        "partition": "aws",
+        "policyTagKey": "AWSAcceleratorManaged",
+        "type": "CHATBOT_POLICY",
         "uuid": "REPLACED-MD5",
       },
       "Type": "Custom::CreatePolicy",
@@ -6671,6 +6755,26 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
           "Ref": "AWS::Partition",
         },
         "policyType": "BACKUP_POLICY",
+      },
+      "Type": "Custom::EnablePolicyType",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "enablePolicyTypeChatbotFE7C7953": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomEnablePolicyTypeCustomResourceProviderLogGroup81BE8EF5",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomEnablePolicyTypeCustomResourceProviderHandlerC244F9E1",
+            "Arn",
+          ],
+        },
+        "partition": {
+          "Ref": "AWS::Partition",
+        },
+        "policyType": "CHATBOT_POLICY",
       },
       "Type": "Custom::EnablePolicyType",
       "UpdateReplacePolicy": "Delete",

@@ -119,6 +119,7 @@ export class ConfigRepository extends Construct {
         organizationalUnitIds: [],
         serviceControlPolicies: [],
         taggingPolicies: [],
+        chatbotPolicies: [],
         backupPolicies: [],
       });
       fs.writeFileSync(path.join(this.tempDirPath, OrganizationConfig.FILENAME), yaml.dump(orgConfig), 'utf8');

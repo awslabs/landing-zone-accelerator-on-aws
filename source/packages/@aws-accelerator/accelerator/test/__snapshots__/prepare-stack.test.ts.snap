@@ -4309,7 +4309,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "isOrgsEnabled": true,
         "logArchiveAccountEmail": "all-enabled-logarchive-account@example.com",
         "managementAccountEmail": "all-enabled-management-account@example.com",
-        "organizationsConfigS3Key": "fb76e9a61d7ab20c202744a5728b5278772fff1f6056a6f7b6d8a16bb7fce9f9.yaml",
+        "organizationsConfigS3Key": "424303e536ae2b4ba5e2dbe75b69a0bbfb9c54a18133b94c07d3856114de2c30.yaml",
         "partition": "aws",
         "replacementsConfigS3Key": "e075bcecb878a10a77f0f4650b85c3ab1692fabf90da3e07131fc7006192385f.yaml",
         "stackName": "AWSAccelerator-PrepareStack-111111111111-us-east-1",
