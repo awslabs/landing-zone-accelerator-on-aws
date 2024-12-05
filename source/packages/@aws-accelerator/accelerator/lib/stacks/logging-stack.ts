@@ -1080,7 +1080,7 @@ export class LoggingStack extends AcceleratorStack {
         accessLogEvents: new cdk.aws_iam.PolicyDocument({
           statements: [
             new cdk.aws_iam.PolicyStatement({
-              resources: ['*'],
+              resources: [`arn:${this.props.partition}:logs:${cdk.Stack.of(this).region}:*:log-group:*:*`],
               actions: ['logs:PutLogEvents'],
             }),
           ],
