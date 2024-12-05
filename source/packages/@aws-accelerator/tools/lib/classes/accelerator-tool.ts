@@ -1120,7 +1120,7 @@ export class AcceleratorTool {
         if (e.name === 'KMSInvalidStateException') {
           // This is needed because session manager key is deleted with stack
           this.debugLog(
-            '`KMS Key ${kmsKeyId} from ${stackName} stack in ${keyStatus.KeyMetadata?.KeyState} status, can not schedule deletion`',
+            `KMS Key ${kmsKeyId} from ${stackName} stack in ${keyStatus.KeyMetadata?.KeyState} status, can not schedule deletion`,
             'info',
           );
           return true;
