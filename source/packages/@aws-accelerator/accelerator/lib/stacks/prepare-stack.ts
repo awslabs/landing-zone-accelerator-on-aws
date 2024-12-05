@@ -217,7 +217,7 @@ export class PrepareStack extends AcceleratorStack {
 
         createOrganizationalUnits.node.addDependency(loadAcceleratorConfigTable);
 
-        // Invite Accounts to Organization (GovCloud)
+        // Invite Accounts to Organization
         this.logger.info(`Invite Accounts To OU`);
         const inviteAccountsToOu = new Account(this, 'InviteAccountsToOu', {
           acceleratorConfigTable: configTable,
@@ -343,11 +343,7 @@ export class PrepareStack extends AcceleratorStack {
     cloudwatchKey?: cdk.aws_kms.IKey;
   }) {
     this.logger.info(`Tables`);
-    if (
-      options.props.partition === 'aws' ||
-      options.props.partition === 'aws-us-gov' ||
-      options.props.partition === 'aws-cn'
-    ) {
+    if (options.props.partition !== 'aws-iso' && options.props.partition !== 'aws-iso-b') {
       this.logger.info(`Create mapping table`);
       let govCloudAccountMappingTable: cdk.aws_dynamodb.ITable | undefined;
       this.logger.info(`newOrgAccountsTable`);
