@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(networking): add conditions to trust policy for DescribeTgwAttach IAM Role
 - fix(networking): add conditions to trust policy for VpcPeering IAM Role
 - fix(iam): remove ssm delete parameter permission for CrossAccountSsmParameterShare IAM role
+- fix(logging): add log stream arn for SubscriptionFilterRole IAM Policy
 - fix(config): adjust all-enabled config for asset bucket name
 - fix(logging): updated kms key for imported asset bucket
 - fix(pipeline): fix account bootstrap failed silently

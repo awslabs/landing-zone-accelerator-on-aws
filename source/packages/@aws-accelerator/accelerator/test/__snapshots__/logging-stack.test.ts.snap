@@ -4081,7 +4081,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
                 {
                   "Action": "logs:PutLogEvents",
                   "Effect": "Allow",
-                  "Resource": "*",
+                  "Resource": "arn:aws:logs:us-east-1:*:log-group:*:*",
                 },
               ],
               "Version": "2012-10-17",
@@ -8537,7 +8537,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
                 {
                   "Action": "logs:PutLogEvents",
                   "Effect": "Allow",
-                  "Resource": "*",
+                  "Resource": "arn:aws:logs:us-west-2:*:log-group:*:*",
                 },
               ],
               "Version": "2012-10-17",
@@ -13034,7 +13034,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
                 {
                   "Action": "logs:PutLogEvents",
                   "Effect": "Allow",
-                  "Resource": "*",
+                  "Resource": "arn:aws:logs:us-east-1:*:log-group:*:*",
                 },
               ],
               "Version": "2012-10-17",
