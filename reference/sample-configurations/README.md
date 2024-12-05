@@ -12,7 +12,7 @@ The following configurations are provided as a starter configuration to help mee
 - Industry Configurations
   - [Education](https://github.com/aws-samples/landing-zone-accelerator-on-aws-for-education/blob/main/README.md)
   - [Finance](lza-sample-config-finance-tax/README.md)
-  - [Healthcare](lza-sample-config-healthcare/README.md)
+  - [Healthcare](https://github.com/aws-samples/landing-zone-accelerator-on-aws-for-healthcare/blob/main/README.md)
   - [State and Local Government Central IT](lza-sample-config-us-slg-central-it/README.md)
 
 Important: These assets aren't intended to be feature complete or fully compliant, but rather to help accelerate cloud migrations and cloud refactoring efforts by entities required to meet region- or industry-specific security requirements. While these assets can help you reduce the effort required to manually build a production-ready infrastructure, you will still need to tailor them to your unique business needs. For more information about how to use AWS in compliance with specific requirements, see [AWS Compliance Programs](https://aws.amazon.com/compliance/programs/). Consult with your AWS team to understand controls to meet your requirements.
