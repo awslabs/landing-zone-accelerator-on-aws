@@ -48,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Configuration Changes
 
 - chore(cn): remove cn sample configuration directory
+- chore(sample-config): externalize healthcare configurations
 
 ## [1.10.0] - 10-16-2024
 
