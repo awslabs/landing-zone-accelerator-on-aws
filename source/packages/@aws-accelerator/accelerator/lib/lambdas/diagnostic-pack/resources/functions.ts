@@ -35,7 +35,7 @@ export function formatTableCellValue(cellMessage: string): string {
 
 function getAccountId(email: string, accountDetails: AccountDetailsType[]): string {
   for (const account of accountDetails) {
-    if (account.accountEmail === email) {
+    if (account.accountEmail.toLocaleLowerCase() === email.toLocaleLowerCase()) {
       return account.accountId;
     }
   }

@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(metadata): accelerator lambda times out without error
 - fix(logging): fixed permissions on custom resource for when cloudwatch encryption is enabled in global-config
 - fix(s3): imported elb bucket policy attachment failed
+- fix(config/validation): make account email comparisons case insensitive
 
 ### Changed
 
