@@ -343,361 +343,356 @@ export class PrepareStack extends AcceleratorStack {
     cloudwatchKey?: cdk.aws_kms.IKey;
   }) {
     this.logger.info(`Tables`);
-    if (options.props.partition !== 'aws-iso' && options.props.partition !== 'aws-iso-b') {
-      this.logger.info(`Create mapping table`);
-      let govCloudAccountMappingTable: cdk.aws_dynamodb.ITable | undefined;
-      this.logger.info(`newOrgAccountsTable`);
-      const newOrgAccountsTable = new cdk.aws_dynamodb.Table(this, 'NewOrgAccounts', {
-        partitionKey: { name: 'accountEmail', type: cdk.aws_dynamodb.AttributeType.STRING },
+
+    this.logger.info(`Create mapping table`);
+    let govCloudAccountMappingTable: cdk.aws_dynamodb.ITable | undefined;
+    this.logger.info(`newOrgAccountsTable`);
+    const newOrgAccountsTable = new cdk.aws_dynamodb.Table(this, 'NewOrgAccounts', {
+      partitionKey: { name: 'accountEmail', type: cdk.aws_dynamodb.AttributeType.STRING },
+      billingMode: cdk.aws_dynamodb.BillingMode.PAY_PER_REQUEST,
+      encryption: cdk.aws_dynamodb.TableEncryption.CUSTOMER_MANAGED,
+      encryptionKey: options.managementAccountKey,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      pointInTimeRecovery: true,
+    });
+
+    // AwsSolutions-DDB3: The DynamoDB table does not have Point-in-time Recovery enabled.
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.DDB3,
+      details: [
+        {
+          path: `${this.stackName}/NewOrgAccounts/Resource`,
+          reason: 'NewOrgAccounts DynamoDB table do not need point in time recovery, data can be re-created',
+        },
+      ],
+    });
+
+    this.logger.info(`newControlTowerAccountsTable`);
+    const newCTAccountsTable = new cdk.aws_dynamodb.Table(this, 'NewCTAccounts', {
+      partitionKey: { name: 'accountEmail', type: cdk.aws_dynamodb.AttributeType.STRING },
+      billingMode: cdk.aws_dynamodb.BillingMode.PAY_PER_REQUEST,
+      encryption: cdk.aws_dynamodb.TableEncryption.CUSTOMER_MANAGED,
+      encryptionKey: options.managementAccountKey,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      pointInTimeRecovery: true,
+    });
+
+    // AwsSolutions-DDB3: The DynamoDB table does not have Point-in-time Recovery enabled.
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.DDB3,
+      details: [
+        {
+          path: `${this.stackName}/NewCTAccounts/Resource`,
+          reason: 'NewCTAccounts DynamoDB table do not need point in time recovery, data can be re-created',
+        },
+      ],
+    });
+
+    this.logger.info(`Table Parameter`);
+    this.ssmParameters.push({
+      logicalId: 'NewCTAccountsTableNameParameter',
+      parameterName: `${options.props.prefixes.ssmParamName}/prepare-stack/NewCTAccountsTableName`,
+      stringValue: newCTAccountsTable.tableName,
+    });
+
+    if (options.props.partition === 'aws' && options.props.accountsConfig.anyGovCloudAccounts()) {
+      this.logger.info(`Create GovCloudAccountsMappingTable`);
+      govCloudAccountMappingTable = new cdk.aws_dynamodb.Table(this, 'govCloudAccountMapping', {
+        partitionKey: { name: 'commercialAccountId', type: cdk.aws_dynamodb.AttributeType.STRING },
         billingMode: cdk.aws_dynamodb.BillingMode.PAY_PER_REQUEST,
         encryption: cdk.aws_dynamodb.TableEncryption.CUSTOMER_MANAGED,
         encryptionKey: options.managementAccountKey,
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
         pointInTimeRecovery: true,
       });
 
-      // AwsSolutions-DDB3: The DynamoDB table does not have Point-in-time Recovery enabled.
-      this.nagSuppressionInputs.push({
-        id: NagSuppressionRuleIds.DDB3,
-        details: [
-          {
-            path: `${this.stackName}/NewOrgAccounts/Resource`,
-            reason: 'NewOrgAccounts DynamoDB table do not need point in time recovery, data can be re-created',
-          },
-        ],
-      });
-
-      this.logger.info(`newControlTowerAccountsTable`);
-      const newCTAccountsTable = new cdk.aws_dynamodb.Table(this, 'NewCTAccounts', {
-        partitionKey: { name: 'accountEmail', type: cdk.aws_dynamodb.AttributeType.STRING },
-        billingMode: cdk.aws_dynamodb.BillingMode.PAY_PER_REQUEST,
-        encryption: cdk.aws_dynamodb.TableEncryption.CUSTOMER_MANAGED,
-        encryptionKey: options.managementAccountKey,
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-        pointInTimeRecovery: true,
-      });
-
-      // AwsSolutions-DDB3: The DynamoDB table does not have Point-in-time Recovery enabled.
-      this.nagSuppressionInputs.push({
-        id: NagSuppressionRuleIds.DDB3,
-        details: [
-          {
-            path: `${this.stackName}/NewCTAccounts/Resource`,
-            reason: 'NewCTAccounts DynamoDB table do not need point in time recovery, data can be re-created',
-          },
-        ],
-      });
-
-      this.logger.info(`Table Parameter`);
       this.ssmParameters.push({
-        logicalId: 'NewCTAccountsTableNameParameter',
-        parameterName: `${options.props.prefixes.ssmParamName}/prepare-stack/NewCTAccountsTableName`,
-        stringValue: newCTAccountsTable.tableName,
+        logicalId: 'GovCloudAccountMappingTableNameParameter',
+        parameterName: `${options.props.prefixes.ssmParamName}/prepare-stack/govCloudAccountMappingTableName`,
+        stringValue: govCloudAccountMappingTable.tableName,
       });
+    }
 
-      if (options.props.partition === 'aws' && options.props.accountsConfig.anyGovCloudAccounts()) {
-        this.logger.info(`Create GovCloudAccountsMappingTable`);
-        govCloudAccountMappingTable = new cdk.aws_dynamodb.Table(this, 'govCloudAccountMapping', {
-          partitionKey: { name: 'commercialAccountId', type: cdk.aws_dynamodb.AttributeType.STRING },
-          billingMode: cdk.aws_dynamodb.BillingMode.PAY_PER_REQUEST,
-          encryption: cdk.aws_dynamodb.TableEncryption.CUSTOMER_MANAGED,
-          encryptionKey: options.managementAccountKey,
-          pointInTimeRecovery: true,
-        });
+    this.ssmParameters.push({
+      logicalId: 'NewOrgAccountsTableNameParameter',
+      parameterName: `${options.props.prefixes.ssmParamName}/prepare-stack/NewOrgAccountsTableName`,
+      stringValue: newOrgAccountsTable.tableName,
+    });
 
-        this.ssmParameters.push({
-          logicalId: 'GovCloudAccountMappingTableNameParameter',
-          parameterName: `${options.props.prefixes.ssmParamName}/prepare-stack/govCloudAccountMappingTableName`,
-          stringValue: govCloudAccountMappingTable.tableName,
-        });
-      }
+    const vpcsCidrs = this.props.networkConfig.vpcs
+      ?.filter(vpc => vpc.cidrs?.length)
+      .map(vpc => ({
+        vpcName: `${vpc.account}/${vpc.name}`,
+        cidrs: vpc.cidrs || [],
+        parameterName: this.getSsmPath(SsmResourceType.VALIDATION_VPC_CIDRS, [vpc.account, vpc.name]),
+        logicalId: pascalCase(`SsmParam${pascalCase(vpc.account)}Vpc${pascalCase(vpc.name)}DeployedCidrs`),
+      }));
 
-      this.ssmParameters.push({
-        logicalId: 'NewOrgAccountsTableNameParameter',
-        parameterName: `${options.props.prefixes.ssmParamName}/prepare-stack/NewOrgAccountsTableName`,
-        stringValue: newOrgAccountsTable.tableName,
+    this.logger.info(`Validate Environment`);
+    const validation = new ValidateEnvironmentConfig(this, 'ValidateEnvironmentConfig', {
+      acceleratorConfigTable: options.configTable,
+      newOrgAccountsTable: newOrgAccountsTable,
+      newCTAccountsTable: newCTAccountsTable,
+      controlTowerEnabled: options.props.globalConfig.controlTower.enable,
+      organizationsEnabled: options.props.organizationConfig.enable,
+      commitId: options.loadAcceleratorConfigTable.id,
+      stackName: cdk.Stack.of(this).stackName,
+      region: cdk.Stack.of(this).region,
+      managementAccountId: options.props.accountsConfig.getManagementAccountId(),
+      partition: options.props.partition,
+      kmsKey: options.cloudwatchKey,
+      serviceControlPolicies: this.createScpListsForValidation(),
+      policyTagKey: `${options.props.prefixes.accelerator}Managed`,
+      logRetentionInDays: options.props.globalConfig.cloudwatchLogRetentionInDays,
+      driftDetectionParameter: options.driftDetectedParameter,
+      driftDetectionMessageParameter: options.driftMessageParameter,
+      vpcsCidrs,
+    });
+
+    validation.node.addDependency(options.moveAccounts);
+
+    for (const vpcCidrs of vpcsCidrs) {
+      const parameter = new StringParameter(this, vpcCidrs.logicalId, {
+        parameterName: vpcCidrs.parameterName,
+        stringValue: vpcCidrs.cidrs.join(','),
       });
+      parameter.node.addDependency(validation);
+    }
 
-      const vpcsCidrs = this.props.networkConfig.vpcs
-        ?.filter(vpc => vpc.cidrs?.length)
-        .map(vpc => ({
-          vpcName: `${vpc.account}/${vpc.name}`,
-          cidrs: vpc.cidrs || [],
-          parameterName: this.getSsmPath(SsmResourceType.VALIDATION_VPC_CIDRS, [vpc.account, vpc.name]),
-          logicalId: pascalCase(`SsmParam${pascalCase(vpc.account)}Vpc${pascalCase(vpc.name)}DeployedCidrs`),
-        }));
+    this.logger.info(`Create new organization accounts`);
+    options.organizationAccounts = new CreateOrganizationAccounts(this, 'CreateOrganizationAccounts', {
+      newOrgAccountsTable: newOrgAccountsTable,
+      govCloudAccountMappingTable: govCloudAccountMappingTable,
+      accountRoleName: options.props.globalConfig.managementAccountAccessRole,
+      kmsKey: options.cloudwatchKey,
+      logRetentionInDays: options.props.globalConfig.cloudwatchLogRetentionInDays,
+    });
+    options.organizationAccounts.node.addDependency(validation);
 
-      this.logger.info(`Validate Environment`);
-      const validation = new ValidateEnvironmentConfig(this, 'ValidateEnvironmentConfig', {
-        acceleratorConfigTable: options.configTable,
-        newOrgAccountsTable: newOrgAccountsTable,
-        newCTAccountsTable: newCTAccountsTable,
-        controlTowerEnabled: options.props.globalConfig.controlTower.enable,
-        organizationsEnabled: options.props.organizationConfig.enable,
-        commitId: options.loadAcceleratorConfigTable.id,
-        stackName: cdk.Stack.of(this).stackName,
-        region: cdk.Stack.of(this).region,
-        managementAccountId: options.props.accountsConfig.getManagementAccountId(),
-        partition: options.props.partition,
+    // cdk-nag suppressions
+    const orgAccountsIam4SuppressionPaths = [
+      'CreateOrganizationAccounts/CreateOrganizationAccountsProvider/framework-onEvent/ServiceRole/Resource',
+      'CreateOrganizationAccounts/CreateOrganizationAccountsProvider/framework-onTimeout/ServiceRole/Resource',
+      'CreateOrganizationAccounts/CreateOrganizationAccountsProvider/framework-isComplete/ServiceRole/Resource',
+      'CreateOrganizationAccounts/CreateOrganizationAccounts/ServiceRole/Resource',
+      'CreateOrganizationAccounts/CreateOrganizationAccountStatus/ServiceRole/Resource',
+    ];
+
+    const orgAccountsIam5SuppressionPaths = [
+      'CreateOrganizationAccounts/CreateOrganizationAccountsProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource',
+      'CreateOrganizationAccounts/CreateOrganizationAccountsProvider/framework-isComplete/ServiceRole/DefaultPolicy/Resource',
+      'CreateOrganizationAccounts/CreateOrganizationAccountsProvider/framework-onTimeout/ServiceRole/DefaultPolicy/Resource',
+      'CreateOrganizationAccounts/CreateOrganizationAccountStatus/ServiceRole/DefaultPolicy/Resource',
+      'CreateOrganizationAccounts/CreateOrganizationAccountsProvider/waiter-state-machine/Role/DefaultPolicy/Resource',
+    ];
+    const orgAccountsSfSuppressionPaths = [
+      'CreateOrganizationAccounts/CreateOrganizationAccountsProvider/waiter-state-machine/Resource',
+    ];
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+    this.createNagSuppressionsInputs(NagSuppressionRuleIds.IAM4, orgAccountsIam4SuppressionPaths);
+
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
+    this.createNagSuppressionsInputs(NagSuppressionRuleIds.IAM5, orgAccountsIam5SuppressionPaths);
+
+    // AwsSolutions-SF1: The Step Function does not log "ALL" events to CloudWatch Logs.
+    this.createNagSuppressionsInputs(NagSuppressionRuleIds.SF1, orgAccountsSfSuppressionPaths);
+
+    // AwsSolutions-SF2: The Step Function does not have X-Ray tracing enabled.
+    this.createNagSuppressionsInputs(NagSuppressionRuleIds.SF2, orgAccountsSfSuppressionPaths);
+
+    if (options.props.globalConfig.controlTower.enable) {
+      // Allow security/audit account access
+      options.managementAccountKey.addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'auditAccount',
+          principals: [new cdk.aws_iam.AccountPrincipal(options.props.accountsConfig.getAuditAccountId())],
+          actions: ['kms:GenerateDataKey', 'kms:Encrypt', 'kms:Decrypt', 'kms:DescribeKey'],
+          resources: ['*'],
+        }),
+      );
+
+      this.logger.info(`Get Portfolio Id`);
+      const portfolioResults = new GetPortfolioId(this, 'GetPortFolioId', {
+        displayName: 'AWS Control Tower Account Factory Portfolio',
+        providerName: 'AWS Control Tower',
         kmsKey: options.cloudwatchKey,
-        serviceControlPolicies: this.createScpListsForValidation(),
-        policyTagKey: `${options.props.prefixes.accelerator}Managed`,
         logRetentionInDays: options.props.globalConfig.cloudwatchLogRetentionInDays,
-        driftDetectionParameter: options.driftDetectedParameter,
-        driftDetectionMessageParameter: options.driftMessageParameter,
-        vpcsCidrs,
       });
-
-      validation.node.addDependency(options.moveAccounts);
-
-      for (const vpcCidrs of vpcsCidrs) {
-        const parameter = new StringParameter(this, vpcCidrs.logicalId, {
-          parameterName: vpcCidrs.parameterName,
-          stringValue: vpcCidrs.cidrs.join(','),
-        });
-        parameter.node.addDependency(validation);
-      }
-
-      this.logger.info(`Create new organization accounts`);
-      options.organizationAccounts = new CreateOrganizationAccounts(this, 'CreateOrganizationAccounts', {
-        newOrgAccountsTable: newOrgAccountsTable,
-        govCloudAccountMappingTable: govCloudAccountMappingTable,
-        accountRoleName: options.props.globalConfig.managementAccountAccessRole,
+      this.logger.info(`Create new control tower accounts`);
+      options.controlTowerAccounts = new CreateControlTowerAccounts(this, 'CreateCTAccounts', {
+        table: newCTAccountsTable,
+        portfolioId: portfolioResults.portfolioId,
         kmsKey: options.cloudwatchKey,
         logRetentionInDays: options.props.globalConfig.cloudwatchLogRetentionInDays,
       });
-      options.organizationAccounts.node.addDependency(validation);
+      options.controlTowerAccounts.node.addDependency(validation);
+      options.controlTowerAccounts.node.addDependency(options.organizationAccounts);
 
       // cdk-nag suppressions
-      const orgAccountsIam4SuppressionPaths = [
-        'CreateOrganizationAccounts/CreateOrganizationAccountsProvider/framework-onEvent/ServiceRole/Resource',
-        'CreateOrganizationAccounts/CreateOrganizationAccountsProvider/framework-onTimeout/ServiceRole/Resource',
-        'CreateOrganizationAccounts/CreateOrganizationAccountsProvider/framework-isComplete/ServiceRole/Resource',
-        'CreateOrganizationAccounts/CreateOrganizationAccounts/ServiceRole/Resource',
-        'CreateOrganizationAccounts/CreateOrganizationAccountStatus/ServiceRole/Resource',
+      const ctAccountsIam4SuppressionPaths = [
+        'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onTimeout/ServiceRole/Resource',
+        'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-isComplete/ServiceRole/Resource',
+        'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onEvent/ServiceRole/Resource',
+        'CreateCTAccounts/CreateControlTowerAccountStatus/ServiceRole/Resource',
+        'CreateCTAccounts/CreateControlTowerAccount/ServiceRole/Resource',
       ];
 
-      const orgAccountsIam5SuppressionPaths = [
-        'CreateOrganizationAccounts/CreateOrganizationAccountsProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource',
-        'CreateOrganizationAccounts/CreateOrganizationAccountsProvider/framework-isComplete/ServiceRole/DefaultPolicy/Resource',
-        'CreateOrganizationAccounts/CreateOrganizationAccountsProvider/framework-onTimeout/ServiceRole/DefaultPolicy/Resource',
-        'CreateOrganizationAccounts/CreateOrganizationAccountStatus/ServiceRole/DefaultPolicy/Resource',
-        'CreateOrganizationAccounts/CreateOrganizationAccountsProvider/waiter-state-machine/Role/DefaultPolicy/Resource',
+      const ctAccountsIam5SuppressionPaths = [
+        'CreateCTAccounts/CreateControlTowerAccountStatus/ServiceRole/DefaultPolicy/Resource',
+        'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource',
+        'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-isComplete/ServiceRole/DefaultPolicy/Resource',
+        'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onTimeout/ServiceRole/DefaultPolicy/Resource',
+        'CreateCTAccounts/CreateControlTowerAcccountsProvider/waiter-state-machine/Role/DefaultPolicy/Resource',
       ];
-      const orgAccountsSfSuppressionPaths = [
-        'CreateOrganizationAccounts/CreateOrganizationAccountsProvider/waiter-state-machine/Resource',
+      const ctAccountsSfSuppressionPaths = [
+        'CreateCTAccounts/CreateControlTowerAcccountsProvider/waiter-state-machine/Resource',
       ];
+
       // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-      this.createNagSuppressionsInputs(NagSuppressionRuleIds.IAM4, orgAccountsIam4SuppressionPaths);
+      this.createNagSuppressionsInputs(NagSuppressionRuleIds.IAM4, ctAccountsIam4SuppressionPaths);
 
       // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
-      this.createNagSuppressionsInputs(NagSuppressionRuleIds.IAM5, orgAccountsIam5SuppressionPaths);
+      this.createNagSuppressionsInputs(NagSuppressionRuleIds.IAM5, ctAccountsIam5SuppressionPaths);
 
       // AwsSolutions-SF1: The Step Function does not log "ALL" events to CloudWatch Logs.
-      this.createNagSuppressionsInputs(NagSuppressionRuleIds.SF1, orgAccountsSfSuppressionPaths);
+      this.createNagSuppressionsInputs(NagSuppressionRuleIds.SF1, ctAccountsSfSuppressionPaths);
 
       // AwsSolutions-SF2: The Step Function does not have X-Ray tracing enabled.
-      this.createNagSuppressionsInputs(NagSuppressionRuleIds.SF2, orgAccountsSfSuppressionPaths);
+      this.createNagSuppressionsInputs(NagSuppressionRuleIds.SF2, ctAccountsSfSuppressionPaths);
 
-      if (options.props.globalConfig.controlTower.enable) {
-        // Allow security/audit account access
-        options.managementAccountKey.addToResourcePolicy(
-          new cdk.aws_iam.PolicyStatement({
-            sid: 'auditAccount',
-            principals: [new cdk.aws_iam.AccountPrincipal(options.props.accountsConfig.getAuditAccountId())],
-            actions: ['kms:GenerateDataKey', 'kms:Encrypt', 'kms:Decrypt', 'kms:DescribeKey'],
-            resources: ['*'],
-          }),
-        );
+      // resources for control tower lifecycle events
+      const controlTowerOuEventsFunction = new cdk.aws_lambda.Function(this, 'ControlTowerOuEventsFunction', {
+        code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, '../lambdas/control-tower-ou-events/dist')),
+        runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+        handler: 'index.handler',
+        description: 'Lambda function to process ControlTower OU events from CloudTrail',
+        timeout: cdk.Duration.minutes(5),
+        environment: {
+          CONFIG_TABLE_NAME: options.configTable.tableName,
+        },
+      });
 
-        this.logger.info(`Get Portfolio Id`);
-        const portfolioResults = new GetPortfolioId(this, 'GetPortFolioId', {
-          displayName: 'AWS Control Tower Account Factory Portfolio',
-          providerName: 'AWS Control Tower',
-          kmsKey: options.cloudwatchKey,
-          logRetentionInDays: options.props.globalConfig.cloudwatchLogRetentionInDays,
-        });
-        this.logger.info(`Create new control tower accounts`);
-        options.controlTowerAccounts = new CreateControlTowerAccounts(this, 'CreateCTAccounts', {
-          table: newCTAccountsTable,
-          portfolioId: portfolioResults.portfolioId,
-          kmsKey: options.cloudwatchKey,
-          logRetentionInDays: options.props.globalConfig.cloudwatchLogRetentionInDays,
-        });
-        options.controlTowerAccounts.node.addDependency(validation);
-        options.controlTowerAccounts.node.addDependency(options.organizationAccounts);
+      controlTowerOuEventsFunction.addToRolePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'dynamodb',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['dynamodb:UpdateItem', 'dynamodb:PutItem'],
+          resources: [options.configTable.tableArn],
+        }),
+      );
 
-        // cdk-nag suppressions
-        const ctAccountsIam4SuppressionPaths = [
-          'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onTimeout/ServiceRole/Resource',
-          'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-isComplete/ServiceRole/Resource',
-          'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onEvent/ServiceRole/Resource',
-          'CreateCTAccounts/CreateControlTowerAccountStatus/ServiceRole/Resource',
-          'CreateCTAccounts/CreateControlTowerAccount/ServiceRole/Resource',
-        ];
-
-        const ctAccountsIam5SuppressionPaths = [
-          'CreateCTAccounts/CreateControlTowerAccountStatus/ServiceRole/DefaultPolicy/Resource',
-          'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource',
-          'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-isComplete/ServiceRole/DefaultPolicy/Resource',
-          'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onTimeout/ServiceRole/DefaultPolicy/Resource',
-          'CreateCTAccounts/CreateControlTowerAcccountsProvider/waiter-state-machine/Role/DefaultPolicy/Resource',
-        ];
-        const ctAccountsSfSuppressionPaths = [
-          'CreateCTAccounts/CreateControlTowerAcccountsProvider/waiter-state-machine/Resource',
-        ];
-
-        // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-        this.createNagSuppressionsInputs(NagSuppressionRuleIds.IAM4, ctAccountsIam4SuppressionPaths);
-
-        // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
-        this.createNagSuppressionsInputs(NagSuppressionRuleIds.IAM5, ctAccountsIam5SuppressionPaths);
-
-        // AwsSolutions-SF1: The Step Function does not log "ALL" events to CloudWatch Logs.
-        this.createNagSuppressionsInputs(NagSuppressionRuleIds.SF1, ctAccountsSfSuppressionPaths);
-
-        // AwsSolutions-SF2: The Step Function does not have X-Ray tracing enabled.
-        this.createNagSuppressionsInputs(NagSuppressionRuleIds.SF2, ctAccountsSfSuppressionPaths);
-
-        // resources for control tower lifecycle events
-        const controlTowerOuEventsFunction = new cdk.aws_lambda.Function(this, 'ControlTowerOuEventsFunction', {
-          code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, '../lambdas/control-tower-ou-events/dist')),
-          runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
-          handler: 'index.handler',
-          description: 'Lambda function to process ControlTower OU events from CloudTrail',
-          timeout: cdk.Duration.minutes(5),
-          environment: {
-            CONFIG_TABLE_NAME: options.configTable.tableName,
-          },
-        });
-
-        controlTowerOuEventsFunction.addToRolePolicy(
-          new cdk.aws_iam.PolicyStatement({
-            sid: 'dynamodb',
-            effect: cdk.aws_iam.Effect.ALLOW,
-            actions: ['dynamodb:UpdateItem', 'dynamodb:PutItem'],
-            resources: [options.configTable.tableArn],
-          }),
-        );
-
-        controlTowerOuEventsFunction.addToRolePolicy(
-          new cdk.aws_iam.PolicyStatement({
-            sid: 'organizations',
-            effect: cdk.aws_iam.Effect.ALLOW,
-            actions: ['organizations:DescribeOrganizationalUnit', 'organizations:ListParents'],
-            resources: [
-              `arn:${
-                cdk.Stack.of(this).partition
-              }:organizations::${options.props.accountsConfig.getManagementAccountId()}:account/o-*/*`,
-            ],
-          }),
-        );
-
-        // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
-        this.nagSuppressionInputs.push({
-          id: NagSuppressionRuleIds.IAM5,
-          details: [
-            {
-              path: `${this.stackName}/ControlTowerOuEventsFunction/ServiceRole/DefaultPolicy/Resource`,
-              reason: 'Requires access to all org units.',
-            },
+      controlTowerOuEventsFunction.addToRolePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'organizations',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['organizations:DescribeOrganizationalUnit', 'organizations:ListParents'],
+          resources: [
+            `arn:${
+              cdk.Stack.of(this).partition
+            }:organizations::${options.props.accountsConfig.getManagementAccountId()}:account/o-*/*`,
           ],
-        });
+        }),
+      );
 
-        new cdk.aws_logs.LogGroup(this, `${controlTowerOuEventsFunction.node.id}LogGroup`, {
-          logGroupName: `/aws/lambda/${controlTowerOuEventsFunction.functionName}`,
-          retention: options.props.globalConfig.cloudwatchLogRetentionInDays,
-          encryptionKey: options.cloudwatchKey,
-          removalPolicy: cdk.RemovalPolicy.DESTROY,
-        });
-
-        // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-        this.nagSuppressionInputs.push({
-          id: NagSuppressionRuleIds.IAM4,
-          details: [
-            {
-              path: `${this.stackName}/ControlTowerOuEventsFunction/ServiceRole/Resource`,
-              reason: 'AWS Basic Lambda execution permissions.',
-            },
-          ],
-        });
-
-        const controlTowerOuEventsRule = new cdk.aws_events.Rule(this, 'ControlTowerOuEventsRule', {
-          description: 'Rule to monitor for Control Tower OU registration and de-registration events',
-          eventPattern: {
-            source: ['aws.controltower'],
-            detailType: ['AWS Service Event via CloudTrail'],
-            detail: {
-              eventName: ['RegisterOrganizationalUnit', 'DeregisterOrganizationalUnit'],
-            },
-          },
-        });
-
-        controlTowerOuEventsRule.addTarget(
-          new cdk.aws_events_targets.LambdaFunction(controlTowerOuEventsFunction, { retryAttempts: 3 }),
-        );
-
-        const controlTowerNotificationTopic = new cdk.aws_sns.Topic(this, 'ControlTowerNotification', {
-          //Check this if it causes any issue changing topic name
-          topicName: `${options.props.prefixes.accelerator}-ControlTowerNotification`,
-          displayName: 'ForwardedControlTowerNotifications',
-          masterKey: options.managementAccountKey,
-        });
-
-        controlTowerNotificationTopic.addToResourcePolicy(
-          new cdk.aws_iam.PolicyStatement({
-            sid: 'auditAccount',
-            principals: [new cdk.aws_iam.AccountPrincipal(options.props.accountsConfig.getAuditAccountId())],
-            actions: ['sns:Publish'],
-            resources: [controlTowerNotificationTopic.topicArn],
-          }),
-        );
-
-        // function to process control tower notifications
-        const controlTowerNotificationsFunction = new cdk.aws_lambda.Function(
-          this,
-          'ControlTowerNotificationsFunction',
+      // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
           {
-            code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, '../lambdas/control-tower-notifications/dist')),
-            runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
-            handler: 'index.handler',
-            description: 'Lambda function to process ControlTower notifications from audit account',
-            timeout: cdk.Duration.minutes(5),
-            environment: {
-              DRIFT_PARAMETER_NAME: options.driftDetectedParameter.parameterName,
-              DRIFT_MESSAGE_PARAMETER_NAME: options.driftMessageParameter.parameterName,
-            },
+            path: `${this.stackName}/ControlTowerOuEventsFunction/ServiceRole/DefaultPolicy/Resource`,
+            reason: 'Requires access to all org units.',
           },
-        );
+        ],
+      });
 
-        new cdk.aws_logs.LogGroup(this, `${controlTowerNotificationsFunction.node.id}LogGroup`, {
-          logGroupName: `/aws/lambda/${controlTowerNotificationsFunction.functionName}`,
-          retention: options.props.globalConfig.cloudwatchLogRetentionInDays,
-          encryptionKey: options.cloudwatchKey,
-          removalPolicy: cdk.RemovalPolicy.DESTROY,
-        });
+      new cdk.aws_logs.LogGroup(this, `${controlTowerOuEventsFunction.node.id}LogGroup`, {
+        logGroupName: `/aws/lambda/${controlTowerOuEventsFunction.functionName}`,
+        retention: options.props.globalConfig.cloudwatchLogRetentionInDays,
+        encryptionKey: options.cloudwatchKey,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
 
-        controlTowerNotificationsFunction.addEventSource(new SnsEventSource(controlTowerNotificationTopic));
-        controlTowerNotificationsFunction.addToRolePolicy(
-          new cdk.aws_iam.PolicyStatement({
-            sid: 'ssm',
-            effect: cdk.aws_iam.Effect.ALLOW,
-            actions: ['ssm:PutParameter'],
-            resources: [options.driftDetectedParameter.parameterArn, options.driftMessageParameter.parameterArn],
-          }),
-        );
+      // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/ControlTowerOuEventsFunction/ServiceRole/Resource`,
+            reason: 'AWS Basic Lambda execution permissions.',
+          },
+        ],
+      });
 
-        // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-        this.nagSuppressionInputs.push({
-          id: NagSuppressionRuleIds.IAM4,
-          details: [
-            {
-              path: `${this.stackName}/ControlTowerNotificationsFunction/ServiceRole/Resource`,
-              reason: 'AWS Basic Lambda execution permissions.',
-            },
-          ],
-        });
-      }
+      const controlTowerOuEventsRule = new cdk.aws_events.Rule(this, 'ControlTowerOuEventsRule', {
+        description: 'Rule to monitor for Control Tower OU registration and de-registration events',
+        eventPattern: {
+          source: ['aws.controltower'],
+          detailType: ['AWS Service Event via CloudTrail'],
+          detail: {
+            eventName: ['RegisterOrganizationalUnit', 'DeregisterOrganizationalUnit'],
+          },
+        },
+      });
+
+      controlTowerOuEventsRule.addTarget(
+        new cdk.aws_events_targets.LambdaFunction(controlTowerOuEventsFunction, { retryAttempts: 3 }),
+      );
+
+      const controlTowerNotificationTopic = new cdk.aws_sns.Topic(this, 'ControlTowerNotification', {
+        //Check this if it causes any issue changing topic name
+        topicName: `${options.props.prefixes.accelerator}-ControlTowerNotification`,
+        displayName: 'ForwardedControlTowerNotifications',
+        masterKey: options.managementAccountKey,
+      });
+
+      controlTowerNotificationTopic.addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'auditAccount',
+          principals: [new cdk.aws_iam.AccountPrincipal(options.props.accountsConfig.getAuditAccountId())],
+          actions: ['sns:Publish'],
+          resources: [controlTowerNotificationTopic.topicArn],
+        }),
+      );
+
+      // function to process control tower notifications
+      const controlTowerNotificationsFunction = new cdk.aws_lambda.Function(this, 'ControlTowerNotificationsFunction', {
+        code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, '../lambdas/control-tower-notifications/dist')),
+        runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+        handler: 'index.handler',
+        description: 'Lambda function to process ControlTower notifications from audit account',
+        timeout: cdk.Duration.minutes(5),
+        environment: {
+          DRIFT_PARAMETER_NAME: options.driftDetectedParameter.parameterName,
+          DRIFT_MESSAGE_PARAMETER_NAME: options.driftMessageParameter.parameterName,
+        },
+      });
+
+      new cdk.aws_logs.LogGroup(this, `${controlTowerNotificationsFunction.node.id}LogGroup`, {
+        logGroupName: `/aws/lambda/${controlTowerNotificationsFunction.functionName}`,
+        retention: options.props.globalConfig.cloudwatchLogRetentionInDays,
+        encryptionKey: options.cloudwatchKey,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
+
+      controlTowerNotificationsFunction.addEventSource(new SnsEventSource(controlTowerNotificationTopic));
+      controlTowerNotificationsFunction.addToRolePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'ssm',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['ssm:PutParameter'],
+          resources: [options.driftDetectedParameter.parameterArn, options.driftMessageParameter.parameterArn],
+        }),
+      );
+
+      // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/ControlTowerNotificationsFunction/ServiceRole/Resource`,
+            reason: 'AWS Basic Lambda execution permissions.',
+          },
+        ],
+      });
     }
   }
 
