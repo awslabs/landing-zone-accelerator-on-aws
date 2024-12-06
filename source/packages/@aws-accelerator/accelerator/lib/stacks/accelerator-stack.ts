@@ -457,7 +457,14 @@ export abstract class AcceleratorStack extends cdk.Stack {
   /**
    * List of supported partitions for Service Linked Role creation
    */
-  protected serviceLinkedRoleSupportedPartitionList: string[] = ['aws', 'aws-cn', 'aws-us-gov', 'aws-iso', 'aws-iso-b'];
+  protected serviceLinkedRoleSupportedPartitionList: string[] = [
+    'aws',
+    'aws-cn',
+    'aws-us-gov',
+    'aws-iso',
+    'aws-iso-b',
+    'aws-iso-f',
+  ];
 
   /**
    * Create Access Analyzer Service Linked role
