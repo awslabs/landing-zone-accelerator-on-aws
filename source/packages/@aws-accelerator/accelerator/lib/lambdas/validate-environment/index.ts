@@ -203,7 +203,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
           const awsOuKey = configAllOuKeys.find(ouKeyItem => ouKeyItem.acceleratorKey === mandatoryAccount['ouName']);
           if (awsOuKey?.ignore === false) {
             const mandatoryOrganizationAccount = organizationAccounts.find(
-              item => item.Email == mandatoryAccount['acceleratorKey'],
+              item => item.Email?.toLocaleLowerCase() == mandatoryAccount['acceleratorKey'].toLocaleLowerCase(),
             );
             if (mandatoryOrganizationAccount) {
               if (mandatoryOrganizationAccount.Status !== 'ACTIVE') {
@@ -222,7 +222,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
           const awsOuKey = configAllOuKeys.find(ouKeyItem => ouKeyItem.acceleratorKey === workloadAccount['ouName']);
           if (awsOuKey?.ignore === false) {
             const organizationAccount = organizationAccounts.find(
-              item => item.Email == workloadAccount['acceleratorKey'],
+              item => item.Email?.toLocaleLowerCase() == workloadAccount['acceleratorKey'].toLocaleLowerCase(),
             );
             if (organizationAccount) {
               if (organizationAccount.Status !== 'ACTIVE') {
@@ -534,7 +534,9 @@ function getNewScps(
 async function validateControlTower() {
   // confirm mandatory accounts exist in aws
   for (const mandatoryAccount of mandatoryAccounts) {
-    const existingAccount = organizationAccounts.find(item => item.Email == mandatoryAccount['acceleratorKey']);
+    const existingAccount = organizationAccounts.find(
+      item => item.Email?.toLocaleLowerCase() == mandatoryAccount['acceleratorKey'].toLocaleLowerCase(),
+    );
     if (existingAccount?.Status == 'ACTIVE') {
       console.log(`Mandatory Account ${mandatoryAccount['acceleratorKey']} exists.`);
     } else {
@@ -572,7 +574,9 @@ async function validateControlTower() {
     for (const workloadAccount of workloadAccounts) {
       const accountConfig = JSON.parse(workloadAccount['dataBag']);
       const accountName = accountConfig['name'];
-      const account = organizationAccounts.find(oa => oa.Email == workloadAccount['acceleratorKey']);
+      const account = organizationAccounts.find(
+        oa => oa.Email?.toLocaleLowerCase() == workloadAccount['acceleratorKey'].toLocaleLowerCase(),
+      );
 
       if (!account) {
         console.log(`push to ctAccountsToAdd does not exist ${accountName}`);
@@ -909,10 +913,14 @@ async function validateAllOuInConfig(): Promise<string[]> {
 async function validateAllAwsAccountsInConfig(): Promise<string[]> {
   const errors: string[] = [];
   for (const account of organizationAccounts) {
-    if (workloadAccounts.find(item => item['acceleratorKey'] === account.Email!)) {
+    if (
+      workloadAccounts.find(item => item['acceleratorKey'].toLocaleLowerCase() === account.Email!.toLocaleLowerCase())
+    ) {
       continue;
     }
-    if (mandatoryAccounts.find(item => item['acceleratorKey'] === account.Email!)) {
+    if (
+      mandatoryAccounts.find(item => item['acceleratorKey'].toLocaleLowerCase() === account.Email!.toLocaleLowerCase())
+    ) {
       continue;
     }
     //check if ou is ignored
