@@ -19,11 +19,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] 
         ],
         "Description": "Sample stackset description",
         "ExecutionRoleName": "CustomStackSetsExecutionRole",
-        "OperationPreferences": {
-          "FailureTolerancePercentage": 25,
-          "MaxConcurrentPercentage": 35,
-          "RegionConcurrencyType": "PARALLEL",
-        },
+        "OperationPreferences": {},
         "PermissionModel": "SELF_MANAGED",
         "StackInstancesGroup": [
           {
@@ -1151,11 +1147,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 3`] 
           "CAPABILITY_AUTO_EXPAND",
         ],
         "Description": "Sample stackset description",
-        "OperationPreferences": {
-          "FailureTolerancePercentage": 25,
-          "MaxConcurrentPercentage": 35,
-          "RegionConcurrencyType": "PARALLEL",
-        },
+        "OperationPreferences": {},
         "PermissionModel": "SELF_MANAGED",
         "StackInstancesGroup": [
           {
