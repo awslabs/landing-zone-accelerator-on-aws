@@ -286,7 +286,7 @@ abstract class LandingZoneOperation {
     landingZoneConfiguration: ControlTowerLandingZoneConfigType,
     kmsKeyArn: string,
   ): Promise<string> {
-    const manifestDocument = makeManifestDocument(landingZoneConfiguration, 'CREATE', kmsKeyArn);
+    const manifestDocument = makeManifestDocument(landingZoneConfiguration, 'CREATE', 'Security', kmsKeyArn);
     const param: CreateLandingZoneCommandInput = {
       version: landingZoneConfiguration.version,
       manifest: manifestDocument,
@@ -363,9 +363,15 @@ abstract class LandingZoneOperation {
     landingZoneDetails: ControlTowerLandingZoneDetailsType,
   ): Promise<string> {
     logger.info(`The Landing Zone update operation will begin, because "${reason}"`);
+    if (!landingZoneDetails.securityOuName) {
+      throw new Error(
+        `The Landing Zone configuration didn't return security ou name, failed to update the Control Tower landing zone.`,
+      );
+    }
     const manifestDocument = makeManifestDocument(
       landingZoneConfiguration,
       'UPDATE',
+      landingZoneDetails.securityOuName,
       landingZoneDetails.kmsKeyArn,
       landingZoneDetails.sandboxOuName,
     );
