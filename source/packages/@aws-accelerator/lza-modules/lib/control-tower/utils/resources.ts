@@ -150,12 +150,15 @@ export type ControlTowerLandingZoneDetailsType = {
  * Function to make manifest document for CT API
  * @param landingZoneConfiguration ${@link LandingZoneConfigType}
  * @param event string 'CREATE' | 'UPDATE'
- * @param sandboxOuName string
+ * @param securityOuName string
+ * @param kmsKeyArn string | undefined
+ * @param sandboxOuName string | undefined
  * @returns
  */
 export function makeManifestDocument(
   landingZoneConfiguration: ControlTowerLandingZoneConfigType,
   event: 'CREATE' | 'UPDATE',
+  securityOuName: string,
   kmsKeyArn?: string,
   sandboxOuName?: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -165,7 +168,7 @@ export function makeManifestDocument(
   if (event === 'CREATE') {
     organizationStructure = {
       security: {
-        name: 'Security',
+        name: securityOuName,
       },
       sandbox: {
         name: 'Infrastructure',
@@ -177,7 +180,7 @@ export function makeManifestDocument(
     if (sandboxOuName) {
       organizationStructure = {
         security: {
-          name: 'Security',
+          name: securityOuName,
         },
         sandbox: {
           name: sandboxOuName,
@@ -186,7 +189,7 @@ export function makeManifestDocument(
     } else {
       organizationStructure = {
         security: {
-          name: 'Security',
+          name: securityOuName,
         },
       };
     }

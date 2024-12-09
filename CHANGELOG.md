@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(doc): add package dependency section in typedoc
 - chore(module): add config parsing module
 - feat(organizations): add support for chatbot policies
+- fix(control-tower): update landingzone fails for non-default security ou name
 
 ### Fixed
 
