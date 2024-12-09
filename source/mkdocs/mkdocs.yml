@@ -22,6 +22,7 @@ nav:
       - Feature Development: developer-guide/features.md
       - Documentation Guidelines: developer-guide/doc-guidelines.md
       - JSON Schema: developer-guide/json-schema.md
+      - Module Development: developer-guide/module-development/index.md      
   - Sample Configurations:
       - sample-configurations/index.md
       - Standard:
