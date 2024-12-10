@@ -301,6 +301,7 @@ exports[`DependenciesStack Construct(DependenciesStack):  Snapshot Test 1`] = `
                 {
                   "Action": [
                     "ssm:PutParameter",
+                    "ssm:DeleteParameter",
                     "ssm:GetParameter",
                   ],
                   "Effect": "Allow",
