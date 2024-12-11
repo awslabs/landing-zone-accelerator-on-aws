@@ -5,54 +5,95 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.11.0] -
+## [1.11.0] - 12-11-2024
 
 ### Added
 
+- feat: add eks-auth endpoints to hosted-zone
 - feat(customizations): add feature to set custom admin and execution roles for custom stacksets
-- feat(operations): add feature to create users without console access.
-- feat(pipeline): add feature to parallelise synth and diff operations
-- feat(pipeline): add feature to reuse synth to all deploy actions
-- feat(pipeline): add feature to consolidate all diffs and generate URL for review in Review stage
-- feat(logging): provide file extension to CloudWatch log replicated files in S3
-- chore(modules): add modules package with ct module
-- feat(pipeline): add feature to deploy LZA solution region by region
-- feat(eventbus): add support for default event bus resource policy
+- feat(customizations): add operational preferences support or stacksets customization
 - feat(doc): add package dependency section in typedoc
-- chore(module): add config parsing module
+- feat(eventbus): add support for default event bus resource policy
+- feat(iam): create IAM user without console access
+- feat(lambda): add lambda runtime to the construct props and default to Node 18
+- feat(logging): provide file extension to CloudWatch log replicated files in S3
+- feat(networking): allows the option of specifying a network firewall policy arn
 - feat(organizations): add support for chatbot policies
-- fix(control-tower): update landingzone fails for non-default security ou name
-- chore(documentation): create lza module documentation
-- chore(cli): modify cli signature
+- feat(pipeline): add feature to parallelise synth and diff operations
+- feat(pipeline): add feature to reuse synth for all deploy actions
+- feat(pipeline): add feature to consolidate all diffs and generate URL for review in Review stage
+- feat(pipeline): add feature to deploy LZA solution region by region
+- feat(test): add api assertion to integration testing
+- feat(validation): validating that order of CIDRs is not changed
 
 ### Fixed
 
-- fix(networking): fixes hosted zone dns for sagemaker and eks-auth endpoints
-- fix(networking): trust policy for tgw peering multiple acceptors to single requestor account
-- fix(networking): add conditions to trust policy for DescribeTgwAttach IAM Role
-- fix(networking): add conditions to trust policy for VpcPeering IAM Role
-- fix(logging): add log stream arn for SubscriptionFilterRole IAM Policy
+- fix: added missing imports to test file
+- fix: Disable management events for Lambda & S3 Cloudtrail event selectors 
+- fix: hosted zone DNS for Sagemaker VPC Endpoints 
+- fix: updated GitHub action target
+- fix(account): remove partition checks for account creation in prepare stack
+- fix(assets): add local account for ssm parameters to assets policy
+- fix(build): fixing naming scheme of installer templates
 - fix(config): adjust all-enabled config for asset bucket name
-- fix(logging): updated kms key for imported asset bucket
-- fix(pipeline): fix account bootstrap failed silently
-- fix(installer): fix management account bootstrap failed when using external pipeline
-- fix(metadata): accelerator lambda times out without error
-- fix(logging): fixed permissions on custom resource for when cloudwatch encryption is enabled in global-config
-- fix(s3): imported elb bucket policy attachment failed
 - fix(config/validation): make account email comparisons case insensitive
 - fix(config-service): only record global resources in home region
+- fix(config-service): exclude global resources from recorder except in home region
+- fix(control-tower): update landingzone fails for non-default security ou name
+- fix(docs): change macie api version
+- fix(globalConfig): provide required permissions for subscriptions
+- fix(iam): add supported partition for service linked roles
+- fix(identity-center): checks if a user or group exists when building assignments
+- fix(installer): fix management account bootstrap failed when using external pipeline
+- fix(installer): management account bootstrap failed when using external pipeline
+- fix(logging): add log stream arn for SubscriptionFilterRole IAM Policy
+- fix(logging): fixed permissions on custom resource for when cloudwatch encryption is enabled in global-config
+- fix(logging): incorrect managed policy for imported elb access log bucket
+- fix(logging): updated kms key for imported asset bucket
+- fix(macie): unable to publish sensitive data findings to security hub
+- fix(networking): add conditions to trust policy for DescribeTgwAttach IAM Role
+- fix(networking): add conditions to trust policy for VpcPeering IAM Role
+- fix(networking): fixes ssm parameter name format
+- fix(networking): trust policy for tgw peering multiple acceptors to single requestor account
+- fix(organizations): create ou's in all partitions with exceptions
+- fix(resolver): correctly identify custom domain list filename
+- fix(s3): imported elb bucket policy attachment failed
+- fix(testing): moves synthethic value form all-enabled to snapshot-only tests
+- fix(uninstaller): correct syntax for debug log
+- fix(validation): make case insensitive comparisons when validating email addresses
+- fix(warning): removes unreachable code that results in warning
 
 ### Changed
 
-- chore(module): add config parsing module lza-config
-- chore(sample-config): add kms key disable rotation prevention control in sample config
-- chore(sample-config): add kms delete policy to scp in sample config
-- chore(sample-config): add transit gateway and ram share protection in sample config
+- chore: bump version to v1.11.0
+- chore: change viperscan from cli to wget
+- chore(all-enabled): remove s3 resource policy attachment property from elb import bucket
+- chore(cli): modify cli signature
+- chore(documentation): create lza module documentation
+- chore(modules): add config parsing module lza-config
+- chore(modules): add aws-lza package for ct module and lza cli
+- chore(test): updated tests for stack creation
+- chore(template): added MR template
+- chore(testing): moves construction of stacks from test bootstrap into test run
 
 ### Configuration Changes
 
 - chore(cn): remove cn sample configuration directory
+- chore(sample-config): add kms key disable rotation prevention control in sample config
+- chore(sample-config): add kms delete policy to scp in sample config
+- chore(sample-config): add transit gateway and ram share protection in sample config
 - chore(sample-config): externalize healthcare configurations
+
+## [1.10.1] - 11-18-2024
+
+### Fixed
+
+- fix(metadata): accelerator metadata lambda times out without error
+- fix(docs): resolve broken links in mkdocs
+- fix(route53): fix hosted zone DNS for Sagemaker VPC Endpoints 
+- fix(route53): fix hosted zone DNS for EKS-Auth VPC Endpoints
+- fix(pipeline): bootstrap stage failed silently
+- fix(organizations): fix enabled controls cfn throttling
 
 ## [1.10.0] - 10-16-2024
 
