@@ -211,11 +211,3 @@ export const ValidateOrganizationError = (validationErrors: string[]) =>
 export const AliasFoundError = new Error(
   `There is already an AWS Control Tower Landing Zone KMS CMK alias named ${ControlTowerKeyAlias.AliasName}. The alias ${ControlTowerKeyAlias.AliasName} is reserved for AWS Control Tower Landing Zone CMK created by the solution, the solution cannot deploy AWS Control Tower Landing Zone.`,
 );
-
-/**
- * Management account not found error
- * @param email string
- * @returns
- */
-export const ManagementAccountNotFoundError = (email: string) =>
-  new Error(`Management account with email ${email} not found`);

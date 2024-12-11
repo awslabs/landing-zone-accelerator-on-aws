@@ -47,7 +47,6 @@ process.on('uncaughtException', err => {
  *
  * ```
  * const param: IControlTowerLandingZoneHandlerParameter = {
- *   operation: 'diff' | 'deploy',
  *   partition: 'aws',
  *   homeRegion: 'us-east-1',
  *   configuration: {

@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(organizations): add support for chatbot policies
 - fix(control-tower): update landingzone fails for non-default security ou name
 - chore(documentation): create lza module documentation
+- chore(cli): modify cli signature
 
 ### Fixed
 

@@ -158,7 +158,7 @@ export async function getLandingZoneDetails(
  * @param ms
  * @returns
  */
-export function delay(minutes: number) {
+export async function delay(minutes: number) {
   return new Promise(resolve => setTimeout(resolve, minutes * 60000));
 }
 

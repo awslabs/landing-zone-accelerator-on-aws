@@ -49,7 +49,7 @@ import {
 import { delay, getLandingZoneDetails, getLandingZoneIdentifier, setRetryStrategy } from '../../common/functions';
 import { createLogger } from '../../common/logger';
 import { throttlingBackOff } from '../../common/throttle';
-import { AcceleratorModuleName, Operations } from '../../common/resources';
+import { AcceleratorModuleName } from '../../common/resources';
 
 type DefaultPropsType = { moduleName: string; globalRegion: string; solutionId: string; useExistingRole: boolean };
 
@@ -104,13 +104,19 @@ export class AcceleratorControlTowerLandingZoneModule implements IAcceleratorCon
     //
     const landingZoneIdentifier = await getLandingZoneIdentifier(client);
 
+    // When no existing LZ and dry run was executed
+    if (!landingZoneIdentifier && props.dryRun) {
+      return this.getDryRunResponse(props, defaultProps);
+    }
+
     //
     // Complete AWS Control Tower pre-requisites
     //
-    const preRequisitesResources =
-      props.operation === Operations.DEPLOY
-        ? await ControlTowerPreRequisites.completePreRequisites(props, defaultProps, landingZoneIdentifier)
-        : undefined;
+    const preRequisitesResources = await ControlTowerPreRequisites.completePreRequisites(
+      props,
+      defaultProps,
+      landingZoneIdentifier,
+    );
 
     const organizationAccountDetailsByEmail: Account[] = [];
     const promises: Promise<Account>[] = [];
@@ -154,7 +160,7 @@ export class AcceleratorControlTowerLandingZoneModule implements IAcceleratorCon
 
     const landingZoneDetails = await getLandingZoneDetails(client, props.homeRegion, landingZoneIdentifier);
 
-    if (landingZoneDetails?.status === LandingZoneStatus.PROCESSING && props.operation === Operations.DEPLOY) {
+    if (landingZoneDetails?.status === LandingZoneStatus.PROCESSING && !props.dryRun) {
       throw new Error(
         `Module "${defaultProps.moduleName}" The Landing Zone update operation failed with error - ConflictException - AWS Control Tower cannot begin landing zone setup while another execution is in progress.`,
       );
@@ -170,17 +176,12 @@ export class AcceleratorControlTowerLandingZoneModule implements IAcceleratorCon
         landingZoneIdentifier,
       );
     } else {
-      if (props.operation === Operations.DEPLOY) {
-        return await LandingZoneOperation.createLandingZone(
-          client,
-          landingZoneConfiguration,
-          preRequisitesResources!.kmsKeyArn,
-          defaultProps,
-          props.waitTillOperationCompletes,
-        );
-      } else {
-        return this.getDiffOperationResponse(props, defaultProps);
-      }
+      return await LandingZoneOperation.createLandingZone(
+        client,
+        landingZoneConfiguration,
+        preRequisitesResources!.kmsKeyArn,
+        defaultProps,
+      );
     }
   }
 
@@ -220,20 +221,20 @@ export class AcceleratorControlTowerLandingZoneModule implements IAcceleratorCon
   }
 
   /**
-   * Function to get display for diff operation
+   * Function to get display for dry run
    * @param props {@link IControlTowerLandingZoneHandlerParameter}
    * @param defaultProps {@link DefaultPropsType}
    * @param landingZoneIdentifier string | undefined
    * @param landingZoneUpdateOrResetStatus {@link LandingZoneUpdateOrResetRequiredType} | undefined
    * @returns status string
    */
-  private getDiffOperationResponse(
+  private getDryRunResponse(
     props: IControlTowerLandingZoneHandlerParameter,
     defaultProps: DefaultPropsType,
     landingZoneIdentifier?: string,
     landingZoneUpdateOrResetStatus?: LandingZoneUpdateOrResetRequiredType,
   ): string {
-    const status = `Module "${defaultProps.moduleName}" "${props.operation}" operation completed successfully`;
+    const status = `[DRY-RUN]: "${defaultProps.moduleName}" "${props.operation}" operation validated successfully (no actual changes were made)`;
     if (landingZoneIdentifier) {
       if (!landingZoneUpdateOrResetStatus?.resetRequired && !landingZoneUpdateOrResetStatus?.updateRequired) {
         logger.info(`Existing AWS Control Tower landing zone found, no changes required`);
@@ -272,34 +273,32 @@ export class AcceleratorControlTowerLandingZoneModule implements IAcceleratorCon
       landingZoneDetails,
     );
 
-    if (props.operation === Operations.DEPLOY) {
-      if (landingZoneUpdateOrResetStatus.updateRequired) {
-        return await LandingZoneOperation.updateLandingZone(
-          client,
-          landingZoneUpdateOrResetStatus.targetVersion,
-          landingZoneUpdateOrResetStatus.reason,
-          landingZoneConfiguration,
-          landingZoneDetails,
-          defaultProps,
-          props.waitTillOperationCompletes,
-        );
-      }
-
-      if (landingZoneUpdateOrResetStatus.resetRequired) {
-        return await LandingZoneOperation.resetLandingZone(
-          client,
-          landingZoneDetails.landingZoneIdentifier,
-          landingZoneUpdateOrResetStatus.reason,
-          defaultProps,
-          props.waitTillOperationCompletes,
-        );
-      }
-
-      // When no changes required
-      return `Module "${defaultProps.moduleName}" completed successfully with status ${landingZoneUpdateOrResetStatus.reason}`;
-    } else {
-      return this.getDiffOperationResponse(props, defaultProps, landingZoneIdentifier, landingZoneUpdateOrResetStatus);
+    if (props.dryRun) {
+      return this.getDryRunResponse(props, defaultProps, landingZoneIdentifier, landingZoneUpdateOrResetStatus);
     }
+
+    if (landingZoneUpdateOrResetStatus.updateRequired) {
+      return await LandingZoneOperation.updateLandingZone(
+        client,
+        landingZoneUpdateOrResetStatus.targetVersion,
+        landingZoneUpdateOrResetStatus.reason,
+        landingZoneConfiguration,
+        landingZoneDetails,
+        defaultProps,
+      );
+    }
+
+    if (landingZoneUpdateOrResetStatus.resetRequired) {
+      return await LandingZoneOperation.resetLandingZone(
+        client,
+        landingZoneDetails.landingZoneIdentifier,
+        landingZoneUpdateOrResetStatus.reason,
+        defaultProps,
+      );
+    }
+
+    // When no changes required
+    return `Module "${defaultProps.moduleName}" completed successfully with status ${landingZoneUpdateOrResetStatus.reason}`;
   }
 }
 /**
@@ -322,7 +321,6 @@ abstract class LandingZoneOperation {
     landingZoneConfiguration: ControlTowerLandingZoneConfigType,
     kmsKeyArn: string,
     defaultProps: DefaultPropsType,
-    waitTillOperationCompletes?: boolean,
   ): Promise<string> {
     const manifestDocument = makeManifestDocument(landingZoneConfiguration, 'CREATE', kmsKeyArn);
     const param: CreateLandingZoneCommandInput = {
@@ -344,16 +342,12 @@ abstract class LandingZoneOperation {
     }
 
     logger.info(
-      `The Landing Zone deployment operation successfully started, operation identifier is - ${operationIdentifier}`,
+      `The Landing Zone deployment operation has started asynchronously (ID: ${operationIdentifier}). The process will continue running independent of this session.`,
     );
 
-    if (waitTillOperationCompletes) {
-      await LandingZoneOperation.waitUntilOperationCompletes(client, operationIdentifier);
+    await LandingZoneOperation.waitUntilOperationCompletes(client, operationIdentifier);
 
-      return `Module "${defaultProps.moduleName}" The Landing Zone deployed successfully.`;
-    } else {
-      return `Module "${defaultProps.moduleName}" The Landing Zone create operation started successfully, operation identifier is ${operationIdentifier}`;
-    }
+    return `Module "${defaultProps.moduleName}" The Landing Zone deployed successfully.`;
   }
 
   /**
@@ -361,14 +355,13 @@ abstract class LandingZoneOperation {
    * @param client {@link ControlTowerClient}
    * @param landingZoneIdentifier string
    * @param reason string
-   * @returns operationIdentifier string
+   * @returns status string
    */
   public static async resetLandingZone(
     client: ControlTowerClient,
     landingZoneIdentifier: string,
     reason: string,
     defaultProps: DefaultPropsType,
-    waitTillOperationCompletes?: boolean,
   ): Promise<string> {
     logger.info(`The Landing Zone reset operation will begin, because "${reason}"`);
     const response = await throttlingBackOff(() => client.send(new ResetLandingZoneCommand({ landingZoneIdentifier })));
@@ -385,16 +378,12 @@ abstract class LandingZoneOperation {
     }
 
     logger.info(
-      `The Landing Zone reset operation successfully started, operation identifier is - ${operationIdentifier}`,
+      `The Landing Zone reset operation has started asynchronously (ID: ${operationIdentifier}). The process will continue running independent of this session.`,
     );
 
-    if (waitTillOperationCompletes) {
-      await LandingZoneOperation.waitUntilOperationCompletes(client, operationIdentifier);
+    await LandingZoneOperation.waitUntilOperationCompletes(client, operationIdentifier);
 
-      return `Module "${defaultProps.moduleName}" The Landing Zone reset operation completed successfully.`;
-    } else {
-      return `Module "${defaultProps.moduleName}" The Landing Zone reset operation started successfully, operation identifier is ${operationIdentifier}`;
-    }
+    return `Module "${defaultProps.moduleName}" The Landing Zone reset operation completed successfully.`;
   }
 
   /**
@@ -405,7 +394,8 @@ abstract class LandingZoneOperation {
    * @param reason string
    * @param landingZoneConfiguration {@link ControlTowerLandingZoneConfigType}
    * @param landingZoneDetails {@link ControlTowerLandingZoneDetailsType}
-   * @returns operationIdentifier string
+   * @param defaultProps {@link DefaultPropsType}
+   * @returns status string
    */
   public static async updateLandingZone(
     client: ControlTowerClient,
@@ -414,7 +404,6 @@ abstract class LandingZoneOperation {
     landingZoneConfiguration: ControlTowerLandingZoneConfigType,
     landingZoneDetails: ControlTowerLandingZoneDetailsType,
     defaultProps: DefaultPropsType,
-    waitTillOperationCompletes?: boolean,
   ): Promise<string> {
     logger.info(`The Landing Zone update operation will begin, because "${reason}"`);
     const manifestDocument = makeManifestDocument(
@@ -446,16 +435,12 @@ abstract class LandingZoneOperation {
     }
 
     logger.info(
-      `The Landing Zone update operation successfully started, operation identifier is - ${operationIdentifier}`,
+      `The Landing Zone update operation has started asynchronously (ID: ${operationIdentifier}). The process will continue running independent of this session.`,
     );
 
-    if (waitTillOperationCompletes) {
-      await this.waitUntilOperationCompletes(client, operationIdentifier);
+    await this.waitUntilOperationCompletes(client, operationIdentifier);
 
-      return `Module "${defaultProps.moduleName}" The Landing Zone update operation completed successfully.`;
-    } else {
-      return `Module "${defaultProps.moduleName}" The Landing Zone update operation started successfully, operation identifier is ${operationIdentifier}`;
-    }
+    return `Module "${defaultProps.moduleName}" The Landing Zone update operation completed successfully.`;
   }
 
   /**

@@ -40,20 +40,6 @@ export interface IAssumeRoleCredential {
 }
 
 /**
- * List of Operations
- */
-export const Operations = {
-  /**
-   * Deploy the changes
-   */
-  DEPLOY: 'deploy',
-  /**
-   * Generate information about the changes but doesn't deploy
-   */
-  DIFF: 'diff',
-};
-
-/**
  * Accelerator module common parameter
  *
  * @description
@@ -99,12 +85,12 @@ export interface IModuleCommonParameter {
    */
   managementAccountCredentials?: IAssumeRoleCredential;
   /**
-   * Flag indicating if the module should wait till operation completes
+   *  Flag indicating if the module should perform a dry run
    *
    * @default
    * false
    */
-  waitTillOperationCompletes?: boolean;
+  dryRun?: boolean;
 }
 
 /**
