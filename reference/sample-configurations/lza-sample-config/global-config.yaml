@@ -7,11 +7,6 @@ terminationProtection: true
 cdkOptions:
   centralizeBuckets: true
   useManagementAccessRole: true
-defaultEventBus:
-  applyDefaultEventBusPolicy: true
-  deploymentTargets:
-    organizationalUnits:
-      - Root
 snsTopics:
   deploymentTargets:
     organizationalUnits:
