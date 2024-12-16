@@ -16,7 +16,7 @@
 The Landing Zone Accelerator on AWS (LZA) is architected to align with AWS best practices
 and in conformance with multiple, global compliance frameworks. We recommend customers
 deploy AWS Control Tower as the foundational landing zone and enhance their landing zone
-capabilities with Landing Zone Accelerator. These complementary capabilities provides a
+capabilities with Landing Zone Accelerator. These complementary capabilities provide a
 comprehensive low-code solution across 35+ AWS services to manage and govern a multi-account
 environment built to support customers with highly-regulated workloads and complex compliance
 requirements. AWS Control Tower and Landing Zone Accelerator help you establish platform
@@ -45,7 +45,7 @@ For an overview and solution deployment guide, please visit
 IMPORTANT: This solution will not, by itself, make you compliant. It provides
 the foundational infrastructure from which additional complementary solutions
 can be integrated. The information contained in this solution implementation
-guide is not exhaustive. You must be review, evaluate, assess, and approve the
+guide is not exhaustive. You must review, evaluate, assess, and approve the
 solution in compliance with your organization’s particular security features,
 tools, and configurations. It is the sole responsibility of you and your
 organization to determine which regulatory requirements are applicable and to
@@ -70,12 +70,12 @@ Additional documentation for the solution is hosted on [GitHub Pages](https://aw
 ### @aws-accelerator/accelerator
 
 A CDK Application. The core of the accelerator solution. Contains all the stack
-definitions and deployment pipeline for the accelerator. This also includes the
+definitions and deployment pipelines for the accelerator. This also includes the
 CDK Toolkit orchestration.
 
 ### @aws-accelerator/config
 
-A pure typescript library containing modules to manage the accelerator config
+A pure TypeScript library containing modules to manage the accelerator config
 files.
 
 ### @aws-accelerator/constructs
@@ -99,12 +99,12 @@ Contains various accelerator modules, deployed by the solution.
 ### @aws-accelerator/ui (future)
 
 A web application that utilizes the aws-ui-components library to present a
-console to configure the accelerator
+console to configure the accelerator.
 
 ### @aws-accelerator/utils
 
 Contains common utilities and types that are needed by @aws-accelerator/\*
-packages. For example, throttling and backoff for AWS SDK calls
+packages. For example, throttling and backoff for AWS SDK calls.
 
 ### @aws-cdk-extensions/cdk-extensions
 
@@ -115,7 +115,7 @@ within this repo and submitted to the CDK project as a pull request.
 
 ### @aws-cdk-extensions/tester
 
-Accelerator tester CDK app. This package creates AWS Config custom rules for every test cases defined in test case manifest file.
+Accelerator tester CDK app. This package creates AWS Config custom rules for every test case defined in the test case manifest file.
 
 ---
 
